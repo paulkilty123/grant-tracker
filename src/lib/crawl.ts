@@ -195,7 +195,8 @@ async function crawlUKRI(): Promise<CrawlResult> {
       .querySelectorAll('.page-numbers a')
       .map(a => parseInt(a.text.trim()))
       .filter(n => !isNaN(n))
-    const lastPage = Math.max(...pageNums, 1)
+    // Cap at 3 pages (30 opportunities) to stay within Vercel's 10s function timeout
+    const lastPage = Math.min(Math.max(...pageNums, 1), 3)
 
     // Fetch remaining pages in parallel
     const rest = await Promise.allSettled(
