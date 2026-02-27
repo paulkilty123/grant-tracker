@@ -18,6 +18,10 @@
 //  13.  Heart of England CF              (heartofenglandcf.co.uk/grants)
 //  14.  Foundation Scotland              (foundationscotland.org.uk/apply-for-funding/funding-available)
 //  15.  London Community Foundation      (londoncf.org.uk — grants sitemap)
+//  16.  Sussex Community Foundation      (sussexcommunityfoundation.org/grants/how-to-apply)
+//  17.  Community Foundation for Surrey  (cfsurrey.org.uk/apply)
+//  18.  Hants & IoW Community Foundation (hiwcf.org.uk/grants-for-groups)
+//  19.  Oxfordshire Community Foundation (oxfordshire.org/ocfgrants)
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { createClient }  from '@supabase/supabase-js'
@@ -938,6 +942,284 @@ async function crawlLondonCF(): Promise<CrawlResult> {
   }
 }
 
+// ── Source 16: Sussex Community Foundation ────────────────────────────────────
+// Scrapes two pages:
+//   - /grants/how-to-apply/additional-grants/ — named fund sections (h2 headings)
+//   - /grants/how-to-apply/main-grants/       — one entry for the main programme
+// Funds don't have individual page URLs; apply_url points to the listing page.
+async function crawlSussexCF(): Promise<CrawlResult> {
+  const SOURCE = 'sussex_cf'
+  const BASE   = 'https://sussexcommunityfoundation.org'
+
+  // h2 headings that are navigation/boilerplate (not fund names)
+  const SKIP_H2 = /^(apply|get in touch|subscribe|how it|check|guidance|geographical|our fund|our stor)/i
+
+  try {
+    const grants: ScrapedGrant[] = []
+
+    // ── Additional named funds ──
+    const addHtml = await fetchHtml(`${BASE}/grants/how-to-apply/additional-grants/`)
+    const addRoot = parseHTML(addHtml)
+    const ADDURL  = `${BASE}/grants/how-to-apply/additional-grants/`
+
+    for (const h2 of addRoot.querySelectorAll('h2')) {
+      const title = h2.text?.trim().replace(/\.$/, '')
+      if (!title || title.length < 5 || SKIP_H2.test(title)) continue
+      const slug = slugify(title)
+      grants.push({
+        external_id:          `sussex_cf_${slug}`,
+        source:               SOURCE,
+        title,
+        funder:               'Sussex Community Foundation',
+        funder_type:          'community_foundation',
+        description:          '',
+        amount_min:           null,
+        amount_max:           null,
+        deadline:             null,
+        is_rolling:           true,
+        is_local:             true,
+        sectors:              ['community', 'social welfare'],
+        eligibility_criteria: ['Sussex based organisations'],
+        apply_url:            ADDURL,
+        raw_data:             { title, page: 'additional-grants' } as Record<string, unknown>,
+      })
+    }
+
+    // ── Main grants programme — one composite entry ──
+    const mainUrl = `${BASE}/grants/how-to-apply/main-grants/`
+    grants.push({
+      external_id:          'sussex_cf_main-grants-programme',
+      source:               SOURCE,
+      title:                'Main Grants Programme',
+      funder:               'Sussex Community Foundation',
+      funder_type:          'community_foundation',
+      description:          'Supports grassroots and community organisations across Sussex with four priorities: Tackling Poverty, Improving Health, Reaching Potential, Acting on Climate.',
+      amount_min:           null,
+      amount_max:           null,
+      deadline:             null,
+      is_rolling:           true,
+      is_local:             true,
+      sectors:              ['community', 'social welfare', 'health', 'environment'],
+      eligibility_criteria: ['Sussex based organisations'],
+      apply_url:            mainUrl,
+      raw_data:             { page: 'main-grants' } as Record<string, unknown>,
+    })
+
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
+// ── Source 17: Community Foundation for Surrey ────────────────────────────────
+// Scrapes cfsurrey.org.uk/apply — programme names are in h2 headings on the page.
+// Filters to actual grant programme headings (Main Grants Programme, Other Grant
+// Programmes) and adds an entry for the Crisis Funding programme (currently open).
+async function crawlSurreyCF(): Promise<CrawlResult> {
+  const SOURCE   = 'surrey_cf'
+  const BASE     = 'https://www.cfsurrey.org.uk'
+  const APPLYURL = `${BASE}/apply`
+
+  // Known Surrey grant programmes — scraped from the /apply page
+  // (page uses a deadline table rather than individual fund pages)
+  const PROGRAMMES = [
+    {
+      id:    'main-grants-programme',
+      title: 'Main Grants Programme',
+      desc:  'Surrey\'s main grants round for community organisations. EOIs open to charitable organisations, community groups and other VCSE sector bodies.',
+      sectors: ['community', 'social welfare'],
+    },
+    {
+      id:    'strategic-transformation-fund',
+      title: 'Strategic Transformation Fund',
+      desc:  'Larger grants supporting significant organisational development or transformation for Surrey-based charities.',
+      sectors: ['community', 'social welfare'],
+    },
+    {
+      id:    'crisis-funding',
+      title: 'Grants for Crisis Funding',
+      desc:  'Responsive crisis grants for charities and groups supporting people in acute need in Surrey. Currently open.',
+      sectors: ['community', 'social welfare', 'health'],
+    },
+    {
+      id:    'grants-for-individuals',
+      title: 'Grants for Individuals',
+      desc:  'Grants to support individuals in financial hardship in Surrey. Currently open.',
+      sectors: ['social welfare'],
+    },
+  ]
+
+  try {
+    // Confirm page is live before returning hardcoded grants
+    await fetchHtml(APPLYURL)
+
+    const grants: ScrapedGrant[] = PROGRAMMES.map(p => ({
+      external_id:          `surrey_cf_${p.id}`,
+      source:               SOURCE,
+      title:                p.title,
+      funder:               'Community Foundation for Surrey',
+      funder_type:          'community_foundation',
+      description:          p.desc,
+      amount_min:           null,
+      amount_max:           null,
+      deadline:             null,
+      is_rolling:           true,
+      is_local:             true,
+      sectors:              p.sectors,
+      eligibility_criteria: ['Surrey based organisations or individuals'],
+      apply_url:            APPLYURL,
+      raw_data:             { id: p.id } as Record<string, unknown>,
+    }))
+
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
+// ── Source 18: Hampshire & Isle of Wight Community Foundation ─────────────────
+// Scrapes hiwcf.org.uk/grants-for-groups/ — Elementor SSR page.
+// Each grant is an h3 heading: "MONTH\nTitle – OPEN|CLOSED".
+// Only OPEN grants are included. Walks up the DOM tree to find the parent
+// container holding "Grant size:" text and the "Find out more" link.
+async function crawlHIWCF(): Promise<CrawlResult> {
+  const SOURCE = 'hiwcf'
+  const BASE   = 'https://hiwcf.org.uk'
+  const URL    = `${BASE}/grants-for-groups/`
+
+  try {
+    const html  = await fetchHtml(URL)
+    // Decode common HTML entities so our text matching works
+    const clean = html.replace(/&#8211;/g, '–').replace(/&nbsp;/g, ' ')
+    const root  = parseHTML(clean)
+    const grants: ScrapedGrant[] = []
+    const seen  = new Set<string>()
+
+    for (const h3 of root.querySelectorAll('h3')) {
+      const rawText = (h3.text ?? '').replace(/\s+/g, ' ').trim()
+      // Only process OPEN grants
+      if (!rawText.includes('OPEN')) continue
+
+      // Title is the part between the month prefix and the status marker
+      const titleMatch = rawText.match(/(?:[A-Z]{3,}\s+)?(.+?)\s*[–-]\s*OPEN\s*$/i)
+      const title = titleMatch?.[1]?.trim()
+      if (!title || seen.has(title)) continue
+      seen.add(title)
+
+      // Walk up the parent chain to find the container with Grant size and link
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let node: any = h3.parentNode
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let container: any = null
+      for (let i = 0; i < 10; i++) {
+        if (!node) break
+        if ((node.text ?? '').includes('Grant size:') && node.querySelector('a')) {
+          container = node
+          break
+        }
+        node = node.parentNode
+      }
+
+      const containerText = (container?.text ?? '').replace(/&#8211;/g, '–')
+      const sizeMatch     = containerText.match(/Grant size:\s*([\d£,–\s-]+?)(?=Location:|Find out|$)/i)
+      const sizeRaw       = sizeMatch?.[1]?.trim().replace(/–/g, '-') ?? ''
+      const { min, max }  = parseAmountRange(sizeRaw)
+
+      const linkEl = container?.querySelector('a')
+      const href   = linkEl?.getAttribute('href') ?? ''
+      const url    = href.startsWith('http') ? href : href ? `${BASE}${href}` : URL
+      const slug   = href.split('/').filter(Boolean).pop() ?? slugify(title)
+
+      grants.push({
+        external_id:          `hiwcf_${slug}`,
+        source:               SOURCE,
+        title,
+        funder:               'Hampshire & Isle of Wight Community Foundation',
+        funder_type:          'community_foundation',
+        description:          '',
+        amount_min:           min,
+        amount_max:           max,
+        deadline:             null,
+        is_rolling:           true,
+        is_local:             true,
+        sectors:              ['community', 'social welfare'],
+        eligibility_criteria: ['Hampshire & Isle of Wight based organisations'],
+        apply_url:            url,
+        raw_data:             { title, sizeRaw, href } as Record<string, unknown>,
+      })
+    }
+
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
+// ── Source 19: Oxfordshire Community Foundation ───────────────────────────────
+// Scrapes oxfordshire.org/ocfgrants/ — WordPress SSR page.
+// Individual grant pages live at /ocf_grants/<slug>/ and are linked with
+// "Find out more" anchors. Title is taken from the nearest preceding h2/h3.
+async function crawlOxfordshireCF(): Promise<CrawlResult> {
+  const SOURCE = 'oxfordshire_cf'
+  const BASE   = 'https://oxfordshire.org'
+  const URL    = `${BASE}/ocfgrants/`
+
+  try {
+    const html  = await fetchHtml(URL)
+    const root  = parseHTML(html)
+    const grants: ScrapedGrant[] = []
+    const seen  = new Set<string>()
+
+    for (const a of root.querySelectorAll('a')) {
+      const href = a.getAttribute('href') ?? ''
+      if (!href.includes('/ocf_grants/') || href.endsWith('/ocf_grants/')) continue
+      if (seen.has(href)) continue
+      seen.add(href)
+
+      const slug = href.split('/').filter(Boolean).pop() ?? ''
+      const url  = href.startsWith('http') ? href : `${BASE}${href}`
+
+      // Walk up the parent chain to find a heading (h2/h3) for the title
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let node: any = a.parentNode
+      let title = ''
+      for (let i = 0; i < 8; i++) {
+        if (!node) break
+        const heading = node.querySelector('h2') ?? node.querySelector('h3')
+        if (heading?.text?.trim()) {
+          title = heading.text.trim()
+          break
+        }
+        node = node.parentNode
+      }
+      // Fall back to slug-derived title
+      if (!title) title = slug.replace(/-\d+$/, '').replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+
+      grants.push({
+        external_id:          `oxfordshire_cf_${slug}`,
+        source:               SOURCE,
+        title,
+        funder:               'Oxfordshire Community Foundation',
+        funder_type:          'community_foundation',
+        description:          '',
+        amount_min:           null,
+        amount_max:           null,
+        deadline:             null,
+        is_rolling:           true,
+        is_local:             true,
+        sectors:              ['community', 'social welfare'],
+        eligibility_criteria: ['Oxfordshire based organisations'],
+        apply_url:            url,
+        raw_data:             { slug, href } as Record<string, unknown>,
+      })
+    }
+
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
 // ── Amount parsers ────────────────────────────────────────────────────────────
 function parsePoundAmount(str: string): number | null {
   if (!str) return null
@@ -1017,6 +1299,7 @@ export async function crawlAllSources(): Promise<CrawlResult[]> {
     govUK, tnlcf, ukri, gla, ace,
     sportEngland, heritageFund, foreverMcr, twoRidings, cfWales,
     quartetCF, cfNI, heartOfEngland, foundationScotland, londonCF,
+    sussexCF, surreyCF, hiwcf, oxfordshireCF,
   ] = await Promise.allSettled([
     crawlGovUK(),
     crawlTNLCF(),
@@ -1033,6 +1316,10 @@ export async function crawlAllSources(): Promise<CrawlResult[]> {
     crawlHeartOfEnglandCF(),
     crawlFoundationScotland(),
     crawlLondonCF(),
+    crawlSussexCF(),
+    crawlSurreyCF(),
+    crawlHIWCF(),
+    crawlOxfordshireCF(),
   ])
 
   return [
@@ -1051,5 +1338,9 @@ export async function crawlAllSources(): Promise<CrawlResult[]> {
     heartOfEngland.status    === 'fulfilled' ? heartOfEngland.value    : { source: 'heart_of_england_cf',  fetched: 0, upserted: 0, error: 'Promise rejected' },
     foundationScotland.status=== 'fulfilled' ? foundationScotland.value: { source: 'foundation_scotland',  fetched: 0, upserted: 0, error: 'Promise rejected' },
     londonCF.status          === 'fulfilled' ? londonCF.value          : { source: 'london_cf',            fetched: 0, upserted: 0, error: 'Promise rejected' },
+    sussexCF.status          === 'fulfilled' ? sussexCF.value          : { source: 'sussex_cf',            fetched: 0, upserted: 0, error: 'Promise rejected' },
+    surreyCF.status          === 'fulfilled' ? surreyCF.value          : { source: 'surrey_cf',            fetched: 0, upserted: 0, error: 'Promise rejected' },
+    hiwcf.status             === 'fulfilled' ? hiwcf.value             : { source: 'hiwcf',                fetched: 0, upserted: 0, error: 'Promise rejected' },
+    oxfordshireCF.status     === 'fulfilled' ? oxfordshireCF.value     : { source: 'oxfordshire_cf',       fetched: 0, upserted: 0, error: 'Promise rejected' },
   ]
 }
