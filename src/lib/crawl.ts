@@ -10,6 +10,9 @@
 //   5. Arts Council England             (www.artscouncil.org.uk/our-open-funds)
 //   6. Sport England                    (www.sportengland.org/funding-and-campaigns/our-funding)
 //   7. National Lottery Heritage Fund   (www.heritagefund.org.uk/funding)
+//   8. Forever Manchester               (forevermanchester.com/funding)
+//   9. Two Ridings Community Foundation (tworidingscf.org.uk/apply-for-funding)
+//  10. Community Foundation Wales       (communityfoundationwales.org.uk/grants)
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { createClient }  from '@supabase/supabase-js'
@@ -395,6 +398,155 @@ async function crawlArtsCouncil(): Promise<CrawlResult> {
   }
 }
 
+// ── Source 8: Forever Manchester (Greater Manchester) ─────────────────────────
+// Scrapes forevermanchester.com/funding/
+// Open funds are in .text-side wrappers under the "Funds open for applications"
+// section. Closed/not-open funds use different container classes and are excluded.
+async function crawlForeverManchester(): Promise<CrawlResult> {
+  const SOURCE = 'forever_manchester'
+  const BASE   = 'https://forevermanchester.com'
+  const URL    = `${BASE}/funding/`
+
+  try {
+    const html  = await fetchHtml(URL)
+    const root  = parseHTML(html)
+    const grants: ScrapedGrant[] = []
+
+    for (const block of root.querySelectorAll('.text-side')) {
+      const title = block.querySelector('h3')?.text?.trim()
+      if (!title) continue
+
+      const descRaw = block.querySelector('p')?.text?.trim() ?? ''
+      const href    = block.querySelector('a')?.getAttribute('href') ?? ''
+      const url     = href.startsWith('http') ? href : `${BASE}${href}`
+      const slug    = href.split('/').filter(Boolean).pop() ?? slugify(title)
+
+      // Deadline is embedded in description: "Closes: March 5, 2026 12 Noon"
+      const deadlineMatch = descRaw.match(/closes?:?\s*([A-Za-z]+\s+\d+,?\s+\d{4})/i)
+      const deadline = deadlineMatch ? parseDeadline(deadlineMatch[1]) : null
+
+      grants.push({
+        external_id:          `forever_manchester_${slug}`,
+        source:               SOURCE,
+        title,
+        funder:               'Forever Manchester',
+        funder_type:          'community_foundation',
+        description:          descRaw,
+        amount_min:           null,
+        amount_max:           null,
+        deadline,
+        is_rolling:           !deadline,
+        is_local:             true,
+        sectors:              ['community', 'social welfare'],
+        eligibility_criteria: ['Greater Manchester based organisations'],
+        apply_url:            url || null,
+        raw_data:             { title, descRaw, href } as Record<string, unknown>,
+      })
+    }
+
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
+// ── Source 9: Two Ridings Community Foundation (Yorkshire) ────────────────────
+// Scrapes tworidingscf.org.uk/apply-for-funding/
+// Open funds are inside div.funds-open, each in a .box.fund-box card.
+// Title: h3.no-margin, description: .padding div, link: a.read-more
+async function crawlTwoRidingsCF(): Promise<CrawlResult> {
+  const SOURCE = 'two_ridings_cf'
+  const BASE   = 'https://tworidingscf.org.uk'
+  const URL    = `${BASE}/apply-for-funding/`
+
+  try {
+    const html       = await fetchHtml(URL)
+    const root       = parseHTML(html)
+    const openSection = root.querySelector('.funds-open')
+    if (!openSection) return { source: SOURCE, fetched: 0, upserted: 0, error: 'No .funds-open section found' }
+
+    const grants: ScrapedGrant[] = []
+
+    for (const box of openSection.querySelectorAll('.box.fund-box')) {
+      const title = box.querySelector('h3')?.text?.trim()
+      if (!title) continue
+
+      const desc = box.querySelector('.padding')?.text?.trim() ?? ''
+      const href = box.querySelector('a.read-more')?.getAttribute('href') ?? ''
+      const url  = href.startsWith('http') ? href : `${BASE}${href}`
+      const slug = href.split('/').filter(Boolean).pop() ?? slugify(title)
+
+      grants.push({
+        external_id:          `two_ridings_cf_${slug}`,
+        source:               SOURCE,
+        title,
+        funder:               'Two Ridings Community Foundation',
+        funder_type:          'community_foundation',
+        description:          desc,
+        amount_min:           null,
+        amount_max:           null,
+        deadline:             null,
+        is_rolling:           true,
+        is_local:             true,
+        sectors:              ['community', 'social welfare', 'environment'],
+        eligibility_criteria: ['North & East Yorkshire based organisations'],
+        apply_url:            url || null,
+        raw_data:             { title, desc, href } as Record<string, unknown>,
+      })
+    }
+
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
+// ── Source 10: Community Foundation Wales ─────────────────────────────────────
+// Scrapes communityfoundationwales.org.uk/grants/
+// Each grant is an article.card__container with a .title element and <a> link.
+async function crawlCFWales(): Promise<CrawlResult> {
+  const SOURCE = 'cf_wales'
+  const BASE   = 'https://communityfoundationwales.org.uk'
+  const URL    = `${BASE}/grants/`
+
+  try {
+    const html  = await fetchHtml(URL)
+    const root  = parseHTML(html)
+    const grants: ScrapedGrant[] = []
+
+    for (const card of root.querySelectorAll('article.card__container')) {
+      const title = card.querySelector('.title')?.text?.trim()
+      if (!title) continue
+
+      const href = card.querySelector('a')?.getAttribute('href') ?? ''
+      const url  = href.startsWith('http') ? href : `${BASE}${href}`
+      const slug = href.split('/').filter(Boolean).pop() ?? slugify(title)
+
+      grants.push({
+        external_id:          `cf_wales_${slug}`,
+        source:               SOURCE,
+        title,
+        funder:               'Community Foundation Wales',
+        funder_type:          'community_foundation',
+        description:          '',
+        amount_min:           null,
+        amount_max:           null,
+        deadline:             null,
+        is_rolling:           true,
+        is_local:             true,
+        sectors:              ['community', 'social welfare'],
+        eligibility_criteria: ['Wales based organisations'],
+        apply_url:            url || null,
+        raw_data:             { title, href } as Record<string, unknown>,
+      })
+    }
+
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
 // ── Source 6: Sport England ───────────────────────────────────────────────────
 // Scrapes sportengland.org/funding-and-campaigns/our-funding
 // Active funds are in .txt-img-cont sections with an h2 title and p description.
@@ -578,7 +730,7 @@ async function upsertGrants(source: string, grants: ScrapedGrant[]): Promise<Cra
 
 // ── Main export ───────────────────────────────────────────────────────────────
 export async function crawlAllSources(): Promise<CrawlResult[]> {
-  const [govUK, tnlcf, ukri, gla, ace, sportEngland, heritageFund] = await Promise.allSettled([
+  const [govUK, tnlcf, ukri, gla, ace, sportEngland, heritageFund, foreverMcr, twoRidings, cfWales] = await Promise.allSettled([
     crawlGovUK(),
     crawlTNLCF(),
     crawlUKRI(),
@@ -586,15 +738,21 @@ export async function crawlAllSources(): Promise<CrawlResult[]> {
     crawlArtsCouncil(),
     crawlSportEngland(),
     crawlHeritageFund(),
+    crawlForeverManchester(),
+    crawlTwoRidingsCF(),
+    crawlCFWales(),
   ])
 
   return [
-    govUK.status        === 'fulfilled' ? govUK.value        : { source: 'gov_uk',        fetched: 0, upserted: 0, error: 'Promise rejected' },
-    tnlcf.status        === 'fulfilled' ? tnlcf.value        : { source: 'tnlcf',         fetched: 0, upserted: 0, error: 'Promise rejected' },
-    ukri.status         === 'fulfilled' ? ukri.value         : { source: 'ukri',          fetched: 0, upserted: 0, error: 'Promise rejected' },
-    gla.status          === 'fulfilled' ? gla.value          : { source: 'gla',           fetched: 0, upserted: 0, error: 'Promise rejected' },
-    ace.status          === 'fulfilled' ? ace.value          : { source: 'arts_council',  fetched: 0, upserted: 0, error: 'Promise rejected' },
-    sportEngland.status === 'fulfilled' ? sportEngland.value : { source: 'sport_england', fetched: 0, upserted: 0, error: 'Promise rejected' },
-    heritageFund.status === 'fulfilled' ? heritageFund.value : { source: 'heritage_fund', fetched: 0, upserted: 0, error: 'Promise rejected' },
+    govUK.status         === 'fulfilled' ? govUK.value         : { source: 'gov_uk',              fetched: 0, upserted: 0, error: 'Promise rejected' },
+    tnlcf.status         === 'fulfilled' ? tnlcf.value         : { source: 'tnlcf',               fetched: 0, upserted: 0, error: 'Promise rejected' },
+    ukri.status          === 'fulfilled' ? ukri.value          : { source: 'ukri',                fetched: 0, upserted: 0, error: 'Promise rejected' },
+    gla.status           === 'fulfilled' ? gla.value           : { source: 'gla',                 fetched: 0, upserted: 0, error: 'Promise rejected' },
+    ace.status           === 'fulfilled' ? ace.value           : { source: 'arts_council',        fetched: 0, upserted: 0, error: 'Promise rejected' },
+    sportEngland.status  === 'fulfilled' ? sportEngland.value  : { source: 'sport_england',       fetched: 0, upserted: 0, error: 'Promise rejected' },
+    heritageFund.status  === 'fulfilled' ? heritageFund.value  : { source: 'heritage_fund',       fetched: 0, upserted: 0, error: 'Promise rejected' },
+    foreverMcr.status    === 'fulfilled' ? foreverMcr.value    : { source: 'forever_manchester',  fetched: 0, upserted: 0, error: 'Promise rejected' },
+    twoRidings.status    === 'fulfilled' ? twoRidings.value    : { source: 'two_ridings_cf',      fetched: 0, upserted: 0, error: 'Promise rejected' },
+    cfWales.status       === 'fulfilled' ? cfWales.value       : { source: 'cf_wales',            fetched: 0, upserted: 0, error: 'Promise rejected' },
   ]
 }
