@@ -514,7 +514,7 @@ async function crawlCFWales(): Promise<CrawlResult> {
     const root  = parseHTML(html)
     const grants: ScrapedGrant[] = []
 
-    for (const card of root.querySelectorAll('article.card__container')) {
+    for (const card of root.querySelectorAll('.card--navy')) {
       const title = card.querySelector('.title')?.text?.trim()
       if (!title) continue
 
