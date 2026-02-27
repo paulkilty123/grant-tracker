@@ -514,9 +514,10 @@ async function crawlCFWales(): Promise<CrawlResult> {
     const xml    = await fetchHtml(SITEMAP)
     const grants: ScrapedGrant[] = []
 
-    // Extract all <loc> URLs from the sitemap XML
-    const locMatches = xml.matchAll(/<loc>([^<]+)<\/loc>/g)
-    for (const match of locMatches) {
+    // Extract all <loc> URLs from the sitemap XML using exec loop (matchAll compat)
+    const locRe = /<loc>([^<]+)<\/loc>/g
+    let match: RegExpExecArray | null
+    while ((match = locRe.exec(xml)) !== null) {
       const url = match[1].trim()
       // Skip the archive index page itself
       if (!url.includes('/grants/') || url.endsWith('/grants/')) continue
