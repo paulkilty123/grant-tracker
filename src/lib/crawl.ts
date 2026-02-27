@@ -665,35 +665,26 @@ async function crawlHeritageFund(): Promise<CrawlResult> {
 }
 
 // ── Source 11: Quartet Community Foundation (Bristol & South West) ────────────
-// Scrapes quartetcf.org.uk/apply-for-funding/apply-for-a-grant/
-// Each grant is in a WordPress block with class "grants-block".
-// Status is shown as "OPEN NOW" or "CLOSED" in the .grant-card-footer link.
-// Only grants with status starting "OPEN" are included.
+// The grants listing page is JS-rendered (FacetWP/AJAX), so uses the Yoast SEO
+// custom_grant-sitemap.xml as the data source — same pattern as CF Wales / London CF.
+// Derives grant title from the URL slug.
 async function crawlQuartetCF(): Promise<CrawlResult> {
-  const SOURCE = 'quartet_cf'
-  const BASE   = 'https://quartetcf.org.uk'
-  const URL    = `${BASE}/apply-for-funding/apply-for-a-grant/`
+  const SOURCE  = 'quartet_cf'
+  const BASE    = 'https://quartetcf.org.uk'
+  const SITEMAP = `${BASE}/custom_grant-sitemap.xml`
 
   try {
-    const html  = await fetchHtml(URL)
-    const root  = parseHTML(html)
+    const xml    = await fetchHtml(SITEMAP)
     const grants: ScrapedGrant[] = []
 
-    for (const block of root.querySelectorAll('.grants-block')) {
-      // Status and link are in the footer — skip closed grants
-      const footerLink = block.querySelector('.grant-card-footer a')
-      const status     = footerLink?.text?.trim() ?? ''
-      if (!status.startsWith('OPEN')) continue
+    const locRe = /<loc>([^<]+)<\/loc>/g
+    let match: RegExpExecArray | null
+    while ((match = locRe.exec(xml)) !== null) {
+      const url = match[1].trim()
+      if (!url.includes('/grants/') || url.endsWith('/grants/') || url.endsWith('/grants')) continue
 
-      const href = footerLink?.getAttribute('href') ?? ''
-      const url  = href.startsWith('http') ? href : `${BASE}${href}`
-      const slug = href.split('/').filter(Boolean).pop() ?? slugify(url)
-
-      // Title: first heading in the block
-      const title = block.querySelector('h2, h3, h4')?.text?.trim()
-      if (!title) continue
-
-      const desc = block.querySelector('p')?.text?.trim() ?? ''
+      const slug  = url.split('/').filter(Boolean).pop() ?? ''
+      const title = slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
 
       grants.push({
         external_id:          `quartet_cf_${slug}`,
@@ -701,7 +692,7 @@ async function crawlQuartetCF(): Promise<CrawlResult> {
         title,
         funder:               'Quartet Community Foundation',
         funder_type:          'community_foundation',
-        description:          desc,
+        description:          '',
         amount_min:           null,
         amount_max:           null,
         deadline:             null,
@@ -709,8 +700,8 @@ async function crawlQuartetCF(): Promise<CrawlResult> {
         is_local:             true,
         sectors:              ['community', 'social welfare'],
         eligibility_criteria: ['West of England (Bristol, Bath & NE Somerset, N Somerset, S Gloucestershire)'],
-        apply_url:            url || null,
-        raw_data:             { title, desc, href, status } as Record<string, unknown>,
+        apply_url:            url,
+        raw_data:             { slug, url } as Record<string, unknown>,
       })
     }
 
