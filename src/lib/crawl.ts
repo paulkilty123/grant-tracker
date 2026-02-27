@@ -275,8 +275,8 @@ async function crawlGLA(): Promise<CrawlResult> {
   try {
     const html  = await fetchHtml(URL)
     const root  = parseHTML(html)
-    // Each grant is a <li> containing a div.resource_teaser
-    const cards = root.querySelectorAll('li .resource_teaser')
+    // Each grant card has class resource_teaser (among others)
+    const cards = root.querySelectorAll('.resource_teaser')
     const grants: ScrapedGrant[] = []
 
     for (const card of cards) {
@@ -357,7 +357,7 @@ async function crawlArtsCouncil(): Promise<CrawlResult> {
     const grants: ScrapedGrant[] = []
 
     for (const card of searchRoot.querySelectorAll('.card__body')) {
-      const linkEl = card.querySelector('h3.card-heading a, .card-heading a')
+      const linkEl = card.querySelector('.card-heading a')
       const title  = linkEl?.text?.trim()
       if (!title) continue
 
