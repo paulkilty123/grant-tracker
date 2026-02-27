@@ -3,6 +3,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { crawlAllSources } from '@/lib/crawl'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(req: NextRequest) {
   const auth = req.headers.get('authorization')
   const cronSecret = process.env.CRON_SECRET

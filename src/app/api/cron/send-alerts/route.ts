@@ -5,7 +5,8 @@ import { Resend } from 'resend'
 import { getOrgsWithAlertsEnabled, getUnsentAlerts, markAlertsSent } from '@/lib/alerts'
 import type { AlertGrant } from '@/lib/alerts'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+export const dynamic = 'force-dynamic'
+
 const FROM_EMAIL = process.env.ALERT_FROM_EMAIL ?? 'alerts@granttracker.co.uk'
 const APP_URL    = process.env.NEXT_PUBLIC_APP_URL ?? 'https://granttracker.co.uk'
 
@@ -73,6 +74,8 @@ export async function GET(req: NextRequest) {
   if (!process.env.RESEND_API_KEY) {
     return NextResponse.json({ error: 'RESEND_API_KEY not configured — add it to your environment variables' }, { status: 500 })
   }
+
+  const resend = new Resend(process.env.RESEND_API_KEY)
 
   try {
     const orgs = await getOrgsWithAlertsEnabled()
