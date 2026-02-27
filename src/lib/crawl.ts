@@ -47,7 +47,7 @@ export interface CrawlResult {
 async function fetchFromRegistry(source: string, sliceStart: number, sliceEnd: number, maxPerPublisher = 50): Promise<CrawlResult> {
   // The 360Giving data registry — a JSON file listing all publishers + their dataset URLs
   const registryRes = await fetch(
-    'https://data.threesixtygiving.org/data.json',
+    'https://registry.threesixtygiving.org/data.json',
     { headers: { 'User-Agent': 'GrantTracker/1.0', 'Accept': 'application/json' }, signal: AbortSignal.timeout(15_000) }
   )
   if (!registryRes.ok) throw new Error(`360Giving registry returned ${registryRes.status}`)
