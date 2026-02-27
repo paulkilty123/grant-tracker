@@ -266,7 +266,8 @@ async function crawlUKRI(): Promise<CrawlResult> {
 
 // ── Source 4: GLA / City Hall London ──────────────────────────────────────────
 // Scrapes london.gov.uk/programmes-strategies/search-funding
-// Each <li> item has h3-labelled metadata: Summary, How much, Who can apply, dates.
+// Cards are <li><div class="resource_teaser card">; metadata in .resource_details
+// with <h4> labels and .field__item values.
 async function crawlGLA(): Promise<CrawlResult> {
   const SOURCE = 'gla'
   const URL    = 'https://www.london.gov.uk/programmes-strategies/search-funding'
@@ -274,37 +275,35 @@ async function crawlGLA(): Promise<CrawlResult> {
   try {
     const html  = await fetchHtml(URL)
     const root  = parseHTML(html)
-    const items = root.querySelectorAll('main li')
+    // Each grant is a <li> containing a div.resource_teaser
+    const cards = root.querySelectorAll('li .resource_teaser')
     const grants: ScrapedGrant[] = []
 
-    for (const item of items) {
-      const title = item.querySelector('h2')?.text?.trim()
+    for (const card of cards) {
+      // Title lives in h3 > .field--name-title .field__item  (data-search-highlight attr)
+      const title = card.querySelector('.field--name-title .field__item')?.text?.trim()
+                 ?? card.querySelector('h3 .field__item')?.text?.trim()
       if (!title) continue
 
-      // Walk the child nodes, building a map of H3 label → following DIV values
+      // Build metadata map: h4 label → .field__item value(s) from .resource_details
       const meta: Record<string, string[]> = {}
-      let currentKey = ''
-      for (const child of item.childNodes) {
-        const tag = (child as { tagName?: string }).tagName ?? ''
-        const txt = (child as { text?: string }).text?.trim() ?? ''
-        if (tag === 'H3') {
-          currentKey = txt.replace(/:$/, '')
-          if (!meta[currentKey]) meta[currentKey] = []
-        } else if (tag === 'DIV' && currentKey && txt) {
-          meta[currentKey].push(txt)
-        }
+      for (const field of card.querySelectorAll('.resource_details .field')) {
+        const label  = field.querySelector('h4')?.text?.trim().replace(/:$/, '') ?? ''
+        if (!label) continue
+        const values = field.querySelectorAll('.field__item').map(el => el.text.trim()).filter(Boolean)
+        if (values.length) meta[label] = values
       }
 
-      const summary  = meta['Summary']?.[0]              ?? ''
-      const amountRaw = meta['How much you can apply for']?.[0] ?? ''
-      const who      = meta['Who can apply']              ?? []
-      const theme    = meta['Theme']?.[0]                 ?? ''
-      const closing  = meta['Closing date']?.[0]          ?? ''
+      const summary   = meta['Summary']?.[0]                    ?? ''
+      const amountRaw = meta['How much you can apply for']?.[0]  ?? ''
+      const who       = meta['Who can apply']                    ?? []
+      const theme     = meta['Theme']?.[0]                       ?? ''
+      const closing   = meta['Closing date']?.[0]                ?? ''
 
-      // The detail link is the <a> in the "Find out more" section
-      const href   = item.querySelector('a')?.getAttribute('href') ?? ''
-      const url    = href.startsWith('http') ? href : `https://www.london.gov.uk${href}`
-      const slug   = href.split('/').filter(Boolean).pop() ?? slugify(title)
+      // Detail URL: the <a> link inside the card
+      const href = card.querySelector('a')?.getAttribute('href') ?? ''
+      const url  = href.startsWith('http') ? href : `https://www.london.gov.uk${href}`
+      const slug = href.split('/').filter(Boolean).pop() ?? slugify(title)
 
       const { min, max } = parseAmountRange(amountRaw)
 
@@ -317,9 +316,9 @@ async function crawlGLA(): Promise<CrawlResult> {
         description:          summary,
         amount_min:           min,
         amount_max:           max,
-        deadline:             parseUKRIDate(closing),  // reuse "28 May 2026 (round 3)" parser
+        deadline:             parseUKRIDate(closing),
         is_rolling:           !closing,
-        is_local:             true,                     // GLA grants are London-specific
+        is_local:             true,
         sectors:              theme ? [theme] : [],
         eligibility_criteria: who,
         apply_url:            url || null,
@@ -335,50 +334,46 @@ async function crawlGLA(): Promise<CrawlResult> {
 
 // ── Source 5: Arts Council England open funds ─────────────────────────────────
 // Scrapes artscouncil.org.uk/our-open-funds
-// Funds are h2>a + description div pairs inside a single <article>.
-// No amounts or dates on the listing page — these are rolling programmes.
+// Open funds are in the first .page-section that contains h2 "Our open funds".
+// Each fund is a div.card__body with h3.card-heading > a (title/link) and a <p> (desc).
 async function crawlArtsCouncil(): Promise<CrawlResult> {
   const SOURCE = 'arts_council'
   const BASE   = 'https://www.artscouncil.org.uk'
   const URL    = `${BASE}/our-open-funds`
 
   try {
-    const html    = await fetchHtml(URL)
-    const root    = parseHTML(html)
-    const article = root.querySelector('article') ?? root.querySelector('main')
-    if (!article) throw new Error('No <article> found on Arts Council page')
+    const html = await fetchHtml(URL)
+    const root = parseHTML(html)
+
+    // Find the section labelled "Our open funds" (not "Recently closed funds")
+    let openSection = null
+    for (const section of root.querySelectorAll('.page-section')) {
+      const h2 = section.querySelector('h2')?.text?.trim() ?? ''
+      if (/our open funds/i.test(h2)) { openSection = section; break }
+    }
+    // Fallback: scan all card__body if sections not found
+    const searchRoot = openSection ?? root
 
     const grants: ScrapedGrant[] = []
 
-    // Funds are h2 > a (title/link) followed by a sibling div (description).
-    // Collect all element children of article so we can pair h2 + next-sibling.
-    const children = article.childNodes.filter(
-      n => ['H2', 'DIV', 'P', 'SECTION'].includes((n as { tagName?: string }).tagName ?? '')
-    )
-
-    for (let i = 0; i < children.length; i++) {
-      const node = children[i] as { tagName?: string; text?: string; querySelector?: (s: string) => { text?: string; getAttribute?: (a: string) => string } | null }
-      if (node.tagName !== 'H2') continue
-
-      const linkEl = node.querySelector?.('a')
+    for (const card of searchRoot.querySelectorAll('.card__body')) {
+      const linkEl = card.querySelector('h3.card-heading a, .card-heading a')
       const title  = linkEl?.text?.trim()
       if (!title) continue
 
-      const href = linkEl?.getAttribute?.('href') ?? ''
+      const href = linkEl?.getAttribute('href') ?? ''
       const url  = href.startsWith('http') ? href : `${BASE}${href}`
-
-      // Description: next element sibling (usually a DIV or P)
-      const nextNode = children[i + 1] as { tagName?: string; text?: string } | undefined
-      const desc = (nextNode && nextNode.tagName !== 'H2') ? nextNode.text?.trim() ?? '' : ''
-
       const slug = href.split('/').filter(Boolean).pop() ?? slugify(title)
+
+      // Description: <p> inside the card body
+      const desc = card.querySelector('p')?.text?.trim() ?? ''
 
       grants.push({
         external_id:          `ace_${slug}`,
         source:               SOURCE,
         title,
         funder:               'Arts Council England',
-        funder_type:          'lottery',   // funded via National Lottery
+        funder_type:          'lottery',
         description:          desc,
         amount_min:           null,
         amount_max:           null,
