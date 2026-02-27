@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import type { Organisation } from '@/types'
 
+export const dynamic = 'force-dynamic'
+
 function buildOrgContext(org: Organisation | null): string {
   if (!org) return ''
 

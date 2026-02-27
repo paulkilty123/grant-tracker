@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import type { Organisation } from '@/types'
 
+export const dynamic = 'force-dynamic'
+
 const CACHE_TTL_HOURS = 48
 
 // Service-role client — never exposed to the browser, only used server-side.
