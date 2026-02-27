@@ -1,0 +1,105 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --forest: #1a3c2e;
+    --sage: #4a7c59;
+    --mint: #a8d5b5;
+    --cream: #f8f4ef;
+    --warm: #e8ddd0;
+    --gold: #c9963a;
+  }
+
+  html {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  body {
+    background-color: #f8f4ef;
+    color: #2d2d2d;
+  }
+}
+
+@layer components {
+  /* Cards */
+  .card {
+    @apply bg-white rounded-xl shadow-card p-6;
+  }
+
+  /* Buttons */
+  .btn-primary {
+    @apply bg-forest text-white px-5 py-2.5 rounded-xl text-sm font-medium
+           hover:bg-sage transition-colors duration-150 cursor-pointer border-none;
+  }
+  .btn-outline {
+    @apply bg-transparent text-forest border border-forest px-5 py-2.5 rounded-xl
+           text-sm font-medium hover:bg-forest hover:text-white transition-colors
+           duration-150 cursor-pointer;
+  }
+  .btn-gold {
+    @apply bg-gold text-white px-5 py-2.5 rounded-xl text-sm font-medium
+           hover:bg-amber-600 transition-colors duration-150 cursor-pointer border-none;
+  }
+  .btn-sm {
+    @apply px-3.5 py-1.5 text-xs;
+  }
+
+  /* Form inputs */
+  .form-input {
+    @apply w-full px-3.5 py-2.5 border border-warm rounded-lg text-sm text-charcoal
+           outline-none focus:border-sage transition-colors font-sans bg-white;
+  }
+  .form-textarea {
+    @apply w-full px-3.5 py-2.5 border border-warm rounded-lg text-sm text-charcoal
+           outline-none focus:border-sage transition-colors font-sans bg-white
+           resize-y min-h-[80px];
+  }
+  .form-select {
+    @apply w-full px-3.5 py-2.5 border border-warm rounded-lg text-sm text-charcoal
+           outline-none focus:border-sage transition-colors font-sans bg-white cursor-pointer;
+  }
+
+  /* Nav */
+  .nav-item {
+    @apply flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/65 text-sm
+           cursor-pointer transition-all duration-150 hover:bg-white/10 hover:text-white;
+  }
+  .nav-item.active {
+    @apply bg-sage text-white font-medium;
+  }
+
+  /* Stat cards */
+  .stat-card {
+    @apply bg-white rounded-xl p-5 shadow-card border-l-4;
+  }
+
+  /* Pipeline */
+  .pipeline-card {
+    @apply bg-white rounded-lg p-3.5 mb-2.5 shadow-sm cursor-pointer
+           transition-all duration-150 hover:-translate-y-px hover:shadow-card
+           border-l-[3px] border-transparent;
+  }
+  .pipeline-card.dragging {
+    @apply opacity-40 scale-95 shadow-none;
+  }
+  .pipeline-col {
+    @apply bg-warm rounded-xl p-3.5 min-h-[300px];
+  }
+  .pipeline-col.drag-over {
+    @apply outline-2 outline-dashed outline-sage bg-sage/10;
+  }
+
+  /* Tags */
+  .tag {
+    @apply px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+}
+
+/* Number font override */
+.font-display {
+  font-family: 'Nunito', sans-serif;
+}

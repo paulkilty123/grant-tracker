@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Grant Tracker — Font Preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&family=Nunito:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;1,9..144,400&family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --forest: #2d5a3d;
+      --sage:   #4a7c5c;
+      --mint:   #a8d5b5;
+      --gold:   #c9973a;
+      --cream:  #f7f4ef;
+      --warm:   #e4ddd3;
+      --mid:    #6b7a6e;
+      --charcoal: #2c3530;
+    }
+
+    body {
+      background: #eee9e0;
+      padding: 40px 24px;
+      min-height: 100vh;
+    }
+
+    .page-title {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--mid);
+      font-weight: 600;
+      margin-bottom: 32px;
+      text-align: center;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: var(--cream);
+      border-radius: 20px;
+      border: 1px solid var(--warm);
+      overflow: hidden;
+    }
+
+    /* top strip showing the font name */
+    .card-label {
+      background: var(--forest);
+      color: var(--mint);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 8px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .card-label span { opacity: 0.55; font-weight: 400; letter-spacing: 0; font-size: 9px; }
+
+    .card-body { padding: 24px; }
+
+    /* logo row */
+    .logo-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--warm);
+    }
+    .logo-text-wrap { display: flex; flex-direction: column; }
+    .logo-wordmark {
+      font-weight: 800;
+      font-size: 17px;
+      color: var(--forest);
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+    .logo-wordmark .dim { opacity: 0.45; }
+    .logo-wordmark .dot { opacity: 0.3; margin: 0 3px; font-weight: 400; }
+    .logo-tagline {
+      font-size: 9.5px;
+      font-weight: 500;
+      color: var(--mid);
+      letter-spacing: 0.03em;
+      margin-top: 3px;
+    }
+
+    /* content preview */
+    .preview-heading {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--charcoal);
+      line-height: 1.25;
+      margin-bottom: 10px;
+    }
+    .preview-heading .accent { color: var(--gold); }
+
+    .preview-body {
+      font-size: 13.5px;
+      color: var(--mid);
+      line-height: 1.65;
+      margin-bottom: 18px;
+    }
+
+    .preview-meta {
+      font-size: 11px;
+      color: var(--mid);
+      opacity: 0.7;
+      letter-spacing: 0.02em;
+    }
+
+    .btn {
+      display: inline-block;
+      background: var(--forest);
+      color: #fff;
+      padding: 9px 18px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      margin-top: 4px;
+    }
+
+    /* current badge */
+    .current-badge {
+      background: var(--gold);
+      color: #fff;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+
+    /* ── Per-font classes ── */
+    .f-dm      { font-family: 'DM Sans', sans-serif; }
+    .f-outfit  { font-family: 'Outfit', sans-serif; }
+    .f-jakarta { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .f-sora    { font-family: 'Sora', sans-serif; }
+    .f-nunito  { font-family: 'Nunito', sans-serif; }
+    .f-inter   { font-family: 'Inter', sans-serif; }
+
+    /* mixed pairs */
+    .f-playfair-h  { font-family: 'Playfair Display', serif; }
+    .f-source-b    { font-family: 'Source Sans 3', sans-serif; }
+    .f-fraunces-h  { font-family: 'Fraunces', serif; font-optical-sizing: auto; }
+
+  </style>
+</head>
+<body>
+
+<p class="page-title">Font Options for Grant Tracker — preview at real sizes</p>
+
+<div class="grid">
+
+  <!-- ① DM Sans (CURRENT) -->
+  <div class="card">
+    <div class="card-label">
+      DM Sans <span>Display + Body · Current</span>
+      <span class="current-badge">Current</span>
+    </div>
+    <div class="card-body f-dm">
+      <div class="logo-row">
+        <svg width="30" height="30" viewBox="0 0 72 72" fill="none"><circle cx="28" cy="28" r="20" fill="rgba(45,90,61,0.08)" stroke="#2d5a3d" stroke-width="4"/><text x="28" y="37" text-anchor="middle" font-family="DM Sans,sans-serif" font-weight="800" font-size="23" fill="#2d5a3d">£</text><line x1="42.5" y1="42.5" x2="62" y2="62" stroke="#2d5a3d" stroke-width="5" stroke-linecap="round"/></svg>
+        <div class="logo-text-wrap">
+          <div class="logo-wordmark f-dm"><span class="dim">RANT</span><span class="dot">·</span>TRACKER</div>
+          <div class="logo-tagline f-dm">Community Funding Hub</div>
+        </div>
+      </div>
+      <div class="preview-heading f-dm">Find grants other<br>charities miss. <span class="accent">Win more funding.</span></div>
+      <div class="preview-body f-dm">A curated database, live AI research, and a full application pipeline — everything a small charity needs to find and win funding.</div>
+      <div class="preview-meta f-dm">FREE FOREVER · NO CREDIT CARD · SET UP IN 2 MINUTES</div>
+      <br/><div class="btn f-dm">Start for free →</div>
+    </div>
+  </div>
+
+  <!-- ② Outfit -->
+  <div class="card">
+    <div class="card-label">Outfit <span>Display + Body · Geometric, friendly</span></div>
+    <div class="card-body f-outfit">
+      <div class="logo-row">
+        <svg width="30" height="30" viewBox="0 0 72 72" fill="none"><circle cx="28" cy="28" r="20" fill="rgba(45,90,61,0.08)" stroke="#2d5a3d" stroke-width="4"/><text x="28" y="37" text-anchor="middle" font-family="Outfit,sans-serif" font-weight="800" font-size="23" fill="#2d5a3d">£</text><line x1="42.5" y1="42.5" x2="62" y2="62" stroke="#2d5a3d" stroke-width="5" stroke-linecap="round"/></svg>
+        <div class="logo-text-wrap">
+          <div class="logo-wordmark f-outfit"><span class="dim">RANT</span><span class="dot">·</span>TRACKER</div>
+          <div class="logo-tagline f-outfit">Community Funding Hub</div>
+        </div>
+      </div>
+      <div class="preview-heading f-outfit">Find grants other<br>charities miss. <span class="accent">Win more funding.</span></div>
+      <div class="preview-body f-outfit">A curated database, live AI research, and a full application pipeline — everything a small charity needs to find and win funding.</div>
+      <div class="preview-meta f-outfit">FREE FOREVER · NO CREDIT CARD · SET UP IN 2 MINUTES</div>
+      <br/><div class="btn f-outfit">Start for free →</div>
+    </div>
+  </div>
+
+  <!-- ③ Plus Jakarta Sans -->
+  <div class="card">
+    <div class="card-label">Plus Jakarta Sans <span>Display + Body · Polished, professional</span></div>
+    <div class="card-body f-jakarta">
+      <div class="logo-row">
+        <svg width="30" height="30" viewBox="0 0 72 72" fill="none"><circle cx="28" cy="28" r="20" fill="rgba(45,90,61,0.08)" stroke="#2d5a3d" stroke-width="4"/><text x="28" y="37" text-anchor="middle" font-family="Plus Jakarta Sans,sans-serif" font-weight="800" font-size="23" fill="#2d5a3d">£</text><line x1="42.5" y1="42.5" x2="62" y2="62" stroke="#2d5a3d" stroke-width="5" stroke-linecap="round"/></svg>
+        <div class="logo-text-wrap">
+          <div class="logo-wordmark f-jakarta"><span class="dim">RANT</span><span class="dot">·</span>TRACKER</div>
+          <div class="logo-tagline f-jakarta">Community Funding Hub</div>
+        </div>
+      </div>
+      <div class="preview-heading f-jakarta">Find grants other<br>charities miss. <span class="accent">Win more funding.</span></div>
+      <div class="preview-body f-jakarta">A curated database, live AI research, and a full application pipeline — everything a small charity needs to find and win funding.</div>
+      <div class="preview-meta f-jakarta">FREE FOREVER · NO CREDIT CARD · SET UP IN 2 MINUTES</div>
+      <br/><div class="btn f-jakarta">Start for free →</div>
+    </div>
+  </div>
+
+  <!-- ④ Sora -->
+  <div class="card">
+    <div class="card-label">Sora <span>Display + Body · Rounded, warm, approachable</span></div>
+    <div class="card-body f-sora">
+      <div class="logo-row">
+        <svg width="30" height="30" viewBox="0 0 72 72" fill="none"><circle cx="28" cy="28" r="20" fill="rgba(45,90,61,0.08)" stroke="#2d5a3d" stroke-width="4"/><text x="28" y="37" text-anchor="middle" font-family="Sora,sans-serif" font-weight="800" font-size="23" fill="#2d5a3d">£</text><line x1="42.5" y1="42.5" x2="62" y2="62" stroke="#2d5a3d" stroke-width="5" stroke-linecap="round"/></svg>
+        <div class="logo-text-wrap">
+          <div class="logo-wordmark f-sora"><span class="dim">RANT</span><span class="dot">·</span>TRACKER</div>
+          <div class="logo-tagline f-sora">Community Funding Hub</div>
+        </div>
+      </div>
+      <div class="preview-heading f-sora">Find grants other<br>charities miss. <span class="accent">Win more funding.</span></div>
+      <div class="preview-body f-sora">A curated database, live AI research, and a full application pipeline — everything a small charity needs to find and win funding.</div>
+      <div class="preview-meta f-sora">FREE FOREVER · NO CREDIT CARD · SET UP IN 2 MINUTES</div>
+      <br/><div class="btn f-sora">Start for free →</div>
+    </div>
+  </div>
+
+  <!-- ⑤ Nunito -->
+  <div class="card">
+    <div class="card-label">Nunito <span>Display + Body · Very friendly, rounded</span></div>
+    <div class="card-body f-nunito">
+      <div class="logo-row">
+        <svg width="30" height="30" viewBox="0 0 72 72" fill="none"><circle cx="28" cy="28" r="20" fill="rgba(45,90,61,0.08)" stroke="#2d5a3d" stroke-width="4"/><text x="28" y="37" text-anchor="middle" font-family="Nunito,sans-serif" font-weight="800" font-size="23" fill="#2d5a3d">£</text><line x1="42.5" y1="42.5" x2="62" y2="62" stroke="#2d5a3d" stroke-width="5" stroke-linecap="round"/></svg>
+        <div class="logo-text-wrap">
+          <div class="logo-wordmark f-nunito"><span class="dim">RANT</span><span class="dot">·</span>TRACKER</div>
+          <div class="logo-tagline f-nunito">Community Funding Hub</div>
+        </div>
+      </div>
+      <div class="preview-heading f-nunito">Find grants other<br>charities miss. <span class="accent">Win more funding.</span></div>
+      <div class="preview-body f-nunito">A curated database, live AI research, and a full application pipeline — everything a small charity needs to find and win funding.</div>
+      <div class="preview-meta f-nunito">FREE FOREVER · NO CREDIT CARD · SET UP IN 2 MINUTES</div>
+      <br/><div class="btn f-nunito">Start for free →</div>
+    </div>
+  </div>
+
+  <!-- ⑥ Playfair Display + Source Sans -->
+  <div class="card">
+    <div class="card-label">Playfair Display + Source Sans <span>Serif heading · Traditional, trusted</span></div>
+    <div class="card-body f-source-b">
+      <div class="logo-row">
+        <svg width="30" height="30" viewBox="0 0 72 72" fill="none"><circle cx="28" cy="28" r="20" fill="rgba(45,90,61,0.08)" stroke="#2d5a3d" stroke-width="4"/><text x="28" y="37" text-anchor="middle" font-family="Playfair Display,serif" font-weight="700" font-size="22" fill="#2d5a3d">£</text><line x1="42.5" y1="42.5" x2="62" y2="62" stroke="#2d5a3d" stroke-width="5" stroke-linecap="round"/></svg>
+        <div class="logo-text-wrap">
+          <div class="logo-wordmark f-playfair-h" style="font-family:'Playfair Display',serif;"><span class="dim">Rant</span><span class="dot">·</span>Tracker</div>
+          <div class="logo-tagline f-source-b">Community Funding Hub</div>
+        </div>
+      </div>
+      <div class="preview-heading f-playfair-h">Find grants other<br>charities miss. <span class="accent">Win more funding.</span></div>
+      <div class="preview-body f-source-b">A curated database, live AI research, and a full application pipeline — everything a small charity needs to find and win funding.</div>
+      <div class="preview-meta f-source-b">FREE FOREVER · NO CREDIT CARD · SET UP IN 2 MINUTES</div>
+      <br/><div class="btn f-source-b">Start for free →</div>
+    </div>
+  </div>
+
+  <!-- ⑦ Fraunces + Inter -->
+  <div class="card">
+    <div class="card-label">Fraunces + Inter <span>Serif heading · Distinctive, editorial</span></div>
+    <div class="card-body f-inter">
+      <div class="logo-row">
+        <svg width="30" height="30" viewBox="0 0 72 72" fill="none"><circle cx="28" cy="28" r="20" fill="rgba(45,90,61,0.08)" stroke="#2d5a3d" stroke-width="4"/><text x="28" y="37" text-anchor="middle" font-family="Fraunces,serif" font-weight="700" font-size="22" fill="#2d5a3d">£</text><line x1="42.5" y1="42.5" x2="62" y2="62" stroke="#2d5a3d" stroke-width="5" stroke-linecap="round"/></svg>
+        <div class="logo-text-wrap">
+          <div class="logo-wordmark f-fraunces-h" style="font-family:'Fraunces',serif;"><span class="dim">Rant</span><span class="dot">·</span>Tracker</div>
+          <div class="logo-tagline f-inter">Community Funding Hub</div>
+        </div>
+      </div>
+      <div class="preview-heading f-fraunces-h">Find grants other<br>charities miss. <span class="accent">Win more funding.</span></div>
+      <div class="preview-body f-inter">A curated database, live AI research, and a full application pipeline — everything a small charity needs to find and win funding.</div>
+      <div class="preview-meta f-inter">FREE FOREVER · NO CREDIT CARD · SET UP IN 2 MINUTES</div>
+      <br/><div class="btn f-inter">Start for free →</div>
+    </div>
+  </div>
+
+  <!-- ⑧ Inter (clean/neutral) -->
+  <div class="card">
+    <div class="card-label">Inter <span>Display + Body · Clean, neutral, SaaS standard</span></div>
+    <div class="card-body f-inter">
+      <div class="logo-row">
+        <svg width="30" height="30" viewBox="0 0 72 72" fill="none"><circle cx="28" cy="28" r="20" fill="rgba(45,90,61,0.08)" stroke="#2d5a3d" stroke-width="4"/><text x="28" y="37" text-anchor="middle" font-family="Inter,sans-serif" font-weight="800" font-size="23" fill="#2d5a3d">£</text><line x1="42.5" y1="42.5" x2="62" y2="62" stroke="#2d5a3d" stroke-width="5" stroke-linecap="round"/></svg>
+        <div class="logo-text-wrap">
+          <div class="logo-wordmark f-inter"><span class="dim">RANT</span><span class="dot">·</span>TRACKER</div>
+          <div class="logo-tagline f-inter">Community Funding Hub</div>
+        </div>
+      </div>
+      <div class="preview-heading f-inter">Find grants other<br>charities miss. <span class="accent">Win more funding.</span></div>
+      <div class="preview-body f-inter">A curated database, live AI research, and a full application pipeline — everything a small charity needs to find and win funding.</div>
+      <div class="preview-meta f-inter">FREE FOREVER · NO CREDIT CARD · SET UP IN 2 MINUTES</div>
+      <br/><div class="btn f-inter">Start for free →</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

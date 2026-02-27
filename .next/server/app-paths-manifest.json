@@ -1,0 +1,7 @@
+{
+  "/page": "app/page.js",
+  "/dashboard/profile/page": "app/dashboard/profile/page.js",
+  "/dashboard/deep-search/page": "app/dashboard/deep-search/page.js",
+  "/dashboard/search/page": "app/dashboard/search/page.js",
+  "/dashboard/page": "app/dashboard/page.js"
+}

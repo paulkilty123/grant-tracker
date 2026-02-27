@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Grant Tracker — Logo Preview</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #f0ece4;
+      padding: 48px 32px;
+      min-height: 100vh;
+    }
+    h2 {
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #8a9e8f;
+      font-weight: 600;
+      margin-bottom: 24px;
+    }
+    .section {
+      margin-bottom: 48px;
+    }
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 48px;
+      flex-wrap: wrap;
+    }
+    .swatch {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 40px;
+      border-radius: 16px;
+    }
+    .swatch.light { background: #f7f4ef; border: 1px solid #e4ddd3; }
+    .swatch.dark  { background: #2d5a3d; }
+    .swatch.white { background: #ffffff; border: 1px solid #e4ddd3; }
+
+    /* ── Logo SVG styles ── */
+    .logo { display: inline-flex; align-items: center; gap: 10px; }
+    .logo-text {
+      display: flex;
+      align-items: baseline;
+      gap: 0px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .logo-text .rant   { opacity: 0.55; }
+    .logo-text .dot    { opacity: 0.35; margin: 0 4px; font-weight: 400; }
+    .logo-text .tracker { }
+
+    /* size variants */
+    .logo.sm .logo-text { font-size: 15px; }
+    .logo.md .logo-text { font-size: 20px; }
+    .logo.lg .logo-text { font-size: 28px; }
+
+    .tagline {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      opacity: 0.55;
+      margin-top: 1px;
+    }
+    .logo-lockup { display: flex; flex-direction: column; }
+
+    /* colour variants */
+    .logo.dark-variant .logo-text { color: #2d5a3d; }
+    .logo.light-variant .logo-text { color: #e8f5ec; }
+    .logo.dark-variant .tagline { color: #2d5a3d; }
+    .logo.light-variant .tagline { color: #e8f5ec; }
+
+    .divider {
+      border: none;
+      border-top: 1px solid #ddd8d0;
+      margin: 40px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ════════════════════════════════════
+       SMALL
+  ════════════════════════════════════ -->
+  <div class="section">
+    <h2>Small — nav / sidebar</h2>
+    <div class="row">
+
+      <div class="swatch light">
+        <!-- DARK on LIGHT -->
+        <div class="logo sm dark-variant">
+          <svg width="32" height="32" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Glass fill -->
+            <circle cx="20" cy="20" r="14" fill="rgba(45,90,61,0.08)" stroke="#2d5a3d" stroke-width="3"/>
+            <!-- £ symbol -->
+            <text x="20" y="26" text-anchor="middle" font-family="DM Sans, sans-serif"
+                  font-weight="800" font-size="16" fill="#2d5a3d">£</text>
+            <!-- Handle -->
+            <line x1="30.5" y1="30.5" x2="43" y2="43" stroke="#2d5a3d" stroke-width="3.5" stroke-linecap="round"/>
+          </svg>
+          <div class="logo-lockup">
+            <div class="logo-text">
+              <span class="rant">RANT</span><span class="dot">·</span><span class="tracker">TRACKER</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="swatch dark">
+        <!-- LIGHT on DARK -->
+        <div class="logo sm light-variant">
+          <svg width="32" height="32" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="20" cy="20" r="14" fill="rgba(168,213,181,0.15)" stroke="#a8d5b5" stroke-width="3"/>
+            <text x="20" y="26" text-anchor="middle" font-family="DM Sans, sans-serif"
+                  font-weight="800" font-size="16" fill="#a8d5b5">£</text>
+            <line x1="30.5" y1="30.5" x2="43" y2="43" stroke="#a8d5b5" stroke-width="3.5" stroke-linecap="round"/>
+          </svg>
+          <div class="logo-lockup">
+            <div class="logo-text">
+              <span class="rant">RANT</span><span class="dot">·</span><span class="tracker">TRACKER</span>
+            </div>
+            <div class="tagline">Community Funding Hub</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ════════════════════════════════════
+       MEDIUM
+  ════════════════════════════════════ -->
+  <div class="section">
+    <h2>Medium — auth pages (login / signup etc.)</h2>
+    <div class="row">
+
+      <div class="swatch white">
+        <div class="logo md dark-variant">
+          <svg width="44" height="44" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="22" cy="22" r="16" fill="rgba(45,90,61,0.08)" stroke="#2d5a3d" stroke-width="3.5"/>
+            <text x="22" y="29" text-anchor="middle" font-family="DM Sans, sans-serif"
+                  font-weight="800" font-size="18" fill="#2d5a3d">£</text>
+            <line x1="33.5" y1="33.5" x2="49" y2="49" stroke="#2d5a3d" stroke-width="4" stroke-linecap="round"/>
+          </svg>
+          <div class="logo-lockup">
+            <div class="logo-text">
+              <span class="rant">RANT</span><span class="dot">·</span><span class="tracker">TRACKER</span>
+            </div>
+            <div class="tagline">Community Funding Hub</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ════════════════════════════════════
+       LARGE
+  ════════════════════════════════════ -->
+  <div class="section">
+    <h2>Large — hero / marketing</h2>
+    <div class="row">
+
+      <div class="swatch light">
+        <div class="logo lg dark-variant">
+          <svg width="64" height="64" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="28" cy="28" r="20" fill="rgba(45,90,61,0.08)" stroke="#2d5a3d" stroke-width="4"/>
+            <text x="28" y="37" text-anchor="middle" font-family="DM Sans, sans-serif"
+                  font-weight="800" font-size="23" fill="#2d5a3d">£</text>
+            <line x1="42.5" y1="42.5" x2="62" y2="62" stroke="#2d5a3d" stroke-width="5" stroke-linecap="round"/>
+          </svg>
+          <div class="logo-lockup">
+            <div class="logo-text">
+              <span class="rant">RANT</span><span class="dot">·</span><span class="tracker">TRACKER</span>
+            </div>
+            <div class="tagline" style="font-size:12px;">Community Funding Hub</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="swatch dark">
+        <div class="logo lg light-variant">
+          <svg width="64" height="64" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="28" cy="28" r="20" fill="rgba(168,213,181,0.12)" stroke="#a8d5b5" stroke-width="4"/>
+            <text x="28" y="37" text-anchor="middle" font-family="DM Sans, sans-serif"
+                  font-weight="800" font-size="23" fill="#a8d5b5">£</text>
+            <line x1="42.5" y1="42.5" x2="62" y2="62" stroke="#a8d5b5" stroke-width="5" stroke-linecap="round"/>
+          </svg>
+          <div class="logo-lockup">
+            <div class="logo-text">
+              <span class="rant">RANT</span><span class="dot">·</span><span class="tracker">TRACKER</span>
+            </div>
+            <div class="tagline" style="font-size:12px;">Community Funding Hub</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════
+       ICON ONLY
+  ════════════════════════════════════ -->
+  <hr class="divider" />
+  <div class="section">
+    <h2>Icon only (favicon / app icon concept)</h2>
+    <div class="row" style="align-items:flex-end; gap:24px;">
+
+      <!-- 64px -->
+      <div class="swatch light" style="padding:20px;">
+        <svg width="64" height="64" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="28" cy="28" r="20" fill="rgba(45,90,61,0.08)" stroke="#2d5a3d" stroke-width="4"/>
+          <text x="28" y="37" text-anchor="middle" font-family="DM Sans, sans-serif"
+                font-weight="800" font-size="23" fill="#2d5a3d">£</text>
+          <line x1="42.5" y1="42.5" x2="62" y2="62" stroke="#2d5a3d" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+      </div>
+
+      <!-- 40px -->
+      <div class="swatch light" style="padding:20px;">
+        <svg width="40" height="40" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="28" cy="28" r="20" fill="rgba(45,90,61,0.08)" stroke="#2d5a3d" stroke-width="4"/>
+          <text x="28" y="37" text-anchor="middle" font-family="DM Sans, sans-serif"
+                font-weight="800" font-size="23" fill="#2d5a3d">£</text>
+          <line x1="42.5" y1="42.5" x2="62" y2="62" stroke="#2d5a3d" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+      </div>
+
+      <!-- 24px -->
+      <div class="swatch light" style="padding:20px;">
+        <svg width="24" height="24" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="28" cy="28" r="20" fill="rgba(45,90,61,0.08)" stroke="#2d5a3d" stroke-width="4"/>
+          <text x="28" y="37" text-anchor="middle" font-family="DM Sans, sans-serif"
+                font-weight="800" font-size="23" fill="#2d5a3d">£</text>
+          <line x1="42.5" y1="42.5" x2="62" y2="62" stroke="#2d5a3d" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+      </div>
+
+      <p style="font-size:11px; color:#8a9e8f;">64px · 40px · 24px</p>
+    </div>
+  </div>
+
+</body>
+</html>
