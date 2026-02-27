@@ -190,10 +190,11 @@ async function crawlUKRI(): Promise<CrawlResult> {
     const html1  = await fetchHtml(`${BASE}/`)
     const root1  = parseHTML(html1)
 
-    // Find total page count from pagination
+    // Find total page count — extract number from href (e.g. /opportunity/page/12/)
+    // because the link text is "Page\n12" with a hidden span, making parseInt unreliable
     const pageNums = root1
       .querySelectorAll('.page-numbers a')
-      .map(a => parseInt(a.text.trim()))
+      .map(a => { const m = (a.getAttribute('href') ?? '').match(/\/page\/(\d+)\//); return m ? parseInt(m[1]) : NaN })
       .filter(n => !isNaN(n))
     // Cap at 3 pages (30 opportunities) to stay within Vercel's 10s function timeout
     const lastPage = Math.min(Math.max(...pageNums, 1), 3)
