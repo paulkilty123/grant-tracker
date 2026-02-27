@@ -4,7 +4,8 @@
 //
 // Sources:
 //   1. GOV.UK Find a Grant  (https://www.find-government-grants.service.gov.uk)
-//   2. 360Giving data registry (https://data.threesixtygiving.org)
+//   2. 360Giving REST API   (https://api.threesixtygiving.org)
+//   3. UKRI Gateway to Research (https://gtr.ukri.org)
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { createClient } from '@supabase/supabase-js'
@@ -41,118 +42,145 @@ export interface CrawlResult {
   error?: string
 }
 
-// ── 360Giving registry helper ─────────────────────────────────────────────────
-// Fetches the 360Giving data registry and downloads grant datasets from publishers.
-// sliceStart/sliceEnd control which publishers we pull (avoids overlap between sources).
-async function fetchFromRegistry(source: string, sliceStart: number, sliceEnd: number, maxPerPublisher = 50): Promise<CrawlResult> {
-  // The 360Giving data registry — a JSON file listing all publishers + their dataset URLs
-  const registryRes = await fetch(
-    'https://registry.threesixtygiving.org/data.json',
-    { headers: { 'User-Agent': 'GrantTracker/1.0', 'Accept': 'application/json' }, signal: AbortSignal.timeout(15_000) }
-  )
-  if (!registryRes.ok) throw new Error(`360Giving registry returned ${registryRes.status}`)
-
-  const registry = await registryRes.json()
-  const publishers: Array<{ datasets?: Array<{ distribution?: Array<{ downloadURL: string }> }> }> =
-    Array.isArray(registry) ? registry : (registry.publishers ?? registry.data ?? [])
-
-  const grants: ScrapedGrant[] = []
-  let processed = 0
-
-  for (const publisher of publishers.slice(sliceStart, sliceStart + (sliceEnd - sliceStart) * 4)) {
-    if (processed >= (sliceEnd - sliceStart)) break
-    const datasets = publisher.datasets ?? []
-    const latest = datasets[0]
-    const dist = latest?.distribution?.[0]
-    if (!dist?.downloadURL) continue
-    const url = dist.downloadURL
-    if (!url.endsWith('.json')) continue
-    try {
-      const dataRes = await fetch(url, { signal: AbortSignal.timeout(20_000) })
-      if (!dataRes.ok) continue
-      const data = await dataRes.json()
-      const rawGrants: unknown[] = data.grants ?? data.data ?? []
-      grants.push(...rawGrants.slice(0, maxPerPublisher).map(g => normaliseGovUK(g as Record<string, unknown>)))
-      processed++
-    } catch { continue }
-  }
-
-  return await upsertGrants(source, grants)
-}
-
-// ── Source 1: 360Giving publishers 0–4 ───────────────────────────────────────
+// ── Source 1: GOV.UK Find a Grant ─────────────────────────────────────────────
+// Scrapes all pages of find-government-grants.service.gov.uk using the
+// embedded Next.js __NEXT_DATA__ JSON on each page.
 async function crawlGovUK(): Promise<CrawlResult> {
   const SOURCE = 'gov_uk'
+  const BASE   = 'https://www.find-government-grants.service.gov.uk/grants'
+
   try {
-    return await fetchFromRegistry(SOURCE, 0, 5)
+    // Page 1 — also tells us total count and grants-per-page
+    const html1   = await fetchHtml(`${BASE}?page=1`)
+    const data1   = extractNextData(html1)
+    const pp1     = data1.props.pageProps as Record<string, unknown>
+    const page1Grants = (pp1.searchResult as Record<string, unknown>[]) ?? []
+    const total   = Number(pp1.totalGrants ?? 0)
+    const perPage = page1Grants.length || 10
+    const pages   = Math.ceil(total / perPage)
+
+    // Remaining pages — fetched in parallel
+    const rest = await Promise.allSettled(
+      Array.from({ length: pages - 1 }, (_, i) =>
+        fetchHtml(`${BASE}?page=${i + 2}`)
+          .then(html => {
+            const d = extractNextData(html)
+            return (d.props.pageProps as Record<string, unknown>).searchResult as Record<string, unknown>[]
+          })
+      )
+    )
+
+    const all: Record<string, unknown>[] = [
+      ...page1Grants,
+      ...rest.flatMap(r => r.status === 'fulfilled' ? r.value : []),
+    ]
+
+    return await upsertGrants(SOURCE, all.map(normaliseFindAGrant))
   } catch (err) {
     return { source: SOURCE, fetched: 0, upserted: 0, error: err instanceof Error ? err.message : 'Unknown error' }
   }
 }
 
-function normaliseGovUK(g: Record<string, unknown>): ScrapedGrant {
-  // Handles both GOV.UK grant format and 360Giving standard format (used by TNLCF)
-  const id   = String(g.id ?? g.identifier ?? g.grantId ?? g.reference ?? Math.random())
-  const name = String(g.title ?? g['Activity:Title'] ?? g.name ?? g.grantName ?? 'Untitled Grant')
-  const funderArr = g.fundingOrganization as Array<{name?: string}> | undefined
-  const dept = String(funderArr?.[0]?.name ?? g.department ?? g.funder ?? g.fundingOrganisation ?? '')
-  const desc = String(g.description ?? g['Activity:Description'] ?? g.summary ?? g.overview ?? '')
-  const progArr = g.grantProgramme as Array<{url?: string}> | undefined
-  const url  = String(progArr?.[0]?.url ?? g.link ?? g.url ?? g.applyUrl ?? g.applicationUrl ?? '')
-  const amount = typeof g.amountAwarded === 'number' ? g.amountAwarded : null
-  const maxAmt = amount ?? (typeof g.maximumValue === 'number' ? g.maximumValue : typeof g.maxAmount === 'number' ? g.maxAmount : null)
-  const minAmt = typeof g.minimumValue === 'number' ? g.minimumValue : typeof g.minAmount === 'number' ? g.minAmount : null
-  const datesArr = g.plannedDates as Array<{endDate?: string}> | undefined
-  const deadline = g.closingDate ?? g.deadline ?? g.closesAt ?? datesArr?.[0]?.endDate ?? null
+async function fetchHtml(url: string): Promise<string> {
+  const res = await fetch(url, {
+    headers: { 'User-Agent': 'GrantTracker/1.0', 'Accept': 'text/html,*/*' },
+    signal: AbortSignal.timeout(20_000),
+  })
+  if (!res.ok) throw new Error(`${url} returned ${res.status}`)
+  return res.text()
+}
+
+function extractNextData(html: string): { props: { pageProps: Record<string, unknown> } } {
+  // Next.js embeds page data in <script id="__NEXT_DATA__" type="application/json">
+  const match = html.match(/<script[^>]*id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/)
+    ?? html.match(/<script[^>]*type="application\/json"[^>]*>([\s\S]*?)<\/script>/)
+  if (!match?.[1]) throw new Error('No Next.js page data found in HTML')
+  return JSON.parse(match[1])
+}
+
+function normaliseFindAGrant(g: Record<string, unknown>): ScrapedGrant {
+  const label = String(g.label ?? g.id ?? Math.random())
+  const locations = Array.isArray(g.grantLocation) ? g.grantLocation as string[] : []
+  const applicantTypes = Array.isArray(g.grantApplicantType) ? g.grantApplicantType as string[] : []
 
   return {
-    external_id:          `gov_uk_${id}`,
+    external_id:          `gov_uk_${label}`,
     source:               'gov_uk',
-    title:                name,
-    funder:               dept || 'National Lottery Community Fund',
-    funder_type:          'lottery',
-    description:          desc,
-    amount_min:           minAmt,
-    amount_max:           maxAmt,
-    deadline:             parseDeadline(deadline),
-    is_rolling:           Boolean(g.openForApplications ?? g.rolling ?? false),
-    is_local:             false,
-    sectors:              normaliseSectors(g.sectors ?? g.categories ?? g.themes ?? []),
-    eligibility_criteria: normaliseList(g.eligibility ?? g.whoCanApply ?? []),
-    apply_url:            url || null,
+    title:                String(g.grantName ?? 'Untitled Grant'),
+    funder:               String(g.grantFunder ?? 'UK Government'),
+    funder_type:          'government',
+    description:          String(g.grantShortDescription ?? g.grantDescription ?? ''),
+    amount_min:           typeof g.grantMinimumAward === 'number' ? g.grantMinimumAward : null,
+    amount_max:           typeof g.grantMaximumAward === 'number' ? g.grantMaximumAward : null,
+    deadline:             parseDeadline(g.grantApplicationCloseDate),
+    is_rolling:           false,
+    is_local:             locations.length > 0 && !locations.includes('All of United Kingdom'),
+    sectors:              [],
+    eligibility_criteria: applicantTypes,
+    apply_url:            `https://www.find-government-grants.service.gov.uk/grants/${label}`,
     raw_data:             g,
   }
 }
 
-// ── Source 2: 360Giving publishers 5–9 ───────────────────────────────────────
+// ── Source 2: 360Giving REST API ──────────────────────────────────────────────
+// Fetches recent grants from a curated set of major UK grant-making bodies.
+// Rate limit: 2 req/sec — we fetch all in parallel but add a small stagger.
+
+const GIVING_FUNDERS = [
+  { id: 'GB-GOR-PC390',  label: 'National Lottery Heritage Fund' },
+  { id: 'GB-CHC-326568', label: 'Comic Relief'                   },
+  { id: 'GB-CHC-268369', label: 'Charities Aid Foundation'       },
+]
+
 async function crawl360Giving(): Promise<CrawlResult> {
-  const SOURCE = '360giving'
+  const SOURCE   = '360giving'
+  const API_BASE = 'https://api.threesixtygiving.org/api/v1'
+
   try {
-    return await fetchFromRegistry(SOURCE, 5, 10)
+    const grants: ScrapedGrant[] = []
+
+    // Fetch up to 50 recent grants per funder — staggered 600ms to respect rate limit
+    for (let i = 0; i < GIVING_FUNDERS.length; i++) {
+      const { id, label } = GIVING_FUNDERS[i]
+      try {
+        if (i > 0) await sleep(600)
+        const res = await fetch(
+          `${API_BASE}/org/${id}/grants_made/?limit=50`,
+          { headers: { 'Accept': 'application/json', 'User-Agent': 'GrantTracker/1.0' }, signal: AbortSignal.timeout(15_000) }
+        )
+        if (!res.ok) continue
+        const json = await res.json()
+        const results: Record<string, unknown>[] = json.results ?? []
+        grants.push(...results.map(r => normalise360Giving(r, label)))
+      } catch { continue }
+    }
+
+    return await upsertGrants(SOURCE, grants)
   } catch (err) {
     return { source: SOURCE, fetched: 0, upserted: 0, error: err instanceof Error ? err.message : 'Unknown error' }
   }
 }
 
-function normalise360Giving(g: Record<string, unknown>): ScrapedGrant {
-  const id       = String(g.id ?? g.identifier ?? Math.random())
-  const title    = String(g.title ?? g['Activity:Title'] ?? 'Untitled')
-  const funder   = String((g.fundingOrganization as Array<{name?: string}>)?.[0]?.name ?? g.funder ?? '')
-  const desc     = String(g.description ?? g['Activity:Description'] ?? '')
-  const amount   = typeof g.amountAwarded === 'number' ? g.amountAwarded : null
-  const url      = String((g.grantProgramme as Array<{url?: string}>)?.[0]?.url ?? g.url ?? '')
-  const deadline = String((g.plannedDates as Array<{endDate?: string}>)?.[0]?.endDate ?? g.dateModified ?? '')
+function normalise360Giving(r: Record<string, unknown>, fallbackFunder: string): ScrapedGrant {
+  const g = (r.data ?? r) as Record<string, unknown>
+  const id     = String(g.id ?? r.grant_id ?? Math.random())
+  const funderArr = g.fundingOrganization as Array<{name?: string}> | undefined
+  const funder = String(funderArr?.[0]?.name ?? fallbackFunder)
+  const progArr = g.grantProgramme as Array<{url?: string}> | undefined
+  const url    = String(progArr?.[0]?.url ?? g.url ?? g.dataSource ?? '')
+  const dates  = g.plannedDates as Array<{endDate?: string}> | undefined
+  const amount = typeof g.amountAwarded === 'number' ? g.amountAwarded : null
 
   return {
     external_id:          `360giving_${id}`,
     source:               '360giving',
-    title,
+    title:                String(g.title ?? g['Activity:Title'] ?? 'Untitled Grant'),
     funder:               funder || null,
     funder_type:          'trust_foundation',
-    description:          desc,
+    description:          String(g.description ?? g['Activity:Description'] ?? ''),
     amount_min:           null,
     amount_max:           amount,
-    deadline:             parseDeadline(deadline),
+    deadline:             parseDeadline(dates?.[0]?.endDate ?? g.dateModified),
     is_rolling:           false,
     is_local:             false,
     sectors:              [],
@@ -162,21 +190,14 @@ function normalise360Giving(g: Record<string, unknown>): ScrapedGrant {
   }
 }
 
-// ── UKRI Gateway to Research ──────────────────────────────────────────────────
-// UK Research and Innovation publishes all funded projects via a public REST API.
-// Covers Innovate UK, EPSRC, ESRC, MRC, AHRC, BBSRC and more.
-// GtR v2 API is XML-based; we request JSON via Accept header and fall back to XML parsing.
+// ── Source 3: UKRI Gateway to Research ───────────────────────────────────────
 async function crawlUKRI(): Promise<CrawlResult> {
   const SOURCE = 'ukri'
   try {
-    // Try JSON first (some versions support it), fall back to XML
     const res = await fetch(
       'https://gtr.ukri.org/gtr/api/projects?p=1&s=100',
       {
-        headers: {
-          'User-Agent': 'GrantTracker/1.0',
-          'Accept': 'application/json',
-        },
+        headers: { 'User-Agent': 'GrantTracker/1.0', 'Accept': 'application/json' },
         signal: AbortSignal.timeout(20_000),
       }
     )
@@ -189,9 +210,7 @@ async function crawlUKRI(): Promise<CrawlResult> {
       const json = await res.json()
       projects = json.project ?? json.projectOverview?.project ?? json.projects ?? []
     } else {
-      // XML response — parse with regex (no XML lib needed for simple extraction)
       const xml = await res.text()
-      // Extract <project> blocks and pull out key fields
       const projectBlocks = xml.match(/<project[^>]*>[\s\S]*?<\/project>/g) ?? []
       projects = projectBlocks.slice(0, 100).map(block => {
         const get = (tag: string) => block.match(new RegExp(`<${tag}[^>]*>(.*?)</${tag}>`, 's'))?.[1]?.trim() ?? ''
@@ -216,7 +235,6 @@ async function crawlUKRI(): Promise<CrawlResult> {
   }
 }
 
-// Unwrap UKRI's nested { someKey: [...] } or direct array patterns
 function unwrapUKRIArray<T>(val: unknown, innerKey: string): T[] {
   if (Array.isArray(val)) return val as T[]
   if (val && typeof val === 'object') {
@@ -228,16 +246,14 @@ function unwrapUKRIArray<T>(val: unknown, innerKey: string): T[] {
 }
 
 function normaliseUKRI(p: Record<string, unknown>): ScrapedGrant {
-  const fund   = (p.fund as Record<string, unknown>) ?? {}
-  const id     = String(p.id ?? p.grantReference ?? Math.random())
-  const amount = typeof fund.valuePounds === 'number' ? fund.valuePounds : null
+  const fund     = (p.fund as Record<string, unknown>) ?? {}
+  const id       = String(p.id ?? p.grantReference ?? Math.random())
+  const amount   = typeof fund.valuePounds === 'number' ? fund.valuePounds : null
   const leadOrgs = unwrapUKRIArray<{ name?: string }>(p.leadOrganisations, 'leadOrganisation')
   const leadOrg  = leadOrgs[0]?.name ?? null
   const funder   = String(p.leadFunder ?? 'UKRI')
-
-  // Collect research topics / subjects as sectors
-  const topicsRaw = unwrapUKRIArray<{ text?: string }>(p.researchTopics, 'researchTopic')
-  const sectors   = topicsRaw.map(t => (t.text ?? '').toLowerCase().trim()).filter(Boolean)
+  const topics   = unwrapUKRIArray<{ text?: string }>(p.researchTopics, 'researchTopic')
+  const sectors  = topics.map(t => (t.text ?? '').toLowerCase().trim()).filter(Boolean)
 
   return {
     external_id:          `ukri_${id}`,
@@ -259,6 +275,8 @@ function normaliseUKRI(p: Record<string, unknown>): ScrapedGrant {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)) }
+
 function parseDeadline(raw: unknown): string | null {
   if (!raw) return null
   const d = new Date(String(raw))
@@ -278,6 +296,9 @@ function normaliseList(raw: unknown): string[] {
   if (typeof raw === 'string') return raw.split('\n').map(s => s.trim()).filter(Boolean)
   return []
 }
+
+// Keep these exported in case other code uses them
+export { normaliseSectors, normaliseList }
 
 async function upsertGrants(source: string, grants: ScrapedGrant[]): Promise<CrawlResult> {
   if (grants.length === 0) return { source, fetched: 0, upserted: 0 }
