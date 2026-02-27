@@ -121,7 +121,7 @@ export interface PipelineColumn {
 export interface DeadlineAlert {
   item: PipelineItem
   daysUntil: number
-  urgency: 'overdue' | 'urgent' | 'soon' | 'ok'
+  urgency: 'overdue' | 'urgent' | 'soon' | 'ok' | 'rolling'
 }
 
 // ─────────────────────────────────────────────
