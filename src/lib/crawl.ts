@@ -22,6 +22,9 @@
 //  17.  Community Foundation for Surrey  (cfsurrey.org.uk/apply)
 //  18.  Hants & IoW Community Foundation (hiwcf.org.uk/grants-for-groups)
 //  19.  Oxfordshire Community Foundation (oxfordshire.org/ocfgrants)
+//  20.  Asda Foundation                  (asdafoundation.org/our-grants)
+//  21.  Aviva Foundation                 (avivafoundation.org.uk)
+//  22.  Nationwide Foundation            (nationwidefoundation.org.uk/our-programmes)
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { createClient }  from '@supabase/supabase-js'
@@ -1220,6 +1223,178 @@ async function crawlOxfordshireCF(): Promise<CrawlResult> {
   }
 }
 
+// ── Source 20: Asda Foundation ────────────────────────────────────────────────
+// Community grant programmes from asdafoundation.org.
+// Both the listing page and individual grant pages are JS-rendered, so
+// grant entries are hardcoded from browser inspection. Only community-facing
+// programmes are included (colleague-only programmes are excluded).
+async function crawlAsdaFoundation(): Promise<CrawlResult> {
+  const SOURCE  = 'asda_foundation'
+  const BASE    = 'https://asdafoundation.org'
+  const LISTURL = `${BASE}/our-grants/`
+
+  const GRANTS = [
+    {
+      id:    'local-community-spaces-fund',
+      title: 'Local Community Spaces Fund',
+      desc:  'Supports grassroots community groups throughout the UK to repair, renovate and develop community spaces — providing a safe place for people to meet and be together. Grants of £10,000–£20,000.',
+      min:   10000,
+      max:   20000,
+    },
+    {
+      id:    'foodbank-fundamentals-fund',
+      title: 'Foodbank Fundamentals Fund',
+      desc:  'Supports foodbanks and similar food-poverty organisations with grants for essential equipment and operational infrastructure. Grants up to £750.',
+      min:   null,
+      max:   750,
+    },
+    {
+      id:    'young-futures-fund',
+      title: 'Young Futures Fund',
+      desc:  'Supports grassroots groups focused on improving mental health and wellbeing for teenagers aged 13–18 in local communities. Grants of £500–£1,000.',
+      min:   500,
+      max:   1000,
+    },
+  ]
+
+  try {
+    // Confirm the grants listing page is live before returning hardcoded entries
+    await fetchHtml(LISTURL)
+
+    const grants: ScrapedGrant[] = GRANTS.map(g => ({
+      external_id:          `asda_foundation_${g.id}`,
+      source:               SOURCE,
+      title:                g.title,
+      funder:               'Asda Foundation',
+      funder_type:          'corporate_foundation',
+      description:          g.desc,
+      amount_min:           g.min,
+      amount_max:           g.max,
+      deadline:             null,
+      is_rolling:           true,
+      is_local:             false,
+      sectors:              ['community', 'social welfare'],
+      eligibility_criteria: ['UK registered charities and community groups'],
+      apply_url:            `${BASE}/our-grants/${g.id}/`,
+      raw_data:             { id: g.id } as Record<string, unknown>,
+    }))
+
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
+// ── Source 21: Aviva Foundation ───────────────────────────────────────────────
+// Two grant funds from avivafoundation.org.uk — Financial Futures Fund and
+// Communities Fund. The homepage is SSR but fund details are JS-rendered;
+// entries are hardcoded from browser inspection.
+async function crawlAvivaFoundation(): Promise<CrawlResult> {
+  const SOURCE      = 'aviva_foundation'
+  const BASE        = 'https://www.avivafoundation.org.uk'
+  const HOMEPAGEURL = `${BASE}/`
+
+  const FUNDS = [
+    {
+      id:      'financial-futures-fund',
+      title:   'Financial Futures Fund',
+      desc:    'Funds long-term solutions that improve financial resilience across the UK — building financial confidence and capability, improving access to fair and inclusive financial services, and tackling systemic barriers. Distributes £3 million in grants annually.',
+      sectors: ['financial inclusion', 'social welfare'],
+    },
+    {
+      id:      'communities-fund',
+      title:   'Communities Fund',
+      desc:    'Supports communities when it matters most — focused on building community resilience, providing emergency support, and strengthening local support networks across the UK.',
+      sectors: ['community', 'social welfare'],
+    },
+  ]
+
+  try {
+    // Confirm homepage is live before returning hardcoded entries
+    await fetchHtml(HOMEPAGEURL)
+
+    const grants: ScrapedGrant[] = FUNDS.map(f => ({
+      external_id:          `aviva_foundation_${f.id}`,
+      source:               SOURCE,
+      title:                f.title,
+      funder:               'Aviva Foundation',
+      funder_type:          'corporate_foundation',
+      description:          f.desc,
+      amount_min:           null,
+      amount_max:           null,
+      deadline:             null,
+      is_rolling:           true,
+      is_local:             false,
+      sectors:              f.sectors,
+      eligibility_criteria: ['UK registered charities and community organisations'],
+      apply_url:            `${BASE}/${f.id}/`,
+      raw_data:             { id: f.id } as Record<string, unknown>,
+    }))
+
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
+// ── Source 22: Nationwide Foundation ─────────────────────────────────────────
+// Three housing-focused grant programmes from nationwidefoundation.org.uk.
+// The /our-programmes/ listing page is JS-rendered; programme URLs and titles
+// are hardcoded from browser inspection of the live page.
+async function crawlNationwideFoundation(): Promise<CrawlResult> {
+  const SOURCE  = 'nationwide_foundation'
+  const BASE    = 'https://nationwidefoundation.org.uk'
+  const LISTURL = `${BASE}/our-programmes/`
+
+  const PROGRAMMES = [
+    {
+      id:    'nurturing-ideas-for-change-to-the-housing-system',
+      title: 'Nurturing Ideas to Change the Housing System',
+      desc:  'Funds innovative ideas and approaches that could transform the housing system for people in housing need in the UK, including research, pilot projects, and advocacy for systemic change.',
+      sectors: ['housing', 'social welfare'],
+    },
+    {
+      id:    'backing-community-led-housing',
+      title: 'Backing Community-Led Housing',
+      desc:  'Supports community-led housing projects that provide genuinely affordable homes and empower communities to shape their own local housing and neighbourhoods.',
+      sectors: ['housing', 'community'],
+    },
+    {
+      id:    'transforming-the-private-rented-sector',
+      title: 'Transforming the Private Rented Sector',
+      desc:  'Funds work to improve conditions, security and rights for tenants in the private rented sector, including policy advocacy, tenant support and sector-wide reform efforts.',
+      sectors: ['housing', 'social welfare'],
+    },
+  ]
+
+  try {
+    // Confirm programmes page is reachable before returning hardcoded entries
+    await fetchHtml(LISTURL)
+
+    const grants: ScrapedGrant[] = PROGRAMMES.map(p => ({
+      external_id:          `nationwide_foundation_${p.id}`,
+      source:               SOURCE,
+      title:                p.title,
+      funder:               'Nationwide Foundation',
+      funder_type:          'corporate_foundation',
+      description:          p.desc,
+      amount_min:           null,
+      amount_max:           null,
+      deadline:             null,
+      is_rolling:           true,
+      is_local:             false,
+      sectors:              p.sectors,
+      eligibility_criteria: ['UK registered charities and organisations working on housing issues'],
+      apply_url:            `${BASE}/our-programmes/${p.id}/`,
+      raw_data:             { id: p.id } as Record<string, unknown>,
+    }))
+
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
 // ── Amount parsers ────────────────────────────────────────────────────────────
 function parsePoundAmount(str: string): number | null {
   if (!str) return null
@@ -1300,6 +1475,7 @@ export async function crawlAllSources(): Promise<CrawlResult[]> {
     sportEngland, heritageFund, foreverMcr, twoRidings, cfWales,
     quartetCF, cfNI, heartOfEngland, foundationScotland, londonCF,
     sussexCF, surreyCF, hiwcf, oxfordshireCF,
+    asdaFoundation, avivaFoundation, nationwideFoundation,
   ] = await Promise.allSettled([
     crawlGovUK(),
     crawlTNLCF(),
@@ -1320,6 +1496,9 @@ export async function crawlAllSources(): Promise<CrawlResult[]> {
     crawlSurreyCF(),
     crawlHIWCF(),
     crawlOxfordshireCF(),
+    crawlAsdaFoundation(),
+    crawlAvivaFoundation(),
+    crawlNationwideFoundation(),
   ])
 
   return [
@@ -1342,5 +1521,8 @@ export async function crawlAllSources(): Promise<CrawlResult[]> {
     surreyCF.status          === 'fulfilled' ? surreyCF.value          : { source: 'surrey_cf',            fetched: 0, upserted: 0, error: 'Promise rejected' },
     hiwcf.status             === 'fulfilled' ? hiwcf.value             : { source: 'hiwcf',                fetched: 0, upserted: 0, error: 'Promise rejected' },
     oxfordshireCF.status     === 'fulfilled' ? oxfordshireCF.value     : { source: 'oxfordshire_cf',       fetched: 0, upserted: 0, error: 'Promise rejected' },
+    asdaFoundation.status    === 'fulfilled' ? asdaFoundation.value    : { source: 'asda_foundation',      fetched: 0, upserted: 0, error: 'Promise rejected' },
+    avivaFoundation.status   === 'fulfilled' ? avivaFoundation.value   : { source: 'aviva_foundation',     fetched: 0, upserted: 0, error: 'Promise rejected' },
+    nationwideFoundation.status === 'fulfilled' ? nationwideFoundation.value : { source: 'nationwide_foundation', fetched: 0, upserted: 0, error: 'Promise rejected' },
   ]
 }
