@@ -3,11 +3,13 @@
 // and stores them in the scraped_grants Supabase table.
 //
 // Sources:
-//   1. GOV.UK Find a Grant           (www.find-government-grants.service.gov.uk)
-//   2. National Lottery Community Fund (www.tnlcommunityfund.org.uk)
-//   3. UKRI live opportunity calls   (www.ukri.org/opportunity/)
-//   4. GLA / City Hall London        (www.london.gov.uk/programmes-strategies/search-funding)
-//   5. Arts Council England          (www.artscouncil.org.uk/our-open-funds)
+//   1. GOV.UK Find a Grant             (www.find-government-grants.service.gov.uk)
+//   2. National Lottery Community Fund  (www.tnlcommunityfund.org.uk)
+//   3. UKRI live opportunity calls      (www.ukri.org/opportunity/)
+//   4. GLA / City Hall London           (www.london.gov.uk/programmes-strategies/search-funding)
+//   5. Arts Council England             (www.artscouncil.org.uk/our-open-funds)
+//   6. Sport England                    (www.sportengland.org/funding-and-campaigns/our-funding)
+//   7. National Lottery Heritage Fund   (www.heritagefund.org.uk/funding)
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { createClient }  from '@supabase/supabase-js'
@@ -393,6 +395,114 @@ async function crawlArtsCouncil(): Promise<CrawlResult> {
   }
 }
 
+// ── Source 6: Sport England ───────────────────────────────────────────────────
+// Scrapes sportengland.org/funding-and-campaigns/our-funding
+// Active funds are in .txt-img-cont sections with an h2 title and p description.
+// Historic/closed sections are excluded by title matching.
+async function crawlSportEngland(): Promise<CrawlResult> {
+  const SOURCE = 'sport_england'
+  const BASE   = 'https://www.sportengland.org'
+  const URL    = `${BASE}/funding-and-campaigns/our-funding`
+
+  // Sections to skip — not active grant programmes
+  const SKIP = /historic|impact|priorities|charter|work in places|latest news/i
+
+  try {
+    const html  = await fetchHtml(URL)
+    const root  = parseHTML(html)
+    const grants: ScrapedGrant[] = []
+
+    for (const section of root.querySelectorAll('.txt-img-cont')) {
+      const title = section.querySelector('h2')?.text?.trim()
+      if (!title || SKIP.test(title)) continue
+
+      const desc = section.querySelector('p')?.text?.trim() ?? ''
+      const href = section.querySelector('a')?.getAttribute('href') ?? ''
+      const url  = href.startsWith('http') ? href : `${BASE}${href}`
+      const slug = href.split('/').filter(Boolean).pop() ?? slugify(title)
+
+      const { min, max } = parseAmountRange(desc)
+
+      grants.push({
+        external_id:          `sport_england_${slug}`,
+        source:               SOURCE,
+        title,
+        funder:               'Sport England',
+        funder_type:          'lottery',
+        description:          desc,
+        amount_min:           min,
+        amount_max:           max,
+        deadline:             null,
+        is_rolling:           true,
+        is_local:             false,
+        sectors:              ['sport', 'physical activity', 'health'],
+        eligibility_criteria: [],
+        apply_url:            url || null,
+        raw_data:             { title, desc, href } as Record<string, unknown>,
+      })
+    }
+
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
+// ── Source 7: National Lottery Heritage Fund ──────────────────────────────────
+// Scrapes heritagefund.org.uk/funding
+// Programme cards use .search-result__title (title + link) and
+// .search-result__content (description). Amount range is embedded in the title.
+async function crawlHeritageFund(): Promise<CrawlResult> {
+  const SOURCE = 'heritage_fund'
+  const BASE   = 'https://www.heritagefund.org.uk'
+  const URL    = `${BASE}/funding`
+
+  try {
+    const html  = await fetchHtml(URL)
+    const root  = parseHTML(html)
+    const grants: ScrapedGrant[] = []
+
+    for (const titleEl of root.querySelectorAll('.search-result__title')) {
+      const linkEl = titleEl.querySelector('a')
+      const title  = linkEl?.text?.trim()
+      if (!title) continue
+
+      const href = linkEl?.getAttribute('href') ?? ''
+      const url  = href.startsWith('http') ? href : `${BASE}${href}`
+      const slug = href.split('/').filter(Boolean).pop() ?? slugify(title)
+
+      // Description is in the sibling .search-result__content
+      const parent = titleEl.parentNode
+      const desc   = parent?.querySelector('.search-result__content')?.text?.trim() ?? ''
+
+      // Parse amount range from title — e.g. "£10,000 to £250,000"
+      const { min, max } = parseAmountRange(title)
+
+      grants.push({
+        external_id:          `heritage_fund_${slug}`,
+        source:               SOURCE,
+        title,
+        funder:               'National Lottery Heritage Fund',
+        funder_type:          'lottery',
+        description:          desc,
+        amount_min:           min,
+        amount_max:           max,
+        deadline:             null,
+        is_rolling:           true,
+        is_local:             false,
+        sectors:              ['heritage', 'culture', 'community', 'environment'],
+        eligibility_criteria: [],
+        apply_url:            url || null,
+        raw_data:             { title, href, desc } as Record<string, unknown>,
+      })
+    }
+
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
 // ── Amount parsers ────────────────────────────────────────────────────────────
 function parsePoundAmount(str: string): number | null {
   if (!str) return null
@@ -468,19 +578,23 @@ async function upsertGrants(source: string, grants: ScrapedGrant[]): Promise<Cra
 
 // ── Main export ───────────────────────────────────────────────────────────────
 export async function crawlAllSources(): Promise<CrawlResult[]> {
-  const [govUK, tnlcf, ukri, gla, ace] = await Promise.allSettled([
+  const [govUK, tnlcf, ukri, gla, ace, sportEngland, heritageFund] = await Promise.allSettled([
     crawlGovUK(),
     crawlTNLCF(),
     crawlUKRI(),
     crawlGLA(),
     crawlArtsCouncil(),
+    crawlSportEngland(),
+    crawlHeritageFund(),
   ])
 
   return [
-    govUK.status === 'fulfilled' ? govUK.value : { source: 'gov_uk',      fetched: 0, upserted: 0, error: 'Promise rejected' },
-    tnlcf.status === 'fulfilled' ? tnlcf.value : { source: 'tnlcf',       fetched: 0, upserted: 0, error: 'Promise rejected' },
-    ukri.status  === 'fulfilled' ? ukri.value  : { source: 'ukri',        fetched: 0, upserted: 0, error: 'Promise rejected' },
-    gla.status   === 'fulfilled' ? gla.value   : { source: 'gla',         fetched: 0, upserted: 0, error: 'Promise rejected' },
-    ace.status   === 'fulfilled' ? ace.value   : { source: 'arts_council', fetched: 0, upserted: 0, error: 'Promise rejected' },
+    govUK.status        === 'fulfilled' ? govUK.value        : { source: 'gov_uk',        fetched: 0, upserted: 0, error: 'Promise rejected' },
+    tnlcf.status        === 'fulfilled' ? tnlcf.value        : { source: 'tnlcf',         fetched: 0, upserted: 0, error: 'Promise rejected' },
+    ukri.status         === 'fulfilled' ? ukri.value         : { source: 'ukri',          fetched: 0, upserted: 0, error: 'Promise rejected' },
+    gla.status          === 'fulfilled' ? gla.value          : { source: 'gla',           fetched: 0, upserted: 0, error: 'Promise rejected' },
+    ace.status          === 'fulfilled' ? ace.value          : { source: 'arts_council',  fetched: 0, upserted: 0, error: 'Promise rejected' },
+    sportEngland.status === 'fulfilled' ? sportEngland.value : { source: 'sport_england', fetched: 0, upserted: 0, error: 'Promise rejected' },
+    heritageFund.status === 'fulfilled' ? heritageFund.value : { source: 'heritage_fund', fetched: 0, upserted: 0, error: 'Promise rejected' },
   ]
 }
