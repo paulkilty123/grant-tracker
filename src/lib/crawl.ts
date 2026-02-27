@@ -41,35 +41,50 @@ export interface CrawlResult {
   error?: string
 }
 
-// ── National Lottery Community Fund ──────────────────────────────────────────
-// TNLCF is the UK's largest community funder. They publish open grant data via
-// the 360Giving standard. We fetch their latest published dataset directly.
+// ── 360Giving registry helper ─────────────────────────────────────────────────
+// Fetches the 360Giving data registry and downloads grant datasets from publishers.
+// sliceStart/sliceEnd control which publishers we pull (avoids overlap between sources).
+async function fetchFromRegistry(source: string, sliceStart: number, sliceEnd: number, maxPerPublisher = 50): Promise<CrawlResult> {
+  // The 360Giving data registry — a JSON file listing all publishers + their dataset URLs
+  const registryRes = await fetch(
+    'https://data.threesixtygiving.org/data.json',
+    { headers: { 'User-Agent': 'GrantTracker/1.0', 'Accept': 'application/json' }, signal: AbortSignal.timeout(15_000) }
+  )
+  if (!registryRes.ok) throw new Error(`360Giving registry returned ${registryRes.status}`)
+
+  const registry = await registryRes.json()
+  const publishers: Array<{ datasets?: Array<{ distribution?: Array<{ downloadURL: string }> }> }> =
+    Array.isArray(registry) ? registry : (registry.publishers ?? registry.data ?? [])
+
+  const grants: ScrapedGrant[] = []
+  let processed = 0
+
+  for (const publisher of publishers.slice(sliceStart, sliceStart + (sliceEnd - sliceStart) * 4)) {
+    if (processed >= (sliceEnd - sliceStart)) break
+    const datasets = publisher.datasets ?? []
+    const latest = datasets[0]
+    const dist = latest?.distribution?.[0]
+    if (!dist?.downloadURL) continue
+    const url = dist.downloadURL
+    if (!url.endsWith('.json')) continue
+    try {
+      const dataRes = await fetch(url, { signal: AbortSignal.timeout(20_000) })
+      if (!dataRes.ok) continue
+      const data = await dataRes.json()
+      const rawGrants: unknown[] = data.grants ?? data.data ?? []
+      grants.push(...rawGrants.slice(0, maxPerPublisher).map(g => normaliseGovUK(g as Record<string, unknown>)))
+      processed++
+    } catch { continue }
+  }
+
+  return await upsertGrants(source, grants)
+}
+
+// ── Source 1: 360Giving publishers 0–4 ───────────────────────────────────────
 async function crawlGovUK(): Promise<CrawlResult> {
   const SOURCE = 'gov_uk'
   try {
-    // TNLCF publishes open grants data in 360Giving JSON format
-    // Dataset registry: https://data.threesixtygiving.org
-    const res = await fetch(
-      'https://beopen.tnlcf.org.uk/data/grantnav-tnlcf-grants.json',
-      { headers: { 'User-Agent': 'GrantTracker/1.0' }, signal: AbortSignal.timeout(25_000) }
-    )
-
-    if (!res.ok) {
-      // Fallback: try the TNLCF open data portal
-      const res2 = await fetch(
-        'https://beopen.tnlcf.org.uk/api/grants?limit=100',
-        { headers: { 'User-Agent': 'GrantTracker/1.0', 'Accept': 'application/json' }, signal: AbortSignal.timeout(15_000) }
-      )
-      if (!res2.ok) return { source: SOURCE, fetched: 0, upserted: 0 }
-      const json = await res2.json()
-      const grants: ScrapedGrant[] = (json.grants ?? json.data ?? json.results ?? []).map((g: Record<string, unknown>) => normaliseGovUK(g))
-      return await upsertGrants(SOURCE, grants)
-    }
-
-    const json = await res.json()
-    const rawGrants: Record<string, unknown>[] = json.grants ?? json.data ?? (Array.isArray(json) ? json : [])
-    const grants: ScrapedGrant[] = rawGrants.slice(0, 200).map(g => normaliseGovUK(g))
-    return await upsertGrants(SOURCE, grants)
+    return await fetchFromRegistry(SOURCE, 0, 5)
   } catch (err) {
     return { source: SOURCE, fetched: 0, upserted: 0, error: err instanceof Error ? err.message : 'Unknown error' }
   }
@@ -109,27 +124,11 @@ function normaliseGovUK(g: Record<string, unknown>): ScrapedGrant {
   }
 }
 
-// ── 360Giving ─────────────────────────────────────────────────────────────────
-// 360Giving publishes open data from hundreds of UK funders via their REST API.
-// API docs: https://www.360giving.org/api-docs/
+// ── Source 2: 360Giving publishers 5–9 ───────────────────────────────────────
 async function crawl360Giving(): Promise<CrawlResult> {
   const SOURCE = '360giving'
   try {
-    // Use the 360Giving REST API directly — returns grants in standard format
-    const res = await fetch(
-      'https://api.threesixtygiving.org/api/v1/grants/?limit=200',
-      {
-        headers: { 'User-Agent': 'GrantTracker/1.0', 'Accept': 'application/json' },
-        signal: AbortSignal.timeout(25_000),
-      }
-    )
-    if (!res.ok) throw new Error(`360Giving API returned ${res.status}`)
-
-    const data = await res.json()
-    const rawGrants: unknown[] = data.results ?? data.grants ?? (Array.isArray(data) ? data : [])
-    const grants = rawGrants.map(g => normalise360Giving(g as Record<string, unknown>))
-
-    return await upsertGrants(SOURCE, grants)
+    return await fetchFromRegistry(SOURCE, 5, 10)
   } catch (err) {
     return { source: SOURCE, fetched: 0, upserted: 0, error: err instanceof Error ? err.message : 'Unknown error' }
   }
@@ -217,15 +216,27 @@ async function crawlUKRI(): Promise<CrawlResult> {
   }
 }
 
+// Unwrap UKRI's nested { someKey: [...] } or direct array patterns
+function unwrapUKRIArray<T>(val: unknown, innerKey: string): T[] {
+  if (Array.isArray(val)) return val as T[]
+  if (val && typeof val === 'object') {
+    const inner = (val as Record<string, unknown>)[innerKey]
+    if (Array.isArray(inner)) return inner as T[]
+    if (inner) return [inner as T]
+  }
+  return []
+}
+
 function normaliseUKRI(p: Record<string, unknown>): ScrapedGrant {
   const fund   = (p.fund as Record<string, unknown>) ?? {}
-  const id     = String(p.id ?? Math.random())
+  const id     = String(p.id ?? p.grantReference ?? Math.random())
   const amount = typeof fund.valuePounds === 'number' ? fund.valuePounds : null
-  const leadOrg = (p.leadOrganisations as Array<{ name?: string }>)?.[0]?.name ?? null
-  const funder  = String(p.leadFunder ?? 'UKRI')
+  const leadOrgs = unwrapUKRIArray<{ name?: string }>(p.leadOrganisations, 'leadOrganisation')
+  const leadOrg  = leadOrgs[0]?.name ?? null
+  const funder   = String(p.leadFunder ?? 'UKRI')
 
   // Collect research topics / subjects as sectors
-  const topicsRaw = (p.researchTopics as Array<{ text?: string }> | undefined) ?? []
+  const topicsRaw = unwrapUKRIArray<{ text?: string }>(p.researchTopics, 'researchTopic')
   const sectors   = topicsRaw.map(t => (t.text ?? '').toLowerCase().trim()).filter(Boolean)
 
   return {
