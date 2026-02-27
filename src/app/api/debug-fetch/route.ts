@@ -21,11 +21,13 @@ export async function GET(req: NextRequest) {
       status: res.status,
       length: html.length,
       hasResourceTeaser: html.includes('resource_teaser'),
-      hasGreenRoots: html.includes('Green Roots'),
       hasCardBody: html.includes('card__body'),
-      hasCardHeading: html.includes('card-heading'),
-      hasProjectGrants: html.includes('Project Grants'),
-      snippet: html.substring(0, 800),
+      hasCardNavy: html.includes('card--navy'),
+      hasCardContainer: html.includes('card__container'),
+      hasTitle: html.includes('class="title"'),
+      hasFundBox: html.includes('fund-box'),
+      hasTextSide: html.includes('text-side'),
+      snippet: html.substring(0, 1200),
     })
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 })
