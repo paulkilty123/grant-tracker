@@ -502,25 +502,28 @@ async function crawlTwoRidingsCF(): Promise<CrawlResult> {
 }
 
 // ── Source 10: Community Foundation Wales ─────────────────────────────────────
-// Scrapes communityfoundationwales.org.uk/grants/
-// Each grant is an article.card__container with a .title element and <a> link.
+// Uses the WordPress grant sitemap (grant-sitemap.xml) as the data source —
+// the HTML grants page is JS-rendered so the sitemap is more reliable.
+// Derives grant title from the URL slug (slug-to-title-case conversion).
 async function crawlCFWales(): Promise<CrawlResult> {
-  const SOURCE = 'cf_wales'
-  const BASE   = 'https://communityfoundationwales.org.uk'
-  const URL    = `${BASE}/grants/`
+  const SOURCE  = 'cf_wales'
+  const BASE    = 'https://communityfoundationwales.org.uk'
+  const SITEMAP = `${BASE}/grant-sitemap.xml`
 
   try {
-    const html  = await fetchHtml(URL)
-    const root  = parseHTML(html)
+    const xml    = await fetchHtml(SITEMAP)
     const grants: ScrapedGrant[] = []
 
-    for (const card of root.querySelectorAll('.card--navy')) {
-      const title = card.querySelector('.title')?.text?.trim()
-      if (!title) continue
+    // Extract all <loc> URLs from the sitemap XML
+    const locMatches = xml.matchAll(/<loc>([^<]+)<\/loc>/g)
+    for (const match of locMatches) {
+      const url = match[1].trim()
+      // Skip the archive index page itself
+      if (!url.includes('/grants/') || url.endsWith('/grants/')) continue
 
-      const href = card.querySelector('a')?.getAttribute('href') ?? ''
-      const url  = href.startsWith('http') ? href : `${BASE}${href}`
-      const slug = href.split('/').filter(Boolean).pop() ?? slugify(title)
+      const slug  = url.split('/').filter(Boolean).pop() ?? ''
+      // Convert slug to title case: "ashley-family-foundation" → "Ashley Family Foundation"
+      const title = slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
 
       grants.push({
         external_id:          `cf_wales_${slug}`,
@@ -536,8 +539,8 @@ async function crawlCFWales(): Promise<CrawlResult> {
         is_local:             true,
         sectors:              ['community', 'social welfare'],
         eligibility_criteria: ['Wales based organisations'],
-        apply_url:            url || null,
-        raw_data:             { title, href } as Record<string, unknown>,
+        apply_url:            url,
+        raw_data:             { slug, url } as Record<string, unknown>,
       })
     }
 
