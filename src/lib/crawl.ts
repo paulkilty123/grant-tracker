@@ -2548,6 +2548,158 @@ async function crawlCalderdaleCF(): Promise<CrawlResult> {
   }
 }
 
+// ── Source 37: Somerset Community Foundation ─────────────────────────────────
+async function crawlSomersetCF(): Promise<CrawlResult> {
+  const SOURCE  = 'somerset_cf'
+  const BASE    = 'https://www.somersetcf.org.uk'
+  const LISTURL = `${BASE}/grants-and-funding/grants-and-funding-for-groups/`
+  try {
+    const html  = await fetchHtml(LISTURL)
+    const root  = parseHTML(html)
+    const grants: ScrapedGrant[] = []
+
+    for (const card of root.querySelectorAll('a.grant-post-list-item-inner')) {
+      // Closed grants contain a .grant-post-list-item-header child
+      if (card.querySelector('.grant-post-list-item-header')) continue
+
+      const href  = card.getAttribute('href') ?? ''
+      const url   = href.startsWith('http') ? href : `${BASE}${href}`
+      const title = card.querySelector('.grant-post-list-item-content-title h4')?.text.trim() ?? ''
+      if (!title) continue
+
+      let amountRaw = '', deadlineRaw = '', desc = ''
+      for (const p of card.querySelectorAll('.grant-post-list-item-content-details p')) {
+        const label = p.querySelector('strong')?.text.trim() ?? ''
+        const value = p.querySelector('span')?.text.trim()   ?? ''
+        if (label === 'Grant size')         amountRaw   = value
+        if (label === 'Apply by')           deadlineRaw = value
+        if (label === 'Who is it for?')     desc        = value
+        if (label === 'What is it for?' && !desc) desc  = value
+      }
+
+      const { max: maxAmount } = parseAmountRange(amountRaw)
+      const deadline = parseUKRIDate(deadlineRaw)
+
+      grants.push({
+        external_id:          slugify(url),
+        title,
+        funder:               'Somerset Community Foundation',
+        funder_type:          'community_foundation',
+        description:          desc,
+        amount_min:           null,
+        amount_max:           maxAmount,
+        deadline,
+        is_rolling:           false,
+        is_local:             true,
+        sectors:              [],
+        eligibility_criteria: [],
+        apply_url:            url,
+        source:               SOURCE,
+        raw_data:             { amountRaw, deadlineRaw },
+      })
+    }
+
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
+// ── Source 38: Community Foundation for Nottinghamshire (ForeverNotts) ────────
+async function crawlForeverNotts(): Promise<CrawlResult> {
+  const SOURCE  = 'forever_notts'
+  const BASE    = 'https://www.forevernotts.com'
+  const LISTURL = `${BASE}/grants/apply-for-grants/`
+  try {
+    const html  = await fetchHtml(LISTURL)
+    const root  = parseHTML(html)
+    const grants: ScrapedGrant[] = []
+
+    for (const item of root.querySelectorAll('.grant-item')) {
+      const fundDiv = item.querySelector('.grant-fund')
+      if (!fundDiv) continue
+
+      const anchor = fundDiv.querySelector('a[href*="/grant/"]')
+      const href   = anchor?.getAttribute('href') ?? ''
+      const url    = href.startsWith('http') ? href : `${BASE}${href}`
+      const title  = anchor?.querySelector('h3')?.text.trim() ?? anchor?.text.trim() ?? ''
+      if (!title) continue
+
+      const desc = fundDiv.querySelector('p')?.text.trim() ?? ''
+
+      // Metadata <p>s are direct children of .grant-item, outside .grant-fund
+      const allPs  = item.querySelectorAll('p')
+      const fundPs = new Set(fundDiv.querySelectorAll('p'))
+      const metaPs = allPs.filter(p => !fundPs.has(p)).map(p => p.text.trim())
+      // metaPs: [0]=type [1]=status [2]=amount [3]=opening [4]=deadline
+
+      const status = (metaPs[1] ?? '').toLowerCase()
+      if (status.includes('invitation only')) continue
+
+      const amountRaw   = metaPs[2] ?? ''
+      const deadlineRaw = metaPs[4] ?? ''
+      const { max: maxAmount } = parseAmountRange(amountRaw)
+      const deadline    = parseUKRIDate(deadlineRaw) ?? parseDeadline(deadlineRaw)
+
+      grants.push({
+        external_id:          slugify(url),
+        title,
+        funder:               'Community Foundation for Nottinghamshire',
+        funder_type:          'community_foundation',
+        description:          desc,
+        amount_min:           null,
+        amount_max:           maxAmount,
+        deadline,
+        is_rolling:           false,
+        is_local:             true,
+        sectors:              [],
+        eligibility_criteria: [],
+        apply_url:            url,
+        source:               SOURCE,
+        raw_data:             { amountRaw, deadlineRaw, status: metaPs[1] },
+      })
+    }
+
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
+// ── Source 39: Cheshire Community Foundation (hardcoded tiers) ────────────────
+async function crawlCheshireCF(): Promise<CrawlResult> {
+  const SOURCE = 'cheshire_cf'
+  const APPLY  = 'https://www.cheshirecommunityfoundation.org.uk/grants/open-grants-programmes/'
+  try {
+    const deadline = '2026-03-11'
+    const tiers = [
+      { key: 'micro', title: 'Micro Grant',  max: 1000,  desc: 'Grants up to £1,000 for small community groups and voluntary organisations in Cheshire.' },
+      { key: 'small', title: 'Small Grant',  max: 2500,  desc: 'Grants up to £2,500 for community groups and voluntary organisations in Cheshire.' },
+      { key: 'main',  title: 'Main Grant',   max: 15000, desc: 'Grants up to £15,000 for community groups and voluntary organisations in Cheshire.' },
+    ]
+    const grants: ScrapedGrant[] = tiers.map(t => ({
+      external_id:          `cheshire_cf_${t.key}`,
+      title:                `Cheshire CF ${t.title}`,
+      funder:               'Cheshire Community Foundation',
+      funder_type:          'community_foundation',
+      description:          t.desc,
+      amount_min:           null,
+      amount_max:           t.max,
+      deadline,
+      is_rolling:           false,
+      is_local:             true,
+      sectors:              [],
+      eligibility_criteria: [],
+      apply_url:            APPLY,
+      source:               SOURCE,
+      raw_data:             {},
+    }))
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
 // ── Amount parsers ────────────────────────────────────────────────────────────
 function parsePoundAmount(str: string): number | null {
   if (!str) return null
@@ -2634,6 +2786,7 @@ export async function crawlAllSources(): Promise<CrawlResult[]> {
     heartOfBucksCF, llrCF, mkCF,
     lancsCF, cambsCF, hertsCF,
     wiltshireCF, calderdaleCF,
+    somersetCF, foreverNotts, cheshireCF,
   ] = await Promise.allSettled([
     crawlGovUK(),
     crawlTNLCF(),
@@ -2671,6 +2824,9 @@ export async function crawlAllSources(): Promise<CrawlResult[]> {
     crawlHertsCF(),
     crawlWiltshireCF(),
     crawlCalderdaleCF(),
+    crawlSomersetCF(),
+    crawlForeverNotts(),
+    crawlCheshireCF(),
   ])
 
   return [
@@ -2710,5 +2866,8 @@ export async function crawlAllSources(): Promise<CrawlResult[]> {
     hertsCF.status             === 'fulfilled' ? hertsCF.value             : { source: 'herts_cf',             fetched: 0, upserted: 0, error: 'Promise rejected' },
     wiltshireCF.status         === 'fulfilled' ? wiltshireCF.value         : { source: 'wiltshire_cf',         fetched: 0, upserted: 0, error: 'Promise rejected' },
     calderdaleCF.status        === 'fulfilled' ? calderdaleCF.value        : { source: 'calderdale_cf',        fetched: 0, upserted: 0, error: 'Promise rejected' },
+    somersetCF.status          === 'fulfilled' ? somersetCF.value          : { source: 'somerset_cf',          fetched: 0, upserted: 0, error: 'Promise rejected' },
+    foreverNotts.status        === 'fulfilled' ? foreverNotts.value        : { source: 'forever_notts',        fetched: 0, upserted: 0, error: 'Promise rejected' },
+    cheshireCF.status          === 'fulfilled' ? cheshireCF.value          : { source: 'cheshire_cf',          fetched: 0, upserted: 0, error: 'Promise rejected' },
   ]
 }
