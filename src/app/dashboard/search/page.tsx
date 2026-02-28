@@ -274,8 +274,9 @@ export default function SearchPage() {
   const [amountMin, setAmountMin]         = useState('')
   const [amountMax, setAmountMax]         = useState('')
   const [deadlineFilter, setDeadlineFilter] = useState<'all' | 'rolling' | 'has_deadline'>('all')
-  const [activeSectors, setActiveSectors] = useState<Set<string>>(new Set())
-  const [filtersOpen, setFiltersOpen]     = useState(false)
+  const [activeSectors, setActiveSectors]         = useState<Set<string>>(new Set())
+  const [filtersOpen, setFiltersOpen]             = useState(false)
+  const [entryTypeFilter, setEntryTypeFilter]     = useState<'all' | 'live' | 'rolling' | 'profile'>('all')
 
   useEffect(() => {
     try {
@@ -468,7 +469,9 @@ export default function SearchPage() {
         /* has_deadline */                  (!g.isRolling && g.deadline != null)
       const matchesSectors = activeSectors.size === 0 ||
         g.sectors.some(s => activeSectors.has(s))
-      return matchesQuery && matchesType && matchesAmount && matchesDeadline && matchesSectors
+      const gEntryType = g.deadline ? 'live' : g.isRolling ? 'rolling' : 'profile'
+      const matchesEntryType = entryTypeFilter === 'all' || gEntryType === entryTypeFilter
+      return matchesQuery && matchesType && matchesAmount && matchesDeadline && matchesSectors && matchesEntryType
     })
 
     if (aiResults) {
@@ -637,6 +640,34 @@ export default function SearchPage() {
             )}
           </div>
         )}
+
+        {/* ── Entry type legend + filter ── */}
+        <div className="mt-4 pt-4 border-t border-warm">
+          <p className="text-xs text-light mb-2.5">What am I looking at? Click to filter:</p>
+          <div className="flex flex-wrap gap-2">
+            {([
+              { key: 'all',     label: 'All',         icon: '',   desc: 'Show everything',                                      cls: 'border-warm text-mid bg-white',                     active: 'bg-forest border-forest text-white' },
+              { key: 'live',    label: 'Open grant',  icon: '📅', desc: 'Specific round with a closing deadline',               cls: 'border-emerald-200 text-emerald-700 bg-emerald-50', active: 'bg-emerald-600 border-emerald-600 text-white' },
+              { key: 'rolling', label: 'Always open', icon: '🔄', desc: 'Rolling programme — apply any time',                  cls: 'border-blue-200 text-blue-600 bg-blue-50',          active: 'bg-blue-600 border-blue-600 text-white' },
+              { key: 'profile', label: 'Funder info', icon: 'ℹ',  desc: 'General funder profile — no specific round open now', cls: 'border-gray-200 text-gray-500 bg-gray-50',          active: 'bg-gray-500 border-gray-500 text-white' },
+            ] as const).map(({ key, label, icon, desc, cls, active }) => (
+              <button
+                key={key}
+                onClick={() => setEntryTypeFilter(key)}
+                className={`flex flex-col items-start px-3 py-2 rounded-xl border text-left transition-all ${
+                  entryTypeFilter === key ? active : `${cls} hover:opacity-80`
+                }`}
+              >
+                <span className="text-xs font-semibold flex items-center gap-1">
+                  {icon && <span>{icon}</span>}{label}
+                </span>
+                <span className={`text-xs mt-0.5 leading-snug ${entryTypeFilter === key ? 'opacity-75' : 'opacity-60'}`}>
+                  {desc}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
 
         {aiError && <p className="text-amber-600 text-xs mt-3">⚠ {aiError}</p>}
 
