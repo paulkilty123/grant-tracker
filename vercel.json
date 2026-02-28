@@ -1,8 +1,16 @@
 {
   "crons": [
     {
+      "path": "/api/cron/deadline-reminders",
+      "schedule": "30 7 * * *"
+    },
+    {
       "path": "/api/cron/send-alerts",
       "schedule": "0 8 * * 1"
+    },
+    {
+      "path": "/api/cron/pipeline-summary",
+      "schedule": "0 8 * * 5"
     },
     {
       "path": "/api/cron/crawl-grants?batch=1",

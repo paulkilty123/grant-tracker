@@ -3217,6 +3217,362 @@ async function crawlClothworkersFoundation(): Promise<CrawlResult> {
   }
 }
 
+// ── Source 48 — Joseph Rowntree Charitable Trust ──────────────────────────────
+// Quaker-led trust with 5 programmes: peace & security, power & accountability,
+// rights & justice, sustainable future, and Northern Ireland. Very focused —
+// best for organisations working on structural change and advocacy.
+async function crawlJRCT(): Promise<CrawlResult> {
+  const SOURCE = 'jrct'
+  try {
+    const grants: ScrapedGrant[] = [
+      {
+        external_id:          `${SOURCE}_power_accountability`,
+        source:               SOURCE,
+        title:                'JRCT — Power & Accountability Programme',
+        funder:               'Joseph Rowntree Charitable Trust',
+        funder_type:          'trust_foundation',
+        description:          'Supports work that shifts power in UK democracy — including accountable business, ' +
+                              'fair elections, and combating corruption and undue political influence. ' +
+                              'Open to organisations working on systemic democratic change.',
+        amount_min:           10000,
+        amount_max:           200000,
+        deadline:             null,
+        is_rolling:           true,
+        is_local:             false,
+        sectors:              ['democracy', 'accountability', 'governance', 'civic society'],
+        eligibility_criteria: [
+          'Registered UK charity or equivalent legal structure',
+          'Systemic or structural change focus (not direct service delivery)',
+          'Work must fit within JRCT\'s Power & Accountability programme themes',
+        ],
+        apply_url:            'https://www.jrct.org.uk/grant-programmes/power-and-accountability',
+        raw_data:             { programme: 'power_accountability', note: 'Hardcoded rolling entry' },
+      },
+      {
+        external_id:          `${SOURCE}_rights_justice`,
+        source:               SOURCE,
+        title:                'JRCT — Rights & Justice Programme',
+        funder:               'Joseph Rowntree Charitable Trust',
+        funder_type:          'trust_foundation',
+        description:          'Funds organisations challenging injustice and advancing human rights in the UK, ' +
+                              'including refugee rights, racial justice, protest rights, and access to justice. ' +
+                              'Prioritises grassroots and BAME-led organisations.',
+        amount_min:           10000,
+        amount_max:           200000,
+        deadline:             null,
+        is_rolling:           true,
+        is_local:             false,
+        sectors:              ['human rights', 'racial justice', 'refugee support', 'legal rights'],
+        eligibility_criteria: [
+          'Registered UK charity or community interest company',
+          'Rights-based or justice-focused work',
+          'BAME-led organisations particularly encouraged',
+          'Focus on structural change, not one-off casework',
+        ],
+        apply_url:            'https://www.jrct.org.uk/grant-programmes/rights-and-justice',
+        raw_data:             { programme: 'rights_justice', note: 'Hardcoded rolling entry' },
+      },
+      {
+        external_id:          `${SOURCE}_sustainable_future`,
+        source:               SOURCE,
+        title:                'JRCT — Sustainable Future Programme',
+        funder:               'Joseph Rowntree Charitable Trust',
+        funder_type:          'trust_foundation',
+        description:          'Supports work on a just transition to a sustainable economy, including climate ' +
+                              'justice, energy democracy, and systemic alternatives to extractive capitalism. ' +
+                              'Quaker values underpin all funding decisions.',
+        amount_min:           10000,
+        amount_max:           200000,
+        deadline:             null,
+        is_rolling:           true,
+        is_local:             false,
+        sectors:              ['environment', 'climate justice', 'sustainability', 'energy'],
+        eligibility_criteria: [
+          'Registered UK charity or equivalent',
+          'Systemic change focus aligned with just transition',
+          'Intersectional approach linking climate and social justice',
+        ],
+        apply_url:            'https://www.jrct.org.uk/grant-programmes/sustainable-future',
+        raw_data:             { programme: 'sustainable_future', note: 'Hardcoded rolling entry' },
+      },
+    ]
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
+// ── Source 49 — Power to Change ───────────────────────────────────────────────
+// Independent trust supporting community businesses in England. Gives grants and
+// investment to community-owned enterprises — pubs, shops, energy schemes, spaces.
+// Key programmes include The Resilience Fund and Community Business Fund.
+async function crawlPowerToChange(): Promise<CrawlResult> {
+  const SOURCE = 'power_to_change'
+  try {
+    const grants: ScrapedGrant[] = [
+      {
+        external_id:          `${SOURCE}_community_business_fund`,
+        source:               SOURCE,
+        title:                'Power to Change — Community Business Fund',
+        funder:               'Power to Change',
+        funder_type:          'trust_foundation',
+        description:          'Grants of £50,000–£300,000 to help established community businesses grow and ' +
+                              'become financially resilient. Supports community pubs, shops, spaces, energy ' +
+                              'schemes, transport and other locally-owned enterprises across England.',
+        amount_min:           50000,
+        amount_max:           300000,
+        deadline:             null,
+        is_rolling:           true,
+        is_local:             false,
+        sectors:              ['community', 'enterprise', 'social enterprise', 'community assets'],
+        eligibility_criteria: [
+          'Must be a community business — community-owned and trading',
+          'Based in England',
+          'Must have traded for at least one year',
+          'Community has meaningful ownership or governance stake',
+          'Generates at least some income from trading (not grants-only)',
+        ],
+        apply_url:            'https://www.powertochange.org.uk/get-support/programmes/',
+        raw_data:             { programme: 'community_business_fund', note: 'Hardcoded rolling entry' },
+      },
+      {
+        external_id:          `${SOURCE}_resilience_fund`,
+        source:               SOURCE,
+        title:                'Power to Change — The Resilience Fund',
+        funder:               'Power to Change',
+        funder_type:          'trust_foundation',
+        description:          'Smaller grants (up to £50,000) to help community businesses in England strengthen ' +
+                              'their resilience — through business planning, diversifying income, improving ' +
+                              'governance, or responding to challenges.',
+        amount_min:           5000,
+        amount_max:           50000,
+        deadline:             null,
+        is_rolling:           true,
+        is_local:             false,
+        sectors:              ['community', 'enterprise', 'social enterprise'],
+        eligibility_criteria: [
+          'Must be a community business based in England',
+          'Open to earlier-stage or less financially stable community businesses',
+          'Community ownership or governance must be meaningful',
+        ],
+        apply_url:            'https://www.powertochange.org.uk/get-support/programmes/',
+        raw_data:             { programme: 'resilience_fund', note: 'Hardcoded rolling entry' },
+      },
+    ]
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
+// ── Source 50 — People's Health Trust ─────────────────────────────────────────
+// Funded by health lottery proceeds. Focuses on health inequalities caused by
+// social and economic conditions. Two main programmes: Active Communities (small
+// grants up to £20k) and Health Equals (larger 3-year funding).
+async function crawlPeoplesHealthTrust(): Promise<CrawlResult> {
+  const SOURCE = 'peoples_health_trust'
+  try {
+    const grants: ScrapedGrant[] = [
+      {
+        external_id:          `${SOURCE}_active_communities`,
+        source:               SOURCE,
+        title:                "People's Health Trust — Active Communities",
+        funder:               "People's Health Trust",
+        funder_type:          'lottery',
+        description:          'Grants up to £20,000 over one to two years for small, community-led groups ' +
+                              'tackling the conditions that cause poor health — isolation, debt, poor housing, ' +
+                              'lack of green space. Only available in specific areas of England, Scotland and Wales.',
+        amount_min:           1000,
+        amount_max:           20000,
+        deadline:             null,
+        is_rolling:           false,
+        is_local:             true,
+        sectors:              ['health', 'community', 'wellbeing', 'poverty'],
+        eligibility_criteria: [
+          'Community-led group (must be led by people with lived experience)',
+          'Annual income under £350,000',
+          'Working in a designated deprived area covered by the programme',
+          'Activities address root causes of health inequalities',
+          'Check website for currently open local areas',
+        ],
+        apply_url:            'https://www.peopleshealthtrust.org.uk/active-communities',
+        raw_data:             { programme: 'active_communities', note: 'Hardcoded entry — check open areas on website' },
+      },
+      {
+        external_id:          `${SOURCE}_health_equals`,
+        source:               SOURCE,
+        title:                "People's Health Trust — Health Equals",
+        funder:               "People's Health Trust",
+        funder_type:          'lottery',
+        description:          'Larger 3-year grants for established organisations working to change the conditions ' +
+                              'that drive health inequalities. Focused on housing, employment, early years and ' +
+                              'social connection. Open UK-wide when running.',
+        amount_min:           100000,
+        amount_max:           500000,
+        deadline:             null,
+        is_rolling:           false,
+        is_local:             false,
+        sectors:              ['health', 'housing', 'employment', 'early years', 'poverty'],
+        eligibility_criteria: [
+          'Registered UK charity or social enterprise',
+          'Minimum 3 years\' track record',
+          'Evidence of impact on social determinants of health',
+          'Programme opens periodically — check website for current status',
+        ],
+        apply_url:            'https://www.peopleshealthtrust.org.uk/health-equals',
+        raw_data:             { programme: 'health_equals', note: 'Hardcoded rolling entry' },
+      },
+    ]
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
+// ── Source 51 — National Churches Trust ───────────────────────────────────────
+// UK charity helping to maintain, repair and support church buildings so they
+// can serve their communities. Grants for urgent structural repairs, community
+// use improvements, and heritage projects.
+async function crawlNationalChurchesTrust(): Promise<CrawlResult> {
+  const SOURCE = 'national_churches_trust'
+  try {
+    const grants: ScrapedGrant[] = [
+      {
+        external_id:          `${SOURCE}_cornerstone`,
+        source:               SOURCE,
+        title:                'National Churches Trust — Cornerstone Grants',
+        funder:               'National Churches Trust',
+        funder_type:          'trust_foundation',
+        description:          'Grants of £10,000–£50,000 for urgent structural repair of church buildings across ' +
+                              'the UK. Focused on preventing further deterioration of the building fabric — ' +
+                              'roofs, walls, towers and drainage.',
+        amount_min:           10000,
+        amount_max:           50000,
+        deadline:             null,
+        is_rolling:           true,
+        is_local:             false,
+        sectors:              ['heritage', 'community', 'faith'],
+        eligibility_criteria: [
+          'Church building open to the public for worship',
+          'UK-wide (all denominations)',
+          'Repair or maintenance work only (not new build)',
+          'Evidence of regular use by the local community',
+          'Listed building or significant heritage status preferred',
+        ],
+        apply_url:            'https://www.nationalchurchestrust.org/grants',
+        raw_data:             { programme: 'cornerstone', note: 'Hardcoded rolling entry' },
+      },
+      {
+        external_id:          `${SOURCE}_community_mission`,
+        source:               SOURCE,
+        title:                'National Churches Trust — Community Mission Grants',
+        funder:               'National Churches Trust',
+        funder_type:          'trust_foundation',
+        description:          'Grants of up to £20,000 to help church buildings become better community assets — ' +
+                              'toilet facilities, accessibility improvements, kitchens and flexible community ' +
+                              'spaces that increase use by the local community.',
+        amount_min:           1000,
+        amount_max:           20000,
+        deadline:             null,
+        is_rolling:           true,
+        is_local:             false,
+        sectors:              ['heritage', 'community', 'faith', 'accessibility'],
+        eligibility_criteria: [
+          'Active church building open for community use',
+          'UK-wide, all Christian denominations',
+          'Project must increase or improve community use of the building',
+          'Evidence of local need and community support',
+        ],
+        apply_url:            'https://www.nationalchurchestrust.org/grants',
+        raw_data:             { programme: 'community_mission', note: 'Hardcoded rolling entry' },
+      },
+    ]
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
+// ── Source 52 — Tudor Trust ────────────────────────────────────────────────────
+// Well-established independent foundation giving around £20 million/year to UK
+// charities. Wide remit: community, welfare, arts, health, environment. Particularly
+// interested in smaller organisations working with marginalised communities.
+// No specific deadlines — applications reviewed on a rolling basis.
+async function crawlTudorTrust(): Promise<CrawlResult> {
+  const SOURCE = 'tudor_trust'
+  try {
+    const grants: ScrapedGrant[] = [{
+      external_id:          `${SOURCE}_main`,
+      source:               SOURCE,
+      title:                'Tudor Trust — General Grants Programme',
+      funder:               'Tudor Trust',
+      funder_type:          'trust_foundation',
+      description:          'Independent foundation giving around £20 million per year to UK charities. ' +
+                            'Wide remit covering welfare, community, arts, health and environment. ' +
+                            'Particularly interested in smaller charities (under £1.5m income) working ' +
+                            'directly with people who are marginalised or facing disadvantage. ' +
+                            'Applications reviewed on a rolling basis throughout the year.',
+      amount_min:           1000,
+      amount_max:           150000,
+      deadline:             null,
+      is_rolling:           true,
+      is_local:             false,
+      sectors:              ['community', 'welfare', 'arts', 'health', 'environment', 'disadvantaged communities'],
+      eligibility_criteria: [
+        'Registered UK charity',
+        'Annual income preferably under £1.5 million',
+        'Working with people facing disadvantage or marginalisation',
+        'Must demonstrate direct, positive change for beneficiaries',
+        'Cannot fund individuals, statutory bodies or overseas projects',
+      ],
+      apply_url:            'https://tudortrust.org.uk/what-we-fund/apply',
+      raw_data:             { note: 'Hardcoded rolling entry — no structured listing page' },
+    }]
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
+// ── Source 53 — Ufi VocTech Trust ─────────────────────────────────────────────
+// Independent UK charity investing in technology that helps adults improve their
+// vocational skills. Funds R&D and growth of digital tools for workplace and
+// vocational learning. Periodic themed funding rounds.
+async function crawlUfiVocTech(): Promise<CrawlResult> {
+  const SOURCE = 'ufi_voctech'
+  try {
+    const grants: ScrapedGrant[] = [{
+      external_id:          `${SOURCE}_voctech_fund`,
+      source:               SOURCE,
+      title:                'Ufi VocTech Trust — VocTech Impact Fund',
+      funder:               'Ufi VocTech Trust',
+      funder_type:          'trust_foundation',
+      description:          'Grants and investment for organisations developing or scaling technology that ' +
+                            'helps adults improve their vocational and technical skills. Covers digital tools ' +
+                            'for workplace learning, apprenticeships, skills bootcamps and adult education. ' +
+                            'Periodic funding rounds — check website for current calls.',
+      amount_min:           50000,
+      amount_max:           500000,
+      deadline:             null,
+      is_rolling:           false,
+      is_local:             false,
+      sectors:              ['education', 'technology', 'employment', 'skills', 'digital'],
+      eligibility_criteria: [
+        'UK-based organisation (charity, social enterprise, or commercial)',
+        'Project must use technology to improve adult vocational learning',
+        'Can be R&D (earlier stage) or scaling proven tools',
+        'Must demonstrate potential for significant reach and impact',
+        'Commercial organisations eligible but must show social benefit',
+      ],
+      apply_url:            'https://ufi.co.uk/funding/',
+      raw_data:             { note: 'Hardcoded entry — check website for open funding rounds' },
+    }]
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
 // ── Batch definitions ─────────────────────────────────────────────────────────
 // Sources are grouped into 3 batches so each cron invocation handles ~15 sources.
 // Batch 1: core nationals + first CFs
@@ -3246,6 +3602,8 @@ const BATCH_3_SOURCES = [
   'shropshire_cf', 'kent_cf', 'lincolnshire_cf',
   'paul_hamlyn_foundation', 'esmee_fairbairn', 'henry_smith',
   'garfield_weston', 'clothworkers_foundation',
+  'jrct', 'power_to_change', 'peoples_health_trust',
+  'national_churches_trust', 'tudor_trust', 'ufi_voctech',
 ] as const
 
 // ── Main export ───────────────────────────────────────────────────────────────
@@ -3280,6 +3638,8 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
     shropshireCF, kentCF, lincolnshireCF,
     paulHamlynFoundation, esmeeFairbairn, henrySmith,
     garfieldWeston, clothworkersFoundation,
+    jrct, powerToChange, peoplesHealthTrust,
+    nationalChurchesTrust, tudorTrust, ufiVocTech,
   ] = await Promise.allSettled([
     run('gov_uk',                  crawlGovUK),
     run('tnlcf',                   crawlTNLCF),
@@ -3328,6 +3688,12 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
     run('henry_smith',             crawlHenrySmithFoundation),
     run('garfield_weston',         crawlGarfieldWeston),
     run('clothworkers_foundation', crawlClothworkersFoundation),
+    run('jrct',                    crawlJRCT),
+    run('power_to_change',         crawlPowerToChange),
+    run('peoples_health_trust',    crawlPeoplesHealthTrust),
+    run('national_churches_trust', crawlNationalChurchesTrust),
+    run('tudor_trust',             crawlTudorTrust),
+    run('ufi_voctech',             crawlUfiVocTech),
   ])
 
   const fallback = (source: string) => ({ source, fetched: 0, upserted: 0, error: 'Promise rejected' })
@@ -3380,6 +3746,12 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
     henrySmith.status             === 'fulfilled' ? henrySmith.value             : fallback('henry_smith'),
     garfieldWeston.status         === 'fulfilled' ? garfieldWeston.value         : fallback('garfield_weston'),
     clothworkersFoundation.status === 'fulfilled' ? clothworkersFoundation.value : fallback('clothworkers_foundation'),
+    jrct.status                   === 'fulfilled' ? jrct.value                   : fallback('jrct'),
+    powerToChange.status          === 'fulfilled' ? powerToChange.value          : fallback('power_to_change'),
+    peoplesHealthTrust.status     === 'fulfilled' ? peoplesHealthTrust.value     : fallback('peoples_health_trust'),
+    nationalChurchesTrust.status  === 'fulfilled' ? nationalChurchesTrust.value  : fallback('national_churches_trust'),
+    tudorTrust.status             === 'fulfilled' ? tudorTrust.value             : fallback('tudor_trust'),
+    ufiVocTech.status             === 'fulfilled' ? ufiVocTech.value             : fallback('ufi_voctech'),
   ]
 
   // ── Persist run to crawl_logs (best-effort, don't fail if table missing) ─

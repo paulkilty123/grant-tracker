@@ -90,6 +90,22 @@ function PipelineCard({
           </div>
         </div>
       )}
+      {item.notes && (
+        <p className="text-[10px] text-light mt-1.5 leading-snug line-clamp-2 italic">
+          {item.notes}
+        </p>
+      )}
+      {item.grant_url && (
+        <a
+          href={item.grant_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={e => e.stopPropagation()}
+          className="inline-block mt-1.5 text-[10px] text-forest/70 hover:text-forest underline underline-offset-2 transition-colors"
+        >
+          Apply →
+        </a>
+      )}
     </div>
   )
 }
@@ -114,6 +130,10 @@ function PipelineModal({
   const [deadline, setDeadline] = useState(item.deadline ?? '')
   const [amountMin, setAmountMin] = useState(item.amount_min != null ? String(item.amount_min) : '')
   const [amountMax, setAmountMax] = useState(item.amount_max != null ? String(item.amount_max) : (item.amount_requested != null ? String(item.amount_requested) : ''))
+  const [isUrgent, setIsUrgent] = useState(item.is_urgent)
+  const [contactName, setContactName] = useState(item.contact_name ?? '')
+  const [contactEmail, setContactEmail] = useState(item.contact_email ?? '')
+  const [grantUrl, setGrantUrl] = useState(item.grant_url ?? '')
   const [saving, setSaving] = useState(false)
 
   async function handleSave() {
@@ -125,6 +145,10 @@ function PipelineModal({
       amount_min: amountMin ? Number(amountMin) : null,
       amount_max: amountMax ? Number(amountMax) : null,
       amount_requested: amountMax ? Number(amountMax) : null,
+      is_urgent: isUrgent,
+      contact_name: contactName || null,
+      contact_email: contactEmail || null,
+      grant_url: grantUrl || null,
     })
     setSaving(false)
     onClose()
@@ -255,6 +279,45 @@ function PipelineModal({
             )}
           </div>
 
+          {/* Grant URL */}
+          <div>
+            <label className="text-xs font-semibold text-light uppercase tracking-wider block mb-2">Grant URL</label>
+            <input
+              type="url"
+              value={grantUrl}
+              onChange={e => setGrantUrl(e.target.value)}
+              className="form-input text-sm py-1.5"
+              placeholder="https://funder.org.uk/apply"
+            />
+          </div>
+
+          {/* Contact */}
+          <div>
+            <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Funder contact</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-mid block mb-1">Name</label>
+                <input
+                  type="text"
+                  value={contactName}
+                  onChange={e => setContactName(e.target.value)}
+                  className="form-input text-sm py-1.5"
+                  placeholder="Jane Smith"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-mid block mb-1">Email</label>
+                <input
+                  type="email"
+                  value={contactEmail}
+                  onChange={e => setContactEmail(e.target.value)}
+                  className="form-input text-sm py-1.5"
+                  placeholder="jane@funder.org"
+                />
+              </div>
+            </div>
+          </div>
+
           {/* Notes */}
           <div>
             <label className="text-xs font-semibold text-light uppercase tracking-wider block mb-2">Notes</label>
@@ -262,8 +325,33 @@ function PipelineModal({
               value={notes}
               onChange={e => setNotes(e.target.value)}
               className="form-textarea"
-              placeholder="Add notes, contacts, key dates…"
+              placeholder="Add notes, key dates, requirements…"
             />
+          </div>
+
+          {/* Urgent flag */}
+          <div className="flex items-center gap-3 py-1">
+            <button
+              type="button"
+              onClick={() => setIsUrgent(v => !v)}
+              className={cn(
+                'relative w-10 h-5.5 rounded-full transition-colors flex-shrink-0',
+                isUrgent ? 'bg-red-500' : 'bg-warm'
+              )}
+              style={{ height: '22px', width: '40px' }}
+              aria-pressed={isUrgent}
+            >
+              <span className={cn(
+                'absolute top-0.5 w-4.5 h-4.5 bg-white rounded-full shadow transition-transform',
+                isUrgent ? 'translate-x-5' : 'translate-x-0.5'
+              )} style={{ width: '18px', height: '18px', top: '2px' }} />
+            </button>
+            <div>
+              <p className={cn('text-sm font-medium', isUrgent ? 'text-red-600' : 'text-charcoal')}>
+                {isUrgent ? '⚠ Mark as urgent' : 'Mark as urgent'}
+              </p>
+              <p className="text-xs text-light">Highlights this card in red on the board</p>
+            </div>
           </div>
         </div>
 
