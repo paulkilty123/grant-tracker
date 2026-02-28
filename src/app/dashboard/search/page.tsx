@@ -682,7 +682,7 @@ export default function SearchPage() {
         <p className="text-mid text-sm mt-1">
           {allGrants.length}+ UK grants · AI-powered matching ·{' '}
           <a href="/dashboard/deep-search" className="text-indigo-600 hover:underline">
-            Try Advanced Search →
+            Try Live Search →
           </a>
         </p>
       </div>
@@ -1004,7 +1004,7 @@ export default function SearchPage() {
             <p className="text-4xl mb-3">🔍</p>
             <p className="mb-3">No grants found — try different keywords or clear the filter.</p>
             <a href="/dashboard/deep-search" className="text-indigo-600 text-sm hover:underline">
-              Try 🔬 Advanced Search for live opportunities →
+              Try 🔬 Live Search for live opportunities →
             </a>
           </div>
         )

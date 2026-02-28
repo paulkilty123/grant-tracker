@@ -15,7 +15,7 @@ interface Props {
 
 const NAV: { href: string; label: string; emoji: string; section: string; badge?: string }[] = [
   { href: '/dashboard/search',      label: 'Search Grants',    emoji: '🔍', section: 'Find Funding' },
-  { href: '/dashboard/deep-search', label: 'Advanced Search',  emoji: '🔬', section: 'Find Funding' },
+  { href: '/dashboard/deep-search', label: 'Live Search',       emoji: '🔬', section: 'Find Funding' },
   { href: '/dashboard',             label: 'Overview',         emoji: '📊', section: 'Manage' },
   { href: '/dashboard/pipeline',    label: 'Funding Pipeline', emoji: '🗂',  section: 'Manage' },
   { href: '/dashboard/deadlines',   label: 'Deadlines',        emoji: '📅', section: 'Manage' },

@@ -260,16 +260,28 @@ export default function AdvancedSearchPage() {
   return (
     <div>
       <div className="mb-6">
-        <h2 className="font-display text-2xl font-bold text-forest">Advanced Search</h2>
-        <p className="text-mid text-sm mt-1">Live AI research across the web — not just our database</p>
+        <h2 className="font-display text-2xl font-bold text-forest">Live Search</h2>
       </div>
 
-      {/* What is Advanced Search */}
-      <div className="bg-indigo-50 border border-indigo-200 rounded-xl px-5 py-4 mb-6">
-        <p className="text-base font-bold text-indigo-900 mb-1">What is Advanced Search?</p>
-        <p className="text-sm text-indigo-800 leading-relaxed">
-          Unlike the main Search Grants page — which searches our curated database of verified UK grants — Advanced Search <strong>searches the live web in real time</strong>. It finds hyper-local programmes, newly announced rounds and niche funders that don&apos;t appear in any grant database yet. Results take 15–30 seconds as the AI researches across council sites, NHS commissioning pages, community foundations and specialist funder websites.
+      {/* Explainer banner */}
+      <div className="bg-indigo-600 rounded-2xl px-6 py-5 mb-6 text-white">
+        <p className="text-lg font-bold mb-1">Finds grants that don&apos;t exist in any database yet.</p>
+        <p className="text-sm text-indigo-200 leading-relaxed mb-4">
+          AI researches the live web in real time — council sites, NHS pages, community foundations and specialist funders — uncovering hyper-local and newly announced funding that our main search will never show.
         </p>
+        <div className="flex flex-wrap gap-3">
+          {[
+            { icon: '🌐', label: 'Searches the live web' },
+            { icon: '📍', label: 'Hyper-local results' },
+            { icon: '✦',  label: 'Unique finds only' },
+            { icon: '⏱',  label: '~15–30 seconds' },
+          ].map(item => (
+            <div key={item.label} className="flex items-center gap-1.5 bg-white/15 rounded-full px-3 py-1.5 text-xs font-medium">
+              <span>{item.icon}</span>
+              <span>{item.label}</span>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Search box + filters */}
