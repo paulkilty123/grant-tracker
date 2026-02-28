@@ -84,6 +84,19 @@ async function fetchHtml(url: string): Promise<string> {
   return res.text()
 }
 
+// ── Source toggle ─────────────────────────────────────────────────────────────
+// Set DISABLED_SOURCES env var to a comma-separated list of source IDs to skip.
+// e.g. DISABLED_SOURCES=lincolnshire_cf,kent_cf
+const DISABLED_SOURCES = new Set(
+  (process.env.DISABLED_SOURCES ?? '').split(',').map(s => s.trim()).filter(Boolean)
+)
+function guarded(source: string, fn: () => Promise<CrawlResult>): Promise<CrawlResult> {
+  if (DISABLED_SOURCES.has(source)) {
+    return Promise.resolve({ source, fetched: 0, upserted: 0, error: 'disabled' })
+  }
+  return fn()
+}
+
 // ── Source 1: GOV.UK Find a Grant ─────────────────────────────────────────────
 // Scrapes all pages of find-government-grants.service.gov.uk, extracting the
 // embedded Next.js __NEXT_DATA__ JSON from each page.
@@ -2847,6 +2860,187 @@ async function crawlLincolnshireCF(): Promise<CrawlResult> {
   }
 }
 
+// ── Source 43 — Paul Hamlyn Foundation ────────────────────────────────────────
+// Scrapes the "Open for applications" section of phf.org.uk/funding/
+// Fund items: h3 title + sibling divs with "Amount:" meta block
+async function crawlPaulHamlynFoundation(): Promise<CrawlResult> {
+  const SOURCE  = 'paul_hamlyn_foundation'
+  const BASE    = 'https://www.phf.org.uk'
+  const LISTURL = `${BASE}/funding/`
+  try {
+    const html = await fetchHtml(LISTURL)
+
+    // Slice HTML to only the "Open for applications" section
+    const openIdx   = html.indexOf('Open for applications')
+    const closedIdx = html.indexOf('Not currently accepting applications')
+    const openHtml  = (openIdx >= 0 && closedIdx > openIdx)
+      ? html.slice(openIdx, closedIdx)
+      : html
+
+    const root   = parseHTML(openHtml)
+    const grants: ScrapedGrant[] = []
+
+    for (const h3 of root.querySelectorAll('h3')) {
+      const title = h3.textContent.trim()
+      if (!title) continue
+      if (/india/i.test(title)) continue    // India Fund — not UK
+
+      const fundDiv = h3.parentNode
+      if (!fundDiv) continue
+
+      // Meta div is the sibling div containing "Amount:"
+      const allDivs  = [...fundDiv.querySelectorAll('div')]
+      const metaDiv  = allDivs.find(d => /Amount:/i.test(d.textContent))
+      const metaText = metaDiv?.textContent?.replace(/\s+/g, ' ').trim() ?? ''
+      const descDiv  = allDivs.find(d => d !== metaDiv && d.textContent.trim().length > 30)
+      const desc     = descDiv?.textContent?.replace(/\s+/g, ' ').trim()
+                    ?? `Paul Hamlyn Foundation — ${title}`
+
+      // "Amount: Up to £60,000 per year (3 to 4 years); up to £50,000 per year (5 years)Duration:..."
+      const amountMatch = metaText.match(/Amount:\s*([^D]+?)(?:Duration|$)/i)
+      const amountRaw   = amountMatch?.[1]?.trim() ?? ''
+      const { min: amount_min, max: amount_max } = parseAmountRange(amountRaw)
+      const is_rolling  = /rolling/i.test(metaText)
+
+      grants.push({
+        external_id:          `phf_${title.toLowerCase().replace(/[^a-z0-9]+/g, '_')}`,
+        source:               SOURCE,
+        title,
+        funder:               'Paul Hamlyn Foundation',
+        funder_type:          'foundation',
+        description:          desc,
+        amount_min,
+        amount_max,
+        deadline:             null,
+        is_rolling,
+        is_local:             false,
+        sectors:              [],
+        eligibility_criteria: [],
+        apply_url:            LISTURL,
+        raw_data:             { metaRaw: metaText },
+      })
+    }
+
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
+// ── Source 44 — Esmée Fairbairn Foundation ────────────────────────────────────
+// Continuous rolling programme across three strategic priorities.
+// No individual programme listing with deadlines; hardcoded as single entry.
+async function crawlEsmeeFairbairn(): Promise<CrawlResult> {
+  const SOURCE = 'esmee_fairbairn'
+  const APPLY  = 'https://esmeefairbairn.org.uk/apply-for-a-grant/'
+  const grants: ScrapedGrant[] = [
+    {
+      external_id:          'esmee_fairbairn_main',
+      source:               SOURCE,
+      title:                'Esmée Fairbairn Foundation Grant Programme',
+      funder:               'Esmée Fairbairn Foundation',
+      funder_type:          'foundation',
+      description:          'Grants for charitable organisations working in natural world recovery, social justice (A Fairer Future), and creative/confident communities. Supports core costs, project costs, and unrestricted funding. Rolling applications — no deadlines.',
+      amount_min:           30000,
+      amount_max:           null,
+      deadline:             null,
+      is_rolling:           true,
+      is_local:             false,
+      sectors:              ['environment', 'social justice', 'arts', 'communities'],
+      eligibility_criteria: ['Constituted charitable organisations with annual turnover over £100,000', 'Minimum grant £30,000', 'Majority of grants are for 3–5 years'],
+      apply_url:            APPLY,
+      raw_data:             { note: 'Rolling applications, no deadline. Min £30k, no maximum. ~200 grants/year across 13 priorities.' },
+    },
+  ]
+  return await upsertGrants(SOURCE, grants)
+}
+
+// ── Source 45 — Henry Smith Foundation ────────────────────────────────────────
+// Scrapes the grants listing page then fetches each detail page in parallel.
+// Skips any grant whose detail page indicates applications are closed.
+async function crawlHenrySmithFoundation(): Promise<CrawlResult> {
+  const SOURCE  = 'henry_smith'
+  const BASE    = 'https://henrysmith.foundation'
+  const LISTURL = `${BASE}/grants/`
+  try {
+    const html = await fetchHtml(LISTURL)
+    const root = parseHTML(html)
+
+    // Collect unique grant detail URLs (a.card href matching /grants/<slug>/)
+    const seen  = new Set<string>()
+    const cards = root.querySelectorAll('a').filter(a => {
+      const href = a.getAttribute('href') ?? ''
+      if (!/\/grants\/[^/]+\/$/.test(href)) return false
+      if (seen.has(href)) return false
+      seen.add(href)
+      return true
+    })
+
+    if (cards.length === 0) return { source: SOURCE, fetched: 0, upserted: 0 }
+
+    // Fetch all detail pages in parallel
+    const details = await Promise.allSettled(
+      cards.map(async a => {
+        const relHref    = a.getAttribute('href')!
+        const href       = relHref.startsWith('http') ? relHref : `${BASE}${relHref}`
+        const slug       = relHref.replace(/.*\/grants\//, '').replace(/\/$/, '')
+        const listTitle  = a.querySelector('h5')?.textContent?.trim() ?? slug
+        const detailHtml = await fetchHtml(href)
+        return { slug, href, listTitle, detailHtml }
+      })
+    )
+
+    const grants: ScrapedGrant[] = []
+    for (const r of details) {
+      if (r.status !== 'fulfilled') continue
+      const { slug, href, listTitle, detailHtml } = r.value
+
+      // Skip closed grants — detail page contains "no longer apply" or similar
+      if (/no longer apply|applications are now closed|deadline.*has.*closed/i.test(detailHtml)) continue
+
+      const dRoot = parseHTML(detailHtml)
+
+      // Amount from "Grant amount: ..." in Funding guidelines block
+      const bodyText   = dRoot.querySelector('article')?.textContent ?? detailHtml
+      const amountM    = bodyText.match(/Grant amount[:\s]+([^\n]+)/i)
+      const amountRaw  = amountM?.[1]?.trim() ?? ''
+      const { min: amount_min, max: amount_max } = parseAmountRange(amountRaw)
+
+      // Deadline
+      const dlM       = bodyText.match(/Application deadline[:\s]+([^\n]+)/i)
+      const dlRaw     = dlM?.[1]?.trim() ?? ''
+      const deadline  = parseUKRIDate(dlRaw) ?? parseDeadline(dlRaw)
+      const is_rolling = !deadline
+
+      // Description from first real <p> in article
+      const desc = dRoot.querySelector('article p')?.textContent?.trim()
+                ?? `Henry Smith Foundation — ${listTitle}`
+
+      grants.push({
+        external_id:          `henry_smith_${slug}`,
+        source:               SOURCE,
+        title:                listTitle || slug,
+        funder:               'Henry Smith Foundation',
+        funder_type:          'foundation',
+        description:          desc,
+        amount_min,
+        amount_max,
+        deadline,
+        is_rolling,
+        is_local:             false,
+        sectors:              [],
+        eligibility_criteria: [],
+        apply_url:            href,
+        raw_data:             { amountRaw, deadlineRaw: dlRaw },
+      })
+    }
+
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
 // ── Amount parsers ────────────────────────────────────────────────────────────
 function parsePoundAmount(str: string): number | null {
   if (!str) return null
@@ -2920,8 +3114,53 @@ async function upsertGrants(source: string, grants: ScrapedGrant[]): Promise<Cra
   return { source, fetched: grants.length, upserted: grants.length }
 }
 
+// ── Batch definitions ─────────────────────────────────────────────────────────
+// Sources are grouped into 3 batches so each cron invocation handles ~15 sources.
+// Batch 1: core nationals + first CFs
+// Batch 2: corporate funders + mid CFs
+// Batch 3: Session-4b CFs + foundations
+
+type BatchNum = 1 | 2 | 3
+
+const BATCH_1_SOURCES = [
+  'gov_uk', 'tnlcf', 'ukri', 'gla', 'arts_council',
+  'sport_england', 'heritage_fund', 'forever_manchester', 'two_ridings_cf', 'cf_wales',
+  'quartet_cf', 'cf_ni', 'heart_of_england_cf', 'foundation_scotland', 'london_cf',
+] as const
+
+const BATCH_2_SOURCES = [
+  'sussex_cf', 'surrey_cf', 'hiwcf', 'oxfordshire_cf',
+  'asda_foundation', 'aviva_foundation', 'nationwide_foundation',
+  'tyne_wear_cf', 'norfolk_cf', 'suffolk_cf',
+  'merseyside_cf', 'bbc_cin', 'gloucestershire_cf',
+  'heart_of_bucks_cf', 'llr_cf',
+] as const
+
+const BATCH_3_SOURCES = [
+  'mk_cf', 'lancs_cf', 'cambs_cf', 'herts_cf',
+  'wiltshire_cf', 'calderdale_cf',
+  'somerset_cf', 'forever_notts', 'cheshire_cf',
+  'shropshire_cf', 'kent_cf', 'lincolnshire_cf',
+  'paul_hamlyn_foundation', 'esmee_fairbairn', 'henry_smith',
+] as const
+
 // ── Main export ───────────────────────────────────────────────────────────────
-export async function crawlAllSources(): Promise<CrawlResult[]> {
+// Pass batch=1|2|3 to run only that subset (used by split cron jobs).
+// Omit batch (or pass undefined) to run all sources.
+export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> {
+  // Determine which sources to include
+  let include: ReadonlySet<string> | null = null
+  if (batch === 1) include = new Set(BATCH_1_SOURCES)
+  if (batch === 2) include = new Set(BATCH_2_SOURCES)
+  if (batch === 3) include = new Set(BATCH_3_SOURCES)
+
+  function run(source: string, fn: () => Promise<CrawlResult>): Promise<CrawlResult> {
+    if (include && !include.has(source)) {
+      return Promise.resolve({ source, fetched: 0, upserted: 0, error: 'skipped' })
+    }
+    return guarded(source, fn)
+  }
+
   const [
     govUK, tnlcf, ukri, gla, ace,
     sportEngland, heritageFund, foreverMcr, twoRidings, cfWales,
@@ -2935,93 +3174,102 @@ export async function crawlAllSources(): Promise<CrawlResult[]> {
     wiltshireCF, calderdaleCF,
     somersetCF, foreverNotts, cheshireCF,
     shropshireCF, kentCF, lincolnshireCF,
+    paulHamlynFoundation, esmeeFairbairn, henrySmith,
   ] = await Promise.allSettled([
-    crawlGovUK(),
-    crawlTNLCF(),
-    crawlUKRI(),
-    crawlGLA(),
-    crawlArtsCouncil(),
-    crawlSportEngland(),
-    crawlHeritageFund(),
-    crawlForeverManchester(),
-    crawlTwoRidingsCF(),
-    crawlCFWales(),
-    crawlQuartetCF(),
-    crawlCFNI(),
-    crawlHeartOfEnglandCF(),
-    crawlFoundationScotland(),
-    crawlLondonCF(),
-    crawlSussexCF(),
-    crawlSurreyCF(),
-    crawlHIWCF(),
-    crawlOxfordshireCF(),
-    crawlAsdaFoundation(),
-    crawlAvivaFoundation(),
-    crawlNationwideFoundation(),
-    crawlTyneWearCF(),
-    crawlNorfolkCF(),
-    crawlSuffolkCF(),
-    crawlMerseysideCF(),
-    crawlBBCChildrenInNeed(),
-    crawlGloucestershireCF(),
-    crawlHeartOfBucksCF(),
-    crawlLLRCF(),
-    crawlMKCF(),
-    crawlLancsCF(),
-    crawlCambsCF(),
-    crawlHertsCF(),
-    crawlWiltshireCF(),
-    crawlCalderdaleCF(),
-    crawlSomersetCF(),
-    crawlForeverNotts(),
-    crawlCheshireCF(),
-    crawlShropshireCF(),
-    crawlKentCF(),
-    crawlLincolnshireCF(),
+    run('gov_uk',                  crawlGovUK),
+    run('tnlcf',                   crawlTNLCF),
+    run('ukri',                    crawlUKRI),
+    run('gla',                     crawlGLA),
+    run('arts_council',            crawlArtsCouncil),
+    run('sport_england',           crawlSportEngland),
+    run('heritage_fund',           crawlHeritageFund),
+    run('forever_manchester',      crawlForeverManchester),
+    run('two_ridings_cf',          crawlTwoRidingsCF),
+    run('cf_wales',                crawlCFWales),
+    run('quartet_cf',              crawlQuartetCF),
+    run('cf_ni',                   crawlCFNI),
+    run('heart_of_england_cf',     crawlHeartOfEnglandCF),
+    run('foundation_scotland',     crawlFoundationScotland),
+    run('london_cf',               crawlLondonCF),
+    run('sussex_cf',               crawlSussexCF),
+    run('surrey_cf',               crawlSurreyCF),
+    run('hiwcf',                   crawlHIWCF),
+    run('oxfordshire_cf',          crawlOxfordshireCF),
+    run('asda_foundation',         crawlAsdaFoundation),
+    run('aviva_foundation',        crawlAvivaFoundation),
+    run('nationwide_foundation',   crawlNationwideFoundation),
+    run('tyne_wear_cf',            crawlTyneWearCF),
+    run('norfolk_cf',              crawlNorfolkCF),
+    run('suffolk_cf',              crawlSuffolkCF),
+    run('merseyside_cf',           crawlMerseysideCF),
+    run('bbc_cin',                 crawlBBCChildrenInNeed),
+    run('gloucestershire_cf',      crawlGloucestershireCF),
+    run('heart_of_bucks_cf',       crawlHeartOfBucksCF),
+    run('llr_cf',                  crawlLLRCF),
+    run('mk_cf',                   crawlMKCF),
+    run('lancs_cf',                crawlLancsCF),
+    run('cambs_cf',                crawlCambsCF),
+    run('herts_cf',                crawlHertsCF),
+    run('wiltshire_cf',            crawlWiltshireCF),
+    run('calderdale_cf',           crawlCalderdaleCF),
+    run('somerset_cf',             crawlSomersetCF),
+    run('forever_notts',           crawlForeverNotts),
+    run('cheshire_cf',             crawlCheshireCF),
+    run('shropshire_cf',           crawlShropshireCF),
+    run('kent_cf',                 crawlKentCF),
+    run('lincolnshire_cf',         crawlLincolnshireCF),
+    run('paul_hamlyn_foundation',  crawlPaulHamlynFoundation),
+    run('esmee_fairbairn',         crawlEsmeeFairbairn),
+    run('henry_smith',             crawlHenrySmithFoundation),
   ])
 
+  const fallback = (source: string) => ({ source, fetched: 0, upserted: 0, error: 'Promise rejected' })
+
   return [
-    govUK.status             === 'fulfilled' ? govUK.value             : { source: 'gov_uk',               fetched: 0, upserted: 0, error: 'Promise rejected' },
-    tnlcf.status             === 'fulfilled' ? tnlcf.value             : { source: 'tnlcf',                fetched: 0, upserted: 0, error: 'Promise rejected' },
-    ukri.status              === 'fulfilled' ? ukri.value              : { source: 'ukri',                 fetched: 0, upserted: 0, error: 'Promise rejected' },
-    gla.status               === 'fulfilled' ? gla.value               : { source: 'gla',                 fetched: 0, upserted: 0, error: 'Promise rejected' },
-    ace.status               === 'fulfilled' ? ace.value               : { source: 'arts_council',         fetched: 0, upserted: 0, error: 'Promise rejected' },
-    sportEngland.status      === 'fulfilled' ? sportEngland.value      : { source: 'sport_england',        fetched: 0, upserted: 0, error: 'Promise rejected' },
-    heritageFund.status      === 'fulfilled' ? heritageFund.value      : { source: 'heritage_fund',        fetched: 0, upserted: 0, error: 'Promise rejected' },
-    foreverMcr.status        === 'fulfilled' ? foreverMcr.value        : { source: 'forever_manchester',   fetched: 0, upserted: 0, error: 'Promise rejected' },
-    twoRidings.status        === 'fulfilled' ? twoRidings.value        : { source: 'two_ridings_cf',       fetched: 0, upserted: 0, error: 'Promise rejected' },
-    cfWales.status           === 'fulfilled' ? cfWales.value           : { source: 'cf_wales',             fetched: 0, upserted: 0, error: 'Promise rejected' },
-    quartetCF.status         === 'fulfilled' ? quartetCF.value         : { source: 'quartet_cf',           fetched: 0, upserted: 0, error: 'Promise rejected' },
-    cfNI.status              === 'fulfilled' ? cfNI.value              : { source: 'cf_ni',                fetched: 0, upserted: 0, error: 'Promise rejected' },
-    heartOfEngland.status    === 'fulfilled' ? heartOfEngland.value    : { source: 'heart_of_england_cf',  fetched: 0, upserted: 0, error: 'Promise rejected' },
-    foundationScotland.status=== 'fulfilled' ? foundationScotland.value: { source: 'foundation_scotland',  fetched: 0, upserted: 0, error: 'Promise rejected' },
-    londonCF.status          === 'fulfilled' ? londonCF.value          : { source: 'london_cf',            fetched: 0, upserted: 0, error: 'Promise rejected' },
-    sussexCF.status          === 'fulfilled' ? sussexCF.value          : { source: 'sussex_cf',            fetched: 0, upserted: 0, error: 'Promise rejected' },
-    surreyCF.status          === 'fulfilled' ? surreyCF.value          : { source: 'surrey_cf',            fetched: 0, upserted: 0, error: 'Promise rejected' },
-    hiwcf.status             === 'fulfilled' ? hiwcf.value             : { source: 'hiwcf',                fetched: 0, upserted: 0, error: 'Promise rejected' },
-    oxfordshireCF.status     === 'fulfilled' ? oxfordshireCF.value     : { source: 'oxfordshire_cf',       fetched: 0, upserted: 0, error: 'Promise rejected' },
-    asdaFoundation.status    === 'fulfilled' ? asdaFoundation.value    : { source: 'asda_foundation',      fetched: 0, upserted: 0, error: 'Promise rejected' },
-    avivaFoundation.status   === 'fulfilled' ? avivaFoundation.value   : { source: 'aviva_foundation',     fetched: 0, upserted: 0, error: 'Promise rejected' },
-    nationwideFoundation.status === 'fulfilled' ? nationwideFoundation.value : { source: 'nationwide_foundation', fetched: 0, upserted: 0, error: 'Promise rejected' },
-    tyneWearCF.status          === 'fulfilled' ? tyneWearCF.value          : { source: 'tyne_wear_cf',          fetched: 0, upserted: 0, error: 'Promise rejected' },
-    norfolkCF.status           === 'fulfilled' ? norfolkCF.value           : { source: 'norfolk_cf',            fetched: 0, upserted: 0, error: 'Promise rejected' },
-    suffolkCF.status           === 'fulfilled' ? suffolkCF.value           : { source: 'suffolk_cf',            fetched: 0, upserted: 0, error: 'Promise rejected' },
-    merseysideCF.status        === 'fulfilled' ? merseysideCF.value        : { source: 'merseyside_cf',         fetched: 0, upserted: 0, error: 'Promise rejected' },
-    bbcCiN.status              === 'fulfilled' ? bbcCiN.value              : { source: 'bbc_cin',               fetched: 0, upserted: 0, error: 'Promise rejected' },
-    gloucestershireCF.status   === 'fulfilled' ? gloucestershireCF.value   : { source: 'gloucestershire_cf',    fetched: 0, upserted: 0, error: 'Promise rejected' },
-    heartOfBucksCF.status      === 'fulfilled' ? heartOfBucksCF.value      : { source: 'heart_of_bucks_cf',    fetched: 0, upserted: 0, error: 'Promise rejected' },
-    llrCF.status               === 'fulfilled' ? llrCF.value               : { source: 'llr_cf',               fetched: 0, upserted: 0, error: 'Promise rejected' },
-    mkCF.status                === 'fulfilled' ? mkCF.value                : { source: 'mk_cf',                fetched: 0, upserted: 0, error: 'Promise rejected' },
-    lancsCF.status             === 'fulfilled' ? lancsCF.value             : { source: 'lancs_cf',             fetched: 0, upserted: 0, error: 'Promise rejected' },
-    cambsCF.status             === 'fulfilled' ? cambsCF.value             : { source: 'cambs_cf',             fetched: 0, upserted: 0, error: 'Promise rejected' },
-    hertsCF.status             === 'fulfilled' ? hertsCF.value             : { source: 'herts_cf',             fetched: 0, upserted: 0, error: 'Promise rejected' },
-    wiltshireCF.status         === 'fulfilled' ? wiltshireCF.value         : { source: 'wiltshire_cf',         fetched: 0, upserted: 0, error: 'Promise rejected' },
-    calderdaleCF.status        === 'fulfilled' ? calderdaleCF.value        : { source: 'calderdale_cf',        fetched: 0, upserted: 0, error: 'Promise rejected' },
-    somersetCF.status          === 'fulfilled' ? somersetCF.value          : { source: 'somerset_cf',          fetched: 0, upserted: 0, error: 'Promise rejected' },
-    foreverNotts.status        === 'fulfilled' ? foreverNotts.value        : { source: 'forever_notts',        fetched: 0, upserted: 0, error: 'Promise rejected' },
-    cheshireCF.status          === 'fulfilled' ? cheshireCF.value          : { source: 'cheshire_cf',          fetched: 0, upserted: 0, error: 'Promise rejected' },
-    shropshireCF.status        === 'fulfilled' ? shropshireCF.value        : { source: 'shropshire_cf',        fetched: 0, upserted: 0, error: 'Promise rejected' },
-    kentCF.status              === 'fulfilled' ? kentCF.value              : { source: 'kent_cf',              fetched: 0, upserted: 0, error: 'Promise rejected' },
-    lincolnshireCF.status      === 'fulfilled' ? lincolnshireCF.value      : { source: 'lincolnshire_cf',      fetched: 0, upserted: 0, error: 'Promise rejected' },
+    govUK.status                  === 'fulfilled' ? govUK.value                  : fallback('gov_uk'),
+    tnlcf.status                  === 'fulfilled' ? tnlcf.value                  : fallback('tnlcf'),
+    ukri.status                   === 'fulfilled' ? ukri.value                   : fallback('ukri'),
+    gla.status                    === 'fulfilled' ? gla.value                    : fallback('gla'),
+    ace.status                    === 'fulfilled' ? ace.value                    : fallback('arts_council'),
+    sportEngland.status           === 'fulfilled' ? sportEngland.value           : fallback('sport_england'),
+    heritageFund.status           === 'fulfilled' ? heritageFund.value           : fallback('heritage_fund'),
+    foreverMcr.status             === 'fulfilled' ? foreverMcr.value             : fallback('forever_manchester'),
+    twoRidings.status             === 'fulfilled' ? twoRidings.value             : fallback('two_ridings_cf'),
+    cfWales.status                === 'fulfilled' ? cfWales.value                : fallback('cf_wales'),
+    quartetCF.status              === 'fulfilled' ? quartetCF.value              : fallback('quartet_cf'),
+    cfNI.status                   === 'fulfilled' ? cfNI.value                   : fallback('cf_ni'),
+    heartOfEngland.status         === 'fulfilled' ? heartOfEngland.value         : fallback('heart_of_england_cf'),
+    foundationScotland.status     === 'fulfilled' ? foundationScotland.value     : fallback('foundation_scotland'),
+    londonCF.status               === 'fulfilled' ? londonCF.value               : fallback('london_cf'),
+    sussexCF.status               === 'fulfilled' ? sussexCF.value               : fallback('sussex_cf'),
+    surreyCF.status               === 'fulfilled' ? surreyCF.value               : fallback('surrey_cf'),
+    hiwcf.status                  === 'fulfilled' ? hiwcf.value                  : fallback('hiwcf'),
+    oxfordshireCF.status          === 'fulfilled' ? oxfordshireCF.value          : fallback('oxfordshire_cf'),
+    asdaFoundation.status         === 'fulfilled' ? asdaFoundation.value         : fallback('asda_foundation'),
+    avivaFoundation.status        === 'fulfilled' ? avivaFoundation.value        : fallback('aviva_foundation'),
+    nationwideFoundation.status   === 'fulfilled' ? nationwideFoundation.value   : fallback('nationwide_foundation'),
+    tyneWearCF.status             === 'fulfilled' ? tyneWearCF.value             : fallback('tyne_wear_cf'),
+    norfolkCF.status              === 'fulfilled' ? norfolkCF.value              : fallback('norfolk_cf'),
+    suffolkCF.status              === 'fulfilled' ? suffolkCF.value              : fallback('suffolk_cf'),
+    merseysideCF.status           === 'fulfilled' ? merseysideCF.value           : fallback('merseyside_cf'),
+    bbcCiN.status                 === 'fulfilled' ? bbcCiN.value                 : fallback('bbc_cin'),
+    gloucestershireCF.status      === 'fulfilled' ? gloucestershireCF.value      : fallback('gloucestershire_cf'),
+    heartOfBucksCF.status         === 'fulfilled' ? heartOfBucksCF.value         : fallback('heart_of_bucks_cf'),
+    llrCF.status                  === 'fulfilled' ? llrCF.value                  : fallback('llr_cf'),
+    mkCF.status                   === 'fulfilled' ? mkCF.value                   : fallback('mk_cf'),
+    lancsCF.status                === 'fulfilled' ? lancsCF.value                : fallback('lancs_cf'),
+    cambsCF.status                === 'fulfilled' ? cambsCF.value                : fallback('cambs_cf'),
+    hertsCF.status                === 'fulfilled' ? hertsCF.value                : fallback('herts_cf'),
+    wiltshireCF.status            === 'fulfilled' ? wiltshireCF.value            : fallback('wiltshire_cf'),
+    calderdaleCF.status           === 'fulfilled' ? calderdaleCF.value           : fallback('calderdale_cf'),
+    somersetCF.status             === 'fulfilled' ? somersetCF.value             : fallback('somerset_cf'),
+    foreverNotts.status           === 'fulfilled' ? foreverNotts.value           : fallback('forever_notts'),
+    cheshireCF.status             === 'fulfilled' ? cheshireCF.value             : fallback('cheshire_cf'),
+    shropshireCF.status           === 'fulfilled' ? shropshireCF.value           : fallback('shropshire_cf'),
+    kentCF.status                 === 'fulfilled' ? kentCF.value                 : fallback('kent_cf'),
+    lincolnshireCF.status         === 'fulfilled' ? lincolnshireCF.value         : fallback('lincolnshire_cf'),
+    paulHamlynFoundation.status   === 'fulfilled' ? paulHamlynFoundation.value   : fallback('paul_hamlyn_foundation'),
+    esmeeFairbairn.status         === 'fulfilled' ? esmeeFairbairn.value         : fallback('esmee_fairbairn'),
+    henrySmith.status             === 'fulfilled' ? henrySmith.value             : fallback('henry_smith'),
   ]
 }
