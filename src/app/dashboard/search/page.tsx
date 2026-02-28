@@ -413,13 +413,14 @@ export default function SearchPage() {
   // ── Merged grant pool ────────────────────────────────────────────────────
   const allGrants = [...SEED_GRANTS, ...scrapedGrants]
 
-  // ── Available sectors (from scraped grants) ───────────────────────────────
+  // ── Available sectors (from all grants — seed + scraped) ─────────────────
   const availableSectors: string[] = (() => {
     const counts = new Map<string, number>()
-    scrapedGrants.forEach(g => g.sectors.forEach(s => counts.set(s, (counts.get(s) ?? 0) + 1)))
+    allGrants.forEach(g => g.sectors.forEach(s => counts.set(s, (counts.get(s) ?? 0) + 1)))
     return Array.from(counts.entries())
+      .filter(([s]) => s !== 'all sectors') // exclude meaningless catch-all
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 20)
+      .slice(0, 40)
       .map(([s]) => s)
   })()
 
@@ -799,7 +800,7 @@ export default function SearchPage() {
                           ? 'bg-purple-600 border-purple-600 text-white'
                           : 'border-purple-200 text-purple-700 hover:bg-purple-50'
                       }`}>
-                      {s}
+                      {sectorLabel(s) ?? s}
                     </button>
                   ))}
                 </div>
