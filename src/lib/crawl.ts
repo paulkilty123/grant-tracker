@@ -30,6 +30,12 @@
 //  25.  Suffolk Community Foundation     (suffolkcf.org.uk/current-grants)
 //  26.  Community Foundation Merseyside  (cfmerseyside.org.uk/our-grants)
 //  27.  BBC Children in Need             (bbcchildreninneed.co.uk/grants — hardcoded rolling)
+//  28.  Gloucestershire Community Foundation (gloucestershirecf.org.uk/grants)
+//  29.  Heart of Bucks Community Foundation  (heartofbucks.org/apply-for-a-grant)
+//  30.  LLR Community Foundation             (llrcommunityfoundation.org.uk/our-grants/apply-for-a-grant)
+//  31.  MK Community Foundation              (mkcommunityfoundation.co.uk/apply-for-a-grant — hardcoded tiers)
+//  32.  Community Foundation for Lancashire  (lancsfoundation.org.uk/our-grants?grant-category=open)
+//  33.  Cambridgeshire Community Foundation  (cambscf.org.uk/funds)
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { createClient }  from '@supabase/supabase-js'
@@ -1797,6 +1803,507 @@ async function crawlBBCChildrenInNeed(): Promise<CrawlResult> {
   return await upsertGrants(SOURCE, grants)
 }
 
+// ── Source 28: Gloucestershire Community Foundation ───────────────────────────
+async function crawlGloucestershireCF(): Promise<CrawlResult> {
+  const SOURCE  = 'gloucestershire_cf'
+  const BASE    = 'https://gloucestershirecf.org.uk'
+  const LISTURL = `${BASE}/grants/`
+  try {
+    const html = await fetchHtml(LISTURL)
+    const root = parseHTML(html)
+    const grants: ScrapedGrant[] = []
+
+    const cards = root.querySelectorAll('.grants-grid__card')
+    for (const card of cards) {
+      const anchor = card.querySelector('a[href*="/grant/"]')
+      if (!anchor) continue
+      const href  = anchor.getAttribute('href') ?? ''
+      const slug  = href.split('/grant/')[1]?.replace(/\/$/, '') ?? ''
+      if (!slug) continue
+
+      const title = card.querySelector('h3')?.text?.trim() ?? anchor.text.trim()
+      if (!title) continue
+
+      const description = card.querySelector('.grid-card__text p')?.text?.trim() ?? null
+
+      // .grant-grid__data holds three .grant-data divs: deadline / amount / status
+      const dataItems = card.querySelectorAll('.grant-data')
+      const deadlineRaw = dataItems[0]?.querySelector('span')?.text?.trim() ?? ''
+      const amountRaw   = dataItems[1]?.querySelector('span')?.text?.trim() ?? ''
+      const statusRaw   = dataItems[2]?.querySelector('span')?.text?.trim().toLowerCase() ?? ''
+
+      // Skip paused grants
+      if (statusRaw === 'paused') continue
+
+      // Parse amount
+      const isUpTo = /up\s*to/i.test(amountRaw)
+      const { min: amtMin, max: amtMax } = parseAmountRange(amountRaw)
+      const amount_min = isUpTo ? null : amtMin
+      const amount_max = amtMax
+
+      // Parse deadline — look for "Nth Month YYYY" or "NTH MONTH YYYY"
+      const isRolling = /rolling/i.test(deadlineRaw)
+      const dlMatch   = deadlineRaw.match(/(\d{1,2})(?:st|nd|rd|th)?\s+([A-Za-z]+)\s+(\d{4})/i)
+      const deadline  = dlMatch
+        ? parseUKRIDate(`${dlMatch[1]} ${dlMatch[2]} ${dlMatch[3]}`)
+        : null
+
+      // Sector inference
+      const t = title.toLowerCase()
+      const sectors: string[] = ['community development']
+      if (/cancer|health|wellbeing|mental/i.test(t)) sectors.push('health & wellbeing')
+      if (/youth|young|child|neurodiver/i.test(t)) sectors.push('children & young people')
+      if (/poverty|disadvan|vulnerab/i.test(t)) sectors.push('social welfare')
+      if (/enterprise|business|swef/i.test(t)) sectors.push('enterprise & employment')
+      if (/disability|neurodiver/i.test(t)) sectors.push('disability')
+      if (/freemason|older|elder/i.test(t)) sectors.push('older people')
+
+      const applyUrl = `${BASE}${href.startsWith('/') ? href : '/' + href}`
+
+      grants.push({
+        external_id:          `gloucestershire_cf_${slug}`,
+        source:               SOURCE,
+        title,
+        funder:               'Gloucestershire Community Foundation',
+        funder_type:          'community_foundation',
+        description,
+        amount_min,
+        amount_max,
+        deadline,
+        is_rolling:           isRolling,
+        is_local:             true,
+        sectors,
+        eligibility_criteria: ['Registered charity or constituted group', 'Operating in Gloucestershire'],
+        apply_url:            applyUrl,
+        raw_data:             { status: statusRaw, deadlineRaw, amountRaw } as Record<string, unknown>,
+      })
+    }
+
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
+// ── Source 29: Heart of Bucks Community Foundation ────────────────────────────
+async function crawlHeartOfBucksCF(): Promise<CrawlResult> {
+  const SOURCE  = 'heart_of_bucks_cf'
+  const BASE    = 'https://heartofbucks.org'
+  const LISTURL = `${BASE}/apply-for-a-grant/`
+  try {
+    const html = await fetchHtml(LISTURL)
+    const root = parseHTML(html)
+    const grants: ScrapedGrant[] = []
+
+    // Page uses WPBakery .vc_row layout: each row = one fund
+    // Columns (as .mk-text-block or .wpb_text_column): [title+desc, status, amount, deadline]
+    const rows = root.querySelectorAll('.vc_row')
+    for (const row of rows) {
+      const blocks = row.querySelectorAll('.mk-text-block, .wpb_text_column')
+      if (blocks.length < 2) continue
+
+      // Status is in the second block
+      const statusText = blocks[1]?.text?.trim() ?? ''
+      if (!/^open$/i.test(statusText.split('\n')[0].trim())) continue
+
+      // Title = first <p> in first block; description = second <p>
+      const firstBlockPs = blocks[0].querySelectorAll('p')
+      const title = firstBlockPs[0]?.text?.trim() ?? ''
+      if (!title || title.toUpperCase() === title) continue   // skip header row
+      const description = firstBlockPs[1]?.text?.trim() ?? null
+
+      // Amount in third block
+      const amountRaw = blocks[2]?.text?.trim() ?? ''
+      const isUpTo    = /up\s*to/i.test(amountRaw)
+      const { min: amtMin, max: amtMax } = parseAmountRange(amountRaw)
+      const amount_min = isUpTo ? null : amtMin
+      const amount_max = amtMax
+
+      // Deadline in fourth block
+      const deadlineRaw = blocks[3]?.text?.trim() ?? ''
+      const isRolling   = /rolling|no closing/i.test(deadlineRaw)
+      const dlMatch     = deadlineRaw.match(/(\d{1,2})(?:st|nd|rd|th)?\s+([A-Za-z]+)(?:\s+(\d{4}))?/i)
+      const yearStr     = dlMatch?.[3] ?? new Date().getFullYear().toString()
+      const deadline    = dlMatch && !isRolling
+        ? parseUKRIDate(`${dlMatch[1]} ${dlMatch[2]} ${yearStr}`)
+        : null
+
+      // Apply link: prefer heartofbucks.org links; fall back to any link
+      const allLinks = row.querySelectorAll('a[href]')
+      let applyUrl = LISTURL
+      for (const a of allLinks) {
+        const href = a.getAttribute('href') ?? ''
+        if (href.startsWith('http')) { applyUrl = href; break }
+      }
+
+      // Slug from apply URL
+      const slug = applyUrl.replace(/https?:\/\/[^/]+/, '').replace(/\/$/, '').replace(/\//g, '_').replace(/^_/, '') || title.toLowerCase().replace(/\s+/g, '_')
+
+      // Sector inference
+      const t = title.toLowerCase()
+      const sectors: string[] = ['community development']
+      if (/health|wellbeing|mental/i.test(t)) sectors.push('health & wellbeing')
+      if (/youth|young|child|bursari/i.test(t)) sectors.push('children & young people')
+      if (/skill|train|qualif/i.test(t)) sectors.push('education & training')
+      if (/access|disab|sensory/i.test(t)) sectors.push('disability')
+
+      grants.push({
+        external_id:          `heart_of_bucks_cf_${slug}`,
+        source:               SOURCE,
+        title,
+        funder:               'Heart of Bucks Community Foundation',
+        funder_type:          'community_foundation',
+        description,
+        amount_min,
+        amount_max,
+        deadline,
+        is_rolling:           isRolling,
+        is_local:             true,
+        sectors,
+        eligibility_criteria: ['Registered charity or constituted community group', 'Operating in Buckinghamshire'],
+        apply_url:            applyUrl,
+        raw_data:             { statusText, amountRaw, deadlineRaw } as Record<string, unknown>,
+      })
+    }
+
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
+// ── Source 30: LLR Community Foundation ───────────────────────────────────────
+async function crawlLLRCF(): Promise<CrawlResult> {
+  const SOURCE  = 'llr_cf'
+  const BASE    = 'https://llrcommunityfoundation.org.uk'
+  const LISTURL = `${BASE}/our-grants/apply-for-a-grant/`
+  try {
+    const html   = await fetchHtml(LISTURL)
+    const root   = parseHTML(html)
+    const grants: ScrapedGrant[] = []
+
+    // WordPress post structure: h2/h3 headings with "– OPEN" suffix link to individual pages
+    const headings = root.querySelectorAll('h2, h3')
+    for (const heading of headings) {
+      const headingText = heading.text.trim()
+      // Only include open grants; skip closed
+      if (!/open/i.test(headingText)) continue
+      if (/closed/i.test(headingText)) continue
+
+      // Title = heading text stripped of status suffix
+      const title = headingText.replace(/\s*[–—-]\s*(open|closed|paused).*/i, '').trim()
+      if (!title) continue
+
+      // Apply URL from the heading's anchor or adjacent link
+      const anchor = heading.querySelector('a[href]')
+      const href   = anchor?.getAttribute('href') ?? ''
+      const applyUrl = href.startsWith('http') ? href : href ? `${BASE}${href}` : LISTURL
+
+      // Slug from URL path
+      const slug = applyUrl.replace(/https?:\/\/[^/]+/, '').replace(/\/$/, '').replace(/\//g, '_').replace(/^_/, '') || title.toLowerCase().replace(/[^a-z0-9]+/g, '_')
+
+      // Try to get description and amount from the individual grant page
+      let description: string | null = null
+      let amount_min: number | null  = null
+      let amount_max: number | null  = null
+      let deadline:   string | null  = null
+      let isRolling   = false
+
+      if (applyUrl !== LISTURL) {
+        try {
+          const grantHtml = await fetchHtml(applyUrl)
+          const grantRoot = parseHTML(grantHtml)
+          // First paragraph after main heading
+          const paras = grantRoot.querySelectorAll('.entry-content p, .post-content p, article p')
+          description = paras[0]?.text?.trim() ?? null
+
+          // Look for amount patterns in page text
+          const pageText = grantRoot.text
+          const amtMatch = pageText.match(/(?:up to\s*)?(£[\d,]+)(?:\s*[–-]\s*(£[\d,]+))?/i)
+          if (amtMatch) {
+            const isUpTo = /up\s*to/i.test(pageText.slice(Math.max(0, pageText.indexOf(amtMatch[0]) - 20), pageText.indexOf(amtMatch[0])))
+            const { min: mn, max: mx } = parseAmountRange(amtMatch[0])
+            amount_min = isUpTo ? null : mn
+            amount_max = mx
+          }
+
+          // Deadline
+          const dlMatch = pageText.match(/deadline[:\s]+([^\n.]+)/i)
+          if (dlMatch) {
+            const dlText = dlMatch[1].trim()
+            isRolling = /rolling|ongoing|no fixed/i.test(dlText)
+            const dm = dlText.match(/(\d{1,2})(?:st|nd|rd|th)?\s+([A-Za-z]+)\s+(\d{4})/i)
+            if (dm && !isRolling) deadline = parseUKRIDate(`${dm[1]} ${dm[2]} ${dm[3]}`)
+          }
+        } catch {
+          // Individual page failed — continue with what we have
+        }
+      }
+
+      // Sector inference
+      const t = title.toLowerCase()
+      const sectors: string[] = ['community development']
+      if (/water|environment|green/i.test(t)) sectors.push('environment')
+      if (/enterprise|business|employment|economic/i.test(t)) sectors.push('enterprise & employment')
+      if (/literary|read|book|art|cultur/i.test(t)) sectors.push('arts & culture')
+      if (/health|wellbeing/i.test(t)) sectors.push('health & wellbeing')
+
+      grants.push({
+        external_id:          `llr_cf_${slug}`,
+        source:               SOURCE,
+        title,
+        funder:               'LLR Community Foundation',
+        funder_type:          'community_foundation',
+        description,
+        amount_min,
+        amount_max,
+        deadline,
+        is_rolling:           isRolling,
+        is_local:             true,
+        sectors,
+        eligibility_criteria: ['Registered charity or constituted group', 'Operating in Leicester, Leicestershire or Rutland'],
+        apply_url:            applyUrl,
+        raw_data:             { headingText } as Record<string, unknown>,
+      })
+    }
+
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
+// ── Source 31: MK Community Foundation ────────────────────────────────────────
+async function crawlMKCF(): Promise<CrawlResult> {
+  const SOURCE = 'mk_cf'
+  // MK CF uses a tiered programme model; these are their standing open grant rounds
+  const grants: ScrapedGrant[] = [
+    {
+      external_id:          'mk_cf_seed_grants',
+      source:               SOURCE,
+      title:                'Seed Grants',
+      funder:               'MK Community Foundation',
+      funder_type:          'community_foundation',
+      description:          'For early-stage ideas and new community groups. Grants of up to £750 to help you get started.',
+      amount_min:           null,
+      amount_max:           750,
+      deadline:             null,
+      is_rolling:           true,
+      is_local:             true,
+      sectors:              ['community development'],
+      eligibility_criteria: ['Charity or constituted community group in Milton Keynes', 'New or emerging organisations'],
+      apply_url:            'https://www.mkcommunityfoundation.co.uk/apply-for-a-grant/seed-grants/',
+      raw_data:             {} as Record<string, unknown>,
+    },
+    {
+      external_id:          'mk_cf_sapling_grants',
+      source:               SOURCE,
+      title:                'Sapling Grants',
+      funder:               'MK Community Foundation',
+      funder_type:          'community_foundation',
+      description:          'For growing organisations delivering community benefit in Milton Keynes.',
+      amount_min:           null,
+      amount_max:           5000,
+      deadline:             null,
+      is_rolling:           true,
+      is_local:             true,
+      sectors:              ['community development'],
+      eligibility_criteria: ['Registered charity or constituted group', 'Operating in Milton Keynes'],
+      apply_url:            'https://www.mkcommunityfoundation.co.uk/apply-for-a-grant/sapling-grants/',
+      raw_data:             {} as Record<string, unknown>,
+    },
+    {
+      external_id:          'mk_cf_oak_grants',
+      source:               SOURCE,
+      title:                'Oak Grants',
+      funder:               'MK Community Foundation',
+      funder_type:          'community_foundation',
+      description:          'For established organisations with a track record of delivery in Milton Keynes.',
+      amount_min:           null,
+      amount_max:           15000,
+      deadline:             null,
+      is_rolling:           true,
+      is_local:             true,
+      sectors:              ['community development'],
+      eligibility_criteria: ['Registered charity', 'Operating in Milton Keynes', 'Proven track record'],
+      apply_url:            'https://www.mkcommunityfoundation.co.uk/apply-for-a-grant/oak-grants/',
+      raw_data:             {} as Record<string, unknown>,
+    },
+    {
+      external_id:          'mk_cf_strategic_partnerships',
+      source:               SOURCE,
+      title:                'Strategic Partnership Grants',
+      funder:               'MK Community Foundation',
+      funder_type:          'community_foundation',
+      description:          'Multi-year funding for anchor organisations making a significant strategic impact across Milton Keynes.',
+      amount_min:           null,
+      amount_max:           null,
+      deadline:             null,
+      is_rolling:           false,
+      is_local:             true,
+      sectors:              ['community development'],
+      eligibility_criteria: ['Registered charity', 'Operating strategically across Milton Keynes'],
+      apply_url:            'https://www.mkcommunityfoundation.co.uk/apply-for-a-grant/strategic-partnerships/',
+      raw_data:             {} as Record<string, unknown>,
+    },
+  ]
+  return await upsertGrants(SOURCE, grants)
+}
+
+// ── Source 32: Community Foundation for Lancashire ────────────────────────────
+async function crawlLancsCF(): Promise<CrawlResult> {
+  const SOURCE  = 'lancs_cf'
+  const BASE    = 'https://lancsfoundation.org.uk'
+  const LISTURL = `${BASE}/our-grants?grant-category=open`
+  try {
+    const html = await fetchHtml(LISTURL)
+    const root = parseHTML(html)
+    const grants: ScrapedGrant[] = []
+
+    // Each open grant is a .js-grants-single div containing a single <a> card
+    // Inside: h2 (title), p (description), spans with "Grant Size:", "Location:", "Deadline:"
+    const cards = root.querySelectorAll('.js-grants-single')
+    for (const card of cards) {
+      const title = card.querySelector('h2')?.text?.trim() ?? ''
+      if (!title) continue
+
+      const description = card.querySelector('p')?.text?.trim() ?? null
+      const applyHref   = card.querySelector('a[href]')?.getAttribute('href') ?? ''
+      const applyUrl    = applyHref.startsWith('http') ? applyHref : `${BASE}${applyHref}`
+
+      // Parse metadata from card text — spans contain "Grant Size: X", "Location: Y", "Deadline: Z"
+      const cardText    = card.text.replace(/\s+/g, ' ')
+      const amountRaw   = cardText.match(/Grant Size:\s*([^L\n]+?)(?:\s+Location:|$)/i)?.[1]?.trim() ?? ''
+      const deadlineRaw = cardText.match(/Deadline:\s*([^\n]+?)(?:\s+Apply|$)/i)?.[1]?.trim() ?? ''
+
+      const isUpTo    = /up\s*to/i.test(amountRaw)
+      const { min: amtMin, max: amtMax } = parseAmountRange(amountRaw)
+      const amount_min = isUpTo ? null : amtMin
+      const amount_max = amtMax
+
+      // Deadline: "Monday 2nd March 2026" or "Winter 2026" or missing
+      const isRolling = !deadlineRaw || /rolling|ongoing|tbc/i.test(deadlineRaw)
+      const dlMatch   = deadlineRaw.match(/(\d{1,2})(?:st|nd|rd|th)?\s+([A-Za-z]+)\s+(\d{4})/i)
+      const deadline  = dlMatch && !isRolling
+        ? parseUKRIDate(`${dlMatch[1]} ${dlMatch[2]} ${dlMatch[3]}`)
+        : null
+
+      // Slug from URL
+      const slug = applyUrl.replace(/https?:\/\/[^/]+\/grants\//, '').replace(/\/$/, '') || title.toLowerCase().replace(/[^a-z0-9]+/g, '_')
+
+      // Sector inference
+      const t = (title + ' ' + (description ?? '')).toLowerCase()
+      const sectors: string[] = ['community development']
+      if (/young|youth|child|famil/i.test(t)) sectors.push('children & young people')
+      if (/enterprise|business|start.?up/i.test(t)) sectors.push('enterprise & employment')
+      if (/environment|energy|wind farm|decarb/i.test(t)) sectors.push('environment')
+      if (/women|gender/i.test(t)) sectors.push('equality & diversity')
+      if (/music|art|sport|leisure/i.test(t)) sectors.push('arts & culture')
+
+      grants.push({
+        external_id:          `lancs_cf_${slug}`,
+        source:               SOURCE,
+        title,
+        funder:               'Community Foundation for Lancashire',
+        funder_type:          'community_foundation',
+        description,
+        amount_min,
+        amount_max,
+        deadline,
+        is_rolling:           isRolling,
+        is_local:             true,
+        sectors,
+        eligibility_criteria: ['Voluntary or community group in Lancashire'],
+        apply_url:            applyUrl,
+        raw_data:             { amountRaw, deadlineRaw } as Record<string, unknown>,
+      })
+    }
+
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
+// ── Source 33: Cambridgeshire Community Foundation ────────────────────────────
+async function crawlCambsCF(): Promise<CrawlResult> {
+  const SOURCE  = 'cambs_cf'
+  const BASE    = 'https://www.cambscf.org.uk'
+  const LISTURL = `${BASE}/funds/`
+  try {
+    const html = await fetchHtml(LISTURL)
+    const root = parseHTML(html)
+    const grants: ScrapedGrant[] = []
+
+    // Each fund is a <li class="rounded-lg ..."> card
+    // Structure: h3 (title) + div > [h4 (amount), em (deadlines), p (desc), a (link)]
+    const cards = root.querySelectorAll('li.rounded-lg, li[class*="rounded-lg"]')
+    for (const card of cards) {
+      const title = card.querySelector('h3')?.text?.trim() ?? ''
+      if (!title) continue
+
+      const amountRaw   = card.querySelector('h4')?.text?.trim() ?? ''
+      const deadlineRaw = card.querySelector('em')?.text?.trim() ?? ''
+      const description = card.querySelector('p')?.text?.trim() ?? null
+      const applyHref   = card.querySelector('a[href]')?.getAttribute('href') ?? ''
+      const applyUrl    = applyHref.startsWith('http') ? applyHref : `${BASE}${applyHref}`
+
+      // Skip permanently or currently closed funds
+      if (/closed/i.test(deadlineRaw)) continue
+
+      // Clean deadline string: "Application deadlines: 1 May, 1 August" → "1 May, 1 August"
+      const cleanDeadline = deadlineRaw.replace(/^Application deadlines?:\s*/i, '').trim()
+      const isRolling     = /rolling|ongoing/i.test(cleanDeadline)
+
+      // Extract first concrete date
+      const dlMatch = cleanDeadline.match(/(\d{1,2})\s+([A-Za-z]+)/)
+      const deadline = dlMatch && !isRolling
+        ? parseUKRIDate(`${dlMatch[1]} ${dlMatch[2]} ${new Date().getFullYear()}`)
+        : null
+
+      // Parse amount — h4 may say "£50,000" or "Up to £15,000" or "No maximum..."
+      const isUpTo    = /up\s*to|no max/i.test(amountRaw)
+      const { min: amtMin, max: amtMax } = parseAmountRange(amountRaw)
+      const amount_min = isUpTo ? null : amtMin
+      const amount_max = amtMax
+
+      // Slug from apply URL
+      const slug = applyUrl.replace(/https?:\/\/[^/]+/, '').replace(/\/$/, '').replace(/\//g, '_').replace(/^_/, '') || title.toLowerCase().replace(/[^a-z0-9]+/g, '_')
+
+      // Sector inference
+      const t = (title + ' ' + (description ?? '')).toLowerCase()
+      const sectors: string[] = ['community development']
+      if (/environment|nature|decarb|solar|heat pump/i.test(t)) sectors.push('environment')
+      if (/dementia|health|wellbeing|cancer/i.test(t)) sectors.push('health & wellbeing')
+      if (/young|youth|18.30|start.?up|enterprise|business/i.test(t)) sectors.push('enterprise & employment')
+      if (/poverty|need|hardship|distress|vulnerable/i.test(t)) sectors.push('social welfare')
+      if (/education|stem|school|training/i.test(t)) sectors.push('education & training')
+
+      grants.push({
+        external_id:          `cambs_cf_${slug}`,
+        source:               SOURCE,
+        title,
+        funder:               'Cambridgeshire Community Foundation',
+        funder_type:          'community_foundation',
+        description,
+        amount_min,
+        amount_max,
+        deadline,
+        is_rolling:           isRolling,
+        is_local:             true,
+        sectors,
+        eligibility_criteria: ['Registered charity or constituted group', 'Operating in Cambridgeshire'],
+        apply_url:            applyUrl,
+        raw_data:             { amountRaw, deadlineRaw: cleanDeadline } as Record<string, unknown>,
+      })
+    }
+
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
 // ── Amount parsers ────────────────────────────────────────────────────────────
 function parsePoundAmount(str: string): number | null {
   if (!str) return null
@@ -1879,7 +2386,9 @@ export async function crawlAllSources(): Promise<CrawlResult[]> {
     sussexCF, surreyCF, hiwcf, oxfordshireCF,
     asdaFoundation, avivaFoundation, nationwideFoundation,
     tyneWearCF, norfolkCF, suffolkCF,
-    merseysideCF, bbcCiN,
+    merseysideCF, bbcCiN, gloucestershireCF,
+    heartOfBucksCF, llrCF, mkCF,
+    lancsCF, cambsCF,
   ] = await Promise.allSettled([
     crawlGovUK(),
     crawlTNLCF(),
@@ -1908,6 +2417,12 @@ export async function crawlAllSources(): Promise<CrawlResult[]> {
     crawlSuffolkCF(),
     crawlMerseysideCF(),
     crawlBBCChildrenInNeed(),
+    crawlGloucestershireCF(),
+    crawlHeartOfBucksCF(),
+    crawlLLRCF(),
+    crawlMKCF(),
+    crawlLancsCF(),
+    crawlCambsCF(),
   ])
 
   return [
@@ -1938,5 +2453,11 @@ export async function crawlAllSources(): Promise<CrawlResult[]> {
     suffolkCF.status           === 'fulfilled' ? suffolkCF.value           : { source: 'suffolk_cf',            fetched: 0, upserted: 0, error: 'Promise rejected' },
     merseysideCF.status        === 'fulfilled' ? merseysideCF.value        : { source: 'merseyside_cf',         fetched: 0, upserted: 0, error: 'Promise rejected' },
     bbcCiN.status              === 'fulfilled' ? bbcCiN.value              : { source: 'bbc_cin',               fetched: 0, upserted: 0, error: 'Promise rejected' },
+    gloucestershireCF.status   === 'fulfilled' ? gloucestershireCF.value   : { source: 'gloucestershire_cf',    fetched: 0, upserted: 0, error: 'Promise rejected' },
+    heartOfBucksCF.status      === 'fulfilled' ? heartOfBucksCF.value      : { source: 'heart_of_bucks_cf',    fetched: 0, upserted: 0, error: 'Promise rejected' },
+    llrCF.status               === 'fulfilled' ? llrCF.value               : { source: 'llr_cf',               fetched: 0, upserted: 0, error: 'Promise rejected' },
+    mkCF.status                === 'fulfilled' ? mkCF.value                : { source: 'mk_cf',                fetched: 0, upserted: 0, error: 'Promise rejected' },
+    lancsCF.status             === 'fulfilled' ? lancsCF.value             : { source: 'lancs_cf',             fetched: 0, upserted: 0, error: 'Promise rejected' },
+    cambsCF.status             === 'fulfilled' ? cambsCF.value             : { source: 'cambs_cf',             fetched: 0, upserted: 0, error: 'Promise rejected' },
   ]
 }
