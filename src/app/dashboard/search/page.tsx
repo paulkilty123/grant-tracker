@@ -36,6 +36,56 @@ function sectorLabel(s: string): string | null {
   return s
 }
 
+// Themed sector groups for the filter panel
+const SECTOR_GROUPS: { label: string; icon: string; sectors: string[] }[] = [
+  { label: 'People & Community', icon: '🤝', sectors: [
+    'community', 'young people', 'older people', 'women', 'LGBTQ+',
+    'disability', 'carers', 'veterans', 'families', 'loneliness',
+  ]},
+  { label: 'Health & Wellbeing', icon: '🏥', sectors: [
+    'health', 'mental health', 'wellbeing', 'addiction', 'cancer',
+    'physical activity', 'sport',
+  ]},
+  { label: 'Social Justice', icon: '⚖️', sectors: [
+    'poverty', 'inequality', 'racial equity', 'human rights',
+    'criminal justice', 'migration', 'asylum seekers',
+    'domestic abuse', 'homelessness', 'equality', 'gender equality',
+  ]},
+  { label: 'Arts & Culture', icon: '🎭', sectors: [
+    'arts', 'culture', 'heritage', 'film', 'documentary', 'screen',
+    'television', 'animation', 'music', 'museums', 'libraries',
+    'creative industries', 'Welsh language',
+  ]},
+  { label: 'Education & Employment', icon: '📚', sectors: [
+    'education', 'skills', 'employment', 'leadership',
+    'vocational training', 'digital skills',
+  ]},
+  { label: 'Environment & Climate', icon: '🌿', sectors: [
+    'environment', 'climate', 'biodiversity', 'conservation',
+    'energy', 'farming', 'food',
+  ]},
+  { label: 'Technology & Digital', icon: '💻', sectors: [
+    'technology', 'digital', 'digital inclusion', 'digital preservation',
+    'ai', 'open source', 'connectivity', 'online safety', 'innovation',
+  ]},
+  { label: 'Enterprise & Finance', icon: '💼', sectors: [
+    'social enterprise', 'enterprise', 'financial inclusion',
+    'economic inclusion', 'economic development', 'economic justice',
+    'capacity building', 'community business', 'social change',
+  ]},
+  { label: 'Place & Housing', icon: '🏘️', sectors: [
+    'housing', 'homelessness', 'rural', 'urban', 'regeneration', 'transport',
+  ]},
+  { label: 'International', icon: '🌍', sectors: [
+    'international development', 'peacebuilding', 'open access',
+    'disaster relief',
+  ]},
+  { label: 'Research & Policy', icon: '🔬', sectors: [
+    'research', 'social policy', 'advocacy', 'democracy',
+    'science', 'humanities', 'journalism',
+  ]},
+]
+
 const FUNDER_TYPES = [
   { id: 'all',               label: 'All' },
   { id: 'local',             label: '📍 Local' },
@@ -789,22 +839,54 @@ export default function SearchPage() {
               )}
             </div>
 
-            {/* Sectors */}
+            {/* Sectors — grouped by theme */}
             {availableSectors.length > 0 && (
-              <div>
-                <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Sector</p>
-                <div className="flex gap-2 flex-wrap">
-                  {availableSectors.map(s => (
-                    <button key={s} onClick={() => toggleSector(s)}
-                      className={`px-3 py-1 rounded-full border text-xs font-medium capitalize transition-all ${
-                        activeSectors.has(s)
-                          ? 'bg-purple-600 border-purple-600 text-white'
-                          : 'border-purple-200 text-purple-700 hover:bg-purple-50'
-                      }`}>
-                      {sectorLabel(s) ?? s}
-                    </button>
-                  ))}
-                </div>
+              <div className="space-y-3">
+                <p className="text-xs font-semibold text-light uppercase tracking-wider">Sector</p>
+                {SECTOR_GROUPS.map(group => {
+                  const groupSectors = group.sectors.filter(s => availableSectors.includes(s))
+                  if (groupSectors.length === 0) return null
+                  return (
+                    <div key={group.label}>
+                      <p className="text-xs text-mid font-medium mb-1.5">{group.icon} {group.label}</p>
+                      <div className="flex gap-1.5 flex-wrap">
+                        {groupSectors.map(s => (
+                          <button key={s} onClick={() => toggleSector(s)}
+                            className={`px-3 py-1 rounded-full border text-xs font-medium capitalize transition-all ${
+                              activeSectors.has(s)
+                                ? 'bg-purple-600 border-purple-600 text-white'
+                                : 'border-purple-200 text-purple-700 hover:bg-purple-50'
+                            }`}>
+                            {sectorLabel(s) ?? s}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })}
+                {/* Any sectors not in a group */}
+                {(() => {
+                  const grouped = new Set(SECTOR_GROUPS.flatMap(g => g.sectors))
+                  const ungrouped = availableSectors.filter(s => !grouped.has(s))
+                  if (ungrouped.length === 0) return null
+                  return (
+                    <div>
+                      <p className="text-xs text-mid font-medium mb-1.5">Other</p>
+                      <div className="flex gap-1.5 flex-wrap">
+                        {ungrouped.map(s => (
+                          <button key={s} onClick={() => toggleSector(s)}
+                            className={`px-3 py-1 rounded-full border text-xs font-medium capitalize transition-all ${
+                              activeSectors.has(s)
+                                ? 'bg-purple-600 border-purple-600 text-white'
+                                : 'border-purple-200 text-purple-700 hover:bg-purple-50'
+                            }`}>
+                            {sectorLabel(s) ?? s}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })()}
               </div>
             )}
 
