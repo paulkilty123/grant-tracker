@@ -28,6 +28,8 @@
 //  23.  Community Foundation Tyne & Wear (communityfoundation.org.uk/apply)
 //  24.  Norfolk Community Foundation     (norfolkfoundation.com/funding-support/grants/groups)
 //  25.  Suffolk Community Foundation     (suffolkcf.org.uk/current-grants)
+//  26.  Community Foundation Merseyside  (cfmerseyside.org.uk/our-grants)
+//  27.  BBC Children in Need             (bbcchildreninneed.co.uk/grants — hardcoded rolling)
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { createClient }  from '@supabase/supabase-js'
@@ -1668,6 +1670,133 @@ async function crawlSuffolkCF(): Promise<CrawlResult> {
   }
 }
 
+// ── Source 26: Community Foundation Merseyside & Lancashire ───────────────────
+async function crawlMerseysideCF(): Promise<CrawlResult> {
+  const SOURCE  = 'merseyside_cf'
+  const BASE    = 'https://cfmerseyside.org.uk'
+  const LISTURL = `${BASE}/our-grants`
+
+  try {
+    const html  = await fetchHtml(LISTURL)
+    const root  = parseHTML(html)
+    const grants: ScrapedGrant[] = []
+
+    // Each open grant is an <a href="/grants/slug"> wrapping the full card content.
+    // Closed / coming-soon grants use different background colours and lack "Apply Now".
+    const links = root.querySelectorAll('a').filter(a => {
+      const href = a.getAttribute('href') ?? ''
+      return href.includes('/grants/') && /apply\s+now/i.test(a.text)
+    })
+
+    for (const link of links) {
+      const href  = link.getAttribute('href') ?? ''
+      const slug  = href.split('/grants/')[1]?.replace(/\/$/, '') ?? ''
+      if (!slug) continue
+
+      // Skip individual-only grants
+      if (/individual/i.test(slug)) continue
+
+      const title = link.querySelector('h2')?.text?.trim()
+      if (!title || /individual/i.test(title)) continue
+
+      const cardText = link.text.replace(/\s+/g, ' ')
+
+      // Grant Size: e.g. "£5,000" or "£500-£2,000" or "Up to £2,000"
+      const sizeRaw = cardText.match(/Grant Size:\s*((?:Up to\s+)?£[\d,]+(?:\s*[-–]\s*£[\d,]+)?)/i)?.[1] ?? ''
+      const { min: amountMin, max: amountMax } = parseAmountRange(sizeRaw || cardText.slice(0, 400))
+
+      // Location
+      const location = cardText.match(/Location:\s*([A-Za-z][^£\n]{2,60?})(?:\s*Deadline|\s*Decision|\s*Apply)/i)?.[1]?.trim()
+        ?? 'Merseyside / Lancashire'
+
+      // Deadline — "30th March 2026" style
+      const dlRaw   = cardText.match(/Deadline:\s*(\d{1,2}(?:st|nd|rd|th)?\s+\w+\s+\d{4})/i)?.[1] ?? ''
+      const deadline = dlRaw ? parseUKRIDate(dlRaw) : null
+
+      // Description — text before "Grant Size:"
+      const descMatch = cardText.replace(title, '').match(/^\s*(.{30,400?}?)(?:Grant Size:|Location:|Deadline:|Apply Now)/i)
+      const description = descMatch ? descMatch[1].trim().slice(0, 500) : null
+
+      const sectors: string[] = []
+      const lc = `${title} ${description ?? ''}`.toLowerCase()
+      if (/young people|children|youth|educat/i.test(lc))        sectors.push('children & young people')
+      if (/health|wellbeing|mental/i.test(lc))                   sectors.push('health & wellbeing')
+      if (/sport|active|fitness/i.test(lc))                      sectors.push('sport')
+      if (/arts|culture|music|creative/i.test(lc))               sectors.push('arts & culture')
+      if (/environment|climate|green|sustain/i.test(lc))         sectors.push('environment')
+      if (/poverty|homeless|food|fuel|financ/i.test(lc))         sectors.push('social welfare')
+      if (sectors.length === 0)                                   sectors.push('community')
+
+      grants.push({
+        external_id:          `merseyside_cf_${slug}`,
+        source:               SOURCE,
+        title,
+        funder:               'Community Foundation for Merseyside',
+        funder_type:          'community_foundation',
+        description,
+        amount_min:           amountMin,
+        amount_max:           amountMax,
+        deadline,
+        is_rolling:           !deadline,
+        is_local:             true,
+        sectors,
+        eligibility_criteria: ['Charitable or voluntary organisations in Merseyside or Lancashire'],
+        apply_url:            `${BASE}${href}`,
+        raw_data:             { slug } as Record<string, unknown>,
+      })
+    }
+
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
+// ── Source 27: BBC Children in Need (hardcoded rolling fund) ──────────────────
+async function crawlBBCChildrenInNeed(): Promise<CrawlResult> {
+  const SOURCE = 'bbc_cin'
+  const URL    = 'https://www.bbcchildreninneed.co.uk/grants/main-grants/'
+
+  const grants: ScrapedGrant[] = [
+    {
+      external_id:          'bbc_cin_main_grants',
+      source:               SOURCE,
+      title:                'BBC Children in Need Main Grants',
+      funder:               'BBC Children in Need',
+      funder_type:          'charity',
+      description:          'Grants of £10,000–£40,000 per year for up to 3 years for organisations working with disadvantaged children and young people (under 18) in the UK. Covers projects tackling poverty, disability, mental health and other challenges. Requires a pre-application discussion with a grants officer.',
+      amount_min:           10000,
+      amount_max:           40000,
+      deadline:             null,
+      is_rolling:           true,
+      is_local:             false,
+      sectors:              ['children & young people', 'social welfare', 'health & wellbeing'],
+      eligibility_criteria: ['UK-registered charity or constituted group', 'Working with under-18s facing disadvantage'],
+      apply_url:            URL,
+      raw_data:             {} as Record<string, unknown>,
+    },
+    {
+      external_id:          'bbc_cin_small_grants',
+      source:               SOURCE,
+      title:                'BBC Children in Need Small Grants',
+      funder:               'BBC Children in Need',
+      funder_type:          'charity',
+      description:          'Grants of £1,000–£10,000 for organisations delivering direct work with children and young people (under 18) facing disadvantage in the UK. Rolling programme with no fixed deadlines.',
+      amount_min:           1000,
+      amount_max:           10000,
+      deadline:             null,
+      is_rolling:           true,
+      is_local:             false,
+      sectors:              ['children & young people', 'social welfare'],
+      eligibility_criteria: ['UK-registered charity or constituted group', 'Working with under-18s facing disadvantage'],
+      apply_url:            'https://www.bbcchildreninneed.co.uk/grants/small-grants/',
+      raw_data:             {} as Record<string, unknown>,
+    },
+  ]
+
+  return await upsertGrants(SOURCE, grants)
+}
+
 // ── Amount parsers ────────────────────────────────────────────────────────────
 function parsePoundAmount(str: string): number | null {
   if (!str) return null
@@ -1750,6 +1879,7 @@ export async function crawlAllSources(): Promise<CrawlResult[]> {
     sussexCF, surreyCF, hiwcf, oxfordshireCF,
     asdaFoundation, avivaFoundation, nationwideFoundation,
     tyneWearCF, norfolkCF, suffolkCF,
+    merseysideCF, bbcCiN,
   ] = await Promise.allSettled([
     crawlGovUK(),
     crawlTNLCF(),
@@ -1776,6 +1906,8 @@ export async function crawlAllSources(): Promise<CrawlResult[]> {
     crawlTyneWearCF(),
     crawlNorfolkCF(),
     crawlSuffolkCF(),
+    crawlMerseysideCF(),
+    crawlBBCChildrenInNeed(),
   ])
 
   return [
@@ -1804,5 +1936,7 @@ export async function crawlAllSources(): Promise<CrawlResult[]> {
     tyneWearCF.status          === 'fulfilled' ? tyneWearCF.value          : { source: 'tyne_wear_cf',          fetched: 0, upserted: 0, error: 'Promise rejected' },
     norfolkCF.status           === 'fulfilled' ? norfolkCF.value           : { source: 'norfolk_cf',            fetched: 0, upserted: 0, error: 'Promise rejected' },
     suffolkCF.status           === 'fulfilled' ? suffolkCF.value           : { source: 'suffolk_cf',            fetched: 0, upserted: 0, error: 'Promise rejected' },
+    merseysideCF.status        === 'fulfilled' ? merseysideCF.value        : { source: 'merseyside_cf',         fetched: 0, upserted: 0, error: 'Promise rejected' },
+    bbcCiN.status              === 'fulfilled' ? bbcCiN.value              : { source: 'bbc_cin',               fetched: 0, upserted: 0, error: 'Promise rejected' },
   ]
 }
