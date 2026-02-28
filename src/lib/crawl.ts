@@ -3114,6 +3114,109 @@ async function upsertGrants(source: string, grants: ScrapedGrant[]): Promise<Cra
   return { source, fetched: grants.length, upserted: grants.length }
 }
 
+// ── Source 46 — Garfield Weston Foundation ────────────────────────────────────
+// Rolling UK-wide grant maker (~£100m/year). No structured listing page —
+// hardcoded as a single rolling entry covering all programme areas.
+async function crawlGarfieldWeston(): Promise<CrawlResult> {
+  const SOURCE = 'garfield_weston'
+  try {
+    const grants: ScrapedGrant[] = [{
+      external_id:          `${SOURCE}_main`,
+      source:               SOURCE,
+      title:                'Garfield Weston Foundation — General Grants',
+      funder:               'Garfield Weston Foundation',
+      funder_type:          'trust_foundation',
+      description:          'Family-founded grant-maker giving around £100 million a year to UK charities. ' +
+                            'Funds a wide range of sectors including welfare, youth, community, environment, ' +
+                            'education, health, arts, heritage and faith. Applications accepted year-round with ' +
+                            'decisions at quarterly trustee meetings.',
+      amount_min:           1000,
+      amount_max:           100000,
+      deadline:             null,
+      is_rolling:           true,
+      is_local:             false,
+      sectors:              ['welfare', 'youth', 'community', 'environment', 'education', 'health', 'arts', 'heritage'],
+      eligibility_criteria: [
+        'Registered UK charity or exempt/excepted body',
+        'Working in one of the foundation\'s core sectors',
+        'Previous grantees must wait at least one year before reapplying',
+        'Applications accepted from charities of any size',
+      ],
+      apply_url:            'https://garfieldweston.org/for-grant-applicants/how-to-apply/',
+      raw_data:             { note: 'Hardcoded rolling entry — no structured listing page' },
+    }]
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
+// ── Source 47 — Clothworkers Foundation ───────────────────────────────────────
+// Open Grants Programme: capital costs for small/medium charities supporting
+// marginalised communities. Two tiers: small grants up to £15k, large £15k+.
+// Rolling applications accepted year-round, reviewed at quarterly board meetings.
+async function crawlClothworkersFoundation(): Promise<CrawlResult> {
+  const SOURCE = 'clothworkers_foundation'
+  try {
+    const grants: ScrapedGrant[] = [
+      {
+        external_id:          `${SOURCE}_small_grants`,
+        source:               SOURCE,
+        title:                'Clothworkers Foundation — Small Capital Grants (up to £15,000)',
+        funder:               'The Clothworkers Foundation',
+        funder_type:          'trust_foundation',
+        description:          'Capital grants up to £15,000 for small- and medium-sized charities and social ' +
+                              'enterprises supporting disadvantaged and marginalised communities. Funds ' +
+                              'equipment, vehicles, digital infrastructure and small building works. ' +
+                              'Rolling programme — applications reviewed quarterly.',
+        amount_min:           1000,
+        amount_max:           15000,
+        deadline:             null,
+        is_rolling:           true,
+        is_local:             false,
+        sectors:              ['community', 'welfare', 'disadvantaged communities'],
+        eligibility_criteria: [
+          'Registered charity or social enterprise',
+          'Annual income generally under £5 million',
+          'Capital costs only (equipment, vehicles, buildings, digital)',
+          'Must work with disadvantaged or marginalised communities',
+          'Must embed lived experience across organisational work',
+        ],
+        apply_url:            'https://www.clothworkersfoundation.org.uk/open-funding',
+        raw_data:             { tier: 'small', note: 'Hardcoded rolling entry' },
+      },
+      {
+        external_id:          `${SOURCE}_large_grants`,
+        source:               SOURCE,
+        title:                'Clothworkers Foundation — Large Capital Grants (over £15,000)',
+        funder:               'The Clothworkers Foundation',
+        funder_type:          'trust_foundation',
+        description:          'Capital grants over £15,000 — typically for building purchase, construction or ' +
+                              'major refurbishment projects for charities serving marginalised communities. ' +
+                              'In 2024, 186 building projects were funded. Rolling programme reviewed quarterly.',
+        amount_min:           15001,
+        amount_max:           250000,
+        deadline:             null,
+        is_rolling:           true,
+        is_local:             false,
+        sectors:              ['community', 'welfare', 'disadvantaged communities'],
+        eligibility_criteria: [
+          'Registered charity or social enterprise',
+          'Capital costs only — buildings, major refurbishment, large equipment',
+          'Must work with disadvantaged or marginalised communities',
+          'Demonstrates lived experience embedded in governance and delivery',
+          'Can evidence significant organisational impact from the capital project',
+        ],
+        apply_url:            'https://www.clothworkersfoundation.org.uk/open-funding',
+        raw_data:             { tier: 'large', note: 'Hardcoded rolling entry' },
+      },
+    ]
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
 // ── Batch definitions ─────────────────────────────────────────────────────────
 // Sources are grouped into 3 batches so each cron invocation handles ~15 sources.
 // Batch 1: core nationals + first CFs
@@ -3142,6 +3245,7 @@ const BATCH_3_SOURCES = [
   'somerset_cf', 'forever_notts', 'cheshire_cf',
   'shropshire_cf', 'kent_cf', 'lincolnshire_cf',
   'paul_hamlyn_foundation', 'esmee_fairbairn', 'henry_smith',
+  'garfield_weston', 'clothworkers_foundation',
 ] as const
 
 // ── Main export ───────────────────────────────────────────────────────────────
@@ -3175,6 +3279,7 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
     somersetCF, foreverNotts, cheshireCF,
     shropshireCF, kentCF, lincolnshireCF,
     paulHamlynFoundation, esmeeFairbairn, henrySmith,
+    garfieldWeston, clothworkersFoundation,
   ] = await Promise.allSettled([
     run('gov_uk',                  crawlGovUK),
     run('tnlcf',                   crawlTNLCF),
@@ -3221,11 +3326,13 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
     run('paul_hamlyn_foundation',  crawlPaulHamlynFoundation),
     run('esmee_fairbairn',         crawlEsmeeFairbairn),
     run('henry_smith',             crawlHenrySmithFoundation),
+    run('garfield_weston',         crawlGarfieldWeston),
+    run('clothworkers_foundation', crawlClothworkersFoundation),
   ])
 
   const fallback = (source: string) => ({ source, fetched: 0, upserted: 0, error: 'Promise rejected' })
 
-  return [
+  const results = [
     govUK.status                  === 'fulfilled' ? govUK.value                  : fallback('gov_uk'),
     tnlcf.status                  === 'fulfilled' ? tnlcf.value                  : fallback('tnlcf'),
     ukri.status                   === 'fulfilled' ? ukri.value                   : fallback('ukri'),
@@ -3271,5 +3378,25 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
     paulHamlynFoundation.status   === 'fulfilled' ? paulHamlynFoundation.value   : fallback('paul_hamlyn_foundation'),
     esmeeFairbairn.status         === 'fulfilled' ? esmeeFairbairn.value         : fallback('esmee_fairbairn'),
     henrySmith.status             === 'fulfilled' ? henrySmith.value             : fallback('henry_smith'),
+    garfieldWeston.status         === 'fulfilled' ? garfieldWeston.value         : fallback('garfield_weston'),
+    clothworkersFoundation.status === 'fulfilled' ? clothworkersFoundation.value : fallback('clothworkers_foundation'),
   ]
+
+  // ── Persist run to crawl_logs (best-effort, don't fail if table missing) ─
+  try {
+    const loggable = results.filter(r => r.error !== 'skipped')
+    if (loggable.length > 0) {
+      await adminClient()
+        .from('crawl_logs')
+        .insert(loggable.map(r => ({
+          source:   r.source,
+          batch:    batch ?? null,
+          fetched:  r.fetched,
+          upserted: r.upserted,
+          error:    r.error ?? null,
+        })))
+    }
+  } catch { /* crawl_logs table may not exist yet — ignore */ }
+
+  return results
 }

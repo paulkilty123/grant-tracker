@@ -20,6 +20,7 @@ const NAV: { href: string; label: string; emoji: string; section: string; badge?
   { href: '/dashboard/pipeline',    label: 'Funding Pipeline', emoji: '🗂',  section: 'Manage' },
   { href: '/dashboard/deadlines',   label: 'Deadlines',        emoji: '📅', section: 'Manage' },
   { href: '/dashboard/profile',     label: 'Organisation',     emoji: '🏢', section: 'Settings' },
+  { href: '/dashboard/admin',       label: 'Source Health',    emoji: '⚙️',  section: 'Settings' },
 ]
 
 const sections = ['Find Funding', 'Manage', 'Settings']

@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { computeMatchScore } from './matching'
 import { SEED_GRANTS } from './grants'
-import type { Organisation, GrantOpportunity } from '@/types'
+import type { Organisation, GrantOpportunity, FunderType } from '@/types'
 
 // Admin client — uses service role to bypass RLS (server-side only)
 function adminClient() {
@@ -15,6 +15,34 @@ export interface AlertGrant {
   grant: GrantOpportunity
   score: number
   reason: string
+}
+
+const VALID_FUNDER_TYPES: FunderType[] = [
+  'trust_foundation', 'local_authority', 'housing_association',
+  'corporate', 'lottery', 'government', 'other',
+]
+
+function normaliseScraped(row: Record<string, unknown>): GrantOpportunity {
+  const rawType = String(row.funder_type ?? 'other')
+  const funderType: FunderType = VALID_FUNDER_TYPES.includes(rawType as FunderType)
+    ? (rawType as FunderType) : 'other'
+  return {
+    id:                   String(row.external_id ?? row.id),
+    title:                String(row.title ?? ''),
+    funder:               String(row.funder ?? 'Unknown funder'),
+    funderType,
+    description:          String(row.description ?? ''),
+    amountMin:            typeof row.amount_min  === 'number' ? row.amount_min  : 0,
+    amountMax:            typeof row.amount_max  === 'number' ? row.amount_max  : 0,
+    deadline:             row.deadline ? String(row.deadline) : null,
+    isRolling:            Boolean(row.is_rolling),
+    isLocal:              Boolean(row.is_local),
+    sectors:              Array.isArray(row.sectors)              ? (row.sectors as string[])              : [],
+    eligibilityCriteria:  Array.isArray(row.eligibility_criteria) ? (row.eligibility_criteria as string[]) : [],
+    applyUrl:             row.apply_url ? String(row.apply_url) : null,
+    source:               'scraped',
+    dateAdded:            row.first_seen_at ? String(row.first_seen_at).split('T')[0] : undefined,
+  }
 }
 
 /** Find grants that are a good match and haven't been sent to this org yet */
@@ -32,9 +60,22 @@ export async function getUnsentAlerts(
 
   const sentIds = new Set((sent ?? []).map((r: { grant_id: string }) => r.grant_id))
 
-  // Score all grants against the org profile
+  // Fetch active scraped grants from DB (newest first, max 500)
+  const { data: scraped } = await supabase
+    .from('scraped_grants')
+    .select('*')
+    .eq('is_active', true)
+    .order('first_seen_at', { ascending: false })
+    .limit(500)
+
+  const scrapedGrants: GrantOpportunity[] = (scraped ?? [])
+    .map(row => normaliseScraped(row as Record<string, unknown>))
+
+  // Merge seed + scraped, score everything against org profile
+  const allGrants = [...SEED_GRANTS, ...scrapedGrants]
   const candidates: AlertGrant[] = []
-  for (const grant of SEED_GRANTS) {
+
+  for (const grant of allGrants) {
     if (sentIds.has(grant.id)) continue
     const { score, reason } = computeMatchScore(grant, org)
     if (score >= minScore) {
@@ -42,8 +83,8 @@ export async function getUnsentAlerts(
     }
   }
 
-  // Sort by score descending, return top 8
-  return candidates.sort((a, b) => b.score - a.score).slice(0, 8)
+  // Sort by score descending, return top 10
+  return candidates.sort((a, b) => b.score - a.score).slice(0, 10)
 }
 
 /** Record which grants were sent so we don't resend them */
