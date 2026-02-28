@@ -51,7 +51,6 @@ const SOURCE_LABELS: Record<string, string> = {
   garfield_weston:          'Garfield Weston Foundation',
   clothworkers_foundation:  'Clothworkers Foundation',
   jrct:                     'Joseph Rowntree CT',
-  power_to_change:          'Power to Change',
   peoples_health_trust:     "People's Health Trust",
   national_churches_trust:  'National Churches Trust',
   tudor_trust:              'Tudor Trust',
@@ -73,7 +72,7 @@ const BATCH_MAP: Record<string, number> = {
   shropshire_cf: 3, kent_cf: 3, lincolnshire_cf: 3,
   paul_hamlyn_foundation: 3, esmee_fairbairn: 3, henry_smith: 3,
   garfield_weston: 3, clothworkers_foundation: 3,
-  jrct: 3, power_to_change: 3, peoples_health_trust: 3,
+  jrct: 3, peoples_health_trust: 3,
   national_churches_trust: 3, tudor_trust: 3, ufi_voctech: 3,
 }
 

@@ -1792,7 +1792,7 @@ async function crawlBBCChildrenInNeed(): Promise<CrawlResult> {
       is_local:             false,
       sectors:              ['children & young people', 'social welfare', 'health & wellbeing'],
       eligibility_criteria: ['UK-registered charity or constituted group', 'Working with under-18s facing disadvantage'],
-      apply_url:            URL,
+      apply_url:            'https://www.bbcchildreninneed.co.uk/grants/',
       raw_data:             {} as Record<string, unknown>,
     },
     {
@@ -1809,7 +1809,7 @@ async function crawlBBCChildrenInNeed(): Promise<CrawlResult> {
       is_local:             false,
       sectors:              ['children & young people', 'social welfare'],
       eligibility_criteria: ['UK-registered charity or constituted group', 'Working with under-18s facing disadvantage'],
-      apply_url:            'https://www.bbcchildreninneed.co.uk/grants/small-grants/',
+      apply_url:            'https://www.bbcchildreninneed.co.uk/grants/',
       raw_data:             {} as Record<string, unknown>,
     },
   ]
@@ -3245,7 +3245,7 @@ async function crawlJRCT(): Promise<CrawlResult> {
           'Systemic or structural change focus (not direct service delivery)',
           'Work must fit within JRCT\'s Power & Accountability programme themes',
         ],
-        apply_url:            'https://www.jrct.org.uk/grant-programmes/power-and-accountability',
+        apply_url:            'https://www.jrct.org.uk/funding-priorities',
         raw_data:             { programme: 'power_accountability', note: 'Hardcoded rolling entry' },
       },
       {
@@ -3269,7 +3269,7 @@ async function crawlJRCT(): Promise<CrawlResult> {
           'BAME-led organisations particularly encouraged',
           'Focus on structural change, not one-off casework',
         ],
-        apply_url:            'https://www.jrct.org.uk/grant-programmes/rights-and-justice',
+        apply_url:            'https://www.jrct.org.uk/funding-priorities',
         raw_data:             { programme: 'rights_justice', note: 'Hardcoded rolling entry' },
       },
       {
@@ -3292,71 +3292,8 @@ async function crawlJRCT(): Promise<CrawlResult> {
           'Systemic change focus aligned with just transition',
           'Intersectional approach linking climate and social justice',
         ],
-        apply_url:            'https://www.jrct.org.uk/grant-programmes/sustainable-future',
+        apply_url:            'https://www.jrct.org.uk/funding-priorities',
         raw_data:             { programme: 'sustainable_future', note: 'Hardcoded rolling entry' },
-      },
-    ]
-    return await upsertGrants(SOURCE, grants)
-  } catch (err) {
-    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
-  }
-}
-
-// ── Source 49 — Power to Change ───────────────────────────────────────────────
-// Independent trust supporting community businesses in England. Gives grants and
-// investment to community-owned enterprises — pubs, shops, energy schemes, spaces.
-// Key programmes include The Resilience Fund and Community Business Fund.
-async function crawlPowerToChange(): Promise<CrawlResult> {
-  const SOURCE = 'power_to_change'
-  try {
-    const grants: ScrapedGrant[] = [
-      {
-        external_id:          `${SOURCE}_community_business_fund`,
-        source:               SOURCE,
-        title:                'Power to Change — Community Business Fund',
-        funder:               'Power to Change',
-        funder_type:          'trust_foundation',
-        description:          'Grants of £50,000–£300,000 to help established community businesses grow and ' +
-                              'become financially resilient. Supports community pubs, shops, spaces, energy ' +
-                              'schemes, transport and other locally-owned enterprises across England.',
-        amount_min:           50000,
-        amount_max:           300000,
-        deadline:             null,
-        is_rolling:           true,
-        is_local:             false,
-        sectors:              ['community', 'enterprise', 'social enterprise', 'community assets'],
-        eligibility_criteria: [
-          'Must be a community business — community-owned and trading',
-          'Based in England',
-          'Must have traded for at least one year',
-          'Community has meaningful ownership or governance stake',
-          'Generates at least some income from trading (not grants-only)',
-        ],
-        apply_url:            'https://www.powertochange.org.uk/get-support/programmes/',
-        raw_data:             { programme: 'community_business_fund', note: 'Hardcoded rolling entry' },
-      },
-      {
-        external_id:          `${SOURCE}_resilience_fund`,
-        source:               SOURCE,
-        title:                'Power to Change — The Resilience Fund',
-        funder:               'Power to Change',
-        funder_type:          'trust_foundation',
-        description:          'Smaller grants (up to £50,000) to help community businesses in England strengthen ' +
-                              'their resilience — through business planning, diversifying income, improving ' +
-                              'governance, or responding to challenges.',
-        amount_min:           5000,
-        amount_max:           50000,
-        deadline:             null,
-        is_rolling:           true,
-        is_local:             false,
-        sectors:              ['community', 'enterprise', 'social enterprise'],
-        eligibility_criteria: [
-          'Must be a community business based in England',
-          'Open to earlier-stage or less financially stable community businesses',
-          'Community ownership or governance must be meaningful',
-        ],
-        apply_url:            'https://www.powertochange.org.uk/get-support/programmes/',
-        raw_data:             { programme: 'resilience_fund', note: 'Hardcoded rolling entry' },
       },
     ]
     return await upsertGrants(SOURCE, grants)
@@ -3367,60 +3304,39 @@ async function crawlPowerToChange(): Promise<CrawlResult> {
 
 // ── Source 50 — People's Health Trust ─────────────────────────────────────────
 // Funded by health lottery proceeds. Focuses on health inequalities caused by
-// social and economic conditions. Two main programmes: Active Communities (small
-// grants up to £20k) and Health Equals (larger 3-year funding).
+// social and economic conditions. Now operates via the Health Justice Fund —
+// six thematic priority areas covering housing, discrimination, mental health,
+// employment and more. Individual themes open for applications periodically.
 async function crawlPeoplesHealthTrust(): Promise<CrawlResult> {
   const SOURCE = 'peoples_health_trust'
   try {
     const grants: ScrapedGrant[] = [
       {
-        external_id:          `${SOURCE}_active_communities`,
+        external_id:          `${SOURCE}_health_justice_fund`,
         source:               SOURCE,
-        title:                "People's Health Trust — Active Communities",
+        title:                "People's Health Trust — Health Justice Fund",
         funder:               "People's Health Trust",
         funder_type:          'lottery',
-        description:          'Grants up to £20,000 over one to two years for small, community-led groups ' +
-                              'tackling the conditions that cause poor health — isolation, debt, poor housing, ' +
-                              'lack of green space. Only available in specific areas of England, Scotland and Wales.',
-        amount_min:           1000,
-        amount_max:           20000,
-        deadline:             null,
-        is_rolling:           false,
-        is_local:             true,
-        sectors:              ['health', 'community', 'wellbeing', 'poverty'],
-        eligibility_criteria: [
-          'Community-led group (must be led by people with lived experience)',
-          'Annual income under £350,000',
-          'Working in a designated deprived area covered by the programme',
-          'Activities address root causes of health inequalities',
-          'Check website for currently open local areas',
-        ],
-        apply_url:            'https://www.peopleshealthtrust.org.uk/active-communities',
-        raw_data:             { programme: 'active_communities', note: 'Hardcoded entry — check open areas on website' },
-      },
-      {
-        external_id:          `${SOURCE}_health_equals`,
-        source:               SOURCE,
-        title:                "People's Health Trust — Health Equals",
-        funder:               "People's Health Trust",
-        funder_type:          'lottery',
-        description:          'Larger 3-year grants for established organisations working to change the conditions ' +
-                              'that drive health inequalities. Focused on housing, employment, early years and ' +
-                              'social connection. Open UK-wide when running.',
-        amount_min:           100000,
-        amount_max:           500000,
+        description:          'The Health Justice Fund supports communities experiencing health inequalities to ' +
+                              'improve health for the long term. Six thematic priority areas: Advice for Health, ' +
+                              'Discrimination & Health, Good Work & Young People, Homes for Health, Nature for Health, ' +
+                              'and Partnerships for Health. Each theme opens for applications periodically — ' +
+                              'check the website for currently live rounds.',
+        amount_min:           10000,
+        amount_max:           150000,
         deadline:             null,
         is_rolling:           false,
         is_local:             false,
-        sectors:              ['health', 'housing', 'employment', 'early years', 'poverty'],
+        sectors:              ['health', 'housing', 'employment', 'discrimination', 'mental health', 'poverty'],
         eligibility_criteria: [
-          'Registered UK charity or social enterprise',
-          'Minimum 3 years\' track record',
-          'Evidence of impact on social determinants of health',
-          'Programme opens periodically — check website for current status',
+          'UK charity, community interest company or similar',
+          'Community-led or co-produced approach required',
+          'Must address root causes of health inequalities (not just symptoms)',
+          'Evidence of working with communities experiencing disadvantage',
+          'Check website for currently open priority themes',
         ],
-        apply_url:            'https://www.peopleshealthtrust.org.uk/health-equals',
-        raw_data:             { programme: 'health_equals', note: 'Hardcoded rolling entry' },
+        apply_url:            'https://www.peopleshealthtrust.org.uk/funding/health-justice-fund',
+        raw_data:             { programme: 'health_justice_fund', note: 'Hardcoded entry — site rebuilt 2024/25, check open themes' },
       },
     ]
     return await upsertGrants(SOURCE, grants)
@@ -3459,7 +3375,7 @@ async function crawlNationalChurchesTrust(): Promise<CrawlResult> {
           'Evidence of regular use by the local community',
           'Listed building or significant heritage status preferred',
         ],
-        apply_url:            'https://www.nationalchurchestrust.org/grants',
+        apply_url:            'https://www.nationalchurchestrust.org/get-support/grants',
         raw_data:             { programme: 'cornerstone', note: 'Hardcoded rolling entry' },
       },
       {
@@ -3483,7 +3399,7 @@ async function crawlNationalChurchesTrust(): Promise<CrawlResult> {
           'Project must increase or improve community use of the building',
           'Evidence of local need and community support',
         ],
-        apply_url:            'https://www.nationalchurchestrust.org/grants',
+        apply_url:            'https://www.nationalchurchestrust.org/get-support/grants',
         raw_data:             { programme: 'community_mission', note: 'Hardcoded rolling entry' },
       },
     ]
@@ -3564,7 +3480,7 @@ async function crawlUfiVocTech(): Promise<CrawlResult> {
         'Must demonstrate potential for significant reach and impact',
         'Commercial organisations eligible but must show social benefit',
       ],
-      apply_url:            'https://ufi.co.uk/funding/',
+      apply_url:            'https://ufi.co.uk/grant-funding/',
       raw_data:             { note: 'Hardcoded entry — check website for open funding rounds' },
     }]
     return await upsertGrants(SOURCE, grants)
@@ -3602,7 +3518,7 @@ const BATCH_3_SOURCES = [
   'shropshire_cf', 'kent_cf', 'lincolnshire_cf',
   'paul_hamlyn_foundation', 'esmee_fairbairn', 'henry_smith',
   'garfield_weston', 'clothworkers_foundation',
-  'jrct', 'power_to_change', 'peoples_health_trust',
+  'jrct', 'peoples_health_trust',
   'national_churches_trust', 'tudor_trust', 'ufi_voctech',
 ] as const
 
@@ -3638,7 +3554,7 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
     shropshireCF, kentCF, lincolnshireCF,
     paulHamlynFoundation, esmeeFairbairn, henrySmith,
     garfieldWeston, clothworkersFoundation,
-    jrct, powerToChange, peoplesHealthTrust,
+    jrct, peoplesHealthTrust,
     nationalChurchesTrust, tudorTrust, ufiVocTech,
   ] = await Promise.allSettled([
     run('gov_uk',                  crawlGovUK),
@@ -3689,7 +3605,6 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
     run('garfield_weston',         crawlGarfieldWeston),
     run('clothworkers_foundation', crawlClothworkersFoundation),
     run('jrct',                    crawlJRCT),
-    run('power_to_change',         crawlPowerToChange),
     run('peoples_health_trust',    crawlPeoplesHealthTrust),
     run('national_churches_trust', crawlNationalChurchesTrust),
     run('tudor_trust',             crawlTudorTrust),
@@ -3747,7 +3662,6 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
     garfieldWeston.status         === 'fulfilled' ? garfieldWeston.value         : fallback('garfield_weston'),
     clothworkersFoundation.status === 'fulfilled' ? clothworkersFoundation.value : fallback('clothworkers_foundation'),
     jrct.status                   === 'fulfilled' ? jrct.value                   : fallback('jrct'),
-    powerToChange.status          === 'fulfilled' ? powerToChange.value          : fallback('power_to_change'),
     peoplesHealthTrust.status     === 'fulfilled' ? peoplesHealthTrust.value     : fallback('peoples_health_trust'),
     nationalChurchesTrust.status  === 'fulfilled' ? nationalChurchesTrust.value  : fallback('national_churches_trust'),
     tudorTrust.status             === 'fulfilled' ? tudorTrust.value             : fallback('tudor_trust'),
