@@ -569,12 +569,11 @@ export default function SearchPage() {
     await runAISearch(query)
   }
 
-  async function handleSmartMatch() {
+  function handleSmartMatch() {
     if (!org) return
     const smartQuery = buildSmartQuery(org)
     if (!smartQuery) return
     setQuery(smartQuery)
-    await runAISearch(smartQuery, true)
   }
 
   const orgIsIncomplete = org && !org.themes?.length && !org.areas_of_work?.length && !org.primary_location
