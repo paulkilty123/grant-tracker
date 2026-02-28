@@ -28,6 +28,7 @@ const SECTOR_DISPLAY: Record<string, string | null> = {
   'social enterprise':         'Social enterprise',
   'criminal justice':          'Criminal justice',
   'physical activity':         'Physical activity',
+  'Welsh language':            'Welsh lang.',
 }
 
 function sectorLabel(s: string): string | null {
