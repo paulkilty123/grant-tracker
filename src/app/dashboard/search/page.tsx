@@ -689,16 +689,6 @@ export default function SearchPage() {
           >
             {aiLoading ? '⏳ Thinking…' : '✦ AI Search'}
           </button>
-          <button
-            onClick={() => setFiltersOpen(o => !o)}
-            className={`btn-sm whitespace-nowrap border transition-all rounded-xl px-4 ${
-              filtersOpen || activeFilterCount > 0
-                ? 'bg-forest text-white border-forest'
-                : 'border-warm text-mid hover:border-sage hover:text-sage bg-white'
-            }`}
-          >
-            Filters{activeFilterCount > 0 ? ` · ${activeFilterCount}` : ''}
-          </button>
         </div>
 
         {/* Match my org nudge */}
@@ -747,6 +737,18 @@ export default function SearchPage() {
                 </span>
               </button>
             ))}
+          </div>
+          <div className="mt-3">
+            <button
+              onClick={() => setFiltersOpen(o => !o)}
+              className={`btn-sm whitespace-nowrap border transition-all rounded-xl px-4 ${
+                filtersOpen || activeFilterCount > 0
+                  ? 'bg-forest text-white border-forest'
+                  : 'border-warm text-mid hover:border-sage hover:text-sage bg-white'
+              }`}
+            >
+              Filters{activeFilterCount > 0 ? ` · ${activeFilterCount}` : ''}
+            </button>
           </div>
         </div>
 
