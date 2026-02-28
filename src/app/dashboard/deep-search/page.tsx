@@ -264,24 +264,12 @@ export default function AdvancedSearchPage() {
         <p className="text-mid text-sm mt-1">Live AI research across the web — not just our database</p>
       </div>
 
-      {/* Differentiation banner */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
-        {/* Main search */}
-        <div className="bg-white border border-warm rounded-xl p-4 flex gap-3 items-start opacity-70">
-          <div className="w-9 h-9 rounded-lg bg-sage/20 flex items-center justify-center text-lg flex-shrink-0">🔍</div>
-          <div>
-            <p className="text-sm font-semibold text-charcoal mb-0.5">Main Search <span className="text-xs font-normal text-mid ml-1">— Search Grants page</span></p>
-            <p className="text-xs text-mid leading-relaxed">Searches our <strong>curated database</strong> of {741}+ verified UK grants. Fast, reliable, always available.</p>
-          </div>
-        </div>
-        {/* Advanced search */}
-        <div className="bg-indigo-50 border-2 border-indigo-300 rounded-xl p-4 flex gap-3 items-start">
-          <div className="w-9 h-9 rounded-lg bg-indigo-600 flex items-center justify-center text-lg flex-shrink-0">🔬</div>
-          <div>
-            <p className="text-sm font-semibold text-indigo-900 mb-0.5">Advanced Search <span className="text-xs font-normal text-indigo-500 ml-1">— you are here</span></p>
-            <p className="text-xs text-indigo-800 leading-relaxed"><strong>Searches the live web</strong> in real time — finds hyper-local, niche and newly announced grants that aren&apos;t in any database yet. Takes 15–30 seconds.</p>
-          </div>
-        </div>
+      {/* What is Advanced Search */}
+      <div className="bg-indigo-50 border border-indigo-200 rounded-xl px-5 py-4 mb-6">
+        <p className="text-base font-bold text-indigo-900 mb-1">What is Advanced Search?</p>
+        <p className="text-sm text-indigo-800 leading-relaxed">
+          Unlike the main Search Grants page — which searches our curated database of verified UK grants — Advanced Search <strong>searches the live web in real time</strong>. It finds hyper-local programmes, newly announced rounds and niche funders that don&apos;t appear in any grant database yet. Results take 15–30 seconds as the AI researches across council sites, NHS commissioning pages, community foundations and specialist funder websites.
+        </p>
       </div>
 
       {/* Search box + filters */}
