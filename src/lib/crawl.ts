@@ -215,8 +215,7 @@ async function crawlUKRI(): Promise<CrawlResult> {
       .querySelectorAll('.page-numbers a')
       .map(a => { const m = (a.getAttribute('href') ?? '').match(/\/page\/(\d+)\//); return m ? parseInt(m[1]) : NaN })
       .filter(n => !isNaN(n))
-    // Cap at 3 pages (30 opportunities) to stay within Vercel's 10s function timeout
-    const lastPage = Math.min(Math.max(...pageNums, 1), 3)
+    const lastPage = Math.max(...pageNums, 1)
 
     // Fetch remaining pages in parallel
     const rest = await Promise.allSettled(
