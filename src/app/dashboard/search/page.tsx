@@ -69,6 +69,18 @@ function GrantCard({ item, hasOrg, interactions, onAddToPipeline, onDismiss, onU
 
   const { text: scoreText } = scoreColour(score)
 
+  // Classify the entry so users know what they're looking at
+  const entryType: 'live' | 'rolling' | 'profile' =
+    grant.deadline   ? 'live' :
+    grant.isRolling  ? 'rolling' :
+    /* else */         'profile'
+
+  const entryBadge = {
+    live:    { label: '📅 Open grant',   cls: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
+    rolling: { label: '🔄 Always open',  cls: 'bg-blue-50 text-blue-600 border border-blue-200' },
+    profile: { label: 'ℹ Funder info',   cls: 'bg-gray-100 text-gray-500 border border-gray-200' },
+  }[entryType]
+
   if (isDismissed) {
     return (
       <div className="bg-warm/50 rounded-xl px-5 py-3 mb-2 border border-warm flex items-center justify-between opacity-60">
@@ -90,7 +102,12 @@ function GrantCard({ item, hasOrg, interactions, onAddToPipeline, onDismiss, onU
               {grant.funder[0]}
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-display font-bold text-forest text-base leading-snug">{grant.title}</h3>
+              <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                <h3 className="font-display font-bold text-forest text-base leading-snug">{grant.title}</h3>
+                <span className={`text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${entryBadge.cls}`}>
+                  {entryBadge.label}
+                </span>
+              </div>
               <p className="text-sm text-mid">{grant.funder}</p>
             </div>
           </div>
@@ -111,8 +128,7 @@ function GrantCard({ item, hasOrg, interactions, onAddToPipeline, onDismiss, onU
 
           {/* Tags — condensed */}
           <div className="flex flex-wrap gap-1.5">
-            {grant.isLocal   && <span className="tag bg-green-50 text-green-700">📍 Local</span>}
-            {grant.isRolling && <span className="tag bg-blue-50 text-blue-700">Rolling</span>}
+            {grant.isLocal && <span className="tag bg-green-50 text-green-700">📍 Local</span>}
             <span className={`tag ${typeColour[grant.funderType] ?? 'bg-gray-50 text-gray-600'}`}>
               {FUNDER_TYPES.find(t => t.id === grant.funderType)?.label ?? grant.funderType}
             </span>
@@ -153,7 +169,9 @@ function GrantCard({ item, hasOrg, interactions, onAddToPipeline, onDismiss, onU
               {formatRange(grant.amountMin, grant.amountMax)}
             </p>
             <p className="text-xs text-light mt-0.5">
-              {grant.isRolling ? '🔄 Rolling' : grant.deadline ?? 'Check website'}
+              {entryType === 'live'    ? grant.deadline :
+               entryType === 'rolling' ? 'No deadline' :
+               /* profile */            'Typical range'}
             </p>
           </div>
 
