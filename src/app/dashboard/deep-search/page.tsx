@@ -127,6 +127,7 @@ export default function AdvancedSearchPage() {
   const [toast, setToast] = useState<string | null>(null)
   const [org, setOrg] = useState<Organisation | null>(null)
   const [userId, setUserId] = useState('')
+  const [optionsOpen, setOptionsOpen] = useState(false)
 
   // ── Restore search state from sessionStorage on mount ──────────────────
   useEffect(() => {
@@ -266,7 +267,7 @@ export default function AdvancedSearchPage() {
       <div className="bg-white rounded-xl p-5 shadow-card mb-6">
 
         {/* Keyword input */}
-        <div className="flex gap-3 mb-4">
+        <div className="flex gap-3">
           <div className="flex-1 relative">
             <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-indigo-400">🔬</span>
             <input
@@ -298,54 +299,78 @@ export default function AdvancedSearchPage() {
         </div>
 
         {!org && (
-          <p className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2 mb-4">
+          <p className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2 mt-3">
             <strong>Tip:</strong> Complete your <a href="/dashboard/profile" className="underline hover:text-amber-900">organisation profile</a> to unlock the ✦ Match my org button.
           </p>
         )}
 
-        {/* Location filter */}
-        <div className="mb-4">
-          <label className="text-xs font-semibold text-light uppercase tracking-wider block mb-2">
-            📍 Location <span className="font-normal normal-case text-mid">(optional — leave blank for UK-wide)</span>
-          </label>
-          <input
-            type="text"
-            value={locationFilter}
-            onChange={e => setLocationFilter(e.target.value)}
-            className="form-input max-w-xs text-sm"
-            placeholder='e.g. "Manchester" or "rural Norfolk"'
-          />
-        </div>
+        {/* Search Options toggle */}
+        <button
+          onClick={() => setOptionsOpen(o => !o)}
+          className={`mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border font-semibold text-sm transition-all ${
+            optionsOpen || selectedSectors.length > 0 || locationFilter.trim()
+              ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+              : 'border-warm text-mid hover:border-indigo-400 hover:text-indigo-600 bg-white'
+          }`}
+        >
+          <span>🔧</span>
+          {selectedSectors.length > 0 || locationFilter.trim()
+            ? `Search Options · ${[selectedSectors.length > 0 && `${selectedSectors.length} sector${selectedSectors.length > 1 ? 's' : ''}`, locationFilter.trim() && 'location'].filter(Boolean).join(', ')}`
+            : 'Search Options (Location & Sectors)'}
+          <span className={`text-xs transition-transform duration-200 inline-block ${optionsOpen ? 'rotate-180' : ''}`}>▼</span>
+        </button>
 
-        {/* Sector filter pills */}
-        <div>
-          <label className="text-xs font-semibold text-light uppercase tracking-wider block mb-2">
-            🏷 Sectors <span className="font-normal normal-case text-mid">(select any that apply)</span>
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {SECTOR_FILTERS.map(s => (
+        {/* Collapsible options panel */}
+        {optionsOpen && (
+          <div className="mt-4 pt-4 border-t border-warm space-y-4">
+
+            {/* Location filter */}
+            <div>
+              <label className="text-xs font-semibold text-light uppercase tracking-wider block mb-2">
+                📍 Location <span className="font-normal normal-case text-mid">(optional — leave blank for UK-wide)</span>
+              </label>
+              <input
+                type="text"
+                value={locationFilter}
+                onChange={e => setLocationFilter(e.target.value)}
+                className="form-input max-w-xs text-sm"
+                placeholder='e.g. "Manchester" or "rural Norfolk"'
+              />
+            </div>
+
+            {/* Sector filter pills */}
+            <div>
+              <label className="text-xs font-semibold text-light uppercase tracking-wider block mb-2">
+                🏷 Sectors <span className="font-normal normal-case text-mid">(select any that apply)</span>
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {SECTOR_FILTERS.map(s => (
+                  <button
+                    key={s.id}
+                    onClick={() => toggleSector(s.id)}
+                    className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                      selectedSectors.includes(s.id)
+                        ? 'bg-indigo-600 border-indigo-600 text-white'
+                        : 'border-indigo-200 text-indigo-700 hover:bg-indigo-50'
+                    }`}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Reset */}
+            {(selectedSectors.length > 0 || locationFilter.trim()) && (
               <button
-                key={s.id}
-                onClick={() => toggleSector(s.id)}
-                className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
-                  selectedSectors.includes(s.id)
-                    ? 'bg-indigo-600 border-indigo-600 text-white'
-                    : 'border-indigo-200 text-indigo-700 hover:bg-indigo-50'
-                }`}
+                onClick={() => { setSelectedSectors([]); setLocationFilter('') }}
+                className="text-xs font-semibold text-red-500 hover:text-red-700 border border-red-200 hover:border-red-400 rounded-lg px-3 py-1.5 transition-all"
               >
-                {s.label}
+                ✕ Reset options
               </button>
-            ))}
+            )}
           </div>
-          {selectedSectors.length > 0 && (
-            <button
-              onClick={() => setSelectedSectors([])}
-              className="text-xs text-mid hover:text-charcoal underline mt-2"
-            >
-              Clear sectors
-            </button>
-          )}
-        </div>
+        )}
 
         {loading && (
           <div className="mt-4 bg-indigo-50 rounded-lg px-4 py-3 text-sm text-indigo-700">
@@ -425,13 +450,13 @@ export default function AdvancedSearchPage() {
                 sub: 'text-amber-700',
               },
             ].map(item => (
-              <div key={item.title} className={`${item.bg} border ${item.border} rounded-2xl p-5 flex flex-col gap-3`}>
-                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${item.accent} flex items-center justify-center text-xl shadow-sm`}>
+              <div key={item.title} className={`${item.bg} border ${item.border} rounded-2xl p-6 flex flex-col gap-4`}>
+                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${item.accent} flex items-center justify-center text-3xl shadow-md`}>
                   {item.emoji}
                 </div>
                 <div>
-                  <p className={`text-sm font-bold ${item.text} mb-1`}>{item.title}</p>
-                  <p className={`text-xs ${item.sub} leading-relaxed`}>{item.desc}</p>
+                  <p className={`text-base font-bold ${item.text} mb-2`}>{item.title}</p>
+                  <p className={`text-sm ${item.sub} leading-relaxed`}>{item.desc}</p>
                 </div>
               </div>
             ))}
