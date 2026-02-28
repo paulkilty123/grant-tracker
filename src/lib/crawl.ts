@@ -36,6 +36,7 @@
 //  31.  MK Community Foundation              (mkcommunityfoundation.co.uk/apply-for-a-grant — hardcoded tiers)
 //  32.  Community Foundation for Lancashire  (lancsfoundation.org.uk/our-grants?grant-category=open)
 //  33.  Cambridgeshire Community Foundation  (cambscf.org.uk/funds)
+//  34.  Hertfordshire Community Foundation   (hertscf.org.uk/grant-making)
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { createClient }  from '@supabase/supabase-js'
@@ -2150,6 +2151,87 @@ async function crawlMKCF(): Promise<CrawlResult> {
   return await upsertGrants(SOURCE, grants)
 }
 
+// ── Source 34: Hertfordshire Community Foundation ─────────────────────────────
+async function crawlHertsCF(): Promise<CrawlResult> {
+  const SOURCE  = 'herts_cf'
+  const BASE    = 'https://www.hertscf.org.uk'
+  const LISTURL = `${BASE}/grant-making`
+  try {
+    const html = await fetchHtml(LISTURL)
+    const root = parseHTML(html)
+    const grants: ScrapedGrant[] = []
+
+    // Each grant is a .card div; inside: h4 (title), <b> elements (amount + deadline), a.readmore (link)
+    const cards = root.querySelectorAll('.card')
+    for (const card of cards) {
+      const title = card.querySelector('h4, h3, h2')?.text?.trim() ?? ''
+      if (!title) continue
+
+      const applyHref = card.querySelector('a.readmore, a[href]')?.getAttribute('href') ?? ''
+      const applyUrl  = applyHref.startsWith('http') ? applyHref : `${BASE}${applyHref}`
+
+      // <b> elements: first contains amount, remaining contain deadline info
+      // Some cards concatenate amount+deadline in a single <b> — handle both
+      const boldTexts = card.querySelectorAll('b').map(b => b.text.trim()).filter(t => t)
+      const allBoldText = boldTexts.join(' ')
+
+      // Extract amount — "Grants of up to £X" or "Grants of £X–£Y"
+      const amountMatch = allBoldText.match(/Grants\s+(?:of\s+)?(?:up\s+to\s+)?(£[\d,]+(?:\s*[–-]\s*£[\d,]+)?)/i)
+      const amountRaw   = amountMatch ? amountMatch[0] : ''
+      const isUpTo      = /up\s*to/i.test(amountRaw)
+      const { min: amtMin, max: amtMax } = parseAmountRange(amountRaw)
+      const amount_min  = isUpTo ? null : amtMin
+      const amount_max  = amtMax
+
+      // Extract deadline — look for date patterns or "rolling"
+      const deadlineText = boldTexts.filter(b => /deadline|closing/i.test(b)).join(' ')
+      const isRolling    = /rolling|no deadline|ongoing/i.test(deadlineText) || !deadlineText
+      const dlMatch      = deadlineText.match(/(\d{1,2})(?:st|nd|rd|th)?\s+([A-Za-z]+)\s+(\d{4})/i)
+      const deadline     = dlMatch && !isRolling
+        ? parseUKRIDate(`${dlMatch[1]} ${dlMatch[2]} ${dlMatch[3]}`)
+        : null
+
+      // Description from card paragraph text (excluding bold content)
+      const cardText  = card.text.replace(/\s+/g, ' ').trim()
+      const afterBold = cardText.replace(title, '').replace(/Grants of[^A-Z]*/i, '').replace(/Application deadline[^A-Z]*/gi, '').trim()
+      const description = afterBold.replace(/READ MORE\s*$/, '').trim() || null
+
+      // Slug from URL
+      const slug = applyUrl.replace(/https?:\/\/[^/]+\//, '').replace(/\/$/, '').replace(/\//g, '_') || title.toLowerCase().replace(/[^a-z0-9]+/g, '_')
+
+      // Sector inference
+      const t = title.toLowerCase()
+      const sectors: string[] = ['community development']
+      if (/household|food|fuel|water|poverty|need|depriv/i.test(t)) sectors.push('social welfare')
+      if (/transport|travel/i.test(t)) sectors.push('community development')
+      if (/music|art|cultur/i.test(t)) sectors.push('arts & culture')
+      if (/health|wellbeing/i.test(t)) sectors.push('health & wellbeing')
+
+      grants.push({
+        external_id:          `herts_cf_${slug}`,
+        source:               SOURCE,
+        title,
+        funder:               'Hertfordshire Community Foundation',
+        funder_type:          'community_foundation',
+        description:          description && description.length > 10 ? description : null,
+        amount_min,
+        amount_max,
+        deadline,
+        is_rolling:           isRolling,
+        is_local:             true,
+        sectors,
+        eligibility_criteria: ['Registered charity or constituted group', 'Operating in Hertfordshire'],
+        apply_url:            applyUrl,
+        raw_data:             { amountRaw, deadlineText } as Record<string, unknown>,
+      })
+    }
+
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
 // ── Source 32: Community Foundation for Lancashire ────────────────────────────
 async function crawlLancsCF(): Promise<CrawlResult> {
   const SOURCE  = 'lancs_cf'
@@ -2388,7 +2470,7 @@ export async function crawlAllSources(): Promise<CrawlResult[]> {
     tyneWearCF, norfolkCF, suffolkCF,
     merseysideCF, bbcCiN, gloucestershireCF,
     heartOfBucksCF, llrCF, mkCF,
-    lancsCF, cambsCF,
+    lancsCF, cambsCF, hertsCF,
   ] = await Promise.allSettled([
     crawlGovUK(),
     crawlTNLCF(),
@@ -2423,6 +2505,7 @@ export async function crawlAllSources(): Promise<CrawlResult[]> {
     crawlMKCF(),
     crawlLancsCF(),
     crawlCambsCF(),
+    crawlHertsCF(),
   ])
 
   return [
@@ -2459,5 +2542,6 @@ export async function crawlAllSources(): Promise<CrawlResult[]> {
     mkCF.status                === 'fulfilled' ? mkCF.value                : { source: 'mk_cf',                fetched: 0, upserted: 0, error: 'Promise rejected' },
     lancsCF.status             === 'fulfilled' ? lancsCF.value             : { source: 'lancs_cf',             fetched: 0, upserted: 0, error: 'Promise rejected' },
     cambsCF.status             === 'fulfilled' ? cambsCF.value             : { source: 'cambs_cf',             fetched: 0, upserted: 0, error: 'Promise rejected' },
+    hertsCF.status             === 'fulfilled' ? hertsCF.value             : { source: 'herts_cf',             fetched: 0, upserted: 0, error: 'Promise rejected' },
   ]
 }
