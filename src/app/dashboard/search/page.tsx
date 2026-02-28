@@ -11,6 +11,30 @@ import { getInteractions, recordInteraction, removeInteraction } from '@/lib/int
 import type { GrantOpportunity, Organisation, FunderType } from '@/types'
 import type { InteractionAction } from '@/lib/interactions'
 
+// Normalise long or awkward sector names for display only
+const SECTOR_DISPLAY: Record<string, string | null> = {
+  'all sectors':               null,   // meaningless — hide
+  'disadvantaged communities': 'Disadvantaged',
+  'international development': 'Intl. development',
+  'digital preservation':      'Digital pres.',
+  'digital inclusion':         'Digital inclusion',
+  'financial inclusion':       'Financial incl.',
+  'economic inclusion':        'Economic incl.',
+  'economic development':      'Economic dev.',
+  'economic justice':          'Econ. justice',
+  'capacity building':         'Capacity bldg.',
+  'community business':        'Comm. business',
+  'creative industries':       'Creative ind.',
+  'social enterprise':         'Social enterprise',
+  'criminal justice':          'Criminal justice',
+  'physical activity':         'Physical activity',
+}
+
+function sectorLabel(s: string): string | null {
+  if (s in SECTOR_DISPLAY) return SECTOR_DISPLAY[s]
+  return s
+}
+
 const FUNDER_TYPES = [
   { id: 'all',               label: 'All' },
   { id: 'local',             label: '📍 Local' },
@@ -132,9 +156,13 @@ function GrantCard({ item, hasOrg, interactions, onAddToPipeline, onDismiss, onU
             <span className={`tag ${typeColour[grant.funderType] ?? 'bg-gray-50 text-gray-600'}`}>
               {FUNDER_TYPES.find(t => t.id === grant.funderType)?.label ?? grant.funderType}
             </span>
-            {grant.sectors.slice(0, 2).map(s => (
-              <span key={s} className="tag bg-purple-50 text-purple-700 capitalize">{s}</span>
-            ))}
+            {grant.sectors
+              .map(s => ({ raw: s, label: sectorLabel(s) }))
+              .filter(({ label }) => label !== null)
+              .slice(0, 2)
+              .map(({ raw, label }) => (
+                <span key={raw} className="tag bg-purple-50 text-purple-700 capitalize">{label}</span>
+              ))}
           </div>
 
           {/* Expandable eligibility */}
