@@ -45,19 +45,6 @@ function MatchBadge({ score, isAi }: { score: number; isAi: boolean }) {
   )
 }
 
-// ── Score Bar ────────────────────────────────────────────────────────────────
-function ScoreBar({ score }: { score: number }) {
-  const { bar } = scoreColour(score)
-  return (
-    <div className="w-full bg-warm rounded-full h-1 mt-1">
-      <div
-        className={`h-1 rounded-full transition-all duration-500 ${bar}`}
-        style={{ width: `${score}%` }}
-      />
-    </div>
-  )
-}
-
 // ── Grant Card ───────────────────────────────────────────────────────────────
 function GrantCard({ item, hasOrg, interactions, onAddToPipeline, onDismiss, onUndismiss }: {
   item: DisplayGrant
@@ -106,15 +93,6 @@ function GrantCard({ item, hasOrg, interactions, onAddToPipeline, onDismiss, onU
               <h3 className="font-display font-bold text-forest text-base leading-snug">{grant.title}</h3>
               <p className="text-sm text-mid">{grant.funder}</p>
             </div>
-            {hasOrg && (
-              <button
-                onClick={() => onDismiss(grant.id)}
-                className="text-xs text-light hover:text-red-400 transition-colors flex-shrink-0 mt-0.5"
-                title="Not relevant — hide this grant"
-              >
-                ✕ Not relevant
-              </button>
-            )}
           </div>
 
           <p className="text-sm text-mid leading-relaxed mb-3">{grant.description}</p>
@@ -127,22 +105,14 @@ function GrantCard({ item, hasOrg, interactions, onAddToPipeline, onDismiss, onU
             </div>
           )}
 
-          {/* Tags */}
-          <div className="flex flex-wrap gap-2">
+          {/* Tags — condensed */}
+          <div className="flex flex-wrap gap-1.5">
             {grant.isLocal   && <span className="tag bg-green-50 text-green-700">📍 Local</span>}
-            {grant.isRolling && <span className="tag bg-blue-50 text-blue-700">♻ Rolling</span>}
+            {grant.isRolling && <span className="tag bg-blue-50 text-blue-700">Rolling</span>}
             <span className={`tag ${typeColour[grant.funderType] ?? 'bg-gray-50 text-gray-600'}`}>
               {FUNDER_TYPES.find(t => t.id === grant.funderType)?.label ?? grant.funderType}
             </span>
-            {grant.source === 'scraped' && (
-              <span className="tag bg-teal-50 text-teal-700">
-                {grant.id.startsWith('gov_uk_')   ? '🏛 GOV.UK'
-                 : grant.id.startsWith('ukri_')   ? '🔬 UKRI'
-                 : grant.id.startsWith('360')      ? '📊 360Giving'
-                 : '🌐 Live'}
-              </span>
-            )}
-            {grant.sectors.slice(0, 3).map(s => (
+            {grant.sectors.slice(0, 2).map(s => (
               <span key={s} className="tag bg-purple-50 text-purple-700 capitalize">{s}</span>
             ))}
           </div>
@@ -165,31 +135,21 @@ function GrantCard({ item, hasOrg, interactions, onAddToPipeline, onDismiss, onU
             onClick={() => setExpanded(!expanded)}
             className="text-xs text-sage font-medium mt-2 hover:underline"
           >
-            {expanded ? 'Show less ↑' : 'Eligibility criteria ↓'}
+            {expanded ? 'Show less ↑' : 'Eligibility ↓'}
           </button>
         </div>
 
         {/* Right: score + amount + deadline + actions */}
-        <div className="flex flex-col items-end gap-3 min-w-[160px] flex-shrink-0">
+        <div className="flex flex-col items-end gap-3 min-w-[150px] flex-shrink-0">
 
-          {hasOrg && (
-            <div className="w-full">
-              <MatchBadge score={score} isAi={isAiScore} />
-              <ScoreBar score={score} />
-            </div>
-          )}
+          {hasOrg && <MatchBadge score={score} isAi={isAiScore} />}
 
           <div className="text-right">
             <p className="font-display text-xl font-bold text-gold">
               {formatRange(grant.amountMin, grant.amountMax)}
             </p>
-            <p className="text-xs text-light mt-0.5">Grant range</p>
-          </div>
-
-          <div className="text-right">
-            <p className="text-xs text-mid">Deadline</p>
-            <p className="text-sm font-medium text-charcoal">
-              {grant.isRolling ? 'Rolling' : grant.deadline ?? 'Check website'}
+            <p className="text-xs text-light mt-0.5">
+              {grant.isRolling ? '🔄 Rolling' : grant.deadline ?? 'Check website'}
             </p>
           </div>
 
@@ -223,7 +183,7 @@ function GrantCard({ item, hasOrg, interactions, onAddToPipeline, onDismiss, onU
                 onClick={() => onDismiss(grant.id)}
                 className="text-xs text-light hover:text-red-400 transition-colors text-center w-full py-1"
               >
-                ✕ Not relevant
+                ✕ Hide
               </button>
             )}
           </div>
@@ -293,6 +253,7 @@ export default function SearchPage() {
   const [amountMax, setAmountMax]         = useState('')
   const [deadlineFilter, setDeadlineFilter] = useState<'all' | 'rolling' | 'has_deadline'>('all')
   const [activeSectors, setActiveSectors] = useState<Set<string>>(new Set())
+  const [filtersOpen, setFiltersOpen]     = useState(false)
 
   useEffect(() => {
     try {
@@ -578,21 +539,32 @@ export default function SearchPage() {
 
   const orgIsIncomplete = org && !org.themes?.length && !org.areas_of_work?.length && !org.primary_location
 
+  // Count active (non-default) filters for the badge
+  const activeFilterCount = [
+    activeType !== 'all',
+    !!amountMin,
+    !!amountMax,
+    deadlineFilter !== 'all',
+    activeSectors.size > 0,
+    org && sortBy !== 'match',
+  ].filter(Boolean).length
+
   return (
     <div>
-      <div className="mb-7">
+      <div className="mb-6">
         <h2 className="font-display text-2xl font-bold text-forest">Search Grants</h2>
         <p className="text-mid text-sm mt-1">
-          {allGrants.length}+ UK grants{scrapedGrants.length > 0 ? ` · ${scrapedGrants.length} live` : ''} · AI-powered matching ·{' '}
+          {allGrants.length}+ UK grants · AI-powered matching ·{' '}
           <a href="/dashboard/deep-search" className="text-indigo-600 hover:underline">
-            🔬 Try Advanced Search
+            Try Advanced Search →
           </a>
         </p>
       </div>
 
       {/* ── Search bar ── */}
       <div className="bg-white rounded-xl p-5 shadow-card mb-5">
-        <div className="flex gap-3 mb-4">
+        {/* Input row */}
+        <div className="flex gap-2">
           <div className="flex-1 relative">
             <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-light">🔍</span>
             <input
@@ -600,149 +572,165 @@ export default function SearchPage() {
               value={query}
               onChange={e => { setQuery(e.target.value); setAiResults(null) }}
               onKeyDown={e => e.key === 'Enter' && handleAISearch()}
-              className="form-input pl-10 pr-36"
+              className="form-input pl-10 pr-4"
               placeholder='e.g. "youth sport funding Manchester"'
             />
-            <button
-              onClick={handleAISearch}
-              disabled={aiLoading || !query.trim()}
-              className="absolute right-2 top-1/2 -translate-y-1/2 btn-primary btn-sm disabled:opacity-50"
-            >
-              {aiLoading ? '⏳ Thinking…' : '✦ AI Search'}
-            </button>
           </div>
-          {org && (
+          <button
+            onClick={handleAISearch}
+            disabled={aiLoading || !query.trim()}
+            className="btn-primary btn-sm whitespace-nowrap disabled:opacity-50"
+          >
+            {aiLoading ? '⏳ Thinking…' : '✦ AI Search'}
+          </button>
+          <button
+            onClick={() => setFiltersOpen(o => !o)}
+            className={`btn-sm whitespace-nowrap border transition-all rounded-xl px-4 ${
+              filtersOpen || activeFilterCount > 0
+                ? 'bg-forest text-white border-forest'
+                : 'border-warm text-mid hover:border-sage hover:text-sage bg-white'
+            }`}
+          >
+            Filters{activeFilterCount > 0 ? ` · ${activeFilterCount}` : ''}
+          </button>
+        </div>
+
+        {/* Match my org nudge */}
+        {org && (
+          <div className="mt-2.5 flex items-center gap-3">
             <button
               onClick={handleSmartMatch}
               disabled={aiLoading}
-              className="btn-primary btn-sm whitespace-nowrap disabled:opacity-50 flex-shrink-0"
-              title={`Match grants tailored to ${org.name}`}
+              className="text-sm text-sage font-medium hover:underline disabled:opacity-50"
             >
-              {aiLoading ? '⏳ Matching…' : '✦ Match my org'}
+              ✦ Fill from my org profile
             </button>
-          )}
-        </div>
-
-        {/* Filters + sort */}
-        <div className="flex gap-2 flex-wrap items-center justify-between">
-          <div className="flex gap-2 flex-wrap items-center">
-            <span className="text-xs text-mid font-medium">Filter:</span>
-            {FUNDER_TYPES.map(t => (
-              <button key={t.id} onClick={() => setActiveType(t.id)}
-                className={`px-3.5 py-1.5 rounded-full border text-xs font-medium transition-all ${
-                  activeType === t.id
-                    ? 'bg-forest border-forest text-white'
-                    : 'border-warm text-mid hover:border-sage hover:text-sage'
-                }`}>
-                {t.label}
-              </button>
-            ))}
-            {RECENT_GRANTS.length > 0 && (
-              <button onClick={() => setActiveType('recent')}
-                className={`px-3.5 py-1.5 rounded-full border text-xs font-medium transition-all ${
-                  activeType === 'recent'
-                    ? 'bg-green-600 border-green-600 text-white'
-                    : 'border-green-300 text-green-700 hover:bg-green-50'
-                }`}>
-                🆕 Recently Added
-                <span className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${activeType === 'recent' ? 'bg-white/20' : 'bg-green-100'}`}>
-                  {RECENT_GRANTS.length}
-                </span>
-              </button>
-            )}
-            {scrapedGrants.length > 0 && (
-              <button onClick={() => setActiveType('scraped')}
-                className={`px-3.5 py-1.5 rounded-full border text-xs font-medium transition-all ${
-                  activeType === 'scraped'
-                    ? 'bg-teal-600 border-teal-600 text-white'
-                    : 'border-teal-300 text-teal-700 hover:bg-teal-50'
-                }`}>
-                🌐 Live Grants
-                <span className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${activeType === 'scraped' ? 'bg-white/20' : 'bg-teal-100'}`}>
-                  {scrapedGrants.length}
-                </span>
+            {aiResults && (
+              <button
+                onClick={() => { setAiResults(null); setSmartMatched(false); setQuery('') }}
+                className="text-xs text-light hover:text-charcoal underline"
+              >
+                Clear results
               </button>
             )}
           </div>
+        )}
 
-          {org && !aiResults && (
-            <div className="flex items-center gap-1.5 mt-1">
-              <span className="text-xs text-mid font-medium">Sort:</span>
-              <button
-                onClick={() => setSortBy('match')}
-                className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
-                  sortBy === 'match' ? 'bg-forest border-forest text-white' : 'border-warm text-mid hover:border-sage'
-                }`}
-              >
-                Best match
-              </button>
-              <button
-                onClick={() => setSortBy('amount')}
-                className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
-                  sortBy === 'amount' ? 'bg-forest border-forest text-white' : 'border-warm text-mid hover:border-sage'
-                }`}
-              >
-                Largest first
-              </button>
+        {aiError && <p className="text-amber-600 text-xs mt-3">⚠ {aiError}</p>}
+
+        {/* ── Collapsible filters panel ── */}
+        {filtersOpen && (
+          <div className="mt-4 pt-4 border-t border-warm space-y-4">
+
+            {/* Funder type */}
+            <div>
+              <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Funder type</p>
+              <div className="flex gap-2 flex-wrap">
+                {FUNDER_TYPES.map(t => (
+                  <button key={t.id} onClick={() => setActiveType(t.id)}
+                    className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                      activeType === t.id
+                        ? 'bg-forest border-forest text-white'
+                        : 'border-warm text-mid hover:border-sage hover:text-sage'
+                    }`}>
+                    {t.label}
+                  </button>
+                ))}
+                {RECENT_GRANTS.length > 0 && (
+                  <button onClick={() => setActiveType('recent')}
+                    className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                      activeType === 'recent'
+                        ? 'bg-forest border-forest text-white'
+                        : 'border-warm text-mid hover:border-sage hover:text-sage'
+                    }`}>
+                    🆕 Recently Added
+                  </button>
+                )}
+                {scrapedGrants.length > 0 && (
+                  <button onClick={() => setActiveType('scraped')}
+                    className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                      activeType === 'scraped'
+                        ? 'bg-forest border-forest text-white'
+                        : 'border-warm text-mid hover:border-sage hover:text-sage'
+                    }`}>
+                    🌐 Live Grants
+                  </button>
+                )}
+              </div>
             </div>
-          )}
-        </div>
 
-        {/* ── Amount range + deadline filter ── */}
-        <div className="flex gap-3 flex-wrap items-center mt-3 pt-3 border-t border-warm">
-          <span className="text-xs text-mid font-medium">Amount:</span>
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs text-light">£</span>
-            <input
-              type="number"
-              value={amountMin}
-              onChange={e => setAmountMin(e.target.value)}
-              className="form-input w-24 text-xs py-1.5"
-              placeholder="Min"
-              min={0}
-            />
-            <span className="text-xs text-light">–</span>
-            <span className="text-xs text-light">£</span>
-            <input
-              type="number"
-              value={amountMax}
-              onChange={e => setAmountMax(e.target.value)}
-              className="form-input w-24 text-xs py-1.5"
-              placeholder="Max"
-              min={0}
-            />
-          </div>
-          <span className="text-xs text-mid font-medium ml-3">Deadline:</span>
-          {(['all', 'rolling', 'has_deadline'] as const).map(v => (
-            <button key={v} onClick={() => setDeadlineFilter(v)}
-              className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
-                deadlineFilter === v
-                  ? 'bg-forest border-forest text-white'
-                  : 'border-warm text-mid hover:border-sage hover:text-sage'
-              }`}>
-              {v === 'all' ? 'All' : v === 'rolling' ? '🔄 Rolling' : '📅 Has deadline'}
-            </button>
-          ))}
-        </div>
+            {/* Amount + Deadline */}
+            <div className="flex gap-6 flex-wrap">
+              <div>
+                <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Amount range</p>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-light">£</span>
+                  <input type="number" value={amountMin} onChange={e => setAmountMin(e.target.value)}
+                    className="form-input w-24 text-xs py-1.5" placeholder="Min" min={0} />
+                  <span className="text-xs text-light">–</span>
+                  <span className="text-xs text-light">£</span>
+                  <input type="number" value={amountMax} onChange={e => setAmountMax(e.target.value)}
+                    className="form-input w-24 text-xs py-1.5" placeholder="Max" min={0} />
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Deadline</p>
+                <div className="flex gap-2">
+                  {(['all', 'rolling', 'has_deadline'] as const).map(v => (
+                    <button key={v} onClick={() => setDeadlineFilter(v)}
+                      className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                        deadlineFilter === v
+                          ? 'bg-forest border-forest text-white'
+                          : 'border-warm text-mid hover:border-sage hover:text-sage'
+                      }`}>
+                      {v === 'all' ? 'Any' : v === 'rolling' ? '🔄 Rolling' : '📅 Has deadline'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {org && !aiResults && (
+                <div>
+                  <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Sort</p>
+                  <div className="flex gap-2">
+                    {(['match', 'amount'] as const).map(v => (
+                      <button key={v} onClick={() => setSortBy(v)}
+                        className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                          sortBy === v ? 'bg-forest border-forest text-white' : 'border-warm text-mid hover:border-sage'
+                        }`}>
+                        {v === 'match' ? 'Best match' : 'Largest first'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
 
-        {/* ── Sector chips ── */}
-        {availableSectors.length > 0 && (
-          <div className="flex gap-2 flex-wrap items-center mt-3">
-            <span className="text-xs text-mid font-medium">Sector:</span>
-            {availableSectors.map(s => (
-              <button key={s} onClick={() => toggleSector(s)}
-                className={`px-3 py-1 rounded-full border text-xs font-medium capitalize transition-all ${
-                  activeSectors.has(s)
-                    ? 'bg-purple-600 border-purple-600 text-white'
-                    : 'border-purple-200 text-purple-700 hover:bg-purple-50'
-                }`}>
-                {s}
-              </button>
-            ))}
-            {activeSectors.size > 0 && (
-              <button onClick={() => setActiveSectors(new Set())}
-                className="text-xs text-light hover:text-charcoal underline ml-1">
-                Clear sectors
+            {/* Sectors */}
+            {availableSectors.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Sector</p>
+                <div className="flex gap-2 flex-wrap">
+                  {availableSectors.map(s => (
+                    <button key={s} onClick={() => toggleSector(s)}
+                      className={`px-3 py-1 rounded-full border text-xs font-medium capitalize transition-all ${
+                        activeSectors.has(s)
+                          ? 'bg-purple-600 border-purple-600 text-white'
+                          : 'border-purple-200 text-purple-700 hover:bg-purple-50'
+                      }`}>
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Clear all */}
+            {activeFilterCount > 0 && (
+              <button
+                onClick={() => { setActiveType('all'); setAmountMin(''); setAmountMax(''); setDeadlineFilter('all'); setActiveSectors(new Set()); setSortBy('match') }}
+                className="text-xs text-light hover:text-charcoal underline"
+              >
+                Clear all filters
               </button>
             )}
           </div>
@@ -752,33 +740,16 @@ export default function SearchPage() {
           <p className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2 mt-3">
             <strong>Tip:</strong> Complete your{' '}
             <a href="/dashboard/profile" className="underline hover:text-amber-900">organisation profile</a>{' '}
-            to unlock match scores and the ✦ Match my org button.
+            to unlock AI match scores.
           </p>
         )}
         {orgIsIncomplete && (
           <p className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2 mt-3">
-            <strong>Tip:</strong> Your profile is missing themes, location or areas of work —{' '}
-            <a href="/dashboard/profile" className="underline hover:text-amber-900">add more detail</a>{' '}
+            <strong>Tip:</strong>{' '}
+            <a href="/dashboard/profile" className="underline hover:text-amber-900">Add themes and location to your profile</a>{' '}
             to improve your match scores.
           </p>
         )}
-        {aiError && <p className="text-amber-600 text-xs mt-3">⚠ {aiError}</p>}
-      </div>
-
-      {/* ── GOV.UK banner ── */}
-      <div className="bg-forest/5 border border-forest/20 rounded-xl px-5 py-3.5 mb-5 flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-forest">🏛 Looking for government grants?</p>
-          <p className="text-xs text-mid mt-0.5">GOV.UK Find a Grant lists 100+ open government funding programmes</p>
-        </div>
-        <a
-          href="https://www.find-government-grants.service.gov.uk/grants"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn-outline btn-sm whitespace-nowrap"
-        >
-          Search GOV.UK →
-        </a>
       </div>
 
       {/* ── Results header ── */}
@@ -790,31 +761,21 @@ export default function SearchPage() {
             <><strong className="text-forest">✦ {displayGrants.length}</strong> AI-ranked results for &ldquo;{query}&rdquo;</>
           ) : (
             <>
-              Showing <strong className="text-forest">{displayGrants.length}</strong>{' '}
-              {activeType === 'recent' ? 'recently added grants' : `grants${query ? ` matching "${query}"` : ''}`}
-              {org && !aiResults && <span className="text-sage font-medium"> · sorted by match score</span>}
+              <strong className="text-forest">{displayGrants.length}</strong>{' '}
+              grants{query ? ` matching "${query}"` : ''}
+              {org && !aiResults && <span className="text-sage font-medium"> · sorted by match</span>}
             </>
           )}
         </p>
-        <div className="flex items-center gap-3">
-          {displayGrants.length > 0 && (
-            <button
-              onClick={exportCsv}
-              className="text-xs text-mid hover:text-charcoal border border-warm rounded-lg px-3 py-1.5 hover:border-sage transition-all"
-              title="Download results as CSV"
-            >
-              ⬇ Export CSV
-            </button>
-          )}
-          {aiResults && (
-            <button
-              onClick={() => { setAiResults(null); setSmartMatched(false); setQuery('') }}
-              className="text-xs text-mid hover:text-charcoal underline"
-            >
-              Clear AI results
-            </button>
-          )}
-        </div>
+        {displayGrants.length > 0 && (
+          <button
+            onClick={exportCsv}
+            className="text-xs text-mid hover:text-charcoal border border-warm rounded-lg px-3 py-1.5 hover:border-sage transition-all"
+            title="Download results as CSV"
+          >
+            ⬇ Export CSV
+          </button>
+        )}
       </div>
 
       {/* ── Grant list ── */}
