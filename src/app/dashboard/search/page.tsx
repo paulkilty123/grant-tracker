@@ -194,6 +194,14 @@ function GrantCard({ item, hasOrg, interactions, onAddToPipeline, onDismiss, onU
           </div>
 
           <div className="flex flex-col gap-1.5 w-full">
+            {grant.source === 'scraped' && (
+              <a
+                href={`/dashboard/grants/${encodeURIComponent(grant.id)}`}
+                className="btn-outline btn-sm w-full text-center text-xs"
+              >
+                View details →
+              </a>
+            )}
             {grant.applyUrl && (
               <a
                 href={grant.applyUrl}
@@ -281,6 +289,10 @@ export default function SearchPage() {
   const [interactions, setInteractions] = useState<Map<string, Set<InteractionAction>>>(new Map())
   const [showDismissed, setShowDismissed] = useState(false)
   const [scrapedGrants, setScrapedGrants] = useState<GrantOpportunity[]>([])
+  const [amountMin, setAmountMin]         = useState('')
+  const [amountMax, setAmountMax]         = useState('')
+  const [deadlineFilter, setDeadlineFilter] = useState<'all' | 'rolling' | 'has_deadline'>('all')
+  const [activeSectors, setActiveSectors] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     try {
@@ -319,7 +331,7 @@ export default function SearchPage() {
         .select('*')
         .eq('is_active', true)
         .order('last_seen_at', { ascending: false })
-        .limit(300)
+        .limit(500)
       if (scraped) {
         setScrapedGrants(scraped.map(row => normaliseScrapedGrant(row as Record<string, unknown>)))
       }
@@ -388,8 +400,70 @@ export default function SearchPage() {
   // ── Merged grant pool ────────────────────────────────────────────────────
   const allGrants = [...SEED_GRANTS, ...scrapedGrants]
 
+  // ── Available sectors (from scraped grants) ───────────────────────────────
+  const availableSectors: string[] = (() => {
+    const counts = new Map<string, number>()
+    scrapedGrants.forEach(g => g.sectors.forEach(s => counts.set(s, (counts.get(s) ?? 0) + 1)))
+    return Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 20)
+      .map(([s]) => s)
+  })()
+
+  function toggleSector(s: string) {
+    setActiveSectors(prev => {
+      const next = new Set(prev)
+      next.has(s) ? next.delete(s) : next.add(s)
+      return next
+    })
+  }
+
+  // ── CSV export ────────────────────────────────────────────────────────────
+  function exportCsv() {
+    const rows: DisplayGrant[] = (() => {
+      const dismissed = new Set(
+        Array.from(interactions.entries())
+          .filter(([, s]) => s.has('dismissed'))
+          .map(([id]) => id)
+      )
+      return displayGrants.filter(d => !dismissed.has(d.grant.id))
+    })()
+
+    const headers = ['Title', 'Funder', 'Type', 'Amount Min', 'Amount Max', 'Deadline', 'Rolling', 'Sectors', 'Apply URL', 'Match Score']
+    const escape = (v: string | number | boolean | null | undefined) => {
+      const s = String(v ?? '')
+      return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s
+    }
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(({ grant, score }) => [
+        escape(grant.title),
+        escape(grant.funder),
+        escape(grant.funderType),
+        escape(grant.amountMin),
+        escape(grant.amountMax),
+        escape(grant.isRolling ? 'Rolling' : grant.deadline),
+        escape(grant.isRolling),
+        escape(grant.sectors.join('; ')),
+        escape(grant.applyUrl),
+        escape(score > 0 ? score : ''),
+      ].join(',')),
+    ].join('\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url  = URL.createObjectURL(blob)
+    const a    = document.createElement('a')
+    a.href     = url
+    a.download = `grants-${new Date().toISOString().split('T')[0]}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   // ── Build display grants ─────────────────────────────────────────────────
   const displayGrants: DisplayGrant[] = (() => {
+    const minAmt = amountMin ? Number(amountMin) : null
+    const maxAmt = amountMax ? Number(amountMax) : null
+
     const filtered = allGrants.filter(g => {
       const matchesType =
         activeType === 'all'      ? true :
@@ -402,7 +476,16 @@ export default function SearchPage() {
         g.funder.toLowerCase().includes(query.toLowerCase()) ||
         g.description.toLowerCase().includes(query.toLowerCase()) ||
         g.sectors.some(s => s.toLowerCase().includes(query.toLowerCase()))
-      return matchesQuery && matchesType
+      const matchesAmount =
+        (minAmt === null || (g.amountMax ?? 0) >= minAmt) &&
+        (maxAmt === null || (g.amountMin ?? 0) <= maxAmt)
+      const matchesDeadline =
+        deadlineFilter === 'all'          ? true :
+        deadlineFilter === 'rolling'      ? g.isRolling :
+        /* has_deadline */                  (!g.isRolling && g.deadline != null)
+      const matchesSectors = activeSectors.size === 0 ||
+        g.sectors.some(s => activeSectors.has(s))
+      return matchesQuery && matchesType && matchesAmount && matchesDeadline && matchesSectors
     })
 
     if (aiResults) {
@@ -606,6 +689,66 @@ export default function SearchPage() {
           )}
         </div>
 
+        {/* ── Amount range + deadline filter ── */}
+        <div className="flex gap-3 flex-wrap items-center mt-3 pt-3 border-t border-warm">
+          <span className="text-xs text-mid font-medium">Amount:</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-light">£</span>
+            <input
+              type="number"
+              value={amountMin}
+              onChange={e => setAmountMin(e.target.value)}
+              className="form-input w-24 text-xs py-1.5"
+              placeholder="Min"
+              min={0}
+            />
+            <span className="text-xs text-light">–</span>
+            <span className="text-xs text-light">£</span>
+            <input
+              type="number"
+              value={amountMax}
+              onChange={e => setAmountMax(e.target.value)}
+              className="form-input w-24 text-xs py-1.5"
+              placeholder="Max"
+              min={0}
+            />
+          </div>
+          <span className="text-xs text-mid font-medium ml-3">Deadline:</span>
+          {(['all', 'rolling', 'has_deadline'] as const).map(v => (
+            <button key={v} onClick={() => setDeadlineFilter(v)}
+              className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                deadlineFilter === v
+                  ? 'bg-forest border-forest text-white'
+                  : 'border-warm text-mid hover:border-sage hover:text-sage'
+              }`}>
+              {v === 'all' ? 'All' : v === 'rolling' ? '🔄 Rolling' : '📅 Has deadline'}
+            </button>
+          ))}
+        </div>
+
+        {/* ── Sector chips ── */}
+        {availableSectors.length > 0 && (
+          <div className="flex gap-2 flex-wrap items-center mt-3">
+            <span className="text-xs text-mid font-medium">Sector:</span>
+            {availableSectors.map(s => (
+              <button key={s} onClick={() => toggleSector(s)}
+                className={`px-3 py-1 rounded-full border text-xs font-medium capitalize transition-all ${
+                  activeSectors.has(s)
+                    ? 'bg-purple-600 border-purple-600 text-white'
+                    : 'border-purple-200 text-purple-700 hover:bg-purple-50'
+                }`}>
+                {s}
+              </button>
+            ))}
+            {activeSectors.size > 0 && (
+              <button onClick={() => setActiveSectors(new Set())}
+                className="text-xs text-light hover:text-charcoal underline ml-1">
+                Clear sectors
+              </button>
+            )}
+          </div>
+        )}
+
         {!org && (
           <p className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2 mt-3">
             <strong>Tip:</strong> Complete your{' '}
@@ -654,14 +797,25 @@ export default function SearchPage() {
             </>
           )}
         </p>
-        {aiResults && (
-          <button
-            onClick={() => { setAiResults(null); setSmartMatched(false); setQuery('') }}
-            className="text-xs text-mid hover:text-charcoal underline"
-          >
-            Clear AI results
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          {displayGrants.length > 0 && (
+            <button
+              onClick={exportCsv}
+              className="text-xs text-mid hover:text-charcoal border border-warm rounded-lg px-3 py-1.5 hover:border-sage transition-all"
+              title="Download results as CSV"
+            >
+              ⬇ Export CSV
+            </button>
+          )}
+          {aiResults && (
+            <button
+              onClick={() => { setAiResults(null); setSmartMatched(false); setQuery('') }}
+              className="text-xs text-mid hover:text-charcoal underline"
+            >
+              Clear AI results
+            </button>
+          )}
+        </div>
       </div>
 
       {/* ── Grant list ── */}
