@@ -109,7 +109,6 @@ function buildSmartQuery(org: Organisation): string {
   const parts: string[] = []
   if (org.name)             parts.push(`grant funding for ${org.name}`)
   if (org.org_type)         parts.push(`a ${org.org_type.replace(/_/g, ' ')}`)
-  if (org.primary_location) parts.push(`in ${org.primary_location}`)
   if (org.areas_of_work?.length) parts.push(`providing ${org.areas_of_work.slice(0, 3).join(', ')}`)
   if (org.themes?.length)        parts.push(org.themes.slice(0, 3).join(', '))
   if (org.beneficiaries?.length) parts.push(`for ${org.beneficiaries.slice(0, 2).join(' and ')}`)
@@ -216,6 +215,10 @@ export default function AdvancedSearchPage() {
     const smartQuery = buildSmartQuery(org)
     if (!smartQuery) return
     setQuery(smartQuery)
+    if (org.primary_location) {
+      setLocationFilter(org.primary_location)
+      setOptionsOpen(true)
+    }
     setResults(null)
     setError(null)
   }
