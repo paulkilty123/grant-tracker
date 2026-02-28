@@ -95,7 +95,11 @@ function GrantCard({ item, hasOrg, interactions, onAddToPipeline, onDismiss, onU
             </div>
           </div>
 
-          <p className="text-sm text-mid leading-relaxed mb-3">{grant.description}</p>
+          <p className="text-sm text-mid leading-relaxed mb-3">
+            {grant.description.length > 200
+              ? `${grant.description.slice(0, 200).trimEnd()}…`
+              : grant.description}
+          </p>
 
           {/* Match reason */}
           {hasOrg && reason && (
