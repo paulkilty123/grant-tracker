@@ -356,6 +356,7 @@ export default function SearchPage() {
   const [activeSectors, setActiveSectors]         = useState<Set<string>>(new Set())
   const [filtersOpen, setFiltersOpen]             = useState(false)
   const [entryTypeFilter, setEntryTypeFilter]     = useState<'all' | 'live' | 'rolling' | 'profile'>('all')
+  const [expandedGroups, setExpandedGroups]       = useState<Set<string>>(new Set())
 
   useEffect(() => {
     try {
@@ -652,8 +653,27 @@ export default function SearchPage() {
     !!amountMax,
     deadlineFilter !== 'all',
     activeSectors.size > 0,
+    entryTypeFilter !== 'all',
     org && sortBy !== 'match',
   ].filter(Boolean).length
+
+  function resetAllFilters() {
+    setActiveType('all')
+    setAmountMin('')
+    setAmountMax('')
+    setDeadlineFilter('all')
+    setActiveSectors(new Set())
+    setSortBy('match')
+    setEntryTypeFilter('all')
+  }
+
+  function toggleGroup(label: string) {
+    setExpandedGroups(prev => {
+      const next = new Set(prev)
+      next.has(label) ? next.delete(label) : next.add(label)
+      return next
+    })
+  }
 
   return (
     <div>
@@ -712,52 +732,53 @@ export default function SearchPage() {
           </div>
         )}
 
-        {/* ── Entry type legend + filter ── */}
-        <div className="mt-4 pt-4 border-t border-warm">
-          <p className="text-base font-bold text-forest mb-2.5 tracking-tight">What am I looking at? Click to filter:</p>
-          <div className="flex flex-wrap gap-2">
-            {([
-              { key: 'all',     label: 'All',         icon: '',   desc: 'Show everything',                                      cls: 'border-warm text-mid bg-white',                     active: 'bg-forest border-forest text-white' },
-              { key: 'live',    label: 'Open grant',  icon: '📅', desc: 'Specific round with a closing deadline',               cls: 'border-emerald-200 text-emerald-700 bg-emerald-50', active: 'bg-emerald-600 border-emerald-600 text-white' },
-              { key: 'rolling', label: 'Always open', icon: '🔄', desc: 'Rolling programme — apply any time',                  cls: 'border-blue-200 text-blue-600 bg-blue-50',          active: 'bg-blue-600 border-blue-600 text-white' },
-              { key: 'profile', label: 'Funder info', icon: 'ℹ',  desc: 'General funder profile — no specific round open now', cls: 'border-gray-200 text-gray-500 bg-gray-50',          active: 'bg-gray-500 border-gray-500 text-white' },
-            ] as const).map(({ key, label, icon, desc, cls, active }) => (
-              <button
-                key={key}
-                onClick={() => setEntryTypeFilter(key)}
-                className={`flex flex-col items-start px-3 py-2 rounded-xl border text-left transition-all ${
-                  entryTypeFilter === key ? active : `${cls} hover:opacity-80`
-                }`}
-              >
-                <span className="text-xs font-semibold flex items-center gap-1">
-                  {icon && <span>{icon}</span>}{label}
-                </span>
-                <span className={`text-xs mt-0.5 leading-snug ${entryTypeFilter === key ? 'opacity-75' : 'opacity-60'}`}>
-                  {desc}
-                </span>
-              </button>
-            ))}
-          </div>
-          <div className="mt-3">
-            <button
-              onClick={() => setFiltersOpen(o => !o)}
-              className={`btn-sm whitespace-nowrap border transition-all rounded-xl px-4 flex items-center gap-1.5 ${
-                filtersOpen || activeFilterCount > 0
-                  ? 'bg-forest text-white border-forest'
-                  : 'border-warm text-mid hover:border-sage hover:text-sage bg-white'
-              }`}
-            >
-              Filters{activeFilterCount > 0 ? ` · ${activeFilterCount}` : ''}
-              <span className={`text-xs transition-transform duration-200 ${filtersOpen ? 'rotate-180' : ''}`}>▼</span>
-            </button>
-          </div>
-        </div>
+        {/* ── Filters button ── */}
+        <button
+          onClick={() => setFiltersOpen(o => !o)}
+          className={`mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border font-semibold text-sm transition-all ${
+            filtersOpen || activeFilterCount > 0
+              ? 'bg-forest text-white border-forest shadow-sm'
+              : 'border-warm text-mid hover:border-forest hover:text-forest bg-white'
+          }`}
+        >
+          <span>🔧</span>
+          {activeFilterCount > 0 ? `Filters · ${activeFilterCount} active` : 'Filters & Entry Type'}
+          <span className={`text-xs transition-transform duration-200 inline-block ${filtersOpen ? 'rotate-180' : ''}`}>▼</span>
+        </button>
 
         {aiError && <p className="text-amber-600 text-xs mt-3">⚠ {aiError}</p>}
 
         {/* ── Collapsible filters panel ── */}
         {filtersOpen && (
-          <div className="mt-4 pt-4 border-t border-warm space-y-4">
+          <div className="mt-4 pt-4 border-t border-warm space-y-5">
+
+            {/* Entry type */}
+            <div>
+              <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">What am I looking at?</p>
+              <div className="flex flex-wrap gap-2">
+                {([
+                  { key: 'all',     label: 'All',         icon: '',   desc: 'Show everything',                                      cls: 'border-warm text-mid bg-white',                     active: 'bg-forest border-forest text-white' },
+                  { key: 'live',    label: 'Open grant',  icon: '📅', desc: 'Specific round with a closing deadline',               cls: 'border-emerald-200 text-emerald-700 bg-emerald-50', active: 'bg-emerald-600 border-emerald-600 text-white' },
+                  { key: 'rolling', label: 'Always open', icon: '🔄', desc: 'Rolling programme — apply any time',                  cls: 'border-blue-200 text-blue-600 bg-blue-50',          active: 'bg-blue-600 border-blue-600 text-white' },
+                  { key: 'profile', label: 'Funder info', icon: 'ℹ',  desc: 'General funder profile — no specific round open now', cls: 'border-gray-200 text-gray-500 bg-gray-50',          active: 'bg-gray-500 border-gray-500 text-white' },
+                ] as const).map(({ key, label, icon, desc, cls, active }) => (
+                  <button
+                    key={key}
+                    onClick={() => setEntryTypeFilter(key)}
+                    className={`flex flex-col items-start px-3 py-2 rounded-xl border text-left transition-all ${
+                      entryTypeFilter === key ? active : `${cls} hover:opacity-80`
+                    }`}
+                  >
+                    <span className="text-xs font-semibold flex items-center gap-1">
+                      {icon && <span>{icon}</span>}{label}
+                    </span>
+                    <span className={`text-xs mt-0.5 leading-snug ${entryTypeFilter === key ? 'opacity-75' : 'opacity-60'}`}>
+                      {desc}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
 
             {/* Funder type */}
             <div>
@@ -796,23 +817,23 @@ export default function SearchPage() {
               </div>
             </div>
 
-            {/* Amount + Deadline */}
-            <div className="flex gap-6 flex-wrap">
+            {/* Amount · Deadline · Sort — 3-col grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Amount range</p>
                 <div className="flex items-center gap-1.5">
                   <span className="text-xs text-light">£</span>
                   <input type="number" value={amountMin} onChange={e => setAmountMin(e.target.value)}
-                    className="form-input w-24 text-xs py-1.5" placeholder="Min" min={0} />
+                    className="form-input w-full text-xs py-1.5" placeholder="Min" min={0} />
                   <span className="text-xs text-light">–</span>
                   <span className="text-xs text-light">£</span>
                   <input type="number" value={amountMax} onChange={e => setAmountMax(e.target.value)}
-                    className="form-input w-24 text-xs py-1.5" placeholder="Max" min={0} />
+                    className="form-input w-full text-xs py-1.5" placeholder="Max" min={0} />
                 </div>
               </div>
               <div>
                 <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Deadline</p>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   {(['all', 'rolling', 'has_deadline'] as const).map(v => (
                     <button key={v} onClick={() => setDeadlineFilter(v)}
                       className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
@@ -828,7 +849,7 @@ export default function SearchPage() {
               {org && !aiResults && (
                 <div>
                   <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Sort</p>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap">
                     {(['match', 'amount'] as const).map(v => (
                       <button key={v} onClick={() => setSortBy(v)}
                         className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
@@ -842,28 +863,45 @@ export default function SearchPage() {
               )}
             </div>
 
-            {/* Sectors — grouped by theme */}
+            {/* Sectors — grouped, collapsed by default */}
             {availableSectors.length > 0 && (
-              <div className="space-y-3">
-                <p className="text-xs font-semibold text-light uppercase tracking-wider">Sector</p>
+              <div className="space-y-1.5">
+                <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Sector</p>
                 {SECTOR_GROUPS.map(group => {
                   const groupSectors = group.sectors.filter(s => availableSectors.includes(s))
                   if (groupSectors.length === 0) return null
+                  const hasActive = groupSectors.some(s => activeSectors.has(s))
+                  const isOpen = expandedGroups.has(group.label) || hasActive
                   return (
-                    <div key={group.label}>
-                      <p className="text-xs text-mid font-medium mb-1.5">{group.icon} {group.label}</p>
-                      <div className="flex gap-1.5 flex-wrap">
-                        {groupSectors.map(s => (
-                          <button key={s} onClick={() => toggleSector(s)}
-                            className={`px-3 py-1 rounded-full border text-xs font-medium capitalize transition-all ${
-                              activeSectors.has(s)
-                                ? 'bg-purple-600 border-purple-600 text-white'
-                                : 'border-purple-200 text-purple-700 hover:bg-purple-50'
-                            }`}>
-                            {sectorLabel(s) ?? s}
-                          </button>
-                        ))}
-                      </div>
+                    <div key={group.label} className="border border-warm rounded-xl overflow-hidden">
+                      <button
+                        onClick={() => toggleGroup(group.label)}
+                        className="w-full flex items-center justify-between px-3 py-2.5 text-left hover:bg-warm/40 transition-colors"
+                      >
+                        <span className="text-xs font-medium text-charcoal flex items-center gap-1.5">
+                          {group.icon} {group.label}
+                          {hasActive && (
+                            <span className="ml-1 bg-purple-600 text-white text-xs rounded-full px-1.5 py-0.5 leading-none">
+                              {groupSectors.filter(s => activeSectors.has(s)).length}
+                            </span>
+                          )}
+                        </span>
+                        <span className={`text-xs text-light transition-transform duration-150 inline-block ${isOpen ? 'rotate-180' : ''}`}>▼</span>
+                      </button>
+                      {isOpen && (
+                        <div className="px-3 pb-3 pt-1 flex gap-1.5 flex-wrap border-t border-warm">
+                          {groupSectors.map(s => (
+                            <button key={s} onClick={() => toggleSector(s)}
+                              className={`px-3 py-1 rounded-full border text-xs font-medium capitalize transition-all ${
+                                activeSectors.has(s)
+                                  ? 'bg-purple-600 border-purple-600 text-white'
+                                  : 'border-purple-200 text-purple-700 hover:bg-purple-50'
+                              }`}>
+                              {sectorLabel(s) ?? s}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )
                 })}
@@ -872,34 +910,43 @@ export default function SearchPage() {
                   const grouped = new Set(SECTOR_GROUPS.flatMap(g => g.sectors))
                   const ungrouped = availableSectors.filter(s => !grouped.has(s))
                   if (ungrouped.length === 0) return null
+                  const isOpen = expandedGroups.has('Other')
                   return (
-                    <div>
-                      <p className="text-xs text-mid font-medium mb-1.5">Other</p>
-                      <div className="flex gap-1.5 flex-wrap">
-                        {ungrouped.map(s => (
-                          <button key={s} onClick={() => toggleSector(s)}
-                            className={`px-3 py-1 rounded-full border text-xs font-medium capitalize transition-all ${
-                              activeSectors.has(s)
-                                ? 'bg-purple-600 border-purple-600 text-white'
-                                : 'border-purple-200 text-purple-700 hover:bg-purple-50'
-                            }`}>
-                            {sectorLabel(s) ?? s}
-                          </button>
-                        ))}
-                      </div>
+                    <div className="border border-warm rounded-xl overflow-hidden">
+                      <button
+                        onClick={() => toggleGroup('Other')}
+                        className="w-full flex items-center justify-between px-3 py-2.5 text-left hover:bg-warm/40 transition-colors"
+                      >
+                        <span className="text-xs font-medium text-charcoal">Other</span>
+                        <span className={`text-xs text-light transition-transform duration-150 inline-block ${isOpen ? 'rotate-180' : ''}`}>▼</span>
+                      </button>
+                      {isOpen && (
+                        <div className="px-3 pb-3 pt-1 flex gap-1.5 flex-wrap border-t border-warm">
+                          {ungrouped.map(s => (
+                            <button key={s} onClick={() => toggleSector(s)}
+                              className={`px-3 py-1 rounded-full border text-xs font-medium capitalize transition-all ${
+                                activeSectors.has(s)
+                                  ? 'bg-purple-600 border-purple-600 text-white'
+                                  : 'border-purple-200 text-purple-700 hover:bg-purple-50'
+                              }`}>
+                              {sectorLabel(s) ?? s}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )
                 })()}
               </div>
             )}
 
-            {/* Clear all */}
+            {/* Reset all */}
             {activeFilterCount > 0 && (
               <button
-                onClick={() => { setActiveType('all'); setAmountMin(''); setAmountMax(''); setDeadlineFilter('all'); setActiveSectors(new Set()); setSortBy('match') }}
-                className="text-xs text-light hover:text-charcoal underline"
+                onClick={resetAllFilters}
+                className="text-xs font-semibold text-red-500 hover:text-red-700 border border-red-200 hover:border-red-400 rounded-lg px-3 py-1.5 transition-all"
               >
-                Clear all filters
+                ✕ Reset all filters
               </button>
             )}
           </div>
