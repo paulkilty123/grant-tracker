@@ -27,6 +27,7 @@
 //  22.  Nationwide Foundation            (nationwidefoundation.org.uk/our-programmes)
 //  23.  Community Foundation Tyne & Wear (communityfoundation.org.uk/apply)
 //  24.  Norfolk Community Foundation     (norfolkfoundation.com/funding-support/grants/groups)
+//  25.  Suffolk Community Foundation     (suffolkcf.org.uk/current-grants)
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { createClient }  from '@supabase/supabase-js'
@@ -1580,6 +1581,93 @@ async function crawlNorfolkCF(): Promise<CrawlResult> {
   }
 }
 
+// ── Source 25: Suffolk Community Foundation ───────────────────────────────────
+// Scrapes suffolkcf.org.uk/current-grants/ — SSR listing of named funds.
+// Each fund appears as an H2 heading followed by open/closed status text and
+// description. We filter to "Now open" or "Open all year round" only.
+async function crawlSuffolkCF(): Promise<CrawlResult> {
+  const SOURCE  = 'suffolk_cf'
+  const BASE    = 'https://www.suffolkcf.org.uk'
+  const LISTURL = `${BASE}/current-grants/`
+  // Status text that means the fund is accepting applications right now
+  const OPEN_RE  = /now open|open all year round/i
+  // Status text that means NOT open (skip these)
+  const SKIP_RE  = /now closed|opens:/i
+
+  try {
+    const html = await fetchHtml(LISTURL)
+    const root = parseHTML(html)
+    const grants: ScrapedGrant[] = []
+
+    const h2s = root.querySelectorAll('h2').filter(h =>
+      !h.text.match(/general application|subscribe|newsletter|grants opening soon/i)
+    )
+
+    for (const h2 of h2s) {
+      const title = h2.text.trim()
+      if (!title) continue
+
+      // Collect sibling content until next H2
+      let blockText = ''
+      let sib = h2.nextElementSibling
+      while (sib && sib.tagName !== 'H2') {
+        blockText += ' ' + sib.text
+        sib = sib.nextElementSibling
+      }
+
+      // Only include funds currently open
+      if (!OPEN_RE.test(blockText) || SKIP_RE.test(blockText)) continue
+
+      // "Maximum grant: £5,000" or "Maximum grant: No maximum"
+      const maxMatch  = blockText.match(/Maximum grant:\s*(£[\d,]+|No maximum)/i)
+      const amountMax = maxMatch && !/no maximum/i.test(maxMatch[1])
+        ? parsePoundAmount(maxMatch[1]) : null
+
+      const isRolling = /open all year round/i.test(blockText)
+
+      // First proper sentence as description
+      const descMatch = blockText.match(/Grants? (?:to|of|for|up)[^.]{10,200}\./)
+      const desc = descMatch ? descMatch[0].trim()
+        : blockText.replace(/Now open.*?£[\d,]+/i, '').trim().slice(0, 300)
+
+      const slug = slugify(title).toLowerCase().replace(/__+/g, '_').slice(0, 60)
+
+      const combined = (title + ' ' + desc).toLowerCase()
+      const sectors: string[] = ['community']
+      if (/health|wellbeing|medical|mental|cancer|carer/.test(combined)) sectors.push('health')
+      if (/young people|children|youth/.test(combined))                  sectors.push('young people')
+      if (/sport|tennis|physical|active/.test(combined))                 sectors.push('sport')
+      if (/education|skill|learn/.test(combined))                        sectors.push('education')
+      if (/arts|culture/.test(combined))                                 sectors.push('arts')
+      if (/enterprise|business/.test(combined))                          sectors.push('enterprise')
+      if (/hardship|poverty|disab|disadvantage/.test(combined))          sectors.push('social welfare')
+      if (/older people|elderly/.test(combined))                         sectors.push('social welfare')
+
+      grants.push({
+        external_id:          `suffolk_cf_${slug}`,
+        source:               SOURCE,
+        title,
+        funder:               'Suffolk Community Foundation',
+        funder_type:          'community_foundation',
+        description:          desc.replace(/\s+/g, ' ').trim(),
+        amount_min:           null,
+        amount_max:           amountMax,
+        deadline:             null,
+        is_rolling:           isRolling,
+        is_local:             true,
+        sectors,
+        eligibility_criteria: ['Suffolk based organisations or individuals'],
+        apply_url:            LISTURL,
+        raw_data:             { slug } as Record<string, unknown>,
+      })
+    }
+
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
 // ── Amount parsers ────────────────────────────────────────────────────────────
 function parsePoundAmount(str: string): number | null {
   if (!str) return null
@@ -1661,7 +1749,7 @@ export async function crawlAllSources(): Promise<CrawlResult[]> {
     quartetCF, cfNI, heartOfEngland, foundationScotland, londonCF,
     sussexCF, surreyCF, hiwcf, oxfordshireCF,
     asdaFoundation, avivaFoundation, nationwideFoundation,
-    tyneWearCF, norfolkCF,
+    tyneWearCF, norfolkCF, suffolkCF,
   ] = await Promise.allSettled([
     crawlGovUK(),
     crawlTNLCF(),
@@ -1687,6 +1775,7 @@ export async function crawlAllSources(): Promise<CrawlResult[]> {
     crawlNationwideFoundation(),
     crawlTyneWearCF(),
     crawlNorfolkCF(),
+    crawlSuffolkCF(),
   ])
 
   return [
@@ -1714,5 +1803,6 @@ export async function crawlAllSources(): Promise<CrawlResult[]> {
     nationwideFoundation.status === 'fulfilled' ? nationwideFoundation.value : { source: 'nationwide_foundation', fetched: 0, upserted: 0, error: 'Promise rejected' },
     tyneWearCF.status          === 'fulfilled' ? tyneWearCF.value          : { source: 'tyne_wear_cf',          fetched: 0, upserted: 0, error: 'Promise rejected' },
     norfolkCF.status           === 'fulfilled' ? norfolkCF.value           : { source: 'norfolk_cf',            fetched: 0, upserted: 0, error: 'Promise rejected' },
+    suffolkCF.status           === 'fulfilled' ? suffolkCF.value           : { source: 'suffolk_cf',            fetched: 0, upserted: 0, error: 'Promise rejected' },
   ]
 }
