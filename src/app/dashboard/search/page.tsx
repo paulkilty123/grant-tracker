@@ -414,11 +414,12 @@ export default function SearchPage() {
   const allGrants = [...SEED_GRANTS, ...scrapedGrants]
 
   // ── Available sectors (from all grants — seed + scraped) ─────────────────
+  // Filter out scraped verbatim sentences (>30 chars) and meaningless catch-alls
   const availableSectors: string[] = (() => {
     const counts = new Map<string, number>()
     allGrants.forEach(g => g.sectors.forEach(s => counts.set(s, (counts.get(s) ?? 0) + 1)))
     return Array.from(counts.entries())
-      .filter(([s]) => s !== 'all sectors') // exclude meaningless catch-all
+      .filter(([s]) => s !== 'all sectors' && s.length <= 30)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 40)
       .map(([s]) => s)
