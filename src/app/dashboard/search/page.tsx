@@ -714,7 +714,7 @@ export default function SearchPage() {
 
         {/* ── Entry type legend + filter ── */}
         <div className="mt-4 pt-4 border-t border-warm">
-          <p className="text-sm font-semibold text-forest mb-2.5">What am I looking at? Click to filter:</p>
+          <p className="text-base font-bold text-forest mb-2.5 tracking-tight">What am I looking at? Click to filter:</p>
           <div className="flex flex-wrap gap-2">
             {([
               { key: 'all',     label: 'All',         icon: '',   desc: 'Show everything',                                      cls: 'border-warm text-mid bg-white',                     active: 'bg-forest border-forest text-white' },
@@ -741,13 +741,14 @@ export default function SearchPage() {
           <div className="mt-3">
             <button
               onClick={() => setFiltersOpen(o => !o)}
-              className={`btn-sm whitespace-nowrap border transition-all rounded-xl px-4 ${
+              className={`btn-sm whitespace-nowrap border transition-all rounded-xl px-4 flex items-center gap-1.5 ${
                 filtersOpen || activeFilterCount > 0
                   ? 'bg-forest text-white border-forest'
                   : 'border-warm text-mid hover:border-sage hover:text-sage bg-white'
               }`}
             >
               Filters{activeFilterCount > 0 ? ` · ${activeFilterCount}` : ''}
+              <span className={`text-xs transition-transform duration-200 ${filtersOpen ? 'rotate-180' : ''}`}>▼</span>
             </button>
           </div>
         </div>
