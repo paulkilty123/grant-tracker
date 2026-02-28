@@ -2386,6 +2386,168 @@ async function crawlCambsCF(): Promise<CrawlResult> {
   }
 }
 
+// ── Source 35: Wiltshire & Swindon Community Foundation ───────────────────────
+async function crawlWiltshireCF(): Promise<CrawlResult> {
+  const SOURCE  = 'wiltshire_cf'
+  const BASE    = 'https://www.wscf.org.uk'
+  const LISTURL = `${BASE}/grants-and-support/groups/`
+  try {
+    const html = await fetchHtml(LISTURL)
+    const root = parseHTML(html)
+    const grants: ScrapedGrant[] = []
+
+    // Each grant is a .grant div; inside: h3.grant__title (title),
+    // paragraphs (first p = amount info), p.grant__deadline (deadline / status),
+    // a.grant__button (apply link).  Skip if deadline text says "closed".
+    const cards = root.querySelectorAll('.grant')
+    for (const card of cards) {
+      const title = card.querySelector('h3.grant__title, h3')?.text?.trim() ?? ''
+      if (!title) continue
+
+      const deadlineEl  = card.querySelector('p.grant__deadline, .grant__deadline')
+      const deadlineRaw = deadlineEl?.text?.trim() ?? ''
+      if (/closed/i.test(deadlineRaw)) continue
+
+      const isRolling = /rolling|no closing|ongoing/i.test(deadlineRaw)
+      const dlMatch   = deadlineRaw.match(/(\d{1,2})(?:st|nd|rd|th)?\s+([A-Za-z]+)(?:\s+(\d{4}))?/i)
+      const yearStr   = dlMatch?.[3] ?? new Date().getFullYear().toString()
+      const deadline  = dlMatch && !isRolling
+        ? parseUKRIDate(`${dlMatch[1]} ${dlMatch[2]} ${yearStr}`)
+        : null
+
+      // Amount — first <p> that is NOT the deadline paragraph
+      const allPs    = card.querySelectorAll('p')
+      const amountEl = allPs.find(p => p !== deadlineEl)
+      const amountRaw = amountEl?.text?.trim() ?? ''
+      const isUpTo    = /up\s*to/i.test(amountRaw)
+      const { min: amtMin, max: amtMax } = parseAmountRange(amountRaw)
+      const amount_min = isUpTo ? null : amtMin
+      const amount_max = amtMax
+
+      const anchor   = card.querySelector('a.grant__button, a[href]')
+      const applyUrl = anchor ? (anchor.getAttribute('href')?.startsWith('http') ? anchor.getAttribute('href')! : `${BASE}${anchor.getAttribute('href')}`) : LISTURL
+
+      const slug = applyUrl.replace(/https?:\/\/[^/]+/, '').replace(/\/$/, '').replace(/[^a-z0-9]/gi, '_').replace(/^_/, '') || title.toLowerCase().replace(/[^a-z0-9]+/g, '_')
+
+      grants.push({
+        external_id:          `wiltshire_cf_${slug}`,
+        source:               SOURCE,
+        title,
+        funder:               'Wiltshire & Swindon Community Foundation',
+        funder_type:          'community_foundation',
+        description:          null,
+        amount_min,
+        amount_max,
+        deadline,
+        is_rolling:           isRolling,
+        is_local:             true,
+        sectors:              ['community development'],
+        eligibility_criteria: ['Registered charity or constituted group', 'Operating in Wiltshire or Swindon'],
+        apply_url:            applyUrl,
+        raw_data:             { amountRaw, deadlineRaw } as Record<string, unknown>,
+      })
+    }
+
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
+// ── Source 36: Community Foundation for Calderdale ────────────────────────────
+async function crawlCalderdaleCF(): Promise<CrawlResult> {
+  const SOURCE  = 'calderdale_cf'
+  const BASE    = 'https://cffc.co.uk'
+  const LISTURL = `${BASE}/current-grants/`
+  try {
+    const html = await fetchHtml(LISTURL)
+    const root = parseHTML(html)
+    const grants: ScrapedGrant[] = []
+
+    // Elementor grid: each grant is article.elementor-post
+    // Inside: h3.elementor-post__title > a (title + link).
+    // Individual pages have description / amount.
+    const articles = root.querySelectorAll('article.elementor-post, article[class*="elementor-post"]')
+
+    const pagePromises = articles.map(async (article) => {
+      const anchor   = article.querySelector('h3 a, .elementor-post__title a')
+      const title    = anchor?.text?.trim() ?? article.querySelector('h3')?.text?.trim() ?? ''
+      if (!title) return null
+
+      const href     = anchor?.getAttribute('href') ?? ''
+      const applyUrl = href.startsWith('http') ? href : `${BASE}${href}`
+
+      // Fetch individual grant page for amount / description / deadline
+      let description: string | null = null
+      let amount_min:  number | null = null
+      let amount_max:  number | null = null
+      let deadline:    string | null = null
+      let isRolling                  = false
+
+      try {
+        const pageHtml = await fetchHtml(applyUrl)
+        const pg       = parseHTML(pageHtml)
+
+        // Description: first substantial <p> in .elementor-widget-text-editor
+        const bodyPs = pg.querySelectorAll('.elementor-widget-text-editor p, .entry-content p, article p')
+        description  = bodyPs.find(p => p.text.trim().length > 40)?.text?.trim() ?? null
+
+        // Amount: look for £ sign anywhere in headings or paragraphs
+        const allText = pg.text
+        const amtM    = allText.match(/£[\d,]+(?:\s*[-–]\s*£[\d,]+)?/)
+        if (amtM) {
+          const isUpTo  = /up\s*to/i.test(allText.slice(Math.max(0, allText.indexOf(amtM[0]) - 20), allText.indexOf(amtM[0])))
+          const { min, max } = parseAmountRange(amtM[0])
+          amount_min  = isUpTo ? null : min
+          amount_max  = max
+        }
+
+        // Deadline: look for date patterns
+        const dlM = allText.match(/(?:deadline|closes?|closing)[:\s]+(\d{1,2})(?:st|nd|rd|th)?\s+([A-Za-z]+)(?:\s+(\d{4}))?/i)
+          ?? allText.match(/(\d{1,2})(?:st|nd|rd|th)\s+([A-Za-z]+)\s+(\d{4})/i)
+        if (dlM) {
+          const dayIdx = dlM.index! + dlM[0].indexOf(dlM[1])
+          const dayStr = dlM[1], monStr = dlM[2], yrStr = dlM[3] ?? new Date().getFullYear().toString()
+          isRolling = false
+          deadline  = parseUKRIDate(`${dayStr} ${monStr} ${yrStr}`)
+        }
+        if (/rolling|no closing|open.*throughout/i.test(allText)) isRolling = true
+      } catch {
+        // silently skip page fetch errors
+      }
+
+      const slug = applyUrl.replace(/https?:\/\/[^/]+/, '').replace(/\/$/, '').replace(/[^a-z0-9]/gi, '_').replace(/^_/, '') || title.toLowerCase().replace(/[^a-z0-9]+/g, '_')
+
+      return {
+        external_id:          `calderdale_cf_${slug}`,
+        source:               SOURCE,
+        title,
+        funder:               'Community Foundation for Calderdale',
+        funder_type:          'community_foundation',
+        description,
+        amount_min,
+        amount_max,
+        deadline,
+        is_rolling:           isRolling,
+        is_local:             true,
+        sectors:              ['community development'],
+        eligibility_criteria: ['Registered charity or constituted group', 'Operating in Calderdale'],
+        apply_url:            applyUrl,
+        raw_data:             {} as Record<string, unknown>,
+      } as ScrapedGrant
+    })
+
+    const settled = await Promise.allSettled(pagePromises)
+    for (const r of settled) {
+      if (r.status === 'fulfilled' && r.value) grants.push(r.value)
+    }
+
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
 // ── Amount parsers ────────────────────────────────────────────────────────────
 function parsePoundAmount(str: string): number | null {
   if (!str) return null
@@ -2471,6 +2633,7 @@ export async function crawlAllSources(): Promise<CrawlResult[]> {
     merseysideCF, bbcCiN, gloucestershireCF,
     heartOfBucksCF, llrCF, mkCF,
     lancsCF, cambsCF, hertsCF,
+    wiltshireCF, calderdaleCF,
   ] = await Promise.allSettled([
     crawlGovUK(),
     crawlTNLCF(),
@@ -2506,6 +2669,8 @@ export async function crawlAllSources(): Promise<CrawlResult[]> {
     crawlLancsCF(),
     crawlCambsCF(),
     crawlHertsCF(),
+    crawlWiltshireCF(),
+    crawlCalderdaleCF(),
   ])
 
   return [
@@ -2543,5 +2708,7 @@ export async function crawlAllSources(): Promise<CrawlResult[]> {
     lancsCF.status             === 'fulfilled' ? lancsCF.value             : { source: 'lancs_cf',             fetched: 0, upserted: 0, error: 'Promise rejected' },
     cambsCF.status             === 'fulfilled' ? cambsCF.value             : { source: 'cambs_cf',             fetched: 0, upserted: 0, error: 'Promise rejected' },
     hertsCF.status             === 'fulfilled' ? hertsCF.value             : { source: 'herts_cf',             fetched: 0, upserted: 0, error: 'Promise rejected' },
+    wiltshireCF.status         === 'fulfilled' ? wiltshireCF.value         : { source: 'wiltshire_cf',         fetched: 0, upserted: 0, error: 'Promise rejected' },
+    calderdaleCF.status        === 'fulfilled' ? calderdaleCF.value        : { source: 'calderdale_cf',        fetched: 0, upserted: 0, error: 'Promise rejected' },
   ]
 }
