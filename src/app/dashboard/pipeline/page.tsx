@@ -125,11 +125,18 @@ function PipelineModal({
   onDelete: (id: string) => Promise<void>
   onMove: (id: string, stage: PipelineStage) => void
 }) {
+  const isApplyingOrLater = ['applying', 'submitted', 'won', 'declined'].includes(item.stage)
+
   const [notes, setNotes] = useState(item.notes ?? '')
   const [progress, setProgress] = useState(getWritingStage(item.application_progress).value)
   const [deadline, setDeadline] = useState(item.deadline ?? '')
   const [amountMin, setAmountMin] = useState(item.amount_min != null ? String(item.amount_min) : '')
   const [amountMax, setAmountMax] = useState(item.amount_max != null ? String(item.amount_max) : (item.amount_requested != null ? String(item.amount_requested) : ''))
+  // Single "amount requested" used for applying stage and beyond
+  const [amountRequested, setAmountRequested] = useState(
+    item.amount_requested != null ? String(item.amount_requested) :
+    item.amount_max != null      ? String(item.amount_max) : ''
+  )
   const [isUrgent, setIsUrgent] = useState(item.is_urgent)
   const [contactName, setContactName] = useState(item.contact_name ?? '')
   const [contactEmail, setContactEmail] = useState(item.contact_email ?? '')
@@ -138,18 +145,33 @@ function PipelineModal({
 
   async function handleSave() {
     setSaving(true)
-    await onSave(item.id, {
-      notes,
-      application_progress: progress,
-      deadline: deadline || null,
-      amount_min: amountMin ? Number(amountMin) : null,
-      amount_max: amountMax ? Number(amountMax) : null,
-      amount_requested: amountMax ? Number(amountMax) : null,
-      is_urgent: isUrgent,
-      contact_name: contactName || null,
-      contact_email: contactEmail || null,
-      grant_url: grantUrl || null,
-    })
+    if (isApplyingOrLater) {
+      await onSave(item.id, {
+        notes,
+        application_progress: progress,
+        deadline: deadline || null,
+        amount_requested: amountRequested ? Number(amountRequested) : null,
+        amount_min: null,
+        amount_max: amountRequested ? Number(amountRequested) : null,
+        is_urgent: isUrgent,
+        contact_name: contactName || null,
+        contact_email: contactEmail || null,
+        grant_url: grantUrl || null,
+      })
+    } else {
+      await onSave(item.id, {
+        notes,
+        application_progress: progress,
+        deadline: deadline || null,
+        amount_min: amountMin ? Number(amountMin) : null,
+        amount_max: amountMax ? Number(amountMax) : null,
+        amount_requested: amountMax ? Number(amountMax) : null,
+        is_urgent: isUrgent,
+        contact_name: contactName || null,
+        contact_email: contactEmail || null,
+        grant_url: grantUrl || null,
+      })
+    }
     setSaving(false)
     onClose()
   }
@@ -167,48 +189,83 @@ function PipelineModal({
 
         <div className="p-6 space-y-5">
           {/* Amount & Deadline */}
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <label className="text-xs font-semibold text-light uppercase tracking-wider block mb-1">Min amount (£)</label>
-              <div className="relative">
-                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-mid text-sm">£</span>
+          {isApplyingOrLater ? (
+            /* Applying / Submitted / Won / Declined — single amount requested */
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-semibold text-light uppercase tracking-wider block mb-1">Amount requested (£)</label>
+                <div className="relative">
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-mid text-sm">£</span>
+                  <input
+                    type="number"
+                    min="0"
+                    value={amountRequested}
+                    onChange={e => setAmountRequested(e.target.value)}
+                    className="form-input text-sm py-1.5 pl-6"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-light uppercase tracking-wider block mb-1">Deadline</label>
                 <input
-                  type="number"
-                  min="0"
-                  value={amountMin}
-                  onChange={e => setAmountMin(e.target.value)}
-                  className="form-input text-sm py-1.5 pl-6"
-                  placeholder="0"
+                  type="date"
+                  value={deadline}
+                  onChange={e => setDeadline(e.target.value)}
+                  className="form-input text-sm py-1.5 px-2"
                 />
               </div>
             </div>
-            <div>
-              <label className="text-xs font-semibold text-light uppercase tracking-wider block mb-1">Max amount (£)</label>
-              <div className="relative">
-                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-mid text-sm">£</span>
+          ) : (
+            /* Identified / Researching — funder range */
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label className="text-xs font-semibold text-light uppercase tracking-wider block mb-1">Min amount (£)</label>
+                <div className="relative">
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-mid text-sm">£</span>
+                  <input
+                    type="number"
+                    min="0"
+                    value={amountMin}
+                    onChange={e => setAmountMin(e.target.value)}
+                    className="form-input text-sm py-1.5 pl-6"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-light uppercase tracking-wider block mb-1">Max amount (£)</label>
+                <div className="relative">
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-mid text-sm">£</span>
+                  <input
+                    type="number"
+                    min="0"
+                    value={amountMax}
+                    onChange={e => setAmountMax(e.target.value)}
+                    className="form-input text-sm py-1.5 pl-6"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-light uppercase tracking-wider block mb-1">Deadline</label>
                 <input
-                  type="number"
-                  min="0"
-                  value={amountMax}
-                  onChange={e => setAmountMax(e.target.value)}
-                  className="form-input text-sm py-1.5 pl-6"
-                  placeholder="0"
+                  type="date"
+                  value={deadline}
+                  onChange={e => setDeadline(e.target.value)}
+                  className="form-input text-sm py-1.5 px-2"
                 />
               </div>
             </div>
-            <div>
-              <label className="text-xs font-semibold text-light uppercase tracking-wider block mb-1">Deadline</label>
-              <input
-                type="date"
-                value={deadline}
-                onChange={e => setDeadline(e.target.value)}
-                className="form-input text-sm py-1.5 px-2"
-              />
-            </div>
-          </div>
-          {(amountMin || amountMax) && (
+          )}
+          {!isApplyingOrLater && (amountMin || amountMax) && (
             <p className="font-display text-xl font-bold text-gold -mt-2">
               {formatRange(amountMin ? Number(amountMin) : null, amountMax ? Number(amountMax) : null)}
+            </p>
+          )}
+          {isApplyingOrLater && amountRequested && (
+            <p className="font-display text-xl font-bold text-gold -mt-2">
+              £{Number(amountRequested).toLocaleString('en-GB')} requested
             </p>
           )}
 
@@ -330,29 +387,39 @@ function PipelineModal({
           </div>
 
           {/* Urgent flag */}
-          <div className="flex items-center gap-3 py-1">
-            <button
-              type="button"
-              onClick={() => setIsUrgent(v => !v)}
-              className={cn(
-                'relative w-10 h-5.5 rounded-full transition-colors flex-shrink-0',
-                isUrgent ? 'bg-red-500' : 'bg-warm'
-              )}
-              style={{ height: '22px', width: '40px' }}
-              aria-pressed={isUrgent}
-            >
+          <button
+            type="button"
+            onClick={() => setIsUrgent(v => !v)}
+            className={cn(
+              'w-full flex items-center justify-between px-4 py-3 rounded-xl border-2 transition-all',
+              isUrgent
+                ? 'border-red-300 bg-red-50'
+                : 'border-warm bg-white hover:border-red-200 hover:bg-red-50/40'
+            )}
+          >
+            <div className="flex items-center gap-3">
               <span className={cn(
-                'absolute top-0.5 w-4.5 h-4.5 bg-white rounded-full shadow transition-transform',
-                isUrgent ? 'translate-x-5' : 'translate-x-0.5'
-              )} style={{ width: '18px', height: '18px', top: '2px' }} />
-            </button>
-            <div>
-              <p className={cn('text-sm font-medium', isUrgent ? 'text-red-600' : 'text-charcoal')}>
-                {isUrgent ? '⚠ Mark as urgent' : 'Mark as urgent'}
-              </p>
-              <p className="text-xs text-light">Highlights this card in red on the board</p>
+                'text-lg leading-none transition-all',
+                isUrgent ? 'opacity-100' : 'opacity-30'
+              )}>⚠️</span>
+              <div className="text-left">
+                <p className={cn('text-sm font-semibold', isUrgent ? 'text-red-600' : 'text-charcoal')}>
+                  Mark as urgent
+                </p>
+                <p className="text-xs text-light">Highlights this card in red on the board</p>
+              </div>
             </div>
-          </div>
+            {/* Toggle pill */}
+            <div className={cn(
+              'relative flex-shrink-0 h-6 w-11 rounded-full transition-colors duration-200',
+              isUrgent ? 'bg-red-500' : 'bg-gray-200'
+            )}>
+              <span className={cn(
+                'absolute top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200',
+                isUrgent ? 'translate-x-6' : 'translate-x-1'
+              )} />
+            </div>
+          </button>
         </div>
 
         <div className="p-6 pt-0 flex justify-between items-center">
