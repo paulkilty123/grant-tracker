@@ -25,6 +25,7 @@
 //  20.  Asda Foundation                  (asdafoundation.org/our-grants)
 //  21.  Aviva Foundation                 (avivafoundation.org.uk)
 //  22.  Nationwide Foundation            (nationwidefoundation.org.uk/our-programmes)
+//  23.  Community Foundation Tyne & Wear (communityfoundation.org.uk/apply)
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { createClient }  from '@supabase/supabase-js'
@@ -1394,6 +1395,107 @@ async function crawlNationwideFoundation(): Promise<CrawlResult> {
   }
 }
 
+// ── Source 23: Community Foundation Tyne & Wear and Northumberland ────────────
+// Scrapes communityfoundation.org.uk/apply/ — SSR listing of open grant funds.
+// Each card has a /grants/slug/ link. We fetch individual pages for full details
+// (max amount, locations, description). Runs 17 parallel page fetches.
+async function crawlTyneWearCF(): Promise<CrawlResult> {
+  const SOURCE  = 'tyne_wear_cf'
+  const BASE    = 'https://www.communityfoundation.org.uk'
+  const LISTURL = `${BASE}/apply/`
+
+  try {
+    // Step 1: Get all open grant URLs from the listing page
+    const listHtml = await fetchHtml(LISTURL)
+    const listRoot = parseHTML(listHtml)
+
+    const entries = listRoot
+      .querySelectorAll('a[href*="/grants/"]')
+      .map(a => {
+        const href = a.getAttribute('href') ?? ''
+        const url  = href.startsWith('http') ? href : `${BASE}${href}`
+        const slug = href.split('/').filter(Boolean).pop() ?? ''
+        return { url, slug }
+      })
+      .filter(e => e.slug)
+
+    if (entries.length === 0) return { source: SOURCE, fetched: 0, upserted: 0 }
+
+    // Step 2: Fetch all individual grant pages in parallel
+    const pages = await Promise.allSettled(
+      entries.map(async ({ url, slug }) => {
+        const html = await fetchHtml(url)
+        const root = parseHTML(html)
+        const main = root.querySelector('main') ?? root
+
+        const title = main.querySelector('h1')?.text?.trim() ?? slug
+
+        // "Max Grant Size: £3000" — present on most pages
+        const mainText  = main.text
+        const maxMatch  = mainText.match(/Max Grant Size:\s*(£[\d,]+)/i)
+        const amountMax = maxMatch ? parsePoundAmount(maxMatch[1]) : parseAmountRange(mainText.slice(0, 600)).max
+
+        // "Location(s): Gateshead, Newcastle, ..."
+        const locMatch = mainText.match(/Location\(s\):\s*([^\n]+)/i)
+        const location = locMatch ? locMatch[1].replace(/\s+/g, ' ').trim() : null
+
+        // Rolling vs deadline
+        const isRolling = /rolling/i.test(mainText.slice(0, 400))
+        let deadline: string | null = null
+        if (!isRolling) {
+          const dlMatch = mainText.match(/deadline[^:]*:\s*(\d{1,2}\s+\w+\s+\d{4})/i)
+          if (dlMatch) deadline = parseDeadline(dlMatch[1])
+        }
+
+        // Description — first paragraph after "About ..." heading, or first substantive paragraph
+        const aboutH  = [...main.querySelectorAll('h2, h3')].find(h => /about/i.test(h.text))
+        const descEl  = aboutH?.nextElementSibling ?? main.querySelectorAll('p')[3]
+        const desc    = descEl?.text?.trim() ?? ''
+
+        // Rough sector inference from title + description
+        const combined = (title + ' ' + desc).toLowerCase()
+        const sectors: string[] = ['community']
+        if (/health|wellbeing|mental health/.test(combined)) sectors.push('health')
+        if (/young people|children|youth/.test(combined))    sectors.push('young people')
+        if (/arts|culture|creative/.test(combined))          sectors.push('arts')
+        if (/environment|green|sustainab/.test(combined))    sectors.push('environment')
+        if (/sport|physical|active/.test(combined))          sectors.push('sport')
+        if (/education|learn|school/.test(combined))         sectors.push('education')
+        if (/hardship|poverty|disadvantage/.test(combined))  sectors.push('social welfare')
+        if (/housing|home/.test(combined))                   sectors.push('housing')
+        if (/enterprise|business|start.?up/.test(combined))  sectors.push('enterprise')
+
+        return {
+          external_id:          `tyne_wear_cf_${slug}`,
+          source:               SOURCE,
+          title,
+          funder:               'Community Foundation Tyne & Wear and Northumberland',
+          funder_type:          'community_foundation',
+          description:          desc,
+          amount_min:           null,
+          amount_max:           amountMax,
+          deadline,
+          is_rolling:           isRolling,
+          is_local:             true,
+          sectors,
+          eligibility_criteria: location ? [`Located in: ${location}`] : [],
+          apply_url:            url,
+          raw_data:             { slug, location } as Record<string, unknown>,
+        } as ScrapedGrant
+      })
+    )
+
+    const grants = pages
+      .filter(p => p.status === 'fulfilled')
+      .map(p => (p as PromiseFulfilledResult<ScrapedGrant>).value)
+      .filter(g => g.title)
+
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
 // ── Amount parsers ────────────────────────────────────────────────────────────
 function parsePoundAmount(str: string): number | null {
   if (!str) return null
@@ -1475,6 +1577,7 @@ export async function crawlAllSources(): Promise<CrawlResult[]> {
     quartetCF, cfNI, heartOfEngland, foundationScotland, londonCF,
     sussexCF, surreyCF, hiwcf, oxfordshireCF,
     asdaFoundation, avivaFoundation, nationwideFoundation,
+    tyneWearCF,
   ] = await Promise.allSettled([
     crawlGovUK(),
     crawlTNLCF(),
@@ -1498,6 +1601,7 @@ export async function crawlAllSources(): Promise<CrawlResult[]> {
     crawlAsdaFoundation(),
     crawlAvivaFoundation(),
     crawlNationwideFoundation(),
+    crawlTyneWearCF(),
   ])
 
   return [
@@ -1523,5 +1627,6 @@ export async function crawlAllSources(): Promise<CrawlResult[]> {
     asdaFoundation.status    === 'fulfilled' ? asdaFoundation.value    : { source: 'asda_foundation',      fetched: 0, upserted: 0, error: 'Promise rejected' },
     avivaFoundation.status   === 'fulfilled' ? avivaFoundation.value   : { source: 'aviva_foundation',     fetched: 0, upserted: 0, error: 'Promise rejected' },
     nationwideFoundation.status === 'fulfilled' ? nationwideFoundation.value : { source: 'nationwide_foundation', fetched: 0, upserted: 0, error: 'Promise rejected' },
+    tyneWearCF.status          === 'fulfilled' ? tyneWearCF.value          : { source: 'tyne_wear_cf',          fetched: 0, upserted: 0, error: 'Promise rejected' },
   ]
 }
