@@ -26,6 +26,7 @@
 //  21.  Aviva Foundation                 (avivafoundation.org.uk)
 //  22.  Nationwide Foundation            (nationwidefoundation.org.uk/our-programmes)
 //  23.  Community Foundation Tyne & Wear (communityfoundation.org.uk/apply)
+//  24.  Norfolk Community Foundation     (norfolkfoundation.com/funding-support/grants/groups)
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { createClient }  from '@supabase/supabase-js'
@@ -1496,6 +1497,89 @@ async function crawlTyneWearCF(): Promise<CrawlResult> {
   }
 }
 
+// ── Source 24: Norfolk Community Foundation ───────────────────────────────────
+// Scrapes norfolkfoundation.com/funding-support/grants/groups/ — SSR listing.
+// All metadata (max grant, area, deadline) is embedded in the listing page cards.
+async function crawlNorfolkCF(): Promise<CrawlResult> {
+  const SOURCE  = 'norfolk_cf'
+  const BASE    = 'https://www.norfolkfoundation.com'
+  const LISTURL = `${BASE}/funding-support/grants/groups/`
+  const SKIP    = /fund filter|quick links|interested|talk to|cookie/i
+
+  try {
+    const html = await fetchHtml(LISTURL)
+    const root = parseHTML(html)
+    const grants: ScrapedGrant[] = []
+
+    for (const h3 of root.querySelectorAll('h3').filter(h => !SKIP.test(h.text))) {
+      const title = h3.text.trim()
+      if (!title) continue
+
+      // Link for this fund
+      const linkEl = h3.querySelector('a') ?? h3.nextElementSibling?.querySelector('a')
+      const href   = linkEl?.getAttribute('href') ?? ''
+      const url    = href.startsWith('http') ? href : href ? `${BASE}${href}` : LISTURL
+      const slug   = href.split('/').filter(Boolean).pop() ?? slugify(title)
+
+      // Aggregate sibling text until the next H3
+      let blockText = ''
+      let sib = h3.nextElementSibling
+      while (sib && sib.tagName !== 'H3') {
+        blockText += ' ' + sib.text
+        sib = sib.nextElementSibling
+      }
+
+      // "Maximum Grant £5,000" or "Maximum Grant Over £5,000"
+      const maxMatch  = blockText.match(/Maximum Grant\s*(£[\d,]+|Over\s+£[\d,]+)/i)
+      const amountMax = maxMatch ? parsePoundAmount(maxMatch[1].replace(/Over\s+/i, '')) : null
+
+      // "Area [districts...]"
+      const areaMatch = blockText.match(/Area\s+([A-Za-z][^\n]{2,80?})(?=Deadline|Maximum|Find out|\s{3,})/i)
+      const area      = areaMatch ? areaMatch[1].replace(/\s+/g, ' ').trim() : 'Norfolk'
+
+      // "Deadline 12 March 2026"
+      const dlMatch  = blockText.match(/Deadline\s+(\d{1,2}\s+\w+\s+\d{4})/i)
+      const deadline = dlMatch ? parseDeadline(dlMatch[1]) : null
+
+      // Brief description: text following the deadline/area structured block
+      const descMatch = blockText.match(/(?:\d{4}|Area\s+[^\n]+)\s{2,}([\s\S]{30,}?)(?:\s{3,}|Find out|$)/i)
+      const desc      = (descMatch?.[1] ?? '').replace(/\s+/g, ' ').trim().slice(0, 400)
+
+      const combined = (title + ' ' + desc).toLowerCase()
+      const sectors: string[] = ['community']
+      if (/health|wellbeing|mental/.test(combined))       sectors.push('health')
+      if (/young people|children|youth|club/.test(combined)) sectors.push('young people')
+      if (/education|skill|learn|school|stem/.test(combined)) sectors.push('education')
+      if (/sport|physical|active/.test(combined))         sectors.push('sport')
+      if (/arts|culture|creative/.test(combined))         sectors.push('arts')
+      if (/environment|green/.test(combined))             sectors.push('environment')
+      if (/hardship|poverty|disadvantage/.test(combined)) sectors.push('social welfare')
+
+      grants.push({
+        external_id:          `norfolk_cf_${slug}`,
+        source:               SOURCE,
+        title,
+        funder:               'Norfolk Community Foundation',
+        funder_type:          'community_foundation',
+        description:          desc,
+        amount_min:           null,
+        amount_max:           amountMax,
+        deadline,
+        is_rolling:           !dlMatch,
+        is_local:             true,
+        sectors,
+        eligibility_criteria: [`Located in: ${area}`],
+        apply_url:            url || LISTURL,
+        raw_data:             { slug, area } as Record<string, unknown>,
+      })
+    }
+
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
 // ── Amount parsers ────────────────────────────────────────────────────────────
 function parsePoundAmount(str: string): number | null {
   if (!str) return null
@@ -1577,7 +1661,7 @@ export async function crawlAllSources(): Promise<CrawlResult[]> {
     quartetCF, cfNI, heartOfEngland, foundationScotland, londonCF,
     sussexCF, surreyCF, hiwcf, oxfordshireCF,
     asdaFoundation, avivaFoundation, nationwideFoundation,
-    tyneWearCF,
+    tyneWearCF, norfolkCF,
   ] = await Promise.allSettled([
     crawlGovUK(),
     crawlTNLCF(),
@@ -1602,6 +1686,7 @@ export async function crawlAllSources(): Promise<CrawlResult[]> {
     crawlAvivaFoundation(),
     crawlNationwideFoundation(),
     crawlTyneWearCF(),
+    crawlNorfolkCF(),
   ])
 
   return [
@@ -1628,5 +1713,6 @@ export async function crawlAllSources(): Promise<CrawlResult[]> {
     avivaFoundation.status   === 'fulfilled' ? avivaFoundation.value   : { source: 'aviva_foundation',     fetched: 0, upserted: 0, error: 'Promise rejected' },
     nationwideFoundation.status === 'fulfilled' ? nationwideFoundation.value : { source: 'nationwide_foundation', fetched: 0, upserted: 0, error: 'Promise rejected' },
     tyneWearCF.status          === 'fulfilled' ? tyneWearCF.value          : { source: 'tyne_wear_cf',          fetched: 0, upserted: 0, error: 'Promise rejected' },
+    norfolkCF.status           === 'fulfilled' ? norfolkCF.value           : { source: 'norfolk_cf',            fetched: 0, upserted: 0, error: 'Promise rejected' },
   ]
 }
