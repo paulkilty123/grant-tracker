@@ -724,7 +724,7 @@ export default function SearchPage() {
 
         {/* ── Entry type legend + filter ── */}
         <div className="mt-4 pt-4 border-t border-warm">
-          <p className="text-xs text-light mb-2.5">What am I looking at? Click to filter:</p>
+          <p className="text-sm font-semibold text-forest mb-2.5">What am I looking at? Click to filter:</p>
           <div className="flex flex-wrap gap-2">
             {([
               { key: 'all',     label: 'All',         icon: '',   desc: 'Show everything',                                      cls: 'border-warm text-mid bg-white',                     active: 'bg-forest border-forest text-white' },
