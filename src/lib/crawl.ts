@@ -2700,6 +2700,153 @@ async function crawlCheshireCF(): Promise<CrawlResult> {
   }
 }
 
+// ── Source 40: Shropshire Community Foundation ────────────────────────────────
+async function crawlShropshireCF(): Promise<CrawlResult> {
+  const SOURCE  = 'shropshire_cf'
+  const BASE    = 'https://www.shropshirecommunityfoundation.org.uk'
+  const LISTURL = `${BASE}/open-grants/`
+  try {
+    const html  = await fetchHtml(LISTURL)
+    const root  = parseHTML(html)
+    const grants: ScrapedGrant[] = []
+
+    for (const box of root.querySelectorAll('.vacancy_box__inner')) {
+      const title = box.querySelector('h4.post-excerpt-title')?.text.trim() ?? ''
+      if (!title) continue
+
+      const anchor = box.querySelector('.wp-block-button a') ?? box.querySelector('a.btn')
+      const href   = anchor?.getAttribute('href') ?? ''
+      const url    = href.startsWith('http') ? href : `${BASE}${href}`
+      const desc   = box.querySelector('.content p')?.text.trim() ?? ''
+
+      // Right column text: "Grant Size £7,500 Location ... Deadline 23rd March 2026"
+      const rightText = box.querySelector('.right-content')?.text.trim() ?? ''
+      const amountMatch   = rightText.match(/Grant Size\s+([\s\S]+?)\s+Location/)
+      const deadlineMatch = rightText.match(/Deadline\s+([\s\S]+?)$/)
+      const amountRaw   = amountMatch?.[1]?.trim()   ?? ''
+      const deadlineRaw = deadlineMatch?.[1]?.trim() ?? ''
+
+      const isRolling = /open permanently|rolling|open ended/i.test(deadlineRaw) || !deadlineRaw
+      const deadline  = isRolling ? null : parseUKRIDate(deadlineRaw)
+      const { max: maxAmount } = parseAmountRange(amountRaw)
+
+      grants.push({
+        external_id:          slugify(url || `shropshire_cf_${title}`),
+        title,
+        funder:               'Shropshire Community Foundation',
+        funder_type:          'community_foundation',
+        description:          desc,
+        amount_min:           null,
+        amount_max:           maxAmount,
+        deadline,
+        is_rolling:           isRolling,
+        is_local:             true,
+        sectors:              [],
+        eligibility_criteria: [],
+        apply_url:            url || LISTURL,
+        source:               SOURCE,
+        raw_data:             { amountRaw, deadlineRaw },
+      })
+    }
+
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
+// ── Source 41: Kent Community Foundation (hardcoded tiers) ────────────────────
+async function crawlKentCF(): Promise<CrawlResult> {
+  const SOURCE = 'kent_cf'
+  const APPLY  = 'https://kentcf.org.uk/funding'
+  try {
+    const tiers = [
+      { key: 'micro',   title: 'Kent CF Micro Grant',   max: 2000,  desc: 'Grants up to £2,000 for organisations with an annual income under £75,000 in Kent and Medway.' },
+      { key: 'general', title: 'Kent CF General Grant',  max: 6000,  desc: 'Grants up to £6,000 for organisations with an annual income under £3m in Kent and Medway.' },
+    ]
+    const grants: ScrapedGrant[] = tiers.map(t => ({
+      external_id:          `kent_cf_${t.key}`,
+      title:                t.title,
+      funder:               'Kent Community Foundation',
+      funder_type:          'community_foundation',
+      description:          t.desc,
+      amount_min:           null,
+      amount_max:           t.max,
+      deadline:             null,
+      is_rolling:           true,
+      is_local:             true,
+      sectors:              [],
+      eligibility_criteria: [],
+      apply_url:            APPLY,
+      source:               SOURCE,
+      raw_data:             {},
+    }))
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
+// ── Source 42: Lincolnshire Community Foundation ──────────────────────────────
+async function crawlLincolnshireCF(): Promise<CrawlResult> {
+  const SOURCE  = 'lincolnshire_cf'
+  const BASE    = 'https://lincolnshirecf.co.uk'
+  const LISTURL = `${BASE}/available-grants2/`
+  try {
+    const html     = await fetchHtml(LISTURL)
+    const root     = parseHTML(html)
+    const grants: ScrapedGrant[] = []
+
+    const ctaWidgets  = root.querySelectorAll('.elementor-widget-call-to-action')
+    const iconWidgets = root.querySelectorAll('.elementor-widget-icon-list')
+
+    ctaWidgets.forEach((cta, i) => {
+      const title  = cta.querySelector('.elementor-cta__title')?.text.trim() ?? ''
+      if (!title) return
+
+      const anchor = cta.querySelector('a')
+      const href   = anchor?.getAttribute('href') ?? ''
+      const url    = href.startsWith('http') ? href : `${BASE}${href}`
+
+      const il     = iconWidgets[i]
+      const meta   = il
+        ? il.querySelectorAll('.elementor-icon-list-text').map(el => el.text.trim())
+        : []
+
+      // Skip closed grants
+      if (meta.some(m => /^closed$/i.test(m))) return
+
+      const amountRaw   = meta[0] ?? ''
+      const deadlineRaw = meta[2] ?? ''
+      const isRolling   = !deadlineRaw || /annual|january|june|september|march|october|april|rolling/i.test(deadlineRaw) && !/\d{4}/.test(deadlineRaw)
+      const deadline    = isRolling ? null : parseUKRIDate(deadlineRaw) ?? parseDeadline(deadlineRaw)
+      const { max: maxAmount, min: minAmount } = parseAmountRange(amountRaw)
+
+      grants.push({
+        external_id:          slugify(url || `lincolnshire_cf_${title}`),
+        title,
+        funder:               'Lincolnshire Community Foundation',
+        funder_type:          'community_foundation',
+        description:          '',
+        amount_min:           minAmount,
+        amount_max:           maxAmount,
+        deadline,
+        is_rolling:           isRolling,
+        is_local:             true,
+        sectors:              [],
+        eligibility_criteria: [],
+        apply_url:            url || LISTURL,
+        source:               SOURCE,
+        raw_data:             { amountRaw, deadlineRaw },
+      })
+    })
+
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
 // ── Amount parsers ────────────────────────────────────────────────────────────
 function parsePoundAmount(str: string): number | null {
   if (!str) return null
@@ -2787,6 +2934,7 @@ export async function crawlAllSources(): Promise<CrawlResult[]> {
     lancsCF, cambsCF, hertsCF,
     wiltshireCF, calderdaleCF,
     somersetCF, foreverNotts, cheshireCF,
+    shropshireCF, kentCF, lincolnshireCF,
   ] = await Promise.allSettled([
     crawlGovUK(),
     crawlTNLCF(),
@@ -2827,6 +2975,9 @@ export async function crawlAllSources(): Promise<CrawlResult[]> {
     crawlSomersetCF(),
     crawlForeverNotts(),
     crawlCheshireCF(),
+    crawlShropshireCF(),
+    crawlKentCF(),
+    crawlLincolnshireCF(),
   ])
 
   return [
@@ -2869,5 +3020,8 @@ export async function crawlAllSources(): Promise<CrawlResult[]> {
     somersetCF.status          === 'fulfilled' ? somersetCF.value          : { source: 'somerset_cf',          fetched: 0, upserted: 0, error: 'Promise rejected' },
     foreverNotts.status        === 'fulfilled' ? foreverNotts.value        : { source: 'forever_notts',        fetched: 0, upserted: 0, error: 'Promise rejected' },
     cheshireCF.status          === 'fulfilled' ? cheshireCF.value          : { source: 'cheshire_cf',          fetched: 0, upserted: 0, error: 'Promise rejected' },
+    shropshireCF.status        === 'fulfilled' ? shropshireCF.value        : { source: 'shropshire_cf',        fetched: 0, upserted: 0, error: 'Promise rejected' },
+    kentCF.status              === 'fulfilled' ? kentCF.value              : { source: 'kent_cf',              fetched: 0, upserted: 0, error: 'Promise rejected' },
+    lincolnshireCF.status      === 'fulfilled' ? lincolnshireCF.value      : { source: 'lincolnshire_cf',      fetched: 0, upserted: 0, error: 'Promise rejected' },
   ]
 }
