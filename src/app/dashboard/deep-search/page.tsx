@@ -76,11 +76,11 @@ function DeepGrantCard({ grant, onAddToPipeline }: {
             </div>
           )}
         </div>
-        <div className="flex flex-col items-end gap-3 min-w-[155px]">
+        <div className="flex flex-col items-end gap-3 w-44 flex-shrink-0">
           <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700">🔬 Live result</span>
           {grant.amountRange && (
-            <div className="text-right">
-              <p className="font-display text-xl font-bold text-gold">{grant.amountRange}</p>
+            <div className="text-right w-full">
+              <p className="font-display text-lg font-bold text-gold leading-snug break-words">{grant.amountRange}</p>
               <p className="text-xs text-light mt-0.5">Grant range</p>
             </div>
           )}
