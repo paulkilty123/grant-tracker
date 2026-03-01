@@ -45,9 +45,8 @@ export default async function RootPage() {
           🇬🇧 For charities, community groups, social enterprises, impact founders &amp; underserved ventures · Free to get started
         </div>
         <h1 className="font-display font-bold leading-[1.15] mb-6 max-w-4xl mx-auto">
-          <span className="block text-5xl sm:text-6xl text-forest">Find and track grants matched to your mission</span>
-          <span className="block text-3xl sm:text-[2.75rem] text-gold mt-4">Built for charities, community groups,</span>
-          <span className="block text-3xl sm:text-[2.75rem] text-gold">social enterprises and impact founders</span>
+          <span className="block text-5xl sm:text-6xl text-forest">Find &amp; Track Grants</span>
+          <span className="block text-3xl sm:text-[2.75rem] text-gold mt-4">Matched to your mission</span>
         </h1>
         <p className="text-mid text-xl max-w-2xl mx-auto mb-4 leading-relaxed">
           800+ UK funding opportunities, AI matching that learns from your feedback, and a full application pipeline — all in one place.
