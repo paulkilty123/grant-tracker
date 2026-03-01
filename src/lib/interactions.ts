@@ -1,6 +1,6 @@
 import { createClient } from './supabase/client'
 
-export type InteractionAction = 'saved' | 'dismissed' | 'applied'
+export type InteractionAction = 'saved' | 'dismissed' | 'applied' | 'liked' | 'disliked' | 'flagged'
 
 /** Record a user interaction with a grant */
 export async function recordInteraction(

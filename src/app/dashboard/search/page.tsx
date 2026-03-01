@@ -121,17 +121,21 @@ function MatchBadge({ score, isAi }: { score: number; isAi: boolean }) {
 }
 
 // ── Grant Card ───────────────────────────────────────────────────────────────
-function GrantCard({ item, hasOrg, interactions, onAddToPipeline, onDismiss, onUndismiss }: {
+function GrantCard({ item, hasOrg, interactions, onAddToPipeline, onDismiss, onUndismiss, onLike, onDislike }: {
   item: DisplayGrant
   hasOrg: boolean
   interactions: Set<InteractionAction>
   onAddToPipeline: (g: GrantOpportunity) => void
   onDismiss: (grantId: string) => void
   onUndismiss: (grantId: string) => void
+  onLike: (grantId: string) => void
+  onDislike: (grantId: string) => void
 }) {
   const { grant, score, reason, isAiScore } = item
   const [expanded, setExpanded] = useState(false)
-  const isDismissed = interactions.has('dismissed')
+  const isDismissed  = interactions.has('dismissed')
+  const isLiked      = interactions.has('liked')
+  const isDisliked   = interactions.has('disliked')
 
   const typeColour: Record<string, string> = {
     lottery:             'bg-green-50 text-green-700',
@@ -279,6 +283,24 @@ function GrantCard({ item, hasOrg, interactions, onAddToPipeline, onDismiss, onU
             >
               + Pipeline
             </button>
+            {hasOrg && (
+              <div className="flex items-center justify-center gap-2 py-1">
+                <button
+                  onClick={() => onLike(grant.id)}
+                  title="Good match"
+                  className={`text-base transition-all ${isLiked ? 'opacity-100 scale-110' : 'opacity-30 hover:opacity-80'}`}
+                >
+                  👍
+                </button>
+                <button
+                  onClick={() => onDislike(grant.id)}
+                  title="Not relevant"
+                  className={`text-base transition-all ${isDisliked ? 'opacity-100 scale-110' : 'opacity-30 hover:opacity-80'}`}
+                >
+                  👎
+                </button>
+              </div>
+            )}
             {hasOrg && (
               <button
                 onClick={() => onDismiss(grant.id)}
@@ -432,6 +454,64 @@ export default function SearchPage() {
     })
   }
 
+  async function handleLike(grantId: string) {
+    if (!org) return
+    const current = interactions.get(grantId) ?? new Set()
+    if (current.has('liked')) {
+      // toggle off
+      await removeInteraction(org.id, grantId, 'liked')
+      setInteractions(prev => {
+        const next = new Map(prev)
+        const s = new Set(next.get(grantId) ?? [])
+        s.delete('liked')
+        next.set(grantId, s)
+        return next
+      })
+    } else {
+      await recordInteraction(org.id, grantId, 'liked')
+      // clear any existing dislike
+      if (current.has('disliked')) await removeInteraction(org.id, grantId, 'disliked')
+      setInteractions(prev => {
+        const next = new Map(prev)
+        const s = new Set(next.get(grantId) ?? [])
+        s.add('liked')
+        s.delete('disliked')
+        next.set(grantId, s)
+        return next
+      })
+      showToast('Got it — we\'ll prioritise grants like this')
+    }
+  }
+
+  async function handleDislike(grantId: string) {
+    if (!org) return
+    const current = interactions.get(grantId) ?? new Set()
+    if (current.has('disliked')) {
+      // toggle off
+      await removeInteraction(org.id, grantId, 'disliked')
+      setInteractions(prev => {
+        const next = new Map(prev)
+        const s = new Set(next.get(grantId) ?? [])
+        s.delete('disliked')
+        next.set(grantId, s)
+        return next
+      })
+    } else {
+      await recordInteraction(org.id, grantId, 'disliked')
+      // clear any existing like
+      if (current.has('liked')) await removeInteraction(org.id, grantId, 'liked')
+      setInteractions(prev => {
+        const next = new Map(prev)
+        const s = new Set(next.get(grantId) ?? [])
+        s.add('disliked')
+        s.delete('liked')
+        next.set(grantId, s)
+        return next
+      })
+      showToast('Noted — we\'ll show fewer grants like this')
+    }
+  }
+
   async function handleAddToPipeline(grant: GrantOpportunity) {
     if (!org) { showToast('Complete your profile first to track grants'); return }
     try {
@@ -569,7 +649,11 @@ export default function SearchPage() {
     const withScores: DisplayGrant[] = filtered.map(grant => {
       if (org) {
         const match = computeMatchScore(grant, org)
-        return { grant, score: match.score, reason: match.reason, isAiScore: false }
+        const grantInteractions = interactions.get(grant.id) ?? new Set()
+        let score = match.score
+        if (grantInteractions.has('liked'))    score = Math.min(100, score + 12)
+        if (grantInteractions.has('disliked')) score = Math.max(0,   score - 20)
+        return { grant, score, reason: match.reason, isAiScore: false }
       }
       return { grant, score: 0, reason: '', isAiScore: false }
     })
@@ -699,7 +783,7 @@ export default function SearchPage() {
               onChange={e => { setQuery(e.target.value); setAiResults(null) }}
               onKeyDown={e => e.key === 'Enter' && handleAISearch()}
               className="form-input pl-10 pr-4"
-              placeholder='e.g. "youth sport funding Manchester"'
+              placeholder='e.g. "youth sport funding Manchester" or "startup grant for social business London"'
             />
           </div>
           <button
@@ -719,7 +803,7 @@ export default function SearchPage() {
               disabled={aiLoading}
               className="text-sm text-sage font-medium hover:underline disabled:opacity-50"
             >
-              ✦ Fill from my org profile
+              ✦ Fill from my profile
             </button>
             {aiResults && (
               <button
@@ -1020,6 +1104,8 @@ export default function SearchPage() {
                 onAddToPipeline={handleAddToPipeline}
                 onDismiss={handleDismiss}
                 onUndismiss={handleUndismiss}
+                onLike={handleLike}
+                onDislike={handleDislike}
               />
             ))}
             {dismissedCount > 0 && (

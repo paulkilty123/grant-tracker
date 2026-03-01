@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { formatRange } from '@/lib/utils'
 import { notFound } from 'next/navigation'
 import AddToPipelineButton from './AddToPipelineButton'
+import FlagGrantButton from './FlagGrantButton'
 
 // ── Funder-type label map ─────────────────────────────────────────────────────
 const FUNDER_LABELS: Record<string, string> = {
@@ -194,6 +195,9 @@ export default async function GrantDetailPage({
           <span className="ml-2 text-red-400 font-medium">· May be closed</span>
         )}
       </p>
+      <div className="text-center mt-2">
+        <FlagGrantButton grantId={externalId} />
+      </div>
     </div>
   )
 }
