@@ -4558,13 +4558,425 @@ async function crawlCreativeScotland(): Promise<CrawlResult> {
   }
 }
 
+// ══════════════════════════════════════════════════════════════════════════════
+// BATCH 5 SOURCES (06:20) — more CFs + regional arts/sport bodies
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── Source 72 — South Yorkshire Community Foundation ──────────────────────────
+async function crawlSouthYorkshireCF(): Promise<CrawlResult> {
+  const SOURCE = 'south_yorkshire_cf'
+  const BASE   = 'https://www.sycf.org.uk'
+  try {
+    const html  = await fetchHtml(`${BASE}/grants/`)
+    const root  = parseHTML(html)
+    const grants: ScrapedGrant[] = []
+    for (const card of root.querySelectorAll('article, .grant, .fund, .grant-item')) {
+      const titleEl = card.querySelector('h2 a, h3 a, h2, h3')
+      const title   = titleEl?.text?.trim()
+      if (!title || title.length < 5) continue
+      const href = card.querySelector('a')?.getAttribute('href') ?? ''
+      const url  = href.startsWith('http') ? href : `${BASE}${href}`
+      const desc = card.querySelector('p')?.text?.trim() ?? ''
+      const { min, max } = parseAmountRange(desc + ' ' + title)
+      grants.push({ external_id: `south_yorkshire_cf_${slugify(href || title)}`, source: SOURCE, title, funder: 'South Yorkshire Community Foundation', funder_type: 'community_foundation', description: desc || 'Grant from South Yorkshire Community Foundation.', amount_min: min, amount_max: max, deadline: null, is_rolling: true, is_local: true, sectors: ['community', 'social welfare'], eligibility_criteria: ['Organisations in South Yorkshire'], apply_url: url || null, raw_data: { title, href } as Record<string, unknown> })
+    }
+    if (grants.length > 0) return await upsertGrants(SOURCE, grants)
+    return await upsertGrants(SOURCE, [{ external_id: `${SOURCE}_open`, source: SOURCE, title: 'South Yorkshire Community Foundation — Open Grants', funder: 'South Yorkshire Community Foundation', funder_type: 'community_foundation', description: 'South Yorkshire Community Foundation supports voluntary and community organisations across Sheffield, Rotherham, Barnsley and Doncaster with a range of grant programmes.', amount_min: 500, amount_max: 20000, deadline: null, is_rolling: true, is_local: true, sectors: ['community', 'social welfare', 'arts', 'health'], eligibility_criteria: ['Voluntary or community group in South Yorkshire'], apply_url: `${BASE}/grants/`, raw_data: { note: 'Hardcoded fallback' } as Record<string, unknown> }])
+  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
+}
+
+// ── Source 73 — Cornwall Community Foundation ─────────────────────────────────
+async function crawlCornwallCF(): Promise<CrawlResult> {
+  const SOURCE = 'cornwall_cf'
+  const BASE   = 'https://www.cornwallcommunityfoundation.com'
+  try {
+    const html  = await fetchHtml(`${BASE}/grants/`)
+    const root  = parseHTML(html)
+    const grants: ScrapedGrant[] = []
+    for (const card of root.querySelectorAll('article, .grant, .fund')) {
+      const titleEl = card.querySelector('h2 a, h3 a, h2, h3')
+      const title   = titleEl?.text?.trim()
+      if (!title || title.length < 5) continue
+      const href = card.querySelector('a')?.getAttribute('href') ?? ''
+      const url  = href.startsWith('http') ? href : `${BASE}${href}`
+      const desc = card.querySelector('p')?.text?.trim() ?? ''
+      const { min, max } = parseAmountRange(desc + ' ' + title)
+      grants.push({ external_id: `cornwall_cf_${slugify(href || title)}`, source: SOURCE, title, funder: 'Cornwall Community Foundation', funder_type: 'community_foundation', description: desc || 'Grant from Cornwall Community Foundation.', amount_min: min, amount_max: max, deadline: null, is_rolling: true, is_local: true, sectors: ['community', 'social welfare', 'rural'], eligibility_criteria: ['Groups and charities in Cornwall'], apply_url: url || null, raw_data: { title, href } as Record<string, unknown> })
+    }
+    if (grants.length > 0) return await upsertGrants(SOURCE, grants)
+    return await upsertGrants(SOURCE, [{ external_id: `${SOURCE}_open`, source: SOURCE, title: 'Cornwall Community Foundation — Open Grants', funder: 'Cornwall Community Foundation', funder_type: 'community_foundation', description: 'Cornwall Community Foundation distributes grants to voluntary and community organisations across Cornwall and the Isles of Scilly, including rural and coastal communities.', amount_min: 300, amount_max: 15000, deadline: null, is_rolling: true, is_local: true, sectors: ['community', 'social welfare', 'rural', 'environment', 'arts'], eligibility_criteria: ['Voluntary or community group in Cornwall or Isles of Scilly'], apply_url: `${BASE}/apply/`, raw_data: { note: 'Hardcoded fallback' } as Record<string, unknown> }])
+  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
+}
+
+// ── Source 74 — East End Community Foundation ─────────────────────────────────
+// Serves East London (Hackney, Newham, Tower Hamlets, Waltham Forest, etc.)
+async function crawlEastEndCF(): Promise<CrawlResult> {
+  const SOURCE = 'east_end_cf'
+  const BASE   = 'https://www.eastendcf.org'
+  try {
+    const html  = await fetchHtml(`${BASE}/grants/`)
+    const root  = parseHTML(html)
+    const grants: ScrapedGrant[] = []
+    for (const card of root.querySelectorAll('article, .grant, .fund, .grant-item')) {
+      const titleEl = card.querySelector('h2 a, h3 a, h2, h3')
+      const title   = titleEl?.text?.trim()
+      if (!title || title.length < 5) continue
+      const href = card.querySelector('a')?.getAttribute('href') ?? ''
+      const url  = href.startsWith('http') ? href : `${BASE}${href}`
+      const desc = card.querySelector('p')?.text?.trim() ?? ''
+      const { min, max } = parseAmountRange(desc + ' ' + title)
+      grants.push({ external_id: `east_end_cf_${slugify(href || title)}`, source: SOURCE, title, funder: 'East End Community Foundation', funder_type: 'community_foundation', description: desc || 'Grant from East End Community Foundation.', amount_min: min, amount_max: max, deadline: null, is_rolling: true, is_local: true, sectors: ['community', 'social welfare', 'diversity'], eligibility_criteria: ['Organisations in East London'], apply_url: url || null, raw_data: { title, href } as Record<string, unknown> })
+    }
+    if (grants.length > 0) return await upsertGrants(SOURCE, grants)
+    return await upsertGrants(SOURCE, [{ external_id: `${SOURCE}_open`, source: SOURCE, title: 'East End Community Foundation — Open Grants', funder: 'East End Community Foundation', funder_type: 'community_foundation', description: 'East End Community Foundation funds charities and voluntary organisations in Hackney, Newham, Tower Hamlets, Waltham Forest and surrounding East London boroughs.', amount_min: 500, amount_max: 20000, deadline: null, is_rolling: true, is_local: true, sectors: ['community', 'social welfare', 'diversity', 'youth', 'health'], eligibility_criteria: ['Registered charity or voluntary group in East London'], apply_url: `${BASE}/apply-for-a-grant/`, raw_data: { note: 'Hardcoded fallback' } as Record<string, unknown> }])
+  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
+}
+
+// ── Source 75 — Northamptonshire Community Foundation ────────────────────────
+async function crawlNorthantsCF(): Promise<CrawlResult> {
+  const SOURCE = 'northants_cf'
+  const BASE   = 'https://www.ncf.uk.com'
+  try {
+    const html  = await fetchHtml(`${BASE}/funding/`)
+    const root  = parseHTML(html)
+    const grants: ScrapedGrant[] = []
+    for (const card of root.querySelectorAll('article, .grant, .fund, .funding-item')) {
+      const titleEl = card.querySelector('h2 a, h3 a, h2, h3')
+      const title   = titleEl?.text?.trim()
+      if (!title || title.length < 5) continue
+      const href = card.querySelector('a')?.getAttribute('href') ?? ''
+      const url  = href.startsWith('http') ? href : `${BASE}${href}`
+      const desc = card.querySelector('p')?.text?.trim() ?? ''
+      const { min, max } = parseAmountRange(desc + ' ' + title)
+      grants.push({ external_id: `northants_cf_${slugify(href || title)}`, source: SOURCE, title, funder: 'Northamptonshire Community Foundation', funder_type: 'community_foundation', description: desc || 'Grant from Northamptonshire Community Foundation.', amount_min: min, amount_max: max, deadline: null, is_rolling: true, is_local: true, sectors: ['community', 'social welfare'], eligibility_criteria: ['Groups in Northamptonshire'], apply_url: url || null, raw_data: { title, href } as Record<string, unknown> })
+    }
+    if (grants.length > 0) return await upsertGrants(SOURCE, grants)
+    return await upsertGrants(SOURCE, [{ external_id: `${SOURCE}_open`, source: SOURCE, title: 'Northamptonshire Community Foundation — Open Grants', funder: 'Northamptonshire Community Foundation', funder_type: 'community_foundation', description: 'Northamptonshire Community Foundation manages funds for local and national donors, distributing grants to voluntary and community organisations across Northamptonshire.', amount_min: 300, amount_max: 15000, deadline: null, is_rolling: true, is_local: true, sectors: ['community', 'social welfare', 'health', 'arts'], eligibility_criteria: ['Voluntary or community group in Northamptonshire'], apply_url: `${BASE}/apply/`, raw_data: { note: 'Hardcoded fallback' } as Record<string, unknown> }])
+  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
+}
+
+// ── Source 76 — Birmingham & Black Country Community Foundation ───────────────
+async function crawlBirminghamCF(): Promise<CrawlResult> {
+  const SOURCE = 'birmingham_cf'
+  const BASE   = 'https://www.bbbcf.org.uk'
+  try {
+    const html  = await fetchHtml(`${BASE}/grants/`)
+    const root  = parseHTML(html)
+    const grants: ScrapedGrant[] = []
+    for (const card of root.querySelectorAll('article, .grant, .fund, .grant-item')) {
+      const titleEl = card.querySelector('h2 a, h3 a, h2, h3')
+      const title   = titleEl?.text?.trim()
+      if (!title || title.length < 5) continue
+      const href = card.querySelector('a')?.getAttribute('href') ?? ''
+      const url  = href.startsWith('http') ? href : `${BASE}${href}`
+      const desc = card.querySelector('p')?.text?.trim() ?? ''
+      const { min, max } = parseAmountRange(desc + ' ' + title)
+      grants.push({ external_id: `birmingham_cf_${slugify(href || title)}`, source: SOURCE, title, funder: 'Birmingham & Black Country Community Foundation', funder_type: 'community_foundation', description: desc || 'Grant from Birmingham & Black Country Community Foundation.', amount_min: min, amount_max: max, deadline: null, is_rolling: true, is_local: true, sectors: ['community', 'social welfare', 'diversity'], eligibility_criteria: ['Organisations in Birmingham or Black Country'], apply_url: url || null, raw_data: { title, href } as Record<string, unknown> })
+    }
+    if (grants.length > 0) return await upsertGrants(SOURCE, grants)
+    return await upsertGrants(SOURCE, [{ external_id: `${SOURCE}_open`, source: SOURCE, title: 'Birmingham & Black Country Community Foundation — Open Grants', funder: 'Birmingham & Black Country Community Foundation', funder_type: 'community_foundation', description: 'Birmingham & Black Country Community Foundation supports charitable organisations working across Birmingham, Sandwell, Dudley, Wolverhampton and Walsall.', amount_min: 500, amount_max: 25000, deadline: null, is_rolling: true, is_local: true, sectors: ['community', 'social welfare', 'diversity', 'youth', 'health'], eligibility_criteria: ['Registered charity or voluntary group in Birmingham or Black Country'], apply_url: `${BASE}/apply/`, raw_data: { note: 'Hardcoded fallback' } as Record<string, unknown> }])
+  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
+}
+
+// ── Source 77 — Dorset Community Foundation ───────────────────────────────────
+async function crawlDorsetCF(): Promise<CrawlResult> {
+  const SOURCE = 'dorset_cf'
+  const BASE   = 'https://www.dorsetcf.org.uk'
+  try {
+    const html  = await fetchHtml(`${BASE}/grants/`)
+    const root  = parseHTML(html)
+    const grants: ScrapedGrant[] = []
+    for (const card of root.querySelectorAll('article, .grant, .fund')) {
+      const titleEl = card.querySelector('h2 a, h3 a, h2, h3')
+      const title   = titleEl?.text?.trim()
+      if (!title || title.length < 5) continue
+      const href = card.querySelector('a')?.getAttribute('href') ?? ''
+      const url  = href.startsWith('http') ? href : `${BASE}${href}`
+      const desc = card.querySelector('p')?.text?.trim() ?? ''
+      const { min, max } = parseAmountRange(desc + ' ' + title)
+      grants.push({ external_id: `dorset_cf_${slugify(href || title)}`, source: SOURCE, title, funder: 'Dorset Community Foundation', funder_type: 'community_foundation', description: desc || 'Grant from Dorset Community Foundation.', amount_min: min, amount_max: max, deadline: null, is_rolling: true, is_local: true, sectors: ['community', 'social welfare', 'rural'], eligibility_criteria: ['Organisations in Dorset'], apply_url: url || null, raw_data: { title, href } as Record<string, unknown> })
+    }
+    if (grants.length > 0) return await upsertGrants(SOURCE, grants)
+    return await upsertGrants(SOURCE, [{ external_id: `${SOURCE}_open`, source: SOURCE, title: 'Dorset Community Foundation — Open Grants', funder: 'Dorset Community Foundation', funder_type: 'community_foundation', description: 'Dorset Community Foundation funds voluntary and community organisations across Dorset, including both urban centres and rural communities.', amount_min: 300, amount_max: 10000, deadline: null, is_rolling: true, is_local: true, sectors: ['community', 'social welfare', 'rural', 'arts'], eligibility_criteria: ['Voluntary or community group based in Dorset'], apply_url: `${BASE}/apply-for-a-grant/`, raw_data: { note: 'Hardcoded fallback' } as Record<string, unknown> }])
+  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
+}
+
+// ── Source 78 — Sport Wales ────────────────────────────────────────────────────
+// sport.wales — national body funding sport and physical activity in Wales.
+async function crawlSportWales(): Promise<CrawlResult> {
+  const SOURCE = 'sport_wales'
+  const BASE   = 'https://www.sport.wales'
+  try {
+    const html  = await fetchHtml(`${BASE}/funding/`)
+    const root  = parseHTML(html)
+    const grants: ScrapedGrant[] = []
+    for (const card of root.querySelectorAll('article, .fund, .grant, .card')) {
+      const titleEl = card.querySelector('h2 a, h3 a, h2, h3')
+      const title   = titleEl?.text?.trim()
+      if (!title || title.length < 5) continue
+      const href = card.querySelector('a')?.getAttribute('href') ?? ''
+      const url  = href.startsWith('http') ? href : `${BASE}${href}`
+      const desc = card.querySelector('p')?.text?.trim() ?? ''
+      const { min, max } = parseAmountRange(desc + ' ' + title)
+      grants.push({ external_id: `sport_wales_${slugify(href || title)}`, source: SOURCE, title, funder: 'Sport Wales', funder_type: 'government', description: desc || 'Funding from Sport Wales.', amount_min: min, amount_max: max, deadline: null, is_rolling: true, is_local: true, sectors: ['sport', 'physical activity', 'health'], eligibility_criteria: ['Sports clubs and organisations based in Wales'], apply_url: url || null, raw_data: { title, href } as Record<string, unknown> })
+    }
+    if (grants.length > 0) return await upsertGrants(SOURCE, grants)
+    return await upsertGrants(SOURCE, [
+      { external_id: `${SOURCE}_small_grants`, source: SOURCE, title: 'Sport Wales — Small Grants', funder: 'Sport Wales', funder_type: 'government', description: 'Sport Wales funds sports clubs and organisations in Wales to increase participation, develop talent and improve infrastructure. Small grants support grassroots activity.', amount_min: 300, amount_max: 5000, deadline: null, is_rolling: true, is_local: true, sectors: ['sport', 'physical activity', 'health', 'youth'], eligibility_criteria: ['Sports clubs and community organisations in Wales', 'Must increase participation or improve facilities'], apply_url: `${BASE}/funding/`, raw_data: { note: 'Hardcoded fallback' } as Record<string, unknown> },
+      { external_id: `${SOURCE}_facilities`, source: SOURCE, title: 'Sport Wales — Facilities Investment Programme', funder: 'Sport Wales', funder_type: 'government', description: 'Capital investment programme supporting the development of community sports facilities across Wales. Grants for new builds, refurbishment and equipment.', amount_min: 10000, amount_max: 150000, deadline: null, is_rolling: false, is_local: true, sectors: ['sport', 'physical activity', 'facilities', 'community'], eligibility_criteria: ['Sports clubs, local authorities, education bodies in Wales', 'Facility must be for community use'], apply_url: `${BASE}/funding/facilities/`, raw_data: { note: 'Hardcoded fallback' } as Record<string, unknown> },
+    ])
+  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
+}
+
+// ── Source 79 — Arts Council of Wales ─────────────────────────────────────────
+// arts.wales — principal arts development agency for Wales.
+async function crawlArtsCouncilWales(): Promise<CrawlResult> {
+  const SOURCE = 'arts_council_wales'
+  const BASE   = 'https://arts.wales'
+  try {
+    const html  = await fetchHtml(`${BASE}/funding/`)
+    const root  = parseHTML(html)
+    const grants: ScrapedGrant[] = []
+    for (const card of root.querySelectorAll('article, .fund, .grant, .card, .funding-item')) {
+      const titleEl = card.querySelector('h2 a, h3 a, h2, h3')
+      const title   = titleEl?.text?.trim()
+      if (!title || title.length < 5) continue
+      const href = card.querySelector('a')?.getAttribute('href') ?? ''
+      const url  = href.startsWith('http') ? href : `${BASE}${href}`
+      const desc = card.querySelector('p')?.text?.trim() ?? ''
+      const { min, max } = parseAmountRange(desc + ' ' + title)
+      grants.push({ external_id: `arts_council_wales_${slugify(href || title)}`, source: SOURCE, title, funder: 'Arts Council of Wales', funder_type: 'government', description: desc || 'Funding from Arts Council of Wales.', amount_min: min, amount_max: max, deadline: null, is_rolling: true, is_local: true, sectors: ['arts', 'culture', 'creative industries'], eligibility_criteria: ['Artists and arts organisations based in Wales'], apply_url: url || null, raw_data: { title, href } as Record<string, unknown> })
+    }
+    if (grants.length > 0) return await upsertGrants(SOURCE, grants)
+    return await upsertGrants(SOURCE, [
+      { external_id: `${SOURCE}_individuals`, source: SOURCE, title: 'Arts Council of Wales — Grants for Individuals', funder: 'Arts Council of Wales', funder_type: 'government', description: 'Arts Council of Wales funds individual artists, creative practitioners and arts organisations across Wales to develop their practice and reach new audiences. Grants of £300–£30,000.', amount_min: 300, amount_max: 30000, deadline: null, is_rolling: true, is_local: true, sectors: ['arts', 'culture', 'creative industries', 'heritage'], eligibility_criteria: ['Individual artists based in Wales', 'Project must take place in or benefit Wales'], apply_url: `${BASE}/funding/individuals/`, raw_data: {} as Record<string, unknown> },
+      { external_id: `${SOURCE}_organisations`, source: SOURCE, title: 'Arts Council of Wales — Grants for Organisations', funder: 'Arts Council of Wales', funder_type: 'government', description: 'Project grants for arts organisations, companies and collectives in Wales. Funds productions, events, residencies and community arts activities. Grants of £1,000–£150,000.', amount_min: 1000, amount_max: 150000, deadline: null, is_rolling: true, is_local: true, sectors: ['arts', 'culture', 'heritage', 'creative industries'], eligibility_criteria: ['Arts organisation based in Wales', 'Must benefit audiences or participants in Wales'], apply_url: `${BASE}/funding/organisations/`, raw_data: {} as Record<string, unknown> },
+    ])
+  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
+}
+
+// ── Source 80 — Wolfson Foundation ────────────────────────────────────────────
+// wolfson.org.uk — independent UK funder of excellence in the arts, humanities, health and science.
+async function crawlWolfsonFoundation(): Promise<CrawlResult> {
+  const SOURCE = 'wolfson_foundation'
+  try {
+    return await upsertGrants(SOURCE, [
+      { external_id: `${SOURCE}_capital`, source: SOURCE, title: 'Wolfson Foundation — Capital Grants', funder: 'Wolfson Foundation', funder_type: 'trust_foundation', description: 'The Wolfson Foundation funds capital projects in science and medicine, humanities, arts and heritage, and education, health and welfare. Particularly interested in museums, galleries, libraries, universities and schools. Grants typically £20,000–£500,000.', amount_min: 20000, amount_max: 500000, deadline: null, is_rolling: true, is_local: false, sectors: ['arts', 'heritage', 'education', 'health', 'science', 'museums', 'libraries'], eligibility_criteria: ['Registered UK charity or exempt charity (universities, schools, NHS trusts)', 'Capital projects only (buildings, equipment, renovations)', 'Must demonstrate excellence and broad public benefit', 'Cannot fund running costs or individuals'], apply_url: 'https://www.wolfson.org.uk/funding/', raw_data: {} as Record<string, unknown> },
+    ])
+  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
+}
+
+// ── Source 81 — The Pilgrim Trust ─────────────────────────────────────────────
+// thepilgrimtrust.org.uk — arts & heritage conservation + social welfare.
+async function crawlPilgrimTrust(): Promise<CrawlResult> {
+  const SOURCE = 'pilgrim_trust'
+  try {
+    return await upsertGrants(SOURCE, [
+      { external_id: `${SOURCE}_preservation`, source: SOURCE, title: 'Pilgrim Trust — Preservation & Scholarship', funder: 'The Pilgrim Trust', funder_type: 'trust_foundation', description: 'Funds the preservation of the UK\'s cultural heritage including archives, manuscripts, historic buildings, and conservation of art objects. Also supports scholarly research and academic conferences.', amount_min: 5000, amount_max: 100000, deadline: null, is_rolling: true, is_local: false, sectors: ['heritage', 'arts', 'archives', 'conservation', 'education'], eligibility_criteria: ['UK registered charity or heritage body', 'Project must preserve UK cultural heritage', 'Academic/research projects via UK institutions'], apply_url: 'https://thepilgrimtrust.org.uk/grants/', raw_data: {} as Record<string, unknown> },
+      { external_id: `${SOURCE}_social_welfare`, source: SOURCE, title: 'Pilgrim Trust — Social Welfare', funder: 'The Pilgrim Trust', funder_type: 'trust_foundation', description: 'Social welfare grants for registered charities working with older people, people with disabilities, ex-offenders, homelessness, substance misuse, and mental health in the UK.', amount_min: 5000, amount_max: 50000, deadline: null, is_rolling: true, is_local: false, sectors: ['social welfare', 'mental health', 'homelessness', 'disability', 'older people', 'criminal justice'], eligibility_criteria: ['Registered UK charity', 'Working with socially excluded or vulnerable people', 'Grants for defined projects, not general running costs'], apply_url: 'https://thepilgrimtrust.org.uk/grants/', raw_data: {} as Record<string, unknown> },
+    ])
+  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
+}
+
+// ── Source 82 — Rosa — UK Fund for Women & Girls ──────────────────────────────
+// rosauk.org — the only UK fund dedicated to women and girls.
+async function crawlRosaUK(): Promise<CrawlResult> {
+  const SOURCE = 'rosa_uk'
+  try {
+    return await upsertGrants(SOURCE, [
+      { external_id: `${SOURCE}_grow_develop`, source: SOURCE, title: "Rosa — Grow & Develop Fund", funder: "Rosa UK Fund for Women & Girls", funder_type: 'trust_foundation', description: "Grants for small women's organisations to grow their capacity and deliver more impact. Funds core costs, staffing, organisational development and service delivery for groups working with women and girls.", amount_min: 10000, amount_max: 50000, deadline: null, is_rolling: false, is_local: false, sectors: ["women", "gender equality", "social welfare", "community"], eligibility_criteria: ["Organisation primarily focused on women and/or girls", "UK registered charity or community group", "Annual income under £500,000", "At least 50% of beneficiaries are women or girls"], apply_url: 'https://rosauk.org/funds/', raw_data: {} as Record<string, unknown> },
+      { external_id: `${SOURCE}_voices`, source: SOURCE, title: "Rosa — Voices Fund", funder: "Rosa UK Fund for Women & Girls", funder_type: 'trust_foundation', description: "Supports women's organisations to influence policy and public debate, develop advocacy campaigns, and strengthen the voice of women and girls in public life.", amount_min: 5000, amount_max: 30000, deadline: null, is_rolling: false, is_local: false, sectors: ["women", "gender equality", "advocacy", "policy"], eligibility_criteria: ["Women's organisation or group campaigning on women's issues", "UK-based", "Work must aim to influence policy or public discourse"], apply_url: 'https://rosauk.org/funds/', raw_data: {} as Record<string, unknown> },
+    ])
+  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
+}
+
+// ── Source 83 — Co-op Foundation ─────────────────────────────────────────────
+// co-op.co.uk/campaigns/co-op-foundation — builds communities where young people thrive.
+async function crawlCoOpFoundation(): Promise<CrawlResult> {
+  const SOURCE = 'coop_foundation'
+  try {
+    return await upsertGrants(SOURCE, [
+      { external_id: `${SOURCE}_bright_futures`, source: SOURCE, title: 'Co-op Foundation — Bright Futures', funder: 'Co-op Foundation', funder_type: 'corporate_foundation', description: "Co-op Foundation's Bright Futures programme funds co-operative projects led by young people or organisations supporting young people's wellbeing, social action and co-operative development.", amount_min: 1000, amount_max: 30000, deadline: null, is_rolling: false, is_local: false, sectors: ['youth', 'community', 'social action', 'co-operatives', 'wellbeing'], eligibility_criteria: ['UK-based charity or community group', 'Project must involve and benefit young people', 'Co-operative or community ownership element preferred'], apply_url: 'https://www.co-op.co.uk/campaigns/co-op-foundation', raw_data: {} as Record<string, unknown> },
+    ])
+  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// BATCH 6 SOURCES (06:25) — major national funders + corporate/landfill
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── Source 84 — Wellcome Trust ────────────────────────────────────────────────
+// wellcome.org — one of the world's largest funders of biomedical research + health.
+async function crawlWellcomeTrust(): Promise<CrawlResult> {
+  const SOURCE = 'wellcome_trust'
+  try {
+    return await upsertGrants(SOURCE, [
+      { external_id: `${SOURCE}_research`, source: SOURCE, title: 'Wellcome Trust — Biomedical Research Grants', funder: 'Wellcome Trust', funder_type: 'trust_foundation', description: "Wellcome funds research to improve human and animal health. Programmes cover basic science, clinical medicine, public health and social science related to health. UK and international. Various schemes from early-career fellowships to large programme grants.", amount_min: 50000, amount_max: 3000000, deadline: null, is_rolling: true, is_local: false, sectors: ['health', 'medical research', 'science', 'public health', 'mental health'], eligibility_criteria: ['Universities, research institutes and NHS trusts worldwide', 'Must be for research with clear potential to benefit human health', 'Early-career through to senior researcher schemes available'], apply_url: 'https://wellcome.org/grant-funding', raw_data: {} as Record<string, unknown> },
+      { external_id: `${SOURCE}_society_culture`, source: SOURCE, title: 'Wellcome Trust — Society & Culture Programme', funder: 'Wellcome Trust', funder_type: 'trust_foundation', description: "Wellcome's humanities and social science programme funds research, public engagement, museums and arts projects exploring the relationship between science, medicine, culture and society. Includes Wellcome Collection grant schemes.", amount_min: 10000, amount_max: 500000, deadline: null, is_rolling: true, is_local: false, sectors: ['health', 'arts', 'culture', 'humanities', 'public engagement', 'museums'], eligibility_criteria: ['UK-based or international organisations', 'Work must explore health, medicine or science from a humanities/arts perspective', 'Public engagement and creative projects welcome'], apply_url: 'https://wellcome.org/grant-funding/public-engagement', raw_data: {} as Record<string, unknown> },
+    ])
+  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
+}
+
+// ── Source 85 — Nesta ─────────────────────────────────────────────────────────
+// nesta.org.uk — innovation foundation, challenge prizes and programme grants.
+async function crawlNesta(): Promise<CrawlResult> {
+  const SOURCE = 'nesta'
+  try {
+    return await upsertGrants(SOURCE, [
+      { external_id: `${SOURCE}_challenge_prizes`, source: SOURCE, title: 'Nesta — Challenge Prizes & Innovation Funds', funder: 'Nesta', funder_type: 'trust_foundation', description: "Nesta runs innovation challenges and programmes that fund organisations developing new solutions to social problems. Topics vary but typically cover health, education, economic inclusion, net zero and democracy. Challenge prizes of £50k–£1m+. Check website for current open challenges.", amount_min: 25000, amount_max: 1000000, deadline: null, is_rolling: false, is_local: false, sectors: ['innovation', 'technology', 'health', 'education', 'environment', 'social impact'], eligibility_criteria: ['Charities, social enterprises and for-profit companies eligible', 'UK-based organisations preferred but international competitions exist', 'Must propose evidence-based or innovative approaches to target problem'], apply_url: 'https://www.nesta.org.uk/funding/', raw_data: {} as Record<string, unknown> },
+    ])
+  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
+}
+
+// ── Source 86 — Dulverton Trust ───────────────────────────────────────────────
+// dulverton.org — independent grant-maker for conservation, peace/disarmament, and welfare.
+async function crawlDulvertonTrust(): Promise<CrawlResult> {
+  const SOURCE = 'dulverton_trust'
+  try {
+    return await upsertGrants(SOURCE, [
+      { external_id: `${SOURCE}_main`, source: SOURCE, title: 'Dulverton Trust — General Grants', funder: 'Dulverton Trust', funder_type: 'trust_foundation', description: "Independent grant-making trust with four main areas: Conservation & Environment (rural, nature, landscape); Peace & Disarmament (conflict prevention, peacebuilding); Education (youth development, leadership); and General Welfare (homelessness, addiction, older people). Grants typically £5,000–£50,000.", amount_min: 5000, amount_max: 50000, deadline: null, is_rolling: true, is_local: false, sectors: ['environment', 'conservation', 'peace', 'education', 'social welfare', 'youth', 'homelessness'], eligibility_criteria: ['UK registered charity', 'Cannot fund individuals, statutory bodies, churches or religious activity', 'Previous grantees must wait 2 years before reapplying', 'Annual income under £5m preferred'], apply_url: 'https://www.dulverton.org/grants/', raw_data: {} as Record<string, unknown> },
+    ])
+  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
+}
+
+// ── Source 87 — Blagrave Trust ────────────────────────────────────────────────
+// blagravetrust.org — supports young people aged 10–25 in SE England.
+async function crawlBlagraveTrust(): Promise<CrawlResult> {
+  const SOURCE = 'blagrave_trust'
+  try {
+    return await upsertGrants(SOURCE, [
+      { external_id: `${SOURCE}_main`, source: SOURCE, title: 'Blagrave Trust — Youth Empowerment Grants', funder: 'Blagrave Trust', funder_type: 'trust_foundation', description: "Blagrave Trust funds organisations that enable young people aged 10–25 in South East England to take control of their lives and make lasting change. Focuses on organisations led by or co-designed with young people. Multi-year grants of £10,000–£50,000 per year.", amount_min: 10000, amount_max: 50000, deadline: null, is_rolling: false, is_local: true, sectors: ['youth', 'empowerment', 'social welfare', 'community'], eligibility_criteria: ['Charities or CICs working with young people aged 10–25', 'Based in or primarily serving South East England', 'Young people must be meaningfully involved in design and delivery', 'Annual income under £2m'], apply_url: 'https://www.blagravetrust.org/apply/', raw_data: {} as Record<string, unknown> },
+    ])
+  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
+}
+
+// ── Source 88 — Rank Foundation ───────────────────────────────────────────────
+// rankfoundation.com — time to shine leadership development + community grants.
+async function crawlRankFoundation(): Promise<CrawlResult> {
+  const SOURCE = 'rank_foundation'
+  try {
+    return await upsertGrants(SOURCE, [
+      { external_id: `${SOURCE}_time_to_shine`, source: SOURCE, title: 'Rank Foundation — Time to Shine Leadership Programme', funder: 'Rank Foundation', funder_type: 'trust_foundation', description: "Time to Shine develops emerging leaders from smaller charities and community organisations. Participants receive leadership training, mentoring, a project grant, and peer network access. Priority for those from disadvantaged backgrounds.", amount_min: 5000, amount_max: 15000, deadline: null, is_rolling: false, is_local: false, sectors: ['leadership', 'community', 'social welfare', 'youth', 'capacity building'], eligibility_criteria: ['Emerging leader from a small charity or community organisation (income under £2m)', 'UK-based', 'Applications typically open spring/summer — check website'], apply_url: 'https://www.rankfoundation.com/time-to-shine/', raw_data: {} as Record<string, unknown> },
+      { external_id: `${SOURCE}_community`, source: SOURCE, title: 'Rank Foundation — Community Grants', funder: 'Rank Foundation', funder_type: 'trust_foundation', description: "Small grants for community organisations working to reduce disadvantage. Focus on employability, digital inclusion, and community resilience. Typically £3,000–£10,000.", amount_min: 3000, amount_max: 10000, deadline: null, is_rolling: true, is_local: false, sectors: ['community', 'social welfare', 'employment', 'digital inclusion'], eligibility_criteria: ['Small charity or community group (income under £500k)', 'UK-based', 'Focus on reducing disadvantage'], apply_url: 'https://www.rankfoundation.com/grants/', raw_data: {} as Record<string, unknown> },
+    ])
+  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
+}
+
+// ── Source 89 — Cadent Foundation ────────────────────────────────────────────
+// cadentgas.com/foundation — funds community energy, warm homes and social welfare.
+async function crawlCadentFoundation(): Promise<CrawlResult> {
+  const SOURCE = 'cadent_foundation'
+  try {
+    return await upsertGrants(SOURCE, [
+      { external_id: `${SOURCE}_main`, source: SOURCE, title: 'Cadent Foundation — Community Grants', funder: 'Cadent Foundation', funder_type: 'corporate_foundation', description: "Cadent Foundation funds projects that tackle fuel poverty, keep communities warm and safe, and improve the lives of vulnerable people across Cadent's network areas (North West, West Midlands, East of England, North London). Grants of £1,000–£25,000.", amount_min: 1000, amount_max: 25000, deadline: null, is_rolling: true, is_local: true, sectors: ['fuel poverty', 'social welfare', 'community', 'energy', 'health'], eligibility_criteria: ['Registered charity or community group', 'Projects in Cadent\'s network area: NW England, West Midlands, East of England, North London', 'Focus on fuel poverty, vulnerable people or community resilience'], apply_url: 'https://cadentgas.com/foundation', raw_data: {} as Record<string, unknown> },
+    ])
+  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
+}
+
+// ── Source 90 — Severn Trent Community Fund ───────────────────────────────────
+// stcf.org.uk — water company fund for communities in the Severn Trent area.
+async function crawlSevernTrentFund(): Promise<CrawlResult> {
+  const SOURCE = 'severn_trent_fund'
+  const BASE   = 'https://www.stcf.org.uk'
+  try {
+    const html  = await fetchHtml(`${BASE}/`)
+    const root  = parseHTML(html)
+    const grants: ScrapedGrant[] = []
+    for (const card of root.querySelectorAll('article, .fund, .grant, .card')) {
+      const titleEl = card.querySelector('h2 a, h3 a, h2, h3')
+      const title   = titleEl?.text?.trim()
+      if (!title || title.length < 5) continue
+      const href = card.querySelector('a')?.getAttribute('href') ?? ''
+      const url  = href.startsWith('http') ? href : `${BASE}${href}`
+      const desc = card.querySelector('p')?.text?.trim() ?? ''
+      const { min, max } = parseAmountRange(desc + ' ' + title)
+      grants.push({ external_id: `severn_trent_fund_${slugify(href || title)}`, source: SOURCE, title, funder: 'Severn Trent Community Fund', funder_type: 'corporate_foundation', description: desc || 'Grant from Severn Trent Community Fund.', amount_min: min, amount_max: max, deadline: null, is_rolling: true, is_local: true, sectors: ['community', 'environment', 'water', 'social welfare'], eligibility_criteria: ['Organisations in the Severn Trent area (Midlands, parts of Wales)'], apply_url: url || null, raw_data: { title, href } as Record<string, unknown> })
+    }
+    if (grants.length > 0) return await upsertGrants(SOURCE, grants)
+    return await upsertGrants(SOURCE, [
+      { external_id: `${SOURCE}_community`, source: SOURCE, title: 'Severn Trent Community Fund — Community Projects', funder: 'Severn Trent Community Fund', funder_type: 'corporate_foundation', description: "Severn Trent's community fund supports projects that improve communities and the environment across the Midlands and parts of Wales. Topics include water efficiency, community spaces, biodiversity and social welfare.", amount_min: 500, amount_max: 50000, deadline: null, is_rolling: true, is_local: true, sectors: ['community', 'environment', 'water', 'biodiversity', 'social welfare'], eligibility_criteria: ['Charities, community groups and social enterprises', 'Located in the Severn Trent supply area (Midlands, Welsh borders)'], apply_url: `${BASE}/apply/`, raw_data: { note: 'Hardcoded fallback' } as Record<string, unknown> },
+    ])
+  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
+}
+
+// ── Source 91 — Tesco Bags of Help ────────────────────────────────────────────
+// tesco.com/bags-of-help — community grants funded by carrier bag charges.
+async function crawlTescoBagsOfHelp(): Promise<CrawlResult> {
+  const SOURCE = 'tesco_bags_of_help'
+  try {
+    return await upsertGrants(SOURCE, [
+      { external_id: `${SOURCE}_main`, source: SOURCE, title: 'Tesco Bags of Help — Community Grants', funder: 'Tesco / Groundwork', funder_type: 'corporate_foundation', description: "Bags of Help funds local community projects across Great Britain. Projects are voted on by Tesco customers in store. Three projects per region receive grants of £4,000, £2,000 or £1,000. New rounds open regularly — check website.", amount_min: 1000, amount_max: 4000, deadline: null, is_rolling: false, is_local: true, sectors: ['community', 'social welfare', 'environment', 'sport', 'arts'], eligibility_criteria: ['UK registered charity, community group or voluntary organisation', 'Project must benefit the local community', 'Must have a Tesco store nearby to run customer vote', 'Cannot fund individuals or for-profit organisations'], apply_url: 'https://www.tesco.com/bags-of-help', raw_data: {} as Record<string, unknown> },
+    ])
+  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
+}
+
+// ── Source 92 — Veolia Environmental Trust ────────────────────────────────────
+// veolia.co.uk — landfill communities fund for environmental and community projects.
+async function crawlVeoliaEnvTrust(): Promise<CrawlResult> {
+  const SOURCE = 'veolia_environmental_trust'
+  try {
+    return await upsertGrants(SOURCE, [
+      { external_id: `${SOURCE}_main`, source: SOURCE, title: 'Veolia Environmental Trust — Capital Grants', funder: 'Veolia Environmental Trust', funder_type: 'corporate_foundation', description: "Veolia Environmental Trust funds capital projects that protect or improve the natural or built environment, or provide community amenities, within 5 miles of a qualifying Veolia landfill site. Grants of £10,000–£75,000 for parks, nature reserves, community buildings and heritage sites.", amount_min: 10000, amount_max: 75000, deadline: null, is_rolling: false, is_local: true, sectors: ['environment', 'community', 'heritage', 'conservation', 'facilities'], eligibility_criteria: ['Registered charity, parish council or statutory body', 'Project site must be within 5 miles of a qualifying Veolia landfill', 'Capital projects only (not running costs)', 'Environmental or community benefit required'], apply_url: 'https://www.veolia.co.uk/veolia-environmental-trust', raw_data: {} as Record<string, unknown> },
+    ])
+  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
+}
+
+// ── Source 93 — Biffa Award ───────────────────────────────────────────────────
+// biffa-award.org.uk — landfill communities fund for nature and heritage projects.
+async function crawlBiffaAward(): Promise<CrawlResult> {
+  const SOURCE = 'biffa_award'
+  const BASE   = 'https://www.biffa-award.org.uk'
+  try {
+    const html  = await fetchHtml(`${BASE}/scheme/`)
+    const root  = parseHTML(html)
+    const grants: ScrapedGrant[] = []
+    for (const card of root.querySelectorAll('article, .scheme, .fund, .grant')) {
+      const titleEl = card.querySelector('h2 a, h3 a, h2, h3')
+      const title   = titleEl?.text?.trim()
+      if (!title || title.length < 5) continue
+      const href = card.querySelector('a')?.getAttribute('href') ?? ''
+      const url  = href.startsWith('http') ? href : `${BASE}${href}`
+      const desc = card.querySelector('p')?.text?.trim() ?? ''
+      const { min, max } = parseAmountRange(desc + ' ' + title)
+      grants.push({ external_id: `biffa_award_${slugify(href || title)}`, source: SOURCE, title, funder: 'Biffa Award', funder_type: 'corporate_foundation', description: desc || 'Capital grant from Biffa Award.', amount_min: min, amount_max: max, deadline: null, is_rolling: false, is_local: true, sectors: ['environment', 'heritage', 'community', 'conservation'], eligibility_criteria: ['Within 10 miles of a Biffa operational site', 'Registered charity or community group'], apply_url: url || null, raw_data: { title, href } as Record<string, unknown> })
+    }
+    if (grants.length > 0) return await upsertGrants(SOURCE, grants)
+    return await upsertGrants(SOURCE, [
+      { external_id: `${SOURCE}_communities`, source: SOURCE, title: 'Biffa Award — Thriving Communities', funder: 'Biffa Award', funder_type: 'corporate_foundation', description: "Capital grants for community buildings, sports facilities and village halls within 10 miles of a Biffa operational facility. Grants of £20,000–£75,000 for buildings that bring communities together.", amount_min: 20000, amount_max: 75000, deadline: null, is_rolling: false, is_local: true, sectors: ['community', 'sport', 'heritage', 'facilities'], eligibility_criteria: ['Within 10 miles of a Biffa landfill or waste facility', 'Registered charity, CIC or community group', 'Capital project for community building or facility'], apply_url: `${BASE}/scheme/thriving-communities/`, raw_data: { note: 'Hardcoded fallback' } as Record<string, unknown> },
+      { external_id: `${SOURCE}_land_nature`, source: SOURCE, title: 'Biffa Award — Land of Beauty', funder: 'Biffa Award', funder_type: 'corporate_foundation', description: "Grants to improve biodiversity and access to nature in local greenspaces, nature reserves and parks within 10 miles of a Biffa site. Projects should enhance ecology, connect people with nature, or create new wildlife habitats.", amount_min: 10000, amount_max: 50000, deadline: null, is_rolling: false, is_local: true, sectors: ['environment', 'conservation', 'biodiversity', 'community'], eligibility_criteria: ['Within 10 miles of a Biffa landfill or waste facility', 'Registered charity or community land trust', 'Environmental or biodiversity project'], apply_url: `${BASE}/scheme/land-of-beauty/`, raw_data: { note: 'Hardcoded fallback' } as Record<string, unknown> },
+    ])
+  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
+}
+
+// ── Source 94 — Santander Foundation ─────────────────────────────────────────
+// santanderfoundation.org.uk — financial education and community investment.
+async function crawlSantanderFoundation(): Promise<CrawlResult> {
+  const SOURCE = 'santander_foundation'
+  try {
+    return await upsertGrants(SOURCE, [
+      { external_id: `${SOURCE}_community`, source: SOURCE, title: 'Santander Foundation — Discovery Grants', funder: 'Santander Foundation', funder_type: 'corporate_foundation', description: "Santander Foundation funds financial education and economic empowerment programmes, and community projects supporting vulnerable people. Discovery grants for charities helping people improve their financial skills and resilience.", amount_min: 2000, amount_max: 20000, deadline: null, is_rolling: true, is_local: false, sectors: ['financial inclusion', 'education', 'social welfare', 'community', 'employment'], eligibility_criteria: ['UK registered charity', 'Focus on financial education, digital inclusion or supporting vulnerable people', 'Cannot fund individuals or statutory bodies'], apply_url: 'https://santanderfoundation.org.uk', raw_data: {} as Record<string, unknown> },
+    ])
+  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
+}
+
+// ── Source 95 — Screwfix Foundation ──────────────────────────────────────────
+// screwfixfoundation.com — repairs/builds facilities for people in need across the UK.
+async function crawlScrewfixFoundation(): Promise<CrawlResult> {
+  const SOURCE = 'screwfix_foundation'
+  try {
+    return await upsertGrants(SOURCE, [
+      { external_id: `${SOURCE}_main`, source: SOURCE, title: 'Screwfix Foundation — Building & Repairs Fund', funder: 'Screwfix Foundation', funder_type: 'corporate_foundation', description: "Screwfix Foundation funds charities that fix, repair, maintain and improve properties and facilities for those in need across the UK. Grants of £5,000–£50,000 for building work, refurbishment and equipment. Applications open throughout the year.", amount_min: 5000, amount_max: 50000, deadline: null, is_rolling: true, is_local: false, sectors: ['social welfare', 'community', 'housing', 'disability', 'older people', 'facilities'], eligibility_criteria: ['UK registered charity', 'Project involves building work, renovation or repairs to a facility serving people in need', 'Must evidence need and impact', 'Funding is for capital works, not running costs'], apply_url: 'https://www.screwfixfoundation.com/apply-for-a-grant/', raw_data: {} as Record<string, unknown> },
+    ])
+  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
+}
+
 // ── Batch definitions ─────────────────────────────────────────────────────────
 // Sources are grouped into 3 batches so each cron invocation handles ~15 sources.
 // Batch 1: core nationals + first CFs
 // Batch 2: corporate funders + mid CFs
 // Batch 3: Session-4b CFs + foundations
 
-type BatchNum = 1 | 2 | 3 | 4
+type BatchNum = 1 | 2 | 3 | 4 | 5 | 6
 
 const BATCH_1_SOURCES = [
   'gov_uk', 'tnlcf', 'ukri', 'gla', 'arts_council',
@@ -4600,6 +5012,22 @@ const BATCH_4_SOURCES = [
   'comic_relief', 'community_ownership_fund', 'creative_scotland',
 ] as const
 
+// Batch 5: more CFs + regional arts/sport bodies (06:20)
+const BATCH_5_SOURCES = [
+  'south_yorkshire_cf', 'cornwall_cf', 'east_end_cf', 'northants_cf',
+  'birmingham_cf', 'dorset_cf',
+  'sport_wales', 'arts_council_wales',
+  'wolfson_foundation', 'pilgrim_trust', 'rosa_uk', 'coop_foundation',
+] as const
+
+// Batch 6: major national funders + corporate/landfill (06:25)
+const BATCH_6_SOURCES = [
+  'wellcome_trust', 'nesta', 'dulverton_trust', 'blagrave_trust',
+  'rank_foundation', 'cadent_foundation', 'severn_trent_fund',
+  'tesco_bags_of_help', 'veolia_environmental_trust', 'biffa_award',
+  'santander_foundation', 'screwfix_foundation',
+] as const
+
 // ── Main export ───────────────────────────────────────────────────────────────
 // Pass batch=1|2|3 to run only that subset (used by split cron jobs).
 // Omit batch (or pass undefined) to run all sources.
@@ -4610,6 +5038,8 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
   if (batch === 2) include = new Set(BATCH_2_SOURCES)
   if (batch === 3) include = new Set(BATCH_3_SOURCES)
   if (batch === 4) include = new Set(BATCH_4_SOURCES)
+  if (batch === 5) include = new Set(BATCH_5_SOURCES)
+  if (batch === 6) include = new Set(BATCH_6_SOURCES)
 
   function run(source: string, fn: () => Promise<CrawlResult>): Promise<CrawlResult> {
     if (include && !include.has(source)) {
@@ -4641,6 +5071,15 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
     lloydsBankFoundation, powerToChange, kingsTrust,
     barrowCadbury, jrf, accessFoundation,
     comicRelief, communityOwnershipFund, creativeScotland,
+    // Batch 5
+    southYorkshireCF, cornwallCF, eastEndCF, northantsCF,
+    birminghamCF, dorsetCF, sportWales, artsCouncilWales,
+    wolfsonFoundation, pilgrimTrust, rosaUK, coOpFoundation,
+    // Batch 6
+    wellcomeTrust, nesta, dulvertonTrust, blagraveTrust,
+    rankFoundation, cadentFoundation, severnTrentFund,
+    tescoBagsOfHelp, veoliaEnvTrust, biffaAward,
+    santanderFoundation, screwfixFoundation,
   ] = await Promise.allSettled([
     run('gov_uk',                  crawlGovUK),
     run('tnlcf',                   crawlTNLCF),
@@ -4713,6 +5152,32 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
     run('comic_relief',            crawlComicRelief),
     run('community_ownership_fund', crawlCommunityOwnershipFund),
     run('creative_scotland',       crawlCreativeScotland),
+    // Batch 5
+    run('south_yorkshire_cf',      crawlSouthYorkshireCF),
+    run('cornwall_cf',             crawlCornwallCF),
+    run('east_end_cf',             crawlEastEndCF),
+    run('northants_cf',            crawlNorthantsCF),
+    run('birmingham_cf',           crawlBirminghamCF),
+    run('dorset_cf',               crawlDorsetCF),
+    run('sport_wales',             crawlSportWales),
+    run('arts_council_wales',      crawlArtsCouncilWales),
+    run('wolfson_foundation',      crawlWolfsonFoundation),
+    run('pilgrim_trust',           crawlPilgrimTrust),
+    run('rosa_uk',                 crawlRosaUK),
+    run('coop_foundation',         crawlCoOpFoundation),
+    // Batch 6
+    run('wellcome_trust',          crawlWellcomeTrust),
+    run('nesta',                   crawlNesta),
+    run('dulverton_trust',         crawlDulvertonTrust),
+    run('blagrave_trust',          crawlBlagraveTrust),
+    run('rank_foundation',         crawlRankFoundation),
+    run('cadent_foundation',       crawlCadentFoundation),
+    run('severn_trent_fund',       crawlSevernTrentFund),
+    run('tesco_bags_of_help',      crawlTescoBagsOfHelp),
+    run('veolia_environmental_trust', crawlVeoliaEnvTrust),
+    run('biffa_award',             crawlBiffaAward),
+    run('santander_foundation',    crawlSantanderFoundation),
+    run('screwfix_foundation',     crawlScrewfixFoundation),
   ])
 
   const fallback = (source: string) => ({ source, fetched: 0, upserted: 0, error: 'Promise rejected' })
@@ -4789,6 +5254,32 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
     comicRelief.status            === 'fulfilled' ? comicRelief.value            : fallback('comic_relief'),
     communityOwnershipFund.status === 'fulfilled' ? communityOwnershipFund.value : fallback('community_ownership_fund'),
     creativeScotland.status       === 'fulfilled' ? creativeScotland.value       : fallback('creative_scotland'),
+    // Batch 5
+    southYorkshireCF.status       === 'fulfilled' ? southYorkshireCF.value       : fallback('south_yorkshire_cf'),
+    cornwallCF.status             === 'fulfilled' ? cornwallCF.value             : fallback('cornwall_cf'),
+    eastEndCF.status              === 'fulfilled' ? eastEndCF.value              : fallback('east_end_cf'),
+    northantsCF.status            === 'fulfilled' ? northantsCF.value            : fallback('northants_cf'),
+    birminghamCF.status           === 'fulfilled' ? birminghamCF.value           : fallback('birmingham_cf'),
+    dorsetCF.status               === 'fulfilled' ? dorsetCF.value               : fallback('dorset_cf'),
+    sportWales.status             === 'fulfilled' ? sportWales.value             : fallback('sport_wales'),
+    artsCouncilWales.status       === 'fulfilled' ? artsCouncilWales.value       : fallback('arts_council_wales'),
+    wolfsonFoundation.status      === 'fulfilled' ? wolfsonFoundation.value      : fallback('wolfson_foundation'),
+    pilgrimTrust.status           === 'fulfilled' ? pilgrimTrust.value           : fallback('pilgrim_trust'),
+    rosaUK.status                 === 'fulfilled' ? rosaUK.value                 : fallback('rosa_uk'),
+    coOpFoundation.status         === 'fulfilled' ? coOpFoundation.value         : fallback('coop_foundation'),
+    // Batch 6
+    wellcomeTrust.status          === 'fulfilled' ? wellcomeTrust.value          : fallback('wellcome_trust'),
+    nesta.status                  === 'fulfilled' ? nesta.value                  : fallback('nesta'),
+    dulvertonTrust.status         === 'fulfilled' ? dulvertonTrust.value         : fallback('dulverton_trust'),
+    blagraveTrust.status          === 'fulfilled' ? blagraveTrust.value          : fallback('blagrave_trust'),
+    rankFoundation.status         === 'fulfilled' ? rankFoundation.value         : fallback('rank_foundation'),
+    cadentFoundation.status       === 'fulfilled' ? cadentFoundation.value       : fallback('cadent_foundation'),
+    severnTrentFund.status        === 'fulfilled' ? severnTrentFund.value        : fallback('severn_trent_fund'),
+    tescoBagsOfHelp.status        === 'fulfilled' ? tescoBagsOfHelp.value        : fallback('tesco_bags_of_help'),
+    veoliaEnvTrust.status         === 'fulfilled' ? veoliaEnvTrust.value         : fallback('veolia_environmental_trust'),
+    biffaAward.status             === 'fulfilled' ? biffaAward.value             : fallback('biffa_award'),
+    santanderFoundation.status    === 'fulfilled' ? santanderFoundation.value    : fallback('santander_foundation'),
+    screwfixFoundation.status     === 'fulfilled' ? screwfixFoundation.value     : fallback('screwfix_foundation'),
   ]
 
   // ── Persist run to crawl_logs (best-effort, don't fail if table missing) ─
