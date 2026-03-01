@@ -22,6 +22,16 @@ export default async function DashboardPage() {
 
   const items: PipelineItem[] = rawItems ?? []
 
+  // ── New grants this week ───────────────────────────────────────────────
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+  const { data: newGrants, count: newGrantsCount } = await supabase
+    .from('scraped_grants')
+    .select('id, title, funder, amount_min, amount_max, deadline, external_id', { count: 'exact' })
+    .eq('is_active', true)
+    .gte('first_seen_at', sevenDaysAgo)
+    .order('first_seen_at', { ascending: false })
+    .limit(4)
+
   // ── Compute stats inline ───────────────────────────────────────────────
   const active  = items.filter(i => !['won', 'declined'].includes(i.stage))
   const won     = items.filter(i => i.stage === 'won')
@@ -88,6 +98,46 @@ export default async function DashboardPage() {
           <p className="text-xs text-mid mt-1.5">in the next 10 days</p>
         </div>
       </div>
+
+      {/* New This Week */}
+      {(newGrantsCount ?? 0) > 0 && (
+        <div className="card mb-5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <h3 className="font-display text-base font-semibold text-forest">New This Week</h3>
+              <span className="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">
+                {newGrantsCount} new
+              </span>
+            </div>
+            <a href="/dashboard/search" className="text-xs text-sage hover:underline">Search all grants →</a>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {(newGrants ?? []).map(g => (
+              <a key={g.id} href={`/dashboard/grants/${g.external_id}`}
+                className="flex flex-col gap-0.5 p-3 rounded-lg border border-warm bg-cream/50 hover:bg-warm transition-colors group">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-sm font-medium text-charcoal group-hover:text-forest leading-snug line-clamp-2">{g.title}</p>
+                  <span className="bg-emerald-100 text-emerald-700 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide flex-shrink-0 mt-0.5">New</span>
+                </div>
+                <p className="text-xs text-mid truncate">{g.funder ?? 'Unknown funder'}</p>
+                {(g.amount_min || g.amount_max) && (
+                  <p className="text-xs text-sage font-medium mt-0.5">
+                    {g.amount_min && g.amount_max && g.amount_min !== g.amount_max
+                      ? `${formatCurrency(g.amount_min)} – ${formatCurrency(g.amount_max)}`
+                      : formatCurrency(g.amount_max ?? g.amount_min ?? 0)}
+                  </p>
+                )}
+              </a>
+            ))}
+          </div>
+          {(newGrantsCount ?? 0) > 4 && (
+            <p className="text-xs text-mid mt-3 text-center">
+              + {(newGrantsCount ?? 0) - 4} more new grants ·{' '}
+              <a href="/dashboard/search" className="text-sage hover:underline">search to see all →</a>
+            </p>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {/* Pipeline mini */}

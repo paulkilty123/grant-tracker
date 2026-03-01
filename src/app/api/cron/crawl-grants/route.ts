@@ -23,6 +23,7 @@ export async function GET(req: NextRequest) {
   const batch = batchParam === '1' ? 1
               : batchParam === '2' ? 2
               : batchParam === '3' ? 3
+              : batchParam === '4' ? 4
               : undefined
 
   try {

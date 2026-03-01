@@ -148,6 +148,10 @@ function GrantCard({ item, hasOrg, interactions, onAddToPipeline, onDismiss, onU
 
   const { text: scoreText } = scoreColour(score)
 
+  // "New this week" badge — show if added within last 7 days
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  const isNewThisWeek = !!grant.dateAdded && grant.dateAdded >= sevenDaysAgo
+
   // Classify the entry so users know what they're looking at
   const entryType: 'live' | 'rolling' | 'profile' =
     grant.deadline   ? 'live' :
@@ -183,6 +187,11 @@ function GrantCard({ item, hasOrg, interactions, onAddToPipeline, onDismiss, onU
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap mb-0.5">
                 <h3 className="font-display font-bold text-forest text-base leading-snug">{grant.title}</h3>
+                {isNewThisWeek && (
+                  <span className="bg-emerald-100 text-emerald-700 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide flex-shrink-0">
+                    New
+                  </span>
+                )}
                 <span className={`text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${entryBadge.cls}`}>
                   {entryBadge.label}
                 </span>

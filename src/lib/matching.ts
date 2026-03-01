@@ -29,54 +29,112 @@ function fuzzyOverlap(a: string, b: string): boolean {
   return a.toLowerCase().split(/\W+/).some(w => w.length >= 4 && bLower.includes(w))
 }
 
+/**
+ * Count how many 4+ letter words from term appear in text.
+ * Returns a normalised hit ratio (0–1).
+ */
+function phraseHitRatio(term: string, text: string): number {
+  const words = term.toLowerCase().split(/\W+/).filter(w => w.length >= 4)
+  if (words.length === 0) return 0
+  const hits = words.filter(w => text.toLowerCase().includes(w)).length
+  return hits / words.length
+}
+
 export function computeMatchScore(
   grant: GrantOpportunity,
   org: Organisation,
 ): MatchResult {
   const reasons: string[] = []
 
+  // Full grant text used for keyword matching
+  const grantText = [
+    grant.title,
+    grant.description,
+    grant.sectors.join(' '),
+    grant.eligibilityCriteria.join(' '),
+  ].join(' ').toLowerCase()
+
   // ── 1. Location (max 25) ───────────────────────────────────────────────
   let locationScore = 10 // base for national grants
   if (org.primary_location) {
-    const city = org.primary_location.split(',')[0].trim().toLowerCase()
-    const grantText = `${grant.title} ${grant.description}`.toLowerCase()
-    if (grant.isLocal && grantText.includes(city)) {
-      locationScore = 25
-      reasons.push(`Local funder matching ${org.primary_location}`)
-    } else if (grant.isLocal) {
-      locationScore = 18
-      reasons.push('Local funder')
+    const city    = org.primary_location.split(',')[0].trim().toLowerCase()
+    const region  = org.primary_location.split(',')[1]?.trim().toLowerCase() ?? ''
+    const country = org.primary_location.split(',').pop()?.trim().toLowerCase() ?? ''
+
+    if (grant.isLocal) {
+      // Check if any part of the org's location appears in the grant text
+      const locationMatch =
+        (city   && grantText.includes(city))   ||
+        (region && grantText.includes(region)) ||
+        (country && ['scotland', 'wales', 'northern ireland'].includes(country) && grantText.includes(country))
+
+      if (locationMatch) {
+        locationScore = 25
+        reasons.push(`Local match for ${org.primary_location.split(',')[0]}`)
+      } else {
+        locationScore = 18
+        reasons.push('Local funder')
+      }
     }
     // national funders stay at 10
   }
 
   // ── 2. Themes / sectors (max 25) ──────────────────────────────────────
+  // Now includes mission + key_outcomes for much richer matching
   let themesScore = 0
-  const orgTerms = [
+
+  const orgTerms: string[] = [
     ...(org.themes        ?? []),
     ...(org.areas_of_work ?? []),
     ...(org.beneficiaries ?? []),
   ]
-  const grantText = `${grant.title} ${grant.description} ${grant.sectors.join(' ')}`
 
-  if (orgTerms.length === 0) {
-    themesScore = 12 // neutral when profile is incomplete
-  } else {
-    let hits = 0
-    for (const term of orgTerms) {
-      if (fuzzyOverlap(term, grantText)) hits++
-    }
-    const ratio = hits / orgTerms.length
-    themesScore = Math.round(ratio * 25)
-    if (hits >= 3)      reasons.push('Strong theme match')
-    else if (hits >= 1) reasons.push('Partial theme match')
+  // Extract significant phrases from mission statement
+  const missionTerms: string[] = []
+  if (org.mission) {
+    // Split mission into meaningful chunks (phrases of 2-4 words)
+    const mWords = org.mission.split(/[\s,;.]+/).filter(w => w.length >= 4)
+    // Add individual words and the full mission as one term
+    missionTerms.push(...mWords.slice(0, 10))
   }
 
-  // Also check grant sectors against org themes directly
-  const grantSectors = grant.sectors.map(s => s.toLowerCase())
-  const orgThemesLower = (org.themes ?? []).map(t => t.toLowerCase())
-  const sectorHits = grantSectors.filter(s =>
-    orgThemesLower.some(t => s.includes(t.split(' ')[0]) || t.includes(s.split(' ')[0]))
+  // Add key outcomes as additional matching terms
+  const outcomeTerms: string[] = (org.key_outcomes ?? [])
+    .flatMap(o => o.split(/[\s,;.]+/).filter(w => w.length >= 4))
+    .slice(0, 15)
+
+  const allOrgTerms = [...orgTerms, ...missionTerms, ...outcomeTerms]
+
+  if (allOrgTerms.length === 0) {
+    themesScore = 12 // neutral when profile is incomplete
+  } else {
+    // Weight explicit theme terms more heavily than mission/outcome terms
+    let weightedHits = 0
+    let totalWeight  = 0
+
+    for (const term of orgTerms) {
+      const weight = 1.5  // explicit themes count more
+      totalWeight += weight
+      if (fuzzyOverlap(term, grantText)) weightedHits += weight
+    }
+    for (const term of [...missionTerms, ...outcomeTerms]) {
+      const weight = 0.8  // mission/outcome terms count less individually
+      totalWeight += weight
+      if (fuzzyOverlap(term, grantText)) weightedHits += weight
+    }
+
+    const ratio = totalWeight > 0 ? weightedHits / totalWeight : 0
+    themesScore = Math.round(ratio * 25)
+
+    if (ratio >= 0.4)       reasons.push('Strong theme match')
+    else if (ratio >= 0.15) reasons.push('Partial theme match')
+  }
+
+  // Direct sector-to-theme comparison (exact substring match boost)
+  const grantSectors  = grant.sectors.map(s => s.toLowerCase())
+  const orgThemesFlat = (org.themes ?? []).map(t => t.toLowerCase())
+  const sectorHits    = grantSectors.filter(s =>
+    orgThemesFlat.some(t => s.includes(t.split(' ')[0]) || t.includes(s.split(' ')[0]))
   ).length
   themesScore = Math.min(25, themesScore + sectorHits * 4)
 
@@ -119,17 +177,76 @@ export function computeMatchScore(
   }
 
   // ── 5. Eligibility / org type (max 15) ────────────────────────────────
-  const eligibilityScore =
-    org.org_type === 'registered_charity' ? 15 :
-    org.org_type === 'cic'               ? 12 :
-    org.org_type === 'social_enterprise' ? 10 : 8
+  // Start with org-type base score
+  let eligibilityScore: number =
+    org.org_type === 'registered_charity' ? 12 :
+    org.org_type === 'cic'               ? 10 :
+    org.org_type === 'social_enterprise' ? 9  : 7
+
+  // Boost if grant eligibility criteria explicitly favour this org type
+  const eligibilityText = grant.eligibilityCriteria.join(' ').toLowerCase()
+
+  if (eligibilityText) {
+    const charityKeywords  = ['registered charity', 'charity only', 'charitable', 'registered with charity']
+    const cicKeywords      = ['cic', 'community interest company']
+    const seKeywords       = ['social enterprise', 'cic', 'community benefit society', 'community interest']
+    const vcseKeywords     = ['voluntary', 'community group', 'vcse', 'voluntary organisation', 'community organisation']
+
+    const isCharityEligible = charityKeywords.some(k => eligibilityText.includes(k))
+    const isCICEligible     = cicKeywords.some(k => eligibilityText.includes(k))
+    const isSEEligible      = seKeywords.some(k => eligibilityText.includes(k))
+
+    if (isCharityEligible && org.org_type === 'registered_charity') {
+      eligibilityScore = Math.min(15, eligibilityScore + 3)
+      reasons.push('Eligible as a registered charity')
+    } else if (isCICEligible && org.org_type === 'cic') {
+      eligibilityScore = Math.min(15, eligibilityScore + 3)
+      reasons.push('Eligible as a CIC')
+    } else if (isSEEligible && (org.org_type === 'social_enterprise' || org.org_type === 'cic')) {
+      eligibilityScore = Math.min(15, eligibilityScore + 2)
+    } else if (isCharityEligible && org.org_type !== 'registered_charity') {
+      // Charity-only grants scored down for non-charities
+      eligibilityScore = Math.max(3, eligibilityScore - 4)
+    }
+
+    // If eligibility mentions community groups and org is community_group
+    if (vcseKeywords.some(k => eligibilityText.includes(k))) {
+      eligibilityScore = Math.min(15, eligibilityScore + 1)
+    }
+
+    // Location-based eligibility check
+    if (org.primary_location) {
+      const city    = org.primary_location.split(',')[0].trim().toLowerCase()
+      const country = org.primary_location.split(',').pop()?.trim().toLowerCase() ?? ''
+
+      // Bonus if org location explicitly mentioned in eligibility
+      if (city && eligibilityText.includes(city)) {
+        eligibilityScore = Math.min(15, eligibilityScore + 2)
+        reasons.push('Your location meets eligibility')
+      }
+      // Penalty if eligibility restricts to a specific region that doesn't match
+      const ukNations = ['scotland', 'wales', 'northern ireland', 'england']
+      const restrictedTo = ukNations.filter(n => eligibilityText.includes(`based in ${n}`) || eligibilityText.includes(`${n} only`) || eligibilityText.includes(`${n}-based`))
+      if (restrictedTo.length > 0 && !restrictedTo.some(n => country.includes(n) || city.includes(n))) {
+        eligibilityScore = Math.max(2, eligibilityScore - 5)
+      }
+    }
+
+    // Use mission text in eligibility check — match mission concepts against grant criteria
+    if (org.mission && eligibilityText.length > 20) {
+      const missionHitRatio = phraseHitRatio(org.mission, eligibilityText)
+      if (missionHitRatio >= 0.15) {
+        eligibilityScore = Math.min(15, eligibilityScore + 1)
+      }
+    }
+  }
 
   // ── Total ──────────────────────────────────────────────────────────────
   const score = Math.min(100,
     locationScore + themesScore + grantSizeScore + funderTypeScore + eligibilityScore
   )
 
-  // Build reason string
+  // Build reason string — prioritise specific over generic
   const reason =
     reasons.length > 0 ? reasons.join(' · ') :
     score >= 75 ? 'Good overall match for your organisation' :
