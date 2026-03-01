@@ -680,9 +680,9 @@ export default function SearchPage() {
       <div className="mb-6">
         <h2 className="font-display text-2xl font-bold text-forest">Search Grants</h2>
         <p className="text-mid text-sm mt-1">
-          {allGrants.length}+ UK grants · AI-powered matching ·{' '}
+          Our curated database of {allGrants.length}+ verified UK grants — instant results.{' '}
           <a href="/dashboard/deep-search" className="text-indigo-600 hover:underline">
-            Try Live Search →
+            Need something more specific? Try Live Search →
           </a>
         </p>
       </div>
