@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getDeadlineAlerts, formatCurrency, formatDeadline } from '@/lib/utils'
 import { PIPELINE_STAGES } from '@/lib/utils'
@@ -11,6 +12,9 @@ export default async function DashboardPage() {
   const { data: org } = user
     ? await supabase.from('organisations').select('*').eq('owner_id', user.id).maybeSingle()
     : { data: null }
+
+  // New users (no org name set) go straight to profile setup
+  if (!org?.name) redirect('/dashboard/profile')
 
   const { data: rawItems } = org
     ? await supabase.from('pipeline_items').select('*').eq('org_id', org.id).order('created_at', { ascending: false })
@@ -187,15 +191,6 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Empty state if no org yet */}
-      {!org && (
-        <div className="mt-8 card text-center py-12">
-          <div className="text-5xl mb-4">🌱</div>
-          <h3 className="font-display text-lg font-bold text-forest mb-2">Set up your profile</h3>
-          <p className="text-mid text-sm mb-5">Tell us about your work and we&apos;ll match you with the most relevant grants</p>
-          <a href="/dashboard/profile" className="btn-primary inline-block">Set up profile →</a>
-        </div>
-      )}
     </div>
   )
 }

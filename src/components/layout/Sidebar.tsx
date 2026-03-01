@@ -14,16 +14,16 @@ interface Props {
 }
 
 const NAV: { href: string; label: string; emoji: string; section: string; badge?: string }[] = [
+  { href: '/dashboard',             label: 'Dashboard',        emoji: '📊', section: '' },
   { href: '/dashboard/search',      label: 'Search Grants',    emoji: '🔍', section: 'Find Funding' },
-  { href: '/dashboard/deep-search', label: 'Live Search',       emoji: '🔬', section: 'Find Funding' },
-  { href: '/dashboard',             label: 'Overview',         emoji: '📊', section: 'Manage' },
+  { href: '/dashboard/deep-search', label: 'Live Search',      emoji: '🔬', section: 'Find Funding' },
   { href: '/dashboard/pipeline',    label: 'Funding Pipeline', emoji: '🗂',  section: 'Manage' },
   { href: '/dashboard/deadlines',   label: 'Deadlines',        emoji: '📅', section: 'Manage' },
   { href: '/dashboard/profile',     label: 'Profile',          emoji: '👤', section: 'Settings' },
   { href: '/dashboard/admin',       label: 'Source Health',    emoji: '⚙️',  section: 'Settings' },
 ]
 
-const sections = ['Find Funding', 'Manage', 'Settings']
+const sections = ['', 'Find Funding', 'Manage', 'Settings']
 
 export default function Sidebar({ org, userEmail }: Props) {
   const pathname = usePathname()
@@ -69,9 +69,11 @@ export default function Sidebar({ org, userEmail }: Props) {
           if (!items.length) return null
           return (
             <div key={section}>
-              <p className="text-white/35 text-[10px] font-semibold tracking-widest uppercase px-3 mb-1.5">
-                {section}
-              </p>
+              {section && (
+                <p className="text-white/35 text-[10px] font-semibold tracking-widest uppercase px-3 mb-1.5">
+                  {section}
+                </p>
+              )}
               {items.map(item => {
                 const isActive = pathname === item.href ||
                   (item.href !== '/dashboard' && pathname.startsWith(item.href))
