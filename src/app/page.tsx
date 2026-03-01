@@ -23,7 +23,6 @@ export default async function RootPage() {
               {[
                 { label: 'Features', href: '#features' },
                 { label: 'Compare', href: '#compare' },
-                { label: 'Pricing', href: '#pricing' },
                 { label: 'About', href: '#about' },
               ].map(link => (
                 <a key={link.href} href={link.href}
@@ -511,22 +510,22 @@ export default async function RootPage() {
 
             {/* Left credential panel */}
             <div className="lg:col-span-2 bg-forest p-10 flex flex-col gap-8">
-              {/* Avatar */}
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-2xl bg-sage/20 border-2 border-sage/30 flex items-center justify-center flex-shrink-0">
-                  <span className="font-display text-2xl font-bold text-white">P</span>
+              {/* Logo / brand mark */}
+              <div className="flex items-center gap-3">
+                <div className="w-14 h-14 rounded-2xl bg-sage/20 border-2 border-sage/30 flex items-center justify-center flex-shrink-0">
+                  <span className="font-display text-xl font-bold text-white">GT</span>
                 </div>
                 <div>
-                  <p className="font-display text-lg font-bold text-white">Paul</p>
-                  <p className="text-mint/60 text-xs mt-0.5">Founder, Grant Tracker</p>
+                  <p className="font-display text-lg font-bold text-white">Grant Tracker</p>
+                  <p className="text-mint/60 text-xs mt-0.5">Built by sector practitioners</p>
                 </div>
               </div>
 
               {/* Credential stats */}
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { stat: '20', unit: 'years', label: 'in the sector' },
-                  { stat: '3', unit: 'orgs', label: 'founded' },
+                  { stat: '20', unit: 'yrs', label: 'sector experience' },
+                  { stat: '3', unit: 'orgs', label: 'founded & run' },
                   { stat: 'Charity', unit: '+', label: 'social enterprise' },
                   { stat: '£M', unit: '+', label: 'funding secured' },
                 ].map(item => (
@@ -541,9 +540,9 @@ export default async function RootPage() {
 
               {/* Sector tags */}
               <div>
-                <p className="text-mint/40 text-[10px] font-semibold uppercase tracking-wider mb-2">Background</p>
+                <p className="text-mint/40 text-[10px] font-semibold uppercase tracking-wider mb-2">Our background</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {['Founder', 'Fundraiser', 'Charity', 'Social Enterprise', 'Community Sector'].map(tag => (
+                  {['Founders', 'Fundraisers', 'Charities', 'Social Enterprise', 'Community Sector'].map(tag => (
                     <span key={tag} className="text-[10px] font-medium text-mint/60 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">
                       {tag}
                     </span>
@@ -554,99 +553,34 @@ export default async function RootPage() {
               {/* Pull quote */}
               <div className="mt-auto pt-6 border-t border-white/10">
                 <p className="text-mint/60 text-sm leading-relaxed italic">
-                  "I built the tool I always wished existed when I was the one writing the applications."
+                  "We built the tool the sector needed but never had."
                 </p>
               </div>
             </div>
 
             {/* Right content */}
             <div className="lg:col-span-3 p-10">
-              <div className="inline-flex items-center gap-2 bg-sage/10 text-sage text-xs font-semibold px-3 py-1.5 rounded-full mb-6">
-                💬 Why Grant Tracker exists
-              </div>
-              <blockquote className="font-display text-xl text-forest font-semibold leading-snug mb-6">
-                "Finding the right grant has always been harder than it should be. The tools that existed were too expensive, too generic, or built for organisations with a dedicated grants team."
+              <h2 className="font-display text-3xl font-bold text-forest mb-6">
+                Why Grant Tracker exists
+              </h2>
+              <blockquote className="font-display text-xl text-forest font-semibold leading-snug mb-6 border-l-4 border-sage pl-5">
+                "Finding the right grant has always been harder than it should be. The tools that existed were too expensive, too generic, and built for organisations with a dedicated grants team — not for the people actually doing the work."
               </blockquote>
               <div className="space-y-4 text-mid text-sm leading-relaxed">
                 <p>
-                  Grant Tracker was built out of direct experience. Having spent two decades working as a founder and fundraiser across the charity and social enterprise sector, I know first-hand how time-consuming and frustrating the grant search process can be. Sifting through databases that haven't been updated, missing local funders that never appear in national searches, juggling applications across spreadsheets and inboxes.
+                  Grant Tracker was built from direct experience of the sector. Across charities, social enterprises and community organisations, the grant search process is consistently one of the most time-consuming and frustrating parts of running a mission-driven organisation — sifting through outdated databases, missing hyper-local funders that never appear in national searches, and juggling applications across spreadsheets and inboxes.
                 </p>
                 <p>
-                  The tools that did exist ranged from around £150 a year for basic directories up to £1,000 or more for the larger platforms, and most were complicated enough that you needed specialist training to get any real value from them. Small charities, community groups and volunteer-led organisations were effectively locked out.
+                  The tools that did exist ranged from around £150 a year for basic directories to £1,000 or more for the larger platforms, and most required specialist training to extract any real value. Small charities, community groups and grassroots ventures were effectively priced out of the tools designed to help them.
                 </p>
                 <p>
-                  Grant Tracker was built to fix that. A tool that understands how funding actually works in the UK, finds the local and specialist funders that matter, and is simple enough for any founder or trustee to manage alongside everything else they do.
+                  Grant Tracker was built to change that. A platform that understands how UK funding actually works, that learns from how you engage with it, and that&apos;s simple enough for any founder, trustee or community organiser to use alongside everything else they&apos;re managing.
                 </p>
-              </div>
-              <div className="mt-8 pt-6 border-t border-warm flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-sage/20 flex items-center justify-center text-sage font-bold text-sm flex-shrink-0">
-                  P
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-forest">Paul</p>
-                  <p className="text-xs text-mid">Founder, Grant Tracker. 20 years in the charity and social enterprise sector.</p>
-                </div>
               </div>
             </div>
 
           </div>
         </div>
-      </section>
-
-      {/* ── Pricing ── */}
-      <section id="pricing" className="max-w-6xl mx-auto px-6 pb-24 scroll-mt-20">
-        <div className="text-center mb-10">
-          <h2 className="font-display text-3xl font-bold text-forest mb-3">Pricing that makes sense for charities, social enterprises and impact founders</h2>
-          <p className="text-mid max-w-md mx-auto">Start free. Upgrade when you need the full toolkit. No long contracts, no surprises.</p>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-2xl mx-auto">
-          {/* Free */}
-          <div className="bg-white rounded-2xl p-7 shadow-card border border-warm">
-            <p className="font-display text-2xl font-bold text-forest mb-1">Free</p>
-            <p className="text-sm text-mid mb-6">Everything you need to get started</p>
-            <ul className="space-y-2.5 mb-7">
-              {[
-                '800+ grants, competitions, loans & crowdfund matches',
-                'AI match scores across 5 dimensions',
-                'Filter by sector, location, funding type',
-                'New This Week dashboard & freshness filter',
-                'GOV.UK grant directory link',
-              ].map(f => (
-                <li key={f} className="flex items-center gap-2.5 text-sm text-charcoal">
-                  <span className="text-sage font-bold flex-shrink-0">✓</span>{f}
-                </li>
-              ))}
-            </ul>
-            <Link href="/auth/signup" className="btn-outline w-full text-center block py-2.5 text-sm font-semibold">
-              Get started free →
-            </Link>
-          </div>
-          {/* Pro */}
-          <div className="bg-forest rounded-2xl p-7 shadow-card-lg border border-forest relative overflow-hidden">
-            <div className="absolute top-4 right-4 bg-gold text-forest text-[10px] font-bold px-2.5 py-1 rounded-full">Most popular</div>
-            <p className="font-display text-2xl font-bold text-white mb-1">£19 <span className="text-base font-normal text-mint/70">/ month</span></p>
-            <p className="text-sm text-mint/70 mb-6">The full Grant Tracker toolkit</p>
-            <ul className="space-y-2.5 mb-7">
-              {[
-                'Everything in Free',
-                '🎯 Personalisation & feedback-pattern learning',
-                '🔬 Live Search with live AI research',
-                '📋 Full funding pipeline with pop-out cards',
-                '✏️ Writing progress tracker per application',
-                '⏰ Deadline alerts, urgency flags & email digest',
-                '📍 Hyper-local funder discovery',
-              ].map(f => (
-                <li key={f} className="flex items-center gap-2.5 text-sm text-mint">
-                  <span className="text-sage font-bold flex-shrink-0">✓</span>{f}
-                </li>
-              ))}
-            </ul>
-            <Link href="/auth/signup" className="btn-gold w-full text-center block py-2.5 text-sm font-semibold">
-              Get started free →
-            </Link>
-          </div>
-        </div>
-        <p className="text-center text-xs text-light mt-5">Compared to £150–£1,000+/year for traditional grant databases, with fewer features and no pipeline.</p>
       </section>
 
       {/* ── Stats ── */}
@@ -655,7 +589,7 @@ export default async function RootPage() {
           {[
             { stat: '800+', label: 'Grants, competitions, loans & crowdfund matches' },
             { stat: '120+', label: 'Sources crawled daily across the UK' },
-            { stat: '£19/mo', label: 'vs £150–£1,000+/yr elsewhere' },
+            { stat: 'Free', label: 'to search — no credit card required' },
             { stat: 'Live', label: 'AI research and daily database refresh' },
           ].map(item => (
             <div key={item.stat}>
