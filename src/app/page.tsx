@@ -67,9 +67,8 @@ export default async function RootPage() {
 
       {/* ── Differentiator strip ── */}
       <section className="max-w-6xl mx-auto px-6 pb-16">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {[
-            { icon: '🆓', stat: 'Free', label: 'to search 800+ grants' },
             { icon: '🎯', stat: 'AI Match', label: 'learns from your feedback' },
             { icon: '📋', stat: 'Pipeline', label: 'tracks every application' },
             { icon: '🔔', stat: 'Alerts', label: 'when new matches appear' },
