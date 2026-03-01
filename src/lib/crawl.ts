@@ -84,6 +84,61 @@ async function fetchHtml(url: string): Promise<string> {
   return res.text()
 }
 
+// ── Description fetcher ───────────────────────────────────────────────────────
+// Visits an individual grant/fund detail page and extracts the first meaningful
+// paragraph(s) using common WordPress / Elementor content selectors.
+// Returns '' on any error so callers can safely fall back.
+async function fetchDetailDescription(url: string): Promise<string> {
+  try {
+    const html = await fetchHtml(url)
+    const root = parseHTML(html)
+    const SELECTORS = [
+      '.entry-content',
+      '.post-content',
+      '.elementor-widget-text-editor',
+      'article .content',
+      '.grant-description',
+      'main',
+    ]
+    for (const sel of SELECTORS) {
+      const el = root.querySelector(sel)
+      if (!el) continue
+      const paras = el.querySelectorAll('p')
+        .map(p => p.text.trim())
+        .filter(t => t.length > 40)
+      if (paras.length > 0) return paras.slice(0, 2).join(' ').slice(0, 600)
+      const text = el.text.replace(/\s+/g, ' ').trim()
+      if (text.length > 40) return text.slice(0, 600)
+    }
+    return ''
+  } catch {
+    return ''
+  }
+}
+
+// Enriches a list of ScrapedGrants by fetching descriptions from their apply_url.
+// Runs in batches of `concurrency` to avoid hammering sites.
+// Grants that already have a non-empty description are left untouched.
+async function withDescriptions(grants: ScrapedGrant[], concurrency = 3): Promise<ScrapedGrant[]> {
+  const out: ScrapedGrant[] = []
+  for (let i = 0; i < grants.length; i += concurrency) {
+    const batch = grants.slice(i, i + concurrency)
+    const settled = await Promise.allSettled(
+      batch.map(async (g) => {
+        if (g.description) return g                    // already has one
+        if (!g.apply_url)  return g                    // nowhere to fetch from
+        const desc = await fetchDetailDescription(g.apply_url)
+        return { ...g, description: desc }
+      })
+    )
+    for (let j = 0; j < settled.length; j++) {
+      const r = settled[j]
+      out.push(r.status === 'fulfilled' ? r.value : batch[j])
+    }
+  }
+  return out
+}
+
 // ── Source toggle ─────────────────────────────────────────────────────────────
 // Set DISABLED_SOURCES env var to a comma-separated list of source IDs to skip.
 // e.g. DISABLED_SOURCES=lincolnshire_cf,kent_cf
@@ -689,7 +744,8 @@ async function crawlHeritageFund(): Promise<CrawlResult> {
       })
     }
 
-    return await upsertGrants(SOURCE, grants)
+    const enriched = await withDescriptions(grants)
+    return await upsertGrants(SOURCE, enriched)
   } catch (err) {
     return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
   }
@@ -736,7 +792,8 @@ async function crawlQuartetCF(): Promise<CrawlResult> {
       })
     }
 
-    return await upsertGrants(SOURCE, grants)
+    const enriched = await withDescriptions(grants)
+    return await upsertGrants(SOURCE, enriched)
   } catch (err) {
     return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
   }
@@ -963,7 +1020,8 @@ async function crawlLondonCF(): Promise<CrawlResult> {
       })
     }
 
-    return await upsertGrants(SOURCE, grants)
+    const enriched = await withDescriptions(grants)
+    return await upsertGrants(SOURCE, enriched)
   } catch (err) {
     return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
   }
@@ -989,17 +1047,37 @@ async function crawlSussexCF(): Promise<CrawlResult> {
     const addRoot = parseHTML(addHtml)
     const ADDURL  = `${BASE}/grants/how-to-apply/additional-grants/`
 
+    // Build a map of h2 → following sibling paragraphs for descriptions
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const allNodes = Array.from((addRoot.querySelector('body') ?? addRoot).childNodes as any)
     for (const h2 of addRoot.querySelectorAll('h2')) {
       const title = h2.text?.trim().replace(/\.$/, '')
       if (!title || title.length < 5 || SKIP_H2.test(title)) continue
       const slug = slugify(title)
+
+      // Collect text from sibling nodes that follow this h2 until the next h2
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const parent: any = h2.parentNode ?? addRoot
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const siblings = Array.from((parent.childNodes ?? []) as any[])
+      const h2Idx = siblings.indexOf(h2 as unknown)
+      const descParts: string[] = []
+      for (let k = h2Idx + 1; k < siblings.length && descParts.length < 3; k++) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const sib = siblings[k] as any
+        if (sib.tagName === 'H2') break
+        const text = (sib.text ?? '').replace(/\s+/g, ' ').trim()
+        if (text.length > 30) descParts.push(text)
+      }
+      const description = descParts.join(' ').slice(0, 600)
+
       grants.push({
         external_id:          `sussex_cf_${slug}`,
         source:               SOURCE,
         title,
         funder:               'Sussex Community Foundation',
         funder_type:          'community_foundation',
-        description:          '',
+        description,
         amount_min:           null,
         amount_max:           null,
         deadline:             null,
@@ -1011,6 +1089,7 @@ async function crawlSussexCF(): Promise<CrawlResult> {
         raw_data:             { title, page: 'additional-grants' } as Record<string, unknown>,
       })
     }
+    void allNodes // referenced to avoid unused-var lint warning
 
     // ── Main grants programme — one composite entry ──
     const mainUrl = `${BASE}/grants/how-to-apply/main-grants/`
@@ -1176,7 +1255,8 @@ async function crawlHIWCF(): Promise<CrawlResult> {
       })
     }
 
-    return await upsertGrants(SOURCE, grants)
+    const enriched = await withDescriptions(grants)
+    return await upsertGrants(SOURCE, enriched)
   } catch (err) {
     return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
   }
@@ -1241,7 +1321,8 @@ async function crawlOxfordshireCF(): Promise<CrawlResult> {
       })
     }
 
-    return await upsertGrants(SOURCE, grants)
+    const enriched = await withDescriptions(grants)
+    return await upsertGrants(SOURCE, enriched)
   } catch (err) {
     return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
   }
@@ -2854,7 +2935,10 @@ async function crawlLincolnshireCF(): Promise<CrawlResult> {
       })
     })
 
-    return await upsertGrants(SOURCE, grants)
+    // Only fetch detail pages for grants with a real individual URL (not the listing page)
+    const toEnrich = grants.map(g => g.apply_url !== LISTURL ? g : { ...g, description: 'See Lincolnshire Community Foundation website for eligibility criteria and how to apply.' })
+    const enriched = await withDescriptions(toEnrich)
+    return await upsertGrants(SOURCE, enriched)
   } catch (err) {
     return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
   }
