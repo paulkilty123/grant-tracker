@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { createPipelineItem } from '@/lib/pipeline'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { computeMatchScore, scoreColour } from '@/lib/matching'
+import type { FeedbackSignals, MatchBreakdown } from '@/lib/matching'
 import { getInteractions, recordInteraction, removeInteraction } from '@/lib/interactions'
 import type { GrantOpportunity, Organisation, FunderType } from '@/types'
 import type { InteractionAction } from '@/lib/interactions'
@@ -107,15 +108,50 @@ interface DisplayGrant {
   score: number
   reason: string
   isAiScore: boolean
+  breakdown?: MatchBreakdown
 }
 
-// ── Match Score Badge ────────────────────────────────────────────────────────
-function MatchBadge({ score, isAi }: { score: number; isAi: boolean }) {
+// ── Match Score Badge (with breakdown tooltip) ────────────────────────────────
+function MatchBadge({ score, isAi, breakdown }: { score: number; isAi: boolean; breakdown?: MatchBreakdown }) {
   const { bg, text } = scoreColour(score)
+  const [open, setOpen] = useState(false)
+
   return (
-    <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${bg}`}>
-      <span className="text-sm">{isAi ? '✦' : '●'}</span>
-      <span className={`text-xs font-bold ${text}`}>{score}% match</span>
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${bg} cursor-pointer hover:opacity-80 transition-opacity`}
+        title="Click to see score breakdown"
+      >
+        <span className="text-sm">{isAi ? '✦' : '●'}</span>
+        <span className={`text-xs font-bold ${text}`}>{score}% match</span>
+        {breakdown && <span className="text-xs opacity-50">▾</span>}
+      </button>
+
+      {open && breakdown && (
+        <div
+          className="absolute right-0 top-full mt-1.5 z-50 bg-white border border-stone-200 rounded-xl shadow-lg p-3 w-52"
+          onMouseLeave={() => setOpen(false)}
+        >
+          <p className="text-xs font-semibold text-charcoal mb-2">Score breakdown</p>
+          {Object.values(breakdown).map(dim => {
+            const pct = Math.round((dim.score / dim.max) * 100)
+            const { bar } = scoreColour(pct)
+            return (
+              <div key={dim.label} className="mb-1.5">
+                <div className="flex justify-between text-xs text-mid mb-0.5">
+                  <span>{dim.label}</span>
+                  <span className="font-medium text-charcoal">{dim.score}/{dim.max}</span>
+                </div>
+                <div className="h-1.5 rounded-full bg-stone-100 overflow-hidden">
+                  <div className={`h-full rounded-full ${bar}`} style={{ width: `${pct}%` }} />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
@@ -131,7 +167,7 @@ function GrantCard({ item, hasOrg, interactions, onAddToPipeline, onDismiss, onU
   onLike: (grantId: string) => void
   onDislike: (grantId: string) => void
 }) {
-  const { grant, score, reason, isAiScore } = item
+  const { grant, score, reason, isAiScore, breakdown } = item
   const [expanded, setExpanded] = useState(false)
   const isDismissed  = interactions.has('dismissed')
   const isLiked      = interactions.has('liked')
@@ -254,7 +290,7 @@ function GrantCard({ item, hasOrg, interactions, onAddToPipeline, onDismiss, onU
         {/* Right: score + amount + deadline + actions */}
         <div className="flex flex-col items-end gap-3 min-w-[150px] flex-shrink-0">
 
-          {hasOrg && <MatchBadge score={score} isAi={isAiScore} />}
+          {hasOrg && <MatchBadge score={score} isAi={isAiScore} breakdown={breakdown} />}
 
           <div className="text-right">
             <p className="font-display text-xl font-bold text-gold">
@@ -655,14 +691,37 @@ export default function SearchPage() {
         .filter((x): x is DisplayGrant => x !== null)
     }
 
+    // ── Build feedback signals from liked/disliked grant history ──────────
+    // Extract which sectors appear in liked vs disliked grants, then boost/
+    // penalise future matches for those sectors proportionally.
+    const feedbackSignals: FeedbackSignals = (() => {
+      const boosts    = new Map<string, number>()
+      const penalties = new Map<string, number>()
+      for (const [grantId, grantInteractions] of Array.from(interactions.entries())) {
+        const likedGrant = allGrants.find(g => g.id === grantId)
+        if (!likedGrant) continue
+        if (grantInteractions.has('liked')) {
+          for (const s of likedGrant.sectors) {
+            boosts.set(s, (boosts.get(s) ?? 0) + 3)
+          }
+        }
+        if (grantInteractions.has('disliked')) {
+          for (const s of likedGrant.sectors) {
+            penalties.set(s, (penalties.get(s) ?? 0) + 2)
+          }
+        }
+      }
+      return { sectorBoosts: boosts, sectorPenalties: penalties }
+    })()
+
     const withScores: DisplayGrant[] = filtered.map(grant => {
       if (org) {
-        const match = computeMatchScore(grant, org)
+        const match = computeMatchScore(grant, org, feedbackSignals)
         const grantInteractions = interactions.get(grant.id) ?? new Set()
         let score = match.score
         if (grantInteractions.has('liked'))    score = Math.min(100, score + 12)
         if (grantInteractions.has('disliked')) score = Math.max(0,   score - 20)
-        return { grant, score, reason: match.reason, isAiScore: false }
+        return { grant, score, reason: match.reason, isAiScore: false, breakdown: match.breakdown }
       }
       return { grant, score: 0, reason: '', isAiScore: false }
     })

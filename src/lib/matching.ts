@@ -23,6 +23,64 @@ const INCOME_MIDPOINTS: Record<string, number> = {
   'Over £500,000':        750_000,
 }
 
+// Ordered income bands lowest→highest for cap comparison
+const INCOME_BAND_ORDER = [
+  'Under £10,000',
+  '£10,000–£50,000',
+  '£50,000–£100,000',
+  '£100,000–£500,000',
+  'Over £500,000',
+] as const
+
+/**
+ * Parse a pound amount from text (handles £10k, £50,000, £100 000 etc.)
+ * Returns the numeric value, or null if not parseable.
+ */
+function parsePoundAmount(raw: string): number | null {
+  const s = raw.replace(/[,\s]/g, '').toLowerCase()
+  const m = s.match(/£?([\d.]+)(k|m)?/)
+  if (!m) return null
+  let val = parseFloat(m[1])
+  if (m[2] === 'k') val *= 1_000
+  if (m[2] === 'm') val *= 1_000_000
+  return isNaN(val) ? null : val
+}
+
+/**
+ * Extract income cap from grant eligibility text.
+ * Returns the cap as a number, or null if no cap found.
+ * E.g. "organisations with annual income under £50,000" → 50000
+ */
+function parseIncomeCapFromText(text: string): number | null {
+  // Patterns: "income under £X", "income not exceeding £X", "income less than £X",
+  //           "income below £X", "income no more than £X", "turnover under £X"
+  const patterns = [
+    /(?:annual\s+)?(?:income|turnover|budget)\s+(?:of\s+)?(?:under|below|less\s+than|not\s+exceeding|no\s+more\s+than)\s+(£[\d,.km]+)/i,
+    /(?:under|below|less\s+than|not\s+exceeding)\s+(£[\d,.km]+)\s+(?:annual\s+)?(?:income|turnover)/i,
+    /income\s+cap[:\s]+(£[\d,.km]+)/i,
+  ]
+  for (const re of patterns) {
+    const m = text.match(re)
+    if (m) {
+      const val = parsePoundAmount(m[1])
+      if (val !== null) return val
+    }
+  }
+  return null
+}
+
+/**
+ * Return true if the org's income band is within the given cap.
+ * If band is unknown, assume within cap (don't penalise).
+ */
+function orgIncomeWithinCap(band: string | null, cap: number): boolean {
+  if (!band) return true
+  const midpoint = INCOME_MIDPOINTS[band]
+  if (midpoint === undefined) return true
+  // Use midpoint + a small buffer (cap * 1.1) to avoid false negatives on boundary bands
+  return midpoint <= cap * 1.1
+}
+
 /** Fuzzy word overlap — returns true if any 4+ letter word from a appears in b */
 function fuzzyOverlap(a: string, b: string): boolean {
   const bLower = b.toLowerCase()
@@ -40,9 +98,20 @@ function phraseHitRatio(term: string, text: string): number {
   return hits / words.length
 }
 
+/**
+ * Optional feedback signals derived from the user's interaction history.
+ * sectorBoosts: map of sector → positive boost (1–10) based on liked grants
+ * sectorPenalties: map of sector → negative penalty based on disliked grants
+ */
+export interface FeedbackSignals {
+  sectorBoosts:    Map<string, number>
+  sectorPenalties: Map<string, number>
+}
+
 export function computeMatchScore(
   grant: GrantOpportunity,
   org: Organisation,
+  feedback?: FeedbackSignals,
 ): MatchResult {
   const reasons: string[] = []
 
@@ -137,6 +206,25 @@ export function computeMatchScore(
     orgThemesFlat.some(t => s.includes(t.split(' ')[0]) || t.includes(s.split(' ')[0]))
   ).length
   themesScore = Math.min(25, themesScore + sectorHits * 4)
+
+  // ── Feedback signal boost on themes ───────────────────────────────────
+  // If the user has liked grants with sectors that this grant also covers,
+  // give a small boost (up to +6). If they've disliked similar sectors,
+  // apply a small penalty (up to -5).
+  if (feedback && grantSectors.length > 0) {
+    let feedbackDelta = 0
+    let boostedSector = false
+    for (const sector of grantSectors) {
+      const boost   = feedback.sectorBoosts.get(sector)   ?? 0
+      const penalty = feedback.sectorPenalties.get(sector) ?? 0
+      feedbackDelta += boost - penalty
+      if (boost > 0) boostedSector = true
+    }
+    // Normalise: each sector boost is ~3pts per like; cap at ±6 total
+    const cappedDelta = Math.max(-5, Math.min(6, feedbackDelta))
+    themesScore = Math.max(0, Math.min(25, themesScore + cappedDelta))
+    if (boostedSector && cappedDelta >= 3) reasons.push('Matches your liked grant types')
+  }
 
   // ── 3. Grant size fit (max 20) ─────────────────────────────────────────
   let grantSizeScore = 10
@@ -236,6 +324,18 @@ export function computeMatchScore(
     if (org.mission && eligibilityText.length > 20) {
       const missionHitRatio = phraseHitRatio(org.mission, eligibilityText)
       if (missionHitRatio >= 0.15) {
+        eligibilityScore = Math.min(15, eligibilityScore + 1)
+      }
+    }
+
+    // Income cap check — if grant restricts to orgs under £X, penalise larger orgs
+    const incomeCap = parseIncomeCapFromText(eligibilityText)
+    if (incomeCap !== null && org.annual_income_band) {
+      if (!orgIncomeWithinCap(org.annual_income_band, incomeCap)) {
+        eligibilityScore = Math.max(1, eligibilityScore - 6)
+        reasons.push('Your income may exceed this grant\'s cap')
+      } else {
+        // Within cap is a positive signal
         eligibilityScore = Math.min(15, eligibilityScore + 1)
       }
     }
