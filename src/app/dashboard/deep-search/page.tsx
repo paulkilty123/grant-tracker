@@ -267,7 +267,7 @@ export default function AdvancedSearchPage() {
       <div className="bg-indigo-600 rounded-2xl px-6 py-5 mb-6 text-white">
         <p className="text-lg font-bold mb-1">Dig deeper beyond our database — search live funds tailored to your organisation.</p>
         <p className="text-sm text-indigo-200 leading-relaxed mb-4">
-          AI researches the live web in real time — council sites, NHS pages, community foundations and specialist funders — surfacing hyper-local and newly announced funding that isn&apos;t in our main database yet.
+          AI researches the live web in real time — council sites, NHS pages, community foundations and specialist funders — identifying hyper-local and newly announced funding that isn&apos;t in our main database yet.
         </p>
         <div className="flex flex-wrap gap-3">
           {[
