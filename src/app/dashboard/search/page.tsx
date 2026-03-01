@@ -446,6 +446,7 @@ export default function SearchPage() {
   const [filtersOpen, setFiltersOpen]             = useState(false)
   const [entryTypeFilter, setEntryTypeFilter]     = useState<'all' | 'live' | 'rolling' | 'profile'>('all')
   const [expandedGroups, setExpandedGroups]       = useState<Set<string>>(new Set())
+  const [visibleCount, setVisibleCount]           = useState(30)
 
   useEffect(() => {
     try {
@@ -671,6 +672,11 @@ export default function SearchPage() {
     a.click()
     URL.revokeObjectURL(url)
   }
+
+  // Reset visible count when search/filters change so the user starts from the top
+  useEffect(() => {
+    setVisibleCount(30)
+  }, [query, activeType, amountMin, amountMax, deadlineFilter, activeSectors, entryTypeFilter, freshnessFilter, aiResults])
 
   // ── Build display grants ─────────────────────────────────────────────────
   const displayGrants: DisplayGrant[] = (() => {
@@ -1282,20 +1288,32 @@ export default function SearchPage() {
           </a>
         </div>
       ) : (
-        displayGrants.map(item => (
-          <GrantCard
-            key={item.grant.id}
-            item={item}
-            hasOrg={!!org}
-            hasSearch={query.trim() !== '' || item.isAiScore}
-            interactions={interactions.get(item.grant.id) ?? new Set()}
-            onAddToPipeline={handleAddToPipeline}
-            onDismiss={handleDismiss}
-            onUndismiss={handleUndismiss}
-            onLike={handleLike}
-            onDislike={handleDislike}
-          />
-        ))
+        <>
+          {displayGrants.slice(0, visibleCount).map(item => (
+            <GrantCard
+              key={item.grant.id}
+              item={item}
+              hasOrg={!!org}
+              hasSearch={query.trim() !== '' || item.isAiScore}
+              interactions={interactions.get(item.grant.id) ?? new Set()}
+              onAddToPipeline={handleAddToPipeline}
+              onDismiss={handleDismiss}
+              onUndismiss={handleUndismiss}
+              onLike={handleLike}
+              onDislike={handleDislike}
+            />
+          ))}
+          {visibleCount < displayGrants.length && (
+            <div className="text-center py-6">
+              <button
+                onClick={() => setVisibleCount(v => v + 30)}
+                className="btn-outline px-6 py-2.5 text-sm"
+              >
+                Show more ({displayGrants.length - visibleCount} remaining)
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       {toast && (
