@@ -5,7 +5,9 @@ import { SEED_GRANTS } from '@/lib/grants'
 import { createClient } from '@/lib/supabase/client'
 import { createPipelineItem } from '@/lib/pipeline'
 import { getOrganisationByOwner } from '@/lib/organisations'
+import { saveSearchHistory, getSearchHistory, deleteSearchHistory } from '@/lib/searchHistory'
 import type { Organisation } from '@/types'
+import type { SearchHistoryItem } from '@/lib/searchHistory'
 
 interface DeepGrant {
   title: string
@@ -127,6 +129,7 @@ export default function AdvancedSearchPage() {
   const [org, setOrg] = useState<Organisation | null>(null)
   const [userId, setUserId] = useState('')
   const [optionsOpen, setOptionsOpen] = useState(false)
+  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([])
 
   // ── Restore search state from sessionStorage on mount ──────────────────
   useEffect(() => {
@@ -158,6 +161,10 @@ export default function AdvancedSearchPage() {
       setUserId(user.id)
       const o = await getOrganisationByOwner(user.id)
       setOrg(o)
+      if (o) {
+        const history = await getSearchHistory(o.id)
+        setSearchHistory(history)
+      }
     }
     loadOrg()
   }, [])
@@ -197,6 +204,18 @@ export default function AdvancedSearchPage() {
       if (!response.ok) throw new Error(data?.error ?? `Request failed (${response.status})`)
       setResults(data as DeepSearchResponse)
       if (isSmartMatch) setSmartMatched(true)
+      // Save query to history
+      if (org) {
+        await saveSearchHistory({
+          orgId: org.id,
+          query: searchQuery,
+          sectors: selectedSectors,
+          location: locationFilter,
+          resultCount: (data as DeepSearchResponse).grants?.length ?? 0,
+        })
+        const history = await getSearchHistory(org.id)
+        setSearchHistory(history)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Advanced search unavailable — please try again')
     } finally {
@@ -323,8 +342,42 @@ export default function AdvancedSearchPage() {
 
         {!org && (
           <p className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2 mt-3">
-            <strong>Tip:</strong> Complete your <a href="/dashboard/profile" className="underline hover:text-amber-900">organisation profile</a> to unlock ✦ Fill from my org profile.
+            <strong>Tip:</strong> Complete your <a href="/dashboard/profile" className="underline hover:text-amber-900">organisation profile</a> to unlock ✦ Fill from my profile.
           </p>
+        )}
+
+        {/* Recent searches */}
+        {searchHistory.length > 0 && !results && !loading && (
+          <div className="mt-4 pt-4 border-t border-warm">
+            <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Recent searches</p>
+            <div className="flex flex-wrap gap-2">
+              {searchHistory.map(item => (
+                <div key={item.id} className="flex items-center gap-1 bg-indigo-50 border border-indigo-100 rounded-full pl-3 pr-1 py-1">
+                  <button
+                    onClick={() => {
+                      setQuery(item.query)
+                      if (item.location) { setLocationFilter(item.location); setOptionsOpen(true) }
+                      if (item.sectors.length) { setSelectedSectors(item.sectors); setOptionsOpen(true) }
+                    }}
+                    className="text-xs text-indigo-700 font-medium hover:text-indigo-900 max-w-[200px] truncate"
+                  >
+                    🕐 {item.query}
+                    {item.result_count != null && <span className="text-indigo-400 ml-1">· {item.result_count} results</span>}
+                  </button>
+                  <button
+                    onClick={async () => {
+                      await deleteSearchHistory(item.id)
+                      setSearchHistory(prev => prev.filter(h => h.id !== item.id))
+                    }}
+                    className="text-indigo-300 hover:text-indigo-600 px-1 text-xs ml-1"
+                    title="Remove"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
 
         {/* Search Options toggle */}
