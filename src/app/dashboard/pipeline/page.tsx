@@ -387,40 +387,6 @@ function PipelineModal({
             />
           </div>
 
-          {/* Urgent flag */}
-          <button
-            type="button"
-            onClick={() => setIsUrgent(v => !v)}
-            className={cn(
-              'w-full flex items-center justify-between px-4 py-3 rounded-xl border-2 transition-all',
-              isUrgent
-                ? 'border-red-300 bg-red-50'
-                : 'border-warm bg-white hover:border-red-200 hover:bg-red-50/40'
-            )}
-          >
-            <div className="flex items-center gap-3">
-              <span className={cn(
-                'text-lg leading-none transition-all',
-                isUrgent ? 'opacity-100' : 'opacity-30'
-              )}>⚠️</span>
-              <div className="text-left">
-                <p className={cn('text-sm font-semibold', isUrgent ? 'text-red-600' : 'text-charcoal')}>
-                  Mark as urgent
-                </p>
-                <p className="text-xs text-light">Highlights this card in red on the board</p>
-              </div>
-            </div>
-            {/* Toggle pill */}
-            <div className={cn(
-              'relative flex-shrink-0 h-6 w-11 rounded-full transition-colors duration-200',
-              isUrgent ? 'bg-red-500' : 'bg-gray-200'
-            )}>
-              <span className={cn(
-                'absolute top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200',
-                isUrgent ? 'translate-x-6' : 'translate-x-1'
-              )} />
-            </div>
-          </button>
         </div>
 
         <div className="p-6 pt-0 flex justify-between items-center">
