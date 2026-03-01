@@ -43,15 +43,14 @@ export default async function RootPage() {
       {/* ── Hero ── */}
       <section className="max-w-6xl mx-auto px-6 pt-20 pb-16 text-center">
         <div className="inline-flex items-center gap-2 bg-sage/10 text-sage text-xs font-semibold px-4 py-1.5 rounded-full mb-7">
-          🇬🇧 Built for every charity, organisation or venture · Free to get started
+          🇬🇧 For charities, organisations and grassroots ventures · Free to get started
         </div>
         <h1 className="font-display text-5xl sm:text-6xl font-bold text-forest leading-[1.1] mb-6 max-w-4xl mx-auto">
-          Find grants other organisations miss.<br />
-          <span className="text-gold">Win more funding.</span>
+          Find the grants<br />
+          <span className="text-gold">you&apos;ve been missing.</span>
         </h1>
         <p className="text-mid text-xl max-w-2xl mx-auto mb-4 leading-relaxed">
-          Grant Tracker combines a curated database, live AI research, and a full application pipeline.
-          Everything you need to find and win funding — whether you&apos;re a charity, community group, CIC, or grassroots venture.
+          A curated UK database, live AI research, and a full application pipeline — all in one place. Start free in minutes.
         </p>
         <p className="text-sm text-mid/70 mb-10">
           Other tools charge <span className="line-through">£150–£1,000+/year</span> for less. Grant Tracker starts free.
