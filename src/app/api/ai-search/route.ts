@@ -50,7 +50,9 @@ export async function POST(req: NextRequest) {
 
     const orgContext = buildOrgContext(org ?? null)
 
-    const prompt = `You are a UK charity funding expert helping a small charity find the most suitable grants.
+    const prompt = `You are a UK funding expert helping organisations find the most suitable grants, competitions, social loans and matched crowdfunding opportunities.
+
+Applicants include charities, community groups, social enterprises, impact founders and underserved ventures — treat each appropriately based on their profile.
 
 The user is searching for: "${query}"
 ${orgContext}
@@ -61,7 +63,7 @@ Scoring rules — apply these strictly:
 1. TOPIC match: Does the grant's sectors/description match the activity (e.g. training, youth work, mental health)?
 2. GEOGRAPHY match: If the query or the applicant profile mentions a specific place, check whether the grant explicitly serves that area or has isLocal:true. Large UK-wide funders with no local dimension should score MAX 35 when a specific location is given — they should not dominate results. Grants matching the applicant's primary_location should be boosted.
 3. SIZE fit: Match the grant's amount range to the applicant's income band and grant size target. Huge grants (£500k+) are unsuitable for very small organisations.
-4. ELIGIBILITY fit: Does the organisation type (charity, CIC, community group, etc.) and scale likely match the grant's requirements?
+4. ELIGIBILITY fit: Does the organisation type (charity, CIC, community group, social enterprise, impact founder, underserved venture, etc.) and scale likely match the grant's requirements?
 5. THEME/MISSION fit: Where an applicant profile is provided, boost grants that align with their stated themes, areas of work and beneficiaries.
 
 Return a JSON array of the top matching grants ranked by score. For each include:

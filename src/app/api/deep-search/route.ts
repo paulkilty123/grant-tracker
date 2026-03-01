@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
         }\nOnly return genuinely new opportunities not on this list.`
       : ''
 
-    const prompt = `You are a UK charity funding expert. Research grant funding opportunities for: "${query}".
+    const prompt = `You are a UK funding expert specialising in grants, competitions, social loans and matched crowdfunding for charities, community groups, social enterprises, impact founders and underserved ventures. Research funding opportunities for: "${query}".
 ${orgContext}${sectorContext}${locationContext}${exclusionList}
 
 Use web search to find:

@@ -11,7 +11,7 @@ const nunito = Nunito({
 
 export const metadata: Metadata = {
   title: 'Grant Tracker — Community Funding Hub',
-  description: 'Find and track funding opportunities for charities, community organisations and social enterprises.',
+  description: 'Find and track UK funding opportunities for charities, community groups, social enterprises, impact founders and underserved ventures.',
 }
 
 export default function RootLayout({

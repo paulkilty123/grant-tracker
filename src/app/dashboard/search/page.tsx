@@ -1186,7 +1186,7 @@ export default function SearchPage() {
         {!org && (
           <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5">
             <p className="text-xs font-semibold text-amber-900 mb-0.5">Unlock personalised matches</p>
-            <p className="text-xs text-amber-800 mb-2">Complete your profile to get % match scores and ranked results tailored to your organisation.</p>
+            <p className="text-xs text-amber-800 mb-2">Complete your profile to get % match scores and ranked results tailored to your organisation, venture or mission.</p>
             <a href="/dashboard/profile" className="text-xs font-semibold text-amber-700 underline hover:text-amber-900">
               Set up your profile →
             </a>
@@ -1250,7 +1250,7 @@ export default function SearchPage() {
             <p className="text-xs text-amber-800 leading-snug">
               {matchQuality.missing.slice(0, 3).map(f => f.label).join(', ')}{' '}
               {matchQuality.missing.length > 3 ? `and ${matchQuality.missing.length - 3} more` : ''} missing from your profile.{' '}
-              Complete it so Grant Tracker can surface the grants most relevant to your organisation.
+              Complete it so Grant Tracker can surface the grants most relevant to your work.
             </p>
             <a
               href="/dashboard/profile"

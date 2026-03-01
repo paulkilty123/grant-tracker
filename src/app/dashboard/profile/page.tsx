@@ -6,12 +6,12 @@ import { getOrganisationByOwner, createOrganisation, updateOrganisation } from '
 import type { Organisation, OrgType, FunderType } from '@/types'
 
 const ORG_TYPE_OPTIONS: { value: OrgType; label: string }[] = [
-  { value: 'registered_charity', label: 'Registered Charity' },
-  { value: 'cic',                label: 'Community Interest Company (CIC)' },
-  { value: 'social_enterprise',  label: 'Social Enterprise' },
+  { value: 'registered_charity', label: 'Charity (registered)' },
   { value: 'community_group',    label: 'Community Group' },
-  { value: 'other',              label: 'Grassroots Business' },
-  { value: 'other',              label: 'Impact Entrepreneur / Sole Trader' },
+  { value: 'social_enterprise',  label: 'Social Enterprise' },
+  { value: 'cic',                label: 'Community Interest Company (CIC)' },
+  { value: 'other',              label: 'Impact Founder / Sole Trader' },
+  { value: 'other',              label: 'Underserved Venture' },
   { value: 'other',              label: 'Other' },
 ]
 

@@ -43,7 +43,7 @@ export default async function RootPage() {
       {/* ── Hero ── */}
       <section className="max-w-6xl mx-auto px-6 pt-20 pb-16 text-center">
         <div className="inline-flex items-center gap-2 bg-sage/10 text-sage text-xs font-semibold px-4 py-1.5 rounded-full mb-7">
-          🇬🇧 For charities, organisations and grassroots ventures · Free to get started
+          🇬🇧 For charities, community groups, social enterprises, impact founders &amp; underserved ventures · Free to get started
         </div>
         <h1 className="font-display font-bold leading-[1.15] mb-6 max-w-4xl mx-auto">
           <span className="block text-5xl sm:text-6xl text-forest">Find &amp; Track Grants</span>
@@ -345,7 +345,7 @@ export default async function RootPage() {
       <section id="compare" className="max-w-6xl mx-auto px-6 pb-24 scroll-mt-20">
         <div className="text-center mb-10">
           <h2 className="font-display text-3xl font-bold text-forest mb-3">Not just cheaper. Dramatically better.</h2>
-          <p className="text-mid max-w-xl mx-auto">UK grant databases have barely changed in a decade. Grant Tracker was built from scratch for how small charities actually work.</p>
+          <p className="text-mid max-w-xl mx-auto">UK grant databases have barely changed in a decade. Grant Tracker was built from scratch for how charities, social enterprises and impact founders actually work.</p>
         </div>
         <div className="bg-white rounded-2xl shadow-card border border-warm overflow-hidden">
           <div className="grid grid-cols-3 text-sm">
@@ -394,14 +394,13 @@ export default async function RootPage() {
           <h2 className="font-display text-3xl font-bold text-forest mb-3">Built for the people doing the work</h2>
           <p className="text-mid max-w-md mx-auto">Small teams with big ambitions, not large development offices with specialist staff and six-figure budgets.</p>
         </div>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
           {[
-            { emoji: '🏠', label: 'Registered Charities', desc: 'Manage multiple funders and applications without a dedicated grants manager.' },
-            { emoji: '🌱', label: 'Community Groups', desc: 'Find local and national funding that fits your size, area, and cause.' },
-            { emoji: '⚡', label: 'CICs & Social Enterprises', desc: 'Search trust, corporate, and government programmes in one place.' },
-            { emoji: '🤝', label: 'Volunteer-led Orgs', desc: 'Simple enough for anyone to use with no fundraising experience needed.' },
-            { emoji: '🚀', label: 'Grassroots Businesses', desc: 'Discover grants open to early-stage and community-rooted ventures.' },
-            { emoji: '💡', label: 'Impact Entrepreneurs', desc: 'Find funding for sole traders and ventures with a social or environmental mission.' },
+            { emoji: '🏠', label: 'Charities', desc: 'Manage multiple funders and applications without a dedicated grants manager.' },
+            { emoji: '🌱', label: 'Community Groups', desc: 'Find local and national funding that fits your size, area, and cause — including hyper-local funders most platforms miss.' },
+            { emoji: '⚡', label: 'Social Enterprises', desc: 'Search trusts, corporates, government programmes and social loan funds in one place.' },
+            { emoji: '💡', label: 'Impact Founders', desc: 'Find grants, competitions and interest-free loans for founders with a social or environmental mission.' },
+            { emoji: '🚀', label: 'Underserved Ventures', desc: 'Discover competitions, matched crowdfunding and community funds open to early-stage and grassroots ventures.' },
           ].map(item => (
             <div key={item.label} className="bg-white rounded-xl p-5 shadow-card text-center border border-warm">
               <div className="text-3xl mb-3">{item.emoji}</div>
@@ -504,7 +503,7 @@ export default async function RootPage() {
       {/* ── Pricing ── */}
       <section id="pricing" className="max-w-6xl mx-auto px-6 pb-24 scroll-mt-20">
         <div className="text-center mb-10">
-          <h2 className="font-display text-3xl font-bold text-forest mb-3">Pricing that makes sense for small organisations and ventures</h2>
+          <h2 className="font-display text-3xl font-bold text-forest mb-3">Pricing that makes sense for charities, social enterprises and impact founders</h2>
           <p className="text-mid max-w-md mx-auto">Start free. Upgrade when you need the full toolkit. No long contracts, no surprises.</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-2xl mx-auto">
@@ -603,7 +602,7 @@ export default async function RootPage() {
       <section className="max-w-6xl mx-auto px-6 pb-24 text-center">
         <div className="bg-white rounded-2xl shadow-card-lg p-12 border border-warm">
           <div className="inline-flex items-center gap-2 bg-sage/10 text-sage text-xs font-semibold px-4 py-1.5 rounded-full mb-6">
-            🇬🇧 Trusted by UK charities, organisations &amp; ventures
+            🇬🇧 Trusted by UK charities, community groups, social enterprises &amp; impact founders
           </div>
           <h2 className="font-display text-4xl font-bold text-forest mb-3">Ready to find your next grant?</h2>
           <p className="text-mid mb-8 max-w-sm mx-auto">Set up your free account in under two minutes. Search 200+ grants immediately, no credit card needed.</p>
