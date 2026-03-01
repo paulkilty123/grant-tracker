@@ -59,19 +59,23 @@ ${orgContext}
 Available grants:
 ${JSON.stringify(grants)}
 
-Scoring rules — apply these strictly:
-1. TOPIC match: Does the grant's sectors/description match the activity (e.g. training, youth work, mental health)?
-2. GEOGRAPHY match: If the query or the applicant profile mentions a specific place, check whether the grant explicitly serves that area or has isLocal:true. Large UK-wide funders with no local dimension should score MAX 35 when a specific location is given — they should not dominate results. Grants matching the applicant's primary_location should be boosted.
-3. SIZE fit: Match the grant's amount range to the applicant's income band and grant size target. Huge grants (£500k+) are unsuitable for very small organisations.
-4. ELIGIBILITY fit: Does the organisation type (charity, CIC, community group, social enterprise, impact founder, underserved venture, etc.) and scale likely match the grant's requirements?
-5. THEME/MISSION fit: Where an applicant profile is provided, boost grants that align with their stated themes, areas of work and beneficiaries.
+CRITICAL RULE — THE QUERY IS THE PRIMARY FILTER:
+The search query is the user's explicit intent and must be matched first. If the query contains a specific topic, cause, place, beneficiary group or activity (e.g. "tibet", "youth mental health", "food bank"), you must ONLY return grants that are plausibly relevant to that specific thing. Do NOT use the applicant profile as a substitute or fallback — if no grants in the database match the query topic, return an empty array []. Never return grants that match the applicant profile but not the query.
+
+Scoring rules — apply in this priority order:
+1. QUERY match (hard gate): Does the grant's sectors, description or eligibility plausibly cover the specific topic, place or activity in the query? If not, exclude it regardless of profile fit.
+2. TOPIC match: Does the grant's sectors/description match the activity in detail (e.g. training, youth work, mental health)?
+3. GEOGRAPHY match: If the query or the applicant profile mentions a specific place, check whether the grant explicitly serves that area or has isLocal:true. Large UK-wide funders with no local dimension should score MAX 35 when a specific location is given.
+4. SIZE fit: Match the grant's amount range to the applicant's income band and grant size target. Huge grants (£500k+) are unsuitable for very small organisations.
+5. ELIGIBILITY fit: Does the organisation type and scale likely match the grant's requirements?
+6. THEME/MISSION fit: Where an applicant profile is provided, use it to personalise scores among grants that already pass the query filter — not as a fallback for grants that don't match the query.
 
 Return a JSON array of the top matching grants ranked by score. For each include:
 - grantId (the id field)
 - score (0-100)
-- reason (1 sentence explaining specifically why this grant fits — reference the applicant's location or mission if relevant)
+- reason (1 sentence explaining specifically why this grant fits the search query — reference the applicant's location or mission if relevant)
 
-Only include grants with score above 40. Max 20 results.
+Only include grants with score above 40. Max 20 results. Return an empty array [] if no grants genuinely match the query.
 Return ONLY valid JSON array, no markdown, no other text.`
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
