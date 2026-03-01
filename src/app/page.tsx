@@ -45,9 +45,9 @@ export default async function RootPage() {
         <div className="inline-flex items-center gap-2 bg-sage/10 text-sage text-xs font-semibold px-4 py-1.5 rounded-full mb-7">
           🇬🇧 For charities, organisations and grassroots ventures · Free to get started
         </div>
-        <h1 className="font-display text-5xl sm:text-6xl font-bold text-forest leading-[1.1] mb-6 max-w-4xl mx-auto">
-          UK grants, matched<br />
-          <span className="text-gold">to your organisation.</span>
+        <h1 className="font-display font-bold text-forest leading-[1.05] mb-6 max-w-4xl mx-auto">
+          <span className="block text-7xl sm:text-8xl">UK Grants</span>
+          <span className="block text-3xl sm:text-4xl text-gold mt-2">Matched to your organisation.</span>
         </h1>
         <p className="text-mid text-xl max-w-2xl mx-auto mb-4 leading-relaxed">
           A curated UK database, live AI research, and a full application pipeline — all in one place. Start free in minutes.
