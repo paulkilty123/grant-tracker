@@ -6,6 +6,27 @@ export const dynamic = 'force-dynamic'
 
 const CACHE_TTL_HOURS = 48
 
+// ── URL verification ──────────────────────────────────────────────────────────
+// Checks whether a URL actually resolves before we cache and show it.
+// Uses GET (not HEAD) since many grant sites block HEAD requests.
+// Returns true if the page exists, false on 404/timeout/network error.
+async function verifyUrl(url: string): Promise<boolean> {
+  try {
+    const res = await fetch(url, {
+      method: 'GET',
+      signal: AbortSignal.timeout(7000),
+      redirect: 'follow',
+      headers: { 'User-Agent': 'GrantTracker/1.0' },
+    })
+    // Treat 404 and 410 as dead; allow redirects (3xx are followed), 2xx, even 403/429
+    // (403 means the page exists but blocks bots — still a real URL)
+    return res.status !== 404 && res.status !== 410 && res.status !== 400
+  } catch {
+    // Timeout or network error — give it the benefit of the doubt
+    return true
+  }
+}
+
 // Service-role client — never exposed to the browser, only used server-side.
 function getAdminClient() {
   return createClient(
@@ -102,7 +123,7 @@ After researching, return a JSON object with exactly this structure:
       "description": "2-3 sentences describing what it funds and who it is for",
       "amountRange": "£X,000–£X,000 or null if unknown",
       "deadline": "Month YYYY, Rolling, or null if unknown",
-      "applyUrl": "https://... (must be a real, specific URL — not a homepage)",
+      "applyUrl": "https://... (must be a URL you have confirmed exists via web search — do not guess or construct URLs; set null if you cannot verify it)",
       "notes": "One practical tip or caveat, e.g. about eligibility, timing or relationship-building"
     }
   ]
@@ -152,7 +173,22 @@ Return ONLY valid JSON — no markdown fences, no commentary outside the JSON ob
     }
     const result = JSON.parse(cleaned)
 
-    // ── 3. Store in cache (upsert so repeat queries overwrite stale rows) ───
+    // ── 3. Verify URLs — null-out any that return 404/410 ───────────────────
+    if (Array.isArray(result.grants)) {
+      const urlChecks = await Promise.allSettled(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        result.grants.map(async (g: any) => {
+          if (!g.applyUrl) return g
+          const alive = await verifyUrl(g.applyUrl)
+          return alive ? g : { ...g, applyUrl: null }
+        })
+      )
+      result.grants = urlChecks.map((r, i) =>
+        r.status === 'fulfilled' ? r.value : result.grants[i]
+      )
+    }
+
+    // ── 4. Store in cache (upsert so repeat queries overwrite stale rows) ───
     await supabase
       .from('deep_search_cache')
       .upsert({ query_key: queryKey, results: result }, { onConflict: 'query_key' })
