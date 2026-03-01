@@ -173,9 +173,10 @@ function StalenessBadge({ lastVerifiedAt }: { lastVerifiedAt?: string }) {
 }
 
 // ── Grant Card ───────────────────────────────────────────────────────────────
-function GrantCard({ item, hasOrg, interactions, onAddToPipeline, onDismiss, onUndismiss, onLike, onDislike }: {
+function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onDismiss, onUndismiss, onLike, onDislike }: {
   item: DisplayGrant
   hasOrg: boolean
+  hasSearch: boolean
   interactions: Set<InteractionAction>
   onAddToPipeline: (g: GrantOpportunity) => void
   onDismiss: (grantId: string) => void
@@ -264,8 +265,8 @@ function GrantCard({ item, hasOrg, interactions, onAddToPipeline, onDismiss, onU
               : grant.description}
           </p>
 
-          {/* Match reason */}
-          {hasOrg && reason && (
+          {/* Match reason — only when a search has been performed */}
+          {hasOrg && hasSearch && reason && (
             <div className="bg-sage/8 border border-sage/20 rounded-lg px-3.5 py-2.5 mb-3 flex items-start gap-2">
               <span className={`text-sm flex-shrink-0 ${scoreText}`}>{isAiScore ? '✦' : '●'}</span>
               <p className="text-sm text-forest leading-snug">{reason}</p>
@@ -312,7 +313,7 @@ function GrantCard({ item, hasOrg, interactions, onAddToPipeline, onDismiss, onU
         {/* Right: score + amount + deadline + actions */}
         <div className="flex flex-col items-end gap-3 min-w-[150px] flex-shrink-0">
 
-          {hasOrg && <MatchBadge score={score} isAi={isAiScore} breakdown={breakdown} />}
+          {hasOrg && hasSearch && <MatchBadge score={score} isAi={isAiScore} breakdown={breakdown} />}
 
           <div className="text-right">
             <p className="font-display text-xl font-bold text-gold">
@@ -1286,6 +1287,7 @@ export default function SearchPage() {
             key={item.grant.id}
             item={item}
             hasOrg={!!org}
+            hasSearch={query.trim() !== '' || item.isAiScore}
             interactions={interactions.get(item.grant.id) ?? new Set()}
             onAddToPipeline={handleAddToPipeline}
             onDismiss={handleDismiss}
