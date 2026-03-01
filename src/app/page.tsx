@@ -46,8 +46,8 @@ export default async function RootPage() {
           🇬🇧 For charities, organisations and grassroots ventures · Free to get started
         </div>
         <h1 className="font-display text-5xl sm:text-6xl font-bold text-forest leading-[1.1] mb-6 max-w-4xl mx-auto">
-          Find the grants<br />
-          <span className="text-gold">you&apos;ve been missing.</span>
+          UK grants, matched<br />
+          <span className="text-gold">to your organisation.</span>
         </h1>
         <p className="text-mid text-xl max-w-2xl mx-auto mb-4 leading-relaxed">
           A curated UK database, live AI research, and a full application pipeline — all in one place. Start free in minutes.
