@@ -946,6 +946,27 @@ export default function SearchPage() {
           </div>
         )}
 
+        {/* ── Entry type — always visible ── */}
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {([
+            { key: 'all',     label: 'All',         icon: '',   desc: 'Show everything',                                      cls: 'border-warm text-mid bg-white',                     active: 'bg-forest border-forest text-white' },
+            { key: 'live',    label: 'Open grant',  icon: '📅', desc: 'Specific round with a closing deadline',               cls: 'border-emerald-200 text-emerald-700 bg-emerald-50', active: 'bg-emerald-600 border-emerald-600 text-white' },
+            { key: 'rolling', label: 'Always open', icon: '🔄', desc: 'Rolling programme — apply any time',                  cls: 'border-blue-200 text-blue-600 bg-blue-50',          active: 'bg-blue-600 border-blue-600 text-white' },
+            { key: 'profile', label: 'Funder info', icon: 'ℹ',  desc: 'General funder profile — no specific round open now', cls: 'border-gray-200 text-gray-500 bg-gray-50',          active: 'bg-gray-500 border-gray-500 text-white' },
+          ] as const).map(({ key, label, icon, desc, cls, active }) => (
+            <button
+              key={key}
+              onClick={() => setEntryTypeFilter(key)}
+              title={desc}
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all ${
+                entryTypeFilter === key ? active : `${cls} hover:opacity-80`
+              }`}
+            >
+              {icon && <span>{icon}</span>}{label}
+            </button>
+          ))}
+        </div>
+
         {/* ── Filters button ── */}
         <button
           onClick={() => setFiltersOpen(o => !o)}
@@ -965,34 +986,6 @@ export default function SearchPage() {
         {/* ── Collapsible filters panel ── */}
         {filtersOpen && (
           <div className="mt-4 pt-4 border-t border-warm space-y-5">
-
-            {/* Entry type */}
-            <div>
-              <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">What am I looking at?</p>
-              <div className="flex flex-wrap gap-2">
-                {([
-                  { key: 'all',     label: 'All',         icon: '',   desc: 'Show everything',                                      cls: 'border-warm text-mid bg-white',                     active: 'bg-forest border-forest text-white' },
-                  { key: 'live',    label: 'Open grant',  icon: '📅', desc: 'Specific round with a closing deadline',               cls: 'border-emerald-200 text-emerald-700 bg-emerald-50', active: 'bg-emerald-600 border-emerald-600 text-white' },
-                  { key: 'rolling', label: 'Always open', icon: '🔄', desc: 'Rolling programme — apply any time',                  cls: 'border-blue-200 text-blue-600 bg-blue-50',          active: 'bg-blue-600 border-blue-600 text-white' },
-                  { key: 'profile', label: 'Funder info', icon: 'ℹ',  desc: 'General funder profile — no specific round open now', cls: 'border-gray-200 text-gray-500 bg-gray-50',          active: 'bg-gray-500 border-gray-500 text-white' },
-                ] as const).map(({ key, label, icon, desc, cls, active }) => (
-                  <button
-                    key={key}
-                    onClick={() => setEntryTypeFilter(key)}
-                    className={`flex flex-col items-start px-3 py-2 rounded-xl border text-left transition-all ${
-                      entryTypeFilter === key ? active : `${cls} hover:opacity-80`
-                    }`}
-                  >
-                    <span className="text-xs font-semibold flex items-center gap-1">
-                      {icon && <span>{icon}</span>}{label}
-                    </span>
-                    <span className={`text-xs mt-0.5 leading-snug ${entryTypeFilter === key ? 'opacity-75' : 'opacity-60'}`}>
-                      {desc}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
 
             {/* Funder type */}
             <div>
