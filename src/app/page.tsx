@@ -43,15 +43,15 @@ export default async function RootPage() {
       {/* ── Hero ── */}
       <section className="max-w-6xl mx-auto px-6 pt-20 pb-16 text-center">
         <div className="inline-flex items-center gap-2 bg-sage/10 text-sage text-xs font-semibold px-4 py-1.5 rounded-full mb-7">
-          🇬🇧 Built for UK charities &amp; community groups · Free to get started
+          🇬🇧 Built for UK charities, community groups &amp; grassroots ventures · Free to get started
         </div>
         <h1 className="font-display text-5xl sm:text-6xl font-bold text-forest leading-[1.1] mb-6 max-w-4xl mx-auto">
-          Find grants other charities miss.<br />
+          Find grants other organisations miss.<br />
           <span className="text-gold">Win more funding.</span>
         </h1>
         <p className="text-mid text-xl max-w-2xl mx-auto mb-4 leading-relaxed">
           Grant Tracker combines a curated database, live AI research, and a full application pipeline.
-          Everything a small charity needs to find and win funding, in one tool.
+          Everything you need to find and win funding — whether you&apos;re a charity, community group, CIC, or grassroots venture.
         </p>
         <p className="text-sm text-mid/70 mb-10">
           Other tools charge <span className="line-through">£150–£1,000+/year</span> for less. Grant Tracker starts free.
@@ -163,7 +163,7 @@ export default async function RootPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* Mock UI: Advanced Search */}
           <div className="bg-white/10 rounded-2xl p-5 border border-white/20">
-            <p className="text-xs text-mint/70 font-semibold uppercase tracking-wider mb-3">🔬 Advanced Search · Live results</p>
+            <p className="text-xs text-mint/70 font-semibold uppercase tracking-wider mb-3">🔬 Live Search · Live results</p>
             {/* Sector pills */}
             <div className="flex flex-wrap gap-1.5 mb-4">
               {['🧠 Mental Health', '🧒 Youth', '📚 Education & Training', '🏘 Community', '♿ Disability'].map((s, i) => (
@@ -194,13 +194,13 @@ export default async function RootPage() {
 
           <div>
             <div className="inline-flex items-center gap-2 bg-white/10 text-mint text-xs font-semibold px-3 py-1.5 rounded-full mb-5">
-              🔬 Feature 2 · Advanced Search
+              🔬 Feature 2 · Live Search
             </div>
             <h2 className="font-display text-3xl font-bold text-white mb-4">
               Finds local funders other tools completely miss
             </h2>
             <p className="text-mint/80 leading-relaxed mb-6">
-              Advanced Search uses live AI research to scan council websites, NHS commissioning pages, community foundation portals and specialist funders in real time. Not a database. Not last year's results.
+              Live Search uses AI to scan council websites, NHS commissioning pages, community foundation portals and specialist funders in real time. Not a database. Not last year&apos;s results.
             </p>
             <ul className="space-y-3">
               {[
@@ -366,7 +366,7 @@ export default async function RootPage() {
             {[
               { feature: 'Grant database search', them: '✓', us: '✓ 200+ curated UK grants' },
               { feature: 'AI-powered matching', them: '✗ No', us: '✓ Scores every grant for your org' },
-              { feature: 'Live web research', them: '✗ Static database', us: '✓ Advanced Search finds live results' },
+              { feature: 'Live web research', them: '✗ Static database', us: '✓ Live Search finds live results' },
               { feature: 'Hyper-local funders', them: '✗ Often missed', us: '✓ Borough, NHS & council grants' },
               { feature: 'Application pipeline', them: '✗ Separate tool needed', us: '✓ Built in, drag and drop kanban' },
               { feature: 'Writing progress tracking', them: '✗', us: '✓ Stage-by-stage progress tracker' },
@@ -395,12 +395,14 @@ export default async function RootPage() {
           <h2 className="font-display text-3xl font-bold text-forest mb-3">Built for the people doing the work</h2>
           <p className="text-mid max-w-md mx-auto">Small teams with big ambitions, not large development offices with specialist staff and six-figure budgets.</p>
         </div>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
           {[
             { emoji: '🏠', label: 'Registered Charities', desc: 'Manage multiple funders and applications without a dedicated grants manager.' },
             { emoji: '🌱', label: 'Community Groups', desc: 'Find local and national funding that fits your size, area, and cause.' },
             { emoji: '⚡', label: 'CICs & Social Enterprises', desc: 'Search trust, corporate, and government programmes in one place.' },
             { emoji: '🤝', label: 'Volunteer-led Orgs', desc: 'Simple enough for anyone to use with no fundraising experience needed.' },
+            { emoji: '🚀', label: 'Grassroots Businesses', desc: 'Discover grants open to early-stage and community-rooted ventures.' },
+            { emoji: '💡', label: 'Impact Entrepreneurs', desc: 'Find funding for sole traders and ventures with a social or environmental mission.' },
           ].map(item => (
             <div key={item.label} className="bg-white rounded-xl p-5 shadow-card text-center border border-warm">
               <div className="text-3xl mb-3">{item.emoji}</div>
@@ -503,7 +505,7 @@ export default async function RootPage() {
       {/* ── Pricing ── */}
       <section id="pricing" className="max-w-6xl mx-auto px-6 pb-24 scroll-mt-20">
         <div className="text-center mb-10">
-          <h2 className="font-display text-3xl font-bold text-forest mb-3">Pricing that makes sense for small charities</h2>
+          <h2 className="font-display text-3xl font-bold text-forest mb-3">Pricing that makes sense for small organisations and ventures</h2>
           <p className="text-mid max-w-md mx-auto">Start free. Upgrade when you need the full toolkit. No long contracts, no surprises.</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-2xl mx-auto">
@@ -536,12 +538,12 @@ export default async function RootPage() {
             <ul className="space-y-2.5 mb-7">
               {[
                 'Everything in Free',
-                '🔬 Advanced Search with live AI research',
+                '🔬 Live Search with live AI research',
                 '📋 Full funding pipeline',
                 '✏️ Writing progress tracker',
                 '⏰ Deadline alerts & urgency flags',
                 '📍 Hyper-local funder discovery',
-                'Organisation profile matching',
+                'Profile-matched grant recommendations',
               ].map(f => (
                 <li key={f} className="flex items-center gap-2.5 text-sm text-mint">
                   <span className="text-sage font-bold flex-shrink-0">✓</span>{f}
@@ -602,7 +604,7 @@ export default async function RootPage() {
       <section className="max-w-6xl mx-auto px-6 pb-24 text-center">
         <div className="bg-white rounded-2xl shadow-card-lg p-12 border border-warm">
           <div className="inline-flex items-center gap-2 bg-sage/10 text-sage text-xs font-semibold px-4 py-1.5 rounded-full mb-6">
-            🇬🇧 Trusted by UK charities &amp; community groups
+            🇬🇧 Trusted by UK charities, community groups &amp; grassroots ventures
           </div>
           <h2 className="font-display text-4xl font-bold text-forest mb-3">Ready to find your next grant?</h2>
           <p className="text-mid mb-8 max-w-sm mx-auto">Set up your free account in under two minutes. Search 200+ grants immediately, no credit card needed.</p>
