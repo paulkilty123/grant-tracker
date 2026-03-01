@@ -11,7 +11,7 @@ interface LogoProps {
 }
 
 export default function Logo({ variant = 'dark', size = 'md' }: LogoProps) {
-  const textSize = size === 'sm' ? 'text-xl' : size === 'lg' ? 'text-3xl' : 'text-2xl'
+  const textSize = size === 'sm' ? 'text-2xl' : size === 'lg' ? 'text-4xl' : 'text-3xl'
 
   // Dark variant: dark forest + sage (matches the PDF logo on light backgrounds)
   // Light variant: white + mint (for dark sidebar backgrounds)
