@@ -51,7 +51,7 @@ export default async function RootPage() {
         <p className="text-mid text-xl max-w-2xl mx-auto mb-4 leading-relaxed">
           800+ UK funding opportunities, AI matching that learns from your feedback, and a full application pipeline — all in one place.
         </p>
-        <p className="text-sm text-mid/70 mb-10">
+        <p className="text-base text-mid/70 mb-10">
           Other tools charge <span className="line-through">£150–£1,000+/year</span> for less. Grant Tracker starts free.
         </p>
         <div className="flex items-center justify-center gap-4 flex-wrap">
@@ -92,7 +92,7 @@ export default async function RootPage() {
             <h2 className="font-display text-3xl font-bold text-forest mb-4">
               800+ UK funding opportunities,<br />ranked by AI to your mission
             </h2>
-            <p className="text-mid leading-relaxed mb-6">
+            <p className="text-lg text-mid leading-relaxed mb-6">
               Search grants, competitions, social loans and matched crowdfunding — not just the obvious sources, but the specialist and hyper-local funders too. AI Search ranks every result by how well it fits your mission, income band and eligibility. Not keyword guesswork.
             </p>
             <ul className="space-y-3">
@@ -225,7 +225,7 @@ export default async function RootPage() {
             <h2 className="font-display text-3xl font-bold text-forest mb-4">
               Results that get sharper<br />every time you use it
             </h2>
-            <p className="text-mid leading-relaxed mb-6">
+            <p className="text-lg text-mid leading-relaxed mb-6">
               Grant Tracker learns what matters to you. Complete your profile and every result gets an AI match score. Rate results with a thumbs up or down and the system adjusts — boosting funding types and sectors you respond to, and downranking the ones that don&apos;t fit.
             </p>
             <ul className="space-y-3">
@@ -307,7 +307,7 @@ export default async function RootPage() {
             <h2 className="font-display text-3xl font-bold text-forest mb-4">
               A pipeline that shows you exactly where every application stands
             </h2>
-            <p className="text-mid leading-relaxed mb-6">
+            <p className="text-lg text-mid leading-relaxed mb-6">
               Move grants from Identified → Researching → Applying → Submitted → Won with a simple drag-and-drop board. Each card holds your notes, contacts, deadlines and writing progress — everything in one place, nothing lost in a spreadsheet.
             </p>
             <ul className="space-y-3">
@@ -411,7 +411,7 @@ export default async function RootPage() {
               <h2 className="font-display text-3xl font-bold text-forest mb-4">
                 A dashboard that tells you what needs attention today
               </h2>
-              <p className="text-sm text-mid leading-relaxed mb-4">
+              <p className="text-base text-mid leading-relaxed mb-4">
                 Your dashboard shows you what matters right now — new grants added this week, upcoming deadlines ranked by urgency, and a snapshot of your full pipeline. Anything within 14 days gets flagged. Email alerts notify you when new funding matches your profile, so you never find out too late.
               </p>
               <ul className="space-y-2 mb-4">
@@ -496,7 +496,7 @@ export default async function RootPage() {
             <div key={item.label} className="bg-white rounded-xl p-5 shadow-card text-center border border-warm">
               <div className="text-3xl mb-3">{item.emoji}</div>
               <p className="font-display font-bold text-forest text-sm mb-1.5">{item.label}</p>
-              <p className="text-xs text-mid leading-relaxed">{item.desc}</p>
+              <p className="text-sm text-mid leading-relaxed">{item.desc}</p>
             </div>
           ))}
         </div>
@@ -565,7 +565,7 @@ export default async function RootPage() {
               <blockquote className="font-display text-xl text-forest font-semibold leading-snug mb-6 border-l-4 border-sage pl-5">
                 "Finding the right grant has always been harder than it should be. The tools that existed were too expensive, too generic, and built for organisations with a dedicated grants team — not for the people actually doing the work."
               </blockquote>
-              <div className="space-y-4 text-mid text-sm leading-relaxed">
+              <div className="space-y-4 text-mid text-base leading-relaxed">
                 <p>
                   Grant Tracker was built from direct experience of the sector. Across charities, social enterprises and community organisations, the grant search process is consistently one of the most time-consuming and frustrating parts of running a mission-driven organisation — sifting through outdated databases, missing hyper-local funders that never appear in national searches, and juggling applications across spreadsheets and inboxes.
                 </p>
