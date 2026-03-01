@@ -21,8 +21,8 @@ const config: Config = {
         light:   '#9b9b9b',
       },
       fontFamily: {
-        sans:    ['Manrope', 'sans-serif'],
-        display: ['Manrope', 'sans-serif'],
+        sans:    ['var(--font-manrope)', 'sans-serif'],
+        display: ['var(--font-manrope)', 'sans-serif'],
       },
       borderRadius: {
         DEFAULT: '12px',
