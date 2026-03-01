@@ -108,6 +108,7 @@ export interface GrantOpportunity {
   applyUrl: string | null
   source: 'three_sixty_giving' | 'manual' | 'scraped'
   dateAdded?: string        // ISO date, used for "Recently Added" section
+  lastVerifiedAt?: string   // ISO date: last time crawler confirmed this grant was still live
   matchScore?: number       // 0–100, computed per-org
 }
 

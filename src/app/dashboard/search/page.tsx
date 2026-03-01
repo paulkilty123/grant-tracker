@@ -156,6 +156,19 @@ function MatchBadge({ score, isAi, breakdown }: { score: number; isAi: boolean; 
   )
 }
 
+// ── Staleness badge ───────────────────────────────────────────────────────────
+function StalenessBadge({ lastVerifiedAt }: { lastVerifiedAt?: string }) {
+  if (!lastVerifiedAt) return null
+  const today = new Date().toISOString().split('T')[0]
+  const msAgo = new Date(today).getTime() - new Date(lastVerifiedAt).getTime()
+  const daysAgo = Math.round(msAgo / (1000 * 60 * 60 * 24))
+
+  if (daysAgo <= 1)  return <span className="text-[10px] text-emerald-600 font-medium">✓ Verified today</span>
+  if (daysAgo <= 7)  return <span className="text-[10px] text-emerald-500 font-medium">✓ Verified {daysAgo}d ago</span>
+  if (daysAgo <= 14) return <span className="text-[10px] text-amber-500 font-medium">Verified {daysAgo}d ago</span>
+  return <span className="text-[10px] text-amber-600 font-medium">⚠ Not verified in {daysAgo}d</span>
+}
+
 // ── Grant Card ───────────────────────────────────────────────────────────────
 function GrantCard({ item, hasOrg, interactions, onAddToPipeline, onDismiss, onUndismiss, onLike, onDislike }: {
   item: DisplayGrant
@@ -232,7 +245,10 @@ function GrantCard({ item, hasOrg, interactions, onAddToPipeline, onDismiss, onU
                   {entryBadge.label}
                 </span>
               </div>
-              <p className="text-sm text-mid">{grant.funder}</p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm text-mid">{grant.funder}</p>
+                {grant.source === 'scraped' && <StalenessBadge lastVerifiedAt={grant.lastVerifiedAt} />}
+              </div>
             </div>
           </div>
 
@@ -398,7 +414,8 @@ function normaliseScrapedGrant(row: Record<string, unknown>): GrantOpportunity {
     eligibilityCriteria:  Array.isArray(row.eligibility_criteria) ? (row.eligibility_criteria as string[]) : [],
     applyUrl:             row.apply_url ? String(row.apply_url) : null,
     source:               'scraped',
-    dateAdded:            row.first_seen_at ? String(row.first_seen_at).split('T')[0] : undefined,
+    dateAdded:            row.first_seen_at  ? String(row.first_seen_at).split('T')[0]  : undefined,
+    lastVerifiedAt:       row.last_seen_at   ? String(row.last_seen_at).split('T')[0]   : undefined,
   }
 }
 
@@ -413,7 +430,8 @@ export default function SearchPage() {
   const [toast, setToast]               = useState<string | null>(null)
   const [org, setOrg]                   = useState<Organisation | null>(null)
   const [userId, setUserId]             = useState('')
-  const [sortBy, setSortBy]             = useState<'match' | 'amount'>('match')
+  const [sortBy, setSortBy]             = useState<'match' | 'amount' | 'freshest'>('match')
+  const [freshnessFilter, setFreshnessFilter] = useState<'all' | '7d' | '14d' | '30d'>('all')
   const [interactions, setInteractions] = useState<Map<string, Set<InteractionAction>>>(new Map())
   const [showDismissed, setShowDismissed] = useState(false)
   const [scrapedGrants, setScrapedGrants] = useState<GrantOpportunity[]>([])
@@ -678,7 +696,16 @@ export default function SearchPage() {
         g.sectors.some(s => activeSectors.has(s))
       const gEntryType = g.deadline ? 'live' : g.isRolling ? 'rolling' : 'profile'
       const matchesEntryType = entryTypeFilter === 'all' || gEntryType === entryTypeFilter
-      return matchesQuery && matchesType && matchesAmount && matchesDeadline && matchesSectors && matchesEntryType
+      // Freshness filter — only show grants verified within the selected window
+      const matchesFreshness = (() => {
+        if (freshnessFilter === 'all') return true
+        if (!g.lastVerifiedAt) return true // no verification date — don't hide
+        const daysMap = { '7d': 7, '14d': 14, '30d': 30 } as const
+        const cutoff = new Date()
+        cutoff.setDate(cutoff.getDate() - daysMap[freshnessFilter])
+        return new Date(g.lastVerifiedAt) >= cutoff
+      })()
+      return matchesQuery && matchesType && matchesAmount && matchesDeadline && matchesSectors && matchesEntryType && matchesFreshness
     })
 
     if (aiResults) {
@@ -730,6 +757,12 @@ export default function SearchPage() {
       withScores.sort((a, b) => b.score - a.score)
     } else if (sortBy === 'amount') {
       withScores.sort((a, b) => (b.grant.amountMax ?? 0) - (a.grant.amountMax ?? 0))
+    } else if (sortBy === 'freshest') {
+      withScores.sort((a, b) => {
+        const aDate = a.grant.lastVerifiedAt ?? a.grant.dateAdded ?? ''
+        const bDate = b.grant.lastVerifiedAt ?? b.grant.dateAdded ?? ''
+        return bDate.localeCompare(aDate)
+      })
     }
 
     return withScores
@@ -806,7 +839,8 @@ export default function SearchPage() {
     deadlineFilter !== 'all',
     activeSectors.size > 0,
     entryTypeFilter !== 'all',
-    org && sortBy !== 'match',
+    freshnessFilter !== 'all',
+    sortBy !== 'match',
   ].filter(Boolean).length
 
   function resetAllFilters() {
@@ -817,6 +851,7 @@ export default function SearchPage() {
     setActiveSectors(new Set())
     setSortBy('match')
     setEntryTypeFilter('all')
+    setFreshnessFilter('all')
   }
 
   function toggleGroup(label: string) {
@@ -998,21 +1033,45 @@ export default function SearchPage() {
                   ))}
                 </div>
               </div>
-              {org && !aiResults && (
+              {!aiResults && (
                 <div>
                   <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Sort</p>
                   <div className="flex gap-2 flex-wrap">
-                    {(['match', 'amount'] as const).map(v => (
+                    {([
+                      { v: 'match',   label: 'Best match',     show: !!org },
+                      { v: 'amount',  label: 'Largest first',  show: true  },
+                      { v: 'freshest',label: '🕐 Freshest',    show: true  },
+                    ] as const).filter(x => x.show).map(({ v, label }) => (
                       <button key={v} onClick={() => setSortBy(v)}
                         className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
                           sortBy === v ? 'bg-forest border-forest text-white' : 'border-warm text-mid hover:border-sage'
                         }`}>
-                        {v === 'match' ? 'Best match' : 'Largest first'}
+                        {label}
                       </button>
                     ))}
                   </div>
                 </div>
               )}
+
+              {/* Freshness filter */}
+              <div>
+                <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Verified within</p>
+                <div className="flex gap-2 flex-wrap">
+                  {([
+                    { v: 'all', label: 'Any time' },
+                    { v: '7d',  label: '7 days'   },
+                    { v: '14d', label: '14 days'  },
+                    { v: '30d', label: '30 days'  },
+                  ] as const).map(({ v, label }) => (
+                    <button key={v} onClick={() => setFreshnessFilter(v)}
+                      className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                        freshnessFilter === v ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-warm text-mid hover:border-sage'
+                      }`}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
 
             {/* Sectors — grouped, collapsed by default */}

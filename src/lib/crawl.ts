@@ -3057,11 +3057,20 @@ function parseAmountRange(str: string): { min: number | null; max: number | null
 }
 
 // ── Date parsers ──────────────────────────────────────────────────────────────
+// Compare date strings (YYYY-MM-DD) not datetimes — avoids incorrectly
+// discarding today's deadline when the cron runs early in the morning.
+function todayISO(): string {
+  return new Date().toISOString().split('T')[0]
+}
+
 function parseDeadline(raw: unknown): string | null {
   if (!raw) return null
   const d = new Date(String(raw))
-  if (isNaN(d.getTime()) || d < new Date()) return null
-  return d.toISOString().split('T')[0]
+  if (isNaN(d.getTime())) return null
+  const iso = d.toISOString().split('T')[0]
+  // Discard only dates strictly before today (yesterday or earlier)
+  if (iso < todayISO()) return null
+  return iso
 }
 
 // Parses "14 May 2026 4:00pm UK time" → "2026-05-14"
@@ -3070,8 +3079,10 @@ function parseUKRIDate(str: string): string | null {
   const match = str.match(/(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})/)
   if (!match) return null
   const d = new Date(`${match[2]} ${match[1]} ${match[3]}`)
-  if (isNaN(d.getTime()) || d < new Date()) return null
-  return d.toISOString().split('T')[0]
+  if (isNaN(d.getTime())) return null
+  const iso = d.toISOString().split('T')[0]
+  if (iso < todayISO()) return null
+  return iso
 }
 
 // ── Misc helpers ──────────────────────────────────────────────────────────────
@@ -3095,12 +3106,47 @@ export function normaliseList(raw: unknown): string[] {
   return []
 }
 
+// ── Data validation ───────────────────────────────────────────────────────────
+/**
+ * Sanitise a single scraped grant before it goes to the DB:
+ *   - skip if title is blank or too short (< 5 chars)
+ *   - null out negative amounts
+ *   - swap amount_min / amount_max if inverted
+ *   - cap implausibly large amounts (> £50m is almost certainly a parse error)
+ */
+function sanitiseGrant(g: ScrapedGrant): ScrapedGrant | null {
+  if (!g.title || g.title.trim().length < 5) return null
+
+  let minAmt = g.amount_min
+  let maxAmt = g.amount_max
+
+  // Null out negative values
+  if (minAmt !== null && minAmt < 0) minAmt = null
+  if (maxAmt !== null && maxAmt < 0) maxAmt = null
+
+  // Swap if inverted
+  if (minAmt !== null && maxAmt !== null && minAmt > maxAmt) {
+    [minAmt, maxAmt] = [maxAmt, minAmt]
+  }
+
+  // Cap implausible amounts (> £50m is almost certainly a parse error)
+  const MAX_PLAUSIBLE = 50_000_000
+  if (minAmt !== null && minAmt > MAX_PLAUSIBLE) minAmt = null
+  if (maxAmt !== null && maxAmt > MAX_PLAUSIBLE) maxAmt = null
+
+  return { ...g, amount_min: minAmt, amount_max: maxAmt }
+}
+
 // ── DB upsert ─────────────────────────────────────────────────────────────────
 async function upsertGrants(source: string, grants: ScrapedGrant[]): Promise<CrawlResult> {
   if (grants.length === 0) return { source, fetched: 0, upserted: 0 }
   const supabase = adminClient()
 
-  const rows = grants.map(g => ({
+  // Sanitise and drop invalid rows before upserting
+  const valid = grants.map(sanitiseGrant).filter((g): g is ScrapedGrant => g !== null)
+  if (valid.length === 0) return { source, fetched: grants.length, upserted: 0, error: 'All rows failed validation' }
+
+  const rows = valid.map(g => ({
     ...g,
     last_seen_at: new Date().toISOString(),
     is_active:    true,
@@ -3111,7 +3157,7 @@ async function upsertGrants(source: string, grants: ScrapedGrant[]): Promise<Cra
     .upsert(rows, { onConflict: 'external_id' })
 
   if (error) return { source, fetched: grants.length, upserted: 0, error: error.message }
-  return { source, fetched: grants.length, upserted: grants.length }
+  return { source, fetched: grants.length, upserted: valid.length }
 }
 
 // ── Source 46 — Garfield Weston Foundation ────────────────────────────────────
