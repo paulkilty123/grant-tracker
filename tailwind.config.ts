@@ -21,8 +21,8 @@ const config: Config = {
         light:   '#9b9b9b',
       },
       fontFamily: {
-        sans:    ['var(--font-baloo)', 'sans-serif'],
-        display: ['var(--font-baloo)', 'sans-serif'],
+        sans:    ['var(--font-nunito)', 'sans-serif'],
+        display: ['var(--font-nunito)', 'sans-serif'],
       },
       borderRadius: {
         DEFAULT: '12px',

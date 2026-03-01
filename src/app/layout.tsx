@@ -1,11 +1,11 @@
 import type { Metadata } from 'next'
-import { Baloo_Tammudu_2 } from 'next/font/google'
+import { Nunito } from 'next/font/google'
 import './globals.css'
 
-const baloo = Baloo_Tammudu_2({
+const nunito = Nunito({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
-  variable: '--font-baloo',
+  weight: ['300', '400', '500', '600', '700', '800'],
+  variable: '--font-nunito',
   display: 'swap',
 })
 
@@ -20,7 +20,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={baloo.variable}>
+    <html lang="en" className={nunito.variable}>
       <body>{children}</body>
     </html>
   )
