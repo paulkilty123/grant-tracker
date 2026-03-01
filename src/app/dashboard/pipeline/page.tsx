@@ -125,7 +125,8 @@ function PipelineModal({
   onDelete: (id: string) => Promise<void>
   onMove: (id: string, stage: PipelineStage) => void
 }) {
-  const isApplyingOrLater = ['applying', 'submitted', 'won', 'declined'].includes(item.stage)
+  const [localStage, setLocalStage] = useState<PipelineStage>(item.stage)
+  const isApplyingOrLater = ['applying', 'submitted', 'won', 'declined'].includes(localStage)
 
   const [notes, setNotes] = useState(item.notes ?? '')
   const [progress, setProgress] = useState(getWritingStage(item.application_progress).value)
@@ -276,10 +277,10 @@ function PipelineModal({
               {PIPELINE_STAGES.map(s => (
                 <button
                   key={s.id}
-                  onClick={() => { onMove(item.id, s.id) }}
+                  onClick={() => { onMove(item.id, s.id); setLocalStage(s.id as PipelineStage) }}
                   className={cn(
                     'py-2 px-2 rounded-lg border-2 text-xs font-medium transition-all text-center',
-                    item.stage === s.id
+                    localStage === s.id
                       ? 'border-sage bg-green-50 text-forest font-semibold'
                       : 'border-warm text-mid hover:border-sage hover:text-sage'
                   )}
