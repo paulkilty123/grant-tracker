@@ -43,7 +43,7 @@ export default async function RootPage() {
       {/* ── Hero ── */}
       <section className="max-w-6xl mx-auto px-6 pt-20 pb-16 text-center">
         <div className="inline-flex items-center gap-2 bg-sage/10 text-sage text-xs font-semibold px-4 py-1.5 rounded-full mb-7">
-          🇬🇧 Built for UK charities, community groups &amp; grassroots ventures · Free to get started
+          🇬🇧 Built for every charity, organisation or venture · Free to get started
         </div>
         <h1 className="font-display text-5xl sm:text-6xl font-bold text-forest leading-[1.1] mb-6 max-w-4xl mx-auto">
           Find grants other organisations miss.<br />
@@ -604,7 +604,7 @@ export default async function RootPage() {
       <section className="max-w-6xl mx-auto px-6 pb-24 text-center">
         <div className="bg-white rounded-2xl shadow-card-lg p-12 border border-warm">
           <div className="inline-flex items-center gap-2 bg-sage/10 text-sage text-xs font-semibold px-4 py-1.5 rounded-full mb-6">
-            🇬🇧 Trusted by UK charities, community groups &amp; grassroots ventures
+            🇬🇧 Trusted by UK charities, organisations &amp; ventures
           </div>
           <h2 className="font-display text-4xl font-bold text-forest mb-3">Ready to find your next grant?</h2>
           <p className="text-mid mb-8 max-w-sm mx-auto">Set up your free account in under two minutes. Search 200+ grants immediately, no credit card needed.</p>
