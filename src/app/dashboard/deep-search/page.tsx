@@ -300,28 +300,30 @@ export default function AdvancedSearchPage() {
               placeholder='Describe what you need, e.g. "youth mental health London"'
             />
           </div>
-          {org && (
-            <button
-              onClick={handleSmartMatch}
-              disabled={loading}
-              className="btn-primary btn-sm whitespace-nowrap disabled:opacity-50 flex-shrink-0"
-              title={`Fill search with details for ${org.name}`}
-            >
-              ✦ Match my org
-            </button>
-          )}
           <button
             onClick={handleSearch}
             disabled={loading || !canSearch}
             className="px-6 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50 whitespace-nowrap"
           >
-            {loading ? '⏳ Researching…' : '🔬 Advanced Search'}
+            {loading ? '⏳ Researching…' : '🔬 Live Search'}
           </button>
         </div>
 
+        {org && (
+          <div className="mt-2.5">
+            <button
+              onClick={handleSmartMatch}
+              disabled={loading}
+              className="text-sm text-sage font-medium hover:underline disabled:opacity-50"
+            >
+              ✦ Fill from my org profile
+            </button>
+          </div>
+        )}
+
         {!org && (
           <p className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2 mt-3">
-            <strong>Tip:</strong> Complete your <a href="/dashboard/profile" className="underline hover:text-amber-900">organisation profile</a> to unlock the ✦ Match my org button.
+            <strong>Tip:</strong> Complete your <a href="/dashboard/profile" className="underline hover:text-amber-900">organisation profile</a> to unlock ✦ Fill from my org profile.
           </p>
         )}
 
