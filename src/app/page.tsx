@@ -72,7 +72,7 @@ export default async function RootPage() {
             { icon: '🆓', stat: 'Free', label: 'to search 800+ grants' },
             { icon: '🎯', stat: 'AI Match', label: 'learns from your feedback' },
             { icon: '📋', stat: 'Pipeline', label: 'tracks every application' },
-            { icon: '💷', stat: '£19/mo', label: 'for the full toolkit' },
+            { icon: '🔔', stat: 'Alerts', label: 'when new matches appear' },
           ].map(item => (
             <div key={item.stat} className="bg-white rounded-xl p-4 shadow-card text-center border border-warm">
               <div className="text-2xl mb-1">{item.icon}</div>
