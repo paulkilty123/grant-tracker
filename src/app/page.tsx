@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import Logo from '@/components/Logo'
+import ContactForm from '@/components/ContactForm'
 
 export default async function RootPage() {
   const supabase = await createClient()
@@ -24,6 +25,7 @@ export default async function RootPage() {
                 { label: 'Features', href: '#features' },
                 { label: 'Compare', href: '#compare' },
                 { label: 'About', href: '#about' },
+                { label: 'Contact', href: '#contact' },
               ].map(link => (
                 <a key={link.href} href={link.href}
                   className="text-sm text-mid hover:text-forest font-medium px-3 py-1.5 rounded-lg hover:bg-sage/10 transition-all">
@@ -624,6 +626,45 @@ export default async function RootPage() {
         </div>
       </section>
 
+      {/* ── Contact ── */}
+      <section id="contact" className="max-w-6xl mx-auto px-6 pb-24 scroll-mt-20">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+          <div>
+            <div className="inline-flex items-center gap-2 bg-sage/10 text-sage text-xs font-semibold px-3 py-1.5 rounded-full mb-5">
+              ✉️ Get in touch
+            </div>
+            <h2 className="font-display text-3xl font-bold text-forest mb-4">
+              Questions? We&apos;d love to hear from you
+            </h2>
+            <p className="text-lg text-mid leading-normal mb-6">
+              Whether you&apos;re curious about how Grant Tracker works, want to suggest something, or just want to say hello — drop us a message and we&apos;ll get back to you.
+            </p>
+            <div className="space-y-3">
+              {[
+                { icon: '💡', text: 'Suggest a feature or improvement' },
+                { icon: '🐛', text: 'Report a bug or something not working' },
+                { icon: '🤝', text: 'Partnership or collaboration enquiries' },
+                { icon: '❓', text: 'Any other questions' },
+              ].map(item => (
+                <div key={item.text} className="flex items-center gap-3 text-sm text-mid">
+                  <span>{item.icon}</span>
+                  {item.text}
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-light mt-6">
+              Or email us directly at{' '}
+              <a href="mailto:hello@granttracker.co.uk" className="text-sage hover:underline font-medium">
+                hello@granttracker.co.uk
+              </a>
+            </p>
+          </div>
+          <div className="bg-white rounded-2xl shadow-card p-8 border border-warm">
+            <ContactForm />
+          </div>
+        </div>
+      </section>
+
       {/* ── Final CTA ── */}
       <section className="max-w-6xl mx-auto px-6 pb-24 text-center">
         <div className="bg-white rounded-2xl shadow-card-lg p-12 border border-warm">
@@ -631,7 +672,7 @@ export default async function RootPage() {
             🇬🇧 Trusted by UK charities, community groups, social enterprises &amp; impact founders
           </div>
           <h2 className="font-display text-4xl font-bold text-forest mb-3">Ready to find your next grant?</h2>
-          <p className="text-mid mb-8 max-w-sm mx-auto">Set up your free account in under two minutes. Search 200+ grants immediately, no credit card needed.</p>
+          <p className="text-mid mb-8 max-w-sm mx-auto">Set up your free account in under two minutes. Search 800+ grants immediately, no credit card needed.</p>
           <Link href="/auth/signup" className="btn-gold px-12 py-3.5 text-base font-semibold inline-block">
             Create free account →
           </Link>
@@ -651,8 +692,8 @@ export default async function RootPage() {
               <Link href="/auth/login" className="text-xs text-mid hover:text-charcoal transition-colors">Sign in</Link>
               <Link href="/auth/signup" className="text-xs text-mid hover:text-charcoal transition-colors">Sign up free</Link>
               <a href="#features" className="text-xs text-mid hover:text-charcoal transition-colors">Features</a>
-              <a href="#pricing" className="text-xs text-mid hover:text-charcoal transition-colors">Pricing</a>
-              <a href="mailto:hello@granttracker.co.uk" className="text-xs text-mid hover:text-charcoal transition-colors">Contact</a>
+              <a href="#about" className="text-xs text-mid hover:text-charcoal transition-colors">About</a>
+              <a href="#contact" className="text-xs text-mid hover:text-charcoal transition-colors">Contact</a>
             </div>
           </div>
           <div className="border-t border-warm pt-5 flex flex-col sm:flex-row items-center justify-between gap-3">
