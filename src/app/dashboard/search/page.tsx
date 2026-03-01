@@ -95,6 +95,9 @@ const FUNDER_TYPES = [
   { id: 'corporate',         label: 'Corporate' },
   { id: 'local_authority',   label: 'Local Authority' },
   { id: 'government',        label: 'Government' },
+  { id: 'competition',       label: '🏆 Competition' },
+  { id: 'loan',              label: '🔄 Social Loan' },
+  { id: 'crowdfund_match',   label: '🤝 Crowdfund Match' },
 ]
 
 interface AIResult {
@@ -193,6 +196,9 @@ function GrantCard({ item, hasOrg, interactions, onAddToPipeline, onDismiss, onU
     local_authority:     'bg-purple-50 text-purple-700',
     housing_association: 'bg-teal-50 text-teal-700',
     government:          'bg-red-50 text-red-700',
+    competition:         'bg-yellow-50 text-yellow-700',
+    loan:                'bg-sky-50 text-sky-700',
+    crowdfund_match:     'bg-pink-50 text-pink-700',
   }
 
   const { text: scoreText } = scoreColour(score)
@@ -388,6 +394,7 @@ const RECENT_GRANTS  = SEED_GRANTS.filter(g => g.dateAdded && g.dateAdded >= SIX
 const VALID_FUNDER_TYPES: FunderType[] = [
   'trust_foundation', 'local_authority', 'housing_association',
   'corporate', 'lottery', 'government', 'other',
+  'competition', 'loan', 'crowdfund_match',
 ]
 
 function normaliseScrapedGrant(row: Record<string, unknown>): GrantOpportunity {

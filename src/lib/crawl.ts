@@ -5368,13 +5368,302 @@ async function crawlActiveTravelEngland(): Promise<CrawlResult> {
   } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// BATCH 9 — Alternative funding routes (competitions, social loans, crowdfund
+//            match funds). Targets grassroots founders and impact entrepreneurs
+//            who access capital through routes formal platforms ignore.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ── Source 121 — UnLtd ────────────────────────────────────────────────────────
+async function crawlUnLtd(): Promise<CrawlResult> {
+  const SOURCE = 'unltd'
+  try {
+    const html = await fetchHtml('https://unltd.org.uk/find-your-support/')
+    const root = parseHTML(html)
+    const grants: ScrapedGrant[] = []
+    root.querySelectorAll('article, .support-card, .programme-card').forEach(card => {
+      const title = card.querySelector('h2, h3, .card-title')?.text.trim()
+      if (!title) return
+      const desc  = card.querySelector('p, .card-body')?.text.trim() ?? ''
+      const href  = card.querySelector('a')?.getAttribute('href') ?? ''
+      const url   = href.startsWith('http') ? href : `https://unltd.org.uk${href}`
+      const slug  = slugify(url)
+      grants.push({
+        external_id:          `unltd_${slug}`,
+        source:               SOURCE,
+        title:                `UnLtd — ${title}`,
+        funder:               'UnLtd',
+        funder_type:          'competition',
+        description:          desc || 'UnLtd supports social entrepreneurs through awards, training and networks. Awards of up to £500 (Do It) and up to £15,000 (Build It) for social ventures at different stages.',
+        amount_min:           500,
+        amount_max:           15000,
+        deadline:             null,
+        is_rolling:           true,
+        is_local:             false,
+        sectors:              ['social enterprise', 'community', 'social innovation', 'entrepreneurship'],
+        eligibility_criteria: ['Social entrepreneurs at any stage', 'Based in the UK', 'Social mission at the heart of the venture'],
+        apply_url:            url,
+        raw_data:             {} as Record<string, unknown>,
+      })
+    })
+    if (grants.length === 0) return await upsertGrants(SOURCE, [{
+      external_id: `${SOURCE}_awards`, source: SOURCE,
+      title: 'UnLtd — Awards for Social Entrepreneurs',
+      funder: 'UnLtd', funder_type: 'competition',
+      description: 'UnLtd is the leading funder of social entrepreneurs in the UK. The Do It Award (up to £500) supports people taking their first steps, while the Build It Award (up to £15,000) helps those with proven ideas grow their impact. Awards come with practical support and access to a network of fellow social entrepreneurs.',
+      amount_min: 500, amount_max: 15000, deadline: null, is_rolling: true, is_local: false,
+      sectors: ['social enterprise', 'entrepreneurship', 'community', 'social innovation'],
+      eligibility_criteria: ['Social entrepreneurs at any stage', 'Based in the UK', 'Venture must have a primary social mission'],
+      apply_url: 'https://unltd.org.uk/find-your-support/', raw_data: {} as Record<string, unknown>,
+    }])
+    return await upsertGrants(SOURCE, grants.slice(0, 10))
+  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
+}
+
+// ── Source 122 — School for Social Entrepreneurs (SSE) ───────────────────────
+async function crawlSSEFellowships(): Promise<CrawlResult> {
+  const SOURCE = 'sse_fellowships'
+  try {
+    return await upsertGrants(SOURCE, [
+      {
+        external_id: `${SOURCE}_fellowship`, source: SOURCE,
+        title: 'SSE Fellowship Programme — Learning & Bursary',
+        funder: 'School for Social Entrepreneurs', funder_type: 'competition',
+        description: 'The School for Social Entrepreneurs runs year-long fellowship programmes combining peer learning with bursaries of £2,500–£10,000. Programmes support social entrepreneurs to grow income, impact and resilience. SSE has programmes across England, Scotland, Wales and Ireland, with specialist tracks for health, housing, rural and other themes.',
+        amount_min: 2500, amount_max: 10000, deadline: null, is_rolling: true, is_local: false,
+        sectors: ['social enterprise', 'entrepreneurship', 'education', 'community', 'health'],
+        eligibility_criteria: ['Social entrepreneurs running a social venture', 'Based in the UK or Ireland', 'Venture generating some income (not pre-idea stage)', 'Open to CICs, charities, social enterprises and community businesses'],
+        apply_url: 'https://www.sse.org.uk/programmes/apply-for-a-programme', raw_data: {} as Record<string, unknown>,
+      },
+    ])
+  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
+}
+
+// ── Source 123 — Nesta Challenges ─────────────────────────────────────────────
+async function crawlNestaChallenges(): Promise<CrawlResult> {
+  const SOURCE = 'nesta_challenges'
+  try {
+    const html = await fetchHtml('https://www.nesta.org.uk/project/challenges/')
+    const root = parseHTML(html)
+    const grants: ScrapedGrant[] = []
+    root.querySelectorAll('article, .challenge-card, .project-card').forEach(card => {
+      const title = card.querySelector('h2, h3, .card-title')?.text.trim()
+      if (!title) return
+      const desc = card.querySelector('p, .card-body')?.text.trim() ?? ''
+      const href = card.querySelector('a')?.getAttribute('href') ?? ''
+      const url  = href.startsWith('http') ? href : `https://www.nesta.org.uk${href}`
+      grants.push({
+        external_id:          `nesta_challenge_${slugify(url)}`,
+        source:               SOURCE,
+        title:                `Nesta Challenge — ${title}`,
+        funder:               'Nesta', funder_type: 'competition',
+        description:          desc || 'Nesta innovation challenge with prize fund for the best solutions.',
+        amount_min:           10000, amount_max: 1000000, deadline: null, is_rolling: false, is_local: false,
+        sectors:              ['social innovation', 'technology', 'health', 'climate', 'education'],
+        eligibility_criteria: ['Open to social enterprises, startups, charities and individuals', 'UK-based or with UK operations'],
+        apply_url:            url, raw_data: {} as Record<string, unknown>,
+      })
+    })
+    if (grants.length === 0) return await upsertGrants(SOURCE, [{
+      external_id: `${SOURCE}_main`, source: SOURCE,
+      title: 'Nesta Innovation Challenges — Prize Competitions',
+      funder: 'Nesta', funder_type: 'competition',
+      description: 'Nesta runs a portfolio of open innovation challenges and prize competitions tackling issues from healthy ageing to climate and education. Prizes typically range from £50,000 to £1 million. Challenges are open to startups, social enterprises, charities, researchers and individuals with proven solutions.',
+      amount_min: 50000, amount_max: 1000000, deadline: null, is_rolling: false, is_local: false,
+      sectors: ['social innovation', 'health', 'climate', 'education', 'technology'],
+      eligibility_criteria: ['Open competition — individuals, startups, charities, social enterprises', 'UK operations required for most challenges'],
+      apply_url: 'https://www.nesta.org.uk/project/challenges/', raw_data: {} as Record<string, unknown>,
+    }])
+    return await upsertGrants(SOURCE, grants.slice(0, 8))
+  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
+}
+
+// ── Source 124 — Nominet Tech for Good ───────────────────────────────────────
+async function crawlNominetTechForGood(): Promise<CrawlResult> {
+  const SOURCE = 'nominet_tech_for_good'
+  try {
+    return await upsertGrants(SOURCE, [{
+      external_id: `${SOURCE}_main`, source: SOURCE,
+      title: 'Nominet — Tech for Good Programme',
+      funder: 'Nominet', funder_type: 'competition',
+      description: 'Nominet funds digital social innovation through its Tech for Good programme, supporting projects that use technology to address social challenges. The programme includes awards, grants and investment for early-stage digital ventures with measurable social impact.',
+      amount_min: 5000, amount_max: 100000, deadline: null, is_rolling: true, is_local: false,
+      sectors: ['technology', 'digital', 'social innovation', 'community', 'education'],
+      eligibility_criteria: ['UK-based organisations and social enterprises', 'Digital or technology-led approaches to social challenges', 'Early-stage to growth-stage ventures welcome'],
+      apply_url: 'https://www.nominet.uk/tech-good/', raw_data: {} as Record<string, unknown>,
+    }])
+  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
+}
+
+// ── Source 125 — Key Fund ─────────────────────────────────────────────────────
+async function crawlKeyFund(): Promise<CrawlResult> {
+  const SOURCE = 'key_fund'
+  try {
+    return await upsertGrants(SOURCE, [
+      {
+        external_id: `${SOURCE}_loan`, source: SOURCE,
+        title: 'Key Fund — Social Investment Loans',
+        funder: 'Key Fund', funder_type: 'loan',
+        description: 'Key Fund is a specialist social investor providing unsecured loans of £2,000–£150,000 to social enterprises, community businesses and charities in the UK. Loans are typically at low or zero interest and are designed to be accessible to organisations that struggle to access mainstream finance. Key Fund specialises in supporting organisations in disadvantaged communities.',
+        amount_min: 2000, amount_max: 150000, deadline: null, is_rolling: true, is_local: false,
+        sectors: ['social enterprise', 'community', 'housing', 'employment', 'health'],
+        eligibility_criteria: ['Social enterprises, CICs, charities and community interest companies', 'UK-based', 'Trading income or clear route to income required', 'Organisations in disadvantaged communities prioritised'],
+        apply_url: 'https://thekeyfund.co.uk/our-funding/', raw_data: {} as Record<string, unknown>,
+      },
+    ])
+  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
+}
+
+// ── Source 126 — Fredericks Foundation ───────────────────────────────────────
+async function crawlFredericksFoundation(): Promise<CrawlResult> {
+  const SOURCE = 'fredericks_foundation'
+  try {
+    return await upsertGrants(SOURCE, [{
+      external_id: `${SOURCE}_microloan`, source: SOURCE,
+      title: 'Fredericks Foundation — Interest-Free Microloans',
+      funder: 'Fredericks Foundation', funder_type: 'loan',
+      description: 'Fredericks Foundation offers interest-free business loans of up to £25,000 to micro-enterprises and social enterprises that cannot access mainstream finance. Loans come with free mentoring and business support. Fredericks specialises in supporting entrepreneurs from disadvantaged backgrounds, including those with poor credit history.',
+      amount_min: 500, amount_max: 25000, deadline: null, is_rolling: true, is_local: false,
+      sectors: ['entrepreneurship', 'social enterprise', 'community', 'employment', 'micro-enterprise'],
+      eligibility_criteria: ['Micro-enterprises and social enterprises', 'Based in England', 'Unable to access mainstream bank finance', 'Entrepreneurs from disadvantaged backgrounds prioritised'],
+      apply_url: 'https://www.fredericksfoundation.org/apply', raw_data: {} as Record<string, unknown>,
+    }])
+  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
+}
+
+// ── Source 127 — Social Investment Business (SIB) ────────────────────────────
+async function crawlSocialInvestmentBusiness(): Promise<CrawlResult> {
+  const SOURCE = 'social_investment_business'
+  try {
+    return await upsertGrants(SOURCE, [
+      {
+        external_id: `${SOURCE}_resilience`, source: SOURCE,
+        title: 'Social Investment Business — Resilience & Recovery Loans',
+        funder: 'Social Investment Business', funder_type: 'loan',
+        description: 'The Social Investment Business provides repayable finance to charities and social enterprises across England. Loan products include emergency resilience loans, growth capital and working capital facilities. SIB prioritises organisations working with disadvantaged communities and underserved groups.',
+        amount_min: 50000, amount_max: 1500000, deadline: null, is_rolling: true, is_local: false,
+        sectors: ['social enterprise', 'charity', 'community', 'health', 'housing', 'employment'],
+        eligibility_criteria: ['Registered charities and social enterprises in England', 'Minimum £250k annual income recommended', 'Clear social mission and evidence of impact'],
+        apply_url: 'https://sibgroup.org.uk/finance/', raw_data: {} as Record<string, unknown>,
+      },
+    ])
+  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
+}
+
+// ── Source 128 — Big Issue Invest ─────────────────────────────────────────────
+async function crawlBigIssueInvest(): Promise<CrawlResult> {
+  const SOURCE = 'big_issue_invest'
+  try {
+    return await upsertGrants(SOURCE, [{
+      external_id: `${SOURCE}_main`, source: SOURCE,
+      title: 'Big Issue Invest — Social Investment',
+      funder: 'Big Issue Invest', funder_type: 'loan',
+      description: 'Big Issue Invest is the social investment arm of the Big Issue Group, providing loans and investment of £20,000–£1.5 million to social enterprises and charities. Funding supports organisations tackling poverty and disadvantage across the UK. Products include social loans, equity and hybrid instruments with patient, flexible terms.',
+      amount_min: 20000, amount_max: 1500000, deadline: null, is_rolling: true, is_local: false,
+      sectors: ['social enterprise', 'poverty', 'housing', 'employment', 'community', 'health'],
+      eligibility_criteria: ['Social enterprises and charities tackling poverty', 'Based in the UK', 'Evidence of trading income or clear revenue model', 'Strong social impact metrics'],
+      apply_url: 'https://www.bigissueinvest.com/apply/', raw_data: {} as Record<string, unknown>,
+    }])
+  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
+}
+
+// ── Source 129 — Crowdfunder UK Match Funds ───────────────────────────────────
+async function crawlCrowdfunderMatch(): Promise<CrawlResult> {
+  const SOURCE = 'crowdfunder_match'
+  try {
+    const html = await fetchHtml('https://www.crowdfunder.co.uk/funds')
+    const root = parseHTML(html)
+    const grants: ScrapedGrant[] = []
+    root.querySelectorAll('article, .fund-card, .match-fund').forEach(card => {
+      const title = card.querySelector('h2, h3, .fund-title')?.text.trim()
+      if (!title) return
+      const desc  = card.querySelector('p, .fund-desc')?.text.trim() ?? ''
+      const href  = card.querySelector('a')?.getAttribute('href') ?? ''
+      const url   = href.startsWith('http') ? href : `https://www.crowdfunder.co.uk${href}`
+      grants.push({
+        external_id:          `crowdfunder_match_${slugify(url)}`,
+        source:               SOURCE,
+        title:                `Crowdfunder Match — ${title}`,
+        funder:               'Crowdfunder UK', funder_type: 'crowdfund_match',
+        description:          desc || 'Matched crowdfunding campaign — funders pledge to top up every pound raised publicly.',
+        amount_min:           500, amount_max: 50000, deadline: null, is_rolling: true, is_local: true,
+        sectors:              ['community', 'social enterprise', 'local'],
+        eligibility_criteria: ['UK-based community groups, charities and social enterprises', 'Must run a public crowdfunding campaign on Crowdfunder.co.uk'],
+        apply_url:            url, raw_data: {} as Record<string, unknown>,
+      })
+    })
+    if (grants.length === 0) return await upsertGrants(SOURCE, [{
+      external_id: `${SOURCE}_main`, source: SOURCE,
+      title: 'Crowdfunder UK — Community Match Funds',
+      funder: 'Crowdfunder UK', funder_type: 'crowdfund_match',
+      description: 'Crowdfunder UK hosts a range of match funds where councils, NHS bodies, corporates and foundations pledge to top up every pound raised through a public crowdfunding campaign. Match funds are typically 50–100% top-ups, capped per project. Ideal for community groups, charities and social enterprises that want to amplify fundraising while proving public appetite for their idea.',
+      amount_min: 500, amount_max: 50000, deadline: null, is_rolling: true, is_local: false,
+      sectors: ['community', 'social enterprise', 'arts', 'sport', 'environment', 'health'],
+      eligibility_criteria: ['UK-based community groups, charities, social enterprises and CICs', 'Must run a public crowdfunding campaign on Crowdfunder.co.uk', 'Specific match funds have additional criteria — check individual fund pages'],
+      apply_url: 'https://www.crowdfunder.co.uk/funds', raw_data: {} as Record<string, unknown>,
+    }])
+    return await upsertGrants(SOURCE, grants.slice(0, 10))
+  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
+}
+
+// ── Source 130 — Spacehive ────────────────────────────────────────────────────
+async function crawlSpacehive(): Promise<CrawlResult> {
+  const SOURCE = 'spacehive'
+  try {
+    return await upsertGrants(SOURCE, [{
+      external_id: `${SOURCE}_main`, source: SOURCE,
+      title: 'Spacehive — Civic Crowdfunding with Council Match',
+      funder: 'Spacehive', funder_type: 'crowdfund_match',
+      description: 'Spacehive is a civic crowdfunding platform where community projects raise public money and unlock match pledges from local councils, businesses and foundations. Projects fund physical improvements like parks, playgrounds and community spaces. Match funds from partner councils can contribute up to £50,000 per project on top of public pledges.',
+      amount_min: 1000, amount_max: 50000, deadline: null, is_rolling: true, is_local: true,
+      sectors: ['community', 'environment', 'sport', 'arts', 'public space', 'local'],
+      eligibility_criteria: ['UK community groups, local charities and social enterprises', 'Projects must improve a specific place or community space', 'Must be willing to run a public crowdfunding campaign'],
+      apply_url: 'https://www.spacehive.com', raw_data: {} as Record<string, unknown>,
+    }])
+  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
+}
+
+// ── Source 131 — Localgiving Match Funding ────────────────────────────────────
+async function crawlLocalgivingMatch(): Promise<CrawlResult> {
+  const SOURCE = 'localgiving_match'
+  try {
+    return await upsertGrants(SOURCE, [{
+      external_id: `${SOURCE}_main`, source: SOURCE,
+      title: 'Localgiving — Charity Match Funding Rounds',
+      funder: 'Localgiving', funder_type: 'crowdfund_match',
+      description: 'Localgiving runs periodic matched crowdfunding rounds where donations to registered charities on the platform are matched by corporate and foundation partners. Rounds typically run for 24–48 hours and match donations up to a set cap (often £250–£2,500 per charity). Localgiving focuses on small, local charities and community groups.',
+      amount_min: 500, amount_max: 10000, deadline: null, is_rolling: false, is_local: false,
+      sectors: ['community', 'charity', 'local', 'health', 'arts', 'environment'],
+      eligibility_criteria: ['Registered charities based in the UK', 'Must have an active Localgiving profile', 'Priority for small charities with income under £1 million'],
+      apply_url: 'https://localgiving.org/information/match-funding', raw_data: {} as Record<string, unknown>,
+    }])
+  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
+}
+
+// ── Source 132 — Community Shares Unit ────────────────────────────────────────
+async function crawlCommunityShares(): Promise<CrawlResult> {
+  const SOURCE = 'community_shares'
+  try {
+    return await upsertGrants(SOURCE, [{
+      external_id: `${SOURCE}_main`, source: SOURCE,
+      title: 'Community Shares — Booster Fund & Community Share Offers',
+      funder: 'Community Shares Unit', funder_type: 'crowdfund_match',
+      description: 'Community Shares enables community businesses, co-operatives and social enterprises to raise capital by selling withdrawable shares to the public. The Community Shares Booster Fund provides grants of up to £10,000 to help organisations develop and launch share offers. Community share offers typically raise £50,000–£2 million from hundreds of local investors.',
+      amount_min: 10000, amount_max: 2000000, deadline: null, is_rolling: true, is_local: false,
+      sectors: ['community', 'social enterprise', 'co-operative', 'local', 'environment', 'food'],
+      eligibility_criteria: ['Community businesses, co-operatives and social enterprises', 'Based in the UK', 'Booster Fund: must be developing a new community share offer', 'Industrial and provident societies (IPS) or community benefit societies preferred'],
+      apply_url: 'https://communityshares.org.uk/resources/booster-fund', raw_data: {} as Record<string, unknown>,
+    }])
+  } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
+}
+
 // ── Batch definitions ─────────────────────────────────────────────────────────
 // Sources are grouped into 3 batches so each cron invocation handles ~15 sources.
 // Batch 1: core nationals + first CFs
 // Batch 2: corporate funders + mid CFs
 // Batch 3: Session-4b CFs + foundations
 
-type BatchNum = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8
+type BatchNum = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
 
 const BATCH_1_SOURCES = [
   'gov_uk', 'tnlcf', 'ukri', 'gla', 'arts_council',
@@ -5442,6 +5731,13 @@ const BATCH_8_SOURCES = [
   'waitrose_community_matters', 'teenage_cancer_trust', 'active_travel_england',
 ] as const
 
+// Batch 9: alternative funding routes — competitions, social loans, matched crowdfunding (06:40)
+const BATCH_9_SOURCES = [
+  'unltd', 'sse_fellowships', 'nesta_challenges', 'nominet_tech_for_good',
+  'key_fund', 'fredericks_foundation', 'social_investment_business', 'big_issue_invest',
+  'crowdfunder_match', 'spacehive', 'localgiving_match', 'community_shares',
+] as const
+
 // ── Main export ───────────────────────────────────────────────────────────────
 // Pass batch=1|2|3 to run only that subset (used by split cron jobs).
 // Omit batch (or pass undefined) to run all sources.
@@ -5456,6 +5752,7 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
   if (batch === 6) include = new Set(BATCH_6_SOURCES)
   if (batch === 7) include = new Set(BATCH_7_SOURCES)
   if (batch === 8) include = new Set(BATCH_8_SOURCES)
+  if (batch === 9) include = new Set(BATCH_9_SOURCES)
 
   function run(source: string, fn: () => Promise<CrawlResult>): Promise<CrawlResult> {
     if (include && !include.has(source)) {
@@ -5506,6 +5803,10 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
     farmingProtectedLandscapes, esmeeFairbairnCollections, edfEnergyCommunityFund,
     nhsCharitiesTogether, groundworkUK, aldiFoundation,
     waitroseCommunityMatters, teenageCancerTrust, activeTravelEngland,
+    // Batch 9
+    unltd, sseFellowships, nestaChallenges, nominetTechForGood,
+    keyFund, fredericksFoundation, socialInvestmentBusiness, bigIssueInvest,
+    crowdfunderMatch, spacehive, localgivingMatch, communityShares,
   ] = await Promise.allSettled([
     run('gov_uk',                  crawlGovUK),
     run('tnlcf',                   crawlTNLCF),
@@ -5632,6 +5933,19 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
     run('waitrose_community_matters',   crawlWaitroseCommunityMatters),
     run('teenage_cancer_trust',         crawlTeenageCancerTrust),
     run('active_travel_england',        crawlActiveTravelEngland),
+    // Batch 9
+    run('unltd',                        crawlUnLtd),
+    run('sse_fellowships',              crawlSSEFellowships),
+    run('nesta_challenges',             crawlNestaChallenges),
+    run('nominet_tech_for_good',        crawlNominetTechForGood),
+    run('key_fund',                     crawlKeyFund),
+    run('fredericks_foundation',        crawlFredericksFoundation),
+    run('social_investment_business',   crawlSocialInvestmentBusiness),
+    run('big_issue_invest',             crawlBigIssueInvest),
+    run('crowdfunder_match',            crawlCrowdfunderMatch),
+    run('spacehive',                    crawlSpacehive),
+    run('localgiving_match',            crawlLocalgivingMatch),
+    run('community_shares',             crawlCommunityShares),
   ])
 
   const fallback = (source: string) => ({ source, fetched: 0, upserted: 0, error: 'Promise rejected' })
@@ -5762,6 +6076,19 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
     waitroseCommunityMatters.status   === 'fulfilled' ? waitroseCommunityMatters.value   : fallback('waitrose_community_matters'),
     teenageCancerTrust.status         === 'fulfilled' ? teenageCancerTrust.value         : fallback('teenage_cancer_trust'),
     activeTravelEngland.status        === 'fulfilled' ? activeTravelEngland.value        : fallback('active_travel_england'),
+    // Batch 9
+    unltd.status                      === 'fulfilled' ? unltd.value                      : fallback('unltd'),
+    sseFellowships.status             === 'fulfilled' ? sseFellowships.value             : fallback('sse_fellowships'),
+    nestaChallenges.status            === 'fulfilled' ? nestaChallenges.value            : fallback('nesta_challenges'),
+    nominetTechForGood.status         === 'fulfilled' ? nominetTechForGood.value         : fallback('nominet_tech_for_good'),
+    keyFund.status                    === 'fulfilled' ? keyFund.value                    : fallback('key_fund'),
+    fredericksFoundation.status       === 'fulfilled' ? fredericksFoundation.value       : fallback('fredericks_foundation'),
+    socialInvestmentBusiness.status   === 'fulfilled' ? socialInvestmentBusiness.value   : fallback('social_investment_business'),
+    bigIssueInvest.status             === 'fulfilled' ? bigIssueInvest.value             : fallback('big_issue_invest'),
+    crowdfunderMatch.status           === 'fulfilled' ? crowdfunderMatch.value           : fallback('crowdfunder_match'),
+    spacehive.status                  === 'fulfilled' ? spacehive.value                  : fallback('spacehive'),
+    localgivingMatch.status           === 'fulfilled' ? localgivingMatch.value           : fallback('localgiving_match'),
+    communityShares.status            === 'fulfilled' ? communityShares.value            : fallback('community_shares'),
   ]
 
   // ── Persist run to crawl_logs (best-effort, don't fail if table missing) ─

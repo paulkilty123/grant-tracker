@@ -45,6 +45,10 @@
       "schedule": "35 6 * * *"
     },
     {
+      "path": "/api/cron/crawl-grants?batch=9",
+      "schedule": "40 6 * * *"
+    },
+    {
       "path": "/api/cron/expire-grants",
       "schedule": "0 2 * * *"
     }

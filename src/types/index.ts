@@ -24,6 +24,9 @@ export type FunderType =
   | 'corporate'
   | 'lottery'
   | 'government'
+  | 'competition'      // pitch prizes, innovation challenges, awards
+  | 'loan'             // repayable social lending (often interest-free / low rate)
+  | 'crowdfund_match'  // matched crowdfunding campaigns
   | 'other'
 
 // ─────────────────────────────────────────────
