@@ -345,21 +345,24 @@ function GrantCard({ item, hasOrg, interactions, onAddToPipeline, onDismiss, onU
               + Pipeline
             </button>
             {hasOrg && (
-              <div className="flex items-center justify-center gap-2 py-1">
-                <button
-                  onClick={() => onLike(grant.id)}
-                  title="Good match"
-                  className={`text-base transition-all ${isLiked ? 'opacity-100 scale-110' : 'opacity-30 hover:opacity-80'}`}
-                >
-                  👍
-                </button>
-                <button
-                  onClick={() => onDislike(grant.id)}
-                  title="Not relevant"
-                  className={`text-base transition-all ${isDisliked ? 'opacity-100 scale-110' : 'opacity-30 hover:opacity-80'}`}
-                >
-                  👎
-                </button>
+              <div className="py-1">
+                <p className="text-[9px] text-center text-light mb-1 uppercase tracking-wide font-medium">Train your results</p>
+                <div className="flex items-center justify-center gap-2">
+                  <button
+                    onClick={() => onLike(grant.id)}
+                    title="Good match — boosts similar grants in your results"
+                    className={`text-base transition-all ${isLiked ? 'opacity-100 scale-110' : 'opacity-30 hover:opacity-80'}`}
+                  >
+                    👍
+                  </button>
+                  <button
+                    onClick={() => onDislike(grant.id)}
+                    title="Not relevant — reduces similar grants in your results"
+                    className={`text-base transition-all ${isDisliked ? 'opacity-100 scale-110' : 'opacity-30 hover:opacity-80'}`}
+                  >
+                    👎
+                  </button>
+                </div>
               </div>
             )}
             {hasOrg && (
@@ -432,6 +435,7 @@ export default function SearchPage() {
   const [userId, setUserId]             = useState('')
   const [sortBy, setSortBy]             = useState<'match' | 'amount' | 'freshest'>('match')
   const [freshnessFilter, setFreshnessFilter] = useState<'all' | '7d' | '14d' | '30d'>('all')
+  const [bannerDismissed, setBannerDismissed] = useState(false)
   const [interactions, setInteractions] = useState<Map<string, Set<InteractionAction>>>(new Map())
   const [showDismissed, setShowDismissed] = useState(false)
   const [scrapedGrants, setScrapedGrants] = useState<GrantOpportunity[]>([])
@@ -831,6 +835,23 @@ export default function SearchPage() {
 
   const orgIsIncomplete = org && !org.themes?.length && !org.areas_of_work?.length && !org.primary_location
 
+  // Compute match-quality profile score + missing fields for the banner
+  const matchQuality = (() => {
+    if (!org) return null
+    const fields: { label: string; filled: boolean; impact: 'high' | 'medium' }[] = [
+      { label: 'Priority themes',   filled: (org.themes?.length        ?? 0) > 0, impact: 'high'   },
+      { label: 'Areas of work',     filled: (org.areas_of_work?.length ?? 0) > 0, impact: 'high'   },
+      { label: 'Location',          filled: !!org.primary_location,                impact: 'high'   },
+      { label: 'Mission statement', filled: !!org.mission,                         impact: 'medium' },
+      { label: 'Annual income',     filled: !!org.annual_income_band,              impact: 'medium' },
+      { label: 'Beneficiaries',     filled: (org.beneficiaries?.length ?? 0) > 0, impact: 'medium' },
+    ]
+    const filledCount = fields.filter(f => f.filled).length
+    const score = Math.round((filledCount / fields.length) * 100)
+    const missing = fields.filter(f => !f.filled)
+    return { score, missing }
+  })()
+
   // Count active (non-default) filters for the badge
   const activeFilterCount = [
     activeType !== 'all',
@@ -1164,18 +1185,13 @@ export default function SearchPage() {
         )}
 
         {!org && (
-          <p className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2 mt-3">
-            <strong>Tip:</strong> Complete your{' '}
-            <a href="/dashboard/profile" className="underline hover:text-amber-900">organisation profile</a>{' '}
-            to unlock AI match scores.
-          </p>
-        )}
-        {orgIsIncomplete && (
-          <p className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2 mt-3">
-            <strong>Tip:</strong>{' '}
-            <a href="/dashboard/profile" className="underline hover:text-amber-900">Add themes and location to your profile</a>{' '}
-            to improve your match scores.
-          </p>
+          <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5">
+            <p className="text-xs font-semibold text-amber-900 mb-0.5">Unlock personalised matches</p>
+            <p className="text-xs text-amber-800 mb-2">Complete your profile to get % match scores and ranked results tailored to your organisation.</p>
+            <a href="/dashboard/profile" className="text-xs font-semibold text-amber-700 underline hover:text-amber-900">
+              Set up your profile →
+            </a>
+          </div>
         )}
       </div>
 
@@ -1204,6 +1220,57 @@ export default function SearchPage() {
           </button>
         )}
       </div>
+
+      {/* ── Match quality banner ── */}
+      {matchQuality && matchQuality.score < 80 && !bannerDismissed && (
+        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3.5 flex items-start gap-3">
+          {/* Quality ring */}
+          <div className="flex-shrink-0 mt-0.5">
+            <div className="relative w-11 h-11">
+              <svg viewBox="0 0 36 36" className="w-11 h-11 -rotate-90">
+                <circle cx="18" cy="18" r="14" fill="none" stroke="#fde68a" strokeWidth="4" />
+                <circle
+                  cx="18" cy="18" r="14" fill="none"
+                  stroke={matchQuality.score >= 60 ? '#f59e0b' : '#ef4444'}
+                  strokeWidth="4"
+                  strokeDasharray={`${(matchQuality.score / 100) * 88} 88`}
+                  strokeLinecap="round"
+                />
+              </svg>
+              <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-amber-700">
+                {matchQuality.score}%
+              </span>
+            </div>
+          </div>
+
+          {/* Text */}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-amber-900 mb-0.5">
+              Your match quality is {matchQuality.score < 40 ? 'low' : matchQuality.score < 65 ? 'partial' : 'nearly there'}
+            </p>
+            <p className="text-xs text-amber-800 leading-snug">
+              {matchQuality.missing.slice(0, 3).map(f => f.label).join(', ')}{' '}
+              {matchQuality.missing.length > 3 ? `and ${matchQuality.missing.length - 3} more` : ''} missing from your profile.{' '}
+              Complete it so Grant Tracker can surface the grants most relevant to your organisation.
+            </p>
+            <a
+              href="/dashboard/profile"
+              className="inline-block mt-2 text-xs font-semibold text-white bg-amber-500 hover:bg-amber-600 px-3 py-1.5 rounded-lg transition-colors"
+            >
+              Complete profile →
+            </a>
+          </div>
+
+          {/* Dismiss */}
+          <button
+            onClick={() => setBannerDismissed(true)}
+            className="flex-shrink-0 text-amber-400 hover:text-amber-600 text-lg leading-none mt-0.5"
+            title="Dismiss"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* ── Grant list ── */}
       {(() => {

@@ -13,6 +13,24 @@ interface Props {
   userEmail: string
 }
 
+/**
+ * Returns a 0–100 score for the fields that directly drive match quality.
+ * Used to show a completeness dot on the Profile nav link.
+ */
+function matchProfileScore(org: Organisation | null): number {
+  if (!org) return 0
+  const checks = [
+    (org.themes?.length        ?? 0) > 0,   // 20pts — biggest theme signal
+    (org.areas_of_work?.length ?? 0) > 0,   // 20pts
+    !!org.primary_location,                  // 20pts — location scoring
+    !!org.mission,                           // 20pts
+    !!org.annual_income_band,                // 10pts — grant size scoring
+    (org.beneficiaries?.length ?? 0) > 0,   // 10pts
+  ]
+  const filled = checks.filter(Boolean).length
+  return Math.round((filled / checks.length) * 100)
+}
+
 const NAV: { href: string; label: string; emoji: string; section: string; badge?: string }[] = [
   { href: '/dashboard',             label: 'Dashboard',        emoji: '📊', section: '' },
   { href: '/dashboard/search',      label: 'Search Grants',    emoji: '🔍', section: 'Find Funding' },
@@ -29,6 +47,10 @@ export default function Sidebar({ org, userEmail }: Props) {
   const pathname = usePathname()
   const router = useRouter()
   const [mobileOpen, setMobileOpen] = useState(false)
+
+  const profileScore = matchProfileScore(org)
+  // Show dot when profile exists but is incomplete (< 80%)
+  const showProfileDot = org !== null && profileScore < 80
 
   async function handleSignOut() {
     const supabase = createClient()
@@ -87,8 +109,22 @@ export default function Sidebar({ org, userEmail }: Props) {
                       isActive && 'active'
                     )}
                   >
-                    <span className="text-base w-5 text-center">{item.emoji}</span>
+                    <span className="text-base w-5 text-center relative">
+                      {item.emoji}
+                      {/* Amber dot on Profile when match profile is incomplete */}
+                      {item.href === '/dashboard/profile' && showProfileDot && (
+                        <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-amber-400 rounded-full border border-forest" />
+                      )}
+                    </span>
                     <span className="flex-1">{item.label}</span>
+                    {item.href === '/dashboard/profile' && showProfileDot && !isActive && (
+                      <span
+                        className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30"
+                        title={`Match profile ${profileScore}% complete`}
+                      >
+                        {profileScore}%
+                      </span>
+                    )}
                     {item.badge && (
                       <span className="bg-gold text-forest text-[10px] font-bold px-1.5 py-0.5 rounded-full">
                         {item.badge}
