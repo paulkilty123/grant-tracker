@@ -47,7 +47,7 @@ export default async function RootPage() {
         </div>
         <h1 className="font-display font-bold leading-[1.15] mb-6 max-w-4xl mx-auto">
           <span className="block text-5xl sm:text-6xl text-forest">Find and Track Grants</span>
-          <span className="block text-5xl sm:text-6xl text-gold">Matched to your Organisation.</span>
+          <span className="block text-3xl sm:text-[2.55rem] text-gold">Matched to your Organisation.</span>
         </h1>
         <p className="text-mid text-xl max-w-2xl mx-auto mb-4 leading-relaxed">
           A curated UK database, live AI research, and a full application pipeline — all in one place. Start free in minutes.
