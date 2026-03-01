@@ -203,7 +203,7 @@ function inferFunderType(name: string): FunderType {
     isLocal: false,
     sectors: ['housing', 'homelessness', 'community'],
     eligibilityCriteria: ['Registered charity or CIC', 'Focus on housing or homelessness'],
-    applyUrl: 'https://www.nationwidefoundation.org.uk/what-we-fund/',
+    applyUrl: 'https://nationwidefoundation.org.uk/available-funding/',
     source: 'manual',
   },
   {
@@ -2494,7 +2494,7 @@ function inferFunderType(name: string): FunderType {
     isLocal: false,
     sectors: ['housing', 'poverty', 'community', 'social enterprise'],
     eligibilityCriteria: ['UK registered charity or CIC', 'Deeply affordable housing model'],
-    applyUrl: 'https://www.nationwidefoundation.org.uk/what-we-fund/',
+    applyUrl: 'https://nationwidefoundation.org.uk/available-funding/',
     source: 'manual',
   },
   {
