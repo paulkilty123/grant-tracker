@@ -37,7 +37,7 @@ export default async function DashboardPage() {
   const alerts = getDeadlineAlerts(items).slice(0, 5)
   const urgentCount = alerts.filter(a => ['urgent','overdue'].includes(a.urgency)).length
 
-  const orgName = org?.name ?? 'your organisation'
+  const orgName = org?.name ?? 'there'
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
 
@@ -191,8 +191,8 @@ export default async function DashboardPage() {
       {!org && (
         <div className="mt-8 card text-center py-12">
           <div className="text-5xl mb-4">🌱</div>
-          <h3 className="font-display text-lg font-bold text-forest mb-2">Set up your organisation</h3>
-          <p className="text-mid text-sm mb-5">Add your organisation details to get personalised grant matches</p>
+          <h3 className="font-display text-lg font-bold text-forest mb-2">Set up your profile</h3>
+          <p className="text-mid text-sm mb-5">Tell us about your work and we&apos;ll match you with the most relevant grants</p>
           <a href="/dashboard/profile" className="btn-primary inline-block">Set up profile →</a>
         </div>
       )}

@@ -10,6 +10,8 @@ const ORG_TYPE_OPTIONS: { value: OrgType; label: string }[] = [
   { value: 'cic',                label: 'Community Interest Company (CIC)' },
   { value: 'social_enterprise',  label: 'Social Enterprise' },
   { value: 'community_group',    label: 'Community Group' },
+  { value: 'other',              label: 'Grassroots Business' },
+  { value: 'other',              label: 'Impact Entrepreneur / Sole Trader' },
   { value: 'other',              label: 'Other' },
 ]
 
@@ -114,8 +116,8 @@ function orgToForm(org: Organisation): FormState {
 // Score how complete the profile is (0–100)
 function completenessScore(form: FormState): { score: number; missing: string[] } {
   const checks: { label: string; filled: boolean }[] = [
-    { label: 'Organisation name',     filled: !!form.name.trim() },
-    { label: 'Organisation type',     filled: !!form.orgType },
+    { label: 'Name',                  filled: !!form.name.trim() },
+    { label: 'Type',                  filled: !!form.orgType },
     { label: 'Annual income',         filled: !!form.annualIncome },
     { label: 'Primary location',      filled: !!form.primaryLocation.trim() },
     { label: 'Priority themes',       filled: !!form.themes.trim() },
@@ -273,7 +275,7 @@ export default function ProfilePage() {
       {/* ── Header ── */}
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h2 className="font-display text-2xl font-bold text-forest">Organisation Profile</h2>
+          <h2 className="font-display text-2xl font-bold text-forest">Your Profile</h2>
           <p className="text-mid text-sm mt-1">A complete profile means better grant matches and more relevant alerts</p>
         </div>
         <div className="flex items-center gap-3">
@@ -333,7 +335,7 @@ export default function ProfilePage() {
           <input
             type="url"
             className="form-input flex-1"
-            placeholder="https://yourorganisation.org.uk"
+            placeholder="https://yourwebsite.co.uk"
             value={websiteUrl}
             onChange={e => { setWebsiteUrl(e.target.value); setAutoFillError(null); setAutoFillSuccess(false) }}
             onKeyDown={e => e.key === 'Enter' && handleAutoFill()}
@@ -360,16 +362,16 @@ export default function ProfilePage() {
         <div className="card">
           <h3 className="font-display text-sm font-semibold text-forest mb-4 flex items-center gap-2">
             <span className="w-6 h-6 rounded-full bg-forest/10 text-forest text-xs flex items-center justify-center font-bold">1</span>
-            Organisation Details
+            About You
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-charcoal mb-1.5">
-                Organisation name <span className="text-red-400">*</span>
+                Organisation or venture name <span className="text-red-400">*</span>
               </label>
               <input
                 className="form-input"
-                placeholder="e.g. Green Communities CIC"
+                placeholder="e.g. Green Communities CIC or The Makers Project"
                 value={form.name}
                 onChange={set('name')}
               />
@@ -383,7 +385,7 @@ export default function ProfilePage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-charcoal mb-1.5">Charity / CIC number</label>
+              <label className="block text-sm font-medium text-charcoal mb-1.5">Charity / CIC / Company number <span className="text-light font-normal">(if applicable)</span></label>
               <input
                 className="form-input"
                 placeholder="e.g. 1234567"
@@ -392,7 +394,7 @@ export default function ProfilePage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-charcoal mb-1.5">Annual income</label>
+              <label className="block text-sm font-medium text-charcoal mb-1.5">Annual income / turnover</label>
               <select className="form-select" value={form.annualIncome} onChange={set('annualIncome')}>
                 {INCOME_BANDS.map(b => (
                   <option key={b} value={b}>{b}</option>
@@ -609,7 +611,7 @@ export default function ProfilePage() {
           <textarea
             className="form-textarea"
             style={{ minHeight: 120 }}
-            placeholder="Describe what your organisation does, who you serve, and the difference you make…"
+            placeholder="Describe what your organisation or venture does, who you serve, and the difference you make…"
             value={form.mission}
             onChange={set('mission')}
           />
