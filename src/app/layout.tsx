@@ -1,18 +1,11 @@
 import type { Metadata } from 'next'
-import { Fraunces, DM_Sans } from 'next/font/google'
+import { Baloo_Tammudu_2 } from 'next/font/google'
 import './globals.css'
 
-const fraunces = Fraunces({
+const baloo = Baloo_Tammudu_2({
   subsets: ['latin'],
-  weight: ['300', '400', '600', '700', '900'],
-  variable: '--font-fraunces',
-  display: 'swap',
-})
-
-const dmSans = DM_Sans({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
-  variable: '--font-dm-sans',
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-baloo',
   display: 'swap',
 })
 
@@ -27,7 +20,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${fraunces.variable} ${dmSans.variable}`}>
+    <html lang="en" className={baloo.variable}>
       <body>{children}</body>
     </html>
   )
