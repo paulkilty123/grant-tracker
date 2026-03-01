@@ -276,7 +276,7 @@ function PipelineModal({
               {PIPELINE_STAGES.map(s => (
                 <button
                   key={s.id}
-                  onClick={() => { onMove(item.id, s.id); onClose() }}
+                  onClick={() => { onMove(item.id, s.id) }}
                   className={cn(
                     'py-2 px-2 rounded-lg border-2 text-xs font-medium transition-all text-center',
                     item.stage === s.id
