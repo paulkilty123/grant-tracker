@@ -53,10 +53,7 @@ export default async function RootPage() {
         <p className="text-mid text-xl max-w-2xl mx-auto mb-4 leading-normal">
           800+ UK funding opportunities, AI matching that learns from your feedback, and a full application pipeline — all in one place.
         </p>
-        <p className="text-base text-mid/70 mb-10">
-          Other tools charge <span className="line-through">£150–£1,000+/year</span> for less. Grant Tracker starts free.
-        </p>
-        <div className="flex items-center justify-center gap-4 flex-wrap">
+        <div className="flex items-center justify-center gap-4 flex-wrap mb-5">
           <Link href="/auth/signup" className="btn-primary px-10 py-3.5 text-base font-semibold">
             Start for free →
           </Link>
@@ -64,7 +61,6 @@ export default async function RootPage() {
             Already have an account? Sign in
           </Link>
         </div>
-        <p className="text-xs text-light mt-5">Free forever for grant search · No credit card required · Set up in 2 minutes · 🔒 Your data is never shared</p>
       </section>
 
       {/* ── Differentiator strip ── */}
