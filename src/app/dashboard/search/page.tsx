@@ -365,14 +365,6 @@ function GrantCard({ item, hasOrg, interactions, onAddToPipeline, onDismiss, onU
                 </div>
               </div>
             )}
-            {hasOrg && (
-              <button
-                onClick={() => onDismiss(grant.id)}
-                className="text-xs text-light hover:text-red-400 transition-colors text-center w-full py-1"
-              >
-                ✕ Hide
-              </button>
-            )}
           </div>
         </div>
       </div>
@@ -1273,48 +1265,29 @@ export default function SearchPage() {
       )}
 
       {/* ── Grant list ── */}
-      {(() => {
-        const dismissedCount = displayGrants.filter(d => interactions.get(d.grant.id)?.has('dismissed')).length
-        const visibleGrants = showDismissed ? displayGrants : displayGrants.filter(d => !interactions.get(d.grant.id)?.has('dismissed'))
-
-        if (visibleGrants.length === 0 && dismissedCount === 0) return (
-          <div className="text-center py-16 text-light">
-            <p className="text-4xl mb-3">🔍</p>
-            <p className="mb-3">No grants found — try different keywords or clear the filter.</p>
-            <a href="/dashboard/deep-search" className="text-indigo-600 text-sm hover:underline">
-              Try 🔬 Live Search for live opportunities →
-            </a>
-          </div>
-        )
-
-        return (
-          <>
-            {visibleGrants.map(item => (
-              <GrantCard
-                key={item.grant.id}
-                item={item}
-                hasOrg={!!org}
-                interactions={interactions.get(item.grant.id) ?? new Set()}
-                onAddToPipeline={handleAddToPipeline}
-                onDismiss={handleDismiss}
-                onUndismiss={handleUndismiss}
-                onLike={handleLike}
-                onDislike={handleDislike}
-              />
-            ))}
-            {dismissedCount > 0 && (
-              <button
-                onClick={() => setShowDismissed(p => !p)}
-                className="w-full text-xs text-mid hover:text-charcoal py-3 border border-dashed border-warm rounded-xl mt-2 transition-colors"
-              >
-                {showDismissed
-                  ? `Hide ${dismissedCount} dismissed grant${dismissedCount === 1 ? '' : 's'} ↑`
-                  : `Show ${dismissedCount} dismissed grant${dismissedCount === 1 ? '' : 's'} ↓`}
-              </button>
-            )}
-          </>
-        )
-      })()}
+      {displayGrants.length === 0 ? (
+        <div className="text-center py-16 text-light">
+          <p className="text-4xl mb-3">🔍</p>
+          <p className="mb-3">No grants found — try different keywords or clear the filter.</p>
+          <a href="/dashboard/deep-search" className="text-indigo-600 text-sm hover:underline">
+            Try 🔬 Live Search for live opportunities →
+          </a>
+        </div>
+      ) : (
+        displayGrants.map(item => (
+          <GrantCard
+            key={item.grant.id}
+            item={item}
+            hasOrg={!!org}
+            interactions={interactions.get(item.grant.id) ?? new Set()}
+            onAddToPipeline={handleAddToPipeline}
+            onDismiss={handleDismiss}
+            onUndismiss={handleUndismiss}
+            onLike={handleLike}
+            onDislike={handleDislike}
+          />
+        ))
+      )}
 
       {toast && (
         <div className="fixed bottom-6 right-6 bg-forest text-white px-5 py-3.5 rounded-xl shadow-card-lg text-sm z-50">
