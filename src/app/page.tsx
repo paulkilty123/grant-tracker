@@ -102,7 +102,7 @@ export default async function RootPage() {
                 { icon: '✦', text: 'AI match scores with a breakdown — sector, eligibility, geography, size, and mission fit' },
                 { icon: '🎯', text: 'Thumbs up or down on any result trains future rankings to your preferences' },
                 { icon: '📍', text: 'Filter by grants, competitions 🏆, social loans 🔄, or crowdfund match 🤝' },
-                { icon: '🆕', text: 'Freshness filter surfaces the most recently verified opportunities first' },
+                { icon: '🆕', text: 'Freshness filter puts the most recently verified opportunities at the top' },
               ].map(item => (
                 <li key={item.text} className="flex items-start gap-3 text-sm text-mid">
                   <span className="text-sage mt-0.5 flex-shrink-0">{item.icon}</span>
@@ -205,7 +205,7 @@ export default async function RootPage() {
                 { text: 'Borough-level programmes most national databases never index' },
                 { text: 'NHS ICB commissioning and local authority grants by area' },
                 { text: 'Sector filters (mental health, youth, disability, housing, and more)' },
-                { text: 'Only surfaces grants not already in the curated database' },
+                { text: 'Only returns grants not already in the curated database' },
               ].map(item => (
                 <li key={item.text} className="flex items-start gap-3 text-sm text-mint/80">
                   <span className="text-mint mt-0.5 flex-shrink-0">✓</span>
@@ -414,7 +414,7 @@ export default async function RootPage() {
                 A dashboard that tells you what needs attention today
               </h2>
               <p className="text-sm text-mid leading-relaxed mb-4">
-                Your dashboard surfaces what matters right now — new grants added this week, upcoming deadlines ranked by urgency, and a snapshot of your full pipeline. Anything within 14 days gets flagged. Email alerts notify you when new funding matches your profile, so you never find out too late.
+                Your dashboard shows you what matters right now — new grants added this week, upcoming deadlines ranked by urgency, and a snapshot of your full pipeline. Anything within 14 days gets flagged. Email alerts notify you when new funding matches your profile, so you never find out too late.
               </p>
               <ul className="space-y-2 mb-4">
                 {[
@@ -575,7 +575,7 @@ export default async function RootPage() {
                   The tools that did exist ranged from around £150 a year for basic directories up to £1,000 or more for the larger platforms, and most were complicated enough that you needed specialist training to get any real value from them. Small charities, community groups and volunteer-led organisations were effectively locked out.
                 </p>
                 <p>
-                  Grant Tracker was built to fix that. A tool that understands how funding actually works in the UK, surfaces the local and specialist funders that matter, and is simple enough for any founder or trustee to manage alongside everything else they do.
+                  Grant Tracker was built to fix that. A tool that understands how funding actually works in the UK, finds the local and specialist funders that matter, and is simple enough for any founder or trustee to manage alongside everything else they do.
                 </p>
               </div>
               <div className="mt-8 pt-6 border-t border-warm flex items-center gap-4">
