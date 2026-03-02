@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
   RefreshCw, ExternalLink, Pencil, Check, X,
-  AlertTriangle, CheckCircle, Clock, Database,
+  AlertTriangle, CheckCircle, Clock, Database, Trash2,
 } from 'lucide-react'
 
 const ADMIN_EMAIL = 'paulkilty1@gmail.com'
@@ -32,6 +32,7 @@ export default function UrlAdminPage() {
   const [editingId, setEditingId]   = useState<string | null>(null)
   const [editUrl, setEditUrl]       = useState('')
   const [saving, setSaving]         = useState(false)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
   // ── Auth check ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -127,6 +128,17 @@ export default function UrlAdminPage() {
       .update({ url_status: 'ok', url_last_checked: new Date().toISOString() })
       .eq('id', id)
     setGrants(prev => prev.filter(g => g.id !== id))
+    await loadStats()
+  }
+
+  // ── Remove from database (soft delete) ─────────────────────────────────────
+  async function removeGrant(id: string) {
+    await createClient()
+      .from('scraped_grants')
+      .update({ is_active: false })
+      .eq('id', id)
+    setGrants(prev => prev.filter(g => g.id !== id))
+    setConfirmDeleteId(null)
     await loadStats()
   }
 
@@ -320,33 +332,60 @@ export default function UrlAdminPage() {
 
                     {/* Actions */}
                     <td className="px-5 py-3">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          onClick={() => { setEditingId(grant.id); setEditUrl(grant.apply_url ?? '') }}
-                          title="Edit URL"
-                          className="rounded-full border border-warm p-1.5 text-mid hover:border-forest hover:text-forest transition-colors"
-                        >
-                          <Pencil className="h-3 w-3" />
-                        </button>
-                        {grant.url_status === 'dead' && (
+                      {confirmDeleteId === grant.id ? (
+                        <div className="flex items-center justify-end gap-1.5">
+                          <span className="text-xs text-red-500 font-medium mr-1">Remove?</span>
                           <button
-                            onClick={() => markOk(grant.id)}
-                            title="Clear flag — mark as ok"
-                            className="rounded-full border border-warm p-1.5 text-mid hover:border-sage hover:text-sage transition-colors"
+                            onClick={() => removeGrant(grant.id)}
+                            title="Confirm remove"
+                            className="rounded-full bg-red-500 p-1.5 text-white hover:bg-red-600 transition-colors"
                           >
                             <Check className="h-3 w-3" />
                           </button>
-                        )}
-                        {grant.url_status !== 'dead' && (
                           <button
-                            onClick={() => markDead(grant.id)}
-                            title="Flag as dead manually"
-                            className="rounded-full border border-warm p-1.5 text-mid hover:border-red-300 hover:text-red-500 transition-colors"
+                            onClick={() => setConfirmDeleteId(null)}
+                            title="Cancel"
+                            className="rounded-full border border-warm p-1.5 text-mid hover:border-forest hover:text-forest transition-colors"
                           >
                             <X className="h-3 w-3" />
                           </button>
-                        )}
-                      </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => { setEditingId(grant.id); setEditUrl(grant.apply_url ?? '') }}
+                            title="Edit URL"
+                            className="rounded-full border border-warm p-1.5 text-mid hover:border-forest hover:text-forest transition-colors"
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </button>
+                          {grant.url_status === 'dead' && (
+                            <button
+                              onClick={() => markOk(grant.id)}
+                              title="Clear flag — mark as ok"
+                              className="rounded-full border border-warm p-1.5 text-mid hover:border-sage hover:text-sage transition-colors"
+                            >
+                              <Check className="h-3 w-3" />
+                            </button>
+                          )}
+                          {grant.url_status !== 'dead' && (
+                            <button
+                              onClick={() => markDead(grant.id)}
+                              title="Flag as dead manually"
+                              className="rounded-full border border-warm p-1.5 text-mid hover:border-red-300 hover:text-red-500 transition-colors"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => setConfirmDeleteId(grant.id)}
+                            title="Remove from database"
+                            className="rounded-full border border-warm p-1.5 text-mid hover:border-red-300 hover:text-red-500 transition-colors"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        </div>
+                      )}
                     </td>
 
                   </tr>
