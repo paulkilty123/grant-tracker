@@ -64,7 +64,7 @@ export default function SignupPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 rounded-2xl shadow-card-lg overflow-hidden">
 
           {/* ── Left: value props ── */}
-          <div className="bg-forest text-white p-10 flex-col justify-between hidden lg:flex">
+          <div className="bg-forest text-white p-10 hidden lg:flex flex-col justify-between">
             <div>
               <Logo variant="light" size="md" />
               <p className="text-white/70 text-sm mt-2 mb-10">Find funding. Track progress. Win grants.</p>
