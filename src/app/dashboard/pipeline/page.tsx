@@ -13,6 +13,26 @@ import { getOrganisationByOwner } from '@/lib/organisations'
 import { PIPELINE_STAGES, formatDeadline, formatRange, cn } from '@/lib/utils'
 import type { PipelineItem, PipelineStage, Organisation } from '@/types'
 
+// ── Money helpers ─────────────────────────────
+
+/** Best single value estimate for a pipeline item */
+function itemValue(item: PipelineItem): number {
+  return item.amount_requested ?? item.amount_max ?? item.amount_min ?? 0
+}
+
+/** Sum of values for a list of items */
+function stageTotal(items: PipelineItem[]): number {
+  return items.reduce((sum, i) => sum + itemValue(i), 0)
+}
+
+/** Compact £ display: £2.5k, £200k, £1.2m */
+function formatMoney(n: number): string {
+  if (n === 0) return '—'
+  if (n >= 1_000_000) return `£${(n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1)}m`
+  if (n >= 1_000)     return `£${(n / 1_000).toFixed(n % 1_000 === 0 ? 0 : 1)}k`
+  return `£${n.toLocaleString('en-GB')}`
+}
+
 // ── Grant writing stages ──────────────────────
 
 const WRITING_STAGES = [
@@ -613,7 +633,14 @@ export default function PipelinePage() {
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-7">
         <div>
           <h2 className="font-display text-2xl font-bold text-forest">Funding Pipeline</h2>
-          <p className="text-mid text-sm mt-1">Drag cards between columns or click to edit · {items.length} opportunities tracked</p>
+          <p className="text-mid text-sm mt-1">
+            Drag cards between columns or click to edit · {items.length} opportunities tracked
+            {items.length > 0 && (
+              <span className="ml-2 font-semibold text-gold">
+                · {formatMoney(stageTotal(items.filter(i => i.stage !== 'declined')))} in pipeline
+              </span>
+            )}
+          </p>
         </div>
         <button onClick={() => setShowAdd(true)} className="btn-gold">＋ Add Opportunity</button>
       </div>
@@ -623,6 +650,7 @@ export default function PipelinePage() {
       <div className="grid grid-cols-6 gap-3.5 min-h-[60vh] min-w-[720px] md:min-w-0">
         {PIPELINE_STAGES.map(stage => {
           const stageItems = items.filter(i => i.stage === stage.id)
+          const total = stageTotal(stageItems)
           return (
             <div
               key={stage.id}
@@ -632,7 +660,7 @@ export default function PipelinePage() {
               onDrop={e => onColDrop(e, stage.id as PipelineStage)}
             >
               <div className={cn(
-                'flex items-center justify-between text-[11px] font-bold uppercase tracking-wide mb-2 pb-2.5 border-b-2',
+                'flex items-center justify-between text-[11px] font-bold uppercase tracking-wide mb-1 pb-2.5 border-b-2',
                 stage.id === 'identified'  ? 'border-mid text-mid' :
                 stage.id === 'researching' ? 'border-amber-400 text-amber-600' :
                 stage.id === 'applying'    ? 'border-orange-400 text-orange-600' :
@@ -645,7 +673,14 @@ export default function PipelinePage() {
                   {stageItems.length}
                 </span>
               </div>
-              <p className="text-[10px] text-light text-center mb-2">drag cards to move</p>
+              <p className={cn(
+                'text-[11px] font-semibold text-center mb-2',
+                total === 0 ? 'text-light' :
+                stage.id === 'won'      ? 'text-forest' :
+                stage.id === 'declined' ? 'text-red-400' : 'text-gold'
+              )}>
+                {formatMoney(total)}
+              </p>
 
               {stageItems.map(item => (
                 <div key={item.id} data-card-id={item.id}>
