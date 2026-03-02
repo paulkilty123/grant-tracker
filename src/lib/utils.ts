@@ -49,11 +49,11 @@ export function formatDeadline(deadline: string | null): string {
   const date = parseISO(deadline)
   if (!isValid(date)) return deadline
   const days = differenceInDays(date, new Date())
-  if (days < 0)  return `Overdue (${format(date, 'd MMM yyyy')})`
+  if (days < 0)  return `Overdue (${format(date, 'do MMMM yyyy')})`
   if (days === 0) return 'Today!'
   if (days === 1) return 'Tomorrow'
-  if (days <= 14) return `${days} days (${format(date, 'd MMM')})`
-  return format(date, 'd MMM yyyy')
+  if (days <= 14) return `${days} days (${format(date, 'do MMM')})`
+  return format(date, 'do MMMM yyyy')
 }
 
 export function getDeadlineAlerts(items: PipelineItem[]): DeadlineAlert[] {
