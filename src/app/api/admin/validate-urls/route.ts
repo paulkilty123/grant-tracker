@@ -92,6 +92,28 @@ async function checkUrl(url: string): Promise<'ok' | 'dead'> {
       }
     }
 
+    // ── Content 404 detection ─────────────────────────────────────────────────
+    // Some sites (e.g. Waitrose) serve HTTP 200 but render a "404 Not Found"
+    // page inside their normal site chrome. Check the <title> tag.
+    try {
+      const contentType = res.headers.get('content-type') ?? ''
+      if (contentType.includes('text/html')) {
+        const html = await res.text()
+        const titleMatch = html.match(/<title[^>]*>([^<]*)<\/title>/i)
+        if (titleMatch) {
+          const title = titleMatch[1].toLowerCase()
+          if (
+            title.includes('404') ||
+            title.includes('not found') ||
+            title.includes('page not found') ||
+            title.includes('error 404')
+          ) return 'dead'
+        }
+      }
+    } catch {
+      // Body read failed — rely on status/redirect checks only
+    }
+
     return 'ok'
   } catch {
     // Timeout or network error — benefit of the doubt, check again tomorrow

@@ -47,6 +47,24 @@ async function verifyUrl(url: string): Promise<boolean> {
       } catch { /* ignore parse errors */ }
     }
 
+    // Content 404 detection — catches sites that serve HTTP 200 with a 404 page
+    try {
+      const contentType = res.headers.get('content-type') ?? ''
+      if (contentType.includes('text/html')) {
+        const html = await res.text()
+        const titleMatch = html.match(/<title[^>]*>([^<]*)<\/title>/i)
+        if (titleMatch) {
+          const title = titleMatch[1].toLowerCase()
+          if (
+            title.includes('404') ||
+            title.includes('not found') ||
+            title.includes('page not found') ||
+            title.includes('error 404')
+          ) return false
+        }
+      }
+    } catch { /* ignore */ }
+
     return true
   } catch {
     // Timeout or network error — give it the benefit of the doubt
