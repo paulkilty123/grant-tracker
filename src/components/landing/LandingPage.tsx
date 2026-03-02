@@ -559,8 +559,8 @@ export default function LandingPage() {
           <span className="inline-flex items-center gap-1.5 rounded-full bg-forest/10 px-3 py-1 text-xs font-semibold text-forest">
             📊 Compare
           </span>
-          <h2 className="mt-4 text-3xl md:text-4xl">Why Grant Tracker over spreadsheets?</h2>
-          <p className="mt-3 text-mid max-w-xl mx-auto">Purpose-built for the funding journey — not a generic tool adapted for grants.</p>
+          <h2 className="mt-4 text-3xl md:text-4xl">How Grant Tracker compares</h2>
+          <p className="mt-3 text-mid max-w-xl mx-auto">More than a database — AI matching, a full pipeline, and free to start.</p>
         </motion.div>
         <motion.div {...fadeInView(0.15)}>
           <div className="rounded-2xl border border-warm bg-white overflow-hidden shadow-warm">
@@ -569,18 +569,18 @@ export default function LandingPage() {
               <div className="text-sm font-medium text-mid">Feature</div>
               <div className="text-center text-sm font-bold text-forest">Grant Tracker</div>
               <div className="text-center text-sm font-medium text-mid">Spreadsheet</div>
-              <div className="text-center text-sm font-medium text-mid">Generic CRM</div>
+              <div className="text-center text-sm font-medium text-mid">Grant Database</div>
             </div>
             {/* Rows */}
             {[
-              { feature: '800+ UK grants database', gt: true, spreadsheet: false, generic: false },
-              { feature: 'AI match scoring', gt: true, spreadsheet: false, generic: false },
-              { feature: 'Learns from your feedback', gt: true, spreadsheet: false, generic: false },
-              { feature: 'Live web research', gt: true, spreadsheet: false, generic: false },
-              { feature: 'Visual pipeline board', gt: true, spreadsheet: false, generic: true },
-              { feature: 'Deadline tracking', gt: true, spreadsheet: true, generic: true },
-              { feature: 'Built for UK charities', gt: true, spreadsheet: false, generic: false },
-              { feature: 'Free to start', gt: true, spreadsheet: true, generic: false },
+              { feature: '800+ UK grants database',    gt: true, spreadsheet: false, other: true  },
+              { feature: 'AI match scoring',           gt: true, spreadsheet: false, other: false },
+              { feature: 'Learns from your feedback',  gt: true, spreadsheet: false, other: false },
+              { feature: 'Live web research',          gt: true, spreadsheet: false, other: false },
+              { feature: 'Visual pipeline board',      gt: true, spreadsheet: false, other: false },
+              { feature: 'Deadline tracking',          gt: true, spreadsheet: false, other: false },
+              { feature: 'Built for UK charities',     gt: true, spreadsheet: false, other: true  },
+              { feature: 'Free to start',              gt: true, spreadsheet: true,  other: false },
             ].map((row, i) => (
               <div
                 key={row.feature}
@@ -604,7 +604,7 @@ export default function LandingPage() {
                   )}
                 </div>
                 <div className="flex justify-center">
-                  {row.generic ? (
+                  {row.other ? (
                     <div className="flex h-6 w-6 items-center justify-center rounded-full bg-warm">
                       <Check className="h-3.5 w-3.5 text-mid" />
                     </div>
