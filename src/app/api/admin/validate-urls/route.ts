@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
-export const maxDuration = 300 // 5 min — enough for 800+ URLs at 20 concurrent
+export const maxDuration = 300 // 5 min — enough for 600+ URLs at 20 concurrent
 
 const ADMIN_EMAIL = 'paulkilty1@gmail.com'
 

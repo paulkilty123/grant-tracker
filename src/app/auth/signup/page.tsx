@@ -71,7 +71,7 @@ export default function SignupPage() {
 
               <div className="space-y-6">
                 {[
-                  { icon: '🔍', title: '800+ UK grants', desc: 'Charities, community groups, social enterprises and more — updated daily from verified sources.' },
+                  { icon: '🔍', title: '600+ UK grants', desc: 'Charities, community groups, social enterprises and more — updated daily from verified sources.' },
                   { icon: '🎯', title: 'AI that learns from you', desc: 'Personalised matching that improves the more you use it — thumbs up, thumbs down, done.' },
                   { icon: '📋', title: 'Full application pipeline', desc: 'From first discovery to decision — track every grant without a spreadsheet.' },
                 ].map(f => (

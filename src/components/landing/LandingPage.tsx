@@ -132,7 +132,7 @@ export default function LandingPage() {
             {...fadeUp(0.35)}
             className="mx-auto mt-6 max-w-2xl text-lg text-mid md:text-xl"
           >
-            800+ UK funding opportunities, AI matching that learns from your feedback, and a full application pipeline — all in one place.
+            600+ UK funding opportunities, AI matching that learns from your feedback, and a full application pipeline — all in one place.
           </motion.p>
 
           {/* CTAs */}
@@ -184,7 +184,7 @@ export default function LandingPage() {
               ✦ Feature 1 · AI Search
             </span>
             <h2 className="mt-4 text-3xl leading-tight md:text-4xl">
-              800+ UK funding opportunities,<br />ranked by AI to your mission
+              600+ UK funding opportunities,<br />ranked by AI to your mission
             </h2>
             <p className="mt-4 text-lg text-mid leading-relaxed">
               Search grants, competitions, social loans and matched crowdfunding — not just the obvious sources, but the specialist and hyper-local funders too. AI Search ranks every result by how well it fits your mission, income band and eligibility.
@@ -572,7 +572,7 @@ export default function LandingPage() {
             </div>
             {/* Rows */}
             {[
-              { feature: '800+ UK grants database',   gt: true,  other: true  },
+              { feature: '600+ UK grants database',   gt: true,  other: true  },
               { feature: 'AI match scoring',          gt: true,  other: false },
               { feature: 'Learns from your feedback', gt: true,  other: false },
               { feature: 'Live web research',         gt: true,  other: false },
@@ -706,7 +706,7 @@ export default function LandingPage() {
       <section className="max-w-6xl mx-auto px-6 pb-20">
         <motion.div {...fadeInView()} className="bg-forest/8 rounded-2xl p-8 grid grid-cols-2 sm:grid-cols-4 gap-6 text-center border border-forest/10">
           {[
-            { stat: '800+', label: 'Grants, competitions, loans & crowdfund matches' },
+            { stat: '600+', label: 'Grants, competitions, loans & crowdfund matches' },
             { stat: '120+', label: 'Sources crawled daily across the UK' },
             { stat: 'Free', label: 'to search — no credit card required' },
             { stat: 'Live', label: 'AI research and daily database refresh' },
