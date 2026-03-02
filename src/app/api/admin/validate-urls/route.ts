@@ -33,17 +33,53 @@ function getAdminClient() {
 }
 
 // ── URL checker ───────────────────────────────────────────────────────────────
-// Returns 'ok' | 'dead'. Mirrors the logic in /api/deep-search.
+// Returns 'ok' | 'dead'.
+// Catches both hard 404s AND soft 404s (pages that redirect to homepage).
 async function checkUrl(url: string): Promise<'ok' | 'dead'> {
   try {
+    // follow redirects so res.url gives us the final destination
     const res = await fetch(url, {
       method: 'GET',
       signal: AbortSignal.timeout(8000),
       redirect: 'follow',
       headers: { 'User-Agent': 'GrantTracker-URLChecker/1.0' },
     })
-    // 404 Gone / 410 Gone / 400 Bad Request → dead
+
+    // ── Hard failures ─────────────────────────────────────────────────────────
     if (res.status === 404 || res.status === 410 || res.status === 400) return 'dead'
+
+    // ── Soft 404 detection ────────────────────────────────────────────────────
+    // Many charity sites silently redirect dead grant pages to their homepage
+    // or a top-level section rather than returning a proper 404.
+    // We flag a URL as dead if after following redirects it lands on a page
+    // that is clearly not the specific grant page we asked for.
+    const finalUrl = res.url  // populated by fetch after following all redirects
+    if (finalUrl && finalUrl !== url) {
+      try {
+        const orig  = new URL(url)
+        const final = new URL(finalUrl)
+
+        // Only inspect same-domain or www-variant redirects — cross-domain
+        // redirects to unrelated sites are also treated as dead below.
+        const origHost  = orig.hostname.replace(/^www\./, '')
+        const finalHost = final.hostname.replace(/^www\./, '')
+        const sameDomain = origHost === finalHost
+
+        const origDepth  = orig.pathname.replace(/\/$/, '').split('/').filter(Boolean).length
+        const finalDepth = final.pathname.replace(/\/$/, '').split('/').filter(Boolean).length
+
+        if (sameDomain) {
+          // e.g. /grants/fellowship-programme  →  /  or  /grants  (depth dropped ≥ 2 levels)
+          if (origDepth >= 2 && finalDepth <= 1) return 'dead'
+        } else {
+          // Redirected to a completely different domain — almost always dead
+          return 'dead'
+        }
+      } catch {
+        // URL parse failed — ignore soft-404 check, rely on status code only
+      }
+    }
+
     return 'ok'
   } catch {
     // Timeout or network error — benefit of the doubt, check again tomorrow
