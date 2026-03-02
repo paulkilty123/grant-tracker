@@ -35,6 +35,7 @@ export default function UrlAdminPage() {
   const [saving, setSaving]         = useState(false)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [search, setSearch]                   = useState('')
+  const [loadError, setLoadError]             = useState<string | null>(null)
 
   // ── Auth check ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -75,7 +76,14 @@ export default function UrlAdminPage() {
       query = query.or(`title.ilike.%${search.trim()}%,funder.ilike.%${search.trim()}%`)
     }
 
-    const { data } = await query
+    const { data, error } = await query
+    if (error) {
+      console.error('loadGrants error:', error)
+      setLoadError(`Query failed: ${error.message}`)
+      setGrants([])
+      return
+    }
+    setLoadError(null)
     setGrants((data ?? []) as Grant[])
   }, [filter, search])
 
@@ -251,6 +259,16 @@ export default function UrlAdminPage() {
           />
         </div>
       </div>
+
+      {/* Query error */}
+      {loadError && (
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <strong>Database error:</strong> {loadError}
+          {loadError.includes('is_invite_only') && (
+            <p className="mt-1 text-xs">Run migration <code>009_invite_only.sql</code> in your Supabase SQL Editor to fix this.</p>
+          )}
+        </div>
+      )}
 
       {/* Grant table */}
       <div className="rounded-xl border border-warm bg-white overflow-hidden shadow-card">
