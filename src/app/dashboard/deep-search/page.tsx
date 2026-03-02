@@ -58,11 +58,11 @@ function DeepGrantCard({ grant, onAddToPipeline }: {
   onAddToPipeline: (g: DeepGrant) => void
 }) {
   return (
-    <div className="bg-white rounded-xl p-5 shadow-card mb-3 border border-indigo-100 hover:border-indigo-300 transition-all">
+    <div className="bg-white rounded-xl p-5 shadow-card mb-3 border border-warm hover:border-sage/30 transition-all">
       <div className="flex gap-4">
         <div className="flex-1">
           <div className="flex items-start gap-3 mb-2">
-            <div className="w-9 h-9 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold text-sm flex-shrink-0">
+            <div className="w-9 h-9 rounded-lg bg-sage/10 flex items-center justify-center text-forest font-bold text-sm flex-shrink-0">
               {grant.funder[0]}
             </div>
             <div className="flex-1">
@@ -72,14 +72,14 @@ function DeepGrantCard({ grant, onAddToPipeline }: {
           </div>
           <p className="text-sm text-mid leading-relaxed mb-3">{grant.description}</p>
           {grant.notes && (
-            <div className="bg-indigo-50 rounded-lg px-3.5 py-2.5 flex items-start gap-2">
-              <span className="text-indigo-400 text-sm">💡</span>
-              <p className="text-sm text-indigo-800">{grant.notes}</p>
+            <div className="bg-sage/10 rounded-lg px-3.5 py-2.5 flex items-start gap-2">
+              <span className="text-sage text-sm">💡</span>
+              <p className="text-sm text-charcoal">{grant.notes}</p>
             </div>
           )}
         </div>
         <div className="flex flex-col items-end gap-3 w-44 flex-shrink-0">
-          <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700">🔬 Live result</span>
+          <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-sage/10 text-forest">🔬 Live result</span>
           {grant.amountRange && (
             <div className="text-right w-full">
               <p className="font-display text-lg font-bold text-gold leading-snug break-words">{grant.amountRange}</p>
@@ -283,9 +283,9 @@ export default function AdvancedSearchPage() {
       </div>
 
       {/* Explainer banner */}
-      <div className="bg-indigo-600 rounded-2xl px-6 py-5 mb-6 text-white">
+      <div className="bg-forest rounded-2xl px-6 py-5 mb-6 text-white">
         <p className="text-lg font-bold mb-1">Dig deeper beyond our database — search live funds tailored to your organisation or venture.</p>
-        <p className="text-sm text-indigo-200 leading-relaxed mb-4">
+        <p className="text-sm text-mint leading-relaxed mb-4">
           AI researches the live web in real time — council sites, NHS pages, community foundations and specialist funders — identifying hyper-local and newly announced funding that isn&apos;t in our main database yet.
         </p>
         <div className="flex flex-wrap gap-3">
@@ -309,7 +309,7 @@ export default function AdvancedSearchPage() {
         {/* Keyword input */}
         <div className="flex gap-3">
           <div className="flex-1 relative">
-            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-indigo-400">🔬</span>
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sage">🔬</span>
             <input
               type="text"
               value={query}
@@ -322,7 +322,7 @@ export default function AdvancedSearchPage() {
           <button
             onClick={handleSearch}
             disabled={loading || !canSearch}
-            className="px-6 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50 whitespace-nowrap"
+            className="px-6 py-2.5 rounded-xl bg-forest text-white text-sm font-medium hover:bg-sage transition-colors disabled:opacity-50 whitespace-nowrap"
           >
             {loading ? '⏳ Researching…' : '🔬 Live Search'}
           </button>
@@ -352,24 +352,24 @@ export default function AdvancedSearchPage() {
             <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Recent searches</p>
             <div className="flex flex-wrap gap-2">
               {searchHistory.map(item => (
-                <div key={item.id} className="flex items-center gap-1 bg-indigo-50 border border-indigo-100 rounded-full pl-3 pr-1 py-1">
+                <div key={item.id} className="flex items-center gap-1 bg-sage/10 border border-warm rounded-full pl-3 pr-1 py-1">
                   <button
                     onClick={() => {
                       setQuery(item.query)
                       if (item.location) { setLocationFilter(item.location); setOptionsOpen(true) }
                       if (item.sectors.length) { setSelectedSectors(item.sectors); setOptionsOpen(true) }
                     }}
-                    className="text-xs text-indigo-700 font-medium hover:text-indigo-900 max-w-[200px] truncate"
+                    className="text-xs text-forest font-medium hover:text-charcoal max-w-[200px] truncate"
                   >
                     🕐 {item.query}
-                    {item.result_count != null && <span className="text-indigo-400 ml-1">· {item.result_count} results</span>}
+                    {item.result_count != null && <span className="text-sage ml-1">· {item.result_count} results</span>}
                   </button>
                   <button
                     onClick={async () => {
                       await deleteSearchHistory(item.id)
                       setSearchHistory(prev => prev.filter(h => h.id !== item.id))
                     }}
-                    className="text-indigo-300 hover:text-indigo-600 px-1 text-xs ml-1"
+                    className="text-mint hover:text-forest px-1 text-xs ml-1"
                     title="Remove"
                   >
                     ✕
@@ -385,8 +385,8 @@ export default function AdvancedSearchPage() {
           onClick={() => setOptionsOpen(o => !o)}
           className={`mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border font-semibold text-sm transition-all ${
             optionsOpen || selectedSectors.length > 0 || locationFilter.trim()
-              ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
-              : 'border-warm text-mid hover:border-indigo-400 hover:text-indigo-600 bg-white'
+              ? 'bg-forest text-white border-forest shadow-sm'
+              : 'border-warm text-mid hover:border-sage hover:text-forest bg-white'
           }`}
         >
           <span>🔧</span>
@@ -426,8 +426,8 @@ export default function AdvancedSearchPage() {
                     onClick={() => toggleSector(s.id)}
                     className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
                       selectedSectors.includes(s.id)
-                        ? 'bg-indigo-600 border-indigo-600 text-white'
-                        : 'border-indigo-200 text-indigo-700 hover:bg-indigo-50'
+                        ? 'bg-forest border-forest text-white'
+                        : 'border-warm text-forest hover:bg-sage/10'
                     }`}
                   >
                     {s.label}
@@ -449,7 +449,7 @@ export default function AdvancedSearchPage() {
         )}
 
         {loading && (
-          <div className="mt-4 bg-indigo-50 rounded-lg px-4 py-3 text-sm text-indigo-700">
+          <div className="mt-4 bg-sage/10 rounded-lg px-4 py-3 text-sm text-forest">
             🔬 Searching live funding sources, local council programmes and specialist funders… this takes 15–30 seconds.
           </div>
         )}
@@ -465,7 +465,7 @@ export default function AdvancedSearchPage() {
             <div>
               <h3 className="font-display font-bold text-forest text-base flex items-center gap-2">
                 {smartMatched ? `Live results for ${org?.name}` : 'Live Research Results'}
-                <span className="text-xs font-normal bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">
+                <span className="text-xs font-normal bg-sage/15 text-forest px-2 py-0.5 rounded-full">
                   {results.grants.length} found
                 </span>
                 {results._cached && (
@@ -499,11 +499,11 @@ export default function AdvancedSearchPage() {
                 emoji: '🌐',
                 title: 'Searches the live web',
                 desc: 'Looks across council websites, NHS commissioning pages, community foundation portals and funder sites — updated in real time.',
-                accent: 'from-indigo-500 to-violet-500',
-                bg: 'bg-indigo-50',
-                border: 'border-indigo-100',
-                text: 'text-indigo-900',
-                sub: 'text-indigo-700',
+                accent: 'from-forest to-sage',
+                bg: 'bg-sage/10',
+                border: 'border-warm',
+                text: 'text-charcoal',
+                sub: 'text-forest',
               },
               {
                 emoji: '📍',
@@ -546,7 +546,7 @@ export default function AdvancedSearchPage() {
                 <button
                   key={q}
                   onClick={() => { setQuery(q); setResults(null) }}
-                  className="px-3.5 py-1.5 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-medium hover:bg-indigo-100 hover:border-indigo-300 transition-all"
+                  className="px-3.5 py-1.5 rounded-full bg-sage/10 border border-warm text-forest text-xs font-medium hover:bg-sage/15 hover:border-sage/30 transition-all"
                 >
                   {q} →
                 </button>

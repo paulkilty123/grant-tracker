@@ -18,8 +18,8 @@ const FUNDER_LABELS: Record<string, string> = {
 
 const TYPE_COLOURS: Record<string, string> = {
   lottery:             'bg-green-50 text-green-700',
-  trust_foundation:    'bg-blue-50 text-blue-700',
-  foundation:          'bg-blue-50 text-blue-700',
+  trust_foundation:    'bg-sage/10 text-forest',
+  foundation:          'bg-sage/10 text-forest',
   corporate:           'bg-amber-50 text-amber-700',
   local_authority:     'bg-purple-50 text-purple-700',
   housing_association: 'bg-teal-50 text-teal-700',
@@ -77,7 +77,7 @@ export default async function GrantDetailPage({
         : `📅 ${grant.deadline}`
       : 'Check website for deadline'
 
-  const deadlineColour = grant.is_rolling ? 'text-blue-700'
+  const deadlineColour = grant.is_rolling ? 'text-sage'
     : grant.deadline && new Date(grant.deadline) < new Date() ? 'text-red-600'
     : 'text-charcoal'
 

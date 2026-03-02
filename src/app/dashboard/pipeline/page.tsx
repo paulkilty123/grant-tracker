@@ -17,7 +17,7 @@ import type { PipelineItem, PipelineStage, Organisation } from '@/types'
 
 const WRITING_STAGES = [
   { label: 'Not started', value: 0,   emoji: '○',  colour: 'text-light' },
-  { label: 'Research',    value: 17,  emoji: '🔍', colour: 'text-blue-500' },
+  { label: 'Research',    value: 17,  emoji: '🔍', colour: 'text-sage' },
   { label: 'Outline',     value: 33,  emoji: '📝', colour: 'text-amber-500' },
   { label: 'First draft', value: 50,  emoji: '✏️', colour: 'text-purple-500' },
   { label: 'Revising',    value: 67,  emoji: '🔄', colour: 'text-orange-500' },
@@ -54,7 +54,7 @@ function PipelineCard({
   const isDeclined = stage.id === 'declined'
 
   const borderColour =
-    stage.id === 'identified'  ? 'border-blue-400' :
+    stage.id === 'identified'  ? 'border-mid' :
     stage.id === 'researching' ? 'border-amber-400' :
     stage.id === 'applying'    ? 'border-purple-400' :
     stage.id === 'submitted'   ? 'border-sage' :
@@ -633,7 +633,7 @@ export default function PipelinePage() {
             >
               <div className={cn(
                 'flex items-center justify-between text-[11px] font-bold uppercase tracking-wide mb-2 pb-2.5 border-b-2',
-                stage.id === 'identified'  ? 'border-blue-400 text-blue-600' :
+                stage.id === 'identified'  ? 'border-mid text-mid' :
                 stage.id === 'researching' ? 'border-amber-400 text-amber-600' :
                 stage.id === 'applying'    ? 'border-purple-400 text-purple-600' :
                 stage.id === 'submitted'   ? 'border-sage text-sage' :

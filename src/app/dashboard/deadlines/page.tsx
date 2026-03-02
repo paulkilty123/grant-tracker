@@ -8,7 +8,7 @@ import type { DeadlineAlert, PipelineItem } from '@/types'
 const URGENCY_CONFIG = {
   overdue: { label: 'Overdue',    bg: 'bg-red-50',    text: 'text-red-600',    border: 'border-red-200',    badge: 'bg-red-100 text-red-600'      },
   urgent:  { label: 'This week',  bg: 'bg-amber-50',  text: 'text-amber-600',  border: 'border-amber-200',  badge: 'bg-amber-100 text-amber-600'  },
-  soon:    { label: 'Coming up',  bg: 'bg-blue-50',   text: 'text-blue-600',   border: 'border-blue-200',   badge: 'bg-blue-100 text-blue-600'    },
+  soon:    { label: 'Coming up',  bg: 'bg-sage/10',   text: 'text-sage',   border: 'border-sage/20',   badge: 'bg-sage/15 text-sage'    },
   ok:      { label: 'On track',   bg: 'bg-green-50',  text: 'text-sage',       border: 'border-green-200',  badge: 'bg-green-100 text-sage'       },
   rolling: { label: 'Rolling',    bg: 'bg-gray-50',   text: 'text-gray-500',   border: 'border-gray-200',   badge: 'bg-gray-100 text-gray-500'    },
 }
@@ -166,7 +166,7 @@ export default function DeadlinesPage() {
             {[
               { label: 'Overdue',   count: overdue.length, bg: 'bg-red-50',    text: 'text-red-600',   border: 'border-red-200'   },
               { label: 'This week', count: urgent.length,  bg: 'bg-amber-50',  text: 'text-amber-600', border: 'border-amber-200' },
-              { label: 'Coming up', count: soon.length,    bg: 'bg-blue-50',   text: 'text-blue-600',  border: 'border-blue-200'  },
+              { label: 'Coming up', count: soon.length,    bg: 'bg-sage/10',   text: 'text-sage',  border: 'border-sage/20'  },
               { label: 'On track',  count: ok.length,      bg: 'bg-green-50',  text: 'text-sage',      border: 'border-green-200' },
             ].map(s => (
               <div key={s.label} className={`rounded-xl p-4 border ${s.bg} ${s.border}`}>
@@ -195,7 +195,7 @@ export default function DeadlinesPage() {
           )}
           {soon.length > 0 && (
             <section className="mb-6">
-              <h3 className="font-display text-sm font-semibold text-blue-600 uppercase tracking-wider mb-3">
+              <h3 className="font-display text-sm font-semibold text-sage uppercase tracking-wider mb-3">
                 📆 Coming up (11–21 days) — {soon.length}
               </h3>
               {soon.map(a => <DeadlineCard key={a.item.id} alert={a} />)}

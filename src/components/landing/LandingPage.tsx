@@ -451,7 +451,7 @@ export default function LandingPage() {
               </div>
               <div className="grid grid-cols-6 gap-1.5 mb-3">
                 {[
-                  { label: 'Identified', color: 'border-blue-400 text-blue-600', cards: 2 },
+                  { label: 'Identified', color: 'border-mid text-mid', cards: 2 },
                   { label: 'Researching', color: 'border-gold text-gold', cards: 1 },
                   { label: 'Applying', color: 'border-sage text-sage', cards: 2 },
                   { label: 'Submitted', color: 'border-forest text-forest', cards: 1 },

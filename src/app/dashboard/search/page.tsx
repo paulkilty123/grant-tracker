@@ -192,7 +192,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
 
   const typeColour: Record<string, string> = {
     lottery:             'bg-green-50 text-green-700',
-    trust_foundation:    'bg-blue-50 text-blue-700',
+    trust_foundation:    'bg-sage/10 text-forest',
     corporate:           'bg-amber-50 text-amber-700',
     local_authority:     'bg-purple-50 text-purple-700',
     housing_association: 'bg-teal-50 text-teal-700',
@@ -216,7 +216,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
 
   const entryBadge = {
     live:    { label: '📅 Open grant',   cls: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
-    rolling: { label: '🔄 Always open',  cls: 'bg-blue-50 text-blue-600 border border-blue-200' },
+    rolling: { label: '🔄 Always open',  cls: 'bg-sage/10 text-sage border border-sage/20' },
     profile: { label: 'ℹ Funder info',   cls: 'bg-gray-100 text-gray-500 border border-gray-200' },
   }[entryType]
 
@@ -895,7 +895,7 @@ export default function SearchPage() {
         <h2 className="font-display text-2xl font-bold text-forest">Search Grants</h2>
         <p className="text-mid text-sm mt-1">
           Our curated database of {allGrants.length}+ verified UK grants — instant results.{' '}
-          <a href="/dashboard/deep-search" className="text-indigo-600 hover:underline">
+          <a href="/dashboard/deep-search" className="text-forest hover:underline">
             Need something more specific? Try Live Search →
           </a>
         </p>
@@ -951,7 +951,7 @@ export default function SearchPage() {
           {([
             { key: 'all',     label: 'All',         icon: '',   desc: 'Show everything',                                      cls: 'border-warm text-mid bg-white',                     active: 'bg-forest border-forest text-white' },
             { key: 'live',    label: 'Open grant',  icon: '📅', desc: 'Specific round with a closing deadline',               cls: 'border-emerald-200 text-emerald-700 bg-emerald-50', active: 'bg-emerald-600 border-emerald-600 text-white' },
-            { key: 'rolling', label: 'Always open', icon: '🔄', desc: 'Rolling programme — apply any time',                  cls: 'border-blue-200 text-blue-600 bg-blue-50',          active: 'bg-blue-600 border-blue-600 text-white' },
+            { key: 'rolling', label: 'Always open', icon: '🔄', desc: 'Rolling programme — apply any time',                  cls: 'border-sage/20 text-sage bg-sage/10',          active: 'bg-forest border-forest text-white' },
             { key: 'profile', label: 'Funder info', icon: 'ℹ',  desc: 'General funder profile — no specific round open now', cls: 'border-gray-200 text-gray-500 bg-gray-50',          active: 'bg-gray-500 border-gray-500 text-white' },
           ] as const).map(({ key, label, icon, desc, cls, active }) => (
             <button
@@ -1276,7 +1276,7 @@ export default function SearchPage() {
         <div className="text-center py-16 text-light">
           <p className="text-4xl mb-3">🔍</p>
           <p className="mb-3">No grants found — try different keywords or clear the filter.</p>
-          <a href="/dashboard/deep-search" className="text-indigo-600 text-sm hover:underline">
+          <a href="/dashboard/deep-search" className="text-forest text-sm hover:underline">
             Try 🔬 Live Search for live opportunities →
           </a>
         </div>

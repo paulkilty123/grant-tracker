@@ -87,7 +87,7 @@ export default async function DashboardPage() {
           </p>
           <p className="text-xs text-mid mt-1.5">{stats.wonCount} grants secured</p>
         </div>
-        <div className="stat-card border-blue-400">
+        <div className="stat-card border-mid">
           <p className="text-[10px] font-semibold text-light uppercase tracking-wider mb-2">Submitted</p>
           <p className="font-display text-3xl font-bold text-forest">{stats.submittedCount}</p>
           <p className="text-xs text-mid mt-1.5">awaiting decision</p>
