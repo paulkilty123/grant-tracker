@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, Target, ClipboardList, Bell, User, Check, Heart, Users, Lightbulb, Mail, MessageSquare } from 'lucide-react'
 import ContactForm from '@/components/ContactForm'
 
 /* ─── helpers ─── */
@@ -44,7 +44,7 @@ export default function LandingPage() {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           {/* Logo */}
           <a href="/" className="flex items-center gap-0.5">
-            <span className="font-serif text-2xl text-forest">Grant</span>
+            <span className="font-serif text-2xl text-forest italic">Grant</span>
             <span className="font-serif text-2xl text-charcoal">Tracker</span>
           </a>
 
@@ -154,18 +154,18 @@ export default function LandingPage() {
             className="mx-auto mt-16 grid max-w-3xl grid-cols-2 gap-4 md:grid-cols-4"
           >
             {[
-              { icon: '🎯', stat: 'AI Match', label: 'learns from your feedback' },
-              { icon: '📋', stat: 'Pipeline', label: 'tracks every application' },
-              { icon: '🔔', stat: 'Alerts', label: 'when new matches appear' },
-              { icon: '👤', stat: 'Personalisation', label: 'matched to your mission' },
+              { icon: Target, stat: 'AI Match', label: 'learns from your feedback' },
+              { icon: ClipboardList, stat: 'Pipeline', label: 'tracks every application' },
+              { icon: Bell, stat: 'Alerts', label: 'when new matches appear' },
+              { icon: User, stat: 'Personalisation', label: 'matched to your mission' },
             ].map((item, i) => (
               <motion.div
                 key={item.stat}
                 {...fadeUp(0.7 + i * 0.1)}
                 className="group flex flex-col items-center gap-2 rounded-2xl border border-warm bg-white p-5 transition-all hover:border-forest/20 hover:shadow-warm"
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-forest/10 text-xl transition-colors group-hover:bg-forest group-hover:text-white">
-                  {item.icon}
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-forest/10 text-forest transition-colors group-hover:bg-forest group-hover:text-white">
+                  <item.icon size={20} />
                 </div>
                 <span className="font-serif text-sm font-semibold text-charcoal">{item.stat}</span>
                 <span className="text-xs text-mid">{item.label}</span>
@@ -554,48 +554,68 @@ export default function LandingPage() {
       </section>
 
       {/* ══ COMPARISON ════════════════════════════════════════════════════════ */}
-      <section id="compare" className="max-w-6xl mx-auto px-6 pb-24 scroll-mt-20">
-        <motion.div {...fadeInView()} className="text-center mb-10">
-          <h2 className="text-3xl md:text-4xl">Not just cheaper. Dramatically better.</h2>
-          <p className="mt-3 text-mid max-w-xl mx-auto">UK grant databases have barely changed in a decade. Grant Tracker was built from scratch for how charities, social enterprises and impact founders actually work.</p>
+      <section id="compare" className="max-w-4xl mx-auto px-6 pb-24 scroll-mt-20">
+        <motion.div {...fadeInView()} className="text-center mb-12">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-forest/10 px-3 py-1 text-xs font-semibold text-forest">
+            📊 Compare
+          </span>
+          <h2 className="mt-4 text-3xl md:text-4xl">Why Grant Tracker over spreadsheets?</h2>
+          <p className="mt-3 text-mid max-w-xl mx-auto">Purpose-built for the funding journey — not a generic tool adapted for grants.</p>
         </motion.div>
-        <motion.div {...fadeInView(0.1)}>
-          <div className="bg-white rounded-2xl shadow-card border border-warm overflow-hidden">
-            <div className="grid grid-cols-3 text-sm">
-              <div className="p-4 bg-warm/40 border-b border-r border-warm">
-                <p className="font-semibold text-charcoal text-xs uppercase tracking-wider">Feature</p>
-              </div>
-              <div className="p-4 bg-warm/40 border-b border-r border-warm text-center">
-                <p className="font-semibold text-mid text-xs uppercase tracking-wider">Traditional tools</p>
-                <p className="text-[10px] text-light mt-0.5">£150–£1,000+/year</p>
-              </div>
-              <div className="p-4 bg-forest/5 border-b border-warm text-center">
-                <p className="font-bold text-forest text-xs uppercase tracking-wider">Grant Tracker</p>
-                <p className="text-[10px] text-sage mt-0.5">Free · £19/mo for full access</p>
-              </div>
-              {[
-                { feature: 'Funding database', them: '✓', us: '✓ 800+ grants, competitions, loans & crowdfund match' },
-                { feature: 'AI-powered matching', them: '✗ No', us: '✓ Scores every result across 5 dimensions' },
-                { feature: 'Personalisation & feedback learning', them: '✗ No', us: '✓ Ratings train results to your preferences' },
-                { feature: 'Live web research', them: '✗ Static database', us: '✓ Live Search finds live & hyper-local results' },
-                { feature: 'Dashboard & deadline alerts', them: '± Basic', us: '✓ Urgency flags + email alerts on new matches' },
-                { feature: 'Application pipeline', them: '✗ Separate tool needed', us: '✓ Built in, drag and drop kanban' },
-                { feature: 'Writing progress tracking', them: '✗', us: '✓ Per-card stage-by-stage progress tracker' },
-                { feature: 'Free tier', them: '✗ Fully paywalled', us: '✓ Search 800+ grants free forever' },
-              ].map((row, i) => (
-                <div key={row.feature} className="contents">
-                  <div className={`p-3.5 border-b border-r border-warm ${i % 2 !== 0 ? 'bg-warm/20' : ''}`}>
-                    <p className="text-sm text-charcoal font-medium">{row.feature}</p>
-                  </div>
-                  <div className={`p-3.5 border-b border-r border-warm text-center ${i % 2 !== 0 ? 'bg-warm/20' : ''}`}>
-                    <p className={`text-sm ${row.them.startsWith('✗') ? 'text-red-400' : row.them.startsWith('±') ? 'text-gold' : 'text-mid'}`}>{row.them}</p>
-                  </div>
-                  <div className={`p-3.5 border-b border-warm text-center ${i % 2 !== 0 ? 'bg-forest/[0.04]' : 'bg-forest/[0.02]'}`}>
-                    <p className="text-sm text-forest font-medium">{row.us}</p>
+        <motion.div {...fadeInView(0.15)}>
+          <div className="rounded-2xl border border-warm bg-white overflow-hidden shadow-warm">
+            {/* Header */}
+            <div className="grid grid-cols-4 gap-0 border-b border-warm bg-warm/30 px-6 py-4">
+              <div className="text-sm font-medium text-mid">Feature</div>
+              <div className="text-center text-sm font-bold text-forest">Grant Tracker</div>
+              <div className="text-center text-sm font-medium text-mid">Spreadsheet</div>
+              <div className="text-center text-sm font-medium text-mid">Generic CRM</div>
+            </div>
+            {/* Rows */}
+            {[
+              { feature: '800+ UK grants database', gt: true, spreadsheet: false, generic: false },
+              { feature: 'AI match scoring', gt: true, spreadsheet: false, generic: false },
+              { feature: 'Learns from your feedback', gt: true, spreadsheet: false, generic: false },
+              { feature: 'Live web research', gt: true, spreadsheet: false, generic: false },
+              { feature: 'Visual pipeline board', gt: true, spreadsheet: false, generic: true },
+              { feature: 'Deadline tracking', gt: true, spreadsheet: true, generic: true },
+              { feature: 'Built for UK charities', gt: true, spreadsheet: false, generic: false },
+              { feature: 'Free to start', gt: true, spreadsheet: true, generic: false },
+            ].map((row, i) => (
+              <div
+                key={row.feature}
+                className={`grid grid-cols-4 gap-0 px-6 py-3.5 ${i < 7 ? 'border-b border-warm' : ''}`}
+              >
+                <div className="text-sm text-charcoal">{row.feature}</div>
+                <div className="flex justify-center">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-forest/10">
+                    <Check className="h-3.5 w-3.5 text-forest" />
                   </div>
                 </div>
-              ))}
-            </div>
+                <div className="flex justify-center">
+                  {row.spreadsheet ? (
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-warm">
+                      <Check className="h-3.5 w-3.5 text-mid" />
+                    </div>
+                  ) : (
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-red-50">
+                      <X className="h-3.5 w-3.5 text-red-400" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex justify-center">
+                  {row.generic ? (
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-warm">
+                      <Check className="h-3.5 w-3.5 text-mid" />
+                    </div>
+                  ) : (
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-red-50">
+                      <X className="h-3.5 w-3.5 text-red-400" />
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         </motion.div>
       </section>
@@ -623,75 +643,52 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      {/* ══ FOUNDER STORY ══════════════════════════════════════════════════════ */}
-      <section id="about" className="max-w-6xl mx-auto px-6 pb-24 scroll-mt-20">
-        <motion.div {...fadeInView()} className="bg-white rounded-3xl shadow-card border border-warm overflow-hidden">
-          <div className="grid grid-cols-1 lg:grid-cols-5">
-
-            {/* Left credential panel */}
-            <div className="lg:col-span-2 bg-forest p-10 flex flex-col gap-8">
-              <div className="flex items-center gap-3">
-                <div className="w-14 h-14 rounded-2xl bg-sage/20 border-2 border-sage/30 flex items-center justify-center flex-shrink-0">
-                  <span className="font-serif text-xl font-bold text-white">GT</span>
-                </div>
-                <div>
-                  <p className="font-serif text-lg font-bold text-white">Grant Tracker</p>
-                  <p className="text-mint/60 text-xs mt-0.5">Built by sector practitioners</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { stat: '20', unit: 'yrs', label: 'sector experience' },
-                  { stat: '3', unit: 'orgs', label: 'founded & run' },
-                  { stat: 'Charity', unit: '+', label: 'social enterprise' },
-                  { stat: '£M', unit: '+', label: 'funding secured' },
-                ].map(item => (
-                  <div key={item.label} className="bg-white/5 border border-white/10 rounded-xl p-3">
-                    <p className="font-serif text-xl font-bold text-white leading-none">
-                      {item.stat}<span className="text-sage text-sm">{item.unit}</span>
-                    </p>
-                    <p className="text-mint/50 text-[10px] mt-1">{item.label}</p>
-                  </div>
-                ))}
-              </div>
-
-              <div>
-                <p className="text-mint/40 text-[10px] font-semibold uppercase tracking-wider mb-2">Our background</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {['Founders', 'Fundraisers', 'Charities', 'Social Enterprise', 'Community Sector'].map(tag => (
-                    <span key={tag} className="text-[10px] font-medium text-mint/60 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">{tag}</span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mt-auto pt-6 border-t border-white/10">
-                <p className="text-mint/60 text-sm leading-normal italic">
-                  &ldquo;We built the tool the sector needed but never had.&rdquo;
-                </p>
-              </div>
-            </div>
-
-            {/* Right content */}
-            <div className="lg:col-span-3 p-10">
-              <h2 className="text-3xl mb-6">Why Grant Tracker exists</h2>
-              <blockquote className="font-serif text-xl text-forest font-semibold leading-snug mb-6 border-l-4 border-sage pl-5">
-                &ldquo;Finding the right grant has always been harder than it should be. The tools that existed were too expensive, too generic, and built for organisations with a dedicated grants team — not for the people actually doing the work.&rdquo;
-              </blockquote>
-              <div className="space-y-4 text-mid text-base leading-relaxed">
-                <p>
-                  Grant Tracker was built from direct experience of the sector. Across charities, social enterprises and community organisations, the grant search process is consistently one of the most time-consuming and frustrating parts of running a mission-driven organisation — sifting through outdated databases, missing hyper-local funders that never appear in national searches, and juggling applications across spreadsheets and inboxes.
-                </p>
-                <p>
-                  The tools that did exist ranged from around £150 a year for basic directories to £1,000 or more for the larger platforms, and most required specialist training to extract any real value. Small charities, community groups and grassroots ventures were effectively priced out of the tools designed to help them.
-                </p>
-                <p>
-                  Grant Tracker was built to change that. A platform that understands how UK funding actually works, that learns from how you engage with it, and that&apos;s simple enough for any founder, trustee or community organiser to use alongside everything else they&apos;re managing.
-                </p>
-              </div>
-            </div>
-          </div>
+      {/* ══ ABOUT ══════════════════════════════════════════════════════════════ */}
+      <section id="about" className="max-w-4xl mx-auto px-6 pb-24 scroll-mt-20">
+        <motion.div {...fadeInView()} className="text-center mb-12">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-forest/10 px-3 py-1 text-xs font-semibold text-forest">
+            🌱 About
+          </span>
+          <h2 className="mt-4 text-3xl md:text-4xl">
+            Built for the people who<br />
+            <span className="italic">build communities</span>
+          </h2>
+          <p className="mt-3 text-mid max-w-lg mx-auto">
+            Grant Tracker exists to help mission-driven organisations spend less time searching for funding and more time delivering impact.
+          </p>
         </motion.div>
+
+        <div className="grid md:grid-cols-3 gap-6">
+          {[
+            {
+              icon: Heart,
+              title: 'Mission-driven',
+              desc: 'Built by people who understand the UK social sector — we know what fundraisers actually need.',
+            },
+            {
+              icon: Users,
+              title: 'Community first',
+              desc: 'Used by charities, community groups and social enterprises across England, Scotland and Wales.',
+            },
+            {
+              icon: Lightbulb,
+              title: 'Always improving',
+              desc: 'New grants added daily, AI models refined weekly, and features shaped by real user feedback.',
+            },
+          ].map((v, i) => (
+            <motion.div
+              key={v.title}
+              {...fadeInView(i * 0.1)}
+              className="rounded-2xl border border-warm bg-white p-6 text-center shadow-warm"
+            >
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-forest/10 text-forest">
+                <v.icon size={22} />
+              </div>
+              <h3 className="mt-4 font-serif text-lg text-charcoal">{v.title}</h3>
+              <p className="mt-2 text-sm text-mid leading-relaxed">{v.desc}</p>
+            </motion.div>
+          ))}
+        </div>
       </section>
 
       {/* ══ STATS ═════════════════════════════════════════════════════════════ */}
@@ -739,29 +736,35 @@ export default function LandingPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
           <motion.div {...fadeInView()}>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-forest/10 px-3 py-1 text-xs font-semibold text-forest">
-              ✉️ Get in touch
+              ✉️ Contact
             </span>
-            <h2 className="mt-4 text-3xl">Questions? We&apos;d love to hear from you</h2>
-            <p className="mt-4 text-lg text-mid leading-relaxed">
-              Whether you&apos;re curious about how Grant Tracker works, want to suggest something, or just want to say hello — drop us a message and we&apos;ll get back to you.
+            <h2 className="mt-4 text-3xl">Get in touch</h2>
+            <p className="mt-3 text-lg text-mid leading-relaxed">
+              Have a question, partnership idea, or just want to say hello? We&apos;d love to hear from you.
             </p>
-            <div className="mt-6 space-y-3">
-              {[
-                { icon: '💡', text: 'Suggest a feature or improvement' },
-                { icon: '🐛', text: 'Report a bug or something not working' },
-                { icon: '🤝', text: 'Partnership or collaboration enquiries' },
-                { icon: '❓', text: 'Any other questions' },
-              ].map(item => (
-                <div key={item.text} className="flex items-center gap-3 text-sm text-mid">
-                  <span>{item.icon}</span>
-                  {item.text}
+
+            <div className="mt-8 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-forest/10 text-forest flex-shrink-0">
+                  <Mail size={18} />
                 </div>
-              ))}
+                <div>
+                  <p className="text-sm font-semibold text-charcoal">Email us</p>
+                  <a href="mailto:hello@granttracker.co.uk" className="text-sm text-forest hover:underline">
+                    hello@granttracker.co.uk
+                  </a>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-forest/10 text-forest flex-shrink-0">
+                  <MessageSquare size={18} />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-charcoal">Response time</p>
+                  <p className="text-sm text-mid">Usually within 24 hours</p>
+                </div>
+              </div>
             </div>
-            <p className="text-xs text-light mt-6">
-              Or email us directly at{' '}
-              <a href="mailto:hello@granttracker.co.uk" className="text-sage hover:underline font-medium">hello@granttracker.co.uk</a>
-            </p>
           </motion.div>
           <motion.div {...fadeInView(0.15)} className="bg-white rounded-2xl shadow-card p-8 border border-warm">
             <ContactForm />
@@ -804,7 +807,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-6">
             <a href="/" className="flex items-center gap-0.5">
-              <span className="font-serif text-xl text-forest">Grant</span>
+              <span className="font-serif text-xl text-forest italic">Grant</span>
               <span className="font-serif text-xl text-charcoal">Tracker</span>
             </a>
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
