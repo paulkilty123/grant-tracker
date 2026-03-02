@@ -15,6 +15,7 @@ import {
   User,
   MessageSquare,
   Activity,
+  LinkIcon,
   LogOut,
   Menu,
   X,
@@ -58,7 +59,8 @@ const NAV_GROUPS = [
     items: [
       { href: '/dashboard/profile',  label: 'Profile',      Icon: User },
       { href: '/dashboard/feedback', label: 'Feedback',     Icon: MessageSquare },
-      { href: '/dashboard/admin',    label: 'Source Health', Icon: Activity },
+      { href: '/dashboard/admin',      label: 'Source Health', Icon: Activity  },
+      { href: '/dashboard/admin/urls', label: 'URL Health',    Icon: LinkIcon  },
     ],
   },
 ]
