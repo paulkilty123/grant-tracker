@@ -650,39 +650,48 @@ export default function LandingPage() {
             🌱 About
           </span>
           <h2 className="mt-4 text-3xl md:text-4xl">
-            Built for the people who<br />
-            <span className="italic">build communities</span>
+            Built for the people<br />
+            <span className="italic">doing the work</span>
           </h2>
           <p className="mt-3 text-mid max-w-lg mx-auto">
             Grant Tracker exists to help mission-driven organisations spend less time searching for funding and more time delivering impact.
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {[
             {
-              icon: Heart,
-              title: 'Mission-driven',
-              desc: 'Built by people who understand the UK social sector — we know what fundraisers actually need.',
+              emoji: '🏛️',
+              gradient: 'from-forest/20 to-teal-100',
+              title: 'Charities',
+              desc: 'From national organisations to grassroots groups — find grants tailored to your cause and structure.',
             },
             {
-              icon: Users,
-              title: 'Community first',
-              desc: 'Used by charities, community groups and social enterprises across England, Scotland and Wales.',
+              emoji: '🤝',
+              gradient: 'from-amber-100 to-orange-100',
+              title: 'Community Groups',
+              desc: 'Local projects, faith groups, and resident-led initiatives deserve funding too. We surface the hyper-local pots others miss.',
             },
             {
-              icon: Lightbulb,
-              title: 'Always improving',
-              desc: 'New grants added daily, AI models refined weekly, and features shaped by real user feedback.',
+              emoji: '🌱',
+              gradient: 'from-emerald-100 to-teal-50',
+              title: 'Social Enterprises',
+              desc: 'Trading for good? Search social loans, competitions and blended finance alongside traditional grants.',
+            },
+            {
+              emoji: '🎓',
+              gradient: 'from-sky-100 to-indigo-50',
+              title: 'CICs & Not-for-Profits',
+              desc: "Whether you're a CIC, CIO or unincorporated — eligibility filters adapt so you only see what you can apply for.",
             },
           ].map((v, i) => (
             <motion.div
               key={v.title}
               {...fadeInView(i * 0.1)}
-              className="rounded-2xl border border-warm bg-white p-6 text-center shadow-warm"
+              className="rounded-2xl border border-warm bg-white p-6 text-center shadow-warm hover:shadow-lg transition-shadow duration-300"
             >
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-forest/10 text-forest">
-                <v.icon size={22} />
+              <div className={`mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${v.gradient}`}>
+                <span className="text-2xl">{v.emoji}</span>
               </div>
               <h3 className="mt-4 font-serif text-lg text-charcoal">{v.title}</h3>
               <p className="mt-2 text-sm text-mid leading-relaxed">{v.desc}</p>
