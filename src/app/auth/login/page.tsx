@@ -87,7 +87,7 @@ export default function LoginPage() {
               <Logo variant="dark" size="md" />
             </div>
 
-            <h1 className="font-display text-2xl font-bold text-forest mb-1">Welcome back</h1>
+            <h1 className="text-2xl font-bold text-forest mb-1">Welcome back</h1>
             <p className="text-mid text-sm mb-7">Sign in to your Grant Tracker account</p>
 
             <form onSubmit={handleLogin} className="space-y-4">

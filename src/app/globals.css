@@ -4,43 +4,47 @@
 
 @layer base {
   :root {
-    --forest: #1a3c2e;
-    --sage: #4a7c59;
-    --mint: #a8d5b5;
-    --cream: #f8f4ef;
-    --warm: #e8ddd0;
-    --gold: #c9963a;
+    --forest: #1f5c52;
+    --sage:   #2d8a7a;
+    --mint:   #b8deda;
+    --cream:  #faf7f2;
+    --warm:   #e8ddd0;
+    --gold:   #e8a030;
   }
 
   html {
-    font-family: var(--font-nunito), sans-serif;
+    font-family: var(--font-dm-sans), system-ui, sans-serif;
   }
 
   body {
-    background-color: #f8f4ef;
-    color: #2d2d2d;
+    background-color: #faf7f2;
+    color: #1a2e2b;
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-dm-serif), serif;
   }
 }
 
 @layer components {
   /* Cards */
   .card {
-    @apply bg-white rounded-xl shadow-card p-6;
+    @apply bg-white rounded-2xl shadow-card p-6;
   }
 
   /* Buttons */
   .btn-primary {
-    @apply bg-forest text-white px-5 py-2.5 rounded-xl text-sm font-medium
+    @apply bg-forest text-white px-5 py-2.5 rounded-full text-sm font-medium
            hover:bg-sage transition-colors duration-150 cursor-pointer border-none;
   }
   .btn-outline {
-    @apply bg-transparent text-forest border border-forest px-5 py-2.5 rounded-xl
+    @apply bg-transparent text-forest border border-forest px-5 py-2.5 rounded-full
            text-sm font-medium hover:bg-forest hover:text-white transition-colors
            duration-150 cursor-pointer;
   }
   .btn-gold {
-    @apply bg-gold text-white px-5 py-2.5 rounded-xl text-sm font-medium
-           hover:bg-amber-600 transition-colors duration-150 cursor-pointer border-none;
+    @apply bg-gold text-white px-5 py-2.5 rounded-full text-sm font-medium
+           hover:opacity-90 transition-all duration-150 cursor-pointer border-none;
   }
   .btn-sm {
     @apply px-3.5 py-1.5 text-xs;
@@ -48,36 +52,36 @@
 
   /* Form inputs */
   .form-input {
-    @apply w-full px-3.5 py-2.5 border border-warm rounded-lg text-sm text-charcoal
+    @apply w-full px-3.5 py-2.5 border border-warm rounded-xl text-sm text-charcoal
            outline-none focus:border-sage transition-colors font-sans bg-white;
   }
   .form-textarea {
-    @apply w-full px-3.5 py-2.5 border border-warm rounded-lg text-sm text-charcoal
+    @apply w-full px-3.5 py-2.5 border border-warm rounded-xl text-sm text-charcoal
            outline-none focus:border-sage transition-colors font-sans bg-white
            resize-y min-h-[80px];
   }
   .form-select {
-    @apply w-full px-3.5 py-2.5 border border-warm rounded-lg text-sm text-charcoal
+    @apply w-full px-3.5 py-2.5 border border-warm rounded-xl text-sm text-charcoal
            outline-none focus:border-sage transition-colors font-sans bg-white cursor-pointer;
   }
 
   /* Nav */
   .nav-item {
-    @apply flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-white/65 text-sm
+    @apply flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-white/65 text-sm
            cursor-pointer transition-all duration-150 hover:bg-white/10 hover:text-white;
   }
   .nav-item.active {
-    @apply bg-sage text-white font-medium;
+    @apply bg-white/15 text-white font-medium;
   }
 
   /* Stat cards */
   .stat-card {
-    @apply bg-white rounded-xl p-5 shadow-card border-l-4;
+    @apply bg-white rounded-2xl p-5 shadow-card border-l-4;
   }
 
   /* Pipeline */
   .pipeline-card {
-    @apply bg-white rounded-lg p-3.5 mb-2.5 shadow-sm cursor-pointer
+    @apply bg-white rounded-xl p-3.5 mb-2.5 shadow-sm cursor-pointer
            transition-all duration-150 hover:-translate-y-px hover:shadow-card
            border-l-[3px] border-transparent;
   }
@@ -85,7 +89,7 @@
     @apply opacity-40 scale-95 shadow-none;
   }
   .pipeline-col {
-    @apply bg-warm rounded-xl p-3.5 min-h-[300px];
+    @apply bg-warm/60 rounded-2xl p-3.5 min-h-[300px];
   }
   .pipeline-col.drag-over {
     @apply outline-2 outline-dashed outline-sage bg-sage/10;
@@ -97,7 +101,14 @@
   }
 }
 
-/* Number font override */
-.font-display {
-  font-family: 'Nunito', sans-serif;
+/* Utilities */
+@layer utilities {
+  .text-gradient-warm {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #1f5c52, #e8a030);
+  }
+
+  .font-display {
+    font-family: var(--font-dm-serif), serif;
+  }
 }

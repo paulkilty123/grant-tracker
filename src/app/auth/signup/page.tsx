@@ -40,7 +40,7 @@ export default function SignupPage() {
       <div className="min-h-screen bg-cream flex items-center justify-center p-4">
         <div className="card max-w-md w-full text-center">
           <div className="text-4xl mb-4">📬</div>
-          <h2 className="font-display text-xl font-bold text-forest mb-2">Check your email</h2>
+          <h2 className="text-xl font-bold text-forest mb-2">Check your email</h2>
           <p className="text-mid text-sm">We&apos;ve sent a confirmation link to <strong>{email}</strong>. Click it to activate your account.</p>
           <p className="text-xs text-light mt-4">Can&apos;t find it? Check your spam folder.</p>
         </div>
@@ -97,7 +97,7 @@ export default function SignupPage() {
               <Logo variant="dark" size="md" />
             </div>
 
-            <h1 className="font-display text-2xl font-bold text-forest mb-1">Create your free account</h1>
+            <h1 className="text-2xl font-bold text-forest mb-1">Create your free account</h1>
             <p className="text-mid text-sm mb-7">Set up in 2 minutes</p>
 
             <form onSubmit={handleSignup} className="space-y-4">

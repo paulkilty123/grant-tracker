@@ -13,14 +13,15 @@ interface LogoProps {
 export default function Logo({ variant = 'dark', size = 'md' }: LogoProps) {
   const textSize = size === 'sm' ? 'text-2xl' : size === 'lg' ? 'text-4xl' : 'text-3xl'
 
-  // Dark variant: dark forest + sage (matches the PDF logo on light backgrounds)
-  // Light variant: white + mint (for dark sidebar backgrounds)
-  const grantColor   = variant === 'light' ? '#ffffff'   : '#2d5a3d'
-  const trackerColor = variant === 'light' ? '#a8d5b5'   : '#7aaa6d'
+  // Light variant: white Grant + mint Tracker (on dark/forest backgrounds)
+  // Dark variant: forest Grant + charcoal Tracker (on light backgrounds)
+  const grantColor   = variant === 'light' ? '#ffffff' : '#1f5c52'
+  const trackerColor = variant === 'light' ? '#b8deda' : '#1a2e2b'
 
   return (
-    <span className={`font-display font-bold tracking-tight leading-none ${textSize}`}>
-      <span style={{ color: grantColor }}>Grant</span><span style={{ color: trackerColor }}>Tracker</span>
+    <span className={`font-serif tracking-tight leading-none ${textSize}`}>
+      <span style={{ color: grantColor }}>Grant</span>
+      <span style={{ color: trackerColor }}>Tracker</span>
     </span>
   )
 }
