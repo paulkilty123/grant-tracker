@@ -87,7 +87,7 @@ export default function SignupPage() {
             </div>
 
             <div className="mt-10 pt-6 border-t border-white/10">
-              <p className="text-white/50 text-xs">🔒 Your data is never shared or sold · Free forever for grant search · No credit card required</p>
+              <p className="text-white/50 text-xs">🔒 Your data is never shared or sold</p>
             </div>
           </div>
 
@@ -98,7 +98,7 @@ export default function SignupPage() {
             </div>
 
             <h1 className="font-display text-2xl font-bold text-forest mb-1">Create your free account</h1>
-            <p className="text-mid text-sm mb-7">Set up in 2 minutes — no credit card needed</p>
+            <p className="text-mid text-sm mb-7">Set up in 2 minutes</p>
 
             <form onSubmit={handleSignup} className="space-y-4">
               {error && (
@@ -173,7 +173,7 @@ export default function SignupPage() {
 
             {/* Trust strip — visible on mobile only (desktop sees it in left panel) */}
             <p className="text-xs text-light text-center mt-5 lg:hidden">
-              🔒 Your data is never shared · Free forever · No credit card
+              🔒 Your data is never shared
             </p>
 
             <div className="mt-6 pt-6 border-t border-warm text-center">
