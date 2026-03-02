@@ -565,43 +565,30 @@ export default function LandingPage() {
         <motion.div {...fadeInView(0.15)}>
           <div className="rounded-2xl border border-warm bg-white overflow-hidden shadow-warm">
             {/* Header */}
-            <div className="grid grid-cols-4 gap-0 border-b border-warm bg-warm/30 px-6 py-4">
+            <div className="grid grid-cols-3 gap-0 border-b border-warm bg-warm/30 px-6 py-4">
               <div className="text-sm font-medium text-mid">Feature</div>
               <div className="text-center text-sm font-bold text-forest">Grant Tracker</div>
-              <div className="text-center text-sm font-medium text-mid">Spreadsheet</div>
-              <div className="text-center text-sm font-medium text-mid">Grant Database</div>
+              <div className="text-center text-sm font-medium text-mid">Traditional Grant Database</div>
             </div>
             {/* Rows */}
             {[
-              { feature: '800+ UK grants database',    gt: true, spreadsheet: false, other: true  },
-              { feature: 'AI match scoring',           gt: true, spreadsheet: false, other: false },
-              { feature: 'Learns from your feedback',  gt: true, spreadsheet: false, other: false },
-              { feature: 'Live web research',          gt: true, spreadsheet: false, other: false },
-              { feature: 'Visual pipeline board',      gt: true, spreadsheet: false, other: false },
-              { feature: 'Deadline tracking',          gt: true, spreadsheet: false, other: false },
-              { feature: 'Built for UK charities',     gt: true, spreadsheet: false, other: true  },
-              { feature: 'Free to start',              gt: true, spreadsheet: true,  other: false },
+              { feature: '800+ UK grants database',   gt: true,  other: true  },
+              { feature: 'AI match scoring',          gt: true,  other: false },
+              { feature: 'Learns from your feedback', gt: true,  other: false },
+              { feature: 'Live web research',         gt: true,  other: false },
+              { feature: 'Visual pipeline board',     gt: true,  other: false },
+              { feature: 'Deadline tracking',         gt: true,  other: false },
+              { feature: 'Built for UK charities',    gt: true,  other: true  },
             ].map((row, i) => (
               <div
                 key={row.feature}
-                className={`grid grid-cols-4 gap-0 px-6 py-3.5 ${i < 7 ? 'border-b border-warm' : ''}`}
+                className={`grid grid-cols-3 gap-0 px-6 py-3.5 ${i < 6 ? 'border-b border-warm' : ''}`}
               >
                 <div className="text-sm text-charcoal">{row.feature}</div>
                 <div className="flex justify-center">
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-forest/10">
                     <Check className="h-3.5 w-3.5 text-forest" />
                   </div>
-                </div>
-                <div className="flex justify-center">
-                  {row.spreadsheet ? (
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-warm">
-                      <Check className="h-3.5 w-3.5 text-mid" />
-                    </div>
-                  ) : (
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-red-50">
-                      <X className="h-3.5 w-3.5 text-red-400" />
-                    </div>
-                  )}
                 </div>
                 <div className="flex justify-center">
                   {row.other ? (
