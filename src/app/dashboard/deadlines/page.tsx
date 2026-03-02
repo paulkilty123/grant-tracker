@@ -133,7 +133,7 @@ export default function DeadlinesPage() {
           <h2 className="font-display text-2xl font-bold text-forest">Deadlines</h2>
           <p className="text-mid text-sm mt-1">Never miss an application window</p>
         </div>
-        <a href="/dashboard/pipeline" className="btn-outline btn-sm">
+        <a href="/dashboard/pipeline" className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-warm text-sm font-medium text-mid hover:border-forest hover:text-forest transition-colors">
           Manage Pipeline →
         </a>
       </div>
@@ -164,12 +164,12 @@ export default function DeadlinesPage() {
           {/* Summary strip */}
           <div className="grid grid-cols-4 gap-3 mb-7">
             {[
-              { label: 'Overdue',   count: overdue.length, bg: 'bg-red-50',    text: 'text-red-600',   border: 'border-red-200'   },
-              { label: 'This week', count: urgent.length,  bg: 'bg-amber-50',  text: 'text-amber-600', border: 'border-amber-200' },
-              { label: 'Coming up', count: soon.length,    bg: 'bg-sage/10',   text: 'text-sage',  border: 'border-sage/20'  },
-              { label: 'On track',  count: ok.length,      bg: 'bg-green-50',  text: 'text-sage',      border: 'border-green-200' },
+              { label: 'Overdue',   count: overdue.length, bg: 'bg-red-50',    text: 'text-red-600',   borderL: 'border-l-4 border-l-red-400'   },
+              { label: 'This week', count: urgent.length,  bg: 'bg-amber-50',  text: 'text-amber-600', borderL: 'border-l-4 border-l-amber-400' },
+              { label: 'Coming up', count: soon.length,    bg: 'bg-sage/10',   text: 'text-sage',      borderL: 'border-l-4 border-l-sage'      },
+              { label: 'On track',  count: ok.length,      bg: 'bg-green-50',  text: 'text-sage',      borderL: 'border-l-4 border-l-emerald-400' },
             ].map(s => (
-              <div key={s.label} className={`rounded-xl p-4 border ${s.bg} ${s.border}`}>
+              <div key={s.label} className={`rounded-xl p-4 border border-warm shadow-warm ${s.bg} ${s.borderL}`}>
                 <p className={`font-display text-3xl font-bold ${s.text}`}>{s.count}</p>
                 <p className="text-xs text-mid mt-1">{s.label}</p>
               </div>

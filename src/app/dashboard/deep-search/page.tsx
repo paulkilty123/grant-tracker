@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { Sparkles } from 'lucide-react'
 import { SEED_GRANTS } from '@/lib/grants'
 import { createClient } from '@/lib/supabase/client'
 import { createPipelineItem } from '@/lib/pipeline'
@@ -58,12 +59,12 @@ function DeepGrantCard({ grant, onAddToPipeline }: {
   onAddToPipeline: (g: DeepGrant) => void
 }) {
   return (
-    <div className="bg-white rounded-xl p-5 shadow-card mb-3 border border-warm hover:border-sage/30 transition-all">
+    <div className="bg-white rounded-xl p-5 shadow-warm mb-3 border border-warm hover:shadow-lg transition-all">
       <div className="flex gap-4">
         <div className="flex-1">
           <div className="flex items-start gap-3 mb-2">
-            <div className="w-9 h-9 rounded-lg bg-sage/10 flex items-center justify-center text-forest font-bold text-sm flex-shrink-0">
-              {grant.funder[0]}
+            <div className="h-10 w-10 rounded-full bg-sage/10 flex items-center justify-center text-forest font-bold text-sm flex-shrink-0 border border-sage/20">
+              {grant.funder[0].toUpperCase()}
             </div>
             <div className="flex-1">
               <h3 className="font-display font-bold text-forest text-base leading-snug">{grant.title}</h3>
@@ -93,11 +94,12 @@ function DeepGrantCard({ grant, onAddToPipeline }: {
           <div className="flex flex-col gap-1.5 w-full">
             {grant.applyUrl && (
               <a href={grant.applyUrl} target="_blank" rel="noopener noreferrer"
-                className="btn-outline btn-sm w-full text-center text-xs">
+                className="flex items-center justify-center gap-1 px-3 py-1.5 rounded-full border border-warm text-xs font-medium text-mid hover:border-forest hover:text-forest transition-colors w-full">
                 Visit website →
               </a>
             )}
-            <button onClick={() => onAddToPipeline(grant)} className="btn-gold btn-sm w-full text-center">
+            <button onClick={() => onAddToPipeline(grant)}
+              className="px-3 py-1.5 rounded-full bg-gold text-white text-xs font-semibold w-full hover:bg-gold/90 transition-colors">
               + Pipeline
             </button>
           </div>
@@ -309,22 +311,23 @@ export default function AdvancedSearchPage() {
         {/* Keyword input */}
         <div className="flex gap-3">
           <div className="flex-1 relative">
-            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sage">🔬</span>
+            <Sparkles className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-light" />
             <input
               type="text"
               value={query}
               onChange={e => { setQuery(e.target.value); setResults(null); setError(null) }}
               onKeyDown={e => e.key === 'Enter' && handleSearch()}
-              className="form-input pl-10"
+              className="form-input rounded-full h-12 pl-11"
               placeholder='Describe what you need, e.g. "youth mental health London"'
             />
           </div>
           <button
             onClick={handleSearch}
             disabled={loading || !canSearch}
-            className="px-6 py-2.5 rounded-xl bg-forest text-white text-sm font-medium hover:bg-sage transition-colors disabled:opacity-50 whitespace-nowrap"
+            className="px-5 h-12 rounded-full bg-forest text-white text-sm font-semibold flex items-center gap-2 hover:bg-forest/90 transition-colors disabled:opacity-50 whitespace-nowrap"
           >
-            {loading ? '⏳ Researching…' : '🔬 Live Search'}
+            <Sparkles className="h-4 w-4" />
+            {loading ? 'Researching…' : 'Live Search'}
           </button>
         </div>
 

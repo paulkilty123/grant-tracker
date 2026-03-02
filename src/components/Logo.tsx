@@ -20,7 +20,7 @@ export default function Logo({ variant = 'dark', size = 'md' }: LogoProps) {
 
   return (
     <span className={`font-serif tracking-tight leading-none ${textSize}`}>
-      <span style={{ color: grantColor }}>Grant</span>
+      <span style={{ color: grantColor }} className="italic">Grant</span>
       <span style={{ color: trackerColor }}>Tracker</span>
     </span>
   )

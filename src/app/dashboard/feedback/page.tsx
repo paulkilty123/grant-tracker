@@ -126,7 +126,7 @@ export default function FeedbackPage() {
               <button
                 type="submit"
                 disabled={status === 'sending' || !message.trim()}
-                className="btn-primary px-6 py-2 text-sm font-semibold disabled:opacity-50"
+                className="px-6 py-2.5 rounded-full bg-forest text-white text-sm font-semibold hover:bg-forest/90 transition-colors disabled:opacity-50"
               >
                 {status === 'sending' ? 'Sending…' : 'Send feedback →'}
               </button>

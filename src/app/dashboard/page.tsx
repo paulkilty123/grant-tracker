@@ -73,26 +73,26 @@ export default async function DashboardPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-7">
-        <div className="stat-card border-sage">
+        <div className="bg-white rounded-xl shadow-warm border border-warm border-l-4 border-l-sage p-5">
           <p className="text-[10px] font-semibold text-light uppercase tracking-wider mb-2">Total Pipeline</p>
           <p className="font-display text-3xl font-bold text-forest">
             {formatCurrency(stats.totalPipelineValue)}
           </p>
           <p className="text-xs text-mid mt-1.5">{stats.activeCount} active opportunities</p>
         </div>
-        <div className="stat-card border-gold">
+        <div className="bg-white rounded-xl shadow-warm border border-warm border-l-4 border-l-gold p-5">
           <p className="text-[10px] font-semibold text-light uppercase tracking-wider mb-2">Won This Year</p>
           <p className="font-display text-3xl font-bold text-forest">
             {formatCurrency(stats.totalWon)}
           </p>
           <p className="text-xs text-mid mt-1.5">{stats.wonCount} grants secured</p>
         </div>
-        <div className="stat-card border-mid">
+        <div className="bg-white rounded-xl shadow-warm border border-warm border-l-4 border-l-mid p-5">
           <p className="text-[10px] font-semibold text-light uppercase tracking-wider mb-2">Submitted</p>
           <p className="font-display text-3xl font-bold text-forest">{stats.submittedCount}</p>
           <p className="text-xs text-mid mt-1.5">awaiting decision</p>
         </div>
-        <div className="stat-card border-red-400">
+        <div className="bg-white rounded-xl shadow-warm border border-warm border-l-4 border-l-red-400 p-5">
           <p className="text-[10px] font-semibold text-light uppercase tracking-wider mb-2">Urgent Deadlines</p>
           <p className="font-display text-3xl font-bold text-forest">{urgentCount}</p>
           <p className="text-xs text-mid mt-1.5">in the next 10 days</p>
@@ -154,36 +154,36 @@ export default async function DashboardPage() {
             </div>
           ) : (
             <>
-              <div className="flex gap-2 mb-4">
-                {PIPELINE_STAGES.map(s => (
-                  <a
-                    key={s.id}
-                    href="/dashboard/pipeline"
-                    className="flex-1 text-center py-2 px-1 rounded-lg text-xs font-medium transition-colors hover:opacity-80"
-                    style={{
-                      background: s.id === 'won' ? '#d4f0dc' : s.id === 'declined' ? '#ffe8e8' :
-                        s.id === 'identified' ? '#e8f4ff' : s.id === 'researching' ? '#fff4e0' :
-                        s.id === 'applying' ? '#f0e8ff' : '#e8ffe8',
-                      color: s.id === 'won' ? '#1a3c2e' : s.id === 'declined' ? '#c94a4a' :
-                        s.id === 'identified' ? '#3a6bc9' : s.id === 'researching' ? '#c97a3a' :
-                        s.id === 'applying' ? '#7a4ac9' : '#4a7c59',
-                    }}
-                  >
-                    <span className="block font-display text-xl font-bold">
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-4">
+                {[
+                  { id: 'identified',  label: 'Identified',  cls: 'bg-warm/60 text-mid' },
+                  { id: 'researching', label: 'Researching', cls: 'bg-gold/10 text-gold' },
+                  { id: 'applying',    label: 'Applying',    cls: 'bg-sage/10 text-sage' },
+                  { id: 'submitted',   label: 'Submitted',   cls: 'bg-forest/10 text-forest' },
+                  { id: 'won',         label: 'Won',         cls: 'bg-emerald-50 text-emerald-700' },
+                  { id: 'declined',    label: 'Declined',    cls: 'bg-red-50 text-red-500' },
+                ].map(s => (
+                  <a key={s.id} href="/dashboard/pipeline"
+                    className={`rounded-xl p-3 text-center transition-opacity hover:opacity-80 ${s.cls}`}>
+                    <span className="block font-display text-2xl font-bold">
                       {stats.byStageCounts[s.id] ?? 0}
                     </span>
-                    {s.label}
+                    <span className="text-[10px] font-medium mt-0.5 block">{s.label}</span>
                   </a>
                 ))}
               </div>
               {/* Recent pipeline items */}
               {active.slice(0, 3).length > 0 && (
-                <div className="space-y-0 border-t border-warm pt-3">
+                <div className="border-t border-warm pt-3">
                   {active.slice(0, 3).map(item => {
                     const stage = PIPELINE_STAGES.find(s => s.id === item.stage)
-                    const stageColour = item.stage === 'won' ? '#4a7c59' : item.stage === 'declined' ? '#c94a4a' :
-                      item.stage === 'identified' ? '#3a6bc9' : item.stage === 'researching' ? '#c97a3a' :
-                      item.stage === 'applying' ? '#7a4ac9' : '#4a7c59'
+                    const stageCls =
+                      item.stage === 'won'         ? 'bg-emerald-50 text-emerald-700' :
+                      item.stage === 'declined'    ? 'bg-red-50 text-red-500' :
+                      item.stage === 'identified'  ? 'bg-warm/60 text-mid' :
+                      item.stage === 'researching' ? 'bg-gold/10 text-gold' :
+                      item.stage === 'applying'    ? 'bg-sage/10 text-sage' :
+                      'bg-forest/10 text-forest'
                     return (
                       <a key={item.id} href="/dashboard/pipeline"
                         className="flex items-center justify-between py-2.5 border-b border-warm last:border-0 hover:bg-warm/30 -mx-1 px-1 rounded transition-colors">
@@ -191,8 +191,7 @@ export default async function DashboardPage() {
                           <p className="text-sm font-medium text-charcoal truncate">{item.grant_name}</p>
                           <p className="text-xs text-mid truncate">{item.funder_name}</p>
                         </div>
-                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
-                          style={{ background: `${stageColour}18`, color: stageColour }}>
+                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${stageCls}`}>
                           {stage?.label ?? item.stage}
                         </span>
                       </a>

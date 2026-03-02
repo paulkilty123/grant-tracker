@@ -6,43 +6,62 @@ import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Organisation } from '@/types'
 import { cn } from '@/lib/utils'
-import Logo from '@/components/Logo'
+import {
+  LayoutDashboard,
+  Search,
+  Sparkles,
+  FolderKanban,
+  CalendarClock,
+  User,
+  MessageSquare,
+  Activity,
+  LogOut,
+  Menu,
+  X,
+} from 'lucide-react'
 
 interface Props {
   org: Organisation | null
   userEmail: string
 }
 
-/**
- * Returns a 0–100 score for the fields that directly drive match quality.
- * Used to show a completeness dot on the Profile nav link.
- */
 function matchProfileScore(org: Organisation | null): number {
   if (!org) return 0
   const checks = [
-    (org.themes?.length        ?? 0) > 0,   // 20pts — biggest theme signal
-    (org.areas_of_work?.length ?? 0) > 0,   // 20pts
-    !!org.primary_location,                  // 20pts — location scoring
-    !!org.mission,                           // 20pts
-    !!org.annual_income_band,                // 10pts — grant size scoring
-    (org.beneficiaries?.length ?? 0) > 0,   // 10pts
+    (org.themes?.length        ?? 0) > 0,
+    (org.areas_of_work?.length ?? 0) > 0,
+    !!org.primary_location,
+    !!org.mission,
+    !!org.annual_income_band,
+    (org.beneficiaries?.length ?? 0) > 0,
   ]
-  const filled = checks.filter(Boolean).length
-  return Math.round((filled / checks.length) * 100)
+  return Math.round((checks.filter(Boolean).length / checks.length) * 100)
 }
 
-const NAV: { href: string; label: string; emoji: string; section: string; badge?: string }[] = [
-  { href: '/dashboard',             label: 'Dashboard',        emoji: '📊', section: '' },
-  { href: '/dashboard/search',      label: 'Search Grants',    emoji: '🔍', section: 'Find Funding' },
-  { href: '/dashboard/deep-search', label: 'Live Search',      emoji: '🔬', section: 'Find Funding' },
-  { href: '/dashboard/pipeline',    label: 'Funding Pipeline', emoji: '🗂',  section: 'Manage' },
-  { href: '/dashboard/deadlines',   label: 'Deadlines',        emoji: '📅', section: 'Manage' },
-  { href: '/dashboard/profile',     label: 'Profile',          emoji: '👤', section: 'Settings' },
-  { href: '/dashboard/feedback',    label: 'Feedback',         emoji: '💬', section: 'Settings' },
-  { href: '/dashboard/admin',       label: 'Source Health',    emoji: '⚙️',  section: 'Settings' },
+const NAV_GROUPS = [
+  {
+    label: 'Find Funding',
+    items: [
+      { href: '/dashboard/search',      label: 'Search Grants',    Icon: Search },
+      { href: '/dashboard/deep-search', label: 'Live Search',      Icon: Sparkles },
+    ],
+  },
+  {
+    label: 'Manage',
+    items: [
+      { href: '/dashboard/pipeline',  label: 'Funding Pipeline', Icon: FolderKanban },
+      { href: '/dashboard/deadlines', label: 'Deadlines',        Icon: CalendarClock },
+    ],
+  },
+  {
+    label: 'Settings',
+    items: [
+      { href: '/dashboard/profile',  label: 'Profile',      Icon: User },
+      { href: '/dashboard/feedback', label: 'Feedback',     Icon: MessageSquare },
+      { href: '/dashboard/admin',    label: 'Source Health', Icon: Activity },
+    ],
+  },
 ]
-
-const sections = ['', 'Find Funding', 'Manage', 'Settings']
 
 export default function Sidebar({ org, userEmail }: Props) {
   const pathname = usePathname()
@@ -50,7 +69,6 @@ export default function Sidebar({ org, userEmail }: Props) {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const profileScore = matchProfileScore(org)
-  // Show dot when profile exists but is incomplete (< 80%)
   const showProfileDot = org !== null && profileScore < 80
 
   async function handleSignOut() {
@@ -63,98 +81,93 @@ export default function Sidebar({ org, userEmail }: Props) {
     ? org.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
     : userEmail.slice(0, 2).toUpperCase()
 
+  const navLink = (href: string, label: string, Icon: React.ElementType, showDot?: boolean, score?: number) => {
+    const isActive = pathname === href || (href !== '/dashboard' && pathname.startsWith(href))
+    return (
+      <Link
+        key={href}
+        href={href}
+        onClick={() => setMobileOpen(false)}
+        className={cn(
+          'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+          isActive
+            ? 'bg-white/15 text-white'
+            : 'text-white/65 hover:bg-white/10 hover:text-white'
+        )}
+      >
+        <Icon className="h-4 w-4 flex-shrink-0" />
+        <span className="flex-1">{label}</span>
+        {showDot && !isActive && (
+          <span
+            className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-gold/20 text-gold border border-gold/30"
+            title={`Match profile ${score}% complete`}
+          >
+            {score}%
+          </span>
+        )}
+      </Link>
+    )
+  }
+
   const sidebarContent = (
     <aside className={cn(
-      'fixed left-0 top-0 bottom-0 w-60 bg-forest flex flex-col z-50 py-7 transition-transform duration-300',
-      // Always visible on md+, slide in/out on mobile
+      'fixed left-0 top-0 bottom-0 w-60 bg-forest flex flex-col z-50 transition-transform duration-300',
       'md:translate-x-0',
       mobileOpen ? 'translate-x-0' : '-translate-x-full'
     )}>
       {/* Logo */}
-      <div className="px-6 pb-7 border-b border-white/10">
-        <div className="flex items-center gap-3">
-          <Logo variant="light" size="sm" showTagline />
-          {/* Close button — mobile only */}
-          <button
-            className="ml-auto md:hidden text-white/50 hover:text-white text-xl leading-none"
-            onClick={() => setMobileOpen(false)}
-            aria-label="Close menu"
-          >
-            ✕
-          </button>
-        </div>
+      <div className="px-6 py-6 flex items-center justify-between border-b border-white/10">
+        <Link href="/dashboard" className="font-serif text-xl tracking-tight text-white">
+          <span className="italic">Grant</span>Tracker
+        </Link>
+        <button
+          className="md:hidden text-white/50 hover:text-white"
+          onClick={() => setMobileOpen(false)}
+        >
+          <X className="h-5 w-5" />
+        </button>
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 px-3 py-5 space-y-5 overflow-y-auto">
-        {sections.map(section => {
-          const items = NAV.filter(n => n.section === section)
-          if (!items.length) return null
-          return (
-            <div key={section}>
-              {section && (
-                <p className="text-white/35 text-[10px] font-semibold tracking-widest uppercase px-3 mb-1.5">
-                  {section}
-                </p>
-              )}
-              {items.map(item => {
-                const isActive = pathname === item.href ||
-                  (item.href !== '/dashboard' && pathname.startsWith(item.href))
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setMobileOpen(false)}
-                    className={cn(
-                      'nav-item mb-0.5',
-                      isActive && 'active'
-                    )}
-                  >
-                    <span className="text-base w-5 text-center relative">
-                      {item.emoji}
-                      {/* Amber dot on Profile when match profile is incomplete */}
-                      {item.href === '/dashboard/profile' && showProfileDot && (
-                        <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-amber-400 rounded-full border border-forest" />
-                      )}
-                    </span>
-                    <span className="flex-1">{item.label}</span>
-                    {item.href === '/dashboard/profile' && showProfileDot && !isActive && (
-                      <span
-                        className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30"
-                        title={`Match profile ${profileScore}% complete`}
-                      >
-                        {profileScore}%
-                      </span>
-                    )}
-                    {item.badge && (
-                      <span className="bg-gold text-forest text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                        {item.badge}
-                      </span>
-                    )}
-                  </Link>
-                )
-              })}
-            </div>
-          )
-        })}
+      {/* Dashboard link */}
+      <div className="px-3 pt-4">
+        {navLink('/dashboard', 'Dashboard', LayoutDashboard)}
+      </div>
+
+      {/* Nav groups */}
+      <nav className="flex-1 px-3 py-3 space-y-4 overflow-y-auto">
+        {NAV_GROUPS.map(group => (
+          <div key={group.label}>
+            <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-widest text-white/35">
+              {group.label}
+            </p>
+            {group.items.map(item => navLink(
+              item.href,
+              item.label,
+              item.Icon,
+              item.href === '/dashboard/profile' ? showProfileDot : false,
+              item.href === '/dashboard/profile' ? profileScore : undefined,
+            ))}
+          </div>
+        ))}
       </nav>
 
-      {/* Org chip + sign out */}
-      <div className="px-5 pt-4 border-t border-white/10">
+      {/* User chip */}
+      <div className="border-t border-white/10 px-4 py-4">
         <div className="flex items-center gap-2.5 mb-3">
-          <div className="w-8 h-8 rounded-full bg-mint flex items-center justify-center text-forest text-xs font-bold flex-shrink-0">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-white text-xs font-bold flex-shrink-0">
             {initials}
           </div>
-          <div className="min-w-0">
-            <p className="text-white text-xs font-medium truncate">{org?.name ?? 'My Profile'}</p>
-            <p className="text-white/40 text-[10px] truncate">{userEmail}</p>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium text-white">{org?.name ?? 'My Profile'}</p>
+            <p className="truncate text-[10px] text-white/40">{userEmail}</p>
           </div>
         </div>
         <button
           onClick={handleSignOut}
-          className="w-full text-left text-white/40 hover:text-white/70 text-xs py-1 transition-colors"
+          className="flex items-center gap-2 text-xs text-white/40 hover:text-white/80 transition-colors"
         >
-          Sign out →
+          <LogOut className="h-3.5 w-3.5" />
+          Sign out
         </button>
       </div>
     </aside>
@@ -162,7 +175,7 @@ export default function Sidebar({ org, userEmail }: Props) {
 
   return (
     <>
-      {/* Mobile hamburger button — shown only when sidebar is closed on mobile */}
+      {/* Mobile hamburger */}
       <button
         onClick={() => setMobileOpen(true)}
         className={cn(
@@ -173,17 +186,14 @@ export default function Sidebar({ org, userEmail }: Props) {
         )}
         aria-label="Open menu"
       >
-        <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
+        <Menu className="h-5 w-5 text-white" />
       </button>
 
-      {/* Overlay — mobile only, closes sidebar on tap */}
+      {/* Mobile overlay */}
       {mobileOpen && (
         <div
           className="fixed inset-0 bg-black/40 z-40 md:hidden"
           onClick={() => setMobileOpen(false)}
-          aria-hidden="true"
         />
       )}
 

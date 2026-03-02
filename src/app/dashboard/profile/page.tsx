@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { Sparkles } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner, createOrganisation, updateOrganisation } from '@/lib/organisations'
 import type { Organisation, OrgType, FunderType } from '@/types'
@@ -285,7 +286,7 @@ export default function ProfilePage() {
           <button
             onClick={handleSave}
             disabled={saving || !form.name.trim()}
-            className="btn-primary disabled:opacity-50"
+            className="px-5 py-2.5 rounded-full bg-forest text-white text-sm font-semibold hover:bg-forest/90 transition-colors disabled:opacity-50"
           >
             {saving ? 'Saving…' : saveStatus === 'saved' ? '✓ Saved!' : 'Save Profile'}
           </button>
@@ -323,7 +324,9 @@ export default function ProfilePage() {
       {/* ── Auto-fill ── */}
       <div className="card mb-6">
         <div className="flex items-start gap-3 mb-3">
-          <span className="text-2xl">✨</span>
+          <div className="w-8 h-8 rounded-full bg-gold/10 flex items-center justify-center flex-shrink-0">
+            <Sparkles className="h-4 w-4 text-gold" />
+          </div>
           <div>
             <h3 className="font-display text-sm font-semibold text-forest">Auto-fill from your website</h3>
             <p className="text-xs text-mid mt-0.5">
@@ -334,7 +337,7 @@ export default function ProfilePage() {
         <div className="flex gap-3">
           <input
             type="url"
-            className="form-input flex-1"
+            className="form-input rounded-full flex-1"
             placeholder="https://yourwebsite.co.uk"
             value={websiteUrl}
             onChange={e => { setWebsiteUrl(e.target.value); setAutoFillError(null); setAutoFillSuccess(false) }}
@@ -343,9 +346,10 @@ export default function ProfilePage() {
           <button
             onClick={handleAutoFill}
             disabled={autoFilling || !websiteUrl.trim()}
-            className="btn-primary disabled:opacity-50 whitespace-nowrap"
+            className="px-4 py-2 rounded-full bg-forest text-white text-sm font-medium flex items-center gap-2 hover:bg-forest/90 transition-colors disabled:opacity-50 whitespace-nowrap"
           >
-            {autoFilling ? '⏳ Reading…' : '✨ Auto-fill'}
+            <Sparkles className="h-3.5 w-3.5" />
+            {autoFilling ? 'Reading…' : 'Auto-fill'}
           </button>
         </div>
         {autoFillSuccess && (

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { Search, ThumbsUp, ThumbsDown, ChevronDown, Download } from 'lucide-react'
 import { SEED_GRANTS } from '@/lib/grants'
 import { formatRange } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -232,13 +233,13 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
   }
 
   return (
-    <div className="bg-white rounded-xl p-5 shadow-card mb-3 border border-transparent hover:border-mint transition-all">
+    <div className="bg-white rounded-xl p-5 shadow-warm mb-3 border border-warm hover:shadow-lg transition-all">
       <div className="flex gap-4">
         {/* Left: main content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start gap-3 mb-2">
-            <div className="w-9 h-9 rounded-lg bg-sage/20 flex items-center justify-center text-sage font-bold text-sm flex-shrink-0">
-              {grant.funder[0]}
+            <div className="h-10 w-10 rounded-full bg-sage/10 flex items-center justify-center text-sage font-bold text-sm flex-shrink-0 border border-sage/20">
+              {grant.funder[0].toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap mb-0.5">
@@ -330,7 +331,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
             {grant.source === 'scraped' && (
               <a
                 href={`/dashboard/grants/${encodeURIComponent(grant.id)}`}
-                className="btn-outline btn-sm w-full text-center text-xs"
+                className="flex items-center justify-center gap-1 px-3 py-1.5 rounded-full border border-warm text-xs font-medium text-mid hover:border-forest hover:text-forest transition-colors w-full"
               >
                 View details →
               </a>
@@ -340,34 +341,34 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
                 href={grant.applyUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn-outline btn-sm w-full text-center text-xs"
+                className="flex items-center justify-center gap-1 px-3 py-1.5 rounded-full border border-warm text-xs font-medium text-mid hover:border-forest hover:text-forest transition-colors w-full"
               >
                 Visit website →
               </a>
             )}
             <button
               onClick={() => onAddToPipeline(grant)}
-              className="btn-gold btn-sm w-full text-center"
+              className="px-3 py-1.5 rounded-full bg-gold text-white text-xs font-semibold w-full hover:bg-gold/90 transition-colors"
             >
               + Pipeline
             </button>
             {hasOrg && (
-              <div className="py-1">
-                <p className="text-[9px] text-center text-light mb-1 uppercase tracking-wide font-medium">Train your results</p>
-                <div className="flex items-center justify-center gap-2">
+              <div className="pt-1 pb-0.5">
+                <p className="text-[9px] text-center text-light mb-1.5 uppercase tracking-wide font-medium">Train your results</p>
+                <div className="flex items-center justify-center gap-3">
                   <button
                     onClick={() => onLike(grant.id)}
                     title="Good match — boosts similar grants in your results"
-                    className={`text-base transition-all ${isLiked ? 'opacity-100 scale-110' : 'opacity-30 hover:opacity-80'}`}
+                    className={`transition-all ${isLiked ? 'text-forest scale-110' : 'text-light hover:text-forest'}`}
                   >
-                    👍
+                    <ThumbsUp className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => onDislike(grant.id)}
                     title="Not relevant — reduces similar grants in your results"
-                    className={`text-base transition-all ${isDisliked ? 'opacity-100 scale-110' : 'opacity-30 hover:opacity-80'}`}
+                    className={`transition-all ${isDisliked ? 'text-red-500 scale-110' : 'text-light hover:text-red-400'}`}
                   >
-                    👎
+                    <ThumbsDown className="h-4 w-4" />
                   </button>
                 </div>
               </div>
@@ -904,22 +905,22 @@ export default function SearchPage() {
       {/* ── Search bar ── */}
       <div className="bg-white rounded-xl p-5 shadow-card mb-5">
         {/* Input row */}
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           <div className="flex-1 relative">
-            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-light">🔍</span>
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-light" />
             <input
               type="text"
               value={query}
               onChange={e => { setQuery(e.target.value); setAiResults(null) }}
               onKeyDown={e => e.key === 'Enter' && handleAISearch()}
-              className="form-input pl-10 pr-4"
+              className="form-input rounded-full h-12 pl-11 pr-4"
               placeholder='e.g. "youth sport funding Manchester" or "startup grant for social business London"'
             />
           </div>
           <button
             onClick={handleAISearch}
             disabled={aiLoading || !query.trim()}
-            className="btn-primary btn-sm whitespace-nowrap disabled:opacity-50"
+            className="px-5 h-12 rounded-full bg-forest text-white text-sm font-semibold whitespace-nowrap hover:bg-forest/90 transition-colors disabled:opacity-50"
           >
             {aiLoading ? '⏳ Thinking…' : '✦ AI Search'}
           </button>
@@ -1212,10 +1213,10 @@ export default function SearchPage() {
         {displayGrants.length > 0 && (
           <button
             onClick={exportCsv}
-            className="text-xs text-mid hover:text-charcoal border border-warm rounded-lg px-3 py-1.5 hover:border-sage transition-all"
+            className="flex items-center gap-1.5 text-xs text-mid hover:text-charcoal border border-warm rounded-full px-3 py-1.5 hover:border-sage transition-all"
             title="Download results as CSV"
           >
-            ⬇ Export CSV
+            <Download className="h-3 w-3" /> Export CSV
           </button>
         )}
       </div>

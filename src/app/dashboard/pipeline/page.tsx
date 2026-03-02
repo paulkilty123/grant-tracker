@@ -56,7 +56,7 @@ function PipelineCard({
   const borderColour =
     stage.id === 'identified'  ? 'border-mid' :
     stage.id === 'researching' ? 'border-amber-400' :
-    stage.id === 'applying'    ? 'border-purple-400' :
+    stage.id === 'applying'    ? 'border-orange-400' :
     stage.id === 'submitted'   ? 'border-sage' :
     stage.id === 'won'         ? 'border-forest' :
                                  'border-red-400'
@@ -635,7 +635,7 @@ export default function PipelinePage() {
                 'flex items-center justify-between text-[11px] font-bold uppercase tracking-wide mb-2 pb-2.5 border-b-2',
                 stage.id === 'identified'  ? 'border-mid text-mid' :
                 stage.id === 'researching' ? 'border-amber-400 text-amber-600' :
-                stage.id === 'applying'    ? 'border-purple-400 text-purple-600' :
+                stage.id === 'applying'    ? 'border-orange-400 text-orange-600' :
                 stage.id === 'submitted'   ? 'border-sage text-sage' :
                 stage.id === 'won'         ? 'border-forest text-forest' :
                                              'border-red-400 text-red-500'
@@ -661,7 +661,7 @@ export default function PipelinePage() {
 
               <button
                 onClick={() => setShowAdd(true)}
-                className="w-full py-2 border-2 border-dashed border-black/10 rounded-lg text-xs text-light hover:border-sage hover:text-sage transition-colors mt-1"
+                className="w-full py-3 border-2 border-dashed border-warm rounded-xl text-sm text-light hover:border-sage hover:text-sage transition-colors mt-1"
               >
                 + Add
               </button>
