@@ -689,6 +689,65 @@ export default function LandingPage() {
             </motion.div>
           ))}
         </div>
+
+        {/* Founder story */}
+        <motion.div {...fadeInView(0.2)} className="mt-16 rounded-3xl border border-warm bg-white overflow-hidden shadow-warm">
+          <div className="grid grid-cols-1 lg:grid-cols-5">
+            {/* Left accent panel */}
+            <div className="lg:col-span-2 bg-forest p-10 flex flex-col justify-between gap-8">
+              <div>
+                <div className="flex items-center gap-3 mb-8">
+                  <div className="w-12 h-12 rounded-2xl bg-sage/20 border border-sage/30 flex items-center justify-center flex-shrink-0">
+                    <span className="font-serif text-lg font-bold text-white italic">GT</span>
+                  </div>
+                  <div>
+                    <p className="font-serif text-base font-bold text-white">Grant Tracker</p>
+                    <p className="text-mint/60 text-xs mt-0.5">Built by sector practitioners</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { stat: '20', unit: ' yrs', label: 'sector experience' },
+                    { stat: '3', unit: ' orgs', label: 'founded & run' },
+                    { stat: 'Charity', unit: ' +', label: 'social enterprise' },
+                    { stat: '£M', unit: '+', label: 'funding secured' },
+                  ].map(item => (
+                    <div key={item.label} className="bg-white/5 border border-white/10 rounded-xl p-3">
+                      <p className="font-serif text-lg font-bold text-white leading-none">
+                        {item.stat}<span className="text-sage text-xs">{item.unit}</span>
+                      </p>
+                      <p className="text-mint/50 text-[10px] mt-1">{item.label}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="border-t border-white/10 pt-6">
+                <p className="text-mint/60 text-sm leading-normal italic">
+                  &ldquo;We built the tool the sector needed but never had.&rdquo;
+                </p>
+              </div>
+            </div>
+
+            {/* Right story */}
+            <div className="lg:col-span-3 p-10">
+              <h3 className="font-serif text-2xl text-forest mb-5">Why Grant Tracker exists</h3>
+              <blockquote className="font-serif text-lg text-forest font-semibold leading-snug mb-6 border-l-4 border-sage pl-5">
+                &ldquo;Finding the right grant has always been harder than it should be. The tools that existed were too expensive, too generic, and built for organisations with a dedicated grants team — not for the people actually doing the work.&rdquo;
+              </blockquote>
+              <div className="space-y-4 text-mid text-sm leading-relaxed">
+                <p>
+                  Grant Tracker was built from direct experience of the sector. The grant search process is consistently one of the most time-consuming and frustrating parts of running a mission-driven organisation — sifting through outdated databases, missing hyper-local funders that never appear in national searches, and juggling applications across spreadsheets and inboxes.
+                </p>
+                <p>
+                  The tools that existed ranged from around £150 a year for basic directories to £1,000 or more for the larger platforms. Small charities, community groups and grassroots ventures were effectively priced out of the tools designed to help them.
+                </p>
+                <p>
+                  Grant Tracker was built to change that — a platform that understands how UK funding actually works, learns from how you engage with it, and is simple enough for any founder, trustee or community organiser to use alongside everything else they&apos;re managing.
+                </p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
       </section>
 
       {/* ══ STATS ═════════════════════════════════════════════════════════════ */}
