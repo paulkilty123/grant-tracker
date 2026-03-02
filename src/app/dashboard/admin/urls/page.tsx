@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
   RefreshCw, ExternalLink, Pencil, Check, X,
-  AlertTriangle, CheckCircle, Clock, Database, Trash2, Mail,
+  AlertTriangle, CheckCircle, Clock, Database, Trash2, Mail, Search,
 } from 'lucide-react'
 
 const ADMIN_EMAIL = 'paulkilty1@gmail.com'
@@ -34,6 +34,7 @@ export default function UrlAdminPage() {
   const [editUrl, setEditUrl]       = useState('')
   const [saving, setSaving]         = useState(false)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [search, setSearch]                   = useState('')
 
   // ── Auth check ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -65,14 +66,18 @@ export default function UrlAdminPage() {
       .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only')
       .eq('is_active', true)
       .order('url_last_checked', { ascending: true, nullsFirst: true })
-      .limit(200)
+      .limit(2000)
 
     if (filter === 'dead')      query = query.eq('url_status', 'dead')
     if (filter === 'unchecked') query = query.eq('url_status', 'unchecked').not('apply_url', 'is', null)
 
+    if (search.trim()) {
+      query = query.or(`title.ilike.%${search.trim()}%,funder.ilike.%${search.trim()}%`)
+    }
+
     const { data } = await query
     setGrants((data ?? []) as Grant[])
-  }, [filter])
+  }, [filter, search])
 
   useEffect(() => {
     if (authorised) { loadStats(); loadGrants() }
@@ -215,8 +220,8 @@ export default function UrlAdminPage() {
         </div>
       )}
 
-      {/* Filter tabs */}
-      <div className="mb-5 flex gap-2 flex-wrap">
+      {/* Filter tabs + search */}
+      <div className="mb-4 flex flex-wrap items-center gap-2">
         {([
           { key: 'dead',      label: `Dead links${stats ? ` (${stats.dead})` : ''}` },
           { key: 'unchecked', label: `Never checked${stats ? ` (${stats.unchecked})` : ''}` },
@@ -234,6 +239,17 @@ export default function UrlAdminPage() {
             {tab.label}
           </button>
         ))}
+        {/* Search box */}
+        <div className="relative ml-auto">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-light pointer-events-none" />
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search by name or funder…"
+            className="rounded-full border border-warm bg-white py-1.5 pl-8 pr-4 text-sm text-charcoal placeholder:text-light focus:border-forest focus:outline-none w-64"
+          />
+        </div>
       </div>
 
       {/* Grant table */}
@@ -420,7 +436,7 @@ export default function UrlAdminPage() {
       </div>
 
       <p className="mt-4 text-xs text-light text-center">
-        Showing up to 200 results · Sorted by oldest check first
+        {grants.length} result{grants.length !== 1 ? 's' : ''}{search ? ` for "${search}"` : ''} · Sorted by oldest check first
       </p>
     </div>
   )
