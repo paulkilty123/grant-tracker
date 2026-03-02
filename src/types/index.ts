@@ -109,6 +109,7 @@ export interface GrantOpportunity {
   sectors: string[]
   eligibilityCriteria: string[]
   applyUrl: string | null
+  isInviteOnly: boolean
   source: 'three_sixty_giving' | 'manual' | 'scraped'
   dateAdded?: string        // ISO date, used for "Recently Added" section
   lastVerifiedAt?: string   // ISO date: last time crawler confirmed this grant was still live

@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
   RefreshCw, ExternalLink, Pencil, Check, X,
-  AlertTriangle, CheckCircle, Clock, Database, Trash2,
+  AlertTriangle, CheckCircle, Clock, Database, Trash2, Mail,
 } from 'lucide-react'
 
 const ADMIN_EMAIL = 'paulkilty1@gmail.com'
@@ -17,6 +17,7 @@ type Grant = {
   url_status: 'unchecked' | 'ok' | 'dead'
   url_last_checked: string | null
   source: string
+  is_invite_only: boolean
 }
 
 type Stats = { total: number; withUrl: number; ok: number; dead: number; unchecked: number }
@@ -61,7 +62,7 @@ export default function UrlAdminPage() {
   const loadGrants = useCallback(async () => {
     let query = createClient()
       .from('scraped_grants')
-      .select('id, title, funder, apply_url, url_status, url_last_checked, source')
+      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only')
       .eq('is_active', true)
       .order('url_last_checked', { ascending: true, nullsFirst: true })
       .limit(200)
@@ -129,6 +130,17 @@ export default function UrlAdminPage() {
       .eq('id', id)
     setGrants(prev => prev.filter(g => g.id !== id))
     await loadStats()
+  }
+
+  // ── Toggle invite-only flag ─────────────────────────────────────────────────
+  async function toggleInviteOnly(id: string, current: boolean) {
+    await createClient()
+      .from('scraped_grants')
+      .update({ is_invite_only: !current })
+      .eq('id', id)
+    setGrants(prev => prev.map(g =>
+      g.id === id ? { ...g, is_invite_only: !current } : g
+    ))
   }
 
   // ── Remove from database (soft delete) ─────────────────────────────────────
@@ -352,6 +364,17 @@ export default function UrlAdminPage() {
                         </div>
                       ) : (
                         <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => toggleInviteOnly(grant.id, grant.is_invite_only)}
+                            title={grant.is_invite_only ? 'Mark as open application' : 'Mark as invite-only'}
+                            className={`rounded-full border p-1.5 transition-colors ${
+                              grant.is_invite_only
+                                ? 'border-purple-300 bg-purple-50 text-purple-600 hover:bg-purple-100'
+                                : 'border-warm text-mid hover:border-purple-300 hover:text-purple-600'
+                            }`}
+                          >
+                            <Mail className="h-3 w-3" />
+                          </button>
                           <button
                             onClick={() => { setEditingId(grant.id); setEditUrl(grant.apply_url ?? '') }}
                             title="Edit URL"

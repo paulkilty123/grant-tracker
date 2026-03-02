@@ -249,6 +249,11 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
                     New
                   </span>
                 )}
+                {grant.isInviteOnly && (
+                  <span className="bg-purple-50 text-purple-700 border border-purple-200 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide flex-shrink-0" title="This funder only accepts invited applications">
+                    ✉ Invite Only
+                  </span>
+                )}
                 <span className={`text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${entryBadge.cls}`}>
                   {entryBadge.label}
                 </span>
@@ -417,6 +422,7 @@ function normaliseScrapedGrant(row: Record<string, unknown>): GrantOpportunity {
     sectors:              Array.isArray(row.sectors)              ? (row.sectors as string[])              : [],
     eligibilityCriteria:  Array.isArray(row.eligibility_criteria) ? (row.eligibility_criteria as string[]) : [],
     applyUrl:             row.apply_url ? String(row.apply_url) : null,
+    isInviteOnly:         Boolean(row.is_invite_only),
     source:               'scraped',
     dateAdded:            row.first_seen_at  ? String(row.first_seen_at).split('T')[0]  : undefined,
     lastVerifiedAt:       row.last_seen_at   ? String(row.last_seen_at).split('T')[0]   : undefined,
@@ -446,6 +452,7 @@ export default function SearchPage() {
   const [activeSectors, setActiveSectors]         = useState<Set<string>>(new Set())
   const [filtersOpen, setFiltersOpen]             = useState(false)
   const [entryTypeFilter, setEntryTypeFilter]     = useState<'all' | 'live' | 'rolling' | 'profile'>('all')
+  const [showInviteOnly, setShowInviteOnly]       = useState(true)
   const [expandedGroups, setExpandedGroups]       = useState<Set<string>>(new Set())
   const [visibleCount, setVisibleCount]           = useState(30)
 
@@ -677,7 +684,7 @@ export default function SearchPage() {
   // Reset visible count when search/filters change so the user starts from the top
   useEffect(() => {
     setVisibleCount(30)
-  }, [query, activeType, amountMin, amountMax, deadlineFilter, activeSectors, entryTypeFilter, freshnessFilter, aiResults])
+  }, [query, activeType, amountMin, amountMax, deadlineFilter, activeSectors, entryTypeFilter, freshnessFilter, showInviteOnly, aiResults])
 
   // ── Build display grants ─────────────────────────────────────────────────
   const displayGrants: DisplayGrant[] = (() => {
@@ -716,7 +723,8 @@ export default function SearchPage() {
         cutoff.setDate(cutoff.getDate() - daysMap[freshnessFilter])
         return new Date(g.lastVerifiedAt) >= cutoff
       })()
-      return matchesQuery && matchesType && matchesAmount && matchesDeadline && matchesSectors && matchesEntryType && matchesFreshness
+      const matchesInviteOnly = showInviteOnly || !g.isInviteOnly
+      return matchesQuery && matchesType && matchesAmount && matchesDeadline && matchesSectors && matchesEntryType && matchesFreshness && matchesInviteOnly
     })
 
     if (aiResults) {
@@ -868,6 +876,7 @@ export default function SearchPage() {
     activeSectors.size > 0,
     entryTypeFilter !== 'all',
     freshnessFilter !== 'all',
+    !showInviteOnly,
     sortBy !== 'match',
   ].filter(Boolean).length
 
@@ -880,6 +889,7 @@ export default function SearchPage() {
     setSortBy('match')
     setEntryTypeFilter('all')
     setFreshnessFilter('all')
+    setShowInviteOnly(true)
   }
 
   function toggleGroup(label: string) {
@@ -1094,6 +1104,26 @@ export default function SearchPage() {
                 </div>
               </div>
             </div>
+
+            {/* Invite-only toggle */}
+              <div>
+                <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Invite Only grants</p>
+                <button
+                  onClick={() => setShowInviteOnly(v => !v)}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                    showInviteOnly
+                      ? 'bg-purple-600 border-purple-600 text-white'
+                      : 'border-warm text-mid hover:border-purple-300'
+                  }`}
+                >
+                  <span>{showInviteOnly ? '✉ Included' : '✉ Hidden'}</span>
+                </button>
+                <p className="text-[10px] text-light mt-1.5">
+                  {showInviteOnly
+                    ? 'Showing invite-only funders — they may not accept your application'
+                    : 'Invite-only funders are hidden from results'}
+                </p>
+              </div>
 
             {/* Sectors — grouped, collapsed by default */}
             {availableSectors.length > 0 && (
