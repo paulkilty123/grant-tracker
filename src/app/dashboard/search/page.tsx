@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Search, ThumbsUp, ThumbsDown, ChevronDown, Download } from 'lucide-react'
+import { Search, ThumbsUp, ThumbsDown, ChevronDown } from 'lucide-react'
 import { SEED_GRANTS } from '@/lib/grants'
 import { formatRange } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -638,18 +638,7 @@ export default function SearchPage() {
       next.has(s) ? next.delete(s) : next.add(s)
       return next
     })
-  }
-
-  // ── CSV export ────────────────────────────────────────────────────────────
-  function exportCsv() {
-    const rows: DisplayGrant[] = (() => {
-      const dismissed = new Set(
-        Array.from(interactions.entries())
-          .filter(([, s]) => s.has('dismissed'))
-          .map(([id]) => id)
-      )
-      return displayGrants.filter(d => !dismissed.has(d.grant.id))
-    })()
+  })()
 
     const headers = ['Title', 'Funder', 'Type', 'Amount Min', 'Amount Max', 'Deadline', 'Rolling', 'Sectors', 'Apply URL', 'Match Score']
     const escape = (v: string | number | boolean | null | undefined) => {
@@ -1240,15 +1229,6 @@ export default function SearchPage() {
             </>
           )}
         </p>
-        {displayGrants.length > 0 && (
-          <button
-            onClick={exportCsv}
-            className="flex items-center gap-1.5 text-xs text-mid hover:text-charcoal border border-warm rounded-full px-3 py-1.5 hover:border-sage transition-all"
-            title="Download results as CSV"
-          >
-            <Download className="h-3 w-3" /> Export CSV
-          </button>
-        )}
       </div>
 
       {/* ── Match quality banner ── */}
