@@ -18,9 +18,36 @@ async function verifyUrl(url: string): Promise<boolean> {
       redirect: 'follow',
       headers: { 'User-Agent': 'GrantTracker/1.0' },
     })
-    // Treat 404 and 410 as dead; allow redirects (3xx are followed), 2xx, even 403/429
-    // (403 means the page exists but blocks bots — still a real URL)
-    return res.status !== 404 && res.status !== 410 && res.status !== 400
+    // Hard failures
+    if (res.status === 404 || res.status === 410 || res.status === 400) return false
+
+    // Soft 404 detection — catch pages that redirect to homepage or parent path
+    const finalUrl = res.url
+    if (finalUrl && finalUrl !== url) {
+      try {
+        const orig  = new URL(url)
+        const final = new URL(finalUrl)
+        const origHost  = orig.hostname.replace(/^www\./, '')
+        const finalHost = final.hostname.replace(/^www\./, '')
+        const sameDomain = origHost === finalHost
+        const origDepth  = orig.pathname.replace(/\/$/, '').split('/').filter(Boolean).length
+        const finalDepth = final.pathname.replace(/\/$/, '').split('/').filter(Boolean).length
+
+        if (sameDomain) {
+          const origPath  = orig.pathname.replace(/\/$/, '') || '/'
+          const finalPath = final.pathname.replace(/\/$/, '') || '/'
+          // Redirected to homepage
+          if (origDepth >= 2 && finalDepth <= 1) return false
+          // Redirected to a parent path (specific page no longer exists)
+          if (finalPath !== origPath && origPath.startsWith(finalPath + '/') && origDepth >= finalDepth + 1) return false
+        } else {
+          // Cross-domain redirect — almost always dead
+          return false
+        }
+      } catch { /* ignore parse errors */ }
+    }
+
+    return true
   } catch {
     // Timeout or network error — give it the benefit of the doubt
     return true
