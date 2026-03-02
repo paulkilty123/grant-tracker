@@ -493,7 +493,7 @@ export default function SearchPage() {
         .select('*')
         .eq('is_active', true)
         .order('last_seen_at', { ascending: false })
-        .limit(500)
+        .limit(1500)
       if (scraped) {
         setScrapedGrants(scraped.map(row => normaliseScrapedGrant(row as Record<string, unknown>)))
       }
