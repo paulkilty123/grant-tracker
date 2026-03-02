@@ -217,7 +217,7 @@ export default function UrlAdminPage() {
             { label: 'Total grants',   value: stats.total,     Icon: Database,      colour: 'text-charcoal', bg: 'bg-white',   border: 'border-warm'      },
             { label: 'Links verified', value: stats.ok,        Icon: CheckCircle,   colour: 'text-sage',     bg: 'bg-sage/5',  border: 'border-sage/20'   },
             { label: 'Dead links',     value: stats.dead,      Icon: AlertTriangle, colour: 'text-red-500',  bg: 'bg-red-50',  border: 'border-red-200'   },
-            { label: 'Never checked',  value: stats.unchecked, Icon: Clock,         colour: 'text-gold',     bg: 'bg-gold/5',  border: 'border-gold/20'   },
+            { label: 'No URL found',    value: stats.unchecked, Icon: Clock,         colour: 'text-gold',     bg: 'bg-gold/5',  border: 'border-gold/20'   },
           ].map(s => (
             <div key={s.label} className={`rounded-2xl border ${s.border} ${s.bg} p-5 shadow-warm`}>
               <s.Icon className={`mb-2 h-5 w-5 ${s.colour}`} />
@@ -232,7 +232,7 @@ export default function UrlAdminPage() {
       <div className="mb-4 flex flex-wrap items-center gap-2">
         {([
           { key: 'dead',      label: `Dead links${stats ? ` (${stats.dead})` : ''}` },
-          { key: 'unchecked', label: `Never checked${stats ? ` (${stats.unchecked})` : ''}` },
+          { key: 'unchecked', label: `No URL${stats ? ` (${stats.unchecked})` : ''}` },
           { key: 'all',       label: 'All grants' },
         ] as const).map(tab => (
           <button
