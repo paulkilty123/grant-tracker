@@ -201,7 +201,7 @@ export default function UrlAdminPage() {
       {/* Run result */}
       {running && (
         <div className="mb-6 rounded-xl border border-forest/20 bg-forest/5 px-4 py-3 text-sm text-forest">
-          Checking URLs in batches of 20 — this takes 2–3 minutes for 600+ grants…
+          Checking URLs in batches of 20 — this takes 2–3 minutes for 800+ grants…
         </div>
       )}
       {runResult && (

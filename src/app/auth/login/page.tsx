@@ -78,7 +78,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <p className="text-white/40 text-xs mt-10">600+ UK grants · Free to search · Updated daily</p>
+            <p className="text-white/40 text-xs mt-10">800+ UK grants · Free to search · Updated daily</p>
           </div>
 
           {/* ── Right: form ── */}
