@@ -638,36 +638,6 @@ export default function SearchPage() {
       next.has(s) ? next.delete(s) : next.add(s)
       return next
     })
-  })()
-
-    const headers = ['Title', 'Funder', 'Type', 'Amount Min', 'Amount Max', 'Deadline', 'Rolling', 'Sectors', 'Apply URL', 'Match Score']
-    const escape = (v: string | number | boolean | null | undefined) => {
-      const s = String(v ?? '')
-      return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s
-    }
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(({ grant, score }) => [
-        escape(grant.title),
-        escape(grant.funder),
-        escape(grant.funderType),
-        escape(grant.amountMin),
-        escape(grant.amountMax),
-        escape(grant.isRolling ? 'Rolling' : grant.deadline),
-        escape(grant.isRolling),
-        escape(grant.sectors.join('; ')),
-        escape(grant.applyUrl),
-        escape(score > 0 ? score : ''),
-      ].join(',')),
-    ].join('\n')
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-    const url  = URL.createObjectURL(blob)
-    const a    = document.createElement('a')
-    a.href     = url
-    a.download = `grants-${new Date().toISOString().split('T')[0]}.csv`
-    a.click()
-    URL.revokeObjectURL(url)
   }
 
   // Reset visible count when search/filters change so the user starts from the top
