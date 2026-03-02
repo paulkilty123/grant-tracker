@@ -69,8 +69,20 @@ async function checkUrl(url: string): Promise<'ok' | 'dead'> {
         const finalDepth = final.pathname.replace(/\/$/, '').split('/').filter(Boolean).length
 
         if (sameDomain) {
-          // e.g. /grants/fellowship-programme  →  /  or  /grants  (depth dropped ≥ 2 levels)
+          const origPath  = orig.pathname.replace(/\/$/, '') || '/'
+          const finalPath = final.pathname.replace(/\/$/, '') || '/'
+
+          // 1. Redirected to homepage or root-level page
           if (origDepth >= 2 && finalDepth <= 1) return 'dead'
+
+          // 2. Redirected to a parent path — the specific page no longer exists
+          //    e.g. /programmes/fellowship-2022  →  /programmes  (parent section)
+          //    Detected by: final path is a strict prefix of original path
+          if (
+            finalPath !== origPath &&
+            origPath.startsWith(finalPath + '/') &&
+            origDepth >= finalDepth + 1
+          ) return 'dead'
         } else {
           // Redirected to a completely different domain — almost always dead
           return 'dead'
