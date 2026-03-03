@@ -32,6 +32,14 @@ export async function middleware(request: NextRequest) {
   const isPublicPage = request.nextUrl.pathname === '/'
   const isApiRoute = request.nextUrl.pathname.startsWith('/api/')
 
+  // Catch Supabase auth callbacks that land on the homepage instead of /auth/callback
+  // (happens when emailRedirectTo isn't in Supabase's allowed redirect URLs list)
+  if (isPublicPage && request.nextUrl.searchParams.get('code')) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/auth/callback'
+    return NextResponse.redirect(url)
+  }
+
   // Catch Supabase auth errors redirected to the homepage (e.g. expired confirmation links)
   // and forward them to the login page with a readable error param
   if (isPublicPage && request.nextUrl.searchParams.get('error')) {
