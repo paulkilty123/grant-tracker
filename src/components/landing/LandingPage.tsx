@@ -176,24 +176,24 @@ export default function LandingPage() {
       </section>
 
       {/* ══ COVERAGE ════════════════════════════════════════════════════════ */}
-      <section id="coverage" className="py-24 bg-forest/[0.03]">
+      <section id="coverage" className="py-14 bg-forest/[0.03]">
         <div className="max-w-6xl mx-auto px-6">
 
           {/* Heading */}
-          <motion.div {...fadeInView(0)} className="text-center mb-16">
-            <span className="inline-block mb-3 rounded-full bg-forest/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-forest">
+          <motion.div {...fadeInView(0)} className="text-center mb-8">
+            <span className="inline-block mb-2 rounded-full bg-forest/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-forest">
               UK Coverage
             </span>
-            <h2 className="text-4xl md:text-5xl mb-4">
+            <h2 className="text-4xl md:text-5xl mb-3">
               Every layer of UK funding,<br />
               <span className="text-gradient-warm italic">in one place</span>
             </h2>
-            <p className="mx-auto max-w-2xl text-mid text-lg">
+            <p className="mx-auto max-w-2xl text-mid text-base">
               From hyperlocal community trusts to national lottery programmes — 800+ opportunities spanning every region of England, Scotland, Wales and Northern Ireland.
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
 
             {/* ── UK Map ── */}
             <motion.div {...fadeInView(0)} className="flex flex-col items-center">
