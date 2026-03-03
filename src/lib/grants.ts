@@ -606,7 +606,7 @@ function inferFunderType(name: string): FunderType {
     sectors: ['young people', 'education', 'sport', 'arts', 'leadership'],
     eligibilityCriteria: ['Work with 11–25 year olds in London or Essex', 'Registered charity or CIC'],
     isInviteOnly: false,
-    applyUrl: 'https://www.jackpetchey.org.uk/funding/',
+    applyUrl: 'https://www.jackpetcheyfoundation.org.uk/opportunities/open-grants/',
     source: 'manual',
   },
   {
@@ -623,7 +623,7 @@ function inferFunderType(name: string): FunderType {
     sectors: ['young people', 'social change', 'leadership', 'inequality'],
     eligibilityCriteria: ['UK registered charity or CIC', 'Young people in meaningful leadership roles', 'Annual income under £2m'],
     isInviteOnly: false,
-    applyUrl: 'https://www.blagravetrust.org/our-grants/',
+    applyUrl: 'https://www.blagravetrust.org/apply-for-funding/',
     source: 'manual',
   },
   {
