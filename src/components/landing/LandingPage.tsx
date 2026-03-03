@@ -176,11 +176,11 @@ export default function LandingPage() {
       </section>
 
       {/* ══ COVERAGE ════════════════════════════════════════════════════════ */}
-      <section id="coverage" className="py-16">
+      <section id="coverage" className="py-24">
         <div className="max-w-6xl mx-auto px-6">
 
           {/* Heading */}
-          <motion.div {...fadeInView(0)} className="text-center mb-6">
+          <motion.div {...fadeInView(0)} className="text-center mb-8">
             <span className="inline-block mb-2 rounded-full bg-forest/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-forest">
               UK Coverage
             </span>
@@ -290,7 +290,7 @@ export default function LandingPage() {
       </section>
 
       {/* ══ FUNDING LAYERS ═══════════════════════════════════════════════════ */}
-      <section className="py-16">
+      <section className="py-24">
         <div className="max-w-6xl mx-auto px-6">
 
           <motion.div {...fadeInView(0)} className="text-center mb-8">
@@ -361,7 +361,7 @@ export default function LandingPage() {
       </section>
 
       {/* ══ FEATURE 1: GRANT SEARCH ══════════════════════════════════════════ */}
-      <section id="features" className="max-w-6xl mx-auto px-6 pb-24 scroll-mt-20">
+      <section id="features" className="max-w-6xl mx-auto px-6 pt-24 pb-24 scroll-mt-20">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
 
           <motion.div {...fadeInView()}>
