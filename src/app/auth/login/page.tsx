@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Logo from '@/components/Logo'
 
@@ -10,6 +10,13 @@ const ERROR_MESSAGES: Record<string, string> = {
   'Invalid login credentials': 'Incorrect email or password — please try again.',
   'Email not confirmed': 'Please check your email and click the confirmation link first.',
   'Too many requests': 'Too many attempts — please wait a few minutes and try again.',
+}
+
+// Friendly messages for error codes passed via ?error= URL param (e.g. from Supabase redirects)
+const URL_ERROR_MESSAGES: Record<string, string> = {
+  'otp_expired':          'That confirmation link has expired. Please sign up again to receive a new one.',
+  'confirmation_failed':  'We couldn\'t confirm your email — the link may have already been used. Try signing in, or sign up again.',
+  'auth_error':           'Something went wrong with that link. Please try again.',
 }
 
 function friendlyError(msg: string): string {
@@ -26,6 +33,9 @@ export default function LoginPage() {
   const [error, setError]       = useState<string | null>(null)
   const [loading, setLoading]   = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const urlError = searchParams.get('error')
+  const urlErrorMessage = urlError ? (URL_ERROR_MESSAGES[urlError] ?? URL_ERROR_MESSAGES['auth_error']) : null
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -91,6 +101,11 @@ export default function LoginPage() {
             <p className="text-mid text-sm mb-7">Sign in to your Grant Tracker account</p>
 
             <form onSubmit={handleLogin} className="space-y-4">
+              {urlErrorMessage && (
+                <div className="bg-amber-50 text-amber-700 text-sm px-4 py-3 rounded-lg border border-amber-200">
+                  {urlErrorMessage}
+                </div>
+              )}
               {error && (
                 <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-lg border border-red-100">
                   {error}

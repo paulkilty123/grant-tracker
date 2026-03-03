@@ -32,6 +32,16 @@ export async function middleware(request: NextRequest) {
   const isPublicPage = request.nextUrl.pathname === '/'
   const isApiRoute = request.nextUrl.pathname.startsWith('/api/')
 
+  // Catch Supabase auth errors redirected to the homepage (e.g. expired confirmation links)
+  // and forward them to the login page with a readable error param
+  if (isPublicPage && request.nextUrl.searchParams.get('error')) {
+    const errorCode = request.nextUrl.searchParams.get('error_code') ?? 'auth_error'
+    const url = request.nextUrl.clone()
+    url.pathname = '/auth/login'
+    url.search = `?error=${errorCode}`
+    return NextResponse.redirect(url)
+  }
+
   // Redirect unauthenticated users to login
   if (!user && !isAuthPage && !isPublicPage && !isApiRoute) {
     const url = request.nextUrl.clone()
