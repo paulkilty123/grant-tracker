@@ -185,7 +185,7 @@ export default function LandingPage() {
               UK Coverage
             </span>
             <h2 className="text-4xl md:text-5xl mb-3">
-              Every layer of UK funding,<br />
+              UK-wide funding,<br />
               <span className="text-gradient-warm italic">in one place</span>
             </h2>
             <p className="mx-auto max-w-2xl text-mid text-lg">
