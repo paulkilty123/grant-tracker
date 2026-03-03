@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { createClient as createServerClient } from '@/lib/supabase/server'
+import { SEED_GRANTS } from '@/lib/grants'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300 // 5 min — enough for 800+ URLs at 20 concurrent
@@ -32,11 +33,29 @@ function getAdminClient() {
   )
 }
 
+// ── Content sniffing helper ───────────────────────────────────────────────────
+// Extracts "distinctive" words from a funder name — words that are long enough
+// and specific enough that their absence from the page HTML strongly suggests
+// the URL has landed on a completely unrelated page (e.g. domain moves).
+const GENERIC_GRANT_WORDS = new Set([
+  'trust', 'funds', 'grant', 'grants', 'charity', 'health', 'foundation',
+  'community', 'national', 'lottery', 'local', 'england', 'council',
+])
+
+function extractDistinctiveWords(funderName: string): string[] {
+  return funderName
+    .toLowerCase()
+    .split(/[\s\-']+/)
+    .map(w => w.replace(/[^a-z]/g, ''))
+    .filter(w => w.length > 4 && !GENERIC_GRANT_WORDS.has(w))
+}
+
 // ── URL checker ───────────────────────────────────────────────────────────────
 // Returns 'ok' | 'dead'.
 // Catches hard 404s, soft 404s (homepage redirects), content 404s,
-// and DNS failures (domain no longer exists).
-async function checkUrl(url: string): Promise<'ok' | 'dead'> {
+// DNS failures (domain no longer exists), and wrong-page redirects
+// (content sniffing: funder name absent from page HTML).
+export async function checkUrl(url: string, funderName?: string): Promise<'ok' | 'dead'> {
   try {
     // follow redirects so res.url gives us the final destination
     const res = await fetch(url, {
@@ -96,9 +115,7 @@ async function checkUrl(url: string): Promise<'ok' | 'dead'> {
       }
     }
 
-    // ── Content 404 detection ─────────────────────────────────────────────────
-    // Some sites serve HTTP 200 but render an error page inside their normal
-    // site chrome. Check both the <title> tag and early <h1>/<h2> headings.
+    // ── Content checks (title + headings + funder name sniffing) ─────────────
     // Read only the first 30 KB — enough to cover <head> and opening content.
     try {
       const contentType = res.headers.get('content-type') ?? ''
@@ -137,6 +154,19 @@ async function checkUrl(url: string): Promise<'ok' | 'dead'> {
             heading.includes('page you requested') ||
             heading.includes('page you are looking for')
           ) return 'dead'
+        }
+
+        // 3. Content sniffing — check the page mentions the funder
+        //    If we have a funder name, extract distinctive words and verify at
+        //    least one appears in the HTML. A page with NONE of the distinctive
+        //    funder words is almost certainly the wrong page (e.g. domain moved).
+        if (funderName) {
+          const distinctiveWords = extractDistinctiveWords(funderName)
+          if (distinctiveWords.length > 0) {
+            const htmlLower = html.toLowerCase()
+            const anyMatch = distinctiveWords.some(w => htmlLower.includes(w))
+            if (!anyMatch) return 'dead'
+          }
         }
       }
     } catch {
@@ -195,7 +225,10 @@ export async function GET(req: NextRequest) {
   const dead      = data.filter(g => g.url_status === 'dead').length
   const unchecked = data.filter(g => g.url_status === 'unchecked').length
 
-  return NextResponse.json({ total, withUrl, ok, dead, unchecked })
+  // Also count SEED_GRANTS with a URL
+  const seedTotal = SEED_GRANTS.filter(g => g.applyUrl).length
+
+  return NextResponse.json({ total, withUrl, ok, dead, unchecked, seedTotal })
 }
 
 // ── POST — run validation ─────────────────────────────────────────────────────
@@ -204,15 +237,15 @@ export async function POST(req: NextRequest) {
 
   const supabase = getAdminClient()
 
-  // Fetch all active grants that have a URL
+  // Fetch all active grants that have a URL (include funder for content sniffing)
   const { data: grants, error } = await supabase
     .from('scraped_grants')
-    .select('id, apply_url')
+    .select('id, apply_url, funder')
     .eq('is_active', true)
     .not('apply_url', 'is', null)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  if (!grants || grants.length === 0) return NextResponse.json({ checked: 0, dead: 0, ok: 0 })
+  if (!grants || grants.length === 0) return NextResponse.json({ checked: 0, dead: 0, ok: 0, deadSeedGrants: [] })
 
   let checkedCount = 0
   let deadCount    = 0
@@ -220,7 +253,7 @@ export async function POST(req: NextRequest) {
 
   // Check in batches of 20 concurrent requests
   await inBatches(grants, 20, async (grant) => {
-    const status = await checkUrl(grant.apply_url as string)
+    const status = await checkUrl(grant.apply_url as string, grant.funder ?? undefined)
     checkedCount++
     if (status === 'dead') deadCount++
     else okCount++
@@ -231,10 +264,27 @@ export async function POST(req: NextRequest) {
       .eq('id', grant.id)
   })
 
+  // ── Also check SEED_GRANTS ────────────────────────────────────────────────
+  const seedGrantsWithUrl = SEED_GRANTS.filter(g => g.applyUrl)
+  const deadSeedGrants: { id: string; title: string; funder: string; url: string }[] = []
+
+  await inBatches(seedGrantsWithUrl, 10, async (grant) => {
+    const status = await checkUrl(grant.applyUrl as string, grant.funder)
+    if (status === 'dead') {
+      deadSeedGrants.push({
+        id:     grant.id,
+        title:  grant.title,
+        funder: grant.funder,
+        url:    grant.applyUrl as string,
+      })
+    }
+  })
+
   return NextResponse.json({
     checked: checkedCount,
     ok: okCount,
     dead: deadCount,
+    deadSeedGrants,
     ranAt: new Date().toISOString(),
   })
 }
@@ -243,7 +293,7 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   if (!await isAuthorised(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { id, apply_url } = await req.json()
+  const { id, apply_url, funder } = await req.json()
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })
 
   const supabase = getAdminClient()
@@ -251,7 +301,7 @@ export async function PATCH(req: NextRequest) {
   // Re-check the new URL immediately if one was provided
   let url_status: 'ok' | 'dead' | 'unchecked' = 'unchecked'
   if (apply_url) {
-    url_status = await checkUrl(apply_url)
+    url_status = await checkUrl(apply_url, funder ?? undefined)
   }
 
   const { error } = await supabase

@@ -20,8 +20,9 @@ type Grant = {
   is_invite_only: boolean
 }
 
-type Stats = { total: number; withUrl: number; ok: number; dead: number; unchecked: number }
+type Stats = { total: number; withUrl: number; ok: number; dead: number; unchecked: number; seedTotal?: number }
 type Filter = 'dead' | 'unchecked' | 'all'
+type DeadSeedGrant = { id: string; title: string; funder: string; url: string }
 
 export default function UrlAdminPage() {
   const [authorised, setAuthorised] = useState<boolean | null>(null)
@@ -29,7 +30,7 @@ export default function UrlAdminPage() {
   const [grants, setGrants]         = useState<Grant[]>([])
   const [filter, setFilter]         = useState<Filter>('dead')
   const [running, setRunning]       = useState(false)
-  const [runResult, setRunResult]   = useState<{ ok: number; dead: number } | null>(null)
+  const [runResult, setRunResult]   = useState<{ ok: number; dead: number; deadSeedGrants: DeadSeedGrant[] } | null>(null)
   const [editingId, setEditingId]   = useState<string | null>(null)
   const [editUrl, setEditUrl]       = useState('')
   const [saving, setSaving]         = useState(false)
@@ -100,7 +101,7 @@ export default function UrlAdminPage() {
       const res = await fetch('/api/admin/validate-urls', { method: 'POST' })
       if (!res.ok) throw new Error('Request failed')
       const data = await res.json()
-      setRunResult({ ok: data.ok, dead: data.dead })
+      setRunResult({ ok: data.ok, dead: data.dead, deadSeedGrants: data.deadSeedGrants ?? [] })
       await loadStats()
       await loadGrants()
     } catch {
@@ -205,8 +206,38 @@ export default function UrlAdminPage() {
         </div>
       )}
       {runResult && (
-        <div className="mb-6 rounded-xl border border-sage/20 bg-sage/10 px-4 py-3 text-sm text-forest">
-          ✓ Validation complete — {runResult.ok} ok, {runResult.dead} flagged as dead
+        <div className="mb-6 space-y-3">
+          <div className="rounded-xl border border-sage/20 bg-sage/10 px-4 py-3 text-sm text-forest">
+            ✓ Validation complete — {runResult.ok} ok, {runResult.dead} scraped grants flagged as dead
+            {runResult.deadSeedGrants.length === 0 && ' · all seed grant links ok'}
+          </div>
+          {runResult.deadSeedGrants.length > 0 && (
+            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm">
+              <p className="font-semibold text-red-700 mb-2">
+                ⚠ {runResult.deadSeedGrants.length} seed grant{runResult.deadSeedGrants.length !== 1 ? 's' : ''} with dead links — update URLs in <code className="text-xs bg-red-100 px-1 py-0.5 rounded">src/lib/grants.ts</code>
+              </p>
+              <ul className="space-y-1">
+                {runResult.deadSeedGrants.map(g => (
+                  <li key={g.id} className="flex items-start gap-2">
+                    <span className="text-red-400 mt-0.5 flex-shrink-0">•</span>
+                    <div className="min-w-0">
+                      <span className="text-red-800 font-medium">{g.title}</span>
+                      <span className="text-red-500 mx-1">·</span>
+                      <span className="text-red-600 text-xs">{g.funder}</span>
+                      <a
+                        href={g.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ml-2 text-xs text-red-400 hover:text-red-600 underline truncate"
+                      >
+                        {g.url}
+                      </a>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
 

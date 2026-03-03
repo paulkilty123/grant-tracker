@@ -51,6 +51,10 @@
     {
       "path": "/api/cron/expire-grants",
       "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/validate-urls",
+      "schedule": "0 3 * * 1"
     }
   ]
 }
