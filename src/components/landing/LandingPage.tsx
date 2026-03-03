@@ -175,6 +175,183 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ══ COVERAGE ════════════════════════════════════════════════════════ */}
+      <section id="coverage" className="py-24 bg-forest/[0.03]">
+        <div className="max-w-6xl mx-auto px-6">
+
+          {/* Heading */}
+          <motion.div {...fadeInView(0)} className="text-center mb-16">
+            <span className="inline-block mb-3 rounded-full bg-forest/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-forest">
+              UK Coverage
+            </span>
+            <h2 className="text-4xl md:text-5xl mb-4">
+              Every layer of UK funding,<br />
+              <span className="text-gradient-warm italic">in one place</span>
+            </h2>
+            <p className="mx-auto max-w-2xl text-mid text-lg">
+              From hyperlocal community trusts to national lottery programmes — 800+ opportunities spanning every region of England, Scotland, Wales and Northern Ireland.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+
+            {/* ── UK Map ── */}
+            <motion.div {...fadeInView(0)} className="flex flex-col items-center">
+              <div className="relative w-56 md:w-64">
+                <svg viewBox="0 0 200 300" xmlns="http://www.w3.org/2000/svg" className="w-full drop-shadow-lg">
+                  <defs>
+                    <filter id="mapShadow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="6" stdDeviation="8" floodColor="#2D5A3D" floodOpacity="0.18"/>
+                    </filter>
+                    <filter id="dotGlow" x="-100%" y="-100%" width="300%" height="300%">
+                      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+                      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                  </defs>
+
+                  {/* Northern Ireland */}
+                  <polygon
+                    points="18,100 50,94 57,110 45,122 20,118"
+                    fill="#2D5A3D" opacity="0.8"
+                    filter="url(#mapShadow)"
+                  />
+
+                  {/* Scotland */}
+                  <polygon
+                    points="62,12 88,6 116,4 140,12 154,32 157,55 154,76 155,90 140,97 118,105 96,106 78,102 64,92 57,74 57,54 62,32"
+                    fill="#2D5A3D"
+                    filter="url(#mapShadow)"
+                  />
+
+                  {/* England (includes the Wales latitude — Wales drawn on top) */}
+                  <polygon
+                    points="78,102 96,106 118,105 140,97 155,90 164,103 168,124 170,147 168,170 162,193 153,216 140,239 126,252 112,260 98,256 90,240 85,225 80,210 75,195 72,180 72,165 74,150 76,135 78,120"
+                    fill="#3D7A55" opacity="0.92"
+                    filter="url(#mapShadow)"
+                  />
+
+                  {/* Wales — slightly lighter, sticks out west */}
+                  <polygon
+                    points="72,165 62,168 52,180 48,196 50,210 60,220 72,218 76,208 75,195 72,180"
+                    fill="#4E9469" opacity="0.92"
+                  />
+
+                  {/* ── City dots ── */}
+                  {/* London */}
+                  <circle cx="142" cy="196" r="5.5" fill="#C4973A" filter="url(#dotGlow)"/>
+                  {/* Manchester */}
+                  <circle cx="120" cy="148" r="4.5" fill="#C4973A" filter="url(#dotGlow)"/>
+                  {/* Birmingham */}
+                  <circle cx="127" cy="170" r="4" fill="#C4973A" filter="url(#dotGlow)"/>
+                  {/* Edinburgh */}
+                  <circle cx="124" cy="68" r="4" fill="#C4973A" filter="url(#dotGlow)"/>
+                  {/* Cardiff */}
+                  <circle cx="94" cy="198" r="3.5" fill="#C4973A" filter="url(#dotGlow)"/>
+                  {/* Belfast */}
+                  <circle cx="35" cy="106" r="3.5" fill="#C4973A" filter="url(#dotGlow)"/>
+                  {/* Glasgow */}
+                  <circle cx="100" cy="75" r="3.5" fill="#E8C97A"/>
+                  {/* Leeds */}
+                  <circle cx="130" cy="140" r="3" fill="#E8C97A"/>
+                  {/* Bristol */}
+                  <circle cx="110" cy="213" r="3" fill="#E8C97A"/>
+                  {/* Newcastle */}
+                  <circle cx="136" cy="118" r="3" fill="#E8C97A"/>
+                  {/* Norwich */}
+                  <circle cx="158" cy="164" r="2.5" fill="#E8C97A" opacity="0.8"/>
+                  {/* Sheffield */}
+                  <circle cx="128" cy="152" r="2.5" fill="#E8C97A" opacity="0.8"/>
+                </svg>
+
+                {/* Map legend */}
+                <div className="mt-5 flex flex-col gap-2 px-1">
+                  <div className="flex items-center gap-2 text-xs text-mid">
+                    <div className="h-2.5 w-2.5 rounded-full bg-[#C4973A] shrink-0" />
+                    <span>Major funding hubs</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-mid">
+                    <div className="h-2.5 w-2.5 rounded-full bg-[#E8C97A] shrink-0" />
+                    <span>Regional grant centres</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-mid">
+                    <div className="h-2.5 w-2.5 rounded-full bg-forest/40 shrink-0" />
+                    <span>England · Scotland · Wales · N. Ireland</span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* ── Grant type cards ── */}
+            <div>
+              <motion.div {...fadeInView(0.1)} className="mb-6">
+                <h3 className="text-2xl md:text-3xl leading-snug">
+                  Five layers of funding<br />
+                  <span className="text-mid font-normal text-xl">to match your organisation</span>
+                </h3>
+              </motion.div>
+
+              <div className="space-y-3">
+                {[
+                  {
+                    emoji: '🏛️',
+                    title: 'National & Government',
+                    desc: 'Arts Council England, National Lottery, Sport England, Innovate UK — UK-wide eligibility and larger award sizes.',
+                    badge: '£1k – £1M+',
+                    delay: 0.15,
+                  },
+                  {
+                    emoji: '🌍',
+                    title: 'Regional & Community Foundations',
+                    desc: 'County and city-level funders across all four nations. Lower competition, community-first priorities.',
+                    badge: '£500 – £50k',
+                    delay: 0.25,
+                  },
+                  {
+                    emoji: '🏢',
+                    title: 'Corporate Foundations',
+                    desc: 'Lloyds Bank, Barclays, Aviva and 50+ more — sector-themed funding tied to a company\'s community strategy.',
+                    badge: '£1k – £100k',
+                    delay: 0.35,
+                  },
+                  {
+                    emoji: '🏡',
+                    title: 'Small Trusts & Family Foundations',
+                    desc: 'Hundreds of hyperlocal trusts with county or parish-level remits. Faster decisions, less competition.',
+                    badge: '£500 – £20k',
+                    delay: 0.45,
+                  },
+                  {
+                    emoji: '🚀',
+                    title: 'Accelerators & Challenge Funds',
+                    desc: 'UnLtd, Nesta and DCMS programmes pairing direct grants with mentoring, peer networks and capacity building.',
+                    badge: '£1k – £150k',
+                    delay: 0.55,
+                  },
+                ].map((item) => (
+                  <motion.div
+                    key={item.title}
+                    {...fadeInView(item.delay)}
+                    className="flex gap-3 rounded-2xl border border-warm bg-white p-4 hover:border-forest/20 hover:shadow-warm transition-all"
+                  >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-forest/10 text-lg">
+                      {item.emoji}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                        <span className="text-sm font-semibold text-charcoal">{item.title}</span>
+                        <span className="rounded-full bg-gold/20 px-2 py-0.5 text-[11px] font-medium text-forest/80">{item.badge}</span>
+                      </div>
+                      <p className="text-xs text-mid leading-relaxed">{item.desc}</p>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
       {/* ══ FEATURE 1: GRANT SEARCH ══════════════════════════════════════════ */}
       <section id="features" className="max-w-6xl mx-auto px-6 pb-24 scroll-mt-20">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
