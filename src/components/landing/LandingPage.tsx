@@ -181,7 +181,7 @@ export default function LandingPage() {
 
           {/* Heading */}
           <motion.div {...fadeInView(0)} className="text-center mb-12">
-            <span className="inline-block mb-2 rounded-full bg-forest/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-forest">
+            <span className="inline-block mb-4 rounded-full bg-forest/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-forest">
               UK Coverage
             </span>
             <h2 className="text-4xl md:text-5xl mb-3">
