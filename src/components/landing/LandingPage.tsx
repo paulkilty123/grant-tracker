@@ -301,7 +301,7 @@ export default function LandingPage() {
               ✦ Feature 1 · AI Search
             </span>
             <h2 className="mt-4 text-3xl leading-tight md:text-4xl">
-              800+ UK funding opportunities,<br />ranked by AI to your mission
+              Search UK funding opportunities,<br />ranked intelligently to your mission
             </h2>
             <p className="mt-4 text-lg text-mid leading-relaxed">
               Search grants, competitions, social loans and matched crowdfunding — not just the obvious sources, but the specialist and hyper-local funders too. AI Search ranks every result by how well it fits your mission, income band and eligibility.
