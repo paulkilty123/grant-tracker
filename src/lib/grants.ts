@@ -1150,7 +1150,7 @@ function inferFunderType(name: string): FunderType {
     sectors: ['poverty', 'education', 'social welfare', 'community'],
     eligibilityCriteria: ['Work in London Borough of Lambeth', 'Registered charity'],
     isInviteOnly: false,
-    applyUrl: 'https://www.walcotfoundation.org.uk/grants/',
+    applyUrl: 'https://www.walcotfoundation.org.uk/organisationsschools.html',
     source: 'manual',
   },
   {
