@@ -487,11 +487,14 @@ export default function SearchPage() {
         const ix = await getInteractions(o.id)
         setInteractions(ix)
       }
-      // Fetch live scraped grants (runs for all users, no auth needed)
+      // Fetch live scraped grants — exclude dead URLs and expired deadlines
+      const today = new Date().toISOString().split('T')[0]
       const { data: scraped } = await supabase
         .from('scraped_grants')
         .select('*')
         .eq('is_active', true)
+        .neq('url_status', 'dead')
+        .or(`is_rolling.eq.true,deadline.is.null,deadline.gte.${today}`)
         .order('last_seen_at', { ascending: false })
         .limit(1500)
       if (scraped) {
@@ -649,8 +652,12 @@ export default function SearchPage() {
   const displayGrants: DisplayGrant[] = (() => {
     const minAmt = amountMin ? Number(amountMin) : null
     const maxAmt = amountMax ? Number(amountMax) : null
+    const todayStr = new Date().toISOString().split('T')[0]
 
     const filtered = allGrants.filter(g => {
+      // Always strip expired deadlines — never show grants whose closing date has passed
+      if (!g.isRolling && g.deadline && g.deadline < todayStr) return false
+
       const matchesType =
         activeType === 'all'      ? true :
         activeType === 'local'    ? g.isLocal :
