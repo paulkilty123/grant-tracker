@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
   RefreshCw, ExternalLink, Pencil, Check, X,
   AlertTriangle, CheckCircle, Clock, Database, Trash2, Mail, Search,
 } from 'lucide-react'
+import { SEED_GRANTS } from '@/lib/grants'
 
 const ADMIN_EMAIL = 'paulkilty1@gmail.com'
 
@@ -21,7 +22,7 @@ type Grant = {
 }
 
 type Stats = { total: number; withUrl: number; ok: number; dead: number; unchecked: number; seedTotal?: number }
-type Filter = 'dead' | 'unchecked' | 'all'
+type Filter = 'dead' | 'unchecked' | 'all' | 'seed'
 type DeadSeedGrant = { id: string; title: string; funder: string; url: string }
 
 export default function UrlAdminPage() {
@@ -58,11 +59,14 @@ export default function UrlAdminPage() {
       ok:        data.filter(g => g.url_status === 'ok').length,
       dead:      data.filter(g => g.url_status === 'dead').length,
       unchecked: data.filter(g => g.url_status === 'unchecked').length,
+      seedTotal: SEED_GRANTS.filter(g => g.applyUrl).length,
     })
   }, [])
 
-  // ── Load grants ─────────────────────────────────────────────────────────────
+  // ── Load scraped grants ──────────────────────────────────────────────────────
   const loadGrants = useCallback(async () => {
+    if (filter === 'seed') return // seed grants are loaded from static data
+
     let query = createClient()
       .from('scraped_grants')
       .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only')
@@ -92,12 +96,22 @@ export default function UrlAdminPage() {
     if (authorised) { loadStats(); loadGrants() }
   }, [authorised, loadStats, loadGrants])
 
+  // ── Filtered seed grants (client-side) ──────────────────────────────────────
+  const filteredSeedGrants = useMemo(() => {
+    if (filter !== 'seed') return []
+    const q = search.trim().toLowerCase()
+    if (!q) return SEED_GRANTS
+    return SEED_GRANTS.filter(g =>
+      g.title.toLowerCase().includes(q) ||
+      g.funder.toLowerCase().includes(q)
+    )
+  }, [filter, search])
+
   // ── Run full validation ─────────────────────────────────────────────────────
   async function runValidation() {
     setRunning(true)
     setRunResult(null)
     try {
-      // Auth is handled server-side via Supabase session
       const res = await fetch('/api/admin/validate-urls', { method: 'POST' })
       if (!res.ok) throw new Error('Request failed')
       const data = await res.json()
@@ -248,7 +262,7 @@ export default function UrlAdminPage() {
             { label: 'Total grants',   value: stats.total,     Icon: Database,      colour: 'text-charcoal', bg: 'bg-white',   border: 'border-warm'      },
             { label: 'Links verified', value: stats.ok,        Icon: CheckCircle,   colour: 'text-sage',     bg: 'bg-sage/5',  border: 'border-sage/20'   },
             { label: 'Dead links',     value: stats.dead,      Icon: AlertTriangle, colour: 'text-red-500',  bg: 'bg-red-50',  border: 'border-red-200'   },
-            { label: 'No URL found',    value: stats.unchecked, Icon: Clock,         colour: 'text-gold',     bg: 'bg-gold/5',  border: 'border-gold/20'   },
+            { label: 'Seed grants',    value: stats.seedTotal ?? SEED_GRANTS.length, Icon: Clock, colour: 'text-forest', bg: 'bg-forest/5', border: 'border-forest/20' },
           ].map(s => (
             <div key={s.label} className={`rounded-2xl border ${s.border} ${s.bg} p-5 shadow-warm`}>
               <s.Icon className={`mb-2 h-5 w-5 ${s.colour}`} />
@@ -265,10 +279,11 @@ export default function UrlAdminPage() {
           { key: 'dead',      label: `Dead links${stats ? ` (${stats.dead})` : ''}` },
           { key: 'unchecked', label: `No URL${stats ? ` (${stats.unchecked})` : ''}` },
           { key: 'all',       label: 'All grants' },
+          { key: 'seed',      label: `Seed grants (${SEED_GRANTS.length})` },
         ] as const).map(tab => (
           <button
             key={tab.key}
-            onClick={() => setFilter(tab.key)}
+            onClick={() => { setFilter(tab.key); setSearch('') }}
             className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
               filter === tab.key
                 ? 'bg-forest text-white'
@@ -301,191 +316,269 @@ export default function UrlAdminPage() {
         </div>
       )}
 
-      {/* Grant table */}
-      <div className="rounded-xl border border-warm bg-white overflow-hidden shadow-card">
-        {grants.length === 0 ? (
-          <div className="py-16 text-center">
-            <CheckCircle className="mx-auto mb-3 h-8 w-8 text-sage" />
-            <p className="text-mid text-sm">
-              {filter === 'dead' ? 'No dead links found — run validation to check' : 'No results for this filter'}
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-warm bg-warm/30 text-left text-xs font-semibold text-mid uppercase tracking-wider">
-                  <th className="px-5 py-3">Grant / Funder</th>
-                  <th className="px-5 py-3">URL</th>
-                  <th className="px-5 py-3 text-center">Status</th>
-                  <th className="px-5 py-3 text-center">Checked</th>
-                  <th className="px-5 py-3" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-warm/60">
-                {grants.map(grant => (
-                  <tr key={grant.id} className="hover:bg-cream/50 transition-colors">
-
-                    {/* Title + funder */}
-                    <td className="px-5 py-3 max-w-[220px]">
-                      <p className="font-medium text-charcoal leading-snug line-clamp-2">{grant.title}</p>
-                      <p className="text-xs text-mid mt-0.5">{grant.funder ?? '—'}</p>
-                    </td>
-
-                    {/* URL (editable) */}
-                    <td className="px-5 py-3 max-w-[300px]">
-                      {editingId === grant.id ? (
-                        <div className="flex items-center gap-2">
-                          <input
-                            autoFocus
-                            type="url"
-                            value={editUrl}
-                            onChange={e => setEditUrl(e.target.value)}
-                            className="flex-1 min-w-0 rounded-lg border border-warm px-2 py-1 text-xs focus:border-forest focus:outline-none"
-                            placeholder="https://funder.org/apply"
-                          />
-                          <button
-                            onClick={() => saveUrl(grant.id)}
-                            disabled={saving}
-                            className="flex-shrink-0 rounded-full bg-forest p-1.5 text-white disabled:opacity-50"
-                          >
-                            <Check className="h-3 w-3" />
-                          </button>
-                          <button
-                            onClick={() => setEditingId(null)}
-                            className="flex-shrink-0 rounded-full border border-warm p-1.5 text-mid"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1.5">
-                          {grant.apply_url ? (
+      {/* ── Seed grants table ──────────────────────────────────────────────────── */}
+      {filter === 'seed' && (
+        <div className="rounded-xl border border-warm bg-white overflow-hidden shadow-card">
+          {filteredSeedGrants.length === 0 ? (
+            <div className="py-16 text-center">
+              <Search className="mx-auto mb-3 h-8 w-8 text-light" />
+              <p className="text-mid text-sm">No seed grants match &ldquo;{search}&rdquo;</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-warm bg-warm/30 text-left text-xs font-semibold text-mid uppercase tracking-wider">
+                    <th className="px-5 py-3">Grant / Funder</th>
+                    <th className="px-5 py-3">URL</th>
+                    <th className="px-5 py-3 text-center">Amount</th>
+                    <th className="px-5 py-3 text-center">Rolling</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-warm/60">
+                  {filteredSeedGrants.map(grant => (
+                    <tr key={grant.id} className="hover:bg-cream/50 transition-colors">
+                      <td className="px-5 py-3 max-w-[220px]">
+                        <p className="font-medium text-charcoal leading-snug line-clamp-2">{grant.title}</p>
+                        <p className="text-xs text-mid mt-0.5">{grant.funder}</p>
+                        <span className="inline-block mt-1 rounded-full bg-forest/10 px-2 py-0.5 text-[10px] font-semibold text-forest">
+                          {grant.id}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3 max-w-[320px]">
+                        {grant.applyUrl ? (
+                          <div className="flex items-center gap-1.5">
                             <a
-                              href={grant.apply_url}
+                              href={grant.applyUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="truncate text-xs text-forest hover:underline max-w-[250px] block"
+                              className="truncate text-xs text-forest hover:underline max-w-[270px] block"
                             >
-                              {grant.apply_url}
+                              {grant.applyUrl}
                             </a>
-                          ) : (
-                            <span className="text-xs text-light italic">No URL set</span>
-                          )}
-                          {grant.apply_url && (
-                            <a href={grant.apply_url} target="_blank" rel="noopener noreferrer" className="flex-shrink-0">
+                            <a href={grant.applyUrl} target="_blank" rel="noopener noreferrer" className="flex-shrink-0">
                               <ExternalLink className="h-3 w-3 text-light hover:text-forest transition-colors" />
                             </a>
-                          )}
-                        </div>
-                      )}
-                    </td>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-light italic">No URL set</span>
+                        )}
+                      </td>
+                      <td className="px-5 py-3 text-center text-xs text-mid whitespace-nowrap">
+                        {grant.amountMin || grant.amountMax
+                          ? `£${(grant.amountMin ?? 0).toLocaleString()} – £${(grant.amountMax ?? 0).toLocaleString()}`
+                          : '—'}
+                      </td>
+                      <td className="px-5 py-3 text-center">
+                        {grant.isRolling ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-sage/10 px-2 py-0.5 text-[10px] font-semibold text-sage">
+                            <CheckCircle className="h-2.5 w-2.5" /> rolling
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-gold/10 px-2 py-0.5 text-[10px] font-semibold text-gold">
+                            <Clock className="h-2.5 w-2.5" /> deadline
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
 
-                    {/* Status badge */}
-                    <td className="px-5 py-3 text-center">
-                      {grant.url_status === 'ok' && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-sage/10 px-2 py-0.5 text-[10px] font-semibold text-sage">
-                          <CheckCircle className="h-2.5 w-2.5" /> ok
-                        </span>
-                      )}
-                      {grant.url_status === 'dead' && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-500">
-                          <AlertTriangle className="h-2.5 w-2.5" /> dead
-                        </span>
-                      )}
-                      {grant.url_status === 'unchecked' && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-gold/10 px-2 py-0.5 text-[10px] font-semibold text-gold">
-                          <Clock className="h-2.5 w-2.5" /> unchecked
-                        </span>
-                      )}
-                    </td>
+      {/* ── Scraped grants table ───────────────────────────────────────────────── */}
+      {filter !== 'seed' && (
+        <div className="rounded-xl border border-warm bg-white overflow-hidden shadow-card">
+          {grants.length === 0 ? (
+            <div className="py-16 text-center">
+              <CheckCircle className="mx-auto mb-3 h-8 w-8 text-sage" />
+              <p className="text-mid text-sm">
+                {filter === 'dead' ? 'No dead links found — run validation to check' : 'No results for this filter'}
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-warm bg-warm/30 text-left text-xs font-semibold text-mid uppercase tracking-wider">
+                    <th className="px-5 py-3">Grant / Funder</th>
+                    <th className="px-5 py-3">URL</th>
+                    <th className="px-5 py-3 text-center">Status</th>
+                    <th className="px-5 py-3 text-center">Checked</th>
+                    <th className="px-5 py-3" />
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-warm/60">
+                  {grants.map(grant => (
+                    <tr key={grant.id} className="hover:bg-cream/50 transition-colors">
 
-                    {/* Last checked date */}
-                    <td className="px-5 py-3 text-center text-xs text-light whitespace-nowrap">
-                      {grant.url_last_checked
-                        ? new Date(grant.url_last_checked).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-                        : '—'}
-                    </td>
+                      {/* Title + funder */}
+                      <td className="px-5 py-3 max-w-[220px]">
+                        <p className="font-medium text-charcoal leading-snug line-clamp-2">{grant.title}</p>
+                        <p className="text-xs text-mid mt-0.5">{grant.funder ?? '—'}</p>
+                      </td>
 
-                    {/* Actions */}
-                    <td className="px-5 py-3">
-                      {confirmDeleteId === grant.id ? (
-                        <div className="flex items-center justify-end gap-1.5">
-                          <span className="text-xs text-red-500 font-medium mr-1">Remove?</span>
-                          <button
-                            onClick={() => removeGrant(grant.id)}
-                            title="Confirm remove"
-                            className="rounded-full bg-red-500 p-1.5 text-white hover:bg-red-600 transition-colors"
-                          >
-                            <Check className="h-3 w-3" />
-                          </button>
-                          <button
-                            onClick={() => setConfirmDeleteId(null)}
-                            title="Cancel"
-                            className="rounded-full border border-warm p-1.5 text-mid hover:border-forest hover:text-forest transition-colors"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            onClick={() => toggleInviteOnly(grant.id, grant.is_invite_only)}
-                            title={grant.is_invite_only ? 'Mark as open application' : 'Mark as invite-only'}
-                            className={`rounded-full border p-1.5 transition-colors ${
-                              grant.is_invite_only
-                                ? 'border-purple-300 bg-purple-50 text-purple-600 hover:bg-purple-100'
-                                : 'border-warm text-mid hover:border-purple-300 hover:text-purple-600'
-                            }`}
-                          >
-                            <Mail className="h-3 w-3" />
-                          </button>
-                          <button
-                            onClick={() => { setEditingId(grant.id); setEditUrl(grant.apply_url ?? '') }}
-                            title="Edit URL"
-                            className="rounded-full border border-warm p-1.5 text-mid hover:border-forest hover:text-forest transition-colors"
-                          >
-                            <Pencil className="h-3 w-3" />
-                          </button>
-                          {grant.url_status === 'dead' && (
+                      {/* URL (editable) */}
+                      <td className="px-5 py-3 max-w-[300px]">
+                        {editingId === grant.id ? (
+                          <div className="flex items-center gap-2">
+                            <input
+                              autoFocus
+                              type="url"
+                              value={editUrl}
+                              onChange={e => setEditUrl(e.target.value)}
+                              className="flex-1 min-w-0 rounded-lg border border-warm px-2 py-1 text-xs focus:border-forest focus:outline-none"
+                              placeholder="https://funder.org/apply"
+                            />
                             <button
-                              onClick={() => markOk(grant.id)}
-                              title="Clear flag — mark as ok"
-                              className="rounded-full border border-warm p-1.5 text-mid hover:border-sage hover:text-sage transition-colors"
+                              onClick={() => saveUrl(grant.id)}
+                              disabled={saving}
+                              className="flex-shrink-0 rounded-full bg-forest p-1.5 text-white disabled:opacity-50"
                             >
                               <Check className="h-3 w-3" />
                             </button>
-                          )}
-                          {grant.url_status !== 'dead' && (
                             <button
-                              onClick={() => markDead(grant.id)}
-                              title="Flag as dead manually"
-                              className="rounded-full border border-warm p-1.5 text-mid hover:border-red-300 hover:text-red-500 transition-colors"
+                              onClick={() => setEditingId(null)}
+                              className="flex-shrink-0 rounded-full border border-warm p-1.5 text-mid"
                             >
                               <X className="h-3 w-3" />
                             </button>
-                          )}
-                          <button
-                            onClick={() => setConfirmDeleteId(grant.id)}
-                            title="Remove from database"
-                            className="rounded-full border border-warm p-1.5 text-mid hover:border-red-300 hover:text-red-500 transition-colors"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </button>
-                        </div>
-                      )}
-                    </td>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1.5">
+                            {grant.apply_url ? (
+                              <a
+                                href={grant.apply_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="truncate text-xs text-forest hover:underline max-w-[250px] block"
+                              >
+                                {grant.apply_url}
+                              </a>
+                            ) : (
+                              <span className="text-xs text-light italic">No URL set</span>
+                            )}
+                            {grant.apply_url && (
+                              <a href={grant.apply_url} target="_blank" rel="noopener noreferrer" className="flex-shrink-0">
+                                <ExternalLink className="h-3 w-3 text-light hover:text-forest transition-colors" />
+                              </a>
+                            )}
+                          </div>
+                        )}
+                      </td>
 
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+                      {/* Status badge */}
+                      <td className="px-5 py-3 text-center">
+                        {grant.url_status === 'ok' && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-sage/10 px-2 py-0.5 text-[10px] font-semibold text-sage">
+                            <CheckCircle className="h-2.5 w-2.5" /> ok
+                          </span>
+                        )}
+                        {grant.url_status === 'dead' && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-500">
+                            <AlertTriangle className="h-2.5 w-2.5" /> dead
+                          </span>
+                        )}
+                        {grant.url_status === 'unchecked' && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-gold/10 px-2 py-0.5 text-[10px] font-semibold text-gold">
+                            <Clock className="h-2.5 w-2.5" /> unchecked
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Last checked date */}
+                      <td className="px-5 py-3 text-center text-xs text-light whitespace-nowrap">
+                        {grant.url_last_checked
+                          ? new Date(grant.url_last_checked).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+                          : '—'}
+                      </td>
+
+                      {/* Actions */}
+                      <td className="px-5 py-3">
+                        {confirmDeleteId === grant.id ? (
+                          <div className="flex items-center justify-end gap-1.5">
+                            <span className="text-xs text-red-500 font-medium mr-1">Remove?</span>
+                            <button
+                              onClick={() => removeGrant(grant.id)}
+                              title="Confirm remove"
+                              className="rounded-full bg-red-500 p-1.5 text-white hover:bg-red-600 transition-colors"
+                            >
+                              <Check className="h-3 w-3" />
+                            </button>
+                            <button
+                              onClick={() => setConfirmDeleteId(null)}
+                              title="Cancel"
+                              className="rounded-full border border-warm p-1.5 text-mid hover:border-forest hover:text-forest transition-colors"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              onClick={() => toggleInviteOnly(grant.id, grant.is_invite_only)}
+                              title={grant.is_invite_only ? 'Mark as open application' : 'Mark as invite-only'}
+                              className={`rounded-full border p-1.5 transition-colors ${
+                                grant.is_invite_only
+                                  ? 'border-purple-300 bg-purple-50 text-purple-600 hover:bg-purple-100'
+                                  : 'border-warm text-mid hover:border-purple-300 hover:text-purple-600'
+                              }`}
+                            >
+                              <Mail className="h-3 w-3" />
+                            </button>
+                            <button
+                              onClick={() => { setEditingId(grant.id); setEditUrl(grant.apply_url ?? '') }}
+                              title="Edit URL"
+                              className="rounded-full border border-warm p-1.5 text-mid hover:border-forest hover:text-forest transition-colors"
+                            >
+                              <Pencil className="h-3 w-3" />
+                            </button>
+                            {grant.url_status === 'dead' && (
+                              <button
+                                onClick={() => markOk(grant.id)}
+                                title="Clear flag — mark as ok"
+                                className="rounded-full border border-warm p-1.5 text-mid hover:border-sage hover:text-sage transition-colors"
+                              >
+                                <Check className="h-3 w-3" />
+                              </button>
+                            )}
+                            {grant.url_status !== 'dead' && (
+                              <button
+                                onClick={() => markDead(grant.id)}
+                                title="Flag as dead manually"
+                                className="rounded-full border border-warm p-1.5 text-mid hover:border-red-300 hover:text-red-500 transition-colors"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            )}
+                            <button
+                              onClick={() => setConfirmDeleteId(grant.id)}
+                              title="Remove from database"
+                              className="rounded-full border border-warm p-1.5 text-mid hover:border-red-300 hover:text-red-500 transition-colors"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          </div>
+                        )}
+                      </td>
+
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
 
       <p className="mt-4 text-xs text-light text-center">
-        {grants.length} result{grants.length !== 1 ? 's' : ''}{search ? ` for "${search}"` : ''} · Sorted by oldest check first
+        {filter === 'seed'
+          ? `${filteredSeedGrants.length} seed grant${filteredSeedGrants.length !== 1 ? 's' : ''}${search ? ` matching "${search}"` : ''} · Edit URLs in src/lib/grants.ts`
+          : `${grants.length} result${grants.length !== 1 ? 's' : ''}${search ? ` for "${search}"` : ''} · Sorted by oldest check first`
+        }
       </p>
     </div>
   )
