@@ -132,7 +132,7 @@ export default function LandingPage() {
             {...fadeUp(0.35)}
             className="mx-auto mt-6 max-w-2xl text-lg text-mid md:text-xl"
           >
-            800+ UK funding opportunities, AI matching that learns from your feedback, and a full application pipeline — all in one place.
+            800+ UK funding opportunities, smart matching that learns from your preferences, and a full application pipeline — all in one place.
           </motion.p>
 
           {/* CTAs */}
@@ -154,7 +154,7 @@ export default function LandingPage() {
             className="mx-auto mt-16 grid max-w-3xl grid-cols-2 gap-4 md:grid-cols-4"
           >
             {[
-              { icon: Target, stat: 'AI Match', label: 'learns from your feedback' },
+              { icon: Target, stat: 'Smart Match', label: 'gets smarter the more you use it' },
               { icon: ClipboardList, stat: 'Pipeline', label: 'tracks every application' },
               { icon: Bell, stat: 'Alerts', label: 'when new matches appear' },
               { icon: User, stat: 'Personalisation', label: 'matched to your mission' },
@@ -292,13 +292,80 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ══ FEATURE 1: GRANT SEARCH ══════════════════════════════════════════ */}
+      {/* ══ FEATURE 1: LIVE SEARCH (dark panel) ══════════════════════════════ */}
       <section id="features" className="max-w-6xl mx-auto px-6 pb-24 scroll-mt-20">
+        <div className="bg-forest rounded-3xl px-8 py-16">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+
+            {/* Mock UI */}
+            <motion.div {...fadeInView()}>
+              <div className="bg-white/10 rounded-2xl p-5 border border-white/20">
+                <p className="text-xs text-mint/70 font-semibold uppercase tracking-wider mb-3">🔬 Live Search · Live results</p>
+                <div className="flex flex-wrap gap-1.5 mb-4">
+                  {['🧠 Mental Health', '🧒 Youth', '📚 Education & Training', '🏘 Community', '♿ Disability'].map((s, i) => (
+                    <span key={s} className={`px-2 py-1 rounded-full text-[10px] font-medium border ${i < 2 ? 'bg-sage border-sage/70 text-white' : 'border-white/20 text-white/60'}`}>{s}</span>
+                  ))}
+                </div>
+                <div className="space-y-2.5">
+                  {[
+                    { title: 'Lewisham Borough Community Resilience Fund', funder: 'London Borough of Lewisham', amount: 'Up to £8,000', tag: '📍 Hyper-local', badge: 'Found by Live Search', daysAgo: 'Published 3 days ago' },
+                    { title: 'SE London ICB Mental Health Commissioning Round', funder: "South East London ICB", amount: '£15k–£50k', tag: '🏥 NHS', badge: null, daysAgo: 'Published 6 days ago' },
+                    { title: 'Young Minds Matter Grant', funder: 'Comic Relief, open round', amount: '£5k–£25k', tag: '🆕 New round', badge: null, daysAgo: 'Published 1 day ago' },
+                  ].map(r => (
+                    <div key={r.title} className="bg-white/10 rounded-xl p-3 border border-white/10">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                            <span className="text-[9px] font-semibold text-mint bg-white/10 px-1.5 py-0.5 rounded-full">{r.tag}</span>
+                            {r.badge && <span className="text-[9px] font-semibold text-gold bg-gold/15 px-1.5 py-0.5 rounded-full">✦ {r.badge}</span>}
+                          </div>
+                          <p className="text-xs font-bold text-white leading-tight">{r.title}</p>
+                          <p className="text-[10px] text-mint/60 mt-0.5">{r.funder} · {r.daysAgo}</p>
+                        </div>
+                        <p className="text-xs font-bold text-gold flex-shrink-0">{r.amount}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[10px] text-mint/50 mt-3 text-center">Not listed on any national database · found in real time</p>
+              </div>
+            </motion.div>
+
+            <motion.div {...fadeInView(0.15)}>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-mint">
+                🔬 Feature 1 · Live Search (Pro)
+              </span>
+              <h2 className="mt-4 text-3xl text-white leading-tight md:text-4xl">
+                Finds local funders other tools completely miss
+              </h2>
+              <p className="mt-4 text-mint/80 leading-relaxed">
+                Every week, councils, NHS integrated care boards, and community foundations publish funding rounds on their own websites. They rarely appear in national databases. By the time word gets around, the deadline has often passed. Live Search monitors these sources continuously, so you see them the moment they go live.
+              </p>
+              <ul className="mt-6 space-y-3">
+                {[
+                  'Borough-level programmes most national databases never index',
+                  'NHS ICB commissioning and local authority grants by area',
+                  'Sector filters (mental health, youth, disability, housing, and more)',
+                  'Only returns grants not already in the curated database',
+                ].map(text => (
+                  <li key={text} className="flex items-start gap-3 text-sm text-mint/80">
+                    <span className="mt-0.5 flex-shrink-0 text-mint">✓</span>
+                    {text}
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* ══ FEATURE 2: GRANT SEARCH ══════════════════════════════════════════ */}
+      <section className="max-w-6xl mx-auto px-6 pb-24">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
 
           <motion.div {...fadeInView()}>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-forest/10 px-3 py-1 text-xs font-semibold text-forest">
-              ✦ Feature 1 · AI Search
+              ✦ Feature 2 · AI Search
             </span>
             <h2 className="mt-4 text-3xl leading-tight md:text-4xl">
               UK funding opportunities,<br />ranked intelligently to your mission
@@ -308,8 +375,8 @@ export default function LandingPage() {
             </p>
             <ul className="mt-6 space-y-3">
               {[
-                { icon: '✦', text: 'AI match scores with a breakdown — sector, eligibility, geography, size, and mission fit' },
-                { icon: '🎯', text: 'Thumbs up or down on any result trains future rankings to your preferences' },
+                { icon: '✦', text: 'Smart match scores with a breakdown — sector, eligibility, geography, size, and mission fit' },
+                { icon: '🎯', text: 'Thumbs up or down on any result — the more you use it, the sharper your results get' },
                 { icon: '📍', text: 'Filter by grants, competitions 🏆, social loans 🔄, or crowdfund match 🤝' },
                 { icon: '🆕', text: 'Freshness filter puts the most recently verified opportunities at the top' },
               ].map(item => (
@@ -363,73 +430,9 @@ export default function LandingPage() {
                   </div>
                 ))}
               </div>
-              <p className="text-[10px] text-center text-light mt-3">Showing 3 of 24 AI-matched results · ranked by match score</p>
+              <p className="text-[10px] text-center text-light mt-3">Showing 3 of 24 matched results · ranked by match score</p>
             </div>
           </motion.div>
-        </div>
-      </section>
-
-      {/* ══ FEATURE 2: LIVE SEARCH (dark panel) ═══════════════════════════════ */}
-      <section className="max-w-6xl mx-auto px-6 pb-24">
-        <div className="bg-forest rounded-3xl px-8 py-16">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-
-            {/* Mock UI */}
-            <motion.div {...fadeInView()}>
-              <div className="bg-white/10 rounded-2xl p-5 border border-white/20">
-                <p className="text-xs text-mint/70 font-semibold uppercase tracking-wider mb-3">🔬 Live Search · Live results</p>
-                <div className="flex flex-wrap gap-1.5 mb-4">
-                  {['🧠 Mental Health', '🧒 Youth', '📚 Education & Training', '🏘 Community', '♿ Disability'].map((s, i) => (
-                    <span key={s} className={`px-2 py-1 rounded-full text-[10px] font-medium border ${i < 2 ? 'bg-sage border-sage/70 text-white' : 'border-white/20 text-white/60'}`}>{s}</span>
-                  ))}
-                </div>
-                <div className="space-y-2.5">
-                  {[
-                    { title: 'Lewisham Community Mental Health Fund', funder: 'London Borough of Lewisham', amount: 'Up to £8,000', tag: '📍 Hyper-local' },
-                    { title: 'SE London ICB Commissioning Round', funder: "Guy's & St Thomas' NHS Foundation", amount: '£15k–£50k', tag: '🏥 NHS' },
-                    { title: 'Young Minds Matter Grant', funder: 'Comic Relief, open round', amount: '£5k–£25k', tag: '🆕 New round' },
-                  ].map(r => (
-                    <div key={r.title} className="bg-white/10 rounded-xl p-3 border border-white/10">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <span className="text-[9px] font-semibold text-mint bg-white/10 px-1.5 py-0.5 rounded-full">{r.tag}</span>
-                          <p className="text-xs font-bold text-white mt-1 leading-tight">{r.title}</p>
-                          <p className="text-[10px] text-mint/60 mt-0.5">{r.funder}</p>
-                        </div>
-                        <p className="text-xs font-bold text-gold flex-shrink-0">{r.amount}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <p className="text-[10px] text-mint/50 mt-3 text-center">Results researched live, not from a static database</p>
-              </div>
-            </motion.div>
-
-            <motion.div {...fadeInView(0.15)}>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-mint">
-                🔬 Feature 2 · Live Search (Pro)
-              </span>
-              <h2 className="mt-4 text-3xl text-white leading-tight md:text-4xl">
-                Finds local funders other tools completely miss
-              </h2>
-              <p className="mt-4 text-mint/80 leading-relaxed">
-                Live Search uses AI to scan council websites, NHS commissioning pages, community foundation portals and specialist funders in real time. Not a database. Not last year&apos;s results.
-              </p>
-              <ul className="mt-6 space-y-3">
-                {[
-                  'Borough-level programmes most national databases never index',
-                  'NHS ICB commissioning and local authority grants by area',
-                  'Sector filters (mental health, youth, disability, housing, and more)',
-                  'Only returns grants not already in the curated database',
-                ].map(text => (
-                  <li key={text} className="flex items-start gap-3 text-sm text-mint/80">
-                    <span className="mt-0.5 flex-shrink-0 text-mint">✓</span>
-                    {text}
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
-          </div>
         </div>
       </section>
 
@@ -445,13 +448,16 @@ export default function LandingPage() {
               Results that get sharper<br />every time you use it
             </h2>
             <p className="mt-4 text-lg text-mid leading-relaxed">
-              Grant Tracker learns what matters to you. Complete your profile and every result gets an AI match score. Rate results with a thumbs up or down and the system adjusts — boosting funding types and sectors you respond to, and downranking the ones that don&apos;t fit.
+              Grant Tracker learns what matters to you. Complete your profile and every result gets a smart match score. Rate results with a thumbs up or down and the system adjusts — boosting funding types and sectors you respond to, and downranking the ones that don&apos;t fit.
             </p>
-            <ul className="mt-6 space-y-3">
+            <p className="mt-3 text-sm font-medium text-forest">
+              Every recommendation is explained — tap any match score to see exactly why it was suggested.
+            </p>
+            <ul className="mt-5 space-y-3">
               {[
                 { icon: '🧠', text: 'Profile-based matching across 5 dimensions: sector, eligibility, geography, size and mission' },
                 { icon: '👍', text: 'Feedback-pattern learning — liked grants boost similar results, dislikes suppress them' },
-                { icon: '📊', text: 'Tap any match score to see a breakdown of exactly how it was calculated' },
+                { icon: '📊', text: 'Tap any match score to see a full breakdown — sector, eligibility, geography, size, mission fit' },
                 { icon: '🔔', text: 'Profile completeness indicator shows you which fields will improve your matches most' },
               ].map(item => (
                 <li key={item.text} className="flex items-start gap-3 text-sm text-mid">
@@ -521,7 +527,7 @@ export default function LandingPage() {
                   <span className="text-mid cursor-pointer">👎</span>
                 </div>
               </div>
-              <p className="text-[10px] text-center text-light">👍 on a result trains future rankings to your preferences</p>
+              <p className="text-[10px] text-center text-light">👍 on a result — the more you use it, the better it gets</p>
             </div>
           </motion.div>
         </div>
@@ -877,7 +883,7 @@ export default function LandingPage() {
               <span className="text-sm text-white/70">No credit card required</span>
             </div>
             <p className="relative text-xs text-white/40 mt-5">Free forever for grant search · Upgrade anytime · Cancel anytime</p>
-            <p className="relative text-xs text-white/30 mt-2">🔒 Your data is never shared or sold. Stored securely, deleted on request.</p>
+            <p className="relative text-xs text-white/30 mt-2">🔒 Your data is only used to improve your own matches — never used to train external models, never shared with funders, never sold.</p>
           </div>
         </motion.div>
       </section>
