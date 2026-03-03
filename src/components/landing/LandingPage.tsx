@@ -176,7 +176,7 @@ export default function LandingPage() {
       </section>
 
       {/* ══ COVERAGE & FUNDING LAYERS ════════════════════════════════════════ */}
-      <section id="coverage" className="py-24">
+      <section id="coverage" className="pt-8 pb-24">
         <div className="max-w-6xl mx-auto px-6">
 
           {/* Heading */}
@@ -255,7 +255,7 @@ export default function LandingPage() {
       </section>
 
       {/* ══ FEATURE 1: GRANT SEARCH ══════════════════════════════════════════ */}
-      <section id="features" className="max-w-6xl mx-auto px-6 pt-24 pb-24 scroll-mt-20">
+      <section id="features" className="max-w-6xl mx-auto px-6 pb-24 scroll-mt-20">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
 
           <motion.div {...fadeInView()}>
