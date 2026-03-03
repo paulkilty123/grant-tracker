@@ -752,25 +752,37 @@ export default function SearchPage() {
     setSmartMatched(false)
 
     // ── Pre-filter: only send the most relevant grants to the API ──────────
-    // Step 1: keyword match on query terms
-    const queryTerms = searchQuery.toLowerCase().split(/\s+/).filter(t => t.length > 2)
-    const keywordScored = allGrants.map(g => {
+    // Use a two-pool approach so the user's query always dominates over the
+    // org profile. This prevents profile-matched grants from drowning out
+    // grants that specifically match what the user typed (e.g. "Cornwall arts").
+    //
+    // Filter to words > 3 chars to skip trivial stop words ("and", "the", "for")
+    const queryTerms = searchQuery.toLowerCase().split(/\s+/).filter(t => t.length > 3)
+
+    const scored = allGrants.map(g => {
       const text = `${g.title} ${g.funder} ${g.description} ${g.sectors.join(' ')}`.toLowerCase()
-      const hits = queryTerms.filter(t => text.includes(t)).length
-      return { g, hits }
-    })
-
-    // Step 2: combine keyword hits with client-side match score (if org exists)
-    const ranked = keywordScored.map(({ g, hits }) => {
+      const hits      = queryTerms.filter(t => text.includes(t)).length
       const matchScore = org ? computeMatchScore(g, org).score : 50
-      // Weight: keyword hit = 3pts each, match score out of 100
-      const combined = hits * 3 + matchScore
-      return { g, combined }
+      return { g, hits, matchScore }
     })
 
-    // Step 3: sort by combined score, take top 35
-    ranked.sort((a, b) => b.combined - a.combined)
-    const preFiltered = ranked.slice(0, 35).map(({ g }) => g)
+    // Pool 1 (25 slots) — keyword-first: primary sort by keyword hits, then
+    // profile score as a tiebreaker for grants with the same hit count.
+    const pool1 = [...scored]
+      .sort((a, b) => b.hits !== a.hits ? b.hits - a.hits : b.matchScore - a.matchScore)
+      .slice(0, 25)
+      .map(({ g }) => g)
+
+    // Pool 2 (10 slots) — profile fallback: top org-match grants not already
+    // in pool 1, ensuring Smart Match and profile-only searches still work.
+    const pool1Ids = new Set(pool1.map(g => g.id))
+    const pool2 = [...scored]
+      .sort((a, b) => b.matchScore - a.matchScore)
+      .filter(({ g }) => !pool1Ids.has(g.id))
+      .slice(0, 10)
+      .map(({ g }) => g)
+
+    const preFiltered = [...pool1, ...pool2]
 
     const grantsContext = preFiltered.map(g => ({
       id: g.id, title: g.title, funder: g.funder,
