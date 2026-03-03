@@ -5,11 +5,11 @@
 // 4. Returns a JSON summary (visible in Vercel cron logs)
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { checkUrl } from '@/app/api/admin/validate-urls/route'
+import { checkUrl } from '@/lib/url-validator'
 import { SEED_GRANTS } from '@/lib/grants'
 
 export const dynamic    = 'force-dynamic'
-export const maxDuration = 300  // 5 min
+export const maxDuration = 60
 
 function getAdminClient() {
   return createClient(
