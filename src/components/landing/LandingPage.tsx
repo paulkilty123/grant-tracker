@@ -176,11 +176,11 @@ export default function LandingPage() {
       </section>
 
       {/* ══ COVERAGE ════════════════════════════════════════════════════════ */}
-      <section id="coverage" className="py-14 bg-forest/[0.03]">
+      <section id="coverage" className="py-12 bg-forest/[0.03]">
         <div className="max-w-6xl mx-auto px-6">
 
           {/* Heading */}
-          <motion.div {...fadeInView(0)} className="text-center mb-8">
+          <motion.div {...fadeInView(0)} className="text-center mb-6">
             <span className="inline-block mb-2 rounded-full bg-forest/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-forest">
               UK Coverage
             </span>
@@ -193,11 +193,9 @@ export default function LandingPage() {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
-
-            {/* ── UK Map ── */}
-            <motion.div {...fadeInView(0)} className="flex flex-col items-center">
-              <div className="relative w-56 md:w-64">
+          {/* ── UK Map — centred ── */}
+          <motion.div {...fadeInView(0.1)} className="flex flex-col items-center">
+            <div className="relative w-52 md:w-60">
                 <svg viewBox="0 0 220 320" xmlns="http://www.w3.org/2000/svg" className="w-full drop-shadow-lg">
                   <defs>
                     <filter id="mapShadow" x="-20%" y="-20%" width="140%" height="140%">
@@ -275,91 +273,90 @@ export default function LandingPage() {
                 </svg>
 
                 {/* Map legend */}
-                <div className="mt-5 flex flex-col gap-2 px-1">
-                  <div className="flex items-center gap-2 text-xs text-mid">
+                <div className="mt-4 flex justify-center gap-5">
+                  <div className="flex items-center gap-1.5 text-xs text-mid">
                     <div className="h-2.5 w-2.5 rounded-full bg-[#C4973A] shrink-0" />
-                    <span>Major funding hubs</span>
+                    <span>Major hubs</span>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-mid">
+                  <div className="flex items-center gap-1.5 text-xs text-mid">
                     <div className="h-2.5 w-2.5 rounded-full bg-[#E8C97A] shrink-0" />
-                    <span>Regional grant centres</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-mid">
-                    <div className="h-2.5 w-2.5 rounded-full bg-forest/40 shrink-0" />
-                    <span>England · Scotland · Wales · N. Ireland</span>
+                    <span>Regional centres</span>
                   </div>
                 </div>
               </div>
-            </motion.div>
+          </motion.div>
 
-            {/* ── Grant type cards ── */}
-            <div>
-              <motion.div {...fadeInView(0.1)} className="mb-6">
-                <h3 className="text-2xl md:text-3xl leading-snug">
-                  Five layers of funding<br />
-                  <span className="text-mid font-normal text-xl">to match your organisation</span>
-                </h3>
+        </div>
+      </section>
+
+      {/* ══ FUNDING LAYERS ═══════════════════════════════════════════════════ */}
+      <section className="py-14">
+        <div className="max-w-6xl mx-auto px-6">
+
+          <motion.div {...fadeInView(0)} className="text-center mb-8">
+            <h2 className="text-3xl md:text-4xl mb-2">
+              Five layers of funding
+            </h2>
+            <p className="text-mid text-base">to match your organisation</p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[
+              {
+                emoji: '🏛️',
+                title: 'National & Government',
+                desc: 'Arts Council England, National Lottery, Sport England, Innovate UK — UK-wide eligibility and larger award sizes.',
+                badge: '£1k – £1M+',
+                delay: 0.1,
+              },
+              {
+                emoji: '🌍',
+                title: 'Regional & Community Foundations',
+                desc: 'County and city-level funders across all four nations. Lower competition, community-first priorities.',
+                badge: '£500 – £50k',
+                delay: 0.2,
+              },
+              {
+                emoji: '🏢',
+                title: 'Corporate Foundations',
+                desc: 'Lloyds Bank, Barclays, Aviva and 50+ more — sector-themed funding tied to a company\'s community strategy.',
+                badge: '£1k – £100k',
+                delay: 0.3,
+              },
+              {
+                emoji: '🏡',
+                title: 'Small Trusts & Family Foundations',
+                desc: 'Hundreds of hyperlocal trusts with county or parish-level remits. Faster decisions, less competition.',
+                badge: '£500 – £20k',
+                delay: 0.4,
+              },
+              {
+                emoji: '🚀',
+                title: 'Accelerators & Challenge Funds',
+                desc: 'UnLtd, Nesta and DCMS programmes pairing direct grants with mentoring, peer networks and capacity building.',
+                badge: '£1k – £150k',
+                delay: 0.5,
+              },
+            ].map((item) => (
+              <motion.div
+                key={item.title}
+                {...fadeInView(item.delay)}
+                className="flex gap-3 rounded-2xl border border-warm bg-white p-4 hover:border-forest/20 hover:shadow-warm transition-all"
+              >
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-forest/10 text-lg">
+                  {item.emoji}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                    <span className="text-sm font-semibold text-charcoal">{item.title}</span>
+                    <span className="rounded-full bg-gold/20 px-2 py-0.5 text-[11px] font-medium text-forest/80">{item.badge}</span>
+                  </div>
+                  <p className="text-xs text-mid leading-relaxed">{item.desc}</p>
+                </div>
               </motion.div>
-
-              <div className="space-y-3">
-                {[
-                  {
-                    emoji: '🏛️',
-                    title: 'National & Government',
-                    desc: 'Arts Council England, National Lottery, Sport England, Innovate UK — UK-wide eligibility and larger award sizes.',
-                    badge: '£1k – £1M+',
-                    delay: 0.15,
-                  },
-                  {
-                    emoji: '🌍',
-                    title: 'Regional & Community Foundations',
-                    desc: 'County and city-level funders across all four nations. Lower competition, community-first priorities.',
-                    badge: '£500 – £50k',
-                    delay: 0.25,
-                  },
-                  {
-                    emoji: '🏢',
-                    title: 'Corporate Foundations',
-                    desc: 'Lloyds Bank, Barclays, Aviva and 50+ more — sector-themed funding tied to a company\'s community strategy.',
-                    badge: '£1k – £100k',
-                    delay: 0.35,
-                  },
-                  {
-                    emoji: '🏡',
-                    title: 'Small Trusts & Family Foundations',
-                    desc: 'Hundreds of hyperlocal trusts with county or parish-level remits. Faster decisions, less competition.',
-                    badge: '£500 – £20k',
-                    delay: 0.45,
-                  },
-                  {
-                    emoji: '🚀',
-                    title: 'Accelerators & Challenge Funds',
-                    desc: 'UnLtd, Nesta and DCMS programmes pairing direct grants with mentoring, peer networks and capacity building.',
-                    badge: '£1k – £150k',
-                    delay: 0.55,
-                  },
-                ].map((item) => (
-                  <motion.div
-                    key={item.title}
-                    {...fadeInView(item.delay)}
-                    className="flex gap-3 rounded-2xl border border-warm bg-white p-4 hover:border-forest/20 hover:shadow-warm transition-all"
-                  >
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-forest/10 text-lg">
-                      {item.emoji}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                        <span className="text-sm font-semibold text-charcoal">{item.title}</span>
-                        <span className="rounded-full bg-gold/20 px-2 py-0.5 text-[11px] font-medium text-forest/80">{item.badge}</span>
-                      </div>
-                      <p className="text-xs text-mid leading-relaxed">{item.desc}</p>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-
+            ))}
           </div>
+
         </div>
       </section>
 
