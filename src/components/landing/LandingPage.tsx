@@ -104,7 +104,7 @@ export default function LandingPage() {
       </motion.nav>
 
       {/* ══ HERO ═════════════════════════════════════════════════════════════ */}
-      <section className="relative overflow-hidden pt-32 pb-20 md:pt-44 md:pb-28">
+      <section className="relative overflow-hidden pt-32 pb-12 md:pt-44 md:pb-16">
         {/* Background blobs */}
         <div className="pointer-events-none absolute inset-0 -z-10">
           <div className="absolute top-20 left-1/2 h-[600px] w-[600px] -translate-x-1/2 rounded-full bg-forest/5 blur-3xl" />
@@ -176,7 +176,7 @@ export default function LandingPage() {
       </section>
 
       {/* ══ COVERAGE ════════════════════════════════════════════════════════ */}
-      <section id="coverage" className="py-12 bg-forest/[0.03]">
+      <section id="coverage" className="py-16">
         <div className="max-w-6xl mx-auto px-6">
 
           {/* Heading */}
@@ -290,7 +290,7 @@ export default function LandingPage() {
       </section>
 
       {/* ══ FUNDING LAYERS ═══════════════════════════════════════════════════ */}
-      <section className="py-14">
+      <section className="py-16">
         <div className="max-w-6xl mx-auto px-6">
 
           <motion.div {...fadeInView(0)} className="text-center mb-8">
