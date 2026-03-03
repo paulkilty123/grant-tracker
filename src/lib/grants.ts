@@ -2615,7 +2615,7 @@ function inferFunderType(name: string): FunderType {
     sectors: ['community', 'poverty', 'employment', 'arts', 'young people'],
     eligibilityCriteria: ['Project benefits residents on or near a Peabody estate in London'],
     isInviteOnly: false,
-    applyUrl: 'https://peabody.org.uk/community-foundation',
+    applyUrl: 'https://www.peabodygroup.org.uk/our-work/peabody-community-foundation-pcf/',
     source: 'manual',
   },
   {
