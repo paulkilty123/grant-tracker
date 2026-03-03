@@ -9,14 +9,16 @@ const CACHE_TTL_HOURS = 48
 // ── URL verification ──────────────────────────────────────────────────────────
 // Checks whether a URL actually resolves before we cache and show it.
 // Uses GET (not HEAD) since many grant sites block HEAD requests.
-// Returns true if the page exists, false on 404/timeout/network error.
+// Returns true if the page exists, false on 404/timeout/DNS-failure/content-404.
 async function verifyUrl(url: string): Promise<boolean> {
   try {
     const res = await fetch(url, {
       method: 'GET',
       signal: AbortSignal.timeout(7000),
       redirect: 'follow',
-      headers: { 'User-Agent': 'GrantTracker/1.0' },
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; GrantTracker/1.0; +https://grant-tracker-kappa.vercel.app)',
+      },
     })
     // Hard failures
     if (res.status === 404 || res.status === 410 || res.status === 400) return false
@@ -47,11 +49,16 @@ async function verifyUrl(url: string): Promise<boolean> {
       } catch { /* ignore parse errors */ }
     }
 
-    // Content 404 detection — catches sites that serve HTTP 200 with a 404 page
+    // Content 404 detection — catches sites that serve HTTP 200 with an error
+    // page inside their normal chrome (e.g. "No Results Found" on Blagrave,
+    // "404 Not Found" on Waitrose). Read first 30 KB — enough for head + content.
     try {
       const contentType = res.headers.get('content-type') ?? ''
       if (contentType.includes('text/html')) {
-        const html = await res.text()
+        const buf  = await res.arrayBuffer()
+        const html = new TextDecoder().decode(new Uint8Array(buf).slice(0, 30720))
+
+        // <title> tag check
         const titleMatch = html.match(/<title[^>]*>([^<]*)<\/title>/i)
         if (titleMatch) {
           const title = titleMatch[1].toLowerCase()
@@ -62,12 +69,36 @@ async function verifyUrl(url: string): Promise<boolean> {
             title.includes('error 404')
           ) return false
         }
+
+        // <h1>/<h2> heading check — catches "No Results Found" style errors
+        const headingMatches = Array.from(html.matchAll(/<h[12][^>]*>([\s\S]*?)<\/h[12]>/gi))
+        for (const m of headingMatches) {
+          const heading = m[1].replace(/<[^>]+>/g, '').toLowerCase().trim()
+          if (
+            heading === '404' ||
+            heading === 'not found' ||
+            heading === 'page not found' ||
+            heading === 'no results found' ||
+            heading === 'content not found' ||
+            heading === 'sorry, page not found' ||
+            heading.includes('page could not be found') ||
+            heading.includes("page doesn't exist") ||
+            heading.includes('page does not exist') ||
+            heading.includes('page you requested') ||
+            heading.includes('page you are looking for')
+          ) return false
+        }
       }
     } catch { /* ignore */ }
 
     return true
-  } catch {
-    // Timeout or network error — give it the benefit of the doubt
+  } catch (err: unknown) {
+    // ENOTFOUND = domain doesn't exist in DNS — permanently dead
+    const msg     = err instanceof Error ? err.message : String(err)
+    const cause   = (err instanceof Error && err.cause instanceof Error) ? err.cause.message : ''
+    if (`${msg} ${cause}`.toLowerCase().includes('enotfound')) return false
+
+    // Timeout or other transient error — benefit of the doubt
     return true
   }
 }

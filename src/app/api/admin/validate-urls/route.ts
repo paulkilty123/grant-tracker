@@ -34,7 +34,8 @@ function getAdminClient() {
 
 // ── URL checker ───────────────────────────────────────────────────────────────
 // Returns 'ok' | 'dead'.
-// Catches both hard 404s AND soft 404s (pages that redirect to homepage).
+// Catches hard 404s, soft 404s (homepage redirects), content 404s,
+// and DNS failures (domain no longer exists).
 async function checkUrl(url: string): Promise<'ok' | 'dead'> {
   try {
     // follow redirects so res.url gives us the final destination
@@ -42,7 +43,10 @@ async function checkUrl(url: string): Promise<'ok' | 'dead'> {
       method: 'GET',
       signal: AbortSignal.timeout(8000),
       redirect: 'follow',
-      headers: { 'User-Agent': 'GrantTracker-URLChecker/1.0' },
+      // Use a realistic browser UA — some grant sites block obvious bot agents
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; GrantTracker/1.0; +https://grant-tracker-kappa.vercel.app)',
+      },
     })
 
     // ── Hard failures ─────────────────────────────────────────────────────────
@@ -93,12 +97,16 @@ async function checkUrl(url: string): Promise<'ok' | 'dead'> {
     }
 
     // ── Content 404 detection ─────────────────────────────────────────────────
-    // Some sites (e.g. Waitrose) serve HTTP 200 but render a "404 Not Found"
-    // page inside their normal site chrome. Check the <title> tag.
+    // Some sites serve HTTP 200 but render an error page inside their normal
+    // site chrome. Check both the <title> tag and early <h1>/<h2> headings.
+    // Read only the first 30 KB — enough to cover <head> and opening content.
     try {
       const contentType = res.headers.get('content-type') ?? ''
       if (contentType.includes('text/html')) {
-        const html = await res.text()
+        const buf = await res.arrayBuffer()
+        const html = new TextDecoder().decode(new Uint8Array(buf).slice(0, 30720))
+
+        // 1. <title> tag check
         const titleMatch = html.match(/<title[^>]*>([^<]*)<\/title>/i)
         if (titleMatch) {
           const title = titleMatch[1].toLowerCase()
@@ -109,14 +117,45 @@ async function checkUrl(url: string): Promise<'ok' | 'dead'> {
             title.includes('error 404')
           ) return 'dead'
         }
+
+        // 2. <h1> / <h2> heading check — catches patterns like "No Results Found"
+        //    that use a 200 status but clearly indicate a missing page.
+        const headingMatches = Array.from(html.matchAll(/<h[12][^>]*>([\s\S]*?)<\/h[12]>/gi))
+        for (const m of headingMatches) {
+          // Strip any inner HTML tags (e.g. <span>, <a>) to get plain text
+          const heading = m[1].replace(/<[^>]+>/g, '').toLowerCase().trim()
+          if (
+            heading === '404' ||
+            heading === 'not found' ||
+            heading === 'page not found' ||
+            heading === 'no results found' ||
+            heading === 'content not found' ||
+            heading === 'sorry, page not found' ||
+            heading.includes('page could not be found') ||
+            heading.includes("page doesn't exist") ||
+            heading.includes('page does not exist') ||
+            heading.includes('page you requested') ||
+            heading.includes('page you are looking for')
+          ) return 'dead'
+        }
       }
     } catch {
       // Body read failed — rely on status/redirect checks only
     }
 
     return 'ok'
-  } catch {
-    // Timeout or network error — benefit of the doubt, check again tomorrow
+  } catch (err: unknown) {
+    // ── Distinguish DNS failures from transient timeouts ───────────────────────
+    // ENOTFOUND = the domain doesn't exist in DNS — almost certainly permanently
+    // dead (e.g. jackpetchey.org.uk which moved to jackpetcheyfoundation.org.uk).
+    // Timeouts and other transient errors get the benefit of the doubt.
+    const msg   = err instanceof Error ? err.message : String(err)
+    const cause = (err instanceof Error && err.cause instanceof Error) ? err.cause.message : ''
+    const combined = `${msg} ${cause}`.toLowerCase()
+
+    if (combined.includes('enotfound')) return 'dead'
+
+    // Timeout or other transient network error — check again tomorrow
     return 'ok'
   }
 }
