@@ -114,7 +114,14 @@ Return ONLY valid JSON array, no markdown, no other text.`
       cleaned = jsonMatch[0]
     }
     const results = JSON.parse(cleaned)
-    return NextResponse.json(results)
+    // Strip any <cite ...>...</cite> or other HTML tags the model may include in reason text
+    const sanitised = results.map((r: { grantId: string; score: number; reason: string }) => ({
+      ...r,
+      reason: typeof r.reason === 'string'
+        ? r.reason.replace(/<[^>]*>/g, '').trim()
+        : r.reason,
+    }))
+    return NextResponse.json(sanitised)
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Search failed'
     return NextResponse.json({ error: message }, { status: 500 })

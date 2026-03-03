@@ -275,7 +275,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
           {hasOrg && hasSearch && reason && (
             <div className="bg-sage/8 border border-sage/20 rounded-lg px-3.5 py-2.5 mb-3 flex items-start gap-2">
               <span className={`text-sm flex-shrink-0 ${scoreText}`}>{isAiScore ? '✦' : '●'}</span>
-              <p className="text-sm text-forest leading-snug">{reason}</p>
+              <p className="text-sm text-forest leading-snug">{reason.replace(/<[^>]*>/g, '').trim()}</p>
             </div>
           )}
 
