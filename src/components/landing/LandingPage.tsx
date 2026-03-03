@@ -724,19 +724,28 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      {/* ══ WHO IT'S FOR ══════════════════════════════════════════════════════ */}
-      <section className="max-w-6xl mx-auto px-6 pb-24">
-        <motion.div {...fadeInView()} className="text-center mb-10">
-          <h2 className="text-3xl md:text-4xl">Built for the people doing the work</h2>
-          <p className="mt-3 text-mid max-w-md mx-auto">Small teams with big ambitions, not large development offices with specialist staff and six-figure budgets.</p>
+      {/* ══ ABOUT ══════════════════════════════════════════════════════════════ */}
+      <section id="about" className="max-w-6xl mx-auto px-6 pb-24 scroll-mt-20">
+        <motion.div {...fadeInView()} className="text-center mb-12">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-forest/10 px-3 py-1 text-xs font-semibold text-forest">
+            🌱 About
+          </span>
+          <h2 className="mt-4 text-3xl md:text-4xl">
+            Built for the people doing the work
+          </h2>
+          <p className="mt-3 text-mid max-w-lg mx-auto">
+            Grant Tracker exists to help mission-driven organisations spend less time searching for funding and more time delivering impact.
+          </p>
         </motion.div>
-        <motion.div {...fadeInView(0.1)} className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+
+        {/* Persona cards */}
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5 mb-16">
           {[
-            { emoji: '🏠', label: 'Charities', desc: 'Manage multiple funders and applications without a dedicated grants manager.' },
-            { emoji: '🌱', label: 'Community Groups', desc: 'Find local and national funding that fits your size, area, and cause — including hyper-local funders most platforms miss.' },
-            { emoji: '⚡', label: 'Social Enterprises', desc: 'Search trusts, corporates, government programmes and social loan funds in one place.' },
-            { emoji: '💡', label: 'Impact Founders', desc: 'Find grants, competitions and interest-free loans for founders with a social or environmental mission.' },
-            { emoji: '🚀', label: 'Underserved Ventures', desc: 'Discover competitions, matched crowdfunding and community funds open to early-stage and grassroots ventures.' },
+            { emoji: '🏠', label: 'Charities',           desc: 'Manage multiple funders and applications without a dedicated grants manager.' },
+            { emoji: '🌱', label: 'Community Groups',    desc: 'Find local and national funding that fits your size, area, and cause — including hyper-local funders most platforms miss.' },
+            { emoji: '⚡', label: 'Social Enterprises',  desc: 'Search trusts, corporates, government programmes and social loan funds in one place.' },
+            { emoji: '💡', label: 'Impact Founders',     desc: 'Find grants, competitions and interest-free loans for founders with a social or environmental mission.' },
+            { emoji: '🚀', label: 'Underserved Ventures',desc: 'Discover competitions, matched crowdfunding and community funds open to early-stage and grassroots ventures.' },
           ].map((item, i) => (
             <motion.div key={item.label} {...fadeInView(i * 0.08)} className="bg-white rounded-2xl p-5 shadow-card text-center border border-warm hover:shadow-warm transition-shadow">
               <div className="text-3xl mb-3">{item.emoji}</div>
@@ -744,67 +753,10 @@ export default function LandingPage() {
               <p className="text-sm text-mid leading-normal">{item.desc}</p>
             </motion.div>
           ))}
-        </motion.div>
-      </section>
-
-      {/* ══ ABOUT ══════════════════════════════════════════════════════════════ */}
-      <section id="about" className="max-w-4xl mx-auto px-6 pb-24 scroll-mt-20">
-        <motion.div {...fadeInView()} className="text-center mb-12">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-forest/10 px-3 py-1 text-xs font-semibold text-forest">
-            🌱 About
-          </span>
-          <h2 className="mt-4 text-3xl md:text-4xl">
-            Built for the people<br />
-            <span className="italic">doing the work</span>
-          </h2>
-          <p className="mt-3 text-mid max-w-lg mx-auto">
-            Grant Tracker exists to help mission-driven organisations spend less time searching for funding and more time delivering impact.
-          </p>
-        </motion.div>
-
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {[
-            {
-              emoji: '🏛️',
-              gradient: 'from-forest/20 to-teal-100',
-              title: 'Charities',
-              desc: 'From national organisations to grassroots groups — find grants tailored to your cause and structure.',
-            },
-            {
-              emoji: '🤝',
-              gradient: 'from-amber-100 to-orange-100',
-              title: 'Community Groups',
-              desc: 'Local projects, faith groups, and resident-led initiatives deserve funding too. We surface the hyper-local pots others miss.',
-            },
-            {
-              emoji: '🌱',
-              gradient: 'from-emerald-100 to-teal-50',
-              title: 'Social Enterprises',
-              desc: 'Trading for good? Search social loans, competitions and blended finance alongside traditional grants.',
-            },
-            {
-              emoji: '🎓',
-              gradient: 'from-sky-100 to-indigo-50',
-              title: 'CICs & Not-for-Profits',
-              desc: "Whether you're a CIC, CIO or unincorporated — eligibility filters adapt so you only see what you can apply for.",
-            },
-          ].map((v, i) => (
-            <motion.div
-              key={v.title}
-              {...fadeInView(i * 0.1)}
-              className="rounded-2xl border border-warm bg-white p-6 text-center shadow-warm hover:shadow-lg transition-shadow duration-300"
-            >
-              <div className={`mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${v.gradient}`}>
-                <span className="text-2xl">{v.emoji}</span>
-              </div>
-              <h3 className="mt-4 font-serif text-lg text-charcoal">{v.title}</h3>
-              <p className="mt-2 text-sm text-mid leading-relaxed">{v.desc}</p>
-            </motion.div>
-          ))}
         </div>
 
         {/* Founder story */}
-        <motion.div {...fadeInView(0.2)} className="mt-16 rounded-3xl border border-warm bg-white p-10 shadow-warm max-w-2xl mx-auto">
+        <motion.div {...fadeInView(0.2)} className="rounded-3xl border border-warm bg-white p-10 shadow-warm max-w-2xl mx-auto">
           <blockquote className="font-serif text-xl text-forest font-semibold leading-snug mb-6 border-l-4 border-sage pl-5">
             &ldquo;Finding the right grant has always been harder than it should be. The tools that existed were too expensive, too generic, and built for organisations with a dedicated grants team — not for the people actually doing the work.&rdquo;
           </blockquote>
