@@ -188,7 +188,7 @@ export default function LandingPage() {
               Every layer of UK funding,<br />
               <span className="text-gradient-warm italic">in one place</span>
             </h2>
-            <p className="mx-auto max-w-2xl text-mid text-base">
+            <p className="mx-auto max-w-2xl text-mid text-lg">
               From hyperlocal community trusts to national lottery programmes — 800+ opportunities spanning every region of England, Scotland, Wales and Northern Ireland.
             </p>
           </motion.div>
