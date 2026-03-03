@@ -756,11 +756,11 @@ export default function LandingPage() {
         </div>
 
         {/* Founder story */}
-        <motion.div {...fadeInView(0.2)} className="rounded-3xl border border-warm bg-white p-10 shadow-warm max-w-2xl mx-auto">
-          <blockquote className="font-serif text-xl text-forest font-semibold leading-snug mb-6 border-l-4 border-sage pl-5">
+        <motion.div {...fadeInView(0.2)} className="rounded-3xl bg-forest p-10 max-w-2xl mx-auto">
+          <blockquote className="font-serif text-xl text-white font-semibold leading-snug mb-6 border-l-4 border-white/40 pl-5">
             &ldquo;Finding the right grant has always been harder than it should be. The tools that existed were too expensive, too generic, and built for organisations with a dedicated grants team — not for the people actually doing the work.&rdquo;
           </blockquote>
-          <div className="space-y-4 text-mid text-sm leading-relaxed">
+          <div className="space-y-4 text-white/80 text-sm leading-relaxed">
             <p>
               Grant Tracker was built from direct experience of the sector — sifting through outdated databases, missing hyper-local funders that never appear in national searches, and juggling applications across spreadsheets and inboxes.
             </p>
