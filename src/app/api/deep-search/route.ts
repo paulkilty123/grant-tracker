@@ -4,7 +4,7 @@ import type { Organisation } from '@/types'
 
 export const dynamic = 'force-dynamic'
 
-const CACHE_TTL_HOURS = 48
+const CACHE_TTL_HOURS = 168 // 7 days
 
 // ── URL verification ──────────────────────────────────────────────────────────
 // Checks whether a URL actually resolves before we cache and show it.
@@ -218,8 +218,8 @@ Return ONLY valid JSON — no markdown fences, no commentary outside the JSON ob
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-5-20250929',
-        max_tokens: 8000,
-        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        max_tokens: 5000,
+        tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 5 }],
         messages: [{ role: 'user', content: prompt }],
       }),
     })
