@@ -12,14 +12,11 @@ export default async function RootPage({
 }) {
   const supabase = await createClient()
 
-  // Handle Supabase auth callbacks that land here instead of /auth/callback.
-  // Exchange the code for a session right here so we don't need an extra redirect hop.
+  // Supabase sometimes falls back to the Site URL instead of /auth/callback.
+  // Forward the code to the Route Handler which CAN set session cookies
+  // (Server Components cannot set cookies, so exchanging here would silently fail).
   if (searchParams.code) {
-    const { error } = await supabase.auth.exchangeCodeForSession(searchParams.code)
-    if (error) {
-      redirect('/auth/login?error=confirmation_failed')
-    }
-    redirect('/dashboard')
+    redirect(`/auth/callback?code=${searchParams.code}`)
   }
 
   // Forward Supabase auth errors to the login page with a readable message
