@@ -2,6 +2,30 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
+  const { pathname, searchParams } = request.nextUrl
+
+  // ── Early exits: handle Supabase auth redirects before touching the session ──
+  // These must run BEFORE supabase.auth.getUser() so a slow/failed Supabase
+  // call cannot prevent the redirect from firing.
+
+  // Supabase sometimes falls back to the Site URL (/) instead of /auth/callback.
+  // Forward the code straight to the Route Handler which CAN set session cookies.
+  if (pathname === '/' && searchParams.get('code')) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/auth/callback'
+    return NextResponse.redirect(url)
+  }
+
+  // Forward Supabase auth errors (e.g. expired confirmation links) to the login page.
+  if (pathname === '/' && searchParams.get('error')) {
+    const errorCode = searchParams.get('error_code') ?? 'auth_error'
+    const url = request.nextUrl.clone()
+    url.pathname = '/auth/login'
+    url.search = `?error=${errorCode}`
+    return NextResponse.redirect(url)
+  }
+
+  // ── Session refresh ────────────────────────────────────────────────────────
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -28,27 +52,9 @@ export async function middleware(request: NextRequest) {
   // Refresh session — keeps the user logged in
   const { data: { user } } = await supabase.auth.getUser()
 
-  const isAuthPage = request.nextUrl.pathname.startsWith('/auth')
-  const isPublicPage = request.nextUrl.pathname === '/'
-  const isApiRoute = request.nextUrl.pathname.startsWith('/api/')
-
-  // Catch Supabase auth callbacks that land on the homepage instead of /auth/callback
-  // (happens when emailRedirectTo isn't in Supabase's allowed redirect URLs list)
-  if (isPublicPage && request.nextUrl.searchParams.get('code')) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/auth/callback'
-    return NextResponse.redirect(url)
-  }
-
-  // Catch Supabase auth errors redirected to the homepage (e.g. expired confirmation links)
-  // and forward them to the login page with a readable error param
-  if (isPublicPage && request.nextUrl.searchParams.get('error')) {
-    const errorCode = request.nextUrl.searchParams.get('error_code') ?? 'auth_error'
-    const url = request.nextUrl.clone()
-    url.pathname = '/auth/login'
-    url.search = `?error=${errorCode}`
-    return NextResponse.redirect(url)
-  }
+  const isAuthPage = pathname.startsWith('/auth')
+  const isPublicPage = pathname === '/'
+  const isApiRoute = pathname.startsWith('/api/')
 
   // Redirect unauthenticated users to login
   if (!user && !isAuthPage && !isPublicPage && !isApiRoute) {
