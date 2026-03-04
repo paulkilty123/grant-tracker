@@ -297,8 +297,34 @@ export default function LandingPage() {
         <div className="bg-forest rounded-3xl px-8 py-16">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
 
-            {/* Mock UI */}
+            {/* Text */}
             <motion.div {...fadeInView()}>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-mint">
+                🔬 Feature 1 · Live Search (Pro)
+              </span>
+              <h2 className="mt-4 text-3xl text-white leading-tight md:text-4xl">
+                Finds local funders other tools completely miss
+              </h2>
+              <p className="mt-4 text-mint/80 leading-relaxed">
+                Every week, councils, NHS integrated care boards, and community foundations publish funding rounds on their own websites. They rarely appear in national databases. By the time word gets around, the deadline has often passed. Live Search monitors these sources continuously, so you see them the moment they go live.
+              </p>
+              <ul className="mt-6 space-y-3">
+                {[
+                  'Borough-level programmes most national databases never index',
+                  'NHS ICB commissioning and local authority grants by area',
+                  'Sector filters (mental health, youth, disability, housing, and more)',
+                  'Only returns grants not already in the curated database',
+                ].map(text => (
+                  <li key={text} className="flex items-start gap-3 text-sm text-mint/80">
+                    <span className="mt-0.5 flex-shrink-0 text-mint">✓</span>
+                    {text}
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+
+            {/* Mock UI */}
+            <motion.div {...fadeInView(0.15)}>
               <div className="bg-white/10 rounded-2xl p-5 border border-white/20">
                 <p className="text-xs text-mint/70 font-semibold uppercase tracking-wider mb-3">🔬 Live Search · Live results</p>
                 <div className="flex flex-wrap gap-1.5 mb-4">
@@ -330,31 +356,6 @@ export default function LandingPage() {
                 <p className="text-[10px] text-mint/50 mt-3 text-center">Not listed on any national database · found in real time</p>
               </div>
             </motion.div>
-
-            <motion.div {...fadeInView(0.15)}>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-mint">
-                🔬 Feature 1 · Live Search (Pro)
-              </span>
-              <h2 className="mt-4 text-3xl text-white leading-tight md:text-4xl">
-                Finds local funders other tools completely miss
-              </h2>
-              <p className="mt-4 text-mint/80 leading-relaxed">
-                Every week, councils, NHS integrated care boards, and community foundations publish funding rounds on their own websites. They rarely appear in national databases. By the time word gets around, the deadline has often passed. Live Search monitors these sources continuously, so you see them the moment they go live.
-              </p>
-              <ul className="mt-6 space-y-3">
-                {[
-                  'Borough-level programmes most national databases never index',
-                  'NHS ICB commissioning and local authority grants by area',
-                  'Sector filters (mental health, youth, disability, housing, and more)',
-                  'Only returns grants not already in the curated database',
-                ].map(text => (
-                  <li key={text} className="flex items-start gap-3 text-sm text-mint/80">
-                    <span className="mt-0.5 flex-shrink-0 text-mint">✓</span>
-                    {text}
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
           </div>
         </div>
       </section>
@@ -363,33 +364,8 @@ export default function LandingPage() {
       <section className="max-w-6xl mx-auto px-6 pb-24">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
 
-          <motion.div {...fadeInView()}>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-forest/10 px-3 py-1 text-xs font-semibold text-forest">
-              ✦ Feature 2 · AI Search
-            </span>
-            <h2 className="mt-4 text-3xl leading-tight md:text-4xl">
-              UK funding opportunities,<br />ranked intelligently to your mission
-            </h2>
-            <p className="mt-4 text-lg text-mid leading-relaxed">
-              Search grants, competitions, social loans and matched crowdfunding — not just the obvious sources, but the specialist and hyper-local funders too. AI Search ranks every result by how well it fits your mission, income band and eligibility.
-            </p>
-            <ul className="mt-6 space-y-3">
-              {[
-                { icon: '✦', text: 'Smart match scores with a breakdown — sector, eligibility, geography, size, and mission fit' },
-                { icon: '🎯', text: 'Thumbs up or down on any result — the more you use it, the sharper your results get' },
-                { icon: '📍', text: 'Filter by grants, competitions 🏆, social loans 🔄, or crowdfund match 🤝' },
-                { icon: '🆕', text: 'Freshness filter puts the most recently verified opportunities at the top' },
-              ].map(item => (
-                <li key={item.text} className="flex items-start gap-3 text-sm text-mid">
-                  <span className="mt-0.5 flex-shrink-0 text-sage">{item.icon}</span>
-                  {item.text}
-                </li>
-              ))}
-            </ul>
-          </motion.div>
-
           {/* Search mockup */}
-          <motion.div {...fadeInView(0.15)}>
+          <motion.div {...fadeInView()}>
             <div className="rounded-2xl border border-warm bg-white p-5 shadow-card-lg">
               {/* Search bar */}
               <div className="flex gap-2 mb-4">
@@ -432,6 +408,31 @@ export default function LandingPage() {
               </div>
               <p className="text-[10px] text-center text-light mt-3">Showing 3 of 24 matched results · ranked by match score</p>
             </div>
+          </motion.div>
+
+          <motion.div {...fadeInView(0.15)}>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-forest/10 px-3 py-1 text-xs font-semibold text-forest">
+              ✦ Feature 2 · AI Search
+            </span>
+            <h2 className="mt-4 text-3xl leading-tight md:text-4xl">
+              UK funding opportunities,<br />ranked intelligently to your mission
+            </h2>
+            <p className="mt-4 text-lg text-mid leading-relaxed">
+              Search grants, competitions, social loans and matched crowdfunding — not just the obvious sources, but the specialist and hyper-local funders too. AI Search ranks every result by how well it fits your mission, income band and eligibility.
+            </p>
+            <ul className="mt-6 space-y-3">
+              {[
+                { icon: '✦', text: 'Smart match scores with a breakdown — sector, eligibility, geography, size, and mission fit' },
+                { icon: '🎯', text: 'Thumbs up or down on any result — the more you use it, the sharper your results get' },
+                { icon: '📍', text: 'Filter by grants, competitions 🏆, social loans 🔄, or crowdfund match 🤝' },
+                { icon: '🆕', text: 'Freshness filter puts the most recently verified opportunities at the top' },
+              ].map(item => (
+                <li key={item.text} className="flex items-start gap-3 text-sm text-mid">
+                  <span className="mt-0.5 flex-shrink-0 text-sage">{item.icon}</span>
+                  {item.text}
+                </li>
+              ))}
+            </ul>
           </motion.div>
         </div>
       </section>
@@ -537,33 +538,8 @@ export default function LandingPage() {
       <section className="max-w-6xl mx-auto px-6 pb-24">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
 
-          <motion.div {...fadeInView()}>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-gold/10 px-3 py-1 text-xs font-semibold text-gold">
-              📋 Feature 4 · Pipeline
-            </span>
-            <h2 className="mt-4 text-3xl leading-tight md:text-4xl">
-              A pipeline that shows you exactly where every application stands
-            </h2>
-            <p className="mt-4 text-lg text-mid leading-relaxed">
-              Move grants from Identified → Researching → Applying → Submitted → Won with a simple drag-and-drop board. Each card holds your notes, contacts, deadlines and writing progress — everything in one place, nothing lost in a spreadsheet.
-            </p>
-            <ul className="mt-6 space-y-3">
-              {[
-                { icon: '📊', text: 'Visual kanban board — see the full picture at a glance, not buried in a spreadsheet' },
-                { icon: '✏️', text: 'Per-card writing tracker from first draft to final submission' },
-                { icon: '📝', text: 'Notes, funder contacts, deadlines and grant URLs all on the card' },
-                { icon: '💷', text: 'Total pipeline value so you always know what funding is in play' },
-              ].map(item => (
-                <li key={item.text} className="flex items-start gap-3 text-sm text-mid">
-                  <span className="flex-shrink-0 mt-0.5">{item.icon}</span>
-                  {item.text}
-                </li>
-              ))}
-            </ul>
-          </motion.div>
-
           {/* Pipeline mockup */}
-          <motion.div {...fadeInView(0.15)}>
+          <motion.div {...fadeInView()}>
             <div className="rounded-2xl border border-warm bg-white p-5 shadow-card-lg">
               <div className="flex items-center justify-between mb-4">
                 <div>
@@ -615,6 +591,31 @@ export default function LandingPage() {
               </div>
             </div>
           </motion.div>
+
+          <motion.div {...fadeInView(0.15)}>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-gold/10 px-3 py-1 text-xs font-semibold text-gold">
+              📋 Feature 4 · Pipeline
+            </span>
+            <h2 className="mt-4 text-3xl leading-tight md:text-4xl">
+              A pipeline that shows you exactly where every application stands
+            </h2>
+            <p className="mt-4 text-lg text-mid leading-relaxed">
+              Move grants from Identified → Researching → Applying → Submitted → Won with a simple drag-and-drop board. Each card holds your notes, contacts, deadlines and writing progress — everything in one place, nothing lost in a spreadsheet.
+            </p>
+            <ul className="mt-6 space-y-3">
+              {[
+                { icon: '📊', text: 'Visual kanban board — see the full picture at a glance, not buried in a spreadsheet' },
+                { icon: '✏️', text: 'Per-card writing tracker from first draft to final submission' },
+                { icon: '📝', text: 'Notes, funder contacts, deadlines and grant URLs all on the card' },
+                { icon: '💷', text: 'Total pipeline value so you always know what funding is in play' },
+              ].map(item => (
+                <li key={item.text} className="flex items-start gap-3 text-sm text-mid">
+                  <span className="flex-shrink-0 mt-0.5">{item.icon}</span>
+                  {item.text}
+                </li>
+              ))}
+            </ul>
+          </motion.div>
         </div>
       </section>
 
@@ -623,32 +624,7 @@ export default function LandingPage() {
         <div className="rounded-3xl border border-warm bg-white p-10 shadow-card">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
 
-            {/* Deadline mock */}
             <motion.div {...fadeInView()}>
-              <p className="text-xs font-semibold text-forest/60 uppercase tracking-wider mb-4">⏰ Deadline Alerts</p>
-              <div className="space-y-3">
-                {[
-                  { name: 'Youth Fund', funder: 'Paul Hamlyn Foundation', days: 3, amount: '£30,000', urgent: true },
-                  { name: 'Local Connections Fund', funder: 'Barclays', days: 12, amount: '£5,000', urgent: false },
-                  { name: 'Awards for All', funder: 'National Lottery', days: 28, amount: '£10,000', urgent: false },
-                ].map(item => (
-                  <div key={item.name} className={`bg-cream rounded-xl p-4 border ${item.urgent ? 'border-red-200' : 'border-warm'} flex items-center justify-between gap-4`}>
-                    <div>
-                      <p className="text-xs font-semibold text-charcoal">{item.name}</p>
-                      <p className="text-[10px] text-mid">{item.funder}</p>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className={`text-xs font-bold ${item.urgent ? 'text-red-500' : 'text-mid'}`}>
-                        {item.urgent ? `⚠ ${item.days} days left` : `${item.days} days`}
-                      </p>
-                      <p className="text-[10px] text-gold font-semibold">{item.amount}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-
-            <motion.div {...fadeInView(0.15)}>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-forest/10 px-3 py-1 text-xs font-semibold text-forest">
                 ⏰ Feature 5 · Dashboard &amp; Alerts
               </span>
@@ -671,6 +647,31 @@ export default function LandingPage() {
                   </li>
                 ))}
               </ul>
+            </motion.div>
+
+            {/* Deadline mock */}
+            <motion.div {...fadeInView(0.15)}>
+              <p className="text-xs font-semibold text-forest/60 uppercase tracking-wider mb-4">⏰ Deadline Alerts</p>
+              <div className="space-y-3">
+                {[
+                  { name: 'Youth Fund', funder: 'Paul Hamlyn Foundation', days: 3, amount: '£30,000', urgent: true },
+                  { name: 'Local Connections Fund', funder: 'Barclays', days: 12, amount: '£5,000', urgent: false },
+                  { name: 'Awards for All', funder: 'National Lottery', days: 28, amount: '£10,000', urgent: false },
+                ].map(item => (
+                  <div key={item.name} className={`bg-cream rounded-xl p-4 border ${item.urgent ? 'border-red-200' : 'border-warm'} flex items-center justify-between gap-4`}>
+                    <div>
+                      <p className="text-xs font-semibold text-charcoal">{item.name}</p>
+                      <p className="text-[10px] text-mid">{item.funder}</p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className={`text-xs font-bold ${item.urgent ? 'text-red-500' : 'text-mid'}`}>
+                        {item.urgent ? `⚠ ${item.days} days left` : `${item.days} days`}
+                      </p>
+                      <p className="text-[10px] text-gold font-semibold">{item.amount}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </motion.div>
           </div>
         </div>
