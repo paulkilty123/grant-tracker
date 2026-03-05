@@ -4,6 +4,7 @@ import LandingPage from '@/components/landing/LandingPage'
 
 // Always render dynamically — never cache this page at the CDN edge
 export const dynamic = 'force-dynamic'
+// test-deploy-2026
 
 export default async function RootPage({
   searchParams,
