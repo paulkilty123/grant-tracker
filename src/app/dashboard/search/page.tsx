@@ -451,7 +451,7 @@ export default function SearchPage() {
   const [deadlineFilter, setDeadlineFilter] = useState<'all' | 'rolling' | 'has_deadline'>('all')
   const [activeSectors, setActiveSectors]         = useState<Set<string>>(new Set())
   const [filtersOpen, setFiltersOpen]             = useState(false)
-  const [entryTypeFilter, setEntryTypeFilter]     = useState<'all' | 'live' | 'rolling' | 'profile'>('all')
+  const [entryTypeFilter, setEntryTypeFilter]     = useState<'all' | 'live' | 'funders'>('all')
   const [showInviteOnly, setShowInviteOnly]       = useState(true)
   const [expandedGroups, setExpandedGroups]       = useState<Set<string>>(new Set())
   const [visibleCount, setVisibleCount]           = useState(30)
@@ -679,7 +679,10 @@ export default function SearchPage() {
       const matchesSectors = activeSectors.size === 0 ||
         g.sectors.some(s => activeSectors.has(s))
       const gEntryType = g.deadline ? 'live' : g.isRolling ? 'rolling' : 'profile'
-      const matchesEntryType = entryTypeFilter === 'all' || gEntryType === entryTypeFilter
+      const matchesEntryType =
+        entryTypeFilter === 'all'     ? true :
+        entryTypeFilter === 'live'    ? gEntryType === 'live' :
+        /* funders */                   gEntryType === 'rolling' || gEntryType === 'profile'
       // Freshness filter — only show grants verified within the selected window
       const matchesFreshness = (() => {
         if (freshnessFilter === 'all') return true
@@ -938,10 +941,9 @@ export default function SearchPage() {
         {/* ── Entry type — always visible ── */}
         <div className="mt-3 flex flex-wrap gap-1.5">
           {([
-            { key: 'all',     label: 'All',         icon: '',   desc: 'Show everything',                                      cls: 'border-warm text-mid bg-white',                     active: 'bg-forest border-forest text-white' },
-            { key: 'live',    label: 'Open grant',  icon: '📅', desc: 'Specific round with a closing deadline',               cls: 'border-emerald-200 text-emerald-700 bg-emerald-50', active: 'bg-emerald-600 border-emerald-600 text-white' },
-            { key: 'rolling', label: 'Always open', icon: '🔄', desc: 'Rolling programme — apply any time',                  cls: 'border-sage/20 text-sage bg-sage/10',          active: 'bg-forest border-forest text-white' },
-            { key: 'profile', label: 'Funder info', icon: 'ℹ',  desc: 'General funder profile — no specific round open now', cls: 'border-gray-200 text-gray-500 bg-gray-50',          active: 'bg-gray-500 border-gray-500 text-white' },
+            { key: 'all',     label: 'All',            icon: '',   desc: 'Show everything',                                          cls: 'border-warm text-mid bg-white',                     active: 'bg-forest border-forest text-white' },
+            { key: 'live',    label: 'Latest Grants',  icon: '📅', desc: 'Recently added grants with a specific deadline',            cls: 'border-emerald-200 text-emerald-700 bg-emerald-50', active: 'bg-emerald-600 border-emerald-600 text-white' },
+            { key: 'funders', label: 'Funders',        icon: '🏛️', desc: 'Ongoing funders and rolling programmes — apply any time',   cls: 'border-sage/20 text-sage bg-sage/10',               active: 'bg-forest border-forest text-white' },
           ] as const).map(({ key, label, icon, desc, cls, active }) => (
             <button
               key={key}
