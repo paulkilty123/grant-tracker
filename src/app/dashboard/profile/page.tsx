@@ -126,10 +126,6 @@ function completenessScore(form: FormState): { score: number; missing: string[] 
     { label: 'Beneficiaries',         filled: !!form.beneficiaries.trim() },
     { label: 'Mission statement',     filled: !!form.mission.trim() },
     { label: 'Years operating',       filled: !!form.yearsOperating },
-    { label: 'People served/year',    filled: !!form.peoplePerYear },
-    { label: 'Grant size preference', filled: !!form.minGrantTarget || !!form.maxGrantTarget },
-    { label: 'Funder preferences',    filled: form.funderTypePreferences.length > 0 },
-    { label: 'Key outcomes',          filled: !!form.keyOutcomes.trim() },
   ]
   const filled = checks.filter(c => c.filled).length
   const missing = checks.filter(c => !c.filled).map(c => c.label)
@@ -479,136 +475,10 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* ── Section 3: Impact & Scale ── */}
+        {/* ── Section 3: Mission ── */}
         <div className="card">
           <h3 className="font-display text-sm font-semibold text-forest mb-1 flex items-center gap-2">
             <span className="w-6 h-6 rounded-full bg-forest/10 text-forest text-xs flex items-center justify-center font-bold">3</span>
-            Impact & Scale
-          </h3>
-          <p className="text-xs text-mid mb-4 ml-8">Funders use this to understand the size and reach of your work</p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-            <div>
-              <label className="block text-sm font-medium text-charcoal mb-1.5">People served / year</label>
-              <input
-                type="number"
-                min="0"
-                className="form-input"
-                placeholder="e.g. 250"
-                value={form.peoplePerYear}
-                onChange={set('peoplePerYear')}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-charcoal mb-1.5">Volunteers</label>
-              <input
-                type="number"
-                min="0"
-                className="form-input"
-                placeholder="e.g. 12"
-                value={form.volunteers}
-                onChange={set('volunteers')}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-charcoal mb-1.5">Active projects</label>
-              <input
-                type="number"
-                min="0"
-                className="form-input"
-                placeholder="e.g. 4"
-                value={form.projectsRunning}
-                onChange={set('projectsRunning')}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-charcoal mb-1.5">Years operating</label>
-              <input
-                type="number"
-                min="0"
-                className="form-input"
-                placeholder="e.g. 5"
-                value={form.yearsOperating}
-                onChange={set('yearsOperating')}
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-charcoal mb-1.5">Key outcomes</label>
-            <textarea
-              className="form-textarea"
-              style={{ minHeight: 90 }}
-              placeholder={"e.g. 80% of participants gained employment within 6 months\nReduced A&E attendances by 30% among programme participants\n120 families moved into stable housing"}
-              value={form.keyOutcomes}
-              onChange={set('keyOutcomes')}
-            />
-            <p className="text-xs text-light mt-1">One outcome per line — use numbers and evidence where you can</p>
-          </div>
-        </div>
-
-        {/* ── Section 4: Grant Preferences ── */}
-        <div className="card">
-          <h3 className="font-display text-sm font-semibold text-forest mb-1 flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-forest/10 text-forest text-xs flex items-center justify-center font-bold">4</span>
-            Grant Preferences
-          </h3>
-          <p className="text-xs text-mid mb-4 ml-8">Tells the search engine which grants to prioritise for you</p>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
-            <div>
-              <label className="block text-sm font-medium text-charcoal mb-1.5">Minimum grant size (£)</label>
-              <input
-                type="number"
-                min="0"
-                className="form-input"
-                placeholder="e.g. 5000"
-                value={form.minGrantTarget}
-                onChange={set('minGrantTarget')}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-charcoal mb-1.5">Maximum grant size (£)</label>
-              <input
-                type="number"
-                min="0"
-                className="form-input"
-                placeholder="e.g. 50000"
-                value={form.maxGrantTarget}
-                onChange={set('maxGrantTarget')}
-              />
-              <p className="text-xs text-light mt-1">Leave blank to see all sizes</p>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-charcoal mb-2">Preferred funder types</label>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {FUNDER_TYPE_OPTIONS.map(ft => {
-                const selected = form.funderTypePreferences.includes(ft.value)
-                return (
-                  <button
-                    key={ft.value}
-                    type="button"
-                    onClick={() => toggleFunderType(ft.value)}
-                    className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm font-medium transition-all text-left ${
-                      selected
-                        ? 'bg-forest text-white border-forest'
-                        : 'bg-white text-charcoal border-warm hover:border-sage hover:bg-sage/5'
-                    }`}
-                  >
-                    <span>{ft.emoji}</span>
-                    <span>{ft.label}</span>
-                  </button>
-                )
-              })}
-            </div>
-            <p className="text-xs text-light mt-2">Select all that apply — or none to see everything</p>
-          </div>
-        </div>
-
-        {/* ── Section 5: Mission ── */}
-        <div className="card">
-          <h3 className="font-display text-sm font-semibold text-forest mb-1 flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-forest/10 text-forest text-xs flex items-center justify-center font-bold">5</span>
             Mission Statement
           </h3>
           <p className="text-xs text-mid mb-3 ml-8">Used by AI search to find the most relevant grants for your work</p>
@@ -624,10 +494,10 @@ export default function ProfilePage() {
           </p>
         </div>
 
-        {/* ── Section 6: Email Alerts ── */}
+        {/* ── Section 4: Email Alerts ── */}
         <div className="card">
           <h3 className="font-display text-sm font-semibold text-forest mb-1 flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-forest/10 text-forest text-xs flex items-center justify-center font-bold">6</span>
+            <span className="w-6 h-6 rounded-full bg-forest/10 text-forest text-xs flex items-center justify-center font-bold">4</span>
             Email Alerts
           </h3>
           <p className="text-xs text-mid mb-4 ml-8">Get notified by email when new grants match your organisation</p>
