@@ -147,13 +147,17 @@ export default function UrlAdminPage() {
     setRunResult(null)
     try {
       const res = await fetch('/api/admin/validate-urls', { method: 'POST' })
-      if (!res.ok) throw new Error('Request failed')
+      if (!res.ok) {
+        let detail = `HTTP ${res.status}`
+        try { const body = await res.json(); detail += `: ${body.error ?? JSON.stringify(body)}` } catch { /* ignore */ }
+        throw new Error(detail)
+      }
       const data = await res.json()
       setRunResult({ ok: data.ok, dead: data.dead, deadSeedGrants: data.deadSeedGrants ?? [] })
       await loadStats()
       await loadGrants()
-    } catch {
-      alert('Validation failed — check NEXT_PUBLIC_ADMIN_SECRET env var is set.')
+    } catch (err) {
+      alert(`Validation failed — ${err instanceof Error ? err.message : String(err)}`)
     } finally {
       setRunning(false)
     }
