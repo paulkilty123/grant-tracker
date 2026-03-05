@@ -39,6 +39,8 @@ function matchProfileScore(org: Organisation | null): number {
   return Math.round((checks.filter(Boolean).length / checks.length) * 100)
 }
 
+const ADMIN_EMAIL = 'paulkilty1@gmail.com'
+
 const NAV_GROUPS = [
   {
     label: 'Find Funding',
@@ -59,11 +61,17 @@ const NAV_GROUPS = [
     items: [
       { href: '/dashboard/profile',  label: 'Profile',      Icon: User },
       { href: '/dashboard/feedback', label: 'Feedback',     Icon: MessageSquare },
-      { href: '/dashboard/admin',      label: 'Source Health', Icon: Activity  },
-      { href: '/dashboard/admin/urls', label: 'URL Health',    Icon: LinkIcon  },
     ],
   },
 ]
+
+const ADMIN_NAV_GROUP = {
+  label: 'Admin',
+  items: [
+    { href: '/dashboard/admin',      label: 'Source Health', Icon: Activity },
+    { href: '/dashboard/admin/urls', label: 'URL Health',    Icon: LinkIcon  },
+  ],
+}
 
 export default function Sidebar({ org, userEmail }: Props) {
   const pathname = usePathname()
@@ -137,7 +145,7 @@ export default function Sidebar({ org, userEmail }: Props) {
 
       {/* Nav groups */}
       <nav className="flex-1 px-3 py-3 space-y-4 overflow-y-auto">
-        {NAV_GROUPS.map(group => (
+        {[...NAV_GROUPS, ...(userEmail === ADMIN_EMAIL ? [ADMIN_NAV_GROUP] : [])].map(group => (
           <div key={group.label}>
             <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-widest text-white/35">
               {group.label}
