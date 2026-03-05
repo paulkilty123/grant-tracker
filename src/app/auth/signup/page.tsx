@@ -1,11 +1,13 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import Logo from '@/components/Logo'
 
 export default function SignupPage() {
+  const router                  = useRouter()
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
   const [orgName, setOrgName]   = useState('')
@@ -13,13 +15,15 @@ export default function SignupPage() {
   const [error, setError]       = useState<string | null>(null)
   const [loading, setLoading]   = useState(false)
   const [done, setDone]         = useState(false)
+  const [resending, setResending] = useState(false)
+  const [resent, setResent]     = useState(false)
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setError(null)
     const supabase = createClient()
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -30,9 +34,25 @@ export default function SignupPage() {
     if (error) {
       setError(error.message)
       setLoading(false)
+    } else if (data.session) {
+      // Email confirmation is disabled in Supabase — user is immediately active.
+      router.push('/dashboard')
     } else {
       setDone(true)
     }
+  }
+
+  async function handleResend() {
+    setResending(true)
+    setResent(false)
+    const supabase = createClient()
+    await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: { emailRedirectTo: `${location.origin}/auth/callback` },
+    })
+    setResending(false)
+    setResent(true)
   }
 
   if (done) {
@@ -42,7 +62,25 @@ export default function SignupPage() {
           <div className="text-4xl mb-4">📬</div>
           <h2 className="text-xl font-bold text-forest mb-2">Check your email</h2>
           <p className="text-mid text-sm">We&apos;ve sent a confirmation link to <strong>{email}</strong>. Click it to activate your account.</p>
-          <p className="text-xs text-light mt-4">Can&apos;t find it? Check your spam folder.</p>
+          <p className="text-xs text-light mt-3">Can&apos;t find it? Check your spam folder.</p>
+          <div className="mt-5">
+            {resent ? (
+              <p className="text-xs text-emerald-600 font-medium">✓ Confirmation email resent</p>
+            ) : (
+              <button
+                onClick={handleResend}
+                disabled={resending}
+                className="text-xs text-forest underline underline-offset-2 hover:text-forest/70 disabled:opacity-50"
+              >
+                {resending ? 'Resending…' : 'Resend confirmation email'}
+              </button>
+            )}
+          </div>
+          <div className="mt-6 pt-5 border-t border-warm">
+            <Link href="/auth/login" className="text-xs text-mid hover:text-charcoal transition-colors">
+              Back to sign in
+            </Link>
+          </div>
         </div>
       </div>
     )
