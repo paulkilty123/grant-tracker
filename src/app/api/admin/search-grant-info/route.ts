@@ -12,6 +12,23 @@ async function assertAdmin() {
   if (data.user?.email !== ADMIN_EMAIL) throw new Error('Forbidden')
 }
 
+// Patterns that indicate a 404 / error page rather than real content
+const NOT_FOUND_PATTERNS = [
+  /\bpage.{0,10}not.{0,10}found\b/i,
+  /\b404\b/,
+  /\bpage.{0,10}doesn.t exist\b/i,
+  /\bpage.{0,10}no longer exists\b/i,
+  /\bsorry.{0,20}can.t find\b/i,
+  /\bthis page has.{0,20}moved\b/i,
+  /\bno page found\b/i,
+  /\bpage.{0,10}unavailable\b/i,
+]
+
+function looksLike404(text: string): boolean {
+  const sample = text.slice(0, 1000).toLowerCase()
+  return NOT_FOUND_PATTERNS.some(p => p.test(sample))
+}
+
 // Fetch a URL via Jina.ai Reader — handles JS-rendered and bot-protected pages
 async function fetchViaJina(url: string): Promise<string | null> {
   try {
@@ -21,7 +38,8 @@ async function fetchViaJina(url: string): Promise<string | null> {
     })
     if (!res.ok) return null
     const text = await res.text()
-    return text.length >= 200 ? text.slice(0, 12000) : null
+    if (text.length < 200 || looksLike404(text)) return null
+    return text.slice(0, 12000)
   } catch {
     return null
   }
@@ -140,24 +158,28 @@ export async function POST(req: NextRequest) {
     try { siteHint = `site:${new URL(existingUrl).hostname}` } catch { /* skip */ }
   }
 
+  // Helper: try a list of candidate URLs, return first that loads real content
+  async function tryFetchCandidates(urls: Array<{ url: string; score: number }>): Promise<boolean> {
+    for (const { url } of urls) {
+      const text = await fetchViaJina(url)
+      if (text) { pageText = text; sourceUrl = url; return true }
+    }
+    return false
+  }
+
+  // First search: targeted with site: hint to stay on the funder's domain
   const searchQuery = [cleanFunder, cleanTitle, 'grant apply', siteHint]
     .filter(Boolean).join(' ')
-
   const searchResults = await searchViaJina(searchQuery)
-
   if (searchResults) {
     const candidates = extractUrls(searchResults)
       .map(u => ({ url: u, score: scoreUrl(u, title ?? '', funder ?? '') }))
       .sort((a, b) => b.score - a.score)
       .slice(0, 5)
-
-    for (const { url } of candidates) {
-      const text = await fetchViaJina(url)
-      if (text) { pageText = text; sourceUrl = url; break }
-    }
+    await tryFetchCandidates(candidates)
   }
 
-  // ── Fallback: search without site: restriction ────────────────────────────
+  // Second search: broaden without site: restriction if first search found nothing
   if (!pageText && siteHint) {
     const broadQuery = [cleanFunder, cleanTitle, 'grant apply'].filter(Boolean).join(' ')
     const broadResults = await searchViaJina(broadQuery)
@@ -166,15 +188,11 @@ export async function POST(req: NextRequest) {
         .map(u => ({ url: u, score: scoreUrl(u, title ?? '', funder ?? '') }))
         .sort((a, b) => b.score - a.score)
         .slice(0, 5)
-
-      for (const { url } of candidates) {
-        const text = await fetchViaJina(url)
-        if (text) { pageText = text; sourceUrl = url; break }
-      }
+      await tryFetchCandidates(candidates)
     }
   }
 
-  // ── Last resort: fetch the existing URL directly ──────────────────────────
+  // Last resort: fetch the existing URL directly
   if (!pageText && existingUrl) {
     const text = await fetchViaJina(existingUrl)
     if (text) { pageText = text; sourceUrl = existingUrl }
