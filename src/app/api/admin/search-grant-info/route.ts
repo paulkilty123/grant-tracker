@@ -114,7 +114,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'title or funder is required' }, { status: 400 })
   }
 
-  const searchQuery = [funder, title, 'grant apply'].filter(Boolean).join(' ')
+  // Build a clean, concise query — strip special chars and limit length
+  function cleanTerm(s: string) {
+    return s
+      .replace(/[—–\-]/g, ' ')   // replace dashes/em-dashes with space
+      .replace(/[^\w\s]/g, '')    // strip remaining punctuation
+      .replace(/\s{2,}/g, ' ')
+      .trim()
+  }
+  const cleanFunder = cleanTerm(funder ?? '').split(/\s+/).slice(0, 5).join(' ')
+  const cleanTitle  = cleanTerm(title  ?? '').split(/\s+/).slice(0, 6).join(' ')
+  const searchQuery = [cleanFunder, cleanTitle, 'grant'].filter(Boolean).join(' ')
   const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(searchQuery)}`
 
   // ── Search DuckDuckGo ──────────────────────────────────────────────────────────

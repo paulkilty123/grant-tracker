@@ -434,18 +434,28 @@ export default function UrlAdminPage() {
     }
   }
 
-  // ── Search for grant info → open refresh modal ───────────────────────────────
+  // ── Fetch/search for grant info → open refresh modal ─────────────────────────
+  // If the grant already has a URL, scrape it directly (more reliable).
+  // Otherwise fall back to a web search using title + funder.
   async function fetchGrantInfo(grant: Grant | CategoryGrant) {
     setRefreshingId(grant.id)
     setRefreshError(null)
     try {
-      const res = await fetch('/api/admin/search-grant-info', {
+      let endpoint: string
+      let body: Record<string, string>
+
+      if (grant.apply_url) {
+        endpoint = '/api/admin/fetch-grant-info'
+        body = { url: grant.apply_url }
+      } else {
+        endpoint = '/api/admin/search-grant-info'
+        body = { title: grant.title, funder: grant.funder ?? '' }
+      }
+
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title:  grant.title,
-          funder: grant.funder ?? '',
-        }),
+        body: JSON.stringify(body),
       })
       const json = await res.json()
       if (!res.ok || !json.ok) {
