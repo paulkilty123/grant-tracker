@@ -12,15 +12,11 @@ async function assertAdmin() {
   if (data.user?.email !== ADMIN_EMAIL) throw new Error('Forbidden')
 }
 
-// Fetch a URL via Jina.ai Reader — handles JS-rendered sites and bot-protected pages
+// Fetch a URL via Jina.ai Reader — handles JS-rendered and bot-protected pages
 async function fetchViaJina(url: string): Promise<string | null> {
   try {
-    const jinaUrl = `https://r.jina.ai/${url}`
-    const res = await fetch(jinaUrl, {
-      headers: {
-        'Accept': 'text/plain',
-        'X-Return-Format': 'text',
-      },
+    const res = await fetch(`https://r.jina.ai/${url}`, {
+      headers: { 'Accept': 'text/plain', 'X-Return-Format': 'text' },
       signal: AbortSignal.timeout(20_000),
     })
     if (!res.ok) return null
@@ -31,57 +27,80 @@ async function fetchViaJina(url: string): Promise<string | null> {
   }
 }
 
-// Extract URLs from Jina markdown output — links appear as [text](url) or plain https://...
-function extractLinksFromMarkdown(markdown: string, baseUrl: string): string[] {
-  const base = new URL(baseUrl)
-  const seen = new Set<string>()
-  const links: string[] = []
-
-  // Markdown links: [text](url)
-  const mdRegex = /\[([^\]]*)\]\((https?:\/\/[^)]+)\)/g
-  let match: RegExpExecArray | null
-  while ((match = mdRegex.exec(markdown)) !== null) {
-    try {
-      const u = new URL(match[2])
-      if (u.hostname === base.hostname) {
-        const clean = u.origin + u.pathname
-        if (!seen.has(clean)) { seen.add(clean); links.push(clean) }
-      }
-    } catch { /* skip */ }
+// Search via Jina.ai Search — returns web results as structured text
+async function searchViaJina(query: string): Promise<string | null> {
+  try {
+    const encoded = encodeURIComponent(query)
+    const res = await fetch(`https://s.jina.ai/${encoded}`, {
+      headers: { 'Accept': 'text/plain', 'X-Return-Format': 'text' },
+      signal: AbortSignal.timeout(20_000),
+    })
+    if (!res.ok) return null
+    const text = await res.text()
+    return text.length >= 100 ? text : null
+  } catch {
+    return null
   }
-
-  // Plain URLs
-  const plainRegex = /https?:\/\/[^\s)\]"'<>]+/g
-  while ((match = plainRegex.exec(markdown)) !== null) {
-    try {
-      const u = new URL(match[0])
-      if (u.hostname === base.hostname) {
-        const clean = u.origin + u.pathname
-        if (!seen.has(clean)) { seen.add(clean); links.push(clean) }
-      }
-    } catch { /* skip */ }
-  }
-
-  return links
 }
 
-// Score a link for relevance to the specific grant
-function scoreLink(url: string, title: string): number {
+// Extract URLs from Jina search results or markdown content
+function extractUrls(text: string): string[] {
+  const seen = new Set<string>()
+  const urls: string[] = []
+
+  // Markdown links: [text](url)
+  const mdRegex = /\[([^\]]*)\]\((https?:\/\/[^)\s]+)\)/g
+  let match: RegExpExecArray | null
+  while ((match = mdRegex.exec(text)) !== null) {
+    try {
+      const u = new URL(match[2])
+      const clean = u.origin + u.pathname
+      if (!seen.has(clean)) { seen.add(clean); urls.push(clean) }
+    } catch { /* skip */ }
+  }
+
+  // Source lines from Jina search output: "Source: https://..."
+  const sourceRegex = /Source:\s*(https?:\/\/[^\s]+)/g
+  while ((match = sourceRegex.exec(text)) !== null) {
+    try {
+      const u = new URL(match[1])
+      const clean = u.origin + u.pathname
+      if (!seen.has(clean)) { seen.add(clean); urls.push(clean) }
+    } catch { /* skip */ }
+  }
+
+  // Plain URLs as fallback
+  const plainRegex = /https?:\/\/[^\s)\]"'<>,]+/g
+  while ((match = plainRegex.exec(text)) !== null) {
+    try {
+      const u = new URL(match[0])
+      const clean = u.origin + u.pathname
+      if (!seen.has(clean)) { seen.add(clean); urls.push(clean) }
+    } catch { /* skip */ }
+  }
+
+  return urls
+}
+
+// Score a URL for relevance to the specific grant
+function scoreUrl(url: string, title: string, funder: string): number {
   const lower = url.toLowerCase()
   const titleWords = title.toLowerCase()
-    .replace(/[—–\-]/g, ' ')
-    .replace(/[^\w\s]/g, '')
-    .split(/\s+/)
-    .filter(w => w.length > 3)
+    .replace(/[—–\-]/g, ' ').replace(/[^\w\s]/g, '')
+    .split(/\s+/).filter(w => w.length > 3)
+  const funderWords = funder.toLowerCase()
+    .replace(/[—–\-]/g, ' ').replace(/[^\w\s]/g, '')
+    .split(/\s+/).filter(w => w.length > 3)
 
   let score = 0
   const grantKeywords = ['apply', 'application', 'fund', 'grant', 'award',
     'programme', 'program', 'scheme', 'bursary', 'booster', 'support']
   grantKeywords.forEach(kw => { if (lower.includes(kw)) score += 3 })
   titleWords.forEach(w => { if (lower.includes(w)) score += 5 })
+  funderWords.forEach(w => { if (lower.includes(w)) score += 3 })
   const noise = ['news', 'blog', 'event', 'contact', 'about', 'login',
-    'privacy', 'cookie', 'sitemap', 'search']
-  noise.forEach(n => { if (lower.includes(n)) score -= 4 })
+    'privacy', 'cookie', 'sitemap', 'search', 'twitter', 'facebook', 'linkedin']
+  noise.forEach(n => { if (lower.includes(n)) score -= 5 })
   return score
 }
 
@@ -106,72 +125,64 @@ export async function POST(req: NextRequest) {
   let pageText = ''
   let sourceUrl = ''
 
-  // ── Strategy A: crawl from the existing URL via Jina ──────────────────────
+  // ── Strategy: web search via Jina Search ─────────────────────────────────
+  // Build a targeted query using funder + key title words + site: hint if we
+  // have an existing URL so results stay on the right domain.
+  const cleanTitle = (title ?? '')
+    .replace(/[—–]/g, ' ').replace(/[^\w\s]/g, ' ')
+    .split(/\s+/).filter(w => w.length > 2).slice(0, 6).join(' ')
+  const cleanFunder = (funder ?? '')
+    .replace(/[—–]/g, ' ').replace(/[^\w\s]/g, ' ')
+    .split(/\s+/).filter(w => w.length > 2).slice(0, 4).join(' ')
+
+  let siteHint = ''
   if (existingUrl) {
-    const rootText = await fetchViaJina(existingUrl)
-    if (rootText) {
-      // Extract and score same-domain links from the page
-      const links = extractLinksFromMarkdown(rootText, existingUrl)
-      const scored = links
-        .map(u => ({ url: u, score: scoreLink(u, title ?? '') }))
+    try { siteHint = `site:${new URL(existingUrl).hostname}` } catch { /* skip */ }
+  }
+
+  const searchQuery = [cleanFunder, cleanTitle, 'grant apply', siteHint]
+    .filter(Boolean).join(' ')
+
+  const searchResults = await searchViaJina(searchQuery)
+
+  if (searchResults) {
+    const candidates = extractUrls(searchResults)
+      .map(u => ({ url: u, score: scoreUrl(u, title ?? '', funder ?? '') }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5)
+
+    for (const { url } of candidates) {
+      const text = await fetchViaJina(url)
+      if (text) { pageText = text; sourceUrl = url; break }
+    }
+  }
+
+  // ── Fallback: search without site: restriction ────────────────────────────
+  if (!pageText && siteHint) {
+    const broadQuery = [cleanFunder, cleanTitle, 'grant apply'].filter(Boolean).join(' ')
+    const broadResults = await searchViaJina(broadQuery)
+    if (broadResults) {
+      const candidates = extractUrls(broadResults)
+        .map(u => ({ url: u, score: scoreUrl(u, title ?? '', funder ?? '') }))
         .sort((a, b) => b.score - a.score)
         .slice(0, 5)
 
-      // Try each candidate link via Jina
-      for (const { url } of scored) {
-        if (url === existingUrl) continue
+      for (const { url } of candidates) {
         const text = await fetchViaJina(url)
-        if (text) {
-          pageText = text
-          sourceUrl = url
-          break
-        }
-      }
-
-      // Nothing better found — use the root page itself
-      if (!pageText) {
-        pageText = rootText
-        sourceUrl = existingUrl
+        if (text) { pageText = text; sourceUrl = url; break }
       }
     }
   }
 
-  // ── Strategy B: ask Claude to suggest URLs (no existing URL) ──────────────
-  if (!pageText) {
-    const urlPrompt = `You are a UK grant assistant. Return a JSON array of up to 4 specific URLs where detailed application info for this grant can be found. Only include URLs you are confident exist. Prioritise the grant's own application page over the funder homepage. Return ONLY the JSON array, no markdown.
-
-Funder: ${funder ?? ''}
-Grant: ${title ?? ''}`
-
-    try {
-      const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': process.env.ANTHROPIC_API_KEY ?? '',
-          'anthropic-version': '2023-06-01',
-        },
-        body: JSON.stringify({
-          model: 'claude-haiku-4-5-20251001',
-          max_tokens: 300,
-          messages: [{ role: 'user', content: urlPrompt }],
-        }),
-      })
-      const aiData = await aiRes.json()
-      const raw = aiData.content?.[0]?.text ?? ''
-      const cleaned = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
-      const urls: unknown[] = JSON.parse(cleaned)
-      for (const url of urls) {
-        if (typeof url !== 'string' || !url.startsWith('http')) continue
-        const text = await fetchViaJina(url)
-        if (text) { pageText = text; sourceUrl = url; break }
-      }
-    } catch { /* fall through */ }
+  // ── Last resort: fetch the existing URL directly ──────────────────────────
+  if (!pageText && existingUrl) {
+    const text = await fetchViaJina(existingUrl)
+    if (text) { pageText = text; sourceUrl = existingUrl }
   }
 
   if (!pageText) {
     return NextResponse.json(
-      { error: 'Could not load the grant page. Please update the URL to point directly to the specific grant page (e.g. the apply or programme page), then press the button again.' },
+      { error: 'Could not load the grant page. Try updating the URL to point directly to the specific grant application page, then press the button again.' },
       { status: 422 }
     )
   }
