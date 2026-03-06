@@ -12,52 +12,60 @@ async function assertAdmin() {
   if (data.user?.email !== ADMIN_EMAIL) throw new Error('Forbidden')
 }
 
-function htmlToText(html: string): string {
-  return html
-    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
-    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
-    .replace(/<nav[\s\S]*?<\/nav>/gi, ' ')
-    .replace(/<footer[\s\S]*?<\/footer>/gi, ' ')
-    .replace(/<header[\s\S]*?<\/header>/gi, ' ')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&pound;|&#163;/g, '£')
-    .replace(/\s{2,}/g, ' ')
-    .trim()
-    .slice(0, 12000)
+// Fetch a URL via Jina.ai Reader — handles JS-rendered sites and bot-protected pages
+async function fetchViaJina(url: string): Promise<string | null> {
+  try {
+    const jinaUrl = `https://r.jina.ai/${url}`
+    const res = await fetch(jinaUrl, {
+      headers: {
+        'Accept': 'text/plain',
+        'X-Return-Format': 'text',
+      },
+      signal: AbortSignal.timeout(20_000),
+    })
+    if (!res.ok) return null
+    const text = await res.text()
+    return text.length >= 200 ? text.slice(0, 12000) : null
+  } catch {
+    return null
+  }
 }
 
-// Extract same-domain links from raw HTML
-function extractLinks(html: string, baseUrl: string): string[] {
+// Extract URLs from Jina markdown output — links appear as [text](url) or plain https://...
+function extractLinksFromMarkdown(markdown: string, baseUrl: string): string[] {
   const base = new URL(baseUrl)
   const seen = new Set<string>()
   const links: string[] = []
-  const hrefRegex = /href="([^"#][^"]*)"/g
+
+  // Markdown links: [text](url)
+  const mdRegex = /\[([^\]]*)\]\((https?:\/\/[^)]+)\)/g
   let match: RegExpExecArray | null
-  while ((match = hrefRegex.exec(html)) !== null) {
+  while ((match = mdRegex.exec(markdown)) !== null) {
     try {
-      const href = match[1].trim()
-      if (!href || href.startsWith('mailto:') || href.startsWith('tel:')) continue
-      const resolved = new URL(href, baseUrl)
-      // Same domain only, no query-only or anchor-only links
-      if (resolved.hostname === base.hostname && resolved.pathname !== base.pathname) {
-        const clean = resolved.origin + resolved.pathname
-        if (!seen.has(clean)) {
-          seen.add(clean)
-          links.push(clean)
-        }
+      const u = new URL(match[2])
+      if (u.hostname === base.hostname) {
+        const clean = u.origin + u.pathname
+        if (!seen.has(clean)) { seen.add(clean); links.push(clean) }
       }
-    } catch {
-      // skip malformed
-    }
+    } catch { /* skip */ }
   }
+
+  // Plain URLs
+  const plainRegex = /https?:\/\/[^\s)\]"'<>]+/g
+  while ((match = plainRegex.exec(markdown)) !== null) {
+    try {
+      const u = new URL(match[0])
+      if (u.hostname === base.hostname) {
+        const clean = u.origin + u.pathname
+        if (!seen.has(clean)) { seen.add(clean); links.push(clean) }
+      }
+    } catch { /* skip */ }
+  }
+
   return links
 }
 
-// Score a same-domain link for relevance to a specific grant
+// Score a link for relevance to the specific grant
 function scoreLink(url: string, title: string): number {
   const lower = url.toLowerCase()
   const titleWords = title.toLowerCase()
@@ -67,40 +75,14 @@ function scoreLink(url: string, title: string): number {
     .filter(w => w.length > 3)
 
   let score = 0
-
-  // Strong signals in the URL path
-  const applyKeywords = ['apply', 'application', 'fund', 'grant', 'award',
+  const grantKeywords = ['apply', 'application', 'fund', 'grant', 'award',
     'programme', 'program', 'scheme', 'bursary', 'booster', 'support']
-  applyKeywords.forEach(kw => { if (lower.includes(kw)) score += 3 })
-
-  // Title words in URL are a great signal
+  grantKeywords.forEach(kw => { if (lower.includes(kw)) score += 3 })
   titleWords.forEach(w => { if (lower.includes(w)) score += 5 })
-
-  // Penalise obvious non-grant pages
   const noise = ['news', 'blog', 'event', 'contact', 'about', 'login',
-    'privacy', 'cookie', 'sitemap', 'search', 'tag', 'category']
+    'privacy', 'cookie', 'sitemap', 'search']
   noise.forEach(n => { if (lower.includes(n)) score -= 4 })
-
   return score
-}
-
-async function fetchPage(url: string): Promise<{ html: string; text: string } | null> {
-  try {
-    const res = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; GrantTrackerBot/1.0)',
-        'Accept': 'text/html,application/xhtml+xml',
-      },
-      signal: AbortSignal.timeout(10_000),
-    })
-    if (!res.ok) return null
-    const html = await res.text()
-    const text = htmlToText(html)
-    if (text.length < 200) return null
-    return { html, text }
-  } catch {
-    return null
-  }
 }
 
 export async function POST(req: NextRequest) {
@@ -124,45 +106,42 @@ export async function POST(req: NextRequest) {
   let pageText = ''
   let sourceUrl = ''
 
-  // ── Strategy A: crawl from the existing URL ────────────────────────────────
-  // Fetch the known page, extract real links, follow the most relevant one.
+  // ── Strategy A: crawl from the existing URL via Jina ──────────────────────
   if (existingUrl) {
-    const root = await fetchPage(existingUrl)
-    if (root) {
-      // Extract and score same-domain links
-      const links = extractLinks(root.html, existingUrl)
+    const rootText = await fetchViaJina(existingUrl)
+    if (rootText) {
+      // Extract and score same-domain links from the page
+      const links = extractLinksFromMarkdown(rootText, existingUrl)
       const scored = links
         .map(u => ({ url: u, score: scoreLink(u, title ?? '') }))
-        .filter(x => x.score > 0)
         .sort((a, b) => b.score - a.score)
-        .slice(0, 6)
+        .slice(0, 5)
 
-      // Try each candidate link
+      // Try each candidate link via Jina
       for (const { url } of scored) {
-        const page = await fetchPage(url)
-        if (page) {
-          pageText = page.text
+        if (url === existingUrl) continue
+        const text = await fetchViaJina(url)
+        if (text) {
+          pageText = text
           sourceUrl = url
           break
         }
       }
 
-      // Nothing better found — fall back to the root page itself
+      // Nothing better found — use the root page itself
       if (!pageText) {
-        pageText = root.text
+        pageText = rootText
         sourceUrl = existingUrl
       }
     }
   }
 
-  // ── Strategy B: ask Claude Haiku to suggest URLs (no existing URL) ─────────
-  if (!pageText && (title || funder)) {
-    const urlPrompt = `You are a UK grant assistant. Return a JSON array of up to 4 real, specific URLs where detailed application information for the following grant can be found. Prioritise the grant's own application/programme page over the funder's homepage. Return ONLY the JSON array, no markdown, no explanation.
+  // ── Strategy B: ask Claude to suggest URLs (no existing URL) ──────────────
+  if (!pageText) {
+    const urlPrompt = `You are a UK grant assistant. Return a JSON array of up to 4 specific URLs where detailed application info for this grant can be found. Only include URLs you are confident exist. Prioritise the grant's own application page over the funder homepage. Return ONLY the JSON array, no markdown.
 
 Funder: ${funder ?? ''}
-Grant: ${title ?? ''}
-
-Example output: ["https://example.org/grants/small-grants/apply"]`
+Grant: ${title ?? ''}`
 
     try {
       const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
@@ -181,29 +160,23 @@ Example output: ["https://example.org/grants/small-grants/apply"]`
       const aiData = await aiRes.json()
       const raw = aiData.content?.[0]?.text ?? ''
       const cleaned = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
-      const urls: string[] = JSON.parse(cleaned)
+      const urls: unknown[] = JSON.parse(cleaned)
       for (const url of urls) {
         if (typeof url !== 'string' || !url.startsWith('http')) continue
-        const page = await fetchPage(url)
-        if (page) {
-          pageText = page.text
-          sourceUrl = url
-          break
-        }
+        const text = await fetchViaJina(url)
+        if (text) { pageText = text; sourceUrl = url; break }
       }
-    } catch {
-      // Claude suggestion failed — fall through
-    }
+    } catch { /* fall through */ }
   }
 
   if (!pageText) {
     return NextResponse.json(
-      { error: 'Could not load a grant page automatically. Try updating the URL to the specific grant page and press the button again.' },
+      { error: 'Could not load the grant page. Please update the URL to point directly to the specific grant page (e.g. the apply or programme page), then press the button again.' },
       { status: 422 }
     )
   }
 
-  // ── Extract structured grant data from the page ───────────────────────────
+  // ── Extract structured grant data ─────────────────────────────────────────
   const extractPrompt = `You are a grant database assistant. Extract structured information about a grant funding opportunity from the following webpage content.
 
 Return a single JSON object (no markdown, no extra text) with exactly these fields:
