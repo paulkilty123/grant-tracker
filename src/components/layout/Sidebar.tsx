@@ -16,6 +16,7 @@ import {
   MessageSquare,
   Activity,
   LinkIcon,
+  Bell,
   LogOut,
   Menu,
   X,
@@ -68,8 +69,9 @@ const NAV_GROUPS = [
 const ADMIN_NAV_GROUP = {
   label: 'Admin',
   items: [
-    { href: '/dashboard/admin',      label: 'Source Health', Icon: Activity },
-    { href: '/dashboard/admin/urls', label: 'URL Health',    Icon: LinkIcon  },
+    { href: '/dashboard/admin',             label: 'Source Health',    Icon: Activity },
+    { href: '/dashboard/admin/urls',        label: 'URL Health',       Icon: LinkIcon  },
+    { href: '/dashboard/admin/watchlist',   label: 'Funder Watchlist', Icon: Bell      },
   ],
 }
 

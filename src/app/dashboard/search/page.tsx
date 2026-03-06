@@ -681,7 +681,7 @@ export default function SearchPage() {
       const gEntryType = g.deadline ? 'live' : g.isRolling ? 'rolling' : 'profile'
       const matchesEntryType =
         entryTypeFilter === 'all'     ? true :
-        entryTypeFilter === 'live'    ? gEntryType === 'live' :
+        entryTypeFilter === 'live'    ? (g.dateAdded != null && g.dateAdded >= SIXTY_DAYS_AGO) :
         /* funders */                   gEntryType === 'rolling' || gEntryType === 'profile'
       // Freshness filter — only show grants verified within the selected window
       const matchesFreshness = (() => {
@@ -741,7 +741,14 @@ export default function SearchPage() {
       return { grant, score: 0, reason: '', isAiScore: false }
     })
 
-    if (org && sortBy === 'match') {
+    // When "Latest Grants" tab is active and no explicit sort chosen, default to newest-first by dateAdded
+    if (entryTypeFilter === 'live' && sortBy === 'match') {
+      withScores.sort((a, b) => {
+        const aDate = a.grant.dateAdded ?? ''
+        const bDate = b.grant.dateAdded ?? ''
+        return bDate.localeCompare(aDate)
+      })
+    } else if (org && sortBy === 'match') {
       withScores.sort((a, b) => b.score - a.score)
     } else if (sortBy === 'amount') {
       withScores.sort((a, b) => (b.grant.amountMax ?? 0) - (a.grant.amountMax ?? 0))
@@ -942,7 +949,7 @@ export default function SearchPage() {
         <div className="mt-3 flex flex-wrap gap-1.5">
           {([
             { key: 'all',     label: 'All',            icon: '',   desc: 'Show everything',                                          cls: 'border-warm text-mid bg-white',                     active: 'bg-forest border-forest text-white' },
-            { key: 'live',    label: 'Latest Grants',  icon: '📅', desc: 'Recently added grants with a specific deadline',            cls: 'border-emerald-200 text-emerald-700 bg-emerald-50', active: 'bg-emerald-600 border-emerald-600 text-white' },
+            { key: 'live',    label: 'Latest Grants',  icon: '🆕', desc: 'Grants added to the database in the last 60 days — all funder types',  cls: 'border-emerald-200 text-emerald-700 bg-emerald-50', active: 'bg-emerald-600 border-emerald-600 text-white' },
             { key: 'funders', label: 'Funders',        icon: '🏛️', desc: 'Ongoing funders and rolling programmes — apply any time',   cls: 'border-sage/20 text-sage bg-sage/10',               active: 'bg-forest border-forest text-white' },
           ] as const).map(({ key, label, icon, desc, cls, active }) => (
             <button
