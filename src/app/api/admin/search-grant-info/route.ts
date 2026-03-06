@@ -30,23 +30,77 @@ function htmlToText(html: string): string {
     .slice(0, 12000)
 }
 
-async function callClaude(prompt: string, maxTokens = 400): Promise<string> {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': process.env.ANTHROPIC_API_KEY ?? '',
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: maxTokens,
-      messages: [{ role: 'user', content: prompt }],
-    }),
-  })
-  const data = await res.json()
-  if (!res.ok) throw new Error(data?.error?.message ?? `AI error ${res.status}`)
-  return data.content?.[0]?.text ?? ''
+// Extract same-domain links from raw HTML
+function extractLinks(html: string, baseUrl: string): string[] {
+  const base = new URL(baseUrl)
+  const seen = new Set<string>()
+  const links: string[] = []
+  const hrefRegex = /href="([^"#][^"]*)"/g
+  let match: RegExpExecArray | null
+  while ((match = hrefRegex.exec(html)) !== null) {
+    try {
+      const href = match[1].trim()
+      if (!href || href.startsWith('mailto:') || href.startsWith('tel:')) continue
+      const resolved = new URL(href, baseUrl)
+      // Same domain only, no query-only or anchor-only links
+      if (resolved.hostname === base.hostname && resolved.pathname !== base.pathname) {
+        const clean = resolved.origin + resolved.pathname
+        if (!seen.has(clean)) {
+          seen.add(clean)
+          links.push(clean)
+        }
+      }
+    } catch {
+      // skip malformed
+    }
+  }
+  return links
+}
+
+// Score a same-domain link for relevance to a specific grant
+function scoreLink(url: string, title: string): number {
+  const lower = url.toLowerCase()
+  const titleWords = title.toLowerCase()
+    .replace(/[—–\-]/g, ' ')
+    .replace(/[^\w\s]/g, '')
+    .split(/\s+/)
+    .filter(w => w.length > 3)
+
+  let score = 0
+
+  // Strong signals in the URL path
+  const applyKeywords = ['apply', 'application', 'fund', 'grant', 'award',
+    'programme', 'program', 'scheme', 'bursary', 'booster', 'support']
+  applyKeywords.forEach(kw => { if (lower.includes(kw)) score += 3 })
+
+  // Title words in URL are a great signal
+  titleWords.forEach(w => { if (lower.includes(w)) score += 5 })
+
+  // Penalise obvious non-grant pages
+  const noise = ['news', 'blog', 'event', 'contact', 'about', 'login',
+    'privacy', 'cookie', 'sitemap', 'search', 'tag', 'category']
+  noise.forEach(n => { if (lower.includes(n)) score -= 4 })
+
+  return score
+}
+
+async function fetchPage(url: string): Promise<{ html: string; text: string } | null> {
+  try {
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; GrantTrackerBot/1.0)',
+        'Accept': 'text/html,application/xhtml+xml',
+      },
+      signal: AbortSignal.timeout(10_000),
+    })
+    if (!res.ok) return null
+    const html = await res.text()
+    const text = htmlToText(html)
+    if (text.length < 200) return null
+    return { html, text }
+  } catch {
+    return null
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -67,78 +121,89 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'title or funder is required' }, { status: 400 })
   }
 
-  // ── Step 1: Ask Claude to suggest specific grant page URLs ────────────────────
-  const urlPrompt = `You are a UK grant database assistant. I need to find the specific webpage for a grant funding opportunity.
-
-Funder: ${funder ?? '(unknown)'}
-Grant title: ${title ?? '(unknown)'}
-${existingUrl ? `Known URL (may be a general funder page, not the specific grant page): ${existingUrl}` : ''}
-
-Based on your knowledge of UK funders and their websites, suggest up to 5 specific URLs where detailed information about THIS grant (application details, eligibility, amounts, deadlines) is most likely to be found. Prioritise the most specific grant/programme page over the funder's homepage.
-
-Return ONLY a JSON array of URL strings, ordered by likelihood. No markdown, no explanation. Example:
-["https://example.org/grants/small-grants", "https://example.org/apply"]`
-
-  let candidateUrls: string[] = []
-  try {
-    const raw = await callClaude(urlPrompt, 400)
-    const cleaned = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
-    const parsed = JSON.parse(cleaned)
-    if (Array.isArray(parsed)) {
-      candidateUrls = parsed.filter((u: unknown) => typeof u === 'string' && u.startsWith('http'))
-    }
-  } catch {
-    // Claude couldn't suggest URLs — fall through
-  }
-
-  // Also include existingUrl as a fallback candidate at the end
-  if (existingUrl && !candidateUrls.includes(existingUrl)) {
-    candidateUrls.push(existingUrl)
-  }
-
-  if (candidateUrls.length === 0) {
-    return NextResponse.json(
-      { error: 'Could not find any candidate URLs for this grant. Try entering the URL manually.' },
-      { status: 422 }
-    )
-  }
-
-  // ── Step 2: Try fetching each candidate until one succeeds ────────────────────
   let pageText = ''
   let sourceUrl = ''
 
-  for (const url of candidateUrls) {
+  // ── Strategy A: crawl from the existing URL ────────────────────────────────
+  // Fetch the known page, extract real links, follow the most relevant one.
+  if (existingUrl) {
+    const root = await fetchPage(existingUrl)
+    if (root) {
+      // Extract and score same-domain links
+      const links = extractLinks(root.html, existingUrl)
+      const scored = links
+        .map(u => ({ url: u, score: scoreLink(u, title ?? '') }))
+        .filter(x => x.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 6)
+
+      // Try each candidate link
+      for (const { url } of scored) {
+        const page = await fetchPage(url)
+        if (page) {
+          pageText = page.text
+          sourceUrl = url
+          break
+        }
+      }
+
+      // Nothing better found — fall back to the root page itself
+      if (!pageText) {
+        pageText = root.text
+        sourceUrl = existingUrl
+      }
+    }
+  }
+
+  // ── Strategy B: ask Claude Haiku to suggest URLs (no existing URL) ─────────
+  if (!pageText && (title || funder)) {
+    const urlPrompt = `You are a UK grant assistant. Return a JSON array of up to 4 real, specific URLs where detailed application information for the following grant can be found. Prioritise the grant's own application/programme page over the funder's homepage. Return ONLY the JSON array, no markdown, no explanation.
+
+Funder: ${funder ?? ''}
+Grant: ${title ?? ''}
+
+Example output: ["https://example.org/grants/small-grants/apply"]`
+
     try {
-      const res = await fetch(url, {
+      const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
         headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; GrantTrackerBot/1.0)',
-          'Accept': 'text/html,application/xhtml+xml',
+          'Content-Type': 'application/json',
+          'x-api-key': process.env.ANTHROPIC_API_KEY ?? '',
+          'anthropic-version': '2023-06-01',
         },
-        signal: AbortSignal.timeout(10_000),
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 300,
+          messages: [{ role: 'user', content: urlPrompt }],
+        }),
       })
-      if (!res.ok) continue
-      const html = await res.text()
-      const text = htmlToText(html)
-      if (text.length >= 200) {
-        pageText = text
-        sourceUrl = url
-        break
+      const aiData = await aiRes.json()
+      const raw = aiData.content?.[0]?.text ?? ''
+      const cleaned = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
+      const urls: string[] = JSON.parse(cleaned)
+      for (const url of urls) {
+        if (typeof url !== 'string' || !url.startsWith('http')) continue
+        const page = await fetchPage(url)
+        if (page) {
+          pageText = page.text
+          sourceUrl = url
+          break
+        }
       }
     } catch {
-      continue
+      // Claude suggestion failed — fall through
     }
   }
 
   if (!pageText) {
     return NextResponse.json(
-      {
-        error: `Tried ${candidateUrls.length} URL(s) but none loaded successfully. Try entering the correct URL manually.`,
-      },
+      { error: 'Could not load a grant page automatically. Try updating the URL to the specific grant page and press the button again.' },
       { status: 422 }
     )
   }
 
-  // ── Step 3: Extract structured grant data from the page ───────────────────────
+  // ── Extract structured grant data from the page ───────────────────────────
   const extractPrompt = `You are a grant database assistant. Extract structured information about a grant funding opportunity from the following webpage content.
 
 Return a single JSON object (no markdown, no extra text) with exactly these fields:
@@ -158,9 +223,30 @@ If a field cannot be determined from the page content, use null for amounts/dead
 Webpage content from ${sourceUrl}:
 ${pageText}`
 
+  const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': process.env.ANTHROPIC_API_KEY ?? '',
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 1000,
+      messages: [{ role: 'user', content: extractPrompt }],
+    }),
+  })
+
+  const aiData = await aiRes.json()
+  if (!aiRes.ok) {
+    const message = aiData?.error?.message ?? `AI error (${aiRes.status})`
+    return NextResponse.json({ error: message }, { status: 502 })
+  }
+
+  const raw = aiData.content?.[0]?.text ?? ''
+  const cleaned = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
+
   try {
-    const raw = await callClaude(extractPrompt, 1000)
-    const cleaned = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
     const parsed = JSON.parse(cleaned)
     return NextResponse.json({ ok: true, data: parsed, sourceUrl })
   } catch {
