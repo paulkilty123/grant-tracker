@@ -214,8 +214,12 @@ ${pageText}`
   }
 
   // ── Return knowledge-based result if live fetch didn't work ───────────────
-  // Don't expose any URL we couldn't successfully load — leave it blank so
-  // the user can manually enter the correct one.
-  const { suggested_url: _, ...dataWithoutUrl } = knowledgeResult as Record<string, unknown>
-  return NextResponse.json({ ok: true, data: dataWithoutUrl, sourceUrl: '' })
+  // Still surface Claude's suggested URL (if it's not a known-bad URL) so
+  // the user has a starting point to verify or correct manually.
+  const { suggested_url: suggestedUrl, ...dataWithoutUrl } = knowledgeResult as Record<string, unknown>
+  const fallbackUrl =
+    typeof suggestedUrl === 'string' && suggestedUrl.startsWith('http') && !isLikely404Url(suggestedUrl)
+      ? suggestedUrl
+      : (existingUrl ?? '')
+  return NextResponse.json({ ok: true, data: dataWithoutUrl, sourceUrl: fallbackUrl })
 }
