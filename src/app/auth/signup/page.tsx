@@ -11,6 +11,7 @@ export default function SignupPage() {
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
   const [orgName, setOrgName]   = useState('')
+  const [orgType, setOrgType]   = useState('')
   const [showPw, setShowPw]     = useState(false)
   const [error, setError]       = useState<string | null>(null)
   const [loading, setLoading]   = useState(false)
@@ -27,7 +28,7 @@ export default function SignupPage() {
       email,
       password,
       options: {
-        data: { org_name: orgName },
+        data: { org_name: orgName, org_type: orgType },
         emailRedirectTo: `${location.origin}/auth/callback`,
       },
     })
@@ -109,7 +110,7 @@ export default function SignupPage() {
 
               <div className="space-y-6">
                 {[
-                  { icon: '🔍', title: '800+ UK grants', desc: 'Charities, community groups, social enterprises and more — updated daily from verified sources.' },
+                  { icon: '🔍', title: '800+ UK grants', desc: 'Charities, CICs, social enterprises and community groups — updated regularly from verified sources.' },
                   { icon: '🎯', title: 'AI that learns from you', desc: 'Personalised matching that improves the more you use it — thumbs up, thumbs down, done.' },
                   { icon: '📋', title: 'Full application pipeline', desc: 'From first discovery to decision — track every grant without a spreadsheet.' },
                 ].map(f => (
@@ -156,6 +157,23 @@ export default function SignupPage() {
                   autoComplete="organization"
                   required
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-charcoal mb-1.5">Organisation type</label>
+                <select
+                  value={orgType}
+                  onChange={e => setOrgType(e.target.value)}
+                  className="form-input"
+                  required
+                >
+                  <option value="" disabled>Select your organisation type…</option>
+                  <option value="registered_charity">Registered charity</option>
+                  <option value="cic">Community Interest Company (CIC)</option>
+                  <option value="social_enterprise">Social enterprise</option>
+                  <option value="community_group">Community group or voluntary organisation</option>
+                  <option value="other">Other mission-driven organisation</option>
+                </select>
               </div>
 
               <div>

@@ -7,13 +7,11 @@ import { getOrganisationByOwner, createOrganisation, updateOrganisation } from '
 import type { Organisation, OrgType, FunderType } from '@/types'
 
 const ORG_TYPE_OPTIONS: { value: OrgType; label: string }[] = [
-  { value: 'registered_charity', label: 'Charity (registered)' },
-  { value: 'community_group',    label: 'Community Group' },
-  { value: 'social_enterprise',  label: 'Social Enterprise' },
+  { value: 'registered_charity', label: 'Registered Charity' },
   { value: 'cic',                label: 'Community Interest Company (CIC)' },
-  { value: 'other',              label: 'Impact Founder / Sole Trader' },
-  { value: 'other',              label: 'Underserved Venture' },
-  { value: 'other',              label: 'Other' },
+  { value: 'social_enterprise',  label: 'Social Enterprise' },
+  { value: 'community_group',    label: 'Community Group / Voluntary Organisation' },
+  { value: 'other',              label: 'Other Mission-Driven Organisation' },
 ]
 
 const INCOME_BANDS = [
@@ -156,6 +154,16 @@ export default function ProfilePage() {
       if (org) {
         setOrgId(org.id)
         setForm(orgToForm(org))
+      } else {
+        // Pre-populate from signup metadata so new users see their name & org type already filled in
+        const meta = user.user_metadata ?? {}
+        if (meta.org_name || meta.org_type) {
+          setForm(prev => ({
+            ...prev,
+            ...(meta.org_name ? { name: meta.org_name as string } : {}),
+            ...(meta.org_type ? { orgType: meta.org_type as OrgType } : {}),
+          }))
+        }
       }
       setLoading(false)
     }

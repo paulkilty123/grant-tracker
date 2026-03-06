@@ -329,13 +329,21 @@ export default function UrlAdminPage() {
     }
   }
 
+  // ── Server-side update helper (bypasses RLS via service role) ────────────────
+  async function updateGrant(id: string, fields: Record<string, unknown>): Promise<boolean> {
+    const res = await fetch('/api/admin/update-grant', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, fields }),
+    })
+    if (!res.ok) console.error('updateGrant error:', await res.json())
+    return res.ok
+  }
+
   // ── Save edited URL ──────────────────────────────────────────────────────────
   async function saveUrl(id: string) {
     setSaving(true)
-    await createClient()
-      .from('scraped_grants')
-      .update({ apply_url: editUrl || null, url_status: 'unchecked', url_last_checked: null })
-      .eq('id', id)
+    await updateGrant(id, { apply_url: editUrl || null, url_status: 'unchecked', url_last_checked: null })
     const updateInList = (g: Grant) =>
       g.id === id ? { ...g, apply_url: editUrl || null, url_status: 'unchecked' as const, url_last_checked: null } : g
     setGrants(prev => prev.map(updateInList))
@@ -349,10 +357,7 @@ export default function UrlAdminPage() {
 
   // ── Mark dead manually ────────────────────────────────────────────────────────
   async function markDead(id: string) {
-    await createClient()
-      .from('scraped_grants')
-      .update({ url_status: 'dead', url_last_checked: new Date().toISOString() })
-      .eq('id', id)
+    await updateGrant(id, { url_status: 'dead', url_last_checked: new Date().toISOString() })
     const update = (g: Grant) => g.id === id ? { ...g, url_status: 'dead' as const } : g
     setGrants(prev => prev.map(update))
     setCategoryGrants(prev => prev.map(g => g.id === id ? { ...g, url_status: 'dead' as const } : g))
@@ -361,10 +366,7 @@ export default function UrlAdminPage() {
 
   // ── Mark ok manually ─────────────────────────────────────────────────────────
   async function markOk(id: string) {
-    await createClient()
-      .from('scraped_grants')
-      .update({ url_status: 'ok', url_last_checked: new Date().toISOString() })
-      .eq('id', id)
+    await updateGrant(id, { url_status: 'ok', url_last_checked: new Date().toISOString() })
     setGrants(prev => prev.filter(g => g.id !== id))
     setCategoryGrants(prev => prev.map(g => g.id === id ? { ...g, url_status: 'ok' as const } : g))
     await loadStats()
@@ -372,10 +374,7 @@ export default function UrlAdminPage() {
 
   // ── Toggle invite-only ────────────────────────────────────────────────────────
   async function toggleInviteOnly(id: string, current: boolean) {
-    await createClient()
-      .from('scraped_grants')
-      .update({ is_invite_only: !current })
-      .eq('id', id)
+    await updateGrant(id, { is_invite_only: !current })
     const update = (g: Grant) => g.id === id ? { ...g, is_invite_only: !current } : g
     setGrants(prev => prev.map(update))
     setCategoryGrants(prev => prev.map(g => g.id === id ? { ...g, is_invite_only: !current } : g))
@@ -383,10 +382,7 @@ export default function UrlAdminPage() {
 
   // ── Soft delete ───────────────────────────────────────────────────────────────
   async function removeGrant(id: string) {
-    await createClient()
-      .from('scraped_grants')
-      .update({ is_active: false })
-      .eq('id', id)
+    await updateGrant(id, { is_active: false })
     setGrants(prev => prev.filter(g => g.id !== id))
     setNewGrants(prev => prev.filter(g => g.id !== id))
     setCategoryGrants(prev => prev.filter(g => g.id !== id))
@@ -395,30 +391,23 @@ export default function UrlAdminPage() {
   }
 
   // ── Promote seed grant → scraped_grants DB row ───────────────────────────────
+  // Uses a server-side API route so the service role key can bypass RLS.
   async function promoteSeedGrant(grant: CategoryGrant): Promise<string | null> {
-    const seedData = SEED_GRANTS.find(g => g.id === grant.id)
-    const { data, error } = await createClient().from('scraped_grants').insert({
-      title:               grant.title,
-      funder:              grant.funder,
-      funder_type:         grant.funder_type,
-      apply_url:           grant.apply_url,
-      is_invite_only:      grant.is_invite_only,
-      source:              'manual',
-      is_active:           true,
-      url_status:          grant.apply_url ? 'unchecked' : null,
-      ...(seedData ? {
-        description:         seedData.description ?? null,
-        amount_min:          seedData.amountMin   ?? null,
-        amount_max:          seedData.amountMax   ?? null,
-        is_rolling:          seedData.isRolling   ?? true,
-        deadline:            seedData.deadline    ?? null,
-        sectors:             seedData.sectors     ?? [],
-        eligibility_criteria: seedData.eligibilityCriteria ?? [],
-      } : {}),
-    }).select('id').single()
-
-    if (error) { console.error('promoteSeedGrant error:', error); return null }
-    return data.id
+    const res = await fetch('/api/admin/promote-grant', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        seedId:         grant.id,
+        title:          grant.title,
+        funder:         grant.funder,
+        funder_type:    grant.funder_type,
+        apply_url:      grant.apply_url,
+        is_invite_only: grant.is_invite_only,
+      }),
+    })
+    const json = await res.json()
+    if (!res.ok) { console.error('promoteSeedGrant error:', json); return null }
+    return json.id as string
   }
 
   // ── Handle any action on a seed grant (promotes first, then runs action) ──────
@@ -499,7 +488,7 @@ export default function UrlAdminPage() {
     const sectors = form.sectors
       ? form.sectors.split(',').map(s => s.trim()).filter(Boolean)
       : []
-    const { error } = await createClient().from('scraped_grants').update({
+    const ok = await updateGrant(grantId, {
       title:          form.title.trim(),
       funder:         form.funder.trim(),
       funder_type:    form.funder_type,
@@ -511,10 +500,10 @@ export default function UrlAdminPage() {
       deadline:       (!form.is_rolling && form.deadline) ? form.deadline : null,
       sectors,
       is_invite_only: form.is_invite_only,
-    }).eq('id', grantId)
+    })
 
-    if (error) {
-      setRefreshError(`Save failed: ${error.message}`)
+    if (!ok) {
+      setRefreshError('Save failed — check console for details')
       setRefreshSaving(false)
       return
     }
@@ -587,25 +576,28 @@ export default function UrlAdminPage() {
       ? addForm.sectors.split(',').map(s => s.trim()).filter(Boolean)
       : []
 
-    const { error } = await createClient().from('scraped_grants').insert({
-      title:             addForm.title.trim(),
-      funder:            addForm.funder.trim(),
-      funder_type:       addForm.funder_type,
-      apply_url:         addForm.apply_url.trim() || null,
-      description:       addForm.description.trim() || null,
-      amount_min:        addForm.amount_min ? parseInt(addForm.amount_min, 10) : null,
-      amount_max:        addForm.amount_max ? parseInt(addForm.amount_max, 10) : null,
-      deadline:          (!addForm.is_rolling && addForm.deadline) ? addForm.deadline : null,
-      is_rolling:        addForm.is_rolling,
-      is_invite_only:    addForm.is_invite_only,
-      sectors,
-      source:            'manual',
-      is_active:         true,
-      url_status:        addForm.apply_url.trim() ? 'unchecked' : null,
+    const addRes = await fetch('/api/admin/promote-grant', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        manual:         true,
+        title:          addForm.title.trim(),
+        funder:         addForm.funder.trim(),
+        funder_type:    addForm.funder_type,
+        apply_url:      addForm.apply_url.trim() || null,
+        description:    addForm.description.trim() || null,
+        amount_min:     addForm.amount_min ? parseInt(addForm.amount_min, 10) : null,
+        amount_max:     addForm.amount_max ? parseInt(addForm.amount_max, 10) : null,
+        deadline:       (!addForm.is_rolling && addForm.deadline) ? addForm.deadline : null,
+        is_rolling:     addForm.is_rolling,
+        is_invite_only: addForm.is_invite_only,
+        sectors,
+      }),
     })
+    const addJson = await addRes.json()
 
-    if (error) {
-      setAddError(`Failed to save: ${error.message}`)
+    if (!addRes.ok) {
+      setAddError(`Failed to save: ${addJson.error ?? 'Unknown error'}`)
       setAddSaving(false)
       return
     }
