@@ -94,6 +94,7 @@ export default function UrlAdminPage() {
   const [filter, setFilter]         = useState<Filter>('dead')
   const [running, setRunning]       = useState(false)
   const [runResult, setRunResult]   = useState<{ ok: number; dead: number; deadSeedGrants: DeadSeedGrant[] } | null>(null)
+  const [validationProgress, setValidationProgress] = useState<{ checked: number; total: number; ok: number; dead: number } | null>(null)
   const [promotingSeeds, setPromotingSeeds]   = useState(false)
   const [promoteResult, setPromoteResult]     = useState<{ inserted: number; skipped: number; message: string } | null>(null)
   const [editingId, setEditingId]   = useState<string | null>(null)
@@ -327,25 +328,49 @@ export default function UrlAdminPage() {
     }
   }
 
-  // ── Run full validation ──────────────────────────────────────────────────────
+  // ── Run full validation (paginated to avoid 60s Vercel timeout) ──────────────
   async function runValidation() {
     setRunning(true)
     setRunResult(null)
+    setValidationProgress(null)
+
+    let offset   = 0
+    let totalOk  = 0
+    let totalDead = 0
+    let grandTotal = 0
+
     try {
-      const res = await fetch('/api/admin/validate-urls', { method: 'POST' })
-      if (!res.ok) {
-        let detail = `HTTP ${res.status}`
-        try { const body = await res.json(); detail += `: ${body.error ?? JSON.stringify(body)}` } catch { /* ignore */ }
-        throw new Error(detail)
+      while (true) {
+        const res = await fetch('/api/admin/validate-urls', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ offset, limit: 50 }),
+        })
+        if (!res.ok) {
+          let detail = `HTTP ${res.status}`
+          try { const b = await res.json(); detail += `: ${b.error ?? JSON.stringify(b)}` } catch { /* ignore */ }
+          throw new Error(detail)
+        }
+        const data = await res.json()
+
+        totalOk   += data.ok   ?? 0
+        totalDead += data.dead ?? 0
+        offset     = data.nextOffset ?? (offset + 50)
+        if (offset === 50) grandTotal = data.total ?? 0  // captured on first call
+
+        setValidationProgress({ checked: offset, total: grandTotal, ok: totalOk, dead: totalDead })
+
+        if (data.done) break
       }
-      const data = await res.json()
-      setRunResult({ ok: data.ok, dead: data.dead, deadSeedGrants: data.deadSeedGrants ?? [] })
+
+      setRunResult({ ok: totalOk, dead: totalDead, deadSeedGrants: [] })
       await loadStats()
       await loadGrants()
     } catch (err) {
       alert(`Validation failed — ${err instanceof Error ? err.message : String(err)}`)
     } finally {
       setRunning(false)
+      setValidationProgress(null)
     }
   }
 
@@ -883,8 +908,27 @@ export default function UrlAdminPage() {
 
       {/* Run result banners */}
       {running && (
-        <div className="mb-6 rounded-xl border border-forest/20 bg-forest/5 px-4 py-3 text-sm text-forest">
-          Checking URLs in batches of 20 — this takes 2–3 minutes for 800+ grants…
+        <div className="mb-6 rounded-xl border border-forest/20 bg-forest/5 px-4 py-3 text-sm text-forest space-y-2">
+          <div className="flex items-center justify-between">
+            <span>
+              {validationProgress
+                ? `Checking URLs… ${validationProgress.checked} / ${validationProgress.total || '?'} checked · ${validationProgress.ok} ok · ${validationProgress.dead} dead`
+                : 'Starting URL validation…'}
+            </span>
+            <span className="text-xs text-forest/60">
+              {validationProgress && validationProgress.total
+                ? `${Math.round((validationProgress.checked / validationProgress.total) * 100)}%`
+                : ''}
+            </span>
+          </div>
+          {validationProgress && validationProgress.total > 0 && (
+            <div className="h-1.5 w-full rounded-full bg-forest/10 overflow-hidden">
+              <div
+                className="h-full rounded-full bg-forest transition-all duration-300"
+                style={{ width: `${Math.min(100, Math.round((validationProgress.checked / validationProgress.total) * 100))}%` }}
+              />
+            </div>
+          )}
         </div>
       )}
       {runResult && (
