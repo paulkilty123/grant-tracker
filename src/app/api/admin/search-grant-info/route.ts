@@ -38,9 +38,19 @@ function htmlToText(html: string): string {
     .slice(0, 12000)
 }
 
+function isLikely404Url(url: string): boolean {
+  try {
+    const path = new URL(url).pathname.toLowerCase()
+    return path === '/404' || path.endsWith('/404') || path === '/not-found' || path === '/error'
+  } catch { return false }
+}
+
 // Try fetching a URL via Jina.ai Reader (handles bot-protected pages)
 // then fall back to a direct fetch
 async function tryFetchPage(url: string): Promise<string | null> {
+  // Reject URLs that are obviously error pages
+  if (isLikely404Url(url)) return null
+
   // Try Jina first
   try {
     const res = await fetch(`https://r.jina.ai/${url}`, {
@@ -204,7 +214,8 @@ ${pageText}`
   }
 
   // ── Return knowledge-based result if live fetch didn't work ───────────────
+  // Don't expose any URL we couldn't successfully load — leave it blank so
+  // the user can manually enter the correct one.
   const { suggested_url: _, ...dataWithoutUrl } = knowledgeResult as Record<string, unknown>
-  const finalSourceUrl = urlsToTry[0] ?? existingUrl ?? ''
-  return NextResponse.json({ ok: true, data: dataWithoutUrl, sourceUrl: finalSourceUrl })
+  return NextResponse.json({ ok: true, data: dataWithoutUrl, sourceUrl: '' })
 }
