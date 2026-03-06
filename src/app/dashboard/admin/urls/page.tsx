@@ -434,32 +434,35 @@ export default function UrlAdminPage() {
     }
   }
 
-  // ── Fetch grant info from URL → open refresh modal ───────────────────────────
+  // ── Search for grant info → open refresh modal ───────────────────────────────
   async function fetchGrantInfo(grant: Grant | CategoryGrant) {
-    if (!grant.apply_url) return
     setRefreshingId(grant.id)
     setRefreshError(null)
     try {
-      const res = await fetch('/api/admin/fetch-grant-info', {
+      const res = await fetch('/api/admin/search-grant-info', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: grant.apply_url }),
+        body: JSON.stringify({
+          title:  grant.title,
+          funder: grant.funder ?? '',
+        }),
       })
       const json = await res.json()
       if (!res.ok || !json.ok) {
-        alert(`Could not fetch grant info: ${json.error ?? `Error ${res.status}`}`)
+        alert(`Could not find grant info: ${json.error ?? `Error ${res.status}`}`)
         return
       }
       const d = json.data
+      const discoveredUrl: string = json.sourceUrl ?? grant.apply_url ?? ''
       setRefreshModal({
         grantId:    grant.id,
         grantTitle: grant.title,
-        grantUrl:   grant.apply_url,
+        grantUrl:   discoveredUrl,
         form: {
           title:         d.title        ?? grant.title,
           funder:        d.funder       ?? (grant.funder ?? ''),
           funder_type:   d.funder_type  ?? (grant.funder_type ?? 'trust_foundation'),
-          apply_url:     grant.apply_url ?? '',
+          apply_url:     discoveredUrl,
           description:   d.description  ?? '',
           amount_min:    d.amount_min   != null ? String(d.amount_min) : '',
           amount_max:    d.amount_max   != null ? String(d.amount_max) : '',
@@ -470,7 +473,7 @@ export default function UrlAdminPage() {
         },
       })
     } catch (err) {
-      alert(`Fetch failed: ${err instanceof Error ? err.message : String(err)}`)
+      alert(`Search failed: ${err instanceof Error ? err.message : String(err)}`)
     } finally {
       setRefreshingId(null)
     }
@@ -640,19 +643,17 @@ export default function UrlAdminPage() {
       </div>
     ) : (
       <div className="flex items-center justify-end gap-1.5">
-        {grant.apply_url && (
-          <button
-            onClick={() => fetchGrantInfo(grant)}
-            disabled={refreshingId === grant.id}
-            title="Fetch latest info from URL"
-            className="rounded-full border border-warm p-1.5 text-mid hover:border-forest hover:text-forest transition-colors disabled:opacity-40"
-          >
-            {refreshingId === grant.id
-              ? <RefreshCw className="h-3 w-3 animate-spin" />
-              : <Sparkles className="h-3 w-3" />
-            }
-          </button>
-        )}
+        <button
+          onClick={() => fetchGrantInfo(grant)}
+          disabled={refreshingId === grant.id}
+          title="Search web for latest grant info"
+          className="rounded-full border border-warm p-1.5 text-mid hover:border-forest hover:text-forest transition-colors disabled:opacity-40"
+        >
+          {refreshingId === grant.id
+            ? <RefreshCw className="h-3 w-3 animate-spin" />
+            : <Sparkles className="h-3 w-3" />
+          }
+        </button>
         <button
           onClick={() => toggleInviteOnly(grant.id, grant.is_invite_only)}
           title={grant.is_invite_only ? 'Mark as open application' : 'Mark as invite-only'}
@@ -706,24 +707,22 @@ export default function UrlAdminPage() {
 
     return (
       <div className="flex items-center justify-end gap-1.5">
-        {grant.apply_url && (
-          <button
-            onClick={() => handleSeedAction(grant, newId => {
-              // After promotion, find the promoted grant and fetch its info
-              const promotedGrant: Grant = {
-                id: newId, title: grant.title, funder: grant.funder,
-                apply_url: grant.apply_url, url_status: 'unchecked',
-                url_last_checked: null, source: 'manual',
-                is_invite_only: grant.is_invite_only,
-              }
-              fetchGrantInfo(promotedGrant)
-            })}
-            title="Fetch latest info from URL"
-            className="rounded-full border border-warm p-1.5 text-mid hover:border-forest hover:text-forest transition-colors"
-          >
-            <Sparkles className="h-3 w-3" />
-          </button>
-        )}
+        <button
+          onClick={() => handleSeedAction(grant, newId => {
+            // After promotion, find the promoted grant and search for its info
+            const promotedGrant: Grant = {
+              id: newId, title: grant.title, funder: grant.funder,
+              apply_url: grant.apply_url, url_status: 'unchecked',
+              url_last_checked: null, source: 'manual',
+              is_invite_only: grant.is_invite_only,
+            }
+            fetchGrantInfo(promotedGrant)
+          })}
+          title="Search web for latest grant info"
+          className="rounded-full border border-warm p-1.5 text-mid hover:border-forest hover:text-forest transition-colors"
+        >
+          <Sparkles className="h-3 w-3" />
+        </button>
         <button
           onClick={() => handleSeedAction(grant, newId => toggleInviteOnly(newId, grant.is_invite_only))}
           title={grant.is_invite_only ? 'Mark as open application' : 'Mark as invite-only'}
