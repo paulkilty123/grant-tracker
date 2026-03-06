@@ -1129,20 +1129,7 @@ export default function UrlAdminPage() {
                           {new Date((grant as NewGrant).first_seen_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                         </td>
                         <td className="px-5 py-3">
-                          {confirmDeleteId === grant.id ? (
-                            <div className="flex items-center justify-end gap-1.5">
-                              <span className="text-xs text-red-500 font-medium mr-1">Remove?</span>
-                              <button onClick={() => removeGrant(grant.id)} className="rounded-full bg-red-500 p-1.5 text-white hover:bg-red-600 transition-colors"><Check className="h-3 w-3" /></button>
-                              <button onClick={() => setConfirmDeleteId(null)} className="rounded-full border border-warm p-1.5 text-mid"><X className="h-3 w-3" /></button>
-                            </div>
-                          ) : (
-                            <div className="flex justify-end">
-                              <button onClick={() => setConfirmDeleteId(grant.id)} title="Remove from database"
-                                className="rounded-full border border-warm p-1.5 text-mid hover:border-red-300 hover:text-red-500 transition-colors">
-                                <Trash2 className="h-3 w-3" />
-                              </button>
-                            </div>
-                          )}
+                          <RowActions grant={grant} />
                         </td>
                       </tr>
                     ))}
