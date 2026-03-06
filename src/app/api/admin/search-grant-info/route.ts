@@ -181,15 +181,11 @@ export async function POST(req: NextRequest) {
   } catch { /* fall through */ }
 
   if (searchText) {
-    // Verify candidate URLs — pick first that actually returns 200
+    // Pick the top-scored URL from search results as the suggested link.
+    // We skip known-bad URL patterns but otherwise trust the search result —
+    // the user will see it in the modal and can correct it if needed.
     const candidates = extractBestUrl(searchText, title ?? '', funder ?? '')
-    for (const url of candidates.slice(0, 5)) {
-      if (await urlExists(url)) { sourceUrl = url; break }
-    }
-    // Fall back to existing URL if no candidate verified
-    if (!sourceUrl && existingUrl && !isLikely404Url(existingUrl) && await urlExists(existingUrl)) {
-      sourceUrl = existingUrl
-    }
+    sourceUrl = candidates.find(u => !isLikely404Url(u)) ?? existingUrl ?? ''
 
     const prompt = `You are a UK grant database assistant. Based on the following web search results about a grant, extract the structured grant information.
 
@@ -226,12 +222,10 @@ ${EXTRACT_FIELDS}
     const cleaned = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
     const result = JSON.parse(cleaned) as Record<string, unknown>
     const { suggested_url: suggestedUrl, ...data } = result
-    let fallbackUrl = ''
-    if (typeof suggestedUrl === 'string' && suggestedUrl.startsWith('http') && await urlExists(suggestedUrl)) {
-      fallbackUrl = suggestedUrl
-    } else if (existingUrl && !isLikely404Url(existingUrl) && await urlExists(existingUrl)) {
-      fallbackUrl = existingUrl
-    }
+    const fallbackUrl =
+      typeof suggestedUrl === 'string' && suggestedUrl.startsWith('http') && !isLikely404Url(suggestedUrl)
+        ? suggestedUrl
+        : (existingUrl && !isLikely404Url(existingUrl) ? existingUrl : '')
     return NextResponse.json({ ok: true, data, sourceUrl: fallbackUrl })
   } catch {
     return NextResponse.json(
