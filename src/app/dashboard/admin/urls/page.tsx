@@ -107,6 +107,7 @@ export default function UrlAdminPage() {
   const [categoryGrants, setCategoryGrants]       = useState<CategoryGrant[]>([])
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
   const [categorySearch, setCategorySearch]         = useState('')
+  const [promotingId, setPromotingId]               = useState<string | null>(null)
 
   // Add grant modal state
   const [showAddModal, setShowAddModal] = useState(false)
@@ -374,6 +375,54 @@ export default function UrlAdminPage() {
     await loadStats()
   }
 
+  // ── Promote seed grant → scraped_grants DB row ───────────────────────────────
+  async function promoteSeedGrant(grant: CategoryGrant): Promise<string | null> {
+    const seedData = SEED_GRANTS.find(g => g.id === grant.id)
+    const { data, error } = await createClient().from('scraped_grants').insert({
+      title:               grant.title,
+      funder:              grant.funder,
+      funder_type:         grant.funder_type,
+      apply_url:           grant.apply_url,
+      is_invite_only:      grant.is_invite_only,
+      source:              'manual',
+      is_active:           true,
+      url_status:          grant.apply_url ? 'unchecked' : null,
+      ...(seedData ? {
+        description:         seedData.description ?? null,
+        amount_min:          seedData.amountMin   ?? null,
+        amount_max:          seedData.amountMax   ?? null,
+        is_rolling:          seedData.isRolling   ?? true,
+        deadline:            seedData.deadline    ?? null,
+        sectors:             seedData.sectors     ?? [],
+        eligibility_criteria: seedData.eligibilityCriteria ?? [],
+      } : {}),
+    }).select('id').single()
+
+    if (error) { console.error('promoteSeedGrant error:', error); return null }
+    return data.id
+  }
+
+  // ── Handle any action on a seed grant (promotes first, then runs action) ──────
+  async function handleSeedAction(
+    grant: CategoryGrant,
+    action: (newId: string) => void | Promise<void>,
+  ) {
+    setPromotingId(grant.id)
+    try {
+      const newId = await promoteSeedGrant(grant)
+      if (!newId) { alert('Could not promote seed grant — check console'); return }
+      // Replace seed entry in local state with the new DB row
+      setCategoryGrants(prev => prev.map(g =>
+        (g.id === grant.id && g.is_seed)
+          ? { ...g, id: newId, is_seed: false, source: 'manual', url_status: 'unchecked' as const }
+          : g
+      ))
+      await action(newId)
+    } finally {
+      setPromotingId(null)
+    }
+  }
+
   // ── Populate form from URL ────────────────────────────────────────────────────
   async function populateFromUrl() {
     const url = fetchUrl.trim()
@@ -530,6 +579,60 @@ export default function UrlAdminPage() {
         )}
         <button onClick={() => setConfirmDeleteId(grant.id)} title="Remove from database"
           className="rounded-full border border-warm p-1.5 text-mid hover:border-red-300 hover:text-red-500 transition-colors">
+          <Trash2 className="h-3 w-3" />
+        </button>
+      </div>
+    )
+  }
+
+  // ── Seed row actions (promotes on first edit, then runs normal action) ────────
+  function SeedRowActions({ grant }: { grant: CategoryGrant }) {
+    const isPromoting = promotingId === grant.id
+
+    if (isPromoting) {
+      return (
+        <div className="flex items-center justify-end gap-2 text-xs text-mid">
+          <RefreshCw className="h-3.5 w-3.5 animate-spin text-forest" />
+          <span>Saving…</span>
+        </div>
+      )
+    }
+
+    return (
+      <div className="flex items-center justify-end gap-1.5">
+        <button
+          onClick={() => handleSeedAction(grant, newId => toggleInviteOnly(newId, grant.is_invite_only))}
+          title={grant.is_invite_only ? 'Mark as open application' : 'Mark as invite-only'}
+          className={`rounded-full border p-1.5 transition-colors ${
+            grant.is_invite_only
+              ? 'border-purple-300 bg-purple-50 text-purple-600 hover:bg-purple-100'
+              : 'border-warm text-mid hover:border-purple-300 hover:text-purple-600'
+          }`}
+        >
+          <Mail className="h-3 w-3" />
+        </button>
+        <button
+          onClick={() => handleSeedAction(grant, newId => {
+            setEditingId(newId)
+            setEditUrl(grant.apply_url ?? '')
+          })}
+          title="Edit URL"
+          className="rounded-full border border-warm p-1.5 text-mid hover:border-forest hover:text-forest transition-colors"
+        >
+          <Pencil className="h-3 w-3" />
+        </button>
+        <button
+          onClick={() => handleSeedAction(grant, newId => markDead(newId))}
+          title="Flag as dead manually"
+          className="rounded-full border border-warm p-1.5 text-mid hover:border-red-300 hover:text-red-500 transition-colors"
+        >
+          <X className="h-3 w-3" />
+        </button>
+        <button
+          onClick={() => handleSeedAction(grant, newId => setConfirmDeleteId(newId))}
+          title="Remove from database"
+          className="rounded-full border border-warm p-1.5 text-mid hover:border-red-300 hover:text-red-500 transition-colors"
+        >
           <Trash2 className="h-3 w-3" />
         </button>
       </div>
@@ -808,7 +911,7 @@ export default function UrlAdminPage() {
 
                               {/* Status */}
                               <td className="px-5 py-3 text-center">
-                                {grant.is_seed
+                                {grant.is_seed && !grant.apply_url
                                   ? <span className="text-xs text-light italic">—</span>
                                   : <StatusBadge status={grant.url_status} />
                                 }
@@ -821,10 +924,10 @@ export default function UrlAdminPage() {
                                   : '—'}
                               </td>
 
-                              {/* Actions — scraped only */}
+                              {/* Actions */}
                               <td className="px-5 py-3">
                                 {grant.is_seed ? (
-                                  <span className="text-xs text-light italic text-right block">Edit in grants.ts</span>
+                                  <SeedRowActions grant={grant} />
                                 ) : (
                                   <RowActions grant={grant} />
                                 )}
