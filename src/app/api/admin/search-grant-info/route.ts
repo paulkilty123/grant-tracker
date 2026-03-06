@@ -19,17 +19,34 @@ function isLikely404Url(url: string): boolean {
   } catch { return false }
 }
 
-// Quick HEAD check to verify a URL actually exists (returns 200)
+// Patterns that indicate a 404/error page (including soft 404s that return HTTP 200)
+const NOT_FOUND_PATTERNS = [
+  /\bpage not found\b/i,
+  /\bpage.{0,15}doesn.t exist\b/i,
+  /\bpage.{0,15}no longer exists\b/i,
+  /\bsorry.{0,30}can.t find\b/i,
+  /\bno page found\b/i,
+  /\bpage.{0,15}unavailable\b/i,
+  /\bthis page.{0,20}(removed|deleted|moved)\b/i,
+  /\bcouldn.t find.{0,20}page\b/i,
+  /\b404\b/,
+]
+function looksLike404(text: string): boolean {
+  return NOT_FOUND_PATTERNS.some(p => p.test(text.slice(0, 1000)))
+}
+
+// Verify a URL actually has real content by fetching it via Jina.
+// HEAD requests can't detect soft 404s (HTTP 200 with a "not found" page).
 async function urlExists(url: string): Promise<boolean> {
   if (isLikely404Url(url)) return false
   try {
-    const res = await fetch(url, {
-      method: 'HEAD',
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; GrantTrackerBot/1.0)' },
-      signal: AbortSignal.timeout(6_000),
-      redirect: 'follow',
+    const res = await fetch(`https://r.jina.ai/${url}`, {
+      headers: { 'Accept': 'text/plain', 'X-Return-Format': 'text' },
+      signal: AbortSignal.timeout(12_000),
     })
-    return res.ok
+    if (!res.ok) return false
+    const text = await res.text()
+    return text.length >= 300 && !looksLike404(text)
   } catch {
     return false
   }
