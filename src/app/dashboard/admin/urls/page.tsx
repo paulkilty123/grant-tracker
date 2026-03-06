@@ -94,6 +94,8 @@ export default function UrlAdminPage() {
   const [filter, setFilter]         = useState<Filter>('dead')
   const [running, setRunning]       = useState(false)
   const [runResult, setRunResult]   = useState<{ ok: number; dead: number; deadSeedGrants: DeadSeedGrant[] } | null>(null)
+  const [promotingSeeds, setPromotingSeeds]   = useState(false)
+  const [promoteResult, setPromoteResult]     = useState<{ inserted: number; skipped: number; message: string } | null>(null)
   const [editingId, setEditingId]   = useState<string | null>(null)
   const [editUrl, setEditUrl]       = useState('')
   const [saving, setSaving]         = useState(false)
@@ -306,6 +308,24 @@ export default function UrlAdminPage() {
     }
     return groups
   }, [filter, categoryGrants, categorySearch])
+
+  // ── Bulk-promote all seed grants to scraped_grants ────────────────────────────
+  async function promoteAllSeeds() {
+    setPromotingSeeds(true)
+    setPromoteResult(null)
+    try {
+      const res = await fetch('/api/admin/promote-all-seeds', { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Unknown error')
+      setPromoteResult(data)
+      await loadStats()
+      if (filter === 'category') await loadCategoryGrants()
+    } catch (err) {
+      setPromoteResult({ inserted: 0, skipped: 0, message: `Error: ${err instanceof Error ? err.message : 'Unknown'}` })
+    } finally {
+      setPromotingSeeds(false)
+    }
+  }
 
   // ── Run full validation ──────────────────────────────────────────────────────
   async function runValidation() {
@@ -842,6 +862,15 @@ export default function UrlAdminPage() {
             Add funder
           </button>
           <button
+            onClick={promoteAllSeeds}
+            disabled={promotingSeeds}
+            title="Copy all seed grants into the database so their URLs can be validated"
+            className="flex items-center gap-2 rounded-full border border-forest px-4 py-2.5 text-sm font-semibold text-forest hover:bg-forest/5 disabled:opacity-60 transition-colors whitespace-nowrap"
+          >
+            <Database className={`h-4 w-4 ${promotingSeeds ? 'animate-pulse' : ''}`} />
+            {promotingSeeds ? 'Promoting seeds…' : 'Promote all seeds'}
+          </button>
+          <button
             onClick={runValidation}
             disabled={running}
             className="flex items-center gap-2 rounded-full bg-forest px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60 hover:bg-forest/90 transition-colors whitespace-nowrap"
@@ -886,6 +915,15 @@ export default function UrlAdminPage() {
                 ))}
               </ul>
             </div>
+          )}
+        </div>
+      )}
+
+      {promoteResult && (
+        <div className={`mb-6 rounded-xl border px-4 py-3 text-sm ${promoteResult.message.startsWith('Error') ? 'border-red-200 bg-red-50 text-red-700' : 'border-sage/20 bg-sage/10 text-forest'}`}>
+          {promoteResult.message.startsWith('Error') ? '✗' : '✓'} {promoteResult.message}
+          {!promoteResult.message.startsWith('Error') && promoteResult.inserted > 0 && (
+            <span className="ml-2 text-mid">Run URL validation now to check their links.</span>
           )}
         </div>
       )}

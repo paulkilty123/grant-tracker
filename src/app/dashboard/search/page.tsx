@@ -620,10 +620,13 @@ export default function SearchPage() {
     }
   }
 
-  // ── Merged grant pool ────────────────────────────────────────────────────
-  const allGrants = [...SEED_GRANTS, ...scrapedGrants]
+  // ── Grant pool ───────────────────────────────────────────────────────────
+  // Seeds are now promoted to scraped_grants so we use the DB as single source.
+  // Fall back to including SEED_GRANTS only if the DB returns very few results
+  // (e.g. during initial setup before promote-all-seeds has been run).
+  const allGrants = scrapedGrants.length > 50 ? scrapedGrants : [...SEED_GRANTS, ...scrapedGrants]
 
-  // ── Available sectors (from all grants — seed + scraped) ─────────────────
+  // ── Available sectors (from all grants) ──────────────────────────────────
   // Filter out scraped verbatim sentences (>30 chars) and meaningless catch-alls
   const availableSectors: string[] = (() => {
     const counts = new Map<string, number>()
