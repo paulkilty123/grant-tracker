@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import {
   RefreshCw, ExternalLink, Pencil, Check, X,
   AlertTriangle, CheckCircle, Clock, Database, Trash2, Mail, Search,
-  ChevronDown, ChevronRight, Plus, Tag,
+  ChevronDown, ChevronRight, Plus, Tag, Link, Sparkles,
 } from 'lucide-react'
 import { SEED_GRANTS } from '@/lib/grants'
 
@@ -113,6 +113,12 @@ export default function UrlAdminPage() {
   const [addForm, setAddForm]           = useState<AddGrantForm>(BLANK_FORM)
   const [addSaving, setAddSaving]       = useState(false)
   const [addError, setAddError]         = useState<string | null>(null)
+
+  // URL-populate state
+  const [fetchUrl, setFetchUrl]         = useState('')
+  const [fetching, setFetching]         = useState(false)
+  const [fetchError, setFetchError]     = useState<string | null>(null)
+  const [fetchedFrom, setFetchedFrom]   = useState<string | null>(null)
 
   // ── Auth check ───────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -368,6 +374,48 @@ export default function UrlAdminPage() {
     await loadStats()
   }
 
+  // ── Populate form from URL ────────────────────────────────────────────────────
+  async function populateFromUrl() {
+    const url = fetchUrl.trim()
+    if (!url) return
+    setFetching(true)
+    setFetchError(null)
+    try {
+      const res = await fetch('/api/admin/fetch-grant-info', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      })
+      const json = await res.json()
+      if (!res.ok || !json.ok) {
+        setFetchError(json.error ?? `Error ${res.status}`)
+        return
+      }
+      const d = json.data
+      setAddForm(prev => ({
+        ...prev,
+        title:          d.title        ?? prev.title,
+        funder:         d.funder       ?? prev.funder,
+        funder_type:    d.funder_type  ?? prev.funder_type,
+        description:    d.description  ?? prev.description,
+        amount_min:     d.amount_min != null ? String(d.amount_min) : prev.amount_min,
+        amount_max:     d.amount_max != null ? String(d.amount_max) : prev.amount_max,
+        is_rolling:     d.is_rolling  ?? prev.is_rolling,
+        deadline:       d.deadline     ?? prev.deadline,
+        sectors:        Array.isArray(d.sectors) && d.sectors.length > 0
+                          ? d.sectors.join(', ')
+                          : prev.sectors,
+        is_invite_only: d.is_invite_only ?? prev.is_invite_only,
+        apply_url:      prev.apply_url || url,   // prefill URL if not already set
+      }))
+      setFetchedFrom(url)
+    } catch (err) {
+      setFetchError(err instanceof Error ? err.message : 'Unexpected error')
+    } finally {
+      setFetching(false)
+    }
+  }
+
   // ── Add new grant (manual) ────────────────────────────────────────────────────
   async function addGrant() {
     if (!addForm.title.trim() || !addForm.funder.trim()) {
@@ -556,7 +604,7 @@ export default function UrlAdminPage() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => { setShowAddModal(true); setAddForm(BLANK_FORM); setAddError(null) }}
+            onClick={() => { setShowAddModal(true); setAddForm(BLANK_FORM); setAddError(null); setFetchUrl(''); setFetchError(null); setFetchedFrom(null) }}
             className="flex items-center gap-2 rounded-full border border-forest px-4 py-2.5 text-sm font-semibold text-forest hover:bg-forest/5 transition-colors whitespace-nowrap"
           >
             <Plus className="h-4 w-4" />
@@ -1019,7 +1067,7 @@ export default function UrlAdminPage() {
                 <h3 className="font-display text-lg font-bold text-charcoal">Add New Funder</h3>
                 <p className="text-xs text-mid mt-0.5">Manually add a grant to the database</p>
               </div>
-              <button onClick={() => setShowAddModal(false)}
+              <button onClick={() => { setShowAddModal(false); setFetchUrl(''); setFetchError(null); setFetchedFrom(null) }}
                 className="rounded-full border border-warm p-2 text-mid hover:border-forest hover:text-forest transition-colors">
                 <X className="h-4 w-4" />
               </button>
@@ -1027,6 +1075,58 @@ export default function UrlAdminPage() {
 
             {/* Modal form */}
             <div className="px-6 py-5 space-y-4">
+
+                {/* ── Populate from URL ───────────────────────────────────── */}
+              <div className="rounded-xl border border-forest/20 bg-forest/5 p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-forest flex-shrink-0" />
+                  <span className="text-sm font-semibold text-forest">Auto-populate from a URL</span>
+                  <span className="text-xs text-mid ml-1">— paste the grant page link and we'll fill in the details</span>
+                </div>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Link className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-mid pointer-events-none" />
+                    <input
+                      type="url"
+                      value={fetchUrl}
+                      onChange={e => { setFetchUrl(e.target.value); setFetchError(null) }}
+                      onKeyDown={e => e.key === 'Enter' && populateFromUrl()}
+                      placeholder="https://funder.org/grants/open-programme"
+                      className="w-full rounded-xl border border-forest/20 bg-white pl-8 pr-3 py-2.5 text-sm text-charcoal placeholder:text-light focus:border-forest focus:outline-none"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={populateFromUrl}
+                    disabled={fetching || !fetchUrl.trim()}
+                    className="flex items-center gap-2 rounded-xl bg-forest px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50 hover:bg-forest/90 transition-colors whitespace-nowrap"
+                  >
+                    {fetching
+                      ? <><RefreshCw className="h-3.5 w-3.5 animate-spin" /> Fetching…</>
+                      : <><Sparkles className="h-3.5 w-3.5" /> Populate</>
+                    }
+                  </button>
+                </div>
+                {fetchError && (
+                  <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                    <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                    <span>{fetchError}</span>
+                  </div>
+                )}
+                {fetchedFrom && !fetchError && (
+                  <div className="flex items-center gap-2 text-xs text-sage">
+                    <CheckCircle className="h-3.5 w-3.5 flex-shrink-0" />
+                    <span>Fields populated from <span className="font-medium truncate max-w-[280px] inline-block align-bottom">{fetchedFrom}</span> — review and edit below</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Divider */}
+              <div className="flex items-center gap-3 text-xs text-light">
+                <div className="flex-1 h-px bg-warm" />
+                <span>or fill in manually</span>
+                <div className="flex-1 h-px bg-warm" />
+              </div>
 
               {/* Error banner */}
               {addError && (
@@ -1170,7 +1270,7 @@ export default function UrlAdminPage() {
 
             {/* Modal footer */}
             <div className="sticky bottom-0 flex items-center justify-end gap-3 border-t border-warm bg-white px-6 py-4">
-              <button onClick={() => setShowAddModal(false)}
+              <button onClick={() => { setShowAddModal(false); setFetchUrl(''); setFetchError(null); setFetchedFrom(null) }}
                 className="rounded-full border border-warm px-5 py-2 text-sm font-medium text-mid hover:border-charcoal hover:text-charcoal transition-colors">
                 Cancel
               </button>
