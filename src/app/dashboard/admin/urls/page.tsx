@@ -115,11 +115,22 @@ export default function UrlAdminPage() {
   const [addSaving, setAddSaving]       = useState(false)
   const [addError, setAddError]         = useState<string | null>(null)
 
-  // URL-populate state
+  // URL-populate state (Add modal)
   const [fetchUrl, setFetchUrl]         = useState('')
   const [fetching, setFetching]         = useState(false)
   const [fetchError, setFetchError]     = useState<string | null>(null)
   const [fetchedFrom, setFetchedFrom]   = useState<string | null>(null)
+
+  // Refresh grant info state
+  const [refreshingId, setRefreshingId] = useState<string | null>(null)
+  const [refreshModal, setRefreshModal] = useState<{
+    grantId: string
+    grantTitle: string
+    grantUrl: string
+    form: AddGrantForm
+  } | null>(null)
+  const [refreshSaving, setRefreshSaving] = useState(false)
+  const [refreshError, setRefreshError]   = useState<string | null>(null)
 
   // ── Auth check ───────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -423,6 +434,88 @@ export default function UrlAdminPage() {
     }
   }
 
+  // ── Fetch grant info from URL → open refresh modal ───────────────────────────
+  async function fetchGrantInfo(grant: Grant | CategoryGrant) {
+    if (!grant.apply_url) return
+    setRefreshingId(grant.id)
+    setRefreshError(null)
+    try {
+      const res = await fetch('/api/admin/fetch-grant-info', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: grant.apply_url }),
+      })
+      const json = await res.json()
+      if (!res.ok || !json.ok) {
+        alert(`Could not fetch grant info: ${json.error ?? `Error ${res.status}`}`)
+        return
+      }
+      const d = json.data
+      setRefreshModal({
+        grantId:    grant.id,
+        grantTitle: grant.title,
+        grantUrl:   grant.apply_url,
+        form: {
+          title:         d.title        ?? grant.title,
+          funder:        d.funder       ?? (grant.funder ?? ''),
+          funder_type:   d.funder_type  ?? (grant.funder_type ?? 'trust_foundation'),
+          apply_url:     grant.apply_url ?? '',
+          description:   d.description  ?? '',
+          amount_min:    d.amount_min   != null ? String(d.amount_min) : '',
+          amount_max:    d.amount_max   != null ? String(d.amount_max) : '',
+          is_rolling:    d.is_rolling   ?? true,
+          deadline:      d.deadline     ?? '',
+          sectors:       Array.isArray(d.sectors) && d.sectors.length > 0 ? d.sectors.join(', ') : '',
+          is_invite_only: d.is_invite_only ?? grant.is_invite_only,
+        },
+      })
+    } catch (err) {
+      alert(`Fetch failed: ${err instanceof Error ? err.message : String(err)}`)
+    } finally {
+      setRefreshingId(null)
+    }
+  }
+
+  // ── Save refreshed info back to DB ────────────────────────────────────────────
+  async function saveRefreshedInfo() {
+    if (!refreshModal) return
+    setRefreshSaving(true)
+    setRefreshError(null)
+    const { grantId, form } = refreshModal
+    const sectors = form.sectors
+      ? form.sectors.split(',').map(s => s.trim()).filter(Boolean)
+      : []
+    const { error } = await createClient().from('scraped_grants').update({
+      title:          form.title.trim(),
+      funder:         form.funder.trim(),
+      funder_type:    form.funder_type,
+      description:    form.description.trim() || null,
+      amount_min:     form.amount_min ? parseInt(form.amount_min, 10) : null,
+      amount_max:     form.amount_max ? parseInt(form.amount_max, 10) : null,
+      is_rolling:     form.is_rolling,
+      deadline:       (!form.is_rolling && form.deadline) ? form.deadline : null,
+      sectors,
+      is_invite_only: form.is_invite_only,
+    }).eq('id', grantId)
+
+    if (error) {
+      setRefreshError(`Save failed: ${error.message}`)
+      setRefreshSaving(false)
+      return
+    }
+    // Update local state
+    const updater = (g: CategoryGrant) =>
+      g.id === grantId
+        ? { ...g, title: form.title.trim(), funder: form.funder.trim(), is_invite_only: form.is_invite_only }
+        : g
+    setCategoryGrants(prev => prev.map(updater))
+    setGrants(prev => prev.map(g =>
+      g.id === grantId ? { ...g, title: form.title.trim(), funder: form.funder.trim(), is_invite_only: form.is_invite_only } : g
+    ))
+    setRefreshSaving(false)
+    setRefreshModal(null)
+  }
+
   // ── Populate form from URL ────────────────────────────────────────────────────
   async function populateFromUrl() {
     const url = fetchUrl.trim()
@@ -547,6 +640,19 @@ export default function UrlAdminPage() {
       </div>
     ) : (
       <div className="flex items-center justify-end gap-1.5">
+        {grant.apply_url && (
+          <button
+            onClick={() => fetchGrantInfo(grant)}
+            disabled={refreshingId === grant.id}
+            title="Fetch latest info from URL"
+            className="rounded-full border border-warm p-1.5 text-mid hover:border-forest hover:text-forest transition-colors disabled:opacity-40"
+          >
+            {refreshingId === grant.id
+              ? <RefreshCw className="h-3 w-3 animate-spin" />
+              : <Sparkles className="h-3 w-3" />
+            }
+          </button>
+        )}
         <button
           onClick={() => toggleInviteOnly(grant.id, grant.is_invite_only)}
           title={grant.is_invite_only ? 'Mark as open application' : 'Mark as invite-only'}
@@ -600,6 +706,24 @@ export default function UrlAdminPage() {
 
     return (
       <div className="flex items-center justify-end gap-1.5">
+        {grant.apply_url && (
+          <button
+            onClick={() => handleSeedAction(grant, newId => {
+              // After promotion, find the promoted grant and fetch its info
+              const promotedGrant: Grant = {
+                id: newId, title: grant.title, funder: grant.funder,
+                apply_url: grant.apply_url, url_status: 'unchecked',
+                url_last_checked: null, source: 'manual',
+                is_invite_only: grant.is_invite_only,
+              }
+              fetchGrantInfo(promotedGrant)
+            })}
+            title="Fetch latest info from URL"
+            className="rounded-full border border-warm p-1.5 text-mid hover:border-forest hover:text-forest transition-colors"
+          >
+            <Sparkles className="h-3 w-3" />
+          </button>
+        )}
         <button
           onClick={() => handleSeedAction(grant, newId => toggleInviteOnly(newId, grant.is_invite_only))}
           title={grant.is_invite_only ? 'Mark as open application' : 'Mark as invite-only'}
@@ -1157,6 +1281,152 @@ export default function UrlAdminPage() {
             : `${grants.length} result${grants.length !== 1 ? 's' : ''}${search ? ` for "${search}"` : ''} · Sorted by oldest check first`
           }
         </p>
+      )}
+
+      {/* ── Refresh Info Modal ───────────────────────────────────────────────────── */}
+      {refreshModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-2xl border border-warm">
+
+            {/* Header */}
+            <div className="sticky top-0 flex items-center justify-between border-b border-warm bg-white px-6 py-4 z-10">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-forest" />
+                  <h3 className="font-display text-lg font-bold text-charcoal">Refresh Grant Info</h3>
+                </div>
+                <p className="text-xs text-mid mt-0.5 truncate max-w-[420px]">
+                  AI-extracted from <a href={refreshModal.grantUrl} target="_blank" rel="noopener noreferrer" className="text-forest hover:underline">{refreshModal.grantUrl}</a>
+                </p>
+              </div>
+              <button onClick={() => setRefreshModal(null)}
+                className="rounded-full border border-warm p-2 text-mid hover:border-forest hover:text-forest transition-colors">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="px-6 py-5 space-y-4">
+              <div className="rounded-xl border border-forest/20 bg-forest/5 px-4 py-3 text-xs text-forest">
+                Review the fields below — edit anything that looks wrong before saving.
+              </div>
+
+              {refreshError && (
+                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{refreshError}</div>
+              )}
+
+              {/* Title */}
+              <div>
+                <label className="block text-xs font-semibold text-mid uppercase tracking-wider mb-1.5">Grant Title</label>
+                <input type="text" value={refreshModal.form.title}
+                  onChange={e => setRefreshModal(m => m ? { ...m, form: { ...m.form, title: e.target.value } } : m)}
+                  className="w-full rounded-xl border border-warm px-3 py-2.5 text-sm text-charcoal focus:border-forest focus:outline-none" />
+              </div>
+
+              {/* Funder + Type */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-mid uppercase tracking-wider mb-1.5">Funder Name</label>
+                  <input type="text" value={refreshModal.form.funder}
+                    onChange={e => setRefreshModal(m => m ? { ...m, form: { ...m.form, funder: e.target.value } } : m)}
+                    className="w-full rounded-xl border border-warm px-3 py-2.5 text-sm text-charcoal focus:border-forest focus:outline-none" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-mid uppercase tracking-wider mb-1.5">Funder Type</label>
+                  <select value={refreshModal.form.funder_type}
+                    onChange={e => setRefreshModal(m => m ? { ...m, form: { ...m.form, funder_type: e.target.value } } : m)}
+                    className="w-full rounded-xl border border-warm px-3 py-2.5 text-sm text-charcoal focus:border-forest focus:outline-none bg-white">
+                    {FUNDER_TYPE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              {/* Amount */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-mid uppercase tracking-wider mb-1.5">Min Amount (£)</label>
+                  <input type="number" value={refreshModal.form.amount_min}
+                    onChange={e => setRefreshModal(m => m ? { ...m, form: { ...m.form, amount_min: e.target.value } } : m)}
+                    placeholder="e.g. 1000"
+                    className="w-full rounded-xl border border-warm px-3 py-2.5 text-sm text-charcoal placeholder:text-light focus:border-forest focus:outline-none" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-mid uppercase tracking-wider mb-1.5">Max Amount (£)</label>
+                  <input type="number" value={refreshModal.form.amount_max}
+                    onChange={e => setRefreshModal(m => m ? { ...m, form: { ...m.form, amount_max: e.target.value } } : m)}
+                    placeholder="e.g. 10000"
+                    className="w-full rounded-xl border border-warm px-3 py-2.5 text-sm text-charcoal placeholder:text-light focus:border-forest focus:outline-none" />
+                </div>
+              </div>
+
+              {/* Deadline */}
+              <div>
+                <label className="block text-xs font-semibold text-mid uppercase tracking-wider mb-2">Deadline</label>
+                <div className="flex items-center gap-3">
+                  <button type="button"
+                    onClick={() => setRefreshModal(m => m ? { ...m, form: { ...m.form, is_rolling: true, deadline: '' } } : m)}
+                    className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                      refreshModal.form.is_rolling ? 'bg-forest text-white' : 'border border-warm text-mid hover:border-forest hover:text-charcoal'
+                    }`}>
+                    Rolling
+                  </button>
+                  <button type="button"
+                    onClick={() => setRefreshModal(m => m ? { ...m, form: { ...m.form, is_rolling: false } } : m)}
+                    className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                      !refreshModal.form.is_rolling ? 'bg-forest text-white' : 'border border-warm text-mid hover:border-forest hover:text-charcoal'
+                    }`}>
+                    Fixed deadline
+                  </button>
+                </div>
+                {!refreshModal.form.is_rolling && (
+                  <input type="date" value={refreshModal.form.deadline}
+                    onChange={e => setRefreshModal(m => m ? { ...m, form: { ...m.form, deadline: e.target.value } } : m)}
+                    className="mt-2 rounded-xl border border-warm px-3 py-2.5 text-sm text-charcoal focus:border-forest focus:outline-none" />
+                )}
+              </div>
+
+              {/* Sectors */}
+              <div>
+                <label className="block text-xs font-semibold text-mid uppercase tracking-wider mb-1.5">
+                  Sectors <span className="font-normal normal-case text-light">(comma-separated)</span>
+                </label>
+                <input type="text" value={refreshModal.form.sectors}
+                  onChange={e => setRefreshModal(m => m ? { ...m, form: { ...m.form, sectors: e.target.value } } : m)}
+                  placeholder="e.g. community, young people, health"
+                  className="w-full rounded-xl border border-warm px-3 py-2.5 text-sm text-charcoal placeholder:text-light focus:border-forest focus:outline-none" />
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-xs font-semibold text-mid uppercase tracking-wider mb-1.5">Description</label>
+                <textarea rows={4} value={refreshModal.form.description}
+                  onChange={e => setRefreshModal(m => m ? { ...m, form: { ...m.form, description: e.target.value } } : m)}
+                  className="w-full rounded-xl border border-warm px-3 py-2.5 text-sm text-charcoal placeholder:text-light focus:border-forest focus:outline-none resize-none" />
+              </div>
+
+              {/* Invite-only */}
+              <label className="flex items-center gap-3 cursor-pointer">
+                <div className={`relative w-10 h-6 rounded-full transition-colors ${refreshModal.form.is_invite_only ? 'bg-purple-500' : 'bg-warm'}`}
+                  onClick={() => setRefreshModal(m => m ? { ...m, form: { ...m.form, is_invite_only: !m.form.is_invite_only } } : m)}>
+                  <div className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-all ${refreshModal.form.is_invite_only ? 'left-5' : 'left-1'}`} />
+                </div>
+                <span className="text-sm text-charcoal">Invite-only / not open to unsolicited applications</span>
+              </label>
+            </div>
+
+            {/* Footer */}
+            <div className="sticky bottom-0 flex items-center justify-end gap-3 border-t border-warm bg-white px-6 py-4">
+              <button onClick={() => setRefreshModal(null)}
+                className="rounded-full border border-warm px-5 py-2 text-sm font-medium text-mid hover:border-charcoal hover:text-charcoal transition-colors">
+                Cancel
+              </button>
+              <button onClick={saveRefreshedInfo} disabled={refreshSaving}
+                className="flex items-center gap-2 rounded-full bg-forest px-6 py-2 text-sm font-semibold text-white disabled:opacity-60 hover:bg-forest/90 transition-colors">
+                {refreshSaving ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                {refreshSaving ? 'Saving…' : 'Save updates'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* ── Add Grant Modal ──────────────────────────────────────────────────────── */}
