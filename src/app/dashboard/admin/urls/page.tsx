@@ -218,12 +218,19 @@ export default function UrlAdminPage() {
   const loadCategoryGrants = useCallback(async () => {
     if (filter !== 'category') return
 
-    const { data, error } = await createClient()
-      .from('scraped_grants')
-      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_type')
-      .eq('is_active', true)
-      .order('funder', { ascending: true, nullsFirst: false })
-      .limit(5000)
+    // Load active grants for display, plus ALL grants (inc. inactive) for deduplication
+    const [{ data, error }, { data: allData }] = await Promise.all([
+      createClient()
+        .from('scraped_grants')
+        .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_type')
+        .eq('is_active', true)
+        .order('funder', { ascending: true, nullsFirst: false })
+        .limit(5000),
+      createClient()
+        .from('scraped_grants')
+        .select('title, funder')
+        .limit(10000),
+    ])
 
     if (error) {
       console.error('loadCategoryGrants error:', error)
@@ -232,7 +239,7 @@ export default function UrlAdminPage() {
     }
     setLoadError(null)
 
-    // Scraped grants
+    // Scraped grants (active only — shown in UI)
     const scraped: CategoryGrant[] = (data ?? []).map(g => ({
       ...g,
       funder_type: (g.funder_type as string) ?? 'other',
@@ -253,9 +260,10 @@ export default function UrlAdminPage() {
       is_seed: true,
     }))
 
-    // Deduplicate: scraped takes priority over seed if same title+funder
-    const scrapedKeys = new Set(scraped.map(g => `${g.title}||${g.funder}`))
-    const uniqueSeeds = seeded.filter(g => !scrapedKeys.has(`${g.title}||${g.funder}`))
+    // Deduplicate against ALL scraped rows (inc. inactive/deleted) so that
+    // deleted seed grants don't reappear after being promoted then removed.
+    const allScrapedKeys = new Set((allData ?? []).map(g => `${g.title}||${g.funder}`))
+    const uniqueSeeds = seeded.filter(g => !allScrapedKeys.has(`${g.title}||${g.funder}`))
 
     setCategoryGrants([...scraped, ...uniqueSeeds])
   }, [filter])
@@ -495,6 +503,7 @@ export default function UrlAdminPage() {
       title:          form.title.trim(),
       funder:         form.funder.trim(),
       funder_type:    form.funder_type,
+      apply_url:      form.apply_url.trim() || null,
       description:    form.description.trim() || null,
       amount_min:     form.amount_min ? parseInt(form.amount_min, 10) : null,
       amount_max:     form.amount_max ? parseInt(form.amount_max, 10) : null,
@@ -510,13 +519,14 @@ export default function UrlAdminPage() {
       return
     }
     // Update local state
+    const updatedUrl = form.apply_url.trim() || null
     const updater = (g: CategoryGrant) =>
       g.id === grantId
-        ? { ...g, title: form.title.trim(), funder: form.funder.trim(), is_invite_only: form.is_invite_only }
+        ? { ...g, title: form.title.trim(), funder: form.funder.trim(), apply_url: updatedUrl, is_invite_only: form.is_invite_only }
         : g
     setCategoryGrants(prev => prev.map(updater))
     setGrants(prev => prev.map(g =>
-      g.id === grantId ? { ...g, title: form.title.trim(), funder: form.funder.trim(), is_invite_only: form.is_invite_only } : g
+      g.id === grantId ? { ...g, title: form.title.trim(), funder: form.funder.trim(), apply_url: updatedUrl, is_invite_only: form.is_invite_only } : g
     ))
     setRefreshSaving(false)
     setRefreshModal(null)
