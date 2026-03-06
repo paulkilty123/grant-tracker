@@ -12,32 +12,6 @@ async function assertAdmin() {
   if (data.user?.email !== ADMIN_EMAIL) throw new Error('Forbidden')
 }
 
-// Patterns that indicate a 404 / error page rather than real content
-const NOT_FOUND_PATTERNS = [
-  /\bpage.{0,10}not.{0,10}found\b/i,
-  /\b404\b/,
-  /\bpage.{0,10}doesn.t exist\b/i,
-  /\bpage.{0,10}no longer exists\b/i,
-  /\bsorry.{0,20}can.t find\b/i,
-  /\bno page found\b/i,
-  /\bpage.{0,10}unavailable\b/i,
-]
-function looksLike404(text: string): boolean {
-  return NOT_FOUND_PATTERNS.some(p => p.test(text.slice(0, 800)))
-}
-
-function htmlToText(html: string): string {
-  return html
-    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
-    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-    .replace(/&pound;|&#163;/g, '£')
-    .replace(/\s{2,}/g, ' ').trim()
-    .slice(0, 12000)
-}
-
 function isLikely404Url(url: string): boolean {
   try {
     const path = new URL(url).pathname.toLowerCase()
@@ -45,38 +19,87 @@ function isLikely404Url(url: string): boolean {
   } catch { return false }
 }
 
-// Try fetching a URL via Jina.ai Reader (handles bot-protected pages)
-// then fall back to a direct fetch
-async function tryFetchPage(url: string): Promise<string | null> {
-  // Reject URLs that are obviously error pages
-  if (isLikely404Url(url)) return null
+// Extract the first plausible grant page URL from Jina search results text
+function extractBestUrl(searchText: string, title: string, funder: string): string {
+  const titleWords = title.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/).filter(w => w.length > 3)
+  const funderWords = funder.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/).filter(w => w.length > 3)
 
-  // Try Jina first
-  try {
-    const res = await fetch(`https://r.jina.ai/${url}`, {
-      headers: { 'Accept': 'text/plain', 'X-Return-Format': 'text' },
-      signal: AbortSignal.timeout(15_000),
-    })
-    if (res.ok) {
-      const text = await res.text()
-      if (text.length >= 300 && !looksLike404(text)) return text.slice(0, 12000)
+  const seen = new Set<string>()
+  const candidates: Array<{ url: string; score: number }> = []
+
+  // Pull URLs from markdown links and Source: lines
+  const patterns = [
+    /\[([^\]]*)\]\((https?:\/\/[^)\s]+)\)/g,
+    /Source:\s*(https?:\/\/[^\s\n]+)/g,
+    /URL:\s*(https?:\/\/[^\s\n]+)/g,
+  ]
+
+  for (const regex of patterns) {
+    let match: RegExpExecArray | null
+    while ((match = regex.exec(searchText)) !== null) {
+      const raw = match[match.length - 1].replace(/[)>\s]+$/, '')
+      try {
+        const u = new URL(raw)
+        const clean = u.origin + u.pathname
+        if (seen.has(clean)) continue
+        seen.add(clean)
+
+        const lower = clean.toLowerCase()
+        // Skip noise domains
+        if (['twitter.com', 'facebook.com', 'linkedin.com', 'youtube.com',
+          'instagram.com', 'wikipedia.org', 'r.jina.ai', 's.jina.ai'].some(d => lower.includes(d))) continue
+        if (isLikely404Url(clean)) continue
+
+        let score = 0
+        titleWords.forEach(w => { if (lower.includes(w)) score += 5 })
+        funderWords.forEach(w => { if (lower.includes(w)) score += 4 })
+        const grantKw = ['grant', 'fund', 'apply', 'award', 'match', 'programme', 'scheme', 'bursary']
+        grantKw.forEach(kw => { if (lower.includes(kw)) score += 3 })
+        const noiseKw = ['news', 'blog', 'twitter', 'facebook', 'search', 'privacy', 'cookie']
+        noiseKw.forEach(kw => { if (lower.includes(kw)) score -= 4 })
+
+        candidates.push({ url: clean, score })
+      } catch { /* skip */ }
     }
-  } catch { /* fall through */ }
+  }
 
-  // Direct fetch as fallback
-  try {
-    const res = await fetch(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; GrantTrackerBot/1.0)', 'Accept': 'text/html' },
-      signal: AbortSignal.timeout(10_000),
-    })
-    if (res.ok) {
-      const text = htmlToText(await res.text())
-      if (text.length >= 300 && !looksLike404(text)) return text
-    }
-  } catch { /* fall through */ }
-
-  return null
+  candidates.sort((a, b) => b.score - a.score)
+  return candidates[0]?.url ?? ''
 }
+
+const ANTHROPIC_HEADERS = {
+  'Content-Type': 'application/json',
+  'x-api-key': '',  // set per-request below
+  'anthropic-version': '2023-06-01',
+}
+
+async function callClaude(prompt: string, apiKey: string, maxTokens = 1000): Promise<string> {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { ...ANTHROPIC_HEADERS, 'x-api-key': apiKey },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: maxTokens,
+      messages: [{ role: 'user', content: prompt }],
+    }),
+    signal: AbortSignal.timeout(20_000),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data?.error?.message ?? `AI error ${res.status}`)
+  return data.content?.[0]?.text ?? ''
+}
+
+const EXTRACT_FIELDS = `Return a single JSON object (no markdown, no extra text) with exactly these fields:
+- title: string — the grant programme name (not the funder organisation name)
+- funder: string — the name of the funding organisation
+- funder_type: one of: trust_foundation, corporate, government, lottery, housing_association, local_authority, competition, loan, crowdfund_match, other
+- description: string — 2-3 sentence plain English description of what the grant funds and who can apply
+- amount_min: number or null — minimum grant amount in GBP (integer, no currency symbol)
+- amount_max: number or null — maximum grant amount in GBP (integer, no currency symbol)
+- is_rolling: boolean — true if applications are accepted on a rolling basis, false if there is a fixed deadline
+- deadline: string or null — if is_rolling is false, the application deadline in YYYY-MM-DD format; otherwise null
+- sectors: array of strings — relevant topic tags from this list only: community, young people, poverty, health, arts, environment, social welfare, education, employment, mental health, culture, sport, disability, social change, heritage, older people, inequality, climate, financial inclusion, technology, housing, homelessness, food, women, human rights, digital skills, rural, innovation, criminal justice, advocacy, wellbeing
+- is_invite_only: boolean — true if the grant is invite-only`
 
 export async function POST(req: NextRequest) {
   try {
@@ -96,130 +119,82 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'title or funder is required' }, { status: 400 })
   }
 
-  const ANTHROPIC_HEADERS = {
-    'Content-Type': 'application/json',
-    'x-api-key': process.env.ANTHROPIC_API_KEY ?? '',
-    'anthropic-version': '2023-06-01',
+  const apiKey = process.env.ANTHROPIC_API_KEY ?? ''
+
+  // Build search query — funder + title keywords
+  const cleanTitle = (title ?? '').replace(/[—–]/g, ' ').replace(/[^\w\s]/g, ' ')
+    .split(/\s+/).filter(w => w.length > 2).slice(0, 6).join(' ')
+  const cleanFunder = (funder ?? '').replace(/[—–]/g, ' ').replace(/[^\w\s]/g, ' ')
+    .split(/\s+/).filter(w => w.length > 2).slice(0, 4).join(' ')
+  const searchQuery = [cleanFunder, cleanTitle, 'grant'].filter(Boolean).join(' ')
+
+  // ── Strategy A: Jina Search → extract from result snippets ───────────────
+  // Search result snippets often contain all the key facts we need without
+  // having to load (and get blocked by) individual funder pages.
+  let searchText = ''
+  let sourceUrl = ''
+
+  try {
+    const searchRes = await fetch(`https://s.jina.ai/${encodeURIComponent(searchQuery)}`, {
+      headers: { 'Accept': 'text/plain', 'X-Return-Format': 'text' },
+      signal: AbortSignal.timeout(20_000),
+    })
+    if (searchRes.ok) {
+      const raw = await searchRes.text()
+      if (raw.length > 200) {
+        searchText = raw.slice(0, 15000)
+        sourceUrl = extractBestUrl(searchText, title ?? '', funder ?? '')
+      }
+    }
+  } catch { /* fall through */ }
+
+  if (searchText) {
+    const prompt = `You are a UK grant database assistant. Based on the following web search results about a grant, extract the structured grant information.
+
+${EXTRACT_FIELDS}
+
+If a field cannot be determined from the search results, use null for amounts/deadline, empty array for sectors, and make your best guess for other fields.
+
+Search results for "${funder} ${title}":
+${searchText}`
+
+    try {
+      const raw = await callClaude(prompt, apiKey)
+      const cleaned = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
+      const parsed = JSON.parse(cleaned)
+      // Use existing URL as fallback if search didn't surface a better one
+      if (!sourceUrl && existingUrl && !isLikely404Url(existingUrl)) sourceUrl = existingUrl
+      return NextResponse.json({ ok: true, data: parsed, sourceUrl })
+    } catch { /* fall through to knowledge-based */ }
   }
 
-  // ── Step 1: Ask Claude for grant info from its training knowledge ──────────
-  // Claude knows most UK funders well. Also ask it to suggest a URL so we can
-  // try to fetch fresher data to supplement.
+  // ── Strategy B: Claude training knowledge ────────────────────────────────
+  // Reliable fallback — Claude knows most UK funders well.
   const knowledgePrompt = `You are a UK grant database assistant with extensive knowledge of UK funders.
 
-Based on your training knowledge, provide information about this grant and suggest the most likely current URL for its application/programme page.
+Based on your training knowledge, provide information about this grant. Also suggest the most likely current URL for its application or programme page (not just the funder homepage).
 
 Funder: ${funder ?? '(unknown)'}
 Grant title: ${title ?? '(unknown)'}
-${existingUrl ? `Known URL (may be a general page, not the specific grant page): ${existingUrl}` : ''}
+${existingUrl ? `Known URL (may be a general page): ${existingUrl}` : ''}
 
-Return a single JSON object (no markdown, no extra text) with exactly these fields:
-- title: string — the grant programme name
-- funder: string — the name of the funding organisation
-- funder_type: one of: trust_foundation, corporate, government, lottery, housing_association, local_authority, competition, loan, crowdfund_match, other
-- description: string — 2-3 sentence plain English description of what the grant funds and who can apply
-- amount_min: number or null — minimum grant amount in GBP (integer)
-- amount_max: number or null — maximum grant amount in GBP (integer)
-- is_rolling: boolean — true if rolling applications, false if fixed deadline
-- deadline: string or null — deadline in YYYY-MM-DD if known and not rolling, otherwise null
-- sectors: array of strings from: community, young people, poverty, health, arts, environment, social welfare, education, employment, mental health, culture, sport, disability, social change, heritage, older people, inequality, climate, financial inclusion, technology, housing, homelessness, food, women, human rights, digital skills, rural, innovation, criminal justice, advocacy, wellbeing
-- is_invite_only: boolean
-- suggested_url: string or null — your best guess at the specific grant application/programme page URL (not just the funder homepage). Only suggest a URL you are reasonably confident exists. Use null if unsure.`
+${EXTRACT_FIELDS}
+- suggested_url: string or null — your best guess at the specific grant page URL. Use null if unsure.`
 
-  const knowledgeRes = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: ANTHROPIC_HEADERS,
-    body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1000,
-      messages: [{ role: 'user', content: knowledgePrompt }],
-    }),
-  })
-
-  const knowledgeData = await knowledgeRes.json()
-  if (!knowledgeRes.ok) {
-    return NextResponse.json(
-      { error: knowledgeData?.error?.message ?? 'AI error' },
-      { status: 502 }
-    )
-  }
-
-  const rawKnowledge = knowledgeData.content?.[0]?.text ?? ''
-  const cleanedKnowledge = rawKnowledge.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
-
-  let knowledgeResult: Record<string, unknown> | null = null
   try {
-    knowledgeResult = JSON.parse(cleanedKnowledge)
+    const raw = await callClaude(knowledgePrompt, apiKey)
+    const cleaned = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
+    const result = JSON.parse(cleaned) as Record<string, unknown>
+    const { suggested_url: suggestedUrl, ...data } = result
+    const fallbackUrl =
+      typeof suggestedUrl === 'string' && suggestedUrl.startsWith('http') && !isLikely404Url(suggestedUrl)
+        ? suggestedUrl
+        : (existingUrl && !isLikely404Url(existingUrl) ? existingUrl : '')
+    return NextResponse.json({ ok: true, data, sourceUrl: fallbackUrl })
   } catch {
     return NextResponse.json(
-      { error: 'AI returned unreadable data — try entering the URL manually' },
+      { error: 'Could not retrieve grant information. Try entering the details manually.' },
       { status: 502 }
     )
   }
-
-  // ── Step 2: Try to fetch a live page to get fresher/more specific data ─────
-  // Priority: suggested URL from Claude > existing URL from DB
-  const urlsToTry = [
-    knowledgeResult?.suggested_url as string | undefined,
-    existingUrl,
-  ].filter((u): u is string => typeof u === 'string' && u.startsWith('http'))
-
-  let pageText = ''
-  let sourceUrl = ''
-
-  for (const url of urlsToTry) {
-    const text = await tryFetchPage(url)
-    if (text) { pageText = text; sourceUrl = url; break }
-  }
-
-  // ── Step 3: If we got a live page, re-extract from it for fresher data ─────
-  if (pageText) {
-    const extractPrompt = `You are a grant database assistant. Extract structured information about a grant funding opportunity from the following webpage content.
-
-Return a single JSON object (no markdown, no extra text) with exactly these fields:
-- title: string — the grant programme name (not the funder organisation name)
-- funder: string — the name of the funding organisation
-- funder_type: one of: trust_foundation, corporate, government, lottery, housing_association, local_authority, competition, loan, crowdfund_match, other
-- description: string — 2-3 sentence plain English description of what the grant funds and who can apply
-- amount_min: number or null — minimum grant amount in GBP (integer, no currency symbol)
-- amount_max: number or null — maximum grant amount in GBP (integer, no currency symbol)
-- is_rolling: boolean — true if applications are accepted on a rolling basis, false if there is a fixed deadline
-- deadline: string or null — if is_rolling is false, the application deadline in YYYY-MM-DD format; otherwise null
-- sectors: array of strings — relevant topic tags from this list only: community, young people, poverty, health, arts, environment, social welfare, education, employment, mental health, culture, sport, disability, social change, heritage, older people, inequality, climate, financial inclusion, technology, housing, homelessness, food, women, human rights, digital skills, rural, innovation, criminal justice, advocacy, wellbeing
-- is_invite_only: boolean — true if invite-only
-
-If a field cannot be determined from the page content, use null for amounts/deadline, empty array for sectors, and make your best guess for other fields.
-
-Webpage content from ${sourceUrl}:
-${pageText}`
-
-    const extractRes = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: ANTHROPIC_HEADERS,
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content: extractPrompt }],
-      }),
-    })
-
-    const extractData = await extractRes.json()
-    const rawExtract = extractData.content?.[0]?.text ?? ''
-    const cleanedExtract = rawExtract.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
-
-    try {
-      const liveResult = JSON.parse(cleanedExtract)
-      return NextResponse.json({ ok: true, data: liveResult, sourceUrl })
-    } catch { /* fall through to knowledge result */ }
-  }
-
-  // ── Return knowledge-based result if live fetch didn't work ───────────────
-  // Still surface Claude's suggested URL (if it's not a known-bad URL) so
-  // the user has a starting point to verify or correct manually.
-  const { suggested_url: suggestedUrl, ...dataWithoutUrl } = knowledgeResult as Record<string, unknown>
-  const fallbackUrl =
-    typeof suggestedUrl === 'string' && suggestedUrl.startsWith('http') && !isLikely404Url(suggestedUrl)
-      ? suggestedUrl
-      : (existingUrl ?? '')
-  return NextResponse.json({ ok: true, data: dataWithoutUrl, sourceUrl: fallbackUrl })
 }
