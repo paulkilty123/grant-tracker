@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
-export const maxDuration = 45
+export const maxDuration = 60
 
 const ADMIN_EMAIL = 'paulkilty1@gmail.com'
 
@@ -12,7 +12,6 @@ async function assertAdmin() {
   if (data.user?.email !== ADMIN_EMAIL) throw new Error('Forbidden')
 }
 
-// Strip HTML tags and collapse whitespace to get readable page text
 function htmlToText(html: string): string {
   return html
     .replace(/<script[\s\S]*?<\/script>/gi, ' ')
@@ -31,73 +30,23 @@ function htmlToText(html: string): string {
     .slice(0, 12000)
 }
 
-// Extract result URLs from DuckDuckGo HTML search results page
-function extractSearchResults(html: string): string[] {
-  const urls: string[] = []
-
-  // DuckDuckGo embeds actual URLs in uddg= parameter of redirect links
-  const uddgRegex = /uddg=([^&"'\s]+)/g
-  let match: RegExpExecArray | null
-  while ((match = uddgRegex.exec(html)) !== null) {
-    try {
-      const decoded = decodeURIComponent(match[1])
-      if (decoded.startsWith('http') && !decoded.includes('duckduckgo.com')) {
-        urls.push(decoded)
-      }
-    } catch {
-      // skip malformed
-    }
-  }
-
-  // Also try plain href links as fallback
-  if (urls.length === 0) {
-    const hrefRegex = /href="(https?:\/\/(?!.*duckduckgo)[^"]+)"/g
-    while ((match = hrefRegex.exec(html)) !== null) {
-      const u = match[1]
-      if (!u.includes('duckduckgo') && !u.includes('duck.co')) {
-        urls.push(u)
-      }
-    }
-  }
-
-  // Deduplicate and return
-  const seen = new Set<string>()
-  return urls.filter(u => {
-    if (seen.has(u)) return false
-    seen.add(u)
-    return true
+async function callClaude(prompt: string, maxTokens = 400): Promise<string> {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': process.env.ANTHROPIC_API_KEY ?? '',
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: maxTokens,
+      messages: [{ role: 'user', content: prompt }],
+    }),
   })
-}
-
-// Score a URL for likely relevance to grant info (higher = better)
-function scoreUrl(url: string, funder: string, title: string): number {
-  const lower = url.toLowerCase()
-  const funderWords = funder.toLowerCase().split(/\s+/).filter(w => w.length > 3)
-  const titleWords = title.toLowerCase().split(/\s+/).filter(w => w.length > 3)
-
-  let score = 0
-
-  // Penalise social media, news aggregators, job sites
-  const noise = ['twitter.com', 'facebook.com', 'linkedin.com', 'youtube.com',
-    'instagram.com', 'wikipedia.org', 'bbc.co.uk', 'theguardian.com',
-    'indeed.com', 'glassdoor.com', 'charityjob']
-  if (noise.some(n => lower.includes(n))) return -100
-
-  // Favour .gov, .org, .org.uk
-  if (lower.includes('.gov')) score += 10
-  if (lower.includes('.org')) score += 5
-
-  // Favour funder name appearing in domain
-  funderWords.forEach(w => { if (lower.includes(w)) score += 8 })
-
-  // Favour grant-related path segments
-  const grantKeywords = ['grant', 'fund', 'apply', 'award', 'programme', 'program', 'scheme', 'bursary']
-  grantKeywords.forEach(kw => { if (lower.includes(kw)) score += 3 })
-
-  // Favour title words appearing in URL
-  titleWords.forEach(w => { if (lower.includes(w)) score += 2 })
-
-  return score
+  const data = await res.json()
+  if (!res.ok) throw new Error(data?.error?.message ?? `AI error ${res.status}`)
+  return data.content?.[0]?.text ?? ''
 }
 
 export async function POST(req: NextRequest) {
@@ -108,61 +57,53 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json()
-  const { title, funder } = body as { title?: string; funder?: string }
+  const { title, funder, existingUrl } = body as {
+    title?: string
+    funder?: string
+    existingUrl?: string
+  }
 
   if (!title && !funder) {
     return NextResponse.json({ error: 'title or funder is required' }, { status: 400 })
   }
 
-  // Build a clean, concise query — strip special chars and limit length
-  function cleanTerm(s: string) {
-    return s
-      .replace(/[—–\-]/g, ' ')   // replace dashes/em-dashes with space
-      .replace(/[^\w\s]/g, '')    // strip remaining punctuation
-      .replace(/\s{2,}/g, ' ')
-      .trim()
-  }
-  const cleanFunder = cleanTerm(funder ?? '').split(/\s+/).slice(0, 5).join(' ')
-  const cleanTitle  = cleanTerm(title  ?? '').split(/\s+/).slice(0, 6).join(' ')
-  const searchQuery = [cleanFunder, cleanTitle, 'grant'].filter(Boolean).join(' ')
-  const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(searchQuery)}`
+  // ── Step 1: Ask Claude to suggest specific grant page URLs ────────────────────
+  const urlPrompt = `You are a UK grant database assistant. I need to find the specific webpage for a grant funding opportunity.
 
-  // ── Search DuckDuckGo ──────────────────────────────────────────────────────────
+Funder: ${funder ?? '(unknown)'}
+Grant title: ${title ?? '(unknown)'}
+${existingUrl ? `Known URL (may be a general funder page, not the specific grant page): ${existingUrl}` : ''}
+
+Based on your knowledge of UK funders and their websites, suggest up to 5 specific URLs where detailed information about THIS grant (application details, eligibility, amounts, deadlines) is most likely to be found. Prioritise the most specific grant/programme page over the funder's homepage.
+
+Return ONLY a JSON array of URL strings, ordered by likelihood. No markdown, no explanation. Example:
+["https://example.org/grants/small-grants", "https://example.org/apply"]`
+
   let candidateUrls: string[] = []
   try {
-    const searchRes = await fetch(searchUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'en-GB,en;q=0.9',
-      },
-      signal: AbortSignal.timeout(12_000),
-    })
-
-    if (searchRes.ok) {
-      const html = await searchRes.text()
-      const allUrls = extractSearchResults(html)
-
-      // Sort by relevance score, take top 5
-      candidateUrls = allUrls
-        .map(u => ({ url: u, score: scoreUrl(u, funder ?? '', title ?? '') }))
-        .filter(x => x.score > -100)
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 5)
-        .map(x => x.url)
+    const raw = await callClaude(urlPrompt, 400)
+    const cleaned = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
+    const parsed = JSON.parse(cleaned)
+    if (Array.isArray(parsed)) {
+      candidateUrls = parsed.filter((u: unknown) => typeof u === 'string' && u.startsWith('http'))
     }
   } catch {
-    // Search failed — fall through to error below
+    // Claude couldn't suggest URLs — fall through
+  }
+
+  // Also include existingUrl as a fallback candidate at the end
+  if (existingUrl && !candidateUrls.includes(existingUrl)) {
+    candidateUrls.push(existingUrl)
   }
 
   if (candidateUrls.length === 0) {
     return NextResponse.json(
-      { error: `No search results found for "${searchQuery}". Try adding or correcting the grant URL manually.` },
+      { error: 'Could not find any candidate URLs for this grant. Try entering the URL manually.' },
       { status: 422 }
     )
   }
 
-  // ── Try fetching candidate pages until one succeeds ───────────────────────────
+  // ── Step 2: Try fetching each candidate until one succeeds ────────────────────
   let pageText = ''
   let sourceUrl = ''
 
@@ -190,13 +131,15 @@ export async function POST(req: NextRequest) {
 
   if (!pageText) {
     return NextResponse.json(
-      { error: 'Found search results but could not load any of the pages. Try adding the URL manually.' },
+      {
+        error: `Tried ${candidateUrls.length} URL(s) but none loaded successfully. Try entering the correct URL manually.`,
+      },
       { status: 422 }
     )
   }
 
-  // ── Ask Claude to extract structured grant info ───────────────────────────────
-  const prompt = `You are a grant database assistant. Extract structured information about a grant funding opportunity from the following webpage content.
+  // ── Step 3: Extract structured grant data from the page ───────────────────────
+  const extractPrompt = `You are a grant database assistant. Extract structured information about a grant funding opportunity from the following webpage content.
 
 Return a single JSON object (no markdown, no extra text) with exactly these fields:
 - title: string — the grant programme name (not the funder organisation name)
@@ -215,37 +158,14 @@ If a field cannot be determined from the page content, use null for amounts/dead
 Webpage content from ${sourceUrl}:
 ${pageText}`
 
-  const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': process.env.ANTHROPIC_API_KEY ?? '',
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1000,
-      messages: [{ role: 'user', content: prompt }],
-    }),
-  })
-
-  const aiData = await aiRes.json()
-
-  if (!aiRes.ok) {
-    const message = aiData?.error?.message ?? `AI error (${aiRes.status})`
-    return NextResponse.json({ error: message }, { status: 502 })
-  }
-
-  const text = aiData.content?.[0]?.text ?? ''
-  const cleaned = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
-
   try {
+    const raw = await callClaude(extractPrompt, 1000)
+    const cleaned = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
     const parsed = JSON.parse(cleaned)
-    // Return extracted data + the URL we sourced it from
     return NextResponse.json({ ok: true, data: parsed, sourceUrl })
   } catch {
     return NextResponse.json(
-      { error: 'AI returned unreadable data — try adding the URL manually' },
+      { error: 'AI returned unreadable data — try entering the URL manually' },
       { status: 502 }
     )
   }
