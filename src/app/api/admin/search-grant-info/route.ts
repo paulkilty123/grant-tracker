@@ -19,8 +19,24 @@ function isLikely404Url(url: string): boolean {
   } catch { return false }
 }
 
-// Extract the first plausible grant page URL from Jina search results text
-function extractBestUrl(searchText: string, title: string, funder: string): string {
+// Quick HEAD check to verify a URL actually exists (returns 200)
+async function urlExists(url: string): Promise<boolean> {
+  if (isLikely404Url(url)) return false
+  try {
+    const res = await fetch(url, {
+      method: 'HEAD',
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; GrantTrackerBot/1.0)' },
+      signal: AbortSignal.timeout(6_000),
+      redirect: 'follow',
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}
+
+// Extract and rank plausible grant page URLs from Jina search results text
+function extractBestUrl(searchText: string, title: string, funder: string): string[] {
   const titleWords = title.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/).filter(w => w.length > 3)
   const funderWords = funder.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/).filter(w => w.length > 3)
 
@@ -64,7 +80,7 @@ function extractBestUrl(searchText: string, title: string, funder: string): stri
   }
 
   candidates.sort((a, b) => b.score - a.score)
-  return candidates[0]?.url ?? ''
+  return candidates.map(c => c.url)
 }
 
 const ANTHROPIC_HEADERS = {
@@ -143,12 +159,21 @@ export async function POST(req: NextRequest) {
       const raw = await searchRes.text()
       if (raw.length > 200) {
         searchText = raw.slice(0, 15000)
-        sourceUrl = extractBestUrl(searchText, title ?? '', funder ?? '')
       }
     }
   } catch { /* fall through */ }
 
   if (searchText) {
+    // Verify candidate URLs — pick first that actually returns 200
+    const candidates = extractBestUrl(searchText, title ?? '', funder ?? '')
+    for (const url of candidates.slice(0, 5)) {
+      if (await urlExists(url)) { sourceUrl = url; break }
+    }
+    // Fall back to existing URL if no candidate verified
+    if (!sourceUrl && existingUrl && !isLikely404Url(existingUrl) && await urlExists(existingUrl)) {
+      sourceUrl = existingUrl
+    }
+
     const prompt = `You are a UK grant database assistant. Based on the following web search results about a grant, extract the structured grant information.
 
 ${EXTRACT_FIELDS}
@@ -162,8 +187,6 @@ ${searchText}`
       const raw = await callClaude(prompt, apiKey)
       const cleaned = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
       const parsed = JSON.parse(cleaned)
-      // Use existing URL as fallback if search didn't surface a better one
-      if (!sourceUrl && existingUrl && !isLikely404Url(existingUrl)) sourceUrl = existingUrl
       return NextResponse.json({ ok: true, data: parsed, sourceUrl })
     } catch { /* fall through to knowledge-based */ }
   }
@@ -186,10 +209,12 @@ ${EXTRACT_FIELDS}
     const cleaned = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
     const result = JSON.parse(cleaned) as Record<string, unknown>
     const { suggested_url: suggestedUrl, ...data } = result
-    const fallbackUrl =
-      typeof suggestedUrl === 'string' && suggestedUrl.startsWith('http') && !isLikely404Url(suggestedUrl)
-        ? suggestedUrl
-        : (existingUrl && !isLikely404Url(existingUrl) ? existingUrl : '')
+    let fallbackUrl = ''
+    if (typeof suggestedUrl === 'string' && suggestedUrl.startsWith('http') && await urlExists(suggestedUrl)) {
+      fallbackUrl = suggestedUrl
+    } else if (existingUrl && !isLikely404Url(existingUrl) && await urlExists(existingUrl)) {
+      fallbackUrl = existingUrl
+    }
     return NextResponse.json({ ok: true, data, sourceUrl: fallbackUrl })
   } catch {
     return NextResponse.json(
