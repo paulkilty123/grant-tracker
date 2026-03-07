@@ -19,58 +19,79 @@ function isLikely404Url(url: string): boolean {
   } catch { return false }
 }
 
-// Patterns that indicate a 404/error page (including soft 404s that return HTTP 200)
+// How specific is a URL path? Deeper = more specific = better
+function pathDepthScore(url: string): number {
+  try {
+    const path = new URL(url).pathname.replace(/\/$/, '')
+    const segments = path.split('/').filter(Boolean)
+    // Root or single-segment (homepage, /grants) score 0; deeper pages score more
+    if (segments.length === 0) return 0
+    if (segments.length === 1) return 1
+    return segments.length + 2  // reward depth
+  } catch { return 0 }
+}
+
+// Is this URL just a funder homepage or top-level landing page?
+function isHomepageUrl(url: string): boolean {
+  try {
+    const path = new URL(url).pathname.replace(/\/$/, '')
+    const segments = path.split('/').filter(Boolean)
+    return segments.length <= 1
+  } catch { return false }
+}
+
 const NOT_FOUND_PATTERNS = [
   /\bpage not found\b/i,
   /\bpage.{0,15}doesn.t exist\b/i,
-  /\bpage.{0,15}no longer exists\b/i,
   /\bsorry.{0,30}can.t find\b/i,
-  /\bno page found\b/i,
-  /\bpage.{0,15}unavailable\b/i,
-  /\bthis page.{0,20}(removed|deleted|moved)\b/i,
-  /\bcouldn.t find.{0,20}page\b/i,
   /\b404\b/,
+  /\bno page found\b/i,
 ]
 function looksLike404(text: string): boolean {
   return NOT_FOUND_PATTERNS.some(p => p.test(text.slice(0, 1000)))
 }
 
-// Verify a URL actually has real content by fetching it via Jina.
-// HEAD requests can't detect soft 404s (HTTP 200 with a "not found" page).
-async function urlExists(url: string): Promise<boolean> {
-  if (isLikely404Url(url)) return false
+// Fetch a page via Jina Reader and return its text content
+async function fetchPageText(url: string): Promise<string> {
   try {
     const res = await fetch(`https://r.jina.ai/${url}`, {
       headers: { 'Accept': 'text/plain', 'X-Return-Format': 'text' },
       signal: AbortSignal.timeout(12_000),
     })
-    if (!res.ok) return false
+    if (!res.ok) return ''
     const text = await res.text()
-    return text.length >= 300 && !looksLike404(text)
-  } catch {
-    return false
-  }
+    if (text.length < 200 || looksLike404(text)) return ''
+    return text.slice(0, 15000)
+  } catch { return '' }
 }
 
-// Extract and rank plausible grant page URLs from Jina search results text
-function extractBestUrl(searchText: string, title: string, funder: string): string[] {
+// Score and rank URLs extracted from text, using grant title/funder keywords
+function scoreAndRankUrls(
+  text: string,
+  title: string,
+  funder: string,
+  existingUrl: string,
+): Array<{ url: string; score: number }> {
   const titleWords = title.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/).filter(w => w.length > 3)
   const funderWords = funder.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/).filter(w => w.length > 3)
+  // Domain of existing URL — URLs on the same domain are preferred
+  let existingDomain = ''
+  try { existingDomain = new URL(existingUrl).hostname } catch { /* ignore */ }
 
   const seen = new Set<string>()
   const candidates: Array<{ url: string; score: number }> = []
 
-  // Pull URLs from markdown links and Source: lines
   const patterns = [
     /\[([^\]]*)\]\((https?:\/\/[^)\s]+)\)/g,
     /Source:\s*(https?:\/\/[^\s\n]+)/g,
     /URL:\s*(https?:\/\/[^\s\n]+)/g,
+    /(https?:\/\/[^\s\n"'<>()]+)/g,
   ]
 
   for (const regex of patterns) {
     let match: RegExpExecArray | null
-    while ((match = regex.exec(searchText)) !== null) {
-      const raw = match[match.length - 1].replace(/[)>\s]+$/, '')
+    while ((match = regex.exec(text)) !== null) {
+      const raw = (match[match.length - 1] || match[1] || '').replace(/[)>\s,]+$/, '')
       try {
         const u = new URL(raw)
         const clean = u.origin + u.pathname
@@ -78,31 +99,51 @@ function extractBestUrl(searchText: string, title: string, funder: string): stri
         seen.add(clean)
 
         const lower = clean.toLowerCase()
-        // Skip noise domains
+        // Skip noise
         if (['twitter.com', 'facebook.com', 'linkedin.com', 'youtube.com',
-          'instagram.com', 'wikipedia.org', 'r.jina.ai', 's.jina.ai'].some(d => lower.includes(d))) continue
+          'instagram.com', 'wikipedia.org', 'r.jina.ai', 's.jina.ai',
+          'google.com', 'bing.com'].some(d => lower.includes(d))) continue
         if (isLikely404Url(clean)) continue
 
         let score = 0
-        titleWords.forEach(w => { if (lower.includes(w)) score += 5 })
+
+        // ── Deep path bonus — specific pages > homepages ──────────────────
+        score += pathDepthScore(clean) * 3
+
+        // ── Same domain as existing URL ───────────────────────────────────
+        if (existingDomain && lower.includes(existingDomain)) score += 5
+
+        // ── Title and funder keywords in URL path ─────────────────────────
+        titleWords.forEach(w => { if (lower.includes(w)) score += 6 })
         funderWords.forEach(w => { if (lower.includes(w)) score += 4 })
-        const grantKw = ['grant', 'fund', 'apply', 'award', 'match', 'programme', 'scheme', 'bursary']
-        grantKw.forEach(kw => { if (lower.includes(kw)) score += 3 })
-        const noiseKw = ['news', 'blog', 'twitter', 'facebook', 'search', 'privacy', 'cookie']
-        noiseKw.forEach(kw => { if (lower.includes(kw)) score -= 4 })
+
+        // ── Grant-action keywords ─────────────────────────────────────────
+        const grantKw = ['apply', 'application', 'grant', 'fund', 'award',
+          'programme', 'scheme', 'bursary', 'match', 'support']
+        grantKw.forEach(kw => { if (lower.includes(kw)) score += 4 })
+
+        // ── Penalise noise ────────────────────────────────────────────────
+        const noiseKw = ['news', 'blog', 'press', 'privacy', 'cookie',
+          'contact', 'about', 'login', 'register', 'search']
+        noiseKw.forEach(kw => { if (lower.includes(kw)) score -= 5 })
+
+        // ── Penalise the existing URL if it's just a homepage ─────────────
+        // (don't reward confirming an already-known low-quality URL)
+        if (existingUrl && clean === existingUrl.replace(/\/$/, '') && isHomepageUrl(clean)) {
+          score -= 10
+        }
 
         candidates.push({ url: clean, score })
       } catch { /* skip */ }
     }
   }
 
-  candidates.sort((a, b) => b.score - a.score)
-  return candidates.map(c => c.url)
+  return candidates.sort((a, b) => b.score - a.score)
 }
 
 const ANTHROPIC_HEADERS = {
   'Content-Type': 'application/json',
-  'x-api-key': '',  // set per-request below
+  'x-api-key': '',
   'anthropic-version': '2023-06-01',
 }
 
@@ -154,79 +195,105 @@ export async function POST(req: NextRequest) {
 
   const apiKey = process.env.ANTHROPIC_API_KEY ?? ''
 
-  // Build search query — funder + title keywords
-  const cleanTitle = (title ?? '').replace(/[—–]/g, ' ').replace(/[^\w\s]/g, ' ')
-    .split(/\s+/).filter(w => w.length > 2).slice(0, 6).join(' ')
-  const cleanFunder = (funder ?? '').replace(/[—–]/g, ' ').replace(/[^\w\s]/g, ' ')
-    .split(/\s+/).filter(w => w.length > 2).slice(0, 4).join(' ')
-  const searchQuery = [cleanFunder, cleanTitle, 'grant'].filter(Boolean).join(' ')
+  // Build a specific search query — exact title phrase + funder + "apply"
+  const cleanTitle = (title ?? '').replace(/[—–]/g, ' ').trim()
+  const cleanFunder = (funder ?? '').replace(/[—–]/g, ' ').trim()
 
-  // ── Strategy A: Jina Search → extract from result snippets ───────────────
-  // Search result snippets often contain all the key facts we need without
-  // having to load (and get blocked by) individual funder pages.
+  // Use quoted title phrase for precision; add "apply" to find application pages
+  const searchQuery = `"${cleanTitle}" ${cleanFunder} apply`
+
+  let bestUrl = ''
   let searchText = ''
-  let sourceUrl = ''
+  let pageText = ''
 
+  // ── Step 1: Jina web search with specific query ────────────────────────────
   try {
     const searchRes = await fetch(`https://s.jina.ai/${encodeURIComponent(searchQuery)}`, {
       headers: { 'Accept': 'text/plain', 'X-Return-Format': 'text' },
-      signal: AbortSignal.timeout(20_000),
+      signal: AbortSignal.timeout(18_000),
     })
     if (searchRes.ok) {
       const raw = await searchRes.text()
-      if (raw.length > 200) {
-        searchText = raw.slice(0, 15000)
-      }
+      if (raw.length > 200) searchText = raw.slice(0, 15000)
     }
   } catch { /* fall through */ }
 
   if (searchText) {
-    // Pick the top-scored URL from search results as the suggested link.
-    // We skip known-bad URL patterns but otherwise trust the search result —
-    // the user will see it in the modal and can correct it if needed.
-    const candidates = extractBestUrl(searchText, title ?? '', funder ?? '')
-    sourceUrl = candidates.find(u => !isLikely404Url(u)) ?? existingUrl ?? ''
+    const candidates = scoreAndRankUrls(searchText, title ?? '', funder ?? '', existingUrl ?? '')
+    // Pick top candidate — prefer specific pages over homepages
+    const specificCandidate = candidates.find(c => !isLikely404Url(c.url) && !isHomepageUrl(c.url))
+    const anyCandidate = candidates.find(c => !isLikely404Url(c.url))
+    bestUrl = specificCandidate?.url ?? anyCandidate?.url ?? ''
+  }
 
-    const prompt = `You are a UK grant database assistant. Based on the following web search results about a grant, extract the structured grant information.
+  // ── Step 2: If existing URL is a homepage, crawl it to find deeper links ──
+  // e.g. existing URL is "funder.org/grants" — crawl it to find specific page
+  if (existingUrl && (isHomepageUrl(existingUrl) || !bestUrl || bestUrl === existingUrl)) {
+    pageText = await fetchPageText(existingUrl)
+    if (pageText) {
+      const pageCandidates = scoreAndRankUrls(pageText, title ?? '', funder ?? '', existingUrl ?? '')
+      const deeperLink = pageCandidates.find(
+        c => !isLikely404Url(c.url) && !isHomepageUrl(c.url) && c.url !== existingUrl
+      )
+      if (deeperLink && deeperLink.score > 5) {
+        bestUrl = deeperLink.url
+      }
+    }
+  }
+
+  // Combine all text sources for Claude to extract grant info from
+  const combinedText = [searchText, pageText].filter(Boolean).join('\n\n---\n\n')
+
+  // ── Step 3: Extract structured data with Claude ────────────────────────────
+  if (combinedText) {
+    const prompt = `You are a UK grant database assistant. Based on the following web search results and page content about a grant, extract the structured grant information.
 
 ${EXTRACT_FIELDS}
 
-If a field cannot be determined from the search results, use null for amounts/deadline, empty array for sectors, and make your best guess for other fields.
+If a field cannot be determined, use null for amounts/deadline, empty array for sectors, and make your best guess for other required fields.
 
-Search results for "${funder} ${title}":
-${searchText}`
+Grant being researched: "${cleanTitle}" by ${cleanFunder}
+
+Content:
+${combinedText.slice(0, 12000)}`
 
     try {
       const raw = await callClaude(prompt, apiKey)
       const cleaned = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
       const parsed = JSON.parse(cleaned)
-      return NextResponse.json({ ok: true, data: parsed, sourceUrl })
-    } catch { /* fall through to knowledge-based */ }
+      const sourceUrl = bestUrl || existingUrl || ''
+      const urlImproved = !!bestUrl && bestUrl !== existingUrl && !isHomepageUrl(bestUrl)
+      return NextResponse.json({ ok: true, data: parsed, sourceUrl, urlImproved })
+    } catch { /* fall through */ }
   }
 
-  // ── Strategy B: Claude training knowledge ────────────────────────────────
-  // Reliable fallback — Claude knows most UK funders well.
+  // ── Step 4: Fallback — Claude training knowledge ───────────────────────────
   const knowledgePrompt = `You are a UK grant database assistant with extensive knowledge of UK funders.
 
-Based on your training knowledge, provide information about this grant. Also suggest the most likely current URL for its application or programme page (not just the funder homepage).
+Provide information about this grant using your training knowledge. Focus on finding the SPECIFIC grant application page URL, not just the funder's homepage.
 
-Funder: ${funder ?? '(unknown)'}
-Grant title: ${title ?? '(unknown)'}
-${existingUrl ? `Known URL (may be a general page): ${existingUrl}` : ''}
+Funder: ${cleanFunder}
+Grant title: ${cleanTitle}
+${existingUrl ? `Current URL (may be too general): ${existingUrl}` : 'No URL currently stored.'}
 
 ${EXTRACT_FIELDS}
-- suggested_url: string or null — your best guess at the specific grant page URL. Use null if unsure.`
+- suggested_url: string or null — the specific grant application page URL. If the current URL looks like a homepage, suggest a more specific page. Use null only if you genuinely don't know.`
 
   try {
     const raw = await callClaude(knowledgePrompt, apiKey)
     const cleaned = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
     const result = JSON.parse(cleaned) as Record<string, unknown>
     const { suggested_url: suggestedUrl, ...data } = result
-    const fallbackUrl =
-      typeof suggestedUrl === 'string' && suggestedUrl.startsWith('http') && !isLikely404Url(suggestedUrl)
-        ? suggestedUrl
-        : (existingUrl && !isLikely404Url(existingUrl) ? existingUrl : '')
-    return NextResponse.json({ ok: true, data, sourceUrl: fallbackUrl })
+    const suggestedIsSpecific =
+      typeof suggestedUrl === 'string' &&
+      suggestedUrl.startsWith('http') &&
+      !isLikely404Url(suggestedUrl) &&
+      !isHomepageUrl(suggestedUrl)
+    const sourceUrl = suggestedIsSpecific
+      ? suggestedUrl as string
+      : (existingUrl ?? '')
+    const urlImproved = suggestedIsSpecific && sourceUrl !== existingUrl
+    return NextResponse.json({ ok: true, data, sourceUrl, urlImproved })
   } catch {
     return NextResponse.json(
       { error: 'Could not retrieve grant information. Try entering the details manually.' },
