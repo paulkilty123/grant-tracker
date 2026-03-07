@@ -1542,6 +1542,23 @@ export default function UrlAdminPage() {
                 <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{refreshError}</div>
               )}
 
+              {/* Apply URL */}
+              <div>
+                <label className="block text-xs font-semibold text-mid uppercase tracking-wider mb-1.5">Apply URL</label>
+                <div className="flex items-center gap-2">
+                  <input type="url" value={refreshModal.form.apply_url}
+                    onChange={e => setRefreshModal(m => m ? { ...m, form: { ...m.form, apply_url: e.target.value }, grantUrl: e.target.value } : m)}
+                    placeholder="https://…"
+                    className="flex-1 rounded-xl border border-warm px-3 py-2.5 text-sm text-charcoal placeholder:text-light focus:border-forest focus:outline-none" />
+                  {refreshModal.form.apply_url && (
+                    <a href={refreshModal.form.apply_url} target="_blank" rel="noopener noreferrer"
+                      className="flex-shrink-0 rounded-xl border border-warm p-2.5 text-mid hover:border-forest hover:text-forest transition-colors">
+                      <ExternalLink className="h-4 w-4" />
+                    </a>
+                  )}
+                </div>
+              </div>
+
               {/* Title */}
               <div>
                 <label className="block text-xs font-semibold text-mid uppercase tracking-wider mb-1.5">Grant Title</label>
