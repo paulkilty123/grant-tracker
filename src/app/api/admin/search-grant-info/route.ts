@@ -26,11 +26,11 @@ function pathDepthScore(url: string): number {
     const segments = path.split('/').filter(Boolean)
     if (segments.length === 0) return 0
     if (segments.length === 1) return 1
-    return segments.length + 2  // reward depth
+    return segments.length + 2
   } catch { return 0 }
 }
 
-// Is this URL just a funder homepage or very top-level page?
+// Is this URL just a funder homepage or top-level page?
 function isHomepageUrl(url: string): boolean {
   try {
     const path = new URL(url).pathname.replace(/\/$/, '')
@@ -39,28 +39,30 @@ function isHomepageUrl(url: string): boolean {
   } catch { return false }
 }
 
-// Is this a generic non-grant page? (CSR, about, contact, news etc.)
+// Is this a generic non-grant page (CSR, about, contact, news etc.)?
 function isGenericPage(url: string): boolean {
-  const lower = url.toLowerCase()
   const genericSegments = [
     'about', 'contact', 'news', 'press', 'blog', 'privacy', 'cookie',
     'corporate-responsibility', 'csr', 'sustainability', 'who-we-are',
     'our-story', 'team', 'careers', 'jobs', 'login', 'register',
-    'making-a-difference', 'community', 'responsibility',
+    'making-a-difference', 'responsibility',
   ]
   try {
     const path = new URL(url).pathname.toLowerCase()
-    // If path contains ONLY generic segments and no grant-related ones, flag it
     const hasGrantKeyword = ['grant', 'fund', 'apply', 'application', 'award', 'programme',
-      'scheme', 'bursary', 'support', 'neighbourhood', 'local'].some(k => path.includes(k))
+      'scheme', 'bursary', 'support', 'loan', 'finance', 'invest'].some(k => path.includes(k))
     if (hasGrantKeyword) return false
     return genericSegments.some(s => path.includes(s))
   } catch { return false }
 }
 
-// Score combining depth, keywords, and grant relevance
 function isLowQualityUrl(url: string): boolean {
   return isHomepageUrl(url) || isGenericPage(url)
+}
+
+// Extract just the domain+origin from a URL
+function getOrigin(url: string): string {
+  try { return new URL(url).origin } catch { return '' }
 }
 
 const NOT_FOUND_PATTERNS = [
@@ -102,12 +104,13 @@ async function jinaSearch(query: string): Promise<string> {
   } catch { return '' }
 }
 
-// Score and rank URLs extracted from text, using grant title/funder keywords
+// Score and rank URLs extracted from text
 function scoreAndRankUrls(
   text: string,
   title: string,
   funder: string,
   existingUrl: string,
+  preferredDomain?: string,
 ): Array<{ url: string; score: number }> {
   const titleWords = title.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/).filter(w => w.length > 3)
   const funderWords = funder.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/).filter(w => w.length > 3)
@@ -142,11 +145,14 @@ function scoreAndRankUrls(
 
         let score = 0
 
-        // Deep path bonus — specific pages > homepages
+        // Deep path — specific pages reward
         score += pathDepthScore(clean) * 3
 
         // Same domain as existing URL
         if (existingDomain && lower.includes(existingDomain)) score += 4
+
+        // Preferred domain (e.g. funder homepage we already found)
+        if (preferredDomain && lower.includes(preferredDomain)) score += 3
 
         // Title and funder keywords in URL path
         titleWords.forEach(w => { if (lower.includes(w)) score += 6 })
@@ -154,16 +160,16 @@ function scoreAndRankUrls(
 
         // Grant-action keywords in path
         const grantKw = ['apply', 'application', 'grant', 'fund', 'award',
-          'programme', 'scheme', 'bursary', 'match', 'support']
+          'programme', 'scheme', 'bursary', 'loan', 'finance', 'support']
         grantKw.forEach(kw => { if (lower.includes(kw)) score += 4 })
 
-        // Penalise noise pages
+        // Penalise noise
         const noiseKw = ['news', 'blog', 'press', 'privacy', 'cookie',
           'contact', 'about', 'login', 'register', 'search',
           'corporate-responsibility', 'csr', 'sustainability']
         noiseKw.forEach(kw => { if (lower.includes(kw)) score -= 6 })
 
-        // Strong penalty if this is the existing URL and it's low quality
+        // Strong penalty if this IS the existing URL and it's low quality
         if (existingUrl) {
           const cleanExisting = existingUrl.replace(/\/$/, '')
           if (clean === cleanExisting && isLowQualityUrl(clean)) {
@@ -233,54 +239,67 @@ export async function POST(req: NextRequest) {
 
   const apiKey = process.env.ANTHROPIC_API_KEY ?? ''
 
-  // Clean title — remove em/en dashes and collapse whitespace
   const cleanTitle = (title ?? '').replace(/[—–]/g, ' ').replace(/\s+/g, ' ').trim()
   const cleanFunder = (funder ?? '').replace(/[—–]/g, ' ').replace(/\s+/g, ' ').trim()
 
   let bestUrl = ''
-  let searchText = ''
-  let pageText = ''
+  let existingUrlIsDead = false
   const allSearchTexts: string[] = []
 
-  // ── Step 1a: Jina search — exact quoted title phrase ──────────────────────
-  const exactQuery = `"${cleanTitle}" ${cleanFunder} apply`
-  const exactText = await jinaSearch(exactQuery)
-  if (exactText) {
-    allSearchTexts.push(exactText)
-    searchText = exactText
-    const candidates = scoreAndRankUrls(exactText, cleanTitle, cleanFunder, existingUrl ?? '')
-    const best = candidates.find(c => !isLikely404Url(c.url) && !isLowQualityUrl(c.url))
-    if (best && best.score > 8) bestUrl = best.url
+  // Helper: pick best URL from scored candidates
+  function pickBest(candidates: Array<{ url: string; score: number }>, minScore = 5): string {
+    return candidates.find(c => !isLikely404Url(c.url) && !isLowQualityUrl(c.url) && c.score >= minScore)?.url ?? ''
   }
 
-  // ── Step 1b: Broader search if exact phrase didn't find a good URL ─────────
-  if (!bestUrl || isLowQualityUrl(bestUrl)) {
-    // Drop quotes, try broader match
-    const broadQuery = `${cleanTitle} ${cleanFunder} grant apply UK`
-    const broadText = await jinaSearch(broadQuery)
+  // ── Step 1a: Exact quoted title phrase search ─────────────────────────────
+  const exactText = await jinaSearch(`"${cleanTitle}" ${cleanFunder} apply`)
+  if (exactText) {
+    allSearchTexts.push(exactText)
+    const found = pickBest(scoreAndRankUrls(exactText, cleanTitle, cleanFunder, existingUrl ?? ''))
+    if (found) bestUrl = found
+  }
+
+  // ── Step 1b: Broader search (no quotes) ───────────────────────────────────
+  if (!bestUrl) {
+    const broadText = await jinaSearch(`${cleanTitle} ${cleanFunder} grant apply UK`)
     if (broadText) {
       allSearchTexts.push(broadText)
-      const candidates = scoreAndRankUrls(broadText, cleanTitle, cleanFunder, existingUrl ?? '')
-      const best = candidates.find(c => !isLikely404Url(c.url) && !isLowQualityUrl(c.url))
-      if (best && best.score > 8) bestUrl = best.url
+      const found = pickBest(scoreAndRankUrls(broadText, cleanTitle, cleanFunder, existingUrl ?? ''))
+      if (found) bestUrl = found
     }
   }
 
-  // ── Step 2: Always crawl the existing URL ─────────────────────────────────
-  // The existing URL may be a dud, a CSR page, or a generic landing page.
-  // Crawl it to check if it has links to a more specific grant page.
+  // ── Step 2: Crawl the existing URL ────────────────────────────────────────
   if (existingUrl) {
     const crawledText = await fetchPageText(existingUrl)
     if (crawledText) {
-      pageText = crawledText
       allSearchTexts.push(crawledText)
-      const pageCandidates = scoreAndRankUrls(crawledText, cleanTitle, cleanFunder, existingUrl)
-      // Only upgrade to a page link if it's clearly better (grant-specific path)
-      const deeperLink = pageCandidates.find(
-        c => !isLikely404Url(c.url) && !isLowQualityUrl(c.url) && c.url !== existingUrl && c.score > 8
-      )
-      if (deeperLink && (!bestUrl || isLowQualityUrl(bestUrl))) {
-        bestUrl = deeperLink.url
+      if (!bestUrl) {
+        const found = pickBest(
+          scoreAndRankUrls(crawledText, cleanTitle, cleanFunder, existingUrl),
+          5
+        )
+        if (found && found !== existingUrl) bestUrl = found
+      }
+    } else {
+      // Existing URL returned empty — likely a 404 or dead page
+      existingUrlIsDead = true
+    }
+  }
+
+  // ── Step 3: Crawl the funder's homepage if we still have no good URL ──────
+  // Useful when existing URL is dead and search didn't find the specific page
+  if (!bestUrl && existingUrl) {
+    const funderHomepage = getOrigin(existingUrl)
+    if (funderHomepage) {
+      const homepageText = await fetchPageText(funderHomepage)
+      if (homepageText) {
+        allSearchTexts.push(homepageText)
+        const found = pickBest(
+          scoreAndRankUrls(homepageText, cleanTitle, cleanFunder, existingUrl),
+          4
+        )
+        if (found) bestUrl = found
       }
     }
   }
@@ -288,20 +307,23 @@ export async function POST(req: NextRequest) {
   // Combine all gathered text for Claude
   const combinedText = allSearchTexts.filter(Boolean).join('\n\n---\n\n')
 
-  // ── Step 3: Claude extracts structured data from gathered text ─────────────
-  if (combinedText) {
-    const existingUrlNote = existingUrl
-      ? `\nNote: The current stored URL is "${existingUrl}" — this may be a generic page (CSR, about, etc.), NOT the actual grant page. If you can identify a better, more specific URL from the content above, use that.`
-      : ''
+  // Build URL context note for Claude prompts
+  const urlContext = existingUrl
+    ? existingUrlIsDead
+      ? `The current stored URL "${existingUrl}" is DEAD (returns 404 / no content). You MUST suggest a different working URL.`
+      : isLowQualityUrl(existingUrl)
+        ? `The current stored URL "${existingUrl}" appears to be a generic page, NOT the actual grant page. Suggest a more specific URL if you can.`
+        : `Current URL: "${existingUrl}" — suggest a better one if you know of one.`
+    : 'No URL currently stored.'
 
-    const prompt = `You are a UK grant database assistant. Based on the following web search results and page content, extract structured information about this grant.
+  // ── Step 4: Claude extracts data + suggests URL from gathered content ──────
+  if (combinedText) {
+    const prompt = `You are a UK grant database assistant. Extract structured information about this grant from the content below, and suggest the best available URL for the grant application page.
 
 ${EXTRACT_FIELDS}
+- suggested_url: string or null — the specific grant application or information page URL. ${urlContext} Must start with https://. Use null only if you genuinely cannot find one.
 
-If a field cannot be determined, use null for amounts/deadline, empty array for sectors, and your best guess for other required fields.
-${existingUrlNote}
-
-Grant being researched: "${cleanTitle}" by ${cleanFunder}
+Grant: "${cleanTitle}" by ${cleanFunder}
 
 Content:
 ${combinedText.slice(0, 12000)}`
@@ -309,29 +331,33 @@ ${combinedText.slice(0, 12000)}`
     try {
       const raw = await callClaude(prompt, apiKey)
       const cleaned = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
-      const parsed = JSON.parse(cleaned)
-      const sourceUrl = bestUrl || existingUrl || ''
+      const result = JSON.parse(cleaned) as Record<string, unknown>
+      const { suggested_url: suggestedUrl, ...data } = result
+
+      // If Claude found a specific URL and we don't have one, use Claude's
+      if (!bestUrl && typeof suggestedUrl === 'string' && suggestedUrl.startsWith('http')) {
+        const isSpecific = !isLikely404Url(suggestedUrl) && !isLowQualityUrl(suggestedUrl)
+        if (isSpecific) bestUrl = suggestedUrl
+      }
+
+      const sourceUrl = bestUrl || (existingUrlIsDead ? '' : (existingUrl ?? ''))
       const urlImproved = !!bestUrl && bestUrl !== (existingUrl ?? '') && !isLowQualityUrl(bestUrl)
-      return NextResponse.json({ ok: true, data: parsed, sourceUrl, urlImproved })
+      return NextResponse.json({ ok: true, data, sourceUrl, urlImproved, urlWasDead: existingUrlIsDead })
     } catch { /* fall through */ }
   }
 
-  // ── Step 4: Fallback — Claude training knowledge ───────────────────────────
-  const existingIsLowQuality = existingUrl ? isLowQualityUrl(existingUrl) : true
-  const knowledgePrompt = `You are a UK grant database assistant with extensive knowledge of UK funders and grant programmes.
+  // ── Step 5: Pure Claude knowledge fallback ────────────────────────────────
+  const knowledgePrompt = `You are a UK grant database assistant with extensive knowledge of UK funders.
 
 Provide information about this grant using your training knowledge.
-
 Funder: ${cleanFunder}
 Grant title: ${cleanTitle}
-${existingUrl ? `Current URL stored (${existingIsLowQuality ? 'LIKELY WRONG — appears to be a generic/CSR page, not the actual grant page' : 'may be outdated'}): ${existingUrl}` : 'No URL currently stored.'}
+${urlContext}
 
-Your task: Find the SPECIFIC grant application or information page URL, NOT the funder homepage or corporate responsibility page.
-If this grant has moved to a community platform (e.g. LocalGiving, Spacehive, etc.) include that URL.
-If the grant no longer exists or is closed, say so in the description and set suggested_url to null.
+Find the SPECIFIC grant application or information page URL. If the grant has moved to a community platform (LocalGiving, Spacehive, etc.) include that URL. If the grant no longer exists, say so in the description and set suggested_url to null.
 
 ${EXTRACT_FIELDS}
-- suggested_url: string or null — the SPECIFIC grant page URL. Must be different from the current URL if the current URL is a generic page. Use null only if the grant genuinely doesn't exist or you cannot find the page.`
+- suggested_url: string or null — SPECIFIC grant page URL. Use null only if the grant genuinely doesn't exist.`
 
   try {
     const raw = await callClaude(knowledgePrompt, apiKey)
@@ -345,9 +371,9 @@ ${EXTRACT_FIELDS}
       !isLowQualityUrl(suggestedUrl)
     const sourceUrl = suggestedIsSpecific
       ? suggestedUrl as string
-      : (existingUrl ?? '')
+      : (existingUrlIsDead ? '' : (existingUrl ?? ''))
     const urlImproved = suggestedIsSpecific && sourceUrl !== existingUrl
-    return NextResponse.json({ ok: true, data, sourceUrl, urlImproved })
+    return NextResponse.json({ ok: true, data, sourceUrl, urlImproved, urlWasDead: existingUrlIsDead })
   } catch {
     return NextResponse.json(
       { error: 'Could not retrieve grant information. Try entering the details manually.' },

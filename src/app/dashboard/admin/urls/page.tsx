@@ -130,6 +130,8 @@ export default function UrlAdminPage() {
     grantId: string
     grantTitle: string
     grantUrl: string
+    urlImproved?: boolean
+    urlWasDead?: boolean
     form: AddGrantForm
   } | null>(null)
   const [refreshSaving, setRefreshSaving] = useState(false)
@@ -500,11 +502,19 @@ export default function UrlAdminPage() {
         return
       }
       const d = json.data
-      const discoveredUrl: string = json.sourceUrl ?? grant.apply_url ?? ''
+      // If existing URL was dead and no replacement found, clear it so user must enter manually
+      const discoveredUrl: string = json.sourceUrl ?? (json.urlWasDead ? '' : (grant.apply_url ?? ''))
+      if (json.urlWasDead && !json.sourceUrl) {
+        alert('⚠️ The existing URL is dead (404). No replacement was found automatically — please enter the correct URL manually in the form below.')
+      } else if (json.urlImproved) {
+        // Subtle — modal will show the new URL, no need for alert
+      }
       setRefreshModal({
-        grantId:    grant.id,
-        grantTitle: grant.title,
-        grantUrl:   discoveredUrl,
+        grantId:     grant.id,
+        grantTitle:  grant.title,
+        grantUrl:    discoveredUrl,
+        urlImproved: json.urlImproved ?? false,
+        urlWasDead:  json.urlWasDead ?? false,
         form: {
           title:         d.title        ?? grant.title,
           funder:        d.funder       ?? (grant.funder ?? ''),
@@ -1372,9 +1382,18 @@ export default function UrlAdminPage() {
                 <div className="flex items-center gap-2">
                   <Sparkles className="h-4 w-4 text-forest" />
                   <h3 className="font-display text-lg font-bold text-charcoal">Refresh Grant Info</h3>
+                  {refreshModal.urlImproved && (
+                    <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">Better URL found ✓</span>
+                  )}
+                  {refreshModal.urlWasDead && !refreshModal.urlImproved && (
+                    <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">Old URL was dead</span>
+                  )}
                 </div>
                 <p className="text-xs text-mid mt-0.5 truncate max-w-[420px]">
-                  AI-extracted from <a href={refreshModal.grantUrl} target="_blank" rel="noopener noreferrer" className="text-forest hover:underline">{refreshModal.grantUrl}</a>
+                  {refreshModal.grantUrl
+                    ? <>AI-extracted from <a href={refreshModal.grantUrl} target="_blank" rel="noopener noreferrer" className="text-forest hover:underline">{refreshModal.grantUrl}</a></>
+                    : <span className="text-red-500">No URL found — please enter one manually below</span>
+                  }
                 </p>
               </div>
               <button onClick={() => setRefreshModal(null)}
