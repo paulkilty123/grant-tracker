@@ -709,10 +709,11 @@ export default function UrlAdminPage() {
     setAddSaving(false)
     setShowAddModal(false)
     setAddForm(BLANK_FORM)
-    // Reload relevant views
+    setSearch('')
+    // Switch to "All grants" so the new entry is immediately visible
+    // (useEffect on filter change will call loadGrants automatically)
+    setFilter('all')
     await loadStats()
-    if (filter === 'category') await loadCategoryGrants()
-    if (filter === 'all') await loadGrants()
   }
 
   // ── Toggle category accordion ─────────────────────────────────────────────────
