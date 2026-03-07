@@ -30,8 +30,8 @@ type CategoryGrant = Grant & {
   is_seed: boolean
 }
 
-type Stats = { total: number; withUrl: number; ok: number; dead: number; unchecked: number; seedTotal?: number; newCount?: number }
-type Filter = 'dead' | 'unchecked' | 'all' | 'seed' | 'new' | 'category'
+type Stats = { total: number; withUrl: number; ok: number; dead: number; unchecked: number; noUrl: number; seedTotal?: number; newCount?: number }
+type Filter = 'dead' | 'unchecked' | 'no_url' | 'all' | 'seed' | 'new' | 'category'
 type DeadSeedGrant = { id: string; title: string; funder: string; url: string }
 type NewGrant = Grant & { first_seen_at: string }
 
@@ -155,8 +155,9 @@ export default function UrlAdminPage() {
       withUrl:   data.filter(g => g.apply_url).length,
       ok:        data.filter(g => g.url_status === 'ok').length,
       dead:      data.filter(g => g.url_status === 'dead').length,
-      unchecked: data.filter(g => g.url_status === 'unchecked').length,
-      seedTotal: SEED_GRANTS.filter(g => g.applyUrl).length,
+      unchecked: data.filter(g => g.url_status === 'unchecked' && g.apply_url).length,
+      noUrl:     data.filter(g => !g.apply_url).length,
+      seedTotal: 0,
       newCount:  newCount ?? 0,
     })
   }, [])
@@ -174,6 +175,7 @@ export default function UrlAdminPage() {
 
     if (filter === 'dead')      query = query.eq('url_status', 'dead')
     if (filter === 'unchecked') query = query.eq('url_status', 'unchecked').not('apply_url', 'is', null)
+    if (filter === 'no_url')    query = query.is('apply_url', null)
 
     if (search.trim()) {
       query = query.or(`title.ilike.%${search.trim()}%,funder.ilike.%${search.trim()}%`)
@@ -996,7 +998,8 @@ export default function UrlAdminPage() {
           { key: 'category',  label: `By Category` },
           { key: 'new',       label: `New this week${stats ? ` (${stats.newCount ?? 0})` : ''}` },
           { key: 'dead',      label: `Dead links${stats ? ` (${stats.dead})` : ''}` },
-          { key: 'unchecked', label: `No URL${stats ? ` (${stats.unchecked})` : ''}` },
+          { key: 'unchecked', label: `Unchecked${stats ? ` (${stats.unchecked})` : ''}` },
+          { key: 'no_url',    label: `No URL${stats ? ` (${stats.noUrl ?? 0})` : ''}` },
           { key: 'all',       label: 'All grants' },
           { key: 'seed',      label: `Seed grants (${SEED_GRANTS.length})` },
         ] as const).map(tab => (
@@ -1351,6 +1354,8 @@ export default function UrlAdminPage() {
             ? `${filteredSeedGrants.length} seed grant${filteredSeedGrants.length !== 1 ? 's' : ''}${search ? ` matching "${search}"` : ''} · Edit URLs in src/lib/grants.ts`
             : filter === 'new'
             ? `${newGrants.length} new grant${newGrants.length !== 1 ? 's' : ''} in the last 7 days · ${newSources.size} new source${newSources.size !== 1 ? 's' : ''}`
+            : filter === 'no_url'
+            ? `${grants.length} grant${grants.length !== 1 ? 's' : ''} with no URL set — use Sparkles to find one`
             : `${grants.length} result${grants.length !== 1 ? 's' : ''}${search ? ` for "${search}"` : ''} · Sorted by oldest check first`
           }
         </p>
