@@ -616,25 +616,13 @@ export default function UrlAdminPage() {
       setRefreshSaving(false)
       return
     }
-    // Update local state — flip url_status to 'ok' immediately
-    const updatedUrl = form.apply_url.trim() || null
-    const now = new Date().toISOString()
-    const updater = (g: CategoryGrant) =>
-      g.id === grantId
-        ? { ...g, title: form.title.trim(), funder: form.funder.trim(), apply_url: updatedUrl,
-            is_invite_only: form.is_invite_only,
-            url_status: (updatedUrl ? 'ok' : null) as Grant['url_status'],
-            url_last_checked: updatedUrl ? now : null }
-        : g
-    setCategoryGrants(prev => prev.map(updater))
-    setGrants(prev => prev.map(g =>
-      g.id === grantId ? { ...g, title: form.title.trim(), funder: form.funder.trim(), apply_url: updatedUrl,
-        is_invite_only: form.is_invite_only,
-        url_status: (updatedUrl ? 'ok' : null) as Grant['url_status'],
-        url_last_checked: updatedUrl ? now : null } : g
-    ))
     setRefreshSaving(false)
     setRefreshModal(null)
+    // Reload the current view so the grant disappears from filtered lists
+    // (e.g. it should vanish from Dead/Unchecked once marked ok)
+    await loadStats()
+    await loadGrants()
+    if (filter === 'category') await loadCategoryGrants()
   }
 
   // ── Populate form from URL ────────────────────────────────────────────────────
