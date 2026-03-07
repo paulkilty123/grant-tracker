@@ -504,11 +504,6 @@ export default function UrlAdminPage() {
       const d = json.data
       // If existing URL was dead and no replacement found, clear it so user must enter manually
       const discoveredUrl: string = json.sourceUrl ?? (json.urlWasDead ? '' : (grant.apply_url ?? ''))
-      if (json.urlWasDead && !json.sourceUrl) {
-        alert('⚠️ The existing URL is dead (404). No replacement was found automatically — please enter the correct URL manually in the form below.')
-      } else if (json.urlImproved) {
-        // Subtle — modal will show the new URL, no need for alert
-      }
       setRefreshModal({
         grantId:     grant.id,
         grantTitle:  grant.title,

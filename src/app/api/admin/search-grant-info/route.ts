@@ -246,9 +246,13 @@ export async function POST(req: NextRequest) {
   let existingUrlIsDead = false
   const allSearchTexts: string[] = []
 
-  // Helper: pick best URL from scored candidates
+  // Helper: pick best SPECIFIC URL (not homepage, not generic page)
   function pickBest(candidates: Array<{ url: string; score: number }>, minScore = 5): string {
     return candidates.find(c => !isLikely404Url(c.url) && !isLowQualityUrl(c.url) && c.score >= minScore)?.url ?? ''
+  }
+  // Helper: pick best URL that is at least not a 404 (allows homepage/generic as fallback)
+  function pickAny(candidates: Array<{ url: string; score: number }>, minScore = 1): string {
+    return candidates.find(c => !isLikely404Url(c.url) && c.score >= minScore)?.url ?? ''
   }
 
   // ── Step 1a: Exact quoted title phrase search ─────────────────────────────
@@ -289,17 +293,27 @@ export async function POST(req: NextRequest) {
 
   // ── Step 3: Crawl the funder's homepage if we still have no good URL ──────
   // Useful when existing URL is dead and search didn't find the specific page
-  if (!bestUrl && existingUrl) {
-    const funderHomepage = getOrigin(existingUrl)
-    if (funderHomepage) {
-      const homepageText = await fetchPageText(funderHomepage)
-      if (homepageText) {
-        allSearchTexts.push(homepageText)
-        const found = pickBest(
-          scoreAndRankUrls(homepageText, cleanTitle, cleanFunder, existingUrl),
-          4
+  let funderHomepageUrl = ''
+  if (existingUrl) {
+    funderHomepageUrl = getOrigin(existingUrl)
+  }
+  if (!bestUrl && funderHomepageUrl) {
+    const homepageText = await fetchPageText(funderHomepageUrl)
+    if (homepageText) {
+      allSearchTexts.push(homepageText)
+      const homeCandidates = scoreAndRankUrls(homepageText, cleanTitle, cleanFunder, existingUrl ?? '')
+      // First try to find a specific deep page
+      const specific = pickBest(homeCandidates, 4)
+      if (specific) {
+        bestUrl = specific
+      } else {
+        // Accept shallow same-domain pages (e.g. /loans, /apply) as a better-than-nothing fallback
+        const shallow = homeCandidates.find(c =>
+          !isLikely404Url(c.url) &&
+          c.url !== (existingUrl ?? '') &&
+          c.score >= 2
         )
-        if (found) bestUrl = found
+        if (shallow) bestUrl = shallow.url
       }
     }
   }
@@ -334,11 +348,18 @@ ${combinedText.slice(0, 12000)}`
       const result = JSON.parse(cleaned) as Record<string, unknown>
       const { suggested_url: suggestedUrl, ...data } = result
 
-      // If Claude found a specific URL and we don't have one, use Claude's
+      // Accept Claude's suggestion if we don't have a specific URL yet
       if (!bestUrl && typeof suggestedUrl === 'string' && suggestedUrl.startsWith('http')) {
-        const isSpecific = !isLikely404Url(suggestedUrl) && !isLowQualityUrl(suggestedUrl)
-        if (isSpecific) bestUrl = suggestedUrl
+        if (!isLikely404Url(suggestedUrl) && !isLowQualityUrl(suggestedUrl)) {
+          bestUrl = suggestedUrl
+        } else if (!isLikely404Url(suggestedUrl)) {
+          // Accept a homepage suggestion as last resort if existing was dead
+          if (existingUrlIsDead) bestUrl = suggestedUrl
+        }
       }
+
+      // Final fallback: if still no URL and existing was dead, use funder homepage
+      if (!bestUrl && existingUrlIsDead && funderHomepageUrl) bestUrl = funderHomepageUrl
 
       const sourceUrl = bestUrl || (existingUrlIsDead ? '' : (existingUrl ?? ''))
       const urlImproved = !!bestUrl && bestUrl !== (existingUrl ?? '') && !isLowQualityUrl(bestUrl)
@@ -364,16 +385,16 @@ ${EXTRACT_FIELDS}
     const cleaned = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
     const result = JSON.parse(cleaned) as Record<string, unknown>
     const { suggested_url: suggestedUrl, ...data } = result
-    const suggestedIsSpecific =
-      typeof suggestedUrl === 'string' &&
-      suggestedUrl.startsWith('http') &&
-      !isLikely404Url(suggestedUrl) &&
-      !isLowQualityUrl(suggestedUrl)
-    const sourceUrl = suggestedIsSpecific
-      ? suggestedUrl as string
-      : (existingUrlIsDead ? '' : (existingUrl ?? ''))
-    const urlImproved = suggestedIsSpecific && sourceUrl !== existingUrl
-    return NextResponse.json({ ok: true, data, sourceUrl, urlImproved, urlWasDead: existingUrlIsDead })
+    let finalUrl = bestUrl  // may already be set from earlier steps
+    if (!finalUrl && typeof suggestedUrl === 'string' && suggestedUrl.startsWith('http')) {
+      if (!isLikely404Url(suggestedUrl)) finalUrl = suggestedUrl as string
+    }
+    // Last resort: funder homepage so user at least has somewhere to start
+    if (!finalUrl && existingUrlIsDead && funderHomepageUrl) finalUrl = funderHomepageUrl
+    if (!finalUrl && !existingUrlIsDead) finalUrl = existingUrl ?? ''
+
+    const urlImproved = !!finalUrl && finalUrl !== existingUrl && !isLowQualityUrl(finalUrl)
+    return NextResponse.json({ ok: true, data, sourceUrl: finalUrl, urlImproved, urlWasDead: existingUrlIsDead })
   } catch {
     return NextResponse.json(
       { error: 'Could not retrieve grant information. Try entering the details manually.' },
