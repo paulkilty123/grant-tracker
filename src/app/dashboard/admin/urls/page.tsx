@@ -592,18 +592,23 @@ export default function UrlAdminPage() {
     const sectors = form.sectors
       ? form.sectors.split(',').map(s => s.trim()).filter(Boolean)
       : []
+    const savedUrl = form.apply_url.trim() || null
     const ok = await updateGrant(grantId, {
-      title:          form.title.trim(),
-      funder:         form.funder.trim(),
-      funder_type:    form.funder_type,
-      apply_url:      form.apply_url.trim() || null,
-      description:    form.description.trim() || null,
-      amount_min:     form.amount_min ? parseInt(form.amount_min, 10) : null,
-      amount_max:     form.amount_max ? parseInt(form.amount_max, 10) : null,
-      is_rolling:     form.is_rolling,
-      deadline:       (!form.is_rolling && form.deadline) ? form.deadline : null,
+      title:            form.title.trim(),
+      funder:           form.funder.trim(),
+      funder_type:      form.funder_type,
+      apply_url:        savedUrl,
+      description:      form.description.trim() || null,
+      amount_min:       form.amount_min ? parseInt(form.amount_min, 10) : null,
+      amount_max:       form.amount_max ? parseInt(form.amount_max, 10) : null,
+      is_rolling:       form.is_rolling,
+      deadline:         (!form.is_rolling && form.deadline) ? form.deadline : null,
       sectors,
-      is_invite_only: form.is_invite_only,
+      is_invite_only:   form.is_invite_only,
+      // Sparkles confirmed this URL exists — mark it ok so it doesn't
+      // sit in the Unchecked queue waiting for the next validation run
+      url_status:       savedUrl ? 'ok' : null,
+      url_last_checked: savedUrl ? new Date().toISOString() : null,
     })
 
     if (!ok) {
@@ -611,15 +616,22 @@ export default function UrlAdminPage() {
       setRefreshSaving(false)
       return
     }
-    // Update local state
+    // Update local state — flip url_status to 'ok' immediately
     const updatedUrl = form.apply_url.trim() || null
+    const now = new Date().toISOString()
     const updater = (g: CategoryGrant) =>
       g.id === grantId
-        ? { ...g, title: form.title.trim(), funder: form.funder.trim(), apply_url: updatedUrl, is_invite_only: form.is_invite_only }
+        ? { ...g, title: form.title.trim(), funder: form.funder.trim(), apply_url: updatedUrl,
+            is_invite_only: form.is_invite_only,
+            url_status: (updatedUrl ? 'ok' : null) as Grant['url_status'],
+            url_last_checked: updatedUrl ? now : null }
         : g
     setCategoryGrants(prev => prev.map(updater))
     setGrants(prev => prev.map(g =>
-      g.id === grantId ? { ...g, title: form.title.trim(), funder: form.funder.trim(), apply_url: updatedUrl, is_invite_only: form.is_invite_only } : g
+      g.id === grantId ? { ...g, title: form.title.trim(), funder: form.funder.trim(), apply_url: updatedUrl,
+        is_invite_only: form.is_invite_only,
+        url_status: (updatedUrl ? 'ok' : null) as Grant['url_status'],
+        url_last_checked: updatedUrl ? now : null } : g
     ))
     setRefreshSaving(false)
     setRefreshModal(null)
