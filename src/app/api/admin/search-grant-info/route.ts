@@ -227,10 +227,13 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json()
-  const { title, funder, existingUrl } = body as {
+  const { title, funder, existingUrl, skipUrlSearch } = body as {
     title?: string
     funder?: string
     existingUrl?: string
+    // When true, skip the Jina search steps and go straight to crawling
+    // existingUrl. Used by the "Populate" button when user enters a known URL.
+    skipUrlSearch?: boolean
   }
 
   if (!title && !funder) {
@@ -256,15 +259,18 @@ export async function POST(req: NextRequest) {
   }
 
   // ── Step 1a: Exact quoted title phrase search ─────────────────────────────
-  const exactText = await jinaSearch(`"${cleanTitle}" ${cleanFunder} apply`)
-  if (exactText) {
-    allSearchTexts.push(exactText)
-    const found = pickBest(scoreAndRankUrls(exactText, cleanTitle, cleanFunder, existingUrl ?? ''))
-    if (found) bestUrl = found
+  // Skipped when skipUrlSearch=true (user has provided a specific URL to crawl)
+  if (!skipUrlSearch) {
+    const exactText = await jinaSearch(`"${cleanTitle}" ${cleanFunder} apply`)
+    if (exactText) {
+      allSearchTexts.push(exactText)
+      const found = pickBest(scoreAndRankUrls(exactText, cleanTitle, cleanFunder, existingUrl ?? ''))
+      if (found) bestUrl = found
+    }
   }
 
   // ── Step 1b: Broader search (no quotes) ───────────────────────────────────
-  if (!bestUrl) {
+  if (!skipUrlSearch && !bestUrl) {
     const broadText = await jinaSearch(`${cleanTitle} ${cleanFunder} grant apply UK`)
     if (broadText) {
       allSearchTexts.push(broadText)

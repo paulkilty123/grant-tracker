@@ -136,8 +136,9 @@ export default function UrlAdminPage() {
     urlWasDead?: boolean
     form: AddGrantForm
   } | null>(null)
-  const [refreshSaving, setRefreshSaving] = useState(false)
-  const [refreshError, setRefreshError]   = useState<string | null>(null)
+  const [refreshSaving, setRefreshSaving]           = useState(false)
+  const [refreshError, setRefreshError]             = useState<string | null>(null)
+  const [populatingFromUrl, setPopulatingFromUrl]   = useState(false)
 
   // ── Auth check ───────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -580,6 +581,62 @@ export default function UrlAdminPage() {
       alert(`Search failed: ${err instanceof Error ? err.message : String(err)}`)
     } finally {
       setRefreshingId(null)
+    }
+  }
+
+  // ── Re-populate modal fields from a manually entered URL ─────────────────────
+  // Called when the user types a new URL and clicks "Populate". Uses the same
+  // search-grant-info endpoint but passes the new URL as existingUrl so the
+  // pipeline skips the URL-search steps and goes straight to crawling the page.
+  async function populateFromUrl() {
+    if (!refreshModal) return
+    const url = refreshModal.form.apply_url.trim()
+    if (!url) return
+    setPopulatingFromUrl(true)
+    setRefreshError(null)
+    try {
+      const res = await fetch('/api/admin/search-grant-info', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title:       refreshModal.grantTitle,
+          funder:      refreshModal.form.funder ?? '',
+          existingUrl: url,
+          // Hint: treat the entered URL as confirmed so the pipeline crawls it
+          // directly without trying to find a "better" URL first.
+          skipUrlSearch: true,
+        }),
+      })
+      const json = await res.json()
+      if (!res.ok || !json.ok) {
+        setRefreshError(`Could not fetch info from URL: ${json.error ?? `Error ${res.status}`}`)
+        return
+      }
+      const d = json.data
+      // Merge fetched data into form — keep the URL the user typed
+      setRefreshModal(m => m ? {
+        ...m,
+        grantUrl: url,
+        urlImproved: false,
+        urlWasDead: false,
+        form: {
+          ...m.form,
+          title:          d.title        || m.form.title,
+          funder:         d.funder       || m.form.funder,
+          funder_type:    d.funder_type  || m.form.funder_type,
+          description:    d.description  || m.form.description,
+          amount_min:     d.amount_min   != null ? String(d.amount_min) : m.form.amount_min,
+          amount_max:     d.amount_max   != null ? String(d.amount_max) : m.form.amount_max,
+          is_rolling:     d.is_rolling   ?? m.form.is_rolling,
+          deadline:       d.deadline     ?? m.form.deadline,
+          sectors:        Array.isArray(d.sectors) && d.sectors.length > 0 ? d.sectors.join(', ') : m.form.sectors,
+          is_invite_only: d.is_invite_only ?? m.form.is_invite_only,
+        },
+      } : m)
+    } catch (err) {
+      setRefreshError(`Populate failed: ${err instanceof Error ? err.message : String(err)}`)
+    } finally {
+      setPopulatingFromUrl(false)
     }
   }
 
@@ -1550,6 +1607,17 @@ export default function UrlAdminPage() {
                     onChange={e => setRefreshModal(m => m ? { ...m, form: { ...m.form, apply_url: e.target.value }, grantUrl: e.target.value } : m)}
                     placeholder="https://…"
                     className="flex-1 rounded-xl border border-warm px-3 py-2.5 text-sm text-charcoal placeholder:text-light focus:border-forest focus:outline-none" />
+                  {/* Populate: fetch grant info from the entered URL */}
+                  <button
+                    onClick={populateFromUrl}
+                    disabled={populatingFromUrl || !refreshModal.form.apply_url.trim()}
+                    title="Fetch grant info from this URL"
+                    className="flex-shrink-0 flex items-center gap-1.5 rounded-xl border border-forest bg-forest px-3 py-2.5 text-xs font-semibold text-white hover:bg-forest/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                    {populatingFromUrl
+                      ? <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                      : <Sparkles className="h-3.5 w-3.5" />}
+                    {populatingFromUrl ? 'Fetching…' : 'Populate'}
+                  </button>
                   {refreshModal.form.apply_url && (
                     <a href={refreshModal.form.apply_url} target="_blank" rel="noopener noreferrer"
                       className="flex-shrink-0 rounded-xl border border-warm p-2.5 text-mid hover:border-forest hover:text-forest transition-colors">
@@ -1557,6 +1625,7 @@ export default function UrlAdminPage() {
                     </a>
                   )}
                 </div>
+                <p className="mt-1 text-xs text-light">Enter a URL then click Populate to auto-fill the fields below from that page.</p>
               </div>
 
               {/* Title */}
