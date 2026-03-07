@@ -28,26 +28,47 @@ function getAdminClient() {
 
 // PATCH /api/admin/update-grant
 // Body: { id: string, fields: Record<string, unknown> }
-// Updates any set of columns on a scraped_grants row using the service role key (bypasses RLS).
+//   OR: { ids: string[], fields: Record<string, unknown> }  ← batch update
+// Updates any set of columns on scraped_grants row(s) using the service role key (bypasses RLS).
 export async function PATCH(req: NextRequest) {
   if (!await isAuthorised(req)) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
   }
 
-  const { id, fields } = await req.json() as {
-    id: string
+  const body = await req.json() as {
+    id?: string
+    ids?: string[]
     fields: Record<string, unknown>
   }
+  const { fields } = body
 
-  if (!id || !fields || typeof fields !== 'object') {
-    return NextResponse.json({ error: 'id and fields are required' }, { status: 400 })
+  if (!fields || typeof fields !== 'object') {
+    return NextResponse.json({ error: 'fields is required' }, { status: 400 })
   }
 
   const db = getAdminClient()
+
+  // Batch update (array of ids)
+  if (Array.isArray(body.ids) && body.ids.length > 0) {
+    const { error } = await db
+      .from('scraped_grants')
+      .update(fields)
+      .in('id', body.ids)
+    if (error) {
+      console.error('update-grant batch error:', error)
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+    return NextResponse.json({ ok: true, updated: body.ids.length })
+  }
+
+  // Single update
+  if (!body.id) {
+    return NextResponse.json({ error: 'id or ids is required' }, { status: 400 })
+  }
   const { error } = await db
     .from('scraped_grants')
     .update(fields)
-    .eq('id', id)
+    .eq('id', body.id)
 
   if (error) {
     console.error('update-grant error:', error)

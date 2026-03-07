@@ -30,8 +30,8 @@ type CategoryGrant = Grant & {
   is_seed: boolean
 }
 
-type Stats = { total: number; withUrl: number; ok: number; dead: number; unchecked: number; noUrl: number; seedTotal?: number; newCount?: number }
-type Filter = 'dead' | 'unchecked' | 'no_url' | 'all' | 'seed' | 'new' | 'category'
+type Stats = { total: number; withUrl: number; ok: number; dead: number; unchecked: number; noUrl: number; seedTotal?: number; newCount?: number; reviewCount?: number }
+type Filter = 'dead' | 'unchecked' | 'no_url' | 'all' | 'seed' | 'new' | 'category' | 'review'
 type DeadSeedGrant = { id: string; title: string; funder: string; url: string }
 type NewGrant = Grant & { first_seen_at: string }
 
@@ -105,6 +105,8 @@ export default function UrlAdminPage() {
   const [loadError, setLoadError]             = useState<string | null>(null)
   const [newGrants, setNewGrants]             = useState<NewGrant[]>([])
   const [newSources, setNewSources]           = useState<Set<string>>(new Set())
+  const [reviewGrants, setReviewGrants]       = useState<Grant[]>([])
+  const [approvingAll, setApprovingAll]       = useState(false)
 
   // Category view state
   const [categoryGrants, setCategoryGrants]       = useState<CategoryGrant[]>([])
@@ -147,26 +149,28 @@ export default function UrlAdminPage() {
   // ── Load stats ───────────────────────────────────────────────────────────────
   const loadStats = useCallback(async () => {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-    const [{ data }, { count: newCount }] = await Promise.all([
+    const [{ data }, { count: newCount }, { count: reviewCount }] = await Promise.all([
       createClient().from('scraped_grants').select('url_status, apply_url').eq('is_active', true),
       createClient().from('scraped_grants').select('id', { count: 'exact', head: true }).eq('is_active', true).gte('first_seen_at', sevenDaysAgo),
+      createClient().from('scraped_grants').select('id', { count: 'exact', head: true }).eq('is_active', false),
     ])
     if (!data) return
     setStats({
-      total:     data.length,
-      withUrl:   data.filter(g => g.apply_url).length,
-      ok:        data.filter(g => g.url_status === 'ok').length,
-      dead:      data.filter(g => g.url_status === 'dead').length,
-      unchecked: data.filter(g => g.url_status === 'unchecked' && g.apply_url).length,
-      noUrl:     data.filter(g => !g.apply_url).length,
-      seedTotal: 0,
-      newCount:  newCount ?? 0,
+      total:       data.length,
+      withUrl:     data.filter(g => g.apply_url).length,
+      ok:          data.filter(g => g.url_status === 'ok').length,
+      dead:        data.filter(g => g.url_status === 'dead').length,
+      unchecked:   data.filter(g => g.url_status === 'unchecked' && g.apply_url).length,
+      noUrl:       data.filter(g => !g.apply_url).length,
+      seedTotal:   0,
+      newCount:    newCount ?? 0,
+      reviewCount: reviewCount ?? 0,
     })
   }, [])
 
   // ── Load scraped grants (URL health views) ───────────────────────────────────
   const loadGrants = useCallback(async () => {
-    if (filter === 'seed' || filter === 'new' || filter === 'category') return
+    if (filter === 'seed' || filter === 'new' || filter === 'category' || filter === 'review') return
 
     let query = createClient()
       .from('scraped_grants')
@@ -220,6 +224,50 @@ export default function UrlAdminPage() {
     setNewGrants(data as NewGrant[])
     setNewSources(brandNewSources)
   }, [])
+
+  // ── Load review queue (inactive grants awaiting approval) ─────────────────────
+  const loadReviewGrants = useCallback(async () => {
+    if (filter !== 'review') return
+    const { data } = await createClient()
+      .from('scraped_grants')
+      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, description, funder_type')
+      .eq('is_active', false)
+      .order('last_seen_at', { ascending: false })
+      .limit(500)
+    setReviewGrants((data ?? []) as Grant[])
+  }, [filter])
+
+  // ── Approve all pending review grants ─────────────────────────────────────────
+  async function approveAllReview() {
+    if (!confirm(`Approve all ${reviewGrants.length} pending grants and make them live?`)) return
+    setApprovingAll(true)
+    try {
+      // Batch approve in groups of 50 to avoid URL length limits
+      const ids = reviewGrants.map(g => g.id)
+      for (let i = 0; i < ids.length; i += 50) {
+        await fetch('/api/admin/update-grant', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids: ids.slice(i, i + 50), fields: { is_active: true } }),
+        })
+      }
+      setReviewGrants([])
+      await loadStats()
+    } finally {
+      setApprovingAll(false)
+    }
+  }
+
+  // ── Approve a single review grant ─────────────────────────────────────────────
+  async function approveGrant(id: string) {
+    await fetch('/api/admin/update-grant', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, fields: { is_active: true } }),
+    })
+    setReviewGrants(prev => prev.filter(g => g.id !== id))
+    await loadStats()
+  }
 
   // ── Load category grants (all grants, grouped by funder type) ────────────────
   const loadCategoryGrants = useCallback(async () => {
@@ -282,6 +330,10 @@ export default function UrlAdminPage() {
   useEffect(() => {
     if (authorised && filter === 'category') loadCategoryGrants()
   }, [authorised, filter, loadCategoryGrants])
+
+  useEffect(() => {
+    if (authorised && filter === 'review') loadReviewGrants()
+  }, [authorised, filter, loadReviewGrants])
 
   // ── Filtered seed grants (client-side, seed tab) ─────────────────────────────
   const filteredSeedGrants = useMemo(() => {
@@ -1000,6 +1052,7 @@ export default function UrlAdminPage() {
       {/* Filter tabs + search */}
       <div className="mb-4 flex flex-wrap items-center gap-2">
         {([
+          { key: 'review',    label: `Needs Review${stats?.reviewCount ? ` (${stats.reviewCount})` : ''}`, urgent: (stats?.reviewCount ?? 0) > 0 },
           { key: 'category',  label: `By Category` },
           { key: 'new',       label: `New this week${stats ? ` (${stats.newCount ?? 0})` : ''}` },
           { key: 'dead',      label: `Dead links${stats ? ` (${stats.dead})` : ''}` },
@@ -1013,7 +1066,9 @@ export default function UrlAdminPage() {
             className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
               filter === tab.key
                 ? 'bg-forest text-white'
-                : 'border border-warm bg-white text-mid hover:border-forest/30 hover:text-charcoal'
+                : ('urgent' in tab && tab.urgent)
+                  ? 'border border-amber-400 bg-amber-50 text-amber-700 hover:bg-amber-100'
+                  : 'border border-warm bg-white text-mid hover:border-forest/30 hover:text-charcoal'
             }`}
           >
             {tab.key === 'category' && <Tag className="inline h-3 w-3 mr-1.5 -mt-0.5" />}
@@ -1300,8 +1355,88 @@ export default function UrlAdminPage() {
         </div>
       )}
 
+      {/* ── Review queue ──────────────────────────────────────────────────────── */}
+      {filter === 'review' && (
+        <div className="rounded-xl border border-warm bg-white overflow-hidden shadow-card">
+          {/* Header with bulk actions */}
+          <div className="flex items-center justify-between border-b border-warm bg-amber-50 px-5 py-3">
+            <div>
+              <p className="text-sm font-semibold text-amber-800">
+                {reviewGrants.length} grant{reviewGrants.length !== 1 ? 's' : ''} pending review
+              </p>
+              <p className="text-xs text-amber-600 mt-0.5">
+                These were scraped automatically and are not yet visible to users. Approve the ones that look legitimate.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button onClick={approveAllReview} disabled={approvingAll || reviewGrants.length === 0}
+                className="rounded-full bg-forest px-4 py-1.5 text-xs font-semibold text-white hover:bg-forest/80 transition-colors disabled:opacity-50">
+                {approvingAll ? 'Approving…' : `Approve all ${reviewGrants.length}`}
+              </button>
+            </div>
+          </div>
+          {reviewGrants.length === 0 ? (
+            <div className="py-16 text-center">
+              <CheckCircle className="mx-auto mb-3 h-8 w-8 text-sage" />
+              <p className="text-mid text-sm">No grants pending review — all clear!</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-warm bg-warm/30 text-left text-xs font-semibold text-mid uppercase tracking-wider">
+                    <th className="px-5 py-3">Grant / Funder</th>
+                    <th className="px-5 py-3">Description</th>
+                    <th className="px-5 py-3">URL</th>
+                    <th className="px-5 py-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-warm/60">
+                  {reviewGrants.map(grant => (
+                    <tr key={grant.id} className="hover:bg-cream/50 transition-colors">
+                      <td className="px-5 py-3 max-w-[200px]">
+                        <p className="font-medium text-charcoal leading-snug line-clamp-2">{grant.title}</p>
+                        <p className="text-xs text-mid mt-0.5">{grant.funder}</p>
+                        <span className="inline-block mt-1 rounded-full bg-warm px-2 py-0.5 text-[10px] text-mid">{grant.source}</span>
+                      </td>
+                      <td className="px-5 py-3 max-w-[280px]">
+                        <p className="text-xs text-mid line-clamp-3">
+                          {(grant as Grant & { description?: string }).description ?? <span className="italic text-light">No description</span>}
+                        </p>
+                      </td>
+                      <td className="px-5 py-3 max-w-[220px]">
+                        {grant.apply_url ? (
+                          <a href={grant.apply_url} target="_blank" rel="noopener noreferrer"
+                            className="truncate text-xs text-forest hover:underline block max-w-[200px]">
+                            {grant.apply_url}
+                          </a>
+                        ) : (
+                          <span className="text-xs text-light italic">No URL</span>
+                        )}
+                      </td>
+                      <td className="px-5 py-3 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button onClick={() => approveGrant(grant.id)}
+                            className="rounded-full bg-forest/10 px-3 py-1 text-xs font-semibold text-forest hover:bg-forest hover:text-white transition-colors">
+                            Approve
+                          </button>
+                          <button onClick={() => removeGrant(grant.id)}
+                            className="rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-500 hover:bg-red-500 hover:text-white transition-colors">
+                            Hide
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ── Scraped grants table (dead / unchecked / all) ──────────────────────── */}
-      {filter !== 'seed' && filter !== 'new' && filter !== 'category' && (
+      {filter !== 'seed' && filter !== 'new' && filter !== 'category' && filter !== 'review' && (
         <div className="rounded-xl border border-warm bg-white overflow-hidden shadow-card">
           {grants.length === 0 ? (
             <div className="py-16 text-center">

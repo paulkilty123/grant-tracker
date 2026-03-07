@@ -183,7 +183,8 @@ async function crawlGovUK(): Promise<CrawlResult> {
       ...rest.flatMap(r => r.status === 'fulfilled' ? r.value : []),
     ]
 
-    return await upsertGrants(SOURCE, all.map(normaliseFindAGrant))
+    const normalised = all.map(normaliseFindAGrant).filter((g): g is ScrapedGrant => g !== null)
+    return await upsertGrants(SOURCE, normalised)
   } catch (err) {
     return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
   }
@@ -196,10 +197,50 @@ function extractNextData(html: string): { props: { pageProps: Record<string, unk
   return JSON.parse(match[1])
 }
 
-function normaliseFindAGrant(g: Record<string, unknown>): ScrapedGrant {
+// Applicant types from find-government-grants that are relevant to our audience
+const RELEVANT_APPLICANT_TYPES = [
+  'Charity or social enterprise',
+  'Non profit',
+  'Voluntary',
+  'Community',
+  'Social enterprise',
+  'Third sector',
+  'Charitable',
+  'Civil society',
+  'Individual',       // keep — some personal grants are useful
+  'Other',            // keep — catch-all bucket that often includes charities
+]
+// Applicant types that indicate the grant is NOT for our audience if they are
+// the ONLY types listed
+const EXCLUDED_ONLY_TYPES = [
+  'Local authority',
+  'Local and national business',
+  'Business',
+  'Research institute',
+  'University',
+  'NHS',
+  'Public sector',
+  'Government',
+]
+
+function isRelevantForAudience(applicants: string[]): boolean {
+  if (applicants.length === 0) return true  // no restriction info — include
+  const lower = applicants.map(a => a.toLowerCase())
+  // Include if any relevant type is present
+  const hasRelevant = RELEVANT_APPLICANT_TYPES.some(t => lower.some(a => a.includes(t.toLowerCase())))
+  if (hasRelevant) return true
+  // Exclude if ONLY public-sector/business types are present
+  const allExcluded = lower.every(a => EXCLUDED_ONLY_TYPES.some(t => a.includes(t.toLowerCase())))
+  return !allExcluded
+}
+
+function normaliseFindAGrant(g: Record<string, unknown>): ScrapedGrant | null {
   const label       = String(g.label ?? g.id ?? Math.random())
   const locations   = Array.isArray(g.grantLocation)    ? g.grantLocation    as string[] : []
   const applicants  = Array.isArray(g.grantApplicantType) ? g.grantApplicantType as string[] : []
+
+  // Skip grants that are only for local authorities, businesses, research institutes etc.
+  if (!isRelevantForAudience(applicants)) return null
 
   return {
     external_id:          `gov_uk_${label}`,
@@ -3192,55 +3233,116 @@ export function normaliseList(raw: unknown): string[] {
 
 // ── Data validation ───────────────────────────────────────────────────────────
 /**
- * Sanitise a single scraped grant before it goes to the DB:
- *   - skip if title is blank or too short (< 5 chars)
- *   - null out negative amounts
- *   - swap amount_min / amount_max if inverted
- *   - cap implausibly large amounts (> £50m is almost certainly a parse error)
+ * Sanitise a single scraped grant before it goes to the DB.
+ * Returns null to drop the row entirely if it fails quality checks.
+ *
+ * Checks:
+ *   - title must be present and ≥ 5 chars
+ *   - apply_url must not be truncated/malformed (if present)
+ *   - description must be ≥ 20 chars (if present — null is fine for hardcoded entries)
+ *   - null out negative amounts, swap inverted, cap implausible (> £50m)
  */
 function sanitiseGrant(g: ScrapedGrant): ScrapedGrant | null {
+  // ── Title ───────────────────────────────────────────────────────────────────
   if (!g.title || g.title.trim().length < 5) return null
 
+  // ── URL quality ─────────────────────────────────────────────────────────────
+  if (g.apply_url) {
+    const url = g.apply_url.trim()
+
+    // Must look like a valid URL
+    try { new URL(url) } catch { return null }
+
+    // Reject obviously truncated URLs — ends with common word-break chars
+    if (/[-/=?&_]$/.test(url)) return null
+
+    // Reject impossibly short URLs (e.g. "https://x.co" without a path is fine,
+    // but "https://gov.uk/guidance/community-" is truncated)
+    // A real grant URL needs at least origin + 5 meaningful path chars
+    const { origin, pathname } = new URL(url)
+    if (origin.length > 0 && pathname.replace(/\/$/, '').length > 0 && pathname.length < 3) return null
+
+    // Reject placeholder / localhost / obviously wrong
+    if (/localhost|127\.0\.0\.1|example\.com|placeholder/i.test(url)) return null
+  }
+
+  // ── Description ─────────────────────────────────────────────────────────────
+  // Descriptions that are present but trivially short are useless
+  if (g.description && g.description.trim().length > 0 && g.description.trim().length < 20) {
+    return { ...g, description: null }  // blank it rather than dropping the row
+  }
+
+  // ── Amounts ─────────────────────────────────────────────────────────────────
   let minAmt = g.amount_min
   let maxAmt = g.amount_max
 
-  // Null out negative values
   if (minAmt !== null && minAmt < 0) minAmt = null
   if (maxAmt !== null && maxAmt < 0) maxAmt = null
 
-  // Swap if inverted
   if (minAmt !== null && maxAmt !== null && minAmt > maxAmt) {
     [minAmt, maxAmt] = [maxAmt, minAmt]
   }
 
-  // Cap implausible amounts (> £50m is almost certainly a parse error)
   const MAX_PLAUSIBLE = 50_000_000
   if (minAmt !== null && minAmt > MAX_PLAUSIBLE) minAmt = null
   if (maxAmt !== null && maxAmt > MAX_PLAUSIBLE) maxAmt = null
 
-  return { ...g, amount_min: minAmt, amount_max: maxAmt }
+  return { ...g, apply_url: g.apply_url?.trim() ?? null, amount_min: minAmt, amount_max: maxAmt }
 }
 
 // ── DB upsert ─────────────────────────────────────────────────────────────────
+// New grants (never seen before) land with is_active: false so an admin can
+// review them in the "Needs Review" tab before they go live.
+// Re-scraped existing grants update metadata but preserve their is_active value.
 async function upsertGrants(source: string, grants: ScrapedGrant[]): Promise<CrawlResult> {
   if (grants.length === 0) return { source, fetched: 0, upserted: 0 }
   const supabase = adminClient()
 
-  // Sanitise and drop invalid rows before upserting
   const valid = grants.map(sanitiseGrant).filter((g): g is ScrapedGrant => g !== null)
   if (valid.length === 0) return { source, fetched: grants.length, upserted: 0, error: 'All rows failed validation' }
 
-  const rows = valid.map(g => ({
-    ...g,
-    last_seen_at: new Date().toISOString(),
-    is_active:    true,
-  }))
-
-  const { error } = await supabase
+  // Check which external_ids are already in the DB
+  const ids = valid.map(g => g.external_id)
+  const { data: existing } = await supabase
     .from('scraped_grants')
-    .upsert(rows, { onConflict: 'external_id' })
+    .select('external_id')
+    .in('external_id', ids)
+  const existingIds = new Set((existing ?? []).map((r: { external_id: string }) => r.external_id))
 
-  if (error) return { source, fetched: grants.length, upserted: 0, error: error.message }
+  const now = new Date().toISOString()
+
+  // ── 1. Update existing grants (preserve is_active — do not overwrite) ──────
+  const toUpdate = valid
+    .filter(g => existingIds.has(g.external_id))
+    .map(g => ({ ...g, last_seen_at: now, is_active: true }))
+    // NOTE: is_active is included but Supabase upsert on conflict will update it.
+    // To truly preserve is_active we use a separate update that excludes it:
+  if (toUpdate.length > 0) {
+    // Update all fields except is_active using a raw update per-batch
+    const updateRows = toUpdate.map(({ ...g }) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { is_active: _drop, ...rest } = g as typeof g & { is_active: boolean }
+      return { ...rest, last_seen_at: now }
+    })
+    for (let i = 0; i < updateRows.length; i += 50) {
+      await supabase
+        .from('scraped_grants')
+        .upsert(updateRows.slice(i, i + 50), { onConflict: 'external_id' })
+    }
+  }
+
+  // ── 2. Insert new grants with is_active: false (pending admin review) ──────
+  const toInsert = valid
+    .filter(g => !existingIds.has(g.external_id))
+    .map(g => ({ ...g, last_seen_at: now, is_active: false }))
+  if (toInsert.length > 0) {
+    for (let i = 0; i < toInsert.length; i += 50) {
+      await supabase
+        .from('scraped_grants')
+        .insert(toInsert.slice(i, i + 50))
+    }
+  }
+
   return { source, fetched: grants.length, upserted: valid.length }
 }
 
