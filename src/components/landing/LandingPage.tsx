@@ -703,9 +703,9 @@ export default function LandingPage() {
               </p>
             </div>
             <div className="border-l-2 border-emerald-400 pl-4">
-              <p className="text-emerald-300 font-semibold mb-1 text-xs uppercase tracking-wide">Eligibility should be clear from the start</p>
+              <p className="text-emerald-300 font-semibold mb-1 text-xs uppercase tracking-wide">Stop reading criteria that were never meant for you</p>
               <p className="text-white/80">
-                Too many people read pages of criteria, start an application, then discover their legal structure or income band rules them out. Grant Tracker checks eligibility upfront — so you only spend time on opportunities you can actually win.
+                Too many people read pages of criteria, start an application, then discover their legal structure or income band rules them out. Grant Tracker filters results to your profile from the start — so you see fewer dead ends and spend more time on funding you can actually win.
               </p>
             </div>
             <div className="border-l-2 border-sky-400 pl-4">
