@@ -189,7 +189,7 @@ export default function LandingPage() {
             {[
               { icon: '👤', title: 'Set up your profile', color: 'text-forest', bg: 'bg-forest/10', border: 'border-forest/40' },
               { icon: '🔍', title: 'Search funding', color: 'text-sky-500', bg: 'bg-sky-500/10', border: 'border-sky-400/40' },
-              { icon: '✓', title: 'Check eligibility', color: 'text-emerald-500', bg: 'bg-emerald-500/10', border: 'border-emerald-400/40' },
+              { icon: '✦', title: 'See your matches', color: 'text-emerald-500', bg: 'bg-emerald-500/10', border: 'border-emerald-400/40' },
               { icon: '📋', title: 'Add to pipeline', color: 'text-gold', bg: 'bg-gold/10', border: 'border-gold/40' },
               { icon: '🔔', title: 'Get alerts', color: 'text-purple-400', bg: 'bg-purple-400/10', border: 'border-purple-400/40' },
             ].map((step, i, arr) => (
@@ -214,7 +214,7 @@ export default function LandingPage() {
             {[
               { icon: '👤', title: 'Set up your profile', color: 'text-forest' },
               { icon: '🔍', title: 'Search funding', color: 'text-sky-500' },
-              { icon: '✓', title: 'Check eligibility', color: 'text-emerald-500' },
+              { icon: '✦', title: 'See your matches', color: 'text-emerald-500' },
               { icon: '📋', title: 'Add to pipeline', color: 'text-gold' },
               { icon: '🔔', title: 'Get alerts', color: 'text-purple-400' },
             ].map((step, i, arr) => (
@@ -246,7 +246,7 @@ export default function LandingPage() {
               <span className="text-gradient-warm italic">the full funding landscape</span>
             </h2>
             <p className="mx-auto max-w-2xl text-mid text-lg">
-              Traditional grant databases cover about 30% of what CICs and social enterprises can access. Grant Tracker indexes all six funding types — because your audience needs the full picture.
+              Most grant databases cover only a fraction of what CICs and social enterprises can actually access. Grant Tracker indexes all six funding types — because your audience needs the full picture.
             </p>
           </motion.div>
 
@@ -337,7 +337,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ══ ELIGIBILITY ENGINE (dark panel) ══════════════════════════════════ */}
+      {/* ══ FEATURE 1: SEARCH & MATCH ════════════════════════════════════════ */}
       <section id="features" className="max-w-6xl mx-auto px-6 pb-24 scroll-mt-20">
         <div className="bg-forest rounded-3xl px-8 py-16">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -345,20 +345,21 @@ export default function LandingPage() {
             {/* Text */}
             <motion.div {...fadeInView()}>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-mint">
-                ⚡ Feature 1 · Eligibility Engine
+                ✦ Feature 1 · Search & Match
               </span>
               <h2 className="mt-4 text-3xl text-white leading-tight md:text-4xl">
-                Know if you qualify before you click
+                Search everything.<br />See only what fits.
               </h2>
               <p className="mt-4 text-mint/80 leading-relaxed">
-                Most founders waste hours reading criteria only to find they&apos;re ineligible because of their legal structure. Our eligibility engine resolves this before you click. Every result carries a badge: Eligible, Likely Eligible, or Check with Funder — with a one-line explanation.
+                Tell us your legal structure, sector, and stage once. Every search automatically filters to funding you can actually apply for — no reading through pages of criteria only to find you&apos;re ineligible. Live Search surfaces matching opportunities as you type, ranked by how well each one fits your profile.
               </p>
               <ul className="mt-6 space-y-3">
                 {[
-                  'Hard filters on legal structure — CIC, charity, co-op, Ltd, unincorporated, sole trader',
-                  'Soft matching for Ltd companies with declared social mission (likely eligible, not excluded)',
-                  'Stage and income band filters — no more wading through grants your org can\'t access yet',
-                  'Diversity boost: opt-in demographics surface targeted funds as a bonus layer',
+                  'Profile-based filtering — your structure, stage and sector shape every result from the start',
+                  'Live Search — finds new funding as you type across all six funding types at once',
+                  'Match scores with a full breakdown — structure, sector, geography, stage, and mission',
+                  'Filter by funding type, sector, or deadline — or let AI ranking do the work',
+                  'Freshness filter surfaces newly-verified opportunities before they fill up',
                 ].map(text => (
                   <li key={text} className="flex items-start gap-3 text-sm text-mint/80">
                     <span className="mt-0.5 flex-shrink-0 text-mint">✓</span>
@@ -368,119 +369,51 @@ export default function LandingPage() {
               </ul>
             </motion.div>
 
-            {/* Mock UI — eligibility badges */}
+            {/* Search mock */}
             <motion.div {...fadeInView(0.15)}>
-              <div className="bg-white/10 rounded-2xl p-5 border border-white/20">
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs text-mint/70 font-semibold uppercase tracking-wider">⚡ Eligibility Results · CIC Ltd by guarantee</p>
+              <div className="rounded-2xl bg-white/10 border border-white/20 p-5">
+                {/* Search bar */}
+                <div className="flex gap-2 mb-4">
+                  <div className="flex-1 flex items-center gap-2 border border-white/20 rounded-xl px-3 py-2.5 bg-white/5">
+                    <span className="text-mint/50 text-sm">🔍</span>
+                    <span className="text-sm text-mint/60">circular economy Birmingham CIC</span>
+                  </div>
+                  <div className="bg-white text-forest text-xs font-bold px-3 py-2 rounded-xl whitespace-nowrap flex items-center">✦ Live Search</div>
                 </div>
-                <div className="flex flex-wrap gap-1.5 mb-4">
-                  {['🎨 Creative', '💚 Health', '🔬 Tech for Good'].map((s, i) => (
-                    <span key={s} className={`px-2 py-1 rounded-full text-[10px] font-medium border ${i === 0 ? 'bg-sage border-sage/70 text-white' : 'border-white/20 text-white/60'}`}>{s}</span>
+                {/* Filter pills */}
+                <div className="flex gap-1.5 mb-4 flex-wrap">
+                  {['All types', '🎯 Grants', '🚀 Accelerators', '💰 Social Investment'].map((f, i) => (
+                    <span key={f} className={`px-2.5 py-1 rounded-full text-[10px] font-medium border ${i === 0 ? 'bg-white/20 text-white border-white/30' : 'border-white/15 text-white/50'}`}>{f}</span>
                   ))}
+                  <span className="px-2.5 py-1 rounded-full text-[10px] font-medium bg-gold/20 text-gold border border-gold/30">🆕 New this week 17</span>
                 </div>
+                {/* Result cards */}
                 <div className="space-y-2.5">
                   {[
-                    { title: 'Arts Council England — National Lottery Project Grants', funder: 'Arts Council England', amount: '£1k – £100k', status: 'eligible', statusLabel: '✓ Eligible', statusColor: 'bg-emerald-500/20 text-emerald-300', reason: 'CIC accepted · creative sector match' },
-                    { title: 'Foundervine Black Founders Accelerator', funder: 'Foundervine / Barclays', amount: 'Programme + £10k', status: 'likely', statusLabel: '⚠ Likely Eligible', statusColor: 'bg-gold/20 text-gold', reason: 'Social enterprise accepted · confirm with funder' },
-                    { title: 'Innovate UK Smart Grants', funder: 'Innovate UK', amount: '£25k – £500k', status: 'check', statusLabel: '~ Check with Funder', statusColor: 'bg-white/10 text-mint/70', reason: 'CIC may qualify — verify trading income requirement' },
-                  ].map(r => (
-                    <div key={r.title} className="bg-white/10 rounded-xl p-3 border border-white/10">
+                    { funder: 'Ashden Awards', title: 'UK Climate Solutions Award', amount: '£10k–£40k', score: 96, type: '🎯 Grant', tag: 'CIC eligible', tagColor: 'bg-emerald-500/20 text-emerald-300' },
+                    { funder: 'Creative UK / Innovate UK', title: 'Green Economy Innovation Fund', amount: '£25k–£100k', score: 88, type: '🔀 Blended', tag: 'Social enterprise accepted', tagColor: 'bg-gold/20 text-gold' },
+                    { funder: 'UnLtd / Big Issue Invest', title: 'Social Entrepreneur Award', amount: 'Up to £15k', score: 81, type: '🚀 Accelerator', tag: 'CIC & unincorporated eligible', tagColor: 'bg-emerald-500/20 text-emerald-300' },
+                  ].map(g => (
+                    <div key={g.title} className="bg-white/10 rounded-xl p-3 border border-white/10">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5 flex-wrap mb-1">
-                            <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${r.statusColor}`}>{r.statusLabel}</span>
+                          <p className="text-[10px] text-mint/60 font-semibold">{g.funder}</p>
+                          <p className="text-xs font-bold text-white leading-tight">{g.title}</p>
+                          <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                            <span className="text-[10px] bg-white/15 text-white px-2 py-0.5 rounded-full font-medium">✦ {g.score}% match</span>
+                            <span className="text-[9px] bg-white/10 text-mint/70 px-1.5 py-0.5 rounded-full">{g.type}</span>
+                            <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${g.tagColor}`}>{g.tag}</span>
                           </div>
-                          <p className="text-xs font-bold text-white leading-tight">{r.title}</p>
-                          <p className="text-[10px] text-mint/60 mt-0.5">{r.funder} · {r.reason}</p>
                         </div>
-                        <p className="text-xs font-bold text-gold flex-shrink-0">{r.amount}</p>
+                        <p className="text-xs font-bold text-gold flex-shrink-0">{g.amount}</p>
                       </div>
                     </div>
                   ))}
                 </div>
-                <p className="text-[10px] text-mint/50 mt-3 text-center">Eligibility computed before you click — no wasted reading</p>
+                <p className="text-[10px] text-mint/50 mt-3 text-center">Showing 3 of 31 matched results across 6 funding types</p>
               </div>
             </motion.div>
           </div>
-        </div>
-      </section>
-
-      {/* ══ FEATURE 2: GRANT SEARCH ══════════════════════════════════════════ */}
-      <section className="max-w-6xl mx-auto px-6 pb-24">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-
-          {/* Search mockup */}
-          <motion.div {...fadeInView()}>
-            <div className="rounded-2xl border border-warm bg-white p-5 shadow-card-lg">
-              {/* Search bar */}
-              <div className="flex gap-2 mb-4">
-                <div className="flex-1 flex items-center gap-2 border border-warm rounded-xl px-3 py-2.5 bg-cream/50">
-                  <span className="text-light text-sm">🔍</span>
-                  <span className="text-sm text-light">circular economy Birmingham CIC</span>
-                </div>
-                <div className="bg-forest text-white text-xs font-semibold px-3 py-2 rounded-xl whitespace-nowrap flex items-center">✦ AI Search</div>
-              </div>
-              {/* Filter pills */}
-              <div className="flex gap-1.5 mb-4 flex-wrap">
-                {['All types', '🎯 Grants', '🚀 Accelerators', '💰 Social Investment'].map((f, i) => (
-                  <span key={f} className={`px-2.5 py-1 rounded-full text-[10px] font-medium border ${i === 0 ? 'bg-forest text-white border-forest' : 'border-warm text-mid bg-white'}`}>{f}</span>
-                ))}
-                <span className="px-2.5 py-1 rounded-full text-[10px] font-medium bg-gold/15 text-gold border border-gold/20">🆕 New this week 17</span>
-              </div>
-              {/* Grant cards */}
-              <div className="space-y-2.5">
-                {[
-                  { funder: 'Ashden Awards', title: 'UK Climate Solutions Award', amount: '£10k–£40k', score: 96, type: '🎯 Grant', reason: 'Circular economy · CIC eligible · strong mission match' },
-                  { funder: 'Creative UK / Innovate UK', title: 'Green Economy Innovation Fund', amount: '£25k–£100k', score: 88, type: '🔀 Blended', reason: 'Partial grant + loan · social enterprise accepted' },
-                  { funder: 'UnLtd / Big Issue Invest', title: 'Social Entrepreneur Award', amount: 'Up to £15k', score: 81, type: '🚀 Accelerator', reason: 'Equity-free · CIC and unincorporated eligible' },
-                ].map(g => (
-                  <div key={g.title} className="border border-warm rounded-xl p-3 bg-white hover:border-forest/20 transition-all">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[10px] text-mid font-semibold">{g.funder}</p>
-                        <p className="text-xs font-bold text-forest leading-tight">{g.title}</p>
-                        <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                          <span className="text-[10px] bg-forest/10 text-forest px-2 py-0.5 rounded-full font-medium">✦ {g.score}% match</span>
-                          <span className="text-[9px] bg-warm text-mid px-1.5 py-0.5 rounded-full">{g.type}</span>
-                          <span className="text-[10px] text-mid">{g.reason}</span>
-                        </div>
-                      </div>
-                      <div className="text-right flex-shrink-0">
-                        <p className="text-xs font-bold text-gold">{g.amount}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <p className="text-[10px] text-center text-light mt-3">Showing 3 of 31 matched results across 6 funding types</p>
-            </div>
-          </motion.div>
-
-          <motion.div {...fadeInView(0.15)}>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-forest/10 px-3 py-1 text-xs font-semibold text-forest">
-              ✦ Feature 2 · AI-Matched Search
-            </span>
-            <h2 className="mt-4 text-3xl leading-tight md:text-4xl">
-              Every funding opportunity,<br />matched to your structure and mission
-            </h2>
-            <p className="mt-4 text-lg text-mid leading-relaxed">
-              Search across grants, accelerators, social investment, diversity funds, and in-kind support — all in one place. AI matching ranks every result by eligibility, sector fit, stage, and mission alignment. No more irrelevant results for structures you&apos;re not.
-            </p>
-            <ul className="mt-6 space-y-3">
-              {[
-                { icon: '✦', text: 'Match scores with a full breakdown — structure, sector, geography, stage, and mission' },
-                { icon: '🏗️', text: 'Filter by funding type: grants, accelerators, social investment, diversity funds, and more' },
-                { icon: '🎯', text: 'Thumbs up or down on any result — the more you use it, the sharper your results get' },
-                { icon: '🆕', text: 'Freshness filter surfaces newly-verified opportunities before they fill up' },
-              ].map(item => (
-                <li key={item.text} className="flex items-start gap-3 text-sm text-mid">
-                  <span className="mt-0.5 flex-shrink-0 text-sage">{item.icon}</span>
-                  {item.text}
-                </li>
-              ))}
-            </ul>
-          </motion.div>
         </div>
       </section>
 
@@ -490,13 +423,13 @@ export default function LandingPage() {
 
           <motion.div {...fadeInView()}>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-forest/10 px-3 py-1 text-xs font-semibold text-forest">
-              🎯 Feature 3 · Personalisation
+              🎯 Feature 2 · Personalisation
             </span>
             <h2 className="mt-4 text-3xl leading-tight md:text-4xl">
               Results that get sharper<br />every time you use it
             </h2>
             <p className="mt-4 text-lg text-mid leading-relaxed">
-              Grant Tracker learns what matters to you. Complete your profile and every result gets a smart match score. Rate results with a thumbs up or down and the system adjusts — boosting funding types and sectors you respond to, and downranking the ones that don&apos;t fit.
+              Complete your profile and every result gets a smart match score across 5 dimensions — structure, sector, geography, stage, and mission. Rate results with a thumbs up or down to refine your matches over time.
             </p>
             <p className="mt-3 text-sm font-medium text-forest">
               Every recommendation is explained — tap any match score to see exactly why it was suggested.
@@ -504,7 +437,7 @@ export default function LandingPage() {
             <ul className="mt-5 space-y-3">
               {[
                 { icon: '🧠', text: 'Profile-based matching across 5 dimensions: sector, eligibility, geography, size and mission' },
-                { icon: '👍', text: 'Feedback-pattern learning — liked grants boost similar results, dislikes suppress them' },
+                { icon: '👍', text: 'Rate results to refine your matches — liked results surface more like them, dislikes suppress poor fits' },
                 { icon: '📊', text: 'Tap any match score to see a full breakdown — sector, eligibility, geography, size, mission fit' },
                 { icon: '🔔', text: 'Profile completeness indicator shows you which fields will improve your matches most' },
               ].map(item => (
@@ -641,13 +574,13 @@ export default function LandingPage() {
 
           <motion.div {...fadeInView(0.15)}>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-gold/10 px-3 py-1 text-xs font-semibold text-gold">
-              📋 Feature 4 · Pipeline
+              📋 Feature 3 · Pipeline & Alerts
             </span>
             <h2 className="mt-4 text-3xl leading-tight md:text-4xl">
-              A pipeline that shows you exactly where every application stands
+              Track every application.<br />Never miss a deadline.
             </h2>
             <p className="mt-4 text-lg text-mid leading-relaxed">
-              Move grants from Identified → Researching → Applying → Submitted → Won with a simple drag-and-drop board. Each card holds your notes, contacts, deadlines and writing progress — everything in one place, nothing lost in a spreadsheet.
+              Move opportunities from Identified → Researching → Applying → Submitted → Won with a simple drag-and-drop board. Email alerts notify you when new funding matches your profile — and urgency flags surface anything closing within 14 days before it&apos;s too late.
             </p>
             <ul className="mt-6 space-y-3">
               {[
@@ -655,6 +588,8 @@ export default function LandingPage() {
                 { icon: '✏️', text: 'Per-card writing tracker from first draft to final submission' },
                 { icon: '📝', text: 'Notes, funder contacts, deadlines and grant URLs all on the card' },
                 { icon: '💷', text: 'Total pipeline value so you always know what funding is in play' },
+                { icon: '📧', text: 'Email alerts when new funding matches your profile — weekly digest or instant' },
+                { icon: '⚠', text: 'Urgency flags surface grants closing within 14 days before it\'s too late' },
               ].map(item => (
                 <li key={item.text} className="flex items-start gap-3 text-sm text-mid">
                   <span className="flex-shrink-0 mt-0.5">{item.icon}</span>
@@ -663,64 +598,6 @@ export default function LandingPage() {
               ))}
             </ul>
           </motion.div>
-        </div>
-      </section>
-
-      {/* ══ FEATURE 5: DEADLINE ALERTS ════════════════════════════════════════ */}
-      <section className="max-w-6xl mx-auto px-6 pb-24">
-        <div className="rounded-3xl border border-warm bg-white p-10 shadow-card">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
-
-            <motion.div {...fadeInView()}>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-forest/10 px-3 py-1 text-xs font-semibold text-forest">
-                ⏰ Feature 5 · Dashboard &amp; Alerts
-              </span>
-              <h2 className="mt-4 text-3xl leading-tight md:text-4xl">
-                A dashboard that tells you what needs attention today
-              </h2>
-              <p className="mt-4 text-base text-mid leading-relaxed">
-                Your dashboard shows you what matters right now — new grants added this week, upcoming deadlines ranked by urgency, and a snapshot of your full pipeline. Anything within 14 days gets flagged. Email alerts notify you when new funding matches your profile, so you never find out too late.
-              </p>
-              <ul className="mt-5 space-y-2.5">
-                {[
-                  { icon: '🆕', text: '"New This Week" highlights fresh opportunities the moment they appear' },
-                  { icon: '⚠', text: 'Urgency flags surface grants closing within 14 days before it\'s too late' },
-                  { icon: '📧', text: 'Email alerts when new matches appear for your profile — weekly digest or instant' },
-                  { icon: '📋', text: 'Pipeline snapshot shows your full funding picture without opening a single card' },
-                ].map(item => (
-                  <li key={item.text} className="flex items-start gap-2.5 text-sm text-mid">
-                    <span className="flex-shrink-0 mt-0.5">{item.icon}</span>
-                    {item.text}
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
-
-            {/* Deadline mock */}
-            <motion.div {...fadeInView(0.15)}>
-              <p className="text-xs font-semibold text-forest/60 uppercase tracking-wider mb-4">⏰ Deadline Alerts</p>
-              <div className="space-y-3">
-                {[
-                  { name: 'Youth Fund', funder: 'Paul Hamlyn Foundation', days: 3, amount: '£30,000', urgent: true },
-                  { name: 'Local Connections Fund', funder: 'Barclays', days: 12, amount: '£5,000', urgent: false },
-                  { name: 'Awards for All', funder: 'National Lottery', days: 28, amount: '£10,000', urgent: false },
-                ].map(item => (
-                  <div key={item.name} className={`bg-cream rounded-xl p-4 border ${item.urgent ? 'border-red-200' : 'border-warm'} flex items-center justify-between gap-4`}>
-                    <div>
-                      <p className="text-xs font-semibold text-charcoal">{item.name}</p>
-                      <p className="text-[10px] text-mid">{item.funder}</p>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className={`text-xs font-bold ${item.urgent ? 'text-red-500' : 'text-mid'}`}>
-                        {item.urgent ? `⚠ ${item.days} days left` : `${item.days} days`}
-                      </p>
-                      <p className="text-[10px] text-gold font-semibold">{item.amount}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          </div>
         </div>
       </section>
 
