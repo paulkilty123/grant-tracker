@@ -2,12 +2,58 @@
 // Database row types (mirrors Supabase schema)
 // ─────────────────────────────────────────────
 
+/** Full legal structure taxonomy — replaces the old OrgType enum */
+export type LegalStructure =
+  | 'cic_guarantee'        // CIC limited by guarantee
+  | 'cic_shares'           // CIC limited by shares
+  | 'cio'                  // Charitable Incorporated Organisation
+  | 'registered_charity'   // Registered charity (company limited by guarantee)
+  | 'ltd_guarantee'        // Ltd by guarantee (non-charity, non-CIC)
+  | 'ltd_shares'           // Ltd by shares (trading social enterprise)
+  | 'llp'                  // Limited Liability Partnership
+  | 'cooperative'          // Co-operative / Community Benefit Society
+  | 'unincorporated'       // Unincorporated association / community group
+  | 'sole_trader'          // Sole trader
+  | 'not_registered'       // Not yet registered / idea stage
+
+/** Backward-compatible alias — kept for existing data */
 export type OrgType =
   | 'registered_charity'
   | 'cic'
   | 'social_enterprise'
   | 'community_group'
   | 'other'
+
+export type OrgStage =
+  | 'idea'
+  | 'pre_revenue'
+  | 'early'
+  | 'growth'
+  | 'established'
+
+/** The 12 impact sectors users select during onboarding (1–3 per user) */
+export type ImpactSector =
+  | 'creative'
+  | 'environment'
+  | 'health'
+  | 'education'
+  | 'tech'
+  | 'housing'
+  | 'food'
+  | 'employment'
+  | 'community'
+  | 'justice'
+  | 'financial'
+  | 'international'
+
+/** Funding opportunity types — extends beyond grants */
+export type FundingType =
+  | 'grant'
+  | 'accelerator'
+  | 'social_investment'
+  | 'diversity_fund'
+  | 'blended_finance'
+  | 'in_kind'
 
 export type PipelineStage =
   | 'identified'
@@ -39,7 +85,22 @@ export interface Organisation {
   name: string
   charity_number: string | null
   cic_number: string | null
+  // Legacy field — kept for backward compat
   org_type: OrgType
+  // ── New strategic fields ──────────────────────────────────────────────────
+  /** Full legal structure — replaces org_type for new data */
+  legal_structure: LegalStructure | null
+  /** Does the org self-identify as mission-driven? Critical for Ltd companies */
+  social_mission_declared: boolean
+  /** Do articles of association restrict dividends / state social purpose? */
+  articles_restrict_profit: boolean
+  /** User is both an individual practitioner AND an org — show both grant types */
+  also_individual_practitioner: boolean
+  /** 1–3 impact sectors from the 12-sector taxonomy */
+  impact_sectors: ImpactSector[]
+  /** Org stage for matching programme eligibility */
+  org_stage: OrgStage | null
+  // ── Existing fields ───────────────────────────────────────────────────────
   annual_income_band: string | null
   primary_location: string | null
   areas_of_work: string[]
@@ -100,6 +161,8 @@ export interface GrantOpportunity {
   title: string
   funder: string
   funderType: FunderType
+  /** Broader funding type — grants, accelerators, social investment, etc. */
+  fundingType?: FundingType
   description: string
   amountMin: number
   amountMax: number
@@ -107,13 +170,25 @@ export interface GrantOpportunity {
   isRolling: boolean
   isLocal: boolean
   sectors: string[]
+  /** New 12-sector taxonomy tags */
+  impactSectors?: ImpactSector[]
   eligibilityCriteria: string[]
+  /** Legal structures that are explicitly eligible */
+  eligibleStructures?: LegalStructure[]
+  /** If true, Ltd companies with declared social mission are soft-matched */
+  acceptsSocialEnterprises?: boolean
+  /** individual | organisation | both */
+  applicantType?: 'individual' | 'organisation' | 'both'
   applyUrl: string | null
   isInviteOnly: boolean
   source: 'three_sixty_giving' | 'manual' | 'scraped'
   dateAdded?: string        // ISO date, used for "Recently Added" section
   lastVerifiedAt?: string   // ISO date: last time crawler confirmed this grant was still live
   matchScore?: number       // 0–100, computed per-org
+  /** Eligibility badge computed by the eligibility engine */
+  eligibilityStatus?: 'eligible' | 'likely_eligible' | 'check_required' | 'ineligible'
+  /** Human-readable reason for the eligibility status */
+  eligibilityReason?: string
 }
 
 export interface PipelineColumn {

@@ -4,15 +4,47 @@ import { useState, useEffect } from 'react'
 import { Sparkles } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner, createOrganisation, updateOrganisation } from '@/lib/organisations'
-import type { Organisation, OrgType, FunderType } from '@/types'
+import type { Organisation, OrgType, LegalStructure, OrgStage, ImpactSector, FunderType } from '@/types'
 
-const ORG_TYPE_OPTIONS: { value: OrgType; label: string }[] = [
-  { value: 'registered_charity', label: 'Registered Charity' },
-  { value: 'cic',                label: 'Community Interest Company (CIC)' },
-  { value: 'social_enterprise',  label: 'Social Enterprise' },
-  { value: 'community_group',    label: 'Community Group / Voluntary Organisation' },
-  { value: 'other',              label: 'Other Mission-Driven Organisation' },
+const LEGAL_STRUCTURE_OPTIONS: { value: LegalStructure; label: string; hint?: string }[] = [
+  { value: 'cic_guarantee',    label: 'CIC — Limited by Guarantee',         hint: 'Most common CIC structure' },
+  { value: 'cic_shares',       label: 'CIC — Limited by Shares',            hint: 'CIC with shareholder model' },
+  { value: 'cio',              label: 'Charitable Incorporated Organisation (CIO)' },
+  { value: 'registered_charity', label: 'Registered Charity (Ltd by Guarantee)' },
+  { value: 'ltd_guarantee',    label: 'Ltd by Guarantee (non-charity, non-CIC)' },
+  { value: 'ltd_shares',       label: 'Ltd by Shares (trading social enterprise)',  hint: 'Social mission required for soft matching' },
+  { value: 'llp',              label: 'Limited Liability Partnership (LLP)' },
+  { value: 'cooperative',      label: 'Co-operative / Community Benefit Society' },
+  { value: 'unincorporated',   label: 'Unincorporated Association / Community Group' },
+  { value: 'sole_trader',      label: 'Sole Trader / Individual Practitioner' },
+  { value: 'not_registered',   label: 'Not yet registered (idea / pre-registration)' },
 ]
+
+const ORG_STAGE_OPTIONS: { value: OrgStage; label: string; desc: string }[] = [
+  { value: 'idea',        label: 'Idea Stage',    desc: 'Not yet trading or registered' },
+  { value: 'pre_revenue', label: 'Pre-Revenue',   desc: 'Registered but no trading income yet' },
+  { value: 'early',       label: 'Early Stage',   desc: 'Up to 2 years trading or £50k income' },
+  { value: 'growth',      label: 'Growth',        desc: '2–5 years or £50k–£250k income' },
+  { value: 'established', label: 'Established',   desc: '5+ years or over £250k income' },
+]
+
+const IMPACT_SECTOR_OPTIONS: { value: ImpactSector; label: string; emoji: string }[] = [
+  { value: 'creative',      label: 'Creative Industries',        emoji: '🎨' },
+  { value: 'environment',   label: 'Environment & Climate',      emoji: '🌿' },
+  { value: 'health',        label: 'Health & Wellbeing',         emoji: '💚' },
+  { value: 'education',     label: 'Education & Skills',         emoji: '📚' },
+  { value: 'tech',          label: 'Tech for Good',              emoji: '💻' },
+  { value: 'housing',       label: 'Housing & Homelessness',     emoji: '🏠' },
+  { value: 'food',          label: 'Food & Agriculture',         emoji: '🌾' },
+  { value: 'employment',    label: 'Employment & Livelihoods',   emoji: '🧑‍💼' },
+  { value: 'community',     label: 'Community Dev & Spaces',     emoji: '🤝' },
+  { value: 'justice',       label: 'Justice, Rights & Democracy',emoji: '⚖️' },
+  { value: 'financial',     label: 'Financial Inclusion',        emoji: '💰' },
+  { value: 'international', label: 'International & Fair Trade', emoji: '🌍' },
+]
+
+// Structures where "social mission declared" soft-match is relevant
+const SOFT_MATCH_STRUCTURES: LegalStructure[] = ['ltd_guarantee', 'ltd_shares', 'llp', 'sole_trader', 'unincorporated']
 
 const INCOME_BANDS = [
   'Under £10,000',
@@ -36,8 +68,19 @@ interface FormState {
   // Basic
   name: string
   charityNumber: string
+  /** Legacy field — kept for backward compat with existing data */
   orgType: OrgType
+  /** New primary structure field */
+  legalStructure: LegalStructure | ''
+  orgStage: OrgStage | ''
   annualIncome: string
+  // Social mission flags (relevant for Ltd/LLP/sole trader soft matching)
+  socialMissionDeclared: boolean
+  articlesRestrictProfit: boolean
+  // Individual practitioner (creative sector)
+  alsoIndividualPractitioner: boolean
+  // Impact sectors (1–3 from 12-sector taxonomy)
+  impactSectors: ImpactSector[]
   // Location & focus
   primaryLocation: string
   geographicReach: string
@@ -66,7 +109,13 @@ const EMPTY_FORM: FormState = {
   name: '',
   charityNumber: '',
   orgType: 'registered_charity',
+  legalStructure: '',
+  orgStage: '',
   annualIncome: INCOME_BANDS[0],
+  socialMissionDeclared: false,
+  articlesRestrictProfit: false,
+  alsoIndividualPractitioner: false,
+  impactSectors: [],
   primaryLocation: '',
   geographicReach: 'local',
   themes: '',
@@ -88,27 +137,33 @@ const EMPTY_FORM: FormState = {
 
 function orgToForm(org: Organisation): FormState {
   return {
-    name:                  org.name ?? '',
-    charityNumber:         org.charity_number ?? org.cic_number ?? '',
-    orgType:               org.org_type ?? 'registered_charity',
-    annualIncome:          org.annual_income_band ?? INCOME_BANDS[0],
-    primaryLocation:       org.primary_location ?? '',
-    geographicReach:       'local',
-    themes:                (org.themes ?? []).join(', '),
-    areasOfWork:           (org.areas_of_work ?? []).join(', '),
-    beneficiaries:         (org.beneficiaries ?? []).join(', '),
-    yearsOperating:        org.years_operating != null ? String(org.years_operating) : '',
-    peoplePerYear:         org.people_per_year != null ? String(org.people_per_year) : '',
-    volunteers:            org.volunteers != null ? String(org.volunteers) : '',
-    projectsRunning:       org.projects_running != null ? String(org.projects_running) : '',
-    keyOutcomes:           (org.key_outcomes ?? []).join('\n'),
-    minGrantTarget:        org.min_grant_target != null ? String(org.min_grant_target) : '',
-    maxGrantTarget:        org.max_grant_target != null ? String(org.max_grant_target) : '',
-    funderTypePreferences: org.funder_type_preferences ?? [],
-    mission:               org.mission ?? '',
-    alertsEnabled:         (org as Organisation & { alerts_enabled?: boolean }).alerts_enabled ?? false,
-    alertFrequency:        (org as Organisation & { alert_frequency?: string }).alert_frequency ?? 'weekly',
-    alertMinScore:         String((org as Organisation & { alert_min_score?: number }).alert_min_score ?? 70),
+    name:                       org.name ?? '',
+    charityNumber:              org.charity_number ?? org.cic_number ?? '',
+    orgType:                    org.org_type ?? 'registered_charity',
+    legalStructure:             org.legal_structure ?? '',
+    orgStage:                   org.org_stage ?? '',
+    annualIncome:               org.annual_income_band ?? INCOME_BANDS[0],
+    socialMissionDeclared:      org.social_mission_declared ?? false,
+    articlesRestrictProfit:     org.articles_restrict_profit ?? false,
+    alsoIndividualPractitioner: org.also_individual_practitioner ?? false,
+    impactSectors:              (org.impact_sectors ?? []) as ImpactSector[],
+    primaryLocation:            org.primary_location ?? '',
+    geographicReach:            'local',
+    themes:                     (org.themes ?? []).join(', '),
+    areasOfWork:                (org.areas_of_work ?? []).join(', '),
+    beneficiaries:              (org.beneficiaries ?? []).join(', '),
+    yearsOperating:             org.years_operating != null ? String(org.years_operating) : '',
+    peoplePerYear:              org.people_per_year != null ? String(org.people_per_year) : '',
+    volunteers:                 org.volunteers != null ? String(org.volunteers) : '',
+    projectsRunning:            org.projects_running != null ? String(org.projects_running) : '',
+    keyOutcomes:                (org.key_outcomes ?? []).join('\n'),
+    minGrantTarget:             org.min_grant_target != null ? String(org.min_grant_target) : '',
+    maxGrantTarget:             org.max_grant_target != null ? String(org.max_grant_target) : '',
+    funderTypePreferences:      org.funder_type_preferences ?? [],
+    mission:                    org.mission ?? '',
+    alertsEnabled:              (org as Organisation & { alerts_enabled?: boolean }).alerts_enabled ?? false,
+    alertFrequency:             (org as Organisation & { alert_frequency?: string }).alert_frequency ?? 'weekly',
+    alertMinScore:              String((org as Organisation & { alert_min_score?: number }).alert_min_score ?? 70),
   }
 }
 
@@ -116,13 +171,13 @@ function orgToForm(org: Organisation): FormState {
 function completenessScore(form: FormState): { score: number; missing: string[] } {
   const checks: { label: string; filled: boolean }[] = [
     { label: 'Name',                  filled: !!form.name.trim() },
-    { label: 'Type',                  filled: !!form.orgType },
+    { label: 'Legal structure',       filled: !!form.legalStructure },
+    { label: 'Organisation stage',    filled: !!form.orgStage },
+    { label: 'Impact sectors',        filled: form.impactSectors.length > 0 },
     { label: 'Annual income',         filled: !!form.annualIncome },
     { label: 'Primary location',      filled: !!form.primaryLocation.trim() },
-    { label: 'Priority themes',       filled: !!form.themes.trim() },
-    { label: 'Areas of work',         filled: !!form.areasOfWork.trim() },
-    { label: 'Beneficiaries',         filled: !!form.beneficiaries.trim() },
     { label: 'Mission statement',     filled: !!form.mission.trim() },
+    { label: 'Areas of work',         filled: !!form.areasOfWork.trim() },
     { label: 'Years operating',       filled: !!form.yearsOperating },
   ]
   const filled = checks.filter(c => c.filled).length
@@ -184,6 +239,18 @@ export default function ProfilePage() {
     }))
   }
 
+  function toggleImpactSector(sector: ImpactSector) {
+    setForm(prev => {
+      const current = prev.impactSectors
+      if (current.includes(sector)) {
+        return { ...prev, impactSectors: current.filter(s => s !== sector) }
+      }
+      // Max 3 sectors
+      if (current.length >= 3) return prev
+      return { ...prev, impactSectors: [...current, sector] }
+    })
+  }
+
   async function handleAutoFill() {
     if (!websiteUrl.trim()) return
     setAutoFilling(true)
@@ -223,28 +290,34 @@ export default function ProfilePage() {
     setSaveStatus('idle')
 
     const payload: Omit<Organisation, 'id' | 'created_at'> & { alerts_enabled: boolean; alert_frequency: string; alert_min_score: number } = {
-      name:                    form.name.trim(),
-      charity_number:          form.charityNumber.trim() || null,
-      cic_number:              null,
-      org_type:                form.orgType,
-      annual_income_band:      form.annualIncome,
-      primary_location:        form.primaryLocation.trim() || null,
-      themes:                  form.themes.split(',').map(s => s.trim()).filter(Boolean),
-      areas_of_work:           form.areasOfWork.split(',').map(s => s.trim()).filter(Boolean),
-      beneficiaries:           form.beneficiaries.split(',').map(s => s.trim()).filter(Boolean),
-      mission:                 form.mission.trim() || null,
-      years_operating:         form.yearsOperating ? parseInt(form.yearsOperating) : null,
-      people_per_year:         form.peoplePerYear ? parseInt(form.peoplePerYear) : null,
-      volunteers:              form.volunteers ? parseInt(form.volunteers) : null,
-      projects_running:        form.projectsRunning ? parseInt(form.projectsRunning) : null,
-      key_outcomes:            form.keyOutcomes.split('\n').map(s => s.trim()).filter(Boolean),
-      min_grant_target:        form.minGrantTarget ? parseInt(form.minGrantTarget.replace(/,/g, '')) : null,
-      max_grant_target:        form.maxGrantTarget ? parseInt(form.maxGrantTarget.replace(/,/g, '')) : null,
-      funder_type_preferences: form.funderTypePreferences,
-      owner_id:                userId,
-      alerts_enabled:          form.alertsEnabled,
-      alert_frequency:         form.alertFrequency,
-      alert_min_score:         parseInt(form.alertMinScore) || 70,
+      name:                         form.name.trim(),
+      charity_number:               form.charityNumber.trim() || null,
+      cic_number:                   null,
+      org_type:                     form.orgType,
+      legal_structure:              form.legalStructure || null,
+      org_stage:                    form.orgStage || null,
+      social_mission_declared:      form.socialMissionDeclared,
+      articles_restrict_profit:     form.articlesRestrictProfit,
+      also_individual_practitioner: form.alsoIndividualPractitioner,
+      impact_sectors:               form.impactSectors,
+      annual_income_band:           form.annualIncome,
+      primary_location:             form.primaryLocation.trim() || null,
+      themes:                       form.themes.split(',').map(s => s.trim()).filter(Boolean),
+      areas_of_work:                form.areasOfWork.split(',').map(s => s.trim()).filter(Boolean),
+      beneficiaries:                form.beneficiaries.split(',').map(s => s.trim()).filter(Boolean),
+      mission:                      form.mission.trim() || null,
+      years_operating:              form.yearsOperating ? parseInt(form.yearsOperating) : null,
+      people_per_year:              form.peoplePerYear ? parseInt(form.peoplePerYear) : null,
+      volunteers:                   form.volunteers ? parseInt(form.volunteers) : null,
+      projects_running:             form.projectsRunning ? parseInt(form.projectsRunning) : null,
+      key_outcomes:                 form.keyOutcomes.split('\n').map(s => s.trim()).filter(Boolean),
+      min_grant_target:             form.minGrantTarget ? parseInt(form.minGrantTarget.replace(/,/g, '')) : null,
+      max_grant_target:             form.maxGrantTarget ? parseInt(form.maxGrantTarget.replace(/,/g, '')) : null,
+      funder_type_preferences:      form.funderTypePreferences,
+      owner_id:                     userId,
+      alerts_enabled:               form.alertsEnabled,
+      alert_frequency:              form.alertFrequency,
+      alert_min_score:              parseInt(form.alertMinScore) || 70,
     }
 
     try {
@@ -370,7 +443,7 @@ export default function ProfilePage() {
         <div className="card">
           <h3 className="font-display text-sm font-semibold text-forest mb-4 flex items-center gap-2">
             <span className="w-6 h-6 rounded-full bg-forest/10 text-forest text-xs flex items-center justify-center font-bold">1</span>
-            About You
+            About Your Organisation
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2">
@@ -385,13 +458,73 @@ export default function ProfilePage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-charcoal mb-1.5">Organisation type</label>
-              <select className="form-select" value={form.orgType} onChange={set('orgType')}>
-                {ORG_TYPE_OPTIONS.map(o => (
+              <label className="block text-sm font-medium text-charcoal mb-1.5">
+                Legal structure <span className="text-red-400">*</span>
+              </label>
+              <select className="form-select" value={form.legalStructure}
+                onChange={e => setForm(prev => ({ ...prev, legalStructure: e.target.value as LegalStructure }))}>
+                <option value="">Select your legal structure…</option>
+                {LEGAL_STRUCTURE_OPTIONS.map(o => (
                   <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
               </select>
+              <p className="text-xs text-light mt-1">This drives eligibility matching — pick the most accurate option</p>
             </div>
+            <div>
+              <label className="block text-sm font-medium text-charcoal mb-1.5">Organisation stage</label>
+              <select className="form-select" value={form.orgStage}
+                onChange={e => setForm(prev => ({ ...prev, orgStage: e.target.value as OrgStage }))}>
+                <option value="">Select your stage…</option>
+                {ORG_STAGE_OPTIONS.map(o => (
+                  <option key={o.value} value={o.value}>{o.label} — {o.desc}</option>
+                ))}
+              </select>
+              <p className="text-xs text-light mt-1">Some programmes are stage-gated (e.g. pre-revenue only)</p>
+            </div>
+
+            {/* Social mission soft-match flags — shown for non-charity/CIC structures */}
+            {form.legalStructure && SOFT_MATCH_STRUCTURES.includes(form.legalStructure as LegalStructure) && (
+              <div className="md:col-span-2 rounded-xl border border-gold/30 bg-gold/5 p-4 space-y-3">
+                <p className="text-xs font-semibold text-forest">
+                  ✦ Social mission flags — help us soft-match you to funders who accept &ldquo;social enterprises&rdquo;
+                </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-charcoal font-medium">We self-identify as mission-driven / a social enterprise</p>
+                    <p className="text-xs text-mid mt-0.5">Unlocks &ldquo;likely eligible&rdquo; matching for funders who accept social enterprises</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setForm(prev => ({ ...prev, socialMissionDeclared: !prev.socialMissionDeclared }))}
+                    className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${
+                      form.socialMissionDeclared ? 'bg-forest' : 'bg-warm'
+                    }`}
+                  >
+                    <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                      form.socialMissionDeclared ? 'translate-x-5' : 'translate-x-0'
+                    }`} />
+                  </button>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-charcoal font-medium">Our articles of association restrict profit distribution or state a social purpose</p>
+                    <p className="text-xs text-mid mt-0.5">Relevant for funders who specify &ldquo;not-for-profit&rdquo; eligibility</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setForm(prev => ({ ...prev, articlesRestrictProfit: !prev.articlesRestrictProfit }))}
+                    className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${
+                      form.articlesRestrictProfit ? 'bg-forest' : 'bg-warm'
+                    }`}
+                  >
+                    <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                      form.articlesRestrictProfit ? 'translate-x-5' : 'translate-x-0'
+                    }`} />
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div>
               <label className="block text-sm font-medium text-charcoal mb-1.5">Charity / CIC / Company number <span className="text-light font-normal">(if applicable)</span></label>
               <input
@@ -422,13 +555,74 @@ export default function ProfilePage() {
               />
               <p className="text-xs text-light mt-1">Some funders require a minimum trading history</p>
             </div>
+
+            {/* Individual practitioner toggle — creative sector */}
+            <div className="md:col-span-2">
+              <div className="flex items-center justify-between p-3 bg-sage/5 rounded-xl border border-sage/20">
+                <div>
+                  <p className="text-sm text-charcoal font-medium">I am also an individual practitioner (e.g. artist, filmmaker, musician)</p>
+                  <p className="text-xs text-mid mt-0.5">Shows both organisational and individual grants — e.g. Arts Council DYCP, PRS Foundation</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setForm(prev => ({ ...prev, alsoIndividualPractitioner: !prev.alsoIndividualPractitioner }))}
+                  className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${
+                    form.alsoIndividualPractitioner ? 'bg-forest' : 'bg-warm'
+                  }`}
+                >
+                  <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                    form.alsoIndividualPractitioner ? 'translate-x-5' : 'translate-x-0'
+                  }`} />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* ── Section 2: Location & Focus ── */}
+        {/* ── Section 1b: Impact Sectors ── */}
+        <div className="card">
+          <h3 className="font-display text-sm font-semibold text-forest mb-1 flex items-center gap-2">
+            <span className="w-6 h-6 rounded-full bg-forest/10 text-forest text-xs flex items-center justify-center font-bold">2</span>
+            Impact Sectors
+            <span className="text-xs text-light font-normal ml-1">— choose 1 to 3</span>
+          </h3>
+          <p className="text-xs text-mid mb-4 ml-8">
+            Your sector selection drives which funding pools you&apos;re matched against. More specific = better matches.
+            {form.impactSectors.length >= 3 && (
+              <span className="text-gold font-medium"> Maximum 3 sectors reached.</span>
+            )}
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {IMPACT_SECTOR_OPTIONS.map(s => {
+              const selected = form.impactSectors.includes(s.value)
+              const atMax = !selected && form.impactSectors.length >= 3
+              return (
+                <button
+                  key={s.value}
+                  type="button"
+                  onClick={() => toggleImpactSector(s.value)}
+                  disabled={atMax}
+                  className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all text-left ${
+                    selected
+                      ? 'border-forest bg-forest/10 text-forest'
+                      : atMax
+                        ? 'border-warm text-mid opacity-40 cursor-not-allowed'
+                        : 'border-warm text-mid hover:border-forest/30 hover:text-forest'
+                  }`}
+                >
+                  <span>{s.emoji}</span>
+                  <span className="text-xs">{s.label}</span>
+                  {selected && <span className="ml-auto text-forest text-xs font-bold">✓</span>}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* ── Section 3: Location & Focus ── */}
         <div className="card">
           <h3 className="font-display text-sm font-semibold text-forest mb-4 flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-forest/10 text-forest text-xs flex items-center justify-center font-bold">2</span>
+            <span className="w-6 h-6 rounded-full bg-forest/10 text-forest text-xs flex items-center justify-center font-bold">3</span>
             Location & Focus
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -483,10 +677,10 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* ── Section 3: Mission ── */}
+        {/* ── Section 4: Mission ── */}
         <div className="card">
           <h3 className="font-display text-sm font-semibold text-forest mb-1 flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-forest/10 text-forest text-xs flex items-center justify-center font-bold">3</span>
+            <span className="w-6 h-6 rounded-full bg-forest/10 text-forest text-xs flex items-center justify-center font-bold">4</span>
             Mission Statement
           </h3>
           <p className="text-xs text-mid mb-3 ml-8">Used by AI search to find the most relevant grants for your work</p>
@@ -502,10 +696,10 @@ export default function ProfilePage() {
           </p>
         </div>
 
-        {/* ── Section 4: Email Alerts ── */}
+        {/* ── Section 5: Email Alerts ── */}
         <div className="card">
           <h3 className="font-display text-sm font-semibold text-forest mb-1 flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-forest/10 text-forest text-xs flex items-center justify-center font-bold">4</span>
+            <span className="w-6 h-6 rounded-full bg-forest/10 text-forest text-xs flex items-center justify-center font-bold">5</span>
             Email Alerts
           </h3>
           <p className="text-xs text-mid mb-4 ml-8">Get notified by email when new grants match your organisation</p>

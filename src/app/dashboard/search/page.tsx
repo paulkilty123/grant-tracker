@@ -10,7 +10,7 @@ import { getOrganisationByOwner } from '@/lib/organisations'
 import { computeMatchScore, scoreColour } from '@/lib/matching'
 import type { FeedbackSignals, MatchBreakdown } from '@/lib/matching'
 import { getInteractions, recordInteraction, removeInteraction } from '@/lib/interactions'
-import type { GrantOpportunity, Organisation, FunderType } from '@/types'
+import type { GrantOpportunity, Organisation, FunderType, FundingType } from '@/types'
 import type { InteractionAction } from '@/lib/interactions'
 
 // Normalise long or awkward sector names for display only
@@ -89,7 +89,7 @@ const SECTOR_GROUPS: { label: string; icon: string; sectors: string[] }[] = [
 ]
 
 const FUNDER_TYPES = [
-  { id: 'all',               label: 'All' },
+  { id: 'all',               label: 'All sources' },
   { id: 'local',             label: '📍 Local' },
   { id: 'lottery',           label: 'Lottery' },
   { id: 'trust_foundation',  label: 'Trust & Foundation' },
@@ -99,6 +99,16 @@ const FUNDER_TYPES = [
   { id: 'competition',       label: '🏆 Competition' },
   { id: 'loan',              label: '🔄 Social Loan' },
   { id: 'crowdfund_match',   label: '🤝 Crowdfund Match' },
+]
+
+const FUNDING_TYPES: { id: FundingType | 'all'; label: string; emoji: string; desc: string }[] = [
+  { id: 'all',               label: 'All types',            emoji: '⚡', desc: 'All funding types' },
+  { id: 'grant',             label: 'Grants & Awards',      emoji: '🎯', desc: 'One-off grants from trusts, foundations, Lottery & government' },
+  { id: 'accelerator',       label: 'Accelerators',         emoji: '🚀', desc: 'Equity-free programmes: mentoring, workspace & networks' },
+  { id: 'social_investment', label: 'Social Investment',    emoji: '💰', desc: 'Repayable finance for social purpose organisations' },
+  { id: 'diversity_fund',    label: 'Diversity Funds',      emoji: '🌈', desc: 'BBB Pathways, Women in Innovation, Black Seed & more' },
+  { id: 'blended_finance',   label: 'Blended Finance',      emoji: '🔗', desc: 'Community shares, matched crowdfunding & CDFIs' },
+  { id: 'in_kind',           label: 'In-Kind & Tax',        emoji: '🛠️', desc: 'Google Ad Grants, AWS credits, SITR, R&D tax credits' },
 ]
 
 interface AIResult {
@@ -450,6 +460,7 @@ export default function SearchPage() {
   const [amountMax, setAmountMax]         = useState('')
   const [deadlineFilter, setDeadlineFilter] = useState<'all' | 'rolling' | 'has_deadline'>('all')
   const [activeSectors, setActiveSectors]         = useState<Set<string>>(new Set())
+  const [activeFundingType, setActiveFundingType] = useState<FundingType | 'all'>('all')
   const [filtersOpen, setFiltersOpen]             = useState(false)
   const [entryTypeFilter, setEntryTypeFilter]     = useState<'all' | 'live' | 'funders'>('all')
   const [showInviteOnly, setShowInviteOnly]       = useState(true)
@@ -649,7 +660,7 @@ export default function SearchPage() {
   // Reset visible count when search/filters change so the user starts from the top
   useEffect(() => {
     setVisibleCount(30)
-  }, [query, activeType, amountMin, amountMax, deadlineFilter, activeSectors, entryTypeFilter, freshnessFilter, showInviteOnly, aiResults])
+  }, [query, activeType, amountMin, amountMax, deadlineFilter, activeSectors, activeFundingType, entryTypeFilter, freshnessFilter, showInviteOnly, aiResults])
 
   // ── Build display grants ─────────────────────────────────────────────────
   const displayGrants: DisplayGrant[] = (() => {
@@ -696,7 +707,11 @@ export default function SearchPage() {
         return new Date(g.lastVerifiedAt) >= cutoff
       })()
       const matchesInviteOnly = showInviteOnly || !g.isInviteOnly
-      return matchesQuery && matchesType && matchesAmount && matchesDeadline && matchesSectors && matchesEntryType && matchesFreshness && matchesInviteOnly
+      const matchesFundingType = activeFundingType === 'all' ||
+        (g as GrantOpportunity & { fundingType?: FundingType }).fundingType === activeFundingType ||
+        // Fallback: if grant has no fundingType set, treat it as 'grant'
+        (!( g as GrantOpportunity & { fundingType?: FundingType }).fundingType && activeFundingType === 'grant')
+      return matchesQuery && matchesType && matchesAmount && matchesDeadline && matchesSectors && matchesEntryType && matchesFreshness && matchesInviteOnly && matchesFundingType
     })
 
     if (aiResults) {
@@ -861,6 +876,7 @@ export default function SearchPage() {
   // Count active (non-default) filters for the badge
   const activeFilterCount = [
     activeType !== 'all',
+    activeFundingType !== 'all',
     !!amountMin,
     !!amountMax,
     deadlineFilter !== 'all',
@@ -873,6 +889,7 @@ export default function SearchPage() {
 
   function resetAllFilters() {
     setActiveType('all')
+    setActiveFundingType('all')
     setAmountMin('')
     setAmountMax('')
     setDeadlineFilter('all')
@@ -894,9 +911,9 @@ export default function SearchPage() {
   return (
     <div>
       <div className="mb-6">
-        <h2 className="font-display text-2xl font-bold text-forest">Search Grants</h2>
+        <h2 className="font-display text-2xl font-bold text-forest">Search Funding</h2>
         <p className="text-mid text-sm mt-1">
-          Our curated database of {allGrants.length}+ verified UK grants — instant results.{' '}
+          Grants, accelerators, social investment, diversity funds & more — {allGrants.length}+ opportunities matched to your structure.{' '}
           <a href="/dashboard/deep-search" className="text-forest hover:underline">
             Need something more specific? Try Live Search →
           </a>
@@ -988,9 +1005,27 @@ export default function SearchPage() {
         {filtersOpen && (
           <div className="mt-4 pt-4 border-t border-warm space-y-5">
 
+            {/* Funding type — grants vs accelerators vs social investment etc */}
+            <div>
+              <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Funding type</p>
+              <div className="flex gap-2 flex-wrap mb-1">
+                {FUNDING_TYPES.map(t => (
+                  <button key={t.id} onClick={() => setActiveFundingType(t.id as FundingType | 'all')}
+                    title={t.desc}
+                    className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                      activeFundingType === t.id
+                        ? 'bg-forest border-forest text-white'
+                        : 'border-warm text-mid hover:border-sage hover:text-sage'
+                    }`}>
+                    {t.emoji} {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Funder type */}
             <div>
-              <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Funder type</p>
+              <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Funder source</p>
               <div className="flex gap-2 flex-wrap">
                 {FUNDER_TYPES.map(t => (
                   <button key={t.id} onClick={() => setActiveType(t.id)}
