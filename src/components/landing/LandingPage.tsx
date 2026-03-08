@@ -132,7 +132,7 @@ export default function LandingPage() {
             {...fadeUp(0.35)}
             className="mx-auto mt-6 max-w-2xl text-lg text-mid md:text-xl"
           >
-            The UK&apos;s first eligibility-first funding platform. Grants, accelerators, social investment, diversity funds, and more — all matched to your legal structure, stage, and mission.
+            Find grants, accelerators, social investment, diversity funds, and more — all matched to your mission, legal structure and stage.
           </motion.p>
 
           {/* CTAs */}
