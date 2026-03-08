@@ -718,11 +718,12 @@ export default function LandingPage() {
         </motion.div>
 
         {/* Persona cards */}
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5 mb-16">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 mb-16">
           {[
             { emoji: '🏗️', label: 'CICs',                desc: 'Access grants, accelerators, and social investment matched specifically to your CIC structure — no more filtering out results meant for charities.' },
             { emoji: '⚡', label: 'Social Enterprises',  desc: 'Ltd company with a social mission? Soft matching surfaces relevant opportunities even without CIC or charity status.' },
             { emoji: '🤝', label: 'Co-operatives & CBS', desc: 'Find the community finance, blended funding, and sector-specific grants that fit your mutual structure and democratic model.' },
+            { emoji: '🏠', label: 'Charities',           desc: 'Manage multiple funders and applications without a dedicated grants manager — and discover funding streams beyond the usual trusts and foundations.' },
             { emoji: '💡', label: 'Impact Founders',     desc: 'Grants, accelerators, diversity funds, and interest-free loans — matched to your stage, sector, and founding team.' },
             { emoji: '🌱', label: 'Community Groups',    desc: 'Find local and national funding that fits your size, area, and cause — including hyper-local funders most platforms miss.' },
           ].map((item, i) => (
