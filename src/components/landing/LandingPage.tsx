@@ -612,6 +612,111 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ══ FEATURE 4: RECOMMENDATION SHEET ════════════════════════════════ */}
+      <section className="max-w-6xl mx-auto px-6 pb-24">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+
+          {/* Text */}
+          <motion.div {...fadeInView()}>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-gold/10 px-3 py-1 text-xs font-semibold text-gold">
+              ✦ Feature 4 · Match Briefing
+            </span>
+            <h2 className="mt-4 text-3xl leading-tight md:text-4xl">
+              Prepare to write.<br />Not write for you.
+            </h2>
+            <p className="mt-4 text-lg text-mid leading-relaxed">
+              Move a grant into Applying and Grant Tracker generates a match briefing — each funder criterion mapped against your profile, language to understand, and practical watch-outs. The actual words are always yours.
+            </p>
+            <ul className="mt-5 space-y-3">
+              {[
+                { icon: '✦', text: 'Criteria map — each funder priority matched to evidence from your profile' },
+                { icon: '💬', text: 'Funder language guide — key phrases and what they signal about values' },
+                { icon: '⚠️', text: 'Tips & watch-outs — from funder guidance and community feedback' },
+              ].map(item => (
+                <li key={item.text} className="flex items-start gap-3 text-sm text-mid">
+                  <span className="flex-shrink-0 mt-0.5">{item.icon}</span>
+                  {item.text}
+                </li>
+              ))}
+            </ul>
+            <p className="mt-5 text-xs text-light italic border-l-2 border-gold/40 pl-3 leading-relaxed">
+              &ldquo;This is your match briefing, not your application. The actual words should always be yours.&rdquo;
+            </p>
+          </motion.div>
+
+          {/* Recommendation sheet mock */}
+          <motion.div {...fadeInView(0.15)}>
+            <div className="rounded-2xl border border-warm bg-[#faf9f7] p-5 shadow-card-lg">
+
+              {/* Mini header */}
+              <div className="flex items-start justify-between pb-4 border-b border-warm mb-4">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-forest/50 mb-1">Match Briefing</p>
+                  <p className="font-serif text-sm font-bold text-charcoal leading-snug">Paul Hamlyn Foundation<br />Youth Fund</p>
+                </div>
+                <div className="text-center bg-charcoal rounded-xl p-2.5 flex-shrink-0">
+                  <p className="text-[9px] text-white/50 uppercase tracking-wide">Match</p>
+                  <p className="font-bold text-lg text-emerald-400 leading-none">4/6</p>
+                  <p className="text-[9px] text-white/50">strong</p>
+                </div>
+              </div>
+
+              {/* Briefing banner */}
+              <div className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200/60 rounded-lg px-3 py-2.5 mb-4 leading-relaxed">
+                This is your match briefing, not your application. Use it to prepare and plan — the actual words should always be yours.
+              </div>
+
+              {/* Criteria cards */}
+              <div className="space-y-3">
+
+                {/* Strong match */}
+                <div className="bg-white rounded-xl border border-warm p-3.5">
+                  <div className="flex items-center justify-between mb-2.5 gap-2">
+                    <p className="text-xs font-bold text-charcoal">Work with young people facing disadvantage</p>
+                    <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-500/10 border border-emerald-500/30 rounded px-1.5 py-0.5 flex-shrink-0">● Strong</span>
+                  </div>
+                  <div className="bg-cream/80 rounded-lg px-3 py-2 mb-2 border-l-2 border-warm">
+                    <p className="text-[9px] font-bold uppercase tracking-wide text-light mb-1">From your profile</p>
+                    <p className="text-[11px] text-mid leading-relaxed">Young people aged 14–21 with mental health challenges. 127 participants in 2024.</p>
+                  </div>
+                  <div className="bg-amber-50/80 rounded-lg px-3 py-2 border-l-2 border-gold/60">
+                    <p className="text-[9px] font-bold uppercase tracking-wide text-amber-700/70 mb-1">Recommendation</p>
+                    <p className="text-[11px] text-charcoal leading-relaxed">Lead with the age range and mental health focus. Name the conditions — funders want specificity, not generalities.</p>
+                  </div>
+                </div>
+
+                {/* Partial match */}
+                <div className="bg-white rounded-xl border border-warm p-3.5">
+                  <div className="flex items-center justify-between mb-2.5 gap-2">
+                    <p className="text-xs font-bold text-charcoal">Clear theory of change</p>
+                    <span className="text-[10px] font-semibold text-amber-600 bg-amber-500/10 border border-amber-500/30 rounded px-1.5 py-0.5 flex-shrink-0">◐ Partial</span>
+                  </div>
+                  <div className="bg-cream/80 rounded-lg px-3 py-2 mb-2 border-l-2 border-warm">
+                    <p className="text-[9px] font-bold uppercase tracking-wide text-light mb-1">From your profile</p>
+                    <p className="text-[11px] text-mid leading-relaxed">Your profile describes activities and outcomes but doesn&apos;t articulate a formal theory of change.</p>
+                  </div>
+                  <div className="bg-amber-50/80 rounded-lg px-3 py-2 border-l-2 border-gold/60">
+                    <p className="text-[9px] font-bold uppercase tracking-wide text-amber-700/70 mb-1">Recommendation</p>
+                    <p className="text-[11px] text-charcoal leading-relaxed">Map it simply: workshops → creative expression → peer connection → improved wellbeing. No academic language needed.</p>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Footer */}
+              <div className="flex items-center justify-between mt-4 pt-3 border-t border-warm">
+                <p className="text-[10px] text-light">Generated from your profile</p>
+                <div className="flex gap-2">
+                  <button className="text-[10px] font-semibold text-mid border border-warm rounded-lg px-2.5 py-1.5">Export PDF</button>
+                  <button className="text-[10px] font-semibold text-white bg-forest rounded-lg px-2.5 py-1.5">Start writing →</button>
+                </div>
+              </div>
+
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* ══ COMPARISON ════════════════════════════════════════════════════════ */}
       <section id="compare" className="max-w-4xl mx-auto px-6 pb-24 scroll-mt-20">
         <motion.div {...fadeInView()} className="text-center mb-12">
