@@ -12,7 +12,6 @@ import {
   Sparkles,
   FolderKanban,
   CalendarClock,
-  FileText,
   User,
   MessageSquare,
   Activity,
@@ -54,9 +53,8 @@ const NAV_GROUPS = [
   {
     label: 'Manage',
     items: [
-      { href: '/dashboard/pipeline',        label: 'Funding Pipeline', Icon: FolderKanban },
-      { href: '/dashboard/match-briefing', label: 'Match Briefing',   Icon: FileText     },
-      { href: '/dashboard/deadlines',      label: 'Deadlines',        Icon: CalendarClock },
+      { href: '/dashboard/pipeline',  label: 'Funding Pipeline', Icon: FolderKanban },
+      { href: '/dashboard/deadlines', label: 'Deadlines',        Icon: CalendarClock },
     ],
   },
   {

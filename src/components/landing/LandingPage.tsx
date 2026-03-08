@@ -612,8 +612,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ══ FEATURE 4: RECOMMENDATION SHEET ════════════════════════════════ */}
-      <section className="max-w-6xl mx-auto px-6 pb-24">
+      {/* FEATURE 4: RECOMMENDATION SHEET — hidden, will revisit */}
+      {false && <section className="max-w-6xl mx-auto px-6 pb-24">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
 
           {/* Text */}
@@ -715,7 +715,7 @@ export default function LandingPage() {
             </div>
           </motion.div>
         </div>
-      </section>
+      </section>}
 
       {/* ══ COMPARISON ════════════════════════════════════════════════════════ */}
       <section id="compare" className="max-w-4xl mx-auto px-6 pb-24 scroll-mt-20">
