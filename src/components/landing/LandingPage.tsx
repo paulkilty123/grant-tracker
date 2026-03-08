@@ -124,7 +124,7 @@ export default function LandingPage() {
             className="mx-auto max-w-3xl text-5xl leading-tight md:text-7xl md:leading-[1.1]"
           >
             Find Funding{' '}
-            <span className="text-gradient-warm italic">Matched to Your Structure</span>
+            <span className="text-gradient-warm italic">Matched to Your Purpose</span>
           </motion.h1>
 
           {/* Subtitle */}
