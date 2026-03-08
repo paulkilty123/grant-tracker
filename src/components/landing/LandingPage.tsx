@@ -287,7 +287,7 @@ export default function LandingPage() {
               {
                 emoji: '💰',
                 title: 'Social Investment',
-                desc: 'We profile the major social lenders — Big Issue Invest, Charity Bank, Resonance — so you know who funds what and what they look for. The journey starts with a conversation, not a form.',
+                desc: 'We profile major social lenders — Big Issue Invest, Charity Bank, Resonance — so you know who funds what before you reach out.',
                 badge: '£20k – £3m',
                 journey: '📖 Provider profiles',
                 journeyColor: 'bg-sky-500/10 text-sky-600',
@@ -296,7 +296,7 @@ export default function LandingPage() {
               {
                 emoji: '🔗',
                 title: 'Blended & Matched Funding',
-                desc: 'Specific programmes like SSE Match Trading and Power to Change offer matched or blended funding — part grant, part loan. We list the real programmes, not the theoretical mechanisms.',
+                desc: 'Programmes like SSE Match Trading and Power to Change — part grant, part loan. Real listings, not theoretical mechanisms.',
                 badge: 'Selected programmes',
                 journey: '🔍 Selected listings',
                 journeyColor: 'bg-forest/10 text-forest',
@@ -305,7 +305,7 @@ export default function LandingPage() {
               {
                 emoji: '🛠️',
                 title: 'In-Kind & Sector Reliefs',
-                desc: 'Tech credits, sector-specific tax reliefs, and in-kind support explained — including who\'s actually eligible. A growing guides section to help you understand what exists beyond cash grants.',
+                desc: 'Tech credits, tax reliefs, and in-kind support explained — including who\'s actually eligible. Beyond cash grants.',
                 badge: 'Guides & resources',
                 journey: '📚 Guides section',
                 journeyColor: 'bg-gold/10 text-gold',
@@ -368,15 +368,13 @@ export default function LandingPage() {
                 Search everything.<br />See only what fits.
               </h2>
               <p className="mt-4 text-mint/80 leading-relaxed">
-                Tell us your legal structure, sector, and stage once. Every search automatically filters to funding you can actually apply for — no reading through pages of criteria only to find you&apos;re ineligible. Live Search surfaces matching opportunities as you type, ranked by how well each one fits your profile.
+                Tell us your structure and sector once. Every result is filtered to funding you can actually apply for — Live Search surfaces matches as you type.
               </p>
               <ul className="mt-6 space-y-3">
                 {[
-                  'Profile-based filtering — your structure, stage and sector shape every result from the start',
-                  'Live Search — finds new funding as you type across all six funding types at once',
-                  'Match scores with a full breakdown — structure, sector, geography, stage, and mission',
-                  'Filter by funding type, sector, or deadline — or let AI ranking do the work',
-                  'Freshness filter surfaces newly-verified opportunities before they fill up',
+                  'Profile-based filtering — your structure, stage and sector shape every result',
+                  'Live Search — finds matching funding as you type across all six types',
+                  'Match scores ranked by structure, sector, geography, stage and mission',
                 ].map(text => (
                   <li key={text} className="flex items-start gap-3 text-sm text-mint/80">
                     <span className="mt-0.5 flex-shrink-0 text-mint">✓</span>
@@ -446,17 +444,13 @@ export default function LandingPage() {
               Results that get sharper<br />every time you use it
             </h2>
             <p className="mt-4 text-lg text-mid leading-relaxed">
-              Complete your profile and every result gets a smart match score across 5 dimensions — structure, sector, geography, stage, and mission. Rate results with a thumbs up or down to refine your matches over time.
-            </p>
-            <p className="mt-3 text-sm font-medium text-forest">
-              Every recommendation is explained — tap any match score to see exactly why it was suggested.
+              Complete your profile once. Every result gets a match score across structure, sector, geography, stage and mission — and gets sharper every time you use it.
             </p>
             <ul className="mt-5 space-y-3">
               {[
-                { icon: '🧠', text: 'Profile-based matching across 5 dimensions: sector, eligibility, geography, size and mission' },
-                { icon: '👍', text: 'Rate results to refine your matches — liked results surface more like them, dislikes suppress poor fits' },
-                { icon: '📊', text: 'Tap any match score to see a full breakdown — sector, eligibility, geography, size, mission fit' },
-                { icon: '🔔', text: 'Profile completeness indicator shows you which fields will improve your matches most' },
+                { icon: '🧠', text: 'Match scores across 5 dimensions: structure, sector, geography, stage and mission' },
+                { icon: '👍', text: 'Rate results to refine future matches — the more you use it, the better it gets' },
+                { icon: '📊', text: 'Tap any score for a full breakdown — see exactly why a result was suggested' },
               ].map(item => (
                 <li key={item.text} className="flex items-start gap-3 text-sm text-mid">
                   <span className="mt-0.5 flex-shrink-0">{item.icon}</span>
@@ -597,7 +591,7 @@ export default function LandingPage() {
               Track every application.<br />Never miss a deadline.
             </h2>
             <p className="mt-4 text-lg text-mid leading-relaxed">
-              Move opportunities from Identified → Researching → Applying → Submitted → Won with a simple drag-and-drop board. Email alerts notify you when new funding matches your profile — and urgency flags surface anything closing within 14 days before it&apos;s too late.
+              A drag-and-drop board keeps every application in view. Alerts notify you when new funding matches your profile — urgency flags surface anything closing within 14 days.
             </p>
             <ul className="mt-6 space-y-3">
               {[
@@ -692,12 +686,12 @@ export default function LandingPage() {
         {/* Persona cards */}
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 mb-16">
           {[
-            { emoji: '🏗️', label: 'CICs',                desc: 'Access grants, accelerators, and social investment matched specifically to your CIC structure — no more filtering out results meant for charities.' },
-            { emoji: '⚡', label: 'Social Enterprises',  desc: 'Ltd company with a social mission? Soft matching surfaces relevant opportunities even without CIC or charity status.' },
-            { emoji: '🤝', label: 'Co-operatives & CBS', desc: 'Find the community finance, blended funding, and sector-specific grants that fit your mutual structure and democratic model.' },
-            { emoji: '🏠', label: 'Charities & CIOs',    desc: 'Go beyond trusts and foundations. If your charity works across health, creative industries, environment, or tech, you\'re eligible for more than a single-sector database shows. Pipeline tracking and deadline alerts replace the spreadsheet.' },
-            { emoji: '💡', label: 'Impact Founders',     desc: 'Grants, accelerators, diversity funds, and interest-free loans — matched to your stage, sector, and founding team.' },
-            { emoji: '🌱', label: 'Community Groups',    desc: 'Find local and national funding that fits your size, area, and cause — including hyper-local funders most platforms miss.' },
+            { emoji: '🏗️', label: 'CICs',                desc: 'Grants, accelerators, and social investment matched to your structure — no more results built for charities.' },
+            { emoji: '⚡', label: 'Social Enterprises',  desc: 'Ltd company with a mission? Soft matching surfaces opportunities even without CIC or charity status.' },
+            { emoji: '🤝', label: 'Co-operatives & CBS', desc: 'Community finance, blended funding, and grants that fit your mutual structure.' },
+            { emoji: '🏠', label: 'Charities & CIOs',    desc: 'Go beyond trusts and foundations — pipeline tracking and alerts replace the spreadsheet.' },
+            { emoji: '💡', label: 'Impact Founders',     desc: 'Grants, accelerators, and diversity funds matched to your stage, sector, and team.' },
+            { emoji: '🌱', label: 'Community Groups',    desc: 'Local and national funding matched to your size, area, and cause.' },
           ].map((item, i) => (
             <motion.div key={item.label} {...fadeInView(i * 0.08)} className="bg-white rounded-2xl p-5 shadow-card text-center border border-warm hover:shadow-warm transition-shadow">
               <div className="text-3xl mb-3">{item.emoji}</div>
@@ -714,20 +708,20 @@ export default function LandingPage() {
           </blockquote>
           <div className="space-y-4 text-sm leading-relaxed">
             <div className="border-l-2 border-red-400 pl-4">
-              <p className="text-red-300 font-semibold mb-1 text-xs uppercase tracking-wide">Searching shouldn&apos;t mean guessing</p>
+              <p className="text-red-300 font-semibold mb-1 text-xs uppercase tracking-wide">One place for everything</p>
               <p className="text-white/80">
-                You search one database for grants, another for accelerators, another for social investment — and most results are irrelevant to your size, sector, or structure. Grant Tracker brings it all together and matches it to what you actually do.
+                Grants, accelerators, social investment, diversity funds — brought together and matched to your structure, sector, and stage.
               </p>
             </div>
             <div className="border-l-2 border-emerald-400 pl-4">
-              <p className="text-emerald-300 font-semibold mb-1 text-xs uppercase tracking-wide">Stop reading criteria that were never meant for you</p>
+              <p className="text-emerald-300 font-semibold mb-1 text-xs uppercase tracking-wide">No more dead ends</p>
               <p className="text-white/80">
-                Too many people read pages of criteria, start an application, then discover their legal structure or income band rules them out. Grant Tracker filters results to your profile from the start — so you see fewer dead ends and spend more time on funding you can actually win.
+                Grant Tracker filters to your profile from the start — fewer criteria pages to read, more time on funding you can actually win.
               </p>
             </div>
             <div className="border-l-2 border-sky-400 pl-4">
               <p className="text-white/80">
-                Whether you&apos;re a CIC, charity, social enterprise, co-op, or just getting started — Grant Tracker helps you find funding faster and waste less time on the ones you were never going to get.
+                CIC, charity, co-op, social enterprise, or just getting started — find funding faster and waste less time on the ones you were never going to get.
               </p>
             </div>
           </div>
