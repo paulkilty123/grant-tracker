@@ -250,7 +250,7 @@ export default function LandingPage() {
               <span className="text-gradient-warm italic">the full funding landscape</span>
             </h2>
             <p className="mx-auto max-w-2xl text-mid text-lg">
-              Most grant databases cover only a fraction of what CICs and social enterprises can access. Grant Tracker brings together searchable grants, accelerators, and diversity funds — plus profiles of social lenders and guides to in-kind support — because your audience needs more than one type of answer.
+              Most grant databases cover only a fraction of what mission-driven organisations can access. Grant Tracker brings together searchable grants, accelerators, and diversity funds — plus profiles of social lenders and guides to in-kind support — because finding funding rarely means finding just one type of answer.
             </p>
           </motion.div>
 
