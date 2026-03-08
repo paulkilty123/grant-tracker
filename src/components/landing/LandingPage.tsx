@@ -178,7 +178,10 @@ export default function LandingPage() {
       {/* ══ HOW IT WORKS ═════════════════════════════════════════════════════ */}
       <section className="max-w-6xl mx-auto px-6 pt-4 pb-20">
         <motion.div {...fadeInView()} className="text-center mb-10">
-          <h2 className="text-3xl md:text-4xl">How it works</h2>
+          <span className="inline-block mb-4 rounded-full bg-forest/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-forest">
+            How it works
+          </span>
+          <p className="text-xl text-mid md:text-2xl">Set up once. Search everything. Track what matters.</p>
         </motion.div>
         <motion.div {...fadeInView(0.1)} className="relative">
           {/* Desktop: horizontal flow */}
