@@ -18,8 +18,8 @@ const dmSerif = DM_Serif_Display({
 })
 
 export const metadata: Metadata = {
-  title: 'Grant Tracker — Funding Discovery for CICs & Social Enterprises',
-  description: 'Find grants, accelerators, social investment, and diversity funding matched to your legal structure and mission. Built for CICs, social enterprises, co-operatives, and impact-driven founders across the UK.',
+  title: 'Grant Tracker — UK Funding for CICs, Social Enterprises, Charities & Impact Founders',
+  description: 'Find grants, accelerators, social investment, and diversity funding matched to your legal structure and mission. Built for CICs, social enterprises, charities, co-operatives, and impact-driven founders across the UK.',
 }
 
 export default function RootLayout({

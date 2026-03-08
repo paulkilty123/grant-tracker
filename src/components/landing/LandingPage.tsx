@@ -115,7 +115,7 @@ export default function LandingPage() {
           {/* Badge */}
           <motion.div {...fadeUp(0.1)} className="mb-8 inline-flex items-center gap-2 rounded-full border border-warm bg-white px-4 py-2 text-sm text-mid shadow-sm">
             <span>🇬🇧</span>
-            <span>For CICs · Social Enterprises · Co-operatives · Impact Founders · Diverse-Led Ventures</span>
+            <span>For CICs · Social Enterprises · Charities · Co-operatives · Impact Founders · Diverse-Led Ventures</span>
           </motion.div>
 
           {/* Heading */}
@@ -154,7 +154,7 @@ export default function LandingPage() {
             className="mx-auto mt-16 grid max-w-3xl grid-cols-2 gap-4 md:grid-cols-4"
           >
             {[
-              { icon: Target, stat: 'Eligibility First', label: 'know before you click if you qualify' },
+              { icon: Target, stat: 'Eligibility First', label: 'know before you click' },
               { icon: ClipboardList, stat: 'Pipeline', label: 'tracks every application' },
               { icon: Bell, stat: 'Alerts', label: 'when new matches appear' },
               { icon: User, stat: 'All Funding Types', label: 'grants, accelerators, investment & more' },
@@ -173,6 +173,60 @@ export default function LandingPage() {
             ))}
           </motion.div>
         </div>
+      </section>
+
+      {/* ══ HOW IT WORKS ═════════════════════════════════════════════════════ */}
+      <section className="max-w-6xl mx-auto px-6 pt-4 pb-20">
+        <motion.div {...fadeInView()} className="text-center mb-10">
+          <h2 className="text-3xl md:text-4xl">How it works</h2>
+        </motion.div>
+        <motion.div {...fadeInView(0.1)} className="relative">
+          {/* Desktop: horizontal flow */}
+          <div className="hidden md:flex items-start justify-between gap-0">
+            {[
+              { icon: '👤', title: 'Set up your profile', color: 'text-forest', bg: 'bg-forest/10', border: 'border-forest/40' },
+              { icon: '🔍', title: 'Search funding', color: 'text-sky-500', bg: 'bg-sky-500/10', border: 'border-sky-400/40' },
+              { icon: '✓', title: 'Check eligibility', color: 'text-emerald-500', bg: 'bg-emerald-500/10', border: 'border-emerald-400/40' },
+              { icon: '📋', title: 'Add to pipeline', color: 'text-gold', bg: 'bg-gold/10', border: 'border-gold/40' },
+              { icon: '🔔', title: 'Get alerts', color: 'text-purple-400', bg: 'bg-purple-400/10', border: 'border-purple-400/40' },
+            ].map((step, i, arr) => (
+              <div key={step.title} className="flex items-center flex-1">
+                <div className="flex flex-col items-center text-center flex-1">
+                  <div className={`w-14 h-14 rounded-full ${step.bg} border-2 ${step.border} flex items-center justify-center text-2xl mb-3`}>
+                    {step.icon}
+                  </div>
+                  <p className={`text-sm font-semibold ${step.color} leading-snug max-w-[90px]`}>{step.title}</p>
+                </div>
+                {i < arr.length - 1 && (
+                  <div className="flex-1 flex items-center pb-6">
+                    <div className="h-0.5 flex-1 bg-warm" />
+                    <span className="text-light text-sm mx-0.5">›</span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          {/* Mobile: vertical flow */}
+          <div className="flex md:hidden flex-col items-start gap-0 pl-4">
+            {[
+              { icon: '👤', title: 'Set up your profile', color: 'text-forest' },
+              { icon: '🔍', title: 'Search funding', color: 'text-sky-500' },
+              { icon: '✓', title: 'Check eligibility', color: 'text-emerald-500' },
+              { icon: '📋', title: 'Add to pipeline', color: 'text-gold' },
+              { icon: '🔔', title: 'Get alerts', color: 'text-purple-400' },
+            ].map((step, i, arr) => (
+              <div key={step.title} className="flex items-start gap-4">
+                <div className="flex flex-col items-center">
+                  <div className="w-10 h-10 rounded-full bg-forest/10 border border-warm flex items-center justify-center text-xl">
+                    {step.icon}
+                  </div>
+                  {i < arr.length - 1 && <div className="w-0.5 h-6 bg-warm my-1" />}
+                </div>
+                <p className={`text-sm font-semibold ${step.color} mt-2.5`}>{step.title}</p>
+              </div>
+            ))}
+          </div>
+        </motion.div>
       </section>
 
       {/* ══ COVERAGE & FUNDING TYPES ═════════════════════════════════════════ */}
@@ -258,6 +312,24 @@ export default function LandingPage() {
             ))}
 
           </div>
+
+          {/* Sector strip */}
+          <motion.div {...fadeInView(0.2)} className="mt-10 rounded-2xl border border-warm bg-white p-6">
+            <p className="text-sm font-semibold text-charcoal mb-4">Covering 12 impact sectors</p>
+            <div className="flex flex-wrap gap-2">
+              {[
+                '🎨 Creative Industries', '🌿 Environment & Climate', '🧠 Health & Wellbeing',
+                '📖 Education & Skills', '💻 Tech for Good', '🏠 Housing & Homelessness',
+                '🍽️ Food & Agriculture', '💼 Employment', '🤝 Community Development',
+                '⚖️ Justice & Rights', '🏦 Financial Inclusion', '🌍 International',
+              ].map(sector => (
+                <span key={sector} className="px-3 py-1.5 rounded-lg border border-warm bg-cream text-xs text-mid font-medium">
+                  {sector}
+                </span>
+              ))}
+            </div>
+            <p className="text-xs text-light mt-3">From film funding to blockchain grants, community energy to legal aid — matched to your structure, stage, and mission.</p>
+          </motion.div>
 
         </div>
       </section>
@@ -668,17 +740,20 @@ export default function LandingPage() {
             </div>
             {/* Rows */}
             {[
+              { feature: 'UK grant database',                            gt: true,  other: true  },
+              { feature: 'Human-curated listings',                       gt: true,  other: true  },
+              { feature: 'Email funding alerts',                         gt: true,  other: true  },
               { feature: 'Legal structure eligibility matching',         gt: true,  other: false },
-              { feature: 'CIC & social enterprise funding',              gt: true,  other: false },
+              { feature: 'CIC & social enterprise focus',                gt: true,  other: false },
               { feature: 'Soft matching for Ltd companies with mission', gt: true,  other: false },
               { feature: '6 funding types (not just grants)',            gt: true,  other: false },
               { feature: 'AI match scoring with breakdown',              gt: true,  other: false },
-              { feature: 'Visual pipeline & deadline tracking',          gt: true,  other: false },
-              { feature: 'General UK grant database',                    gt: true,  other: true  },
+              { feature: 'Pipeline & deadline tracking',                 gt: true,  other: false },
+              { feature: '12 impact sectors',                            gt: true,  other: false },
             ].map((row, i) => (
               <div
                 key={row.feature}
-                className={`grid grid-cols-3 gap-0 px-6 py-3.5 ${i < 6 ? 'border-b border-warm' : ''}`}
+                className={`grid grid-cols-3 gap-0 px-6 py-3.5 ${i < 9 ? 'border-b border-warm' : ''}`}
               >
                 <div className="text-sm text-charcoal">{row.feature}</div>
                 <div className="flex justify-center">
@@ -723,7 +798,7 @@ export default function LandingPage() {
             { emoji: '🏗️', label: 'CICs',                desc: 'Access grants, accelerators, and social investment matched specifically to your CIC structure — no more filtering out results meant for charities.' },
             { emoji: '⚡', label: 'Social Enterprises',  desc: 'Ltd company with a social mission? Soft matching surfaces relevant opportunities even without CIC or charity status.' },
             { emoji: '🤝', label: 'Co-operatives & CBS', desc: 'Find the community finance, blended funding, and sector-specific grants that fit your mutual structure and democratic model.' },
-            { emoji: '🏠', label: 'Charities',           desc: 'Manage multiple funders and applications without a dedicated grants manager — and discover funding streams beyond the usual trusts and foundations.' },
+            { emoji: '🏠', label: 'Charities & CIOs',    desc: 'Go beyond trusts and foundations. If your charity works across health, creative industries, environment, or tech, you\'re eligible for more than a single-sector database shows. Pipeline tracking and deadline alerts replace the spreadsheet.' },
             { emoji: '💡', label: 'Impact Founders',     desc: 'Grants, accelerators, diversity funds, and interest-free loans — matched to your stage, sector, and founding team.' },
             { emoji: '🌱', label: 'Community Groups',    desc: 'Find local and national funding that fits your size, area, and cause — including hyper-local funders most platforms miss.' },
           ].map((item, i) => (
@@ -737,16 +812,27 @@ export default function LandingPage() {
 
         {/* Founder story */}
         <motion.div {...fadeInView(0.2)} className="rounded-3xl bg-forest p-10 max-w-2xl mx-auto">
-          <blockquote className="font-serif text-xl text-white font-semibold leading-snug mb-6 border-l-4 border-white/40 pl-5">
-            &ldquo;CICs, social enterprises, and co-operatives were being left out. The tools that existed were built for established charities — not for the fastest-growing part of the UK&apos;s social economy.&rdquo;
+          <blockquote className="font-serif text-xl text-white font-semibold leading-snug mb-8 border-l-4 border-white/40 pl-5">
+            &ldquo;Finding the right grant has always been harder than it should be. The tools that existed were too expensive, too generic, and built for organisations with a dedicated grants team — not for the people actually doing the work.&rdquo;
           </blockquote>
-          <div className="space-y-4 text-white/80 text-sm leading-relaxed">
-            <p>
-              Grant Tracker was built from direct experience of the gap — a CIC founder spending hours on charity-first databases, only to hit &ldquo;registered charities only&rdquo; at the end of a long application. The eligibility problem needed solving before the search problem.
-            </p>
-            <p>
-              Traditional databases cover roughly 30% of what CICs and social enterprises can access. The other 70% — accelerators, social investment, diversity funds, in-kind support, and blended finance — was invisible. Grant Tracker was built to fix that, and to make it free for the founders who need it most.
-            </p>
+          <div className="space-y-4 text-sm leading-relaxed">
+            <div className="border-l-2 border-red-400 pl-4">
+              <p className="text-red-300 font-semibold mb-1 text-xs uppercase tracking-wide">Searching shouldn&apos;t mean guessing</p>
+              <p className="text-white/80">
+                You search one database for grants, another for accelerators, another for social investment — and most results are irrelevant to your size, sector, or structure. Grant Tracker brings it all together and matches it to what you actually do.
+              </p>
+            </div>
+            <div className="border-l-2 border-emerald-400 pl-4">
+              <p className="text-emerald-300 font-semibold mb-1 text-xs uppercase tracking-wide">Eligibility should be clear from the start</p>
+              <p className="text-white/80">
+                Too many people read pages of criteria, start an application, then discover their legal structure or income band rules them out. Grant Tracker checks eligibility upfront — so you only spend time on opportunities you can actually win.
+              </p>
+            </div>
+            <div className="border-l-2 border-sky-400 pl-4">
+              <p className="text-white/80">
+                Whether you&apos;re a CIC, charity, social enterprise, co-op, or just getting started — Grant Tracker helps you find funding faster and waste less time on the ones you were never going to get.
+              </p>
+            </div>
           </div>
         </motion.div>
       </section>
@@ -755,10 +841,10 @@ export default function LandingPage() {
       <section className="max-w-6xl mx-auto px-6 pb-20">
         <motion.div {...fadeInView()} className="bg-forest/8 rounded-2xl p-8 grid grid-cols-2 sm:grid-cols-4 gap-6 text-center border border-forest/10">
           {[
-            { stat: '800+', label: 'Grants, competitions, loans & crowdfund matches' },
-            { stat: '120+', label: 'Sources crawled daily across the UK' },
+            { stat: '800+', label: 'Funding opportunities across all 6 types' },
+            { stat: '6',    label: 'Funding types — grants, accelerators, investment & more' },
+            { stat: '12',   label: 'Impact sectors covered' },
             { stat: 'Free', label: 'to search — no credit card required' },
-            { stat: 'Live', label: 'AI research and daily database refresh' },
           ].map(item => (
             <div key={item.stat}>
               <p className="font-serif text-3xl sm:text-4xl font-bold text-forest">{item.stat}</p>
@@ -841,14 +927,14 @@ export default function LandingPage() {
             <div className="pointer-events-none absolute -bottom-20 -left-20 h-60 w-60 rounded-full bg-white/10 blur-3xl" />
 
             <div className="relative inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs text-mint font-semibold mb-6">
-              🇬🇧 Built for CICs, social enterprises, co-operatives &amp; impact founders across the UK
+              🇬🇧 Built for CICs, social enterprises, charities, co-operatives &amp; impact founders across the UK
             </div>
             <h2 className="relative text-3xl text-white md:text-5xl">
               Ready to find funding<br />
               <span className="italic">matched to your structure?</span>
             </h2>
             <p className="relative mx-auto mt-4 max-w-lg text-white/80">
-              Join CICs, social enterprises, co-operatives, and impact founders already using Grant Tracker to find and win funding that actually fits.
+              Join CICs, social enterprises, charities, co-operatives, and impact founders already using Grant Tracker to find and win funding that actually fits.
             </p>
             <div className="relative mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
               <Link href="/auth/signup" className="btn-gold px-12 py-3.5 text-base font-semibold">
@@ -856,7 +942,7 @@ export default function LandingPage() {
               </Link>
               <span className="text-sm text-white/70">No credit card required</span>
             </div>
-            <p className="relative text-xs text-white/40 mt-5">Free forever for grant search · Upgrade anytime · Cancel anytime</p>
+            <p className="relative text-xs text-white/40 mt-5">Free to search · Live Search and pipeline tools from £11/month · Cancel anytime</p>
             <p className="relative text-xs text-white/30 mt-2">🔒 Your data is only used to improve your own matches — never used to train external models, never shared with funders, never sold.</p>
           </div>
         </motion.div>
@@ -879,7 +965,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="border-t border-warm pt-5 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <p className="text-xs text-light">© {new Date().getFullYear()} Grant Tracker · Funding discovery for CICs, social enterprises &amp; impact founders</p>
+            <p className="text-xs text-light">© {new Date().getFullYear()} Grant Tracker · Funding discovery for CICs, social enterprises, charities &amp; impact founders</p>
             <div className="flex items-center gap-5">
               <Link href="/privacy" className="text-xs text-light hover:text-mid transition-colors">Privacy Policy</Link>
               <Link href="/terms" className="text-xs text-light hover:text-mid transition-colors">Terms of Service</Link>
