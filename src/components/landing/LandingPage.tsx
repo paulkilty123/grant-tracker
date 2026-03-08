@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { Menu, X, Target, ClipboardList, Bell, User, Check, Heart, Users, Lightbulb, Mail, MessageSquare } from 'lucide-react'
+import { Menu, X, Target, ClipboardList, Bell, Layers, Check, Heart, Users, Lightbulb, Mail, MessageSquare } from 'lucide-react'
 import ContactForm from '@/components/ContactForm'
 
 /* ─── helpers ─── */
@@ -154,10 +154,10 @@ export default function LandingPage() {
             className="mx-auto mt-16 grid max-w-3xl grid-cols-2 gap-4 md:grid-cols-4"
           >
             {[
-              { icon: Target, stat: 'Eligibility First', label: 'know before you click' },
+              { icon: Layers, stat: '6 Funding Types', label: 'grants, accelerators, investment & more' },
+              { icon: Target, stat: 'Smart Matching', label: 'filtered to your structure & stage' },
               { icon: ClipboardList, stat: 'Pipeline', label: 'tracks every application' },
-              { icon: Bell, stat: 'Alerts', label: 'when new matches appear' },
-              { icon: User, stat: 'All Funding Types', label: 'grants, accelerators, investment & more' },
+              { icon: Bell, stat: 'Alerts', label: 'never miss a deadline' },
             ].map((item, i) => (
               <motion.div
                 key={item.stat}
