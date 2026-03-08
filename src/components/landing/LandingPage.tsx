@@ -245,7 +245,7 @@ export default function LandingPage() {
             <span className="inline-block mb-4 rounded-full bg-forest/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-forest">
               6 Funding Types
             </span>
-            <h2 className="text-4xl md:text-5xl mb-3">
+            <h2 className="text-5xl leading-tight md:text-6xl md:leading-[1.1] mb-5">
               Beyond grants —<br />
               <span className="text-gradient-warm italic">the full funding landscape</span>
             </h2>
