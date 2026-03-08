@@ -176,56 +176,60 @@ export default function LandingPage() {
       </section>
 
       {/* ══ HOW IT WORKS ═════════════════════════════════════════════════════ */}
-      <section className="max-w-6xl mx-auto px-6 pt-4 pb-20">
-        <motion.div {...fadeInView()} className="text-center mb-10">
+      <section className="max-w-6xl mx-auto px-6 pt-4 pb-24">
+        <motion.div {...fadeInView()} className="text-center mb-12">
           <span className="inline-block mb-4 rounded-full bg-forest/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-forest">
             How it works
           </span>
           <p className="text-xl text-mid md:text-2xl">Set up once. Search everything. Track what matters.</p>
         </motion.div>
-        <motion.div {...fadeInView(0.1)} className="relative">
+        <motion.div {...fadeInView(0.1)} className="rounded-3xl bg-forest/[0.03] border border-forest/8 px-8 py-12">
           {/* Desktop: horizontal flow */}
           <div className="hidden md:flex items-start justify-between gap-0">
             {[
-              { icon: '👤', title: 'Set up your profile', color: 'text-forest', bg: 'bg-forest/10', border: 'border-forest/40' },
-              { icon: '🔍', title: 'Search funding', color: 'text-sky-500', bg: 'bg-sky-500/10', border: 'border-sky-400/40' },
-              { icon: '✦', title: 'See your matches', color: 'text-emerald-500', bg: 'bg-emerald-500/10', border: 'border-emerald-400/40' },
-              { icon: '📋', title: 'Add to pipeline', color: 'text-gold', bg: 'bg-gold/10', border: 'border-gold/40' },
-              { icon: '🔔', title: 'Get alerts', color: 'text-purple-400', bg: 'bg-purple-400/10', border: 'border-purple-400/40' },
+              { icon: '👤', title: 'Set up your profile',  desc: 'Tell us your legal structure, sector, stage, and location. Takes about 5 minutes.', color: 'text-forest',    bg: 'bg-forest/10',    border: 'border-forest/40'    },
+              { icon: '🔍', title: 'Search funding',        desc: 'Search naturally across grants, accelerators, social investment, and more in one place.', color: 'text-sky-500',   bg: 'bg-sky-500/10',   border: 'border-sky-400/40'   },
+              { icon: '✦',  title: 'See your matches',      desc: 'Results are ranked by how well they fit your profile — structure, sector, stage, and mission.', color: 'text-emerald-500', bg: 'bg-emerald-500/10', border: 'border-emerald-400/40' },
+              { icon: '📋', title: 'Add to pipeline',       desc: 'Track each application from first contact to submission on a simple visual board.', color: 'text-gold',      bg: 'bg-gold/10',      border: 'border-gold/40'      },
+              { icon: '🔔', title: 'Get alerts',            desc: 'Weekly or instant email alerts when new funding matches your profile.', color: 'text-purple-400', bg: 'bg-purple-400/10', border: 'border-purple-400/40' },
             ].map((step, i, arr) => (
-              <div key={step.title} className="flex items-center flex-1">
-                <div className="flex flex-col items-center text-center flex-1">
-                  <div className={`w-14 h-14 rounded-full ${step.bg} border-2 ${step.border} flex items-center justify-center text-2xl mb-3`}>
+              <div key={step.title} className="flex items-start flex-1">
+                <div className="flex flex-col items-center text-center flex-1 px-2">
+                  <div className={`w-16 h-16 rounded-full ${step.bg} border-2 ${step.border} flex items-center justify-center text-2xl mb-4`}>
                     {step.icon}
                   </div>
-                  <p className={`text-sm font-semibold ${step.color} leading-snug max-w-[90px]`}>{step.title}</p>
+                  <p className={`text-sm font-semibold ${step.color} leading-snug mb-2`}>{step.title}</p>
+                  <p className="text-xs text-mid leading-relaxed max-w-[130px]">{step.desc}</p>
                 </div>
                 {i < arr.length - 1 && (
-                  <div className="flex-1 flex items-center pb-6">
-                    <div className="h-0.5 flex-1 bg-warm" />
-                    <span className="text-light text-sm mx-0.5">›</span>
+                  <div className="flex items-center pt-8 w-8 flex-shrink-0">
+                    <div className="h-0.5 flex-1 bg-warm w-full" />
+                    <span className="text-light text-sm -ml-1">›</span>
                   </div>
                 )}
               </div>
             ))}
           </div>
           {/* Mobile: vertical flow */}
-          <div className="flex md:hidden flex-col items-start gap-0 pl-4">
+          <div className="flex md:hidden flex-col gap-0 pl-2">
             {[
-              { icon: '👤', title: 'Set up your profile', color: 'text-forest' },
-              { icon: '🔍', title: 'Search funding', color: 'text-sky-500' },
-              { icon: '✦', title: 'See your matches', color: 'text-emerald-500' },
-              { icon: '📋', title: 'Add to pipeline', color: 'text-gold' },
-              { icon: '🔔', title: 'Get alerts', color: 'text-purple-400' },
+              { icon: '👤', title: 'Set up your profile',  desc: 'Tell us your legal structure, sector, stage, and location. Takes about 5 minutes.',                              color: 'text-forest'    },
+              { icon: '🔍', title: 'Search funding',        desc: 'Search naturally across grants, accelerators, social investment, and more in one place.',                        color: 'text-sky-500'   },
+              { icon: '✦',  title: 'See your matches',      desc: 'Results ranked by how well they fit your profile — structure, sector, stage, and mission.',                      color: 'text-emerald-500' },
+              { icon: '📋', title: 'Add to pipeline',       desc: 'Track each application from first contact to submission on a simple visual board.',                             color: 'text-gold'      },
+              { icon: '🔔', title: 'Get alerts',            desc: 'Weekly or instant email alerts when new funding matches your profile.',                                          color: 'text-purple-400' },
             ].map((step, i, arr) => (
               <div key={step.title} className="flex items-start gap-4">
-                <div className="flex flex-col items-center">
-                  <div className="w-10 h-10 rounded-full bg-forest/10 border border-warm flex items-center justify-center text-xl">
+                <div className="flex flex-col items-center flex-shrink-0">
+                  <div className="w-11 h-11 rounded-full bg-forest/10 border border-warm flex items-center justify-center text-xl">
                     {step.icon}
                   </div>
-                  {i < arr.length - 1 && <div className="w-0.5 h-6 bg-warm my-1" />}
+                  {i < arr.length - 1 && <div className="w-0.5 h-8 bg-warm my-1" />}
                 </div>
-                <p className={`text-sm font-semibold ${step.color} mt-2.5`}>{step.title}</p>
+                <div className="pt-2 pb-4">
+                  <p className={`text-sm font-semibold ${step.color} mb-1`}>{step.title}</p>
+                  <p className="text-xs text-mid leading-relaxed">{step.desc}</p>
+                </div>
               </div>
             ))}
           </div>
