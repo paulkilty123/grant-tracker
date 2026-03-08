@@ -250,7 +250,7 @@ export default function LandingPage() {
               <span className="text-gradient-warm italic">the full funding landscape</span>
             </h2>
             <p className="mx-auto max-w-2xl text-mid text-lg">
-              Most grant databases cover only a fraction of what CICs and social enterprises can actually access. Grant Tracker indexes all six funding types — because your audience needs the full picture.
+              Most grant databases cover only a fraction of what CICs and social enterprises can access. Grant Tracker brings together searchable grants, accelerators, and diversity funds — plus profiles of social lenders and guides to in-kind support — because your audience needs more than one type of answer.
             </p>
           </motion.div>
 
@@ -260,43 +260,55 @@ export default function LandingPage() {
               {
                 emoji: '🎯',
                 title: 'Grants & Awards',
-                desc: 'National Lottery, trusts, foundations, Innovate UK, arts councils, and government programmes. Tagged by eligible legal structure.',
+                desc: 'National Lottery, trusts, foundations, Innovate UK, arts councils, and government programmes — each tagged with eligible legal structures.',
                 badge: '£300 – £500k+',
+                journey: '🔍 Search & apply',
+                journeyColor: 'bg-forest/10 text-forest',
                 delay: 0.1,
               },
               {
                 emoji: '🚀',
                 title: 'Accelerators & Programmes',
-                desc: 'Equity-free programmes with mentoring, workspace and networks. UnLtd, SSE, Foundervine, Hatch, Creative UK and more. Near-zero overlap with other databases.',
+                desc: 'Equity-free programmes with mentoring, workspace and networks. UnLtd, SSE, Foundervine, Hatch, Creative UK and more — with clear application windows.',
                 badge: 'Programme + grant',
+                journey: '🔍 Search & apply',
+                journeyColor: 'bg-forest/10 text-forest',
                 delay: 0.2,
+              },
+              {
+                emoji: '🌈',
+                title: 'Diversity-Targeted Funds',
+                desc: 'Women in Innovation, Black Seed, Foundervine, and more. The fastest-growing category — zero overlap with general grant databases.',
+                badge: '£5k – £250k',
+                journey: '🔍 Search & apply',
+                journeyColor: 'bg-forest/10 text-forest',
+                delay: 0.3,
               },
               {
                 emoji: '💰',
                 title: 'Social Investment',
-                desc: 'Repayable finance for social purpose from Big Issue Invest, Charity Bank, and Social & Sustainable Capital. Often paired with a grant element.',
+                desc: 'We profile the major social lenders — Big Issue Invest, Charity Bank, Resonance — so you know who funds what and what they look for. The journey starts with a conversation, not a form.',
                 badge: '£20k – £3m',
-                delay: 0.3,
-              },
-              {
-                emoji: '🌈',
-                title: 'Diversity-Targeted Funding',
-                desc: 'BBB Investor Pathways, Women in Innovation, Black Seed, Foundervine, Cornerstone Angels. Fastest-growing category. Zero overlap with general grant databases.',
-                badge: '£5k – £400m programme',
+                journey: '📖 Provider profiles',
+                journeyColor: 'bg-sky-500/10 text-sky-600',
                 delay: 0.4,
               },
               {
                 emoji: '🔗',
-                title: 'Blended & Community Finance',
-                desc: 'Community shares, matched crowdfunding, CDFIs, and SSE Match Trading. Part-grant, part-loan models that most founders have never heard of.',
-                badge: '£50k – £100k match',
+                title: 'Blended & Matched Funding',
+                desc: 'Specific programmes like SSE Match Trading and Power to Change offer matched or blended funding — part grant, part loan. We list the real programmes, not the theoretical mechanisms.',
+                badge: 'Selected programmes',
+                journey: '🔍 Selected listings',
+                journeyColor: 'bg-forest/10 text-forest',
                 delay: 0.5,
               },
               {
                 emoji: '🛠️',
-                title: 'In-Kind & Tax Reliefs',
-                desc: 'Google Ad Grants ($10k/month), AWS credits, SITR, EIS/SEIS, R&D Tax Credits, Video Game Tax Relief. Cash-equivalent support that no other database lists.',
-                badge: 'Varies (cash-equivalent)',
+                title: 'In-Kind & Sector Reliefs',
+                desc: 'Tech credits, sector-specific tax reliefs, and in-kind support explained — including who\'s actually eligible. A growing guides section to help you understand what exists beyond cash grants.',
+                badge: 'Guides & resources',
+                journey: '📚 Guides section',
+                journeyColor: 'bg-gold/10 text-gold',
                 delay: 0.6,
               },
             ].map((item) => (
@@ -309,11 +321,12 @@ export default function LandingPage() {
                   {item.emoji}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                  <div className="flex items-center gap-2 flex-wrap mb-1">
                     <span className="text-sm font-semibold text-charcoal">{item.title}</span>
                     <span className="rounded-full bg-gold/20 px-2 py-0.5 text-[11px] font-medium text-forest/80">{item.badge}</span>
                   </div>
-                  <p className="text-xs text-mid leading-relaxed">{item.desc}</p>
+                  <p className="text-xs text-mid leading-relaxed mb-2">{item.desc}</p>
+                  <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${item.journeyColor}`}>{item.journey}</span>
                 </div>
               </motion.div>
             ))}
