@@ -101,6 +101,8 @@ export default function UrlAdminPage() {
   const [editUrl, setEditUrl]       = useState('')
   const [saving, setSaving]         = useState(false)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [selectedIds, setSelectedIds]         = useState<Set<string>>(new Set())
+  const [batchDeleting, setBatchDeleting]     = useState(false)
   const [search, setSearch]                   = useState('')
   const [loadError, setLoadError]             = useState<string | null>(null)
   const [newGrants, setNewGrants]             = useState<NewGrant[]>([])
@@ -336,6 +338,9 @@ export default function UrlAdminPage() {
     if (authorised && filter === 'review') loadReviewGrants()
   }, [authorised, filter, loadReviewGrants])
 
+  // ── Clear selection when switching tabs ──────────────────────────────────────
+  useEffect(() => { setSelectedIds(new Set()) }, [filter])
+
   // ── Filtered seed grants (client-side, seed tab) ─────────────────────────────
   const filteredSeedGrants = useMemo(() => {
     if (filter !== 'seed') return []
@@ -490,6 +495,44 @@ export default function UrlAdminPage() {
     setCategoryGrants(prev => prev.filter(g => g.id !== id))
     setConfirmDeleteId(null)
     await loadStats()
+  }
+
+  // ── Batch select / delete ─────────────────────────────────────────────────────
+  function toggleSelect(id: string) {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function toggleSelectAll(visibleIds: string[]) {
+    setSelectedIds(prev =>
+      prev.size === visibleIds.length && visibleIds.every(id => prev.has(id))
+        ? new Set()
+        : new Set(visibleIds)
+    )
+  }
+
+  async function batchDelete() {
+    if (selectedIds.size === 0 || batchDeleting) return
+    setBatchDeleting(true)
+    try {
+      const ids = Array.from(selectedIds)
+      await fetch('/api/admin/update-grant', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids, fields: { is_active: false } }),
+      })
+      setGrants(prev => prev.filter(g => !selectedIds.has(g.id)))
+      setNewGrants(prev => prev.filter(g => !selectedIds.has(g.id)))
+      setReviewGrants(prev => prev.filter(g => !selectedIds.has(g.id)))
+      setSelectedIds(new Set())
+      await loadStats()
+    } finally {
+      setBatchDeleting(false)
+    }
   }
 
   // ── Promote seed grant → scraped_grants DB row ───────────────────────────────
@@ -1281,12 +1324,33 @@ export default function UrlAdminPage() {
         </div>
       )}
 
+      {/* ── Batch actions bar ────────────────────────────────────────────────── */}
+      {selectedIds.size > 0 && (
+        <div className="sticky top-4 z-20 flex items-center justify-between rounded-xl border border-red-200 bg-red-50 px-5 py-3 shadow-lg">
+          <p className="text-sm font-semibold text-red-700">
+            {selectedIds.size} grant{selectedIds.size !== 1 ? 's' : ''} selected
+          </p>
+          <div className="flex items-center gap-3">
+            <button onClick={() => setSelectedIds(new Set())}
+              className="text-xs text-red-400 hover:text-red-600 transition-colors">
+              Clear
+            </button>
+            <button onClick={batchDelete} disabled={batchDeleting}
+              className="rounded-full bg-red-500 px-4 py-1.5 text-xs font-semibold text-white hover:bg-red-600 transition-colors disabled:opacity-50">
+              {batchDeleting ? 'Hiding…' : `Hide ${selectedIds.size} selected`}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── New grants table ──────────────────────────────────────────────────── */}
       {filter === 'new' && (() => {
         const q = search.trim().toLowerCase()
         const filtered = newGrants.filter(g =>
           !q || g.title.toLowerCase().includes(q) || (g.funder ?? '').toLowerCase().includes(q) || g.source.toLowerCase().includes(q)
         )
+        const filteredIds = filtered.map(g => g.id)
+        const allSelected = filteredIds.length > 0 && filteredIds.every(id => selectedIds.has(id))
         return (
           <div className="rounded-xl border border-warm bg-white overflow-hidden shadow-card">
             {filtered.length === 0 ? (
@@ -1299,6 +1363,10 @@ export default function UrlAdminPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-warm bg-warm/30 text-left text-xs font-semibold text-mid uppercase tracking-wider">
+                      <th className="px-3 py-3 w-8">
+                        <input type="checkbox" checked={allSelected} onChange={() => toggleSelectAll(filteredIds)}
+                          className="h-3.5 w-3.5 rounded accent-forest cursor-pointer" />
+                      </th>
                       <th className="px-5 py-3">Grant / Funder</th>
                       <th className="px-5 py-3">Source</th>
                       <th className="px-5 py-3">URL</th>
@@ -1309,7 +1377,11 @@ export default function UrlAdminPage() {
                   </thead>
                   <tbody className="divide-y divide-warm/60">
                     {filtered.map(grant => (
-                      <tr key={grant.id} className="hover:bg-cream/50 transition-colors">
+                      <tr key={grant.id} className={`hover:bg-cream/50 transition-colors ${selectedIds.has(grant.id) ? 'bg-red-50' : ''}`}>
+                        <td className="px-3 py-3 w-8">
+                          <input type="checkbox" checked={selectedIds.has(grant.id)} onChange={() => toggleSelect(grant.id)}
+                            className="h-3.5 w-3.5 rounded accent-forest cursor-pointer" />
+                        </td>
                         <td className="px-5 py-3 max-w-[200px]">
                           <p className="font-medium text-charcoal leading-snug line-clamp-2">{grant.title}</p>
                           <p className="text-xs text-mid mt-0.5">{grant.funder ?? '—'}</p>
@@ -1438,11 +1510,18 @@ export default function UrlAdminPage() {
               <CheckCircle className="mx-auto mb-3 h-8 w-8 text-sage" />
               <p className="text-mid text-sm">No grants pending review — all clear!</p>
             </div>
-          ) : (
+          ) : (() => {
+            const reviewIds = reviewGrants.map(g => g.id)
+            const allReviewSelected = reviewIds.length > 0 && reviewIds.every(id => selectedIds.has(id))
+            return (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-warm bg-warm/30 text-left text-xs font-semibold text-mid uppercase tracking-wider">
+                    <th className="px-3 py-3 w-8">
+                      <input type="checkbox" checked={allReviewSelected} onChange={() => toggleSelectAll(reviewIds)}
+                        className="h-3.5 w-3.5 rounded accent-forest cursor-pointer" />
+                    </th>
                     <th className="px-5 py-3">Grant / Funder</th>
                     <th className="px-5 py-3">Description</th>
                     <th className="px-5 py-3">URL</th>
@@ -1451,7 +1530,11 @@ export default function UrlAdminPage() {
                 </thead>
                 <tbody className="divide-y divide-warm/60">
                   {reviewGrants.map(grant => (
-                    <tr key={grant.id} className="hover:bg-cream/50 transition-colors">
+                    <tr key={grant.id} className={`hover:bg-cream/50 transition-colors ${selectedIds.has(grant.id) ? 'bg-red-50' : ''}`}>
+                      <td className="px-3 py-3 w-8">
+                        <input type="checkbox" checked={selectedIds.has(grant.id)} onChange={() => toggleSelect(grant.id)}
+                          className="h-3.5 w-3.5 rounded accent-forest cursor-pointer" />
+                      </td>
                       <td className="px-5 py-3 max-w-[200px]">
                         <p className="font-medium text-charcoal leading-snug line-clamp-2">{grant.title}</p>
                         <p className="text-xs text-mid mt-0.5">{grant.funder}</p>
@@ -1489,7 +1572,8 @@ export default function UrlAdminPage() {
                 </tbody>
               </table>
             </div>
-          )}
+            )
+          })()}
         </div>
       )}
 
@@ -1503,11 +1587,18 @@ export default function UrlAdminPage() {
                 {filter === 'dead' ? 'No dead links found — run validation to check' : 'No results for this filter'}
               </p>
             </div>
-          ) : (
+          ) : (() => {
+            const grantIds = grants.map(g => g.id)
+            const allGrantsSelected = grantIds.length > 0 && grantIds.every(id => selectedIds.has(id))
+            return (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-warm bg-warm/30 text-left text-xs font-semibold text-mid uppercase tracking-wider">
+                    <th className="px-3 py-3 w-8">
+                      <input type="checkbox" checked={allGrantsSelected} onChange={() => toggleSelectAll(grantIds)}
+                        className="h-3.5 w-3.5 rounded accent-forest cursor-pointer" />
+                    </th>
                     <th className="px-5 py-3">Grant / Funder</th>
                     <th className="px-5 py-3">URL</th>
                     <th className="px-5 py-3 text-center">Status</th>
@@ -1517,7 +1608,11 @@ export default function UrlAdminPage() {
                 </thead>
                 <tbody className="divide-y divide-warm/60">
                   {grants.map(grant => (
-                    <tr key={grant.id} className="hover:bg-cream/50 transition-colors">
+                    <tr key={grant.id} className={`hover:bg-cream/50 transition-colors ${selectedIds.has(grant.id) ? 'bg-red-50' : ''}`}>
+                      <td className="px-3 py-3 w-8">
+                        <input type="checkbox" checked={selectedIds.has(grant.id)} onChange={() => toggleSelect(grant.id)}
+                          className="h-3.5 w-3.5 rounded accent-forest cursor-pointer" />
+                      </td>
                       <td className="px-5 py-3 max-w-[220px]">
                         <p className="font-medium text-charcoal leading-snug line-clamp-2">{grant.title}</p>
                         <p className="text-xs text-mid mt-0.5">{grant.funder ?? '—'}</p>
@@ -1541,7 +1636,8 @@ export default function UrlAdminPage() {
                 </tbody>
               </table>
             </div>
-          )}
+            )
+          })()}
         </div>
       )}
 
