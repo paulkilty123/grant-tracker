@@ -50,6 +50,7 @@ export type ImpactSector =
 export type FundingType =
   | 'grant'
   | 'accelerator'
+  | 'support_programme'   // capacity building, fellowships, mentoring, incubators, training
   | 'social_investment'
   | 'diversity_fund'
   | 'blended_finance'

@@ -132,7 +132,7 @@ export default function LandingPage() {
             {...fadeUp(0.35)}
             className="mx-auto mt-6 max-w-2xl text-lg text-mid md:text-xl"
           >
-            Find grants, accelerators, social investment, diversity funds, and more — all matched to your mission, legal structure and stage.
+            Find grants, support programmes, accelerators, social investment, and more — all matched to your mission, legal structure and stage. One search. No overlap with Charity Excellence or My Funding Central.
           </motion.p>
 
           {/* CTAs */}
@@ -154,7 +154,7 @@ export default function LandingPage() {
             className="mx-auto mt-16 grid max-w-3xl grid-cols-2 gap-4 md:grid-cols-4"
           >
             {[
-              { icon: Layers, stat: '6 Funding Types', label: 'grants, accelerators, investment & more' },
+              { icon: Layers, stat: '7 Funding Types', label: 'grants, programmes, investment & more' },
               { icon: Target, stat: 'Smart Matching', label: 'filtered to your structure & stage' },
               { icon: ClipboardList, stat: 'Pipeline', label: 'tracks every application' },
               { icon: Bell, stat: 'Alerts', label: 'never miss a deadline' },
@@ -243,14 +243,14 @@ export default function LandingPage() {
           {/* Heading */}
           <motion.div {...fadeInView(0)} className="text-center mb-12">
             <span className="inline-block mb-4 rounded-full bg-forest/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-forest">
-              6 Funding Types
+              7 Funding Types
             </span>
             <h2 className="text-5xl leading-tight md:text-6xl md:leading-[1.1] mb-5">
               Beyond grants —<br />
               <span className="text-gradient-warm italic">the full funding landscape</span>
             </h2>
             <p className="mx-auto max-w-2xl text-mid text-lg">
-              Most grant databases cover only a fraction of what mission-driven organisations can access. Grant Tracker brings together searchable grants, accelerators, and diversity funds — plus profiles of social lenders and guides to in-kind support — because finding funding rarely means finding just one type of answer.
+              Most grant databases cover only a fraction of what mission-driven organisations can access. Grant Tracker brings together searchable grants, accelerators, and diversity funds — plus profiles of social lenders and guides to in-kind support — because finding funding rarely means finding just one type of answer. Support programmes — capacity building, fellowships and training — make up 300–500 active opportunities at any time. Traditional grant databases don&apos;t cover them.
             </p>
           </motion.div>
 
@@ -285,13 +285,22 @@ export default function LandingPage() {
                 delay: 0.3,
               },
               {
+                emoji: '🎓',
+                title: 'Support Programmes & Training',
+                desc: 'Capacity building, fellowships, mentoring, incubators and training — from Lloyds Bank Foundation Enhance to NCVO and local CVS networks. Near-zero overlap with any grant database.',
+                badge: 'Capacity building',
+                journey: '📋 Self-enrol / apply',
+                journeyColor: 'bg-pink-500/10 text-pink-600',
+                delay: 0.4,
+              },
+              {
                 emoji: '💰',
                 title: 'Social Investment',
                 desc: 'We profile major social lenders — Big Issue Invest, Charity Bank, Resonance — so you know who funds what before you reach out.',
                 badge: '£20k – £3m',
                 journey: '📖 Provider profiles',
                 journeyColor: 'bg-sky-500/10 text-sky-600',
-                delay: 0.4,
+                delay: 0.5,
               },
               {
                 emoji: '🔗',
@@ -300,7 +309,7 @@ export default function LandingPage() {
                 badge: 'Selected programmes',
                 journey: '🔍 Selected listings',
                 journeyColor: 'bg-forest/10 text-forest',
-                delay: 0.5,
+                delay: 0.6,
               },
               {
                 emoji: '🛠️',
@@ -309,7 +318,7 @@ export default function LandingPage() {
                 badge: 'Guides & resources',
                 journey: '📚 Guides section',
                 journeyColor: 'bg-gold/10 text-gold',
-                delay: 0.6,
+                delay: 0.7,
               },
             ].map((item) => (
               <motion.div
@@ -373,7 +382,7 @@ export default function LandingPage() {
               <ul className="mt-6 space-y-3">
                 {[
                   'Profile-based filtering — your structure, stage and sector shape every result',
-                  'Live Search — finds matching funding as you type across all six types',
+                  'Live Search — finds matching funding as you type across all seven types',
                   'Match scores ranked by structure, sector, geography, stage and mission',
                 ].map(text => (
                   <li key={text} className="flex items-start gap-3 text-sm text-mint/80">
@@ -724,7 +733,7 @@ export default function LandingPage() {
             📊 Compare
           </span>
           <h2 className="mt-4 text-3xl md:text-4xl">How Grant Tracker compares</h2>
-          <p className="mt-3 text-mid max-w-xl mx-auto">Built for CICs and social enterprises — not an afterthought in a charity database.</p>
+          <p className="mt-3 text-mid max-w-xl mx-auto">The only platform covering grants AND support programmes — not an afterthought in a charity database.</p>
         </motion.div>
         <motion.div {...fadeInView(0.15)}>
           <div className="rounded-2xl border border-warm bg-white overflow-hidden shadow-warm">
@@ -742,7 +751,8 @@ export default function LandingPage() {
               { feature: 'Legal structure eligibility matching',         gt: true,  other: false },
               { feature: 'CIC & social enterprise focus',                gt: true,  other: false },
               { feature: 'Soft matching for Ltd companies with mission', gt: true,  other: false },
-              { feature: '6 funding types (not just grants)',            gt: true,  other: false },
+              { feature: 'Support programmes, training & capacity building', gt: true,  other: false },
+              { feature: '7 funding types (not just grants)',            gt: true,  other: false },
               { feature: 'AI match scoring with breakdown',              gt: true,  other: false },
               { feature: 'Pipeline & deadline tracking',                 gt: true,  other: false },
               { feature: '12 impact sectors',                            gt: true,  other: false },
@@ -837,8 +847,8 @@ export default function LandingPage() {
       <section className="max-w-6xl mx-auto px-6 pb-20">
         <motion.div {...fadeInView()} className="bg-forest/8 rounded-2xl p-8 grid grid-cols-2 sm:grid-cols-4 gap-6 text-center border border-forest/10">
           {[
-            { stat: '800+', label: 'Funding opportunities across all 6 types' },
-            { stat: '6',    label: 'Funding types — grants, accelerators, investment & more' },
+            { stat: '800+', label: 'Funding opportunities across all 7 types' },
+            { stat: '7',    label: 'Funding types — grants, programmes, investment & more' },
             { stat: '12',   label: 'Impact sectors covered' },
             { stat: 'Free', label: 'to search — no credit card required' },
           ].map(item => (

@@ -104,7 +104,8 @@ const FUNDER_TYPES = [
 const FUNDING_TYPES: { id: FundingType | 'all'; label: string; emoji: string; desc: string }[] = [
   { id: 'all',               label: 'All types',            emoji: '⚡', desc: 'All funding types' },
   { id: 'grant',             label: 'Grants & Awards',      emoji: '🎯', desc: 'One-off grants from trusts, foundations, Lottery & government' },
-  { id: 'accelerator',       label: 'Accelerators',         emoji: '🚀', desc: 'Equity-free programmes: mentoring, workspace & networks' },
+  { id: 'accelerator',        label: 'Accelerators',         emoji: '🚀', desc: 'Equity-free programmes: mentoring, workspace & networks' },
+  { id: 'support_programme', label: 'Support & Training',  emoji: '🎓', desc: 'Capacity building, fellowships, mentoring, incubators & training programmes' },
   { id: 'social_investment', label: 'Social Investment',    emoji: '💰', desc: 'Repayable finance for social purpose organisations' },
   { id: 'diversity_fund',    label: 'Diversity Funds',      emoji: '🌈', desc: 'BBB Pathways, Women in Innovation, Black Seed & more' },
   { id: 'blended_finance',   label: 'Blended Finance',      emoji: '🔗', desc: 'Community shares, matched crowdfunding & CDFIs' },
@@ -461,6 +462,7 @@ export default function SearchPage() {
   const [deadlineFilter, setDeadlineFilter] = useState<'all' | 'rolling' | 'has_deadline'>('all')
   const [activeSectors, setActiveSectors]         = useState<Set<string>>(new Set())
   const [activeFundingType, setActiveFundingType] = useState<FundingType | 'all'>('all')
+  const [categoryFilter, setCategoryFilter]       = useState<'all' | 'grants' | 'programmes'>('all')
   const [filtersOpen, setFiltersOpen]             = useState(false)
   const [entryTypeFilter, setEntryTypeFilter]     = useState<'all' | 'live' | 'funders'>('all')
   const [showInviteOnly, setShowInviteOnly]       = useState(true)
@@ -657,10 +659,14 @@ export default function SearchPage() {
     })
   }
 
+  // Category groupings for the top-level toggle
+  const GRANT_TYPES: (FundingType | 'all')[]      = ['grant', 'social_investment', 'diversity_fund', 'blended_finance', 'in_kind']
+  const PROGRAMME_TYPES: (FundingType | 'all')[]  = ['accelerator', 'support_programme']
+
   // Reset visible count when search/filters change so the user starts from the top
   useEffect(() => {
     setVisibleCount(30)
-  }, [query, activeType, amountMin, amountMax, deadlineFilter, activeSectors, activeFundingType, entryTypeFilter, freshnessFilter, showInviteOnly, aiResults])
+  }, [query, activeType, amountMin, amountMax, deadlineFilter, activeSectors, activeFundingType, categoryFilter, entryTypeFilter, freshnessFilter, showInviteOnly, aiResults])
 
   // ── Build display grants ─────────────────────────────────────────────────
   const displayGrants: DisplayGrant[] = (() => {
@@ -711,7 +717,12 @@ export default function SearchPage() {
         (g as GrantOpportunity & { fundingType?: FundingType }).fundingType === activeFundingType ||
         // Fallback: if grant has no fundingType set, treat it as 'grant'
         (!( g as GrantOpportunity & { fundingType?: FundingType }).fundingType && activeFundingType === 'grant')
-      return matchesQuery && matchesType && matchesAmount && matchesDeadline && matchesSectors && matchesEntryType && matchesFreshness && matchesInviteOnly && matchesFundingType
+      const gFundingType = (g as GrantOpportunity & { fundingType?: FundingType }).fundingType ?? 'grant'
+      const matchesCategory =
+        categoryFilter === 'all' ||
+        (categoryFilter === 'grants'      && GRANT_TYPES.includes(gFundingType)) ||
+        (categoryFilter === 'programmes'  && PROGRAMME_TYPES.includes(gFundingType))
+      return matchesQuery && matchesType && matchesAmount && matchesDeadline && matchesSectors && matchesEntryType && matchesFreshness && matchesInviteOnly && matchesFundingType && matchesCategory
     })
 
     if (aiResults) {
@@ -877,6 +888,7 @@ export default function SearchPage() {
   const activeFilterCount = [
     activeType !== 'all',
     activeFundingType !== 'all',
+    categoryFilter !== 'all',
     !!amountMin,
     !!amountMax,
     deadlineFilter !== 'all',
@@ -898,6 +910,7 @@ export default function SearchPage() {
     setEntryTypeFilter('all')
     setFreshnessFilter('all')
     setShowInviteOnly(true)
+    setCategoryFilter('all')
   }
 
   function toggleGroup(label: string) {
@@ -907,6 +920,22 @@ export default function SearchPage() {
       return next
     })
   }
+
+  // Derived: which funding-type pills to show given the active category
+  const visibleFundingTypes = FUNDING_TYPES.filter(t =>
+    t.id === 'all' ||
+    categoryFilter === 'all' ||
+    (categoryFilter === 'grants'      && GRANT_TYPES.includes(t.id)) ||
+    (categoryFilter === 'programmes'  && PROGRAMME_TYPES.includes(t.id))
+  )
+
+  // Category counts (used for badges on the toggle)
+  const allGrants_raw = allGrants.filter(g => {
+    if (!g.isRolling && g.deadline && g.deadline < new Date().toISOString().split('T')[0]) return false
+    return true
+  })
+  const grantsCount     = allGrants_raw.filter(g => GRANT_TYPES.includes((g as GrantOpportunity & { fundingType?: FundingType }).fundingType ?? 'grant')).length
+  const programmesCount = allGrants_raw.filter(g => PROGRAMME_TYPES.includes((g as GrantOpportunity & { fundingType?: FundingType }).fundingType ?? 'grant')).length
 
   return (
     <div>
@@ -1005,11 +1034,41 @@ export default function SearchPage() {
         {filtersOpen && (
           <div className="mt-4 pt-4 border-t border-warm space-y-5">
 
+            {/* Category toggle — Grants & funding vs Programmes & support */}
+            <div>
+              <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Category</p>
+              <div className="inline-flex rounded-lg border border-warm bg-white p-0.5 gap-0.5 mb-4">
+                {([
+                  { id: 'all',         label: 'All opportunities',    count: allGrants_raw.length },
+                  { id: 'grants',      label: 'Grants & funding',     count: grantsCount },
+                  { id: 'programmes',  label: 'Programmes & support', count: programmesCount },
+                ] as const).map(opt => (
+                  <button
+                    key={opt.id}
+                    onClick={() => {
+                      setCategoryFilter(opt.id)
+                      setActiveFundingType('all')
+                    }}
+                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ${
+                      categoryFilter === opt.id
+                        ? 'bg-forest text-white shadow-sm'
+                        : 'text-mid hover:text-dark'
+                    }`}
+                  >
+                    {opt.label}
+                    <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
+                      categoryFilter === opt.id ? 'bg-white/20 text-white' : 'bg-warm text-mid'
+                    }`}>{opt.count}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Funding type — grants vs accelerators vs social investment etc */}
             <div>
               <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Funding type</p>
               <div className="flex gap-2 flex-wrap mb-1">
-                {FUNDING_TYPES.map(t => (
+                {visibleFundingTypes.map(t => (
                   <button key={t.id} onClick={() => setActiveFundingType(t.id as FundingType | 'all')}
                     title={t.desc}
                     className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
