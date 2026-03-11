@@ -163,7 +163,7 @@ export default function UrlAdminPage() {
     const [{ data }, { count: newCount }, { count: reviewCount }, { count: suspiciousCount }] = await Promise.all([
       createClient().from('scraped_grants').select('url_status, apply_url').eq('is_active', true),
       createClient().from('scraped_grants').select('id', { count: 'exact', head: true }).eq('is_active', true).gte('first_seen_at', sevenDaysAgo),
-      createClient().from('scraped_grants').select('id', { count: 'exact', head: true }).eq('is_active', false),
+      createClient().from('scraped_grants').select('id', { count: 'exact', head: true }).eq('is_active', false).neq('url_status', 'dead'),
       createClient().from('scraped_grants').select('id', { count: 'exact', head: true }).eq('is_active', true).not('url_quality_score', 'is', null).lt('url_quality_score', 60),
     ])
     if (!data) return
@@ -624,14 +624,20 @@ export default function UrlAdminPage() {
     setBatchDeleting(true)
     try {
       const ids = Array.from(selectedIds)
+      // Review grants are already is_active: false — mark them as url_status: 'dead'
+      // so they don't reappear in the review queue on next load.
+      const fields = filter === 'review'
+        ? { url_status: 'dead' }
+        : { is_active: false }
       await fetch('/api/admin/update-grant', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ids, fields: { is_active: false } }),
+        body: JSON.stringify({ ids, fields }),
       })
       setGrants(prev => prev.filter(g => !selectedIds.has(g.id)))
       setNewGrants(prev => prev.filter(g => !selectedIds.has(g.id)))
       setReviewGrants(prev => prev.filter(g => !selectedIds.has(g.id)))
+      setSuspiciousGrants(prev => prev.filter(g => !selectedIds.has(g.id)))
       setSelectedIds(new Set())
       await loadStats()
     } finally {
