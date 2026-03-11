@@ -215,6 +215,7 @@ After researching, return a JSON object with exactly this structure:
 
 Include up to 15 grants. Strongly prioritise hyper-local and specialist funders over large national ones.
 IMPORTANT: Every grant MUST include an applyUrl — if you cannot find the specific grant application page, use the funder's homepage or grants page instead. Do NOT include any grant where you cannot provide at least a funder website URL.
+IMPORTANT: Today's date is ${new Date().toISOString().slice(0, 10)}. Do NOT include any grant whose deadline has already passed. Only include grants that are currently open, rolling, or have a future deadline.
 Return ONLY valid JSON — no markdown fences, no commentary outside the JSON object.`
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -278,6 +279,16 @@ Return ONLY valid JSON — no markdown fences, no commentary outside the JSON ob
       result.grants = urlChecks
         .map((r, i) => r.status === 'fulfilled' ? r.value : result.grants[i])
         .filter((g: { applyUrl?: string | null }) => g.applyUrl)  // drop grants with no URL
+        .filter((g: { deadline?: string | null }) => {
+          // Drop grants with clearly past deadlines
+          if (!g.deadline) return true  // keep rolling/unknown
+          const dl = g.deadline.toLowerCase()
+          if (dl.includes('rolling') || dl.includes('ongoing') || dl.includes('open') || dl.includes('tbc') || dl.includes('tba')) return true
+          // Try to parse a date from the deadline string
+          const parsed = new Date(g.deadline)
+          if (isNaN(parsed.getTime())) return true  // can't parse — keep it
+          return parsed.getTime() > Date.now()
+        })
     }
 
     // ── 4. Store in cache (upsert so repeat queries overwrite stale rows) ───
