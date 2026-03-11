@@ -275,9 +275,9 @@ Return ONLY valid JSON — no markdown fences, no commentary outside the JSON ob
           return { ...g, applyUrl: null }
         })
       )
-      result.grants = urlChecks.map((r, i) =>
-        r.status === 'fulfilled' ? r.value : result.grants[i]
-      )
+      result.grants = urlChecks
+        .map((r, i) => r.status === 'fulfilled' ? r.value : result.grants[i])
+        .filter((g: { applyUrl?: string | null }) => g.applyUrl)  // drop grants with no URL
     }
 
     // ── 4. Store in cache (upsert so repeat queries overwrite stale rows) ───

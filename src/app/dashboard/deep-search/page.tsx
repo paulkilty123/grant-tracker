@@ -92,17 +92,10 @@ function DeepGrantCard({ grant, onAddToPipeline }: {
             <p className="text-sm font-medium text-charcoal">{grant.deadline ?? 'Check website'}</p>
           </div>
           <div className="flex flex-col gap-1.5 w-full">
-            {grant.applyUrl ? (
-              <a href={grant.applyUrl} target="_blank" rel="noopener noreferrer"
-                className="flex items-center justify-center gap-1 px-3 py-1.5 rounded-full border border-warm text-xs font-medium text-mid hover:border-forest hover:text-forest transition-colors w-full">
-                Visit website →
-              </a>
-            ) : (
-              <a href={`https://www.google.com/search?q=${encodeURIComponent(`${grant.title} ${grant.funder} grant apply`)}`} target="_blank" rel="noopener noreferrer"
-                className="flex items-center justify-center gap-1 px-3 py-1.5 rounded-full border border-dashed border-warm text-xs font-medium text-light hover:border-sage hover:text-sage transition-colors w-full">
-                Search for this grant →
-              </a>
-            )}
+            <a href={grant.applyUrl} target="_blank" rel="noopener noreferrer"
+              className="flex items-center justify-center gap-1 px-3 py-1.5 rounded-full border border-warm text-xs font-medium text-mid hover:border-forest hover:text-forest transition-colors w-full">
+              Visit website →
+            </a>
             <button onClick={() => onAddToPipeline(grant)}
               className="px-3 py-1.5 rounded-full bg-gold text-white text-xs font-semibold w-full hover:bg-gold/90 transition-colors">
               + Pipeline
