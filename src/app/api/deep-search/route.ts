@@ -132,7 +132,7 @@ function buildOrgContext(org: Organisation | null): string {
     parts.push(`Preferred grant size: ${min} – ${max}`)
   }
   if (!parts.length) return ''
-  return `\n\nAPPLICANT PROFILE — tailor your research to this organisation:\n${parts.map(p => `- ${p}`).join('\n')}\n`
+  return `\n\nAPPLICANT PROFILE — use ONLY for eligibility filtering, NOT to change the search topic:\n${parts.map(p => `- ${p}`).join('\n')}\n`
 }
 
 export async function POST(req: NextRequest) {
@@ -177,17 +177,25 @@ export async function POST(req: NextRequest) {
         }\nOnly return genuinely new opportunities not on this list.`
       : ''
 
-    const prompt = `You are a UK funding expert specialising in grants, competitions, social loans and matched crowdfunding for charities, community groups, social enterprises, impact founders and underserved ventures. Research funding opportunities for: "${query}".
-${orgContext}${sectorContext}${locationContext}${exclusionList}
+    const prompt = `You are a UK funding expert specialising in grants, competitions, social loans and matched crowdfunding for charities, community groups, social enterprises, impact founders and underserved ventures.
+
+SEARCH QUERY (this is the PRIMARY driver — all results MUST match this query): "${query}"
+${sectorContext}${locationContext}
+
+CRITICAL: Your results MUST directly match the search query above. The search query defines WHAT to look for. Do NOT substitute the query topic with the applicant profile topic. For example, if the query says "Social Enterprises Funding London" then every result must be about social enterprise funding in London — not about the applicant's other themes or areas of work.
+${orgContext}${exclusionList}
 
 Use web search to find:
-1. Hyper-local funders specific to any location mentioned in the query or applicant profile (local council grants, NHS/ICB commissioning, community foundations, borough-level programmes)
-2. Specialist funders for the specific sectors, topics, themes and beneficiaries
+1. Hyper-local funders specific to any location mentioned in the query (local council grants, NHS/ICB commissioning, community foundations, borough-level programmes)
+2. Specialist funders for the specific sectors, topics, themes and beneficiaries mentioned in the query
 3. Any relevant regional funders if applicable
 4. Current application windows, deadlines and open rounds
-5. Grants sized appropriately for the applicant's income band and preferred grant range (where provided)
+5. Grants sized appropriately for the applicant's income band and preferred grant range (where provided in profile)
 
-Where an applicant profile is provided, prioritise funders that match their location, organisation type, themes and grant size preferences. Deprioritise large national funders if hyper-local alternatives exist.
+If an applicant profile is provided, use it ONLY to:
+- Filter out grants the organisation would not be eligible for (wrong org type, wrong income band, wrong geography)
+- Prefer grants matching the applicant's grant size range
+Do NOT use the profile to change what topics or sectors are searched for — the search query alone defines the topic.
 
 After researching, return a JSON object with exactly this structure:
 {
