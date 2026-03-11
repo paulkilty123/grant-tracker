@@ -98,6 +98,7 @@ export default function UrlAdminPage() {
   const [validationProgress, setValidationProgress] = useState<{ checked: number; total: number; ok: number; dead: number } | null>(null)
   const [promotingSeeds, setPromotingSeeds]   = useState(false)
   const [promoteResult, setPromoteResult]     = useState<{ inserted: number; skipped: number; message: string } | null>(null)
+  const [promotedKeys, setPromotedKeys]       = useState<Set<string>>(new Set())
   const [editingId, setEditingId]   = useState<string | null>(null)
   const [editUrl, setEditUrl]       = useState('')
   const [saving, setSaving]         = useState(false)
@@ -178,6 +179,15 @@ export default function UrlAdminPage() {
       reviewCount: reviewCount ?? 0,
       suspiciousCount: suspiciousCount ?? 0,
     })
+  }, [])
+
+  // ── Load set of seed grants that already exist in the DB (promoted) ─────────
+  const loadPromotedKeys = useCallback(async () => {
+    const { data } = await createClient()
+      .from('scraped_grants')
+      .select('title, funder')
+      .limit(10000)
+    setPromotedKeys(new Set((data ?? []).map(g => `${g.title}||${g.funder}`)))
   }, [])
 
   // ── Load scraped grants (URL health views) ───────────────────────────────────
@@ -351,8 +361,8 @@ export default function UrlAdminPage() {
   }, [filter])
 
   useEffect(() => {
-    if (authorised) { loadStats(); loadGrants(); loadNewGrants() }
-  }, [authorised, loadStats, loadGrants, loadNewGrants])
+    if (authorised) { loadStats(); loadGrants(); loadNewGrants(); loadPromotedKeys() }
+  }, [authorised, loadStats, loadGrants, loadNewGrants, loadPromotedKeys])
 
   useEffect(() => {
     if (authorised && filter === 'category') loadCategoryGrants()
@@ -372,13 +382,15 @@ export default function UrlAdminPage() {
   // ── Filtered seed grants (client-side, seed tab) ─────────────────────────────
   const filteredSeedGrants = useMemo(() => {
     if (filter !== 'seed') return []
+    // Filter out seeds that have been promoted to the DB
+    const unpromoted = SEED_GRANTS.filter(g => !promotedKeys.has(`${g.title}||${g.funder}`))
     const q = search.trim().toLowerCase()
-    if (!q) return SEED_GRANTS
-    return SEED_GRANTS.filter(g =>
+    if (!q) return unpromoted
+    return unpromoted.filter(g =>
       g.title.toLowerCase().includes(q) ||
       g.funder.toLowerCase().includes(q)
     )
-  }, [filter, search])
+  }, [filter, search, promotedKeys])
 
   // ── Category grouped data (client-side filtering + grouping) ─────────────────
   const categoryGrouped = useMemo(() => {
@@ -409,7 +421,7 @@ export default function UrlAdminPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Unknown error')
       setPromoteResult(data)
-      await loadStats()
+      await Promise.all([loadStats(), loadPromotedKeys()])
       if (filter === 'category') await loadCategoryGrants()
     } catch (err) {
       setPromoteResult({ inserted: 0, skipped: 0, message: `Error: ${err instanceof Error ? err.message : 'Unknown'}` })
@@ -1310,7 +1322,7 @@ export default function UrlAdminPage() {
           { key: 'no_url',    label: `No URL${stats ? ` (${stats.noUrl ?? 0})` : ''}` },
           { key: 'suspicious', label: `Suspicious${stats?.suspiciousCount ? ` (${stats.suspiciousCount})` : ''}`, urgent: (stats?.suspiciousCount ?? 0) > 10 },
           { key: 'all',       label: 'All grants' },
-          { key: 'seed',      label: `Seed grants (${SEED_GRANTS.length})` },
+          { key: 'seed',      label: `Seed grants (${SEED_GRANTS.length - promotedKeys.size > 0 ? `${SEED_GRANTS.length - Math.min(promotedKeys.size, SEED_GRANTS.length)} remaining` : 'all promoted'})` },
         ] as const).map(tab => (
           <button key={tab.key}
             onClick={() => { setFilter(tab.key); setSearch(''); setCategorySearch('') }}
