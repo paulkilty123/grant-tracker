@@ -207,13 +207,14 @@ After researching, return a JSON object with exactly this structure:
       "description": "2-3 sentences describing what it funds and who it is for",
       "amountRange": "£X,000–£X,000 or null if unknown",
       "deadline": "Month YYYY, Rolling, or null if unknown",
-      "applyUrl": "https://... (must be a URL you have confirmed exists via web search — do not guess or construct URLs; set null if you cannot verify it)",
+      "applyUrl": "https://... (REQUIRED — provide the specific grant page URL confirmed via web search. If the exact grant page is not found, provide the funder's main grants/funding page instead. Never set this to null — every result MUST have a URL.)",
       "notes": "One practical tip or caveat, e.g. about eligibility, timing or relationship-building"
     }
   ]
 }
 
 Include up to 15 grants. Strongly prioritise hyper-local and specialist funders over large national ones.
+IMPORTANT: Every grant MUST include an applyUrl — if you cannot find the specific grant application page, use the funder's homepage or grants page instead. Do NOT include any grant where you cannot provide at least a funder website URL.
 Return ONLY valid JSON — no markdown fences, no commentary outside the JSON object.`
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -257,14 +258,21 @@ Return ONLY valid JSON — no markdown fences, no commentary outside the JSON ob
     }
     const result = JSON.parse(cleaned)
 
-    // ── 3. Verify URLs — null-out any that return 404/410 ───────────────────
+    // ── 3. Verify URLs — fall back to funder homepage if specific page is dead
     if (Array.isArray(result.grants)) {
       const urlChecks = await Promise.allSettled(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         result.grants.map(async (g: any) => {
           if (!g.applyUrl) return g
           const alive = await verifyUrl(g.applyUrl)
-          return alive ? g : { ...g, applyUrl: null }
+          if (alive) return g
+          // Try funder homepage as fallback
+          try {
+            const domain = new URL(g.applyUrl).origin
+            const homepageAlive = await verifyUrl(domain)
+            if (homepageAlive) return { ...g, applyUrl: domain }
+          } catch { /* ignore parse errors */ }
+          return { ...g, applyUrl: null }
         })
       )
       result.grants = urlChecks.map((r, i) =>
