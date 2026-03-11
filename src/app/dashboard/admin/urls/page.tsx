@@ -141,6 +141,7 @@ export default function UrlAdminPage() {
   const [refreshSaving, setRefreshSaving]           = useState(false)
   const [refreshError, setRefreshError]             = useState<string | null>(null)
   const [populatingFromUrl, setPopulatingFromUrl]   = useState(false)
+  const [populateMsg, setPopulateMsg]               = useState<string | null>(null)
 
   // ── Auth check ───────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -582,6 +583,7 @@ export default function UrlAdminPage() {
   async function fetchGrantInfo(grant: Grant | CategoryGrant) {
     setRefreshingId(grant.id)
     setRefreshError(null)
+    setPopulateMsg(null)
     try {
       const res = await fetch('/api/admin/search-grant-info', {
         method: 'POST',
@@ -637,6 +639,7 @@ export default function UrlAdminPage() {
     if (!url) return
     setPopulatingFromUrl(true)
     setRefreshError(null)
+    setPopulateMsg(null)
     try {
       const res = await fetch('/api/admin/search-grant-info', {
         method: 'POST',
@@ -676,6 +679,11 @@ export default function UrlAdminPage() {
           is_invite_only: d.is_invite_only ?? m.form.is_invite_only,
         },
       } : m)
+      // Friendly feedback: let the user know what happened
+      const pageCrawled = json.urlWasDead === false  // API crawled the URL successfully
+      setPopulateMsg(pageCrawled
+        ? '✓ Page scanned — fields updated below'
+        : '✓ Used AI knowledge — page could not be crawled directly')
     } catch (err) {
       setRefreshError(`Populate failed: ${err instanceof Error ? err.message : String(err)}`)
     } finally {
@@ -688,6 +696,7 @@ export default function UrlAdminPage() {
     if (!refreshModal) return
     setRefreshSaving(true)
     setRefreshError(null)
+    setPopulateMsg(null)
     const { grantId, form } = refreshModal
     const sectors = form.sectors
       ? form.sectors.split(',').map(s => s.trim()).filter(Boolean)
@@ -723,6 +732,8 @@ export default function UrlAdminPage() {
     await loadStats()
     await loadGrants()
     if (filter === 'category') await loadCategoryGrants()
+    if (filter === 'review')   await loadReviewGrants()
+    if (filter === 'new')      await loadNewGrants()
   }
 
   // ── Populate form from URL ────────────────────────────────────────────────────
@@ -1700,7 +1711,7 @@ export default function UrlAdminPage() {
                 <label className="block text-xs font-semibold text-mid uppercase tracking-wider mb-1.5">Apply URL</label>
                 <div className="flex items-center gap-2">
                   <input type="url" value={refreshModal.form.apply_url}
-                    onChange={e => setRefreshModal(m => m ? { ...m, form: { ...m.form, apply_url: e.target.value }, grantUrl: e.target.value } : m)}
+                    onChange={e => setRefreshModal(m => m ? { ...m, form: { ...m.form, apply_url: e.target.value } } : m)}
                     placeholder="https://…"
                     className="flex-1 rounded-xl border border-warm px-3 py-2.5 text-sm text-charcoal placeholder:text-light focus:border-forest focus:outline-none" />
                   {/* Populate: fetch grant info from the entered URL */}
@@ -1721,7 +1732,10 @@ export default function UrlAdminPage() {
                     </a>
                   )}
                 </div>
-                <p className="mt-1 text-xs text-light">Enter a URL then click Populate to auto-fill the fields below from that page.</p>
+                {populateMsg
+                  ? <p className="mt-1 text-xs text-forest font-medium">{populateMsg}</p>
+                  : <p className="mt-1 text-xs text-light">Enter a URL then click Populate to auto-fill the fields below from that page.</p>
+                }
               </div>
 
               {/* Title */}
