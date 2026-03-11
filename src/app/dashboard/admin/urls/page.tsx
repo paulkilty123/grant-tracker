@@ -568,7 +568,8 @@ export default function UrlAdminPage() {
 
   // ── Mark ok manually ─────────────────────────────────────────────────────────
   async function markOk(id: string) {
-    await updateGrant(id, { url_status: 'ok', url_last_checked: new Date().toISOString() })
+    // Clear url_quality_score so it no longer matches the suspicious filter (score < 60)
+    await updateGrant(id, { url_status: 'ok', url_last_checked: new Date().toISOString(), url_quality_score: null, url_quality_issues: [] })
     setGrants(prev => prev.filter(g => g.id !== id))
     setCategoryGrants(prev => prev.map(g => g.id === id ? { ...g, url_status: 'ok' as const } : g))
     setSuspiciousGrants(prev => prev.filter(g => g.id !== id))
