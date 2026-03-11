@@ -570,7 +570,14 @@ export default function UrlAdminPage() {
   async function markOk(id: string) {
     // Clear url_quality_score so it no longer matches the suspicious filter (score < 60)
     await updateGrant(id, { url_status: 'ok', url_last_checked: new Date().toISOString(), url_quality_score: null, url_quality_issues: [] })
-    setGrants(prev => prev.filter(g => g.id !== id))
+    const patchOk = (g: Grant) => g.id === id ? { ...g, url_status: 'ok' as const, url_last_checked: new Date().toISOString() } : g
+    // For dead/unchecked filter views, remove from list; for others, update in place
+    if (filter === 'dead' || filter === 'unchecked') {
+      setGrants(prev => prev.filter(g => g.id !== id))
+    } else {
+      setGrants(prev => prev.map(patchOk))
+    }
+    setNewGrants(prev => prev.map(g => g.id === id ? { ...g, url_status: 'ok' as const, url_last_checked: new Date().toISOString() } : g))
     setCategoryGrants(prev => prev.map(g => g.id === id ? { ...g, url_status: 'ok' as const } : g))
     setSuspiciousGrants(prev => prev.filter(g => g.id !== id))
     await loadStats()
@@ -1016,8 +1023,8 @@ export default function UrlAdminPage() {
         >
           <Pencil className="h-3 w-3" />
         </button>
-        {grant.url_status === 'dead' && (
-          <button onClick={() => markOk(grant.id)} title="Clear flag — mark as ok"
+        {grant.url_status !== 'ok' && (
+          <button onClick={() => markOk(grant.id)} title="Approve — mark URL as ok"
             className="rounded-full border border-warm p-1.5 text-mid hover:border-sage hover:text-sage transition-colors">
             <Check className="h-3 w-3" />
           </button>
