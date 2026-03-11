@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { deepCheckUrl } from '@/lib/url-validator'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 55
@@ -336,6 +337,50 @@ export async function POST(req: NextRequest) {
         : `Current URL: "${existingUrl}" — suggest a better one if you know of one.`
     : 'No URL currently stored.'
 
+  // ── Verify a suggested URL actually exists (reject Claude hallucinations) ───
+  async function verifySuggested(suggestedUrl: string): Promise<boolean> {
+    if (!suggestedUrl.startsWith('http')) return false
+    try {
+      const res = await fetch(suggestedUrl, {
+        method: 'HEAD',
+        signal: AbortSignal.timeout(5000),
+        redirect: 'follow',
+        headers: { 'User-Agent': 'Mozilla/5.0 (GrantTracker/1.0)' },
+      })
+      return res.status !== 404 && res.status !== 410 && res.status !== 400
+    } catch {
+      return false // Network error → can't confirm it exists
+    }
+  }
+
+  // ── Compare old vs new URL quality — only upgrade if meaningfully better ────
+  async function shouldUpgradeUrl(
+    newUrl: string,
+    oldUrl: string | undefined,
+  ): Promise<{ improved: boolean; oldScore: number; newScore: number }> {
+    if (!oldUrl || existingUrlIsDead) {
+      // No existing URL or it's dead — any working URL is an improvement
+      return { improved: true, oldScore: 0, newScore: 60 }
+    }
+    if (newUrl === oldUrl) return { improved: false, oldScore: 50, newScore: 50 }
+
+    // Deep-check both URLs in parallel
+    const [oldResult, newResult] = await Promise.all([
+      deepCheckUrl(oldUrl, cleanFunder, cleanTitle),
+      deepCheckUrl(newUrl, cleanFunder, cleanTitle),
+    ])
+
+    // Only suggest if new is ≥15 points better, or old is already bad (< 40)
+    const improvement = newResult.qualityScore - oldResult.qualityScore
+    const improved = improvement >= 15 || (oldResult.qualityScore < 40 && newResult.qualityScore >= 40)
+
+    return {
+      improved,
+      oldScore: oldResult.qualityScore,
+      newScore: newResult.qualityScore,
+    }
+  }
+
   // ── Step 4: Claude extracts data + suggests URL from gathered content ──────
   if (combinedText) {
     const prompt = `You are a UK grant database assistant. Extract structured information about this grant from the content below, and suggest the best available URL for the grant application page.
@@ -356,11 +401,14 @@ ${combinedText.slice(0, 12000)}`
 
       // Accept Claude's suggestion if we don't have a specific URL yet
       if (!bestUrl && typeof suggestedUrl === 'string' && suggestedUrl.startsWith('http')) {
-        if (!isLikely404Url(suggestedUrl) && !isLowQualityUrl(suggestedUrl)) {
-          bestUrl = suggestedUrl
-        } else if (!isLikely404Url(suggestedUrl)) {
-          // Accept a homepage suggestion as last resort if existing was dead
-          if (existingUrlIsDead) bestUrl = suggestedUrl
+        // Verify the suggested URL actually exists before accepting
+        const exists = await verifySuggested(suggestedUrl)
+        if (exists) {
+          if (!isLikely404Url(suggestedUrl) && !isLowQualityUrl(suggestedUrl)) {
+            bestUrl = suggestedUrl
+          } else if (!isLikely404Url(suggestedUrl) && existingUrlIsDead) {
+            bestUrl = suggestedUrl
+          }
         }
       }
 
@@ -368,8 +416,21 @@ ${combinedText.slice(0, 12000)}`
       if (!bestUrl && existingUrlIsDead && funderHomepageUrl) bestUrl = funderHomepageUrl
 
       const sourceUrl = bestUrl || (existingUrlIsDead ? '' : (existingUrl ?? ''))
-      const urlImproved = !!bestUrl && bestUrl !== (existingUrl ?? '') && !isLowQualityUrl(bestUrl)
-      return NextResponse.json({ ok: true, data, sourceUrl, urlImproved, urlWasDead: existingUrlIsDead })
+
+      // Compare old vs new before declaring "improved"
+      let urlImproved = false
+      let urlComparison: { oldScore: number; newScore: number } | undefined
+      if (bestUrl && bestUrl !== (existingUrl ?? '') && !isLowQualityUrl(bestUrl)) {
+        const cmp = await shouldUpgradeUrl(bestUrl, existingUrl)
+        urlImproved = cmp.improved
+        urlComparison = { oldScore: cmp.oldScore, newScore: cmp.newScore }
+        // If the old URL is actually better, revert to it
+        if (!urlImproved && existingUrl && !existingUrlIsDead) {
+          return NextResponse.json({ ok: true, data, sourceUrl: existingUrl, urlImproved: false, urlWasDead: existingUrlIsDead, urlComparison })
+        }
+      }
+
+      return NextResponse.json({ ok: true, data, sourceUrl, urlImproved, urlWasDead: existingUrlIsDead, urlComparison })
     } catch { /* fall through */ }
   }
 
@@ -393,14 +454,27 @@ ${EXTRACT_FIELDS}
     const { suggested_url: suggestedUrl, ...data } = result
     let finalUrl = bestUrl  // may already be set from earlier steps
     if (!finalUrl && typeof suggestedUrl === 'string' && suggestedUrl.startsWith('http')) {
-      if (!isLikely404Url(suggestedUrl)) finalUrl = suggestedUrl as string
+      // Verify before accepting
+      const exists = await verifySuggested(suggestedUrl)
+      if (exists && !isLikely404Url(suggestedUrl)) finalUrl = suggestedUrl as string
     }
     // Last resort: funder homepage so user at least has somewhere to start
     if (!finalUrl && existingUrlIsDead && funderHomepageUrl) finalUrl = funderHomepageUrl
     if (!finalUrl && !existingUrlIsDead) finalUrl = existingUrl ?? ''
 
-    const urlImproved = !!finalUrl && finalUrl !== existingUrl && !isLowQualityUrl(finalUrl)
-    return NextResponse.json({ ok: true, data, sourceUrl: finalUrl, urlImproved, urlWasDead: existingUrlIsDead })
+    // Compare old vs new before declaring "improved"
+    let urlImproved = false
+    let urlComparison: { oldScore: number; newScore: number } | undefined
+    if (finalUrl && finalUrl !== existingUrl && !isLowQualityUrl(finalUrl)) {
+      const cmp = await shouldUpgradeUrl(finalUrl, existingUrl)
+      urlImproved = cmp.improved
+      urlComparison = { oldScore: cmp.oldScore, newScore: cmp.newScore }
+      if (!urlImproved && existingUrl && !existingUrlIsDead) {
+        return NextResponse.json({ ok: true, data, sourceUrl: existingUrl, urlImproved: false, urlWasDead: existingUrlIsDead, urlComparison })
+      }
+    }
+
+    return NextResponse.json({ ok: true, data, sourceUrl: finalUrl, urlImproved, urlWasDead: existingUrlIsDead, urlComparison })
   } catch {
     return NextResponse.json(
       { error: 'Could not retrieve grant information. Try entering the details manually.' },

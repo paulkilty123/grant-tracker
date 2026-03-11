@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { createClient as createServerClient } from '@/lib/supabase/server'
-import { checkUrl } from '@/lib/url-validator'
+import { checkUrl, deepCheckUrl } from '@/lib/url-validator'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
   // Fetch this chunk
   const { data: grants, error } = await supabase
     .from('scraped_grants')
-    .select('id, apply_url, funder')
+    .select('id, apply_url, funder, title')
     .eq('is_active', true)
     .not('apply_url', 'is', null)
     .order('id')            // stable order across calls
@@ -101,12 +101,23 @@ export async function POST(req: NextRequest) {
   let deadCount = 0
 
   await inBatches(grants, 10, async (grant) => {
-    const status = await checkUrl(grant.apply_url as string, grant.funder ?? undefined)
+    // Use deepCheckUrl to also score quality while validating
+    const result = await deepCheckUrl(
+      grant.apply_url as string,
+      (grant.funder as string) ?? '',
+      (grant.title as string) ?? '',
+    )
+    const status = (result.status === 'dead' || result.status === 'grant_closed') ? 'dead' as const : 'ok' as const
     if (status === 'dead') deadCount++
     else okCount++
     await supabase
       .from('scraped_grants')
-      .update({ url_status: status, url_last_checked: new Date().toISOString() })
+      .update({
+        url_status:         status,
+        url_last_checked:   new Date().toISOString(),
+        url_quality_score:  result.qualityScore,
+        url_quality_issues: result.issues,
+      })
       .eq('id', grant.id)
   })
 
@@ -127,18 +138,36 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   if (!await isAuthorised(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { id, apply_url, funder } = await req.json()
+  const { id, apply_url, funder, title } = await req.json()
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })
 
   const supabase = getAdminClient()
   let url_status: 'ok' | 'dead' | 'unchecked' = 'unchecked'
-  if (apply_url) url_status = await checkUrl(apply_url, funder ?? undefined)
+  let qualityScore: number | null = null
+  let qualityIssues: string[] = []
+
+  if (apply_url) {
+    if (title && funder) {
+      const result = await deepCheckUrl(apply_url, funder, title)
+      url_status     = (result.status === 'dead' || result.status === 'grant_closed') ? 'dead' : 'ok'
+      qualityScore   = result.qualityScore
+      qualityIssues  = result.issues
+    } else {
+      url_status = await checkUrl(apply_url, funder ?? undefined)
+    }
+  }
 
   const { error } = await supabase
     .from('scraped_grants')
-    .update({ apply_url, url_status, url_last_checked: new Date().toISOString() })
+    .update({
+      apply_url,
+      url_status,
+      url_last_checked:   new Date().toISOString(),
+      url_quality_score:  qualityScore,
+      url_quality_issues: qualityIssues,
+    })
     .eq('id', id)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ id, apply_url, url_status })
+  return NextResponse.json({ id, apply_url, url_status, url_quality_score: qualityScore })
 }

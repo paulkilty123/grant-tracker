@@ -30,8 +30,9 @@ type CategoryGrant = Grant & {
   is_seed: boolean
 }
 
-type Stats = { total: number; withUrl: number; ok: number; dead: number; unchecked: number; noUrl: number; seedTotal?: number; newCount?: number; reviewCount?: number }
-type Filter = 'dead' | 'unchecked' | 'no_url' | 'all' | 'seed' | 'new' | 'category' | 'review'
+type Stats = { total: number; withUrl: number; ok: number; dead: number; unchecked: number; noUrl: number; seedTotal?: number; newCount?: number; reviewCount?: number; suspiciousCount?: number }
+type Filter = 'dead' | 'unchecked' | 'no_url' | 'all' | 'seed' | 'new' | 'category' | 'review' | 'suspicious'
+type SuspiciousGrant = Grant & { url_quality_score: number | null; url_quality_issues: string[] }
 type DeadSeedGrant = { id: string; title: string; funder: string; url: string }
 type NewGrant = Grant & { first_seen_at: string }
 
@@ -116,6 +117,11 @@ export default function UrlAdminPage() {
   const [categorySearch, setCategorySearch]         = useState('')
   const [promotingId, setPromotingId]               = useState<string | null>(null)
 
+  // Suspicious / audit state
+  const [suspiciousGrants, setSuspiciousGrants] = useState<SuspiciousGrant[]>([])
+  const [auditing, setAuditing]                 = useState(false)
+  const [auditProgress, setAuditProgress]       = useState<{ checked: number; total: number; avgScore: number; dead: number; closed: number } | null>(null)
+
   // Add grant modal state
   const [showAddModal, setShowAddModal] = useState(false)
   const [addForm, setAddForm]           = useState<AddGrantForm>(BLANK_FORM)
@@ -153,10 +159,11 @@ export default function UrlAdminPage() {
   // ── Load stats ───────────────────────────────────────────────────────────────
   const loadStats = useCallback(async () => {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-    const [{ data }, { count: newCount }, { count: reviewCount }] = await Promise.all([
+    const [{ data }, { count: newCount }, { count: reviewCount }, { count: suspiciousCount }] = await Promise.all([
       createClient().from('scraped_grants').select('url_status, apply_url').eq('is_active', true),
       createClient().from('scraped_grants').select('id', { count: 'exact', head: true }).eq('is_active', true).gte('first_seen_at', sevenDaysAgo),
       createClient().from('scraped_grants').select('id', { count: 'exact', head: true }).eq('is_active', false),
+      createClient().from('scraped_grants').select('id', { count: 'exact', head: true }).eq('is_active', true).not('url_quality_score', 'is', null).lt('url_quality_score', 60),
     ])
     if (!data) return
     setStats({
@@ -169,12 +176,13 @@ export default function UrlAdminPage() {
       seedTotal:   0,
       newCount:    newCount ?? 0,
       reviewCount: reviewCount ?? 0,
+      suspiciousCount: suspiciousCount ?? 0,
     })
   }, [])
 
   // ── Load scraped grants (URL health views) ───────────────────────────────────
   const loadGrants = useCallback(async () => {
-    if (filter === 'seed' || filter === 'new' || filter === 'category' || filter === 'review') return
+    if (filter === 'seed' || filter === 'new' || filter === 'category' || filter === 'review' || filter === 'suspicious') return
 
     let query = createClient()
       .from('scraped_grants')
@@ -239,6 +247,20 @@ export default function UrlAdminPage() {
       .order('last_seen_at', { ascending: false })
       .limit(500)
     setReviewGrants((data ?? []) as Grant[])
+  }, [filter])
+
+  // ── Load suspicious grants (low quality score) ───────────────────────────────
+  const loadSuspiciousGrants = useCallback(async () => {
+    if (filter !== 'suspicious') return
+    const { data } = await createClient()
+      .from('scraped_grants')
+      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, url_quality_score, url_quality_issues')
+      .eq('is_active', true)
+      .not('url_quality_score', 'is', null)
+      .lt('url_quality_score', 60)
+      .order('url_quality_score', { ascending: true })
+      .limit(500)
+    setSuspiciousGrants((data ?? []) as SuspiciousGrant[])
   }, [filter])
 
   // ── Approve all pending review grants ─────────────────────────────────────────
@@ -339,6 +361,10 @@ export default function UrlAdminPage() {
     if (authorised && filter === 'review') loadReviewGrants()
   }, [authorised, filter, loadReviewGrants])
 
+  useEffect(() => {
+    if (authorised && filter === 'suspicious') loadSuspiciousGrants()
+  }, [authorised, filter, loadSuspiciousGrants])
+
   // ── Clear selection when switching tabs ──────────────────────────────────────
   useEffect(() => { setSelectedIds(new Set()) }, [filter])
 
@@ -434,6 +460,60 @@ export default function UrlAdminPage() {
     } finally {
       setRunning(false)
       setValidationProgress(null)
+    }
+  }
+
+  // ── Run deep URL audit (paginated, same pattern as validation) ──────────────
+  async function runAudit() {
+    setAuditing(true)
+    setAuditProgress(null)
+
+    let offset = 0
+    let grandTotal = 0
+    let totalChecked = 0
+    let totalDead = 0
+    let totalClosed = 0
+    let scoreSum = 0
+
+    try {
+      while (true) {
+        const res = await fetch('/api/admin/audit-url-quality', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ offset, limit: 30 }),
+        })
+        if (!res.ok) {
+          let detail = `HTTP ${res.status}`
+          try { const b = await res.json(); detail += `: ${b.error ?? JSON.stringify(b)}` } catch { /* ignore */ }
+          throw new Error(detail)
+        }
+        const data = await res.json()
+
+        totalChecked += data.checked ?? 0
+        totalDead    += data.dead ?? 0
+        totalClosed  += data.closed ?? 0
+        scoreSum     += (data.avgScore ?? 0) * (data.checked ?? 0)
+        offset        = data.nextOffset ?? (offset + 30)
+        if (totalChecked <= 30) grandTotal = data.total ?? 0
+
+        setAuditProgress({
+          checked:  totalChecked,
+          total:    grandTotal,
+          avgScore: totalChecked > 0 ? Math.round(scoreSum / totalChecked) : 0,
+          dead:     totalDead,
+          closed:   totalClosed,
+        })
+
+        if (data.done) break
+      }
+
+      await loadStats()
+      if (filter === 'suspicious') await loadSuspiciousGrants()
+      await loadGrants()
+    } catch (err) {
+      alert(`Audit failed — ${err instanceof Error ? err.message : String(err)}`)
+    } finally {
+      setAuditing(false)
     }
   }
 
@@ -744,8 +824,9 @@ export default function UrlAdminPage() {
     await loadStats()
     await loadGrants()
     if (filter === 'category') await loadCategoryGrants()
-    if (filter === 'review')   await loadReviewGrants()
-    if (filter === 'new')      await loadNewGrants()
+    if (filter === 'review')     await loadReviewGrants()
+    if (filter === 'new')        await loadNewGrants()
+    if (filter === 'suspicious') await loadSuspiciousGrants()
   }
 
   // ── Populate form from URL ────────────────────────────────────────────────────
@@ -1080,14 +1161,48 @@ export default function UrlAdminPage() {
           </button>
           <button
             onClick={runValidation}
-            disabled={running}
+            disabled={running || auditing}
             className="flex items-center gap-2 rounded-full bg-forest px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60 hover:bg-forest/90 transition-colors whitespace-nowrap"
           >
             <RefreshCw className={`h-4 w-4 ${running ? 'animate-spin' : ''}`} />
             {running ? 'Checking all URLs…' : 'Run validation now'}
           </button>
+          <button
+            onClick={runAudit}
+            disabled={running || auditing}
+            className="flex items-center gap-2 rounded-full border-2 border-amber-500 bg-amber-50 px-5 py-2.5 text-sm font-semibold text-amber-700 disabled:opacity-60 hover:bg-amber-100 transition-colors whitespace-nowrap"
+          >
+            <Search className={`h-4 w-4 ${auditing ? 'animate-pulse' : ''}`} />
+            {auditing ? 'Deep auditing…' : 'Run deep audit'}
+          </button>
         </div>
       </div>
+
+      {/* Audit progress banner */}
+      {auditing && (
+        <div className="mb-6 rounded-xl border border-amber-300/40 bg-amber-50 px-4 py-3 text-sm text-amber-800 space-y-2">
+          <div className="flex items-center justify-between">
+            <span>
+              {auditProgress
+                ? `Deep auditing… ${auditProgress.checked} / ${auditProgress.total || '?'} · avg score ${auditProgress.avgScore} · ${auditProgress.dead} dead · ${auditProgress.closed} closed`
+                : 'Starting deep URL audit…'}
+            </span>
+            <span className="text-xs text-amber-600">
+              {auditProgress && auditProgress.total
+                ? `${Math.round((auditProgress.checked / auditProgress.total) * 100)}%`
+                : ''}
+            </span>
+          </div>
+          {auditProgress && auditProgress.total > 0 && (
+            <div className="h-1.5 w-full rounded-full bg-amber-200 overflow-hidden">
+              <div
+                className="h-full rounded-full bg-amber-500 transition-all duration-300"
+                style={{ width: `${Math.min(100, Math.round((auditProgress.checked / auditProgress.total) * 100))}%` }}
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Run result banners */}
       {running && (
@@ -1182,6 +1297,7 @@ export default function UrlAdminPage() {
           { key: 'dead',      label: `Dead links${stats ? ` (${stats.dead})` : ''}` },
           { key: 'unchecked', label: `Unchecked${stats ? ` (${stats.unchecked})` : ''}` },
           { key: 'no_url',    label: `No URL${stats ? ` (${stats.noUrl ?? 0})` : ''}` },
+          { key: 'suspicious', label: `Suspicious${stats?.suspiciousCount ? ` (${stats.suspiciousCount})` : ''}`, urgent: (stats?.suspiciousCount ?? 0) > 10 },
           { key: 'all',       label: 'All grants' },
           { key: 'seed',      label: `Seed grants (${SEED_GRANTS.length})` },
         ] as const).map(tab => (
@@ -1600,8 +1716,90 @@ export default function UrlAdminPage() {
         </div>
       )}
 
+      {/* ── Suspicious grants table ──────────────────────────────────────────── */}
+      {filter === 'suspicious' && (
+        <div className="rounded-xl border border-warm bg-white overflow-hidden shadow-card">
+          {suspiciousGrants.length === 0 ? (
+            <div className="py-16 text-center">
+              <p className="text-light text-sm">{stats?.suspiciousCount === 0 ? 'No suspicious URLs found — run a deep audit first.' : 'Loading…'}</p>
+            </div>
+          ) : (
+            <table className="w-full text-sm">
+              <thead className="border-b border-warm bg-neutral-50/60 text-left text-xs uppercase tracking-wide text-mid">
+                <tr>
+                  <th className="px-5 py-3 w-8"></th>
+                  <th className="px-5 py-3 font-semibold">Grant</th>
+                  <th className="px-5 py-3 font-semibold max-w-[260px]">URL</th>
+                  <th className="px-5 py-3 font-semibold text-center">Score</th>
+                  <th className="px-5 py-3 font-semibold">Issues</th>
+                  <th className="px-5 py-3 font-semibold text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-warm/60">
+                {suspiciousGrants.map(grant => (
+                  <tr key={grant.id} className="group hover:bg-cream/40 transition-colors">
+                    <td className="px-5 py-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(grant.id)}
+                        onChange={() => setSelectedIds(prev => { const n = new Set(prev); n.has(grant.id) ? n.delete(grant.id) : n.add(grant.id); return n })}
+                        className="rounded border-warm"
+                      />
+                    </td>
+                    <td className="px-5 py-3">
+                      <p className="font-medium text-charcoal line-clamp-1">{grant.title}</p>
+                      <p className="text-xs text-light">{grant.funder}</p>
+                    </td>
+                    <td className="px-5 py-3 max-w-[260px]">
+                      <UrlCell grant={grant} />
+                    </td>
+                    <td className="px-5 py-3 text-center">
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-bold ${
+                        (grant.url_quality_score ?? 0) < 30 ? 'bg-red-100 text-red-700'
+                        : (grant.url_quality_score ?? 0) < 60 ? 'bg-amber-100 text-amber-700'
+                        : 'bg-green-100 text-green-700'
+                      }`}>
+                        {grant.url_quality_score ?? '—'}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3">
+                      <div className="flex flex-wrap gap-1">
+                        {(grant.url_quality_issues ?? []).map(issue => (
+                          <span key={issue} className="inline-flex rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-medium text-neutral-600">
+                            {issue.replace(/_/g, ' ')}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="px-5 py-3 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button onClick={() => fetchGrantInfo(grant)} title="Search for better info"
+                          className="rounded-full border border-warm p-1.5 text-mid hover:border-forest hover:text-forest transition-colors">
+                          <Sparkles className="h-3 w-3" />
+                        </button>
+                        <button onClick={() => { setEditingId(grant.id); setEditUrl(grant.apply_url ?? '') }} title="Edit URL"
+                          className="rounded-full border border-warm p-1.5 text-mid hover:border-forest hover:text-forest transition-colors">
+                          <Pencil className="h-3 w-3" />
+                        </button>
+                        <button onClick={() => markDead(grant.id)} title="Flag as dead"
+                          className="rounded-full border border-warm p-1.5 text-mid hover:border-red-300 hover:text-red-500 transition-colors">
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          <p className="px-5 py-3 text-xs text-light text-center border-t border-warm/40">
+            {suspiciousGrants.length} suspicious URL{suspiciousGrants.length !== 1 ? 's' : ''} (quality score &lt; 60) — worst first
+          </p>
+        </div>
+      )}
+
       {/* ── Scraped grants table (dead / unchecked / all) ──────────────────────── */}
-      {filter !== 'seed' && filter !== 'new' && filter !== 'category' && filter !== 'review' && (
+      {filter !== 'seed' && filter !== 'new' && filter !== 'category' && filter !== 'review' && filter !== 'suspicious' && (
         <div className="rounded-xl border border-warm bg-white overflow-hidden shadow-card">
           {grants.length === 0 ? (
             <div className="py-16 text-center">

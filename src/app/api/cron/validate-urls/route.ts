@@ -5,7 +5,7 @@
 // 4. Returns a JSON summary (visible in Vercel cron logs)
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { checkUrl } from '@/lib/url-validator'
+import { checkUrl, deepCheckUrl } from '@/lib/url-validator'
 import { SEED_GRANTS } from '@/lib/grants'
 
 export const dynamic    = 'force-dynamic'
@@ -60,31 +60,45 @@ export async function GET(req: NextRequest) {
   let checkedScraped   = 0
   let okScraped        = 0
   let deactivatedCount = 0
+  let closedCount      = 0
   const deactivated: { id: string; title: string }[] = []
 
-  // ── 2. Check each grant URL ───────────────────────────────────────────────
-  await inBatches(grants ?? [], 20, async (grant) => {
-    const status = await checkUrl(grant.apply_url as string, grant.funder ?? undefined)
+  // ── 2. Deep-check each grant URL (quality + liveness) ─────────────────────
+  await inBatches(grants ?? [], 15, async (grant) => {
+    const result = await deepCheckUrl(
+      grant.apply_url as string,
+      (grant.funder as string) ?? '',
+      (grant.title as string) ?? '',
+    )
     checkedScraped++
 
-    if (status === 'dead') {
-      // Mark as dead AND deactivate so it vanishes from search results
+    if (result.status === 'dead' || result.status === 'grant_closed') {
+      // Mark as dead/closed AND deactivate
       await supabase
         .from('scraped_grants')
         .update({
-          url_status:       'dead',
-          url_last_checked: ranAt,
-          is_active:        false,
+          url_status:         'dead',
+          url_last_checked:   ranAt,
+          is_active:          false,
+          url_quality_score:  result.qualityScore,
+          url_quality_issues: result.issues,
         })
         .eq('id', grant.id)
 
       deactivatedCount++
+      if (result.status === 'grant_closed') closedCount++
       deactivated.push({ id: grant.id, title: grant.title as string })
     } else {
-      // Keep active, just refresh the check timestamp
+      // Keep active — write quality metrics alongside status
+      const urlStatus = result.status === 'wrong_page' ? 'unchecked' as const : 'ok' as const
       await supabase
         .from('scraped_grants')
-        .update({ url_status: 'ok', url_last_checked: ranAt })
+        .update({
+          url_status:         urlStatus,
+          url_last_checked:   ranAt,
+          url_quality_score:  result.qualityScore,
+          url_quality_issues: result.issues,
+        })
         .eq('id', grant.id)
       okScraped++
     }
@@ -113,6 +127,7 @@ export async function GET(req: NextRequest) {
       checked:     checkedScraped,
       ok:          okScraped,
       deactivated: deactivatedCount,
+      closed:      closedCount,
       grants:      deactivated,
     },
     seed: {
