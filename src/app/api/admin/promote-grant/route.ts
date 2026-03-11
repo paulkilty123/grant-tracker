@@ -42,6 +42,7 @@ export async function POST(req: NextRequest) {
     title: string
     funder: string
     funder_type: string
+    funding_type?: string | null   // e.g. 'grant' | 'social_investment' | 'support_programme'
     apply_url: string | null
     is_invite_only: boolean
     description?: string | null
@@ -54,7 +55,7 @@ export async function POST(req: NextRequest) {
 
   const {
     seedId, manual,
-    title, funder, funder_type, apply_url, is_invite_only,
+    title, funder, funder_type, funding_type, apply_url, is_invite_only,
     description, amount_min, amount_max, deadline, is_rolling, sectors,
   } = body
 
@@ -65,6 +66,7 @@ export async function POST(req: NextRequest) {
     title,
     funder,
     funder_type,
+    funding_type: funding_type ?? 'grant',  // default to 'grant' — covers all seeds and most manual entries
     apply_url,
     is_invite_only,
     source:     'manual',

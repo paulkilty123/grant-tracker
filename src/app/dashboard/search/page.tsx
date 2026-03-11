@@ -101,6 +101,29 @@ const FUNDER_TYPES = [
   { id: 'crowdfund_match',   label: '🤝 Crowdfund Match' },
 ]
 
+// Funder categories from the funders table (our 8-category taxonomy)
+const FUNDER_CATEGORIES = [
+  { id: 'lottery',              label: '🎱 Lottery',               colour: 'bg-green-50 text-green-700 border-green-200' },
+  { id: 'government',           label: '🏛️ Government',            colour: 'bg-red-50 text-red-700 border-red-200' },
+  { id: 'major_trust',          label: '🏦 Major Trust',           colour: 'bg-sage/10 text-forest border-sage/20' },
+  { id: 'community_foundation', label: '🌱 Community Foundation',  colour: 'bg-teal-50 text-teal-700 border-teal-200' },
+  { id: 'corporate',            label: '🏢 Corporate',             colour: 'bg-amber-50 text-amber-700 border-amber-200' },
+  { id: 'social_investment',    label: '💰 Social Investment',     colour: 'bg-sky-50 text-sky-700 border-sky-200' },
+  { id: 'crowdfunding',         label: '🤝 Crowdfunding',          colour: 'bg-pink-50 text-pink-700 border-pink-200' },
+  { id: 'sector_body',          label: '📋 Sector Body',           colour: 'bg-purple-50 text-purple-700 border-purple-200' },
+]
+
+// Geographic scope filter options
+const GEO_SCOPES = [
+  { id: 'uk',               label: '🇬🇧 UK-wide'           },
+  { id: 'england',          label: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 England'            },
+  { id: 'london',           label: '🏙️ London'             },
+  { id: 'scotland',         label: '🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scotland'           },
+  { id: 'wales',            label: '🏴󠁧󠁢󠁷󠁬󠁳󠁿 Wales'              },
+  { id: 'northern_ireland', label: '🍀 Northern Ireland'   },
+  { id: 'regional',         label: '📍 Regional'           },
+]
+
 const FUNDING_TYPES: { id: FundingType | 'all'; label: string; emoji: string; desc: string }[] = [
   { id: 'all',               label: 'All types',            emoji: '⚡', desc: 'All funding types' },
   { id: 'grant',             label: 'Grants & Awards',      emoji: '🎯', desc: 'One-off grants from trusts, foundations, Lottery & government' },
@@ -415,7 +438,13 @@ const VALID_FUNDER_TYPES: FunderType[] = [
   'competition', 'loan', 'crowdfund_match',
 ]
 
-function normaliseScrapedGrant(row: Record<string, unknown>): GrantOpportunity {
+// Extended type to carry funder-table metadata alongside grant fields
+interface EnrichedGrant extends GrantOpportunity {
+  funderCategory?: string       // funders.funder_type (our 8-category taxonomy)
+  geoScope?: string[]           // funders.geographic_scope
+}
+
+function normaliseScrapedGrant(row: Record<string, unknown>): EnrichedGrant {
   const rawType = String(row.funder_type ?? 'other')
   const funderType: FunderType = VALID_FUNDER_TYPES.includes(rawType as FunderType)
     ? (rawType as FunderType) : 'other'
@@ -437,6 +466,9 @@ function normaliseScrapedGrant(row: Record<string, unknown>): GrantOpportunity {
     source:               'scraped',
     dateAdded:            row.first_seen_at  ? String(row.first_seen_at).split('T')[0]  : undefined,
     lastVerifiedAt:       row.last_seen_at   ? String(row.last_seen_at).split('T')[0]   : undefined,
+    // Funder-table enrichment (null for 'manual' source grants)
+    funderCategory:       row.funder_category ? String(row.funder_category) : undefined,
+    geoScope:             Array.isArray(row.geographic_scope) ? (row.geographic_scope as string[]) : undefined,
   }
 }
 
@@ -456,7 +488,7 @@ export default function SearchPage() {
   const [bannerDismissed, setBannerDismissed] = useState(false)
   const [interactions, setInteractions] = useState<Map<string, Set<InteractionAction>>>(new Map())
   const [showDismissed, setShowDismissed] = useState(false)
-  const [scrapedGrants, setScrapedGrants] = useState<GrantOpportunity[]>([])
+  const [scrapedGrants, setScrapedGrants] = useState<EnrichedGrant[]>([])
   const [amountMin, setAmountMin]         = useState('')
   const [amountMax, setAmountMax]         = useState('')
   const [deadlineFilter, setDeadlineFilter] = useState<'all' | 'rolling' | 'has_deadline'>('all')
@@ -467,6 +499,8 @@ export default function SearchPage() {
   const [entryTypeFilter, setEntryTypeFilter]     = useState<'all' | 'live' | 'funders'>('all')
   const [showInviteOnly, setShowInviteOnly]       = useState(true)
   const [expandedGroups, setExpandedGroups]       = useState<Set<string>>(new Set())
+  const [activeFunderCategory, setActiveFunderCategory] = useState<string>('all')
+  const [activeGeoScope, setActiveGeoScope]             = useState<string>('all')
   const [visibleCount, setVisibleCount]           = useState(30)
 
   useEffect(() => {
@@ -503,7 +537,7 @@ export default function SearchPage() {
       // Fetch live scraped grants — exclude dead URLs and expired deadlines
       const today = new Date().toISOString().split('T')[0]
       const { data: scraped } = await supabase
-        .from('scraped_grants')
+        .from('grants_with_funder')
         .select('*')
         .eq('is_active', true)
         .neq('url_status', 'dead')
@@ -666,7 +700,7 @@ export default function SearchPage() {
   // Reset visible count when search/filters change so the user starts from the top
   useEffect(() => {
     setVisibleCount(30)
-  }, [query, activeType, amountMin, amountMax, deadlineFilter, activeSectors, activeFundingType, categoryFilter, entryTypeFilter, freshnessFilter, showInviteOnly, aiResults])
+  }, [query, activeType, amountMin, amountMax, deadlineFilter, activeSectors, activeFundingType, categoryFilter, entryTypeFilter, freshnessFilter, showInviteOnly, aiResults, activeFunderCategory, activeGeoScope])
 
   // ── Build display grants ─────────────────────────────────────────────────
   const displayGrants: DisplayGrant[] = (() => {
@@ -722,7 +756,16 @@ export default function SearchPage() {
         categoryFilter === 'all' ||
         (categoryFilter === 'grants'      && GRANT_TYPES.includes(gFundingType)) ||
         (categoryFilter === 'programmes'  && PROGRAMME_TYPES.includes(gFundingType))
-      return matchesQuery && matchesType && matchesAmount && matchesDeadline && matchesSectors && matchesEntryType && matchesFreshness && matchesInviteOnly && matchesFundingType && matchesCategory
+      // Funder category (from funders table — only applies to non-manual grants with enrichment)
+      const ge = g as EnrichedGrant
+      const matchesFunderCategory =
+        activeFunderCategory === 'all' ||
+        ge.funderCategory === activeFunderCategory
+      // Geographic scope (from funders table — uk/england/london/scotland/etc.)
+      const matchesGeoScope =
+        activeGeoScope === 'all' ||
+        (ge.geoScope && ge.geoScope.includes(activeGeoScope))
+      return matchesQuery && matchesType && matchesAmount && matchesDeadline && matchesSectors && matchesEntryType && matchesFreshness && matchesInviteOnly && matchesFundingType && matchesCategory && matchesFunderCategory && matchesGeoScope
     })
 
     if (aiResults) {
@@ -897,6 +940,8 @@ export default function SearchPage() {
     freshnessFilter !== 'all',
     !showInviteOnly,
     sortBy !== 'match',
+    activeFunderCategory !== 'all',
+    activeGeoScope !== 'all',
   ].filter(Boolean).length
 
   function resetAllFilters() {
@@ -911,6 +956,8 @@ export default function SearchPage() {
     setFreshnessFilter('all')
     setShowInviteOnly(true)
     setCategoryFilter('all')
+    setActiveFunderCategory('all')
+    setActiveGeoScope('all')
   }
 
   function toggleGroup(label: string) {
@@ -1117,6 +1164,69 @@ export default function SearchPage() {
                   </button>
                 )}
               </div>
+            </div>
+
+            {/* Funder category (from funders table taxonomy) */}
+            <div>
+              <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Funder category</p>
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  onClick={() => setActiveFunderCategory('all')}
+                  className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                    activeFunderCategory === 'all'
+                      ? 'bg-forest border-forest text-white'
+                      : 'border-warm text-mid hover:border-sage hover:text-sage'
+                  }`}
+                >
+                  All
+                </button>
+                {FUNDER_CATEGORIES.map(cat => (
+                  <button
+                    key={cat.id}
+                    onClick={() => setActiveFunderCategory(activeFunderCategory === cat.id ? 'all' : cat.id)}
+                    className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                      activeFunderCategory === cat.id
+                        ? 'bg-forest border-forest text-white'
+                        : `${cat.colour} hover:opacity-80`
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Geographic scope (from funders table) */}
+            <div>
+              <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Geographic scope</p>
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  onClick={() => setActiveGeoScope('all')}
+                  className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                    activeGeoScope === 'all'
+                      ? 'bg-forest border-forest text-white'
+                      : 'border-warm text-mid hover:border-sage hover:text-sage'
+                  }`}
+                >
+                  Anywhere
+                </button>
+                {GEO_SCOPES.map(scope => (
+                  <button
+                    key={scope.id}
+                    onClick={() => setActiveGeoScope(activeGeoScope === scope.id ? 'all' : scope.id)}
+                    className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                      activeGeoScope === scope.id
+                        ? 'bg-forest border-forest text-white'
+                        : 'border-warm text-mid hover:border-sage hover:text-sage'
+                    }`}
+                  >
+                    {scope.label}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[10px] text-light mt-1.5">
+                Filters by where the funder accepts applications from. Manual/seed grants without a linked funder profile are hidden when a scope is selected.
+              </p>
             </div>
 
             {/* Amount · Deadline · Sort — 3-col grid */}

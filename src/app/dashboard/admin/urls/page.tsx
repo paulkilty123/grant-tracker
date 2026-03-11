@@ -244,6 +244,7 @@ export default function UrlAdminPage() {
       .from('scraped_grants')
       .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, description, funder_type')
       .eq('is_active', false)
+      .neq('url_status', 'dead')  // exclude grants that were explicitly hidden/rejected
       .order('last_seen_at', { ascending: false })
       .limit(500)
     setReviewGrants((data ?? []) as Grant[])
@@ -570,10 +571,17 @@ export default function UrlAdminPage() {
 
   // ── Soft delete ───────────────────────────────────────────────────────────────
   async function removeGrant(id: string) {
-    await updateGrant(id, { is_active: false })
-    setGrants(prev => prev.filter(g => g.id !== id))
-    setNewGrants(prev => prev.filter(g => g.id !== id))
-    setCategoryGrants(prev => prev.filter(g => g.id !== id))
+    // For review grants (already is_active: false), set url_status to 'dead'
+    // so they don't reappear in the review queue next time
+    if (filter === 'review') {
+      await updateGrant(id, { url_status: 'dead' })
+      setReviewGrants(prev => prev.filter(g => g.id !== id))
+    } else {
+      await updateGrant(id, { is_active: false })
+      setGrants(prev => prev.filter(g => g.id !== id))
+      setNewGrants(prev => prev.filter(g => g.id !== id))
+      setCategoryGrants(prev => prev.filter(g => g.id !== id))
+    }
     setConfirmDeleteId(null)
     await loadStats()
   }
@@ -1685,17 +1693,18 @@ export default function UrlAdminPage() {
                         </p>
                       </td>
                       <td className="px-5 py-3 max-w-[220px]">
-                        {grant.apply_url ? (
-                          <a href={grant.apply_url} target="_blank" rel="noopener noreferrer"
-                            className="truncate text-xs text-forest hover:underline block max-w-[200px]">
-                            {grant.apply_url}
-                          </a>
-                        ) : (
-                          <span className="text-xs text-light italic">No URL</span>
-                        )}
+                        <UrlCell grant={grant} />
                       </td>
                       <td className="px-5 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
+                          <button onClick={() => fetchGrantInfo(grant)} title="Search for info & better URL"
+                            className="rounded-full border border-warm p-1.5 text-mid hover:border-forest hover:text-forest transition-colors">
+                            <Sparkles className="h-3 w-3" />
+                          </button>
+                          <button onClick={() => { setEditingId(grant.id); setEditUrl(grant.apply_url ?? '') }} title="Edit URL"
+                            className="rounded-full border border-warm p-1.5 text-mid hover:border-forest hover:text-forest transition-colors">
+                            <Pencil className="h-3 w-3" />
+                          </button>
                           <button onClick={() => approveGrant(grant.id)}
                             className="rounded-full bg-forest/10 px-3 py-1 text-xs font-semibold text-forest hover:bg-forest hover:text-white transition-colors">
                             Approve
