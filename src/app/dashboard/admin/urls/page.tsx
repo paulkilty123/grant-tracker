@@ -550,6 +550,7 @@ export default function UrlAdminPage() {
     const update = (g: Grant) => g.id === id ? { ...g, url_status: 'dead' as const } : g
     setGrants(prev => prev.map(update))
     setCategoryGrants(prev => prev.map(g => g.id === id ? { ...g, url_status: 'dead' as const } : g))
+    setSuspiciousGrants(prev => prev.filter(g => g.id !== id))
     await loadStats()
   }
 
@@ -558,6 +559,7 @@ export default function UrlAdminPage() {
     await updateGrant(id, { url_status: 'ok', url_last_checked: new Date().toISOString() })
     setGrants(prev => prev.filter(g => g.id !== id))
     setCategoryGrants(prev => prev.map(g => g.id === id ? { ...g, url_status: 'ok' as const } : g))
+    setSuspiciousGrants(prev => prev.filter(g => g.id !== id))
     await loadStats()
   }
 
@@ -581,6 +583,7 @@ export default function UrlAdminPage() {
       setGrants(prev => prev.filter(g => g.id !== id))
       setNewGrants(prev => prev.filter(g => g.id !== id))
       setCategoryGrants(prev => prev.filter(g => g.id !== id))
+      setSuspiciousGrants(prev => prev.filter(g => g.id !== id))
     }
     setConfirmDeleteId(null)
     await loadStats()
@@ -1781,20 +1784,40 @@ export default function UrlAdminPage() {
                       </div>
                     </td>
                     <td className="px-5 py-3 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button onClick={() => fetchGrantInfo(grant)} title="Search for better info"
-                          className="rounded-full border border-warm p-1.5 text-mid hover:border-forest hover:text-forest transition-colors">
-                          <Sparkles className="h-3 w-3" />
-                        </button>
-                        <button onClick={() => { setEditingId(grant.id); setEditUrl(grant.apply_url ?? '') }} title="Edit URL"
-                          className="rounded-full border border-warm p-1.5 text-mid hover:border-forest hover:text-forest transition-colors">
-                          <Pencil className="h-3 w-3" />
-                        </button>
-                        <button onClick={() => markDead(grant.id)} title="Flag as dead"
-                          className="rounded-full border border-warm p-1.5 text-mid hover:border-red-300 hover:text-red-500 transition-colors">
-                          <X className="h-3 w-3" />
-                        </button>
-                      </div>
+                      {confirmDeleteId === grant.id ? (
+                        <div className="flex items-center justify-end gap-1.5">
+                          <span className="text-xs text-red-500 font-medium mr-1">Remove?</span>
+                          <button onClick={() => removeGrant(grant.id)} className="rounded-full bg-red-500 p-1.5 text-white hover:bg-red-600 transition-colors">
+                            <Check className="h-3 w-3" />
+                          </button>
+                          <button onClick={() => setConfirmDeleteId(null)} className="rounded-full border border-warm p-1.5 text-mid hover:border-forest hover:text-forest transition-colors">
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button onClick={() => fetchGrantInfo(grant)} title="Search for better info"
+                            className="rounded-full border border-warm p-1.5 text-mid hover:border-forest hover:text-forest transition-colors">
+                            <Sparkles className="h-3 w-3" />
+                          </button>
+                          <button onClick={() => { setEditingId(grant.id); setEditUrl(grant.apply_url ?? '') }} title="Edit URL"
+                            className="rounded-full border border-warm p-1.5 text-mid hover:border-forest hover:text-forest transition-colors">
+                            <Pencil className="h-3 w-3" />
+                          </button>
+                          <button onClick={() => markOk(grant.id)} title="Mark as OK — clear suspicious flag"
+                            className="rounded-full border border-warm p-1.5 text-mid hover:border-sage hover:text-sage transition-colors">
+                            <Check className="h-3 w-3" />
+                          </button>
+                          <button onClick={() => markDead(grant.id)} title="Flag as dead"
+                            className="rounded-full border border-warm p-1.5 text-mid hover:border-red-300 hover:text-red-500 transition-colors">
+                            <X className="h-3 w-3" />
+                          </button>
+                          <button onClick={() => setConfirmDeleteId(grant.id)} title="Remove from database"
+                            className="rounded-full border border-warm p-1.5 text-mid hover:border-red-300 hover:text-red-500 transition-colors">
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}
