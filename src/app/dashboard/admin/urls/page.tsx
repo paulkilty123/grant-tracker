@@ -727,6 +727,18 @@ export default function UrlAdminPage() {
     }
     setRefreshSaving(false)
     setRefreshModal(null)
+    // Optimistically update badge in all local lists immediately so the user
+    // sees the new status as soon as the modal closes (don't wait for reloads)
+    const okStatus = savedUrl ? 'ok' as const : undefined
+    const nowIso   = new Date().toISOString()
+    if (okStatus) {
+      const patch = <T extends { id: string }>(g: T): T =>
+        g.id === grantId ? { ...g, url_status: okStatus, url_last_checked: nowIso } : g
+      setGrants(prev         => prev.map(patch))
+      setNewGrants(prev      => prev.map(patch))
+      setCategoryGrants(prev => prev.map(patch))
+      setReviewGrants(prev   => prev.map(patch))
+    }
     // Reload the current view so the grant disappears from filtered lists
     // (e.g. it should vanish from Dead/Unchecked once marked ok)
     await loadStats()
