@@ -819,6 +819,9 @@ export default function UrlAdminPage() {
       ? form.sectors.split(',').map(s => s.trim()).filter(Boolean)
       : []
     const savedUrl = form.apply_url.trim() || null
+    // When saving from the Needs Review tab, also approve the grant (set is_active: true)
+    // so it goes live immediately — the user has reviewed & confirmed the details.
+    const isReviewApproval = filter === 'review'
     const ok = await updateGrant(grantId, {
       title:            form.title.trim(),
       funder:           form.funder.trim(),
@@ -835,6 +838,8 @@ export default function UrlAdminPage() {
       // sit in the Unchecked queue waiting for the next validation run
       url_status:       savedUrl ? 'ok' : null,
       url_last_checked: savedUrl ? new Date().toISOString() : null,
+      // Auto-approve when editing from the Needs Review tab
+      ...(isReviewApproval ? { is_active: true } : {}),
     })
 
     if (!ok) {
@@ -854,7 +859,12 @@ export default function UrlAdminPage() {
       setGrants(prev         => prev.map(patch))
       setNewGrants(prev      => prev.map(patch))
       setCategoryGrants(prev => prev.map(patch))
-      setReviewGrants(prev   => prev.map(patch))
+      // If we just approved from Needs Review, remove from the review list
+      if (isReviewApproval) {
+        setReviewGrants(prev => prev.filter(g => g.id !== grantId))
+      } else {
+        setReviewGrants(prev => prev.map(patch))
+      }
     }
     // Reload the current view so the grant disappears from filtered lists
     // (e.g. it should vanish from Dead/Unchecked once marked ok)
