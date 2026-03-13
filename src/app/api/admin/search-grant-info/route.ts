@@ -260,14 +260,13 @@ export async function POST(req: NextRequest) {
   }
 
   // ── Step 1a: Exact quoted title phrase search ─────────────────────────────
-  // Always run when we have a title — even with skipUrlSearch, because the
-  // user-provided URL may be a generic listing page with no specific info.
-  if (cleanTitle) {
+  // Skipped when skipUrlSearch=true — user explicitly provided a URL to use.
+  if (!skipUrlSearch && cleanTitle) {
     const exactText = await jinaSearch(`"${cleanTitle}" ${cleanFunder} apply`)
     if (exactText) {
       allSearchTexts.push(exactText)
       const found = pickBest(scoreAndRankUrls(exactText, cleanTitle, cleanFunder, existingUrl ?? ''))
-      if (found && !skipUrlSearch) bestUrl = found
+      if (found) bestUrl = found
     }
   }
 
@@ -314,6 +313,16 @@ export async function POST(req: NextRequest) {
     } else {
       // Existing URL returned empty — likely a 404 or dead page
       existingUrlIsDead = true
+    }
+  }
+
+  // ── Step 2c: Fallback search when skipUrlSearch provided only thin content ──
+  // If the user provided a listing page URL, Step 2b may have found a sub-page.
+  // But if not, do a targeted search so Claude has something useful to work with.
+  if (skipUrlSearch && cleanTitle && allSearchTexts.length <= 1) {
+    const fallbackText = await jinaSearch(`"${cleanTitle}" ${cleanFunder} apply`)
+    if (fallbackText) {
+      allSearchTexts.push(fallbackText)
     }
   }
 
