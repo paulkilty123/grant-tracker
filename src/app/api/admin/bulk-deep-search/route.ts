@@ -96,6 +96,7 @@ Return JSON in this exact format:
         'Content-Type': 'application/json',
         'x-api-key': ANTHROPIC_API_KEY,
         'anthropic-version': '2023-06-01',
+        'anthropic-beta': 'web-search-2025-03-05',
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-5-20250929',
@@ -126,17 +127,23 @@ Return JSON in this exact format:
     return []
   }
 
-  // Extract text content from response
-  const textBlock = data.content?.find((b: { type: string }) => b.type === 'text')
-  if (!textBlock?.text) return []
+  // Extract the LAST text block — with web_search, Claude emits multiple text
+  // blocks during the search process; the final one contains the JSON answer
+  const textBlock = data.content
+    ?.filter((b: { type: string }) => b.type === 'text')
+    .pop() as { text: string } | undefined
+  if (!textBlock?.text) {
+    console.error(`No text block in response for "${query}". Content types: ${data.content?.map((b: { type: string }) => b.type).join(', ')}`)
+    return []
+  }
 
   try {
     // Strip markdown fencing
-    let raw = textBlock.text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+    let raw = textBlock.text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
 
     // If the text doesn't start with '{', try to extract JSON object from within it
     if (!raw.startsWith('{')) {
-      const jsonMatch = raw.match(/\{[\s\S]*"grants"\s*:\s*\[[\s\S]*\]\s*\}/)
+      const jsonMatch = raw.match(/\{[\s\S]*\}/)
       if (jsonMatch) {
         raw = jsonMatch[0]
       } else {
