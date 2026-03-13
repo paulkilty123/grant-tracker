@@ -260,18 +260,19 @@ export async function POST(req: NextRequest) {
   }
 
   // ── Step 1a: Exact quoted title phrase search ─────────────────────────────
-  // Skipped when skipUrlSearch=true (user has provided a specific URL to crawl)
-  if (!skipUrlSearch) {
+  // Always run when we have a title — even with skipUrlSearch, because the
+  // user-provided URL may be a generic listing page with no specific info.
+  if (cleanTitle) {
     const exactText = await jinaSearch(`"${cleanTitle}" ${cleanFunder} apply`)
     if (exactText) {
       allSearchTexts.push(exactText)
       const found = pickBest(scoreAndRankUrls(exactText, cleanTitle, cleanFunder, existingUrl ?? ''))
-      if (found) bestUrl = found
+      if (found && !skipUrlSearch) bestUrl = found
     }
   }
 
   // ── Step 1b: Broader search (no quotes) ───────────────────────────────────
-  if (!skipUrlSearch && !bestUrl) {
+  if (!bestUrl && !skipUrlSearch) {
     const broadText = await jinaSearch(`${cleanTitle} ${cleanFunder} grant apply UK`)
     if (broadText) {
       allSearchTexts.push(broadText)
@@ -313,19 +314,6 @@ export async function POST(req: NextRequest) {
     } else {
       // Existing URL returned empty — likely a 404 or dead page
       existingUrlIsDead = true
-    }
-  }
-
-  // ── Step 2c: If skipUrlSearch was used but we only have listing page content,
-  // do a targeted search for the specific programme to get richer detail ──────
-  if (skipUrlSearch && cleanTitle && allSearchTexts.length <= 1) {
-    const targetedText = await jinaSearch(`"${cleanTitle}" ${cleanFunder} apply`)
-    if (targetedText) {
-      allSearchTexts.unshift(targetedText)
-      if (!bestUrl) {
-        const found = pickBest(scoreAndRankUrls(targetedText, cleanTitle, cleanFunder, existingUrl ?? ''))
-        if (found) bestUrl = found
-      }
     }
   }
 
