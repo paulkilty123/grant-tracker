@@ -8,6 +8,7 @@ import {
   ChevronDown, ChevronRight, Plus, Tag, Link, Sparkles,
 } from 'lucide-react'
 import { SEED_GRANTS } from '@/lib/grants'
+import { parseOpenDate } from '@/lib/parse-open-date'
 
 const ADMIN_EMAIL = 'paulkilty1@gmail.com'
 
@@ -865,7 +866,8 @@ export default function UrlAdminPage() {
       deadline:         (!form.is_rolling && form.deadline) ? form.deadline : null,
       sectors,
       is_invite_only:   form.is_invite_only,
-      next_open_date:   form.next_open_date.trim() || null,
+      next_open_date:        form.next_open_date.trim() || null,
+      next_open_date_parsed: parseOpenDate(form.next_open_date.trim() || null),
       // Sparkles confirmed this URL exists — mark it ok so it doesn't
       // sit in the Unchecked queue waiting for the next validation run
       url_status:       savedUrl ? 'ok' : null,
@@ -979,7 +981,8 @@ export default function UrlAdminPage() {
         deadline:       (!addForm.is_rolling && addForm.deadline) ? addForm.deadline : null,
         is_rolling:     addForm.is_rolling,
         is_invite_only: addForm.is_invite_only,
-        next_open_date: addForm.next_open_date.trim() || null,
+        next_open_date:        addForm.next_open_date.trim() || null,
+        next_open_date_parsed: parseOpenDate(addForm.next_open_date.trim() || null),
         sectors,
       }),
     })

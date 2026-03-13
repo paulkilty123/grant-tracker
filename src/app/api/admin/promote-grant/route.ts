@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { SEED_GRANTS } from '@/lib/grants'
+import { parseOpenDate } from '@/lib/parse-open-date'
 
 export const dynamic = 'force-dynamic'
 
@@ -83,7 +84,8 @@ export async function POST(req: NextRequest) {
     row.deadline     = deadline    ?? null
     row.is_rolling   = is_rolling  ?? false
     row.sectors          = sectors        ?? []
-    row.next_open_date   = next_open_date ?? null
+    row.next_open_date        = next_open_date ?? null
+    row.next_open_date_parsed = parseOpenDate(next_open_date ?? null)
   } else if (seedData) {
     // Seed grant extra fields
     row.description          = seedData.description          ?? null
