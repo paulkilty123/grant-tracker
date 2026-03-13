@@ -383,12 +383,15 @@ export async function POST(req: NextRequest) {
 
   // ── Step 4: Claude extracts data + suggests URL from gathered content ──────
   if (combinedText) {
-    const prompt = `You are a UK grant database assistant. Extract structured information about this grant from the content below, and suggest the best available URL for the grant application page.
+    const prompt = `You are a UK grant database assistant. Extract structured information about ONE SPECIFIC grant from the content below.
+
+CRITICAL: You are looking for the grant called "${cleanTitle}" by ${cleanFunder}.
+- ONLY extract information about THIS specific grant/programme — NOT any other grants or programmes listed on the same page.
+- The page may list MULTIPLE funding programmes. You MUST identify and extract ONLY the one matching "${cleanTitle}".
+- If the page does not contain information specifically about "${cleanTitle}", return the title as "${cleanTitle}" and set description to null rather than extracting information about a different programme.
 
 ${EXTRACT_FIELDS}
-- suggested_url: string or null — the specific grant application or information page URL. ${urlContext} Must start with https://. Use null only if you genuinely cannot find one.
-
-Grant: "${cleanTitle}" by ${cleanFunder}
+- suggested_url: string or null — the specific grant application or information page URL for "${cleanTitle}" specifically (not a general listing page). ${urlContext} Must start with https://. Use null only if you genuinely cannot find one.
 
 Content:
 ${combinedText.slice(0, 12000)}`
@@ -437,15 +440,15 @@ ${combinedText.slice(0, 12000)}`
   // ── Step 5: Pure Claude knowledge fallback ────────────────────────────────
   const knowledgePrompt = `You are a UK grant database assistant with extensive knowledge of UK funders.
 
-Provide information about this grant using your training knowledge.
+CRITICAL: Provide information ONLY about this SPECIFIC grant — do NOT describe any other programme by this funder.
 Funder: ${cleanFunder}
 Grant title: ${cleanTitle}
 ${urlContext}
 
-Find the SPECIFIC grant application or information page URL. If the grant has moved to a community platform (LocalGiving, Spacehive, etc.) include that URL. If the grant no longer exists, say so in the description and set suggested_url to null.
+Find the SPECIFIC grant application or information page URL for "${cleanTitle}". If the grant has moved to a community platform (LocalGiving, Spacehive, etc.) include that URL. If the grant no longer exists, say so in the description and set suggested_url to null.
 
 ${EXTRACT_FIELDS}
-- suggested_url: string or null — SPECIFIC grant page URL. Use null only if the grant genuinely doesn't exist.`
+- suggested_url: string or null — SPECIFIC grant page URL for "${cleanTitle}". Use null only if the grant genuinely doesn't exist.`
 
   try {
     const raw = await callClaude(knowledgePrompt, apiKey)
