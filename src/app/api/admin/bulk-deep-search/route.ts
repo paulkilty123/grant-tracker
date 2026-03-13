@@ -131,8 +131,20 @@ Return JSON in this exact format:
   if (!textBlock?.text) return []
 
   try {
-    // Parse JSON — handle markdown fencing if present
-    const raw = textBlock.text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+    // Strip markdown fencing
+    let raw = textBlock.text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+
+    // If the text doesn't start with '{', try to extract JSON object from within it
+    if (!raw.startsWith('{')) {
+      const jsonMatch = raw.match(/\{[\s\S]*"grants"\s*:\s*\[[\s\S]*\]\s*\}/)
+      if (jsonMatch) {
+        raw = jsonMatch[0]
+      } else {
+        console.error(`No JSON found in deep search response for "${query}". Text starts with: ${raw.slice(0, 200)}`)
+        return []
+      }
+    }
+
     const parsed = JSON.parse(raw)
     return parsed.grants ?? []
   } catch (e) {
