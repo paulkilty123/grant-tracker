@@ -402,15 +402,14 @@ export async function POST(req: NextRequest) {
 
   // ── Step 4: Claude extracts data + suggests URL from gathered content ──────
   if (combinedText) {
-    const prompt = `You are a UK grant database assistant. Extract structured information about ONE SPECIFIC grant from the content below.
+    const prompt = `You are a UK grant database assistant. Extract structured information about a specific grant from the content below.
 
-CRITICAL: You are looking for the grant called "${cleanTitle}" by ${cleanFunder}.
-- ONLY extract information about THIS specific grant/programme — NOT any other grants or programmes listed on the same page.
-- The page may list MULTIPLE funding programmes. You MUST identify and extract ONLY the one matching "${cleanTitle}".
-- If the page does not contain information specifically about "${cleanTitle}", return the title as "${cleanTitle}" and set description to null rather than extracting information about a different programme.
+You are looking for: "${cleanTitle}" by ${cleanFunder}.
+The content may mention multiple programmes — focus on the one that best matches "${cleanTitle}" and extract its details.
+If NONE of the programmes match "${cleanTitle}" at all, only then should you set description to null. Otherwise, always provide a description and fill in as many fields as possible.
 
 ${EXTRACT_FIELDS}
-- suggested_url: string or null — the specific grant application or information page URL for "${cleanTitle}" specifically (not a general listing page). ${urlContext} Must start with https://. Use null only if you genuinely cannot find one.
+- suggested_url: string or null — the specific grant application or information page URL for "${cleanTitle}" (not a general listing page). ${urlContext} Must start with https://. Use null only if you genuinely cannot find one.
 
 Content:
 ${combinedText.slice(0, 12000)}`
@@ -459,7 +458,7 @@ ${combinedText.slice(0, 12000)}`
   // ── Step 5: Pure Claude knowledge fallback ────────────────────────────────
   const knowledgePrompt = `You are a UK grant database assistant with extensive knowledge of UK funders.
 
-CRITICAL: Provide information ONLY about this SPECIFIC grant — do NOT describe any other programme by this funder.
+Provide detailed information about this specific grant. Always fill in as many fields as possible.
 Funder: ${cleanFunder}
 Grant title: ${cleanTitle}
 ${urlContext}
