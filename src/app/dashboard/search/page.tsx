@@ -851,7 +851,27 @@ export default function SearchPage() {
         return bDate.localeCompare(aDate)
       })
     } else if (org && sortBy === 'match') {
-      withScores.sort((a, b) => b.score - a.score)
+      // When a query is active, tier results by how closely the query matches
+      // the funder/title/description so that e.g. searching "Impact Hub" always
+      // surfaces Impact Hub grants before grants that merely mention "impact" in
+      // their description.
+      if (query) {
+        const q = query.toLowerCase()
+        const queryTier = (g: GrantOpportunity) => {
+          if (g.funder.toLowerCase() === q)              return 4  // exact funder match
+          if (g.funder.toLowerCase().includes(q))        return 3  // partial funder match
+          if (g.title.toLowerCase().includes(q))         return 2  // title match
+          if (g.sectors.some(s => s.toLowerCase().includes(q))) return 1  // sector match
+          return 0  // description-only match
+        }
+        withScores.sort((a, b) => {
+          const ta = queryTier(a.grant), tb = queryTier(b.grant)
+          if (tb !== ta) return tb - ta
+          return b.score - a.score
+        })
+      } else {
+        withScores.sort((a, b) => b.score - a.score)
+      }
     } else if (sortBy === 'amount') {
       withScores.sort((a, b) => (b.grant.amountMax ?? 0) - (a.grant.amountMax ?? 0))
     } else if (sortBy === 'freshest') {
@@ -876,7 +896,11 @@ export default function SearchPage() {
     // grants that specifically match what the user typed (e.g. "Cornwall arts").
     //
     // Filter to words > 3 chars to skip trivial stop words ("and", "the", "for")
-    const queryTerms = searchQuery.toLowerCase().split(/\s+/).filter(t => t.length > 3)
+    // Keep words of 3+ characters (changed from >3 so short but meaningful words
+    // like "hub", "art", "law" are included rather than being silently dropped,
+    // which previously caused multi-word queries like "Impact Hub" to collapse
+    // to just "impact" and match dozens of unrelated grants).
+    const queryTerms = searchQuery.toLowerCase().split(/\s+/).filter(t => t.length > 2)
 
     const scored = allGrants.map(g => {
       const text = `${g.title} ${g.funder} ${g.description} ${g.sectors.join(' ')}`.toLowerCase()
