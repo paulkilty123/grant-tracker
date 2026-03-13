@@ -80,29 +80,51 @@ Return JSON in this exact format:
   ]
 }`
 
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-5-20250929',
-      max_tokens: 8000,
-      tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 8 }],
-      system: systemPrompt,
-      messages: [{ role: 'user', content: userPrompt }],
-    }),
-  })
+  // Retry with exponential backoff for rate limits
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let data: any = null
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt > 0) {
+      const wait = 60_000 * attempt // 60s, 120s
+      console.log(`[deep-search] Rate limited, retrying in ${wait / 1000}s...`)
+      await sleep(wait)
+    }
 
-  if (!res.ok) {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5-20250929',
+        max_tokens: 8000,
+        tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 5 }],
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }],
+      }),
+    })
+
+    if (res.ok) {
+      data = await res.json()
+      break
+    }
+
     const err = await res.text()
+    if (res.status === 429 || err.includes('rate_limit')) {
+      console.error(`[deep-search] Rate limited for "${query}" (attempt ${attempt + 1})`)
+      continue
+    }
+
     console.error(`Deep search failed for "${query}":`, err)
     return []
   }
 
-  const data = await res.json()
+  if (!data) {
+    console.error(`Deep search exhausted retries for "${query}"`)
+    return []
+  }
 
   // Extract text content from response
   const textBlock = data.content?.find((b: { type: string }) => b.type === 'text')
@@ -166,10 +188,10 @@ export async function POST(req: NextRequest) {
 
   for (let qi = 0; qi < queries.length; qi++) {
     const query = queries[qi]
-    // Rate-limit spacing: wait 15s between queries (skip first)
+    // Rate-limit spacing: wait 65s between queries to stay under 30k tokens/min
     if (qi > 0) {
-      console.log(`[bulk-deep-search] Waiting 15s before next query...`)
-      await sleep(15_000)
+      console.log(`[bulk-deep-search] Waiting 65s before next query...`)
+      await sleep(65_000)
     }
     console.log(`[bulk-deep-search] Running: "${query}"`)
     const grants = await runDeepSearch(query)
