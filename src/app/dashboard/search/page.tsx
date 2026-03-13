@@ -239,6 +239,24 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
 
   const { text: scoreText } = scoreColour(score)
 
+  // Funding type badge — shown for non-grant types so users know what's being offered
+  const fundingTypeBadge: Record<string, { label: string; cls: string }> = {
+    accelerator:        { label: '🚀 Accelerator',        cls: 'bg-orange-50 text-orange-700 border border-orange-200' },
+    support_programme:  { label: '🎓 Support Programme',  cls: 'bg-indigo-50 text-indigo-700 border border-indigo-200' },
+    programme:          { label: '🎓 Support Programme',  cls: 'bg-indigo-50 text-indigo-700 border border-indigo-200' },
+    social_investment:  { label: '💷 Social Investment',   cls: 'bg-cyan-50 text-cyan-700 border border-cyan-200' },
+    loan:               { label: '💷 Loan',                cls: 'bg-cyan-50 text-cyan-700 border border-cyan-200' },
+    equity:             { label: '💷 Equity',              cls: 'bg-cyan-50 text-cyan-700 border border-cyan-200' },
+    diversity_fund:     { label: '🌍 Diversity Fund',      cls: 'bg-violet-50 text-violet-700 border border-violet-200' },
+    blended_finance:    { label: '🔗 Blended Finance',     cls: 'bg-teal-50 text-teal-700 border border-teal-200' },
+    in_kind:            { label: '🎁 In-Kind Support',     cls: 'bg-rose-50 text-rose-700 border border-rose-200' },
+    'in-kind':          { label: '🎁 In-Kind Support',     cls: 'bg-rose-50 text-rose-700 border border-rose-200' },
+    'tax-relief':       { label: '🏛 Tax Relief',           cls: 'bg-stone-100 text-stone-700 border border-stone-300' },
+  }
+  const ftBadge = grant.fundingType && grant.fundingType !== 'grant'
+    ? fundingTypeBadge[grant.fundingType] ?? null
+    : null
+
   // "New this week" badge — show if added within last 7 days
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
   const isNewThisWeek = !!grant.dateAdded && grant.dateAdded >= sevenDaysAgo
@@ -291,6 +309,11 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
                 {grant.nextOpenDate && (
                   <span className="bg-blue-50 text-blue-700 border border-blue-200 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide flex-shrink-0" title={`This grant is not currently open — next expected: ${grant.nextOpenDate}`}>
                     🔔 Opens {grant.nextOpenDate}
+                  </span>
+                )}
+                {ftBadge && (
+                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide flex-shrink-0 ${ftBadge.cls}`}>
+                    {ftBadge.label}
                   </span>
                 )}
                 <span className={`text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${entryBadge.cls}`}>
@@ -469,6 +492,7 @@ function normaliseScrapedGrant(row: Record<string, unknown>): EnrichedGrant {
     applyUrl:             row.apply_url ? String(row.apply_url) : null,
     isInviteOnly:         Boolean(row.is_invite_only),
     nextOpenDate:         row.next_open_date ? String(row.next_open_date) : null,
+    fundingType:          (row.funding_type ? String(row.funding_type) : 'grant') as FundingType,
     source:               'scraped',
     dateAdded:            row.first_seen_at  ? String(row.first_seen_at).split('T')[0]  : undefined,
     lastVerifiedAt:       row.last_seen_at   ? String(row.last_seen_at).split('T')[0]   : undefined,

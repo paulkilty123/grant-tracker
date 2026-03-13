@@ -68,6 +68,23 @@ export default async function GrantDetailPage({
   const typeColour             = TYPE_COLOURS[funderType] ?? 'bg-gray-50 text-gray-600'
   const lastSeen               = grant.last_seen_at ? String(grant.last_seen_at).split('T')[0] : 'Unknown'
 
+  // Funding type badge — shown for non-grant types
+  const FUNDING_TYPE_BADGES: Record<string, { label: string; cls: string }> = {
+    accelerator:        { label: '🚀 Accelerator',        cls: 'bg-orange-50 text-orange-700 border border-orange-200' },
+    support_programme:  { label: '🎓 Support Programme',  cls: 'bg-indigo-50 text-indigo-700 border border-indigo-200' },
+    programme:          { label: '🎓 Support Programme',  cls: 'bg-indigo-50 text-indigo-700 border border-indigo-200' },
+    social_investment:  { label: '💷 Social Investment',   cls: 'bg-cyan-50 text-cyan-700 border border-cyan-200' },
+    loan:               { label: '💷 Loan',                cls: 'bg-cyan-50 text-cyan-700 border border-cyan-200' },
+    equity:             { label: '💷 Equity',              cls: 'bg-cyan-50 text-cyan-700 border border-cyan-200' },
+    diversity_fund:     { label: '🌍 Diversity Fund',      cls: 'bg-violet-50 text-violet-700 border border-violet-200' },
+    blended_finance:    { label: '🔗 Blended Finance',     cls: 'bg-teal-50 text-teal-700 border border-teal-200' },
+    in_kind:            { label: '🎁 In-Kind Support',     cls: 'bg-rose-50 text-rose-700 border border-rose-200' },
+    'in-kind':          { label: '🎁 In-Kind Support',     cls: 'bg-rose-50 text-rose-700 border border-rose-200' },
+    'tax-relief':       { label: '🏛 Tax Relief',           cls: 'bg-stone-100 text-stone-700 border border-stone-300' },
+  }
+  const rawFundingType = grant.funding_type ? String(grant.funding_type) : 'grant'
+  const fundingTypeBadge = rawFundingType !== 'grant' ? (FUNDING_TYPE_BADGES[rawFundingType] ?? null) : null
+
   // Deadline display
   const deadlineDisplay = grant.is_rolling
     ? '🔄 Rolling — apply any time'
@@ -107,6 +124,11 @@ export default async function GrantDetailPage({
               {grant.is_local && (
                 <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-green-50 text-green-700">
                   📍 Local
+                </span>
+              )}
+              {fundingTypeBadge && (
+                <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${fundingTypeBadge.cls}`}>
+                  {fundingTypeBadge.label}
                 </span>
               )}
             </div>
