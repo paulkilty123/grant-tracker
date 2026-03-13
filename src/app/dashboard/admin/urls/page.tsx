@@ -1770,9 +1770,9 @@ export default function UrlAdminPage() {
                       </td>
                       <td className="px-5 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <button onClick={() => fetchGrantInfo(grant)} title="Search for info & better URL"
-                            className="rounded-full border border-warm p-1.5 text-mid hover:border-forest hover:text-forest transition-colors">
-                            <Sparkles className="h-3 w-3" />
+                          <button onClick={() => fetchGrantInfo(grant)} disabled={refreshingId === grant.id} title="Search for info & better URL"
+                            className="rounded-full border border-warm p-1.5 text-mid hover:border-forest hover:text-forest transition-colors disabled:opacity-40">
+                            {refreshingId === grant.id ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
                           </button>
                           <button onClick={() => { setEditingId(grant.id); setEditUrl(grant.apply_url ?? '') }} title="Edit URL"
                             className="rounded-full border border-warm p-1.5 text-mid hover:border-forest hover:text-forest transition-colors">
@@ -1866,9 +1866,9 @@ export default function UrlAdminPage() {
                         </div>
                       ) : (
                         <div className="flex items-center justify-end gap-1.5">
-                          <button onClick={() => fetchGrantInfo(grant)} title="Search for better info"
-                            className="rounded-full border border-warm p-1.5 text-mid hover:border-forest hover:text-forest transition-colors">
-                            <Sparkles className="h-3 w-3" />
+                          <button onClick={() => fetchGrantInfo(grant)} disabled={refreshingId === grant.id} title="Search for better info"
+                            className="rounded-full border border-warm p-1.5 text-mid hover:border-forest hover:text-forest transition-colors disabled:opacity-40">
+                            {refreshingId === grant.id ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
                           </button>
                           <button onClick={() => { setEditingId(grant.id); setEditUrl(grant.apply_url ?? '') }} title="Edit URL"
                             className="rounded-full border border-warm p-1.5 text-mid hover:border-forest hover:text-forest transition-colors">
