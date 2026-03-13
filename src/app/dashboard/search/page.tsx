@@ -985,7 +985,7 @@ export default function SearchPage() {
   const activeFilterCount = [
     activeType !== 'all',
     activeFundingType !== 'all',
-    categoryFilter !== 'all',
+    // categoryFilter is now a top-level tab, not counted as a hidden filter
     !!amountMin,
     !!amountMax,
     deadlineFilter !== 'all',
@@ -1038,16 +1038,67 @@ export default function SearchPage() {
   const grantsCount     = allGrants_raw.filter(g => GRANT_TYPES.includes((g as GrantOpportunity & { fundingType?: FundingType }).fundingType ?? 'grant')).length
   const programmesCount = allGrants_raw.filter(g => PROGRAMME_TYPES.includes((g as GrantOpportunity & { fundingType?: FundingType }).fundingType ?? 'grant')).length
 
+  const CATEGORY_TABS = [
+    {
+      id:    'all'        as const,
+      icon:  '✦',
+      label: 'All',
+      desc:  'Grants, programmes & support',
+      count: allGrants_raw.length,
+    },
+    {
+      id:    'grants'     as const,
+      icon:  '💰',
+      label: 'Funding',
+      desc:  'Grants, social investment & funds',
+      count: grantsCount,
+    },
+    {
+      id:    'programmes' as const,
+      icon:  '🚀',
+      label: 'Support & Programmes',
+      desc:  'Accelerators, mentoring, pro bono & skills',
+      count: programmesCount,
+    },
+  ]
+
   return (
     <div>
-      <div className="mb-6">
+      <div className="mb-5">
         <h2 className="font-display text-2xl font-bold text-forest">Search Funding</h2>
         <p className="text-mid text-sm mt-1">
-          Grants, accelerators, social investment, diversity funds & more — {allGrants.length}+ opportunities matched to your structure.{' '}
+          {categoryFilter === 'grants'
+            ? 'Grants, social investment, diversity funds & more'
+            : categoryFilter === 'programmes'
+            ? 'Accelerators, support programmes, mentoring & pro bono'
+            : 'Grants, accelerators, social investment, diversity funds & more'
+          }{' '}— {allGrants.length}+ opportunities matched to your structure.{' '}
           <a href="/dashboard/deep-search" className="text-forest hover:underline">
             Need something more specific? Try Live Search →
           </a>
         </p>
+      </div>
+
+      {/* ── Category tabs ── */}
+      <div className="flex gap-0 border-b border-warm mb-5 -mx-1">
+        {CATEGORY_TABS.map(tab => (
+          <button
+            key={tab.id}
+            title={tab.desc}
+            onClick={() => { setCategoryFilter(tab.id); setActiveFundingType('all') }}
+            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-all ${
+              categoryFilter === tab.id
+                ? 'border-forest text-forest'
+                : 'border-transparent text-mid hover:text-dark hover:border-warm'
+            }`}
+          >
+            <span className="text-base leading-none">{tab.icon}</span>
+            <span>{tab.label}</span>
+            <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
+              categoryFilter === tab.id ? 'bg-forest/10 text-forest' : 'bg-warm text-light'
+            }`}>{tab.count}</span>
+          </button>
+        ))}
       </div>
 
       {/* ── Search bar ── */}
@@ -1134,36 +1185,6 @@ export default function SearchPage() {
         {/* ── Collapsible filters panel ── */}
         {filtersOpen && (
           <div className="mt-4 pt-4 border-t border-warm space-y-5">
-
-            {/* Category toggle — Grants & funding vs Programmes & support */}
-            <div>
-              <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Category</p>
-              <div className="inline-flex rounded-lg border border-warm bg-white p-0.5 gap-0.5 mb-4">
-                {([
-                  { id: 'all',         label: 'All opportunities',    count: allGrants_raw.length },
-                  { id: 'grants',      label: 'Grants & funding',     count: grantsCount },
-                  { id: 'programmes',  label: 'Programmes & support', count: programmesCount },
-                ] as const).map(opt => (
-                  <button
-                    key={opt.id}
-                    onClick={() => {
-                      setCategoryFilter(opt.id)
-                      setActiveFundingType('all')
-                    }}
-                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ${
-                      categoryFilter === opt.id
-                        ? 'bg-forest text-white shadow-sm'
-                        : 'text-mid hover:text-dark'
-                    }`}
-                  >
-                    {opt.label}
-                    <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
-                      categoryFilter === opt.id ? 'bg-white/20 text-white' : 'bg-warm text-mid'
-                    }`}>{opt.count}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
 
             {/* Funding type — grants vs accelerators vs social investment etc */}
             <div>
