@@ -44,12 +44,11 @@ interface DeepGrant {
   fundingType?: string
 }
 
-// Run a single deep search using Claude Sonnet + web search
-async function runDeepSearch(query: string, existingTitles: string[]): Promise<DeepGrant[]> {
-  const existingList = existingTitles.length > 0
-    ? `\n\nALREADY IN DATABASE (skip these):\n${existingTitles.map(t => `- ${t}`).join('\n')}\n`
-    : ''
+// Delay helper — avoids rate limits between sequential API calls
+function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)) }
 
+// Run a single deep search using Claude Sonnet + web search
+async function runDeepSearch(query: string): Promise<DeepGrant[]> {
   const systemPrompt = `You are a UK funding research specialist. Search the live web for grants, funding programmes, accelerators, social investment, and support programmes available to UK social enterprises, CICs, charities, and impact-driven organisations.
 
 Return ONLY results that:
@@ -63,8 +62,8 @@ Return valid JSON only — no markdown fencing.`
 
   const userPrompt = `Search for: "${query}"
 
-Find 8-15 funding opportunities matching this query. Focus on opportunities NOT already in our database.
-${existingList}
+Find 8-15 funding opportunities matching this query.
+
 Return JSON in this exact format:
 {
   "grants": [
@@ -165,9 +164,15 @@ export async function POST(req: NextRequest) {
 
   const results: { query: string; found: number; imported: number; skipped: string[] }[] = []
 
-  for (const query of queries) {
+  for (let qi = 0; qi < queries.length; qi++) {
+    const query = queries[qi]
+    // Rate-limit spacing: wait 15s between queries (skip first)
+    if (qi > 0) {
+      console.log(`[bulk-deep-search] Waiting 15s before next query...`)
+      await sleep(15_000)
+    }
     console.log(`[bulk-deep-search] Running: "${query}"`)
-    const grants = await runDeepSearch(query, existingTitles)
+    const grants = await runDeepSearch(query)
     const skipped: string[] = []
     let imported = 0
 
