@@ -9,7 +9,6 @@ import { cn } from '@/lib/utils'
 import {
   LayoutDashboard,
   Search,
-  Sparkles,
   FolderKanban,
   CalendarClock,
   User,
@@ -46,8 +45,7 @@ const NAV_GROUPS = [
   {
     label: 'Find Funding',
     items: [
-      { href: '/dashboard/search',      label: 'Search Grants',    Icon: Search },
-      { href: '/dashboard/deep-search', label: 'Live Search',      Icon: Sparkles },
+      { href: '/dashboard/search', label: 'Find Funding', Icon: Search },
     ],
   },
   {

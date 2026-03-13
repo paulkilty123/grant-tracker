@@ -10,8 +10,10 @@ import { getOrganisationByOwner } from '@/lib/organisations'
 import { computeMatchScore, scoreColour } from '@/lib/matching'
 import type { FeedbackSignals, MatchBreakdown } from '@/lib/matching'
 import { getInteractions, recordInteraction, removeInteraction } from '@/lib/interactions'
+import { saveSearchHistory, getSearchHistory, deleteSearchHistory } from '@/lib/searchHistory'
 import type { GrantOpportunity, Organisation, FunderType, FundingType } from '@/types'
 import type { InteractionAction } from '@/lib/interactions'
+import type { SearchHistoryItem } from '@/lib/searchHistory'
 
 // Normalise long or awkward sector names for display only
 const SECTOR_DISPLAY: Record<string, string | null> = {
@@ -134,6 +136,104 @@ const FUNDING_TYPES: { id: FundingType | 'all'; label: string; emoji: string; de
   { id: 'blended_finance',   label: 'Blended Finance',      emoji: '🔗', desc: 'Community shares, matched crowdfunding & CDFIs' },
   { id: 'in_kind',           label: 'In-Kind & Tax',        emoji: '🛠️', desc: 'Google Ad Grants, AWS credits, SITR, R&D tax credits' },
 ]
+
+// ── Live Search (web) types & constants ──────────────────────────────────────
+interface LiveGrant {
+  title: string
+  funder: string
+  description: string
+  amountRange: string | null
+  deadline: string | null
+  applyUrl: string
+  notes: string
+}
+
+interface LiveSearchResponse {
+  summary: string
+  grants: LiveGrant[]
+  _cached?: boolean
+}
+
+const LIVE_SECTOR_FILTERS = [
+  { id: 'mental health',              label: '🧠 Mental Health' },
+  { id: 'youth',                      label: '🧒 Youth' },
+  { id: 'elderly',                    label: '👴 Older People' },
+  { id: 'education & training',       label: '📚 Education' },
+  { id: 'housing',                    label: '🏠 Housing' },
+  { id: 'disability',                 label: '♿ Disability' },
+  { id: 'arts & culture',             label: '🎨 Arts & Culture' },
+  { id: 'sport & physical activity',  label: '⚽ Sport' },
+  { id: 'environment',                label: '🌿 Environment' },
+  { id: 'food poverty',               label: '🍞 Food Poverty' },
+  { id: 'community',                  label: '🏘 Community' },
+  { id: 'social enterprise',          label: '🌱 Social Enterprise' },
+  { id: 'women & girls',              label: '♀ Women & Girls' },
+]
+
+const LIVE_EXAMPLE_QUERIES = [
+  'mental health funding Lewisham',
+  'youth sport grants Brighton',
+  'community food bank Birmingham',
+  'arts and heritage Cornwall',
+  'disability support Edinburgh',
+  'environmental projects Leeds',
+]
+
+// ── Live Grant Card ───────────────────────────────────────────────────────────
+function LiveGrantCard({ grant, onAddToPipeline }: {
+  grant: LiveGrant
+  onAddToPipeline: (g: LiveGrant) => void
+}) {
+  return (
+    <div className="bg-white rounded-xl p-5 shadow-warm mb-3 border border-warm hover:shadow-lg transition-all">
+      <div className="flex gap-4">
+        <div className="flex-1">
+          <div className="flex items-start gap-3 mb-2">
+            <div className="h-10 w-10 rounded-full bg-sage/10 flex items-center justify-center text-forest font-bold text-sm flex-shrink-0 border border-sage/20">
+              {grant.funder[0]?.toUpperCase() ?? '?'}
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-display font-bold text-forest text-base leading-snug">{grant.title}</h3>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">🌐 Live result</span>
+              </div>
+              <p className="text-sm text-mid">{grant.funder}</p>
+            </div>
+          </div>
+          <p className="text-sm text-mid leading-relaxed mb-3">{grant.description}</p>
+          {grant.notes && (
+            <div className="bg-sage/10 rounded-lg px-3.5 py-2.5 flex items-start gap-2">
+              <span className="text-sage text-sm">💡</span>
+              <p className="text-sm text-charcoal">{grant.notes}</p>
+            </div>
+          )}
+        </div>
+        <div className="flex flex-col items-end gap-3 w-40 flex-shrink-0">
+          {grant.amountRange && (
+            <div className="text-right">
+              <p className="font-display text-lg font-bold text-gold leading-snug">{grant.amountRange}</p>
+              <p className="text-xs text-light mt-0.5">Grant range</p>
+            </div>
+          )}
+          <div className="text-right">
+            <p className="text-xs text-mid">Deadline</p>
+            <p className="text-sm font-medium text-charcoal">{grant.deadline ?? 'Check website'}</p>
+          </div>
+          <div className="flex flex-col gap-1.5 w-full">
+            <a href={grant.applyUrl} target="_blank" rel="noopener noreferrer"
+              className="flex items-center justify-center gap-1 px-3 py-1.5 rounded-full border border-warm text-xs font-medium text-mid hover:border-forest hover:text-forest transition-colors w-full">
+              Visit website →
+            </a>
+            <button onClick={() => onAddToPipeline(grant)}
+              className="px-3 py-1.5 rounded-full bg-gold text-white text-xs font-semibold w-full hover:bg-gold/90 transition-colors">
+              + Pipeline
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 interface AIResult {
   grantId: string
@@ -533,6 +633,16 @@ export default function SearchPage() {
   const [activeGeoScope, setActiveGeoScope]             = useState<string>('all')
   const [visibleCount, setVisibleCount]           = useState(30)
 
+  // ── Live search (web) state ───────────────────────────────────────────────
+  const [searchMode, setSearchMode]               = useState<'database' | 'live'>('database')
+  const [locationFilter, setLocationFilter]       = useState('')
+  const [liveSelectedSectors, setLiveSelectedSectors] = useState<string[]>([])
+  const [liveResults, setLiveResults]             = useState<LiveSearchResponse | null>(null)
+  const [liveLoading, setLiveLoading]             = useState(false)
+  const [liveError, setLiveError]                 = useState<string | null>(null)
+  const [liveSmartMatched, setLiveSmartMatched]   = useState(false)
+  const [searchHistory, setSearchHistory]         = useState<SearchHistoryItem[]>([])
+
   useEffect(() => {
     try {
       const saved = sessionStorage.getItem('grantSearch')
@@ -577,9 +687,78 @@ export default function SearchPage() {
       if (scraped) {
         setScrapedGrants(scraped.map(row => normaliseScrapedGrant(row as Record<string, unknown>)))
       }
+      // Load live search history
+      if (o) {
+        const history = await getSearchHistory(o.id)
+        setSearchHistory(history)
+      }
     }
     loadOrg()
   }, [])
+
+  // ── Live search handler ───────────────────────────────────────────────────
+  async function runLiveSearch(searchQuery: string, isSmartMatch = false) {
+    if (!searchQuery.trim() && liveSelectedSectors.length === 0 && !locationFilter.trim()) return
+    setLiveLoading(true)
+    setLiveError(null)
+    setLiveResults(null)
+    setLiveSmartMatched(false)
+    try {
+      const q = searchQuery.trim() || [...liveSelectedSectors, locationFilter].filter(Boolean).join(', ')
+      const response = await fetch('/api/deep-search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: q,
+          org,
+          sectors: liveSelectedSectors,
+          location: locationFilter,
+          existingGrantTitles: SEED_GRANTS.map(g => ({ title: g.title, funder: g.funder })),
+        }),
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data?.error ?? `Request failed (${response.status})`)
+      setLiveResults(data as LiveSearchResponse)
+      if (isSmartMatch) setLiveSmartMatched(true)
+      if (org) {
+        await saveSearchHistory({
+          orgId: org.id,
+          query: q,
+          sectors: liveSelectedSectors,
+          location: locationFilter,
+          resultCount: (data as LiveSearchResponse).grants?.length ?? 0,
+        })
+        const history = await getSearchHistory(org.id)
+        setSearchHistory(history)
+      }
+    } catch (err) {
+      setLiveError(err instanceof Error ? err.message : 'Live search unavailable — please try again')
+    } finally {
+      setLiveLoading(false)
+    }
+  }
+
+  async function handleLiveAddToPipeline(grant: LiveGrant) {
+    if (!org) { showToast('Complete your profile first to track grants'); return }
+    try {
+      await createPipelineItem({
+        org_id: org.id,
+        grant_name: grant.title,
+        funder_name: grant.funder,
+        funder_type: 'other',
+        amount_min: null, amount_max: null, amount_requested: null,
+        deadline: null, stage: 'identified', notes: grant.notes || null,
+        application_progress: 0, is_urgent: false,
+        contact_name: null, contact_email: null,
+        grant_url: grant.applyUrl || null,
+        outcome_date: null, outcome_notes: null,
+        created_by: userId,
+      })
+      showToast(`"${grant.title}" added to pipeline!`)
+    } catch {
+      showToast('Failed to add — please try again')
+    }
+  }
 
   function showToast(msg: string) {
     setToast(msg)
@@ -1065,17 +1244,16 @@ export default function SearchPage() {
   return (
     <div>
       <div className="mb-5">
-        <h2 className="font-display text-2xl font-bold text-forest">Search Funding</h2>
+        <h2 className="font-display text-2xl font-bold text-forest">Find Funding</h2>
         <p className="text-mid text-sm mt-1">
-          {categoryFilter === 'grants'
-            ? 'Grants, social investment, diversity funds & more'
+          {searchMode === 'live'
+            ? 'AI researches the live web for hyper-local and newly announced funding not in our database'
+            : categoryFilter === 'grants'
+            ? `Grants, social investment, diversity funds & more — ${allGrants.length}+ opportunities matched to your structure`
             : categoryFilter === 'programmes'
-            ? 'Accelerators, support programmes, mentoring & pro bono'
-            : 'Grants, accelerators, social investment, diversity funds & more'
-          }{' '}— {allGrants.length}+ opportunities matched to your structure.{' '}
-          <a href="/dashboard/deep-search" className="text-forest hover:underline">
-            Need something more specific? Try Live Search →
-          </a>
+            ? `Accelerators, support programmes, mentoring & pro bono — ${allGrants.length}+ opportunities`
+            : `Grants, accelerators, social investment, diversity funds & more — ${allGrants.length}+ opportunities matched to your structure`
+          }
         </p>
       </div>
 
@@ -1103,6 +1281,34 @@ export default function SearchPage() {
 
       {/* ── Search bar ── */}
       <div className="bg-white rounded-xl p-5 shadow-card mb-5">
+
+        {/* ── Mode toggle ── */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="inline-flex rounded-full border border-warm bg-warm p-0.5 gap-0.5">
+            {([
+              { id: 'database' as const, icon: '🗄', label: 'Our database' },
+              { id: 'live'     as const, icon: '🌐', label: 'Live Search'  },
+            ]).map(m => (
+              <button
+                key={m.id}
+                onClick={() => { setSearchMode(m.id); setLiveResults(null); setAiResults(null) }}
+                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                  searchMode === m.id
+                    ? m.id === 'live'
+                      ? 'bg-emerald-600 text-white shadow-sm'
+                      : 'bg-forest text-white shadow-sm'
+                    : 'text-mid hover:text-dark'
+                }`}
+              >
+                <span>{m.icon}</span>{m.label}
+              </button>
+            ))}
+          </div>
+          {searchMode === 'live' && (
+            <p className="text-[11px] text-mid">⏱ ~15–30 seconds · searches the live web</p>
+          )}
+        </div>
+
         {/* Input row */}
         <div className="flex gap-3">
           <div className="flex-1 relative">
@@ -1110,34 +1316,60 @@ export default function SearchPage() {
             <input
               type="text"
               value={query}
-              onChange={e => { setQuery(e.target.value); setAiResults(null) }}
-              onKeyDown={e => e.key === 'Enter' && handleAISearch()}
+              onChange={e => { setQuery(e.target.value); if (searchMode === 'database') setAiResults(null) }}
+              onKeyDown={e => {
+                if (e.key !== 'Enter') return
+                searchMode === 'live' ? runLiveSearch(query) : handleAISearch()
+              }}
               className="form-input rounded-full h-12 pl-11 pr-4"
-              placeholder='e.g. "youth sport funding Manchester" or "startup grant for social business London"'
+              placeholder={searchMode === 'live'
+                ? 'e.g. "youth mental health London" or "arts grants Cornwall"'
+                : 'e.g. "youth sport funding" or "social enterprise grant Manchester"'}
             />
           </div>
           <button
-            onClick={handleAISearch}
-            disabled={aiLoading || !query.trim()}
-            className="px-5 h-12 rounded-full bg-forest text-white text-sm font-semibold whitespace-nowrap hover:bg-forest/90 transition-colors disabled:opacity-50"
+            onClick={() => searchMode === 'live' ? runLiveSearch(query) : handleAISearch()}
+            disabled={searchMode === 'live' ? liveLoading : (aiLoading || !query.trim())}
+            className={`px-5 h-12 rounded-full text-white text-sm font-semibold whitespace-nowrap transition-colors disabled:opacity-50 ${
+              searchMode === 'live'
+                ? 'bg-emerald-600 hover:bg-emerald-700'
+                : 'bg-forest hover:bg-forest/90'
+            }`}
           >
-            {aiLoading ? '⏳ Thinking…' : '✦ AI Search'}
+            {searchMode === 'live'
+              ? (liveLoading ? '⏳ Researching…' : '🌐 Search')
+              : (aiLoading   ? '⏳ Thinking…'   : '✦ AI Match')}
           </button>
         </div>
 
-        {/* Match my org nudge */}
+        {/* Fill from profile + clear */}
         {org && (
           <div className="mt-2.5 flex items-center gap-3">
             <button
-              onClick={handleSmartMatch}
-              disabled={aiLoading}
+              onClick={() => searchMode === 'live'
+                ? (() => {
+                    if (org.primary_location) setLocationFilter(org.primary_location)
+                    const smartQ = [org.themes?.slice(0,2).join(', '), org.areas_of_work?.slice(0,2).join(', ')].filter(Boolean).join(' ')
+                    if (smartQ) setQuery(smartQ)
+                  })()
+                : handleSmartMatch()
+              }
+              disabled={searchMode === 'live' ? liveLoading : aiLoading}
               className="text-sm text-sage font-medium hover:underline disabled:opacity-50"
             >
               ✦ Fill from my profile
             </button>
-            {aiResults && (
+            {searchMode === 'database' && aiResults && (
               <button
                 onClick={() => { setAiResults(null); setSmartMatched(false); setQuery('') }}
+                className="text-xs text-light hover:text-charcoal underline"
+              >
+                Clear results
+              </button>
+            )}
+            {searchMode === 'live' && liveResults && (
+              <button
+                onClick={() => { setLiveResults(null); setLiveSmartMatched(false); setQuery('') }}
                 className="text-xs text-light hover:text-charcoal underline"
               >
                 Clear results
@@ -1146,41 +1378,126 @@ export default function SearchPage() {
           </div>
         )}
 
-        {/* ── Entry type — always visible ── */}
-        <div className="mt-3 flex flex-wrap gap-1.5">
-          {([
-            { key: 'all',     label: 'All',            icon: '',   desc: 'Show everything',                                          cls: 'border-warm text-mid bg-white',                     active: 'bg-forest border-forest text-white' },
-            { key: 'live',    label: 'Latest Grants',  icon: '🆕', desc: 'Grants added to the database in the last 60 days — all funder types',  cls: 'border-emerald-200 text-emerald-700 bg-emerald-50', active: 'bg-emerald-600 border-emerald-600 text-white' },
-            { key: 'funders', label: 'Funders',        icon: '🏛️', desc: 'Ongoing funders and rolling programmes — apply any time',   cls: 'border-sage/20 text-sage bg-sage/10',               active: 'bg-forest border-forest text-white' },
-          ] as const).map(({ key, label, icon, desc, cls, active }) => (
+        {/* ── DATABASE MODE: entry type pills + filters ── */}
+        {searchMode === 'database' && (
+          <>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {([
+                { key: 'all',     label: 'All',           icon: '',    desc: 'Show everything',                                                  cls: 'border-warm text-mid bg-white',                     active: 'bg-forest border-forest text-white' },
+                { key: 'live',    label: 'Latest Grants', icon: '🆕',  desc: 'Grants added to the database in the last 60 days',                  cls: 'border-emerald-200 text-emerald-700 bg-emerald-50', active: 'bg-emerald-600 border-emerald-600 text-white' },
+                { key: 'funders', label: 'Funders',       icon: '🏛️',  desc: 'Ongoing funders and rolling programmes — apply any time',           cls: 'border-sage/20 text-sage bg-sage/10',               active: 'bg-forest border-forest text-white' },
+              ] as const).map(({ key, label, icon, desc, cls, active }) => (
+                <button key={key} onClick={() => setEntryTypeFilter(key)} title={desc}
+                  className={`flex items-center gap-1 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all ${
+                    entryTypeFilter === key ? active : `${cls} hover:opacity-80`
+                  }`}
+                >
+                  {icon && <span>{icon}</span>}{label}
+                </button>
+              ))}
+            </div>
+
+            {/* Filters toggle — renamed to "More filters" */}
             <button
-              key={key}
-              onClick={() => setEntryTypeFilter(key)}
-              title={desc}
-              className={`flex items-center gap-1 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all ${
-                entryTypeFilter === key ? active : `${cls} hover:opacity-80`
+              onClick={() => setFiltersOpen(o => !o)}
+              className={`mt-3 flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all ${
+                filtersOpen || activeFilterCount > 0
+                  ? 'bg-forest text-white border-forest'
+                  : 'border-warm text-mid hover:border-forest hover:text-forest bg-white'
               }`}
             >
-              {icon && <span>{icon}</span>}{label}
+              <span>⚙</span>
+              {activeFilterCount > 0 ? `Filters · ${activeFilterCount} active` : 'More filters'}
+              <span className={`text-xs transition-transform duration-200 inline-block ${filtersOpen ? 'rotate-180' : ''}`}>▼</span>
             </button>
-          ))}
-        </div>
 
-        {/* ── Filters button ── */}
-        <button
-          onClick={() => setFiltersOpen(o => !o)}
-          className={`mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border font-semibold text-sm transition-all ${
-            filtersOpen || activeFilterCount > 0
-              ? 'bg-forest text-white border-forest shadow-sm'
-              : 'border-warm text-mid hover:border-forest hover:text-forest bg-white'
-          }`}
-        >
-          <span>🔧</span>
-          {activeFilterCount > 0 ? `Filters · ${activeFilterCount} active` : 'Filters & Entry Type'}
-          <span className={`text-xs transition-transform duration-200 inline-block ${filtersOpen ? 'rotate-180' : ''}`}>▼</span>
-        </button>
+            {aiError && <p className="text-amber-600 text-xs mt-3">⚠ {aiError}</p>}
+          </>
+        )}
 
-        {aiError && <p className="text-amber-600 text-xs mt-3">⚠ {aiError}</p>}
+        {/* ── LIVE SEARCH MODE: location + sectors ── */}
+        {searchMode === 'live' && (
+          <div className="mt-4 space-y-4">
+            {/* Location */}
+            <div className="flex items-center gap-3">
+              <label className="text-xs font-semibold text-mid whitespace-nowrap">📍 Location</label>
+              <input
+                type="text"
+                value={locationFilter}
+                onChange={e => setLocationFilter(e.target.value)}
+                className="form-input flex-1 text-sm"
+                placeholder='e.g. "Manchester", "rural Norfolk", or leave blank for UK-wide'
+              />
+            </div>
+            {/* Sector pills */}
+            <div>
+              <p className="text-xs font-semibold text-mid mb-2">🏷 Sector <span className="font-normal text-light">(optional)</span></p>
+              <div className="flex flex-wrap gap-1.5">
+                {LIVE_SECTOR_FILTERS.map(s => (
+                  <button key={s.id} onClick={() => setLiveSelectedSectors(prev =>
+                    prev.includes(s.id) ? prev.filter(x => x !== s.id) : [...prev, s.id]
+                  )}
+                    className={`px-3 py-1 rounded-full border text-xs font-medium transition-all ${
+                      liveSelectedSectors.includes(s.id)
+                        ? 'bg-forest border-forest text-white'
+                        : 'border-warm text-mid hover:border-forest hover:text-forest'
+                    }`}
+                  >{s.label}</button>
+                ))}
+              </div>
+            </div>
+            {/* Recent searches */}
+            {searchHistory.length > 0 && !liveResults && !liveLoading && (
+              <div className="pt-3 border-t border-warm">
+                <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Recent</p>
+                <div className="flex flex-wrap gap-2">
+                  {searchHistory.map(item => (
+                    <div key={item.id} className="flex items-center gap-1 bg-sage/10 border border-warm rounded-full pl-3 pr-1 py-1">
+                      <button
+                        onClick={() => {
+                          setQuery(item.query)
+                          if (item.location) setLocationFilter(item.location)
+                          if (item.sectors.length) setLiveSelectedSectors(item.sectors)
+                        }}
+                        className="text-xs text-forest font-medium hover:text-charcoal max-w-[200px] truncate"
+                      >
+                        🕐 {item.query}
+                        {item.result_count != null && <span className="text-sage ml-1">· {item.result_count}</span>}
+                      </button>
+                      <button
+                        onClick={async () => {
+                          await deleteSearchHistory(item.id)
+                          setSearchHistory(prev => prev.filter(h => h.id !== item.id))
+                        }}
+                        className="text-light hover:text-charcoal px-1 text-xs ml-1"
+                      >✕</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {/* Example searches (when no history) */}
+            {searchHistory.length === 0 && !liveResults && !liveLoading && (
+              <div className="pt-3 border-t border-warm">
+                <p className="text-xs text-light mb-2">✦ Try an example</p>
+                <div className="flex flex-wrap gap-2">
+                  {LIVE_EXAMPLE_QUERIES.map(q => (
+                    <button key={q} onClick={() => setQuery(q)}
+                      className="px-3 py-1 rounded-full bg-sage/10 border border-warm text-forest text-xs font-medium hover:bg-sage/20 transition-all"
+                    >{q} →</button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {liveLoading && (
+              <div className="bg-emerald-50 rounded-lg px-4 py-3 text-sm text-emerald-800">
+                🌐 Searching live funding sources, council sites and specialist funders… this takes 15–30 seconds.
+              </div>
+            )}
+            {liveError && <p className="text-red-600 text-xs">⚠ {liveError}</p>}
+          </div>
+        )}
+
 
         {/* ── Collapsible filters panel ── */}
         {filtersOpen && (
@@ -1495,24 +1812,52 @@ export default function SearchPage() {
       </div>
 
       {/* ── Results header ── */}
-      <div className="flex justify-between items-center mb-3">
-        <p className="text-sm text-mid">
-          {aiResults && smartMatched ? (
-            <><strong className="text-forest">✦ {displayGrants.length}</strong> grants matched for <strong className="text-forest">{org?.name}</strong></>
-          ) : aiResults ? (
-            <><strong className="text-forest">✦ {displayGrants.length}</strong> AI-ranked results for &ldquo;{query}&rdquo;</>
-          ) : (
-            <>
-              <strong className="text-forest">{displayGrants.length}</strong>{' '}
-              grants{query ? ` matching "${query}"` : ''}
-              {org && !aiResults && <span className="text-sage font-medium"> · sorted by match</span>}
-            </>
-          )}
-        </p>
-      </div>
+      {searchMode === 'database' && (
+        <div className="flex justify-between items-center mb-3">
+          <p className="text-sm text-mid">
+            {aiResults && smartMatched ? (
+              <><strong className="text-forest">✦ {displayGrants.length}</strong> grants matched for <strong className="text-forest">{org?.name}</strong></>
+            ) : aiResults ? (
+              <><strong className="text-forest">✦ {displayGrants.length}</strong> AI-ranked results for &ldquo;{query}&rdquo;</>
+            ) : (
+              <>
+                <strong className="text-forest">{displayGrants.length}</strong>{' '}
+                grants{query ? ` matching "${query}"` : ''}
+                {org && !aiResults && <span className="text-sage font-medium"> · sorted by match</span>}
+              </>
+            )}
+          </p>
+        </div>
+      )}
 
-      {/* ── Match quality banner ── */}
-      {matchQuality && matchQuality.score < 80 && !bannerDismissed && (
+      {/* ── Live Search results ── */}
+      {searchMode === 'live' && liveResults && (
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="font-display font-bold text-forest text-base flex items-center gap-2">
+                {liveSmartMatched ? `Live results for ${org?.name}` : 'Live Research Results'}
+                <span className="text-xs font-normal bg-sage/15 text-forest px-2 py-0.5 rounded-full">
+                  {liveResults.grants.length} found
+                </span>
+                {liveResults._cached && (
+                  <span className="text-xs font-normal bg-warm text-mid px-2 py-0.5 rounded-full">cached</span>
+                )}
+              </h3>
+              <p className="text-sm text-mid mt-1 max-w-2xl">{liveResults.summary}</p>
+            </div>
+          </div>
+          {liveResults.grants.map((g, i) => (
+            <LiveGrantCard key={i} grant={g} onAddToPipeline={handleLiveAddToPipeline} />
+          ))}
+          <p className="text-xs text-light mt-3">
+            🌐 Live results are researched in real time. Always verify details on the funder&apos;s website before applying.
+          </p>
+        </div>
+      )}
+
+      {/* ── Match quality banner (database mode only) ── */}
+      {searchMode === 'database' && matchQuality && matchQuality.score < 80 && !bannerDismissed && (
         <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3.5 flex items-start gap-3">
           {/* Quality ring */}
           <div className="flex-shrink-0 mt-0.5">
@@ -1562,14 +1907,17 @@ export default function SearchPage() {
         </div>
       )}
 
-      {/* ── Grant list ── */}
-      {displayGrants.length === 0 ? (
+      {/* ── Database grant list ── */}
+      {searchMode === 'database' && (displayGrants.length === 0 ? (
         <div className="text-center py-16 text-light">
           <p className="text-4xl mb-3">🔍</p>
-          <p className="mb-3">No grants found — try different keywords or clear the filter.</p>
-          <a href="/dashboard/deep-search" className="text-forest text-sm hover:underline">
-            Try 🔬 Live Search for live opportunities →
-          </a>
+          <p className="mb-3">No grants found — try different keywords or clear the filters.</p>
+          <button
+            onClick={() => setSearchMode('live')}
+            className="text-forest text-sm hover:underline font-medium"
+          >
+            Try 🌐 Live Search for live web results →
+          </button>
         </div>
       ) : (
         <>
@@ -1598,7 +1946,7 @@ export default function SearchPage() {
             </div>
           )}
         </>
-      )}
+      ))}
 
       {toast && (
         <div className="fixed bottom-6 right-6 bg-forest text-white px-5 py-3.5 rounded-xl shadow-card-lg text-sm z-50">
