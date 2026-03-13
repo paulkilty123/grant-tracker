@@ -218,7 +218,8 @@ const EXTRACT_FIELDS = `Return a single JSON object (no markdown, no extra text)
 - is_rolling: boolean — true if applications are accepted on a rolling basis, false if there is a fixed deadline
 - deadline: string or null — if is_rolling is false, the application deadline in YYYY-MM-DD format; otherwise null
 - sectors: array of strings — relevant topic tags from this list only: community, young people, poverty, health, arts, environment, social welfare, education, employment, mental health, culture, sport, disability, social change, heritage, older people, inequality, climate, financial inclusion, technology, housing, homelessness, food, women, human rights, digital skills, rural, innovation, criminal justice, advocacy, wellbeing
-- is_invite_only: boolean — true if the grant is invite-only`
+- is_invite_only: boolean — true if the grant is invite-only
+- next_open_date: string or null — if the grant is NOT currently open for applications, when does it next open? Use a short human-readable format like "July 2026", "Q3 2026", or "Spring 2026". Set to null if the grant is currently open or the next opening date is unknown.`
 
 export async function POST(req: NextRequest) {
   try {

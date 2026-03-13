@@ -182,6 +182,8 @@ export interface GrantOpportunity {
   applicantType?: 'individual' | 'organisation' | 'both'
   applyUrl: string | null
   isInviteOnly: boolean
+  /** Human-readable date when the grant next opens (e.g. "July 2026"). Null if open now or unknown. */
+  nextOpenDate?: string | null
   source: 'three_sixty_giving' | 'manual' | 'scraped'
   dateAdded?: string        // ISO date, used for "Recently Added" section
   lastVerifiedAt?: string   // ISO date: last time crawler confirmed this grant was still live

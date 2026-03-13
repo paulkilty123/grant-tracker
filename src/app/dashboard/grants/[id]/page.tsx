@@ -129,6 +129,15 @@ export default async function GrantDetailPage({
           </div>
         </div>
 
+        {/* Next Open Date badge */}
+        {grant.next_open_date && (
+          <div className="mb-4">
+            <span className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 border border-blue-200 text-xs font-semibold px-3 py-1.5 rounded-lg">
+              🔔 Opens {String(grant.next_open_date)}
+            </span>
+          </div>
+        )}
+
         {/* Description */}
         <div className="mb-5">
           <h2 className="text-xs font-semibold text-light uppercase tracking-wider mb-2.5">About this grant</h2>

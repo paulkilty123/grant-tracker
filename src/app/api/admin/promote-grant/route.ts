@@ -45,6 +45,7 @@ export async function POST(req: NextRequest) {
     funding_type?: string | null   // e.g. 'grant' | 'social_investment' | 'support_programme'
     apply_url: string | null
     is_invite_only: boolean
+    next_open_date?: string | null
     description?: string | null
     amount_min?: number | null
     amount_max?: number | null
@@ -55,7 +56,7 @@ export async function POST(req: NextRequest) {
 
   const {
     seedId, manual,
-    title, funder, funder_type, funding_type, apply_url, is_invite_only,
+    title, funder, funder_type, funding_type, apply_url, is_invite_only, next_open_date,
     description, amount_min, amount_max, deadline, is_rolling, sectors,
   } = body
 
@@ -81,7 +82,8 @@ export async function POST(req: NextRequest) {
     row.amount_max   = amount_max  ?? null
     row.deadline     = deadline    ?? null
     row.is_rolling   = is_rolling  ?? false
-    row.sectors      = sectors     ?? []
+    row.sectors          = sectors        ?? []
+    row.next_open_date   = next_open_date ?? null
   } else if (seedData) {
     // Seed grant extra fields
     row.description          = seedData.description          ?? null

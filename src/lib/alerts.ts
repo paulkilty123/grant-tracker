@@ -41,6 +41,7 @@ function normaliseScraped(row: Record<string, unknown>): GrantOpportunity {
     eligibilityCriteria:  Array.isArray(row.eligibility_criteria) ? (row.eligibility_criteria as string[]) : [],
     applyUrl:             row.apply_url ? String(row.apply_url) : null,
     isInviteOnly:         Boolean(row.is_invite_only),
+    nextOpenDate:         row.next_open_date ? String(row.next_open_date) : null,
     source:               'scraped',
     dateAdded:            row.first_seen_at ? String(row.first_seen_at).split('T')[0] : undefined,
   }

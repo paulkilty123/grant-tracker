@@ -47,6 +47,7 @@ type AddGrantForm = {
   deadline: string
   is_rolling: boolean
   is_invite_only: boolean
+  next_open_date: string
   sectors: string
 }
 
@@ -83,7 +84,7 @@ const FUNDER_TYPE_OPTIONS = [
 const BLANK_FORM: AddGrantForm = {
   title: '', funder: '', funder_type: 'trust_foundation', apply_url: '',
   description: '', amount_min: '', amount_max: '', deadline: '',
-  is_rolling: true, is_invite_only: false, sectors: '',
+  is_rolling: true, is_invite_only: false, next_open_date: '', sectors: '',
 }
 
 // ── Component ──────────────────────────────────────────────────────────────────
@@ -737,6 +738,7 @@ export default function UrlAdminPage() {
           deadline:      d.deadline     ?? '',
           sectors:       Array.isArray(d.sectors) && d.sectors.length > 0 ? d.sectors.join(', ') : '',
           is_invite_only: d.is_invite_only ?? grant.is_invite_only,
+          next_open_date: d.next_open_date ?? '',
         },
       })
     } catch (err) {
@@ -794,6 +796,7 @@ export default function UrlAdminPage() {
           deadline:       d.deadline     ?? m.form.deadline,
           sectors:        Array.isArray(d.sectors) && d.sectors.length > 0 ? d.sectors.join(', ') : m.form.sectors,
           is_invite_only: d.is_invite_only ?? m.form.is_invite_only,
+          next_open_date: d.next_open_date ?? m.form.next_open_date,
         },
       } : m)
       // Friendly feedback: let the user know what happened
@@ -834,6 +837,7 @@ export default function UrlAdminPage() {
       deadline:         (!form.is_rolling && form.deadline) ? form.deadline : null,
       sectors,
       is_invite_only:   form.is_invite_only,
+      next_open_date:   form.next_open_date.trim() || null,
       // Sparkles confirmed this URL exists — mark it ok so it doesn't
       // sit in the Unchecked queue waiting for the next validation run
       url_status:       savedUrl ? 'ok' : null,
@@ -908,6 +912,7 @@ export default function UrlAdminPage() {
                           ? d.sectors.join(', ')
                           : prev.sectors,
         is_invite_only: d.is_invite_only ?? prev.is_invite_only,
+        next_open_date: d.next_open_date ?? prev.next_open_date,
         apply_url:      prev.apply_url || url,   // prefill URL if not already set
       }))
       setFetchedFrom(url)
@@ -946,6 +951,7 @@ export default function UrlAdminPage() {
         deadline:       (!addForm.is_rolling && addForm.deadline) ? addForm.deadline : null,
         is_rolling:     addForm.is_rolling,
         is_invite_only: addForm.is_invite_only,
+        next_open_date: addForm.next_open_date.trim() || null,
         sectors,
       }),
     })
@@ -2105,6 +2111,16 @@ export default function UrlAdminPage() {
                   className="w-full rounded-xl border border-warm px-3 py-2.5 text-sm text-charcoal placeholder:text-light focus:border-forest focus:outline-none resize-none" />
               </div>
 
+              {/* Next open date */}
+              <div>
+                <label className="block text-xs font-semibold text-mid uppercase tracking-wider mb-1.5">Next Opens</label>
+                <input type="text" value={refreshModal.form.next_open_date}
+                  onChange={e => setRefreshModal(m => m ? { ...m, form: { ...m.form, next_open_date: e.target.value } } : m)}
+                  placeholder="e.g. July 2026, Q3 2026, Spring 2026"
+                  className="w-full rounded-xl border border-warm px-3 py-2.5 text-sm text-charcoal placeholder:text-light focus:border-forest focus:outline-none" />
+                <p className="mt-1 text-xs text-light">If the grant isn&apos;t currently open, when does it next open? Leave blank if open now or unknown.</p>
+              </div>
+
               {/* Invite-only */}
               <label className="flex items-center gap-3 cursor-pointer">
                 <div className={`relative w-10 h-6 rounded-full transition-colors ${refreshModal.form.is_invite_only ? 'bg-purple-500' : 'bg-warm'}`}
@@ -2331,6 +2347,15 @@ export default function UrlAdminPage() {
                   onChange={e => setAddForm(f => ({ ...f, description: e.target.value }))}
                   placeholder="Brief description of what this funder funds…"
                   className="w-full rounded-xl border border-warm px-3 py-2.5 text-sm text-charcoal placeholder:text-light focus:border-forest focus:outline-none resize-none" />
+              </div>
+
+              {/* Next open date */}
+              <div>
+                <label className="block text-xs font-semibold text-mid uppercase tracking-wider mb-1.5">Next Opens</label>
+                <input type="text" value={addForm.next_open_date}
+                  onChange={e => setAddForm(f => ({ ...f, next_open_date: e.target.value }))}
+                  placeholder="e.g. July 2026, Q3 2026"
+                  className="w-full rounded-xl border border-warm px-3 py-2.5 text-sm text-charcoal placeholder:text-light focus:border-forest focus:outline-none" />
               </div>
 
               {/* Invite-only toggle */}

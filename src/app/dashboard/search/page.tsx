@@ -288,6 +288,11 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
                     ✉ Invite Only
                   </span>
                 )}
+                {grant.nextOpenDate && (
+                  <span className="bg-blue-50 text-blue-700 border border-blue-200 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide flex-shrink-0" title={`This grant is not currently open — next expected: ${grant.nextOpenDate}`}>
+                    🔔 Opens {grant.nextOpenDate}
+                  </span>
+                )}
                 <span className={`text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${entryBadge.cls}`}>
                   {entryBadge.label}
                 </span>
@@ -463,6 +468,7 @@ function normaliseScrapedGrant(row: Record<string, unknown>): EnrichedGrant {
     eligibilityCriteria:  Array.isArray(row.eligibility_criteria) ? (row.eligibility_criteria as string[]) : [],
     applyUrl:             row.apply_url ? String(row.apply_url) : null,
     isInviteOnly:         Boolean(row.is_invite_only),
+    nextOpenDate:         row.next_open_date ? String(row.next_open_date) : null,
     source:               'scraped',
     dateAdded:            row.first_seen_at  ? String(row.first_seen_at).split('T')[0]  : undefined,
     lastVerifiedAt:       row.last_seen_at   ? String(row.last_seen_at).split('T')[0]   : undefined,
