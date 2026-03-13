@@ -811,17 +811,45 @@ export default function UrlAdminPage() {
     }
   }
 
+  // ── Redirect warning state ──────────────────────────────────────────────────
+  const [redirectWarning, setRedirectWarning] = useState<{
+    inputUrl: string; finalUrl: string
+  } | null>(null)
+
   // ── Save refreshed info back to DB ────────────────────────────────────────────
-  async function saveRefreshedInfo() {
+  async function saveRefreshedInfo(overrideUrl?: string) {
     if (!refreshModal) return
     setRefreshSaving(true)
     setRefreshError(null)
     setPopulateMsg(null)
+    setRedirectWarning(null)
     const { grantId, form } = refreshModal
     const sectors = form.sectors
       ? form.sectors.split(',').map(s => s.trim()).filter(Boolean)
       : []
-    const savedUrl = form.apply_url.trim() || null
+    const savedUrl = overrideUrl ?? (form.apply_url.trim() || null)
+
+    // ── Redirect detection: check before first save ─────────────────────────
+    // Skip if this is a retry with an override URL (user already chose)
+    if (savedUrl && !overrideUrl) {
+      try {
+        const checkRes = await fetch('/api/admin/check-redirect', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: savedUrl }),
+        })
+        const checkJson = await checkRes.json()
+        if (checkJson.ok && checkJson.redirected) {
+          // Show warning — don't save yet
+          setRedirectWarning({ inputUrl: savedUrl, finalUrl: checkJson.finalUrl })
+          setRefreshSaving(false)
+          return
+        }
+      } catch {
+        // If redirect check fails, proceed with save anyway
+      }
+    }
+
     // When saving from the Needs Review tab, also approve the grant (set is_active: true)
     // so it goes live immediately — the user has reviewed & confirmed the details.
     const isReviewApproval = filter === 'review'
@@ -2131,13 +2159,52 @@ export default function UrlAdminPage() {
               </label>
             </div>
 
+            {/* Redirect warning */}
+            {redirectWarning && (
+              <div className="mx-6 mb-3 rounded-xl border border-amber-300 bg-amber-50 p-4">
+                <p className="text-sm font-semibold text-amber-800 mb-2">
+                  ⚠ This URL redirects to a different page
+                </p>
+                <p className="text-xs text-amber-700 mb-1">
+                  <span className="font-medium">You entered:</span>{' '}
+                  <span className="break-all">{redirectWarning.inputUrl}</span>
+                </p>
+                <p className="text-xs text-amber-700 mb-3">
+                  <span className="font-medium">Redirects to:</span>{' '}
+                  <span className="break-all">{redirectWarning.finalUrl}</span>
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      // Use the redirected URL instead
+                      setRefreshModal(m => m ? { ...m, form: { ...m.form, apply_url: redirectWarning.finalUrl } } : m)
+                      setRedirectWarning(null)
+                      setPopulateMsg('URL updated to final destination')
+                    }}
+                    className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-700 transition-colors">
+                    Use redirected URL
+                  </button>
+                  <button
+                    onClick={() => saveRefreshedInfo(redirectWarning.inputUrl)}
+                    className="rounded-lg border border-amber-300 px-3 py-1.5 text-xs font-semibold text-amber-800 hover:bg-amber-100 transition-colors">
+                    Keep original URL
+                  </button>
+                  <button
+                    onClick={() => setRedirectWarning(null)}
+                    className="rounded-lg px-3 py-1.5 text-xs text-amber-600 hover:text-amber-800 transition-colors">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Footer */}
             <div className="sticky bottom-0 flex items-center justify-end gap-3 border-t border-warm bg-white px-6 py-4">
               <button onClick={() => setRefreshModal(null)}
                 className="rounded-full border border-warm px-5 py-2 text-sm font-medium text-mid hover:border-charcoal hover:text-charcoal transition-colors">
                 Cancel
               </button>
-              <button onClick={saveRefreshedInfo} disabled={refreshSaving}
+              <button onClick={() => saveRefreshedInfo()} disabled={refreshSaving}
                 className="flex items-center gap-2 rounded-full bg-forest px-6 py-2 text-sm font-semibold text-white disabled:opacity-60 hover:bg-forest/90 transition-colors">
                 {refreshSaving ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                 {refreshSaving ? 'Saving…' : 'Save updates'}
