@@ -887,7 +887,7 @@ export default function UrlAdminPage() {
     const nowIso   = new Date().toISOString()
     if (okStatus) {
       const patch = <T extends { id: string }>(g: T): T =>
-        g.id === grantId ? { ...g, url_status: okStatus, url_last_checked: nowIso } : g
+        g.id === grantId ? { ...g, apply_url: savedUrl, title: form.title.trim(), funder: form.funder.trim(), url_status: okStatus, url_last_checked: nowIso } : g
       setGrants(prev         => prev.map(patch))
       setNewGrants(prev      => prev.map(patch))
       setCategoryGrants(prev => prev.map(patch))
