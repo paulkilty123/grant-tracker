@@ -643,7 +643,9 @@ export default function SearchPage() {
   const [liveSmartMatched, setLiveSmartMatched]   = useState(false)
   const [searchHistory, setSearchHistory]         = useState<SearchHistoryItem[]>([])
   const [weeklySearchCount, setWeeklySearchCount] = useState(0)
-  const WEEKLY_LIMIT = 2
+  const [isAdmin, setIsAdmin]                     = useState(false)
+  const WEEKLY_LIMIT = 3
+  const ADMIN_EMAIL  = 'paulkilty1@gmail.com'
 
   useEffect(() => {
     try {
@@ -670,6 +672,7 @@ export default function SearchPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
       setUserId(user.id)
+      setIsAdmin(user.email === ADMIN_EMAIL)
       const o = await getOrganisationByOwner(user.id)
       setOrg(o)
       if (o) {
@@ -705,7 +708,7 @@ export default function SearchPage() {
   // ── Live search handler ───────────────────────────────────────────────────
   async function runLiveSearch(searchQuery: string, isSmartMatch = false) {
     if (!searchQuery.trim() && liveSelectedSectors.length === 0 && !locationFilter.trim()) return
-    if (weeklySearchCount >= WEEKLY_LIMIT) return   // enforce limit client-side
+    if (!isAdmin && weeklySearchCount >= WEEKLY_LIMIT) return   // enforce limit client-side
     setLiveLoading(true)
     setLiveError(null)
     setLiveResults(null)
@@ -1317,7 +1320,9 @@ export default function SearchPage() {
           </div>
           {searchMode === 'live' && (
             <p className="text-[11px] text-mid">
-              {weeklySearchCount >= WEEKLY_LIMIT
+              {isAdmin
+                ? '∞ Unlimited searches'
+                : weeklySearchCount >= WEEKLY_LIMIT
                 ? '⚠ Weekly limit reached'
                 : `${WEEKLY_LIMIT - weeklySearchCount} of ${WEEKLY_LIMIT} searches left this week`}
             </p>
@@ -1344,7 +1349,7 @@ export default function SearchPage() {
           </div>
           <button
             onClick={() => searchMode === 'live' ? runLiveSearch(query) : handleAISearch()}
-            disabled={searchMode === 'live' ? (liveLoading || weeklySearchCount >= WEEKLY_LIMIT) : (aiLoading || !query.trim())}
+            disabled={searchMode === 'live' ? (liveLoading || (!isAdmin && weeklySearchCount >= WEEKLY_LIMIT)) : (aiLoading || !query.trim())}
             className={`px-5 h-12 rounded-full text-white text-sm font-semibold whitespace-nowrap transition-colors disabled:opacity-50 ${
               searchMode === 'live'
                 ? 'bg-emerald-600 hover:bg-emerald-700'
@@ -1443,28 +1448,35 @@ export default function SearchPage() {
                 </p>
               </div>
               {/* Usage pill */}
-              <div className={`flex-shrink-0 flex flex-col items-center rounded-xl px-3 py-2 border text-center min-w-[72px] ${
-                weeklySearchCount >= WEEKLY_LIMIT
-                  ? 'bg-red-50 border-red-200'
-                  : weeklySearchCount === WEEKLY_LIMIT - 1
-                  ? 'bg-amber-50 border-amber-200'
-                  : 'bg-white border-emerald-200'
-              }`}>
-                <p className={`text-xl font-bold leading-none ${
-                  weeklySearchCount >= WEEKLY_LIMIT ? 'text-red-600'
-                  : weeklySearchCount === WEEKLY_LIMIT - 1 ? 'text-amber-600'
-                  : 'text-emerald-700'
+              {isAdmin ? (
+                <div className="flex-shrink-0 flex flex-col items-center rounded-xl px-3 py-2 border border-emerald-200 bg-white text-center min-w-[72px]">
+                  <p className="text-xl font-bold leading-none text-emerald-700">∞</p>
+                  <p className="text-[10px] font-medium mt-0.5 text-emerald-600">unlimited</p>
+                </div>
+              ) : (
+                <div className={`flex-shrink-0 flex flex-col items-center rounded-xl px-3 py-2 border text-center min-w-[72px] ${
+                  weeklySearchCount >= WEEKLY_LIMIT
+                    ? 'bg-red-50 border-red-200'
+                    : weeklySearchCount === WEEKLY_LIMIT - 1
+                    ? 'bg-amber-50 border-amber-200'
+                    : 'bg-white border-emerald-200'
                 }`}>
-                  {WEEKLY_LIMIT - weeklySearchCount}
-                </p>
-                <p className={`text-[10px] font-medium mt-0.5 ${
-                  weeklySearchCount >= WEEKLY_LIMIT ? 'text-red-500' : 'text-emerald-600'
-                }`}>left this week</p>
-              </div>
+                  <p className={`text-xl font-bold leading-none ${
+                    weeklySearchCount >= WEEKLY_LIMIT ? 'text-red-600'
+                    : weeklySearchCount === WEEKLY_LIMIT - 1 ? 'text-amber-600'
+                    : 'text-emerald-700'
+                  }`}>
+                    {Math.max(0, WEEKLY_LIMIT - weeklySearchCount)}
+                  </p>
+                  <p className={`text-[10px] font-medium mt-0.5 ${
+                    weeklySearchCount >= WEEKLY_LIMIT ? 'text-red-500' : 'text-emerald-600'
+                  }`}>left this week</p>
+                </div>
+              )}
             </div>
 
             {/* Limit reached message */}
-            {weeklySearchCount >= WEEKLY_LIMIT && (
+            {!isAdmin && weeklySearchCount >= WEEKLY_LIMIT && (
               <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
                 <p className="text-xs font-semibold text-amber-900 mb-1">Weekly limit reached</p>
                 <p className="text-xs text-amber-800">
