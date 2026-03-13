@@ -762,7 +762,7 @@ export default function UrlAdminPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title:       refreshModal.grantTitle,
+          title:       refreshModal.form.title || refreshModal.grantTitle,
           funder:      refreshModal.form.funder ?? '',
           existingUrl: url,
           // Hint: treat the entered URL as confirmed so the pipeline crawls it

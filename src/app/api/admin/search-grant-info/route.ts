@@ -411,15 +411,25 @@ export async function POST(req: NextRequest) {
 
   // ── Step 4: Claude extracts data + suggests URL from gathered content ──────
   if (combinedText) {
+    // When the user clicked Populate with a specific URL (skipUrlSearch=true),
+    // tell Claude to extract whatever grant is actually on the page rather than
+    // only looking for the pre-existing title. The title is just a hint.
+    const extractionInstruction = skipUrlSearch
+      ? `Extract the grant or funding programme described on the page below.
+The current database entry is: "${cleanTitle}" by ${cleanFunder}.
+If the page describes a DIFFERENT programme than "${cleanTitle}", extract that programme's details instead — the user wants to know what is actually at this URL.
+If the page lists multiple programmes, pick the one that best matches "${cleanTitle}". If none match, pick the most prominent one.`
+      : `You are looking for: "${cleanTitle}" by ${cleanFunder}.
+The content below may mention multiple programmes — focus on the one that best matches "${cleanTitle}" and extract its details.`
+
     const prompt = `You are a UK grant database assistant. Extract structured information about a specific grant.
 
-You are looking for: "${cleanTitle}" by ${cleanFunder}.
-The content below may mention multiple programmes — focus on the one that best matches "${cleanTitle}" and extract its details.
+${extractionInstruction}
 
 IMPORTANT: The page content below may be incomplete (some websites use JavaScript rendering that prevents full text extraction). If the content is sparse or only contains navigation/footer text, supplement with your training knowledge about this grant. You MUST always provide a description — never return null for description.
 
 ${EXTRACT_FIELDS}
-- suggested_url: string or null — the specific grant application or information page URL for "${cleanTitle}" (not a general listing page). ${urlContext} Must start with https://. Use null only if you genuinely cannot find one.
+- suggested_url: string or null — the specific grant application or information page URL (not a general listing page). ${urlContext} Must start with https://. Use null only if you genuinely cannot find one.
 
 Content:
 ${combinedText.slice(0, 12000)}`
