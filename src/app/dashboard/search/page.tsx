@@ -10,7 +10,7 @@ import { getOrganisationByOwner } from '@/lib/organisations'
 import { computeMatchScore, scoreColour } from '@/lib/matching'
 import type { FeedbackSignals, MatchBreakdown } from '@/lib/matching'
 import { getInteractions, recordInteraction, removeInteraction } from '@/lib/interactions'
-import { saveSearchHistory, getSearchHistory, deleteSearchHistory } from '@/lib/searchHistory'
+import { saveSearchHistory, getSearchHistory, deleteSearchHistory, getWeeklySearchCount } from '@/lib/searchHistory'
 import type { GrantOpportunity, Organisation, FunderType, FundingType } from '@/types'
 import type { InteractionAction } from '@/lib/interactions'
 import type { SearchHistoryItem } from '@/lib/searchHistory'
@@ -642,6 +642,8 @@ export default function SearchPage() {
   const [liveError, setLiveError]                 = useState<string | null>(null)
   const [liveSmartMatched, setLiveSmartMatched]   = useState(false)
   const [searchHistory, setSearchHistory]         = useState<SearchHistoryItem[]>([])
+  const [weeklySearchCount, setWeeklySearchCount] = useState(0)
+  const WEEKLY_LIMIT = 2
 
   useEffect(() => {
     try {
@@ -687,10 +689,14 @@ export default function SearchPage() {
       if (scraped) {
         setScrapedGrants(scraped.map(row => normaliseScrapedGrant(row as Record<string, unknown>)))
       }
-      // Load live search history
+      // Load live search history + weekly usage count
       if (o) {
-        const history = await getSearchHistory(o.id)
+        const [history, weekCount] = await Promise.all([
+          getSearchHistory(o.id),
+          getWeeklySearchCount(o.id),
+        ])
         setSearchHistory(history)
+        setWeeklySearchCount(weekCount)
       }
     }
     loadOrg()
@@ -699,6 +705,7 @@ export default function SearchPage() {
   // ── Live search handler ───────────────────────────────────────────────────
   async function runLiveSearch(searchQuery: string, isSmartMatch = false) {
     if (!searchQuery.trim() && liveSelectedSectors.length === 0 && !locationFilter.trim()) return
+    if (weeklySearchCount >= WEEKLY_LIMIT) return   // enforce limit client-side
     setLiveLoading(true)
     setLiveError(null)
     setLiveResults(null)
@@ -728,8 +735,12 @@ export default function SearchPage() {
           location: locationFilter,
           resultCount: (data as LiveSearchResponse).grants?.length ?? 0,
         })
-        const history = await getSearchHistory(org.id)
+        const [history, newCount] = await Promise.all([
+          getSearchHistory(org.id),
+          getWeeklySearchCount(org.id),
+        ])
         setSearchHistory(history)
+        setWeeklySearchCount(newCount)
       }
     } catch (err) {
       setLiveError(err instanceof Error ? err.message : 'Live search unavailable — please try again')
@@ -1305,7 +1316,11 @@ export default function SearchPage() {
             ))}
           </div>
           {searchMode === 'live' && (
-            <p className="text-[11px] text-mid">⏱ ~15–30 seconds · searches the live web</p>
+            <p className="text-[11px] text-mid">
+              {weeklySearchCount >= WEEKLY_LIMIT
+                ? '⚠ Weekly limit reached'
+                : `${WEEKLY_LIMIT - weeklySearchCount} of ${WEEKLY_LIMIT} searches left this week`}
+            </p>
           )}
         </div>
 
@@ -1329,7 +1344,7 @@ export default function SearchPage() {
           </div>
           <button
             onClick={() => searchMode === 'live' ? runLiveSearch(query) : handleAISearch()}
-            disabled={searchMode === 'live' ? liveLoading : (aiLoading || !query.trim())}
+            disabled={searchMode === 'live' ? (liveLoading || weeklySearchCount >= WEEKLY_LIMIT) : (aiLoading || !query.trim())}
             className={`px-5 h-12 rounded-full text-white text-sm font-semibold whitespace-nowrap transition-colors disabled:opacity-50 ${
               searchMode === 'live'
                 ? 'bg-emerald-600 hover:bg-emerald-700'
@@ -1418,6 +1433,46 @@ export default function SearchPage() {
         {/* ── LIVE SEARCH MODE: location + sectors ── */}
         {searchMode === 'live' && (
           <div className="mt-4 space-y-4">
+
+            {/* Explainer + usage */}
+            <div className="flex items-start justify-between gap-4 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
+              <div className="flex-1">
+                <p className="text-xs font-semibold text-emerald-900 mb-0.5">What is Live Search?</p>
+                <p className="text-xs text-emerald-800 leading-relaxed">
+                  Searches the live web in real time — council sites, community foundations and specialist funders — to find hyper-local and newly announced grants not yet in our database. Takes 15–30 seconds.
+                </p>
+              </div>
+              {/* Usage pill */}
+              <div className={`flex-shrink-0 flex flex-col items-center rounded-xl px-3 py-2 border text-center min-w-[72px] ${
+                weeklySearchCount >= WEEKLY_LIMIT
+                  ? 'bg-red-50 border-red-200'
+                  : weeklySearchCount === WEEKLY_LIMIT - 1
+                  ? 'bg-amber-50 border-amber-200'
+                  : 'bg-white border-emerald-200'
+              }`}>
+                <p className={`text-xl font-bold leading-none ${
+                  weeklySearchCount >= WEEKLY_LIMIT ? 'text-red-600'
+                  : weeklySearchCount === WEEKLY_LIMIT - 1 ? 'text-amber-600'
+                  : 'text-emerald-700'
+                }`}>
+                  {WEEKLY_LIMIT - weeklySearchCount}
+                </p>
+                <p className={`text-[10px] font-medium mt-0.5 ${
+                  weeklySearchCount >= WEEKLY_LIMIT ? 'text-red-500' : 'text-emerald-600'
+                }`}>left this week</p>
+              </div>
+            </div>
+
+            {/* Limit reached message */}
+            {weeklySearchCount >= WEEKLY_LIMIT && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                <p className="text-xs font-semibold text-amber-900 mb-1">Weekly limit reached</p>
+                <p className="text-xs text-amber-800">
+                  You&apos;ve used your {WEEKLY_LIMIT} Live Searches for this week. Your allowance resets every Monday — or switch to our database above for instant results.
+                </p>
+              </div>
+            )}
+
             {/* Location */}
             <div className="flex items-center gap-3">
               <label className="text-xs font-semibold text-mid whitespace-nowrap">📍 Location</label>
