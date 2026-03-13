@@ -286,15 +286,46 @@ export async function POST(req: NextRequest) {
     if (crawledText) {
       allSearchTexts.push(crawledText)
       if (!bestUrl) {
-        const found = pickBest(
-          scoreAndRankUrls(crawledText, cleanTitle, cleanFunder, existingUrl),
-          5
-        )
+        const candidates = scoreAndRankUrls(crawledText, cleanTitle, cleanFunder, existingUrl)
+        const found = pickBest(candidates, 5)
         if (found && found !== existingUrl) bestUrl = found
+      }
+
+      // ── Step 2b: If existing URL is a listing page, try to follow a link
+      // to the specific programme page for richer content ──────────────────
+      if (skipUrlSearch && cleanTitle) {
+        // Find the best title-matching link from the listing page
+        const candidates = scoreAndRankUrls(crawledText, cleanTitle, cleanFunder, existingUrl)
+        const specificPage = candidates.find(c =>
+          !isLikely404Url(c.url) &&
+          c.url !== existingUrl &&
+          c.score >= 8 // High threshold — must strongly match the grant title
+        )
+        if (specificPage) {
+          const specificText = await fetchPageText(specificPage.url)
+          if (specificText) {
+            // Prepend the specific page content so Claude prioritises it
+            allSearchTexts.unshift(specificText)
+            if (!bestUrl || isLowQualityUrl(bestUrl)) bestUrl = specificPage.url
+          }
+        }
       }
     } else {
       // Existing URL returned empty — likely a 404 or dead page
       existingUrlIsDead = true
+    }
+  }
+
+  // ── Step 2c: If skipUrlSearch was used but we only have listing page content,
+  // do a targeted search for the specific programme to get richer detail ──────
+  if (skipUrlSearch && cleanTitle && allSearchTexts.length <= 1) {
+    const targetedText = await jinaSearch(`"${cleanTitle}" ${cleanFunder} apply`)
+    if (targetedText) {
+      allSearchTexts.unshift(targetedText)
+      if (!bestUrl) {
+        const found = pickBest(scoreAndRankUrls(targetedText, cleanTitle, cleanFunder, existingUrl ?? ''))
+        if (found) bestUrl = found
+      }
     }
   }
 
