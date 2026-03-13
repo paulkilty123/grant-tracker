@@ -123,8 +123,8 @@ export default function LandingPage() {
             {...fadeUp(0.2)}
             className="mx-auto max-w-3xl text-5xl leading-tight md:text-7xl md:leading-[1.1]"
           >
-            Find Funding{' '}
-            <span className="text-gradient-warm italic">Matched to Your Purpose</span>
+            Find the Perfect Grant{' '}
+            <span className="text-gradient-warm italic">for Your Cause or Venture</span>
           </motion.h1>
 
           {/* Subtitle */}
@@ -132,7 +132,7 @@ export default function LandingPage() {
             {...fadeUp(0.35)}
             className="mx-auto mt-6 max-w-2xl text-lg text-mid md:text-xl"
           >
-            Find grants, support programmes, accelerators, social investment, and more — all matched to your mission, legal structure and stage. One search. No overlap with Charity Excellence or My Funding Central.
+            Search grants, accelerators, social investment, diversity funds and support programmes — all filtered to your legal structure, sector and stage. Built for the UK.
           </motion.p>
 
           {/* CTAs */}
@@ -181,7 +181,7 @@ export default function LandingPage() {
           <span className="inline-block mb-4 rounded-full bg-forest/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-forest">
             How it works
           </span>
-          <p className="text-xl text-mid md:text-2xl">Set up once. Search everything. Track what matters.</p>
+          <p className="text-xl text-mid md:text-2xl">Set up once. Find everything. Track what matters.</p>
         </motion.div>
         <motion.div {...fadeInView(0.1)} className="rounded-3xl bg-forest/[0.03] border border-forest/8 px-8 py-12">
           {/* Desktop: horizontal flow */}
@@ -246,11 +246,11 @@ export default function LandingPage() {
               7 Funding Types
             </span>
             <h2 className="text-5xl leading-tight md:text-6xl md:leading-[1.1] mb-5">
-              Beyond grants —<br />
-              <span className="text-gradient-warm italic">the full funding landscape</span>
+              Not just grants —<br />
+              <span className="text-gradient-warm italic">the full picture</span>
             </h2>
             <p className="mx-auto max-w-2xl text-mid text-lg">
-              Most grant databases cover only a fraction of what mission-driven organisations can access. Grant Tracker brings together searchable grants, accelerators, and diversity funds — plus profiles of social lenders and guides to in-kind support — because finding funding rarely means finding just one type of answer. Support programmes — capacity building, fellowships and training — make up 300–500 active opportunities at any time. Traditional grant databases don&apos;t cover them.
+              Most platforms only index grants. Grant Tracker covers 7 funding types — including accelerators, diversity funds, and support programmes. That&apos;s 300–500 additional opportunities completely invisible on every other platform.
             </p>
           </motion.div>
 
@@ -377,12 +377,12 @@ export default function LandingPage() {
                 Search everything.<br />See only what fits.
               </h2>
               <p className="mt-4 text-mint/80 leading-relaxed">
-                Tell us your structure and sector once. Every result is filtered to funding you can actually apply for — Live Search surfaces matches as you type.
+                Tell us your structure and sector once. We filter out everything you&apos;re not eligible for before you even see results — no more reading criteria pages for funding you were never going to get.
               </p>
               <ul className="mt-6 space-y-3">
                 {[
                   'Profile-based filtering — your structure, stage and sector shape every result',
-                  'Live Search — finds matching funding as you type across all seven types',
+                  'Live Search — surfaces matching funding across all seven types in real time',
                   'Match scores ranked by structure, sector, geography, stage and mission',
                 ].map(text => (
                   <li key={text} className="flex items-start gap-3 text-sm text-mint/80">
@@ -450,10 +450,10 @@ export default function LandingPage() {
               🎯 Feature 2 · Personalisation
             </span>
             <h2 className="mt-4 text-3xl leading-tight md:text-4xl">
-              Results that get sharper<br />every time you use it
+              Every result scored.<br />Not just listed.
             </h2>
             <p className="mt-4 text-lg text-mid leading-relaxed">
-              Complete your profile once. Every result gets a match score across structure, sector, geography, stage and mission — and gets sharper every time you use it.
+              Complete your profile once and every opportunity is ranked across structure, sector, geography, stage and mission — so the funding you&apos;re most likely to win floats straight to the top.
             </p>
             <ul className="mt-5 space-y-3">
               {[
@@ -600,7 +600,7 @@ export default function LandingPage() {
               Track every application.<br />Never miss a deadline.
             </h2>
             <p className="mt-4 text-lg text-mid leading-relaxed">
-              A drag-and-drop board keeps every application in view. Alerts notify you when new funding matches your profile — urgency flags surface anything closing within 14 days.
+              A drag-and-drop board keeps every application visible, from first contact to submission. Urgency flags surface anything closing within 14 days. Alerts fire the moment new funding matches your profile.
             </p>
             <ul className="mt-6 space-y-3">
               {[
@@ -733,7 +733,7 @@ export default function LandingPage() {
             📊 Compare
           </span>
           <h2 className="mt-4 text-3xl md:text-4xl">How Grant Tracker compares</h2>
-          <p className="mt-3 text-mid max-w-xl mx-auto">The only platform covering grants AND support programmes — not an afterthought in a charity database.</p>
+          <p className="mt-3 text-mid max-w-xl mx-auto">The only platform that covers grants AND support programmes — not bolted on as an afterthought.</p>
         </motion.div>
         <motion.div {...fadeInView(0.15)}>
           <div className="rounded-2xl border border-warm bg-white overflow-hidden shadow-warm">
@@ -794,7 +794,7 @@ export default function LandingPage() {
             Built for the people doing the work
           </h2>
           <p className="mt-3 text-mid max-w-lg mx-auto">
-            Grant Tracker exists to help mission-driven organisations spend less time searching for funding and more time delivering impact.
+            A dedicated grants team is a luxury most organisations can&apos;t afford. Grant Tracker gives you the tools they use — at a price that makes sense.
           </p>
         </motion.div>
 
@@ -825,18 +825,18 @@ export default function LandingPage() {
             <div className="border-l-2 border-red-400 pl-4">
               <p className="text-red-300 font-semibold mb-1 text-xs uppercase tracking-wide">One place for everything</p>
               <p className="text-white/80">
-                Grants, accelerators, social investment, diversity funds — brought together and matched to your structure, sector, and stage.
+                Grants, accelerators, social investment, diversity funds and support programmes — brought together and filtered to your structure, sector and stage.
               </p>
             </div>
             <div className="border-l-2 border-emerald-400 pl-4">
               <p className="text-emerald-300 font-semibold mb-1 text-xs uppercase tracking-wide">No more dead ends</p>
               <p className="text-white/80">
-                Grant Tracker filters to your profile from the start — fewer criteria pages to read, more time on funding you can actually win.
+                We filter results to your profile from the start — fewer criteria pages to wade through, more time on funding you can actually win.
               </p>
             </div>
             <div className="border-l-2 border-sky-400 pl-4">
               <p className="text-white/80">
-                CIC, charity, co-op, social enterprise, or just getting started — find funding faster and waste less time on the ones you were never going to get.
+                CIC, charity, co-op, social enterprise, or just getting started — stop wasting time on grants you were never going to get.
               </p>
             </div>
           </div>
@@ -936,15 +936,15 @@ export default function LandingPage() {
               🇬🇧 Built for CICs, social enterprises, charities, co-operatives &amp; impact founders across the UK
             </div>
             <h2 className="relative text-3xl text-white md:text-5xl">
-              Ready to find funding<br />
-              <span className="italic">matched to your structure?</span>
+              Find your funding.<br />
+              <span className="italic">Free to start.</span>
             </h2>
             <p className="relative mx-auto mt-4 max-w-lg text-white/80">
-              Join CICs, social enterprises, charities, co-operatives, and impact founders already using Grant Tracker to find and win funding that actually fits.
+              Join CICs, charities, social enterprises and impact founders already discovering funding that actually fits — no credit card needed.
             </p>
             <div className="relative mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
               <Link href="/auth/signup" className="btn-gold px-12 py-3.5 text-base font-semibold">
-                Create free account →
+                Start for free →
               </Link>
               <span className="text-sm text-white/70">No credit card required</span>
             </div>

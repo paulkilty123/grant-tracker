@@ -533,14 +533,19 @@ export default function UrlAdminPage() {
   }
 
   // ── Server-side update helper (bypasses RLS via service role) ────────────────
-  async function updateGrant(id: string, fields: Record<string, unknown>): Promise<boolean> {
+  async function updateGrant(id: string, fields: Record<string, unknown>): Promise<{ ok: boolean; error?: string }> {
     const res = await fetch('/api/admin/update-grant', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, fields }),
     })
-    if (!res.ok) console.error('updateGrant error:', await res.json())
-    return res.ok
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}))
+      const msg = json.error ?? `HTTP ${res.status}`
+      console.error('updateGrant error:', msg)
+      return { ok: false, error: msg }
+    }
+    return { ok: true }
   }
 
   // ── Save edited URL ──────────────────────────────────────────────────────────
@@ -828,10 +833,12 @@ export default function UrlAdminPage() {
     const sectors = form.sectors
       ? form.sectors.split(',').map(s => s.trim()).filter(Boolean)
       : []
-    const savedUrl = overrideUrl ?? (form.apply_url.trim() || null)
+    let savedUrl = overrideUrl ?? (form.apply_url.trim() || null)
 
-    // ── Redirect detection: check before first save ─────────────────────────
-    // Skip if this is a retry with an override URL (user already chose)
+    // ── Redirect detection: silently follow to the final URL ─────────────────
+    // If the URL redirects, use the final destination rather than the redirect
+    // source — no user action needed. Skip when overrideUrl is already set
+    // (user has already chosen) or when there's no URL to check.
     if (savedUrl && !overrideUrl) {
       try {
         const checkRes = await fetch('/api/admin/check-redirect', {
@@ -840,21 +847,19 @@ export default function UrlAdminPage() {
           body: JSON.stringify({ url: savedUrl }),
         })
         const checkJson = await checkRes.json()
-        if (checkJson.ok && checkJson.redirected) {
-          // Show warning — don't save yet
-          setRedirectWarning({ inputUrl: savedUrl, finalUrl: checkJson.finalUrl })
-          setRefreshSaving(false)
-          return
+        if (checkJson.ok && checkJson.redirected && checkJson.finalUrl) {
+          // Silently update to the final destination URL
+          savedUrl = checkJson.finalUrl
         }
       } catch {
-        // If redirect check fails, proceed with save anyway
+        // If redirect check fails, proceed with the original URL
       }
     }
 
     // When saving from the Needs Review tab, also approve the grant (set is_active: true)
     // so it goes live immediately — the user has reviewed & confirmed the details.
     const isReviewApproval = filter === 'review'
-    const ok = await updateGrant(grantId, {
+    const result = await updateGrant(grantId, {
       title:            form.title.trim(),
       funder:           form.funder.trim(),
       funder_type:      form.funder_type,
@@ -876,8 +881,8 @@ export default function UrlAdminPage() {
       ...(isReviewApproval ? { is_active: true } : {}),
     })
 
-    if (!ok) {
-      setRefreshError('Save failed — check console for details')
+    if (!result.ok) {
+      setRefreshError(result.error ?? 'Save failed — check console for details')
       setRefreshSaving(false)
       return
     }
@@ -2161,45 +2166,6 @@ export default function UrlAdminPage() {
                 <span className="text-sm text-charcoal">Invite-only / not open to unsolicited applications</span>
               </label>
             </div>
-
-            {/* Redirect warning */}
-            {redirectWarning && (
-              <div className="mx-6 mb-3 rounded-xl border border-amber-300 bg-amber-50 p-4">
-                <p className="text-sm font-semibold text-amber-800 mb-2">
-                  ⚠ This URL redirects to a different page
-                </p>
-                <p className="text-xs text-amber-700 mb-1">
-                  <span className="font-medium">You entered:</span>{' '}
-                  <span className="break-all">{redirectWarning.inputUrl}</span>
-                </p>
-                <p className="text-xs text-amber-700 mb-3">
-                  <span className="font-medium">Redirects to:</span>{' '}
-                  <span className="break-all">{redirectWarning.finalUrl}</span>
-                </p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => {
-                      // Use the redirected URL instead
-                      setRefreshModal(m => m ? { ...m, form: { ...m.form, apply_url: redirectWarning.finalUrl } } : m)
-                      setRedirectWarning(null)
-                      setPopulateMsg('URL updated to final destination')
-                    }}
-                    className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-700 transition-colors">
-                    Use redirected URL
-                  </button>
-                  <button
-                    onClick={() => saveRefreshedInfo(redirectWarning.inputUrl)}
-                    className="rounded-lg border border-amber-300 px-3 py-1.5 text-xs font-semibold text-amber-800 hover:bg-amber-100 transition-colors">
-                    Keep original URL
-                  </button>
-                  <button
-                    onClick={() => setRedirectWarning(null)}
-                    className="rounded-lg px-3 py-1.5 text-xs text-amber-600 hover:text-amber-800 transition-colors">
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            )}
 
             {/* Footer */}
             <div className="sticky bottom-0 flex items-center justify-end gap-3 border-t border-warm bg-white px-6 py-4">

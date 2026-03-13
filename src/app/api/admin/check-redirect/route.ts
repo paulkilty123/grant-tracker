@@ -34,11 +34,15 @@ export async function POST(req: NextRequest) {
     })
 
     const finalUrl = res.url
-    // Normalise both for comparison (strip trailing slash, fragments, query params)
+    // Normalise both for comparison:
+    // - strip trailing slash, fragments, query params
+    // - ignore protocol difference (http vs https) — not a meaningful redirect
+    // - ignore www prefix difference — not a meaningful redirect
     const normalise = (u: string) => {
       try {
         const parsed = new URL(u)
-        return (parsed.origin + parsed.pathname).replace(/\/$/, '')
+        const host = parsed.hostname.replace(/^www\./, '').toLowerCase()
+        return (host + parsed.pathname).replace(/\/$/, '').toLowerCase()
       } catch { return u }
     }
 

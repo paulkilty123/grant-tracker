@@ -65,14 +65,21 @@ export async function PATCH(req: NextRequest) {
   if (!body.id) {
     return NextResponse.json({ error: 'id or ids is required' }, { status: 400 })
   }
-  const { error } = await db
+  const { data, error } = await db
     .from('scraped_grants')
     .update(fields)
     .eq('id', body.id)
+    .select('id')
 
   if (error) {
     console.error('update-grant error:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  // Detect 0-row updates (id didn't match any row in the DB)
+  if (!data || data.length === 0) {
+    console.error('update-grant: no rows matched id', body.id)
+    return NextResponse.json({ error: `No grant found with id "${body.id}" — it may be a seed grant that hasn't been promoted yet.` }, { status: 404 })
   }
 
   return NextResponse.json({ ok: true })
