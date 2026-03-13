@@ -411,11 +411,12 @@ export async function POST(req: NextRequest) {
 
   // ── Step 4: Claude extracts data + suggests URL from gathered content ──────
   if (combinedText) {
-    const prompt = `You are a UK grant database assistant. Extract structured information about a specific grant from the content below.
+    const prompt = `You are a UK grant database assistant. Extract structured information about a specific grant.
 
 You are looking for: "${cleanTitle}" by ${cleanFunder}.
-The content may mention multiple programmes — focus on the one that best matches "${cleanTitle}" and extract its details.
-If NONE of the programmes match "${cleanTitle}" at all, only then should you set description to null. Otherwise, always provide a description and fill in as many fields as possible.
+The content below may mention multiple programmes — focus on the one that best matches "${cleanTitle}" and extract its details.
+
+IMPORTANT: The page content below may be incomplete (some websites use JavaScript rendering that prevents full text extraction). If the content is sparse or only contains navigation/footer text, supplement with your training knowledge about this grant. You MUST always provide a description — never return null for description.
 
 ${EXTRACT_FIELDS}
 - suggested_url: string or null — the specific grant application or information page URL for "${cleanTitle}" (not a general listing page). ${urlContext} Must start with https://. Use null only if you genuinely cannot find one.
@@ -442,25 +443,33 @@ ${combinedText.slice(0, 12000)}`
         }
       }
 
-      // Final fallback: if still no URL and existing was dead, use funder homepage
-      if (!bestUrl && existingUrlIsDead && funderHomepageUrl) bestUrl = funderHomepageUrl
+      // If Step 4 returned null/empty description, fall through to Step 5
+      // (knowledge fallback) which is better at generating descriptions from
+      // training data when page content was too thin (e.g. JS-rendered sites).
+      if (!data.description) {
+        console.log('Step 4 returned null description — falling through to Step 5 knowledge fallback')
+        // Don't return — let Step 5 handle it below
+      } else {
+        // Final fallback: if still no URL and existing was dead, use funder homepage
+        if (!bestUrl && existingUrlIsDead && funderHomepageUrl) bestUrl = funderHomepageUrl
 
-      const sourceUrl = bestUrl || (existingUrlIsDead ? '' : (existingUrl ?? ''))
+        const sourceUrl = bestUrl || (existingUrlIsDead ? '' : (existingUrl ?? ''))
 
-      // Compare old vs new before declaring "improved"
-      let urlImproved = false
-      let urlComparison: { oldScore: number; newScore: number } | undefined
-      if (bestUrl && bestUrl !== (existingUrl ?? '') && !isLowQualityUrl(bestUrl)) {
-        const cmp = await shouldUpgradeUrl(bestUrl, existingUrl)
-        urlImproved = cmp.improved
-        urlComparison = { oldScore: cmp.oldScore, newScore: cmp.newScore }
-        // If the old URL is actually better, revert to it
-        if (!urlImproved && existingUrl && !existingUrlIsDead) {
-          return NextResponse.json({ ok: true, data, sourceUrl: existingUrl, urlImproved: false, urlWasDead: existingUrlIsDead, urlComparison })
+        // Compare old vs new before declaring "improved"
+        let urlImproved = false
+        let urlComparison: { oldScore: number; newScore: number } | undefined
+        if (bestUrl && bestUrl !== (existingUrl ?? '') && !isLowQualityUrl(bestUrl)) {
+          const cmp = await shouldUpgradeUrl(bestUrl, existingUrl)
+          urlImproved = cmp.improved
+          urlComparison = { oldScore: cmp.oldScore, newScore: cmp.newScore }
+          // If the old URL is actually better, revert to it
+          if (!urlImproved && existingUrl && !existingUrlIsDead) {
+            return NextResponse.json({ ok: true, data, sourceUrl: existingUrl, urlImproved: false, urlWasDead: existingUrlIsDead, urlComparison })
+          }
         }
-      }
 
-      return NextResponse.json({ ok: true, data, sourceUrl, urlImproved, urlWasDead: existingUrlIsDead, urlComparison })
+        return NextResponse.json({ ok: true, data, sourceUrl, urlImproved, urlWasDead: existingUrlIsDead, urlComparison })
+      }
     } catch { /* fall through */ }
   }
 
