@@ -192,14 +192,25 @@ export default function LandingPage() {
           >
             <span className="block">
               Find the{' '}
-              <span
-                style={{
-                  backgroundImage: 'linear-gradient(transparent 76%, rgba(232,114,92,0.45) 76%)',
-                  paddingLeft: '3px',
-                  paddingRight: '3px',
-                }}
-              >
+              <span className="relative inline-block" style={{ paddingBottom: '6px' }}>
                 perfect grant
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 300 10"
+                  preserveAspectRatio="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  style={{ position: 'absolute', left: '-3px', bottom: 0, width: 'calc(100% + 6px)', height: '10px', overflow: 'visible' }}
+                >
+                  <path
+                    d="M1,7 C18,3 32,9 55,5 C72,2 88,8 112,5 C130,3 148,8 168,5 C185,2 202,8 222,5 C240,3 258,8 275,5 C285,3 293,7 299,6"
+                    stroke="#E8725C"
+                    strokeWidth="2.8"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeOpacity="0.7"
+                  />
+                </svg>
               </span>
               {' '}for
             </span>
