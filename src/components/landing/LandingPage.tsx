@@ -196,7 +196,7 @@ export default function LandingPage() {
                     fill="none"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeOpacity="0.75"
+                    strokeOpacity="0.9"
                   />
                 </svg>
               </span>
