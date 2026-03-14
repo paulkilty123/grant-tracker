@@ -190,8 +190,13 @@ export default function LandingPage() {
             {...fadeUp(0.2)}
             className="mx-auto max-w-3xl text-5xl leading-tight md:text-7xl md:leading-[1.1]"
           >
-            Find the Perfect Grant{' '}
-            <span className="text-gradient-warm italic">for Your Cause or Venture</span>
+            Find the{' '}
+            <span className="relative inline-block">
+              Perfect Grant
+              <span className="absolute -bottom-1 left-0 right-0 h-[3px] rounded-full bg-coral" />
+            </span>
+            <br />
+            <span className="whitespace-nowrap">for Your Cause or Venture</span>
           </motion.h1>
 
           {/* Subtitle */}
