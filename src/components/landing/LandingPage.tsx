@@ -191,15 +191,17 @@ export default function LandingPage() {
             className="mx-auto max-w-3xl text-5xl leading-tight md:text-7xl md:leading-[1.1]"
           >
             Find the{' '}
-            <span className="relative inline-block">
+            <span
+              style={{
+                backgroundImage: 'linear-gradient(transparent 52%, rgba(232,114,92,0.38) 52%)',
+                paddingLeft: '3px',
+                paddingRight: '3px',
+              }}
+            >
               Perfect Grant
-              <span
-                className="absolute -z-10 rounded bg-coral/35"
-                style={{ bottom: '4px', left: '-4px', right: '-4px', height: '14px', transform: 'rotate(-1deg)' }}
-              />
             </span>
-            <br />
-            <span className="whitespace-nowrap">for Your Cause or Venture</span>
+            {' '}for<br />
+            <span className="whitespace-nowrap">Your Cause or Venture</span>
           </motion.h1>
 
           {/* Subtitle */}
