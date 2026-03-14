@@ -199,12 +199,12 @@ export default function LandingPage() {
                   viewBox="0 0 300 24"
                   preserveAspectRatio="none"
                   xmlns="http://www.w3.org/2000/svg"
-                  style={{ position: 'absolute', left: '-4px', bottom: 0, width: 'calc(100% + 8px)', height: '18px', overflow: 'visible' }}
+                  style={{ position: 'absolute', left: '-4px', bottom: '14px', width: 'calc(100% + 8px)', height: '18px', overflow: 'visible' }}
                 >
                   <path
                     d="M2,14 C40,11 80,17 130,13 C175,10 220,16 260,13 C275,11 288,14 298,13"
                     stroke="#E8725C"
-                    strokeWidth="14"
+                    strokeWidth="20"
                     fill="none"
                     strokeLinecap="round"
                     strokeLinejoin="round"
