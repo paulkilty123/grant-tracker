@@ -19,6 +19,9 @@ const config: Config = {
         // Accent amber (Lovable: hsl(36 85% 55%))
         gold:    '#e8a030',
         'gold-light': '#f5c86a',
+        // Coral CTA accent (matches reference design)
+        coral:        '#E8725C',
+        'coral-light': '#f09c8c',
         // Text
         charcoal: '#1a2e2b',
         mid:     '#5a7370',

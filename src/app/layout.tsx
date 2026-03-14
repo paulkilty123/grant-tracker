@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
-import { DM_Sans, DM_Serif_Display } from 'next/font/google'
+import { Plus_Jakarta_Sans, DM_Serif_Display } from 'next/font/google'
 import './globals.css'
 
-const dmSans = DM_Sans({
+const dmSans = Plus_Jakarta_Sans({
   subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
+  weight: ['400', '500', '600', '700'],
   variable: '--font-dm-sans',
   display: 'swap',
 })
