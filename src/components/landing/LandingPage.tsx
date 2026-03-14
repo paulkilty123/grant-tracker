@@ -173,18 +173,6 @@ export default function LandingPage() {
         </div>
 
         <div className="mx-auto max-w-6xl px-6 text-center">
-          {/* Badge with pulsing dot */}
-          <motion.div
-            {...fadeUp(0.1)}
-            className="mb-8 inline-flex items-center gap-2 rounded-full border border-sage/30 bg-sage/10 px-4 py-2 text-sm font-semibold text-forest"
-          >
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sage opacity-60" />
-              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-sage" />
-            </span>
-            AI-powered grant discovery for UK organisations
-          </motion.div>
-
           {/* Heading */}
           <motion.h1
             {...fadeUp(0.2)}
@@ -241,34 +229,6 @@ export default function LandingPage() {
             </a>
           </motion.div>
 
-          <motion.p {...fadeUp(0.6)} className="mt-4 text-sm text-light">
-            No credit card required · Free tier always available
-          </motion.p>
-
-          {/* Feature pillars */}
-          <motion.div
-            {...fadeUp(0.65)}
-            className="mx-auto mt-14 grid max-w-3xl grid-cols-2 gap-4 md:grid-cols-4"
-          >
-            {[
-              { icon: Layers, stat: '7 Funding Types', label: 'grants, programmes, investment & more' },
-              { icon: Target, stat: 'Smart Matching', label: 'filtered to your structure & stage' },
-              { icon: ClipboardList, stat: 'Pipeline', label: 'tracks every application' },
-              { icon: Bell, stat: 'Alerts', label: 'never miss a deadline' },
-            ].map((item, i) => (
-              <motion.div
-                key={item.stat}
-                {...fadeUp(0.7 + i * 0.1)}
-                className="group flex flex-col items-center gap-2 rounded-2xl border border-warm bg-white p-5 transition-all hover:border-forest/20 hover:shadow-warm"
-              >
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-forest/10 text-forest transition-colors group-hover:bg-forest group-hover:text-white">
-                  <item.icon size={20} />
-                </div>
-                <span className="font-serif text-sm font-semibold text-charcoal">{item.stat}</span>
-                <span className="text-xs text-mid text-center">{item.label}</span>
-              </motion.div>
-            ))}
-          </motion.div>
         </div>
       </section>
 
