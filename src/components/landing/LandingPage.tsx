@@ -192,23 +192,23 @@ export default function LandingPage() {
           >
             <span className="block">
               Find the{' '}
-              <span className="relative inline-block" style={{ paddingBottom: '6px' }}>
+              <span className="relative inline-block" style={{ paddingBottom: '8px' }}>
                 perfect grant
                 <svg
                   aria-hidden="true"
-                  viewBox="0 0 300 10"
+                  viewBox="0 0 300 20"
                   preserveAspectRatio="none"
                   xmlns="http://www.w3.org/2000/svg"
-                  style={{ position: 'absolute', left: '-3px', bottom: 0, width: 'calc(100% + 6px)', height: '10px', overflow: 'visible' }}
+                  style={{ position: 'absolute', left: '-4px', bottom: 0, width: 'calc(100% + 8px)', height: '14px', overflow: 'visible' }}
                 >
                   <path
-                    d="M1,7 C18,3 32,9 55,5 C72,2 88,8 112,5 C130,3 148,8 168,5 C185,2 202,8 222,5 C240,3 258,8 275,5 C285,3 293,7 299,6"
+                    d="M2,13 C15,11 28,15 52,12 C70,10 90,14 115,12 C135,10 155,14 178,11 C198,9 218,14 242,11 C260,9 278,13 298,11"
                     stroke="#E8725C"
-                    strokeWidth="2.8"
+                    strokeWidth="2"
                     fill="none"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeOpacity="0.7"
+                    strokeOpacity="0.85"
                   />
                 </svg>
               </span>
