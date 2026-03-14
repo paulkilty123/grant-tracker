@@ -188,20 +188,22 @@ export default function LandingPage() {
           {/* Heading */}
           <motion.h1
             {...fadeUp(0.2)}
-            className="mx-auto max-w-3xl text-5xl leading-tight md:text-7xl md:leading-[1.1]"
+            className="text-5xl leading-tight md:text-7xl md:leading-[1.1]"
           >
-            Find the{' '}
-            <span
-              style={{
-                backgroundImage: 'linear-gradient(transparent 52%, rgba(232,114,92,0.38) 52%)',
-                paddingLeft: '3px',
-                paddingRight: '3px',
-              }}
-            >
-              Perfect Grant
+            <span className="block">
+              Find the{' '}
+              <span
+                style={{
+                  backgroundImage: 'linear-gradient(transparent 52%, rgba(232,114,92,0.38) 52%)',
+                  paddingLeft: '3px',
+                  paddingRight: '3px',
+                }}
+              >
+                Perfect Grant
+              </span>
+              {' '}for
             </span>
-            {' '}for<br />
-            <span className="whitespace-nowrap">Your Cause or Venture</span>
+            <span className="block">Your Cause or Venture</span>
           </motion.h1>
 
           {/* Subtitle */}
