@@ -193,7 +193,10 @@ export default function LandingPage() {
             Find the{' '}
             <span className="relative inline-block">
               Perfect Grant
-              <span className="absolute -bottom-1 left-0 right-0 h-[3px] rounded-full bg-coral" />
+              <span
+                className="absolute -z-10 rounded bg-coral/35"
+                style={{ bottom: '4px', left: '-4px', right: '-4px', height: '14px', transform: 'rotate(-1deg)' }}
+              />
             </span>
             <br />
             <span className="whitespace-nowrap">for Your Cause or Venture</span>
