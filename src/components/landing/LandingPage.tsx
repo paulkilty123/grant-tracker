@@ -194,16 +194,16 @@ export default function LandingPage() {
               Find the{' '}
               <span
                 style={{
-                  backgroundImage: 'linear-gradient(transparent 52%, rgba(232,114,92,0.38) 52%)',
+                  backgroundImage: 'linear-gradient(transparent 76%, rgba(232,114,92,0.45) 76%)',
                   paddingLeft: '3px',
                   paddingRight: '3px',
                 }}
               >
-                Perfect Grant
+                perfect grant
               </span>
               {' '}for
             </span>
-            <span className="block">Your Cause or Venture</span>
+            <span className="block">your cause or venture</span>
           </motion.h1>
 
           {/* Subtitle */}
