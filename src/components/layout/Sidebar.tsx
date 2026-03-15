@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Organisation } from '@/types'
 import { cn } from '@/lib/utils'
+import RadioWaveIcon from '@/components/icons/RadioWaveIcon'
 import {
   LayoutDashboard,
   Search,
@@ -127,8 +128,9 @@ export default function Sidebar({ org, userEmail }: Props) {
     )}>
       {/* Logo */}
       <div className="px-6 py-6 flex items-center justify-between border-b border-white/10">
-        <Link href="/dashboard" className="font-serif text-xl tracking-tight text-white">
-          <span className="italic">Grant</span>Tracker
+        <Link href="/dashboard" className="flex items-center gap-1.5">
+          <RadioWaveIcon className="h-6 w-6 text-white/80" />
+          <span className="font-serif text-xl tracking-tight text-white"><span className="italic">Grant</span>Tracker</span>
         </Link>
         <button
           className="md:hidden text-white/50 hover:text-white"

@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Grant Tracker — Fundly Style Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #f5f0ea;
+    --black:     #151210;
+    --mid:       #6b6460;
+    --light:     #a09890;
+    --teal:      #b3ede3;
+    --teal-dark: #1a8f7a;
+    --lavender:  #d9ccf7;
+    --lav-dark:  #6b4fcf;
+    --orange:    #f8c9a0;
+    --ora-dark:  #c2570e;
+    --yellow:    #f7e07c;
+    --yel-dark:  #a07a00;
+    --green:     #d1fae5;
+    --green-dark:#065f46;
+    --card-r:    18px;
+    --section-gap: 100px;
+  }
+
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--black);
+    font-size: 16px;
+    line-height: 1.55;
+    overflow-x: hidden;
+  }
+
+  /* ── SVG ICON HELPERS ───────────────────────────────── */
+  .icon     { display:inline-block; width:20px; height:20px; flex-shrink:0; }
+  .icon-sm  { display:inline-block; width:16px; height:16px; flex-shrink:0; }
+  .icon-xs  { display:inline-block; width:12px; height:12px; flex-shrink:0; vertical-align:middle; }
+  .icon-lg  { display:inline-block; width:24px; height:24px; flex-shrink:0; }
+  .icon-xl  { display:inline-block; width:28px; height:28px; flex-shrink:0; }
+
+  /* ── NAV ────────────────────────────────────────── */
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 60px;
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 100;
+    border-bottom: 1px solid rgba(0,0,0,0.07);
+  }
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--black);
+    text-decoration: none;
+  }
+  .logo-mark {
+    width: 36px; height: 36px;
+    background: var(--black);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--yellow);
+    font-size: 18px; font-weight: 900;
+  }
+  .nav-links { display: flex; align-items: center; gap: 32px; list-style: none; }
+  .nav-links a { font-size: 14px; font-weight: 500; color: var(--mid); text-decoration: none; }
+  .nav-links a:hover { color: var(--black); }
+  .nav-right { display: flex; align-items: center; gap: 16px; }
+  .btn-ghost { font-size: 14px; font-weight: 600; color: var(--mid); text-decoration: none; }
+  .btn-black {
+    background: var(--black); color: #fff; border: none;
+    border-radius: 100px; padding: 10px 22px;
+    font-size: 14px; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-block;
+  }
+  .btn-black:hover { opacity: 0.85; }
+
+  /* ── HERO ───────────────────────────────────────── */
+  .hero {
+    max-width: 1200px; margin: 0 auto;
+    padding: 70px 60px 80px;
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 60px; align-items: center;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: #fff; border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 100px; padding: 6px 14px;
+    font-size: 12px; font-weight: 600; color: var(--mid); margin-bottom: 28px;
+  }
+  .hero h1 {
+    font-size: 62px; font-weight: 900; line-height: 1.0;
+    letter-spacing: -2px; color: var(--black); margin-bottom: 24px;
+  }
+  .hero h1 em {
+    font-style: italic;
+    background: var(--yellow); padding: 0 4px; border-radius: 4px;
+  }
+  .hero-sub {
+    font-size: 18px; color: var(--mid); max-width: 420px; line-height: 1.6; margin-bottom: 36px;
+  }
+  .hero-ctas { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .btn-black-lg {
+    background: var(--black); color: #fff; border: none;
+    border-radius: 100px; padding: 15px 32px;
+    font-size: 16px; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-block;
+  }
+  .btn-outline-lg {
+    background: transparent; color: var(--black); border: 2px solid var(--black);
+    border-radius: 100px; padding: 13px 28px;
+    font-size: 16px; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-block;
+  }
+  .hero-note { margin-top: 16px; font-size: 12px; color: var(--light); }
+
+  /* Hero pillars */
+  .hero-pillars {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 32px;
+  }
+  .hero-pillar {
+    background: #fff; border: 1px solid rgba(0,0,0,0.09);
+    border-radius: 14px; padding: 14px 12px;
+    display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center;
+  }
+  .hero-pillar-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: rgba(26,143,122,0.1);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .hero-pillar strong { font-size: 12px; font-weight: 800; color: var(--black); }
+  .hero-pillar span { font-size: 10px; color: var(--mid); }
+
+  /* ── HERO VISUAL ────────────────────────────────── */
+  .hero-visual { position: relative; }
+  .hero-frame {
+    background: #1a1410; border-radius: 28px; padding: 20px;
+    position: relative; box-shadow: 0 24px 64px rgba(0,0,0,0.22);
+  }
+  .hero-frame-inner { background: #f9f7f4; border-radius: 16px; overflow: hidden; min-height: 360px; }
+  .mock-topbar {
+    background: #fff; padding: 12px 16px; border-bottom: 1px solid #eee;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .mock-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .mock-search {
+    flex: 1; background: #f5f0ea; border-radius: 8px; padding: 7px 12px;
+    font-size: 11px; color: #aaa; margin-left: 8px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .mock-body { padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+  .mock-section-label {
+    font-size: 9px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.08em; color: #aaa; padding: 4px 0 2px;
+  }
+  .mock-grant {
+    background: #fff; border-radius: 10px; padding: 10px 12px;
+    display: flex; align-items: center; gap: 10px; border: 1px solid #eee;
+  }
+  .mock-grant-icon {
+    width: 28px; height: 28px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .mock-grant-info { flex: 1; min-width: 0; }
+  .mock-grant-name { font-size: 11px; font-weight: 700; color: #1a1a2e; }
+  .mock-grant-funder { font-size: 9px; color: #aaa; }
+  .mock-grant-score {
+    font-size: 11px; font-weight: 800; color: #1a8f7a;
+    display: flex; align-items: center; gap: 2px;
+  }
+  .mock-grant-amount {
+    font-size: 10px; font-weight: 700; color: #a07a00;
+    background: #f7e07c40; padding: 2px 7px; border-radius: 20px;
+  }
+  .mock-pipeline {
+    background: #fff; border-radius: 10px; padding: 10px 12px; margin-top: 4px;
+  }
+  .mock-pipeline-header {
+    font-size: 9px; font-weight: 700; color: #1a1a2e; margin-bottom: 8px;
+    display: flex; justify-content: space-between;
+  }
+  .mock-stages { display: flex; gap: 4px; }
+  .mock-stage {
+    flex: 1; border-radius: 6px; padding: 4px 5px;
+    font-size: 7.5px; font-weight: 600; text-align: center; color: #888; background: #f5f0ea;
+  }
+  .mock-stage.active { background: #b3ede380; color: #1a8f7a; }
+
+  /* floating decorative icons */
+  .float-icon {
+    position: absolute;
+    width: 48px; height: 48px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    animation: bob 3s ease-in-out infinite;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.14);
+  }
+  .float-icon.f1 { top: -18px; right: 60px; animation-delay: 0s; }
+  .float-icon.f2 { bottom: 30px; left: -24px; animation-delay: 0.8s; }
+  .float-icon.f3 { top: 50%; right: -28px; animation-delay: 1.5s; width:42px; height:42px; }
+  .float-icon.f4 { bottom: -16px; right: 80px; animation-delay: 0.4s; width:40px; height:40px; }
+  @keyframes bob {
+    0%, 100% { transform: translateY(0px); }
+    50%       { transform: translateY(-8px); }
+  }
+
+  /* ── SECTION WRAPPER ────────────────────────────── */
+  .section { max-width: 1200px; margin: 0 auto var(--section-gap); padding: 0 60px; }
+  .section-label {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.1em; color: var(--mid); margin-bottom: 16px;
+  }
+  .section-label::before {
+    content: ''; width: 16px; height: 2px; background: var(--black); border-radius: 2px;
+  }
+  .section-heading {
+    font-size: 50px; font-weight: 900; line-height: 1.05;
+    letter-spacing: -1.5px; margin-bottom: 16px; color: var(--black);
+  }
+  .section-heading em {
+    font-style: italic;
+    text-decoration: underline; text-decoration-color: var(--yellow);
+    text-decoration-thickness: 6px; text-underline-offset: 4px;
+  }
+  .section-intro {
+    font-size: 17px; color: var(--mid); max-width: 700px; line-height: 1.65; margin-bottom: 48px;
+  }
+
+  /* ── HOW IT WORKS — 5 STEPS ─────────────────────── */
+  .steps-flow {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    background: rgba(26,143,122,0.04); border: 1px solid rgba(26,143,122,0.1);
+    border-radius: 28px; padding: 48px 40px;
+    gap: 0;
+  }
+  .step-flow-item {
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+    flex: 1; padding: 0 12px;
+  }
+  .step-flow-icon {
+    width: 60px; height: 60px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid; margin-bottom: 16px;
+    font-size: 22px;
+  }
+  .step-flow-title { font-size: 13px; font-weight: 800; color: var(--black); margin-bottom: 6px; }
+  .step-flow-desc { font-size: 11px; color: var(--mid); line-height: 1.55; max-width: 120px; }
+  .step-connector {
+    display: flex; align-items: center; padding-top: 30px; flex-shrink: 0;
+  }
+  .step-connector-line { width: 32px; height: 1px; background: rgba(0,0,0,0.12); }
+  .step-connector-arrow { font-size: 14px; color: var(--light); margin-left: -2px; }
+
+  /* ── FUNDING TYPE CARDS ─────────────────────────── */
+  .funding-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px;
+  }
+  .funding-card {
+    background: #fff; border: 1px solid rgba(0,0,0,0.09); border-radius: 16px;
+    padding: 18px 16px;
+    display: flex; gap: 12px;
+    transition: box-shadow 0.2s;
+  }
+  .funding-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+  .funding-card-icon {
+    width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+    background: rgba(26,143,122,0.1);
+    display: flex; align-items: center; justify-content: center; font-size: 16px;
+  }
+  .funding-card-title { font-size: 13px; font-weight: 800; color: var(--black); margin-bottom: 3px; }
+  .funding-card-badge {
+    display: inline-block; background: rgba(247,224,124,0.4);
+    border-radius: 20px; padding: 1px 8px;
+    font-size: 10px; font-weight: 600; color: var(--yel-dark); margin-bottom: 6px;
+  }
+  .funding-card-desc { font-size: 11px; color: var(--mid); line-height: 1.55; }
+  .funding-card-tag {
+    display: inline-block; margin-top: 8px;
+    border-radius: 20px; padding: 2px 8px;
+    font-size: 10px; font-weight: 700;
+  }
+  .sector-strip {
+    background: #fff; border: 1px solid rgba(0,0,0,0.09); border-radius: 16px; padding: 20px 24px;
+  }
+  .sector-strip p { font-size: 13px; font-weight: 700; color: var(--black); margin-bottom: 12px; }
+  .sector-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .sector-tag {
+    background: var(--bg); border: 1px solid rgba(0,0,0,0.09);
+    border-radius: 8px; padding: 5px 10px;
+    font-size: 11px; color: var(--mid); font-weight: 500;
+  }
+  .sector-note { font-size: 11px; color: var(--light); }
+
+  /* ── FEATURE ROWS ───────────────────────────────── */
+  .feat-row {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 80px; align-items: center; margin-bottom: 80px;
+  }
+  .feat-row.reverse { direction: rtl; }
+  .feat-row.reverse > * { direction: ltr; }
+  .feat-tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    border-radius: 100px; padding: 5px 12px;
+    font-size: 11px; font-weight: 700;
+    margin-bottom: 14px;
+  }
+  .feat-tag.forest { background: rgba(26,143,122,0.1); color: var(--teal-dark); }
+  .feat-tag.gold   { background: rgba(247,224,124,0.4); color: var(--yel-dark); }
+  .feat-text h2 {
+    font-size: 40px; font-weight: 900; letter-spacing: -1.2px; line-height: 1.1;
+    margin-bottom: 16px; color: var(--black);
+  }
+  .feat-text p {
+    font-size: 16px; color: var(--mid); line-height: 1.65; margin-bottom: 20px; max-width: 400px;
+  }
+  .feat-bullets { list-style: none; margin-bottom: 28px; display: flex; flex-direction: column; gap: 10px; }
+  .feat-bullets li { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: var(--mid); }
+  .feat-bullets li .bullet-dot {
+    width: 20px; height: 20px; border-radius: 50%; background: rgba(26,143,122,0.12);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;
+  }
+
+  /* visual panels */
+  .feat-visual { border-radius: 24px; overflow: hidden; position: relative; }
+  .feat-panel {
+    background: #fff; border-radius: 20px; padding: 20px;
+    border: 1px solid #ede9e2; box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+  }
+  .feat-panel-header {
+    font-size: 11px; font-weight: 700; color: var(--light);
+    text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px;
+  }
+
+  /* search mock */
+  .search-bar {
+    background: var(--bg); border-radius: 12px; padding: 11px 16px;
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 10px; border: 1px solid #e5e0d8;
+  }
+  .search-bar-text { font-size: 12px; color: #aaa; flex: 1; }
+  .search-tag {
+    background: var(--black); color: #fff;
+    font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 20px;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .filter-pills { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
+  .filter-pill {
+    padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 600;
+    border: 1px solid rgba(0,0,0,0.1); color: var(--mid); background: transparent;
+  }
+  .filter-pill.active { background: var(--black); color: #fff; border-color: var(--black); }
+  .filter-pill.new { background: rgba(247,224,124,0.35); color: var(--yel-dark); border-color: rgba(247,224,124,0.5); }
+  .result-row {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+    background: var(--bg); border-radius: 10px; margin-bottom: 7px;
+  }
+  .result-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .result-name { font-size: 12px; font-weight: 700; color: var(--black); flex: 1; }
+  .result-funder { font-size: 10px; color: var(--light); }
+  .result-score {
+    font-size: 11px; font-weight: 800; color: var(--teal-dark);
+    display: flex; align-items: center; gap: 2px;
+  }
+  .result-badge {
+    font-size: 9px; font-weight: 700; padding: 2px 7px;
+    border-radius: 20px;
+  }
+
+  /* match score mock */
+  .score-card { border-radius: 14px; padding: 16px; margin-bottom: 10px; }
+  .score-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .score-name { font-size: 13px; font-weight: 800; color: var(--black); }
+  .score-funder { font-size: 10px; color: var(--light); margin-top: 1px; }
+  .score-num { font-size: 24px; font-weight: 900; color: var(--teal-dark); }
+  .score-bars { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
+  .score-bar-wrap { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .score-bar-bg { width: 100%; height: 5px; background: #eee; border-radius: 10px; overflow: hidden; }
+  .score-bar-fill { height: 100%; border-radius: 10px; background: var(--teal-dark); }
+  .score-bar-label { font-size: 8px; color: var(--light); }
+
+  /* pipeline mock */
+  .pipeline-cols { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; }
+  .pipe-col-label {
+    font-size: 7px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+    padding: 3px 5px; border-radius: 6px; text-align: center; margin-bottom: 5px;
+  }
+  .pipe-card-mini {
+    background: #fff; border-radius: 8px; padding: 6px 7px; margin-bottom: 4px;
+    border-left: 3px solid; font-size: 8px; font-weight: 600; color: var(--black);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06); line-height: 1.3;
+  }
+  .pipe-amount { font-size: 7.5px; font-weight: 700; margin-top: 2px; }
+
+  /* ── COMPARISON ─────────────────────────────────── */
+  .compare-table {
+    background: #fff; border: 1px solid rgba(0,0,0,0.09);
+    border-radius: 20px; overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  }
+  .compare-head {
+    display: grid; grid-template-columns: 1fr 160px 220px;
+    background: rgba(0,0,0,0.03); padding: 16px 28px;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+  }
+  .compare-head-label { font-size: 12px; font-weight: 600; color: var(--mid); }
+  .compare-head-gt { font-size: 13px; font-weight: 800; color: var(--teal-dark); text-align: center; }
+  .compare-head-other { font-size: 12px; font-weight: 500; color: var(--mid); text-align: center; }
+  .compare-row {
+    display: grid; grid-template-columns: 1fr 160px 220px;
+    padding: 12px 28px; border-bottom: 1px solid rgba(0,0,0,0.06);
+    align-items: center;
+  }
+  .compare-row:last-child { border-bottom: none; }
+  .compare-feat { font-size: 13px; color: var(--black); }
+  .compare-check {
+    display: flex; justify-content: center;
+  }
+  .chk-yes {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: rgba(26,143,122,0.12);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .chk-no {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: #fef2f2;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .chk-mid {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: rgba(0,0,0,0.05);
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* ── ABOUT / PERSONA CARDS ──────────────────────── */
+  .persona-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 48px; }
+  .persona-card {
+    background: #fff; border: 1px solid rgba(0,0,0,0.09);
+    border-radius: 18px; padding: 24px 20px; text-align: center;
+  }
+  .persona-emoji { font-size: 28px; margin-bottom: 10px; }
+  .persona-label { font-size: 14px; font-weight: 800; color: var(--teal-dark); margin-bottom: 6px; }
+  .persona-desc { font-size: 12px; color: var(--mid); line-height: 1.55; }
+
+  /* Founder story */
+  .founder-card {
+    background: var(--black); border-radius: 28px; padding: 48px;
+    max-width: 780px; margin: 0 auto;
+  }
+  .founder-quote {
+    font-size: 20px; font-style: italic; font-weight: 700;
+    color: #fff; line-height: 1.5; margin-bottom: 32px;
+    border-left: 4px solid rgba(255,255,255,0.3); padding-left: 20px;
+  }
+  .founder-blocks { display: flex; flex-direction: column; gap: 16px; }
+  .founder-block { padding-left: 16px; }
+  .founder-block-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
+  .founder-block p { font-size: 14px; color: rgba(255,255,255,0.75); line-height: 1.6; }
+
+  /* ── STATS ──────────────────────────────────────── */
+  .stats-strip {
+    background: var(--black); border-radius: 24px; padding: 40px 60px;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;
+    text-align: center; margin-bottom: var(--section-gap);
+  }
+  .stat-num { font-size: 52px; font-weight: 900; letter-spacing: -2px; color: #fff; line-height: 1; margin-bottom: 6px; }
+  .stat-num span { color: var(--yellow); }
+  .stat-label { font-size: 13px; color: rgba(255,255,255,0.5); }
+
+  /* ── TESTIMONIAL ────────────────────────────────── */
+  .testimonial-wrap {
+    background: var(--lavender); border-radius: 28px; padding: 60px; text-align: center;
+  }
+  .testimonial-stars { display: flex; justify-content: center; gap: 4px; margin-bottom: 24px; }
+  .testimonial-quote {
+    font-size: 22px; font-weight: 700; font-style: italic; line-height: 1.5;
+    max-width: 680px; margin: 0 auto 24px; color: var(--black);
+  }
+  .testimonial-avatar {
+    display: inline-flex; align-items: center; gap: 10px;
+  }
+  .testimonial-initials {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: rgba(107,79,207,0.15);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 800; color: var(--lav-dark);
+  }
+  .testimonial-name { font-size: 13px; font-weight: 700; color: var(--black); text-align: left; }
+  .testimonial-role { font-size: 11px; color: rgba(0,0,0,0.45); }
+
+  /* ── CONTACT ────────────────────────────────────── */
+  .contact-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;
+  }
+  .contact-detail { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+  .contact-icon {
+    width: 42px; height: 42px; border-radius: 12px;
+    background: rgba(26,143,122,0.1);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .contact-label { font-size: 13px; font-weight: 700; color: var(--black); }
+  .contact-value { font-size: 13px; color: var(--teal-dark); }
+  .contact-form-mock {
+    background: #fff; border: 1px solid rgba(0,0,0,0.09); border-radius: 20px; padding: 32px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  }
+  .form-field { margin-bottom: 14px; }
+  .form-label { font-size: 11px; font-weight: 700; color: var(--mid); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .form-input {
+    width: 100%; background: var(--bg); border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 10px; padding: 10px 14px; font-size: 13px; color: var(--light);
+    font-family: inherit;
+  }
+  .form-input.tall { height: 80px; }
+
+  /* ── CTA ────────────────────────────────────────── */
+  .cta-section {
+    background: var(--black); border-radius: 28px; padding: 80px 60px;
+    text-align: center; margin-bottom: var(--section-gap); position: relative; overflow: hidden;
+  }
+  .cta-blob {
+    position: absolute; border-radius: 50%; filter: blur(60px); pointer-events: none;
+  }
+  .cta-badge {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: rgba(255,255,255,0.1); border-radius: 100px; padding: 6px 16px;
+    font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.75); margin-bottom: 24px;
+    position: relative;
+  }
+  .cta-section h2 {
+    font-size: 56px; font-weight: 900; letter-spacing: -2px; line-height: 1.0;
+    margin-bottom: 16px; color: #fff; position: relative;
+  }
+  .cta-section h2 em { font-style: italic; color: var(--yellow); }
+  .cta-section p {
+    font-size: 18px; color: rgba(255,255,255,0.6); margin-bottom: 36px;
+    max-width: 520px; margin-left: auto; margin-right: auto; position: relative;
+  }
+  .btn-yellow-lg {
+    background: var(--yellow); color: var(--black); border: none;
+    border-radius: 100px; padding: 15px 36px;
+    font-size: 16px; font-weight: 800; cursor: pointer; text-decoration: none;
+    display: inline-block; position: relative;
+  }
+  .cta-note { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 14px; position: relative; }
+  .cta-privacy { font-size: 11px; color: rgba(255,255,255,0.25); margin-top: 8px; position: relative; }
+
+  /* ── FOOTER ─────────────────────────────────────── */
+  footer { max-width: 1200px; margin: 0 auto; padding: 40px 60px; }
+  .footer-top {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid rgba(0,0,0,0.1);
+  }
+  .footer-links { display: flex; gap: 24px; list-style: none; }
+  .footer-links a { font-size: 13px; color: var(--light); text-decoration: none; }
+  .footer-links a:hover { color: var(--black); }
+  .footer-bottom {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  footer p.copy { font-size: 12px; color: var(--light); }
+  .footer-legal { display: flex; gap: 20px; list-style: none; }
+  .footer-legal a { font-size: 12px; color: var(--light); text-decoration: none; }
+</style>
+</head>
+<body>
+
+<!-- ── SVG SYMBOL DEFS ───────────────────────────────────── -->
+<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+  <defs>
+    <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+    </symbol>
+    <symbol id="i-sparkle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 2l2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5z"/>
+    </symbol>
+    <symbol id="i-kanban" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="5" height="14" rx="1.5"/>
+      <rect x="9.5" y="3" width="5" height="9" rx="1.5"/>
+      <rect x="16" y="3" width="5" height="18" rx="1.5"/>
+    </symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+      <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+    </symbol>
+    <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+      <circle cx="12" cy="7" r="4"/>
+    </symbol>
+    <symbol id="i-leaf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/>
+      <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+    </symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+    </symbol>
+    <symbol id="i-pound" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <path d="M9.5 17h6"/><path d="M8 13h6"/><path d="M10 13V9.5a2.5 2.5 0 0 1 5 0"/>
+    </symbol>
+    <symbol id="i-warning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+      <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+    </symbol>
+    <symbol id="i-bulb" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="9" y1="18" x2="15" y2="18"/><line x1="10" y1="22" x2="14" y2="22"/>
+      <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/>
+    </symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"/>
+    </symbol>
+    <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+    </symbol>
+    <symbol id="i-brush" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18.37 2.63 14 7l-1.59-1.59a2 2 0 0 0-2.82 0L8 7l9 9 1.59-1.59a2 2 0 0 0 0-2.82L17 10l4.37-4.37a2.12 2.12 0 0 0-3-3z"/>
+      <path d="M9 8c-2 3-4 3.5-7 4l8 10c2-1 6-5 6-7"/>
+      <path d="M14.5 17.5 4.5 15"/>
+    </symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+      <polyline points="2 17 12 22 22 17"/>
+      <polyline points="2 12 12 17 22 12"/>
+    </symbol>
+    <symbol id="i-target" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+    </symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="4" width="20" height="16" rx="2"/>
+      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+    </symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+    </symbol>
+    <symbol id="i-star-filled" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- ── NAV ───────────────────────────────────────────────── -->
+<nav>
+  <a href="#" class="nav-logo">
+    <div class="logo-mark">G</div>
+    GrantTracker
+  </a>
+  <ul class="nav-links">
+    <li><a href="#">Features</a></li>
+    <li><a href="#">Compare</a></li>
+    <li><a href="#">About</a></li>
+    <li><a href="#">Contact</a></li>
+  </ul>
+  <div class="nav-right">
+    <a href="#" class="btn-ghost">Sign in</a>
+    <a href="#" class="btn-black">Get started free →</a>
+  </div>
+</nav>
+
+<!-- ── HERO ──────────────────────────────────────────────── -->
+<div class="hero">
+  <div class="hero-text">
+    <div class="hero-badge">
+      🇬🇧 For CICs · Social Enterprises · Charities · Co-operatives · Impact Founders
+    </div>
+    <h1>Find Funding<br /><em>Matched to<br />Your Purpose</em></h1>
+    <p class="hero-sub">Find grants, accelerators, social investment, diversity funds, and more — all matched to your mission, legal structure and stage.</p>
+    <div class="hero-ctas">
+      <a href="#" class="btn-black-lg">Start for free →</a>
+      <a href="#" class="btn-outline-lg">See how it works</a>
+    </div>
+    <p class="hero-note">Free to search · No credit card required</p>
+    <div class="hero-pillars">
+      <div class="hero-pillar">
+        <div class="hero-pillar-icon"><svg class="icon-sm" style="color:var(--teal-dark)"><use href="#i-layers"/></svg></div>
+        <strong>6 Funding Types</strong>
+        <span>grants, accelerators, investment & more</span>
+      </div>
+      <div class="hero-pillar">
+        <div class="hero-pillar-icon"><svg class="icon-sm" style="color:var(--teal-dark)"><use href="#i-target"/></svg></div>
+        <strong>Smart Matching</strong>
+        <span>filtered to your structure & stage</span>
+      </div>
+      <div class="hero-pillar">
+        <div class="hero-pillar-icon"><svg class="icon-sm" style="color:var(--teal-dark)"><use href="#i-kanban"/></svg></div>
+        <strong>Pipeline</strong>
+        <span>tracks every application</span>
+      </div>
+      <div class="hero-pillar">
+        <div class="hero-pillar-icon"><svg class="icon-sm" style="color:var(--teal-dark)"><use href="#i-bell"/></svg></div>
+        <strong>Alerts</strong>
+        <span>never miss a deadline</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-visual">
+    <div class="float-icon f1" style="background:var(--yellow)">
+      <svg class="icon-lg" style="color:var(--black)"><use href="#i-search"/></svg>
+    </div>
+    <div class="float-icon f2" style="background:var(--orange)">
+      <svg class="icon-lg" style="color:var(--ora-dark)"><use href="#i-pound"/></svg>
+    </div>
+    <div class="float-icon f3" style="background:var(--lavender)">
+      <svg class="icon" style="color:var(--lav-dark)"><use href="#i-sparkle"/></svg>
+    </div>
+    <div class="float-icon f4" style="background:var(--teal)">
+      <svg class="icon-sm" style="color:var(--teal-dark)"><use href="#i-check"/></svg>
+    </div>
+
+    <div class="hero-frame">
+      <div class="hero-frame-inner">
+        <div class="mock-topbar">
+          <div class="mock-dot" style="background:#ff5f57"></div>
+          <div class="mock-dot" style="background:#ffbd2e"></div>
+          <div class="mock-dot" style="background:#28c840"></div>
+          <div class="mock-search">
+            <svg class="icon-xs" style="color:#aaa"><use href="#i-search"/></svg>
+            circular economy Birmingham CIC
+          </div>
+        </div>
+        <div class="mock-body">
+          <div class="mock-section-label">Best matches for your profile</div>
+          <div class="mock-grant">
+            <div class="mock-grant-icon" style="background:#b3ede3">
+              <svg class="icon-sm" style="color:var(--teal-dark)"><use href="#i-leaf"/></svg>
+            </div>
+            <div class="mock-grant-info">
+              <div class="mock-grant-name">UK Climate Solutions Award</div>
+              <div class="mock-grant-funder">Ashden Awards · Grant</div>
+            </div>
+            <div class="mock-grant-amount">£10k–£40k</div>
+            <div class="mock-grant-score"><svg class="icon-xs"><use href="#i-sparkle"/></svg> 96%</div>
+          </div>
+          <div class="mock-grant">
+            <div class="mock-grant-icon" style="background:#d9ccf7">
+              <svg class="icon-sm" style="color:var(--lav-dark)"><use href="#i-bolt"/></svg>
+            </div>
+            <div class="mock-grant-info">
+              <div class="mock-grant-name">Green Economy Innovation Fund</div>
+              <div class="mock-grant-funder">Creative UK / Innovate UK · Blended</div>
+            </div>
+            <div class="mock-grant-amount">£25k–£100k</div>
+            <div class="mock-grant-score"><svg class="icon-xs"><use href="#i-sparkle"/></svg> 88%</div>
+          </div>
+          <div class="mock-grant">
+            <div class="mock-grant-icon" style="background:#f8c9a0">
+              <svg class="icon-sm" style="color:var(--ora-dark)"><use href="#i-target"/></svg>
+            </div>
+            <div class="mock-grant-info">
+              <div class="mock-grant-name">Social Entrepreneur Award</div>
+              <div class="mock-grant-funder">UnLtd / Big Issue Invest · Accelerator</div>
+            </div>
+            <div class="mock-grant-amount">Up to £15k</div>
+            <div class="mock-grant-score"><svg class="icon-xs"><use href="#i-sparkle"/></svg> 81%</div>
+          </div>
+          <div class="mock-pipeline">
+            <div class="mock-pipeline-header">
+              <span>Pipeline</span>
+              <span style="color:#1a8f7a">£187,500 active</span>
+            </div>
+            <div class="mock-stages">
+              <div class="mock-stage">Identified</div>
+              <div class="mock-stage active">Researching</div>
+              <div class="mock-stage active">Applying</div>
+              <div class="mock-stage">Submitted</div>
+              <div class="mock-stage active">Won ✓</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── HOW IT WORKS ───────────────────────────────────────── -->
+<div class="section">
+  <div class="section-label">How it works</div>
+  <h2 class="section-heading">Set up once. Search everything.<br />Track what matters.</h2>
+  <div class="steps-flow">
+    <div class="step-flow-item">
+      <div class="step-flow-icon" style="background:rgba(26,143,122,0.1);border-color:rgba(26,143,122,0.4)">
+        <svg class="icon-lg" style="color:var(--teal-dark)"><use href="#i-user"/></svg>
+      </div>
+      <div class="step-flow-title">Set up your profile</div>
+      <div class="step-flow-desc">Tell us your legal structure, sector, stage, and location. Takes about 5 minutes.</div>
+    </div>
+    <div class="step-connector"><div class="step-connector-line"></div><div class="step-connector-arrow">›</div></div>
+    <div class="step-flow-item">
+      <div class="step-flow-icon" style="background:rgba(14,165,233,0.1);border-color:rgba(14,165,233,0.4)">
+        <svg class="icon-lg" style="color:#0ea5e9"><use href="#i-search"/></svg>
+      </div>
+      <div class="step-flow-title">Search funding</div>
+      <div class="step-flow-desc">Search naturally across grants, accelerators, social investment, and more in one place.</div>
+    </div>
+    <div class="step-connector"><div class="step-connector-line"></div><div class="step-connector-arrow">›</div></div>
+    <div class="step-flow-item">
+      <div class="step-flow-icon" style="background:rgba(16,185,129,0.1);border-color:rgba(16,185,129,0.4)">
+        <svg class="icon-lg" style="color:#10b981"><use href="#i-sparkle"/></svg>
+      </div>
+      <div class="step-flow-title">See your matches</div>
+      <div class="step-flow-desc">Results ranked by how well they fit your profile — structure, sector, stage, and mission.</div>
+    </div>
+    <div class="step-connector"><div class="step-connector-line"></div><div class="step-connector-arrow">›</div></div>
+    <div class="step-flow-item">
+      <div class="step-flow-icon" style="background:rgba(247,224,124,0.4);border-color:rgba(160,122,0,0.4)">
+        <svg class="icon-lg" style="color:var(--yel-dark)"><use href="#i-kanban"/></svg>
+      </div>
+      <div class="step-flow-title">Add to pipeline</div>
+      <div class="step-flow-desc">Track each application from first contact to submission on a simple visual board.</div>
+    </div>
+    <div class="step-connector"><div class="step-connector-line"></div><div class="step-connector-arrow">›</div></div>
+    <div class="step-flow-item">
+      <div class="step-flow-icon" style="background:rgba(168,85,247,0.1);border-color:rgba(168,85,247,0.4)">
+        <svg class="icon-lg" style="color:#a855f7"><use href="#i-bell"/></svg>
+      </div>
+      <div class="step-flow-title">Get alerts</div>
+      <div class="step-flow-desc">Weekly or instant email alerts when new funding matches your profile.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── FUNDING TYPES ──────────────────────────────────────── -->
+<div class="section">
+  <div class="section-label">6 Funding Types</div>
+  <h2 class="section-heading">Beyond grants —<br /><em>the full funding landscape</em></h2>
+  <p class="section-intro">Most grant databases cover only a fraction of what mission-driven organisations can access. Grant Tracker brings together searchable grants, accelerators, and diversity funds — plus profiles of social lenders and guides to in-kind support — because finding funding rarely means finding just one type of answer.</p>
+  <div class="funding-grid">
+    <div class="funding-card">
+      <div class="funding-card-icon">🎯</div>
+      <div>
+        <div class="funding-card-title">Grants & Awards</div>
+        <div class="funding-card-badge">£300 – £500k+</div>
+        <div class="funding-card-desc">National Lottery, trusts, foundations, Innovate UK, arts councils, and government programmes — each tagged with eligible legal structures.</div>
+        <span class="funding-card-tag" style="background:rgba(26,143,122,0.1);color:var(--teal-dark)">🔍 Search & apply</span>
+      </div>
+    </div>
+    <div class="funding-card">
+      <div class="funding-card-icon">🚀</div>
+      <div>
+        <div class="funding-card-title">Accelerators & Programmes</div>
+        <div class="funding-card-badge">Programme + grant</div>
+        <div class="funding-card-desc">Equity-free programmes with mentoring, workspace and networks. UnLtd, SSE, Foundervine, Hatch, Creative UK and more — with clear application windows.</div>
+        <span class="funding-card-tag" style="background:rgba(26,143,122,0.1);color:var(--teal-dark)">🔍 Search & apply</span>
+      </div>
+    </div>
+    <div class="funding-card">
+      <div class="funding-card-icon">🌈</div>
+      <div>
+        <div class="funding-card-title">Diversity-Targeted Funds</div>
+        <div class="funding-card-badge">£5k – £250k</div>
+        <div class="funding-card-desc">Women in Innovation, Black Seed, Foundervine, and more. The fastest-growing category — zero overlap with general grant databases.</div>
+        <span class="funding-card-tag" style="background:rgba(26,143,122,0.1);color:var(--teal-dark)">🔍 Search & apply</span>
+      </div>
+    </div>
+    <div class="funding-card">
+      <div class="funding-card-icon">💰</div>
+      <div>
+        <div class="funding-card-title">Social Investment</div>
+        <div class="funding-card-badge">£20k – £3m</div>
+        <div class="funding-card-desc">We profile major social lenders — Big Issue Invest, Charity Bank, Resonance — so you know who funds what before you reach out.</div>
+        <span class="funding-card-tag" style="background:rgba(14,165,233,0.1);color:#0369a1">📖 Provider profiles</span>
+      </div>
+    </div>
+    <div class="funding-card">
+      <div class="funding-card-icon">🔗</div>
+      <div>
+        <div class="funding-card-title">Blended & Matched Funding</div>
+        <div class="funding-card-badge">Selected programmes</div>
+        <div class="funding-card-desc">Programmes like SSE Match Trading and Power to Change — part grant, part loan. Real listings, not theoretical mechanisms.</div>
+        <span class="funding-card-tag" style="background:rgba(26,143,122,0.1);color:var(--teal-dark)">🔍 Selected listings</span>
+      </div>
+    </div>
+    <div class="funding-card">
+      <div class="funding-card-icon">🛠️</div>
+      <div>
+        <div class="funding-card-title">In-Kind & Sector Reliefs</div>
+        <div class="funding-card-badge">Guides & resources</div>
+        <div class="funding-card-desc">Tech credits, tax reliefs, and in-kind support explained — including who's actually eligible. Beyond cash grants.</div>
+        <span class="funding-card-tag" style="background:rgba(247,224,124,0.4);color:var(--yel-dark)">📚 Guides section</span>
+      </div>
+    </div>
+  </div>
+  <div class="sector-strip">
+    <p>Covering 12 impact sectors</p>
+    <div class="sector-tags">
+      <span class="sector-tag">🎨 Creative Industries</span>
+      <span class="sector-tag">🌿 Environment & Climate</span>
+      <span class="sector-tag">🧠 Health & Wellbeing</span>
+      <span class="sector-tag">📖 Education & Skills</span>
+      <span class="sector-tag">💻 Tech for Good</span>
+      <span class="sector-tag">🏠 Housing & Homelessness</span>
+      <span class="sector-tag">🍽️ Food & Agriculture</span>
+      <span class="sector-tag">💼 Employment</span>
+      <span class="sector-tag">🤝 Community Development</span>
+      <span class="sector-tag">⚖️ Justice & Rights</span>
+      <span class="sector-tag">🏦 Financial Inclusion</span>
+      <span class="sector-tag">🌍 International</span>
+    </div>
+    <p class="sector-note">From film funding to blockchain grants, community energy to legal aid — matched to your structure, stage, and mission.</p>
+  </div>
+</div>
+
+<!-- ── FEATURE 1: SEARCH & MATCH ─────────────────────────── -->
+<div class="section">
+  <div class="feat-row" style="background:var(--black);border-radius:28px;padding:48px;margin-bottom:80px;gap:60px">
+    <div class="feat-text">
+      <div class="feat-tag" style="background:rgba(255,255,255,0.1);color:rgba(179,237,227,0.9)">
+        <svg class="icon-xs"><use href="#i-sparkle"/></svg>
+        Feature 1 · Search & Match
+      </div>
+      <h2 style="color:#fff">Search everything.<br />See only what fits.</h2>
+      <p style="color:rgba(179,237,227,0.75)">Tell us your structure and sector once. Every result is filtered to funding you can actually apply for — Live Search surfaces matches as you type.</p>
+      <ul class="feat-bullets">
+        <li>
+          <div class="bullet-dot" style="background:rgba(255,255,255,0.1)"><svg class="icon-xs" style="color:rgba(179,237,227,0.8)"><use href="#i-check"/></svg></div>
+          <span style="color:rgba(179,237,227,0.75)">Profile-based filtering — your structure, stage and sector shape every result</span>
+        </li>
+        <li>
+          <div class="bullet-dot" style="background:rgba(255,255,255,0.1)"><svg class="icon-xs" style="color:rgba(179,237,227,0.8)"><use href="#i-check"/></svg></div>
+          <span style="color:rgba(179,237,227,0.75)">Live Search — finds matching funding as you type across all six types</span>
+        </li>
+        <li>
+          <div class="bullet-dot" style="background:rgba(255,255,255,0.1)"><svg class="icon-xs" style="color:rgba(179,237,227,0.8)"><use href="#i-check"/></svg></div>
+          <span style="color:rgba(179,237,227,0.75)">Match scores ranked by structure, sector, geography, stage and mission</span>
+        </li>
+      </ul>
+    </div>
+    <div class="feat-visual">
+      <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:18px;padding:20px">
+        <div class="search-bar" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.12)">
+          <svg class="icon-sm" style="color:rgba(179,237,227,0.5);flex-shrink:0"><use href="#i-search"/></svg>
+          <span style="font-size:12px;color:rgba(179,237,227,0.5);flex:1">circular economy Birmingham CIC</span>
+          <div class="search-tag">
+            <svg class="icon-xs" style="color:#fff"><use href="#i-sparkle"/></svg>
+            Live Search
+          </div>
+        </div>
+        <div class="filter-pills" style="margin-bottom:12px">
+          <span class="filter-pill active" style="background:rgba(255,255,255,0.2);color:#fff;border-color:rgba(255,255,255,0.3)">All types</span>
+          <span class="filter-pill" style="border-color:rgba(255,255,255,0.12);color:rgba(255,255,255,0.5)">🎯 Grants</span>
+          <span class="filter-pill" style="border-color:rgba(255,255,255,0.12);color:rgba(255,255,255,0.5)">🚀 Accelerators</span>
+          <span class="filter-pill new">🆕 New this week 17</span>
+        </div>
+        <!-- Result 1 -->
+        <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px;margin-bottom:8px">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+            <div style="flex:1">
+              <div style="font-size:10px;color:rgba(179,237,227,0.6);font-weight:600;margin-bottom:2px">Ashden Awards</div>
+              <div style="font-size:12px;font-weight:700;color:#fff">UK Climate Solutions Award</div>
+              <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+                <span style="font-size:10px;background:rgba(255,255,255,0.12);color:#fff;padding:2px 8px;border-radius:20px;font-weight:600">
+                  <svg class="icon-xs" style="color:#fff;vertical-align:middle"><use href="#i-sparkle"/></svg> 96% match
+                </span>
+                <span style="font-size:9px;background:rgba(179,237,227,0.15);color:rgba(179,237,227,0.8);padding:2px 7px;border-radius:20px">🎯 Grant</span>
+                <span style="font-size:9px;background:rgba(16,185,129,0.2);color:#6ee7b7;padding:2px 7px;border-radius:20px;font-weight:600">CIC eligible</span>
+              </div>
+            </div>
+            <div style="font-size:12px;font-weight:700;color:var(--yellow);flex-shrink:0">£10k–£40k</div>
+          </div>
+        </div>
+        <!-- Result 2 -->
+        <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px;margin-bottom:8px">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+            <div style="flex:1">
+              <div style="font-size:10px;color:rgba(179,237,227,0.6);font-weight:600;margin-bottom:2px">Creative UK / Innovate UK</div>
+              <div style="font-size:12px;font-weight:700;color:#fff">Green Economy Innovation Fund</div>
+              <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+                <span style="font-size:10px;background:rgba(255,255,255,0.12);color:#fff;padding:2px 8px;border-radius:20px;font-weight:600">✦ 88% match</span>
+                <span style="font-size:9px;background:rgba(247,224,124,0.2);color:var(--yellow);padding:2px 7px;border-radius:20px">🔀 Blended</span>
+                <span style="font-size:9px;background:rgba(247,224,124,0.2);color:var(--yellow);padding:2px 7px;border-radius:20px;font-weight:600">Social enterprise accepted</span>
+              </div>
+            </div>
+            <div style="font-size:12px;font-weight:700;color:var(--yellow);flex-shrink:0">£25k–£100k</div>
+          </div>
+        </div>
+        <!-- Result 3 -->
+        <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+            <div style="flex:1">
+              <div style="font-size:10px;color:rgba(179,237,227,0.6);font-weight:600;margin-bottom:2px">UnLtd / Big Issue Invest</div>
+              <div style="font-size:12px;font-weight:700;color:#fff">Social Entrepreneur Award</div>
+              <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+                <span style="font-size:10px;background:rgba(255,255,255,0.12);color:#fff;padding:2px 8px;border-radius:20px;font-weight:600">✦ 81% match</span>
+                <span style="font-size:9px;background:rgba(179,237,227,0.15);color:rgba(179,237,227,0.8);padding:2px 7px;border-radius:20px">🚀 Accelerator</span>
+                <span style="font-size:9px;background:rgba(16,185,129,0.2);color:#6ee7b7;padding:2px 7px;border-radius:20px;font-weight:600">CIC & unincorporated eligible</span>
+              </div>
+            </div>
+            <div style="font-size:12px;font-weight:700;color:var(--yellow);flex-shrink:0">Up to £15k</div>
+          </div>
+        </div>
+        <p style="font-size:10px;color:rgba(179,237,227,0.4);text-align:center;margin-top:10px">Showing 3 of 31 matched results across 6 funding types</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── FEATURE 2: PERSONALISATION ────────────────────────── -->
+<div class="section">
+  <div class="feat-row reverse">
+    <div class="feat-visual">
+      <div class="feat-panel">
+        <div class="feat-panel-header">Match quality</div>
+        <!-- Profile completeness -->
+        <div style="background:rgba(247,224,124,0.15);border:1px solid rgba(247,224,124,0.3);border-radius:14px;padding:16px;margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-size:13px;font-weight:700;color:var(--black)">Profile completeness</span>
+            <span style="font-size:22px;font-weight:900;color:var(--yel-dark)">60%</span>
+          </div>
+          <div style="height:7px;background:#eee;border-radius:10px;overflow:hidden;margin-bottom:8px">
+            <div style="height:100%;width:60%;background:var(--yel-dark);border-radius:10px"></div>
+          </div>
+          <p style="font-size:11px;color:var(--mid)">Annual income and primary location missing from your profile</p>
+          <span style="font-size:11px;font-weight:700;color:var(--yel-dark)">Complete profile →</span>
+        </div>
+        <!-- Grant card with score breakdown -->
+        <div class="score-card" style="background:var(--bg)">
+          <div class="score-header">
+            <div>
+              <div style="font-size:10px;color:var(--mid);font-weight:600;margin-bottom:2px">Esmée Fairbairn Foundation</div>
+              <div class="score-name">Main Grants Programme</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="score-num">
+                <svg class="icon-xs" style="color:var(--teal-dark)"><use href="#i-sparkle"/></svg> 91%
+              </div>
+              <span style="font-size:18px">👍</span>
+              <span style="font-size:18px">👎</span>
+            </div>
+          </div>
+          <div class="score-bars">
+            <div class="score-bar-wrap"><div class="score-bar-bg"><div class="score-bar-fill" style="width:95%"></div></div><div class="score-bar-label">Structure</div></div>
+            <div class="score-bar-wrap"><div class="score-bar-bg"><div class="score-bar-fill" style="width:92%"></div></div><div class="score-bar-label">Sector</div></div>
+            <div class="score-bar-wrap"><div class="score-bar-bg"><div class="score-bar-fill" style="width:90%"></div></div><div class="score-bar-label">Mission</div></div>
+            <div class="score-bar-wrap"><div class="score-bar-bg"><div class="score-bar-fill" style="width:88%"></div></div><div class="score-bar-label">Geography</div></div>
+            <div class="score-bar-wrap"><div class="score-bar-bg"><div class="score-bar-fill" style="width:82%"></div></div><div class="score-bar-label">Stage</div></div>
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid #ede9e2;border-radius:12px;padding:12px;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:10px;color:var(--mid);font-weight:600">UnLtd</div>
+            <div style="font-size:12px;font-weight:700;color:var(--teal-dark)">Award for Social Entrepreneurs</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:11px;background:rgba(26,143,122,0.1);color:var(--teal-dark);padding:3px 10px;border-radius:20px;font-weight:700">✦ 84%</span>
+            <span>👍</span><span>👎</span>
+          </div>
+        </div>
+        <p style="font-size:10px;color:var(--light);text-align:center;margin-top:10px">👍 on a result — the more you use it, the better it gets</p>
+      </div>
+    </div>
+    <div class="feat-text">
+      <div class="feat-tag forest">
+        <svg class="icon-xs"><use href="#i-target"/></svg>
+        Feature 2 · Personalisation
+      </div>
+      <h2>Results that get sharper every time you use it</h2>
+      <p>Complete your profile once. Every result gets a match score across structure, sector, geography, stage and mission — and gets sharper every time you use it.</p>
+      <ul class="feat-bullets">
+        <li>
+          <div class="bullet-dot"><svg class="icon-xs" style="color:var(--teal-dark)"><use href="#i-check"/></svg></div>
+          Match scores across 5 dimensions: structure, sector, geography, stage and mission
+        </li>
+        <li>
+          <div class="bullet-dot"><svg class="icon-xs" style="color:var(--teal-dark)"><use href="#i-check"/></svg></div>
+          Rate results to refine future matches — the more you use it, the better it gets
+        </li>
+        <li>
+          <div class="bullet-dot"><svg class="icon-xs" style="color:var(--teal-dark)"><use href="#i-check"/></svg></div>
+          Tap any score for a full breakdown — see exactly why a result was suggested
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ── FEATURE 3: PIPELINE ───────────────────────────────── -->
+<div class="section">
+  <div class="feat-row">
+    <div class="feat-text">
+      <div class="feat-tag gold">
+        <svg class="icon-xs"><use href="#i-kanban"/></svg>
+        Feature 3 · Pipeline & Alerts
+      </div>
+      <h2>Track every application.<br />Never miss a deadline.</h2>
+      <p>A drag-and-drop board keeps every application in view. Alerts notify you when new funding matches your profile — urgency flags surface anything closing within 14 days.</p>
+      <ul class="feat-bullets">
+        <li><div class="bullet-dot"><svg class="icon-xs" style="color:var(--teal-dark)"><use href="#i-check"/></svg></div>Visual kanban board — see the full picture at a glance, not buried in a spreadsheet</li>
+        <li><div class="bullet-dot"><svg class="icon-xs" style="color:var(--teal-dark)"><use href="#i-check"/></svg></div>Per-card writing tracker from first draft to final submission</li>
+        <li><div class="bullet-dot"><svg class="icon-xs" style="color:var(--teal-dark)"><use href="#i-check"/></svg></div>Notes, funder contacts, deadlines and grant URLs all on the card</li>
+        <li><div class="bullet-dot"><svg class="icon-xs" style="color:var(--teal-dark)"><use href="#i-check"/></svg></div>Email alerts when new funding matches your profile — weekly digest or instant</li>
+      </ul>
+    </div>
+    <div class="feat-visual">
+      <div class="feat-panel">
+        <div class="feat-panel-header" style="display:flex;justify-content:space-between">
+          <span>Funding Pipeline · 7 opportunities tracked</span>
+          <span style="color:var(--yel-dark);font-weight:800">£187,500 active</span>
+        </div>
+        <div class="pipeline-cols">
+          <div>
+            <div class="pipe-col-label" style="background:#eee;color:#888">Identified</div>
+            <div class="pipe-card-mini" style="border-color:#bbb"><div style="height:5px;background:#eee;border-radius:3px;margin-bottom:3px"></div><div style="height:4px;background:#f5f0ea;border-radius:3px;width:70%"></div></div>
+            <div class="pipe-card-mini" style="border-color:#bbb"><div style="height:5px;background:#eee;border-radius:3px;margin-bottom:3px"></div><div style="height:4px;background:#f5f0ea;border-radius:3px;width:60%"></div></div>
+          </div>
+          <div>
+            <div class="pipe-col-label" style="background:rgba(247,224,124,0.3);color:var(--yel-dark)">Researching</div>
+            <div class="pipe-card-mini" style="border-color:var(--yel-dark)"><div style="height:5px;background:#f7e07c40;border-radius:3px;margin-bottom:3px"></div><div style="height:4px;background:#f7e07c30;border-radius:3px;width:65%"></div></div>
+          </div>
+          <div>
+            <div class="pipe-col-label" style="background:rgba(179,237,227,0.4);color:var(--teal-dark)">Applying</div>
+            <div class="pipe-card-mini" style="border-color:var(--teal-dark)"><div style="height:5px;background:#b3ede340;border-radius:3px;margin-bottom:3px"></div><div style="height:4px;background:#b3ede330;border-radius:3px;width:55%"></div></div>
+            <div class="pipe-card-mini" style="border-color:var(--teal-dark)"><div style="height:5px;background:#b3ede340;border-radius:3px;margin-bottom:3px"></div><div style="height:4px;background:#b3ede330;border-radius:3px;width:75%"></div></div>
+          </div>
+          <div>
+            <div class="pipe-col-label" style="background:rgba(26,143,122,0.15);color:var(--teal-dark)">Submitted</div>
+            <div class="pipe-card-mini" style="border-color:var(--teal-dark)"><div style="height:5px;background:#1a8f7a20;border-radius:3px;margin-bottom:3px"></div><div style="height:4px;background:#1a8f7a15;border-radius:3px;width:80%"></div></div>
+          </div>
+          <div>
+            <div class="pipe-col-label" style="background:#d1fae5;color:#065f46">Won ✓</div>
+            <div class="pipe-card-mini" style="border-color:#059669"><div style="height:5px;background:#d1fae5;border-radius:3px;margin-bottom:3px"></div><div style="height:4px;background:#a7f3d0;border-radius:3px;width:60%"></div></div>
+          </div>
+          <div>
+            <div class="pipe-col-label" style="background:#fee2e2;color:#dc2626">Declined</div>
+          </div>
+        </div>
+        <!-- Expanded card -->
+        <div style="margin-top:12px;border:1px solid rgba(26,143,122,0.2);border-radius:12px;padding:12px;background:rgba(26,143,122,0.03)">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
+            <div>
+              <div style="font-size:10px;color:var(--mid);font-weight:600">Paul Hamlyn Foundation</div>
+              <div style="font-size:12px;font-weight:700;color:var(--teal-dark)">Youth Fund 2025</div>
+              <div style="font-size:10px;color:var(--ora-dark);margin-top:2px;display:flex;align-items:center;gap:4px">
+                <svg class="icon-xs"><use href="#i-warning"/></svg> Deadline: 15 Mar 2025
+              </div>
+            </div>
+            <span style="font-size:14px;font-weight:800;color:var(--yel-dark)">£30k</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--mid);margin-bottom:4px">
+            <span>✏️ First draft</span><span>50%</span>
+          </div>
+          <div style="height:5px;background:#eee;border-radius:10px;overflow:hidden">
+            <div style="height:100%;width:50%;background:var(--teal-dark);border-radius:10px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── COMPARISON TABLE ───────────────────────────────────── -->
+<div class="section">
+  <div class="section-label">Compare</div>
+  <h2 class="section-heading">How Grant Tracker compares</h2>
+  <p class="section-intro" style="margin-bottom:32px">Built for CICs and social enterprises — not an afterthought in a charity database.</p>
+  <div class="compare-table">
+    <div class="compare-head">
+      <div class="compare-head-label">Feature</div>
+      <div class="compare-head-gt">Grant Tracker</div>
+      <div class="compare-head-other">My Funding Central / Charity Excellence</div>
+    </div>
+    <div class="compare-row"><div class="compare-feat">UK grant database</div><div class="compare-check"><div class="chk-yes"><svg class="icon-xs" style="color:var(--teal-dark)"><use href="#i-check"/></svg></div></div><div class="compare-check"><div class="chk-mid"><svg class="icon-xs" style="color:var(--mid)"><use href="#i-check"/></svg></div></div></div>
+    <div class="compare-row"><div class="compare-feat">Human-curated listings</div><div class="compare-check"><div class="chk-yes"><svg class="icon-xs" style="color:var(--teal-dark)"><use href="#i-check"/></svg></div></div><div class="compare-check"><div class="chk-mid"><svg class="icon-xs" style="color:var(--mid)"><use href="#i-check"/></svg></div></div></div>
+    <div class="compare-row"><div class="compare-feat">Email funding alerts</div><div class="compare-check"><div class="chk-yes"><svg class="icon-xs" style="color:var(--teal-dark)"><use href="#i-check"/></svg></div></div><div class="compare-check"><div class="chk-mid"><svg class="icon-xs" style="color:var(--mid)"><use href="#i-check"/></svg></div></div></div>
+    <div class="compare-row"><div class="compare-feat">Legal structure eligibility matching</div><div class="compare-check"><div class="chk-yes"><svg class="icon-xs" style="color:var(--teal-dark)"><use href="#i-check"/></svg></div></div><div class="compare-check"><div class="chk-no"><svg class="icon-xs" style="color:#ef4444"><use href="#i-x"/></svg></div></div></div>
+    <div class="compare-row"><div class="compare-feat">CIC & social enterprise focus</div><div class="compare-check"><div class="chk-yes"><svg class="icon-xs" style="color:var(--teal-dark)"><use href="#i-check"/></svg></div></div><div class="compare-check"><div class="chk-no"><svg class="icon-xs" style="color:#ef4444"><use href="#i-x"/></svg></div></div></div>
+    <div class="compare-row"><div class="compare-feat">Soft matching for Ltd companies with mission</div><div class="compare-check"><div class="chk-yes"><svg class="icon-xs" style="color:var(--teal-dark)"><use href="#i-check"/></svg></div></div><div class="compare-check"><div class="chk-no"><svg class="icon-xs" style="color:#ef4444"><use href="#i-x"/></svg></div></div></div>
+    <div class="compare-row"><div class="compare-feat">6 funding types (not just grants)</div><div class="compare-check"><div class="chk-yes"><svg class="icon-xs" style="color:var(--teal-dark)"><use href="#i-check"/></svg></div></div><div class="compare-check"><div class="chk-no"><svg class="icon-xs" style="color:#ef4444"><use href="#i-x"/></svg></div></div></div>
+    <div class="compare-row"><div class="compare-feat">AI match scoring with breakdown</div><div class="compare-check"><div class="chk-yes"><svg class="icon-xs" style="color:var(--teal-dark)"><use href="#i-check"/></svg></div></div><div class="compare-check"><div class="chk-no"><svg class="icon-xs" style="color:#ef4444"><use href="#i-x"/></svg></div></div></div>
+    <div class="compare-row"><div class="compare-feat">Pipeline & deadline tracking</div><div class="compare-check"><div class="chk-yes"><svg class="icon-xs" style="color:var(--teal-dark)"><use href="#i-check"/></svg></div></div><div class="compare-check"><div class="chk-no"><svg class="icon-xs" style="color:#ef4444"><use href="#i-x"/></svg></div></div></div>
+    <div class="compare-row"><div class="compare-feat">12 impact sectors</div><div class="compare-check"><div class="chk-yes"><svg class="icon-xs" style="color:var(--teal-dark)"><use href="#i-check"/></svg></div></div><div class="compare-check"><div class="chk-no"><svg class="icon-xs" style="color:#ef4444"><use href="#i-x"/></svg></div></div></div>
+  </div>
+</div>
+
+<!-- ── ABOUT ──────────────────────────────────────────────── -->
+<div class="section">
+  <div class="section-label">About</div>
+  <h2 class="section-heading">Built for the people doing the work</h2>
+  <p class="section-intro">Grant Tracker exists to help mission-driven organisations spend less time searching for funding and more time delivering impact.</p>
+  <div class="persona-grid">
+    <div class="persona-card">
+      <div class="persona-emoji">🏗️</div>
+      <div class="persona-label">CICs</div>
+      <div class="persona-desc">Grants, accelerators, and social investment matched to your structure — no more results built for charities.</div>
+    </div>
+    <div class="persona-card">
+      <div class="persona-emoji">⚡</div>
+      <div class="persona-label">Social Enterprises</div>
+      <div class="persona-desc">Ltd company with a mission? Soft matching surfaces opportunities even without CIC or charity status.</div>
+    </div>
+    <div class="persona-card">
+      <div class="persona-emoji">🤝</div>
+      <div class="persona-label">Co-operatives & CBS</div>
+      <div class="persona-desc">Community finance, blended funding, and grants that fit your mutual structure.</div>
+    </div>
+    <div class="persona-card">
+      <div class="persona-emoji">🏠</div>
+      <div class="persona-label">Charities & CIOs</div>
+      <div class="persona-desc">Go beyond trusts and foundations — pipeline tracking and alerts replace the spreadsheet.</div>
+    </div>
+    <div class="persona-card">
+      <div class="persona-emoji">💡</div>
+      <div class="persona-label">Impact Founders</div>
+      <div class="persona-desc">Grants, accelerators, and diversity funds matched to your stage, sector, and team.</div>
+    </div>
+    <div class="persona-card">
+      <div class="persona-emoji">🌱</div>
+      <div class="persona-label">Community Groups</div>
+      <div class="persona-desc">Local and national funding matched to your size, area, and cause.</div>
+    </div>
+  </div>
+  <div class="founder-card">
+    <p class="founder-quote">"Finding the right grant has always been harder than it should be. The tools that existed were too expensive, too generic, and built for organisations with a dedicated grants team — not for the people actually doing the work."</p>
+    <div class="founder-blocks">
+      <div class="founder-block" style="border-left:2px solid #f87171">
+        <div class="founder-block-label" style="color:#fca5a5">One place for everything</div>
+        <p>Grants, accelerators, social investment, diversity funds — brought together and matched to your structure, sector, and stage.</p>
+      </div>
+      <div class="founder-block" style="border-left:2px solid #6ee7b7">
+        <div class="founder-block-label" style="color:#6ee7b7">No more dead ends</div>
+        <p>Grant Tracker filters to your profile from the start — fewer criteria pages to read, more time on funding you can actually win.</p>
+      </div>
+      <div class="founder-block" style="border-left:2px solid #93c5fd">
+        <p>CIC, charity, co-op, social enterprise, or just getting started — find funding faster and waste less time on the ones you were never going to get.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── STATS ──────────────────────────────────────────────── -->
+<div class="section">
+  <div class="stats-strip">
+    <div>
+      <div class="stat-num"><span>800</span>+</div>
+      <div class="stat-label">Funding opportunities across all 6 types</div>
+    </div>
+    <div>
+      <div class="stat-num"><span>6</span></div>
+      <div class="stat-label">Funding types — grants, accelerators, investment & more</div>
+    </div>
+    <div>
+      <div class="stat-num"><span>12</span></div>
+      <div class="stat-label">Impact sectors covered</div>
+    </div>
+    <div>
+      <div class="stat-num" style="font-size:40px"><span>Free</span></div>
+      <div class="stat-label">to search — no credit card required</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── TESTIMONIAL ────────────────────────────────────────── -->
+<div class="section">
+  <div class="testimonial-wrap">
+    <div class="testimonial-stars">
+      <svg width="20" height="20" style="color:#a07a00"><use href="#i-star-filled"/></svg>
+      <svg width="20" height="20" style="color:#a07a00"><use href="#i-star-filled"/></svg>
+      <svg width="20" height="20" style="color:#a07a00"><use href="#i-star-filled"/></svg>
+      <svg width="20" height="20" style="color:#a07a00"><use href="#i-star-filled"/></svg>
+      <svg width="20" height="20" style="color:#a07a00"><use href="#i-star-filled"/></svg>
+    </div>
+    <p class="testimonial-quote">"As a CIC we kept being told we weren't eligible for charity grants. Grant Tracker finally shows us what we can actually apply for — including accelerators and diversity funds we'd never heard of."</p>
+    <div class="testimonial-avatar">
+      <div class="testimonial-initials">M</div>
+      <div>
+        <div class="testimonial-name">Marcus</div>
+        <div class="testimonial-role">Director, community tech CIC, Manchester</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── CONTACT ────────────────────────────────────────────── -->
+<div class="section">
+  <div class="contact-row">
+    <div>
+      <div class="section-label">Contact</div>
+      <h2 style="font-size:40px;font-weight:900;letter-spacing:-1.2px;margin-bottom:16px">Get in touch</h2>
+      <p style="font-size:17px;color:var(--mid);line-height:1.65;margin-bottom:32px">Have a question, partnership idea, or just want to say hello? We'd love to hear from you.</p>
+      <div class="contact-detail">
+        <div class="contact-icon"><svg class="icon" style="color:var(--teal-dark)"><use href="#i-mail"/></svg></div>
+        <div>
+          <div class="contact-label">Email us</div>
+          <div class="contact-value">hello@granttracker.co.uk</div>
+        </div>
+      </div>
+      <div class="contact-detail">
+        <div class="contact-icon"><svg class="icon" style="color:var(--teal-dark)"><use href="#i-clock"/></svg></div>
+        <div>
+          <div class="contact-label">Response time</div>
+          <div style="font-size:13px;color:var(--mid)">Usually within 24 hours</div>
+        </div>
+      </div>
+    </div>
+    <div class="contact-form-mock">
+      <div class="form-field">
+        <div class="form-label">Your name</div>
+        <div class="form-input">Name</div>
+      </div>
+      <div class="form-field">
+        <div class="form-label">Email address</div>
+        <div class="form-input">email@example.com</div>
+      </div>
+      <div class="form-field">
+        <div class="form-label">Message</div>
+        <div class="form-input tall"></div>
+      </div>
+      <a href="#" class="btn-black-lg" style="width:100%;text-align:center;display:block;margin-top:4px">Send message →</a>
+    </div>
+  </div>
+</div>
+
+<!-- ── FINAL CTA ──────────────────────────────────────────── -->
+<div class="section">
+  <div class="cta-section">
+    <div class="cta-blob" style="width:240px;height:240px;background:rgba(247,224,124,0.2);top:-60px;right:-60px"></div>
+    <div class="cta-blob" style="width:200px;height:200px;background:rgba(255,255,255,0.06);bottom:-50px;left:-50px"></div>
+    <div class="cta-badge">🇬🇧 Built for CICs, social enterprises, charities, co-operatives &amp; impact founders across the UK</div>
+    <h2>Ready to find funding<br /><em>matched to your structure?</em></h2>
+    <p>Join CICs, social enterprises, charities, co-operatives, and impact founders already using Grant Tracker to find and win funding that actually fits.</p>
+    <a href="#" class="btn-yellow-lg">Create free account →</a>
+    <p class="cta-note">Free to search · Live Search and pipeline tools from £11/month · Cancel anytime</p>
+    <p class="cta-privacy">🔒 Your data is only used to improve your own matches — never used to train external models, never shared with funders, never sold.</p>
+  </div>
+</div>
+
+<!-- ── FOOTER ─────────────────────────────────────────────── -->
+<footer>
+  <div class="footer-top">
+    <a href="#" style="font-size:20px;font-weight:900;color:var(--black);text-decoration:none">GrantTracker</a>
+    <ul class="footer-links">
+      <li><a href="#">Sign in</a></li>
+      <li><a href="#">Sign up free</a></li>
+      <li><a href="#">Features</a></li>
+      <li><a href="#">About</a></li>
+      <li><a href="#">Contact</a></li>
+    </ul>
+  </div>
+  <div class="footer-bottom">
+    <p class="copy">© 2025 Grant Tracker · Funding discovery for CICs, social enterprises, charities &amp; impact founders</p>
+    <ul class="footer-legal">
+      <li><a href="#">Privacy Policy</a></li>
+      <li><a href="#">Terms of Service</a></li>
+      <li><a href="#">hello@granttracker.co.uk</a></li>
+    </ul>
+  </div>
+</footer>
+
+</body>
+</html>
