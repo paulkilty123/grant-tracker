@@ -287,88 +287,106 @@ export default function LandingPage() {
       </motion.nav>
 
       {/* HERO */}
-      <section className="pt-16 md:pt-20">
-        <div className="mx-auto max-w-6xl px-6 md:px-12">
-          <div className="grid md:grid-cols-2 gap-12 lg:gap-16 items-center py-16 md:py-24">
+      <section
+        className="relative overflow-hidden flex flex-col items-center justify-center text-center pt-16"
+        style={{ minHeight: '85vh', padding: '80px 24px 100px' }}
+      >
+        {/* Warm layered radial gradient — dappled golden light */}
+        <motion.div
+          className="absolute inset-0 z-0 pointer-events-none"
+          animate={{ opacity: [0.85, 1, 0.9], scale: [1, 1.02, 1.01] }}
+          transition={{ duration: 12, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' }}
+          style={{ background: [
+            'radial-gradient(ellipse 600px 400px at 15% 20%, rgba(212,168,83,0.18) 0%, transparent 70%)',
+            'radial-gradient(ellipse 500px 500px at 80% 15%, rgba(232,120,92,0.12) 0%, transparent 60%)',
+            'radial-gradient(ellipse 400px 300px at 60% 70%, rgba(212,168,83,0.14) 0%, transparent 65%)',
+            'radial-gradient(ellipse 300px 250px at 25% 75%, rgba(45,107,74,0.06) 0%, transparent 60%)',
+            'radial-gradient(ellipse 800px 600px at 50% 40%, rgba(232,120,92,0.06) 0%, transparent 70%)',
+          ].join(',') }}
+        />
 
-            {/* Left: text */}
-            <motion.div {...fadeUp(0.15)}>
-              <h1 className="font-serif text-5xl leading-[1.05] sm:text-6xl lg:text-7xl text-charcoal">
-                <span className="relative inline-block" style={{ zIndex: 0 }}>
-                  Fund
-                  <span
-                    className="absolute bottom-1.5 left-0 right-0 h-3 bg-coral/25 rounded"
-                    style={{ transform: 'rotate(-1deg)', zIndex: -1 }}
-                  />
-                </span>
-                {' '}your cause<br className="hidden sm:block" /> or venture.
-              </h1>
-              <p className="mt-7 text-mid leading-relaxed text-base md:text-lg max-w-md">
-                Find grants, accelerators, investment and support programmes — matched to you, managed in one place.
-              </p>
-              <div className="mt-9 flex flex-col gap-4 sm:flex-row">
-                <Link href="/auth/signup" className="bg-coral text-white rounded-xl px-7 py-3.5 text-base font-semibold hover:opacity-90 transition-colors text-center">Start for free</Link>
-                <a href="#how" className="border border-coral/50 text-coral rounded-xl px-7 py-3.5 text-base font-semibold transition-colors hover:bg-coral/5 text-center">
-                  See how it works
-                </a>
+        {/* Subtle leaf-accent overlay */}
+        <div
+          className="absolute inset-0 z-0 pointer-events-none"
+          style={{ background: [
+            'radial-gradient(ellipse 120px 180px at 8% 30%, rgba(45,107,74,0.05) 0%, transparent 70%)',
+            'radial-gradient(ellipse 100px 160px at 92% 60%, rgba(45,107,74,0.04) 0%, transparent 70%)',
+            'radial-gradient(ellipse 80px 120px at 75% 20%, rgba(45,107,74,0.03) 0%, transparent 70%)',
+            'radial-gradient(ellipse 90px 140px at 20% 80%, rgba(212,168,83,0.06) 0%, transparent 70%)',
+          ].join(',') }}
+        />
+
+        {/* Floating decorative dots */}
+        {[
+          { size: 8,  color: '#E8725C', style: { top: '18%',    left:  '12%' }, delay: 0 },
+          { size: 6,  color: '#D4A853', style: { top: '25%',    right: '15%' }, delay: 2 },
+          { size: 10, color: '#2D6B4A', style: { bottom: '30%', left:  '8%'  }, delay: 4 },
+          { size: 5,  color: '#E8725C', style: { bottom: '25%', right: '10%' }, delay: 1 },
+          { size: 7,  color: '#D4A853', style: { top: '40%',    left:  '5%'  }, delay: 3 },
+        ].map((d, i) => (
+          <motion.span
+            key={i}
+            className="absolute rounded-full z-0 pointer-events-none"
+            style={{ width: d.size, height: d.size, background: d.color, ...d.style }}
+            animate={{ y: [0, -12, 0], opacity: [0.15, 0.3, 0.15] }}
+            transition={{ duration: 8, repeat: Infinity, delay: d.delay, ease: 'easeInOut' }}
+          />
+        ))}
+
+        {/* Content */}
+        <div className="relative z-10 max-w-[800px] mx-auto w-full">
+
+          <motion.h1
+            {...fadeUp(0)}
+            className="font-serif leading-[1.05] text-charcoal mb-7"
+            style={{ fontSize: 'clamp(52px, 6vw, 84px)' }}
+          >
+            <span className="relative inline-block" style={{ zIndex: 0 }}>
+              Fund
+              <span
+                className="absolute left-0 right-0 h-[14px] bg-coral/25 rounded pointer-events-none"
+                style={{ bottom: '8px', transform: 'rotate(-1deg)', zIndex: -1 }}
+              />
+            </span>
+            {' '}your cause or venture.
+          </motion.h1>
+
+          <motion.p
+            {...fadeUp(0.15)}
+            className="text-mid leading-relaxed mx-auto"
+            style={{ fontSize: '20px', lineHeight: 1.65, maxWidth: '560px', marginBottom: '40px' }}
+          >
+            Find grants, accelerators, investment and support programmes — matched to you, managed in one place.
+          </motion.p>
+
+          <motion.div {...fadeUp(0.3)} className="flex flex-col gap-4 sm:flex-row justify-center">
+            <Link href="/auth/signup" className="bg-coral text-white rounded-xl px-8 py-4 text-[17px] font-semibold hover:opacity-90 transition-colors">
+              Start for free
+            </Link>
+            <a href="#how" className="border border-coral/50 text-coral rounded-xl px-8 py-4 text-[17px] font-semibold transition-colors hover:bg-coral/10">
+              See how it works
+            </a>
+          </motion.div>
+
+          {/* Trust bar */}
+          <motion.div
+            {...fadeUp(0.45)}
+            className="flex flex-wrap gap-8 sm:gap-12 justify-center"
+            style={{ marginTop: '64px', paddingTop: '40px', borderTop: '1px solid #E8E4DE' }}
+          >
+            {[
+              { value: '500+', label: 'Funding opportunities' },
+              { value: '6',    label: 'Funding types' },
+              { value: '12',   label: 'Impact sectors' },
+              { value: 'Free', label: 'To start' },
+            ].map((s) => (
+              <div key={s.label} className="text-center">
+                <p className="font-serif text-[28px] text-charcoal">{s.value}</p>
+                <p className="text-[13px] text-mid mt-1">{s.label}</p>
               </div>
-            </motion.div>
+            ))}
+          </motion.div>
 
-            {/* Right: browser mockup */}
-            <motion.div {...fadeUp(0.3)}>
-              <div
-                className="bg-white rounded-xl overflow-hidden"
-                style={{
-                  boxShadow: '0 8px 40px rgba(27,58,45,0.08), 0 1px 3px rgba(27,58,45,0.06)',
-                  transform: 'perspective(1200px) rotateY(-3deg) rotateX(1deg)',
-                }}
-              >
-                {/* Browser chrome */}
-                <div className="flex items-center gap-2 px-4 py-3.5 border-b border-warm bg-[#FDFCFA]">
-                  <div className="h-2.5 w-2.5 rounded-full bg-coral" />
-                  <div className="h-2.5 w-2.5 rounded-full bg-gold" />
-                  <div className="h-2.5 w-2.5 rounded-full bg-sage" />
-                  <span className="ml-4 text-xs text-mid">granttracker.co.uk/search</span>
-                </div>
-                {/* Content */}
-                <div className="p-5 md:p-6">
-                  {/* Search bar */}
-                  <div className="flex items-center gap-2.5 border border-warm rounded-lg px-4 py-3 mb-4">
-                    <Search size={15} className="text-mid shrink-0" />
-                    <span className="text-sm text-charcoal flex-1">Community garden project in South London</span>
-                    <span className="bg-charcoal text-white text-xs font-semibold px-4 py-1.5 rounded">Search</span>
-                  </div>
-                  {/* Result cards */}
-                  {[
-                    { org: 'London Community Foundation', name: 'Grow to Give — Community Growing Grants', amount: 'Up to £8,000', tags: ['South London', 'Closes Apr 15'], match: 94, green: 88, amber: 6 },
-                    { org: 'National Lottery Community Fund', name: 'Small Grants for Green Spaces', amount: '£1,000 – £10,000', tags: ['All UK', 'Rolling'], match: 87, green: 80, amber: 7 },
-                    { org: 'Southwark Council', name: 'Southwark Community Fund', amount: 'Up to £5,000', tags: ['Southwark', 'Closes May 1'], match: 82, green: 74, amber: 8 },
-                  ].map((r) => (
-                    <div key={r.name} className="border border-warm rounded-lg p-4 mb-3 last:mb-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="text-sm font-bold text-charcoal leading-snug">{r.name}</p>
-                        <span className="text-xs font-semibold text-charcoal whitespace-nowrap">{r.amount}</span>
-                      </div>
-                      <p className="text-xs text-mid mt-0.5 mb-2.5">{r.org}</p>
-                      <div className="flex gap-2 mb-3">
-                        {r.tags.map(tag => (
-                          <span key={tag} className="bg-cream text-mid text-[11px] px-2.5 py-0.5 rounded">{tag}</span>
-                        ))}
-                      </div>
-                      <div className="flex items-center gap-2.5">
-                        <div className="flex-1 h-1.5 bg-warm rounded-full overflow-hidden flex">
-                          <div className="h-full bg-sage rounded-l-full" style={{ width: `${r.green}%` }} />
-                          <div className="h-full bg-gold" style={{ width: `${r.amber}%` }} />
-                        </div>
-                        <span className="text-xs font-bold text-sage min-w-[28px] text-right">{r.match}%</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-
-          </div>
         </div>
       </section>
 
