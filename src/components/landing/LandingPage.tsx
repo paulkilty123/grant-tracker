@@ -291,7 +291,7 @@ export default function LandingPage() {
         <div className="mx-auto flex max-w-4xl flex-col items-center justify-center px-6 py-16 md:py-24 min-h-[70vh] text-center">
           <motion.h1
             {...fadeUp(0.15)}
-            className="font-serif text-4xl leading-[1.05] sm:text-5xl md:text-6xl lg:text-7xl"
+            className="font-serif text-5xl leading-[1.05] sm:text-6xl md:text-6xl lg:text-7xl"
           >
             <span className="relative inline-block">
               Fund
@@ -301,7 +301,7 @@ export default function LandingPage() {
             </span>
             {' '}your cause or venture.
           </motion.h1>
-          <motion.p {...fadeUp(0.35)} className="mt-8 max-w-2xl text-mid leading-relaxed text-xl md:text-2xl">
+          <motion.p {...fadeUp(0.35)} className="mt-8 max-w-2xl text-mid leading-relaxed text-base md:text-lg">
             Find grants, accelerators, investment and support programmes — matched to you, managed in one place.
           </motion.p>
           <motion.div {...fadeUp(0.5)} className="mt-10 flex flex-col gap-4 sm:flex-row sm:justify-center">
