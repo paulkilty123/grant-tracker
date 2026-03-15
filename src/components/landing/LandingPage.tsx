@@ -367,6 +367,71 @@ export default function LandingPage() {
             </a>
           </motion.div>
 
+          {/* Dashboard preview mockup */}
+          <motion.div
+            {...fadeUp(0.4)}
+            className="relative mx-auto w-full max-w-3xl mt-14"
+            style={{ perspective: '1200px' }}
+          >
+            <div
+              className="relative rounded-xl overflow-hidden border border-warm shadow-xl shadow-charcoal/10"
+              style={{ transform: 'rotateX(5deg)', transformOrigin: 'top center' }}
+            >
+              {/* Browser chrome bar */}
+              <div className="bg-white border-b border-warm/60 px-4 py-2.5 flex items-center gap-3">
+                <div className="flex gap-1.5">
+                  {['bg-red-300','bg-amber-300','bg-green-300'].map(c => <div key={c} className={`w-2.5 h-2.5 rounded-full ${c}`} />)}
+                </div>
+                <div className="flex-1 bg-warm/50 rounded-full h-5 max-w-xs mx-auto" />
+              </div>
+              {/* Dashboard layout */}
+              <div className="flex bg-[#f5f2ed]" style={{ minHeight: '280px' }}>
+                {/* Sidebar */}
+                <div className="w-44 bg-cream border-r border-warm/60 p-4 flex flex-col gap-1.5 flex-shrink-0">
+                  <div className="flex items-center gap-2 mb-4 px-1">
+                    <div className="w-5 h-5 rounded bg-coral flex-shrink-0" style={{ borderRadius: '4px' }} />
+                    <div className="h-2.5 bg-charcoal/25 rounded w-20" />
+                  </div>
+                  {[{ w: 'w-20', active: true }, { w: 'w-24', active: false }, { w: 'w-16', active: false }, { w: 'w-14', active: false }].map((item, i) => (
+                    <div key={i} className={`rounded-lg px-3 py-2 flex items-center gap-2 ${item.active ? 'bg-coral/10' : ''}`}>
+                      <div className={`w-3 h-3 rounded flex-shrink-0 ${item.active ? 'bg-coral/50' : 'bg-mid/25'}`} />
+                      <div className={`h-2 rounded ${item.active ? 'bg-coral/40' : 'bg-mid/20'} ${item.w}`} />
+                    </div>
+                  ))}
+                </div>
+                {/* Main content */}
+                <div className="flex-1 p-5">
+                  {/* Top bar */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="h-4 bg-charcoal/20 rounded w-28" />
+                    <div className="h-7 bg-coral rounded w-24" style={{ borderRadius: '8px' }} />
+                  </div>
+                  {/* Grant cards grid */}
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { status: 'Matched', statusCol: 'bg-green-100 text-green-700', bar1: 'w-full', bar2: 'w-3/4', amount: 'w-16' },
+                      { status: 'Deadline soon', statusCol: 'bg-amber-100 text-amber-700', bar1: 'w-5/6', bar2: 'w-2/3', amount: 'w-20' },
+                      { status: 'New', statusCol: 'bg-blue-100 text-blue-700', bar1: 'w-full', bar2: 'w-4/5', amount: 'w-14' },
+                      { status: 'Matched', statusCol: 'bg-green-100 text-green-700', bar1: 'w-3/4', bar2: 'w-1/2', amount: 'w-18' },
+                    ].map((g, i) => (
+                      <div key={i} className="bg-white rounded-lg p-3.5 border border-warm/60">
+                        <div className="flex items-center justify-between gap-2 mb-2.5">
+                          <div className={`h-2.5 bg-charcoal/20 rounded flex-1 ${g.bar1}`} />
+                          <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0 ${g.statusCol}`}>{g.status}</span>
+                        </div>
+                        <div className={`h-2 bg-charcoal/12 rounded mb-3 ${g.bar2}`} />
+                        <div className={`h-3 bg-charcoal/20 rounded ${g.amount}`} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              {/* Bottom fade out */}
+              <div className="absolute bottom-0 left-0 right-0 h-28 pointer-events-none"
+                style={{ background: 'linear-gradient(to bottom, transparent, rgba(250,247,242,0.98))' }} />
+            </div>
+          </motion.div>
+
           {/* Trust bar */}
           <motion.div
             {...fadeUp(0.45)}
