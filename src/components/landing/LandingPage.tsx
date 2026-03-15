@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Menu, X, Check, Search, Calendar, TrendingUp, Activity, Clock, Mail, MessageSquare } from 'lucide-react'
 import ContactForm from '@/components/ContactForm'
 import RadioWaveIcon from '@/components/icons/RadioWaveIcon'
@@ -287,178 +288,86 @@ export default function LandingPage() {
 
       {/* HERO */}
       <section
-        className="relative overflow-hidden flex flex-col items-center justify-center text-center"
-        style={{ minHeight: '100vh', padding: '160px 24px 80px' }}
+        className="relative overflow-hidden"
+        style={{ minHeight: '100vh', background: '#faf7f2' }}
       >
-        {/* Warm layered radial gradient — dappled golden light */}
-        <motion.div
-          className="absolute inset-0 z-0 pointer-events-none"
-          animate={{ opacity: [0.85, 1, 0.9], scale: [1, 1.02, 1.01] }}
-          transition={{ duration: 12, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' }}
-          style={{ background: [
-            'radial-gradient(ellipse 600px 400px at 15% 20%, rgba(212,168,83,0.18) 0%, transparent 70%)',
-            'radial-gradient(ellipse 500px 500px at 80% 15%, rgba(232,120,92,0.12) 0%, transparent 60%)',
-            'radial-gradient(ellipse 400px 300px at 60% 70%, rgba(212,168,83,0.14) 0%, transparent 65%)',
-            'radial-gradient(ellipse 300px 250px at 25% 75%, rgba(45,107,74,0.06) 0%, transparent 60%)',
-            'radial-gradient(ellipse 800px 600px at 50% 40%, rgba(232,120,92,0.06) 0%, transparent 70%)',
-          ].join(',') }}
-        />
+        {/* Warm radial gradient background */}
+        <div className="absolute inset-0 z-0 pointer-events-none" style={{ background: [
+          'radial-gradient(ellipse 700px 500px at 20% 50%, rgba(212,168,83,0.13) 0%, transparent 70%)',
+          'radial-gradient(ellipse 500px 400px at 5% 80%, rgba(45,107,74,0.05) 0%, transparent 70%)',
+        ].join(',') }} />
 
-        {/* Subtle leaf-accent overlay */}
-        <div
-          className="absolute inset-0 z-0 pointer-events-none"
-          style={{ background: [
-            'radial-gradient(ellipse 120px 180px at 8% 30%, rgba(45,107,74,0.05) 0%, transparent 70%)',
-            'radial-gradient(ellipse 100px 160px at 92% 60%, rgba(45,107,74,0.04) 0%, transparent 70%)',
-            'radial-gradient(ellipse 80px 120px at 75% 20%, rgba(45,107,74,0.03) 0%, transparent 70%)',
-            'radial-gradient(ellipse 90px 140px at 20% 80%, rgba(212,168,83,0.06) 0%, transparent 70%)',
-          ].join(',') }}
-        />
+        {/* Two-column layout */}
+        <div className="relative z-10 mx-auto max-w-7xl px-8 flex flex-col lg:flex-row items-center gap-12 lg:gap-16" style={{ minHeight: '100vh', paddingTop: '120px', paddingBottom: '80px' }}>
 
-        {/* Floating decorative dots */}
-        {[
-          { size: 8,  color: '#E8725C', style: { top: '18%',    left:  '12%' }, delay: 0 },
-          { size: 6,  color: '#D4A853', style: { top: '25%',    right: '15%' }, delay: 2 },
-          { size: 10, color: '#2D6B4A', style: { bottom: '30%', left:  '8%'  }, delay: 4 },
-          { size: 5,  color: '#E8725C', style: { bottom: '25%', right: '10%' }, delay: 1 },
-          { size: 7,  color: '#D4A853', style: { top: '40%',    left:  '5%'  }, delay: 3 },
-        ].map((d, i) => (
-          <motion.span
-            key={i}
-            className="absolute rounded-full z-0 pointer-events-none"
-            style={{ width: d.size, height: d.size, background: d.color, ...d.style }}
-            animate={{ y: [0, -12, 0], opacity: [0.15, 0.3, 0.15] }}
-            transition={{ duration: 8, repeat: Infinity, delay: d.delay, ease: 'easeInOut' }}
-          />
-        ))}
-
-        {/* Content */}
-        <div className="relative z-10 max-w-[800px] mx-auto w-full">
-
-          <motion.h1
-            {...fadeUp(0)}
-            className="font-serif leading-[1.05] text-charcoal mb-7"
-            style={{ fontSize: 'clamp(52px, 6vw, 84px)' }}
-          >
-            <span className="relative inline-block" style={{ zIndex: 0 }}>
-              Fund
-              <span
-                className="absolute left-0 right-0 h-[14px] bg-coral/25 rounded pointer-events-none"
-                style={{ bottom: '8px', transform: 'rotate(-1deg)', zIndex: -1 }}
-              />
-            </span>
-            {' '}your cause or venture.
-          </motion.h1>
-
-          <motion.p
-            {...fadeUp(0.15)}
-            className="text-mid leading-relaxed mx-auto"
-            style={{ fontSize: '20px', lineHeight: 1.65, maxWidth: '560px', marginBottom: '40px' }}
-          >
-            Find grants, accelerators, investment and support programmes — matched to you, managed in one place.
-          </motion.p>
-
-          <motion.div {...fadeUp(0.3)} className="flex flex-col gap-4 sm:flex-row justify-center">
-            <Link href="/auth/signup" className="bg-coral text-white rounded px-8 py-4 text-[17px] font-semibold hover:opacity-90 transition-colors">
-              Start for free
-            </Link>
-            <a href="#how" className="border border-coral/50 text-coral rounded px-8 py-4 text-[17px] font-semibold transition-colors hover:bg-coral/10">
-              See how it works
-            </a>
-          </motion.div>
-
-          {/* Dashboard preview mockup */}
-          <motion.div
-            {...fadeUp(0.4)}
-            className="relative mx-auto w-full max-w-3xl mt-14"
-            style={{ perspective: '1200px' }}
-          >
-            <div
-              className="relative rounded-xl overflow-hidden border border-warm shadow-xl shadow-charcoal/10"
-              style={{ transform: 'rotateX(5deg)', transformOrigin: 'top center' }}
+          {/* Left: text */}
+          <div className="flex-1 max-w-xl">
+            <motion.h1
+              {...fadeUp(0)}
+              className="font-serif leading-[1.05] text-charcoal mb-6"
+              style={{ fontSize: 'clamp(44px, 5vw, 72px)' }}
             >
-              {/* Browser chrome bar */}
-              <div className="bg-white border-b border-warm/60 px-4 py-2.5 flex items-center gap-3">
-                <div className="flex gap-1.5">
-                  {['bg-red-300','bg-amber-300','bg-green-300'].map(c => <div key={c} className={`w-2.5 h-2.5 rounded-full ${c}`} />)}
-                </div>
-                <div className="flex-1 bg-warm/50 rounded-full h-5 max-w-xs mx-auto" />
-              </div>
-              {/* Dashboard layout */}
-              <div className="flex bg-[#f5f2ed]" style={{ minHeight: '280px' }}>
-                {/* Sidebar */}
-                <div className="w-44 bg-cream border-r border-warm/60 p-4 flex flex-col gap-1 flex-shrink-0">
-                  <div className="flex items-center gap-2 mb-4 px-1">
-                    <div className="w-5 h-5 bg-coral flex-shrink-0" style={{ borderRadius: '4px' }} />
-                    <span className="text-[11px] font-serif font-semibold text-charcoal">GrantTracker</span>
-                  </div>
-                  {[
-                    { label: 'Dashboard', active: true },
-                    { label: 'Browse Grants', active: false },
-                    { label: 'My Applications', active: false },
-                    { label: 'Saved', active: false },
-                  ].map((item) => (
-                    <div key={item.label} className={`rounded-lg px-3 py-2 flex items-center gap-2 ${item.active ? 'bg-coral/10' : ''}`}>
-                      <div className={`w-2.5 h-2.5 rounded-sm flex-shrink-0 ${item.active ? 'bg-coral/60' : 'bg-mid/25'}`} />
-                      <span className={`text-[10px] font-medium ${item.active ? 'text-coral' : 'text-mid'}`}>{item.label}</span>
-                    </div>
-                  ))}
-                </div>
-                {/* Main content */}
-                <div className="flex-1 p-4">
-                  {/* Search bar */}
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="flex-1 bg-white border border-warm rounded-lg px-3 py-1.5 flex items-center gap-2">
-                      <svg className="w-3 h-3 text-mid flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                      <span className="text-[10px] text-mid">Social enterprise, London…</span>
-                    </div>
-                    <div className="bg-coral text-white text-[10px] font-semibold px-3 py-1.5 rounded-lg flex-shrink-0">Find grants</div>
-                  </div>
-                  {/* Results label */}
-                  <p className="text-[9px] text-mid mb-2 font-medium">24 matches found for your profile</p>
-                  {/* Grant cards grid */}
-                  <div className="grid grid-cols-2 gap-2.5">
-                    {[
-                      { name: 'National Lottery Community Fund', type: 'Grant', amount: 'Up to £50,000', status: 'Matched', statusCol: 'bg-green-100 text-green-700', deadline: 'Closes 14 Apr' },
-                      { name: 'Innovate UK Smart Grant', type: 'Investment', amount: 'Up to £25,000', status: 'Deadline soon', statusCol: 'bg-amber-100 text-amber-700', deadline: 'Closes 28 Mar' },
-                      { name: 'Arts Council England', type: 'Grant', amount: 'Up to £15,000', status: 'Matched', statusCol: 'bg-green-100 text-green-700', deadline: 'Closes 30 Apr' },
-                      { name: 'Big Society Capital', type: 'Accelerator', amount: 'Up to £100,000', status: 'New', statusCol: 'bg-blue-100 text-blue-700', deadline: 'Rolling' },
-                    ].map((g, i) => (
-                      <div key={i} className="bg-white rounded-lg p-3 border border-warm/60">
-                        <div className="flex items-start justify-between gap-1.5 mb-1.5">
-                          <span className="text-[10px] font-semibold text-charcoal leading-tight">{g.name}</span>
-                          <span className={`text-[8px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0 whitespace-nowrap ${g.statusCol}`}>{g.status}</span>
-                        </div>
-                        <p className="text-[9px] text-mid mb-1">{g.type} · {g.deadline}</p>
-                        <p className="text-[10px] font-semibold text-charcoal">{g.amount}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              {/* Bottom fade out */}
-              <div className="absolute bottom-0 left-0 right-0 h-28 pointer-events-none"
-                style={{ background: 'linear-gradient(to bottom, transparent, rgba(250,247,242,0.98))' }} />
-            </div>
-          </motion.div>
+              <span className="relative inline-block" style={{ zIndex: 0 }}>
+                Fund
+                <span
+                  className="absolute left-0 right-0 h-[12px] bg-coral/25 rounded pointer-events-none"
+                  style={{ bottom: '6px', transform: 'rotate(-1deg)', zIndex: -1 }}
+                />
+              </span>
+              {' '}your cause or venture.
+            </motion.h1>
 
-          {/* Trust bar */}
+            <motion.p
+              {...fadeUp(0.15)}
+              className="text-mid leading-relaxed mb-10"
+              style={{ fontSize: '18px', lineHeight: 1.7, maxWidth: '480px' }}
+            >
+              Find grants, accelerators, social investment, diversity funds and support programmes — all filtered to your preferences, with a management tool all in one.
+            </motion.p>
+
+            <motion.div {...fadeUp(0.3)} className="flex flex-wrap gap-3 mb-14">
+              <Link href="/auth/signup" className="bg-coral text-white rounded px-7 py-3.5 text-[16px] font-semibold hover:opacity-90 transition-colors">
+                Start for free
+              </Link>
+              <a href="#how" className="border border-coral/50 text-coral rounded px-7 py-3.5 text-[16px] font-semibold transition-colors hover:bg-coral/10">
+                See how it works
+              </a>
+            </motion.div>
+
+            {/* Trust bar */}
+            <motion.div
+              {...fadeUp(0.45)}
+              className="flex flex-wrap gap-8"
+              style={{ paddingTop: '32px', borderTop: '1px solid #E8E4DE' }}
+            >
+              {[
+                { value: '500+', label: 'Funding opportunities' },
+                { value: '6',    label: 'Funding types' },
+                { value: '12',   label: 'Impact sectors' },
+                { value: 'Free', label: 'To start' },
+              ].map((s) => (
+                <div key={s.label}>
+                  <p className="font-serif text-[24px] text-charcoal">{s.value}</p>
+                  <p className="text-[12px] text-mid mt-0.5">{s.label}</p>
+                </div>
+              ))}
+            </motion.div>
+          </div>
+
+          {/* Right: photo */}
           <motion.div
-            {...fadeUp(0.45)}
-            className="flex flex-wrap gap-8 sm:gap-12 justify-center"
-            style={{ marginTop: '64px', paddingTop: '40px', borderTop: '1px solid #E8E4DE' }}
+            {...fadeUp(0.2)}
+            className="flex-1 w-full lg:max-w-[560px] rounded-2xl overflow-hidden shadow-2xl shadow-charcoal/15 flex-shrink-0"
+            style={{ aspectRatio: '4/3' }}
           >
-            {[
-              { value: '500+', label: 'Funding opportunities' },
-              { value: '6',    label: 'Funding types' },
-              { value: '12',   label: 'Impact sectors' },
-              { value: 'Free', label: 'To start' },
-            ].map((s) => (
-              <div key={s.label} className="text-center">
-                <p className="font-serif text-[28px] text-charcoal">{s.value}</p>
-                <p className="text-[13px] text-mid mt-1">{s.label}</p>
-              </div>
-            ))}
+            <Image
+              src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200&q=85"
+              alt="Team collaborating on funding applications"
+              width={1200}
+              height={900}
+              className="w-full h-full object-cover"
+              priority
+            />
           </motion.div>
 
         </div>
