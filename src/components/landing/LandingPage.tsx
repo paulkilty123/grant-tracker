@@ -357,10 +357,10 @@ export default function LandingPage() {
           </motion.p>
 
           <motion.div {...fadeUp(0.3)} className="flex flex-col gap-4 sm:flex-row justify-center">
-            <Link href="/auth/signup" className="bg-coral text-white rounded-xl px-8 py-4 text-[17px] font-semibold hover:opacity-90 transition-colors">
+            <Link href="/auth/signup" className="bg-coral text-white rounded px-8 py-4 text-[17px] font-semibold hover:opacity-90 transition-colors">
               Start for free
             </Link>
-            <a href="#how" className="border border-coral/50 text-coral rounded-xl px-8 py-4 text-[17px] font-semibold transition-colors hover:bg-coral/10">
+            <a href="#how" className="border border-coral/50 text-coral rounded px-8 py-4 text-[17px] font-semibold transition-colors hover:bg-coral/10">
               See how it works
             </a>
           </motion.div>
