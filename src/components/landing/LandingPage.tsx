@@ -249,19 +249,19 @@ export default function LandingPage() {
         transition={{ duration: 0.5 }}
         className="fixed top-0 left-0 right-0 z-50 bg-cream/95 backdrop-blur-sm border-b border-warm/60"
       >
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <a href="/" className="flex items-center gap-1.5">
-            <RadioWaveIcon className="h-9 w-9 text-coral" />
-            <span className="font-serif text-2xl text-charcoal">GrantTracker</span>
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
+          <a href="/" className="flex items-center gap-1">
+            <RadioWaveIcon className="h-12 w-12 text-coral" />
+            <span className="font-serif text-3xl text-charcoal">GrantTracker</span>
           </a>
-          <div className="hidden items-center gap-6 md:flex">
+          <div className="hidden items-center gap-5 lg:gap-8 md:flex">
             {navLinks.map((link) => (
               <a key={link.label} href={link.href} className="text-sm text-mid transition-colors hover:text-charcoal">{link.label}</a>
             ))}
           </div>
           <div className="hidden items-center gap-3 md:flex">
             <Link href="/auth/login" className="text-sm text-mid hover:text-charcoal transition-colors px-3 py-2">Sign in</Link>
-            <Link href="/auth/signup" className="btn-primary px-5 py-2 text-sm">Get started free</Link>
+            <Link href="/auth/signup" className="bg-coral text-white rounded px-5 py-2 text-sm font-medium hover:opacity-90 transition-colors">Get started free</Link>
           </div>
           <button className="md:hidden text-charcoal" onClick={() => setMobileOpen(!mobileOpen)}>
             {mobileOpen ? <X size={24} /> : <Menu size={24} />}
@@ -279,7 +279,7 @@ export default function LandingPage() {
               ))}
               <div className="flex flex-col gap-2 pt-2">
                 <Link href="/auth/login" onClick={() => setMobileOpen(false)} className="text-center text-sm text-mid py-2 border border-warm">Sign in</Link>
-                <Link href="/auth/signup" onClick={() => setMobileOpen(false)} className="btn-primary text-center text-sm py-2">Get started free</Link>
+                <Link href="/auth/signup" onClick={() => setMobileOpen(false)} className="bg-coral text-white rounded text-center text-sm font-medium py-2 hover:opacity-90 transition-colors">Get started free</Link>
               </div>
             </div>
           </motion.div>
@@ -293,24 +293,10 @@ export default function LandingPage() {
             {...fadeUp(0.15)}
             className="font-serif text-5xl leading-[1.05] sm:text-6xl md:text-7xl lg:text-8xl"
           >
-            <span className="relative inline-block" style={{ zIndex: 0 }}>
+            <span className="relative inline-block">
               Fund
-              <svg
-                aria-hidden="true"
-                viewBox="0 0 120 24"
-                preserveAspectRatio="none"
-                xmlns="http://www.w3.org/2000/svg"
-                style={{ position: 'absolute', left: '-4px', bottom: '14px', width: 'calc(100% + 8px)', height: '18px', overflow: 'visible', zIndex: -1 }}
-              >
-                <path
-                  d="M2,14 C20,10 50,17 80,13 C100,10 112,15 118,13"
-                  stroke="#E8725C"
-                  strokeWidth="20"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeOpacity="0.4"
-                />
+              <svg className="absolute -bottom-4 left-0 w-full h-6 text-coral/30 pointer-events-none" viewBox="0 0 200 20" preserveAspectRatio="none">
+                <path d="M5 12 Q 50 4, 100 10 T 195 8" stroke="currentColor" strokeWidth="14" strokeLinecap="round" fill="none" />
               </svg>
             </span>
             {' '}your cause or venture.
@@ -319,7 +305,7 @@ export default function LandingPage() {
             Find grants, accelerators, investment and support programmes — matched to you, managed in one place.
           </motion.p>
           <motion.div {...fadeUp(0.5)} className="mt-10 flex flex-col gap-4 sm:flex-row sm:justify-center">
-            <Link href="/auth/signup" className="btn-primary px-8 py-3 text-base font-semibold">Start for free →</Link>
+            <Link href="/auth/signup" className="bg-coral text-white rounded px-8 py-3 text-base font-semibold hover:opacity-90 transition-colors">Start for free</Link>
             <a href="#how" className="border border-coral/50 text-coral px-8 py-3 text-base font-semibold transition-colors hover:bg-coral/5">
               See how it works
             </a>
@@ -571,7 +557,7 @@ export default function LandingPage() {
             <h2 className="font-serif text-4xl text-cream md:text-6xl leading-tight">Find your funding. Free to start.</h2>
             <p className="mx-auto mt-6 max-w-lg text-cream/60 leading-relaxed">Join CICs, charities, social enterprises and impact founders already discovering funding that actually fits.</p>
             <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-              <Link href="/auth/signup" className="btn-primary px-10 py-3.5 text-base font-semibold">Start for free</Link>
+              <Link href="/auth/signup" className="bg-coral text-white rounded px-10 py-3.5 text-base font-semibold hover:opacity-90 transition-colors">Start for free</Link>
             </div>
             <p className="mt-4 text-sm text-cream/40">No credit card required</p>
           </motion.div>
