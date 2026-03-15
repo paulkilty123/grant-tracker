@@ -256,13 +256,10 @@ export default function LandingPage() {
             </div>
             <span className="font-serif text-[22px] text-charcoal">GrantTracker</span>
           </a>
-          <div className="hidden items-center gap-3 md:flex">
+          <div className="flex items-center gap-3">
             <Link href="/auth/login" className="text-sm text-mid hover:text-charcoal transition-colors px-3 py-2">Sign in</Link>
             <Link href="/auth/signup" className="bg-coral text-white rounded-xl px-5 py-2 text-sm font-medium hover:opacity-90 transition-colors">Get started free</Link>
           </div>
-          <button className="md:hidden text-charcoal" onClick={() => setMobileOpen(!mobileOpen)}>
-            {mobileOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
         </div>
         {mobileOpen && (
           <motion.div
