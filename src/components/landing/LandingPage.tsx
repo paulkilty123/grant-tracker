@@ -249,18 +249,13 @@ export default function LandingPage() {
         transition={{ duration: 0.5 }}
         className="fixed top-0 left-0 right-0 z-50 bg-cream/95 backdrop-blur-sm border-b border-warm/60"
       >
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
+        <div className="flex w-full items-center justify-between px-8 py-5">
           <a href="/" className="flex items-center gap-2.5 no-underline">
             <div className="relative flex items-center justify-center bg-coral w-7 h-7 flex-shrink-0" style={{ borderRadius: '6px' }}>
               <div className="w-2.5 h-2.5 rounded-full border-2 border-white" />
             </div>
             <span className="font-serif text-[22px] text-charcoal">GrantTracker</span>
           </a>
-          <div className="hidden items-center gap-5 lg:gap-8 md:flex">
-            {navLinks.map((link) => (
-              <a key={link.label} href={link.href} className="text-sm text-mid transition-colors hover:text-charcoal">{link.label}</a>
-            ))}
-          </div>
           <div className="hidden items-center gap-3 md:flex">
             <Link href="/auth/login" className="text-sm text-mid hover:text-charcoal transition-colors px-3 py-2">Sign in</Link>
             <Link href="/auth/signup" className="bg-coral text-white rounded-xl px-5 py-2 text-sm font-medium hover:opacity-90 transition-colors">Get started free</Link>
@@ -290,8 +285,8 @@ export default function LandingPage() {
 
       {/* HERO */}
       <section
-        className="relative overflow-hidden flex flex-col items-center justify-center text-center pt-16"
-        style={{ minHeight: '85vh', padding: '80px 24px 100px' }}
+        className="relative overflow-hidden flex flex-col items-center justify-center text-center"
+        style={{ minHeight: '100vh', padding: '160px 24px 80px' }}
       >
         {/* Warm layered radial gradient — dappled golden light */}
         <motion.div
