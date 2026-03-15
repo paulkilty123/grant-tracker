@@ -287,29 +287,88 @@ export default function LandingPage() {
       </motion.nav>
 
       {/* HERO */}
-      <section className="relative pt-16">
-        <div className="mx-auto flex max-w-4xl flex-col items-center justify-center px-6 py-16 md:py-24 min-h-[70vh] text-center">
-          <motion.h1
-            {...fadeUp(0.15)}
-            className="font-serif text-5xl leading-[1.05] sm:text-6xl md:text-6xl lg:text-7xl"
-          >
-            <span className="relative inline-block">
-              Fund
-              <svg className="absolute -bottom-4 left-0 w-full h-6 text-coral/30 pointer-events-none" viewBox="0 0 200 20" preserveAspectRatio="none">
-                <path d="M5 12 Q 50 4, 100 10 T 195 8" stroke="currentColor" strokeWidth="14" strokeLinecap="round" fill="none" />
-              </svg>
-            </span>
-            {' '}your cause or venture.
-          </motion.h1>
-          <motion.p {...fadeUp(0.35)} className="mt-8 max-w-2xl text-mid leading-relaxed text-base md:text-lg">
-            Find grants, accelerators, investment and support programmes — matched to you, managed in one place.
-          </motion.p>
-          <motion.div {...fadeUp(0.5)} className="mt-10 flex flex-col gap-4 sm:flex-row sm:justify-center">
-            <Link href="/auth/signup" className="bg-coral text-white rounded-xl px-8 py-3 text-base font-semibold hover:opacity-90 transition-colors">Start for free</Link>
-            <a href="#how" className="border border-coral/50 text-coral rounded-xl px-8 py-3 text-base font-semibold transition-colors hover:bg-coral/5">
-              See how it works
-            </a>
-          </motion.div>
+      <section className="pt-16 md:pt-20">
+        <div className="mx-auto max-w-6xl px-6 md:px-12">
+          <div className="grid md:grid-cols-2 gap-12 lg:gap-16 items-center py-16 md:py-24">
+
+            {/* Left: text */}
+            <motion.div {...fadeUp(0.15)}>
+              <h1 className="font-serif text-5xl leading-[1.05] sm:text-6xl lg:text-7xl text-charcoal">
+                <span className="relative inline-block" style={{ zIndex: 0 }}>
+                  Fund
+                  <span
+                    className="absolute bottom-1.5 left-0 right-0 h-3 bg-coral/25 rounded"
+                    style={{ transform: 'rotate(-1deg)', zIndex: -1 }}
+                  />
+                </span>
+                {' '}your cause<br className="hidden sm:block" /> or venture.
+              </h1>
+              <p className="mt-7 text-mid leading-relaxed text-base md:text-lg max-w-md">
+                Find grants, accelerators, investment and support programmes — matched to you, managed in one place.
+              </p>
+              <div className="mt-9 flex flex-col gap-4 sm:flex-row">
+                <Link href="/auth/signup" className="bg-coral text-white rounded-xl px-7 py-3.5 text-base font-semibold hover:opacity-90 transition-colors text-center">Start for free</Link>
+                <a href="#how" className="border border-coral/50 text-coral rounded-xl px-7 py-3.5 text-base font-semibold transition-colors hover:bg-coral/5 text-center">
+                  See how it works
+                </a>
+              </div>
+            </motion.div>
+
+            {/* Right: browser mockup */}
+            <motion.div {...fadeUp(0.3)}>
+              <div
+                className="bg-white rounded-xl overflow-hidden"
+                style={{
+                  boxShadow: '0 8px 40px rgba(27,58,45,0.08), 0 1px 3px rgba(27,58,45,0.06)',
+                  transform: 'perspective(1200px) rotateY(-3deg) rotateX(1deg)',
+                }}
+              >
+                {/* Browser chrome */}
+                <div className="flex items-center gap-2 px-4 py-3.5 border-b border-warm bg-[#FDFCFA]">
+                  <div className="h-2.5 w-2.5 rounded-full bg-coral" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-gold" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-sage" />
+                  <span className="ml-4 text-xs text-mid">granttracker.co.uk/search</span>
+                </div>
+                {/* Content */}
+                <div className="p-5 md:p-6">
+                  {/* Search bar */}
+                  <div className="flex items-center gap-2.5 border border-warm rounded-lg px-4 py-3 mb-4">
+                    <Search size={15} className="text-mid shrink-0" />
+                    <span className="text-sm text-charcoal flex-1">Community garden project in South London</span>
+                    <span className="bg-charcoal text-white text-xs font-semibold px-4 py-1.5 rounded">Search</span>
+                  </div>
+                  {/* Result cards */}
+                  {[
+                    { org: 'London Community Foundation', name: 'Grow to Give — Community Growing Grants', amount: 'Up to £8,000', tags: ['South London', 'Closes Apr 15'], match: 94, green: 88, amber: 6 },
+                    { org: 'National Lottery Community Fund', name: 'Small Grants for Green Spaces', amount: '£1,000 – £10,000', tags: ['All UK', 'Rolling'], match: 87, green: 80, amber: 7 },
+                    { org: 'Southwark Council', name: 'Southwark Community Fund', amount: 'Up to £5,000', tags: ['Southwark', 'Closes May 1'], match: 82, green: 74, amber: 8 },
+                  ].map((r) => (
+                    <div key={r.name} className="border border-warm rounded-lg p-4 mb-3 last:mb-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-sm font-bold text-charcoal leading-snug">{r.name}</p>
+                        <span className="text-xs font-semibold text-charcoal whitespace-nowrap">{r.amount}</span>
+                      </div>
+                      <p className="text-xs text-mid mt-0.5 mb-2.5">{r.org}</p>
+                      <div className="flex gap-2 mb-3">
+                        {r.tags.map(tag => (
+                          <span key={tag} className="bg-cream text-mid text-[11px] px-2.5 py-0.5 rounded">{tag}</span>
+                        ))}
+                      </div>
+                      <div className="flex items-center gap-2.5">
+                        <div className="flex-1 h-1.5 bg-warm rounded-full overflow-hidden flex">
+                          <div className="h-full bg-sage rounded-l-full" style={{ width: `${r.green}%` }} />
+                          <div className="h-full bg-gold" style={{ width: `${r.amber}%` }} />
+                        </div>
+                        <span className="text-xs font-bold text-sage min-w-[28px] text-right">{r.match}%</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+
+          </div>
         </div>
       </section>
 
