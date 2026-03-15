@@ -263,7 +263,7 @@ export default function LandingPage() {
           </div>
           <div className="flex items-center gap-3">
             <Link href="/auth/login" className="text-sm text-mid hover:text-charcoal transition-colors px-3 py-2">Sign in</Link>
-            <Link href="/auth/signup" className="bg-coral text-white rounded-xl px-5 py-2 text-sm font-medium hover:opacity-90 transition-colors">Get started free</Link>
+            <Link href="/auth/signup" className="bg-coral text-white rounded px-5 py-2 text-sm font-medium hover:opacity-90 transition-colors">Get started free</Link>
           </div>
         </div>
         {mobileOpen && (
