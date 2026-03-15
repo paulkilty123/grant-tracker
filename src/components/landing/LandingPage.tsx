@@ -304,6 +304,15 @@ export default function LandingPage() {
           ].join(',') }}
         />
 
+        {/* Dot grid pattern */}
+        <div
+          className="absolute inset-0 z-0 pointer-events-none"
+          style={{
+            backgroundImage: 'radial-gradient(circle, rgba(139,109,56,0.13) 1.5px, transparent 1.5px)',
+            backgroundSize: '28px 28px',
+          }}
+        />
+
         {/* Subtle leaf-accent overlay */}
         <div
           className="absolute inset-0 z-0 pointer-events-none"
