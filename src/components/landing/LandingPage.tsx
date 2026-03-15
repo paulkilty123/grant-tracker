@@ -308,7 +308,7 @@ export default function LandingPage() {
         <div
           className="absolute inset-0 z-0 pointer-events-none"
           style={{
-            backgroundImage: 'radial-gradient(circle, rgba(139,109,56,0.13) 1.5px, transparent 1.5px)',
+            backgroundImage: 'radial-gradient(circle, rgba(139,109,56,0.28) 2px, transparent 2px)',
             backgroundSize: '28px 28px',
           }}
         />
