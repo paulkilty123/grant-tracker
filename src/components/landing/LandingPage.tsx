@@ -261,7 +261,7 @@ export default function LandingPage() {
           </div>
           <div className="hidden items-center gap-3 md:flex">
             <Link href="/auth/login" className="text-sm text-mid hover:text-charcoal transition-colors px-3 py-2">Sign in</Link>
-            <Link href="/auth/signup" className="bg-coral text-white px-5 py-2 text-sm font-medium hover:opacity-90 transition-colors">Get started free</Link>
+            <Link href="/auth/signup" className="bg-coral text-white rounded-xl px-5 py-2 text-sm font-medium hover:opacity-90 transition-colors">Get started free</Link>
           </div>
           <button className="md:hidden text-charcoal" onClick={() => setMobileOpen(!mobileOpen)}>
             {mobileOpen ? <X size={24} /> : <Menu size={24} />}
@@ -279,7 +279,7 @@ export default function LandingPage() {
               ))}
               <div className="flex flex-col gap-2 pt-2">
                 <Link href="/auth/login" onClick={() => setMobileOpen(false)} className="text-center text-sm text-mid py-2 border border-warm">Sign in</Link>
-                <Link href="/auth/signup" onClick={() => setMobileOpen(false)} className="bg-coral text-white text-center text-sm font-medium py-2 hover:opacity-90 transition-colors">Get started free</Link>
+                <Link href="/auth/signup" onClick={() => setMobileOpen(false)} className="bg-coral text-white rounded-xl text-center text-sm font-medium py-2 hover:opacity-90 transition-colors">Get started free</Link>
               </div>
             </div>
           </motion.div>
@@ -291,7 +291,7 @@ export default function LandingPage() {
         <div className="mx-auto flex max-w-4xl flex-col items-center justify-center px-6 py-16 md:py-24 min-h-[70vh] text-center">
           <motion.h1
             {...fadeUp(0.15)}
-            className="font-serif text-5xl leading-[1.05] sm:text-6xl md:text-7xl lg:text-8xl"
+            className="font-serif text-4xl leading-[1.05] sm:text-5xl md:text-6xl lg:text-7xl"
           >
             <span className="relative inline-block">
               Fund
@@ -305,8 +305,8 @@ export default function LandingPage() {
             Find grants, accelerators, investment and support programmes — matched to you, managed in one place.
           </motion.p>
           <motion.div {...fadeUp(0.5)} className="mt-10 flex flex-col gap-4 sm:flex-row sm:justify-center">
-            <Link href="/auth/signup" className="bg-coral text-white px-8 py-3 text-base font-semibold hover:opacity-90 transition-colors">Start for free</Link>
-            <a href="#how" className="border border-coral/50 text-coral px-8 py-3 text-base font-semibold transition-colors hover:bg-coral/5">
+            <Link href="/auth/signup" className="bg-coral text-white rounded-xl px-8 py-3 text-base font-semibold hover:opacity-90 transition-colors">Start for free</Link>
+            <a href="#how" className="border border-coral/50 text-coral rounded-xl px-8 py-3 text-base font-semibold transition-colors hover:bg-coral/5">
               See how it works
             </a>
           </motion.div>
@@ -484,7 +484,7 @@ export default function LandingPage() {
                 </ul>
                 <Link
                   href="/auth/signup"
-                  className={`mt-8 block text-center py-3 text-sm font-semibold transition-colors ${plan.popular ? 'bg-coral text-white hover:bg-coral-light' : 'bg-[#121f2b] text-white hover:bg-[#121f2b]/90'}`}
+                  className={`mt-8 block rounded-xl text-center py-3 text-sm font-semibold transition-colors ${plan.popular ? 'bg-coral text-white hover:bg-coral-light' : 'bg-[#121f2b] text-white hover:bg-[#121f2b]/90'}`}
                 >
                   {plan.cta}
                 </Link>
@@ -557,7 +557,7 @@ export default function LandingPage() {
             <h2 className="font-serif text-4xl text-cream md:text-6xl leading-tight">Find your funding. Free to start.</h2>
             <p className="mx-auto mt-6 max-w-lg text-cream/60 leading-relaxed">Join CICs, charities, social enterprises and impact founders already discovering funding that actually fits.</p>
             <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-              <Link href="/auth/signup" className="bg-coral text-white px-10 py-3.5 text-base font-semibold hover:opacity-90 transition-colors">Start for free</Link>
+              <Link href="/auth/signup" className="bg-coral text-white rounded-xl px-10 py-3.5 text-base font-semibold hover:opacity-90 transition-colors">Start for free</Link>
             </div>
             <p className="mt-4 text-sm text-cream/40">No credit card required</p>
           </motion.div>
