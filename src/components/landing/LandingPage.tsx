@@ -464,7 +464,7 @@ export default function LandingPage() {
               <motion.div
                 key={plan.name}
                 {...fadeInView(i * 0.1)}
-                className={`relative p-8 flex flex-col ${plan.popular ? 'bg-forest text-cream' : 'bg-cream'}`}
+                className={`relative p-8 flex flex-col ${plan.popular ? 'bg-[#121f2b] text-cream' : 'bg-cream'}`}
               >
                 {plan.popular && (
                   <span className="absolute top-4 right-4 bg-coral px-3 py-1 text-xs font-semibold text-white">Most Popular</span>
@@ -484,7 +484,7 @@ export default function LandingPage() {
                 </ul>
                 <Link
                   href="/auth/signup"
-                  className={`mt-8 block text-center py-3 text-sm font-semibold transition-colors ${plan.popular ? 'bg-coral text-white hover:bg-coral-light' : 'bg-forest text-white hover:bg-forest/90'}`}
+                  className={`mt-8 block text-center py-3 text-sm font-semibold transition-colors ${plan.popular ? 'bg-coral text-white hover:bg-coral-light' : 'bg-[#121f2b] text-white hover:bg-[#121f2b]/90'}`}
                 >
                   {plan.cta}
                 </Link>
@@ -506,7 +506,7 @@ export default function LandingPage() {
               <motion.div key={t.name} {...fadeInView(i * 0.1)} className="bg-cream p-8">
                 <p className="text-sm text-charcoal leading-relaxed">"{t.quote}"</p>
                 <div className="mt-6 flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center bg-forest text-white font-semibold text-sm">{t.initials}</div>
+                  <div className="flex h-10 w-10 items-center justify-center bg-[#121f2b] text-white font-semibold text-sm">{t.initials}</div>
                   <div>
                     <p className="text-sm font-semibold text-charcoal">{t.name}</p>
                     <p className="text-xs text-mid">{t.role}</p>
