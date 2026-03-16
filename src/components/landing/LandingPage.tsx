@@ -355,82 +355,59 @@ export default function LandingPage() {
           </div>
 
           {/* Right: fanned card deck — playing card style */}
-          <div className="flex-1 w-full lg:max-w-[500px] flex-shrink-0 relative" style={{ height: '400px' }}>
+          {/* motion wrapper handles fade-in; inner div handles rotation (keeps transforms separate) */}
+          <div className="flex-1 w-full lg:max-w-[500px] flex-shrink-0 relative" style={{ height: '420px' }}>
 
-            {/* Shared card dimensions and pivot */}
-            {/* All cards: 340px wide, 280px tall, bottom-anchored at y=380, horizontally centred */}
-
-            {/* Card 3: Alerts — furthest back, rotated left */}
-            <motion.div
-              {...fadeUp(0.4)}
-              className="absolute bg-white rounded-xl border border-warm/80 p-5"
-              style={{
-                width: '340px', height: '280px',
-                top: '100px', left: 'calc(50% - 170px)',
-                transformOrigin: 'bottom center',
-                transform: 'rotate(-13deg)',
-                zIndex: 1,
-                boxShadow: '0 4px 20px rgba(26,46,43,0.08)',
-              }}
-            >
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-red-400 flex-shrink-0" />
-                <p className="text-[11px] font-semibold text-charcoal uppercase tracking-wider">Upcoming Deadlines</p>
+            {/* Card 3: Alerts — back */}
+            <motion.div {...fadeUp(0.4)} className="absolute" style={{ width: '340px', top: '80px', left: 'calc(50% - 170px)', zIndex: 1 }}>
+              <div className="bg-white rounded-xl border border-warm/80 p-5" style={{ transformOrigin: 'bottom center', transform: 'rotate(-13deg)', boxShadow: '0 4px 20px rgba(26,46,43,0.08)' }}>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-red-400 flex-shrink-0" />
+                  <p className="text-[11px] font-semibold text-charcoal uppercase tracking-wider">Upcoming Deadlines</p>
+                </div>
+                <div className="mt-3 space-y-2 opacity-0 select-none" aria-hidden>
+                  <div className="h-2 bg-warm rounded w-3/4" /><div className="h-2 bg-warm rounded w-1/2" />
+                </div>
               </div>
             </motion.div>
 
-            {/* Card 2: Pipeline — middle, slightly rotated left */}
-            <motion.div
-              {...fadeUp(0.3)}
-              className="absolute bg-white rounded-xl border border-warm/80 p-5"
-              style={{
-                width: '340px', height: '280px',
-                top: '100px', left: 'calc(50% - 170px)',
-                transformOrigin: 'bottom center',
-                transform: 'rotate(-6deg)',
-                zIndex: 2,
-                boxShadow: '0 6px 28px rgba(26,46,43,0.10)',
-              }}
-            >
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded flex-shrink-0 bg-coral/60" />
-                <p className="text-[11px] font-semibold text-charcoal uppercase tracking-wider">My Pipeline</p>
+            {/* Card 2: Pipeline — middle */}
+            <motion.div {...fadeUp(0.3)} className="absolute" style={{ width: '340px', top: '80px', left: 'calc(50% - 170px)', zIndex: 2 }}>
+              <div className="bg-white rounded-xl border border-warm/80 p-5" style={{ transformOrigin: 'bottom center', transform: 'rotate(-6deg)', boxShadow: '0 6px 28px rgba(26,46,43,0.10)' }}>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded flex-shrink-0 bg-coral/60" />
+                  <p className="text-[11px] font-semibold text-charcoal uppercase tracking-wider">My Pipeline</p>
+                </div>
+                <div className="mt-3 space-y-2 opacity-0 select-none" aria-hidden>
+                  <div className="h-2 bg-warm rounded w-3/4" /><div className="h-2 bg-warm rounded w-1/2" />
+                </div>
               </div>
             </motion.div>
 
-            {/* Card 1: Search — front, slight rightward tilt, fully visible */}
-            <motion.div
-              {...fadeUp(0.2)}
-              className="absolute bg-white rounded-xl border border-warm/80 p-5"
-              style={{
-                width: '340px', height: '280px',
-                top: '100px', left: 'calc(50% - 170px)',
-                transformOrigin: 'bottom center',
-                transform: 'rotate(3deg)',
-                zIndex: 3,
-                boxShadow: '0 14px 44px rgba(26,46,43,0.14)',
-              }}
-            >
-              <p className="text-[11px] font-semibold text-mid uppercase tracking-wider mb-3">Find Funding</p>
-              <div className="flex items-center gap-2 bg-[#f5f2ed] rounded-lg px-3 py-2.5 mb-3 border border-warm/60">
-                <svg className="w-3.5 h-3.5 text-mid flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                <span className="text-[12px] text-charcoal/60">Social enterprise · London · Up to £50k</span>
-              </div>
-              <p className="text-[10px] text-mid font-medium mb-2">24 matches found</p>
-              <div className="flex flex-col">
-                {[
-                  { name: 'National Lottery Community Fund', type: 'Grant · Up to £50,000', badge: 'Matched', badgeCol: 'bg-green-100 text-green-700' },
-                  { name: 'Innovate UK Smart Grant', type: 'Investment · Up to £25,000', badge: 'Deadline soon', badgeCol: 'bg-amber-100 text-amber-700' },
-                  { name: 'Arts Council England', type: 'Grant · Up to £15,000', badge: 'Matched', badgeCol: 'bg-green-100 text-green-700' },
-                ].map((g, i) => (
-                  <div key={g.name} className={`flex items-center justify-between gap-3 py-2 ${i < 2 ? 'border-b border-warm/50' : ''}`}>
-                    <div>
-                      <p className="text-[11px] font-semibold text-charcoal leading-tight">{g.name}</p>
-                      <p className="text-[10px] text-mid mt-0.5">{g.type}</p>
+            {/* Card 1: Search — front, fully visible */}
+            <motion.div {...fadeUp(0.2)} className="absolute" style={{ width: '340px', top: '80px', left: 'calc(50% - 170px)', zIndex: 3 }}>
+              <div className="bg-white rounded-xl border border-warm/80 p-5" style={{ transformOrigin: 'bottom center', transform: 'rotate(3deg)', boxShadow: '0 14px 44px rgba(26,46,43,0.14)' }}>
+                <p className="text-[11px] font-semibold text-mid uppercase tracking-wider mb-3">Find Funding</p>
+                <div className="flex items-center gap-2 bg-[#f5f2ed] rounded-full px-4 py-2.5 mb-3 border border-warm/60">
+                  <svg className="w-3.5 h-3.5 text-mid flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                  <span className="text-[12px] text-charcoal/60">Social enterprise · London · Up to £50k</span>
+                </div>
+                <p className="text-[10px] text-mid font-medium mb-2">24 matches found</p>
+                <div className="flex flex-col">
+                  {[
+                    { name: 'National Lottery Community Fund', type: 'Grant · Up to £50,000', badge: 'Matched', badgeCol: 'bg-green-100 text-green-700' },
+                    { name: 'Innovate UK Smart Grant', type: 'Investment · Up to £25,000', badge: 'Deadline soon', badgeCol: 'bg-amber-100 text-amber-700' },
+                    { name: 'Arts Council England', type: 'Grant · Up to £15,000', badge: 'Matched', badgeCol: 'bg-green-100 text-green-700' },
+                  ].map((g, i) => (
+                    <div key={g.name} className={`flex items-center justify-between gap-3 py-2.5 ${i < 2 ? 'border-b border-warm/50' : ''}`}>
+                      <div>
+                        <p className="text-[12px] font-semibold text-charcoal leading-tight">{g.name}</p>
+                        <p className="text-[10px] text-mid mt-0.5">{g.type}</p>
+                      </div>
+                      <span className={`text-[9px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap flex-shrink-0 ${g.badgeCol}`}>{g.badge}</span>
                     </div>
-                    <span className={`text-[9px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0 ${g.badgeCol}`}>{g.badge}</span>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </motion.div>
 
