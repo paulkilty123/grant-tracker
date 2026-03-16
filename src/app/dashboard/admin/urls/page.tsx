@@ -125,6 +125,11 @@ export default function UrlAdminPage() {
   const [auditing, setAuditing]                 = useState(false)
   const [auditProgress, setAuditProgress]       = useState<{ checked: number; total: number; avgScore: number; dead: number; closed: number } | null>(null)
 
+  // Classify state
+  const [classifying, setClassifying]           = useState(false)
+  const [classifyProgress, setClassifyProgress] = useState<{ classified: number; total: number; failed: number } | null>(null)
+  const [classifyResult, setClassifyResult]     = useState<{ classified: number; failed: number } | null>(null)
+
   // Add grant modal state
   const [showAddModal, setShowAddModal] = useState(false)
   const [addForm, setAddForm]           = useState<AddGrantForm>(BLANK_FORM)
@@ -529,6 +534,48 @@ export default function UrlAdminPage() {
       alert(`Audit failed — ${err instanceof Error ? err.message : String(err)}`)
     } finally {
       setAuditing(false)
+    }
+  }
+
+  // ── Run AI classification pass (paginated, same pattern as validation) ──────
+  async function runClassify(force = false) {
+    setClassifying(true)
+    setClassifyResult(null)
+    setClassifyProgress(null)
+
+    let offset = 0
+    let totalClassified = 0
+    let totalFailed = 0
+
+    try {
+      while (true) {
+        const res = await fetch('/api/admin/classify-grants', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ offset, limit: 20, force }),
+        })
+        if (!res.ok) {
+          let detail = `HTTP ${res.status}`
+          try { const b = await res.json(); detail += `: ${b.error ?? JSON.stringify(b)}` } catch { /* ignore */ }
+          throw new Error(detail)
+        }
+        const data = await res.json()
+
+        totalClassified += data.classified ?? 0
+        totalFailed     += data.failed ?? 0
+        offset           = data.nextOffset ?? (offset + 20)
+
+        setClassifyProgress({ classified: totalClassified, total: offset, failed: totalFailed })
+
+        if (data.done) break
+      }
+
+      setClassifyResult({ classified: totalClassified, failed: totalFailed })
+    } catch (err) {
+      alert(`Classification failed — ${err instanceof Error ? err.message : String(err)}`)
+    } finally {
+      setClassifying(false)
+      setClassifyProgress(null)
     }
   }
 
@@ -1250,7 +1297,7 @@ export default function UrlAdminPage() {
           </button>
           <button
             onClick={runValidation}
-            disabled={running || auditing}
+            disabled={running || auditing || classifying}
             className="flex items-center gap-2 rounded-full bg-forest px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60 hover:bg-forest/90 transition-colors whitespace-nowrap"
           >
             <RefreshCw className={`h-4 w-4 ${running ? 'animate-spin' : ''}`} />
@@ -1258,11 +1305,19 @@ export default function UrlAdminPage() {
           </button>
           <button
             onClick={runAudit}
-            disabled={running || auditing}
+            disabled={running || auditing || classifying}
             className="flex items-center gap-2 rounded-full border-2 border-amber-500 bg-amber-50 px-5 py-2.5 text-sm font-semibold text-amber-700 disabled:opacity-60 hover:bg-amber-100 transition-colors whitespace-nowrap"
           >
             <Search className={`h-4 w-4 ${auditing ? 'animate-pulse' : ''}`} />
             {auditing ? 'Deep auditing…' : 'Run deep audit'}
+          </button>
+          <button
+            onClick={() => runClassify(false)}
+            disabled={running || auditing || classifying}
+            className="flex items-center gap-2 rounded-full border-2 border-charcoal bg-charcoal px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60 hover:bg-charcoal/90 transition-colors whitespace-nowrap"
+          >
+            <Tag className={`h-4 w-4 ${classifying ? 'animate-pulse' : ''}`} />
+            {classifying ? 'Classifying…' : 'Classify grants'}
           </button>
         </div>
       </div>
@@ -1290,6 +1345,31 @@ export default function UrlAdminPage() {
               />
             </div>
           )}
+        </div>
+      )}
+
+      {/* Classify progress banner */}
+      {classifying && (
+        <div className="mb-6 rounded border border-charcoal/20 bg-charcoal/5 px-4 py-3 text-sm text-charcoal space-y-2">
+          <div className="flex items-center justify-between">
+            <span>
+              {classifyProgress
+                ? `Classifying… ${classifyProgress.classified} classified · ${classifyProgress.failed} failed · ${classifyProgress.total} processed`
+                : 'Starting AI classification…'}
+            </span>
+            <span className="text-xs text-charcoal/60">running</span>
+          </div>
+          <div className="h-1.5 w-full rounded bg-charcoal/10 overflow-hidden">
+            <div className="h-full rounded bg-charcoal animate-pulse" style={{ width: '100%' }} />
+          </div>
+        </div>
+      )}
+
+      {/* Classify result banner */}
+      {classifyResult && !classifying && (
+        <div className="mb-6 rounded border border-charcoal/20 bg-charcoal/5 px-4 py-3 text-sm text-charcoal">
+          Classification complete — {classifyResult.classified} grants tagged
+          {classifyResult.failed > 0 && ` · ${classifyResult.failed} failed`}
         </div>
       )}
 
