@@ -56,7 +56,6 @@ function PipelineCard({
 
   const leftBorderColor =
     stage.id === 'identified'  ? '#9ba8a6' :
-    stage.id === 'researching' ? '#f59e0b' :
     stage.id === 'applying'    ? '#fb923c' :
     stage.id === 'submitted'   ? '#4d9e8a' :
     stage.id === 'won'         ? '#1f5c52' :
@@ -622,13 +621,12 @@ export default function PipelinePage() {
 
       {/* Board */}
       <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 pb-4">
-      <div className="grid grid-cols-6 gap-3.5 min-h-[60vh] min-w-[720px] md:min-w-0">
+      <div className="grid grid-cols-5 gap-3.5 min-h-[60vh] min-w-[600px] md:min-w-0">
         {PIPELINE_STAGES.map(stage => {
           const stageItems = items.filter(i => i.stage === stage.id)
 
           const stageColour =
             stage.id === 'identified'  ? { bg: '#f5f2ed', border: '#9ba8a6', text: '#6b7f7c', badgeBg: '#e8e4de', badgeText: '#6b7f7c' } :
-            stage.id === 'researching' ? { bg: '#fffbeb', border: '#f59e0b', text: '#d97706', badgeBg: '#fef3c7', badgeText: '#b45309' } :
             stage.id === 'applying'    ? { bg: '#fff7ed', border: '#fb923c', text: '#ea580c', badgeBg: '#ffedd5', badgeText: '#c2410c' } :
             stage.id === 'submitted'   ? { bg: '#edf4f2', border: '#4d9e8a', text: '#1f5c52', badgeBg: '#d1ece6', badgeText: '#1f5c52' } :
             stage.id === 'won'         ? { bg: '#e6f0ed', border: '#1f5c52', text: '#1f5c52', badgeBg: '#c8e3dc', badgeText: '#1f5c52' } :

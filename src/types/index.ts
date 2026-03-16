@@ -58,7 +58,6 @@ export type FundingType =
 
 export type PipelineStage =
   | 'identified'
-  | 'researching'
   | 'applying'
   | 'submitted'
   | 'won'

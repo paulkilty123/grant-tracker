@@ -76,7 +76,6 @@ export function getDeadlineAlerts(items: PipelineItem[]): DeadlineAlert[] {
 
 export const PIPELINE_STAGES = [
   { id: 'identified',  label: 'Identified',  emoji: '🔎', colour: 'blue' },
-  { id: 'researching', label: 'Researching', emoji: '📖', colour: 'amber' },
   { id: 'applying',    label: 'Applying',    emoji: '✏️', colour: 'purple' },
   { id: 'submitted',   label: 'Submitted',   emoji: '📬', colour: 'sage' },
   { id: 'won',         label: 'Won',         emoji: '🏆', colour: 'forest' },
@@ -85,7 +84,6 @@ export const PIPELINE_STAGES = [
 
 export const STAGE_COLOURS: Record<PipelineStage, string> = {
   identified:  'border-blue-400 text-blue-600',
-  researching: 'border-amber-400 text-amber-600',
   applying:    'border-purple-400 text-purple-600',
   submitted:   'border-sage text-sage',
   won:         'border-forest text-forest',
@@ -94,7 +92,6 @@ export const STAGE_COLOURS: Record<PipelineStage, string> = {
 
 export const STAGE_BG: Record<PipelineStage, string> = {
   identified:  'bg-blue-50',
-  researching: 'bg-amber-50',
   applying:    'bg-purple-50',
   submitted:   'bg-green-50',
   won:         'bg-emerald-50',
