@@ -307,14 +307,17 @@ export default function LandingPage() {
               className="font-serif leading-[1.05] text-charcoal mb-6"
               style={{ fontSize: 'clamp(44px, 5vw, 72px)' }}
             >
-              <span className="relative inline-block" style={{ zIndex: 0 }}>
-                Fund
-                <span
-                  className="absolute left-0 right-0 h-[12px] bg-coral/25 rounded pointer-events-none"
-                  style={{ bottom: '6px', transform: 'rotate(-1deg)', zIndex: -1 }}
-                />
+              <span className="block">
+                <span className="relative inline-block" style={{ zIndex: 0 }}>
+                  Fund
+                  <span
+                    className="absolute left-0 right-0 h-[12px] bg-coral/25 rounded pointer-events-none"
+                    style={{ bottom: '6px', transform: 'rotate(-1deg)', zIndex: -1 }}
+                  />
+                </span>
+                {' '}your
               </span>
-              <span className="block">your cause or</span>
+              <span className="block">cause or</span>
               <span className="block">venture.</span>
             </motion.h1>
 
