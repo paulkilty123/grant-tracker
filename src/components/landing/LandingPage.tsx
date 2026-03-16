@@ -342,37 +342,31 @@ export default function LandingPage() {
 
           {/* Right: fanned card deck — playing card style */}
           {/* motion wrapper handles fade-in; inner div handles rotation (keeps transforms separate) */}
-          <div className="flex-1 w-full lg:max-w-[500px] flex-shrink-0 relative" style={{ height: '420px' }}>
+          <div className="flex-1 w-full lg:max-w-[500px] flex-shrink-0 relative" style={{ height: '540px' }}>
 
             {/* Card 3: Alerts — back */}
-            <motion.div {...fadeUp(0.4)} className="absolute" style={{ width: '340px', top: '80px', left: 'calc(50% - 170px)', zIndex: 1 }}>
-              <div className="bg-white rounded-xl border border-warm/80 p-5" style={{ transformOrigin: 'bottom center', transform: 'rotate(-13deg)', boxShadow: '0 4px 20px rgba(26,46,43,0.08)' }}>
+            <motion.div {...fadeUp(0.4)} className="absolute" style={{ width: '360px', top: '60px', left: 'calc(50% - 180px)', zIndex: 1 }}>
+              <div className="bg-white rounded-xl border border-warm/80 p-5" style={{ minHeight: '400px', transformOrigin: 'bottom center', transform: 'rotate(-13deg)', boxShadow: '0 4px 20px rgba(26,46,43,0.08)' }}>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-red-400 flex-shrink-0" />
                   <p className="text-[11px] font-semibold text-charcoal uppercase tracking-wider">Upcoming Deadlines</p>
-                </div>
-                <div className="mt-3 space-y-2 opacity-0 select-none" aria-hidden>
-                  <div className="h-2 bg-warm rounded w-3/4" /><div className="h-2 bg-warm rounded w-1/2" />
                 </div>
               </div>
             </motion.div>
 
             {/* Card 2: Pipeline — middle */}
-            <motion.div {...fadeUp(0.3)} className="absolute" style={{ width: '340px', top: '80px', left: 'calc(50% - 170px)', zIndex: 2 }}>
-              <div className="bg-white rounded-xl border border-warm/80 p-5" style={{ transformOrigin: 'bottom center', transform: 'rotate(-6deg)', boxShadow: '0 6px 28px rgba(26,46,43,0.10)' }}>
+            <motion.div {...fadeUp(0.3)} className="absolute" style={{ width: '360px', top: '60px', left: 'calc(50% - 180px)', zIndex: 2 }}>
+              <div className="bg-white rounded-xl border border-warm/80 p-5" style={{ minHeight: '400px', transformOrigin: 'bottom center', transform: 'rotate(-6deg)', boxShadow: '0 6px 28px rgba(26,46,43,0.10)' }}>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded flex-shrink-0 bg-coral/60" />
                   <p className="text-[11px] font-semibold text-charcoal uppercase tracking-wider">My Pipeline</p>
-                </div>
-                <div className="mt-3 space-y-2 opacity-0 select-none" aria-hidden>
-                  <div className="h-2 bg-warm rounded w-3/4" /><div className="h-2 bg-warm rounded w-1/2" />
                 </div>
               </div>
             </motion.div>
 
             {/* Card 1: Search — front, fully visible */}
-            <motion.div {...fadeUp(0.2)} className="absolute" style={{ width: '340px', top: '80px', left: 'calc(50% - 170px)', zIndex: 3 }}>
-              <div className="bg-white rounded-xl border border-warm/80 p-5" style={{ transformOrigin: 'bottom center', transform: 'rotate(3deg)', boxShadow: '0 14px 44px rgba(26,46,43,0.14)' }}>
+            <motion.div {...fadeUp(0.2)} className="absolute" style={{ width: '360px', top: '60px', left: 'calc(50% - 180px)', zIndex: 3 }}>
+              <div className="bg-white rounded-xl border border-warm/80 p-5" style={{ minHeight: '400px', transformOrigin: 'bottom center', transform: 'rotate(3deg)', boxShadow: '0 14px 44px rgba(26,46,43,0.14)' }}>
                 <p className="text-[11px] font-semibold text-mid uppercase tracking-wider mb-3">Find Funding</p>
                 <div className="flex items-center gap-2 bg-[#f5f2ed] rounded-full px-4 py-2.5 mb-3 border border-warm/60">
                   <svg className="w-3.5 h-3.5 text-mid flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
