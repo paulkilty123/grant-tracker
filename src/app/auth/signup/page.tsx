@@ -10,6 +10,7 @@ export default function SignupPage() {
   const router                  = useRouter()
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
+  const [fullName, setFullName] = useState('')
   const [orgName, setOrgName]   = useState('')
   const [orgType, setOrgType]   = useState('')
   const [showPw, setShowPw]     = useState(false)
@@ -28,7 +29,7 @@ export default function SignupPage() {
       email,
       password,
       options: {
-        data: { org_name: orgName, org_type: orgType },
+        data: { full_name: fullName, org_name: orgName, org_type: orgType },
         emailRedirectTo: `${location.origin}/auth/callback`,
       },
     })
@@ -162,6 +163,20 @@ export default function SignupPage() {
                   {error}
                 </div>
               )}
+
+              <div>
+                <label className="block text-sm font-medium text-charcoal mb-1.5">Your name</label>
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={e => setFullName(e.target.value)}
+                  className="form-input"
+                  style={{ borderRadius: '0' }}
+                  placeholder="Jane Smith"
+                  autoComplete="name"
+                  required
+                />
+              </div>
 
               <div>
                 <label className="block text-sm font-medium text-charcoal mb-1.5">Organisation name</label>
