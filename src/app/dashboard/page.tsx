@@ -38,7 +38,7 @@ export default async function DashboardPage() {
     activeCount:        active.length,
     submittedCount:     items.filter(i => i.stage === 'submitted').length,
     byStageCounts:      Object.fromEntries(
-      ['identified','researching','applying','submitted','won','declined'].map(s => [
+      ['identified','applying','submitted','won','declined'].map(s => [
         s, items.filter(i => i.stage === s).length,
       ])
     ),
@@ -139,10 +139,9 @@ export default async function DashboardPage() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-4">
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-4">
                 {[
                   { id: 'identified',  label: 'Identified',  cls: 'bg-[#f5f2ed] text-mid' },
-                  { id: 'researching', label: 'Researching', cls: 'bg-amber-50 text-amber-600' },
                   { id: 'applying',    label: 'Applying',    cls: 'bg-coral/10 text-coral' },
                   { id: 'submitted',   label: 'Submitted',   cls: 'bg-forest/10 text-forest' },
                   { id: 'won',         label: 'Won',         cls: 'bg-forest/20 text-forest' },
@@ -165,7 +164,6 @@ export default async function DashboardPage() {
                       item.stage === 'won'         ? 'bg-forest/15 text-forest' :
                       item.stage === 'declined'    ? 'bg-warm text-mid' :
                       item.stage === 'identified'  ? 'bg-[#f5f2ed] text-mid' :
-                      item.stage === 'researching' ? 'bg-amber-50 text-amber-600' :
                       item.stage === 'applying'    ? 'bg-coral/10 text-coral' :
                       'bg-forest/10 text-forest'
                     return (
