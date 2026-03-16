@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Menu, X, Check, Search, Calendar, TrendingUp, Activity, Clock, Mail, MessageSquare } from 'lucide-react'
+import { Menu, X, Check, Search, Calendar, TrendingUp, Activity, Clock, Mail, MessageSquare, Bell, LayoutGrid, ArrowRight } from 'lucide-react'
 import ContactForm from '@/components/ContactForm'
 import RadioWaveIcon from '@/components/icons/RadioWaveIcon'
 
@@ -340,51 +340,125 @@ export default function LandingPage() {
 
           </div>
 
-          {/* Right: fanned card deck — playing card style */}
-          {/* motion wrapper handles fade-in; inner div handles rotation (keeps transforms separate) */}
-          <div className="flex-1 w-full lg:max-w-[500px] flex-shrink-0 relative" style={{ height: '540px' }}>
+          {/* Right: scattered feature cards */}
+          <div className="flex-1 w-full lg:max-w-[540px] flex-shrink-0 relative" style={{ height: '580px' }}>
 
-            {/* Card 3: Alerts — back */}
-            <motion.div {...fadeUp(0.4)} className="absolute" style={{ width: '360px', top: '60px', left: 'calc(50% - 180px)', zIndex: 1 }}>
-              <div className="bg-white rounded-xl border border-warm/80 p-5" style={{ minHeight: '400px', transformOrigin: 'bottom center', transform: 'rotate(-13deg)', boxShadow: '0 4px 20px rgba(26,46,43,0.08)' }}>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-mid/40 flex-shrink-0" />
-                  <p className="text-[11px] font-semibold text-charcoal uppercase tracking-wider">Upcoming Deadlines</p>
+            {/* Dashboard — back right */}
+            <motion.div {...fadeUp(0.4)} className="absolute" style={{ width: '240px', top: '0px', right: '0px', zIndex: 1 }}>
+              <div className="bg-white rounded-2xl border border-warm/80 p-4" style={{ transform: 'rotate(7deg)', boxShadow: '0 4px 20px rgba(26,46,43,0.08)' }}>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-7 h-7 rounded-full bg-warm flex items-center justify-center flex-shrink-0">
+                    <LayoutGrid className="w-3.5 h-3.5 text-mid" />
+                  </div>
+                  <p className="text-[11px] font-bold text-charcoal uppercase tracking-wider">Dashboard</p>
+                </div>
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  <div className="bg-[#f5f2ed] rounded-xl p-2.5">
+                    <p className="text-[17px] font-bold text-charcoal leading-tight">42k</p>
+                    <p className="text-[9px] text-mid uppercase tracking-wide font-medium">Won</p>
+                  </div>
+                  <div className="bg-[#f5f2ed] rounded-xl p-2.5">
+                    <p className="text-[17px] font-bold text-charcoal leading-tight">68%</p>
+                    <p className="text-[9px] text-mid uppercase tracking-wide font-medium">Success</p>
+                  </div>
+                </div>
+                <p className="text-[9px] text-mid mb-2">Funding won — last 7 months</p>
+                <div className="flex items-end gap-1" style={{ height: '40px' }}>
+                  {[40, 25, 55, 35, 70, 60, 85].map((h, i) => (
+                    <div key={i} className="flex-1 bg-coral/60 rounded-sm" style={{ height: `${h}%` }} />
+                  ))}
                 </div>
               </div>
             </motion.div>
 
-            {/* Card 2: Pipeline — middle */}
-            <motion.div {...fadeUp(0.3)} className="absolute" style={{ width: '360px', top: '60px', left: 'calc(50% - 180px)', zIndex: 2 }}>
-              <div className="bg-white rounded-xl border border-warm/80 p-5" style={{ minHeight: '400px', transformOrigin: 'bottom center', transform: 'rotate(-6deg)', boxShadow: '0 6px 28px rgba(26,46,43,0.10)' }}>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded flex-shrink-0 bg-mid/40" />
-                  <p className="text-[11px] font-semibold text-charcoal uppercase tracking-wider">My Pipeline</p>
+            {/* Pipeline — front left */}
+            <motion.div {...fadeUp(0.2)} className="absolute" style={{ width: '230px', top: '30px', left: '0px', zIndex: 3 }}>
+              <div className="bg-white rounded-2xl border border-warm/80 p-4" style={{ transform: 'rotate(-8deg)', boxShadow: '0 8px 32px rgba(26,46,43,0.12)' }}>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-7 h-7 rounded-full bg-coral/15 flex items-center justify-center flex-shrink-0">
+                    <ArrowRight className="w-3.5 h-3.5 text-coral" />
+                  </div>
+                  <p className="text-[11px] font-bold text-coral uppercase tracking-wider">Pipeline</p>
+                </div>
+                <p className="font-serif text-[26px] font-bold text-charcoal leading-tight">£187,500</p>
+                <p className="text-[11px] text-coral font-medium mb-3">7 active opportunities</p>
+                <div className="flex flex-col gap-1.5">
+                  {[
+                    { label: 'Identified', dots: [false, false, false] },
+                    { label: 'Applying',   dots: [true,  true] },
+                    { label: 'Submitted',  dots: [false, false] },
+                  ].map((stage) => (
+                    <div key={stage.label} className="flex items-center justify-between bg-[#f5f2ed] rounded-lg px-2.5 py-1.5">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-3.5 h-3.5 rounded-full border border-mid/30 flex items-center justify-center flex-shrink-0">
+                          <div className="w-1.5 h-1.5 rounded-full bg-mid/30" />
+                        </div>
+                        <span className="text-[10px] text-charcoal">{stage.label}</span>
+                      </div>
+                      <div className="flex gap-1">
+                        {stage.dots.map((active, i) => (
+                          <div key={i} className={`w-2 h-2 rounded-full ${active ? 'bg-coral/70' : 'bg-mid/25'}`} />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </motion.div>
 
-            {/* Card 1: Search — front, fully visible */}
-            <motion.div {...fadeUp(0.2)} className="absolute" style={{ width: '360px', top: '60px', left: 'calc(50% - 180px)', zIndex: 3 }}>
-              <div className="bg-white rounded-xl border border-warm/80 p-5" style={{ minHeight: '400px', transformOrigin: 'bottom center', transform: 'rotate(3deg)', boxShadow: '0 14px 44px rgba(26,46,43,0.14)' }}>
-                <p className="text-[11px] font-semibold text-mid uppercase tracking-wider mb-3">Find Funding</p>
-                <div className="flex items-center gap-2 bg-[#f5f2ed] rounded-full px-4 py-2.5 mb-3 border border-warm/60">
-                  <svg className="w-3.5 h-3.5 text-mid flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                  <span className="text-[12px] text-charcoal/60">Social enterprise · London · Up to £50k</span>
+            {/* Search — centre */}
+            <motion.div {...fadeUp(0.3)} className="absolute" style={{ width: '260px', top: '130px', left: 'calc(50% - 80px)', zIndex: 2 }}>
+              <div className="bg-white rounded-2xl border border-warm/80 p-4" style={{ transform: 'rotate(-2deg)', boxShadow: '0 6px 24px rgba(26,46,43,0.10)' }}>
+                <p className="text-[11px] font-bold text-charcoal uppercase tracking-wider mb-2.5">Search</p>
+                <div className="flex items-center gap-2 bg-[#f5f2ed] rounded-lg px-3 py-2 mb-3 border border-warm/40">
+                  <Search className="w-3 h-3 text-mid flex-shrink-0" />
+                  <span className="text-[11px] text-mid">community garden...</span>
                 </div>
-                <p className="text-[10px] text-mid font-medium mb-2">24 matches found</p>
                 <div className="flex flex-col">
                   {[
-                    { name: 'National Lottery Community Fund', type: 'Grant · Up to £50,000', badge: 'Matched', badgeCol: 'bg-green-100 text-green-700' },
-                    { name: 'Innovate UK Smart Grant', type: 'Investment · Up to £25,000', badge: 'Deadline soon', badgeCol: 'bg-warm text-mid' },
-                    { name: 'Arts Council England', type: 'Grant · Up to £15,000', badge: 'Matched', badgeCol: 'bg-green-100 text-green-700' },
-                  ].map((g, i) => (
-                    <div key={g.name} className={`flex items-center justify-between gap-3 py-2.5 ${i < 2 ? 'border-b border-warm/50' : ''}`}>
+                    { name: 'Community Growing Grants', amount: null,   pct: 94 },
+                    { name: 'Green Spaces Fund',        amount: '£10k', pct: 87 },
+                    { name: 'Urban Nature Programme',   amount: '£15k', pct: 79 },
+                  ].map((r, i) => (
+                    <div key={r.name} className={`flex items-center justify-between gap-2 py-2 ${i < 2 ? 'border-b border-warm/40' : ''}`}>
                       <div>
-                        <p className="text-[12px] font-semibold text-charcoal leading-tight">{g.name}</p>
-                        <p className="text-[10px] text-mid mt-0.5">{g.type}</p>
+                        <p className="text-[11px] font-semibold text-charcoal leading-tight">{r.name}</p>
+                        {r.amount && <p className="text-[10px] text-mid">{r.amount}</p>}
                       </div>
-                      <span className={`text-[9px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap flex-shrink-0 ${g.badgeCol}`}>{g.badge}</span>
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <div className="w-10 h-1.5 bg-warm rounded-full overflow-hidden">
+                          <div className="h-full bg-coral rounded-full" style={{ width: `${r.pct}%` }} />
+                        </div>
+                        <span className="text-[10px] font-bold text-charcoal">{r.pct}%</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Alerts — front bottom */}
+            <motion.div {...fadeUp(0.35)} className="absolute" style={{ width: '250px', top: '320px', left: '10px', zIndex: 4 }}>
+              <div className="bg-white rounded-2xl border border-warm/80 p-4" style={{ transform: 'rotate(-3deg)', boxShadow: '0 8px 32px rgba(26,46,43,0.12)' }}>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="relative w-7 h-7 rounded-full bg-warm flex items-center justify-center flex-shrink-0">
+                    <Bell className="w-3.5 h-3.5 text-mid" />
+                    <div className="absolute top-0 right-0 w-2 h-2 rounded-full bg-red-400 border border-white" />
+                  </div>
+                  <p className="text-[11px] font-bold text-charcoal uppercase tracking-wider">Alerts</p>
+                </div>
+                <div className="flex flex-col">
+                  {[
+                    { name: 'Youth Fund 2025',       org: 'Paul Hamlyn Foundation', days: '2d',  urgent: true  },
+                    { name: 'Green Spaces Grant',    org: 'National Lottery',       days: '8d',  urgent: false },
+                    { name: 'Digital Inclusion Fund',org: 'DCMS',                   days: '14d', urgent: false },
+                  ].map((a, i) => (
+                    <div key={a.name} className={`flex items-center justify-between gap-2 py-2 ${i < 2 ? 'border-b border-warm/40' : ''}`}>
+                      <div>
+                        <p className="text-[11px] font-semibold text-charcoal leading-tight">{a.name}</p>
+                        <p className="text-[10px] text-mid">{a.org}</p>
+                      </div>
+                      <span className={`text-[10px] font-bold px-2 py-1 rounded-full flex-shrink-0 ${a.urgent ? 'bg-coral text-white' : 'bg-warm text-mid'}`}>{a.days}</span>
                     </div>
                   ))}
                 </div>
