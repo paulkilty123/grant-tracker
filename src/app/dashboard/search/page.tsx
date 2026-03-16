@@ -1258,7 +1258,7 @@ export default function SearchPage() {
   return (
     <div>
       <div className="mb-5">
-        <h2 className="font-serif text-2xl text-charcoal">Find Funding</h2>
+        <h2 className="text-2xl font-bold text-charcoal">Find Funding</h2>
         <p className="text-mid text-sm mt-1">
           {searchMode === 'live'
             ? 'AI researches the live web for hyper-local and newly announced funding not in our database'
@@ -1902,7 +1902,7 @@ export default function SearchPage() {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="font-serif text-charcoal text-base flex items-center gap-2">
+              <h3 className="font-semibold text-charcoal text-base flex items-center gap-2">
                 {liveSmartMatched ? `Live results for ${org?.name}` : 'Live Research Results'}
                 <span className="text-xs font-normal bg-forest/10 text-forest px-2 py-0.5">
                   {liveResults.grants.length} found
