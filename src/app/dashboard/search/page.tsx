@@ -320,7 +320,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
 
   const typeColour: Record<string, string> = {
     lottery:             'bg-green-50 text-green-700',
-    trust_foundation:    'bg-sage/10 text-forest',
+    trust_foundation:    'bg-slate-100 text-slate-600',
     corporate:           'bg-amber-50 text-amber-700',
     local_authority:     'bg-purple-50 text-purple-700',
     housing_association: 'bg-teal-50 text-teal-700',
@@ -463,27 +463,18 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
               : null
           })()}
 
-          {/* Eligible org types — who can apply */}
+          {/* Eligible org types — plain text, lower visual weight than sectors */}
           {(() => {
             const structures = (grant as EnrichedGrant).eligibleStructures
             if (!structures?.length) return null
-            const chips = structures.slice(0, 4).map(s => {
-              const lbl = STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' ')
-              return (
-                <span key={s} className="tag bg-teal-50 text-teal-700 capitalize">{lbl}</span>
-              )
-            })
-            const overflow = structures.length > 4 ? structures.length - 4 : 0
+            const labels = structures.slice(0, 5).map(s => STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' '))
+            const overflow = structures.length > 5 ? structures.length - 5 : 0
+            const text = overflow > 0 ? `${labels.join(' · ')} +${overflow}` : labels.join(' · ')
             return (
-              <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-                <span className="text-[10px] font-semibold text-light uppercase tracking-wider flex items-center gap-1">
-                  <Building2 className="w-3 h-3" />For:
-                </span>
-                {chips}
-                {overflow > 0 && (
-                  <span className="tag bg-teal-50 text-teal-500">+{overflow} more</span>
-                )}
-              </div>
+              <p className="text-xs text-slate-500 mt-1.5 flex items-center gap-1.5">
+                <Building2 className="w-3 h-3 flex-shrink-0 text-slate-400" />
+                <span>{text}</span>
+              </p>
             )
           })()}
 
