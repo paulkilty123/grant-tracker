@@ -302,16 +302,7 @@ export default function LandingPage() {
               className="font-serif leading-[1.05] text-charcoal mb-6"
               style={{ fontSize: 'clamp(44px, 5vw, 72px)' }}
             >
-              <span className="block">
-                <span className="relative inline-block" style={{ zIndex: 0 }}>
-                  Fund
-                  <span
-                    className="absolute left-0 right-0 h-[12px] bg-coral/25 rounded pointer-events-none"
-                    style={{ bottom: '6px', transform: 'rotate(-1deg)', zIndex: -1 }}
-                  />
-                </span>
-                {' '}your
-              </span>
+              <span className="block">Fund your</span>
               <span className="block">cause or</span>
               <span className="block">venture.</span>
             </motion.h1>
@@ -321,7 +312,7 @@ export default function LandingPage() {
               className="text-mid leading-relaxed mb-10"
               style={{ fontSize: '18px', lineHeight: 1.7, maxWidth: '480px' }}
             >
-              Find grants, social funding and support programmes — tailored to your preferences, with a toolkit to keep on track.
+              Find grants, accelerators, investment and support programmes — matched to you, managed in one place.
             </motion.p>
 
             <motion.div {...fadeUp(0.3)} className="flex flex-wrap gap-3 mb-14">
@@ -411,9 +402,9 @@ export default function LandingPage() {
                 </div>
                 <div className="flex flex-col">
                   {[
-                    { name: 'Community Growing Grants', amount: null,   pct: 94 },
-                    { name: 'Green Spaces Fund',        amount: '£10k', pct: 87 },
-                    { name: 'Urban Nature Programme',   amount: '£15k', pct: 79 },
+                    { name: 'Community Growing Grants', amount: null,   pct: 94, color: 'bg-forest' },
+                    { name: 'Green Spaces Fund',        amount: '£10k', pct: 87, color: 'bg-forest/70' },
+                    { name: 'Urban Nature Programme',   amount: '£15k', pct: 79, color: 'bg-amber-400' },
                   ].map((r, i) => (
                     <div key={r.name} className={`flex items-center justify-between gap-2 py-2 ${i < 2 ? 'border-b border-warm/40' : ''}`}>
                       <div>
@@ -422,7 +413,7 @@ export default function LandingPage() {
                       </div>
                       <div className="flex items-center gap-1.5 flex-shrink-0">
                         <div className="w-10 h-1.5 bg-warm rounded-full overflow-hidden">
-                          <div className="h-full bg-coral rounded-full" style={{ width: `${r.pct}%` }} />
+                          <div className={`h-full ${r.color} rounded-full`} style={{ width: `${r.pct}%` }} />
                         </div>
                         <span className="text-[10px] font-bold text-charcoal">{r.pct}%</span>
                       </div>
