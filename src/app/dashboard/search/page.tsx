@@ -1309,7 +1309,6 @@ export default function SearchPage() {
                 className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold transition-all ${
                   searchMode === m.id
                     ? 'bg-charcoal text-white shadow-sm'
-                      : 'bg-charcoal text-white shadow-sm'
                     : 'text-mid hover:text-charcoal'
                 }`}
               >
