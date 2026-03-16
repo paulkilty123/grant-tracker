@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
 
   const body   = await req.json() as { offset?: number; limit?: number; apply?: boolean }
   const offset = body.offset ?? 0
-  const limit  = Math.min(body.limit ?? 10, 20)
+  const limit  = Math.min(body.limit ?? 8, 15)
   const apply  = body.apply ?? false
 
   const db = getAdminClient()
@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
     id:                   g.id,
     title:                g.title ?? '',
     funder:               g.funder ?? '',
-    description:          (g.description ?? '').slice(0, 600),
+    description:          (g.description ?? '').slice(0, 400),
     amount_min:           g.amount_min ?? null,
     amount_max:           g.amount_max ?? null,
     current_criteria:     Array.isArray(g.eligibility_criteria) ? g.eligibility_criteria : [],
@@ -123,7 +123,10 @@ ${JSON.stringify(inputData, null, 0)}`
         messages: [{ role: 'user', content: prompt }],
       }),
     })
-    const json = await resp.json() as { content?: Array<{ text: string }> }
+    const json = await resp.json() as { content?: Array<{ text: string }>; error?: { type: string; message: string } }
+    if (json.error) {
+      return NextResponse.json({ error: 'Claude API error', detail: json.error }, { status: 500 })
+    }
     raw = json.content?.[0]?.text?.trim() ?? ''
   } catch (e) {
     return NextResponse.json({ error: 'Claude API call failed', detail: String(e) }, { status: 500 })
