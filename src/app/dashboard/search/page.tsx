@@ -389,8 +389,16 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
                   {entryBadge.label}
                 </span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <p className="text-sm text-mid">{grant.funder}</p>
+                <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${typeColour[grant.funderType] ?? 'bg-gray-50 text-gray-600'}`}>
+                  {FUNDER_TYPES.find(t => t.id === grant.funderType)?.label ?? grant.funderType}
+                </span>
+                {grant.isLocal && (
+                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-green-50 text-green-700 inline-flex items-center gap-0.5">
+                    <MapPin className="w-2.5 h-2.5" />Local
+                  </span>
+                )}
                 {grant.source === 'scraped' && <StalenessBadge lastVerifiedAt={grant.lastVerifiedAt} />}
               </div>
             </div>
@@ -410,27 +418,24 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
             </div>
           )}
 
-          {/* Tags — condensed */}
-          <div className="flex flex-wrap gap-1.5">
-            {grant.isLocal && <span className="tag bg-green-50 text-green-700 inline-flex items-center gap-1"><MapPin className="w-2.5 h-2.5" />Local</span>}
-            <span className={`tag ${typeColour[grant.funderType] ?? 'bg-gray-50 text-gray-600'}`}>
-              {FUNDER_TYPES.find(t => t.id === grant.funderType)?.label ?? grant.funderType}
-            </span>
-            {/* Impact sectors — prefer classified taxonomy, fall back to legacy free-text */}
-            {(grant as EnrichedGrant).impactSectors?.length
-              ? (grant as EnrichedGrant).impactSectors!.slice(0, 3).map(s => {
+          {/* Sector tags — clean single-purpose row */}
+          {(() => {
+            const sectorTags = (grant as EnrichedGrant).impactSectors?.length
+              ? (grant as EnrichedGrant).impactSectors!.slice(0, 4).map(s => {
                   const lbl = IMPACT_SECTOR_FILTERS.find(f => f.id === s)?.label ?? s
                   return <span key={s} className="tag bg-violet-50 text-violet-700 capitalize">{lbl}</span>
                 })
               : grant.sectors
                   .map(s => ({ raw: s, label: sectorLabel(s) }))
                   .filter(({ label }) => label !== null)
-                  .slice(0, 2)
+                  .slice(0, 3)
                   .map(({ raw, label }) => (
-                    <span key={raw} className="tag bg-purple-50 text-purple-700 capitalize">{label}</span>
+                    <span key={raw} className="tag bg-violet-50 text-violet-700 capitalize">{label}</span>
                   ))
-            }
-          </div>
+            return sectorTags.length > 0
+              ? <div className="flex flex-wrap gap-1.5">{sectorTags}</div>
+              : null
+          })()}
 
           {/* Expandable eligibility */}
           {expanded && (
