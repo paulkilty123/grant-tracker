@@ -8,8 +8,8 @@ import type { DeadlineAlert, PipelineItem } from '@/types'
 const URGENCY_CONFIG = {
   overdue: { label: 'Overdue',    bg: 'bg-red-50',    text: 'text-red-600',    border: 'border-red-200',    badge: 'bg-red-100 text-red-600'      },
   urgent:  { label: 'This week',  bg: 'bg-amber-50',  text: 'text-amber-600',  border: 'border-amber-200',  badge: 'bg-amber-100 text-amber-600'  },
-  soon:    { label: 'Coming up',  bg: 'bg-sage/10',   text: 'text-sage',   border: 'border-sage/20',   badge: 'bg-sage/15 text-sage'    },
-  ok:      { label: 'On track',   bg: 'bg-green-50',  text: 'text-sage',       border: 'border-green-200',  badge: 'bg-green-100 text-sage'       },
+  soon:    { label: 'Coming up',  bg: 'bg-warm',      text: 'text-mid',        border: 'border-warm',       badge: 'bg-warm text-mid'             },
+  ok:      { label: 'On track',   bg: 'bg-green-50',  text: 'text-mid',        border: 'border-green-200',  badge: 'bg-green-100 text-mid'        },
   rolling: { label: 'Rolling',    bg: 'bg-gray-50',   text: 'text-gray-500',   border: 'border-gray-200',   badge: 'bg-gray-100 text-gray-500'    },
 }
 
@@ -21,18 +21,18 @@ function DeadlineCard({ alert }: { alert: DeadlineAlert }) {
   const amountStr = formatRange(alert.item.amount_min, alert.item.amount_max ?? alert.item.amount_requested)
 
   return (
-    <div className={`bg-white rounded-xl p-5 shadow-card mb-3 border-l-4 ${cfg.border}`}>
+    <div className={`bg-white rounded p-5 shadow-card mb-3 border-l-4 ${cfg.border}`}>
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${cfg.badge}`}>
-              {alert.urgency === 'overdue' ? '⚠ Overdue' : `${alert.daysUntil}d left`}
+            <span className={`text-xs font-semibold px-2.5 py-0.5 rounded ${cfg.badge}`}>
+              {alert.urgency === 'overdue' ? 'Overdue' : `${alert.daysUntil}d left`}
             </span>
             {stage && (
-              <span className="text-xs text-mid">{stage.emoji} {stage.label}</span>
+              <span className="text-xs text-mid">{stage.label}</span>
             )}
           </div>
-          <h3 className="font-display font-bold text-forest text-base leading-snug truncate">
+          <h3 className="font-bold text-charcoal text-base leading-snug truncate">
             {alert.item.grant_name}
           </h3>
           <p className="text-sm text-mid mt-0.5">{alert.item.funder_name}</p>
@@ -41,7 +41,7 @@ function DeadlineCard({ alert }: { alert: DeadlineAlert }) {
           )}
         </div>
         <div className="flex flex-col items-end gap-2 flex-shrink-0">
-          <p className="font-display text-xl font-bold text-gold">{amountStr}</p>
+          <p className="text-xl font-bold text-gold">{amountStr}</p>
           <p className={`text-sm font-semibold ${cfg.text}`}>
             {formatDeadline(alert.item.deadline)}
           </p>
@@ -59,10 +59,10 @@ function DeadlineCard({ alert }: { alert: DeadlineAlert }) {
             <span className="text-xs text-light">Application progress</span>
             <span className="text-xs font-semibold text-mid">{alert.item.application_progress}%</span>
           </div>
-          <div className="h-1.5 bg-warm rounded-full overflow-hidden">
+          <div className="h-1.5 bg-warm rounded overflow-hidden">
             <div
-              className={`h-full rounded-full transition-all ${
-                alert.item.application_progress >= 75 ? 'bg-amber-400' : 'bg-sage'
+              className={`h-full rounded transition-all ${
+                alert.item.application_progress >= 75 ? 'bg-amber-400' : 'bg-charcoal'
               }`}
               style={{ width: `${alert.item.application_progress}%` }}
             />
@@ -130,10 +130,10 @@ export default function DeadlinesPage() {
     <div>
       <div className="flex items-start justify-between mb-7">
         <div>
-          <h2 className="font-display text-2xl font-bold text-forest">Deadlines</h2>
+          <h2 className="text-2xl font-bold text-charcoal">Deadlines</h2>
           <p className="text-mid text-sm mt-1">Never miss an application window</p>
         </div>
-        <a href="/dashboard/pipeline" className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-warm text-sm font-medium text-mid hover:border-forest hover:text-forest transition-colors">
+        <a href="/dashboard/pipeline" className="flex items-center gap-1.5 px-4 py-2 rounded border border-warm text-sm font-medium text-mid hover:border-coral hover:text-coral transition-colors">
           Manage Pipeline →
         </a>
       </div>
@@ -144,14 +144,12 @@ export default function DeadlinesPage() {
         </div>
       ) : error ? (
         <div className="card text-center py-12">
-          <p className="text-4xl mb-3">⚠️</p>
           <p className="text-red-500 font-medium mb-2">Something went wrong</p>
           <p className="text-sm text-mid">{error}</p>
         </div>
       ) : alerts.length === 0 && noDeadlineItems.length === 0 ? (
         <div className="card text-center py-16">
-          <div className="text-5xl mb-4">📅</div>
-          <h3 className="font-display text-lg font-bold text-forest mb-2">No pipeline items yet</h3>
+          <h3 className="text-lg font-bold text-charcoal mb-2">No pipeline items yet</h3>
           <p className="text-mid text-sm mb-5">
             Add grants to your pipeline from Search or Deep Search, then set deadlines to track them here.
           </p>
@@ -166,11 +164,11 @@ export default function DeadlinesPage() {
             {[
               { label: 'Overdue',   count: overdue.length, bg: 'bg-red-50',    text: 'text-red-600',   borderL: 'border-l-4 border-l-red-400'   },
               { label: 'This week', count: urgent.length,  bg: 'bg-amber-50',  text: 'text-amber-600', borderL: 'border-l-4 border-l-amber-400' },
-              { label: 'Coming up', count: soon.length,    bg: 'bg-sage/10',   text: 'text-sage',      borderL: 'border-l-4 border-l-sage'      },
-              { label: 'On track',  count: ok.length,      bg: 'bg-green-50',  text: 'text-sage',      borderL: 'border-l-4 border-l-emerald-400' },
+              { label: 'Coming up', count: soon.length,    bg: 'bg-warm',      text: 'text-mid',       borderL: 'border-l-4 border-l-mid'       },
+              { label: 'On track',  count: ok.length,      bg: 'bg-green-50',  text: 'text-mid',       borderL: 'border-l-4 border-l-emerald-400' },
             ].map(s => (
-              <div key={s.label} className={`rounded-xl p-4 border border-warm shadow-warm ${s.bg} ${s.borderL}`}>
-                <p className={`font-display text-3xl font-bold ${s.text}`}>{s.count}</p>
+              <div key={s.label} className={`rounded p-4 border border-warm shadow-warm ${s.bg} ${s.borderL}`}>
+                <p className={`text-3xl font-bold ${s.text}`}>{s.count}</p>
                 <p className="text-xs text-mid mt-1">{s.label}</p>
               </div>
             ))}
@@ -179,32 +177,32 @@ export default function DeadlinesPage() {
           {/* Urgency-grouped deadline cards */}
           {overdue.length > 0 && (
             <section className="mb-6">
-              <h3 className="font-display text-sm font-semibold text-red-600 uppercase tracking-wider mb-3">
-                ⚠ Overdue — {overdue.length}
+              <h3 className="text-sm font-semibold text-red-600 uppercase tracking-wider mb-3">
+                Overdue — {overdue.length}
               </h3>
               {overdue.map(a => <DeadlineCard key={a.item.id} alert={a} />)}
             </section>
           )}
           {urgent.length > 0 && (
             <section className="mb-6">
-              <h3 className="font-display text-sm font-semibold text-amber-600 uppercase tracking-wider mb-3">
-                🔥 Due within 10 days — {urgent.length}
+              <h3 className="text-sm font-semibold text-amber-600 uppercase tracking-wider mb-3">
+                Due within 10 days — {urgent.length}
               </h3>
               {urgent.map(a => <DeadlineCard key={a.item.id} alert={a} />)}
             </section>
           )}
           {soon.length > 0 && (
             <section className="mb-6">
-              <h3 className="font-display text-sm font-semibold text-sage uppercase tracking-wider mb-3">
-                📆 Coming up (11–21 days) — {soon.length}
+              <h3 className="text-sm font-semibold text-mid uppercase tracking-wider mb-3">
+                Coming up (11–21 days) — {soon.length}
               </h3>
               {soon.map(a => <DeadlineCard key={a.item.id} alert={a} />)}
             </section>
           )}
           {ok.length > 0 && (
             <section className="mb-6">
-              <h3 className="font-display text-sm font-semibold text-sage uppercase tracking-wider mb-3">
-                ✓ On track (22+ days) — {ok.length}
+              <h3 className="text-sm font-semibold text-mid uppercase tracking-wider mb-3">
+                On track (22+ days) — {ok.length}
               </h3>
               {ok.map(a => <DeadlineCard key={a.item.id} alert={a} />)}
             </section>
@@ -213,8 +211,8 @@ export default function DeadlinesPage() {
           {/* Items with no deadline set */}
           {noDeadlineItems.length > 0 && (
             <section className="mb-6">
-              <h3 className="font-display text-sm font-semibold text-light uppercase tracking-wider mb-1">
-                📋 No deadline set — {noDeadlineItems.length}
+              <h3 className="text-sm font-semibold text-light uppercase tracking-wider mb-1">
+                No deadline set — {noDeadlineItems.length}
               </h3>
               <p className="text-xs text-light mb-3">
                 Click any item in the pipeline and add a deadline date to start tracking it here.
@@ -224,16 +222,16 @@ export default function DeadlinesPage() {
                 const amountStr = formatRange(item.amount_min, item.amount_max ?? item.amount_requested)
                 return (
                   <div key={item.id}
-                    className="bg-white rounded-xl p-4 shadow-card mb-2 border border-warm flex items-center justify-between gap-4">
+                    className="bg-white rounded p-4 shadow-card mb-2 border border-warm flex items-center justify-between gap-4">
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-charcoal truncate">{item.grant_name}</p>
                       <p className="text-xs text-mid mt-0.5">{item.funder_name}</p>
                     </div>
                     <div className="flex items-center gap-3 flex-shrink-0">
                       <p className="text-sm font-bold text-gold">{amountStr}</p>
-                      {stage && <span className="text-xs text-mid">{stage.emoji} {stage.label}</span>}
+                      {stage && <span className="text-xs text-mid">{stage.label}</span>}
                       <a href="/dashboard/pipeline"
-                        className="text-xs font-medium text-sage hover:underline whitespace-nowrap">
+                        className="text-xs font-medium text-coral hover:underline whitespace-nowrap">
                         Set deadline →
                       </a>
                     </div>

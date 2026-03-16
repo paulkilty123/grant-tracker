@@ -5,22 +5,19 @@ import { createClient } from '@/lib/supabase/client'
 
 type FeedbackType = 'feature' | 'bug' | 'general'
 
-const TYPES: { id: FeedbackType; emoji: string; label: string; placeholder: string }[] = [
+const TYPES: { id: FeedbackType; label: string; placeholder: string }[] = [
   {
     id: 'feature',
-    emoji: '💡',
     label: 'Suggest a feature',
     placeholder: 'Describe the feature you\'d like to see. What problem would it solve for you?',
   },
   {
     id: 'bug',
-    emoji: '🐛',
     label: 'Report an issue',
     placeholder: 'Describe what happened, what you expected to happen, and the steps to reproduce it.',
   },
   {
     id: 'general',
-    emoji: '💬',
     label: 'General feedback',
     placeholder: 'Share any thoughts, ideas or comments — anything at all.',
   },
@@ -60,7 +57,7 @@ export default function FeedbackPage() {
 
       {/* Header */}
       <div className="mb-8">
-        <h1 className="font-display text-2xl font-bold text-forest mb-1">Share your feedback</h1>
+        <h1 className="text-2xl font-bold text-charcoal mb-1">Share your feedback</h1>
         <p className="text-mid text-sm">
           Help us make Grant Tracker better. Every message is read and taken seriously.
         </p>
@@ -72,28 +69,27 @@ export default function FeedbackPage() {
           <button
             key={t.id}
             onClick={() => { setActiveType(t.id); setStatus('idle') }}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded text-sm font-medium border transition-all ${
               activeType === t.id
-                ? 'bg-forest border-forest text-white'
-                : 'border-warm text-mid hover:border-sage hover:text-sage bg-white'
+                ? 'bg-charcoal border-charcoal text-white'
+                : 'border-warm text-mid hover:border-coral hover:text-coral bg-white'
             }`}
           >
-            <span>{t.emoji}</span>
             {t.label}
           </button>
         ))}
       </div>
 
       {/* Form */}
-      <div className="bg-white rounded-2xl border border-warm shadow-card p-6">
+      <div className="bg-white rounded border border-warm shadow-card p-6">
         {status === 'sent' ? (
           <div className="text-center py-8">
             <div className="text-4xl mb-3">✓</div>
-            <p className="font-display text-lg font-bold text-forest mb-1">Thank you!</p>
+            <p className="text-lg font-bold text-charcoal mb-1">Thank you!</p>
             <p className="text-sm text-mid mb-5">Your feedback has been received. We really appreciate it.</p>
             <button
               onClick={() => setStatus('idle')}
-              className="text-sm text-sage underline hover:text-forest transition-colors"
+              className="text-sm text-mid hover:text-charcoal underline transition-colors"
             >
               Submit another →
             </button>
@@ -102,7 +98,7 @@ export default function FeedbackPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-charcoal mb-1.5">
-                {active.emoji} {active.label}
+                {active.label}
               </label>
               <textarea
                 value={message}
@@ -126,7 +122,7 @@ export default function FeedbackPage() {
               <button
                 type="submit"
                 disabled={status === 'sending' || !message.trim()}
-                className="px-6 py-2.5 rounded-full bg-forest text-white text-sm font-semibold hover:bg-forest/90 transition-colors disabled:opacity-50"
+                className="px-6 py-2.5 rounded bg-charcoal text-white text-sm font-semibold hover:bg-charcoal/90 transition-colors disabled:opacity-50"
               >
                 {status === 'sending' ? 'Sending…' : 'Send feedback →'}
               </button>
@@ -138,7 +134,7 @@ export default function FeedbackPage() {
       {/* Previous submissions note */}
       <p className="text-xs text-light text-center mt-6">
         Need a faster response? Email us directly at{' '}
-        <a href="mailto:hello@granttracker.co.uk" className="text-sage hover:underline">
+        <a href="mailto:hello@granttracker.co.uk" className="text-mid hover:text-charcoal hover:underline transition-colors">
           hello@granttracker.co.uk
         </a>
       </p>

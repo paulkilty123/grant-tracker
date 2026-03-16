@@ -28,19 +28,19 @@ const ORG_STAGE_OPTIONS: { value: OrgStage; label: string; desc: string }[] = [
   { value: 'established', label: 'Established',   desc: '5+ years or over £250k income' },
 ]
 
-const IMPACT_SECTOR_OPTIONS: { value: ImpactSector; label: string; emoji: string }[] = [
-  { value: 'creative',      label: 'Creative Industries',        emoji: '🎨' },
-  { value: 'environment',   label: 'Environment & Climate',      emoji: '🌿' },
-  { value: 'health',        label: 'Health & Wellbeing',         emoji: '💚' },
-  { value: 'education',     label: 'Education & Skills',         emoji: '📚' },
-  { value: 'tech',          label: 'Tech for Good',              emoji: '💻' },
-  { value: 'housing',       label: 'Housing & Homelessness',     emoji: '🏠' },
-  { value: 'food',          label: 'Food & Agriculture',         emoji: '🌾' },
-  { value: 'employment',    label: 'Employment & Livelihoods',   emoji: '🧑‍💼' },
-  { value: 'community',     label: 'Community Dev & Spaces',     emoji: '🤝' },
-  { value: 'justice',       label: 'Justice, Rights & Democracy',emoji: '⚖️' },
-  { value: 'financial',     label: 'Financial Inclusion',        emoji: '💰' },
-  { value: 'international', label: 'International & Fair Trade', emoji: '🌍' },
+const IMPACT_SECTOR_OPTIONS: { value: ImpactSector; label: string }[] = [
+  { value: 'creative',      label: 'Creative Industries'        },
+  { value: 'environment',   label: 'Environment & Climate'      },
+  { value: 'health',        label: 'Health & Wellbeing'         },
+  { value: 'education',     label: 'Education & Skills'         },
+  { value: 'tech',          label: 'Tech for Good'              },
+  { value: 'housing',       label: 'Housing & Homelessness'     },
+  { value: 'food',          label: 'Food & Agriculture'         },
+  { value: 'employment',    label: 'Employment & Livelihoods'   },
+  { value: 'community',     label: 'Community Dev & Spaces'     },
+  { value: 'justice',       label: 'Justice, Rights & Democracy'},
+  { value: 'financial',     label: 'Financial Inclusion'        },
+  { value: 'international', label: 'International & Fair Trade' },
 ]
 
 // Structures where "social mission declared" soft-match is relevant
@@ -54,14 +54,14 @@ const INCOME_BANDS = [
   'Over £500,000',
 ]
 
-const FUNDER_TYPE_OPTIONS: { value: FunderType; label: string; emoji: string }[] = [
-  { value: 'trust_foundation',   label: 'Trusts & Foundations',    emoji: '🏛️' },
-  { value: 'lottery',            label: 'National Lottery',         emoji: '🎰' },
-  { value: 'local_authority',    label: 'Local Authority',          emoji: '🏙️' },
-  { value: 'government',         label: 'Central Government',       emoji: '🏛' },
-  { value: 'corporate',          label: 'Corporate / CSR',          emoji: '🏢' },
-  { value: 'housing_association',label: 'Housing Associations',     emoji: '🏠' },
-  { value: 'other',              label: 'Other',                    emoji: '🔹' },
+const FUNDER_TYPE_OPTIONS: { value: FunderType; label: string }[] = [
+  { value: 'trust_foundation',   label: 'Trusts & Foundations'    },
+  { value: 'lottery',            label: 'National Lottery'         },
+  { value: 'local_authority',    label: 'Local Authority'          },
+  { value: 'government',         label: 'Central Government'       },
+  { value: 'corporate',          label: 'Corporate / CSR'          },
+  { value: 'housing_association',label: 'Housing Associations'     },
+  { value: 'other',              label: 'Other'                    },
 ]
 
 interface FormState {
@@ -345,7 +345,7 @@ export default function ProfilePage() {
   }
 
   const { score, missing } = completenessScore(form)
-  const scoreColor = score >= 80 ? 'bg-sage' : score >= 50 ? 'bg-gold' : 'bg-red-400'
+  const scoreColor = score >= 80 ? 'bg-charcoal' : score >= 50 ? 'bg-gold' : 'bg-red-400'
   const scoreLabel = score >= 80 ? 'Strong profile' : score >= 50 ? 'Getting there' : 'Needs more detail'
 
   return (
@@ -353,7 +353,7 @@ export default function ProfilePage() {
       {/* ── Header ── */}
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h2 className="font-serif text-2xl text-charcoal">Your Profile</h2>
+          <h2 className="text-2xl font-semibold text-charcoal">Your Profile</h2>
           <p className="text-mid text-sm mt-1">A complete profile means better grant matches and more relevant alerts</p>
         </div>
         <div className="flex items-center gap-3">
@@ -374,16 +374,16 @@ export default function ProfilePage() {
       <div className="card mb-6">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-forest">{scoreLabel}</span>
+            <span className="text-sm font-semibold text-charcoal">{scoreLabel}</span>
             <span className="text-xs text-mid">— {score}% complete</span>
           </div>
-          <span className={`text-xs font-semibold px-2.5 py-1 rounded-full text-white ${scoreColor}`}>
+          <span className={`text-xs font-semibold px-2.5 py-1 rounded text-white ${scoreColor}`}>
             {score}%
           </span>
         </div>
-        <div className="w-full bg-warm rounded-full h-2 mb-3">
+        <div className="w-full bg-warm rounded h-2 mb-3">
           <div
-            className={`h-2 rounded-full transition-all duration-500 ${scoreColor}`}
+            className={`h-2 rounded transition-all duration-500 ${scoreColor}`}
             style={{ width: `${score}%` }}
           />
         </div>
@@ -394,18 +394,18 @@ export default function ProfilePage() {
           </p>
         )}
         {score === 100 && (
-          <p className="text-xs text-sage font-medium">✓ Your profile is fully complete — grant matching is working at full power</p>
+          <p className="text-xs text-mid font-medium">✓ Your profile is fully complete — grant matching is working at full power</p>
         )}
       </div>
 
       {/* ── Auto-fill ── */}
       <div className="card mb-6">
         <div className="flex items-start gap-3 mb-3">
-          <div className="w-8 h-8 rounded-full bg-gold/10 flex items-center justify-center flex-shrink-0">
+          <div className="w-8 h-8 bg-gold/10 flex items-center justify-center flex-shrink-0">
             <Sparkles className="h-4 w-4 text-gold" />
           </div>
           <div>
-            <h3 className="font-serif text-sm font-semibold text-charcoal">Auto-fill from your website</h3>
+            <h3 className="text-sm font-semibold text-charcoal">Auto-fill from your website</h3>
             <p className="text-xs text-mid mt-0.5">
               Enter your website and AI will read it and fill in your profile automatically.
             </p>
@@ -430,10 +430,10 @@ export default function ProfilePage() {
           </button>
         </div>
         {autoFillSuccess && (
-          <p className="text-xs text-forest mt-2 font-medium">✓ Fields filled from your website — review below and save when ready.</p>
+          <p className="text-xs text-charcoal mt-2 font-medium">✓ Fields filled from your website — review below and save when ready.</p>
         )}
         {autoFillError && (
-          <p className="text-xs text-red-500 mt-2">⚠ {autoFillError}</p>
+          <p className="text-xs text-red-500 mt-2">{autoFillError}</p>
         )}
       </div>
 
@@ -441,8 +441,8 @@ export default function ProfilePage() {
 
         {/* ── Section 1: Organisation Details ── */}
         <div className="card">
-          <h3 className="font-display text-sm font-semibold text-forest mb-4 flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-forest/10 text-forest text-xs flex items-center justify-center font-bold">1</span>
+          <h3 className="text-sm font-semibold text-charcoal mb-4 flex items-center gap-2">
+            <span className="w-6 h-6 rounded bg-charcoal/10 text-charcoal text-xs flex items-center justify-center font-bold">1</span>
             About Your Organisation
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -484,9 +484,9 @@ export default function ProfilePage() {
 
             {/* Social mission soft-match flags — shown for non-charity/CIC structures */}
             {form.legalStructure && SOFT_MATCH_STRUCTURES.includes(form.legalStructure as LegalStructure) && (
-              <div className="md:col-span-2 rounded-xl border border-gold/30 bg-gold/5 p-4 space-y-3">
-                <p className="text-xs font-semibold text-forest">
-                  ✦ Social mission flags — help us soft-match you to funders who accept &ldquo;social enterprises&rdquo;
+              <div className="md:col-span-2 rounded border border-gold/30 bg-gold/5 p-4 space-y-3">
+                <p className="text-xs font-semibold text-charcoal">
+                  Social mission flags — help us soft-match you to funders who accept &ldquo;social enterprises&rdquo;
                 </p>
                 <div className="flex items-center justify-between">
                   <div>
@@ -497,7 +497,7 @@ export default function ProfilePage() {
                     type="button"
                     onClick={() => setForm(prev => ({ ...prev, socialMissionDeclared: !prev.socialMissionDeclared }))}
                     className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${
-                      form.socialMissionDeclared ? 'bg-forest' : 'bg-warm'
+                      form.socialMissionDeclared ? 'bg-charcoal' : 'bg-warm'
                     }`}
                   >
                     <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
@@ -514,7 +514,7 @@ export default function ProfilePage() {
                     type="button"
                     onClick={() => setForm(prev => ({ ...prev, articlesRestrictProfit: !prev.articlesRestrictProfit }))}
                     className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${
-                      form.articlesRestrictProfit ? 'bg-forest' : 'bg-warm'
+                      form.articlesRestrictProfit ? 'bg-charcoal' : 'bg-warm'
                     }`}
                   >
                     <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
@@ -558,7 +558,7 @@ export default function ProfilePage() {
 
             {/* Individual practitioner toggle — creative sector */}
             <div className="md:col-span-2">
-              <div className="flex items-center justify-between p-3 bg-sage/5 rounded-xl border border-sage/20">
+              <div className="flex items-center justify-between p-3 bg-warm rounded border border-warm">
                 <div>
                   <p className="text-sm text-charcoal font-medium">I am also an individual practitioner (e.g. artist, filmmaker, musician)</p>
                   <p className="text-xs text-mid mt-0.5">Shows both organisational and individual grants — e.g. Arts Council DYCP, PRS Foundation</p>
@@ -567,7 +567,7 @@ export default function ProfilePage() {
                   type="button"
                   onClick={() => setForm(prev => ({ ...prev, alsoIndividualPractitioner: !prev.alsoIndividualPractitioner }))}
                   className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${
-                    form.alsoIndividualPractitioner ? 'bg-forest' : 'bg-warm'
+                    form.alsoIndividualPractitioner ? 'bg-charcoal' : 'bg-warm'
                   }`}
                 >
                   <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
@@ -579,10 +579,10 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* ── Section 1b: Impact Sectors ── */}
+        {/* ── Section 2: Impact Sectors ── */}
         <div className="card">
-          <h3 className="font-display text-sm font-semibold text-forest mb-1 flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-forest/10 text-forest text-xs flex items-center justify-center font-bold">2</span>
+          <h3 className="text-sm font-semibold text-charcoal mb-1 flex items-center gap-2">
+            <span className="w-6 h-6 rounded bg-charcoal/10 text-charcoal text-xs flex items-center justify-center font-bold">2</span>
             Impact Sectors
             <span className="text-xs text-light font-normal ml-1">— choose 1 to 3</span>
           </h3>
@@ -602,17 +602,16 @@ export default function ProfilePage() {
                   type="button"
                   onClick={() => toggleImpactSector(s.value)}
                   disabled={atMax}
-                  className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all text-left ${
+                  className={`flex items-center gap-2 px-3 py-2.5 rounded border text-sm font-medium transition-all text-left ${
                     selected
-                      ? 'border-forest bg-forest/10 text-forest'
+                      ? 'border-charcoal bg-charcoal/10 text-charcoal'
                       : atMax
                         ? 'border-warm text-mid opacity-40 cursor-not-allowed'
-                        : 'border-warm text-mid hover:border-forest/30 hover:text-forest'
+                        : 'border-warm text-mid hover:border-coral hover:text-coral'
                   }`}
                 >
-                  <span>{s.emoji}</span>
                   <span className="text-xs">{s.label}</span>
-                  {selected && <span className="ml-auto text-forest text-xs font-bold">✓</span>}
+                  {selected && <span className="ml-auto text-charcoal text-xs font-bold">✓</span>}
                 </button>
               )
             })}
@@ -621,8 +620,8 @@ export default function ProfilePage() {
 
         {/* ── Section 3: Location & Focus ── */}
         <div className="card">
-          <h3 className="font-display text-sm font-semibold text-forest mb-4 flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-forest/10 text-forest text-xs flex items-center justify-center font-bold">3</span>
+          <h3 className="text-sm font-semibold text-charcoal mb-4 flex items-center gap-2">
+            <span className="w-6 h-6 rounded bg-charcoal/10 text-charcoal text-xs flex items-center justify-center font-bold">3</span>
             Location & Focus
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -679,8 +678,8 @@ export default function ProfilePage() {
 
         {/* ── Section 4: Mission ── */}
         <div className="card">
-          <h3 className="font-display text-sm font-semibold text-forest mb-1 flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-forest/10 text-forest text-xs flex items-center justify-center font-bold">4</span>
+          <h3 className="text-sm font-semibold text-charcoal mb-1 flex items-center gap-2">
+            <span className="w-6 h-6 rounded bg-charcoal/10 text-charcoal text-xs flex items-center justify-center font-bold">4</span>
             Mission Statement
           </h3>
           <p className="text-xs text-mid mb-3 ml-8">Used by AI search to find the most relevant grants for your work</p>
@@ -698,15 +697,15 @@ export default function ProfilePage() {
 
         {/* ── Section 5: Email Alerts ── */}
         <div className="card">
-          <h3 className="font-display text-sm font-semibold text-forest mb-1 flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-forest/10 text-forest text-xs flex items-center justify-center font-bold">5</span>
+          <h3 className="text-sm font-semibold text-charcoal mb-1 flex items-center gap-2">
+            <span className="w-6 h-6 rounded bg-charcoal/10 text-charcoal text-xs flex items-center justify-center font-bold">5</span>
             Email Alerts
           </h3>
           <p className="text-xs text-mid mb-4 ml-8">Get notified by email when new grants match your organisation</p>
 
-          <div className="flex items-center justify-between mb-4 p-4 bg-sage/5 rounded-xl border border-sage/20">
+          <div className="flex items-center justify-between mb-4 p-4 bg-warm rounded border border-warm">
             <div>
-              <p className="text-sm font-semibold text-forest">Grant match alerts</p>
+              <p className="text-sm font-semibold text-charcoal">Grant match alerts</p>
               <p className="text-xs text-mid mt-0.5">
                 {form.alertsEnabled
                   ? 'You\'ll receive emails when new matching grants are found'
@@ -717,7 +716,7 @@ export default function ProfilePage() {
               type="button"
               onClick={() => setForm(prev => ({ ...prev, alertsEnabled: !prev.alertsEnabled }))}
               className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${
-                form.alertsEnabled ? 'bg-forest' : 'bg-warm'
+                form.alertsEnabled ? 'bg-charcoal' : 'bg-warm'
               }`}
             >
               <span
@@ -761,14 +760,14 @@ export default function ProfilePage() {
       {/* ── Sticky save footer ── */}
       <div className="sticky bottom-0 mt-6 -mx-6 px-6 py-4 bg-cream/95 backdrop-blur border-t border-warm flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-24 bg-warm rounded-full h-1.5">
-            <div className={`h-1.5 rounded-full ${scoreColor}`} style={{ width: `${score}%` }} />
+          <div className="w-24 bg-warm rounded h-1.5">
+            <div className={`h-1.5 rounded ${scoreColor}`} style={{ width: `${score}%` }} />
           </div>
           <span className="text-xs text-mid">{score}% complete</span>
         </div>
         <div className="flex items-center gap-3">
           {saveStatus === 'error' && <p className="text-xs text-red-500">Save failed</p>}
-          {saveStatus === 'saved' && <p className="text-xs text-sage font-medium">✓ Saved!</p>}
+          {saveStatus === 'saved' && <p className="text-xs text-mid font-medium">✓ Saved!</p>}
           <button
             onClick={handleSave}
             disabled={saving || !form.name.trim()}
