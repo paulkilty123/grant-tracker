@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
     .from('scraped_grants')
     .select('id, external_id, title, funder, description, eligibility_criteria, amount_min, amount_max')
     .eq('is_active', true)
-    .order('created_at', { ascending: false })
+    .order('id', { ascending: true })
     .range(offset, offset + limit - 1)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
