@@ -41,6 +41,32 @@ function sectorLabel(s: string): string | null {
   return s
 }
 
+// Eligible org structure labels — maps DB keys to short display names
+const STRUCTURE_LABELS: Record<string, string> = {
+  cic:                            'CIC',
+  charity:                        'Charity',
+  registered_charity:             'Charity',
+  charitable_incorporated_organisation: 'CIO',
+  cio:                            'CIO',
+  social_enterprise:              'Social Enterprise',
+  community_interest_company:     'CIC',
+  ltd_company:                    'Ltd Company',
+  company_ltd_guarantee:          'Ltd by Guarantee',
+  ltd_guarantee:                  'Ltd by Guarantee',
+  community_benefit_society:      'Comm. Benefit Society',
+  coop:                           'Co-operative',
+  cooperative:                    'Co-operative',
+  unincorporated:                 'Unincorporated',
+  voluntary_organisation:         'Voluntary Org',
+  sole_trader:                    'Sole Trader',
+  partnership:                    'Partnership',
+  public_sector:                  'Public Sector',
+  school:                         'School',
+  university:                     'University',
+  housing_association:            'Housing Association',
+  individual:                     'Individual',
+}
+
 // 12-sector taxonomy — used for the filter panel and matching
 const IMPACT_SECTOR_FILTERS: { id: ImpactSector; label: string }[] = [
   { id: 'community',    label: 'Community' },
@@ -418,7 +444,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
             </div>
           )}
 
-          {/* Sector tags — clean single-purpose row */}
+          {/* Sector tags — topic focus */}
           {(() => {
             const sectorTags = (grant as EnrichedGrant).impactSectors?.length
               ? (grant as EnrichedGrant).impactSectors!.slice(0, 4).map(s => {
@@ -435,6 +461,30 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
             return sectorTags.length > 0
               ? <div className="flex flex-wrap gap-1.5">{sectorTags}</div>
               : null
+          })()}
+
+          {/* Eligible org types — who can apply */}
+          {(() => {
+            const structures = (grant as EnrichedGrant).eligibleStructures
+            if (!structures?.length) return null
+            const chips = structures.slice(0, 4).map(s => {
+              const lbl = STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' ')
+              return (
+                <span key={s} className="tag bg-teal-50 text-teal-700 capitalize">{lbl}</span>
+              )
+            })
+            const overflow = structures.length > 4 ? structures.length - 4 : 0
+            return (
+              <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                <span className="text-[10px] font-semibold text-light uppercase tracking-wider flex items-center gap-1">
+                  <Building2 className="w-3 h-3" />For:
+                </span>
+                {chips}
+                {overflow > 0 && (
+                  <span className="tag bg-teal-50 text-teal-500">+{overflow} more</span>
+                )}
+              </div>
+            )
           })()}
 
           {/* Expandable eligibility */}
