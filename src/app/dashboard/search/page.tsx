@@ -1568,128 +1568,77 @@ export default function SearchPage() {
 
         {/* ── Collapsible filters panel ── */}
         {filtersOpen && (
-          <div className="mt-4 pt-4 border-t border-warm space-y-5">
+          <div className="mt-4 pt-4 border-t border-warm space-y-4">
 
-            {/* Funding type — grants vs accelerators vs social investment etc */}
-            <div>
-              <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Funding type</p>
-              <div className="flex gap-2 flex-wrap mb-1">
-                {visibleFundingTypes.map(t => (
-                  <button key={t.id} onClick={() => setActiveFundingType(t.id as FundingType | 'all')}
-                    title={t.desc}
-                    className={`px-3 py-1.5 border text-xs font-medium transition-all ${
-                      activeFundingType === t.id
-                        ? 'bg-charcoal border-charcoal text-white'
-                        : 'border-warm text-mid hover:border-coral hover:text-coral'
-                    }`}>
-                    {t.emoji} {t.label}
-                  </button>
-                ))}
+            {/* Row 1: Funding type + Funder source */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Funding type</p>
+                <div className="flex gap-1.5 flex-wrap">
+                  {visibleFundingTypes.map(t => (
+                    <button key={t.id} onClick={() => setActiveFundingType(t.id as FundingType | 'all')}
+                      title={t.desc}
+                      className={`px-3 py-1.5 border text-xs font-medium transition-all ${
+                        activeFundingType === t.id
+                          ? 'bg-charcoal border-charcoal text-white'
+                          : 'border-warm text-mid hover:border-coral hover:text-coral'
+                      }`}>
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Funder type</p>
+                <div className="flex gap-1.5 flex-wrap">
+                  {(['all', 'local', 'lottery', 'trust_foundation', 'corporate', 'local_authority', 'government'] as const).map(id => {
+                    const t = FUNDER_TYPES.find(f => f.id === id)
+                    if (!t) return null
+                    return (
+                      <button key={t.id} onClick={() => setActiveType(t.id)}
+                        className={`px-3 py-1.5 border text-xs font-medium transition-all ${
+                          activeType === t.id
+                            ? 'bg-charcoal border-charcoal text-white'
+                            : 'border-warm text-mid hover:border-coral hover:text-coral'
+                        }`}>
+                        {t.label}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
             </div>
 
-            {/* Funder type */}
-            <div>
-              <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Funder source</p>
-              <div className="flex gap-2 flex-wrap">
-                {FUNDER_TYPES.map(t => (
-                  <button key={t.id} onClick={() => setActiveType(t.id)}
-                    className={`px-3 py-1.5 border text-xs font-medium transition-all ${
-                      activeType === t.id
-                        ? 'bg-charcoal border-charcoal text-white'
-                        : 'border-warm text-mid hover:border-coral hover:text-coral'
-                    }`}>
-                    {t.label}
-                  </button>
-                ))}
-                {RECENT_GRANTS.length > 0 && (
-                  <button onClick={() => setActiveType('recent')}
-                    className={`px-3 py-1.5 border text-xs font-medium transition-all ${
-                      activeType === 'recent'
-                        ? 'bg-charcoal border-charcoal text-white'
-                        : 'border-warm text-mid hover:border-coral hover:text-coral'
-                    }`}>
-                    Recently Added
-                  </button>
-                )}
-                {scrapedGrants.length > 0 && (
-                  <button onClick={() => setActiveType('scraped')}
-                    className={`px-3 py-1.5 border text-xs font-medium transition-all ${
-                      activeType === 'scraped'
-                        ? 'bg-charcoal border-charcoal text-white'
-                        : 'border-warm text-mid hover:border-coral hover:text-coral'
-                    }`}>
-                    Live Grants
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Funder category (from funders table taxonomy) */}
-            <div>
-              <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Funder category</p>
-              <div className="flex gap-2 flex-wrap">
-                <button
-                  onClick={() => setActiveFunderCategory('all')}
-                  className={`px-3 py-1.5 border text-xs font-medium transition-all ${
-                    activeFunderCategory === 'all'
-                      ? 'bg-charcoal border-charcoal text-white'
-                      : 'border-warm text-mid hover:border-coral hover:text-coral'
-                  }`}
-                >
-                  All
-                </button>
-                {FUNDER_CATEGORIES.map(cat => (
-                  <button
-                    key={cat.id}
-                    onClick={() => setActiveFunderCategory(activeFunderCategory === cat.id ? 'all' : cat.id)}
-                    className={`px-3 py-1.5 border text-xs font-medium transition-all ${
-                      activeFunderCategory === cat.id
-                        ? 'bg-charcoal border-charcoal text-white'
-                        : `${cat.colour} hover:opacity-80`
-                    }`}
-                  >
-                    {cat.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Geographic scope (from funders table) */}
-            <div>
-              <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Geographic scope</p>
-              <div className="flex gap-2 flex-wrap">
-                <button
-                  onClick={() => setActiveGeoScope('all')}
-                  className={`px-3 py-1.5 border text-xs font-medium transition-all ${
-                    activeGeoScope === 'all'
-                      ? 'bg-charcoal border-charcoal text-white'
-                      : 'border-warm text-mid hover:border-coral hover:text-coral'
-                  }`}
-                >
-                  Anywhere
-                </button>
-                {GEO_SCOPES.map(scope => (
-                  <button
-                    key={scope.id}
-                    onClick={() => setActiveGeoScope(activeGeoScope === scope.id ? 'all' : scope.id)}
-                    className={`px-3 py-1.5 border text-xs font-medium transition-all ${
-                      activeGeoScope === scope.id
-                        ? 'bg-charcoal border-charcoal text-white'
-                        : 'border-warm text-mid hover:border-coral hover:text-coral'
-                    }`}
-                  >
-                    {scope.label}
-                  </button>
-                ))}
-              </div>
-              <p className="text-[10px] text-light mt-1.5">
-                Filters by where the funder accepts applications from. Manual/seed grants without a linked funder profile are hidden when a scope is selected.
-              </p>
-            </div>
-
-            {/* Amount · Deadline · Sort — 3-col grid */}
+            {/* Row 2: Geography + Amount + Deadline */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Location</p>
+                <div className="flex gap-1.5 flex-wrap">
+                  <button
+                    onClick={() => setActiveGeoScope('all')}
+                    className={`px-3 py-1.5 border text-xs font-medium transition-all ${
+                      activeGeoScope === 'all'
+                        ? 'bg-charcoal border-charcoal text-white'
+                        : 'border-warm text-mid hover:border-coral hover:text-coral'
+                    }`}
+                  >
+                    Anywhere
+                  </button>
+                  {GEO_SCOPES.map(scope => (
+                    <button
+                      key={scope.id}
+                      onClick={() => setActiveGeoScope(activeGeoScope === scope.id ? 'all' : scope.id)}
+                      className={`px-3 py-1.5 border text-xs font-medium transition-all ${
+                        activeGeoScope === scope.id
+                          ? 'bg-charcoal border-charcoal text-white'
+                          : 'border-warm text-mid hover:border-coral hover:text-coral'
+                      }`}
+                    >
+                      {scope.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <div>
                 <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Amount range</p>
                 <div className="flex items-center gap-1.5">
@@ -1704,7 +1653,7 @@ export default function SearchPage() {
               </div>
               <div>
                 <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Deadline</p>
-                <div className="flex gap-2 flex-wrap">
+                <div className="flex gap-1.5 flex-wrap">
                   {(['all', 'rolling', 'has_deadline'] as const).map(v => (
                     <button key={v} onClick={() => setDeadlineFilter(v)}
                       className={`px-3 py-1.5 border text-xs font-medium transition-all ${
@@ -1717,141 +1666,36 @@ export default function SearchPage() {
                   ))}
                 </div>
               </div>
-              {!aiResults && (
-                <div>
-                  <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Sort</p>
-                  <div className="flex gap-2 flex-wrap">
-                    {([
-                      { v: 'match',   label: 'Best match',     show: !!org },
-                      { v: 'amount',  label: 'Largest first',  show: true  },
-                      { v: 'freshest',label: '🕐 Freshest',    show: true  },
-                    ] as const).filter(x => x.show).map(({ v, label }) => (
-                      <button key={v} onClick={() => setSortBy(v)}
-                        className={`px-3 py-1.5 border text-xs font-medium transition-all ${
-                          sortBy === v ? 'bg-charcoal border-charcoal text-white' : 'border-warm text-mid hover:border-sage'
-                        }`}>
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Freshness filter */}
-              <div>
-                <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Verified within</p>
-                <div className="flex gap-2 flex-wrap">
-                  {([
-                    { v: 'all', label: 'Any time' },
-                    { v: '7d',  label: '7 days'   },
-                    { v: '14d', label: '14 days'  },
-                    { v: '30d', label: '30 days'  },
-                  ] as const).map(({ v, label }) => (
-                    <button key={v} onClick={() => setFreshnessFilter(v)}
-                      className={`px-3 py-1.5 border text-xs font-medium transition-all ${
-                        freshnessFilter === v ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-warm text-mid hover:border-sage'
-                      }`}>
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
             </div>
 
-            {/* Invite-only toggle */}
-              <div>
-                <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Invite Only grants</p>
-                <button
-                  onClick={() => setShowInviteOnly(v => !v)}
-                  className={`flex items-center gap-2 px-3 py-1.5 border text-xs font-medium transition-all ${
-                    showInviteOnly
-                      ? 'bg-purple-600 border-purple-600 text-white'
-                      : 'border-warm text-mid hover:border-purple-300'
-                  }`}
-                >
-                  <span>{showInviteOnly ? '✉ Included' : '✉ Hidden'}</span>
-                </button>
-                <p className="text-[10px] text-light mt-1.5">
-                  {showInviteOnly
-                    ? 'Showing invite-only funders — they may not accept your application'
-                    : 'Invite-only funders are hidden from results'}
-                </p>
-              </div>
-
-            {/* Sectors — grouped, collapsed by default */}
+            {/* Row 3: Sector — flat group pills */}
             {availableSectors.length > 0 && (
-              <div className="space-y-1.5">
+              <div>
                 <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Sector</p>
-                {SECTOR_GROUPS.map(group => {
-                  const groupSectors = group.sectors.filter(s => availableSectors.includes(s))
-                  if (groupSectors.length === 0) return null
-                  const hasActive = groupSectors.some(s => activeSectors.has(s))
-                  const isOpen = expandedGroups.has(group.label) || hasActive
-                  return (
-                    <div key={group.label} className="border border-warm overflow-hidden">
-                      <button
-                        onClick={() => toggleGroup(group.label)}
-                        className="w-full flex items-center justify-between px-3 py-2.5 text-left hover:bg-warm/40 transition-colors"
-                      >
-                        <span className="text-xs font-medium text-charcoal flex items-center gap-1.5">
-                          {group.icon} {group.label}
-                          {hasActive && (
-                            <span className="ml-1 bg-purple-600 text-white text-xs rounded-full px-1.5 py-0.5 leading-none">
-                              {groupSectors.filter(s => activeSectors.has(s)).length}
-                            </span>
-                          )}
-                        </span>
-                        <span className={`text-xs text-light transition-transform duration-150 inline-block ${isOpen ? 'rotate-180' : ''}`}>▼</span>
+                <div className="flex gap-1.5 flex-wrap">
+                  {SECTOR_GROUPS.map(group => {
+                    const groupSectors = group.sectors.filter(s => availableSectors.includes(s))
+                    if (groupSectors.length === 0) return null
+                    const isActive = groupSectors.some(s => activeSectors.has(s))
+                    const handleClick = () => {
+                      if (isActive) {
+                        groupSectors.forEach(s => activeSectors.has(s) && toggleSector(s))
+                      } else {
+                        groupSectors.forEach(s => !activeSectors.has(s) && toggleSector(s))
+                      }
+                    }
+                    return (
+                      <button key={group.label} onClick={handleClick}
+                        className={`px-3 py-1.5 border text-xs font-medium transition-all ${
+                          isActive
+                            ? 'bg-charcoal border-charcoal text-white'
+                            : 'border-warm text-mid hover:border-coral hover:text-coral'
+                        }`}>
+                        {group.label}
                       </button>
-                      {isOpen && (
-                        <div className="px-3 pb-3 pt-1 flex gap-1.5 flex-wrap border-t border-warm">
-                          {groupSectors.map(s => (
-                            <button key={s} onClick={() => toggleSector(s)}
-                              className={`px-3 py-1 border text-xs font-medium capitalize transition-all ${
-                                activeSectors.has(s)
-                                  ? 'bg-purple-600 border-purple-600 text-white'
-                                  : 'border-purple-200 text-purple-700 hover:bg-purple-50'
-                              }`}>
-                              {sectorLabel(s) ?? s}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
-                {/* Any sectors not in a group */}
-                {(() => {
-                  const grouped = new Set(SECTOR_GROUPS.flatMap(g => g.sectors))
-                  const ungrouped = availableSectors.filter(s => !grouped.has(s))
-                  if (ungrouped.length === 0) return null
-                  const isOpen = expandedGroups.has('Other')
-                  return (
-                    <div className="border border-warm overflow-hidden">
-                      <button
-                        onClick={() => toggleGroup('Other')}
-                        className="w-full flex items-center justify-between px-3 py-2.5 text-left hover:bg-warm/40 transition-colors"
-                      >
-                        <span className="text-xs font-medium text-charcoal">Other</span>
-                        <span className={`text-xs text-light transition-transform duration-150 inline-block ${isOpen ? 'rotate-180' : ''}`}>▼</span>
-                      </button>
-                      {isOpen && (
-                        <div className="px-3 pb-3 pt-1 flex gap-1.5 flex-wrap border-t border-warm">
-                          {ungrouped.map(s => (
-                            <button key={s} onClick={() => toggleSector(s)}
-                              className={`px-3 py-1 border text-xs font-medium capitalize transition-all ${
-                                activeSectors.has(s)
-                                  ? 'bg-purple-600 border-purple-600 text-white'
-                                  : 'border-purple-200 text-purple-700 hover:bg-purple-50'
-                              }`}>
-                              {sectorLabel(s) ?? s}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )
-                })()}
+                    )
+                  })}
+                </div>
               </div>
             )}
 
