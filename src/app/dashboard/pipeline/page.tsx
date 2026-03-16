@@ -12,6 +12,15 @@ import {
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { PIPELINE_STAGES, formatDeadline, formatRange, cn } from '@/lib/utils'
 import type { PipelineItem, PipelineStage, Organisation } from '@/types'
+import { Search, Pencil, Send, Trophy, XCircle } from 'lucide-react'
+
+const STAGE_ICONS: Record<string, React.ReactNode> = {
+  identified: <Search size={13} strokeWidth={2.5} />,
+  applying:   <Pencil  size={13} strokeWidth={2.5} />,
+  submitted:  <Send    size={13} strokeWidth={2.5} />,
+  won:        <Trophy  size={13} strokeWidth={2.5} />,
+  declined:   <XCircle size={13} strokeWidth={2.5} />,
+}
 
 
 // ── Grant writing stages ──────────────────────
@@ -72,7 +81,7 @@ function PipelineCard({
     >
       <p className="text-[10px] text-light font-semibold uppercase tracking-wider mb-1">{item.funder_name}</p>
       <p className="text-sm font-semibold text-charcoal leading-snug mb-1.5">{item.grant_name}</p>
-      <p className={cn('font-display text-sm font-bold',
+      <p className={cn('text-sm font-bold',
         isWon ? 'text-forest' : isDeclined ? 'text-red-400' : 'text-gold'
       )}>
         {amountStr}{isWon ? ' ✓' : isDeclined ? ' ✗' : ''}
@@ -261,12 +270,12 @@ function PipelineModal({
             </div>
           )}
           {!isApplyingOrLater && (amountMin || amountMax) && (
-            <p className="font-display text-xl font-bold text-gold -mt-2">
+            <p className="text-xl font-bold text-gold -mt-2">
               {formatRange(amountMin ? Number(amountMin) : null, amountMax ? Number(amountMax) : null)}
             </p>
           )}
           {isApplyingOrLater && amountRequested && (
-            <p className="font-display text-xl font-bold text-gold -mt-2">
+            <p className="text-xl font-bold text-gold -mt-2">
               £{Number(amountRequested).toLocaleString('en-GB')} requested
             </p>
           )}
@@ -645,7 +654,7 @@ export default function PipelinePage() {
                 className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wide mb-1 pb-2.5 border-b-2"
                 style={{ borderColor: stageColour.border, color: stageColour.text }}
               >
-                <span>{stage.emoji} {stage.label}</span>
+                <span className="flex items-center gap-1.5">{STAGE_ICONS[stage.id]}{stage.label}</span>
                 <span
                   className="px-1.5 py-0.5 text-[10px] font-bold"
                   style={{ background: stageColour.badgeBg, color: stageColour.badgeText }}
