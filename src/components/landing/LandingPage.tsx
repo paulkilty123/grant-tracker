@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Menu, X, Check, Search, Calendar, TrendingUp, Activity, Clock, Mail, MessageSquare, Bell, LayoutGrid, ArrowRight } from 'lucide-react'
+import { Menu, X, Check, Search, Calendar, TrendingUp, Activity, Clock, Mail, MessageSquare, Bell, LayoutGrid, ArrowRight, Award } from 'lucide-react'
 import ContactForm from '@/components/ContactForm'
 import RadioWaveIcon from '@/components/icons/RadioWaveIcon'
 
@@ -428,6 +428,24 @@ export default function LandingPage() {
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Awarded — bottom right */}
+            <motion.div {...fadeUp(0.45)} className="absolute" style={{ width: '220px', top: '340px', right: '0px', zIndex: 2 }}>
+              <div className="bg-white rounded-2xl border border-warm/80 p-4" style={{ transform: 'rotate(4deg)', boxShadow: '0 8px 32px rgba(26,46,43,0.10)' }}>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-7 h-7 rounded-full bg-forest/10 flex items-center justify-center flex-shrink-0">
+                    <Award className="w-3.5 h-3.5 text-forest" />
+                  </div>
+                  <p className="text-[11px] font-bold text-forest uppercase tracking-wider">Awarded</p>
+                </div>
+                <p className="text-[13px] font-semibold text-charcoal leading-snug mb-1">London Community Foundation</p>
+                <p className="text-[11px] text-mid mb-3">Grow to Give — Community Growing</p>
+                <div className="flex items-center justify-between bg-forest/8 rounded-xl px-3 py-2" style={{ background: 'rgba(45,107,74,0.08)' }}>
+                  <span className="text-[11px] text-mid">Grant awarded</span>
+                  <span className="text-[15px] font-bold text-forest">£8,000</span>
                 </div>
               </div>
             </motion.div>
