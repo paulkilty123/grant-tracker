@@ -1,4 +1,4 @@
-import type { GrantOpportunity, Organisation } from '@/types'
+import type { GrantOpportunity, Organisation, LegalStructure } from '@/types'
 
 export interface MatchBreakdown {
   location:    { score: number; max: number; label: string }
@@ -52,8 +52,6 @@ function parsePoundAmount(raw: string): number | null {
  * E.g. "organisations with annual income under £50,000" → 50000
  */
 function parseIncomeCapFromText(text: string): number | null {
-  // Patterns: "income under £X", "income not exceeding £X", "income less than £X",
-  //           "income below £X", "income no more than £X", "turnover under £X"
   const patterns = [
     /(?:annual\s+)?(?:income|turnover|budget)\s+(?:of\s+)?(?:under|below|less\s+than|not\s+exceeding|no\s+more\s+than)\s+(£[\d,.km]+)/i,
     /(?:under|below|less\s+than|not\s+exceeding)\s+(£[\d,.km]+)\s+(?:annual\s+)?(?:income|turnover)/i,
@@ -77,7 +75,6 @@ function orgIncomeWithinCap(band: string | null, cap: number): boolean {
   if (!band) return true
   const midpoint = INCOME_MIDPOINTS[band]
   if (midpoint === undefined) return true
-  // Use midpoint + a small buffer (cap * 1.1) to avoid false negatives on boundary bands
   return midpoint <= cap * 1.1
 }
 
@@ -96,6 +93,41 @@ function phraseHitRatio(term: string, text: string): number {
   if (words.length === 0) return 0
   const hits = words.filter(w => text.toLowerCase().includes(w)).length
   return hits / words.length
+}
+
+/**
+ * Map legacy org_type to a list of LegalStructure values for eligibility matching.
+ * Used as fallback when org.legal_structure is not set.
+ */
+function orgStructuresToCheck(org: Organisation): LegalStructure[] {
+  if (org.legal_structure) return [org.legal_structure]
+  switch (org.org_type) {
+    case 'registered_charity': return ['registered_charity', 'cio']
+    case 'cic':                return ['cic_guarantee', 'cic_shares']
+    case 'social_enterprise':  return ['ltd_guarantee', 'ltd_shares', 'cooperative', 'cic_guarantee', 'cic_shares']
+    case 'community_group':    return ['unincorporated', 'not_registered']
+    default:                   return []
+  }
+}
+
+/**
+ * Human-readable label for a legal structure value.
+ */
+function structureLabel(s: LegalStructure): string {
+  const labels: Record<LegalStructure, string> = {
+    cic_guarantee:      'CIC',
+    cic_shares:         'CIC',
+    cio:                'CIO',
+    registered_charity: 'registered charity',
+    ltd_guarantee:      'Ltd company',
+    ltd_shares:         'Ltd company',
+    llp:                'LLP',
+    cooperative:        'cooperative',
+    unincorporated:     'unincorporated association',
+    sole_trader:        'sole trader',
+    not_registered:     'unregistered org',
+  }
+  return labels[s] ?? s
 }
 
 /**
@@ -131,7 +163,6 @@ export function computeMatchScore(
     const country = org.primary_location.split(',').pop()?.trim().toLowerCase() ?? ''
 
     if (grant.isLocal) {
-      // Check if any part of the org's location appears in the grant text
       const locationMatch =
         (city   && grantText.includes(city))   ||
         (region && grantText.includes(region)) ||
@@ -145,82 +176,98 @@ export function computeMatchScore(
         reasons.push('Local funder')
       }
     }
-    // national funders stay at 10
   }
 
   // ── 2. Themes / sectors (max 25) ──────────────────────────────────────
-  // Now includes mission + key_outcomes for much richer matching
   let themesScore = 0
 
-  const orgTerms: string[] = [
-    ...(org.themes        ?? []),
-    ...(org.areas_of_work ?? []),
-    ...(org.beneficiaries ?? []),
-  ]
+  const orgImpactSectors  = org.impact_sectors  ?? []
+  const grantImpactSectors = grant.impactSectors ?? []
 
-  // Extract significant phrases from mission statement
-  const missionTerms: string[] = []
-  if (org.mission) {
-    // Split mission into meaningful chunks (phrases of 2-4 words)
-    const mWords = org.mission.split(/[\s,;.]+/).filter(w => w.length >= 4)
-    // Add individual words and the full mission as one term
-    missionTerms.push(...mWords.slice(0, 10))
-  }
+  if (orgImpactSectors.length > 0 && grantImpactSectors.length > 0) {
+    // ── Structured path: intersection of 12-sector taxonomy ──────────────
+    const intersection = grantImpactSectors.filter(s => orgImpactSectors.includes(s))
+    const hits = intersection.length
 
-  // Add key outcomes as additional matching terms
-  const outcomeTerms: string[] = (org.key_outcomes ?? [])
-    .flatMap(o => o.split(/[\s,;.]+/).filter(w => w.length >= 4))
-    .slice(0, 15)
+    // Score curve: each matching sector adds significant weight
+    //   0 hits → 3  (genuine mismatch, not 0 — avoids filtering out borderline)
+    //   1 hit  → 15
+    //   2 hits → 21
+    //   3+     → 25
+    themesScore = hits === 0 ? 3 : hits === 1 ? 15 : hits === 2 ? 21 : 25
 
-  const allOrgTerms = [...orgTerms, ...missionTerms, ...outcomeTerms]
+    if (intersection.length > 0) {
+      reasons.push(`Sector match: ${intersection.join(', ')}`)
+    }
 
-  if (allOrgTerms.length === 0) {
-    themesScore = 12 // neutral when profile is incomplete
   } else {
-    // Weight explicit theme terms more heavily than mission/outcome terms
-    let weightedHits = 0
-    let totalWeight  = 0
+    // ── Free-text fallback when structured tags are absent ────────────────
+    const orgTerms: string[] = [
+      ...(org.themes        ?? []),
+      ...(org.areas_of_work ?? []),
+      ...(org.beneficiaries ?? []),
+    ]
 
-    for (const term of orgTerms) {
-      const weight = 1.5  // explicit themes count more
-      totalWeight += weight
-      if (fuzzyOverlap(term, grantText)) weightedHits += weight
-    }
-    for (const term of [...missionTerms, ...outcomeTerms]) {
-      const weight = 0.8  // mission/outcome terms count less individually
-      totalWeight += weight
-      if (fuzzyOverlap(term, grantText)) weightedHits += weight
+    const missionTerms: string[] = []
+    if (org.mission) {
+      const mWords = org.mission.split(/[\s,;.]+/).filter(w => w.length >= 4)
+      missionTerms.push(...mWords.slice(0, 10))
     }
 
-    const ratio = totalWeight > 0 ? weightedHits / totalWeight : 0
-    themesScore = Math.round(ratio * 25)
+    const outcomeTerms: string[] = (org.key_outcomes ?? [])
+      .flatMap(o => o.split(/[\s,;.]+/).filter(w => w.length >= 4))
+      .slice(0, 15)
 
-    if (ratio >= 0.4)       reasons.push('Strong theme match')
-    else if (ratio >= 0.15) reasons.push('Partial theme match')
+    const allOrgTerms = [...orgTerms, ...missionTerms, ...outcomeTerms]
+
+    if (allOrgTerms.length === 0) {
+      themesScore = 12 // neutral when profile is incomplete
+    } else {
+      let weightedHits = 0
+      let totalWeight  = 0
+
+      for (const term of orgTerms) {
+        const weight = 1.5
+        totalWeight += weight
+        if (fuzzyOverlap(term, grantText)) weightedHits += weight
+      }
+      for (const term of [...missionTerms, ...outcomeTerms]) {
+        const weight = 0.8
+        totalWeight += weight
+        if (fuzzyOverlap(term, grantText)) weightedHits += weight
+      }
+
+      const ratio = totalWeight > 0 ? weightedHits / totalWeight : 0
+      themesScore = Math.round(ratio * 25)
+
+      if (ratio >= 0.4)       reasons.push('Strong theme match')
+      else if (ratio >= 0.15) reasons.push('Partial theme match')
+    }
+
+    // Direct sector-to-theme comparison (exact substring match boost)
+    const grantSectorsLower = grant.sectors.map(s => s.toLowerCase())
+    const orgThemesFlat     = (org.themes ?? []).map(t => t.toLowerCase())
+    const sectorHits        = grantSectorsLower.filter(s =>
+      orgThemesFlat.some(t => s.includes(t.split(' ')[0]) || t.includes(s.split(' ')[0]))
+    ).length
+    themesScore = Math.min(25, themesScore + sectorHits * 4)
   }
-
-  // Direct sector-to-theme comparison (exact substring match boost)
-  const grantSectors  = grant.sectors.map(s => s.toLowerCase())
-  const orgThemesFlat = (org.themes ?? []).map(t => t.toLowerCase())
-  const sectorHits    = grantSectors.filter(s =>
-    orgThemesFlat.some(t => s.includes(t.split(' ')[0]) || t.includes(s.split(' ')[0]))
-  ).length
-  themesScore = Math.min(25, themesScore + sectorHits * 4)
 
   // ── Feedback signal boost on themes ───────────────────────────────────
-  // If the user has liked grants with sectors that this grant also covers,
-  // give a small boost (up to +6). If they've disliked similar sectors,
-  // apply a small penalty (up to -5).
-  if (feedback && grantSectors.length > 0) {
+  // Works on whichever sector list is populated (structured preferred)
+  const feedbackSectors = grantImpactSectors.length > 0
+    ? grantImpactSectors
+    : grant.sectors.map(s => s.toLowerCase())
+
+  if (feedback && feedbackSectors.length > 0) {
     let feedbackDelta = 0
     let boostedSector = false
-    for (const sector of grantSectors) {
+    for (const sector of feedbackSectors) {
       const boost   = feedback.sectorBoosts.get(sector)   ?? 0
       const penalty = feedback.sectorPenalties.get(sector) ?? 0
       feedbackDelta += boost - penalty
       if (boost > 0) boostedSector = true
     }
-    // Normalise: each sector boost is ~3pts per like; cap at ±6 total
     const cappedDelta = Math.max(-5, Math.min(6, feedbackDelta))
     themesScore = Math.max(0, Math.min(25, themesScore + cappedDelta))
     if (boostedSector && cappedDelta >= 3) reasons.push('Matches your liked grant types')
@@ -238,9 +285,9 @@ export function computeMatchScore(
       grantSizeScore = 20
       reasons.push('Within your target grant size')
     } else if (grantMax < targetMin) {
-      grantSizeScore = 3  // too small
+      grantSizeScore = 3
     } else {
-      grantSizeScore = 8  // too large
+      grantSizeScore = 8
     }
   } else if (org.annual_income_band && grantMax > 0) {
     const orgIncome = INCOME_MIDPOINTS[org.annual_income_band] ?? 50_000
@@ -248,13 +295,15 @@ export function computeMatchScore(
     if (ratio >= 0.05 && ratio <= 0.6)       grantSizeScore = 20
     else if (ratio > 0.6 && ratio <= 1.2)    grantSizeScore = 14
     else if (ratio > 1.2 && ratio <= 3.0)    grantSizeScore = 8
-    else if (ratio > 3.0)                    grantSizeScore = 3  // much larger than org
-    else                                     grantSizeScore = 15 // very small grant — ok
+    else if (ratio > 3.0)                    grantSizeScore = 3
+    else                                     grantSizeScore = 15
     if (grantSizeScore >= 18) reasons.push('Grant size suits your organisation')
   }
 
-  // ── 4. Funder type preference (max 15) ────────────────────────────────
+  // ── 4. Funder type preference + funding type affinity (max 15) ────────
   let funderTypeScore = 8 // neutral base
+
+  // Funder type preference (trust vs government vs lottery etc.)
   if (org.funder_type_preferences?.length) {
     if (org.funder_type_preferences.includes(grant.funderType)) {
       funderTypeScore = 15
@@ -264,14 +313,35 @@ export function computeMatchScore(
     }
   }
 
+  // Funding type affinity — use org_stage as a proxy until
+  // funding_type_preferences is added to org profile in Phase 3
+  if (grant.fundingType && org.org_stage) {
+    const isEarly    = ['idea', 'pre_revenue', 'early'].includes(org.org_stage)
+    const isGrowth   = ['growth', 'established'].includes(org.org_stage)
+    const ft         = grant.fundingType
+
+    if (isEarly && (ft === 'accelerator' || ft === 'support_programme')) {
+      // Early-stage orgs benefit most from structured programmes
+      funderTypeScore = Math.min(15, funderTypeScore + 3)
+      reasons.push('Programme suits your stage')
+    } else if (isGrowth && ft === 'accelerator') {
+      // Accelerators are less useful for established orgs
+      funderTypeScore = Math.max(0, funderTypeScore - 2)
+    } else if (isGrowth && ft === 'social_investment') {
+      // Established orgs can service repayable finance
+      funderTypeScore = Math.min(15, funderTypeScore + 2)
+      reasons.push('Social investment suits growth stage')
+    } else if (ft === 'diversity_fund') {
+      // Don't apply affinity to diversity funds — eligibility depends on founder identity, not stage
+    }
+  }
+
   // ── 5. Eligibility / org type (max 15) ────────────────────────────────
-  // Start with org-type base score
   let eligibilityScore: number =
     org.org_type === 'registered_charity' ? 12 :
     org.org_type === 'cic'               ? 10 :
     org.org_type === 'social_enterprise' ? 9  : 7
 
-  // Boost if grant eligibility criteria explicitly favour this org type
   const eligibilityText = grant.eligibilityCriteria.join(' ').toLowerCase()
 
   if (eligibilityText) {
@@ -293,26 +363,21 @@ export function computeMatchScore(
     } else if (isSEEligible && (org.org_type === 'social_enterprise' || org.org_type === 'cic')) {
       eligibilityScore = Math.min(15, eligibilityScore + 2)
     } else if (isCharityEligible && org.org_type !== 'registered_charity') {
-      // Charity-only grants scored down for non-charities
       eligibilityScore = Math.max(3, eligibilityScore - 4)
     }
 
-    // If eligibility mentions community groups and org is community_group
     if (vcseKeywords.some(k => eligibilityText.includes(k))) {
       eligibilityScore = Math.min(15, eligibilityScore + 1)
     }
 
-    // Location-based eligibility check
     if (org.primary_location) {
       const city    = org.primary_location.split(',')[0].trim().toLowerCase()
       const country = org.primary_location.split(',').pop()?.trim().toLowerCase() ?? ''
 
-      // Bonus if org location explicitly mentioned in eligibility
       if (city && eligibilityText.includes(city)) {
         eligibilityScore = Math.min(15, eligibilityScore + 2)
         reasons.push('Your location meets eligibility')
       }
-      // Penalty if eligibility restricts to a specific region that doesn't match
       const ukNations = ['scotland', 'wales', 'northern ireland', 'england']
       const restrictedTo = ukNations.filter(n => eligibilityText.includes(`based in ${n}`) || eligibilityText.includes(`${n} only`) || eligibilityText.includes(`${n}-based`))
       if (restrictedTo.length > 0 && !restrictedTo.some(n => country.includes(n) || city.includes(n))) {
@@ -320,7 +385,6 @@ export function computeMatchScore(
       }
     }
 
-    // Use mission text in eligibility check — match mission concepts against grant criteria
     if (org.mission && eligibilityText.length > 20) {
       const missionHitRatio = phraseHitRatio(org.mission, eligibilityText)
       if (missionHitRatio >= 0.15) {
@@ -328,17 +392,39 @@ export function computeMatchScore(
       }
     }
 
-    // Income cap check — if grant restricts to orgs under £X, penalise larger orgs
     const incomeCap = parseIncomeCapFromText(eligibilityText)
     if (incomeCap !== null && org.annual_income_band) {
       if (!orgIncomeWithinCap(org.annual_income_band, incomeCap)) {
         eligibilityScore = Math.max(1, eligibilityScore - 6)
         reasons.push('Your income may exceed this grant\'s cap')
       } else {
-        // Within cap is a positive signal
         eligibilityScore = Math.min(15, eligibilityScore + 1)
       }
     }
+  }
+
+  // ── eligible_structures hard gate ────────────────────────────────────
+  // When a grant has explicit structure requirements, override the soft
+  // text-based eligibility with a hard structured check.
+  if (grant.eligibleStructures && grant.eligibleStructures.length > 0) {
+    const orgStructures = orgStructuresToCheck(org)
+
+    if (orgStructures.length > 0) {
+      const isEligible = orgStructures.some(s => grant.eligibleStructures!.includes(s))
+
+      if (isEligible) {
+        // Confirmed eligible — boost to full score
+        eligibilityScore = Math.min(15, eligibilityScore + 3)
+        const label = structureLabel(org.legal_structure ?? orgStructures[0])
+        reasons.push(`Eligible as a ${label}`)
+      } else {
+        // Hard ineligibility — significant penalty
+        // Leave a floor of 1 so it still appears (with low score) rather than disappearing
+        eligibilityScore = Math.max(1, Math.min(eligibilityScore, 4))
+        reasons.push('Check eligibility — legal structure may not qualify')
+      }
+    }
+    // If orgStructures is empty (no legal structure data) we can't gate — leave score as-is
   }
 
   // ── Total ──────────────────────────────────────────────────────────────
@@ -346,7 +432,6 @@ export function computeMatchScore(
     locationScore + themesScore + grantSizeScore + funderTypeScore + eligibilityScore
   )
 
-  // Build reason string — prioritise specific over generic
   const reason =
     reasons.length > 0 ? reasons.join(' · ') :
     score >= 75 ? 'Good overall match for your organisation' :

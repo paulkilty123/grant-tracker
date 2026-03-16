@@ -11,7 +11,7 @@ import { computeMatchScore, scoreColour } from '@/lib/matching'
 import type { FeedbackSignals, MatchBreakdown } from '@/lib/matching'
 import { getInteractions, recordInteraction, removeInteraction } from '@/lib/interactions'
 import { saveSearchHistory, getSearchHistory, deleteSearchHistory, getWeeklySearchCount } from '@/lib/searchHistory'
-import type { GrantOpportunity, Organisation, FunderType, FundingType } from '@/types'
+import type { GrantOpportunity, Organisation, FunderType, FundingType, ImpactSector, LegalStructure } from '@/types'
 import type { InteractionAction } from '@/lib/interactions'
 import type { SearchHistoryItem } from '@/lib/searchHistory'
 
@@ -593,6 +593,8 @@ function normaliseScrapedGrant(row: Record<string, unknown>): EnrichedGrant {
     isInviteOnly:         Boolean(row.is_invite_only),
     nextOpenDate:         row.next_open_date ? String(row.next_open_date) : null,
     fundingType:          (row.funding_type ? String(row.funding_type) : 'grant') as FundingType,
+    impactSectors:        Array.isArray(row.impact_sectors)     ? (row.impact_sectors     as ImpactSector[])   : undefined,
+    eligibleStructures:   Array.isArray(row.eligible_structures) ? (row.eligible_structures as LegalStructure[]) : undefined,
     source:               'scraped',
     dateAdded:            row.first_seen_at  ? String(row.first_seen_at).split('T')[0]  : undefined,
     lastVerifiedAt:       row.last_seen_at   ? String(row.last_seen_at).split('T')[0]   : undefined,
