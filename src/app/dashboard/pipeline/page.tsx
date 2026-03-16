@@ -54,13 +54,13 @@ function PipelineCard({
   const isWon = stage.id === 'won'
   const isDeclined = stage.id === 'declined'
 
-  const borderColour =
-    stage.id === 'identified'  ? 'border-mid' :
-    stage.id === 'researching' ? 'border-amber-400' :
-    stage.id === 'applying'    ? 'border-orange-400' :
-    stage.id === 'submitted'   ? 'border-sage' :
-    stage.id === 'won'         ? 'border-forest' :
-                                 'border-red-400'
+  const leftBorderColor =
+    stage.id === 'identified'  ? '#9ba8a6' :
+    stage.id === 'researching' ? '#f59e0b' :
+    stage.id === 'applying'    ? '#fb923c' :
+    stage.id === 'submitted'   ? '#4d9e8a' :
+    stage.id === 'won'         ? '#1f5c52' :
+                                 '#f87171'
 
   return (
     <div
@@ -68,7 +68,8 @@ function PipelineCard({
       onDragStart={e => onDragStart(e, item.id)}
       onDragEnd={onDragEnd}
       onClick={() => onClick(item)}
-      className={cn('pipeline-card', borderColour)}
+      className="pipeline-card"
+      style={{ borderLeftColor: leftBorderColor }}
     >
       <p className="text-[10px] text-light font-semibold uppercase tracking-wider mb-1">{item.funder_name}</p>
       <p className="text-sm font-semibold text-charcoal leading-snug mb-1.5">{item.grant_name}</p>
@@ -624,41 +625,33 @@ export default function PipelinePage() {
       <div className="grid grid-cols-6 gap-3.5 min-h-[60vh] min-w-[720px] md:min-w-0">
         {PIPELINE_STAGES.map(stage => {
           const stageItems = items.filter(i => i.stage === stage.id)
+
+          const stageColour =
+            stage.id === 'identified'  ? { bg: '#f5f2ed', border: '#9ba8a6', text: '#6b7f7c', badgeBg: '#e8e4de', badgeText: '#6b7f7c' } :
+            stage.id === 'researching' ? { bg: '#fffbeb', border: '#f59e0b', text: '#d97706', badgeBg: '#fef3c7', badgeText: '#b45309' } :
+            stage.id === 'applying'    ? { bg: '#fff7ed', border: '#fb923c', text: '#ea580c', badgeBg: '#ffedd5', badgeText: '#c2410c' } :
+            stage.id === 'submitted'   ? { bg: '#edf4f2', border: '#4d9e8a', text: '#1f5c52', badgeBg: '#d1ece6', badgeText: '#1f5c52' } :
+            stage.id === 'won'         ? { bg: '#e6f0ed', border: '#1f5c52', text: '#1f5c52', badgeBg: '#c8e3dc', badgeText: '#1f5c52' } :
+                                         { bg: '#fdf0ee', border: '#f87171', text: '#ef4444', badgeBg: '#fee2e2', badgeText: '#dc2626' }
+
           return (
             <div
               key={stage.id}
-              className={cn(
-                'pipeline-col',
-                stage.id === 'identified'  ? 'bg-[#f5f2ed]' :
-                stage.id === 'researching' ? 'bg-amber-50' :
-                stage.id === 'applying'    ? 'bg-orange-50' :
-                stage.id === 'submitted'   ? 'bg-[#edf4f2]' :
-                stage.id === 'won'         ? 'bg-[#e6f0ed]' :
-                                             'bg-[#fdf0ee]'
-              )}
+              className="pipeline-col"
+              style={{ background: stageColour.bg }}
               onDragOver={onColDragOver}
               onDragLeave={onColDragLeave}
               onDrop={e => onColDrop(e, stage.id as PipelineStage)}
             >
-              <div className={cn(
-                'flex items-center justify-between text-[11px] font-bold uppercase tracking-wide mb-1 pb-2.5 border-b-2',
-                stage.id === 'identified'  ? 'border-mid/50 text-mid' :
-                stage.id === 'researching' ? 'border-amber-400 text-amber-600' :
-                stage.id === 'applying'    ? 'border-orange-400 text-orange-600' :
-                stage.id === 'submitted'   ? 'border-forest/40 text-forest' :
-                stage.id === 'won'         ? 'border-forest text-forest' :
-                                             'border-red-300 text-red-500'
-              )}>
+              <div
+                className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wide mb-1 pb-2.5 border-b-2"
+                style={{ borderColor: stageColour.border, color: stageColour.text }}
+              >
                 <span>{stage.emoji} {stage.label}</span>
-                <span className={cn(
-                  'px-1.5 py-0.5 text-[10px] font-bold',
-                  stage.id === 'identified'  ? 'bg-warm/80 text-mid' :
-                  stage.id === 'researching' ? 'bg-amber-100 text-amber-700' :
-                  stage.id === 'applying'    ? 'bg-orange-100 text-orange-700' :
-                  stage.id === 'submitted'   ? 'bg-forest/10 text-forest' :
-                  stage.id === 'won'         ? 'bg-forest/20 text-forest' :
-                                               'bg-red-100 text-red-500'
-                )}>
+                <span
+                  className="px-1.5 py-0.5 text-[10px] font-bold"
+                  style={{ background: stageColour.badgeBg, color: stageColour.badgeText }}
+                >
                   {stageItems.length}
                 </span>
               </div>
