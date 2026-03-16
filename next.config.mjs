@@ -7,5 +7,10 @@ const nextConfig = {
       },
     ],
   },
+  experimental: {
+    staleTimes: {
+      dynamic: 0,  // never serve stale HTML for dynamic pages
+    },
+  },
 }
 export default nextConfig
