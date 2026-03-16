@@ -13,7 +13,7 @@ const URGENCY_CONFIG = {
   rolling: { label: 'Rolling',    bg: 'bg-gray-50',   text: 'text-gray-500',   border: 'border-gray-200',   badge: 'bg-gray-100 text-gray-500'    },
 }
 
-const ACTIVE_STAGES = ['identified', 'researching', 'applying', 'submitted']
+const ACTIVE_STAGES = ['identified', 'applying', 'submitted']
 
 function DeadlineCard({ alert }: { alert: DeadlineAlert }) {
   const cfg = URGENCY_CONFIG[alert.urgency]

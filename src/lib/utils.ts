@@ -57,7 +57,7 @@ export function formatDeadline(deadline: string | null): string {
 }
 
 export function getDeadlineAlerts(items: PipelineItem[]): DeadlineAlert[] {
-  const activeStages: PipelineStage[] = ['identified', 'researching', 'applying', 'submitted']
+  const activeStages: PipelineStage[] = ['identified', 'applying', 'submitted']
   return items
     .filter(i => activeStages.includes(i.stage) && i.deadline)
     .map(i => {

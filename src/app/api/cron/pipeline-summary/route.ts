@@ -28,22 +28,20 @@ interface PipelineRow {
   is_urgent: boolean
 }
 
-const STAGE_ORDER = ['identified', 'researching', 'applying', 'submitted', 'won', 'declined']
+const STAGE_ORDER = ['identified', 'applying', 'submitted', 'won', 'declined']
 const STAGE_EMOJIS: Record<string, string> = {
-  identified:  '🔵',
-  researching: '🟡',
-  applying:    '🟣',
-  submitted:   '🟢',
-  won:         '🏆',
-  declined:    '❌',
+  identified: '🔵',
+  applying:   '🟣',
+  submitted:  '🟢',
+  won:        '🏆',
+  declined:   '❌',
 }
 const STAGE_LABELS: Record<string, string> = {
-  identified:  'Identified',
-  researching: 'Researching',
-  applying:    'Applying',
-  submitted:   'Submitted',
-  won:         'Won',
-  declined:    'Declined',
+  identified: 'Identified',
+  applying:   'Applying',
+  submitted:  'Submitted',
+  won:        'Won',
+  declined:   'Declined',
 }
 
 function formatAmount(min: number | null, max: number | null, requested: number | null): string {

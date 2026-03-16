@@ -107,7 +107,7 @@ export async function getPipelineStats(orgId: string) {
     activeCount: active.length,
     submittedCount: items.filter(i => i.stage === 'submitted').length,
     byStageCounts: Object.fromEntries(
-      ['identified','researching','applying','submitted','won','declined'].map(s => [
+      ['identified','applying','submitted','won','declined'].map(s => [
         s,
         items.filter(i => i.stage === s).length
       ])

@@ -33,10 +33,9 @@ function formatAmount(amountMin: number | null, amountMax: number | null, amount
 }
 
 const STAGE_LABELS: Record<string, string> = {
-  identified:  '🔵 Identified',
-  researching: '🟡 Researching',
-  applying:    '🟣 Applying',
-  submitted:   '🟢 Submitted',
+  identified: '🔵 Identified',
+  applying:   '🟣 Applying',
+  submitted:  '🟢 Submitted',
 }
 
 interface ReminderItem {
