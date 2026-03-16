@@ -314,7 +314,8 @@ export default function LandingPage() {
                   style={{ bottom: '6px', transform: 'rotate(-1deg)', zIndex: -1 }}
                 />
               </span>
-              {' '}your cause or venture.
+              <span className="block">your cause or</span>
+              <span className="block">venture.</span>
             </motion.h1>
 
             <motion.p
@@ -322,7 +323,7 @@ export default function LandingPage() {
               className="text-mid leading-relaxed mb-10"
               style={{ fontSize: '18px', lineHeight: 1.7, maxWidth: '480px' }}
             >
-              Find grants, accelerators, social investment, diversity funds and support programmes — all filtered to your preferences, with a management tool all in one.
+              Find grants, social funding and support programmes — tailored to your preferences, with a toolkit to keep on track.
             </motion.p>
 
             <motion.div {...fadeUp(0.3)} className="flex flex-wrap gap-3 mb-14">
