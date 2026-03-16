@@ -348,7 +348,7 @@ export default function LandingPage() {
             <motion.div {...fadeUp(0.4)} className="absolute" style={{ width: '360px', top: '60px', left: 'calc(50% - 180px)', zIndex: 1 }}>
               <div className="bg-white rounded-xl border border-warm/80 p-5" style={{ minHeight: '400px', transformOrigin: 'bottom center', transform: 'rotate(-13deg)', boxShadow: '0 4px 20px rgba(26,46,43,0.08)' }}>
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-red-400 flex-shrink-0" />
+                  <div className="w-2 h-2 rounded-full bg-mid/40 flex-shrink-0" />
                   <p className="text-[11px] font-semibold text-charcoal uppercase tracking-wider">Upcoming Deadlines</p>
                 </div>
               </div>
@@ -358,7 +358,7 @@ export default function LandingPage() {
             <motion.div {...fadeUp(0.3)} className="absolute" style={{ width: '360px', top: '60px', left: 'calc(50% - 180px)', zIndex: 2 }}>
               <div className="bg-white rounded-xl border border-warm/80 p-5" style={{ minHeight: '400px', transformOrigin: 'bottom center', transform: 'rotate(-6deg)', boxShadow: '0 6px 28px rgba(26,46,43,0.10)' }}>
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded flex-shrink-0 bg-coral/60" />
+                  <div className="w-2 h-2 rounded flex-shrink-0 bg-mid/40" />
                   <p className="text-[11px] font-semibold text-charcoal uppercase tracking-wider">My Pipeline</p>
                 </div>
               </div>
@@ -376,7 +376,7 @@ export default function LandingPage() {
                 <div className="flex flex-col">
                   {[
                     { name: 'National Lottery Community Fund', type: 'Grant · Up to £50,000', badge: 'Matched', badgeCol: 'bg-green-100 text-green-700' },
-                    { name: 'Innovate UK Smart Grant', type: 'Investment · Up to £25,000', badge: 'Deadline soon', badgeCol: 'bg-amber-100 text-amber-700' },
+                    { name: 'Innovate UK Smart Grant', type: 'Investment · Up to £25,000', badge: 'Deadline soon', badgeCol: 'bg-warm text-mid' },
                     { name: 'Arts Council England', type: 'Grant · Up to £15,000', badge: 'Matched', badgeCol: 'bg-green-100 text-green-700' },
                   ].map((g, i) => (
                     <div key={g.name} className={`flex items-center justify-between gap-3 py-2.5 ${i < 2 ? 'border-b border-warm/50' : ''}`}>
