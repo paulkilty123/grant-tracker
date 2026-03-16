@@ -1298,7 +1298,7 @@ export default function SearchPage() {
 
         {/* ── Mode toggle ── */}
         <div className="flex items-center justify-between mb-4">
-          <div className="inline-flex border border-warm bg-warm p-0.5 gap-0.5">
+          <div className="inline-flex border border-warm bg-warm p-1 gap-1 rounded-full">
             {([
               { id: 'database' as const, icon: <Database size={13} strokeWidth={2} />, label: 'Our database' },
               { id: 'live'     as const, icon: <Globe    size={13} strokeWidth={2} />, label: 'Live Search'  },
@@ -1306,7 +1306,7 @@ export default function SearchPage() {
               <button
                 key={m.id}
                 onClick={() => { setSearchMode(m.id); setLiveResults(null); setAiResults(null) }}
-                className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold transition-all ${
+                className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold transition-all rounded-full ${
                   searchMode === m.id
                     ? m.id === 'live'
                       ? 'bg-emerald-600 text-white shadow-sm'
