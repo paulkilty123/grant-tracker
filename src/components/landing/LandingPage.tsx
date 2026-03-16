@@ -344,7 +344,7 @@ export default function LandingPage() {
           <div className="flex-1 w-full lg:max-w-[540px] flex-shrink-0 relative" style={{ height: '580px' }}>
 
             {/* Dashboard — back right */}
-            <motion.div {...fadeUp(0.4)} className="absolute" style={{ width: '240px', top: '0px', right: '0px', zIndex: 1 }}>
+            <motion.div {...fadeUp(0.4)} className="absolute" style={{ width: '240px', top: '80px', right: '0px', zIndex: 1 }}>
               <div className="bg-white rounded-2xl border border-warm/80 p-4" style={{ transform: 'rotate(7deg)', boxShadow: '0 4px 20px rgba(26,46,43,0.08)' }}>
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-7 h-7 rounded-full bg-warm flex items-center justify-center flex-shrink-0">
@@ -372,7 +372,7 @@ export default function LandingPage() {
             </motion.div>
 
             {/* Pipeline — front left */}
-            <motion.div {...fadeUp(0.2)} className="absolute" style={{ width: '230px', top: '30px', left: '0px', zIndex: 3 }}>
+            <motion.div {...fadeUp(0.2)} className="absolute" style={{ width: '230px', top: '120px', left: '0px', zIndex: 3 }}>
               <div className="bg-white rounded-2xl border border-warm/80 p-4" style={{ transform: 'rotate(-8deg)', boxShadow: '0 8px 32px rgba(26,46,43,0.12)' }}>
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-7 h-7 rounded-full bg-coral/15 flex items-center justify-center flex-shrink-0">
@@ -406,9 +406,9 @@ export default function LandingPage() {
               </div>
             </motion.div>
 
-            {/* Search — centre */}
-            <motion.div {...fadeUp(0.3)} className="absolute" style={{ width: '260px', top: '130px', left: 'calc(50% - 80px)', zIndex: 2 }}>
-              <div className="bg-white rounded-2xl border border-warm/80 p-4" style={{ transform: 'rotate(-2deg)', boxShadow: '0 6px 24px rgba(26,46,43,0.10)' }}>
+            {/* Search — top centre, largest, front */}
+            <motion.div {...fadeUp(0.3)} className="absolute" style={{ width: '300px', top: '0px', left: 'calc(50% - 90px)', zIndex: 5 }}>
+              <div className="bg-white rounded-2xl border border-warm/80 p-5" style={{ transform: 'rotate(-1deg)', boxShadow: '0 14px 44px rgba(26,46,43,0.14)' }}>
                 <p className="text-[11px] font-bold text-charcoal uppercase tracking-wider mb-2.5">Search</p>
                 <div className="flex items-center gap-2 bg-[#f5f2ed] rounded-lg px-3 py-2 mb-3 border border-warm/40">
                   <Search className="w-3 h-3 text-mid flex-shrink-0" />
@@ -438,7 +438,7 @@ export default function LandingPage() {
             </motion.div>
 
             {/* Alerts — front bottom */}
-            <motion.div {...fadeUp(0.35)} className="absolute" style={{ width: '250px', top: '320px', left: '10px', zIndex: 4 }}>
+            <motion.div {...fadeUp(0.35)} className="absolute" style={{ width: '250px', top: '380px', left: '10px', zIndex: 4 }}>
               <div className="bg-white rounded-2xl border border-warm/80 p-4" style={{ transform: 'rotate(-3deg)', boxShadow: '0 8px 32px rgba(26,46,43,0.12)' }}>
                 <div className="flex items-center gap-2 mb-3">
                   <div className="relative w-7 h-7 rounded-full bg-warm flex items-center justify-center flex-shrink-0">
