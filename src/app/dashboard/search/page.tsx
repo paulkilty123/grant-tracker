@@ -185,16 +185,16 @@ function LiveGrantCard({ grant, onAddToPipeline }: {
   onAddToPipeline: (g: LiveGrant) => void
 }) {
   return (
-    <div className="bg-white rounded-xl p-5 shadow-warm mb-3 border border-warm hover:shadow-lg transition-all">
+    <div className="bg-white p-5 shadow-warm mb-3 border border-warm/80 hover:shadow-lg transition-all">
       <div className="flex gap-4">
         <div className="flex-1">
           <div className="flex items-start gap-3 mb-2">
-            <div className="h-10 w-10 rounded-full bg-sage/10 flex items-center justify-center text-forest font-bold text-sm flex-shrink-0 border border-sage/20">
+            <div className="h-10 w-10 bg-[#f5f2ed] flex items-center justify-center text-charcoal font-bold text-sm flex-shrink-0 border border-warm">
               {grant.funder[0]?.toUpperCase() ?? '?'}
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="font-display font-bold text-forest text-base leading-snug">{grant.title}</h3>
+                <h3 className="font-semibold text-charcoal text-base leading-snug">{grant.title}</h3>
                 <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">🌐 Live result</span>
               </div>
               <p className="text-sm text-mid">{grant.funder}</p>
@@ -202,7 +202,7 @@ function LiveGrantCard({ grant, onAddToPipeline }: {
           </div>
           <p className="text-sm text-mid leading-relaxed mb-3">{grant.description}</p>
           {grant.notes && (
-            <div className="bg-sage/10 rounded-lg px-3.5 py-2.5 flex items-start gap-2">
+            <div className="bg-coral/5 border border-coral/20 px-3.5 py-2.5 flex items-start gap-2">
               <span className="text-sage text-sm">💡</span>
               <p className="text-sm text-charcoal">{grant.notes}</p>
             </div>
@@ -211,7 +211,7 @@ function LiveGrantCard({ grant, onAddToPipeline }: {
         <div className="flex flex-col items-end gap-3 w-40 flex-shrink-0">
           {grant.amountRange && (
             <div className="text-right">
-              <p className="font-display text-lg font-bold text-gold leading-snug">{grant.amountRange}</p>
+              <p className="text-lg font-bold text-gold leading-snug">{grant.amountRange}</p>
               <p className="text-xs text-light mt-0.5">Grant range</p>
             </div>
           )}
@@ -221,11 +221,11 @@ function LiveGrantCard({ grant, onAddToPipeline }: {
           </div>
           <div className="flex flex-col gap-1.5 w-full">
             <a href={grant.applyUrl} target="_blank" rel="noopener noreferrer"
-              className="flex items-center justify-center gap-1 px-3 py-1.5 rounded-full border border-warm text-xs font-medium text-mid hover:border-forest hover:text-forest transition-colors w-full">
+              className="flex items-center justify-center gap-1 px-3 py-1.5 border border-warm text-xs font-medium text-mid hover:border-coral hover:text-coral transition-colors w-full">
               Visit website →
             </a>
             <button onClick={() => onAddToPipeline(grant)}
-              className="px-3 py-1.5 rounded-full bg-gold text-white text-xs font-semibold w-full hover:bg-gold/90 transition-colors">
+              className="px-3 py-1.5 bg-coral text-white text-xs font-semibold w-full hover:bg-coral/90 transition-colors">
               + Pipeline
             </button>
           </div>
@@ -259,7 +259,7 @@ function MatchBadge({ score, isAi, breakdown }: { score: number; isAi: boolean; 
       <button
         type="button"
         onClick={() => setOpen(v => !v)}
-        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${bg} cursor-pointer hover:opacity-80 transition-opacity`}
+        className={`flex items-center gap-1.5 px-2.5 py-1 ${bg} cursor-pointer hover:opacity-80 transition-opacity`}
         title="Click to see score breakdown"
       >
         <span className="text-sm">{isAi ? '✦' : '●'}</span>
@@ -269,7 +269,7 @@ function MatchBadge({ score, isAi, breakdown }: { score: number; isAi: boolean; 
 
       {open && breakdown && (
         <div
-          className="absolute right-0 top-full mt-1.5 z-50 bg-white border border-stone-200 rounded-xl shadow-lg p-3 w-52"
+          className="absolute right-0 top-full mt-1.5 z-50 bg-white border border-stone-200 shadow-lg p-3 w-52"
           onMouseLeave={() => setOpen(false)}
         >
           <p className="text-xs font-semibold text-charcoal mb-2">Score breakdown</p>
@@ -282,8 +282,8 @@ function MatchBadge({ score, isAi, breakdown }: { score: number; isAi: boolean; 
                   <span>{dim.label}</span>
                   <span className="font-medium text-charcoal">{dim.score}/{dim.max}</span>
                 </div>
-                <div className="h-1.5 rounded-full bg-stone-100 overflow-hidden">
-                  <div className={`h-full rounded-full ${bar}`} style={{ width: `${pct}%` }} />
+                <div className="h-1.5 bg-stone-100 overflow-hidden">
+                  <div className={`h-full ${bar}`} style={{ width: `${pct}%` }} />
                 </div>
               </div>
             )
@@ -375,9 +375,9 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
 
   if (isDismissed) {
     return (
-      <div className="bg-warm/50 rounded-xl px-5 py-3 mb-2 border border-warm flex items-center justify-between opacity-60">
+      <div className="bg-warm/50 px-5 py-3 mb-2 border border-warm flex items-center justify-between opacity-60">
         <p className="text-sm text-mid line-through">{grant.title} — {grant.funder}</p>
-        <button onClick={() => onUndismiss(grant.id)} className="text-xs text-sage hover:underline ml-4 flex-shrink-0">
+        <button onClick={() => onUndismiss(grant.id)} className="text-xs text-coral hover:underline ml-4 flex-shrink-0">
           Undo dismiss
         </button>
       </div>
@@ -385,17 +385,17 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
   }
 
   return (
-    <div className="bg-white rounded-xl p-5 shadow-warm mb-3 border border-warm hover:shadow-lg transition-all">
+    <div className="bg-white p-5 shadow-warm mb-3 border border-warm/80 hover:shadow-lg transition-all">
       <div className="flex gap-4">
         {/* Left: main content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start gap-3 mb-2">
-            <div className="h-10 w-10 rounded-full bg-sage/10 flex items-center justify-center text-sage font-bold text-sm flex-shrink-0 border border-sage/20">
+            <div className="h-10 w-10 bg-[#f5f2ed] flex items-center justify-center text-charcoal font-bold text-sm flex-shrink-0 border border-warm">
               {grant.funder[0].toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                <h3 className="font-display font-bold text-forest text-base leading-snug">{grant.title}</h3>
+                <h3 className="font-semibold text-charcoal text-base leading-snug">{grant.title}</h3>
                 {isNewThisWeek && (
                   <span className="bg-emerald-100 text-emerald-700 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide flex-shrink-0">
                     New
@@ -416,7 +416,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
                     {ftBadge.label}
                   </span>
                 )}
-                <span className={`text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${entryBadge.cls}`}>
+                <span className={`text-xs font-medium px-2 py-0.5 flex-shrink-0 ${entryBadge.cls}`}>
                   {entryBadge.label}
                 </span>
               </div>
@@ -435,7 +435,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
 
           {/* Match reason — only when a search has been performed */}
           {hasOrg && hasSearch && reason && (
-            <div className="bg-sage/8 border border-sage/20 rounded-lg px-3.5 py-2.5 mb-3 flex items-start gap-2">
+            <div className="bg-coral/5 border border-coral/20 px-3.5 py-2.5 mb-3 flex items-start gap-2">
               <span className={`text-sm flex-shrink-0 ${scoreText}`}>{isAiScore ? '✦' : '●'}</span>
               <p className="text-sm text-forest leading-snug">{reason.replace(/<[^>]*>/g, '').trim()}</p>
             </div>
@@ -463,7 +463,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
               <ul className="space-y-1">
                 {grant.eligibilityCriteria.map(c => (
                   <li key={c} className="text-sm text-mid flex gap-2">
-                    <span className="text-sage flex-shrink-0">✓</span>{c}
+                    <span className="text-forest flex-shrink-0">✓</span>{c}
                   </li>
                 ))}
               </ul>
@@ -472,7 +472,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
 
           <button
             onClick={() => setExpanded(!expanded)}
-            className="text-xs text-sage font-medium mt-2 hover:underline"
+            className="text-xs text-coral font-medium mt-2 hover:underline"
           >
             {expanded ? 'Show less ↑' : 'Eligibility ↓'}
           </button>
@@ -484,7 +484,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
           {hasOrg && hasSearch && <MatchBadge score={score} isAi={isAiScore} breakdown={breakdown} />}
 
           <div className="text-right">
-            <p className="font-display text-xl font-bold text-gold">
+            <p className="text-xl font-bold text-gold">
               {formatRange(grant.amountMin, grant.amountMax)}
             </p>
             <p className="text-xs text-light mt-0.5">
@@ -498,7 +498,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
             {grant.source === 'scraped' && (
               <a
                 href={`/dashboard/grants/${encodeURIComponent(grant.id)}`}
-                className="flex items-center justify-center gap-1 px-3 py-1.5 rounded-full border border-warm text-xs font-medium text-mid hover:border-forest hover:text-forest transition-colors w-full"
+                className="flex items-center justify-center gap-1 px-3 py-1.5 border border-warm text-xs font-medium text-mid hover:border-coral hover:text-coral transition-colors w-full"
               >
                 View details →
               </a>
@@ -508,14 +508,14 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
                 href={grant.applyUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-1 px-3 py-1.5 rounded-full border border-warm text-xs font-medium text-mid hover:border-forest hover:text-forest transition-colors w-full"
+                className="flex items-center justify-center gap-1 px-3 py-1.5 border border-warm text-xs font-medium text-mid hover:border-coral hover:text-coral transition-colors w-full"
               >
                 Visit website →
               </a>
             )}
             <button
               onClick={() => onAddToPipeline(grant)}
-              className="px-3 py-1.5 rounded-full bg-gold text-white text-xs font-semibold w-full hover:bg-gold/90 transition-colors"
+              className="px-3 py-1.5 bg-coral text-white text-xs font-semibold w-full hover:bg-coral/90 transition-colors"
             >
               + Pipeline
             </button>
@@ -1258,7 +1258,7 @@ export default function SearchPage() {
   return (
     <div>
       <div className="mb-5">
-        <h2 className="font-display text-2xl font-bold text-forest">Find Funding</h2>
+        <h2 className="font-serif text-2xl text-charcoal">Find Funding</h2>
         <p className="text-mid text-sm mt-1">
           {searchMode === 'live'
             ? 'AI researches the live web for hyper-local and newly announced funding not in our database'
@@ -1280,25 +1280,25 @@ export default function SearchPage() {
             onClick={() => { setCategoryFilter(tab.id); setActiveFundingType('all') }}
             className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-all ${
               categoryFilter === tab.id
-                ? 'border-forest text-forest'
-                : 'border-transparent text-mid hover:text-dark hover:border-warm'
+                ? 'border-coral text-coral'
+                : 'border-transparent text-mid hover:text-charcoal hover:border-warm'
             }`}
           >
             <span className="text-base leading-none">{tab.icon}</span>
             <span>{tab.label}</span>
-            <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
-              categoryFilter === tab.id ? 'bg-forest/10 text-forest' : 'bg-warm text-light'
+            <span className={`px-1.5 py-0.5 text-[10px] font-semibold ${
+              categoryFilter === tab.id ? 'bg-coral/10 text-coral' : 'bg-warm text-light'
             }`}>{tab.count}</span>
           </button>
         ))}
       </div>
 
       {/* ── Search bar ── */}
-      <div className="bg-white rounded-xl p-5 shadow-card mb-5">
+      <div className="bg-white p-5 shadow-card mb-5 border border-warm/60">
 
         {/* ── Mode toggle ── */}
         <div className="flex items-center justify-between mb-4">
-          <div className="inline-flex rounded-full border border-warm bg-warm p-0.5 gap-0.5">
+          <div className="inline-flex border border-warm bg-warm p-0.5 gap-0.5">
             {([
               { id: 'database' as const, icon: '🗄', label: 'Our database' },
               { id: 'live'     as const, icon: '🌐', label: 'Live Search'  },
@@ -1306,12 +1306,12 @@ export default function SearchPage() {
               <button
                 key={m.id}
                 onClick={() => { setSearchMode(m.id); setLiveResults(null); setAiResults(null) }}
-                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold transition-all ${
                   searchMode === m.id
                     ? m.id === 'live'
                       ? 'bg-emerald-600 text-white shadow-sm'
-                      : 'bg-forest text-white shadow-sm'
-                    : 'text-mid hover:text-dark'
+                      : 'bg-charcoal text-white shadow-sm'
+                    : 'text-mid hover:text-charcoal'
                 }`}
               >
                 <span>{m.icon}</span>{m.label}
@@ -1341,7 +1341,7 @@ export default function SearchPage() {
                 if (e.key !== 'Enter') return
                 searchMode === 'live' ? runLiveSearch(query) : handleAISearch()
               }}
-              className="form-input rounded-full h-12 pl-11 pr-4"
+              className="form-input h-12 pl-11 pr-4"
               placeholder={searchMode === 'live'
                 ? 'e.g. "youth mental health London" or "arts grants Cornwall"'
                 : 'e.g. "youth sport funding" or "social enterprise grant Manchester"'}
@@ -1350,10 +1350,10 @@ export default function SearchPage() {
           <button
             onClick={() => searchMode === 'live' ? runLiveSearch(query) : handleAISearch()}
             disabled={searchMode === 'live' ? (liveLoading || (!isAdmin && weeklySearchCount >= WEEKLY_LIMIT)) : (aiLoading || !query.trim())}
-            className={`px-5 h-12 rounded-full text-white text-sm font-semibold whitespace-nowrap transition-colors disabled:opacity-50 ${
+            className={`px-5 h-12 text-white text-sm font-semibold whitespace-nowrap transition-colors disabled:opacity-50 ${
               searchMode === 'live'
                 ? 'bg-emerald-600 hover:bg-emerald-700'
-                : 'bg-forest hover:bg-forest/90'
+                : 'bg-coral hover:bg-coral/90'
             }`}
           >
             {searchMode === 'live'
@@ -1375,7 +1375,7 @@ export default function SearchPage() {
                 : handleSmartMatch()
               }
               disabled={searchMode === 'live' ? liveLoading : aiLoading}
-              className="text-sm text-sage font-medium hover:underline disabled:opacity-50"
+              className="text-sm text-coral font-medium hover:underline disabled:opacity-50"
             >
               ✦ Fill from my profile
             </button>
@@ -1403,9 +1403,9 @@ export default function SearchPage() {
           <>
             <div className="mt-3 flex flex-wrap gap-1.5">
               {([
-                { key: 'all',     label: 'All',           icon: '',    desc: 'Show everything',                                                  cls: 'border-warm text-mid bg-white',                     active: 'bg-forest border-forest text-white' },
+                { key: 'all',     label: 'All',           icon: '',    desc: 'Show everything',                                                  cls: 'border-warm text-mid bg-white',                     active: 'bg-charcoal border-charcoal text-white' },
                 { key: 'live',    label: 'Latest Grants', icon: '🆕',  desc: 'Grants added to the database in the last 60 days',                  cls: 'border-emerald-200 text-emerald-700 bg-emerald-50', active: 'bg-emerald-600 border-emerald-600 text-white' },
-                { key: 'funders', label: 'Funders',       icon: '🏛️',  desc: 'Ongoing funders and rolling programmes — apply any time',           cls: 'border-sage/20 text-sage bg-sage/10',               active: 'bg-forest border-forest text-white' },
+                { key: 'funders', label: 'Funders',       icon: '🏛️',  desc: 'Ongoing funders and rolling programmes — apply any time',           cls: 'border-sage/20 text-sage bg-sage/10',               active: 'bg-charcoal border-charcoal text-white' },
               ] as const).map(({ key, label, icon, desc, cls, active }) => (
                 <button key={key} onClick={() => setEntryTypeFilter(key)} title={desc}
                   className={`flex items-center gap-1 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all ${
@@ -1420,10 +1420,10 @@ export default function SearchPage() {
             {/* Filters toggle — renamed to "More filters" */}
             <button
               onClick={() => setFiltersOpen(o => !o)}
-              className={`mt-3 flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all ${
+              className={`mt-3 flex items-center gap-1.5 px-3 py-1.5 border text-xs font-semibold transition-all ${
                 filtersOpen || activeFilterCount > 0
-                  ? 'bg-forest text-white border-forest'
-                  : 'border-warm text-mid hover:border-forest hover:text-forest bg-white'
+                  ? 'bg-charcoal text-white border-charcoal'
+                  : 'border-warm text-mid hover:border-coral hover:text-coral bg-white'
               }`}
             >
               <span>⚙</span>
@@ -1440,7 +1440,7 @@ export default function SearchPage() {
           <div className="mt-4 space-y-4">
 
             {/* Explainer + usage */}
-            <div className="flex items-start justify-between gap-4 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
+            <div className="flex items-start justify-between gap-4 bg-emerald-50 border border-emerald-200 px-4 py-3">
               <div className="flex-1">
                 <p className="text-xs font-semibold text-emerald-900 mb-0.5">What is Live Search?</p>
                 <p className="text-xs text-emerald-800 leading-relaxed">
@@ -1449,7 +1449,7 @@ export default function SearchPage() {
               </div>
               {/* Usage pill */}
               {isAdmin ? (
-                <div className="flex-shrink-0 flex flex-col items-center rounded-xl px-3 py-2 border border-emerald-200 bg-white text-center min-w-[72px]">
+                <div className="flex-shrink-0 flex flex-col items-center px-3 py-2 border border-emerald-200 bg-white text-center min-w-[72px]">
                   <p className="text-xl font-bold leading-none text-emerald-700">∞</p>
                   <p className="text-[10px] font-medium mt-0.5 text-emerald-600">unlimited</p>
                 </div>
@@ -1477,7 +1477,7 @@ export default function SearchPage() {
 
             {/* Limit reached message */}
             {!isAdmin && weeklySearchCount >= WEEKLY_LIMIT && (
-              <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+              <div className="bg-amber-50 border border-amber-200 px-4 py-3">
                 <p className="text-xs font-semibold text-amber-900 mb-1">Weekly limit reached</p>
                 <p className="text-xs text-amber-800">
                   You&apos;ve used your {WEEKLY_LIMIT} Live Searches for this week. Your allowance resets every Monday — or switch to our database above for instant results.
@@ -1504,10 +1504,10 @@ export default function SearchPage() {
                   <button key={s.id} onClick={() => setLiveSelectedSectors(prev =>
                     prev.includes(s.id) ? prev.filter(x => x !== s.id) : [...prev, s.id]
                   )}
-                    className={`px-3 py-1 rounded-full border text-xs font-medium transition-all ${
+                    className={`px-3 py-1 border text-xs font-medium transition-all ${
                       liveSelectedSectors.includes(s.id)
-                        ? 'bg-forest border-forest text-white'
-                        : 'border-warm text-mid hover:border-forest hover:text-forest'
+                        ? 'bg-charcoal border-charcoal text-white'
+                        : 'border-warm text-mid hover:border-coral hover:text-coral'
                     }`}
                   >{s.label}</button>
                 ))}
@@ -1519,7 +1519,7 @@ export default function SearchPage() {
                 <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Recent</p>
                 <div className="flex flex-wrap gap-2">
                   {searchHistory.map(item => (
-                    <div key={item.id} className="flex items-center gap-1 bg-sage/10 border border-warm rounded-full pl-3 pr-1 py-1">
+                    <div key={item.id} className="flex items-center gap-1 bg-[#f5f2ed] border border-warm pl-3 pr-1 py-1">
                       <button
                         onClick={() => {
                           setQuery(item.query)
@@ -1550,14 +1550,14 @@ export default function SearchPage() {
                 <div className="flex flex-wrap gap-2">
                   {LIVE_EXAMPLE_QUERIES.map(q => (
                     <button key={q} onClick={() => setQuery(q)}
-                      className="px-3 py-1 rounded-full bg-sage/10 border border-warm text-forest text-xs font-medium hover:bg-sage/20 transition-all"
+                      className="px-3 py-1 bg-[#f5f2ed] border border-warm text-charcoal text-xs font-medium hover:bg-coral/10 hover:text-coral hover:border-coral transition-all"
                     >{q} →</button>
                   ))}
                 </div>
               </div>
             )}
             {liveLoading && (
-              <div className="bg-emerald-50 rounded-lg px-4 py-3 text-sm text-emerald-800">
+              <div className="bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-800">
                 🌐 Searching live funding sources, council sites and specialist funders… this takes 15–30 seconds.
               </div>
             )}
@@ -1577,10 +1577,10 @@ export default function SearchPage() {
                 {visibleFundingTypes.map(t => (
                   <button key={t.id} onClick={() => setActiveFundingType(t.id as FundingType | 'all')}
                     title={t.desc}
-                    className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                    className={`px-3 py-1.5 border text-xs font-medium transition-all ${
                       activeFundingType === t.id
-                        ? 'bg-forest border-forest text-white'
-                        : 'border-warm text-mid hover:border-sage hover:text-sage'
+                        ? 'bg-charcoal border-charcoal text-white'
+                        : 'border-warm text-mid hover:border-coral hover:text-coral'
                     }`}>
                     {t.emoji} {t.label}
                   </button>
@@ -1594,30 +1594,30 @@ export default function SearchPage() {
               <div className="flex gap-2 flex-wrap">
                 {FUNDER_TYPES.map(t => (
                   <button key={t.id} onClick={() => setActiveType(t.id)}
-                    className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                    className={`px-3 py-1.5 border text-xs font-medium transition-all ${
                       activeType === t.id
-                        ? 'bg-forest border-forest text-white'
-                        : 'border-warm text-mid hover:border-sage hover:text-sage'
+                        ? 'bg-charcoal border-charcoal text-white'
+                        : 'border-warm text-mid hover:border-coral hover:text-coral'
                     }`}>
                     {t.label}
                   </button>
                 ))}
                 {RECENT_GRANTS.length > 0 && (
                   <button onClick={() => setActiveType('recent')}
-                    className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                    className={`px-3 py-1.5 border text-xs font-medium transition-all ${
                       activeType === 'recent'
-                        ? 'bg-forest border-forest text-white'
-                        : 'border-warm text-mid hover:border-sage hover:text-sage'
+                        ? 'bg-charcoal border-charcoal text-white'
+                        : 'border-warm text-mid hover:border-coral hover:text-coral'
                     }`}>
                     🆕 Recently Added
                   </button>
                 )}
                 {scrapedGrants.length > 0 && (
                   <button onClick={() => setActiveType('scraped')}
-                    className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                    className={`px-3 py-1.5 border text-xs font-medium transition-all ${
                       activeType === 'scraped'
-                        ? 'bg-forest border-forest text-white'
-                        : 'border-warm text-mid hover:border-sage hover:text-sage'
+                        ? 'bg-charcoal border-charcoal text-white'
+                        : 'border-warm text-mid hover:border-coral hover:text-coral'
                     }`}>
                     🌐 Live Grants
                   </button>
@@ -1631,10 +1631,10 @@ export default function SearchPage() {
               <div className="flex gap-2 flex-wrap">
                 <button
                   onClick={() => setActiveFunderCategory('all')}
-                  className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                  className={`px-3 py-1.5 border text-xs font-medium transition-all ${
                     activeFunderCategory === 'all'
-                      ? 'bg-forest border-forest text-white'
-                      : 'border-warm text-mid hover:border-sage hover:text-sage'
+                      ? 'bg-charcoal border-charcoal text-white'
+                      : 'border-warm text-mid hover:border-coral hover:text-coral'
                   }`}
                 >
                   All
@@ -1643,9 +1643,9 @@ export default function SearchPage() {
                   <button
                     key={cat.id}
                     onClick={() => setActiveFunderCategory(activeFunderCategory === cat.id ? 'all' : cat.id)}
-                    className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                    className={`px-3 py-1.5 border text-xs font-medium transition-all ${
                       activeFunderCategory === cat.id
-                        ? 'bg-forest border-forest text-white'
+                        ? 'bg-charcoal border-charcoal text-white'
                         : `${cat.colour} hover:opacity-80`
                     }`}
                   >
@@ -1661,10 +1661,10 @@ export default function SearchPage() {
               <div className="flex gap-2 flex-wrap">
                 <button
                   onClick={() => setActiveGeoScope('all')}
-                  className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                  className={`px-3 py-1.5 border text-xs font-medium transition-all ${
                     activeGeoScope === 'all'
-                      ? 'bg-forest border-forest text-white'
-                      : 'border-warm text-mid hover:border-sage hover:text-sage'
+                      ? 'bg-charcoal border-charcoal text-white'
+                      : 'border-warm text-mid hover:border-coral hover:text-coral'
                   }`}
                 >
                   Anywhere
@@ -1673,10 +1673,10 @@ export default function SearchPage() {
                   <button
                     key={scope.id}
                     onClick={() => setActiveGeoScope(activeGeoScope === scope.id ? 'all' : scope.id)}
-                    className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                    className={`px-3 py-1.5 border text-xs font-medium transition-all ${
                       activeGeoScope === scope.id
-                        ? 'bg-forest border-forest text-white'
-                        : 'border-warm text-mid hover:border-sage hover:text-sage'
+                        ? 'bg-charcoal border-charcoal text-white'
+                        : 'border-warm text-mid hover:border-coral hover:text-coral'
                     }`}
                   >
                     {scope.label}
@@ -1707,10 +1707,10 @@ export default function SearchPage() {
                 <div className="flex gap-2 flex-wrap">
                   {(['all', 'rolling', 'has_deadline'] as const).map(v => (
                     <button key={v} onClick={() => setDeadlineFilter(v)}
-                      className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                      className={`px-3 py-1.5 border text-xs font-medium transition-all ${
                         deadlineFilter === v
-                          ? 'bg-forest border-forest text-white'
-                          : 'border-warm text-mid hover:border-sage hover:text-sage'
+                          ? 'bg-charcoal border-charcoal text-white'
+                          : 'border-warm text-mid hover:border-coral hover:text-coral'
                       }`}>
                       {v === 'all' ? 'Any' : v === 'rolling' ? '🔄 Rolling' : '📅 Has deadline'}
                     </button>
@@ -1727,8 +1727,8 @@ export default function SearchPage() {
                       { v: 'freshest',label: '🕐 Freshest',    show: true  },
                     ] as const).filter(x => x.show).map(({ v, label }) => (
                       <button key={v} onClick={() => setSortBy(v)}
-                        className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
-                          sortBy === v ? 'bg-forest border-forest text-white' : 'border-warm text-mid hover:border-sage'
+                        className={`px-3 py-1.5 border text-xs font-medium transition-all ${
+                          sortBy === v ? 'bg-charcoal border-charcoal text-white' : 'border-warm text-mid hover:border-sage'
                         }`}>
                         {label}
                       </button>
@@ -1748,7 +1748,7 @@ export default function SearchPage() {
                     { v: '30d', label: '30 days'  },
                   ] as const).map(({ v, label }) => (
                     <button key={v} onClick={() => setFreshnessFilter(v)}
-                      className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                      className={`px-3 py-1.5 border text-xs font-medium transition-all ${
                         freshnessFilter === v ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-warm text-mid hover:border-sage'
                       }`}>
                       {label}
@@ -1763,7 +1763,7 @@ export default function SearchPage() {
                 <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Invite Only grants</p>
                 <button
                   onClick={() => setShowInviteOnly(v => !v)}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                  className={`flex items-center gap-2 px-3 py-1.5 border text-xs font-medium transition-all ${
                     showInviteOnly
                       ? 'bg-purple-600 border-purple-600 text-white'
                       : 'border-warm text-mid hover:border-purple-300'
@@ -1788,7 +1788,7 @@ export default function SearchPage() {
                   const hasActive = groupSectors.some(s => activeSectors.has(s))
                   const isOpen = expandedGroups.has(group.label) || hasActive
                   return (
-                    <div key={group.label} className="border border-warm rounded-xl overflow-hidden">
+                    <div key={group.label} className="border border-warm overflow-hidden">
                       <button
                         onClick={() => toggleGroup(group.label)}
                         className="w-full flex items-center justify-between px-3 py-2.5 text-left hover:bg-warm/40 transition-colors"
@@ -1807,7 +1807,7 @@ export default function SearchPage() {
                         <div className="px-3 pb-3 pt-1 flex gap-1.5 flex-wrap border-t border-warm">
                           {groupSectors.map(s => (
                             <button key={s} onClick={() => toggleSector(s)}
-                              className={`px-3 py-1 rounded-full border text-xs font-medium capitalize transition-all ${
+                              className={`px-3 py-1 border text-xs font-medium capitalize transition-all ${
                                 activeSectors.has(s)
                                   ? 'bg-purple-600 border-purple-600 text-white'
                                   : 'border-purple-200 text-purple-700 hover:bg-purple-50'
@@ -1827,7 +1827,7 @@ export default function SearchPage() {
                   if (ungrouped.length === 0) return null
                   const isOpen = expandedGroups.has('Other')
                   return (
-                    <div className="border border-warm rounded-xl overflow-hidden">
+                    <div className="border border-warm overflow-hidden">
                       <button
                         onClick={() => toggleGroup('Other')}
                         className="w-full flex items-center justify-between px-3 py-2.5 text-left hover:bg-warm/40 transition-colors"
@@ -1839,7 +1839,7 @@ export default function SearchPage() {
                         <div className="px-3 pb-3 pt-1 flex gap-1.5 flex-wrap border-t border-warm">
                           {ungrouped.map(s => (
                             <button key={s} onClick={() => toggleSector(s)}
-                              className={`px-3 py-1 rounded-full border text-xs font-medium capitalize transition-all ${
+                              className={`px-3 py-1 border text-xs font-medium capitalize transition-all ${
                                 activeSectors.has(s)
                                   ? 'bg-purple-600 border-purple-600 text-white'
                                   : 'border-purple-200 text-purple-700 hover:bg-purple-50'
@@ -1859,7 +1859,7 @@ export default function SearchPage() {
             {activeFilterCount > 0 && (
               <button
                 onClick={resetAllFilters}
-                className="text-xs font-semibold text-red-500 hover:text-red-700 border border-red-200 hover:border-red-400 rounded-lg px-3 py-1.5 transition-all"
+                className="text-xs font-semibold text-red-500 hover:text-red-700 border border-red-200 hover:border-red-400 px-3 py-1.5 transition-all"
               >
                 ✕ Reset all filters
               </button>
@@ -1868,7 +1868,7 @@ export default function SearchPage() {
         )}
 
         {!org && (
-          <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5">
+          <div className="mt-3 border border-amber-200 bg-amber-50 px-3 py-2.5">
             <p className="text-xs font-semibold text-amber-900 mb-0.5">Unlock personalised matches</p>
             <p className="text-xs text-amber-800 mb-2">Complete your profile to get % match scores and ranked results tailored to your organisation, venture or mission.</p>
             <a href="/dashboard/profile" className="text-xs font-semibold text-amber-700 underline hover:text-amber-900">
@@ -1883,14 +1883,14 @@ export default function SearchPage() {
         <div className="flex justify-between items-center mb-3">
           <p className="text-sm text-mid">
             {aiResults && smartMatched ? (
-              <><strong className="text-forest">✦ {displayGrants.length}</strong> grants matched for <strong className="text-forest">{org?.name}</strong></>
+              <><strong className="text-coral">✦ {displayGrants.length}</strong> grants matched for <strong className="text-charcoal">{org?.name}</strong></>
             ) : aiResults ? (
-              <><strong className="text-forest">✦ {displayGrants.length}</strong> AI-ranked results for &ldquo;{query}&rdquo;</>
+              <><strong className="text-coral">✦ {displayGrants.length}</strong> AI-ranked results for &ldquo;{query}&rdquo;</>
             ) : (
               <>
-                <strong className="text-forest">{displayGrants.length}</strong>{' '}
+                <strong className="text-charcoal">{displayGrants.length}</strong>{' '}
                 grants{query ? ` matching "${query}"` : ''}
-                {org && !aiResults && <span className="text-sage font-medium"> · sorted by match</span>}
+                {org && !aiResults && <span className="text-coral font-medium"> · sorted by match</span>}
               </>
             )}
           </p>
@@ -1902,13 +1902,13 @@ export default function SearchPage() {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="font-display font-bold text-forest text-base flex items-center gap-2">
+              <h3 className="font-serif text-charcoal text-base flex items-center gap-2">
                 {liveSmartMatched ? `Live results for ${org?.name}` : 'Live Research Results'}
-                <span className="text-xs font-normal bg-sage/15 text-forest px-2 py-0.5 rounded-full">
+                <span className="text-xs font-normal bg-forest/10 text-forest px-2 py-0.5">
                   {liveResults.grants.length} found
                 </span>
                 {liveResults._cached && (
-                  <span className="text-xs font-normal bg-warm text-mid px-2 py-0.5 rounded-full">cached</span>
+                  <span className="text-xs font-normal bg-warm text-mid px-2 py-0.5">cached</span>
                 )}
               </h3>
               <p className="text-sm text-mid mt-1 max-w-2xl">{liveResults.summary}</p>
@@ -1957,7 +1957,7 @@ export default function SearchPage() {
             </p>
             <a
               href="/dashboard/profile"
-              className="inline-block mt-2 text-xs font-semibold text-white bg-amber-500 hover:bg-amber-600 px-3 py-1.5 rounded-lg transition-colors"
+              className="inline-block mt-2 text-xs font-semibold text-white bg-amber-500 hover:bg-amber-600 px-3 py-1.5 transition-colors"
             >
               Complete profile →
             </a>
@@ -2016,7 +2016,7 @@ export default function SearchPage() {
       ))}
 
       {toast && (
-        <div className="fixed bottom-6 right-6 bg-forest text-white px-5 py-3.5 rounded-xl shadow-card-lg text-sm z-50">
+        <div className="fixed bottom-6 right-6 bg-charcoal text-white px-5 py-3.5 shadow-card-lg text-sm z-50">
           ✓ {toast}
         </div>
       )}
