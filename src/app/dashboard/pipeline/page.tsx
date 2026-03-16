@@ -66,7 +66,7 @@ function PipelineCard({
   const leftBorderColor =
     stage.id === 'identified'  ? '#9ba8a6' :
     stage.id === 'applying'    ? '#fb923c' :
-    stage.id === 'submitted'   ? '#4d9e8a' :
+    stage.id === 'submitted'   ? '#f59e0b' :
     stage.id === 'won'         ? '#1f5c52' :
                                  '#f87171'
 
@@ -637,7 +637,7 @@ export default function PipelinePage() {
           const stageColour =
             stage.id === 'identified'  ? { bg: '#f5f2ed', border: '#9ba8a6', text: '#6b7f7c', badgeBg: '#e8e4de', badgeText: '#6b7f7c' } :
             stage.id === 'applying'    ? { bg: '#fff7ed', border: '#fb923c', text: '#ea580c', badgeBg: '#ffedd5', badgeText: '#c2410c' } :
-            stage.id === 'submitted'   ? { bg: '#edf4f2', border: '#4d9e8a', text: '#1f5c52', badgeBg: '#d1ece6', badgeText: '#1f5c52' } :
+            stage.id === 'submitted'   ? { bg: '#fff3e0', border: '#f59e0b', text: '#b45309', badgeBg: '#fde68a', badgeText: '#92400e' } :
             stage.id === 'won'         ? { bg: '#e6f0ed', border: '#1f5c52', text: '#1f5c52', badgeBg: '#c8e3dc', badgeText: '#1f5c52' } :
                                          { bg: '#fdf0ee', border: '#f87171', text: '#ef4444', badgeBg: '#fee2e2', badgeText: '#dc2626' }
 
