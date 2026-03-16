@@ -360,11 +360,11 @@ export default function LandingPage() {
             {/* Card 3: Alerts — back of deck, only header peeks */}
             <motion.div
               {...fadeUp(0.4)}
-              className="absolute bg-white rounded-xl border border-warm/80 p-4"
-              style={{ top: '296px', left: '32px', right: '0px', zIndex: 1, boxShadow: '0 4px 24px rgba(26,46,43,0.07)' }}
+              className="absolute bg-white rounded-xl border border-warm/80 px-4 overflow-hidden"
+              style={{ top: '308px', left: '32px', right: '0px', height: '44px', zIndex: 1, boxShadow: '0 4px 24px rgba(26,46,43,0.07)', display: 'flex', alignItems: 'center' }}
             >
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-red-400" />
+                <div className="w-2 h-2 rounded-full bg-red-400 flex-shrink-0" />
                 <p className="text-[11px] font-semibold text-charcoal uppercase tracking-wider">Upcoming Deadlines</p>
               </div>
             </motion.div>
@@ -372,11 +372,11 @@ export default function LandingPage() {
             {/* Card 2: Pipeline — middle of deck, only header peeks */}
             <motion.div
               {...fadeUp(0.3)}
-              className="absolute bg-white rounded-xl border border-warm/80 p-4"
-              style={{ top: '248px', left: '16px', right: '0px', zIndex: 2, boxShadow: '0 6px 28px rgba(26,46,43,0.09)' }}
+              className="absolute bg-white rounded-xl border border-warm/80 px-4 overflow-hidden"
+              style={{ top: '256px', left: '16px', right: '0px', height: '44px', zIndex: 2, boxShadow: '0 6px 28px rgba(26,46,43,0.09)', display: 'flex', alignItems: 'center' }}
             >
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded bg-coral/60" />
+                <div className="w-2 h-2 rounded flex-shrink-0 bg-coral/60" />
                 <p className="text-[11px] font-semibold text-charcoal uppercase tracking-wider">My Pipeline</p>
               </div>
             </motion.div>
