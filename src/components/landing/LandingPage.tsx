@@ -407,7 +407,7 @@ export default function LandingPage() {
             </motion.div>
 
             {/* Search — top centre, largest, front */}
-            <motion.div {...fadeUp(0.3)} className="absolute" style={{ width: '300px', top: '0px', left: 'calc(50% - 90px)', zIndex: 5 }}>
+            <motion.div {...fadeUp(0.3)} className="absolute" style={{ width: '300px', top: '0px', left: 'calc(50% - 150px)', zIndex: 5 }}>
               <div className="bg-white rounded-2xl border border-warm/80 p-5" style={{ transform: 'rotate(-1deg)', boxShadow: '0 14px 44px rgba(26,46,43,0.14)' }}>
                 <p className="text-[11px] font-bold text-charcoal uppercase tracking-wider mb-2.5">Search</p>
                 <div className="flex items-center gap-2 bg-[#f5f2ed] rounded-lg px-3 py-2 mb-3 border border-warm/40">
