@@ -291,11 +291,6 @@ export default function LandingPage() {
         className="relative overflow-hidden"
         style={{ minHeight: '100vh', background: '#faf7f2' }}
       >
-        {/* Warm radial gradient background */}
-        <div className="absolute inset-0 z-0 pointer-events-none" style={{ background: [
-          'radial-gradient(ellipse 700px 500px at 20% 50%, rgba(212,168,83,0.13) 0%, transparent 70%)',
-          'radial-gradient(ellipse 500px 400px at 5% 80%, rgba(45,107,74,0.05) 0%, transparent 70%)',
-        ].join(',') }} />
 
         {/* Two-column layout */}
         <div className="relative z-10 mx-auto max-w-7xl px-8 flex flex-col lg:flex-row items-center gap-12 lg:gap-16" style={{ minHeight: '100vh', paddingTop: '120px', paddingBottom: '80px' }}>
