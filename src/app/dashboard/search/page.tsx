@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Search, ThumbsUp, ThumbsDown, ChevronDown } from 'lucide-react'
+import { Search, ThumbsUp, ThumbsDown, ChevronDown, Layers, DollarSign, Rocket, Database, Globe, Clock, Building2, SlidersHorizontal, Sparkles, MapPin } from 'lucide-react'
 import { SEED_GRANTS } from '@/lib/grants'
 import { formatRange } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -1234,21 +1234,21 @@ export default function SearchPage() {
   const CATEGORY_TABS = [
     {
       id:    'all'        as const,
-      icon:  '✦',
+      icon:  <Layers size={15} strokeWidth={2} />,
       label: 'All',
       desc:  'Grants, programmes & support',
       count: allGrants_raw.length,
     },
     {
       id:    'grants'     as const,
-      icon:  '💰',
+      icon:  <DollarSign size={15} strokeWidth={2} />,
       label: 'Funding',
       desc:  'Grants, social investment & funds',
       count: grantsCount,
     },
     {
       id:    'programmes' as const,
-      icon:  '🚀',
+      icon:  <Rocket size={15} strokeWidth={2} />,
       label: 'Support & Programmes',
       desc:  'Accelerators, mentoring, pro bono & skills',
       count: programmesCount,
@@ -1284,7 +1284,7 @@ export default function SearchPage() {
                 : 'border-transparent text-mid hover:text-charcoal hover:border-warm'
             }`}
           >
-            <span className="text-base leading-none">{tab.icon}</span>
+            <span className="flex-shrink-0">{tab.icon}</span>
             <span>{tab.label}</span>
             <span className={`px-1.5 py-0.5 text-[10px] font-semibold ${
               categoryFilter === tab.id ? 'bg-coral/10 text-coral' : 'bg-warm text-light'
@@ -1300,8 +1300,8 @@ export default function SearchPage() {
         <div className="flex items-center justify-between mb-4">
           <div className="inline-flex border border-warm bg-warm p-0.5 gap-0.5">
             {([
-              { id: 'database' as const, icon: '🗄', label: 'Our database' },
-              { id: 'live'     as const, icon: '🌐', label: 'Live Search'  },
+              { id: 'database' as const, icon: <Database size={13} strokeWidth={2} />, label: 'Our database' },
+              { id: 'live'     as const, icon: <Globe    size={13} strokeWidth={2} />, label: 'Live Search'  },
             ]).map(m => (
               <button
                 key={m.id}
@@ -1314,7 +1314,7 @@ export default function SearchPage() {
                     : 'text-mid hover:text-charcoal'
                 }`}
               >
-                <span>{m.icon}</span>{m.label}
+                {m.icon}{m.label}
               </button>
             ))}
           </div>
@@ -1357,8 +1357,8 @@ export default function SearchPage() {
             }`}
           >
             {searchMode === 'live'
-              ? (liveLoading ? '⏳ Researching…' : '🌐 Search')
-              : (aiLoading   ? '⏳ Thinking…'   : '✦ AI Match')}
+              ? (liveLoading ? 'Researching…' : <><Globe size={14} className="inline -mt-0.5 mr-1" />Search</>)
+              : (aiLoading   ? 'Thinking…'    : <><Sparkles size={14} className="inline -mt-0.5 mr-1" />AI Match</>)}
           </button>
         </div>
 
@@ -1375,9 +1375,9 @@ export default function SearchPage() {
                 : handleSmartMatch()
               }
               disabled={searchMode === 'live' ? liveLoading : aiLoading}
-              className="text-sm text-coral font-medium hover:underline disabled:opacity-50"
+              className="flex items-center gap-1.5 text-sm text-coral font-medium hover:underline disabled:opacity-50"
             >
-              ✦ Fill from my profile
+              <Sparkles size={13} />Fill from my profile
             </button>
             {searchMode === 'database' && aiResults && (
               <button
@@ -1403,16 +1403,16 @@ export default function SearchPage() {
           <>
             <div className="mt-3 flex flex-wrap gap-1.5">
               {([
-                { key: 'all',     label: 'All',           icon: '',    desc: 'Show everything',                                                  cls: 'border-warm text-mid bg-white',                     active: 'bg-charcoal border-charcoal text-white' },
-                { key: 'live',    label: 'Latest Grants', icon: '🆕',  desc: 'Grants added to the database in the last 60 days',                  cls: 'border-emerald-200 text-emerald-700 bg-emerald-50', active: 'bg-emerald-600 border-emerald-600 text-white' },
-                { key: 'funders', label: 'Funders',       icon: '🏛️',  desc: 'Ongoing funders and rolling programmes — apply any time',           cls: 'border-sage/20 text-sage bg-sage/10',               active: 'bg-charcoal border-charcoal text-white' },
+                { key: 'all',     label: 'All',           icon: null,                                    desc: 'Show everything',                                    cls: 'border-warm text-mid bg-white',    active: 'bg-coral border-coral text-white' },
+                { key: 'live',    label: 'Latest Grants', icon: <Clock     size={12} strokeWidth={2} />, desc: 'Grants added to the database in the last 60 days',   cls: 'border-warm text-mid bg-white',    active: 'bg-charcoal border-charcoal text-white' },
+                { key: 'funders', label: 'Funders',       icon: <Building2 size={12} strokeWidth={2} />, desc: 'Ongoing funders and rolling programmes — apply any time', cls: 'border-warm text-mid bg-white', active: 'bg-charcoal border-charcoal text-white' },
               ] as const).map(({ key, label, icon, desc, cls, active }) => (
                 <button key={key} onClick={() => setEntryTypeFilter(key)} title={desc}
-                  className={`flex items-center gap-1 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all ${
-                    entryTypeFilter === key ? active : `${cls} hover:opacity-80`
+                  className={`flex items-center gap-1.5 px-3 py-1.5 border text-xs font-semibold transition-all ${
+                    entryTypeFilter === key ? active : `${cls} hover:border-coral hover:text-coral`
                   }`}
                 >
-                  {icon && <span>{icon}</span>}{label}
+                  {icon}{label}
                 </button>
               ))}
             </div>
@@ -1426,9 +1426,9 @@ export default function SearchPage() {
                   : 'border-warm text-mid hover:border-coral hover:text-coral bg-white'
               }`}
             >
-              <span>⚙</span>
+              <SlidersHorizontal size={13} strokeWidth={2} />
               {activeFilterCount > 0 ? `Filters · ${activeFilterCount} active` : 'More filters'}
-              <span className={`text-xs transition-transform duration-200 inline-block ${filtersOpen ? 'rotate-180' : ''}`}>▼</span>
+              <ChevronDown size={13} strokeWidth={2} className={`transition-transform duration-200 ${filtersOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {aiError && <p className="text-amber-600 text-xs mt-3">⚠ {aiError}</p>}
@@ -1487,7 +1487,7 @@ export default function SearchPage() {
 
             {/* Location */}
             <div className="flex items-center gap-3">
-              <label className="text-xs font-semibold text-mid whitespace-nowrap">📍 Location</label>
+              <label className="flex items-center gap-1 text-xs font-semibold text-mid whitespace-nowrap"><MapPin size={12} strokeWidth={2} /> Location</label>
               <input
                 type="text"
                 value={locationFilter}
@@ -1498,7 +1498,7 @@ export default function SearchPage() {
             </div>
             {/* Sector pills */}
             <div>
-              <p className="text-xs font-semibold text-mid mb-2">🏷 Sector <span className="font-normal text-light">(optional)</span></p>
+              <p className="text-xs font-semibold text-mid mb-2">Sector <span className="font-normal text-light">(optional)</span></p>
               <div className="flex flex-wrap gap-1.5">
                 {LIVE_SECTOR_FILTERS.map(s => (
                   <button key={s.id} onClick={() => setLiveSelectedSectors(prev =>
@@ -1558,7 +1558,7 @@ export default function SearchPage() {
             )}
             {liveLoading && (
               <div className="bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-800">
-                🌐 Searching live funding sources, council sites and specialist funders… this takes 15–30 seconds.
+                Searching live funding sources, council sites and specialist funders… this takes 15–30 seconds.
               </div>
             )}
             {liveError && <p className="text-red-600 text-xs">⚠ {liveError}</p>}
@@ -1609,7 +1609,7 @@ export default function SearchPage() {
                         ? 'bg-charcoal border-charcoal text-white'
                         : 'border-warm text-mid hover:border-coral hover:text-coral'
                     }`}>
-                    🆕 Recently Added
+                    Recently Added
                   </button>
                 )}
                 {scrapedGrants.length > 0 && (
@@ -1619,7 +1619,7 @@ export default function SearchPage() {
                         ? 'bg-charcoal border-charcoal text-white'
                         : 'border-warm text-mid hover:border-coral hover:text-coral'
                     }`}>
-                    🌐 Live Grants
+                    Live Grants
                   </button>
                 )}
               </div>
@@ -1712,7 +1712,7 @@ export default function SearchPage() {
                           ? 'bg-charcoal border-charcoal text-white'
                           : 'border-warm text-mid hover:border-coral hover:text-coral'
                       }`}>
-                      {v === 'all' ? 'Any' : v === 'rolling' ? '🔄 Rolling' : '📅 Has deadline'}
+                      {v === 'all' ? 'Any' : v === 'rolling' ? 'Rolling' : 'Has deadline'}
                     </button>
                   ))}
                 </div>
