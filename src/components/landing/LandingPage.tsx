@@ -264,7 +264,7 @@ export default function LandingPage() {
           </div>
           <div className="flex items-center gap-3">
             <Link href="/auth/login" className="text-sm text-mid hover:text-charcoal transition-colors px-3 py-2">Sign in</Link>
-            <Link href="/auth/signup" className="bg-coral text-white px-5 py-2 text-sm font-medium hover:opacity-90 transition-colors" style={{ borderRadius: '8px' }}>Get started free</Link>
+            <Link href="/auth/signup" className="bg-coral text-white px-5 py-2 text-sm font-medium hover:opacity-90 transition-colors" style={{ borderRadius: '0px' }}>Get started free</Link>
           </div>
         </div>
         {mobileOpen && (
@@ -316,10 +316,10 @@ export default function LandingPage() {
             </motion.p>
 
             <motion.div {...fadeUp(0.3)} className="flex flex-wrap gap-3 mb-14">
-              <Link href="/auth/signup" className="bg-coral text-white px-6 py-3 text-[15px] font-semibold hover:opacity-90 transition-colors" style={{ borderRadius: '8px' }}>
+              <Link href="/auth/signup" className="bg-coral text-white px-6 py-3 text-[15px] font-semibold hover:opacity-90 transition-colors" style={{ borderRadius: '0px' }}>
                 Start for free
               </Link>
-              <a href="#how" className="border border-coral/50 text-coral px-6 py-3 text-[15px] font-semibold transition-colors hover:bg-coral/10" style={{ borderRadius: '8px' }}>
+              <a href="#how" className="border border-coral/50 text-coral px-6 py-3 text-[15px] font-semibold transition-colors hover:bg-coral/10" style={{ borderRadius: '0px' }}>
                 See how it works
               </a>
             </motion.div>
@@ -331,7 +331,7 @@ export default function LandingPage() {
 
             {/* Dashboard — back right */}
             <motion.div {...fadeUp(0.4)} className="absolute" style={{ width: '240px', top: '20px', right: '0px', zIndex: 1 }}>
-              <div className="bg-white rounded-lg border border-warm/80 p-4" style={{ transform: 'rotate(7deg)', boxShadow: '0 4px 20px rgba(26,46,43,0.08)' }}>
+              <div className="bg-white rounded-none border border-warm/80 p-4" style={{ transform: 'rotate(7deg)', boxShadow: '0 4px 20px rgba(26,46,43,0.08)' }}>
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-7 h-7 rounded-full bg-warm flex items-center justify-center flex-shrink-0">
                     <LayoutGrid className="w-3.5 h-3.5 text-mid" />
@@ -359,7 +359,7 @@ export default function LandingPage() {
 
             {/* Pipeline — front left */}
             <motion.div {...fadeUp(0.2)} className="absolute" style={{ width: '230px', top: '60px', left: '0px', zIndex: 3 }}>
-              <div className="bg-white rounded-lg border border-warm/80 p-4" style={{ transform: 'rotate(-8deg)', boxShadow: '0 8px 32px rgba(26,46,43,0.12)' }}>
+              <div className="bg-white rounded-none border border-warm/80 p-4" style={{ transform: 'rotate(-8deg)', boxShadow: '0 8px 32px rgba(26,46,43,0.12)' }}>
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-7 h-7 rounded-full bg-coral/15 flex items-center justify-center flex-shrink-0">
                     <ArrowRight className="w-3.5 h-3.5 text-coral" />
@@ -374,7 +374,7 @@ export default function LandingPage() {
                     { label: 'Applying',   dots: [true,  true] },
                     { label: 'Submitted',  dots: [false, false] },
                   ].map((stage) => (
-                    <div key={stage.label} className="flex items-center justify-between bg-[#f5f2ed] rounded-lg px-2.5 py-1.5">
+                    <div key={stage.label} className="flex items-center justify-between bg-[#f5f2ed] rounded-none px-2.5 py-1.5">
                       <div className="flex items-center gap-1.5">
                         <div className="w-3.5 h-3.5 rounded-full border border-mid/30 flex items-center justify-center flex-shrink-0">
                           <div className="w-1.5 h-1.5 rounded-full bg-mid/30" />
@@ -394,9 +394,9 @@ export default function LandingPage() {
 
             {/* Search — centre, largest, front */}
             <motion.div {...fadeUp(0.3)} className="absolute" style={{ width: '300px', top: '100px', left: 'calc(50% - 150px)', zIndex: 5 }}>
-              <div className="bg-white rounded-lg border border-warm/80 p-5" style={{ transform: 'rotate(-1deg)', boxShadow: '0 14px 44px rgba(26,46,43,0.14)' }}>
+              <div className="bg-white rounded-none border border-warm/80 p-5" style={{ transform: 'rotate(-1deg)', boxShadow: '0 14px 44px rgba(26,46,43,0.14)' }}>
                 <p className="text-[11px] font-bold text-charcoal uppercase tracking-wider mb-2.5">Search</p>
-                <div className="flex items-center gap-2 bg-[#f5f2ed] rounded-lg px-3 py-2 mb-3 border border-warm/40">
+                <div className="flex items-center gap-2 bg-[#f5f2ed] rounded-none px-3 py-2 mb-3 border border-warm/40">
                   <Search className="w-3 h-3 text-mid flex-shrink-0" />
                   <span className="text-[11px] text-mid">community garden...</span>
                 </div>
@@ -425,7 +425,7 @@ export default function LandingPage() {
 
             {/* Awarded — bottom right */}
             <motion.div {...fadeUp(0.45)} className="absolute" style={{ width: '220px', top: '340px', right: '0px', zIndex: 2 }}>
-              <div className="bg-white rounded-lg border border-warm/80 p-4" style={{ transform: 'rotate(4deg)', boxShadow: '0 8px 32px rgba(26,46,43,0.10)' }}>
+              <div className="bg-white rounded-none border border-warm/80 p-4" style={{ transform: 'rotate(4deg)', boxShadow: '0 8px 32px rgba(26,46,43,0.10)' }}>
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-7 h-7 rounded-full bg-forest/10 flex items-center justify-center flex-shrink-0">
                     <Award className="w-3.5 h-3.5 text-forest" />
@@ -443,7 +443,7 @@ export default function LandingPage() {
 
             {/* Alerts — front bottom */}
             <motion.div {...fadeUp(0.35)} className="absolute" style={{ width: '250px', top: '320px', left: '10px', zIndex: 4 }}>
-              <div className="bg-white rounded-lg border border-warm/80 p-4" style={{ transform: 'rotate(-3deg)', boxShadow: '0 8px 32px rgba(26,46,43,0.12)' }}>
+              <div className="bg-white rounded-none border border-warm/80 p-4" style={{ transform: 'rotate(-3deg)', boxShadow: '0 8px 32px rgba(26,46,43,0.12)' }}>
                 <div className="flex items-center gap-2 mb-3">
                   <div className="relative w-7 h-7 rounded-full bg-warm flex items-center justify-center flex-shrink-0">
                     <Bell className="w-3.5 h-3.5 text-mid" />
