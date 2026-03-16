@@ -110,6 +110,8 @@ export interface Organisation {
   min_grant_target: number | null
   max_grant_target: number | null
   funder_type_preferences: FunderType[]
+  /** Preferred funding types — explicit user preference set in profile */
+  funding_type_preferences: FundingType[]
   // impact fields
   people_per_year: number | null
   volunteers: number | null

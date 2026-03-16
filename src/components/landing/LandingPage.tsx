@@ -40,12 +40,12 @@ const howSteps = [
 ]
 
 const fundingTypes = [
-  { title: 'Grants & Awards', range: '£300 – £500k+', desc: 'National Lottery, trusts, foundations, Innovate UK, arts councils, and government programmes.' },
-  { title: 'Accelerators & Programmes', range: 'Programme + grant', desc: 'Equity-free programmes with mentoring, workspace and networks. UnLtd, SSE, Foundervine and more.' },
-  { title: 'Diversity-Targeted Funds', range: '£5k – £250k', desc: 'Women in Innovation, Black Seed, Foundervine, and more. Zero overlap with general grant databases.' },
-  { title: 'Support Programmes', range: 'Capacity building', desc: 'Fellowships, mentoring, incubators and training — from Lloyds Bank Foundation to local CVS networks.' },
-  { title: 'Social Investment', range: '£20k – £3m', desc: 'Big Issue Invest, Charity Bank, Resonance — know who funds what before you reach out.' },
-  { title: 'Blended & Matched Funding', range: 'Selected programmes', desc: 'Part grant, part loan. SSE Match Trading and Power to Change — real listings, not theory.' },
+  { title: 'Grants & Awards', range: '£300 – £500k+', fundingType: 'grant', desc: 'National Lottery, trusts, foundations, Innovate UK, arts councils, and government programmes.' },
+  { title: 'Accelerators & Programmes', range: 'Programme + grant', fundingType: 'accelerator', desc: 'Equity-free programmes with mentoring, workspace and networks. UnLtd, SSE, Foundervine and more.' },
+  { title: 'Diversity-Targeted Funds', range: '£5k – £250k', fundingType: 'diversity_fund', desc: 'Women in Innovation, Black Seed, Foundervine, and more. Zero overlap with general grant databases.' },
+  { title: 'Support Programmes', range: 'Capacity building', fundingType: 'support_programme', desc: 'Fellowships, mentoring, incubators and training — from Lloyds Bank Foundation to local CVS networks.' },
+  { title: 'Social Investment', range: '£20k – £3m', fundingType: 'social_investment', desc: 'Big Issue Invest, Charity Bank, Resonance — know who funds what before you reach out.' },
+  { title: 'Blended & Matched Funding', range: 'Selected programmes', fundingType: 'blended_finance', desc: 'Part grant, part loan. SSE Match Trading and Power to Change — real listings, not theory.' },
 ]
 
 const audiences = [
@@ -506,10 +506,18 @@ export default function LandingPage() {
           </motion.div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-white/10">
             {fundingTypes.map((t, i) => (
-              <motion.div key={t.title} {...fadeInView(i * 0.05)} className="bg-[#121f2b] p-8">
-                <span className="text-xs font-semibold text-coral uppercase tracking-wider">{t.range}</span>
-                <h3 className="mt-3 font-serif text-xl text-cream">{t.title}</h3>
-                <p className="mt-3 text-sm text-cream/50 leading-relaxed">{t.desc}</p>
+              <motion.div key={t.title} {...fadeInView(i * 0.05)} className="bg-[#121f2b]">
+                <Link
+                  href={`/dashboard/search?fundingType=${t.fundingType}`}
+                  className="block p-8 group hover:bg-white/5 transition-colors"
+                >
+                  <span className="text-xs font-semibold text-coral uppercase tracking-wider">{t.range}</span>
+                  <h3 className="mt-3 font-serif text-xl text-cream group-hover:text-coral transition-colors">{t.title}</h3>
+                  <p className="mt-3 text-sm text-cream/50 leading-relaxed">{t.desc}</p>
+                  <span className="mt-4 inline-flex items-center gap-1 text-xs text-cream/30 group-hover:text-coral/70 transition-colors">
+                    Browse {t.title} <ArrowRight className="w-3 h-3" />
+                  </span>
+                </Link>
               </motion.div>
             ))}
           </div>

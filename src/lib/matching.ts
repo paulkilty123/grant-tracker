@@ -313,26 +313,35 @@ export function computeMatchScore(
     }
   }
 
-  // Funding type affinity — use org_stage as a proxy until
-  // funding_type_preferences is added to org profile in Phase 3
-  if (grant.fundingType && org.org_stage) {
-    const isEarly    = ['idea', 'pre_revenue', 'early'].includes(org.org_stage)
-    const isGrowth   = ['growth', 'established'].includes(org.org_stage)
-    const ft         = grant.fundingType
+  // Funding type affinity
+  if (grant.fundingType) {
+    const ft   = grant.fundingType
+    const prefs = org.funding_type_preferences ?? []
 
-    if (isEarly && (ft === 'accelerator' || ft === 'support_programme')) {
-      // Early-stage orgs benefit most from structured programmes
-      funderTypeScore = Math.min(15, funderTypeScore + 3)
-      reasons.push('Programme suits your stage')
-    } else if (isGrowth && ft === 'accelerator') {
-      // Accelerators are less useful for established orgs
-      funderTypeScore = Math.max(0, funderTypeScore - 2)
-    } else if (isGrowth && ft === 'social_investment') {
-      // Established orgs can service repayable finance
-      funderTypeScore = Math.min(15, funderTypeScore + 2)
-      reasons.push('Social investment suits growth stage')
-    } else if (ft === 'diversity_fund') {
-      // Don't apply affinity to diversity funds — eligibility depends on founder identity, not stage
+    if (prefs.length > 0) {
+      // ── Explicit preference (Phase 3): use what the user told us ──────────
+      if (prefs.includes(ft)) {
+        funderTypeScore = Math.min(15, funderTypeScore + 4)
+        reasons.push('Matches your funding type preference')
+      } else {
+        // Explicitly not preferred — mild penalty
+        funderTypeScore = Math.max(0, funderTypeScore - 3)
+      }
+    } else if (org.org_stage) {
+      // ── Stage proxy fallback (used until user sets preferences) ───────────
+      const isEarly  = ['idea', 'pre_revenue', 'early'].includes(org.org_stage)
+      const isGrowth = ['growth', 'established'].includes(org.org_stage)
+
+      if (isEarly && (ft === 'accelerator' || ft === 'support_programme')) {
+        funderTypeScore = Math.min(15, funderTypeScore + 3)
+        reasons.push('Programme suits your stage')
+      } else if (isGrowth && ft === 'accelerator') {
+        funderTypeScore = Math.max(0, funderTypeScore - 2)
+      } else if (isGrowth && ft === 'social_investment') {
+        funderTypeScore = Math.min(15, funderTypeScore + 2)
+        reasons.push('Social investment suits growth stage')
+      }
+      // Diversity funds exempt — eligibility depends on founder identity
     }
   }
 

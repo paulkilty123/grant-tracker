@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Sparkles } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner, createOrganisation, updateOrganisation } from '@/lib/organisations'
-import type { Organisation, OrgType, LegalStructure, OrgStage, ImpactSector, FunderType } from '@/types'
+import type { Organisation, OrgType, LegalStructure, OrgStage, ImpactSector, FunderType, FundingType } from '@/types'
 
 const LEGAL_STRUCTURE_OPTIONS: { value: LegalStructure; label: string; hint?: string }[] = [
   { value: 'cic_guarantee',    label: 'CIC — Limited by Guarantee',         hint: 'Most common CIC structure' },
@@ -41,6 +41,16 @@ const IMPACT_SECTOR_OPTIONS: { value: ImpactSector; label: string }[] = [
   { value: 'justice',       label: 'Justice, Rights & Democracy'},
   { value: 'financial',     label: 'Financial Inclusion'        },
   { value: 'international', label: 'International & Fair Trade' },
+]
+
+const FUNDING_TYPE_OPTIONS: { value: FundingType; label: string; desc: string }[] = [
+  { value: 'grant',              label: 'Grants & Awards',       desc: 'One-off or multi-year cash grants, bursaries, prizes' },
+  { value: 'accelerator',        label: 'Accelerators',          desc: 'Structured cohort programmes with mentoring & network' },
+  { value: 'support_programme',  label: 'Support Programmes',    desc: 'Fellowships, capacity building, training, incubators' },
+  { value: 'social_investment',  label: 'Social Investment',     desc: 'Repayable loans and patient capital' },
+  { value: 'diversity_fund',     label: 'Diversity Funds',       desc: 'Funds explicitly targeting underrepresented groups' },
+  { value: 'blended_finance',    label: 'Blended Finance',       desc: 'Part-grant part-loan, matched trading, community shares' },
+  { value: 'in_kind',            label: 'In-Kind Support',       desc: 'Software credits, ad grants, free workspace, pro bono' },
 ]
 
 // Structures where "social mission declared" soft-match is relevant
@@ -97,6 +107,7 @@ interface FormState {
   minGrantTarget: string
   maxGrantTarget: string
   funderTypePreferences: FunderType[]
+  fundingTypePreferences: FundingType[]
   // Mission
   mission: string
   // Alert preferences
@@ -129,6 +140,7 @@ const EMPTY_FORM: FormState = {
   minGrantTarget: '',
   maxGrantTarget: '',
   funderTypePreferences: [],
+  fundingTypePreferences: [],
   mission: '',
   alertsEnabled: false,
   alertFrequency: 'weekly',
@@ -160,6 +172,7 @@ function orgToForm(org: Organisation): FormState {
     minGrantTarget:             org.min_grant_target != null ? String(org.min_grant_target) : '',
     maxGrantTarget:             org.max_grant_target != null ? String(org.max_grant_target) : '',
     funderTypePreferences:      org.funder_type_preferences ?? [],
+    fundingTypePreferences:     (org.funding_type_preferences ?? []) as FundingType[],
     mission:                    org.mission ?? '',
     alertsEnabled:              (org as Organisation & { alerts_enabled?: boolean }).alerts_enabled ?? false,
     alertFrequency:             (org as Organisation & { alert_frequency?: string }).alert_frequency ?? 'weekly',
@@ -239,6 +252,15 @@ export default function ProfilePage() {
     }))
   }
 
+  function toggleFundingType(type: FundingType) {
+    setForm(prev => ({
+      ...prev,
+      fundingTypePreferences: prev.fundingTypePreferences.includes(type)
+        ? prev.fundingTypePreferences.filter(t => t !== type)
+        : [...prev.fundingTypePreferences, type],
+    }))
+  }
+
   function toggleImpactSector(sector: ImpactSector) {
     setForm(prev => {
       const current = prev.impactSectors
@@ -314,6 +336,7 @@ export default function ProfilePage() {
       min_grant_target:             form.minGrantTarget ? parseInt(form.minGrantTarget.replace(/,/g, '')) : null,
       max_grant_target:             form.maxGrantTarget ? parseInt(form.maxGrantTarget.replace(/,/g, '')) : null,
       funder_type_preferences:      form.funderTypePreferences,
+      funding_type_preferences:     form.fundingTypePreferences,
       owner_id:                     userId,
       alerts_enabled:               form.alertsEnabled,
       alert_frequency:              form.alertFrequency,
@@ -695,10 +718,78 @@ export default function ProfilePage() {
           </p>
         </div>
 
-        {/* ── Section 5: Email Alerts ── */}
+        {/* ── Section 5: Grant Preferences ── */}
         <div className="card">
           <h3 className="text-sm font-semibold text-charcoal mb-1 flex items-center gap-2">
             <span className="w-6 h-6 rounded bg-charcoal/10 text-charcoal text-xs flex items-center justify-center font-bold">5</span>
+            Grant Preferences
+          </h3>
+          <p className="text-xs text-mid mb-4 ml-8">Tell us what kinds of funding you&apos;re interested in — improves your match scores</p>
+
+          {/* Funding type preferences */}
+          <div className="mb-5">
+            <label className="block text-sm font-medium text-charcoal mb-1.5">
+              Funding types I&apos;m interested in
+              <span className="text-light font-normal ml-1">(select all that apply)</span>
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {FUNDING_TYPE_OPTIONS.map(opt => {
+                const selected = form.fundingTypePreferences.includes(opt.value)
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => toggleFundingType(opt.value)}
+                    className={`flex flex-col items-start px-3 py-2.5 rounded border text-left transition-all ${
+                      selected
+                        ? 'border-charcoal bg-charcoal/10 text-charcoal'
+                        : 'border-warm text-mid hover:border-coral hover:text-coral'
+                    }`}
+                  >
+                    <span className="text-xs font-semibold">{opt.label}</span>
+                    <span className="text-xs opacity-70 mt-0.5">{opt.desc}</span>
+                    {selected && <span className="text-charcoal text-xs font-bold mt-1">✓ Selected</span>}
+                  </button>
+                )
+              })}
+            </div>
+            <p className="text-xs text-light mt-2">Leave blank to see all funding types</p>
+          </div>
+
+          {/* Funder type preferences */}
+          <div>
+            <label className="block text-sm font-medium text-charcoal mb-1.5">
+              Preferred funder types
+              <span className="text-light font-normal ml-1">(select all that apply)</span>
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {FUNDER_TYPE_OPTIONS.map(opt => {
+                const selected = form.funderTypePreferences.includes(opt.value)
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => toggleFunderType(opt.value)}
+                    className={`px-3 py-1.5 rounded border text-xs font-medium transition-all ${
+                      selected
+                        ? 'border-charcoal bg-charcoal/10 text-charcoal'
+                        : 'border-warm text-mid hover:border-coral hover:text-coral'
+                    }`}
+                  >
+                    {opt.label}
+                    {selected && <span className="ml-1 font-bold">✓</span>}
+                  </button>
+                )
+              })}
+            </div>
+            <p className="text-xs text-light mt-2">Leave blank to see all funder types</p>
+          </div>
+        </div>
+
+        {/* ── Section 6: Email Alerts ── */}
+        <div className="card">
+          <h3 className="text-sm font-semibold text-charcoal mb-1 flex items-center gap-2">
+            <span className="w-6 h-6 rounded bg-charcoal/10 text-charcoal text-xs flex items-center justify-center font-bold">6</span>
             Email Alerts
           </h3>
           <p className="text-xs text-mid mb-4 ml-8">Get notified by email when new grants match your organisation</p>

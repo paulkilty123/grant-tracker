@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Search, ThumbsUp, ThumbsDown, ChevronDown, Layers, DollarSign, Rocket, Database, Globe, Clock, Building2, SlidersHorizontal, Sparkles, MapPin } from 'lucide-react'
 import { SEED_GRANTS } from '@/lib/grants'
 import { formatRange } from '@/lib/utils'
@@ -15,9 +16,9 @@ import type { GrantOpportunity, Organisation, FunderType, FundingType, ImpactSec
 import type { InteractionAction } from '@/lib/interactions'
 import type { SearchHistoryItem } from '@/lib/searchHistory'
 
-// Normalise long or awkward sector names for display only
+// Normalise long or awkward free-text sector names for display on grant cards
 const SECTOR_DISPLAY: Record<string, string | null> = {
-  'all sectors':               null,   // meaningless — hide
+  'all sectors':               null,
   'disadvantaged communities': 'Disadvantaged',
   'international development': 'Intl. development',
   'digital preservation':      'Digital pres.',
@@ -40,54 +41,20 @@ function sectorLabel(s: string): string | null {
   return s
 }
 
-// Themed sector groups for the filter panel
-const SECTOR_GROUPS: { label: string; icon: string; sectors: string[] }[] = [
-  { label: 'People & Community', icon: '🤝', sectors: [
-    'community', 'young people', 'older people', 'women', 'LGBTQ+',
-    'disability', 'carers', 'veterans', 'families', 'loneliness',
-  ]},
-  { label: 'Health & Wellbeing', icon: '🏥', sectors: [
-    'health', 'mental health', 'wellbeing', 'addiction', 'cancer',
-    'physical activity', 'sport',
-  ]},
-  { label: 'Social Justice', icon: '⚖️', sectors: [
-    'poverty', 'inequality', 'racial equity', 'human rights',
-    'criminal justice', 'migration', 'asylum seekers',
-    'domestic abuse', 'homelessness', 'equality', 'gender equality',
-  ]},
-  { label: 'Arts & Culture', icon: '🎭', sectors: [
-    'arts', 'culture', 'heritage', 'film', 'documentary', 'screen',
-    'television', 'animation', 'music', 'museums', 'libraries',
-    'creative industries', 'Welsh language',
-  ]},
-  { label: 'Education & Employment', icon: '📚', sectors: [
-    'education', 'skills', 'employment', 'leadership',
-    'vocational training', 'digital skills',
-  ]},
-  { label: 'Environment & Climate', icon: '🌿', sectors: [
-    'environment', 'climate', 'biodiversity', 'conservation',
-    'energy', 'farming', 'food',
-  ]},
-  { label: 'Technology & Digital', icon: '💻', sectors: [
-    'technology', 'digital', 'digital inclusion', 'digital preservation',
-    'ai', 'open source', 'connectivity', 'online safety', 'innovation',
-  ]},
-  { label: 'Enterprise & Finance', icon: '💼', sectors: [
-    'social enterprise', 'enterprise', 'financial inclusion',
-    'economic inclusion', 'economic development', 'economic justice',
-    'capacity building', 'community business', 'social change',
-  ]},
-  { label: 'Place & Housing', icon: '🏘️', sectors: [
-    'housing', 'homelessness', 'rural', 'urban', 'regeneration', 'transport',
-  ]},
-  { label: 'International', icon: '🌍', sectors: [
-    'international development', 'peacebuilding', 'open access',
-    'disaster relief',
-  ]},
-  { label: 'Research & Policy', icon: '🔬', sectors: [
-    'research', 'social policy', 'advocacy', 'democracy',
-    'science', 'humanities', 'journalism',
-  ]},
+// 12-sector taxonomy — used for the filter panel and matching
+const IMPACT_SECTOR_FILTERS: { id: ImpactSector; label: string }[] = [
+  { id: 'community',    label: 'Community' },
+  { id: 'health',       label: 'Health' },
+  { id: 'education',    label: 'Education' },
+  { id: 'employment',   label: 'Employment' },
+  { id: 'creative',     label: 'Arts & Culture' },
+  { id: 'environment',  label: 'Environment' },
+  { id: 'housing',      label: 'Housing' },
+  { id: 'food',         label: 'Food' },
+  { id: 'justice',      label: 'Justice & Equality' },
+  { id: 'tech',         label: 'Technology' },
+  { id: 'financial',    label: 'Financial Inclusion' },
+  { id: 'international',label: 'International' },
 ]
 
 const FUNDER_TYPES = [
@@ -606,6 +573,12 @@ function normaliseScrapedGrant(row: Record<string, unknown>): EnrichedGrant {
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 export default function SearchPage() {
+  const searchParams = useSearchParams()
+
+  // Initialise filters from URL params (used by landing page category links)
+  const initSector      = searchParams.get('sector')      as ImpactSector | null
+  const initFundingType = searchParams.get('fundingType') as FundingType   | null
+
   const [query, setQuery]               = useState('')
   const [activeType, setActiveType]     = useState('all')
   const [aiResults, setAiResults]       = useState<AIResult[] | null>(null)
@@ -624,8 +597,12 @@ export default function SearchPage() {
   const [amountMin, setAmountMin]         = useState('')
   const [amountMax, setAmountMax]         = useState('')
   const [deadlineFilter, setDeadlineFilter] = useState<'all' | 'rolling' | 'has_deadline'>('all')
-  const [activeSectors, setActiveSectors]         = useState<Set<string>>(new Set())
-  const [activeFundingType, setActiveFundingType] = useState<FundingType | 'all'>('all')
+  const [activeSectors, setActiveSectors]         = useState<Set<ImpactSector>>(() =>
+    initSector ? new Set([initSector]) : new Set()
+  )
+  const [activeFundingType, setActiveFundingType] = useState<FundingType | 'all'>(
+    initFundingType ?? 'all'
+  )
   const [categoryFilter, setCategoryFilter]       = useState<'all' | 'grants' | 'programmes'>('all')
   const [filtersOpen, setFiltersOpen]             = useState(false)
   const [entryTypeFilter, setEntryTypeFilter]     = useState<'all' | 'live' | 'funders'>('all')
@@ -898,19 +875,10 @@ export default function SearchPage() {
   // (e.g. during initial setup before promote-all-seeds has been run).
   const allGrants = scrapedGrants.length > 50 ? scrapedGrants : [...SEED_GRANTS, ...scrapedGrants]
 
-  // ── Available sectors (from all grants) ──────────────────────────────────
-  // Filter out scraped verbatim sentences (>30 chars) and meaningless catch-alls
-  const availableSectors: string[] = (() => {
-    const counts = new Map<string, number>()
-    allGrants.forEach(g => g.sectors.forEach(s => counts.set(s, (counts.get(s) ?? 0) + 1)))
-    return Array.from(counts.entries())
-      .filter(([s]) => s !== 'all sectors' && s.length <= 30)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 40)
-      .map(([s]) => s)
-  })()
+  // Sector filter now uses the fixed 12-sector taxonomy (IMPACT_SECTOR_FILTERS)
+  // rather than a dynamic list derived from free-text grant.sectors[]
 
-  function toggleSector(s: string) {
+  function toggleSector(s: ImpactSector) {
     setActiveSectors(prev => {
       const next = new Set(prev)
       next.has(s) ? next.delete(s) : next.add(s)
@@ -955,8 +923,11 @@ export default function SearchPage() {
         deadlineFilter === 'all'          ? true :
         deadlineFilter === 'rolling'      ? g.isRolling :
         /* has_deadline */                  (!g.isRolling && g.deadline != null)
+      // Use structured impactSectors when present; fall back to include grant
+      // (don't exclude grants that haven't been tagged yet, e.g. seed grants)
       const matchesSectors = activeSectors.size === 0 ||
-        g.sectors.some(s => activeSectors.has(s))
+        !(g as EnrichedGrant).impactSectors?.length ||
+        (g as EnrichedGrant).impactSectors!.some(s => activeSectors.has(s))
       const gEntryType = g.deadline ? 'live' : g.isRolling ? 'rolling' : 'profile'
       const matchesEntryType =
         entryTypeFilter === 'all'     ? true :
@@ -1668,36 +1639,25 @@ export default function SearchPage() {
               </div>
             </div>
 
-            {/* Row 3: Sector — flat group pills */}
-            {availableSectors.length > 0 && (
-              <div>
-                <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Sector</p>
-                <div className="flex gap-1.5 flex-wrap">
-                  {SECTOR_GROUPS.map(group => {
-                    const groupSectors = group.sectors.filter(s => availableSectors.includes(s))
-                    if (groupSectors.length === 0) return null
-                    const isActive = groupSectors.some(s => activeSectors.has(s))
-                    const handleClick = () => {
-                      if (isActive) {
-                        groupSectors.forEach(s => activeSectors.has(s) && toggleSector(s))
-                      } else {
-                        groupSectors.forEach(s => !activeSectors.has(s) && toggleSector(s))
-                      }
-                    }
-                    return (
-                      <button key={group.label} onClick={handleClick}
-                        className={`px-3 py-1.5 border text-xs font-medium transition-all ${
-                          isActive
-                            ? 'bg-charcoal border-charcoal text-white'
-                            : 'border-warm text-mid hover:border-coral hover:text-coral'
-                        }`}>
-                        {group.label}
-                      </button>
-                    )
-                  })}
-                </div>
+            {/* Row 3: Sector — 12-sector taxonomy pills */}
+            <div>
+              <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Sector</p>
+              <div className="flex gap-1.5 flex-wrap">
+                {IMPACT_SECTOR_FILTERS.map(s => {
+                  const isActive = activeSectors.has(s.id)
+                  return (
+                    <button key={s.id} onClick={() => toggleSector(s.id)}
+                      className={`px-3 py-1.5 border text-xs font-medium transition-all ${
+                        isActive
+                          ? 'bg-charcoal border-charcoal text-white'
+                          : 'border-warm text-mid hover:border-coral hover:text-coral'
+                      }`}>
+                      {s.label}
+                    </button>
+                  )
+                })}
               </div>
-            )}
+            </div>
 
             {/* Reset all */}
             {activeFilterCount > 0 && (
