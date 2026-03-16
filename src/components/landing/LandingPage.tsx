@@ -99,44 +99,44 @@ const testimonials = [
 
 /* ─── Mockups ─── */
 const SearchMockup = () => (
-  <div className="bg-white border border-warm p-5">
-    <div className="flex items-center gap-2 mb-4 pb-3 border-b border-warm">
-      <div className="flex gap-1.5">
-        <div className="h-2.5 w-2.5 rounded-full bg-red-300/60" />
-        <div className="h-2.5 w-2.5 rounded-full bg-gold/40" />
-        <div className="h-2.5 w-2.5 rounded-full bg-sage/30" />
+  <div className="bg-white border border-warm/80 p-5" style={{ boxShadow: '0 4px 24px rgba(26,46,43,0.08)' }}>
+    <div className="flex items-center gap-2 mb-4">
+      <div className="w-7 h-7 rounded-full bg-warm flex items-center justify-center flex-shrink-0">
+        <Search className="w-3.5 h-3.5 text-mid" />
       </div>
-      <span className="mx-auto text-xs text-mid">granttracker.co.uk/search</span>
+      <p className="text-[11px] font-bold text-charcoal uppercase tracking-wider">Search</p>
     </div>
-    <div className="flex items-center gap-2 border border-warm bg-cream/50 px-4 py-3">
-      <Search size={16} className="text-mid" />
-      <span className="text-sm text-mid">Community garden project in South London</span>
-      <span className="ml-auto bg-forest px-3 py-1 text-xs font-medium text-white">Search</span>
+    <div className="flex items-center gap-2 bg-[#f5f2ed] px-3 py-2.5 mb-4 border border-warm/40">
+      <Search size={14} className="text-mid flex-shrink-0" />
+      <span className="text-sm text-mid flex-1">Community garden project in South London</span>
+      <span className="bg-forest px-3 py-1 text-xs font-medium text-white">Search</span>
     </div>
-    <div className="mt-4 space-y-3">
+    <div className="flex flex-col">
       {[
-        { org: 'London Community Foundation', name: 'Grow to Give — Community Growing Grants', match: 94, amount: 'Up to £8,000', tags: ['South London', 'Closes Apr 15'] },
-        { org: 'National Lottery Community Fund', name: 'Small Grants for Green Spaces', match: 87, amount: '£1,000 – £10,000', tags: ['All UK', 'Rolling'] },
-        { org: 'Southwark Council', name: 'Southwark Community Fund', match: 82, amount: 'Up to £5,000', tags: ['Southwark', 'Closes May 1'] },
-      ].map((r) => (
-        <div key={r.name} className="border border-warm bg-cream/30 p-4">
-          <div className="flex items-start justify-between">
+        { org: 'London Community Foundation', name: 'Grow to Give — Community Growing Grants', match: 94, amount: 'Up to £8,000', tags: ['South London', 'Closes Apr 15'], color: 'bg-forest' },
+        { org: 'National Lottery Community Fund', name: 'Small Grants for Green Spaces', match: 87, amount: '£1,000 – £10,000', tags: ['All UK', 'Rolling'], color: 'bg-forest/70' },
+        { org: 'Southwark Council', name: 'Southwark Community Fund', match: 82, amount: 'Up to £5,000', tags: ['Southwark', 'Closes May 1'], color: 'bg-amber-400' },
+      ].map((r, i) => (
+        <div key={r.name} className={`py-3 ${i < 2 ? 'border-b border-warm/40' : ''}`}>
+          <div className="flex items-start justify-between gap-3 mb-2">
             <div>
-              <p className="text-sm font-semibold text-charcoal">{r.name}</p>
+              <p className="text-sm font-semibold text-charcoal leading-snug">{r.name}</p>
               <p className="text-xs text-mid mt-0.5">{r.org}</p>
             </div>
             <span className="whitespace-nowrap text-sm font-semibold text-charcoal">{r.amount}</span>
           </div>
-          <div className="mt-2 flex items-center gap-2 flex-wrap">
-            {r.tags.map((tag) => (
-              <span key={tag} className="bg-warm px-2 py-0.5 text-[11px] text-mid">{tag}</span>
-            ))}
-          </div>
-          <div className="mt-2 flex items-center gap-2">
-            <div className="flex-1 h-1.5 bg-warm">
-              <div className="h-1.5 bg-forest" style={{ width: `${r.match}%` }} />
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex gap-1.5 flex-wrap">
+              {r.tags.map((tag) => (
+                <span key={tag} className="bg-[#f5f2ed] px-2 py-0.5 text-[11px] text-mid">{tag}</span>
+              ))}
             </div>
-            <span className="text-xs font-bold text-forest">{r.match}%</span>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <div className="w-14 h-1.5 bg-warm rounded-full overflow-hidden">
+                <div className={`h-full ${r.color} rounded-full`} style={{ width: `${r.match}%` }} />
+              </div>
+              <span className="text-xs font-bold text-charcoal">{r.match}%</span>
+            </div>
           </div>
         </div>
       ))}
@@ -145,21 +145,22 @@ const SearchMockup = () => (
 )
 
 const PipelineMockup = () => (
-  <div className="border border-warm bg-white p-6">
-    <div className="flex items-center justify-between mb-1">
-      <h3 className="text-sm font-semibold text-charcoal">Funding Pipeline</h3>
+  <div className="bg-white border border-warm/80 p-5" style={{ boxShadow: '0 4px 24px rgba(26,46,43,0.08)' }}>
+    <div className="flex items-center gap-2 mb-3">
+      <div className="w-7 h-7 rounded-full bg-coral/15 flex items-center justify-center flex-shrink-0">
+        <ArrowRight className="w-3.5 h-3.5 text-coral" />
+      </div>
+      <p className="text-[11px] font-bold text-coral uppercase tracking-wider">Pipeline</p>
     </div>
-    <div className="flex items-center gap-4 mb-5 text-xs text-mid">
-      <span>7 opportunities tracked</span>
-      <span className="bg-forest/10 px-2 py-0.5 text-sm font-bold text-forest">£187,500 active</span>
-    </div>
-    <div className="grid grid-cols-3 gap-2 text-[10px]">
-      {[{ name: 'Identified', items: 2 }, { name: 'Applying', items: 1 }, { name: 'Submitted', items: 1 }].map((col) => (
+    <p className="font-serif text-[28px] font-bold text-charcoal leading-tight">£187,500</p>
+    <p className="text-[11px] text-coral font-medium mb-4">7 active opportunities</p>
+    <div className="grid grid-cols-3 gap-2 mb-4 text-[10px]">
+      {[{ name: 'Identified', items: 2 }, { name: 'Applying', items: 2 }, { name: 'Submitted', items: 1 }].map((col) => (
         <div key={col.name}>
           <div className="mb-2 text-center font-medium text-mid uppercase tracking-wider">{col.name}</div>
           <div className="space-y-2">
             {Array.from({ length: col.items }).map((_, i) => (
-              <div key={i} className="bg-warm/60 p-2.5">
+              <div key={i} className="bg-[#f5f2ed] p-2.5">
                 <div className="h-2 w-3/4 bg-charcoal/10" />
                 <div className="mt-1.5 h-1.5 w-1/2 bg-charcoal/5" />
               </div>
@@ -168,16 +169,16 @@ const PipelineMockup = () => (
         </div>
       ))}
     </div>
-    <div className="mt-4 border border-forest/20 bg-forest/5 p-4">
-      <div className="flex items-center justify-between">
+    <div className="bg-[#f5f2ed] border border-warm/60 p-3.5">
+      <div className="flex items-center justify-between mb-2">
         <div>
-          <p className="text-xs text-mid">Paul Hamlyn Foundation</p>
+          <p className="text-[10px] text-mid">Paul Hamlyn Foundation</p>
           <p className="text-sm font-semibold text-charcoal">Youth Fund 2025</p>
         </div>
         <span className="text-sm font-bold text-forest">£30k</span>
       </div>
-      <div className="mt-2 flex items-center gap-3">
-        <span className="text-[11px] text-red-500 font-medium">Deadline: 15 Mar 2025</span>
+      <div className="flex items-center gap-3">
+        <span className="text-[11px] text-coral font-medium">Deadline: 15 Mar</span>
         <span className="text-[11px] text-mid">First draft 50%</span>
       </div>
     </div>
@@ -185,10 +186,13 @@ const PipelineMockup = () => (
 )
 
 const DashboardMockup = () => (
-  <div className="border border-warm bg-white p-6">
-    <div className="flex items-center justify-between mb-5">
-      <h3 className="text-sm font-semibold text-charcoal">Dashboard</h3>
-      <span className="text-[11px] text-mid">Last updated: just now</span>
+  <div className="bg-white border border-warm/80 p-5" style={{ boxShadow: '0 4px 24px rgba(26,46,43,0.08)' }}>
+    <div className="flex items-center gap-2 mb-4">
+      <div className="w-7 h-7 rounded-full bg-warm flex items-center justify-center flex-shrink-0">
+        <LayoutGrid className="w-3.5 h-3.5 text-mid" />
+      </div>
+      <p className="text-[11px] font-bold text-charcoal uppercase tracking-wider">Dashboard</p>
+      <span className="ml-auto text-[10px] text-mid">Just now</span>
     </div>
     <div className="grid grid-cols-3 gap-2 mb-4">
       {[
@@ -196,38 +200,38 @@ const DashboardMockup = () => (
         { label: 'Active', value: '7', Icon: Activity, accent: false },
         { label: 'Due this week', value: '2', Icon: Clock, accent: false },
       ].map((s) => (
-        <div key={s.label} className={`p-3 border ${s.accent ? 'border-forest/20 bg-forest/5' : 'border-warm bg-cream/40'}`}>
-          <s.Icon size={14} className={`${s.accent ? 'text-forest' : 'text-mid'} mb-1`} />
-          <p className={`text-lg font-bold ${s.accent ? 'text-forest' : 'text-charcoal'}`}>{s.value}</p>
-          <p className="text-[10px] text-mid">{s.label}</p>
+        <div key={s.label} className={`p-3 ${s.accent ? 'bg-forest/8 border border-forest/20' : 'bg-[#f5f2ed]'}`} style={s.accent ? { background: 'rgba(45,107,74,0.08)' } : {}}>
+          <s.Icon size={14} className={`${s.accent ? 'text-forest' : 'text-mid'} mb-1.5`} />
+          <p className={`text-lg font-bold leading-tight ${s.accent ? 'text-forest' : 'text-charcoal'}`}>{s.value}</p>
+          <p className="text-[10px] text-mid mt-0.5">{s.label}</p>
         </div>
       ))}
     </div>
     <div className="mb-4">
-      <p className="text-[11px] font-medium text-mid mb-1.5">Pipeline breakdown</p>
+      <p className="text-[11px] font-medium text-mid uppercase tracking-wider mb-2">Pipeline breakdown</p>
       <div className="flex h-2 w-full overflow-hidden">
         <div className="bg-forest/30 w-[35%]" /><div className="bg-forest/60 w-[30%]" />
-        <div className="bg-forest w-[20%]" /><div className="bg-coral w-[15%]" />
+        <div className="bg-forest w-[20%]" /><div className="bg-coral/70 w-[15%]" />
       </div>
-      <div className="flex justify-between mt-1 text-[9px] text-mid">
+      <div className="flex justify-between mt-1.5 text-[9px] text-mid uppercase tracking-wide">
         <span>Identified</span><span>Applying</span><span>Submitted</span><span>Awarded</span>
       </div>
     </div>
-    <div className="border border-warm bg-cream/40 p-3">
-      <div className="flex items-center gap-1.5 mb-2">
+    <div className="bg-[#f5f2ed] border border-warm/60 p-3.5">
+      <div className="flex items-center gap-1.5 mb-2.5">
         <Calendar size={12} className="text-mid" />
-        <p className="text-[11px] font-semibold text-charcoal">Upcoming deadlines</p>
+        <p className="text-[11px] font-bold text-charcoal uppercase tracking-wider">Upcoming deadlines</p>
       </div>
-      <div className="space-y-2">
-        {[{ name: 'Youth Fund 2025', org: 'Paul Hamlyn', days: 2, amount: '£30k' }, { name: 'Green Spaces Grant', org: 'National Lottery', days: 8, amount: '£10k' }].map((d) => (
-          <div key={d.name} className="flex items-center justify-between">
+      <div className="flex flex-col gap-2.5">
+        {[{ name: 'Youth Fund 2025', org: 'Paul Hamlyn', days: 2, amount: '£30k' }, { name: 'Green Spaces Grant', org: 'National Lottery', days: 8, amount: '£10k' }].map((d, i) => (
+          <div key={d.name} className={`flex items-center justify-between ${i < 1 ? 'border-b border-warm/40 pb-2.5' : ''}`}>
             <div>
-              <p className="text-xs font-medium text-charcoal">{d.name}</p>
+              <p className="text-xs font-semibold text-charcoal">{d.name}</p>
               <p className="text-[10px] text-mid">{d.org}</p>
             </div>
             <div className="text-right">
               <p className="text-xs font-bold text-charcoal">{d.amount}</p>
-              <p className={`text-[10px] font-medium ${d.days <= 3 ? 'text-red-500' : 'text-mid'}`}>{d.days}d left</p>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${d.days <= 3 ? 'bg-coral text-white' : 'bg-warm text-mid'}`}>{d.days}d</span>
             </div>
           </div>
         ))}
