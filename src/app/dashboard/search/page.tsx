@@ -155,19 +155,19 @@ interface LiveSearchResponse {
 }
 
 const LIVE_SECTOR_FILTERS = [
-  { id: 'mental health',              label: '🧠 Mental Health' },
-  { id: 'youth',                      label: '🧒 Youth' },
-  { id: 'elderly',                    label: '👴 Older People' },
-  { id: 'education & training',       label: '📚 Education' },
-  { id: 'housing',                    label: '🏠 Housing' },
-  { id: 'disability',                 label: '♿ Disability' },
-  { id: 'arts & culture',             label: '🎨 Arts & Culture' },
-  { id: 'sport & physical activity',  label: '⚽ Sport' },
-  { id: 'environment',                label: '🌿 Environment' },
-  { id: 'food poverty',               label: '🍞 Food Poverty' },
-  { id: 'community',                  label: '🏘 Community' },
-  { id: 'social enterprise',          label: '🌱 Social Enterprise' },
-  { id: 'women & girls',              label: '♀ Women & Girls' },
+  { id: 'mental health',              label: 'Mental Health' },
+  { id: 'youth',                      label: 'Youth' },
+  { id: 'elderly',                    label: 'Older People' },
+  { id: 'education & training',       label: 'Education' },
+  { id: 'housing',                    label: 'Housing' },
+  { id: 'disability',                 label: 'Disability' },
+  { id: 'arts & culture',             label: 'Arts & Culture' },
+  { id: 'sport & physical activity',  label: 'Sport' },
+  { id: 'environment',                label: 'Environment' },
+  { id: 'food poverty',               label: 'Food Poverty' },
+  { id: 'community',                  label: 'Community' },
+  { id: 'social enterprise',          label: 'Social Enterprise' },
+  { id: 'women & girls',              label: 'Women & Girls' },
 ]
 
 const LIVE_EXAMPLE_QUERIES = [
@@ -1308,8 +1308,7 @@ export default function SearchPage() {
                 onClick={() => { setSearchMode(m.id); setLiveResults(null); setAiResults(null) }}
                 className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold transition-all ${
                   searchMode === m.id
-                    ? m.id === 'live'
-                      ? 'bg-emerald-600 text-white shadow-sm'
+                    ? 'bg-charcoal text-white shadow-sm'
                       : 'bg-charcoal text-white shadow-sm'
                     : 'text-mid hover:text-charcoal'
                 }`}
@@ -1352,7 +1351,7 @@ export default function SearchPage() {
             disabled={searchMode === 'live' ? (liveLoading || (!isAdmin && weeklySearchCount >= WEEKLY_LIMIT)) : (aiLoading || !query.trim())}
             className={`px-5 h-12 text-white text-sm font-semibold whitespace-nowrap transition-colors disabled:opacity-50 ${
               searchMode === 'live'
-                ? 'bg-emerald-600 hover:bg-emerald-700'
+                ? 'bg-charcoal hover:bg-charcoal/90'
                 : 'bg-coral hover:bg-coral/90'
             }`}
           >
@@ -1440,36 +1439,36 @@ export default function SearchPage() {
           <div className="mt-4 space-y-4">
 
             {/* Explainer + usage */}
-            <div className="flex items-start justify-between gap-4 bg-emerald-50 border border-emerald-200 px-4 py-3">
+            <div className="flex items-start justify-between gap-4 bg-[#f5f2ed] border border-warm px-4 py-3">
               <div className="flex-1">
-                <p className="text-xs font-semibold text-emerald-900 mb-0.5">What is Live Search?</p>
-                <p className="text-xs text-emerald-800 leading-relaxed">
+                <p className="text-xs font-semibold text-charcoal mb-0.5">What is Live Search?</p>
+                <p className="text-xs text-mid leading-relaxed">
                   Searches the live web in real time — council sites, community foundations and specialist funders — to find hyper-local and newly announced grants not yet in our database. Takes 15–30 seconds.
                 </p>
               </div>
-              {/* Usage pill */}
+              {/* Usage counter */}
               {isAdmin ? (
-                <div className="flex-shrink-0 flex flex-col items-center px-3 py-2 border border-emerald-200 bg-white text-center min-w-[72px]">
-                  <p className="text-xl font-bold leading-none text-emerald-700">∞</p>
-                  <p className="text-[10px] font-medium mt-0.5 text-emerald-600">unlimited</p>
+                <div className="flex-shrink-0 flex flex-col items-center px-3 py-2 border border-warm bg-white text-center min-w-[72px]">
+                  <p className="text-xl font-bold leading-none text-charcoal">∞</p>
+                  <p className="text-[10px] font-medium mt-0.5 text-mid">unlimited</p>
                 </div>
               ) : (
-                <div className={`flex-shrink-0 flex flex-col items-center rounded-xl px-3 py-2 border text-center min-w-[72px] ${
+                <div className={`flex-shrink-0 flex flex-col items-center px-3 py-2 border text-center min-w-[72px] ${
                   weeklySearchCount >= WEEKLY_LIMIT
                     ? 'bg-red-50 border-red-200'
                     : weeklySearchCount === WEEKLY_LIMIT - 1
                     ? 'bg-amber-50 border-amber-200'
-                    : 'bg-white border-emerald-200'
+                    : 'bg-white border-warm'
                 }`}>
                   <p className={`text-xl font-bold leading-none ${
                     weeklySearchCount >= WEEKLY_LIMIT ? 'text-red-600'
                     : weeklySearchCount === WEEKLY_LIMIT - 1 ? 'text-amber-600'
-                    : 'text-emerald-700'
+                    : 'text-charcoal'
                   }`}>
                     {Math.max(0, WEEKLY_LIMIT - weeklySearchCount)}
                   </p>
                   <p className={`text-[10px] font-medium mt-0.5 ${
-                    weeklySearchCount >= WEEKLY_LIMIT ? 'text-red-500' : 'text-emerald-600'
+                    weeklySearchCount >= WEEKLY_LIMIT ? 'text-red-500' : 'text-mid'
                   }`}>left this week</p>
                 </div>
               )}
@@ -1526,10 +1525,10 @@ export default function SearchPage() {
                           if (item.location) setLocationFilter(item.location)
                           if (item.sectors.length) setLiveSelectedSectors(item.sectors)
                         }}
-                        className="text-xs text-forest font-medium hover:text-charcoal max-w-[200px] truncate"
+                        className="text-xs text-charcoal font-medium hover:text-coral max-w-[200px] truncate"
                       >
-                        🕐 {item.query}
-                        {item.result_count != null && <span className="text-sage ml-1">· {item.result_count}</span>}
+                        {item.query}
+                        {item.result_count != null && <span className="text-light ml-1">· {item.result_count}</span>}
                       </button>
                       <button
                         onClick={async () => {
@@ -1546,7 +1545,7 @@ export default function SearchPage() {
             {/* Example searches (when no history) */}
             {searchHistory.length === 0 && !liveResults && !liveLoading && (
               <div className="pt-3 border-t border-warm">
-                <p className="text-xs text-light mb-2">✦ Try an example</p>
+                <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Try an example</p>
                 <div className="flex flex-wrap gap-2">
                   {LIVE_EXAMPLE_QUERIES.map(q => (
                     <button key={q} onClick={() => setQuery(q)}
@@ -1557,7 +1556,7 @@ export default function SearchPage() {
               </div>
             )}
             {liveLoading && (
-              <div className="bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-800">
+              <div className="bg-[#f5f2ed] border border-warm px-4 py-3 text-sm text-mid">
                 Searching live funding sources, council sites and specialist funders… this takes 15–30 seconds.
               </div>
             )}
@@ -1748,7 +1747,7 @@ export default function SearchPage() {
             <div>
               <h3 className="font-semibold text-charcoal text-base flex items-center gap-2">
                 {liveSmartMatched ? `Live results for ${org?.name}` : 'Live Research Results'}
-                <span className="text-xs font-normal bg-forest/10 text-forest px-2 py-0.5">
+                <span className="text-xs font-normal bg-warm text-mid px-2 py-0.5">
                   {liveResults.grants.length} found
                 </span>
                 {liveResults._cached && (
