@@ -354,21 +354,89 @@ export default function LandingPage() {
             </motion.div>
           </div>
 
-          {/* Right: photo */}
-          <motion.div
-            {...fadeUp(0.2)}
-            className="flex-1 w-full lg:max-w-[560px] rounded-2xl overflow-hidden shadow-2xl shadow-charcoal/15 flex-shrink-0"
-            style={{ aspectRatio: '4/3' }}
-          >
-            <Image
-              src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200&q=85"
-              alt="Team collaborating on funding applications"
-              width={1200}
-              height={900}
-              className="w-full h-full object-cover"
-              priority
-            />
-          </motion.div>
+          {/* Right: stacked feature cards */}
+          <div className="flex-1 w-full lg:max-w-[520px] flex-shrink-0 relative" style={{ height: '520px' }}>
+
+            {/* Card 1: Search + results */}
+            <motion.div
+              {...fadeUp(0.2)}
+              className="absolute top-0 left-0 right-10 bg-white rounded-xl border border-warm/80 shadow-lg shadow-charcoal/8 p-4"
+              style={{ zIndex: 1 }}
+            >
+              <p className="text-[11px] font-semibold text-mid uppercase tracking-wider mb-3">Find Funding</p>
+              {/* Search input */}
+              <div className="flex items-center gap-2 bg-[#f5f2ed] rounded-lg px-3 py-2 mb-3 border border-warm/60">
+                <svg className="w-3.5 h-3.5 text-mid flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                <span className="text-[12px] text-charcoal/70">Social enterprise · London · Up to £50k</span>
+              </div>
+              {/* Results */}
+              <div className="flex flex-col gap-2">
+                {[
+                  { name: 'National Lottery Community Fund', type: 'Grant', amount: 'Up to £50,000', badge: 'Matched', badgeCol: 'bg-green-100 text-green-700' },
+                  { name: 'Innovate UK Smart Grant', type: 'Investment', amount: 'Up to £25,000', badge: 'Deadline soon', badgeCol: 'bg-amber-100 text-amber-700' },
+                  { name: 'Arts Council England', type: 'Grant', amount: 'Up to £15,000', badge: 'Matched', badgeCol: 'bg-green-100 text-green-700' },
+                ].map((g) => (
+                  <div key={g.name} className="flex items-center justify-between gap-3 py-2 border-b border-warm/40 last:border-0">
+                    <div>
+                      <p className="text-[11px] font-semibold text-charcoal leading-tight">{g.name}</p>
+                      <p className="text-[10px] text-mid mt-0.5">{g.type} · {g.amount}</p>
+                    </div>
+                    <span className={`text-[9px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0 ${g.badgeCol}`}>{g.badge}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Card 2: Pipeline */}
+            <motion.div
+              {...fadeUp(0.3)}
+              className="absolute bg-white rounded-xl border border-warm/80 shadow-xl shadow-charcoal/10 p-4"
+              style={{ top: '195px', left: '16px', right: '0px', zIndex: 2 }}
+            >
+              <p className="text-[11px] font-semibold text-mid uppercase tracking-wider mb-3">My Pipeline</p>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { stage: 'Researching', col: 'bg-blue-50 border-blue-100', items: ['Power to Change', 'Esmée Fairbairn'] },
+                  { stage: 'Applied', col: 'bg-amber-50 border-amber-100', items: ['National Lottery'] },
+                  { stage: 'Decision', col: 'bg-green-50 border-green-100', items: ['Big Society Capital', 'Innovate UK'] },
+                ].map((col) => (
+                  <div key={col.stage}>
+                    <p className="text-[9px] font-semibold text-mid uppercase tracking-wide mb-1.5">{col.stage}</p>
+                    <div className="flex flex-col gap-1.5">
+                      {col.items.map((item) => (
+                        <div key={item} className={`text-[10px] text-charcoal font-medium px-2 py-1.5 rounded-lg border ${col.col} leading-tight`}>{item}</div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Card 3: Alerts */}
+            <motion.div
+              {...fadeUp(0.4)}
+              className="absolute bg-white rounded-xl border border-warm/80 shadow-2xl shadow-charcoal/12 p-4"
+              style={{ top: '370px', left: '32px', right: '0px', zIndex: 3 }}
+            >
+              <p className="text-[11px] font-semibold text-mid uppercase tracking-wider mb-3">Upcoming Deadlines</p>
+              <div className="flex flex-col gap-2">
+                {[
+                  { grant: 'Innovate UK Smart Grant', days: '3 days', urgent: true },
+                  { grant: 'Power to Change Fund', days: '12 days', urgent: false },
+                  { grant: 'National Lottery Community Fund', days: '29 days', urgent: false },
+                ].map((a) => (
+                  <div key={a.grant} className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${a.urgent ? 'bg-red-400' : 'bg-amber-400'}`} />
+                      <p className="text-[11px] text-charcoal font-medium">{a.grant}</p>
+                    </div>
+                    <span className={`text-[10px] font-semibold flex-shrink-0 ${a.urgent ? 'text-red-500' : 'text-mid'}`}>in {a.days}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+
+          </div>
 
         </div>
       </section>
