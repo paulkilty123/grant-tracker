@@ -83,9 +83,9 @@ function PipelineCard({
       {item.application_progress != null && item.application_progress > 0 && (
         <div className="mt-2">
           <p className="text-[10px] text-light mb-0.5">{getWritingStage(item.application_progress).emoji} {getWritingStage(item.application_progress).label}</p>
-          <div className="h-1 bg-warm rounded-full overflow-hidden">
+          <div className="h-1 bg-warm overflow-hidden">
             <div
-              className={cn('h-full rounded-full transition-all', item.application_progress >= 83 ? 'bg-forest' : item.application_progress >= 50 ? 'bg-sage' : 'bg-amber-400')}
+              className={cn('h-full transition-all', item.application_progress >= 83 ? 'bg-forest' : item.application_progress >= 50 ? 'bg-sage' : 'bg-amber-400')}
               style={{ width: `${item.application_progress}%` }}
             />
           </div>
@@ -280,7 +280,7 @@ function PipelineModal({
                   key={s.id}
                   onClick={() => { onMove(item.id, s.id); setLocalStage(s.id as PipelineStage) }}
                   className={cn(
-                    'py-2 px-2 rounded-lg border-2 text-xs font-medium transition-all text-center',
+                    'py-2 px-2 border-2 text-xs font-medium transition-all text-center',
                     localStage === s.id
                       ? 'border-coral bg-coral/10 text-coral font-semibold'
                       : 'border-warm text-mid hover:border-coral hover:text-coral'
@@ -305,7 +305,7 @@ function PipelineModal({
                     type="button"
                     onClick={() => setProgress(s.value)}
                     className={cn(
-                      'flex flex-col items-center gap-1 py-2 px-1 rounded-xl border-2 text-center transition-all',
+                      'flex flex-col items-center gap-1 py-2 px-1 border-2 text-center transition-all',
                       isActive
                         ? 'border-coral bg-coral/10'
                         : 'border-warm bg-white hover:border-coral/50 hover:bg-coral/5'
@@ -320,10 +320,10 @@ function PipelineModal({
               })}
             </div>
             {/* Progress bar */}
-            <div className="h-2 bg-warm rounded-full overflow-hidden">
+            <div className="h-2 bg-warm overflow-hidden">
               <div
                 className={cn(
-                  'h-full rounded-full transition-all duration-300',
+                  'h-full transition-all duration-300',
                   progress >= 83 ? 'bg-forest' :
                   progress >= 50 ? 'bg-sage' :
                   progress > 0   ? 'bg-amber-400' : 'bg-warm'
@@ -627,22 +627,38 @@ export default function PipelinePage() {
           return (
             <div
               key={stage.id}
-              className="pipeline-col"
+              className={cn(
+                'pipeline-col',
+                stage.id === 'identified'  ? 'bg-[#f5f2ed]' :
+                stage.id === 'researching' ? 'bg-amber-50' :
+                stage.id === 'applying'    ? 'bg-orange-50' :
+                stage.id === 'submitted'   ? 'bg-[#edf4f2]' :
+                stage.id === 'won'         ? 'bg-[#e6f0ed]' :
+                                             'bg-[#fdf0ee]'
+              )}
               onDragOver={onColDragOver}
               onDragLeave={onColDragLeave}
               onDrop={e => onColDrop(e, stage.id as PipelineStage)}
             >
               <div className={cn(
                 'flex items-center justify-between text-[11px] font-bold uppercase tracking-wide mb-1 pb-2.5 border-b-2',
-                stage.id === 'identified'  ? 'border-mid text-mid' :
+                stage.id === 'identified'  ? 'border-mid/50 text-mid' :
                 stage.id === 'researching' ? 'border-amber-400 text-amber-600' :
                 stage.id === 'applying'    ? 'border-orange-400 text-orange-600' :
-                stage.id === 'submitted'   ? 'border-sage text-sage' :
+                stage.id === 'submitted'   ? 'border-forest/40 text-forest' :
                 stage.id === 'won'         ? 'border-forest text-forest' :
-                                             'border-red-400 text-red-500'
+                                             'border-red-300 text-red-500'
               )}>
                 <span>{stage.emoji} {stage.label}</span>
-                <span className="bg-white/60 px-1.5 py-0.5 rounded-full text-[10px] font-bold">
+                <span className={cn(
+                  'px-1.5 py-0.5 text-[10px] font-bold',
+                  stage.id === 'identified'  ? 'bg-warm/80 text-mid' :
+                  stage.id === 'researching' ? 'bg-amber-100 text-amber-700' :
+                  stage.id === 'applying'    ? 'bg-orange-100 text-orange-700' :
+                  stage.id === 'submitted'   ? 'bg-forest/10 text-forest' :
+                  stage.id === 'won'         ? 'bg-forest/20 text-forest' :
+                                               'bg-red-100 text-red-500'
+                )}>
                   {stageItems.length}
                 </span>
               </div>
