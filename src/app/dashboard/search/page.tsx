@@ -416,13 +416,20 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
             <span className={`tag ${typeColour[grant.funderType] ?? 'bg-gray-50 text-gray-600'}`}>
               {FUNDER_TYPES.find(t => t.id === grant.funderType)?.label ?? grant.funderType}
             </span>
-            {grant.sectors
-              .map(s => ({ raw: s, label: sectorLabel(s) }))
-              .filter(({ label }) => label !== null)
-              .slice(0, 2)
-              .map(({ raw, label }) => (
-                <span key={raw} className="tag bg-purple-50 text-purple-700 capitalize">{label}</span>
-              ))}
+            {/* Impact sectors — prefer classified taxonomy, fall back to legacy free-text */}
+            {(grant as EnrichedGrant).impactSectors?.length
+              ? (grant as EnrichedGrant).impactSectors!.slice(0, 3).map(s => {
+                  const lbl = IMPACT_SECTOR_FILTERS.find(f => f.id === s)?.label ?? s
+                  return <span key={s} className="tag bg-violet-50 text-violet-700 capitalize">{lbl}</span>
+                })
+              : grant.sectors
+                  .map(s => ({ raw: s, label: sectorLabel(s) }))
+                  .filter(({ label }) => label !== null)
+                  .slice(0, 2)
+                  .map(({ raw, label }) => (
+                    <span key={raw} className="tag bg-purple-50 text-purple-700 capitalize">{label}</span>
+                  ))
+            }
           </div>
 
           {/* Expandable eligibility */}

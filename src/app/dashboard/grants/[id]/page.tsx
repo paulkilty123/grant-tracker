@@ -1,8 +1,13 @@
+import React from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { formatRange } from '@/lib/utils'
 import { notFound } from 'next/navigation'
 import AddToPipelineButton from './AddToPipelineButton'
 import FlagGrantButton from './FlagGrantButton'
+import {
+  Award, Rocket, GraduationCap, TrendingUp, Users, GitMerge, Gift, Landmark,
+  MapPin, Bell, RefreshCw, Calendar, AlertTriangle, CheckCircle, ShieldAlert,
+} from 'lucide-react'
 
 // ── Funder-type label map ─────────────────────────────────────────────────────
 const FUNDER_LABELS: Record<string, string> = {
@@ -68,34 +73,55 @@ export default async function GrantDetailPage({
   const typeColour             = TYPE_COLOURS[funderType] ?? 'bg-gray-50 text-gray-600'
   const lastSeen               = grant.last_seen_at ? String(grant.last_seen_at).split('T')[0] : 'Unknown'
 
-  // Funding type badge — shown for non-grant types
-  const FUNDING_TYPE_BADGES: Record<string, { label: string; cls: string }> = {
-    accelerator:        { label: '🚀 Accelerator',        cls: 'bg-orange-50 text-orange-700 border border-orange-200' },
-    support_programme:  { label: '🎓 Support Programme',  cls: 'bg-indigo-50 text-indigo-700 border border-indigo-200' },
-    programme:          { label: '🎓 Support Programme',  cls: 'bg-indigo-50 text-indigo-700 border border-indigo-200' },
-    social_investment:  { label: '💷 Social Investment',   cls: 'bg-cyan-50 text-cyan-700 border border-cyan-200' },
-    loan:               { label: '💷 Loan',                cls: 'bg-cyan-50 text-cyan-700 border border-cyan-200' },
-    equity:             { label: '💷 Equity',              cls: 'bg-cyan-50 text-cyan-700 border border-cyan-200' },
-    diversity_fund:     { label: '🌍 Diversity Fund',      cls: 'bg-violet-50 text-violet-700 border border-violet-200' },
-    blended_finance:    { label: '🔗 Blended Finance',     cls: 'bg-teal-50 text-teal-700 border border-teal-200' },
-    in_kind:            { label: '🎁 In-Kind Support',     cls: 'bg-rose-50 text-rose-700 border border-rose-200' },
-    'in-kind':          { label: '🎁 In-Kind Support',     cls: 'bg-rose-50 text-rose-700 border border-rose-200' },
-    'tax-relief':       { label: '🏛 Tax Relief',           cls: 'bg-stone-100 text-stone-700 border border-stone-300' },
+  // Funding type badge — all types including grant
+  type FTBadge = { Icon: React.ComponentType<{ className?: string }>; label: string; cls: string }
+  const FUNDING_TYPE_BADGES: Record<string, FTBadge> = {
+    grant:              { Icon: Award,         label: 'Grant',             cls: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
+    accelerator:        { Icon: Rocket,        label: 'Accelerator',       cls: 'bg-orange-50 text-orange-700 border border-orange-200' },
+    support_programme:  { Icon: GraduationCap, label: 'Support Programme', cls: 'bg-indigo-50 text-indigo-700 border border-indigo-200' },
+    programme:          { Icon: GraduationCap, label: 'Support Programme', cls: 'bg-indigo-50 text-indigo-700 border border-indigo-200' },
+    social_investment:  { Icon: TrendingUp,    label: 'Social Investment', cls: 'bg-cyan-50 text-cyan-700 border border-cyan-200' },
+    loan:               { Icon: TrendingUp,    label: 'Loan',              cls: 'bg-cyan-50 text-cyan-700 border border-cyan-200' },
+    equity:             { Icon: TrendingUp,    label: 'Equity',            cls: 'bg-cyan-50 text-cyan-700 border border-cyan-200' },
+    diversity_fund:     { Icon: Users,         label: 'Diversity Fund',    cls: 'bg-violet-50 text-violet-700 border border-violet-200' },
+    blended_finance:    { Icon: GitMerge,      label: 'Blended Finance',   cls: 'bg-teal-50 text-teal-700 border border-teal-200' },
+    in_kind:            { Icon: Gift,          label: 'In-Kind Support',   cls: 'bg-rose-50 text-rose-700 border border-rose-200' },
+    'in-kind':          { Icon: Gift,          label: 'In-Kind Support',   cls: 'bg-rose-50 text-rose-700 border border-rose-200' },
+    'tax-relief':       { Icon: Landmark,      label: 'Tax Relief',        cls: 'bg-stone-100 text-stone-700 border border-stone-300' },
   }
   const rawFundingType = grant.funding_type ? String(grant.funding_type) : 'grant'
-  const fundingTypeBadge = rawFundingType !== 'grant' ? (FUNDING_TYPE_BADGES[rawFundingType] ?? null) : null
+  const fundingTypeBadge: FTBadge = FUNDING_TYPE_BADGES[rawFundingType] ?? FUNDING_TYPE_BADGES['grant']
+
+  // Impact sectors (classified taxonomy)
+  const impactSectors: string[] = Array.isArray(grant.impact_sectors) ? grant.impact_sectors : []
+
+  // Eligible structures
+  const eligibleStructures: string[] = Array.isArray(grant.eligible_structures) ? grant.eligible_structures : []
+  const STRUCTURE_LABELS: Record<string, string> = {
+    cic_guarantee:      'CIC (Ltd by Guarantee)',
+    cic_shares:         'CIC (Ltd by Shares)',
+    cio:                'CIO',
+    registered_charity: 'Registered Charity',
+    ltd_guarantee:      'Ltd by Guarantee',
+    ltd_shares:         'Ltd by Shares',
+    llp:                'LLP',
+    cooperative:        'Co-operative / CBS',
+    unincorporated:     'Unincorporated Association',
+    sole_trader:        'Sole Trader / Individual',
+    not_registered:     'Pre-registration',
+  }
+
+  const IMPACT_SECTOR_LABELS: Record<string, string> = {
+    creative: 'Arts & Culture', environment: 'Environment', health: 'Health',
+    education: 'Education', tech: 'Technology', housing: 'Housing',
+    food: 'Food', employment: 'Employment', community: 'Community',
+    justice: 'Justice & Equality', financial: 'Financial Inclusion', international: 'International',
+  }
 
   // Deadline display
-  const deadlineDisplay = grant.is_rolling
-    ? '🔄 Rolling — apply any time'
-    : grant.deadline
-      ? new Date(grant.deadline) < new Date()
-        ? `⚠ Deadline passed (${grant.deadline})`
-        : `📅 ${grant.deadline}`
-      : 'Check website for deadline'
-
+  const deadlinePassed = !grant.is_rolling && grant.deadline && new Date(grant.deadline) < new Date()
   const deadlineColour = grant.is_rolling ? 'text-sage'
-    : grant.deadline && new Date(grant.deadline) < new Date() ? 'text-red-600'
+    : deadlinePassed ? 'text-red-600'
     : 'text-charcoal'
 
   return (
@@ -122,15 +148,14 @@ export default async function GrantDetailPage({
                 {typeLabel}
               </span>
               {grant.is_local && (
-                <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-green-50 text-green-700">
-                  📍 Local
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-green-50 text-green-700">
+                  <MapPin className="w-3 h-3" />Local
                 </span>
               )}
-              {fundingTypeBadge && (
-                <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${fundingTypeBadge.cls}`}>
-                  {fundingTypeBadge.label}
-                </span>
-              )}
+              <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${fundingTypeBadge.cls}`}>
+                <fundingTypeBadge.Icon className="w-3 h-3" />
+                {fundingTypeBadge.label}
+              </span>
             </div>
             <h1 className="font-display text-2xl font-bold text-forest leading-tight">{grant.title}</h1>
             <p className="text-mid text-base mt-1">{grant.funder}</p>
@@ -147,7 +172,16 @@ export default async function GrantDetailPage({
           </div>
           <div>
             <p className="text-[10px] text-light uppercase tracking-wider font-semibold mb-1">Deadline</p>
-            <p className={`text-sm font-semibold mt-1 ${deadlineColour}`}>{deadlineDisplay}</p>
+            <p className={`text-sm font-semibold mt-1 inline-flex items-center gap-1.5 ${deadlineColour}`}>
+              {grant.is_rolling
+                ? <><RefreshCw className="w-3.5 h-3.5" />Rolling — apply any time</>
+                : grant.deadline
+                  ? deadlinePassed
+                    ? <><AlertTriangle className="w-3.5 h-3.5" />Deadline passed ({String(grant.deadline)})</>
+                    : <><Calendar className="w-3.5 h-3.5" />{String(grant.deadline)}</>
+                  : 'Check website for deadline'
+              }
+            </p>
           </div>
         </div>
 
@@ -155,7 +189,7 @@ export default async function GrantDetailPage({
         {grant.next_open_date && (
           <div className="mb-4">
             <span className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 border border-blue-200 text-xs font-semibold px-3 py-1.5 rounded-lg">
-              🔔 Opens {String(grant.next_open_date)}
+              <Bell className="w-3.5 h-3.5" />Opens {String(grant.next_open_date)}
             </span>
           </div>
         )}
@@ -181,8 +215,43 @@ export default async function GrantDetailPage({
           </div>
         )}
 
-        {/* Sectors */}
-        {sectors.length > 0 && (
+        {/* Impact sectors (classified taxonomy) */}
+        {impactSectors.length > 0 && (
+          <div className="mb-5 pt-4 border-t border-warm">
+            <h2 className="text-xs font-semibold text-light uppercase tracking-wider mb-2.5">Impact sectors</h2>
+            <div className="flex flex-wrap gap-2">
+              {impactSectors.map(s => (
+                <span key={s} className="tag bg-violet-50 text-violet-700 capitalize">
+                  {IMPACT_SECTOR_LABELS[s] ?? s}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Eligible structures */}
+        {eligibleStructures.length > 0 && (
+          <div className="mb-5 pt-4 border-t border-warm">
+            <h2 className="text-xs font-semibold text-light uppercase tracking-wider mb-2.5 inline-flex items-center gap-1.5">
+              <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+              Eligible organisation types
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {eligibleStructures.map(s => (
+                <span key={s} className="tag bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  {STRUCTURE_LABELS[s] ?? s}
+                </span>
+              ))}
+            </div>
+            <p className="text-xs text-light mt-2 inline-flex items-center gap-1">
+              <ShieldAlert className="w-3 h-3" />
+              Only the organisation types listed above are eligible to apply.
+            </p>
+          </div>
+        )}
+
+        {/* Legacy free-text sectors fallback — shown only if no classified sectors */}
+        {impactSectors.length === 0 && sectors.length > 0 && (
           <div className="mb-5 pt-4 border-t border-warm">
             <h2 className="text-xs font-semibold text-light uppercase tracking-wider mb-2.5">Sectors</h2>
             <div className="flex flex-wrap gap-2">

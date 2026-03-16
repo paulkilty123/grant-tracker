@@ -7,7 +7,9 @@
 //   Batch 3 → 06:10 — Session-4b CFs + independent foundations
 //   (no batch param) → all sources (manual/dev use)
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
 import { crawlAllSources } from '@/lib/crawl'
+import { classifyUnclassified } from '@/lib/classify'
 
 export const dynamic    = 'force-dynamic'
 export const maxDuration = 300   // Vercel Pro: allow up to 5 min per batch
@@ -35,7 +37,31 @@ export async function GET(req: NextRequest) {
     const results = await crawlAllSources(batch)
     const active  = results.filter(r => r.error !== 'skipped' && r.error !== 'disabled')
     const total   = active.reduce((n, r) => n + r.upserted, 0)
-    return NextResponse.json({ success: true, batch: batch ?? 'all', totalUpserted: total, results: active })
+
+    // Auto-classify any unclassified grants (new or previously missed).
+    // Run after every batch so sectors/funding type are always populated.
+    let classified = 0
+    let classifyFailed = 0
+    try {
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        { auth: { persistSession: false } },
+      )
+      const r = await classifyUnclassified(supabase, 60)
+      classified     = r.classified
+      classifyFailed = r.failed
+    } catch (err) {
+      console.error('[crawl-grants] Post-crawl classify failed:', err)
+    }
+
+    return NextResponse.json({
+      success: true,
+      batch: batch ?? 'all',
+      totalUpserted: total,
+      classify: { classified, failed: classifyFailed },
+      results: active,
+    })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Crawl failed'
     return NextResponse.json({ error: message }, { status: 500 })
