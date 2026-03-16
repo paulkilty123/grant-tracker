@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Search, ThumbsUp, ThumbsDown, ChevronDown, Layers, DollarSign, Rocket, Database, Globe, Clock, Building2, SlidersHorizontal, Sparkles, MapPin } from 'lucide-react'
+import { Search, ThumbsUp, ThumbsDown, ChevronDown, Layers, DollarSign, Rocket, Database, Globe, Clock, Building2, SlidersHorizontal, Sparkles, MapPin, Award, GraduationCap, TrendingUp, Users, GitMerge, Gift, Landmark, CalendarDays, RefreshCw, Info, Trophy, HandCoins } from 'lucide-react'
 import { SEED_GRANTS } from '@/lib/grants'
 import { formatRange } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -59,15 +59,15 @@ const IMPACT_SECTOR_FILTERS: { id: ImpactSector; label: string }[] = [
 
 const FUNDER_TYPES = [
   { id: 'all',               label: 'All sources' },
-  { id: 'local',             label: '📍 Local' },
+  { id: 'local',             label: 'Local' },
   { id: 'lottery',           label: 'Lottery' },
   { id: 'trust_foundation',  label: 'Trust & Foundation' },
   { id: 'corporate',         label: 'Corporate' },
   { id: 'local_authority',   label: 'Local Authority' },
   { id: 'government',        label: 'Government' },
-  { id: 'competition',       label: '🏆 Competition' },
-  { id: 'loan',              label: '🔄 Social Loan' },
-  { id: 'crowdfund_match',   label: '🤝 Crowdfund Match' },
+  { id: 'competition',       label: 'Competition' },
+  { id: 'loan',              label: 'Social Loan' },
+  { id: 'crowdfund_match',   label: 'Crowdfund Match' },
 ]
 
 // Funder categories from the funders table (our 8-category taxonomy)
@@ -84,13 +84,13 @@ const FUNDER_CATEGORIES = [
 
 // Geographic scope filter options
 const GEO_SCOPES = [
-  { id: 'uk',               label: '🇬🇧 UK-wide'           },
-  { id: 'england',          label: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 England'            },
-  { id: 'london',           label: '🏙️ London'             },
-  { id: 'scotland',         label: '🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scotland'           },
-  { id: 'wales',            label: '🏴󠁧󠁢󠁷󠁬󠁳󠁿 Wales'              },
-  { id: 'northern_ireland', label: '🍀 Northern Ireland'   },
-  { id: 'regional',         label: '📍 Regional'           },
+  { id: 'uk',               label: 'UK-wide'         },
+  { id: 'england',          label: 'England'         },
+  { id: 'london',           label: 'London'          },
+  { id: 'scotland',         label: 'Scotland'        },
+  { id: 'wales',            label: 'Wales'           },
+  { id: 'northern_ireland', label: 'Northern Ireland'},
+  { id: 'regional',         label: 'Regional'        },
 ]
 
 const FUNDING_TYPES: { id: FundingType | 'all'; label: string; emoji: string; desc: string }[] = [
@@ -307,19 +307,19 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
   const { text: scoreText } = scoreColour(score)
 
   // Funding type badge — shown on every card so users always know the category
-  const fundingTypeBadge: Record<string, { label: string; cls: string }> = {
-    grant:              { label: '🏆 Grant',               cls: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
-    accelerator:        { label: '🚀 Accelerator',         cls: 'bg-orange-50 text-orange-700 border border-orange-200' },
-    support_programme:  { label: '🎓 Support Programme',   cls: 'bg-indigo-50 text-indigo-700 border border-indigo-200' },
-    programme:          { label: '🎓 Support Programme',   cls: 'bg-indigo-50 text-indigo-700 border border-indigo-200' },
-    social_investment:  { label: '💷 Social Investment',   cls: 'bg-cyan-50 text-cyan-700 border border-cyan-200' },
-    loan:               { label: '💷 Loan',                cls: 'bg-cyan-50 text-cyan-700 border border-cyan-200' },
-    equity:             { label: '💷 Equity',              cls: 'bg-cyan-50 text-cyan-700 border border-cyan-200' },
-    diversity_fund:     { label: '🌍 Diversity Fund',      cls: 'bg-violet-50 text-violet-700 border border-violet-200' },
-    blended_finance:    { label: '🔗 Blended Finance',     cls: 'bg-teal-50 text-teal-700 border border-teal-200' },
-    in_kind:            { label: '🎁 In-Kind Support',     cls: 'bg-rose-50 text-rose-700 border border-rose-200' },
-    'in-kind':          { label: '🎁 In-Kind Support',     cls: 'bg-rose-50 text-rose-700 border border-rose-200' },
-    'tax-relief':       { label: '🏛 Tax Relief',          cls: 'bg-stone-100 text-stone-700 border border-stone-300' },
+  const fundingTypeBadge: Record<string, { Icon: React.ComponentType<{ className?: string }>; label: string; cls: string }> = {
+    grant:              { Icon: Award,         label: 'Grant',             cls: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
+    accelerator:        { Icon: Rocket,        label: 'Accelerator',       cls: 'bg-orange-50 text-orange-700 border border-orange-200' },
+    support_programme:  { Icon: GraduationCap, label: 'Support Programme', cls: 'bg-indigo-50 text-indigo-700 border border-indigo-200' },
+    programme:          { Icon: GraduationCap, label: 'Support Programme', cls: 'bg-indigo-50 text-indigo-700 border border-indigo-200' },
+    social_investment:  { Icon: TrendingUp,    label: 'Social Investment', cls: 'bg-cyan-50 text-cyan-700 border border-cyan-200' },
+    loan:               { Icon: TrendingUp,    label: 'Loan',              cls: 'bg-cyan-50 text-cyan-700 border border-cyan-200' },
+    equity:             { Icon: TrendingUp,    label: 'Equity',            cls: 'bg-cyan-50 text-cyan-700 border border-cyan-200' },
+    diversity_fund:     { Icon: Users,         label: 'Diversity Fund',    cls: 'bg-violet-50 text-violet-700 border border-violet-200' },
+    blended_finance:    { Icon: GitMerge,      label: 'Blended Finance',   cls: 'bg-teal-50 text-teal-700 border border-teal-200' },
+    in_kind:            { Icon: Gift,          label: 'In-Kind Support',   cls: 'bg-rose-50 text-rose-700 border border-rose-200' },
+    'in-kind':          { Icon: Gift,          label: 'In-Kind Support',   cls: 'bg-rose-50 text-rose-700 border border-rose-200' },
+    'tax-relief':       { Icon: Landmark,      label: 'Tax Relief',        cls: 'bg-stone-100 text-stone-700 border border-stone-300' },
   }
   const effectiveFundingType = grant.fundingType ?? 'grant'
   const ftBadge = fundingTypeBadge[effectiveFundingType] ?? fundingTypeBadge['grant']
@@ -335,9 +335,9 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
     /* else */         'profile'
 
   const entryBadge = {
-    live:    { label: '📅 Open grant',   cls: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
-    rolling: { label: '🔄 Always open',  cls: 'bg-sage/10 text-sage border border-sage/20' },
-    profile: { label: 'ℹ Funder info',   cls: 'bg-gray-100 text-gray-500 border border-gray-200' },
+    live:    { Icon: CalendarDays, label: 'Open grant',  cls: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
+    rolling: { Icon: RefreshCw,    label: 'Always open', cls: 'bg-sage/10 text-sage border border-sage/20' },
+    profile: { Icon: Info,         label: 'Funder info', cls: 'bg-gray-100 text-gray-500 border border-gray-200' },
   }[entryType]
 
   if (isDismissed) {
@@ -379,11 +379,13 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
                   </span>
                 )}
                 {ftBadge && (
-                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide flex-shrink-0 ${ftBadge.cls}`}>
+                  <span className={`inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide flex-shrink-0 ${ftBadge.cls}`}>
+                    <ftBadge.Icon className="w-2.5 h-2.5" />
                     {ftBadge.label}
                   </span>
                 )}
-                <span className={`text-xs font-medium px-2 py-0.5 flex-shrink-0 ${entryBadge.cls}`}>
+                <span className={`inline-flex items-center gap-1 text-[9px] font-medium px-1.5 py-0.5 flex-shrink-0 ${entryBadge.cls}`}>
+                  <entryBadge.Icon className="w-2.5 h-2.5" />
                   {entryBadge.label}
                 </span>
               </div>
@@ -410,7 +412,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
 
           {/* Tags — condensed */}
           <div className="flex flex-wrap gap-1.5">
-            {grant.isLocal && <span className="tag bg-green-50 text-green-700">📍 Local</span>}
+            {grant.isLocal && <span className="tag bg-green-50 text-green-700 inline-flex items-center gap-1"><MapPin className="w-2.5 h-2.5" />Local</span>}
             <span className={`tag ${typeColour[grant.funderType] ?? 'bg-gray-50 text-gray-600'}`}>
               {FUNDER_TYPES.find(t => t.id === grant.funderType)?.label ?? grant.funderType}
             </span>
