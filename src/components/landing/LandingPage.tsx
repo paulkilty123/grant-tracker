@@ -296,7 +296,7 @@ export default function LandingPage() {
         <div className="relative z-10 mx-auto max-w-7xl px-8 flex flex-col lg:flex-row items-center gap-12 lg:gap-16" style={{ minHeight: '100vh', paddingTop: '120px', paddingBottom: '80px' }}>
 
           {/* Left: text */}
-          <div className="flex-1 max-w-xl">
+          <div className="flex-1 max-w-xl lg:pl-12">
             <motion.h1
               {...fadeUp(0)}
               className="font-serif leading-[1.05] text-charcoal mb-6"
