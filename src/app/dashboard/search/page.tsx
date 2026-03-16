@@ -306,11 +306,12 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
 
   const { text: scoreText } = scoreColour(score)
 
-  // Funding type badge — shown for non-grant types so users know what's being offered
+  // Funding type badge — shown on every card so users always know the category
   const fundingTypeBadge: Record<string, { label: string; cls: string }> = {
-    accelerator:        { label: '🚀 Accelerator',        cls: 'bg-orange-50 text-orange-700 border border-orange-200' },
-    support_programme:  { label: '🎓 Support Programme',  cls: 'bg-indigo-50 text-indigo-700 border border-indigo-200' },
-    programme:          { label: '🎓 Support Programme',  cls: 'bg-indigo-50 text-indigo-700 border border-indigo-200' },
+    grant:              { label: '🏆 Grant',               cls: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
+    accelerator:        { label: '🚀 Accelerator',         cls: 'bg-orange-50 text-orange-700 border border-orange-200' },
+    support_programme:  { label: '🎓 Support Programme',   cls: 'bg-indigo-50 text-indigo-700 border border-indigo-200' },
+    programme:          { label: '🎓 Support Programme',   cls: 'bg-indigo-50 text-indigo-700 border border-indigo-200' },
     social_investment:  { label: '💷 Social Investment',   cls: 'bg-cyan-50 text-cyan-700 border border-cyan-200' },
     loan:               { label: '💷 Loan',                cls: 'bg-cyan-50 text-cyan-700 border border-cyan-200' },
     equity:             { label: '💷 Equity',              cls: 'bg-cyan-50 text-cyan-700 border border-cyan-200' },
@@ -318,11 +319,10 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
     blended_finance:    { label: '🔗 Blended Finance',     cls: 'bg-teal-50 text-teal-700 border border-teal-200' },
     in_kind:            { label: '🎁 In-Kind Support',     cls: 'bg-rose-50 text-rose-700 border border-rose-200' },
     'in-kind':          { label: '🎁 In-Kind Support',     cls: 'bg-rose-50 text-rose-700 border border-rose-200' },
-    'tax-relief':       { label: '🏛 Tax Relief',           cls: 'bg-stone-100 text-stone-700 border border-stone-300' },
+    'tax-relief':       { label: '🏛 Tax Relief',          cls: 'bg-stone-100 text-stone-700 border border-stone-300' },
   }
-  const ftBadge = grant.fundingType && grant.fundingType !== 'grant'
-    ? fundingTypeBadge[grant.fundingType] ?? null
-    : null
+  const effectiveFundingType = grant.fundingType ?? 'grant'
+  const ftBadge = fundingTypeBadge[effectiveFundingType] ?? fundingTypeBadge['grant']
 
   // "New this week" badge — show if added within last 7 days
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
