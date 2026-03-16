@@ -58,11 +58,21 @@ export default async function GrantDetailPage({
 
   const supabase = await createClient()
 
-  const { data: grant } = await supabase
+  // Try external_id first, fall back to DB id (UUID) for grants without an external_id
+  let { data: grant } = await supabase
     .from('scraped_grants')
     .select('*')
     .eq('external_id', externalId)
     .maybeSingle()
+
+  if (!grant) {
+    const { data: byId } = await supabase
+      .from('scraped_grants')
+      .select('*')
+      .eq('id', externalId)
+      .maybeSingle()
+    grant = byId
+  }
 
   if (!grant) notFound()
 
