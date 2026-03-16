@@ -335,24 +335,6 @@ export default function LandingPage() {
               </a>
             </motion.div>
 
-            {/* Trust bar */}
-            <motion.div
-              {...fadeUp(0.45)}
-              className="flex flex-wrap gap-8"
-              style={{ paddingTop: '32px', borderTop: '1px solid #E8E4DE' }}
-            >
-              {[
-                { value: '500+', label: 'Funding opportunities' },
-                { value: '6',    label: 'Funding types' },
-                { value: '12',   label: 'Impact sectors' },
-                { value: 'Free', label: 'To start' },
-              ].map((s) => (
-                <div key={s.label}>
-                  <p className="font-serif text-[24px] text-charcoal">{s.value}</p>
-                  <p className="text-[12px] text-mid mt-0.5">{s.label}</p>
-                </div>
-              ))}
-            </motion.div>
           </div>
 
           {/* Right: fanned card deck — playing card style */}
