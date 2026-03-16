@@ -180,10 +180,10 @@ function PipelineModal({
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-white rounded-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
+      <div className="bg-white w-full max-w-lg max-h-[85vh] overflow-y-auto" style={{ boxShadow: '0 16px 64px rgba(26,46,43,0.18)' }} onClick={e => e.stopPropagation()}>
         <div className="p-6 border-b border-warm flex justify-between items-start">
           <div>
-            <h3 className="font-display text-lg font-bold text-forest">{item.grant_name}</h3>
+            <h3 className="font-serif text-lg text-charcoal">{item.grant_name}</h3>
             <p className="text-sm text-mid mt-0.5">{item.funder_name}</p>
           </div>
           <button onClick={onClose} className="text-light hover:text-mid text-xl leading-none">✕</button>
@@ -282,8 +282,8 @@ function PipelineModal({
                   className={cn(
                     'py-2 px-2 rounded-lg border-2 text-xs font-medium transition-all text-center',
                     localStage === s.id
-                      ? 'border-sage bg-green-50 text-forest font-semibold'
-                      : 'border-warm text-mid hover:border-sage hover:text-sage'
+                      ? 'border-coral bg-coral/10 text-coral font-semibold'
+                      : 'border-warm text-mid hover:border-coral hover:text-coral'
                   )}
                 >
                   {s.emoji} {s.label}
@@ -307,8 +307,8 @@ function PipelineModal({
                     className={cn(
                       'flex flex-col items-center gap-1 py-2 px-1 rounded-xl border-2 text-center transition-all',
                       isActive
-                        ? 'border-sage bg-green-50 shadow-sm'
-                        : 'border-warm bg-white hover:border-sage/50 hover:bg-green-50/40'
+                        ? 'border-coral bg-coral/10'
+                        : 'border-warm bg-white hover:border-coral/50 hover:bg-coral/5'
                     )}
                   >
                     <span className="text-base leading-none">{s.emoji}</span>
@@ -463,10 +463,10 @@ function AddModal({
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
+      <div className="bg-white w-full max-w-md" style={{ boxShadow: '0 16px 64px rgba(26,46,43,0.18)' }} onClick={e => e.stopPropagation()}>
         <div className="p-6 border-b border-warm flex justify-between items-start">
           <div>
-            <h3 className="font-display text-lg font-bold text-forest">Add to Pipeline</h3>
+            <h3 className="font-serif text-lg text-charcoal">Add to Pipeline</h3>
             <p className="text-sm text-mid mt-0.5">Track a new funding opportunity</p>
           </div>
           <button onClick={onClose} className="text-light hover:text-mid text-xl leading-none">✕</button>
@@ -613,7 +613,7 @@ export default function PipelinePage() {
     <div>
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-7">
         <div>
-          <h2 className="font-display text-2xl font-bold text-forest">Funding Pipeline</h2>
+          <h2 className="font-serif text-2xl text-charcoal">Funding Pipeline</h2>
           <p className="text-mid text-sm mt-1">Drag cards between columns or click to edit · {items.length} opportunities tracked</p>
         </div>
         <button onClick={() => setShowAdd(true)} className="btn-gold">＋ Add Opportunity</button>
@@ -660,7 +660,7 @@ export default function PipelinePage() {
 
               <button
                 onClick={() => setShowAdd(true)}
-                className="w-full py-3 border-2 border-dashed border-warm rounded-xl text-sm text-light hover:border-sage hover:text-sage transition-colors mt-1"
+                className="w-full py-3 border-2 border-dashed border-warm text-sm text-light hover:border-coral hover:text-coral transition-colors mt-1"
               >
                 + Add
               </button>
@@ -692,7 +692,7 @@ export default function PipelinePage() {
 
       {/* Toast */}
       {toast && (
-        <div className="fixed bottom-6 right-6 bg-forest text-white px-5 py-3.5 rounded-xl shadow-card-lg text-sm flex items-center gap-2 z-50 animate-in slide-in-from-bottom-4">
+        <div className="fixed bottom-6 right-6 bg-charcoal text-white px-5 py-3.5 shadow-lg text-sm flex items-center gap-2 z-50 animate-in slide-in-from-bottom-4">
           ✓ {toast}
         </div>
       )}

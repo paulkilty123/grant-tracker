@@ -100,7 +100,7 @@ export default function Sidebar({ org, userEmail }: Props) {
         href={href}
         onClick={() => setMobileOpen(false)}
         className={cn(
-          'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+          'flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-colors',
           isActive
             ? 'bg-white/15 text-white'
             : 'text-white/65 hover:bg-white/10 hover:text-white'
@@ -122,15 +122,17 @@ export default function Sidebar({ org, userEmail }: Props) {
 
   const sidebarContent = (
     <aside className={cn(
-      'fixed left-0 top-0 bottom-0 w-60 bg-forest flex flex-col z-50 transition-transform duration-300',
+      'fixed left-0 top-0 bottom-0 w-60 flex flex-col z-50 transition-transform duration-300',
       'md:translate-x-0',
       mobileOpen ? 'translate-x-0' : '-translate-x-full'
-    )}>
+    )} style={{ background: '#121f2b' }}>
       {/* Logo */}
       <div className="px-6 py-6 flex items-center justify-between border-b border-white/10">
-        <Link href="/dashboard" className="flex items-center gap-1.5">
-          <RadioWaveIcon className="h-6 w-6 text-white/80" />
-          <span className="font-serif text-xl tracking-tight text-white"><span className="italic">Grant</span>Tracker</span>
+        <Link href="/dashboard" className="flex items-center gap-2.5 no-underline">
+          <div className="relative flex items-center justify-center bg-coral w-7 h-7 flex-shrink-0" style={{ borderRadius: '6px' }}>
+            <div className="w-2.5 h-2.5 rounded-full border-2 border-white" />
+          </div>
+          <span className="font-serif text-[18px] text-white">GrantTracker</span>
         </Link>
         <button
           className="md:hidden text-white/50 hover:text-white"
@@ -192,7 +194,7 @@ export default function Sidebar({ org, userEmail }: Props) {
         onClick={() => setMobileOpen(true)}
         className={cn(
           'fixed top-4 left-4 z-40 md:hidden',
-          'w-10 h-10 bg-forest rounded-xl flex items-center justify-center shadow-lg',
+          'w-10 h-10 flex items-center justify-center shadow-lg',
           'transition-opacity duration-200',
           mobileOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'
         )}

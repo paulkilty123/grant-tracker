@@ -353,7 +353,7 @@ export default function ProfilePage() {
       {/* ── Header ── */}
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h2 className="font-display text-2xl font-bold text-forest">Your Profile</h2>
+          <h2 className="font-serif text-2xl text-charcoal">Your Profile</h2>
           <p className="text-mid text-sm mt-1">A complete profile means better grant matches and more relevant alerts</p>
         </div>
         <div className="flex items-center gap-3">
@@ -363,7 +363,7 @@ export default function ProfilePage() {
           <button
             onClick={handleSave}
             disabled={saving || !form.name.trim()}
-            className="px-5 py-2.5 rounded-full bg-forest text-white text-sm font-semibold hover:bg-forest/90 transition-colors disabled:opacity-50"
+            className="px-5 py-2.5 bg-coral text-white text-sm font-semibold hover:opacity-90 transition-colors disabled:opacity-50"
           >
             {saving ? 'Saving…' : saveStatus === 'saved' ? '✓ Saved!' : 'Save Profile'}
           </button>
@@ -405,7 +405,7 @@ export default function ProfilePage() {
             <Sparkles className="h-4 w-4 text-gold" />
           </div>
           <div>
-            <h3 className="font-display text-sm font-semibold text-forest">Auto-fill from your website</h3>
+            <h3 className="font-serif text-sm font-semibold text-charcoal">Auto-fill from your website</h3>
             <p className="text-xs text-mid mt-0.5">
               Enter your website and AI will read it and fill in your profile automatically.
             </p>
@@ -414,7 +414,7 @@ export default function ProfilePage() {
         <div className="flex gap-3">
           <input
             type="url"
-            className="form-input rounded-full flex-1"
+            className="form-input flex-1"
             placeholder="https://yourwebsite.co.uk"
             value={websiteUrl}
             onChange={e => { setWebsiteUrl(e.target.value); setAutoFillError(null); setAutoFillSuccess(false) }}
@@ -423,14 +423,14 @@ export default function ProfilePage() {
           <button
             onClick={handleAutoFill}
             disabled={autoFilling || !websiteUrl.trim()}
-            className="px-4 py-2 rounded-full bg-forest text-white text-sm font-medium flex items-center gap-2 hover:bg-forest/90 transition-colors disabled:opacity-50 whitespace-nowrap"
+            className="px-4 py-2 bg-coral text-white text-sm font-medium flex items-center gap-2 hover:opacity-90 transition-colors disabled:opacity-50 whitespace-nowrap"
           >
             <Sparkles className="h-3.5 w-3.5" />
             {autoFilling ? 'Reading…' : 'Auto-fill'}
           </button>
         </div>
         {autoFillSuccess && (
-          <p className="text-xs text-sage mt-2 font-medium">✓ Fields filled from your website — review below and save when ready.</p>
+          <p className="text-xs text-forest mt-2 font-medium">✓ Fields filled from your website — review below and save when ready.</p>
         )}
         {autoFillError && (
           <p className="text-xs text-red-500 mt-2">⚠ {autoFillError}</p>

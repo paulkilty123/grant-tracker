@@ -8,12 +8,10 @@ export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  // ── Use the server client directly so RLS sees the authenticated session ──
   const { data: org } = user
     ? await supabase.from('organisations').select('*').eq('owner_id', user.id).maybeSingle()
     : { data: null }
 
-  // New users (no org name set) go straight to profile setup
   if (!org?.name) redirect('/dashboard/profile')
 
   const { data: rawItems } = org
@@ -22,7 +20,6 @@ export default async function DashboardPage() {
 
   const items: PipelineItem[] = rawItems ?? []
 
-  // ── New grants this week ───────────────────────────────────────────────
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
   const { data: newGrants, count: newGrantsCount } = await supabase
     .from('scraped_grants')
@@ -32,7 +29,6 @@ export default async function DashboardPage() {
     .order('first_seen_at', { ascending: false })
     .limit(4)
 
-  // ── Compute stats inline ───────────────────────────────────────────────
   const active  = items.filter(i => !['won', 'declined'].includes(i.stage))
   const won     = items.filter(i => i.stage === 'won')
   const stats = {
@@ -60,43 +56,33 @@ export default async function DashboardPage() {
       {/* Top bar */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-7">
         <div>
-          <h2 className="font-display text-2xl font-bold text-forest">
-            {greeting}, {orgName} 🌿
+          <h2 className="font-serif text-2xl text-charcoal">
+            {greeting}, {orgName}
           </h2>
           <p className="text-mid text-sm mt-1">
             {urgentCount} urgent deadline{urgentCount !== 1 ? 's' : ''}
             · {stats.activeCount} active opportunit{stats.activeCount !== 1 ? 'ies' : 'y'}
           </p>
         </div>
-        <a href="/dashboard/search" className="btn-gold">Find New Grants</a>
+        <a href="/dashboard/search" className="btn-primary">Find New Grants</a>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-7">
-        <div className="bg-white rounded-xl shadow-warm border border-warm border-l-4 border-l-sage p-5">
-          <p className="text-[10px] font-semibold text-light uppercase tracking-wider mb-2">Total Pipeline</p>
-          <p className="font-display text-3xl font-bold text-forest">
-            {formatCurrency(stats.totalPipelineValue)}
-          </p>
-          <p className="text-xs text-mid mt-1.5">{stats.activeCount} active opportunities</p>
-        </div>
-        <div className="bg-white rounded-xl shadow-warm border border-warm border-l-4 border-l-gold p-5">
-          <p className="text-[10px] font-semibold text-light uppercase tracking-wider mb-2">Won This Year</p>
-          <p className="font-display text-3xl font-bold text-forest">
-            {formatCurrency(stats.totalWon)}
-          </p>
-          <p className="text-xs text-mid mt-1.5">{stats.wonCount} grants secured</p>
-        </div>
-        <div className="bg-white rounded-xl shadow-warm border border-warm border-l-4 border-l-mid p-5">
-          <p className="text-[10px] font-semibold text-light uppercase tracking-wider mb-2">Submitted</p>
-          <p className="font-display text-3xl font-bold text-forest">{stats.submittedCount}</p>
-          <p className="text-xs text-mid mt-1.5">awaiting decision</p>
-        </div>
-        <div className="bg-white rounded-xl shadow-warm border border-warm border-l-4 border-l-red-400 p-5">
-          <p className="text-[10px] font-semibold text-light uppercase tracking-wider mb-2">Urgent Deadlines</p>
-          <p className="font-display text-3xl font-bold text-forest">{urgentCount}</p>
-          <p className="text-xs text-mid mt-1.5">in the next 10 days</p>
-        </div>
+        {[
+          { label: 'Total Pipeline', value: formatCurrency(stats.totalPipelineValue), sub: `${stats.activeCount} active opportunities`, accent: true },
+          { label: 'Won This Year',  value: formatCurrency(stats.totalWon),            sub: `${stats.wonCount} grants secured` },
+          { label: 'Submitted',      value: String(stats.submittedCount),              sub: 'awaiting decision' },
+          { label: 'Urgent Deadlines', value: String(urgentCount),                     sub: 'in the next 10 days', urgent: urgentCount > 0 },
+        ].map(s => (
+          <div key={s.label} className="bg-white border border-warm/80 p-5" style={{ boxShadow: '0 2px 16px rgba(26,46,43,0.06)' }}>
+            <p className="text-[10px] font-semibold text-mid uppercase tracking-wider mb-2">{s.label}</p>
+            <p className={`font-serif text-3xl ${s.accent ? 'text-forest' : s.urgent ? 'text-coral' : 'text-charcoal'}`}>
+              {s.value}
+            </p>
+            <p className="text-xs text-mid mt-1.5">{s.sub}</p>
+          </div>
+        ))}
       </div>
 
       {/* New This Week */}
@@ -104,24 +90,24 @@ export default async function DashboardPage() {
         <div className="card mb-5">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <h3 className="font-display text-base font-semibold text-forest">New This Week</h3>
-              <span className="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">
+              <h3 className="font-serif text-base text-charcoal">New This Week</h3>
+              <span className="bg-forest/10 text-forest text-[10px] font-bold px-2 py-0.5 uppercase tracking-wide">
                 {newGrantsCount} new
               </span>
             </div>
-            <a href="/dashboard/search" className="text-xs text-sage hover:underline">Search all grants →</a>
+            <a href="/dashboard/search" className="text-xs text-coral hover:underline">Search all grants →</a>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {(newGrants ?? []).map(g => (
               <a key={g.id} href={`/dashboard/grants/${g.external_id}`}
-                className="flex flex-col gap-0.5 p-3 rounded-lg border border-warm bg-cream/50 hover:bg-warm transition-colors group">
+                className="flex flex-col gap-0.5 p-3 border border-warm bg-[#f5f2ed] hover:bg-warm transition-colors group">
                 <div className="flex items-start justify-between gap-2">
                   <p className="text-sm font-medium text-charcoal group-hover:text-forest leading-snug line-clamp-2">{g.title}</p>
-                  <span className="bg-emerald-100 text-emerald-700 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide flex-shrink-0 mt-0.5">New</span>
+                  <span className="bg-forest/10 text-forest text-[9px] font-bold px-1.5 py-0.5 uppercase tracking-wide flex-shrink-0 mt-0.5">New</span>
                 </div>
                 <p className="text-xs text-mid truncate">{g.funder ?? 'Unknown funder'}</p>
                 {(g.amount_min || g.amount_max) && (
-                  <p className="text-xs text-sage font-medium mt-0.5">
+                  <p className="text-xs text-forest font-medium mt-0.5">
                     {g.amount_min && g.amount_max && g.amount_min !== g.amount_max
                       ? `${formatCurrency(g.amount_min)} – ${formatCurrency(g.amount_max)}`
                       : formatCurrency(g.amount_max ?? g.amount_min ?? 0)}
@@ -133,7 +119,7 @@ export default async function DashboardPage() {
           {(newGrantsCount ?? 0) > 4 && (
             <p className="text-xs text-mid mt-3 text-center">
               + {(newGrantsCount ?? 0) - 4} more new grants ·{' '}
-              <a href="/dashboard/search" className="text-sage hover:underline">search to see all →</a>
+              <a href="/dashboard/search" className="text-coral hover:underline">search to see all →</a>
             </p>
           )}
         </div>
@@ -143,55 +129,53 @@ export default async function DashboardPage() {
         {/* Pipeline mini */}
         <div className="md:col-span-2 card">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-display text-base font-semibold text-forest">Pipeline Overview</h3>
-            <a href="/dashboard/pipeline" className="text-xs text-sage hover:underline">View full pipeline →</a>
+            <h3 className="font-serif text-base text-charcoal">Pipeline Overview</h3>
+            <a href="/dashboard/pipeline" className="text-xs text-coral hover:underline">View full pipeline →</a>
           </div>
           {items.length === 0 ? (
-            <div className="text-center py-8 text-light">
-              <p className="text-3xl mb-2">📋</p>
+            <div className="text-center py-8 text-mid">
               <p className="text-sm mb-3">No opportunities in your pipeline yet</p>
-              <a href="/dashboard/search" className="text-sage text-sm hover:underline">Search for grants to add →</a>
+              <a href="/dashboard/search" className="text-coral text-sm hover:underline">Search for grants to add →</a>
             </div>
           ) : (
             <>
               <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-4">
                 {[
-                  { id: 'identified',  label: 'Identified',  cls: 'bg-warm/60 text-mid' },
-                  { id: 'researching', label: 'Researching', cls: 'bg-gold/10 text-gold' },
-                  { id: 'applying',    label: 'Applying',    cls: 'bg-sage/10 text-sage' },
+                  { id: 'identified',  label: 'Identified',  cls: 'bg-[#f5f2ed] text-mid' },
+                  { id: 'researching', label: 'Researching', cls: 'bg-amber-50 text-amber-600' },
+                  { id: 'applying',    label: 'Applying',    cls: 'bg-coral/10 text-coral' },
                   { id: 'submitted',   label: 'Submitted',   cls: 'bg-forest/10 text-forest' },
-                  { id: 'won',         label: 'Won',         cls: 'bg-emerald-50 text-emerald-700' },
-                  { id: 'declined',    label: 'Declined',    cls: 'bg-red-50 text-red-500' },
+                  { id: 'won',         label: 'Won',         cls: 'bg-forest/20 text-forest' },
+                  { id: 'declined',    label: 'Declined',    cls: 'bg-warm text-mid' },
                 ].map(s => (
                   <a key={s.id} href="/dashboard/pipeline"
-                    className={`rounded-xl p-3 text-center transition-opacity hover:opacity-80 ${s.cls}`}>
-                    <span className="block font-display text-2xl font-bold">
+                    className={`p-3 text-center transition-opacity hover:opacity-80 ${s.cls}`}>
+                    <span className="block font-serif text-2xl">
                       {stats.byStageCounts[s.id] ?? 0}
                     </span>
                     <span className="text-[10px] font-medium mt-0.5 block">{s.label}</span>
                   </a>
                 ))}
               </div>
-              {/* Recent pipeline items */}
               {active.slice(0, 3).length > 0 && (
                 <div className="border-t border-warm pt-3">
                   {active.slice(0, 3).map(item => {
                     const stage = PIPELINE_STAGES.find(s => s.id === item.stage)
                     const stageCls =
-                      item.stage === 'won'         ? 'bg-emerald-50 text-emerald-700' :
-                      item.stage === 'declined'    ? 'bg-red-50 text-red-500' :
-                      item.stage === 'identified'  ? 'bg-warm/60 text-mid' :
-                      item.stage === 'researching' ? 'bg-gold/10 text-gold' :
-                      item.stage === 'applying'    ? 'bg-sage/10 text-sage' :
+                      item.stage === 'won'         ? 'bg-forest/15 text-forest' :
+                      item.stage === 'declined'    ? 'bg-warm text-mid' :
+                      item.stage === 'identified'  ? 'bg-[#f5f2ed] text-mid' :
+                      item.stage === 'researching' ? 'bg-amber-50 text-amber-600' :
+                      item.stage === 'applying'    ? 'bg-coral/10 text-coral' :
                       'bg-forest/10 text-forest'
                     return (
                       <a key={item.id} href="/dashboard/pipeline"
-                        className="flex items-center justify-between py-2.5 border-b border-warm last:border-0 hover:bg-warm/30 -mx-1 px-1 rounded transition-colors">
+                        className="flex items-center justify-between py-2.5 border-b border-warm last:border-0 hover:bg-[#f5f2ed] -mx-1 px-1 transition-colors">
                         <div className="flex-1 min-w-0 mr-3">
                           <p className="text-sm font-medium text-charcoal truncate">{item.grant_name}</p>
                           <p className="text-xs text-mid truncate">{item.funder_name}</p>
                         </div>
-                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${stageCls}`}>
+                        <span className={`text-[10px] font-semibold px-2 py-0.5 flex-shrink-0 ${stageCls}`}>
                           {stage?.label ?? item.stage}
                         </span>
                       </a>
@@ -205,9 +189,9 @@ export default async function DashboardPage() {
 
         {/* Deadlines */}
         <div className="card">
-          <h3 className="font-display text-base font-semibold text-forest mb-4">Upcoming Deadlines ⚠️</h3>
+          <h3 className="font-serif text-base text-charcoal mb-4">Upcoming Deadlines</h3>
           {alerts.length === 0 ? (
-            <div className="text-center py-6 text-light">
+            <div className="text-center py-6 text-mid">
               <p className="text-sm">No upcoming deadlines</p>
               <p className="text-xs mt-1">Open a pipeline item and set a deadline to track it here</p>
             </div>
@@ -219,12 +203,12 @@ export default async function DashboardPage() {
                     <p className="text-sm font-medium text-charcoal truncate">{alert.item.grant_name}</p>
                     <p className="text-xs text-mid mt-0.5 truncate">{alert.item.funder_name}</p>
                   </div>
-                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap flex-shrink-0 ${
+                  <span className={`text-xs font-semibold px-2.5 py-1 whitespace-nowrap flex-shrink-0 ${
                     alert.urgency === 'urgent' || alert.urgency === 'overdue'
-                      ? 'bg-red-50 text-red-500'
+                      ? 'bg-coral text-white'
                       : alert.urgency === 'soon'
                       ? 'bg-amber-50 text-amber-600'
-                      : 'bg-green-50 text-sage'
+                      : 'bg-forest/10 text-forest'
                   }`}>
                     {formatDeadline(alert.item.deadline)}
                   </span>
