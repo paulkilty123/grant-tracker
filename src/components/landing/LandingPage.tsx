@@ -354,14 +354,24 @@ export default function LandingPage() {
             </motion.div>
           </div>
 
-          {/* Right: fanned card deck */}
-          <div className="flex-1 w-full lg:max-w-[500px] flex-shrink-0 relative overflow-hidden" style={{ height: '380px' }}>
+          {/* Right: fanned card deck — playing card style */}
+          <div className="flex-1 w-full lg:max-w-[500px] flex-shrink-0 relative" style={{ height: '400px' }}>
 
-            {/* Card 3: Alerts — back of deck, only header peeks */}
+            {/* Shared card dimensions and pivot */}
+            {/* All cards: 340px wide, 280px tall, bottom-anchored at y=380, horizontally centred */}
+
+            {/* Card 3: Alerts — furthest back, rotated left */}
             <motion.div
               {...fadeUp(0.4)}
-              className="absolute bg-white rounded-xl border border-warm/80 px-4 overflow-hidden"
-              style={{ top: '308px', left: '32px', right: '0px', height: '44px', zIndex: 1, boxShadow: '0 4px 24px rgba(26,46,43,0.07)', display: 'flex', alignItems: 'center' }}
+              className="absolute bg-white rounded-xl border border-warm/80 p-5"
+              style={{
+                width: '340px', height: '280px',
+                top: '100px', left: 'calc(50% - 170px)',
+                transformOrigin: 'bottom center',
+                transform: 'rotate(-13deg)',
+                zIndex: 1,
+                boxShadow: '0 4px 20px rgba(26,46,43,0.08)',
+              }}
             >
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-red-400 flex-shrink-0" />
@@ -369,11 +379,18 @@ export default function LandingPage() {
               </div>
             </motion.div>
 
-            {/* Card 2: Pipeline — middle of deck, only header peeks */}
+            {/* Card 2: Pipeline — middle, slightly rotated left */}
             <motion.div
               {...fadeUp(0.3)}
-              className="absolute bg-white rounded-xl border border-warm/80 px-4 overflow-hidden"
-              style={{ top: '256px', left: '16px', right: '0px', height: '44px', zIndex: 2, boxShadow: '0 6px 28px rgba(26,46,43,0.09)', display: 'flex', alignItems: 'center' }}
+              className="absolute bg-white rounded-xl border border-warm/80 p-5"
+              style={{
+                width: '340px', height: '280px',
+                top: '100px', left: 'calc(50% - 170px)',
+                transformOrigin: 'bottom center',
+                transform: 'rotate(-6deg)',
+                zIndex: 2,
+                boxShadow: '0 6px 28px rgba(26,46,43,0.10)',
+              }}
             >
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded flex-shrink-0 bg-coral/60" />
@@ -381,19 +398,24 @@ export default function LandingPage() {
               </div>
             </motion.div>
 
-            {/* Card 1: Search — front of deck, fully visible */}
+            {/* Card 1: Search — front, slight rightward tilt, fully visible */}
             <motion.div
               {...fadeUp(0.2)}
-              className="absolute top-0 left-0 right-0 bg-white rounded-xl border border-warm/80 p-5"
-              style={{ zIndex: 3, boxShadow: '0 12px 40px rgba(26,46,43,0.13)' }}
+              className="absolute bg-white rounded-xl border border-warm/80 p-5"
+              style={{
+                width: '340px', height: '280px',
+                top: '100px', left: 'calc(50% - 170px)',
+                transformOrigin: 'bottom center',
+                transform: 'rotate(3deg)',
+                zIndex: 3,
+                boxShadow: '0 14px 44px rgba(26,46,43,0.14)',
+              }}
             >
               <p className="text-[11px] font-semibold text-mid uppercase tracking-wider mb-3">Find Funding</p>
-              {/* Search input */}
-              <div className="flex items-center gap-2 bg-[#f5f2ed] rounded-lg px-3 py-2.5 mb-4 border border-warm/60">
+              <div className="flex items-center gap-2 bg-[#f5f2ed] rounded-lg px-3 py-2.5 mb-3 border border-warm/60">
                 <svg className="w-3.5 h-3.5 text-mid flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                 <span className="text-[12px] text-charcoal/60">Social enterprise · London · Up to £50k</span>
               </div>
-              {/* Results */}
               <p className="text-[10px] text-mid font-medium mb-2">24 matches found</p>
               <div className="flex flex-col">
                 {[
@@ -401,7 +423,7 @@ export default function LandingPage() {
                   { name: 'Innovate UK Smart Grant', type: 'Investment · Up to £25,000', badge: 'Deadline soon', badgeCol: 'bg-amber-100 text-amber-700' },
                   { name: 'Arts Council England', type: 'Grant · Up to £15,000', badge: 'Matched', badgeCol: 'bg-green-100 text-green-700' },
                 ].map((g, i) => (
-                  <div key={g.name} className={`flex items-center justify-between gap-3 py-2.5 ${i < 2 ? 'border-b border-warm/50' : ''}`}>
+                  <div key={g.name} className={`flex items-center justify-between gap-3 py-2 ${i < 2 ? 'border-b border-warm/50' : ''}`}>
                     <div>
                       <p className="text-[11px] font-semibold text-charcoal leading-tight">{g.name}</p>
                       <p className="text-[10px] text-mid mt-0.5">{g.type}</p>
