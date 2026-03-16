@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import Logo from '@/components/Logo'
+import { Search, ArrowRight, Bell, Lock } from 'lucide-react'
 
 export default function SignupPage() {
   const router                  = useRouter()
@@ -36,7 +36,6 @@ export default function SignupPage() {
       setError(error.message)
       setLoading(false)
     } else if (data.session) {
-      // Email confirmation is disabled in Supabase — user is immediately active.
       router.push('/dashboard')
     } else {
       setDone(true)
@@ -59,19 +58,21 @@ export default function SignupPage() {
   if (done) {
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center p-4">
-        <div className="card max-w-md w-full text-center">
-          <div className="text-4xl mb-4">📬</div>
-          <h2 className="text-xl font-bold text-forest mb-2">Check your email</h2>
-          <p className="text-mid text-sm">We&apos;ve sent a confirmation link to <strong>{email}</strong>. Click it to activate your account.</p>
-          <p className="text-xs text-light mt-3">Can&apos;t find it? Check your spam folder.</p>
+        <div className="bg-white border border-warm/60 max-w-md w-full p-10 text-center" style={{ boxShadow: '0 8px 40px rgba(26,46,43,0.10)' }}>
+          <div className="w-12 h-12 bg-forest/10 flex items-center justify-center mx-auto mb-5">
+            <Bell size={22} className="text-forest" />
+          </div>
+          <h2 className="font-serif text-[26px] text-charcoal mb-2">Check your email</h2>
+          <p className="text-mid text-sm leading-relaxed">We&apos;ve sent a confirmation link to <strong className="text-charcoal">{email}</strong>. Click it to activate your account.</p>
+          <p className="text-xs text-mid mt-3">Can&apos;t find it? Check your spam folder.</p>
           <div className="mt-5">
             {resent ? (
-              <p className="text-xs text-emerald-600 font-medium">✓ Confirmation email resent</p>
+              <p className="text-xs text-forest font-medium">✓ Confirmation email resent</p>
             ) : (
               <button
                 onClick={handleResend}
                 disabled={resending}
-                className="text-xs text-forest underline underline-offset-2 hover:text-forest/70 disabled:opacity-50"
+                className="text-xs text-coral underline underline-offset-2 hover:opacity-70 disabled:opacity-50"
               >
                 {resending ? 'Resending…' : 'Resend confirmation email'}
               </button>
@@ -94,54 +95,70 @@ export default function SignupPage() {
       <div className="w-full max-w-4xl">
 
         {/* Back to home */}
-        <div className="mb-6 text-center lg:text-left">
-          <Link href="/" className="text-sm text-mid hover:text-charcoal transition-colors inline-flex items-center gap-1">
+        <div className="mb-6">
+          <Link href="/" className="text-sm text-mid hover:text-charcoal transition-colors inline-flex items-center gap-1.5">
             ← Back to home
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 rounded-2xl shadow-card-lg overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 overflow-hidden border border-warm/60" style={{ boxShadow: '0 8px 40px rgba(26,46,43,0.10)' }}>
 
           {/* ── Left: value props ── */}
-          <div className="bg-forest text-white p-10 hidden lg:flex flex-col justify-between">
+          <div className="bg-[#121f2b] text-white p-10 hidden lg:flex flex-col justify-between">
             <div>
-              <Logo variant="light" size="md" />
-              <p className="text-white/70 text-sm mt-2 mb-10">Find funding. Track progress. Win grants.</p>
+              {/* Logo */}
+              <a href="/" className="flex items-center gap-2.5 no-underline mb-2">
+                <div className="relative flex items-center justify-center bg-coral w-7 h-7 flex-shrink-0" style={{ borderRadius: '6px' }}>
+                  <div className="w-2.5 h-2.5 rounded-full border-2 border-white" />
+                </div>
+                <span className="font-serif text-[20px] text-white">GrantTracker</span>
+              </a>
+              <p className="text-white/50 text-sm mb-10">Find grants, accelerators, investment and support programmes — matched to you, managed in one place.</p>
 
               <div className="space-y-6">
                 {[
-                  { icon: '🔍', title: '800+ UK grants', desc: 'Charities, CICs, social enterprises and community groups — updated regularly from verified sources.' },
-                  { icon: '🎯', title: 'AI that learns from you', desc: 'Personalised matching that improves the more you use it — thumbs up, thumbs down, done.' },
-                  { icon: '📋', title: 'Full application pipeline', desc: 'From first discovery to decision — track every grant without a spreadsheet.' },
-                ].map(f => (
-                  <div key={f.title} className="flex gap-3">
-                    <span className="text-xl flex-shrink-0 mt-0.5">{f.icon}</span>
+                  { Icon: Search,     title: '500+ UK funding opportunities', desc: 'Grants, accelerators, social investment and support programmes — all in one place, updated regularly.' },
+                  { Icon: ArrowRight, title: 'Matched to your organisation',   desc: 'Tell us your structure, sector and stage once. We filter out everything you\'re not eligible for.' },
+                  { Icon: Bell,       title: 'Free to start',                  desc: 'Search the full database, save opportunities and get weekly alerts — no credit card required.' },
+                ].map(({ Icon, title, desc }) => (
+                  <div key={title} className="flex gap-3.5">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: 'rgba(255,255,255,0.08)' }}>
+                      <Icon size={15} className="text-coral" />
+                    </div>
                     <div>
-                      <p className="font-semibold text-sm text-white">{f.title}</p>
-                      <p className="text-white/60 text-xs leading-relaxed mt-0.5">{f.desc}</p>
+                      <p className="font-semibold text-sm text-white">{title}</p>
+                      <p className="text-white/50 text-xs leading-relaxed mt-0.5">{desc}</p>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="mt-10 pt-6 border-t border-white/10">
-              <p className="text-white/50 text-xs">🔒 Your data is never shared or sold</p>
+            <div className="flex items-center gap-2 mt-10 pt-6 border-t border-white/10">
+              <Lock size={12} className="text-white/30" />
+              <p className="text-white/30 text-xs">Your data is never shared or sold</p>
             </div>
           </div>
 
           {/* ── Right: form ── */}
           <div className="bg-white p-8 lg:p-10 flex flex-col justify-center">
-            <div className="mb-8 lg:hidden text-center">
-              <Logo variant="dark" size="md" />
+
+            {/* Mobile logo */}
+            <div className="mb-8 lg:hidden flex justify-center">
+              <a href="/" className="flex items-center gap-2.5 no-underline">
+                <div className="relative flex items-center justify-center bg-coral w-7 h-7 flex-shrink-0" style={{ borderRadius: '6px' }}>
+                  <div className="w-2.5 h-2.5 rounded-full border-2 border-white" />
+                </div>
+                <span className="font-serif text-[20px] text-charcoal">GrantTracker</span>
+              </a>
             </div>
 
-            <h1 className="text-2xl font-bold text-forest mb-1">Create your free account</h1>
-            <p className="text-mid text-sm mb-7">Set up in 2 minutes</p>
+            <h1 className="font-serif text-[28px] leading-tight text-charcoal mb-1">Create your free account</h1>
+            <p className="text-mid text-sm mb-7">Set up in 2 minutes — no credit card needed</p>
 
             <form onSubmit={handleSignup} className="space-y-4">
               {error && (
-                <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-lg border border-red-100">
+                <div className="bg-red-50 text-red-600 text-sm px-4 py-3 border border-red-100">
                   {error}
                 </div>
               )}
@@ -153,6 +170,7 @@ export default function SignupPage() {
                   value={orgName}
                   onChange={e => setOrgName(e.target.value)}
                   className="form-input"
+                  style={{ borderRadius: '0' }}
                   placeholder="Green Communities CIC"
                   autoComplete="organization"
                   required
@@ -165,6 +183,7 @@ export default function SignupPage() {
                   value={orgType}
                   onChange={e => setOrgType(e.target.value)}
                   className="form-input"
+                  style={{ borderRadius: '0' }}
                   required
                 >
                   <option value="" disabled>Select your organisation type…</option>
@@ -183,6 +202,7 @@ export default function SignupPage() {
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   className="form-input"
+                  style={{ borderRadius: '0' }}
                   placeholder="you@organisation.org"
                   autoComplete="email"
                   required
@@ -196,7 +216,8 @@ export default function SignupPage() {
                     type={showPw ? 'text' : 'password'}
                     value={password}
                     onChange={e => setPassword(e.target.value)}
-                    className="form-input pr-10"
+                    className="form-input pr-14"
+                    style={{ borderRadius: '0' }}
                     placeholder="At least 8 characters"
                     autoComplete="new-password"
                     minLength={8}
@@ -205,14 +226,14 @@ export default function SignupPage() {
                   <button
                     type="button"
                     onClick={() => setShowPw(v => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-light hover:text-mid text-sm"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-mid hover:text-charcoal text-xs"
                     tabIndex={-1}
                   >
-                    {showPw ? '🙈' : '👁'}
+                    {showPw ? 'Hide' : 'Show'}
                   </button>
                 </div>
                 {password.length > 0 && (
-                  <p className={`text-xs mt-1.5 ${pwStrong ? 'text-emerald-600' : 'text-amber-500'}`}>
+                  <p className={`text-xs mt-1.5 ${pwStrong ? 'text-forest' : 'text-amber-500'}`}>
                     {pwStrong ? '✓ Strong enough' : 'Use at least 8 characters'}
                   </p>
                 )}
@@ -221,21 +242,23 @@ export default function SignupPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="btn-primary w-full flex justify-center mt-2"
+                className="w-full flex justify-center items-center bg-coral text-white py-3 text-sm font-semibold hover:opacity-90 transition-colors mt-2"
+                style={{ borderRadius: '0' }}
               >
                 {loading ? 'Creating account…' : 'Create free account'}
               </button>
             </form>
 
-            {/* Trust strip — visible on mobile only (desktop sees it in left panel) */}
-            <p className="text-xs text-light text-center mt-5 lg:hidden">
-              🔒 Your data is never shared
-            </p>
+            {/* Trust strip — mobile only */}
+            <div className="flex items-center justify-center gap-1.5 mt-5 lg:hidden">
+              <Lock size={11} className="text-mid" />
+              <p className="text-xs text-mid">Your data is never shared</p>
+            </div>
 
             <div className="mt-6 pt-6 border-t border-warm text-center">
               <p className="text-sm text-mid">
                 Already have an account?{' '}
-                <Link href="/auth/login" className="text-sage font-medium hover:underline">Sign in</Link>
+                <Link href="/auth/login" className="text-coral font-medium hover:underline">Sign in</Link>
               </p>
             </div>
           </div>
