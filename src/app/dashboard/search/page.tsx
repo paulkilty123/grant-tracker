@@ -436,84 +436,84 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
                 )}
                 {grant.source === 'scraped' && <StalenessBadge lastVerifiedAt={grant.lastVerifiedAt} />}
               </div>
+
+              <p className="text-sm text-mid leading-relaxed mt-2 mb-3">
+                {grant.description.length > 200
+                  ? `${grant.description.slice(0, 200).trimEnd()}…`
+                  : grant.description}
+              </p>
+
+              {/* Match reason — only when a search has been performed */}
+              {hasOrg && hasSearch && reason && (
+                <div className="border px-3.5 py-2.5 mb-3 flex items-start gap-2" style={{ backgroundColor: 'rgba(26,122,94,0.06)', borderColor: 'rgba(26,122,94,0.18)' }}>
+                  <span className="text-sm flex-shrink-0 text-forest/70">{isAiScore ? '✦' : '●'}</span>
+                  <p className="text-sm text-forest leading-snug">{reason.replace(/<[^>]*>/g, '').trim()}</p>
+                </div>
+              )}
+
+              {/* Sector tags — topic focus */}
+              {(() => {
+                const sectorTags = (grant as EnrichedGrant).impactSectors?.length
+                  ? (grant as EnrichedGrant).impactSectors!.slice(0, 4).map(s => {
+                      const lbl = IMPACT_SECTOR_FILTERS.find(f => f.id === s)?.label ?? s
+                      return <span key={s} className="tag bg-emerald-50 text-emerald-700 capitalize">{lbl}</span>
+                    })
+                  : grant.sectors
+                      .map(s => ({ raw: s, label: sectorLabel(s) }))
+                      .filter(({ label }) => label !== null)
+                      .slice(0, 3)
+                      .map(({ raw, label }) => (
+                        <span key={raw} className="tag bg-emerald-50 text-emerald-700 capitalize">{label}</span>
+                      ))
+                if (sectorTags.length === 0) return null
+                return (
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider w-12 flex-shrink-0">Sector</span>
+                    {sectorTags}
+                  </div>
+                )
+              })()}
+
+              {/* Eligible org types — rose pills */}
+              {(() => {
+                const structures = (grant as EnrichedGrant).eligibleStructures
+                if (!structures?.length) return null
+                const chips = structures.slice(0, 5).map(s => {
+                  const lbl = STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' ')
+                  return <span key={s} className="tag bg-rose-50 text-rose-600 capitalize">{lbl}</span>
+                })
+                const overflow = structures.length > 5 ? structures.length - 5 : 0
+                return (
+                  <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider w-12 flex-shrink-0">For</span>
+                    {chips}
+                    {overflow > 0 && <span className="tag bg-rose-50 text-rose-400">+{overflow}</span>}
+                  </div>
+                )
+              })()}
+
+              {/* Expandable eligibility */}
+              {expanded && (
+                <div className="mt-3 pt-3 border-t border-warm">
+                  <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Eligibility criteria</p>
+                  <ul className="space-y-1">
+                    {grant.eligibilityCriteria.map(c => (
+                      <li key={c} className="text-sm text-mid flex gap-2">
+                        <span className="text-forest flex-shrink-0">✓</span>{c}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <button
+                onClick={() => setExpanded(!expanded)}
+                className="text-xs text-coral font-medium mt-2 hover:underline"
+              >
+                {expanded ? 'Show less ↑' : 'Eligibility ↓'}
+              </button>
             </div>
           </div>
-
-          <p className="text-sm text-mid leading-relaxed mb-3">
-            {grant.description.length > 200
-              ? `${grant.description.slice(0, 200).trimEnd()}…`
-              : grant.description}
-          </p>
-
-          {/* Match reason — only when a search has been performed */}
-          {hasOrg && hasSearch && reason && (
-            <div className="bg-emerald-50 border border-emerald-200 px-3.5 py-2.5 mb-3 flex items-start gap-2">
-              <span className="text-sm flex-shrink-0 text-emerald-600">{isAiScore ? '✦' : '●'}</span>
-              <p className="text-sm text-forest leading-snug">{reason.replace(/<[^>]*>/g, '').trim()}</p>
-            </div>
-          )}
-
-          {/* Sector tags — topic focus */}
-          {(() => {
-            const sectorTags = (grant as EnrichedGrant).impactSectors?.length
-              ? (grant as EnrichedGrant).impactSectors!.slice(0, 4).map(s => {
-                  const lbl = IMPACT_SECTOR_FILTERS.find(f => f.id === s)?.label ?? s
-                  return <span key={s} className="tag bg-emerald-50 text-emerald-700 capitalize">{lbl}</span>
-                })
-              : grant.sectors
-                  .map(s => ({ raw: s, label: sectorLabel(s) }))
-                  .filter(({ label }) => label !== null)
-                  .slice(0, 3)
-                  .map(({ raw, label }) => (
-                    <span key={raw} className="tag bg-emerald-50 text-emerald-700 capitalize">{label}</span>
-                  ))
-            if (sectorTags.length === 0) return null
-            return (
-              <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider w-12 flex-shrink-0">Sector</span>
-                {sectorTags}
-              </div>
-            )
-          })()}
-
-          {/* Eligible org types — distinct amber pills */}
-          {(() => {
-            const structures = (grant as EnrichedGrant).eligibleStructures
-            if (!structures?.length) return null
-            const chips = structures.slice(0, 5).map(s => {
-              const lbl = STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' ')
-              return <span key={s} className="tag bg-rose-50 text-rose-600 capitalize">{lbl}</span>
-            })
-            const overflow = structures.length > 5 ? structures.length - 5 : 0
-            return (
-              <div className="flex flex-wrap items-center gap-1.5 mt-1">
-                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider w-12 flex-shrink-0">For</span>
-                {chips}
-                {overflow > 0 && <span className="tag bg-rose-50 text-rose-400">+{overflow}</span>}
-              </div>
-            )
-          })()}
-
-          {/* Expandable eligibility */}
-          {expanded && (
-            <div className="mt-3 pt-3 border-t border-warm">
-              <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Eligibility criteria</p>
-              <ul className="space-y-1">
-                {grant.eligibilityCriteria.map(c => (
-                  <li key={c} className="text-sm text-mid flex gap-2">
-                    <span className="text-forest flex-shrink-0">✓</span>{c}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="text-xs text-coral font-medium mt-2 hover:underline"
-          >
-            {expanded ? 'Show less ↑' : 'Eligibility ↓'}
-          </button>
         </div>
 
         {/* Right: score + amount + deadline + actions */}
