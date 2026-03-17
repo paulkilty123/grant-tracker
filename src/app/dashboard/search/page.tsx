@@ -1958,44 +1958,49 @@ export default function SearchPage() {
       {/* ── Instructions panel (shown before any search) ── */}
       {searchMode === 'database' && !hasSearched && (
         <div className="bg-white border border-warm/60 p-6 shadow-card">
-          <p className="text-sm font-semibold text-charcoal mb-4">How to find the right funding</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="flex gap-3">
-              <div className="flex-shrink-0 w-8 h-8 bg-coral/10 flex items-center justify-center text-coral font-bold text-sm">1</div>
+          <p className="text-base font-bold text-charcoal mb-5">How to find the right funding</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div className="flex gap-4">
+              <div className="flex-shrink-0 w-9 h-9 bg-coral/10 flex items-center justify-center text-coral font-bold text-base">1</div>
               <div>
-                <p className="text-xs font-semibold text-charcoal mb-0.5">Search by keyword</p>
-                <p className="text-xs text-mid leading-relaxed">Type what you&apos;re looking for — e.g. <em>&ldquo;youth sport Manchester&rdquo;</em> or <em>&ldquo;community food project&rdquo;</em> — then hit <strong>AI Match</strong>.</p>
+                <p className="text-sm font-semibold text-charcoal mb-1">Search by keyword</p>
+                <p className="text-sm text-mid leading-relaxed">Type what you&apos;re looking for — e.g. <em>&ldquo;youth sport Manchester&rdquo;</em> or <em>&ldquo;community food project&rdquo;</em> — then hit <strong>Search</strong>.</p>
               </div>
             </div>
-            <div className="flex gap-3">
-              <div className="flex-shrink-0 w-8 h-8 bg-coral/10 flex items-center justify-center text-coral font-bold text-sm">2</div>
+            <div className="flex gap-4">
+              <div className="flex-shrink-0 w-9 h-9 bg-coral/10 flex items-center justify-center text-coral font-bold text-base">2</div>
               <div>
-                <p className="text-xs font-semibold text-charcoal mb-0.5">Narrow with Filters</p>
-                <p className="text-xs text-mid leading-relaxed">Use the <strong>Filters</strong> button to narrow by sector, funding type, grant amount, location and deadline.</p>
+                <p className="text-sm font-semibold text-charcoal mb-1">Narrow with Filters</p>
+                <p className="text-sm text-mid leading-relaxed">Use the <strong>Filters</strong> button to narrow by sector, funding type, grant amount, location and deadline.</p>
               </div>
             </div>
-            <div className="flex gap-3">
-              <div className="flex-shrink-0 w-8 h-8 bg-forest/10 flex items-center justify-center text-forest font-bold text-sm">3</div>
+            <div className="flex gap-4">
+              <div className="flex-shrink-0 w-9 h-9 bg-forest/10 flex items-center justify-center text-forest font-bold text-base">3</div>
               <div>
-                <p className="text-xs font-semibold text-charcoal mb-0.5">Use your profile</p>
-                <p className="text-xs text-mid leading-relaxed">Click <strong>Use profile filters</strong> to instantly apply your organisation&apos;s sectors, location and legal structure as search filters — and pre-fill the search with your focus areas.</p>
+                <p className="text-sm font-semibold text-charcoal mb-1">Use your profile</p>
+                <p className="text-sm text-mid leading-relaxed">Click <strong>Use profile filters</strong> to instantly apply your organisation&apos;s sectors, location and legal structure as search filters — and pre-fill the search with your focus areas.</p>
               </div>
             </div>
-            <div className="flex gap-3">
-              <div className="flex-shrink-0 w-8 h-8 bg-charcoal/10 flex items-center justify-center text-charcoal font-bold text-sm">4</div>
+            <div className="flex gap-4 p-4 border-2 border-charcoal/20 bg-charcoal/[0.03]">
+              <div className="flex-shrink-0 w-9 h-9 bg-charcoal flex items-center justify-center text-white">
+                <Globe size={17} strokeWidth={2} />
+              </div>
               <div>
-                <p className="text-xs font-semibold text-charcoal mb-0.5">Try Live Search</p>
-                <p className="text-xs text-mid leading-relaxed">Switch to <strong>Live Search</strong> at the top to research hyper-local and newly announced grants not yet in our database. Takes 15–30 seconds.</p>
+                <p className="text-sm font-semibold text-charcoal mb-1">
+                  Live Search
+                  <span className="ml-2 text-[10px] font-semibold px-1.5 py-0.5 bg-emerald-100 text-emerald-700 align-middle">FEATURED</span>
+                </p>
+                <p className="text-sm text-mid leading-relaxed">Switch to <strong>Live Search</strong> above to research hyper-local and newly announced grants not yet in our database — searches council sites, community foundations and specialist funders in real time. Takes 15–30 seconds.</p>
               </div>
             </div>
           </div>
 
-          <div className="mt-5 pt-4 border-t border-warm flex flex-wrap gap-3">
+          <div className="mt-6 pt-4 border-t border-warm flex flex-wrap gap-3">
             <button
               onClick={() => { setHasSearched(true) }}
-              className="flex items-center gap-1.5 px-4 py-2 bg-coral text-white text-xs font-semibold hover:opacity-90 transition-colors"
+              className="flex items-center gap-1.5 px-4 py-2.5 bg-coral text-white text-sm font-semibold hover:opacity-90 transition-colors"
             >
-              <Search size={13} strokeWidth={2} />
+              <Search size={14} strokeWidth={2} />
               Browse all grants
             </button>
             {org && (
@@ -2011,15 +2016,15 @@ export default function SearchPage() {
                   setProfileChipsApplied(true)
                   setHasSearched(true)
                 }}
-                className="flex items-center gap-1.5 px-4 py-2 border border-forest text-forest text-xs font-semibold hover:bg-forest/5 transition-colors"
+                className="flex items-center gap-1.5 px-4 py-2.5 border border-forest text-forest text-sm font-semibold hover:bg-forest/5 transition-colors"
               >
-                <Users size={13} strokeWidth={2} />
+                <Users size={14} strokeWidth={2} />
                 Apply my profile filters
               </button>
             )}
             {!org && (
               <a href="/dashboard/profile"
-                className="flex items-center gap-1.5 px-4 py-2 border border-forest text-forest text-xs font-semibold hover:bg-forest/5 transition-colors"
+                className="flex items-center gap-1.5 px-4 py-2.5 border border-forest text-forest text-sm font-semibold hover:bg-forest/5 transition-colors"
               >
                 Set up profile for personalised results →
               </a>
