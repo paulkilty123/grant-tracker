@@ -33,6 +33,20 @@ const INCOME_BAND_ORDER = [
 ] as const
 
 /**
+ * London borough names used for borough-level geographic restriction detection.
+ * When a grant text or eligibility criteria mentions one of these and it does NOT
+ * match the org's city, the grant is likely restricted to that specific borough.
+ */
+const LONDON_BOROUGHS = [
+  'lambeth', 'southwark', 'lewisham', 'greenwich', 'bexley', 'bromley',
+  'croydon', 'merton', 'sutton', 'kingston', 'richmond', 'wandsworth',
+  'hammersmith', 'fulham', 'kensington', 'chelsea', 'westminster', 'camden',
+  'islington', 'hackney', 'tower hamlets', 'newham', 'barking', 'dagenham',
+  'havering', 'redbridge', 'waltham forest', 'haringey', 'enfield', 'barnet',
+  'harrow', 'brent', 'ealing', 'hounslow', 'hillingdon',
+]
+
+/**
  * Parse a pound amount from text (handles £10k, £50,000, £100 000 etc.)
  * Returns the numeric value, or null if not parseable.
  */
@@ -163,14 +177,32 @@ export function computeMatchScore(
     const country = org.primary_location.split(',').pop()?.trim().toLowerCase() ?? ''
 
     if (grant.isLocal) {
-      const locationMatch =
-        (city   && grantText.includes(city))   ||
-        (region && grantText.includes(region)) ||
-        (country && ['scotland', 'wales', 'northern ireland'].includes(country) && grantText.includes(country))
+      const cityMatch    = !!(city   && grantText.includes(city))
+      const regionMatch  = !!(region && grantText.includes(region))
+      const countryMatch = !!(country && ['scotland', 'wales', 'northern ireland'].includes(country) && grantText.includes(country))
+      const locationMatch = cityMatch || regionMatch || countryMatch
 
       if (locationMatch) {
         locationScore = 25
         reasons.push(`Local match for ${org.primary_location.split(',')[0]}`)
+
+        // Borough mismatch check: if we matched via region ("london") but NOT the
+        // org's specific city/borough, check whether the grant text names a specific
+        // borough. If it does, and that borough isn't the org's, the grant is likely
+        // restricted to that other area — revert to national base score.
+        if (!cityMatch && regionMatch) {
+          const mentionedBoroughs = LONDON_BOROUGHS.filter(b => grantText.includes(b))
+          if (mentionedBoroughs.length > 0) {
+            const orgBoroughMentioned = mentionedBoroughs.some(
+              b => b === city || b.includes(city) || city.includes(b)
+            )
+            if (!orgBoroughMentioned) {
+              locationScore = 10 // revert to national base — borough mismatch
+              reasons.pop()
+              reasons.push('London grant — check borough eligibility')
+            }
+          }
+        }
       } else {
         locationScore = 18
         reasons.push('Local funder')
@@ -381,6 +413,7 @@ export function computeMatchScore(
 
     if (org.primary_location) {
       const city    = org.primary_location.split(',')[0].trim().toLowerCase()
+      const orgRegion = org.primary_location.split(',')[1]?.trim().toLowerCase() ?? ''
       const country = org.primary_location.split(',').pop()?.trim().toLowerCase() ?? ''
 
       if (city && eligibilityText.includes(city)) {
@@ -391,6 +424,24 @@ export function computeMatchScore(
       const restrictedTo = ukNations.filter(n => eligibilityText.includes(`based in ${n}`) || eligibilityText.includes(`${n} only`) || eligibilityText.includes(`${n}-based`))
       if (restrictedTo.length > 0 && !restrictedTo.some(n => country.includes(n) || city.includes(n))) {
         eligibilityScore = Math.max(2, eligibilityScore - 5)
+      }
+
+      // Borough-level restriction: if the eligibility text names a specific London borough
+      // that is NOT the org's borough, the grant is likely area-restricted → penalise.
+      if (orgRegion.includes('london') || city === 'london') {
+        const mentionedBoroughs = LONDON_BOROUGHS.filter(b => eligibilityText.includes(b))
+        if (mentionedBoroughs.length > 0) {
+          const orgBoroughMentioned = mentionedBoroughs.some(
+            b => b === city || b.includes(city) || city.includes(b)
+          )
+          if (!orgBoroughMentioned) {
+            eligibilityScore = Math.max(2, eligibilityScore - 5)
+            // Only add the warning reason if the location section didn't already flag it
+            if (!reasons.includes('London grant — check borough eligibility')) {
+              reasons.push('May be restricted to a different London borough')
+            }
+          }
+        }
       }
     }
 
