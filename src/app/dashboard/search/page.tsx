@@ -261,12 +261,12 @@ function MatchBadge({ score, isAi, breakdown }: { score: number; isAi: boolean; 
       <button
         type="button"
         onClick={() => setOpen(v => !v)}
-        className={`flex items-center gap-1.5 px-2.5 py-1 ${bg} cursor-pointer hover:opacity-80 transition-opacity`}
+        className="flex items-center gap-1.5 cursor-pointer hover:opacity-70 transition-opacity"
         title="Click to see score breakdown"
       >
-        <span className="text-sm">{isAi ? '✦' : '●'}</span>
-        <span className={`text-xs font-bold ${text}`}>{score}% match</span>
-        {breakdown && <span className="text-xs opacity-50">▾</span>}
+        <span className={`text-sm ${text}`}>{isAi ? '✦' : '●'}</span>
+        <span className={`text-sm font-bold ${text}`}>{score}% match</span>
+        {breakdown && <span className={`text-xs opacity-40 ${text}`}>▾</span>}
       </button>
 
       {open && breakdown && (
@@ -397,7 +397,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                <h3 className="font-semibold text-charcoal text-base leading-snug">{grant.title}</h3>
+                <h3 className="font-semibold text-charcoal text-lg leading-snug">{grant.title}</h3>
                 {isNewThisWeek && (
                   <span className="bg-emerald-100 text-emerald-700 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide flex-shrink-0">
                     New
@@ -447,8 +447,8 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
 
           {/* Match reason — only when a search has been performed */}
           {hasOrg && hasSearch && reason && (
-            <div className="bg-coral/5 border border-coral/20 px-3.5 py-2.5 mb-3 flex items-start gap-2">
-              <span className={`text-sm flex-shrink-0 ${scoreText}`}>{isAiScore ? '✦' : '●'}</span>
+            <div className="bg-emerald-50 border border-emerald-200 px-3.5 py-2.5 mb-3 flex items-start gap-2">
+              <span className="text-sm flex-shrink-0 text-emerald-600">{isAiScore ? '✦' : '●'}</span>
               <p className="text-sm text-forest leading-snug">{reason.replace(/<[^>]*>/g, '').trim()}</p>
             </div>
           )}
@@ -458,14 +458,14 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
             const sectorTags = (grant as EnrichedGrant).impactSectors?.length
               ? (grant as EnrichedGrant).impactSectors!.slice(0, 4).map(s => {
                   const lbl = IMPACT_SECTOR_FILTERS.find(f => f.id === s)?.label ?? s
-                  return <span key={s} className="tag bg-violet-50 text-violet-700 capitalize">{lbl}</span>
+                  return <span key={s} className="tag bg-emerald-50 text-emerald-700 capitalize">{lbl}</span>
                 })
               : grant.sectors
                   .map(s => ({ raw: s, label: sectorLabel(s) }))
                   .filter(({ label }) => label !== null)
                   .slice(0, 3)
                   .map(({ raw, label }) => (
-                    <span key={raw} className="tag bg-violet-50 text-violet-700 capitalize">{label}</span>
+                    <span key={raw} className="tag bg-emerald-50 text-emerald-700 capitalize">{label}</span>
                   ))
             if (sectorTags.length === 0) return null
             return (
@@ -482,14 +482,14 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
             if (!structures?.length) return null
             const chips = structures.slice(0, 5).map(s => {
               const lbl = STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' ')
-              return <span key={s} className="tag bg-amber-50 text-amber-700 capitalize">{lbl}</span>
+              return <span key={s} className="tag bg-rose-50 text-rose-600 capitalize">{lbl}</span>
             })
             const overflow = structures.length > 5 ? structures.length - 5 : 0
             return (
               <div className="flex flex-wrap items-center gap-1.5 mt-1">
                 <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider w-12 flex-shrink-0">For</span>
                 {chips}
-                {overflow > 0 && <span className="tag bg-amber-50 text-amber-500">+{overflow}</span>}
+                {overflow > 0 && <span className="tag bg-rose-50 text-rose-400">+{overflow}</span>}
               </div>
             )
           })()}
@@ -536,8 +536,8 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
             {grant.source === 'scraped' && (
               <a
                 href={`/dashboard/grants/${encodeURIComponent(grant.id)}`}
-                className="flex items-center justify-center gap-1 px-3 py-1.5 text-xs font-medium transition-colors w-full"
-              style={{ background: '#faf7f2', color: '#1f5c52', border: '1px solid #e8ddd0' }}
+                className="flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium transition-colors w-full"
+                style={{ background: '#faf7f2', color: '#1f5c52', border: '1px solid #e8ddd0' }}
               >
                 View details →
               </a>
@@ -547,7 +547,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
                 href={grant.applyUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-1 px-3 py-1.5 text-xs font-medium transition-colors w-full"
+                className="flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium transition-colors w-full"
                 style={{ background: '#1a2e2b', color: '#ffffff', border: '1px solid #1a2e2b' }}
               >
                 Visit website →
@@ -555,7 +555,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
             )}
             <button
               onClick={() => onAddToPipeline(grant)}
-              className="px-3 py-1.5 bg-coral text-white text-xs font-semibold w-full hover:bg-coral/90 transition-colors"
+              className="px-3 py-2 bg-coral text-white text-xs font-semibold w-full hover:bg-coral/90 transition-colors"
             >
               + Pipeline
             </button>
