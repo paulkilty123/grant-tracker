@@ -16,7 +16,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from('scraped_grants')
-    .select('id, title, funder, amount_min, amount_max, deadline, is_rolling, impact_sectors, eligible_structures, funder_type, geo_scope')
+    .select('id, title, funder, amount_min, amount_max, deadline, is_rolling, impact_sectors, eligible_structures, funder_type')
     .eq('is_active', true)
     .or(`is_rolling.eq.true,deadline.is.null,deadline.gte.${today}`)
     .not('funder', 'is', null)
