@@ -536,8 +536,8 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
             {grant.source === 'scraped' && (
               <a
                 href={`/dashboard/grants/${encodeURIComponent(grant.id)}`}
-                className="flex items-center justify-center gap-1 px-3 py-1.5 border text-xs font-medium transition-colors w-full"
-              style={{ borderColor: '#94a3b8', color: '#475569', background: 'transparent' }}
+                className="flex items-center justify-center gap-1 px-3 py-1.5 text-xs font-medium transition-colors w-full"
+              style={{ background: '#1f5c52', color: '#ffffff', border: '1px solid #1f5c52' }}
               >
                 View details →
               </a>
@@ -547,7 +547,8 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
                 href={grant.applyUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-1 px-3 py-1.5 border border-warm text-xs font-medium text-mid hover:border-coral hover:text-coral transition-colors w-full"
+                className="flex items-center justify-center gap-1 px-3 py-1.5 text-xs font-medium transition-colors w-full"
+                style={{ background: '#1a2e2b', color: '#ffffff', border: '1px solid #1a2e2b' }}
               >
                 Visit website →
               </a>
