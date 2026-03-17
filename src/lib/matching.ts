@@ -204,8 +204,10 @@ export function computeMatchScore(
           }
         }
       } else {
-        locationScore = 18
-        reasons.push('Local funder')
+        // Local grant but no location text match — likely for a different area.
+        // Score below the national base (10) to avoid surfacing wrong-city grants.
+        locationScore = 4
+        reasons.push('Local grant — area may not match yours')
       }
     }
   }
