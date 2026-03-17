@@ -52,18 +52,49 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ total, hasDeadline, isRolling, missingAndNotRolling })
 }
 
-// ── POST: fill batch ────────────────────────────────────────────────────────
+// Strip HTML tags and collapse whitespace to get readable plain text
+function stripHtml(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+// Fetch a URL with a timeout — returns plain text or null on failure
+async function fetchPageText(url: string, timeoutMs = 10000): Promise<string | null> {
+  try {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), timeoutMs)
+    const resp = await fetch(url, {
+      signal: controller.signal,
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; GrantTracker/1.0)' },
+    })
+    clearTimeout(timer)
+    if (!resp.ok) return null
+    const html = await resp.text()
+    return stripHtml(html).slice(0, 3000) // cap to keep Claude prompt small
+  } catch {
+    return null
+  }
+}
+
+// ── POST: fill batch (scrapes live URLs) ────────────────────────────────────
 export async function POST(req: NextRequest) {
   if (!await isAuthorised(req)) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
   const body   = await req.json() as { offset?: number; limit?: number }
   const offset = body.offset ?? 0
-  const limit  = Math.min(body.limit ?? 10, 20)
+  const limit  = Math.min(body.limit ?? 5, 5)  // small batches — each needs a URL fetch
 
   const db = getAdminClient()
 
-  // Use proper offset — records without dates don't get removed from the
-  // filter, so we must advance the offset to avoid re-processing the same batch
   const { data: grants, error } = await db
     .from('scraped_grants')
     .select('id, title, funder, description, deadline, is_rolling, apply_url')
@@ -74,28 +105,35 @@ export async function POST(req: NextRequest) {
     .range(offset, offset + limit - 1)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  if (!grants || grants.length === 0) return NextResponse.json({ processed: 0, updated: 0, noDate: 0, done: true })
+  if (!grants || grants.length === 0) return NextResponse.json({ processed: 0, updated: 0, noDate: 0, fetchFailed: 0, done: true })
 
-  const today = new Date().toISOString().split('T')[0]
+  const today  = new Date().toISOString().split('T')[0]
   const apiKey = process.env.ANTHROPIC_API_KEY!
 
-  const inputData = grants.map(g => ({
-    id:          g.id,
-    title:       g.title ?? '',
-    funder:      g.funder ?? '',
-    description: (g.description ?? '').slice(0, 600),
+  // Fetch each grant's page in parallel
+  const pageTexts = await Promise.all(
+    grants.map(g => g.apply_url ? fetchPageText(g.apply_url) : Promise.resolve(null))
+  )
+
+  // Build input — use live page text where available, fall back to description
+  const inputData = grants.map((g, i) => ({
+    id:       g.id,
+    title:    g.title ?? '',
+    funder:   g.funder ?? '',
+    content:  pageTexts[i] ?? (g.description ?? '').slice(0, 600),
+    source:   pageTexts[i] ? 'live_page' : 'description_only',
   }))
 
-  const prompt = `You are extracting application deadline dates from UK grant descriptions. Today's date is ${today}.
+  const prompt = `You are extracting application deadline dates from UK grant pages. Today's date is ${today}.
 
-For each grant, look ONLY at the description text. Extract the next upcoming application deadline if one is explicitly stated.
+For each grant, read the content (either a live webpage or a short description).
+Extract the next upcoming application deadline if one is explicitly stated.
 
 Rules (STRICT):
-- Only return a date that is EXPLICITLY mentioned in the description text
+- Only return a date EXPLICITLY mentioned in the content
 - Do NOT infer, guess, or assume dates
-- Do NOT use dates that are clearly in the past relative to today (${today})
-- If a date is mentioned but has already passed, return null
-- If multiple deadlines are mentioned (e.g. rolling rounds), return the next upcoming one
+- If a date has already passed (before ${today}), return null
+- If multiple deadlines exist (rolling rounds), return the next upcoming one
 - Format: YYYY-MM-DD
 - If no date is found, return null
 
@@ -104,7 +142,7 @@ Return ONLY a JSON array — no markdown, no explanation:
   {
     "id": "<copy id exactly>",
     "deadline": "YYYY-MM-DD" | null,
-    "reason": "<one line: what date you found and where, or why null>"
+    "reason": "<what date you found and where, or why null>"
   }
 ]
 
@@ -122,7 +160,7 @@ ${JSON.stringify(inputData, null, 0)}`
       },
       body: JSON.stringify({
         model:      'claude-haiku-4-5-20251001',
-        max_tokens: 2048,
+        max_tokens: 1024,
         messages: [{ role: 'user', content: prompt }],
       }),
     })
@@ -141,16 +179,14 @@ ${JSON.stringify(inputData, null, 0)}`
     return NextResponse.json({ error: 'Failed to parse Claude response', raw }, { status: 500 })
   }
 
-  let updated = 0
-  let noDate  = 0
+  let updated    = 0
+  let noDate     = 0
+  const fetchFailed = pageTexts.filter(t => t === null).length
 
   for (const r of results) {
     if (!r.deadline) { noDate++; continue }
-
-    // Validate date format and that it's not in the past
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/
-    if (!dateRegex.test(r.deadline)) { noDate++; continue }
-    if (r.deadline < today) { noDate++; continue }
+    if (!dateRegex.test(r.deadline) || r.deadline < today) { noDate++; continue }
 
     const { error: ue } = await db
       .from('scraped_grants')
@@ -167,8 +203,14 @@ ${JSON.stringify(inputData, null, 0)}`
     processed:  grants.length,
     updated,
     noDate,
+    fetchFailed,
     nextOffset: offset + grants.length,
     done,
-    sample: results.filter(r => r.deadline).slice(0, 3),
+    results: results.map((r, i) => ({
+      title:  grants[i]?.title ?? '',
+      source: inputData[i]?.source,
+      deadline: r.deadline,
+      reason: r.reason,
+    })),
   })
 }
