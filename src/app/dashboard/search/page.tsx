@@ -1050,7 +1050,12 @@ export default function SearchPage() {
       const matchesGeoScope =
         activeGeoScope === 'all' ||
         (ge.geoScope && ge.geoScope.includes(activeGeoScope))
-      return matchesQuery && matchesType && matchesAmount && matchesDeadline && matchesSectors && matchesEntryType && matchesFreshness && matchesInviteOnly && matchesFundingType && matchesCategory && matchesFunderCategory && matchesGeoScope
+      // Location text filter — soft match against geoScope values (grants with no geo data always pass)
+      const matchesLocationText = !locationFilter ||
+        !ge.geoScope?.length ||
+        ge.geoScope.some(s => s.toLowerCase().includes(locationFilter.toLowerCase()) || locationFilter.toLowerCase().includes(s.toLowerCase()))
+
+      return matchesQuery && matchesType && matchesAmount && matchesDeadline && matchesSectors && matchesEntryType && matchesFreshness && matchesInviteOnly && matchesFundingType && matchesCategory && matchesFunderCategory && matchesGeoScope && matchesLocationText
     })
 
     if (aiResults) {
@@ -1206,9 +1211,10 @@ export default function SearchPage() {
   }
 
   async function handleAISearch() {
-    if (!query.trim()) return
+    if (!query.trim() && !locationFilter.trim()) return
     setHasSearched(true)
-    await runAISearch(query)
+    const combined = [query.trim(), locationFilter.trim()].filter(Boolean).join(' ')
+    await runAISearch(combined)
   }
 
   function handleSmartMatch() {
@@ -1252,6 +1258,7 @@ export default function SearchPage() {
     sortBy !== 'match',
     activeFunderCategory !== 'all',
     activeGeoScope !== 'all',
+    !!locationFilter,
   ].filter(Boolean).length
 
   function resetAllFilters() {
@@ -1261,6 +1268,7 @@ export default function SearchPage() {
     setAmountMax('')
     setDeadlineFilter('all')
     setActiveSectors(new Set())
+    setLocationFilter('')
     setSortBy('match')
     setEntryTypeFilter('all')
     setFreshnessFilter('all')
@@ -1376,12 +1384,12 @@ export default function SearchPage() {
               className="form-input h-12 pl-11 pr-4"
               placeholder={searchMode === 'live'
                 ? 'e.g. "youth mental health London" or "arts grants Cornwall"'
-                : 'e.g. "youth sport funding" or "social enterprise grant Manchester"'}
+                : 'e.g. "youth sport funding" or "social enterprise grant"'}
             />
           </div>
           <button
             onClick={() => searchMode === 'live' ? runLiveSearch(query) : handleAISearch()}
-            disabled={searchMode === 'live' ? (liveLoading || (!isAdmin && weeklySearchCount >= WEEKLY_LIMIT)) : (aiLoading || !query.trim())}
+            disabled={searchMode === 'live' ? (liveLoading || (!isAdmin && weeklySearchCount >= WEEKLY_LIMIT)) : (aiLoading || (!query.trim() && !locationFilter.trim()))}
             className={`px-5 h-12 text-white text-sm font-semibold whitespace-nowrap transition-colors disabled:opacity-50 ${
               searchMode === 'live'
                 ? 'bg-charcoal hover:bg-charcoal/90'
@@ -1390,9 +1398,30 @@ export default function SearchPage() {
           >
             {searchMode === 'live'
               ? (liveLoading ? 'Researching…' : <><Globe size={14} className="inline -mt-0.5 mr-1" />Search</>)
-              : (aiLoading   ? 'Thinking…'    : <><Sparkles size={14} className="inline -mt-0.5 mr-1" />AI Match</>)}
+              : (aiLoading   ? 'Thinking…'    : <><Search size={14} className="inline -mt-0.5 mr-1" />Search</>)}
           </button>
         </div>
+
+        {/* Location row — database mode only */}
+        {searchMode === 'database' && (
+          <div className="flex gap-3 mt-2">
+            <div className="flex-1 relative">
+              <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-light" />
+              <input
+                type="text"
+                value={locationFilter}
+                onChange={e => setLocationFilter(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key !== 'Enter') return
+                  setHasSearched(true)
+                  handleAISearch()
+                }}
+                className="form-input h-10 pl-11 pr-4 text-sm"
+                placeholder='Location — e.g. "London", "Manchester", "rural Wales" (optional)'
+              />
+            </div>
+          </div>
+        )}
 
         {searchMode === 'database' && aiResults && (
           <div className="mt-2.5">
