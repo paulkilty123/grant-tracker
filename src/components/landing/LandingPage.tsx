@@ -282,12 +282,13 @@ export default function LandingPage() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [previewGrants, setPreviewGrants] = useState<PublicGrant[]>([])
 
-  useEffect(() => {
-    fetch('/api/public-grants')
-      .then(r => r.json())
-      .then(d => setPreviewGrants(d.grants ?? []))
-      .catch(() => {})
-  }, [])
+  // Preview section hidden — uncomment to re-enable
+  // useEffect(() => {
+  //   fetch('/api/public-grants')
+  //     .then(r => r.json())
+  //     .then(d => setPreviewGrants(d.grants ?? []))
+  //     .catch(() => {})
+  // }, [])
 
   return (
     <div className="min-h-screen bg-cream">
