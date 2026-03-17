@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -240,9 +240,54 @@ const DashboardMockup = () => (
   </div>
 )
 
+/* ─── Public grant preview ─── */
+interface PublicGrant {
+  id: string
+  title: string
+  funder: string
+  amount_min: number | null
+  amount_max: number | null
+  deadline: string | null
+  is_rolling: boolean
+  impact_sectors: string[] | null
+  eligible_structures: string[] | null
+  funder_type: string | null
+  geo_scope: string | null
+}
+
+function fmtAmount(min: number | null, max: number | null): string {
+  const fmt = (n: number) => n >= 1000 ? `£${Math.round(n / 1000)}k` : `£${n}`
+  if (min && max && min !== max) return `${fmt(min)} – ${fmt(max)}`
+  if (max) return `Up to ${fmt(max)}`
+  if (min) return `From ${fmt(min)}`
+  return 'Amount varies'
+}
+
+function fmtDeadline(d: string | null, rolling: boolean): string {
+  if (rolling) return 'Rolling'
+  if (!d) return 'Check website'
+  const [y, m, day] = d.split('-').map(Number)
+  return new Date(y, m - 1, day).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+const SECTOR_LABELS: Record<string, string> = {
+  creative: 'Creative', environment: 'Environment', health: 'Health',
+  education: 'Education', tech: 'Tech for Good', housing: 'Housing',
+  food: 'Food', employment: 'Employment', community: 'Community',
+  justice: 'Justice', financial: 'Financial Inclusion', international: 'International',
+}
+
 /* ─── page ─── */
 export default function LandingPage() {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [previewGrants, setPreviewGrants] = useState<PublicGrant[]>([])
+
+  useEffect(() => {
+    fetch('/api/public-grants')
+      .then(r => r.json())
+      .then(d => setPreviewGrants(d.grants ?? []))
+      .catch(() => {})
+  }, [])
 
   return (
     <div className="min-h-screen bg-cream">
@@ -477,6 +522,81 @@ export default function LandingPage() {
 
         </div>
       </section>
+
+      {/* LIVE GRANT PREVIEW */}
+      {previewGrants.length > 0 && (
+        <section className="py-16 md:py-24 bg-white border-t border-warm/60">
+          <div className="mx-auto max-w-6xl px-6">
+            <motion.div {...fadeInView(0)} className="text-center mb-12">
+              <p className="text-sm font-semibold text-coral uppercase tracking-wider mb-3">Live funding, right now</p>
+              <h2 className="font-serif text-3xl md:text-4xl text-charcoal mb-4">Browse what's available today</h2>
+              <p className="text-mid max-w-xl mx-auto text-sm leading-relaxed">A sample from our live database. Sign up free to search all opportunities matched to your organisation.</p>
+            </motion.div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
+              {previewGrants.map((grant, i) => (
+                <motion.div
+                  key={grant.id}
+                  {...fadeInView(i * 0.06)}
+                  className="bg-cream border border-warm/80 p-5 flex flex-col"
+                  style={{ boxShadow: '0 2px 12px rgba(26,46,43,0.06)' }}
+                >
+                  {/* Funder + amount */}
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <p className="text-[11px] text-mid font-medium uppercase tracking-wide leading-snug">{grant.funder}</p>
+                    <span className="text-sm font-bold text-forest flex-shrink-0">{fmtAmount(grant.amount_min, grant.amount_max)}</span>
+                  </div>
+
+                  {/* Title */}
+                  <h3 className="font-serif text-[15px] text-charcoal leading-snug mb-3 flex-1">{grant.title}</h3>
+
+                  {/* Sectors */}
+                  {grant.impact_sectors && grant.impact_sectors.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mb-3">
+                      {grant.impact_sectors.slice(0, 3).map(s => (
+                        <span key={s} className="text-[10px] px-2 py-0.5 font-medium" style={{ background: '#ede9fe', color: '#5b21b6' }}>
+                          {SECTOR_LABELS[s] ?? s}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Deadline + CTA */}
+                  <div className="flex items-center justify-between mt-auto pt-3 border-t border-warm/60">
+                    <span className="text-[11px] text-mid">
+                      {grant.is_rolling ? (
+                        <span className="text-forest font-medium">Rolling</span>
+                      ) : grant.deadline ? (
+                        <>Deadline: <span className="text-charcoal font-medium">{fmtDeadline(grant.deadline, false)}</span></>
+                      ) : (
+                        'Check website'
+                      )}
+                    </span>
+                    <Link
+                      href="/auth/signup"
+                      className="text-[11px] font-semibold text-coral hover:underline"
+                    >
+                      View &amp; track →
+                    </Link>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* CTA bar */}
+            <motion.div {...fadeInView(0.2)} className="text-center">
+              <Link
+                href="/auth/signup"
+                className="inline-flex items-center gap-2 bg-forest text-white px-8 py-3.5 text-sm font-semibold hover:opacity-90 transition-colors"
+                style={{ borderRadius: '0px' }}
+              >
+                Search all opportunities free <ArrowRight size={16} />
+              </Link>
+              <p className="text-xs text-mid mt-3">No credit card · Takes 2 minutes</p>
+            </motion.div>
+          </div>
+        </section>
+      )}
 
       {/* HOW IT WORKS */}
       <section id="how" className="py-16 md:py-20">
