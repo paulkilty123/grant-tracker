@@ -651,6 +651,8 @@ export default function SearchPage() {
   // Initialise filters from URL params (used by landing page category links)
   const initSector      = searchParams.get('sector')      as ImpactSector | null
   const initFundingType = searchParams.get('fundingType') as FundingType   | null
+  const isWelcome       = searchParams.get('welcome') === '1'
+  const [welcomeDismissed, setWelcomeDismissed] = useState(false)
 
   const [query, setQuery]               = useState('')
   const [activeType, setActiveType]     = useState('all')
@@ -684,6 +686,9 @@ export default function SearchPage() {
   const [activeFunderCategory, setActiveFunderCategory] = useState<string>('all')
   const [activeGeoScope, setActiveGeoScope]             = useState<string>('all')
   const [visibleCount, setVisibleCount]           = useState(30)
+  const [searchModeToggle, setSearchModeToggle]   = useState<'profile' | 'browse'>('browse')
+  const [profileChipsApplied, setProfileChipsApplied] = useState(false)
+  const [pipelineNudge, setPipelineNudge]         = useState<{ name: string; url: string | null } | null>(null)
 
   // ── Live search (web) state ───────────────────────────────────────────────
   const [searchMode, setSearchMode]               = useState<'database' | 'live'>('database')
@@ -730,6 +735,13 @@ export default function SearchPage() {
       if (o) {
         const ix = await getInteractions(o.id)
         setInteractions(ix)
+        // If arriving from profile setup, auto-apply profile filters
+        if (isWelcome) {
+          if (o.primary_location) setLocationFilter(o.primary_location)
+          if (o.impact_sectors?.length) setActiveSectors(new Set(o.impact_sectors as ImpactSector[]))
+          setSearchModeToggle('profile')
+          setProfileChipsApplied(true)
+        }
       }
       // Fetch live scraped grants — exclude dead URLs and expired deadlines
       const today = new Date().toISOString().split('T')[0]
@@ -936,7 +948,7 @@ export default function SearchPage() {
         outcome_notes:        null,
         created_by:           userId,
       })
-      showToast(`"${grant.title}" added to pipeline!`)
+      setPipelineNudge({ name: grant.title, url: grant.applyUrl ?? null })
     } catch {
       showToast('Failed to add — please try again')
     }
@@ -1317,6 +1329,17 @@ export default function SearchPage() {
         </p>
       </div>
 
+      {/* Welcome banner — shown after first profile save */}
+      {isWelcome && !welcomeDismissed && (
+        <div className="mb-5 border border-forest/30 bg-forest/5 p-4 flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold text-forest">🎉 Profile saved — here are your matches</p>
+            <p className="text-xs text-mid mt-0.5">Results below are filtered to your sector, location and legal structure. Use the <strong>Browse all</strong> toggle above to explore everything.</p>
+          </div>
+          <button onClick={() => setWelcomeDismissed(true)} className="text-mid hover:text-charcoal text-lg leading-none flex-shrink-0">×</button>
+        </div>
+      )}
+
       {/* ── Category tabs ── */}
       <div className="flex gap-0 border-b border-warm mb-5 -mx-1">
         {CATEGORY_TABS.map(tab => (
@@ -1338,6 +1361,44 @@ export default function SearchPage() {
           </button>
         ))}
       </div>
+
+      {/* ── Profile / Browse toggle ── */}
+      {org && (
+        <div className="flex items-center gap-2 mb-4">
+          <span className="text-xs text-mid font-medium">View:</span>
+          <div className="inline-flex border border-warm bg-warm p-0.5 gap-0.5">
+            {([
+              { id: 'profile' as const, label: '✦ Matched to my profile' },
+              { id: 'browse'  as const, label: 'Browse all' },
+            ]).map(m => (
+              <button
+                key={m.id}
+                onClick={() => {
+                  setSearchModeToggle(m.id)
+                  if (m.id === 'profile' && org) {
+                    // Apply profile filters as chips
+                    if (org.primary_location) setLocationFilter(org.primary_location)
+                    if (org.impact_sectors?.length) setActiveSectors(new Set(org.impact_sectors as ImpactSector[]))
+                    setProfileChipsApplied(true)
+                  } else {
+                    // Clear profile-applied filters
+                    setLocationFilter('')
+                    setActiveSectors(new Set())
+                    setQuery('')
+                    setProfileChipsApplied(false)
+                  }
+                }}
+                className={`px-3 py-1.5 text-xs font-semibold transition-all ${
+                  searchModeToggle === m.id ? 'bg-charcoal text-white' : 'text-mid hover:text-charcoal'
+                }`}
+              >{m.label}</button>
+            ))}
+          </div>
+          {searchModeToggle === 'profile' && profileChipsApplied && (
+            <span className="text-[10px] text-mid">Filtered by your sector &amp; location</span>
+          )}
+        </div>
+      )}
 
       {/* ── Search bar ── */}
       <div className="bg-white p-5 shadow-card mb-5 border border-warm/60">
@@ -1406,39 +1467,42 @@ export default function SearchPage() {
           </button>
         </div>
 
-        {/* Fill from profile + clear */}
-        {org && (
-          <div className="mt-2.5 flex items-center gap-3">
+        {/* Profile chips row — visible when profile mode is active */}
+        {org && searchModeToggle === 'profile' && (
+          <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+            {org.primary_location && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-forest/10 text-forest text-xs font-medium">
+                📍 {org.primary_location}
+                <button onClick={() => setLocationFilter('')} className="ml-0.5 hover:opacity-60 leading-none">×</button>
+              </span>
+            )}
+            {(org.impact_sectors as ImpactSector[] | null)?.slice(0, 3).map(s => {
+              const lbl = IMPACT_SECTOR_FILTERS.find(f => f.id === s)?.label ?? s
+              return (
+                <span key={s} className="inline-flex items-center gap-1 px-2.5 py-1 bg-violet-50 text-violet-700 text-xs font-medium">
+                  {lbl}
+                  <button onClick={() => setActiveSectors(prev => { const n = new Set(prev); n.delete(s); return n })} className="ml-0.5 hover:opacity-60 leading-none">×</button>
+                </span>
+              )
+            })}
             <button
-              onClick={() => searchMode === 'live'
-                ? (() => {
-                    if (org.primary_location) setLocationFilter(org.primary_location)
-                    const smartQ = [org.themes?.slice(0,2).join(', '), org.areas_of_work?.slice(0,2).join(', ')].filter(Boolean).join(' ')
-                    if (smartQ) setQuery(smartQ)
-                  })()
-                : handleSmartMatch()
-              }
-              disabled={searchMode === 'live' ? liveLoading : aiLoading}
-              className="flex items-center gap-1.5 text-sm text-coral font-medium hover:underline disabled:opacity-50"
-            >
-              <Sparkles size={13} />Fill from my profile
+              onClick={() => { setSearchModeToggle('browse'); setLocationFilter(''); setActiveSectors(new Set()); setProfileChipsApplied(false) }}
+              className="text-xs text-light hover:text-charcoal underline ml-1"
+            >Clear all</button>
+          </div>
+        )}
+        {searchMode === 'database' && aiResults && (
+          <div className="mt-2.5">
+            <button onClick={() => { setAiResults(null); setSmartMatched(false); setQuery('') }} className="text-xs text-light hover:text-charcoal underline">
+              Clear results
             </button>
-            {searchMode === 'database' && aiResults && (
-              <button
-                onClick={() => { setAiResults(null); setSmartMatched(false); setQuery('') }}
-                className="text-xs text-light hover:text-charcoal underline"
-              >
-                Clear results
-              </button>
-            )}
-            {searchMode === 'live' && liveResults && (
-              <button
-                onClick={() => { setLiveResults(null); setLiveSmartMatched(false); setQuery('') }}
-                className="text-xs text-light hover:text-charcoal underline"
-              >
-                Clear results
-              </button>
-            )}
+          </div>
+        )}
+        {searchMode === 'live' && liveResults && (
+          <div className="mt-2.5">
+            <button onClick={() => { setLiveResults(null); setLiveSmartMatched(false); setQuery('') }} className="text-xs text-light hover:text-charcoal underline">
+              Clear results
+            </button>
           </div>
         )}
 
@@ -1895,6 +1959,32 @@ export default function SearchPage() {
       {toast && (
         <div className="fixed bottom-6 right-6 bg-charcoal text-white px-5 py-3.5 shadow-card-lg text-sm z-50">
           ✓ {toast}
+        </div>
+      )}
+
+      {/* Pipeline nudge modal */}
+      {pipelineNudge && (
+        <div className="fixed inset-0 bg-charcoal/40 z-50 flex items-end sm:items-center justify-center p-4">
+          <div className="bg-white border border-warm w-full max-w-sm p-6" style={{ boxShadow: '0 8px 40px rgba(26,46,43,0.18)' }}>
+            <p className="text-sm font-semibold text-charcoal mb-1">✓ Added to your pipeline</p>
+            <p className="text-xs text-mid mb-4 leading-relaxed">
+              <strong className="text-charcoal">{pipelineNudge.name}</strong> is now in <em>Identified</em>. Head to your pipeline to set a deadline and move it to <em>Applying</em>.
+            </p>
+            <div className="flex gap-2">
+              <a
+                href="/dashboard/pipeline"
+                className="flex-1 text-center px-3 py-2 bg-forest text-white text-xs font-semibold hover:opacity-90 transition-colors"
+              >
+                Go to pipeline →
+              </a>
+              <button
+                onClick={() => setPipelineNudge(null)}
+                className="flex-1 px-3 py-2 border border-warm text-xs text-mid hover:text-charcoal transition-colors"
+              >
+                Keep browsing
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

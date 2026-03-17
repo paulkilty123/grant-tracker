@@ -12,7 +12,7 @@ export default async function DashboardPage() {
     ? await supabase.from('organisations').select('*').eq('owner_id', user.id).maybeSingle()
     : { data: null }
 
-  if (!org?.name) redirect('/dashboard/profile')
+  // No longer hard-block on profile — show dashboard with setup banner instead
 
   const { data: rawItems } = org
     ? await supabase.from('pipeline_items').select('*').eq('org_id', org.id).order('created_at', { ascending: false })
@@ -51,17 +51,32 @@ export default async function DashboardPage() {
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
 
+  const profileIncomplete = !org?.name
+
   return (
     <div>
+      {/* Setup banner — shown until profile is saved */}
+      {profileIncomplete && (
+        <div className="mb-6 border border-amber-200 bg-amber-50 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold text-amber-800">Complete your profile to unlock matched grants</p>
+            <p className="text-xs text-amber-700 mt-0.5">Takes about 3 minutes — tells us your sector, location and legal structure so we can filter results for you.</p>
+          </div>
+          <a href="/dashboard/profile" className="flex-shrink-0 px-4 py-2 bg-amber-600 text-white text-xs font-semibold hover:opacity-90 transition-colors whitespace-nowrap">Set up profile →</a>
+        </div>
+      )}
+
       {/* Top bar */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-7">
         <div>
           <h2 className="font-serif text-2xl text-charcoal">
-            {greeting}, {orgName}
+            {greeting}, {profileIncomplete ? 'there' : orgName}
           </h2>
           <p className="text-mid text-sm mt-1">
-            {urgentCount} urgent deadline{urgentCount !== 1 ? 's' : ''}
-            · {stats.activeCount} active opportunit{stats.activeCount !== 1 ? 'ies' : 'y'}
+            {profileIncomplete
+              ? 'Welcome to GrantTracker — your funding dashboard'
+              : `${urgentCount} urgent deadline${urgentCount !== 1 ? 's' : ''} · ${stats.activeCount} active opportunit${stats.activeCount !== 1 ? 'ies' : 'y'}`
+            }
           </p>
         </div>
         <a href="/dashboard/search" className="btn-primary">Find New Grants</a>
@@ -133,9 +148,11 @@ export default async function DashboardPage() {
             <a href="/dashboard/pipeline" className="text-xs text-coral hover:underline">View full pipeline →</a>
           </div>
           {items.length === 0 ? (
-            <div className="text-center py-8 text-mid">
-              <p className="text-sm mb-3">No opportunities in your pipeline yet</p>
-              <a href="/dashboard/search" className="text-coral text-sm hover:underline">Search for grants to add →</a>
+            <div className="text-center py-10 text-mid">
+              <p className="text-2xl mb-3">🔍</p>
+              <p className="text-sm font-medium text-charcoal mb-1">No grants tracked yet</p>
+              <p className="text-xs mb-4">Find a grant and hit <strong>+ Pipeline</strong> to start tracking your applications here.</p>
+              <a href="/dashboard/search" className="inline-flex items-center gap-1.5 px-4 py-2 bg-forest text-white text-xs font-semibold hover:opacity-90 transition-colors">Find your first grant →</a>
             </div>
           ) : (
             <>

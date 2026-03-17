@@ -79,10 +79,18 @@ export default function SignupPage() {
               </button>
             )}
           </div>
-          <div className="mt-6 pt-5 border-t border-warm">
-            <Link href="/auth/login" className="text-xs text-mid hover:text-charcoal transition-colors">
-              Back to sign in
-            </Link>
+          <div className="mt-6 pt-5 border-t border-warm space-y-2">
+            <p className="text-xs text-mid font-medium">While you wait, here&apos;s what happens next:</p>
+            <ol className="text-xs text-mid text-left space-y-1 list-decimal list-inside">
+              <li>Click the link in your email to verify your account</li>
+              <li>Set up your organisation profile (takes ~3 minutes)</li>
+              <li>Browse grants matched to your sector and structure</li>
+            </ol>
+            <div className="pt-3">
+              <Link href="/auth/login" className="text-xs text-mid hover:text-charcoal transition-colors underline">
+                Already confirmed? Sign in →
+              </Link>
+            </div>
           </div>
         </div>
       </div>

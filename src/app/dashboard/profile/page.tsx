@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Sparkles } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner, createOrganisation, updateOrganisation } from '@/lib/organisations'
@@ -199,8 +200,10 @@ function completenessScore(form: FormState): { score: number; missing: string[] 
 }
 
 export default function ProfilePage() {
+  const router = useRouter()
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
   const [orgId, setOrgId] = useState<string | null>(null)
+  const [isFirstSave, setIsFirstSave] = useState(false)
   const [userId, setUserId] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -223,6 +226,7 @@ export default function ProfilePage() {
         setOrgId(org.id)
         setForm(orgToForm(org))
       } else {
+        setIsFirstSave(true)
         // Pre-populate from signup metadata so new users see their name & org type already filled in
         const meta = user.user_metadata ?? {}
         if (meta.org_name || meta.org_type) {
@@ -351,7 +355,11 @@ export default function ProfilePage() {
         setOrgId(created.id)
       }
       setSaveStatus('saved')
-      setTimeout(() => setSaveStatus('idle'), 3000)
+      if (isFirstSave) {
+        setTimeout(() => router.push('/dashboard/search?welcome=1'), 800)
+      } else {
+        setTimeout(() => setSaveStatus('idle'), 3000)
+      }
     } catch {
       setSaveStatus('error')
     } finally {
