@@ -1243,6 +1243,7 @@ export default function SearchPage() {
       setLiveResults(null)
       setAiResults(null)
       setQuery('')
+      setSortBy('match')
       // Clear all profile-applied filters for a clean slate
       setLocationFilter('')
       setActiveSectors(new Set())
@@ -1848,6 +1849,28 @@ export default function SearchPage() {
               <><strong className="text-charcoal">{displayGrants.length}</strong> grants{query ? ` matching "${query}"` : ''}</>
             )}
           </p>
+          {activeMode === 'matches' && !aiResults && (
+            <div className="flex items-center gap-0 border border-warm rounded-md overflow-hidden text-xs">
+              <button
+                onClick={() => setSortBy('match')}
+                className="px-3 py-1.5 font-medium transition-colors"
+                style={sortBy !== 'freshest'
+                  ? { backgroundColor: '#1a2e2b', color: '#fff' }
+                  : { backgroundColor: '#fff', color: '#6b7280' }}
+              >
+                Rank
+              </button>
+              <button
+                onClick={() => setSortBy('freshest')}
+                className="px-3 py-1.5 font-medium transition-colors"
+                style={sortBy === 'freshest'
+                  ? { backgroundColor: '#1a2e2b', color: '#fff' }
+                  : { backgroundColor: '#fff', color: '#6b7280' }}
+              >
+                Latest
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -2005,59 +2028,6 @@ export default function SearchPage() {
           </div>
         </div>
       )}
-
-      {/* ── "New this week" strip — My Matches only ── */}
-      {activeMode === 'matches' && hasSearched && (() => {
-        const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-        const newGrants = displayGrants
-          .filter(item => item.grant.dateAdded && item.grant.dateAdded >= fourteenDaysAgo && item.score >= 40)
-          .slice(0, 6)
-        if (newGrants.length === 0) return null
-        return (
-          <div className="mb-5 rounded-xl border border-forest/20 px-4 pt-3.5 pb-3" style={{ backgroundColor: 'rgba(26,122,94,0.04)' }}>
-            <p className="text-sm font-semibold text-forest mb-3 flex items-center gap-1.5">
-              <span>✦</span>
-              New this week — {newGrants.length} grant{newGrants.length !== 1 ? 's' : ''} relevant to you
-            </p>
-            <div
-              className="flex gap-3 overflow-x-auto pb-1"
-              style={{ scrollbarWidth: 'none' }}
-            >
-              {newGrants.map(item => {
-                const g = item.grant
-                const scoreBg = item.score >= 75 ? '#e8f5f0' : item.score >= 55 ? '#fef9e7' : '#f5f2ed'
-                const scoreClr = item.score >= 75 ? '#1a7a5e' : item.score >= 55 ? '#9a7500' : '#6b7280'
-                return (
-                  <div
-                    key={g.id}
-                    className="flex-shrink-0 w-52 bg-white border border-warm rounded-lg p-3"
-                    style={{ minWidth: '13rem' }}
-                  >
-                    <div className="flex items-start justify-between gap-2 mb-1.5">
-                      <p className="text-xs font-semibold text-charcoal leading-snug line-clamp-2">{g.title}</p>
-                      <span
-                        className="flex-shrink-0 text-[11px] font-bold px-1.5 py-0.5 rounded"
-                        style={{ backgroundColor: scoreBg, color: scoreClr }}
-                      >
-                        {item.score}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-mid leading-tight">{g.funder}</p>
-                    {g.amountMax > 0 && (
-                      <p className="text-[11px] text-mid mt-0.5">Up to £{g.amountMax.toLocaleString()}</p>
-                    )}
-                    {g.deadline && (
-                      <p className="text-[11px] text-mid mt-0.5">Closes {g.deadline}</p>
-                    )}
-                    <p className="text-[10px] font-bold mt-2 uppercase tracking-wide" style={{ color: '#1a7a5e' }}>✦ New</p>
-                  </div>
-                )
-              })}
-            </div>
-            <p className="text-[11px] text-light mt-2">↓ Full details below in your ranked list</p>
-          </div>
-        )
-      })()}
 
       {/* ── Database grant list ── */}
       {activeMode !== 'live' && hasSearched && (displayGrants.length === 0 ? (
