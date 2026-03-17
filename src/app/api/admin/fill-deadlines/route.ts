@@ -56,13 +56,14 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   if (!await isAuthorised(req)) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
-  const body  = await req.json() as { offset?: number; limit?: number }
-  const limit = Math.min(body.limit ?? 10, 20)
+  const body   = await req.json() as { offset?: number; limit?: number }
+  const offset = body.offset ?? 0
+  const limit  = Math.min(body.limit ?? 10, 20)
 
   const db = getAdminClient()
 
-  // Always fetch from offset 0 within the filtered set — avoids pagination
-  // drift as we update records out of the filtered set
+  // Use proper offset — records without dates don't get removed from the
+  // filter, so we must advance the offset to avoid re-processing the same batch
   const { data: grants, error } = await db
     .from('scraped_grants')
     .select('id, title, funder, description, deadline, is_rolling, apply_url')
@@ -70,7 +71,7 @@ export async function POST(req: NextRequest) {
     .eq('is_rolling', false)
     .is('deadline', null)
     .order('id', { ascending: true })
-    .range(0, limit - 1)
+    .range(offset, offset + limit - 1)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   if (!grants || grants.length === 0) return NextResponse.json({ processed: 0, updated: 0, noDate: 0, done: true })
@@ -163,9 +164,10 @@ ${JSON.stringify(inputData, null, 0)}`
   const done = grants.length < limit
 
   return NextResponse.json({
-    processed: grants.length,
+    processed:  grants.length,
     updated,
     noDate,
+    nextOffset: offset + grants.length,
     done,
     sample: results.filter(r => r.deadline).slice(0, 3),
   })
