@@ -458,23 +458,30 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
                   .map(({ raw, label }) => (
                     <span key={raw} className="tag bg-violet-50 text-violet-700 capitalize">{label}</span>
                   ))
-            return sectorTags.length > 0
-              ? <div className="flex flex-wrap gap-1.5">{sectorTags}</div>
-              : null
+            if (sectorTags.length === 0) return null
+            return (
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider w-12 flex-shrink-0">Sector</span>
+                {sectorTags}
+              </div>
+            )
           })()}
 
-          {/* Eligible org types — plain text, lower visual weight than sectors */}
+          {/* Eligible org types — distinct amber pills */}
           {(() => {
             const structures = (grant as EnrichedGrant).eligibleStructures
             if (!structures?.length) return null
-            const labels = structures.slice(0, 5).map(s => STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' '))
+            const chips = structures.slice(0, 5).map(s => {
+              const lbl = STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' ')
+              return <span key={s} className="tag bg-amber-50 text-amber-700 capitalize">{lbl}</span>
+            })
             const overflow = structures.length > 5 ? structures.length - 5 : 0
-            const text = overflow > 0 ? `${labels.join(' · ')} +${overflow}` : labels.join(' · ')
             return (
-              <p className="text-xs text-slate-500 mt-1.5 flex items-center gap-1.5">
-                <Building2 className="w-3 h-3 flex-shrink-0 text-slate-400" />
-                <span>{text}</span>
-              </p>
+              <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider w-12 flex-shrink-0">For</span>
+                {chips}
+                {overflow > 0 && <span className="tag bg-amber-50 text-amber-500">+{overflow}</span>}
+              </div>
             )
           })()}
 
