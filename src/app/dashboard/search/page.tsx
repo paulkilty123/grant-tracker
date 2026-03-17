@@ -1317,16 +1317,6 @@ export default function SearchPage() {
     <div>
       <div className="mb-5">
         <h2 className="text-2xl font-bold text-charcoal">Find Funding</h2>
-        <p className="text-mid text-sm mt-1">
-          {searchMode === 'live'
-            ? 'AI researches the live web for hyper-local and newly announced funding not in our database'
-            : categoryFilter === 'grants'
-            ? `Grants, social investment, diversity funds & more — ${allGrants.length}+ opportunities matched to your structure`
-            : categoryFilter === 'programmes'
-            ? `Accelerators, support programmes, mentoring & pro bono — ${allGrants.length}+ opportunities`
-            : `Grants, accelerators, social investment, diversity funds & more — ${allGrants.length}+ opportunities matched to your structure`
-          }
-        </p>
       </div>
 
       {/* Welcome banner — shown after first profile save */}
@@ -1334,103 +1324,34 @@ export default function SearchPage() {
         <div className="mb-5 border border-forest/30 bg-forest/5 p-4 flex items-start justify-between gap-4">
           <div>
             <p className="text-sm font-semibold text-forest">🎉 Profile saved — here are your matches</p>
-            <p className="text-xs text-mid mt-0.5">Results below are filtered to your sector, location and legal structure. Use the <strong>Browse all</strong> toggle above to explore everything.</p>
+            <p className="text-xs text-mid mt-0.5">Results are filtered to grants you&apos;re eligible for. Use &ldquo;Show all grants&rdquo; below to browse everything.</p>
           </div>
           <button onClick={() => setWelcomeDismissed(true)} className="text-mid hover:text-charcoal text-lg leading-none flex-shrink-0">×</button>
-        </div>
-      )}
-
-      {/* ── Category tabs ── */}
-      <div className="flex gap-0 border-b border-warm mb-5 -mx-1">
-        {CATEGORY_TABS.map(tab => (
-          <button
-            key={tab.id}
-            title={tab.desc}
-            onClick={() => { setCategoryFilter(tab.id); setActiveFundingType('all') }}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-all ${
-              categoryFilter === tab.id
-                ? 'border-coral text-coral'
-                : 'border-transparent text-mid hover:text-charcoal hover:border-warm'
-            }`}
-          >
-            <span className="flex-shrink-0">{tab.icon}</span>
-            <span>{tab.label}</span>
-            <span className={`px-1.5 py-0.5 text-[10px] font-semibold ${
-              categoryFilter === tab.id ? 'bg-coral/10 text-coral' : 'bg-warm text-light'
-            }`}>{tab.count}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* ── Profile / Browse toggle ── */}
-      {org && (
-        <div className="flex items-center gap-2 mb-4">
-          <span className="text-xs text-mid font-medium">View:</span>
-          <div className="inline-flex border border-warm bg-warm p-0.5 gap-0.5">
-            {([
-              { id: 'profile' as const, label: '✦ Matched to my profile' },
-              { id: 'browse'  as const, label: 'Browse all' },
-            ]).map(m => (
-              <button
-                key={m.id}
-                onClick={() => {
-                  setSearchModeToggle(m.id)
-                  if (m.id === 'profile' && org) {
-                    // Apply profile filters as chips
-                    if (org.primary_location) setLocationFilter(org.primary_location)
-                    if (org.impact_sectors?.length) setActiveSectors(new Set(org.impact_sectors as ImpactSector[]))
-                    setProfileChipsApplied(true)
-                  } else {
-                    // Clear profile-applied filters
-                    setLocationFilter('')
-                    setActiveSectors(new Set())
-                    setQuery('')
-                    setProfileChipsApplied(false)
-                  }
-                }}
-                className={`px-3 py-1.5 text-xs font-semibold transition-all ${
-                  searchModeToggle === m.id ? 'bg-charcoal text-white' : 'text-mid hover:text-charcoal'
-                }`}
-              >{m.label}</button>
-            ))}
-          </div>
-          {searchModeToggle === 'profile' && profileChipsApplied && (
-            <span className="text-[10px] text-mid">Filtered by your sector &amp; location</span>
-          )}
         </div>
       )}
 
       {/* ── Search bar ── */}
       <div className="bg-white p-5 shadow-card mb-5 border border-warm/60">
 
-        {/* ── Mode toggle ── */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="inline-flex border border-warm bg-warm p-0.5 gap-0.5">
-            {([
-              { id: 'database' as const, icon: <Database size={13} strokeWidth={2} />, label: 'Our database' },
-              { id: 'live'     as const, icon: <Globe    size={13} strokeWidth={2} />, label: 'Live Search'  },
-            ]).map(m => (
-              <button
-                key={m.id}
-                onClick={() => { setSearchMode(m.id); setLiveResults(null); setAiResults(null) }}
-                className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold transition-all ${
-                  searchMode === m.id
-                    ? 'bg-charcoal text-white shadow-sm'
-                    : 'text-mid hover:text-charcoal'
-                }`}
-              >
-                {m.icon}{m.label}
-              </button>
-            ))}
-          </div>
+        {/* Input row with inline mode toggle */}
+        <div className="flex items-center gap-2 mb-3 text-xs text-mid">
+          <button
+            onClick={() => { setSearchMode('database'); setLiveResults(null); setAiResults(null) }}
+            className={`font-semibold transition-colors ${searchMode === 'database' ? 'text-charcoal' : 'hover:text-charcoal'}`}
+          >
+            <Database size={11} strokeWidth={2} className="inline mr-1 -mt-0.5" />Our database
+          </button>
+          <span className="text-warm select-none">|</span>
+          <button
+            onClick={() => { setSearchMode('live'); setLiveResults(null); setAiResults(null) }}
+            className={`font-semibold transition-colors ${searchMode === 'live' ? 'text-charcoal' : 'hover:text-charcoal'}`}
+          >
+            <Globe size={11} strokeWidth={2} className="inline mr-1 -mt-0.5" />Live Search
+          </button>
           {searchMode === 'live' && (
-            <p className="text-[11px] text-mid">
-              {isAdmin
-                ? '∞ Unlimited searches'
-                : weeklySearchCount >= WEEKLY_LIMIT
-                ? '⚠ Weekly limit reached'
-                : `${WEEKLY_LIMIT - weeklySearchCount} of ${WEEKLY_LIMIT} searches left this week`}
-            </p>
+            <span className="ml-auto text-[10px]">
+              {isAdmin ? '∞ unlimited' : weeklySearchCount >= WEEKLY_LIMIT ? '⚠ limit reached' : `${WEEKLY_LIMIT - weeklySearchCount}/${WEEKLY_LIMIT} left this week`}
+            </span>
           )}
         </div>
 
@@ -1467,30 +1388,6 @@ export default function SearchPage() {
           </button>
         </div>
 
-        {/* Profile chips row — visible when profile mode is active */}
-        {org && searchModeToggle === 'profile' && (
-          <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-            {org.primary_location && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-forest/10 text-forest text-xs font-medium">
-                📍 {org.primary_location}
-                <button onClick={() => setLocationFilter('')} className="ml-0.5 hover:opacity-60 leading-none">×</button>
-              </span>
-            )}
-            {(org.impact_sectors as ImpactSector[] | null)?.slice(0, 3).map(s => {
-              const lbl = IMPACT_SECTOR_FILTERS.find(f => f.id === s)?.label ?? s
-              return (
-                <span key={s} className="inline-flex items-center gap-1 px-2.5 py-1 bg-violet-50 text-violet-700 text-xs font-medium">
-                  {lbl}
-                  <button onClick={() => setActiveSectors(prev => { const n = new Set(prev); n.delete(s); return n })} className="ml-0.5 hover:opacity-60 leading-none">×</button>
-                </span>
-              )
-            })}
-            <button
-              onClick={() => { setSearchModeToggle('browse'); setLocationFilter(''); setActiveSectors(new Set()); setProfileChipsApplied(false) }}
-              className="text-xs text-light hover:text-charcoal underline ml-1"
-            >Clear all</button>
-          </div>
-        )}
         {searchMode === 'database' && aiResults && (
           <div className="mt-2.5">
             <button onClick={() => { setAiResults(null); setSmartMatched(false); setQuery('') }} className="text-xs text-light hover:text-charcoal underline">
@@ -1506,26 +1403,9 @@ export default function SearchPage() {
           </div>
         )}
 
-        {/* ── DATABASE MODE: entry type pills + filters ── */}
+        {/* ── Filters ── */}
         {searchMode === 'database' && (
           <>
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {([
-                { key: 'all',     label: 'All',           icon: null,                                    desc: 'Show everything',                                    cls: 'border-warm text-mid bg-white',    active: 'bg-coral border-coral text-white' },
-                { key: 'live',    label: 'Latest Grants', icon: <Clock     size={12} strokeWidth={2} />, desc: 'Grants added to the database in the last 60 days',   cls: 'border-warm text-mid bg-white',    active: 'bg-charcoal border-charcoal text-white' },
-                { key: 'funders', label: 'Funders',       icon: <Building2 size={12} strokeWidth={2} />, desc: 'Ongoing funders and rolling programmes — apply any time', cls: 'border-warm text-mid bg-white', active: 'bg-charcoal border-charcoal text-white' },
-              ] as const).map(({ key, label, icon, desc, cls, active }) => (
-                <button key={key} onClick={() => setEntryTypeFilter(key)} title={desc}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 border text-xs font-semibold transition-all ${
-                    entryTypeFilter === key ? active : `${cls} hover:border-coral hover:text-coral`
-                  }`}
-                >
-                  {icon}{label}
-                </button>
-              ))}
-            </div>
-
-            {/* Filters toggle — renamed to "More filters" */}
             <button
               onClick={() => setFiltersOpen(o => !o)}
               className={`mt-3 flex items-center gap-1.5 px-3 py-1.5 border text-xs font-semibold transition-all ${
@@ -1535,10 +1415,9 @@ export default function SearchPage() {
               }`}
             >
               <SlidersHorizontal size={13} strokeWidth={2} />
-              {activeFilterCount > 0 ? `Filters · ${activeFilterCount} active` : 'More filters'}
+              {activeFilterCount > 0 ? `Filters · ${activeFilterCount} active` : 'Filters'}
               <ChevronDown size={13} strokeWidth={2} className={`transition-transform duration-200 ${filtersOpen ? 'rotate-180' : ''}`} />
             </button>
-
             {aiError && <p className="text-amber-600 text-xs mt-3">⚠ {aiError}</p>}
           </>
         )}
@@ -1912,6 +1791,38 @@ export default function SearchPage() {
           >
             ✕
           </button>
+        </div>
+      )}
+
+      {/* ── Results count line ── */}
+      {searchMode === 'database' && org && (
+        <div className="flex items-center justify-between mb-3 text-xs text-mid">
+          {searchModeToggle === 'profile' ? (
+            <>
+              <span>Showing <strong className="text-charcoal">{displayGrants.length}</strong> grants eligible for you</span>
+              <button
+                onClick={() => { setSearchModeToggle('browse'); setLocationFilter(''); setActiveSectors(new Set()); setProfileChipsApplied(false) }}
+                className="text-coral hover:underline font-medium"
+              >Show all {allGrants.length} →</button>
+            </>
+          ) : (
+            <>
+              <span>Showing all <strong className="text-charcoal">{displayGrants.length}</strong> grants</span>
+              {org.impact_sectors?.length || org.primary_location ? (
+                <button
+                  onClick={() => {
+                    setSearchModeToggle('profile')
+                    if (org.primary_location) setLocationFilter(org.primary_location)
+                    if (org.impact_sectors?.length) setActiveSectors(new Set(org.impact_sectors as ImpactSector[]))
+                    setProfileChipsApplied(true)
+                  }}
+                  className="text-coral hover:underline font-medium"
+                >Filter to eligible for me →</button>
+              ) : (
+                <a href="/dashboard/profile" className="text-coral hover:underline font-medium">Set up profile to filter →</a>
+              )}
+            </>
+          )}
         </div>
       )}
 
