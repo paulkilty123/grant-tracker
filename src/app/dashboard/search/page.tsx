@@ -537,7 +537,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
               <a
                 href={`/dashboard/grants/${encodeURIComponent(grant.id)}`}
                 className="flex items-center justify-center gap-1 px-3 py-1.5 text-xs font-medium transition-colors w-full"
-              style={{ background: '#1f5c52', color: '#ffffff', border: '1px solid #1f5c52' }}
+              style={{ background: '#faf7f2', color: '#1f5c52', border: '1px solid #e8ddd0' }}
               >
                 View details →
               </a>
