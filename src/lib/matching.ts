@@ -420,10 +420,45 @@ export function computeMatchScore(
         eligibilityScore = Math.min(15, eligibilityScore + 2)
         reasons.push('Your location meets eligibility')
       }
-      const ukNations = ['scotland', 'wales', 'northern ireland', 'england']
-      const restrictedTo = ukNations.filter(n => eligibilityText.includes(`based in ${n}`) || eligibilityText.includes(`${n} only`) || eligibilityText.includes(`${n}-based`))
-      if (restrictedTo.length > 0 && !restrictedTo.some(n => country.includes(n) || city.includes(n))) {
-        eligibilityScore = Math.max(2, eligibilityScore - 5)
+      // UK nation restriction — checks both grant TITLE and eligibility text with
+      // expanded patterns. Infers England as default for orgs in London/English cities.
+      const grantTitleLower = grant.title.toLowerCase()
+      const orgLocation = [city, orgRegion, country].join(' ')
+      const isInScotland = orgLocation.includes('scotland')
+      const isInWales    = orgLocation.includes('wales')
+      const isInNI       = orgLocation.includes('northern ireland')
+      const isInEngland  = !isInScotland && !isInWales && !isInNI // default
+
+      const allNations = ['scotland', 'wales', 'northern ireland', 'england'] as const
+      const nationRestrictions = allNations.filter(n => {
+        // Title is a strong signal (e.g. "Awards for All Wales", "Scotland Fund")
+        const inTitle = grantTitleLower.includes(n)
+        // Eligibility text — expanded set of phrasing patterns
+        const inElig =
+          eligibilityText.includes(`based in ${n}`) ||
+          eligibilityText.includes(`${n} only`) ||
+          eligibilityText.includes(`${n}-based`) ||
+          eligibilityText.includes(`in ${n}`) ||
+          eligibilityText.includes(`for ${n}`) ||
+          eligibilityText.includes(`${n} organisations`) ||
+          eligibilityText.includes(`${n} registered`) ||
+          eligibilityText.includes(`operating in ${n}`)
+        return inTitle || inElig
+      })
+
+      if (nationRestrictions.length > 0) {
+        const orgMatchesNation = nationRestrictions.some(n =>
+          (n === 'scotland'         && isInScotland) ||
+          (n === 'wales'            && isInWales)    ||
+          (n === 'northern ireland' && isInNI)       ||
+          (n === 'england'          && isInEngland)
+        )
+        if (!orgMatchesNation) {
+          // Strong penalty — nation mismatch means the org is almost certainly ineligible
+          eligibilityScore = Math.max(1, eligibilityScore - 10)
+          const restrictedNation = nationRestrictions.find(n => n !== 'england') ?? nationRestrictions[0]
+          reasons.push(`Likely restricted to ${restrictedNation.charAt(0).toUpperCase() + restrictedNation.slice(1)}`)
+        }
       }
 
       // Borough-level restriction: if the eligibility text names a specific London borough
