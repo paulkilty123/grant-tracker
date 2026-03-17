@@ -691,6 +691,7 @@ export default function SearchPage() {
   const [pipelineNudge, setPipelineNudge]         = useState<{ name: string; url: string | null } | null>(null)
   const [hasSearched, setHasSearched]             = useState(false)
   const [profileFiltersOpen, setProfileFiltersOpen] = useState(false)
+  const [activeMode, setActiveMode]               = useState<'matches' | 'search' | 'live'>('matches')
 
   // ── Live search (web) state ───────────────────────────────────────────────
   const [searchMode, setSearchMode]               = useState<'database' | 'live'>('database')
@@ -737,14 +738,12 @@ export default function SearchPage() {
       if (o) {
         const ix = await getInteractions(o.id)
         setInteractions(ix)
-        // If arriving from profile setup, auto-apply profile filters
-        if (isWelcome) {
-          if (o.primary_location) setLocationFilter(o.primary_location)
-          if (o.impact_sectors?.length) setActiveSectors(new Set(o.impact_sectors as ImpactSector[]))
-          setSearchModeToggle('profile')
-          setProfileChipsApplied(true)
-          setHasSearched(true)
-        }
+        // My Matches mode: always auto-apply profile and show results
+        if (o.primary_location) setLocationFilter(o.primary_location)
+        if (o.impact_sectors?.length) setActiveSectors(new Set(o.impact_sectors as ImpactSector[]))
+        setSearchModeToggle('profile')
+        setProfileChipsApplied(true)
+        setHasSearched(true)
       }
       // Fetch live scraped grants — exclude dead URLs and expired deadlines
       const today = new Date().toISOString().split('T')[0]
@@ -1224,6 +1223,38 @@ export default function SearchPage() {
     setQuery(smartQuery)
   }
 
+  function switchMode(mode: 'matches' | 'search' | 'live') {
+    setActiveMode(mode)
+    setFiltersOpen(false)
+    setProfileFiltersOpen(false)
+    if (mode === 'matches') {
+      setSearchMode('database')
+      setLiveResults(null)
+      setAiResults(null)
+      setQuery('')
+      // Re-apply profile filters
+      if (org?.primary_location) setLocationFilter(org.primary_location)
+      if (org?.impact_sectors?.length) setActiveSectors(new Set(org.impact_sectors as ImpactSector[]))
+      setSearchModeToggle('profile')
+      setProfileChipsApplied(true)
+      setHasSearched(true)
+    } else if (mode === 'search') {
+      setSearchMode('database')
+      setLiveResults(null)
+      setAiResults(null)
+      setQuery('')
+      // Clear all profile-applied filters for a clean slate
+      setLocationFilter('')
+      setActiveSectors(new Set())
+      setSearchModeToggle('browse')
+      setProfileChipsApplied(false)
+      setHasSearched(false)
+    } else {
+      setSearchMode('live')
+      setAiResults(null)
+    }
+  }
+
   const orgIsIncomplete = org && !org.themes?.length && !org.areas_of_work?.length && !org.primary_location
 
   // Compute match-quality profile score + missing fields for the banner
@@ -1343,119 +1374,152 @@ export default function SearchPage() {
         </div>
       )}
 
-      {/* ── Search bar ── */}
-      <div className="bg-white p-5 shadow-card mb-5 border border-warm/60">
+      {/* ── Search card ── */}
+      <div className="bg-white shadow-card mb-5 border border-warm/60">
 
-        {/* Input row with inline mode toggle */}
-        <div className="flex items-center gap-2 mb-3 text-xs text-mid">
-          <button
-            onClick={() => { setSearchMode('database'); setLiveResults(null); setAiResults(null) }}
-            className={`font-semibold transition-colors ${searchMode === 'database' ? 'text-charcoal' : 'hover:text-charcoal'}`}
-          >
-            <Database size={11} strokeWidth={2} className="inline mr-1 -mt-0.5" />Our database
-          </button>
-          <span className="text-warm select-none">|</span>
-          <button
-            onClick={() => { setSearchMode('live'); setLiveResults(null); setAiResults(null) }}
-            className={`font-semibold transition-colors ${searchMode === 'live' ? 'text-charcoal' : 'hover:text-charcoal'}`}
-          >
-            <Globe size={11} strokeWidth={2} className="inline mr-1 -mt-0.5" />Live Search
-          </button>
-          {searchMode === 'live' && (
-            <span className="ml-auto text-[10px]">
-              {isAdmin ? '∞ unlimited' : weeklySearchCount >= WEEKLY_LIMIT ? '⚠ limit reached' : `${WEEKLY_LIMIT - weeklySearchCount}/${WEEKLY_LIMIT} left this week`}
-            </span>
+        {/* ── Mode tabs ── */}
+        <div className="flex border-b border-warm">
+          {([
+            { id: 'matches' as const, icon: <Users size={14} strokeWidth={2} />, label: 'My Matches',    sub: 'Ranked by your profile' },
+            { id: 'search'  as const, icon: <Search size={14} strokeWidth={2} />, label: 'Search',        sub: 'Fresh keyword search'   },
+            { id: 'live'    as const, icon: <Globe  size={14} strokeWidth={2} />, label: 'Live Search',   sub: 'Real-time web research'  },
+          ] as const).map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => switchMode(tab.id)}
+              className={`flex-1 flex flex-col items-center gap-0.5 py-3.5 px-2 border-b-2 transition-colors ${
+                activeMode === tab.id
+                  ? 'border-coral text-charcoal'
+                  : 'border-transparent text-mid hover:text-charcoal hover:bg-warm/30'
+              }`}
+            >
+              <span className={`flex items-center gap-1.5 text-sm font-semibold ${activeMode === tab.id ? 'text-coral' : ''}`}>
+                {tab.icon}{tab.label}
+                {tab.id === 'live' && (
+                  <span className="text-[9px] font-bold px-1 py-0.5 bg-emerald-100 text-emerald-700 leading-none">NEW</span>
+                )}
+              </span>
+              <span className="text-[11px] text-light hidden sm:block">{tab.sub}</span>
+            </button>
+          ))}
+        </div>
+
+        <div className="p-5">
+          {/* Live search usage counter inside tab */}
+          {activeMode === 'live' && (
+            <div className="mb-3 flex items-center justify-between text-xs text-mid">
+              <span>Searches the live web in real time — takes 15–30 seconds</span>
+              <span className={`font-semibold ${(!isAdmin && weeklySearchCount >= WEEKLY_LIMIT) ? 'text-red-500' : 'text-charcoal'}`}>
+                {isAdmin ? '∞ unlimited' : weeklySearchCount >= WEEKLY_LIMIT ? '⚠ limit reached' : `${WEEKLY_LIMIT - weeklySearchCount}/${WEEKLY_LIMIT} searches left this week`}
+              </span>
+            </div>
           )}
-        </div>
 
-        {/* Input row */}
-        <div className="flex gap-3">
-          <div className="flex-1 relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-light" />
-            <input
-              type="text"
-              value={query}
-              onChange={e => { setQuery(e.target.value); if (searchMode === 'database') setAiResults(null) }}
-              onKeyDown={e => {
-                if (e.key !== 'Enter') return
-                setHasSearched(true)
-                searchMode === 'live' ? runLiveSearch(query) : handleAISearch()
-              }}
-              className="form-input h-12 pl-11 pr-4"
-              placeholder={searchMode === 'live'
-                ? 'e.g. "youth mental health London" or "arts grants Cornwall"'
-                : 'e.g. "youth sport funding" or "social enterprise grant"'}
-            />
-          </div>
-          <button
-            onClick={() => searchMode === 'live' ? runLiveSearch(query) : handleAISearch()}
-            disabled={searchMode === 'live' ? (liveLoading || (!isAdmin && weeklySearchCount >= WEEKLY_LIMIT)) : (aiLoading || (!query.trim() && !locationFilter.trim()))}
-            className={`px-5 h-12 text-white text-sm font-semibold whitespace-nowrap transition-colors disabled:opacity-50 ${
-              searchMode === 'live'
-                ? 'bg-charcoal hover:bg-charcoal/90'
-                : 'bg-coral hover:bg-coral/90'
-            }`}
-          >
-            {searchMode === 'live'
-              ? (liveLoading ? 'Researching…' : <><Globe size={14} className="inline -mt-0.5 mr-1" />Search</>)
-              : (aiLoading   ? 'Thinking…'    : <><Search size={14} className="inline -mt-0.5 mr-1" />Search</>)}
-          </button>
-        </div>
+          {/* My Matches context label */}
+          {activeMode === 'matches' && org && (
+            <div className="mb-3 flex items-center gap-2 text-xs text-mid">
+              <span className="w-1.5 h-1.5 rounded-full bg-forest inline-block" />
+              Ranked for <strong className="text-charcoal">{org.name ?? 'your organisation'}</strong>
+              {org.primary_location && <span>· {org.primary_location}</span>}
+              <a href="/dashboard/profile" className="ml-auto text-coral hover:underline font-medium">Edit profile →</a>
+            </div>
+          )}
+          {activeMode === 'matches' && !org && (
+            <div className="mb-3 text-xs border border-amber-200 bg-amber-50 px-3 py-2">
+              <a href="/dashboard/profile" className="font-semibold text-amber-700 underline">Set up your profile</a>
+              <span className="text-amber-800"> to see grants ranked for your organisation.</span>
+            </div>
+          )}
 
-        {/* Location row — database mode only */}
-        {searchMode === 'database' && (
-          <div className="flex gap-3 mt-2">
+          {/* Input row */}
+          <div className="flex gap-3">
             <div className="flex-1 relative">
-              <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-light" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-light" />
               <input
                 type="text"
-                value={locationFilter}
-                onChange={e => setLocationFilter(e.target.value)}
+                value={query}
+                onChange={e => { setQuery(e.target.value); if (searchMode === 'database') setAiResults(null) }}
                 onKeyDown={e => {
                   if (e.key !== 'Enter') return
                   setHasSearched(true)
-                  handleAISearch()
+                  searchMode === 'live' ? runLiveSearch(query) : handleAISearch()
                 }}
-                className="form-input h-10 pl-11 pr-4 text-sm"
-                placeholder='Location — e.g. "London", "Manchester", "rural Wales" (optional)'
+                className="form-input h-12 pl-11 pr-4"
+                placeholder={
+                  activeMode === 'live'    ? 'e.g. "youth mental health London" or "arts grants Cornwall"' :
+                  activeMode === 'matches' ? 'Refine your matches — e.g. "core costs" or "capital project"' :
+                                            'Search all grants — e.g. "youth sport Manchester"'
+                }
               />
             </div>
-          </div>
-        )}
-
-        {searchMode === 'database' && aiResults && (
-          <div className="mt-2.5">
-            <button onClick={() => { setAiResults(null); setSmartMatched(false); setQuery('') }} className="text-xs text-light hover:text-charcoal underline">
-              Clear results
+            <button
+              onClick={() => searchMode === 'live' ? runLiveSearch(query) : handleAISearch()}
+              disabled={searchMode === 'live' ? (liveLoading || (!isAdmin && weeklySearchCount >= WEEKLY_LIMIT)) : (aiLoading || (!query.trim() && !locationFilter.trim()))}
+              className={`px-5 h-12 text-white text-sm font-semibold whitespace-nowrap transition-colors disabled:opacity-50 ${
+                activeMode === 'live' ? 'bg-charcoal hover:bg-charcoal/90' : 'bg-coral hover:bg-coral/90'
+              }`}
+            >
+              {activeMode === 'live'
+                ? (liveLoading ? 'Researching…' : <><Globe size={14} className="inline -mt-0.5 mr-1" />Search</>)
+                : (aiLoading   ? 'Searching…'   : <><Search size={14} className="inline -mt-0.5 mr-1" />Search</>)}
             </button>
           </div>
-        )}
-        {searchMode === 'live' && liveResults && (
-          <div className="mt-2.5">
-            <button onClick={() => { setLiveResults(null); setLiveSmartMatched(false); setQuery('') }} className="text-xs text-light hover:text-charcoal underline">
-              Clear results
-            </button>
-          </div>
-        )}
 
-        {/* ── Filters ── */}
-        {searchMode === 'database' && (
-          <>
-            <div className="mt-3 flex items-center gap-2 flex-wrap">
-              <button
-                onClick={() => setFiltersOpen(o => !o)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 border text-xs font-semibold transition-all ${
-                  filtersOpen || activeFilterCount > 0
-                    ? 'bg-charcoal text-white border-charcoal'
-                    : 'border-warm text-mid hover:border-coral hover:text-coral bg-white'
-                }`}
-              >
-                <SlidersHorizontal size={13} strokeWidth={2} />
-                {activeFilterCount > 0 ? `Filters · ${activeFilterCount} active` : 'Filters'}
-                <ChevronDown size={13} strokeWidth={2} className={`transition-transform duration-200 ${filtersOpen ? 'rotate-180' : ''}`} />
+          {/* Location row — database modes only */}
+          {activeMode !== 'live' && (
+            <div className="flex gap-3 mt-2">
+              <div className="flex-1 relative">
+                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-light" />
+                <input
+                  type="text"
+                  value={locationFilter}
+                  onChange={e => setLocationFilter(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key !== 'Enter') return
+                    setHasSearched(true)
+                    handleAISearch()
+                  }}
+                  className="form-input h-10 pl-11 pr-4 text-sm"
+                  placeholder='Location — e.g. "London", "Manchester", "rural Wales" (optional)'
+                />
+              </div>
+            </div>
+          )}
+
+          {aiResults && (
+            <div className="mt-2.5">
+              <button onClick={() => { setAiResults(null); setSmartMatched(false); setQuery('') }} className="text-xs text-light hover:text-charcoal underline">
+                Clear search results
               </button>
+            </div>
+          )}
+          {liveResults && (
+            <div className="mt-2.5">
+              <button onClick={() => { setLiveResults(null); setLiveSmartMatched(false); setQuery('') }} className="text-xs text-light hover:text-charcoal underline">
+                Clear results
+              </button>
+            </div>
+          )}
 
-              {org && (
+          {/* ── Filters (database modes) ── */}
+          {activeMode !== 'live' && (
+            <>
+              <div className="mt-3 flex items-center gap-2 flex-wrap">
+                <button
+                  onClick={() => setFiltersOpen(o => !o)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 border text-xs font-semibold transition-all ${
+                    filtersOpen || activeFilterCount > 0
+                      ? 'bg-charcoal text-white border-charcoal'
+                      : 'border-warm text-mid hover:border-coral hover:text-coral bg-white'
+                  }`}
+                >
+                  <SlidersHorizontal size={13} strokeWidth={2} />
+                  {activeFilterCount > 0 ? `Filters · ${activeFilterCount} active` : 'Filters'}
+                  <ChevronDown size={13} strokeWidth={2} className={`transition-transform duration-200 ${filtersOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+              {/* Use profile filters — only shown in Search mode (in Matches mode the profile is always active) */}
+              {org && activeMode === 'search' && (
                 <div className="relative">
                   <button
                     onClick={() => setProfileFiltersOpen(o => !o)}
@@ -1547,49 +1611,13 @@ export default function SearchPage() {
                 </div>
               )}
             </div>
-            {aiError && <p className="text-amber-600 text-xs mt-3">⚠ {aiError}</p>}
-          </>
-        )}
+              {aiError && <p className="text-amber-600 text-xs mt-3">⚠ {aiError}</p>}
+            </>
+          )}
 
-        {/* ── LIVE SEARCH MODE: location + sectors ── */}
-        {searchMode === 'live' && (
-          <div className="mt-4 space-y-4">
-
-            {/* Explainer + usage */}
-            <div className="flex items-start justify-between gap-4 bg-[#f5f2ed] border border-warm px-4 py-3">
-              <div className="flex-1">
-                <p className="text-xs font-semibold text-charcoal mb-0.5">What is Live Search?</p>
-                <p className="text-xs text-mid leading-relaxed">
-                  Searches the live web in real time — council sites, community foundations and specialist funders — to find hyper-local and newly announced grants not yet in our database. Takes 15–30 seconds.
-                </p>
-              </div>
-              {/* Usage counter */}
-              {isAdmin ? (
-                <div className="flex-shrink-0 flex flex-col items-center px-3 py-2 border border-warm bg-white text-center min-w-[72px]">
-                  <p className="text-xl font-bold leading-none text-charcoal">∞</p>
-                  <p className="text-[10px] font-medium mt-0.5 text-mid">unlimited</p>
-                </div>
-              ) : (
-                <div className={`flex-shrink-0 flex flex-col items-center px-3 py-2 border text-center min-w-[72px] ${
-                  weeklySearchCount >= WEEKLY_LIMIT
-                    ? 'bg-red-50 border-red-200'
-                    : weeklySearchCount === WEEKLY_LIMIT - 1
-                    ? 'bg-amber-50 border-amber-200'
-                    : 'bg-white border-warm'
-                }`}>
-                  <p className={`text-xl font-bold leading-none ${
-                    weeklySearchCount >= WEEKLY_LIMIT ? 'text-red-600'
-                    : weeklySearchCount === WEEKLY_LIMIT - 1 ? 'text-amber-600'
-                    : 'text-charcoal'
-                  }`}>
-                    {Math.max(0, WEEKLY_LIMIT - weeklySearchCount)}
-                  </p>
-                  <p className={`text-[10px] font-medium mt-0.5 ${
-                    weeklySearchCount >= WEEKLY_LIMIT ? 'text-red-500' : 'text-mid'
-                  }`}>left this week</p>
-                </div>
-              )}
-            </div>
+          {/* ── LIVE SEARCH MODE: sectors + limit ── */}
+          {activeMode === 'live' && (
+            <div className="mt-4 space-y-4">
 
             {/* Limit reached message */}
             {!isAdmin && weeklySearchCount >= WEEKLY_LIMIT && (
@@ -1601,17 +1629,6 @@ export default function SearchPage() {
               </div>
             )}
 
-            {/* Location */}
-            <div className="flex items-center gap-3">
-              <label className="flex items-center gap-1 text-xs font-semibold text-mid whitespace-nowrap"><MapPin size={12} strokeWidth={2} /> Location</label>
-              <input
-                type="text"
-                value={locationFilter}
-                onChange={e => setLocationFilter(e.target.value)}
-                className="form-input flex-1 text-sm"
-                placeholder='e.g. "Manchester", "rural Norfolk", or leave blank for UK-wide'
-              />
-            </div>
             {/* Sector pills */}
             <div>
               <p className="text-xs font-semibold text-mid mb-2">Sector <span className="font-normal text-light">(optional)</span></p>
@@ -1678,12 +1695,11 @@ export default function SearchPage() {
               </div>
             )}
             {liveError && <p className="text-red-600 text-xs">⚠ {liveError}</p>}
-          </div>
-        )}
+            </div>
+          )}
 
-
-        {/* ── Collapsible filters panel ── */}
-        {filtersOpen && (
+          {/* ── Collapsible filters panel ── */}
+          {filtersOpen && (
           <div className="mt-4 pt-4 border-t border-warm space-y-4">
 
             {/* Row 1: Funding type + Funder source */}
@@ -1815,32 +1831,21 @@ export default function SearchPage() {
             )}
           </div>
         )}
-
-        {!org && (
-          <div className="mt-3 border border-amber-200 bg-amber-50 px-3 py-2.5">
-            <p className="text-xs font-semibold text-amber-900 mb-0.5">Unlock personalised matches</p>
-            <p className="text-xs text-amber-800 mb-2">Complete your profile to get % match scores and ranked results tailored to your organisation, venture or mission.</p>
-            <a href="/dashboard/profile" className="text-xs font-semibold text-amber-700 underline hover:text-amber-900">
-              Set up your profile →
-            </a>
-          </div>
-        )}
-      </div>
+        </div>{/* end p-5 */}
+      </div>{/* end search card */}
 
       {/* ── Results header ── */}
-      {searchMode === 'database' && hasSearched && (
+      {activeMode !== 'live' && hasSearched && (
         <div className="flex justify-between items-center mb-3">
           <p className="text-sm text-mid">
             {aiResults && smartMatched ? (
               <><strong className="text-coral">✦ {displayGrants.length}</strong> grants matched for <strong className="text-charcoal">{org?.name}</strong></>
             ) : aiResults ? (
               <><strong className="text-coral">✦ {displayGrants.length}</strong> AI-ranked results for &ldquo;{query}&rdquo;</>
+            ) : activeMode === 'matches' ? (
+              <><strong className="text-charcoal">{displayGrants.length}</strong> grants ranked for you{query ? ` · refined by "${query}"` : ''}</>
             ) : (
-              <>
-                <strong className="text-charcoal">{displayGrants.length}</strong>{' '}
-                grants{query ? ` matching "${query}"` : ''}
-                {org && !aiResults && <span className="text-coral font-medium"> · sorted by match</span>}
-              </>
+              <><strong className="text-charcoal">{displayGrants.length}</strong> grants{query ? ` matching "${query}"` : ''}</>
             )}
           </p>
         </div>
@@ -1923,40 +1928,8 @@ export default function SearchPage() {
         </div>
       )}
 
-      {/* ── Results count line ── */}
-      {searchMode === 'database' && org && hasSearched && (
-        <div className="flex items-center justify-between mb-3 text-xs text-mid">
-          {searchModeToggle === 'profile' ? (
-            <>
-              <span>Showing <strong className="text-charcoal">{displayGrants.length}</strong> grants eligible for you</span>
-              <button
-                onClick={() => { setSearchModeToggle('browse'); setLocationFilter(''); setActiveSectors(new Set()); setProfileChipsApplied(false) }}
-                className="text-coral hover:underline font-medium"
-              >Show all {allGrants.length} →</button>
-            </>
-          ) : (
-            <>
-              <span>Showing all <strong className="text-charcoal">{displayGrants.length}</strong> grants</span>
-              {org.impact_sectors?.length || org.primary_location ? (
-                <button
-                  onClick={() => {
-                    setSearchModeToggle('profile')
-                    if (org.primary_location) setLocationFilter(org.primary_location)
-                    if (org.impact_sectors?.length) setActiveSectors(new Set(org.impact_sectors as ImpactSector[]))
-                    setProfileChipsApplied(true)
-                  }}
-                  className="text-coral hover:underline font-medium"
-                >Filter to eligible for me →</button>
-              ) : (
-                <a href="/dashboard/profile" className="text-coral hover:underline font-medium">Set up profile to filter →</a>
-              )}
-            </>
-          )}
-        </div>
-      )}
-
-      {/* ── Instructions panel (shown before any search) ── */}
-      {searchMode === 'database' && !hasSearched && (
+      {/* ── Instructions panel (shown before any search in Search mode) ── */}
+      {activeMode === 'search' && !hasSearched && (
         <div className="bg-white border border-warm/60 p-6 shadow-card">
           <p className="text-base font-bold text-charcoal mb-5">How to find the right funding</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -1964,21 +1937,21 @@ export default function SearchPage() {
               <div className="flex-shrink-0 w-9 h-9 bg-coral/10 flex items-center justify-center text-coral font-bold text-base">1</div>
               <div>
                 <p className="text-sm font-semibold text-charcoal mb-1">Search by keyword</p>
-                <p className="text-sm text-mid leading-relaxed">Type what you&apos;re looking for — e.g. <em>&ldquo;youth sport Manchester&rdquo;</em> or <em>&ldquo;community food project&rdquo;</em> — then hit <strong>Search</strong>.</p>
+                <p className="text-sm text-mid leading-relaxed">Type what you&apos;re looking for — e.g. <em>&ldquo;youth sport Manchester&rdquo;</em> or <em>&ldquo;community food project&rdquo;</em> — then hit <strong>Search</strong>. No profile data is applied here — it&apos;s a clean search across all grants.</p>
               </div>
             </div>
             <div className="flex gap-4">
               <div className="flex-shrink-0 w-9 h-9 bg-coral/10 flex items-center justify-center text-coral font-bold text-base">2</div>
               <div>
-                <p className="text-sm font-semibold text-charcoal mb-1">Narrow with Filters</p>
-                <p className="text-sm text-mid leading-relaxed">Use the <strong>Filters</strong> button to narrow by sector, funding type, grant amount, location and deadline.</p>
+                <p className="text-sm font-semibold text-charcoal mb-1">Add location</p>
+                <p className="text-sm text-mid leading-relaxed">Use the location box below the search bar to narrow results geographically — e.g. <em>&ldquo;London&rdquo;</em> or <em>&ldquo;rural Wales&rdquo;</em>.</p>
               </div>
             </div>
             <div className="flex gap-4">
-              <div className="flex-shrink-0 w-9 h-9 bg-forest/10 flex items-center justify-center text-forest font-bold text-base">3</div>
+              <div className="flex-shrink-0 w-9 h-9 bg-coral/10 flex items-center justify-center text-coral font-bold text-base">3</div>
               <div>
-                <p className="text-sm font-semibold text-charcoal mb-1">Use your profile</p>
-                <p className="text-sm text-mid leading-relaxed">Click <strong>Use profile filters</strong> to instantly apply your organisation&apos;s sectors, location and legal structure as search filters — and pre-fill the search with your focus areas.</p>
+                <p className="text-sm font-semibold text-charcoal mb-1">Narrow with Filters</p>
+                <p className="text-sm text-mid leading-relaxed">Use the <strong>Filters</strong> button to narrow by sector, funding type, grant amount and deadline.</p>
               </div>
             </div>
             <div className="flex gap-4 p-4 border-2 border-charcoal/20 bg-charcoal/[0.03]">
@@ -2034,7 +2007,7 @@ export default function SearchPage() {
       )}
 
       {/* ── Database grant list ── */}
-      {searchMode === 'database' && hasSearched && (displayGrants.length === 0 ? (
+      {activeMode !== 'live' && hasSearched && (displayGrants.length === 0 ? (
         <div className="text-center py-16 text-light">
           <p className="text-4xl mb-3">🔍</p>
           <p className="mb-3">No grants found — try different keywords or clear the filters.</p>
