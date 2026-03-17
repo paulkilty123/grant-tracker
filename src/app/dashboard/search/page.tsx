@@ -689,6 +689,8 @@ export default function SearchPage() {
   const [searchModeToggle, setSearchModeToggle]   = useState<'profile' | 'browse'>('browse')
   const [profileChipsApplied, setProfileChipsApplied] = useState(false)
   const [pipelineNudge, setPipelineNudge]         = useState<{ name: string; url: string | null } | null>(null)
+  const [hasSearched, setHasSearched]             = useState(false)
+  const [profileFiltersOpen, setProfileFiltersOpen] = useState(false)
 
   // ── Live search (web) state ───────────────────────────────────────────────
   const [searchMode, setSearchMode]               = useState<'database' | 'live'>('database')
@@ -741,6 +743,7 @@ export default function SearchPage() {
           if (o.impact_sectors?.length) setActiveSectors(new Set(o.impact_sectors as ImpactSector[]))
           setSearchModeToggle('profile')
           setProfileChipsApplied(true)
+          setHasSearched(true)
         }
       }
       // Fetch live scraped grants — exclude dead URLs and expired deadlines
@@ -773,6 +776,7 @@ export default function SearchPage() {
   async function runLiveSearch(searchQuery: string, isSmartMatch = false) {
     if (!searchQuery.trim() && liveSelectedSectors.length === 0 && !locationFilter.trim()) return
     if (!isAdmin && weeklySearchCount >= WEEKLY_LIMIT) return   // enforce limit client-side
+    setHasSearched(true)
     setLiveLoading(true)
     setLiveError(null)
     setLiveResults(null)
@@ -1203,6 +1207,7 @@ export default function SearchPage() {
 
   async function handleAISearch() {
     if (!query.trim()) return
+    setHasSearched(true)
     await runAISearch(query)
   }
 
@@ -1365,6 +1370,7 @@ export default function SearchPage() {
               onChange={e => { setQuery(e.target.value); if (searchMode === 'database') setAiResults(null) }}
               onKeyDown={e => {
                 if (e.key !== 'Enter') return
+                setHasSearched(true)
                 searchMode === 'live' ? runLiveSearch(query) : handleAISearch()
               }}
               className="form-input h-12 pl-11 pr-4"
@@ -1406,18 +1412,112 @@ export default function SearchPage() {
         {/* ── Filters ── */}
         {searchMode === 'database' && (
           <>
-            <button
-              onClick={() => setFiltersOpen(o => !o)}
-              className={`mt-3 flex items-center gap-1.5 px-3 py-1.5 border text-xs font-semibold transition-all ${
-                filtersOpen || activeFilterCount > 0
-                  ? 'bg-charcoal text-white border-charcoal'
-                  : 'border-warm text-mid hover:border-coral hover:text-coral bg-white'
-              }`}
-            >
-              <SlidersHorizontal size={13} strokeWidth={2} />
-              {activeFilterCount > 0 ? `Filters · ${activeFilterCount} active` : 'Filters'}
-              <ChevronDown size={13} strokeWidth={2} className={`transition-transform duration-200 ${filtersOpen ? 'rotate-180' : ''}`} />
-            </button>
+            <div className="mt-3 flex items-center gap-2 flex-wrap">
+              <button
+                onClick={() => setFiltersOpen(o => !o)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 border text-xs font-semibold transition-all ${
+                  filtersOpen || activeFilterCount > 0
+                    ? 'bg-charcoal text-white border-charcoal'
+                    : 'border-warm text-mid hover:border-coral hover:text-coral bg-white'
+                }`}
+              >
+                <SlidersHorizontal size={13} strokeWidth={2} />
+                {activeFilterCount > 0 ? `Filters · ${activeFilterCount} active` : 'Filters'}
+                <ChevronDown size={13} strokeWidth={2} className={`transition-transform duration-200 ${filtersOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {org && (
+                <div className="relative">
+                  <button
+                    onClick={() => setProfileFiltersOpen(o => !o)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 border text-xs font-semibold transition-all ${
+                      profileFiltersOpen || profileChipsApplied
+                        ? 'bg-forest text-white border-forest'
+                        : 'border-warm text-mid hover:border-forest hover:text-forest bg-white'
+                    }`}
+                  >
+                    <Users size={13} strokeWidth={2} />
+                    Use profile filters
+                    <ChevronDown size={13} strokeWidth={2} className={`transition-transform duration-200 ${profileFiltersOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {profileFiltersOpen && (
+                    <div className="absolute left-0 top-full mt-1.5 z-40 bg-white border border-warm shadow-lg p-4 w-80">
+                      <p className="text-xs font-semibold text-charcoal mb-3">Your profile settings</p>
+
+                      {/* Org name + description preview */}
+                      {(org.name || org.mission) && (
+                        <div className="bg-[#f5f2ed] border border-warm px-3 py-2 mb-3">
+                          {org.name && <p className="text-xs font-semibold text-charcoal">{org.name}</p>}
+                          {org.mission && <p className="text-xs text-mid mt-0.5 line-clamp-2">{org.mission}</p>}
+                        </div>
+                      )}
+
+                      <div className="space-y-2.5">
+                        {org.primary_location && (
+                          <div>
+                            <p className="text-[10px] font-semibold text-light uppercase tracking-wider mb-1">Location</p>
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-forest/10 text-forest text-xs font-medium">
+                              <MapPin size={10} strokeWidth={2} />{org.primary_location}
+                            </span>
+                          </div>
+                        )}
+
+                        {(org.impact_sectors as string[] | undefined)?.length ? (
+                          <div>
+                            <p className="text-[10px] font-semibold text-light uppercase tracking-wider mb-1">Sectors</p>
+                            <div className="flex flex-wrap gap-1">
+                              {(org.impact_sectors as string[]).map((s: string) => (
+                                <span key={s} className="px-2 py-0.5 bg-forest/10 text-forest text-xs font-medium">{s}</span>
+                              ))}
+                            </div>
+                          </div>
+                        ) : null}
+
+                        {org.legal_structure && (
+                          <div>
+                            <p className="text-[10px] font-semibold text-light uppercase tracking-wider mb-1">Legal structure</p>
+                            <span className="inline-flex px-2 py-0.5 bg-forest/10 text-forest text-xs font-medium">
+                              {STRUCTURE_LABELS[org.legal_structure] ?? org.legal_structure}
+                            </span>
+                          </div>
+                        )}
+
+                        {!org.primary_location && !(org.impact_sectors as string[] | undefined)?.length && (
+                          <p className="text-xs text-mid">Your profile is incomplete — <a href="/dashboard/profile" className="text-coral underline">add location and sectors</a> to use this feature.</p>
+                        )}
+                      </div>
+
+                      <div className="flex gap-2 mt-4 pt-3 border-t border-warm">
+                        <button
+                          onClick={() => {
+                            if (org.primary_location) setLocationFilter(org.primary_location)
+                            if ((org.impact_sectors as string[] | undefined)?.length) {
+                              setActiveSectors(new Set(org.impact_sectors as ImpactSector[]))
+                            }
+                            const smartQ = buildSmartQuery(org)
+                            if (smartQ) setQuery(smartQ)
+                            setSearchModeToggle('profile')
+                            setProfileChipsApplied(true)
+                            setProfileFiltersOpen(false)
+                            setHasSearched(true)
+                          }}
+                          className="flex-1 px-3 py-1.5 bg-forest text-white text-xs font-semibold hover:opacity-90 transition-colors"
+                        >
+                          Apply profile filters
+                        </button>
+                        <button
+                          onClick={() => setProfileFiltersOpen(false)}
+                          className="px-3 py-1.5 border border-warm text-xs text-mid hover:text-charcoal transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
             {aiError && <p className="text-amber-600 text-xs mt-3">⚠ {aiError}</p>}
           </>
         )}
@@ -1699,7 +1799,7 @@ export default function SearchPage() {
       </div>
 
       {/* ── Results header ── */}
-      {searchMode === 'database' && (
+      {searchMode === 'database' && hasSearched && (
         <div className="flex justify-between items-center mb-3">
           <p className="text-sm text-mid">
             {aiResults && smartMatched ? (
@@ -1744,7 +1844,7 @@ export default function SearchPage() {
       )}
 
       {/* ── Match quality banner (database mode only) ── */}
-      {searchMode === 'database' && matchQuality && matchQuality.score < 80 && !bannerDismissed && (
+      {searchMode === 'database' && hasSearched && matchQuality && matchQuality.score < 80 && !bannerDismissed && (
         <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3.5 flex items-start gap-3">
           {/* Quality ring */}
           <div className="flex-shrink-0 mt-0.5">
@@ -1795,7 +1895,7 @@ export default function SearchPage() {
       )}
 
       {/* ── Results count line ── */}
-      {searchMode === 'database' && org && (
+      {searchMode === 'database' && org && hasSearched && (
         <div className="flex items-center justify-between mb-3 text-xs text-mid">
           {searchModeToggle === 'profile' ? (
             <>
@@ -1826,8 +1926,81 @@ export default function SearchPage() {
         </div>
       )}
 
+      {/* ── Instructions panel (shown before any search) ── */}
+      {searchMode === 'database' && !hasSearched && (
+        <div className="bg-white border border-warm/60 p-6 shadow-card">
+          <p className="text-sm font-semibold text-charcoal mb-4">How to find the right funding</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="flex gap-3">
+              <div className="flex-shrink-0 w-8 h-8 bg-coral/10 flex items-center justify-center text-coral font-bold text-sm">1</div>
+              <div>
+                <p className="text-xs font-semibold text-charcoal mb-0.5">Search by keyword</p>
+                <p className="text-xs text-mid leading-relaxed">Type what you&apos;re looking for — e.g. <em>&ldquo;youth sport Manchester&rdquo;</em> or <em>&ldquo;community food project&rdquo;</em> — then hit <strong>AI Match</strong>.</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <div className="flex-shrink-0 w-8 h-8 bg-coral/10 flex items-center justify-center text-coral font-bold text-sm">2</div>
+              <div>
+                <p className="text-xs font-semibold text-charcoal mb-0.5">Narrow with Filters</p>
+                <p className="text-xs text-mid leading-relaxed">Use the <strong>Filters</strong> button to narrow by sector, funding type, grant amount, location and deadline.</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <div className="flex-shrink-0 w-8 h-8 bg-forest/10 flex items-center justify-center text-forest font-bold text-sm">3</div>
+              <div>
+                <p className="text-xs font-semibold text-charcoal mb-0.5">Use your profile</p>
+                <p className="text-xs text-mid leading-relaxed">Click <strong>Use profile filters</strong> to instantly apply your organisation&apos;s sectors, location and legal structure as search filters — and pre-fill the search with your focus areas.</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <div className="flex-shrink-0 w-8 h-8 bg-charcoal/10 flex items-center justify-center text-charcoal font-bold text-sm">4</div>
+              <div>
+                <p className="text-xs font-semibold text-charcoal mb-0.5">Try Live Search</p>
+                <p className="text-xs text-mid leading-relaxed">Switch to <strong>Live Search</strong> at the top to research hyper-local and newly announced grants not yet in our database. Takes 15–30 seconds.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-5 pt-4 border-t border-warm flex flex-wrap gap-3">
+            <button
+              onClick={() => { setHasSearched(true) }}
+              className="flex items-center gap-1.5 px-4 py-2 bg-coral text-white text-xs font-semibold hover:opacity-90 transition-colors"
+            >
+              <Search size={13} strokeWidth={2} />
+              Browse all grants
+            </button>
+            {org && (
+              <button
+                onClick={() => {
+                  if (org.primary_location) setLocationFilter(org.primary_location)
+                  if ((org.impact_sectors as string[] | undefined)?.length) {
+                    setActiveSectors(new Set(org.impact_sectors as ImpactSector[]))
+                  }
+                  const smartQ = buildSmartQuery(org)
+                  if (smartQ) setQuery(smartQ)
+                  setSearchModeToggle('profile')
+                  setProfileChipsApplied(true)
+                  setHasSearched(true)
+                }}
+                className="flex items-center gap-1.5 px-4 py-2 border border-forest text-forest text-xs font-semibold hover:bg-forest/5 transition-colors"
+              >
+                <Users size={13} strokeWidth={2} />
+                Apply my profile filters
+              </button>
+            )}
+            {!org && (
+              <a href="/dashboard/profile"
+                className="flex items-center gap-1.5 px-4 py-2 border border-forest text-forest text-xs font-semibold hover:bg-forest/5 transition-colors"
+              >
+                Set up profile for personalised results →
+              </a>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ── Database grant list ── */}
-      {searchMode === 'database' && (displayGrants.length === 0 ? (
+      {searchMode === 'database' && hasSearched && (displayGrants.length === 0 ? (
         <div className="text-center py-16 text-light">
           <p className="text-4xl mb-3">🔍</p>
           <p className="mb-3">No grants found — try different keywords or clear the filters.</p>
