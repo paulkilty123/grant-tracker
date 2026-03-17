@@ -16,6 +16,15 @@ import type { GrantOpportunity, Organisation, FunderType, FundingType, ImpactSec
 import type { InteractionAction } from '@/lib/interactions'
 import type { SearchHistoryItem } from '@/lib/searchHistory'
 
+// Format a YYYY-MM-DD deadline string as "Deadline: 10 July 2026"
+function formatDeadline(dateStr: string | null): string | null {
+  if (!dateStr) return null
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const date = new Date(y, m - 1, d)
+  const formatted = date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+  return `Deadline: ${formatted}`
+}
+
 // Normalise long or awkward free-text sector names for display on grant cards
 const SECTOR_DISPLAY: Record<string, string | null> = {
   'all sectors':               null,
@@ -210,7 +219,7 @@ function LiveGrantCard({ grant, onAddToPipeline }: {
           )}
           <div className="text-right">
             <p className="text-xs text-mid">Deadline</p>
-            <p className="text-sm font-medium text-charcoal">{grant.deadline ?? 'Check website'}</p>
+            <p className="text-sm font-medium text-charcoal">{formatDeadline(grant.deadline) ?? 'Check website'}</p>
           </div>
           <div className="flex flex-col gap-1.5 w-full">
             <a href={grant.applyUrl} target="_blank" rel="noopener noreferrer"
@@ -517,7 +526,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
               {formatRange(grant.amountMin, grant.amountMax)}
             </p>
             <p className="text-xs text-light mt-0.5">
-              {entryType === 'live'    ? grant.deadline :
+              {entryType === 'live'    ? (formatDeadline(grant.deadline) ?? grant.deadline) :
                entryType === 'rolling' ? 'No deadline' :
                /* profile */            'Typical range'}
             </p>
