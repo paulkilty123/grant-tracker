@@ -1461,8 +1461,12 @@ export default function SearchPage() {
               }`}
             >
               {activeMode === 'live'
-                ? (liveLoading ? 'Researching…' : <><Globe size={14} className="inline -mt-0.5 mr-1" />Search</>)
-                : (aiLoading   ? 'Searching…'   : <><Search size={14} className="inline -mt-0.5 mr-1" />Search</>)}
+                ? (liveLoading
+                    ? <span className="flex items-center gap-2"><span className="dot-bounce flex gap-1"><span/><span/><span/></span>Searching</span>
+                    : <><Globe size={14} className="inline -mt-0.5 mr-1" />Search</>)
+                : (aiLoading
+                    ? <span className="flex items-center gap-2"><span className="dot-bounce flex gap-1"><span/><span/><span/></span>Searching</span>
+                    : <><Search size={14} className="inline -mt-0.5 mr-1" />Search</>)}
             </button>
           </div>
 
