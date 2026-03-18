@@ -1467,17 +1467,19 @@ export default function SearchPage() {
             </div>
             <button
               onClick={() => searchMode === 'live' ? runLiveSearch(inputValue) : handleAISearch(inputValue)}
-              disabled={searchMode === 'live' ? (liveLoading || (!isAdmin && weeklySearchCount >= WEEKLY_LIMIT)) : (aiLoading || (!inputValue.trim() && !locationFilter.trim()))}
-              className={`px-5 h-12 text-white text-sm font-semibold whitespace-nowrap transition-colors disabled:opacity-50 ${
-                activeMode === 'live' ? 'bg-charcoal hover:bg-charcoal/90' : 'bg-coral hover:bg-coral/90'
-              }`}
+              disabled={searchMode === 'live'
+                ? (!isAdmin && weeklySearchCount >= WEEKLY_LIMIT)
+                : (!inputValue.trim() && !locationFilter.trim())}
+              className={`px-5 h-12 text-white text-sm font-semibold whitespace-nowrap transition-colors disabled:opacity-40 ${
+                (aiLoading || liveLoading) ? 'pointer-events-none' : ''
+              } ${activeMode === 'live' ? 'bg-charcoal hover:bg-charcoal/90' : 'bg-coral hover:bg-coral/90'}`}
             >
               {activeMode === 'live'
                 ? (liveLoading
-                    ? <span className="flex items-center gap-2"><span className="dot-bounce flex gap-1"><span/><span/><span/></span>Searching</span>
+                    ? <span className="flex items-center gap-2"><span className="dot-bounce flex gap-1"><span/><span/><span/></span>Searching…</span>
                     : <><Globe size={14} className="inline -mt-0.5 mr-1" />Search</>)
                 : (aiLoading
-                    ? <span className="flex items-center gap-2"><span className="dot-bounce flex gap-1"><span/><span/><span/></span>Searching</span>
+                    ? <span className="flex items-center gap-2"><span className="dot-bounce flex gap-1"><span/><span/><span/></span>Searching…</span>
                     : <><Search size={14} className="inline -mt-0.5 mr-1" />Search</>)}
             </button>
           </div>

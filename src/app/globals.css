@@ -119,8 +119,8 @@
 }
 .dot-bounce > span {
   display: inline-block;
-  width: 4px;
-  height: 4px;
+  width: 5px;
+  height: 5px;
   border-radius: 9999px;
   background: currentColor;
   animation: dot-bounce 1.2s infinite ease-in-out both;
