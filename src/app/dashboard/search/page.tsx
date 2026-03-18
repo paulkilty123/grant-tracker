@@ -715,20 +715,23 @@ export default function SearchPage() {
     try {
       const saved = sessionStorage.getItem('grantSearch')
       if (saved) {
-        const { query: q, aiResults: r, activeType: t, smartMatched: sm } = JSON.parse(saved)
-        if (q)  setQuery(q)
-        if (r)  setAiResults(r)
-        if (t)  setActiveType(t)
-        if (sm) setSmartMatched(sm)
+        const { query: q, aiResults: r, activeType: t, smartMatched: sm, liveResults: lr, liveSmartMatched: lsm, activeMode: am } = JSON.parse(saved)
+        if (q)   setQuery(q)
+        if (r)   setAiResults(r)
+        if (t)   setActiveType(t)
+        if (sm)  setSmartMatched(sm)
+        if (lr)  setLiveResults(lr)
+        if (lsm) setLiveSmartMatched(lsm)
+        if (am)  setActiveMode(am)
       }
     } catch { /* ignore */ }
   }, [])
 
   useEffect(() => {
     try {
-      sessionStorage.setItem('grantSearch', JSON.stringify({ query, aiResults, activeType, smartMatched }))
+      sessionStorage.setItem('grantSearch', JSON.stringify({ query, aiResults, activeType, smartMatched, liveResults, liveSmartMatched, activeMode }))
     } catch { /* ignore */ }
-  }, [query, aiResults, activeType, smartMatched])
+  }, [query, aiResults, activeType, smartMatched, liveResults, liveSmartMatched, activeMode])
 
   useEffect(() => {
     async function loadOrg() {
