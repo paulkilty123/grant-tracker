@@ -1626,29 +1626,60 @@ export default function SearchPage() {
 
               {/* Benefits explainer */}
               {!liveResults && !liveLoading && (
-                <div className="border border-warm/60 bg-white px-5 py-5">
-                  <p className="text-sm font-semibold text-charcoal mb-4">Why use Live Search?</p>
-                  <div className="space-y-3">
-                    {([
-                      { Icon: Search,    text: 'Finds grants not yet in our database — newly announced and hyper-local opportunities that standard searches miss' },
-                      { Icon: Globe,     text: 'Searches council sites, community foundations and specialist funders in real time across the live web' },
-                      { Icon: Sparkles,  text: 'Returns smart matching recommendations tailored to your query — not just a list, but prioritised suggestions with context' },
-                      { Icon: MapPin,    text: 'Ideal for niche or geographic queries — great for finding area-specific funds that rarely appear in grant databases' },
-                      { Icon: RefreshCw, text: "Always up to date — results reflect what's live right now, not what was scraped weeks ago" },
-                    ] as const).map(({ Icon, text }) => (
-                      <div key={text} className="flex items-start gap-3">
-                        <span className="flex-shrink-0 w-7 h-7 flex items-center justify-center" style={{ backgroundColor: 'rgba(26,122,94,0.08)' }}>
-                          <Icon className="w-3.5 h-3.5 text-forest" strokeWidth={2} />
-                        </span>
-                        <p className="text-sm text-mid leading-relaxed pt-0.5">{text}</p>
-                      </div>
-                    ))}
+                <div className="space-y-3">
+                  {/* Experimental notice */}
+                  <div className="border border-amber-200 bg-amber-50 px-4 py-3 flex items-start gap-2.5">
+                    <Info className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" strokeWidth={2} />
+                    <div>
+                      <p className="text-sm font-semibold text-amber-800 mb-0.5">Live Search is experimental</p>
+                      <p className="text-xs text-amber-700 leading-relaxed">Results are researched by AI in real time and are generally very useful — but some details may be outdated, and links occasionally point to the wrong page. Always verify on the funder's website before investing time in an application.</p>
+                    </div>
                   </div>
-                  <div className="mt-4 pt-4 border-t border-warm">
-                    <p className="text-xs text-light leading-relaxed">
-                      <strong className="text-mid">Why is search limited to {WEEKLY_LIMIT} per week?</strong> Live Search queries real-time external APIs and AI services on every search, which carry significant per-use costs. The weekly allowance keeps the feature sustainable while we scale.
-                    </p>
-                    <p className="text-xs text-light mt-1">Each search takes 15–30 seconds.</p>
+
+                  {/* Why use it */}
+                  <div className="border border-warm/60 bg-white px-5 py-5">
+                    <p className="text-sm font-semibold text-charcoal mb-4">Why use Live Search?</p>
+                    <div className="space-y-3">
+                      {([
+                        { Icon: Search,    text: 'Finds grants not yet in our database — newly announced and hyper-local opportunities that standard searches miss' },
+                        { Icon: Globe,     text: 'Searches council sites, community foundations and specialist funders in real time across the live web' },
+                        { Icon: Sparkles,  text: 'Returns smart matching recommendations tailored to your query — not just a list, but prioritised suggestions with context' },
+                        { Icon: MapPin,    text: 'Ideal for niche or geographic queries — great for finding area-specific funds that rarely appear in grant databases' },
+                        { Icon: RefreshCw, text: "Always up to date — results reflect what's live right now, not what was scraped weeks ago" },
+                      ] as const).map(({ Icon, text }) => (
+                        <div key={text} className="flex items-start gap-3">
+                          <span className="flex-shrink-0 w-7 h-7 flex items-center justify-center" style={{ backgroundColor: 'rgba(26,122,94,0.08)' }}>
+                            <Icon className="w-3.5 h-3.5 text-forest" strokeWidth={2} />
+                          </span>
+                          <p className="text-sm text-mid leading-relaxed pt-0.5">{text}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-4 pt-4 border-t border-warm">
+                      <p className="text-xs text-light leading-relaxed">
+                        <strong className="text-mid">Why is search limited to {WEEKLY_LIMIT} per week?</strong> Live Search queries real-time external APIs and AI services on every search, which carry significant per-use costs. The weekly allowance keeps the feature sustainable while we scale.
+                      </p>
+                      <p className="text-xs text-light mt-1">Each search takes 15–30 seconds.</p>
+                    </div>
+                  </div>
+
+                  {/* Tips */}
+                  <div className="border border-warm/60 bg-white px-5 py-5">
+                    <p className="text-sm font-semibold text-charcoal mb-3">Tips for getting the best results</p>
+                    <div className="space-y-2.5">
+                      {([
+                        { tip: 'Be specific with your query', detail: 'e.g. "youth mental health grants Hackney" rather than just "mental health" — the more context, the more relevant the results.' },
+                        { tip: 'If a link goes to the wrong page', detail: "copy the grant or funder name and search for it on Google — you'll usually find the right funding page within the first result or two." },
+                        { tip: 'Check the deadline carefully', detail: "AI can misread closing dates from complex funder websites. Always confirm directly with the funder before starting an application." },
+                        { tip: 'Use it alongside the database', detail: 'Live Search is best for finding niche or newly announced grants. Our curated database is better for well-established programmes with verified details.' },
+                        { tip: 'Try different phrasings', detail: 'If results feel off, reframe your query. "Tech for good funding London" and "digital innovation social enterprise grants" will surface different funders.' },
+                      ]).map(({ tip, detail }) => (
+                        <div key={tip} className="flex items-start gap-2.5">
+                          <span className="flex-shrink-0 text-forest font-bold text-sm mt-0.5">→</span>
+                          <p className="text-sm text-mid leading-relaxed"><strong className="text-charcoal">{tip}:</strong> {detail}</p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
@@ -1860,9 +1891,12 @@ export default function SearchPage() {
           {liveResults.grants.map((g, i) => (
             <LiveGrantCard key={i} grant={g} onAddToPipeline={handleLiveAddToPipeline} />
           ))}
-          <p className="text-xs text-light mt-3">
-            🌐 Live results are researched in real time. Always verify details on the funder&apos;s website before applying.
-          </p>
+          <div className="mt-4 border border-amber-200 bg-amber-50 px-4 py-3 flex items-start gap-2.5">
+            <Info className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" strokeWidth={2} />
+            <p className="text-xs text-amber-700 leading-relaxed">
+              <strong className="text-amber-800">Live Search is experimental.</strong> Results are AI-researched in real time and generally surface great opportunities — but details may be outdated and links can occasionally point to the wrong page. If a link doesn&apos;t work, search the grant or funder name on Google to find the right page. Always verify deadlines and eligibility directly with the funder before applying.
+            </p>
+          </div>
         </div>
       )}
 
