@@ -472,7 +472,7 @@ export default function ProfilePage() {
 
         {/* ── Section 1: Organisation Details ── */}
         <div className="card">
-          <h3 className="text-sm font-semibold text-charcoal mb-4 flex items-center gap-2">
+          <h3 className="font-display text-base font-bold text-charcoal mb-4 flex items-center gap-2">
             <span className="w-6 h-6 rounded bg-charcoal/10 text-charcoal text-xs flex items-center justify-center font-bold">1</span>
             About Your Organisation
           </h3>
@@ -612,7 +612,7 @@ export default function ProfilePage() {
 
         {/* ── Section 2: Impact Sectors ── */}
         <div className="card">
-          <h3 className="text-sm font-semibold text-charcoal mb-1 flex items-center gap-2">
+          <h3 className="font-display text-base font-bold text-charcoal mb-1 flex items-center gap-2">
             <span className="w-6 h-6 rounded bg-charcoal/10 text-charcoal text-xs flex items-center justify-center font-bold">2</span>
             Impact Sectors
             <span className="text-xs text-light font-normal ml-1">— choose 1 to 3</span>
@@ -651,7 +651,7 @@ export default function ProfilePage() {
 
         {/* ── Section 3: Location & Focus ── */}
         <div className="card">
-          <h3 className="text-sm font-semibold text-charcoal mb-4 flex items-center gap-2">
+          <h3 className="font-display text-base font-bold text-charcoal mb-4 flex items-center gap-2">
             <span className="w-6 h-6 rounded bg-charcoal/10 text-charcoal text-xs flex items-center justify-center font-bold">3</span>
             Location & Focus
           </h3>
@@ -709,7 +709,7 @@ export default function ProfilePage() {
 
         {/* ── Section 4: Mission ── */}
         <div className="card">
-          <h3 className="text-sm font-semibold text-charcoal mb-1 flex items-center gap-2">
+          <h3 className="font-display text-base font-bold text-charcoal mb-1 flex items-center gap-2">
             <span className="w-6 h-6 rounded bg-charcoal/10 text-charcoal text-xs flex items-center justify-center font-bold">4</span>
             Mission Statement
           </h3>
@@ -728,7 +728,7 @@ export default function ProfilePage() {
 
         {/* ── Section 5: Grant Preferences ── */}
         <div className="card">
-          <h3 className="text-sm font-semibold text-charcoal mb-1 flex items-center gap-2">
+          <h3 className="font-display text-base font-bold text-charcoal mb-1 flex items-center gap-2">
             <span className="w-6 h-6 rounded bg-charcoal/10 text-charcoal text-xs flex items-center justify-center font-bold">5</span>
             Grant Preferences
           </h3>
@@ -796,7 +796,7 @@ export default function ProfilePage() {
 
         {/* ── Section 6: Email Alerts ── */}
         <div className="card">
-          <h3 className="text-sm font-semibold text-charcoal mb-1 flex items-center gap-2">
+          <h3 className="font-display text-base font-bold text-charcoal mb-1 flex items-center gap-2">
             <span className="w-6 h-6 rounded bg-charcoal/10 text-charcoal text-xs flex items-center justify-center font-bold">6</span>
             Email Alerts
           </h3>
@@ -804,7 +804,7 @@ export default function ProfilePage() {
 
           <div className="flex items-center justify-between mb-4 p-4 bg-warm rounded border border-warm">
             <div>
-              <p className="text-sm font-semibold text-charcoal">Grant match alerts</p>
+              <p className="font-display text-base font-bold text-charcoal">Grant match alerts</p>
               <p className="text-xs text-mid mt-0.5">
                 {form.alertsEnabled
                   ? 'You\'ll receive emails when new matching grants are found'
