@@ -1429,16 +1429,16 @@ export default function SearchPage() {
             <button
               key={tab.id}
               onClick={() => switchMode(tab.id)}
-              className={`flex-1 flex flex-col items-center gap-0.5 py-3.5 px-2 border-b-2 transition-colors ${
+              className={`flex-1 flex flex-col items-center gap-0.5 py-3 sm:py-3.5 px-1 sm:px-2 border-b-2 transition-colors ${
                 activeMode === tab.id
                   ? 'border-coral text-charcoal'
                   : 'border-transparent text-mid hover:text-charcoal hover:bg-warm/30'
               }`}
             >
-              <span className={`flex items-center gap-1.5 text-sm font-semibold ${activeMode === tab.id ? 'text-coral' : ''}`}>
+              <span className={`flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm font-semibold ${activeMode === tab.id ? 'text-coral' : ''}`}>
                 {tab.icon}{tab.label}
                 {tab.id === 'live' && (
-                  <span className="text-[9px] font-bold px-1 py-0.5 bg-emerald-100 text-emerald-700 leading-none">NEW</span>
+                  <span className="hidden sm:inline text-[9px] font-bold px-1 py-0.5 bg-emerald-100 text-emerald-700 leading-none">NEW</span>
                 )}
               </span>
               <span className="text-[11px] text-light hidden sm:block">{tab.sub}</span>
