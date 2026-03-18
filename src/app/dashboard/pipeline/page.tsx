@@ -750,7 +750,7 @@ export default function PipelinePage() {
                 ? `£${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}k`
                 : `£${n.toLocaleString()}`
             return (
-              <div className="flex items-center gap-2 text-xs text-right">
+              <div className="flex items-center gap-2 text-sm text-right">
                 {activeTotal > 0 && (
                   <span className="text-light">Pipeline: <span className="font-semibold text-forest">{fmt(activeTotal)}</span></span>
                 )}
