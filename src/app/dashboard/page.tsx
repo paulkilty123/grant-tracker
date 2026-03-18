@@ -48,6 +48,19 @@ export default async function DashboardPage() {
   const urgentCount = alerts.filter(a => ['urgent','overdue'].includes(a.urgency)).length
 
   const orgName = org?.name ?? 'there'
+
+  // Derive first name: prefer auth metadata, fall back to email prefix
+  const rawName: string =
+    (user?.user_metadata?.full_name as string | undefined) ??
+    (user?.user_metadata?.name as string | undefined) ??
+    (user?.email ?? '')
+  const personName = rawName.includes('@')
+    ? rawName.split('@')[0].split('.')[0]   // e.g. paul.kilty@… → paul
+    : rawName.split(' ')[0]                  // e.g. Paul Kilty → Paul
+  const firstName = personName
+    ? personName.charAt(0).toUpperCase() + personName.slice(1)
+    : 'there'
+
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
 
@@ -70,7 +83,7 @@ export default async function DashboardPage() {
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-7">
         <div>
           <h2 className="font-serif text-2xl text-charcoal">
-            {greeting}, {profileIncomplete ? 'there' : orgName}
+            {greeting}, {firstName}
           </h2>
           <p className="text-mid text-sm mt-1">
             {profileIncomplete
