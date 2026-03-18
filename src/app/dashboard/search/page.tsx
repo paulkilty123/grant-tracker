@@ -837,6 +837,22 @@ export default function SearchPage() {
     }
   }
 
+  function restoreSearch(item: SearchHistoryItem) {
+    if (item.sectors?.length) setLiveSelectedSectors(item.sectors)
+    if (item.location)        setLocationFilter(item.location)
+    runLiveSearch(item.query)
+  }
+
+  function timeAgo(dateStr: string): string {
+    const diff = Date.now() - new Date(dateStr).getTime()
+    const mins  = Math.floor(diff / 60000)
+    const hours = Math.floor(diff / 3600000)
+    const days  = Math.floor(diff / 86400000)
+    if (mins < 60)  return `${mins}m ago`
+    if (hours < 24) return `${hours}h ago`
+    return `${days}d ago`
+  }
+
   async function handleLiveAddToPipeline(grant: LiveGrant) {
     if (!org) { showToast('Complete your profile first to track grants'); return }
     try {
@@ -1543,6 +1559,43 @@ export default function SearchPage() {
                   <p className="text-xs text-amber-800">
                     You&apos;ve used your {WEEKLY_LIMIT} Live Searches for this week. Your allowance resets every Monday — or switch to our database above for instant results.
                   </p>
+                </div>
+              )}
+
+              {/* Recent searches */}
+              {!liveResults && !liveLoading && searchHistory.length > 0 && (
+                <div className="border border-warm bg-white px-5 py-4 mb-3">
+                  <p className="text-xs font-semibold text-light uppercase tracking-wider mb-3">Recent searches</p>
+                  <div className="space-y-1">
+                    {searchHistory.slice(0, 6).map(item => (
+                      <div key={item.id} className="flex items-center gap-2 group">
+                        <button
+                          onClick={() => restoreSearch(item)}
+                          className="flex-1 flex items-center gap-2.5 px-3 py-2 text-left hover:bg-[#f5f2ed] transition-colors rounded-sm min-w-0"
+                        >
+                          <Clock className="w-3.5 h-3.5 text-light flex-shrink-0" strokeWidth={2} />
+                          <span className="text-sm text-charcoal truncate flex-1">{item.query}</span>
+                          {item.location && (
+                            <span className="text-xs text-light flex-shrink-0 flex items-center gap-1">
+                              <MapPin className="w-3 h-3" strokeWidth={2} />{item.location}
+                            </span>
+                          )}
+                          {item.result_count != null && (
+                            <span className="text-xs text-light flex-shrink-0">{item.result_count} found</span>
+                          )}
+                          <span className="text-xs text-light flex-shrink-0">{timeAgo(item.created_at)}</span>
+                        </button>
+                        <button
+                          onClick={async () => {
+                            await deleteSearchHistory(item.id)
+                            if (org) setSearchHistory(await getSearchHistory(org.id))
+                          }}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity text-light hover:text-red-400 px-1 flex-shrink-0"
+                          title="Remove"
+                        >×</button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
