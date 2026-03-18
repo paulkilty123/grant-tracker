@@ -528,7 +528,7 @@ function AddModal({
           <div className="mx-6 mt-5 flex items-start gap-3 px-4 py-3 rounded-lg border border-sage/30 bg-sage/5">
             <Sparkles className="w-4 h-4 text-forest flex-shrink-0 mt-0.5" strokeWidth={2} />
             <div className="text-sm text-forest leading-relaxed">
-              <span className="font-semibold">Already in our database?</span> The fastest way to add a grant is directly from the{' '}
+              The fastest way to add a grant is directly from the{' '}
               <a
                 href="/dashboard/search"
                 className="underline underline-offset-2 font-semibold hover:text-forest/70 inline-flex items-center gap-0.5"
