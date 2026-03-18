@@ -1537,22 +1537,28 @@ export default function SearchPage() {
 
               {/* Benefits explainer */}
               {!liveResults && !liveLoading && (
-                <div className="border border-warm/60 bg-white px-5 py-4">
-                  <p className="text-sm font-semibold text-charcoal mb-3">Why use Live Search?</p>
-                  <ul className="space-y-2">
+                <div className="border border-warm/60 bg-white px-5 py-5">
+                  <p className="text-sm font-semibold text-charcoal mb-4">Why use Live Search?</p>
+                  <div className="space-y-3">
                     {[
-                      'Finds grants not yet in our database — newly announced and hyper-local opportunities',
-                      'Searches council sites, community foundations and specialist funders in real time',
-                      'Great for niche or geographic queries where our database may have gaps',
-                      'Results reflect the live web — always up to date',
-                    ].map(benefit => (
-                      <li key={benefit} className="flex items-start gap-2 text-xs text-mid leading-relaxed">
-                        <span className="text-forest flex-shrink-0 mt-0.5">✓</span>
-                        {benefit}
-                      </li>
+                      { icon: '🔍', text: 'Finds grants not yet in our database — newly announced and hyper-local opportunities that standard searches miss' },
+                      { icon: '🌐', text: 'Searches council sites, community foundations and specialist funders in real time across the live web' },
+                      { icon: '✦',  text: 'Returns smart matching recommendations tailored to your query — not just a list, but prioritised suggestions with context' },
+                      { icon: '📍', text: 'Ideal for niche or geographic queries — great for finding area-specific funds that rarely appear in grant databases' },
+                      { icon: '⚡', text: 'Always up to date — results reflect what\'s live right now, not what was scraped weeks ago' },
+                    ].map(({ icon, text }) => (
+                      <div key={text} className="flex items-start gap-3">
+                        <span className="flex-shrink-0 w-7 h-7 bg-forest/8 flex items-center justify-center text-sm" style={{ backgroundColor: 'rgba(26,122,94,0.08)' }}>{icon}</span>
+                        <p className="text-sm text-mid leading-relaxed pt-0.5">{text}</p>
+                      </div>
                     ))}
-                  </ul>
-                  <p className="text-[11px] text-light mt-3">Takes 15–30 seconds per search.</p>
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-warm">
+                    <p className="text-xs text-light leading-relaxed">
+                      <strong className="text-mid">Why is search limited to {WEEKLY_LIMIT} per week?</strong> Live Search queries real-time external APIs and AI services on every search, which carry significant per-use costs. The weekly allowance keeps the feature sustainable while we scale.
+                    </p>
+                    <p className="text-xs text-light mt-1">Each search takes 15–30 seconds.</p>
+                  </div>
                 </div>
               )}
 
