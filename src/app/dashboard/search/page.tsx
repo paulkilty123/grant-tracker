@@ -1540,15 +1540,17 @@ export default function SearchPage() {
                 <div className="border border-warm/60 bg-white px-5 py-5">
                   <p className="text-sm font-semibold text-charcoal mb-4">Why use Live Search?</p>
                   <div className="space-y-3">
-                    {[
-                      { icon: '🔍', text: 'Finds grants not yet in our database — newly announced and hyper-local opportunities that standard searches miss' },
-                      { icon: '🌐', text: 'Searches council sites, community foundations and specialist funders in real time across the live web' },
-                      { icon: '✦',  text: 'Returns smart matching recommendations tailored to your query — not just a list, but prioritised suggestions with context' },
-                      { icon: '📍', text: 'Ideal for niche or geographic queries — great for finding area-specific funds that rarely appear in grant databases' },
-                      { icon: '⚡', text: 'Always up to date — results reflect what\'s live right now, not what was scraped weeks ago' },
-                    ].map(({ icon, text }) => (
+                    {([
+                      { Icon: Search,    text: 'Finds grants not yet in our database — newly announced and hyper-local opportunities that standard searches miss' },
+                      { Icon: Globe,     text: 'Searches council sites, community foundations and specialist funders in real time across the live web' },
+                      { Icon: Sparkles,  text: 'Returns smart matching recommendations tailored to your query — not just a list, but prioritised suggestions with context' },
+                      { Icon: MapPin,    text: 'Ideal for niche or geographic queries — great for finding area-specific funds that rarely appear in grant databases' },
+                      { Icon: RefreshCw, text: "Always up to date — results reflect what's live right now, not what was scraped weeks ago" },
+                    ] as const).map(({ Icon, text }) => (
                       <div key={text} className="flex items-start gap-3">
-                        <span className="flex-shrink-0 w-7 h-7 bg-forest/8 flex items-center justify-center text-sm" style={{ backgroundColor: 'rgba(26,122,94,0.08)' }}>{icon}</span>
+                        <span className="flex-shrink-0 w-7 h-7 flex items-center justify-center" style={{ backgroundColor: 'rgba(26,122,94,0.08)' }}>
+                          <Icon className="w-3.5 h-3.5 text-forest" strokeWidth={2} />
+                        </span>
                         <p className="text-sm text-mid leading-relaxed pt-0.5">{text}</p>
                       </div>
                     ))}
