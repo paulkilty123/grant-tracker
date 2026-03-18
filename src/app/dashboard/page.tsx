@@ -127,7 +127,7 @@ export default async function DashboardPage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {(newGrants ?? []).map(g => (
-              <a key={g.id} href={`/dashboard/grants/${g.external_id}`}
+              <a key={g.id} href={`/dashboard/grants/${encodeURIComponent(g.external_id ?? g.id)}`}
                 className="flex flex-col gap-0.5 p-3 border border-warm bg-[#f5f2ed] hover:bg-warm transition-colors group">
                 <div className="flex items-start justify-between gap-2">
                   <p className="text-sm font-medium text-charcoal group-hover:text-forest leading-snug line-clamp-2">{g.title}</p>
