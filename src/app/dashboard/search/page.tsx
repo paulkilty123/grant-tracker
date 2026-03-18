@@ -193,45 +193,55 @@ function LiveGrantCard({ grant, onAddToPipeline }: {
   return (
     <div className="bg-white p-5 shadow-warm mb-3 border border-warm/80 hover:shadow-lg transition-all">
       <div className="flex gap-4">
-        <div className="flex-1">
+        {/* Left: main content */}
+        <div className="flex-1 min-w-0">
           <div className="flex items-start gap-3 mb-2">
             <div className="h-10 w-10 bg-[#f5f2ed] flex items-center justify-center text-charcoal font-bold text-sm flex-shrink-0 border border-warm">
               {grant.funder[0]?.toUpperCase() ?? '?'}
             </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="font-semibold text-charcoal text-base leading-snug">{grant.title}</h3>
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">🌐 Live result</span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                <h3 className="font-semibold text-charcoal text-lg leading-snug">{grant.title}</h3>
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap flex-shrink-0">🌐 Live</span>
               </div>
               <p className="text-sm text-mid">{grant.funder}</p>
             </div>
           </div>
-          <p className="text-sm text-mid leading-relaxed mb-3">{grant.description}</p>
+
+          <p className="text-sm text-mid leading-relaxed mt-2 mb-3">
+            {grant.description.length > 200
+              ? `${grant.description.slice(0, 200).trimEnd()}…`
+              : grant.description}
+          </p>
+
           {grant.notes && (
-            <div className="bg-coral/5 border border-coral/20 px-3.5 py-2.5 flex items-start gap-2">
-              <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-sage" strokeWidth={2} />
-              <p className="text-sm text-charcoal">{grant.notes}</p>
+            <div className="border px-3.5 py-2.5 mb-3 flex items-start gap-2"
+              style={{ backgroundColor: 'rgba(26,122,94,0.06)', borderColor: 'rgba(26,122,94,0.18)' }}>
+              <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-forest/70" strokeWidth={2} />
+              <p className="text-sm text-forest leading-snug">{grant.notes}</p>
             </div>
           )}
         </div>
-        <div className="flex flex-col items-end gap-3 w-40 flex-shrink-0">
-          {grant.amountRange && (
-            <div className="text-right">
-              <p className="text-lg font-bold text-gold leading-snug">{grant.amountRange}</p>
-              <p className="text-xs text-light mt-0.5">Grant range</p>
-            </div>
-          )}
+
+        {/* Right: amount + deadline + actions */}
+        <div className="flex flex-col items-end gap-3 min-w-[150px] flex-shrink-0">
           <div className="text-right">
-            <p className="text-xs text-mid">Deadline</p>
-            <p className="text-sm font-medium text-charcoal">{formatDeadline(grant.deadline) ?? (grant.deadline ? `Deadline: ${grant.deadline}` : 'Check website')}</p>
+            <p className="text-xl font-bold text-gold">
+              {grant.amountRange ?? '—'}
+            </p>
+            <p className="text-xs text-light mt-0.5">
+              {formatDeadline(grant.deadline) ?? (grant.deadline ? grant.deadline : 'No deadline listed')}
+            </p>
           </div>
+
           <div className="flex flex-col gap-1.5 w-full">
             <a href={grant.applyUrl} target="_blank" rel="noopener noreferrer"
-              className="flex items-center justify-center gap-1 px-3 py-1.5 border border-warm text-xs font-medium text-mid hover:border-coral hover:text-coral transition-colors w-full">
+              className="flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium transition-colors w-full"
+              style={{ background: '#1a2e2b', color: '#ffffff', border: '1px solid #1a2e2b' }}>
               Visit website →
             </a>
             <button onClick={() => onAddToPipeline(grant)}
-              className="px-3 py-1.5 bg-coral text-white text-xs font-semibold w-full hover:bg-coral/90 transition-colors">
+              className="px-3 py-2 bg-coral text-white text-xs font-semibold w-full hover:bg-coral/90 transition-colors">
               + Pipeline
             </button>
           </div>
