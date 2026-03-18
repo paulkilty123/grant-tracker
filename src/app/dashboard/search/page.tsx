@@ -1253,15 +1253,7 @@ export default function SearchPage() {
     } else if (mode === 'search') {
       setSearchMode('database')
       setLiveResults(null)
-      setAiResults(null)
-      setQuery(''); setInputValue('')
-      setSortBy('match')
-      // Clear all profile-applied filters for a clean slate
-      setLocationFilter('')
-      setActiveSectors(new Set())
-      setSearchModeToggle('browse')
-      setProfileChipsApplied(false)
-      setHasSearched(false)
+      // Preserve existing search results — user clears them explicitly
     } else {
       setSearchMode('live')
       setAiResults(null)
