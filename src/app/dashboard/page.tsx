@@ -49,17 +49,14 @@ export default async function DashboardPage() {
 
   const orgName = org?.name ?? 'there'
 
-  // Derive first name: prefer auth metadata, fall back to email prefix
+  // Derive display name: prefer auth metadata full name, fall back to email prefix
   const rawName: string =
     (user?.user_metadata?.full_name as string | undefined) ??
     (user?.user_metadata?.name as string | undefined) ??
     (user?.email ?? '')
-  const personName = rawName.includes('@')
-    ? rawName.split('@')[0].split('.')[0].replace(/\d+$/, '')  // e.g. paulkilty1@… → paulkilty, paul.kilty@… → paul
-    : rawName.split(' ')[0]                  // e.g. Paul Kilty → Paul
-  const firstName = personName
-    ? personName.charAt(0).toUpperCase() + personName.slice(1)
-    : 'there'
+  const firstName = rawName.includes('@')
+    ? (() => { const p = rawName.split('@')[0].split('.')[0].replace(/\d+$/, ''); return p ? p.charAt(0).toUpperCase() + p.slice(1) : 'there' })()
+    : (rawName.trim() || 'there')
 
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
