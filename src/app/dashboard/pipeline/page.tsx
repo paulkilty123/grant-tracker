@@ -63,13 +63,6 @@ function PipelineCard({
   const isWon = stage.id === 'won'
   const isDeclined = stage.id === 'declined'
 
-  const leftBorderColor =
-    stage.id === 'identified'  ? '#9ba8a6' :
-    stage.id === 'applying'    ? '#fb923c' :
-    stage.id === 'submitted'   ? '#f59e0b' :
-    stage.id === 'won'         ? '#1f5c52' :
-                                 '#f87171'
-
   return (
     <div
       draggable
@@ -77,7 +70,6 @@ function PipelineCard({
       onDragEnd={onDragEnd}
       onClick={() => onClick(item)}
       className="pipeline-card"
-      style={{ borderLeftColor: leftBorderColor }}
     >
       <p className="text-[10px] text-light font-semibold uppercase tracking-wider mb-1">{item.funder_name}</p>
       <p className="text-sm font-semibold text-charcoal leading-snug mb-1.5">{item.grant_name}</p>
