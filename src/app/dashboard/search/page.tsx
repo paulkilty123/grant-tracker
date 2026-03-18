@@ -1496,21 +1496,6 @@ export default function SearchPage() {
             </div>
           </div>
 
-          {aiResults && (
-            <div className="mt-2.5">
-              <button onClick={() => { setAiResults(null); setSmartMatched(false); setQuery(''); setInputValue('') }} className="text-xs text-light hover:text-charcoal underline">
-                Clear search results
-              </button>
-            </div>
-          )}
-          {liveResults && (
-            <div className="mt-2.5">
-              <button onClick={() => { setLiveResults(null); setLiveSmartMatched(false); setQuery(''); setInputValue('') }} className="text-xs text-light hover:text-charcoal underline">
-                Clear results
-              </button>
-            </div>
-          )}
-
           {/* ── Filters (database modes) ── */}
           {activeMode !== 'live' && (
             <>
@@ -1527,8 +1512,12 @@ export default function SearchPage() {
                   {activeFilterCount > 0 ? `Filters · ${activeFilterCount} active` : 'Filters'}
                   <ChevronDown size={13} strokeWidth={2} className={`transition-transform duration-200 ${filtersOpen ? 'rotate-180' : ''}`} />
                 </button>
-
-            </div>
+                {aiResults && (
+                  <button onClick={() => { setAiResults(null); setSmartMatched(false); setQuery(''); setInputValue('') }} className="px-3 py-1.5 border border-warm text-xs font-medium text-mid hover:border-coral hover:text-coral transition-all bg-white">
+                    Clear results
+                  </button>
+                )}
+              </div>
               {aiError && <p className="text-amber-600 text-xs mt-3">⚠ {aiError}</p>}
             </>
           )}
@@ -1776,6 +1765,9 @@ export default function SearchPage() {
               </h3>
               <p className="text-sm text-mid mt-1 max-w-2xl">{liveResults.summary}</p>
             </div>
+            <button onClick={() => { setLiveResults(null); setLiveSmartMatched(false); setQuery(''); setInputValue('') }} className="px-3 py-1.5 border border-warm text-xs font-medium text-mid hover:border-coral hover:text-coral transition-all bg-white flex-shrink-0 self-start">
+              Clear results
+            </button>
           </div>
           {liveResults.grants.map((g, i) => (
             <LiveGrantCard key={i} grant={g} onAddToPipeline={handleLiveAddToPipeline} />
