@@ -2,24 +2,31 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { Lightbulb, AlertCircle, MessageSquare, CheckCircle, Mail } from 'lucide-react'
 
 type FeedbackType = 'feature' | 'bug' | 'general'
 
-const TYPES: { id: FeedbackType; label: string; placeholder: string }[] = [
+const TYPES: { id: FeedbackType; label: string; icon: React.ElementType; placeholder: string; accent: string }[] = [
   {
     id: 'feature',
     label: 'Suggest a feature',
+    icon: Lightbulb,
     placeholder: 'Describe the feature you\'d like to see. What problem would it solve for you?',
+    accent: 'text-forest',
   },
   {
     id: 'bug',
     label: 'Report an issue',
+    icon: AlertCircle,
     placeholder: 'Describe what happened, what you expected to happen, and the steps to reproduce it.',
+    accent: 'text-coral',
   },
   {
     id: 'general',
     label: 'General feedback',
+    icon: MessageSquare,
     placeholder: 'Share any thoughts, ideas or comments — anything at all.',
+    accent: 'text-gold',
   },
 ]
 
@@ -53,7 +60,7 @@ export default function FeedbackPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-6 py-10">
+    <div className="max-w-2xl mx-auto px-5 py-8 md:py-10">
 
       {/* Header */}
       <div className="mb-8">
@@ -63,81 +70,106 @@ export default function FeedbackPage() {
         </p>
       </div>
 
-      {/* Type tabs */}
-      <div className="flex gap-2 mb-6">
-        {TYPES.map(t => (
-          <button
-            key={t.id}
-            onClick={() => { setActiveType(t.id); setStatus('idle') }}
-            className={`flex items-center gap-2 px-4 py-2 rounded text-sm font-medium border transition-all ${
-              activeType === t.id
-                ? 'bg-charcoal border-charcoal text-white'
-                : 'border-warm text-mid hover:border-coral hover:text-coral bg-white'
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
+      {/* Type selector */}
+      <div className="grid grid-cols-3 gap-2 mb-6">
+        {TYPES.map(t => {
+          const Icon = t.icon
+          const isActive = activeType === t.id
+          return (
+            <button
+              key={t.id}
+              onClick={() => { setActiveType(t.id); setStatus('idle') }}
+              className={`flex flex-col items-center gap-2 px-3 py-4 text-center border transition-all ${
+                isActive
+                  ? 'bg-[#121f2b] border-[#121f2b] text-white'
+                  : 'bg-white border-warm/60 text-mid hover:border-charcoal/40 hover:text-charcoal'
+              }`}
+              style={{ borderRadius: 0 }}
+            >
+              <Icon
+                size={18}
+                className={isActive ? 'text-coral' : t.accent}
+              />
+              <span className="text-xs font-medium leading-tight">{t.label}</span>
+            </button>
+          )
+        })}
       </div>
 
-      {/* Form */}
-      <div className="bg-white rounded border border-warm shadow-card p-6">
+      {/* Form card */}
+      <div className="bg-white border border-warm/60" style={{ boxShadow: '0 2px 16px rgba(26,46,43,0.06)' }}>
+
         {status === 'sent' ? (
-          <div className="text-center py-8">
-            <div className="text-4xl mb-3">✓</div>
-            <p className="text-lg font-bold text-charcoal mb-1">Thank you!</p>
-            <p className="text-sm text-mid mb-5">Your feedback has been received. We really appreciate it.</p>
+          <div className="text-center py-12 px-8">
+            <div className="w-12 h-12 bg-forest/10 flex items-center justify-center mx-auto mb-4">
+              <CheckCircle size={22} className="text-forest" />
+            </div>
+            <p className="font-display text-xl font-bold text-charcoal mb-1">Thank you!</p>
+            <p className="text-sm text-mid mb-6">
+              Your feedback has been received. We really appreciate it.
+            </p>
             <button
               onClick={() => setStatus('idle')}
-              className="text-sm text-mid hover:text-charcoal underline transition-colors"
+              className="text-sm text-coral hover:underline transition-colors font-medium"
             >
               Submit another →
             </button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-charcoal mb-1.5">
+          <form onSubmit={handleSubmit}>
+
+            {/* Form body */}
+            <div className="p-6">
+              <label className="block text-sm font-semibold text-charcoal mb-2">
                 {active.label}
               </label>
               <textarea
                 value={message}
                 onChange={e => setMessage(e.target.value)}
                 placeholder={active.placeholder}
-                rows={6}
+                rows={7}
                 required
-                className="form-input w-full resize-none"
+                className="form-input w-full resize-none text-sm"
+                style={{ borderRadius: 0 }}
               />
+              {status === 'error' && (
+                <p className="text-xs text-red-500 mt-2">
+                  Something went wrong — please try again or email us at{' '}
+                  <a href="mailto:hello@granttracker.co.uk" className="underline">hello@granttracker.co.uk</a>
+                </p>
+              )}
             </div>
 
-            {status === 'error' && (
-              <p className="text-xs text-red-500">
-                Something went wrong — please try again or email us at{' '}
-                <a href="mailto:hello@granttracker.co.uk" className="underline">hello@granttracker.co.uk</a>
-              </p>
-            )}
-
-            <div className="flex items-center justify-between">
+            {/* Footer */}
+            <div className="flex items-center justify-between border-t border-warm/60 px-6 py-4">
               <p className="text-xs text-light">Your account details are attached automatically.</p>
               <button
                 type="submit"
                 disabled={status === 'sending' || !message.trim()}
-                className="px-6 py-2.5 rounded bg-charcoal text-white text-sm font-semibold hover:bg-charcoal/90 transition-colors disabled:opacity-50"
+                className="px-5 py-2.5 bg-coral text-white text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-40"
+                style={{ borderRadius: 0 }}
               >
                 {status === 'sending' ? 'Sending…' : 'Send feedback →'}
               </button>
             </div>
+
           </form>
         )}
       </div>
 
-      {/* Previous submissions note */}
-      <p className="text-xs text-light text-center mt-6">
-        Need a faster response? Email us directly at{' '}
-        <a href="mailto:hello@granttracker.co.uk" className="text-mid hover:text-charcoal hover:underline transition-colors">
-          hello@granttracker.co.uk
-        </a>
-      </p>
+      {/* Contact strip */}
+      <div className="mt-5 flex items-center justify-center gap-2 text-xs text-light">
+        <Mail size={12} />
+        <span>
+          Need a faster response?{' '}
+          <a
+            href="mailto:hello@granttracker.co.uk"
+            className="text-mid hover:text-charcoal hover:underline transition-colors"
+          >
+            hello@granttracker.co.uk
+          </a>
+        </span>
+      </div>
 
     </div>
   )
