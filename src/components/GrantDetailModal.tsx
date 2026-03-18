@@ -192,13 +192,13 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
+        className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
         onClick={onClose}
-      />
-
+      >
       {/* Panel */}
       <div
-        className="fixed inset-y-0 right-0 z-50 w-full max-w-xl bg-white shadow-2xl flex flex-col"
+        className="relative z-50 w-full max-w-lg bg-white shadow-2xl flex flex-col rounded-lg overflow-hidden"
+        style={{ maxHeight: '85vh' }}
         onClick={e => e.stopPropagation()}
       >
         {/* Header bar */}
@@ -386,6 +386,7 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
             </>
           )}
         </div>
+      </div>
       </div>
     </>
   )
