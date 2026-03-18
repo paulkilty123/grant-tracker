@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Search, ThumbsUp, ThumbsDown, ChevronDown, Layers, DollarSign, Rocket, Database, Globe, Clock, Building2, SlidersHorizontal, Sparkles, MapPin, Award, GraduationCap, TrendingUp, Users, GitMerge, Gift, Landmark, CalendarDays, RefreshCw, Info, Trophy, HandCoins } from 'lucide-react'
+import GrantDetailModal from '@/components/GrantDetailModal'
 import { SEED_GRANTS } from '@/lib/grants'
 import { formatRange } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -324,7 +325,7 @@ function StalenessBadge({ lastVerifiedAt }: { lastVerifiedAt?: string }) {
 }
 
 // ── Grant Card ───────────────────────────────────────────────────────────────
-function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onDismiss, onUndismiss, onLike, onDislike }: {
+function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onDismiss, onUndismiss, onLike, onDislike, onViewDetail }: {
   item: DisplayGrant
   hasOrg: boolean
   hasSearch: boolean
@@ -334,6 +335,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
   onUndismiss: (grantId: string) => void
   onLike: (grantId: string) => void
   onDislike: (grantId: string) => void
+  onViewDetail: (grantId: string) => void
 }) {
   const { grant, score, reason, isAiScore, breakdown } = item
   const [expanded, setExpanded] = useState(false)
@@ -548,13 +550,13 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
 
           <div className="flex flex-col gap-1.5 w-full">
             {grant.source === 'scraped' && (
-              <a
-                href={`/dashboard/grants/${encodeURIComponent(grant.id)}`}
+              <button
+                onClick={() => onViewDetail(grant.id)}
                 className="flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium transition-colors w-full"
                 style={{ background: '#faf7f2', color: '#1f5c52', border: '1px solid #e8ddd0' }}
               >
                 View details →
-              </a>
+              </button>
             )}
             {grant.applyUrl && (
               <a
@@ -717,6 +719,7 @@ export default function SearchPage() {
   const [liveError, setLiveError]                 = useState<string | null>(null)
   const [liveSmartMatched, setLiveSmartMatched]   = useState(false)
   const [recentSearchesOpen, setRecentSearchesOpen] = useState(false)
+  const [detailGrantId, setDetailGrantId]           = useState<string | null>(null)
   const [searchHistory, setSearchHistory]         = useState<SearchHistoryItem[]>([])
   const [weeklySearchCount, setWeeklySearchCount] = useState(0)
   const [isAdmin, setIsAdmin]                     = useState(false)
@@ -2063,6 +2066,7 @@ export default function SearchPage() {
               onUndismiss={handleUndismiss}
               onLike={handleLike}
               onDislike={handleDislike}
+              onViewDetail={setDetailGrantId}
             />
           ))}
           {visibleCount < displayGrants.length && (
@@ -2109,6 +2113,30 @@ export default function SearchPage() {
           </div>
         </div>
       )}
+
+      {/* Grant detail modal */}
+      <GrantDetailModal
+        grantId={detailGrantId}
+        onClose={() => setDetailGrantId(null)}
+        onAddToPipeline={g => handleAddToPipeline({
+          id:                 g.external_id ?? g.id,
+          title:              g.title,
+          funder:             g.funder,
+          funderType:         (g.funder_type ?? 'other') as GrantOpportunity['funderType'],
+          fundingType:        (g.funding_type ?? 'grant') as GrantOpportunity['fundingType'],
+          description:        g.description ?? '',
+          amountMin:          g.amount_min ?? 0,
+          amountMax:          g.amount_max ?? 0,
+          deadline:           g.deadline,
+          isRolling:          g.is_rolling ?? false,
+          isLocal:            g.is_local ?? false,
+          sectors:            Array.isArray(g.sectors) ? g.sectors : [],
+          eligibilityCriteria: Array.isArray(g.eligibility_criteria) ? g.eligibility_criteria : [],
+          applyUrl:           g.apply_url ?? null,
+          isInviteOnly:       false,
+          source:             'scraped',
+        })}
+      />
     </div>
   )
 }
