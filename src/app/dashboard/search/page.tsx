@@ -716,6 +716,7 @@ export default function SearchPage() {
   const [liveLoading, setLiveLoading]             = useState(false)
   const [liveError, setLiveError]                 = useState<string | null>(null)
   const [liveSmartMatched, setLiveSmartMatched]   = useState(false)
+  const [recentSearchesOpen, setRecentSearchesOpen] = useState(false)
   const [searchHistory, setSearchHistory]         = useState<SearchHistoryItem[]>([])
   const [weeklySearchCount, setWeeklySearchCount] = useState(0)
   const [isAdmin, setIsAdmin]                     = useState(false)
@@ -1302,6 +1303,7 @@ export default function SearchPage() {
       setSearchMode('live')
       setAiResults(null)
       setLocationFilter('')
+      setRecentSearchesOpen(false)
     }
   }
 
@@ -1581,9 +1583,15 @@ export default function SearchPage() {
 
               {/* Recent searches */}
               {!liveResults && !liveLoading && searchHistory.length > 0 && (
-                <div className="border border-warm bg-white px-5 py-4 mb-3">
-                  <p className="text-xs font-semibold text-light uppercase tracking-wider mb-3">Recent searches</p>
-                  <div className="space-y-1">
+                <div className="border border-warm bg-white mb-3">
+                  <button
+                    onClick={() => setRecentSearchesOpen(o => !o)}
+                    className="w-full flex items-center justify-between px-5 py-3 hover:bg-[#f5f2ed] transition-colors"
+                  >
+                    <span className="text-xs font-semibold text-light uppercase tracking-wider">Recent searches</span>
+                    <ChevronDown size={13} strokeWidth={2} className={`text-light transition-transform duration-200 ${recentSearchesOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {recentSearchesOpen && <div className="px-2 pb-3 space-y-1">
                     {searchHistory.slice(0, 6).map(item => (
                       <div key={item.id} className="flex items-center gap-2 group">
                         <button
@@ -1612,7 +1620,7 @@ export default function SearchPage() {
                         >×</button>
                       </div>
                     ))}
-                  </div>
+                  </div>}
                 </div>
               )}
 
