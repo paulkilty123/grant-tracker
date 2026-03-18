@@ -805,7 +805,7 @@ export default function SearchPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           query: q,
-          org,
+          org: null,
           sectors: liveSelectedSectors,
           location: locationFilter,
           existingGrantTitles: SEED_GRANTS.map(g => ({ title: g.title, funder: g.funder })),
