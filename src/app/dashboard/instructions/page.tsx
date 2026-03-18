@@ -95,7 +95,7 @@ export default function InstructionsPage() {
             On any grant card, hit <strong className="text-charcoal">+ Pipeline</strong> to start tracking it. Set a stage, add notes, and monitor your deadlines — all in the Funding Pipeline section.
           </Step>
         </div>
-        <Tip>A complete profile unlocks AI-powered match scores and eligibility filtering. Aim for a profile score of 80% or above.</Tip>
+        <Tip>A complete profile unlocks smart match scores and eligibility filtering. Aim for a profile score of 80% or above.</Tip>
       </Section>
 
       {/* Profile */}
@@ -105,9 +105,9 @@ export default function InstructionsPage() {
         </p>
         <div className="space-y-2 pt-1">
           <Feature icon={CheckCircle} label="Organisation name & type" desc="Charity, CIC, social enterprise, community group, or other — this determines which grants you're eligible for." />
-          <Feature icon={CheckCircle} label="Mission statement" desc="A short description of what your organisation does. Used by AI to match you to relevant grants." />
+          <Feature icon={CheckCircle} label="Mission statement" desc="A short description of what your organisation does. Used to match you to the most relevant grants." />
           <Feature icon={CheckCircle} label="Themes & areas of work" desc="The causes and topics your organisation focuses on — e.g. mental health, education, environment." />
-          <Feature icon={CheckCircle} label="Location" desc="Your primary operating area. Used to surface local and regional funding opportunities." />
+          <Feature icon={CheckCircle} label="Location" desc="Your primary operating area. Used to find local and regional funding opportunities." />
           <Feature icon={CheckCircle} label="Annual income band" desc="Helps filter out grants with minimum or maximum income requirements." />
           <Feature icon={CheckCircle} label="Beneficiaries" desc="Who your organisation serves — e.g. young people, older adults, disabled people." />
         </div>
@@ -141,7 +141,7 @@ export default function InstructionsPage() {
             <p className="font-semibold text-charcoal">Search (database)</p>
           </div>
           <p className="text-sm text-mid leading-relaxed">
-            Keyword search across the full grant database. Type a topic, funder name, or location and hit <strong className="text-charcoal">Search</strong>. AI ranks the results by relevance. Unlike My Matches, this is a free search — your profile is not applied.
+            Keyword search across the full grant database. Type a topic, funder name, or location and hit <strong className="text-charcoal">Search</strong>. Results are ranked by relevance. Unlike My Matches, this is a free search — your profile is not applied.
           </p>
           <ul className="mt-2 space-y-1.5 text-sm text-mid">
             <li className="flex gap-2"><ArrowRight className="w-3.5 h-3.5 text-forest flex-shrink-0 mt-0.5" /><span>Results persist until you click <strong className="text-charcoal">Clear results</strong> or close the browser tab.</span></li>
@@ -156,7 +156,7 @@ export default function InstructionsPage() {
             <p className="font-semibold text-charcoal">Live Search <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 ml-1">Experimental</span></p>
           </div>
           <p className="text-sm text-mid leading-relaxed">
-            Goes beyond the database — AI researches the web in real time to find grants that may not yet be in our database. Results are cached for 7 days so repeat searches are instant.
+            Goes beyond the database — searches the web in real time to find grants that may not yet be in our database. Results are cached for 7 days so repeat searches are instant.
           </p>
           <ul className="mt-2 space-y-1.5 text-sm text-mid">
             <li className="flex gap-2"><ArrowRight className="w-3.5 h-3.5 text-amber-600 flex-shrink-0 mt-0.5" /><span>Be specific — "disability sport grants Manchester" works better than "grants for sport".</span></li>
@@ -189,7 +189,7 @@ export default function InstructionsPage() {
           <Feature icon={CheckCircle} label="Adding grants" desc="Hit '+ Pipeline' on any grant card in Find Funding to add it instantly. Or use 'Add Opportunity' in the Pipeline to add a grant manually, or paste a URL to auto-fill from the web." />
           <Feature icon={CheckCircle} label="Pipeline stages" desc="Move grants through Identified → Applying → Submitted → Won / Rejected as your application progresses." />
           <Feature icon={CheckCircle} label="Notes & contacts" desc="Open any pipeline item to add notes, contacts, application progress, and the outcome date." />
-          <Feature icon={CheckCircle} label="URL auto-fill" desc="In the Add Opportunity panel, paste any grant URL and click Auto-fill — AI will extract the grant name, funder, amount, and deadline automatically." />
+          <Feature icon={CheckCircle} label="URL auto-fill" desc="In the Add Opportunity panel, paste any grant URL and click Auto-fill — it reads the page and extracts the grant name, funder, amount, and deadline automatically." />
         </div>
       </Section>
 
@@ -224,7 +224,7 @@ export default function InstructionsPage() {
           {[
             { t: 'Complete your profile first', d: 'Even a partial profile dramatically improves match quality. Start with mission, themes, and location.' },
             { t: 'Use My Matches regularly', d: 'The database is updated continuously. Check back weekly for new grants that have been added.' },
-            { t: 'Use Live Search for niche queries', d: "If you can't find what you're looking for in the database, Live Search often surfaces specialist or emerging funders." },
+            { t: 'Use Live Search for niche queries', d: "If you can't find what you're looking for in the database, Live Search often turns up specialist or emerging funders." },
             { t: 'Add everything to the pipeline', d: 'Even grants you\'re unsure about — the pipeline helps you track what you\'ve looked at and avoid duplicating research.' },
             { t: 'Train with thumbs', d: 'A few minutes rating results significantly improves future recommendations.' },
             { t: 'Check the Deadlines page weekly', d: 'It\'s easy to lose track of closing dates. Make it part of your weekly routine.' },

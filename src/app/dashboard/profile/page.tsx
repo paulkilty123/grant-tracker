@@ -438,7 +438,7 @@ export default function ProfilePage() {
           <div>
             <h3 className="font-display text-base font-bold text-charcoal">Auto-fill from your website</h3>
             <p className="text-xs text-mid mt-0.5">
-              Enter your website and AI will read it and fill in your profile automatically.
+              Enter your website and Grant Tracker will read it and fill in your profile automatically.
             </p>
           </div>
         </div>
@@ -713,7 +713,7 @@ export default function ProfilePage() {
             <span className="w-6 h-6 rounded bg-charcoal/10 text-charcoal text-xs flex items-center justify-center font-bold">4</span>
             Mission Statement
           </h3>
-          <p className="text-xs text-mid mb-3 ml-8">Used by AI search to find the most relevant grants for your work</p>
+          <p className="text-xs text-mid mb-3 ml-8">Used to find the most relevant grants for your work</p>
           <textarea
             className="form-textarea"
             style={{ minHeight: 120 }}

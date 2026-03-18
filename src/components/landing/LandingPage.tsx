@@ -52,7 +52,7 @@ const audiences = [
   { title: 'CICs', desc: 'Grants, accelerators, and social investment matched to your structure — no more results built for charities.' },
   { title: 'Charities & CIOs', desc: 'Go beyond trusts and foundations — pipeline tracking and alerts replace the spreadsheet.' },
   { title: 'Co-operatives & CBS', desc: 'Community finance, blended funding, and grants that fit your mutual structure.' },
-  { title: 'Social Enterprises', desc: 'Ltd company with a mission? Soft matching surfaces opportunities even without CIC or charity status.' },
+  { title: 'Social Enterprises', desc: 'Ltd company with a mission? Soft matching finds opportunities even without CIC or charity status.' },
   { title: 'Impact Founders', desc: 'Grants, accelerators, and diversity funds matched to your stage, sector, and team.' },
   { title: 'Community Groups', desc: 'Local and national funding matched to your size, area, and cause.' },
 ]
@@ -72,7 +72,7 @@ const plans = [
   },
   {
     name: '6 Months', price: '£65', period: '£10.83/month',
-    features: ['Everything in Free', 'AI Live Search (3/week)', 'Match scoring & ranking', 'Deadline alerts', 'Priority support'],
+    features: ['Everything in Free', 'Live Search (3/week)', 'Match scoring & ranking', 'Deadline alerts', 'Priority support'],
     cta: 'Start 6-Month Plan', popular: true,
   },
   {
@@ -92,7 +92,7 @@ const testimonials = [
     name: 'Sarah R.', role: 'Youth charity, Lewisham', initials: 'SR',
   },
   {
-    quote: "The AI search actually understands what we do. It's not just keyword matching — it found grants for community food growing we'd never have thought to check.",
+    quote: "The search actually understands what we do. It's not just keyword matching — it found grants for community food growing we'd never have thought to check.",
     name: 'Jess P.', role: 'Community garden lead, Bristol', initials: 'JP',
   },
 ]
@@ -647,7 +647,7 @@ export default function LandingPage() {
               <h2 className="mt-3 font-serif text-3xl leading-tight md:text-4xl">Search everything, see only what fits.</h2>
               <p className="mt-4 text-mid leading-relaxed">Tell us your structure and sector once. We filter out everything you're not eligible for before you even see results.</p>
               <ul className="mt-8 space-y-4">
-                {['Profile-based filtering — your structure, stage and sector shape every result', 'Live Search — surfaces matching funding across all seven types in real time', 'Match scores ranked by structure, sector, geography, stage and mission'].map((b, i) => (
+                {['Profile-based filtering — your structure, stage and sector shape every result', 'Live Search — finds matching funding across all seven types in real time', 'Match scores ranked by structure, sector, geography, stage and mission'].map((b, i) => (
                   <li key={i} className="flex items-start gap-3 text-sm text-charcoal">
                     <span className="mt-0.5 flex h-5 w-5 items-center justify-center bg-coral/10 text-coral text-xs font-bold shrink-0">✓</span>
                     <span className="leading-relaxed">{b}</span>

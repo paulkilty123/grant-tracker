@@ -1635,7 +1635,7 @@ export default function SearchPage() {
                     <Info className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" strokeWidth={2} />
                     <div>
                       <p className="text-sm font-semibold text-amber-800 mb-0.5">Live Search is experimental</p>
-                      <p className="text-xs text-amber-700 leading-relaxed">Results are researched by AI in real time and are generally very useful — but some details may be outdated, and links occasionally point to the wrong page. Always verify on the funder's website before investing time in an application.</p>
+                      <p className="text-xs text-amber-700 leading-relaxed">Results are researched in real time and are generally very useful — but some details may be outdated, and links occasionally point to the wrong page. Always verify on the funder's website before investing time in an application.</p>
                     </div>
                   </div>
 
@@ -1660,7 +1660,7 @@ export default function SearchPage() {
                     </div>
                     <div className="mt-4 pt-4 border-t border-warm">
                       <p className="text-xs text-light leading-relaxed">
-                        <strong className="text-mid">Why is search limited to {WEEKLY_LIMIT} per week?</strong> Live Search queries real-time external APIs and AI services on every search, which carry significant per-use costs. The weekly allowance keeps the feature sustainable while we scale.
+                        <strong className="text-mid">Why is search limited to {WEEKLY_LIMIT} per week?</strong> Live Search queries real-time external services on every search, which carry significant per-use costs. The weekly allowance keeps the feature sustainable while we scale.
                       </p>
                       <p className="text-xs text-light mt-1">Each search takes 15–30 seconds.</p>
                     </div>
@@ -1673,9 +1673,9 @@ export default function SearchPage() {
                       {([
                         { tip: 'Be specific with your query', detail: 'e.g. "youth mental health grants Hackney" rather than just "mental health" — the more context, the more relevant the results.' },
                         { tip: 'If a link goes to the wrong page', detail: "copy the grant or funder name and search for it on Google — you'll usually find the right funding page within the first result or two." },
-                        { tip: 'Check the deadline carefully', detail: "AI can misread closing dates from complex funder websites. Always confirm directly with the funder before starting an application." },
+                        { tip: 'Check the deadline carefully', detail: "Closing dates can be misread from complex funder websites. Always confirm directly with the funder before starting an application." },
                         { tip: 'Use it alongside the database', detail: 'Live Search is best for finding niche or newly announced grants. Our curated database is better for well-established programmes with verified details.' },
-                        { tip: 'Try different phrasings', detail: 'If results feel off, reframe your query. "Tech for good funding London" and "digital innovation social enterprise grants" will surface different funders.' },
+                        { tip: 'Try different phrasings', detail: 'If results feel off, reframe your query. "Tech for good funding London" and "digital innovation social enterprise grants" will return different funders.' },
                       ]).map(({ tip, detail }) => (
                         <div key={tip} className="flex items-start gap-2.5">
                           <span className="flex-shrink-0 text-forest font-bold text-sm mt-0.5">→</span>
@@ -1839,7 +1839,7 @@ export default function SearchPage() {
             {aiResults && smartMatched ? (
               <><strong className="text-coral">✦ {displayGrants.length}</strong> grants matched for <strong className="text-charcoal">{org?.name}</strong></>
             ) : aiResults ? (
-              <><strong className="text-coral">✦ {displayGrants.length}</strong> AI-ranked results for &ldquo;{query}&rdquo;</>
+              <><strong className="text-coral">✦ {displayGrants.length}</strong> results ranked for &ldquo;{query}&rdquo;</>
             ) : activeMode === 'matches' ? (
               <><strong className="text-charcoal">{displayGrants.length}</strong> grants ranked for you{query ? ` · refined by "${query}"` : ''}</>
             ) : (
@@ -1897,7 +1897,7 @@ export default function SearchPage() {
           <div className="mt-4 border border-amber-200 bg-amber-50 px-4 py-3 flex items-start gap-2.5">
             <Info className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" strokeWidth={2} />
             <p className="text-xs text-amber-700 leading-relaxed">
-              <strong className="text-amber-800">Live Search is experimental.</strong> Results are AI-researched in real time and generally surface great opportunities — but details may be outdated and links can occasionally point to the wrong page. If a link doesn&apos;t work, search the grant or funder name on Google to find the right page. Always verify deadlines and eligibility directly with the funder before applying.
+              <strong className="text-amber-800">Live Search is experimental.</strong> Results are researched in real time and generally turn up great opportunities — but details may be outdated and links can occasionally point to the wrong page. If a link doesn&apos;t work, search the grant or funder name on Google to find the right page. Always verify deadlines and eligibility directly with the funder before applying.
             </p>
           </div>
         </div>
@@ -1933,7 +1933,7 @@ export default function SearchPage() {
             <p className="text-xs text-amber-800 leading-snug">
               {matchQuality.missing.slice(0, 3).map(f => f.label).join(', ')}{' '}
               {matchQuality.missing.length > 3 ? `and ${matchQuality.missing.length - 3} more` : ''} missing from your profile.{' '}
-              Complete it so Grant Tracker can surface the grants most relevant to your work.
+              Complete it so Grant Tracker can find the grants most relevant to your work.
             </p>
             <a
               href="/dashboard/profile"
