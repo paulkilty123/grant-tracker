@@ -300,21 +300,30 @@ export default function LandingPage() {
         transition={{ duration: 0.5 }}
         className="fixed top-0 left-0 right-0 z-50 bg-cream/95 backdrop-blur-sm border-b border-warm/60"
       >
-        <div className="flex w-full items-center justify-between px-8 py-5">
+        <div className="flex w-full items-center justify-between px-5 md:px-8 py-4 md:py-5">
           <a href="/" className="flex items-center gap-2.5 no-underline">
             <div className="relative flex items-center justify-center bg-coral w-7 h-7 flex-shrink-0" style={{ borderRadius: '6px' }}>
               <div className="w-2.5 h-2.5 rounded-full border-2 border-white" />
             </div>
             <span className="font-serif text-[22px] text-charcoal">GrantTracker</span>
           </a>
-          <div className="flex items-center gap-6 lg:gap-10">
+          {/* Desktop nav links */}
+          <div className="hidden md:flex items-center gap-6 lg:gap-10">
             {navLinks.map((link) => (
               <a key={link.label} href={link.href} className="text-sm text-mid transition-colors hover:text-charcoal">{link.label}</a>
             ))}
           </div>
-          <div className="flex items-center gap-3">
+          {/* Desktop CTAs */}
+          <div className="hidden md:flex items-center gap-3">
             <Link href="/auth/login" className="text-sm text-mid hover:text-charcoal transition-colors px-3 py-2">Sign in</Link>
             <Link href="/auth/signup" className="bg-coral text-white px-5 py-2 text-sm font-medium hover:opacity-90 transition-colors" style={{ borderRadius: '0px' }}>Get started free</Link>
+          </div>
+          {/* Mobile: sign up + hamburger */}
+          <div className="flex md:hidden items-center gap-3">
+            <Link href="/auth/signup" className="bg-coral text-white px-4 py-2 text-sm font-medium hover:opacity-90 transition-colors" style={{ borderRadius: '0px' }}>Get started</Link>
+            <button onClick={() => setMobileOpen(o => !o)} className="p-1 text-charcoal" aria-label="Toggle menu">
+              {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
           </div>
         </div>
         {mobileOpen && (
@@ -343,7 +352,7 @@ export default function LandingPage() {
       >
 
         {/* Two-column layout */}
-        <div className="relative z-10 mx-auto max-w-7xl px-8 flex flex-col lg:flex-row items-center gap-12 lg:gap-16" style={{ minHeight: '100vh', paddingTop: '120px', paddingBottom: '80px' }}>
+        <div className="relative z-10 mx-auto max-w-7xl px-6 md:px-8 flex flex-col lg:flex-row items-center gap-12 lg:gap-16" style={{ minHeight: '100vh', paddingTop: 'clamp(90px, 15vw, 120px)', paddingBottom: '80px' }}>
 
           {/* Left: text */}
           <div className="flex-1 max-w-xl lg:pl-12">
@@ -376,8 +385,8 @@ export default function LandingPage() {
 
           </div>
 
-          {/* Right: scattered feature cards */}
-          <div className="flex-1 w-full lg:max-w-[540px] flex-shrink-0 relative" style={{ height: '580px' }}>
+          {/* Right: scattered feature cards — hidden on mobile, shown lg+ */}
+          <div className="hidden lg:block flex-1 w-full lg:max-w-[540px] flex-shrink-0 relative" style={{ height: '580px' }}>
 
             {/* Dashboard — back right */}
             <motion.div {...fadeUp(0.4)} className="absolute" style={{ width: '240px', top: '20px', right: '0px', zIndex: 1 }}>
