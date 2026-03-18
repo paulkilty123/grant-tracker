@@ -1152,7 +1152,7 @@ export default function SearchPage() {
     return withScores
   })()
 
-  async function runAISearch(searchQuery: string, isSmartMatch = false) {
+  async function runAISearch(searchQuery: string, isSmartMatch = false, includeOrgContext = false) {
     setAiLoading(true)
     setAiError(null)
     setSmartMatched(false)
@@ -1203,7 +1203,7 @@ export default function SearchPage() {
       const response = await fetch('/api/ai-search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: searchQuery, grants: grantsContext, org }),
+        body: JSON.stringify({ query: searchQuery, grants: grantsContext, org: includeOrgContext ? org : null }),
       })
       const data = await response.json()
       if (!response.ok) throw new Error(data?.error ?? `Request failed (${response.status})`)
@@ -1224,7 +1224,7 @@ export default function SearchPage() {
     setInputValue(q)
     setHasSearched(true)
     const combined = [q.trim(), locationFilter.trim()].filter(Boolean).join(' ')
-    await runAISearch(combined)
+    await runAISearch(combined, false, activeMode === 'matches')
   }
 
   function handleSmartMatch() {
