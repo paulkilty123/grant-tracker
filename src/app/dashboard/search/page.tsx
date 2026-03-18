@@ -1466,26 +1466,23 @@ export default function SearchPage() {
             </button>
           </div>
 
-          {/* Location row — database modes only */}
-          {activeMode !== 'live' && (
-            <div className="flex gap-3 mt-2">
-              <div className="flex-1 relative">
-                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-light" />
-                <input
-                  type="text"
-                  value={locationFilter}
-                  onChange={e => setLocationFilter(e.target.value)}
-                  onKeyDown={e => {
-                    if (e.key !== 'Enter') return
-                    setHasSearched(true)
-                    handleAISearch()
-                  }}
-                  className="form-input h-10 pl-11 pr-4 text-sm"
-                  placeholder='Location — e.g. "London", "Manchester", "rural Wales" (optional)'
-                />
-              </div>
+          {/* Location row — all modes */}
+          <div className="flex gap-3 mt-2">
+            <div className="relative w-72">
+              <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-light" />
+              <input
+                type="text"
+                value={locationFilter}
+                onChange={e => setLocationFilter(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key !== 'Enter') return
+                  if (activeMode !== 'live') { setHasSearched(true); handleAISearch() }
+                }}
+                className="form-input h-10 pl-11 pr-4 text-sm w-full"
+                placeholder='Location (optional)'
+              />
             </div>
-          )}
+          </div>
 
           {aiResults && (
             <div className="mt-2.5">
@@ -1519,183 +1516,52 @@ export default function SearchPage() {
                   <ChevronDown size={13} strokeWidth={2} className={`transition-transform duration-200 ${filtersOpen ? 'rotate-180' : ''}`} />
                 </button>
 
-              {/* Use profile filters — only shown in Search mode (in Matches mode the profile is always active) */}
-              {org && activeMode === 'search' && (
-                <div className="relative">
-                  <button
-                    onClick={() => setProfileFiltersOpen(o => !o)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 border text-xs font-semibold transition-all ${
-                      profileFiltersOpen || profileChipsApplied
-                        ? 'bg-forest text-white border-forest'
-                        : 'border-warm text-mid hover:border-forest hover:text-forest bg-white'
-                    }`}
-                  >
-                    <Users size={13} strokeWidth={2} />
-                    Use profile filters
-                    <ChevronDown size={13} strokeWidth={2} className={`transition-transform duration-200 ${profileFiltersOpen ? 'rotate-180' : ''}`} />
-                  </button>
-
-                  {profileFiltersOpen && (
-                    <div className="absolute left-0 top-full mt-1.5 z-40 bg-white border border-warm shadow-lg p-4 w-80">
-                      <p className="text-xs font-semibold text-charcoal mb-3">Your profile settings</p>
-
-                      {/* Org name + description preview */}
-                      {(org.name || org.mission) && (
-                        <div className="bg-[#f5f2ed] border border-warm px-3 py-2 mb-3">
-                          {org.name && <p className="text-xs font-semibold text-charcoal">{org.name}</p>}
-                          {org.mission && <p className="text-xs text-mid mt-0.5 line-clamp-2">{org.mission}</p>}
-                        </div>
-                      )}
-
-                      <div className="space-y-2.5">
-                        {org.primary_location && (
-                          <div>
-                            <p className="text-[10px] font-semibold text-light uppercase tracking-wider mb-1">Location</p>
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-forest/10 text-forest text-xs font-medium">
-                              <MapPin size={10} strokeWidth={2} />{org.primary_location}
-                            </span>
-                          </div>
-                        )}
-
-                        {(org.impact_sectors as string[] | undefined)?.length ? (
-                          <div>
-                            <p className="text-[10px] font-semibold text-light uppercase tracking-wider mb-1">Sectors</p>
-                            <div className="flex flex-wrap gap-1">
-                              {(org.impact_sectors as string[]).map((s: string) => (
-                                <span key={s} className="px-2 py-0.5 bg-forest/10 text-forest text-xs font-medium">{s}</span>
-                              ))}
-                            </div>
-                          </div>
-                        ) : null}
-
-                        {org.legal_structure && (
-                          <div>
-                            <p className="text-[10px] font-semibold text-light uppercase tracking-wider mb-1">Legal structure</p>
-                            <span className="inline-flex px-2 py-0.5 bg-forest/10 text-forest text-xs font-medium">
-                              {STRUCTURE_LABELS[org.legal_structure] ?? org.legal_structure}
-                            </span>
-                          </div>
-                        )}
-
-                        {!org.primary_location && !(org.impact_sectors as string[] | undefined)?.length && (
-                          <p className="text-xs text-mid">Your profile is incomplete — <a href="/dashboard/profile" className="text-coral underline">add location and sectors</a> to use this feature.</p>
-                        )}
-                      </div>
-
-                      <div className="flex gap-2 mt-4 pt-3 border-t border-warm">
-                        <button
-                          onClick={() => {
-                            if (org.primary_location) setLocationFilter(org.primary_location)
-                            if ((org.impact_sectors as string[] | undefined)?.length) {
-                              setActiveSectors(new Set(org.impact_sectors as ImpactSector[]))
-                            }
-                            const smartQ = buildSmartQuery(org)
-                            if (smartQ) setQuery(smartQ)
-                            setSearchModeToggle('profile')
-                            setProfileChipsApplied(true)
-                            setProfileFiltersOpen(false)
-                            setHasSearched(true)
-                          }}
-                          className="flex-1 px-3 py-1.5 bg-forest text-white text-xs font-semibold hover:opacity-90 transition-colors"
-                        >
-                          Apply profile filters
-                        </button>
-                        <button
-                          onClick={() => setProfileFiltersOpen(false)}
-                          className="px-3 py-1.5 border border-warm text-xs text-mid hover:text-charcoal transition-colors"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
               {aiError && <p className="text-amber-600 text-xs mt-3">⚠ {aiError}</p>}
             </>
           )}
 
-          {/* ── LIVE SEARCH MODE: sectors + limit ── */}
+          {/* ── LIVE SEARCH MODE: explainer + limit ── */}
           {activeMode === 'live' && (
-            <div className="mt-4 space-y-4">
+            <div className="mt-4 space-y-3">
 
-            {/* Limit reached message */}
-            {!isAdmin && weeklySearchCount >= WEEKLY_LIMIT && (
-              <div className="bg-amber-50 border border-amber-200 px-4 py-3">
-                <p className="text-xs font-semibold text-amber-900 mb-1">Weekly limit reached</p>
-                <p className="text-xs text-amber-800">
-                  You&apos;ve used your {WEEKLY_LIMIT} Live Searches for this week. Your allowance resets every Monday — or switch to our database above for instant results.
-                </p>
-              </div>
-            )}
+              {/* Limit reached message */}
+              {!isAdmin && weeklySearchCount >= WEEKLY_LIMIT && (
+                <div className="bg-amber-50 border border-amber-200 px-4 py-3">
+                  <p className="text-xs font-semibold text-amber-900 mb-1">Weekly limit reached</p>
+                  <p className="text-xs text-amber-800">
+                    You&apos;ve used your {WEEKLY_LIMIT} Live Searches for this week. Your allowance resets every Monday — or switch to our database above for instant results.
+                  </p>
+                </div>
+              )}
 
-            {/* Sector pills */}
-            <div>
-              <p className="text-xs font-semibold text-mid mb-2">Sector <span className="font-normal text-light">(optional)</span></p>
-              <div className="flex flex-wrap gap-1.5">
-                {LIVE_SECTOR_FILTERS.map(s => (
-                  <button key={s.id} onClick={() => setLiveSelectedSectors(prev =>
-                    prev.includes(s.id) ? prev.filter(x => x !== s.id) : [...prev, s.id]
-                  )}
-                    className={`px-3 py-1 border text-xs font-medium transition-all ${
-                      liveSelectedSectors.includes(s.id)
-                        ? 'bg-charcoal border-charcoal text-white'
-                        : 'border-warm text-mid hover:border-coral hover:text-coral'
-                    }`}
-                  >{s.label}</button>
-                ))}
-              </div>
-            </div>
-            {/* Recent searches */}
-            {searchHistory.length > 0 && !liveResults && !liveLoading && (
-              <div className="pt-3 border-t border-warm">
-                <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Recent</p>
-                <div className="flex flex-wrap gap-2">
-                  {searchHistory.map(item => (
-                    <div key={item.id} className="flex items-center gap-1 bg-[#f5f2ed] border border-warm pl-3 pr-1 py-1">
-                      <button
-                        onClick={() => {
-                          setQuery(item.query)
-                          if (item.location) setLocationFilter(item.location)
-                          if (item.sectors.length) setLiveSelectedSectors(item.sectors)
-                        }}
-                        className="text-xs text-charcoal font-medium hover:text-coral max-w-[200px] truncate"
-                      >
-                        {item.query}
-                        {item.result_count != null && <span className="text-light ml-1">· {item.result_count}</span>}
-                      </button>
-                      <button
-                        onClick={async () => {
-                          await deleteSearchHistory(item.id)
-                          setSearchHistory(prev => prev.filter(h => h.id !== item.id))
-                        }}
-                        className="text-light hover:text-charcoal px-1 text-xs ml-1"
-                      >✕</button>
-                    </div>
-                  ))}
+              {/* Benefits explainer */}
+              {!liveResults && !liveLoading && (
+                <div className="border border-warm/60 bg-white px-5 py-4">
+                  <p className="text-sm font-semibold text-charcoal mb-3">Why use Live Search?</p>
+                  <ul className="space-y-2">
+                    {[
+                      'Finds grants not yet in our database — newly announced and hyper-local opportunities',
+                      'Searches council sites, community foundations and specialist funders in real time',
+                      'Great for niche or geographic queries where our database may have gaps',
+                      'Results reflect the live web — always up to date',
+                    ].map(benefit => (
+                      <li key={benefit} className="flex items-start gap-2 text-xs text-mid leading-relaxed">
+                        <span className="text-forest flex-shrink-0 mt-0.5">✓</span>
+                        {benefit}
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="text-[11px] text-light mt-3">Takes 15–30 seconds per search.</p>
                 </div>
-              </div>
-            )}
-            {/* Example searches (when no history) */}
-            {searchHistory.length === 0 && !liveResults && !liveLoading && (
-              <div className="pt-3 border-t border-warm">
-                <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Try an example</p>
-                <div className="flex flex-wrap gap-2">
-                  {LIVE_EXAMPLE_QUERIES.map(q => (
-                    <button key={q} onClick={() => setQuery(q)}
-                      className="px-3 py-1 bg-[#f5f2ed] border border-warm text-charcoal text-xs font-medium hover:bg-coral/10 hover:text-coral hover:border-coral transition-all"
-                    >{q} →</button>
-                  ))}
+              )}
+
+              {liveLoading && (
+                <div className="bg-[#f5f2ed] border border-warm px-4 py-3 text-sm text-mid">
+                  Searching live funding sources, council sites and specialist funders… this takes 15–30 seconds.
                 </div>
-              </div>
-            )}
-            {liveLoading && (
-              <div className="bg-[#f5f2ed] border border-warm px-4 py-3 text-sm text-mid">
-                Searching live funding sources, council sites and specialist funders… this takes 15–30 seconds.
-              </div>
-            )}
-            {liveError && <p className="text-red-600 text-xs">⚠ {liveError}</p>}
+              )}
+              {liveError && <p className="text-red-600 text-xs">⚠ {liveError}</p>}
             </div>
           )}
 
@@ -1954,39 +1820,43 @@ export default function SearchPage() {
       {/* ── Instructions panel (shown before any search in Search mode) ── */}
       {activeMode === 'search' && !hasSearched && (
         <div className="bg-white border border-warm/60 p-6 shadow-card">
-          <p className="text-base font-bold text-charcoal mb-5">How to find the right funding</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <div className="flex gap-4">
-              <div className="flex-shrink-0 w-9 h-9 bg-coral/10 flex items-center justify-center text-coral font-bold text-base">1</div>
-              <div>
-                <p className="text-sm font-semibold text-charcoal mb-1">Search by keyword</p>
-                <p className="text-sm text-mid leading-relaxed">Type what you&apos;re looking for — e.g. <em>&ldquo;youth sport Manchester&rdquo;</em> or <em>&ldquo;community food project&rdquo;</em> — then hit <strong>Search</strong>. No profile data is applied here — it&apos;s a clean search across all grants.</p>
+          <p className="text-base font-bold text-charcoal mb-4">Search — a fresh start</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {/* Left: the 3 steps */}
+            <div className="space-y-4">
+              <p className="text-xs text-mid leading-relaxed">No profile filters applied here — Search works across all grants from scratch. Use keywords and location to find exactly what you need.</p>
+              <div className="flex gap-3">
+                <div className="flex-shrink-0 w-7 h-7 bg-coral/10 flex items-center justify-center text-coral font-bold text-sm">1</div>
+                <div>
+                  <p className="text-sm font-semibold text-charcoal">Keyword search</p>
+                  <p className="text-xs text-mid leading-relaxed mt-0.5">Type what you&apos;re looking for — e.g. <em>&ldquo;youth sport&rdquo;</em> or <em>&ldquo;food bank capital&rdquo;</em> — then hit <strong>Search</strong>.</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <div className="flex-shrink-0 w-7 h-7 bg-coral/10 flex items-center justify-center text-coral font-bold text-sm">2</div>
+                <div>
+                  <p className="text-sm font-semibold text-charcoal">Add a location</p>
+                  <p className="text-xs text-mid leading-relaxed mt-0.5">Use the location field to narrow geographically — e.g. <em>&ldquo;London&rdquo;</em> or <em>&ldquo;rural Wales&rdquo;</em>.</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <div className="flex-shrink-0 w-7 h-7 bg-coral/10 flex items-center justify-center text-coral font-bold text-sm">3</div>
+                <div>
+                  <p className="text-sm font-semibold text-charcoal">Refine with Filters</p>
+                  <p className="text-xs text-mid leading-relaxed mt-0.5">Filter by sector, funding type, amount or deadline using the <strong>Filters</strong> button.</p>
+                </div>
               </div>
             </div>
-            <div className="flex gap-4">
-              <div className="flex-shrink-0 w-9 h-9 bg-coral/10 flex items-center justify-center text-coral font-bold text-base">2</div>
-              <div>
-                <p className="text-sm font-semibold text-charcoal mb-1">Add location</p>
-                <p className="text-sm text-mid leading-relaxed">Use the location box below the search bar to narrow results geographically — e.g. <em>&ldquo;London&rdquo;</em> or <em>&ldquo;rural Wales&rdquo;</em>.</p>
-              </div>
-            </div>
-            <div className="flex gap-4">
-              <div className="flex-shrink-0 w-9 h-9 bg-coral/10 flex items-center justify-center text-coral font-bold text-base">3</div>
-              <div>
-                <p className="text-sm font-semibold text-charcoal mb-1">Narrow with Filters</p>
-                <p className="text-sm text-mid leading-relaxed">Use the <strong>Filters</strong> button to narrow by sector, funding type, grant amount and deadline.</p>
-              </div>
-            </div>
-            <div className="flex gap-4 p-4 border-2 border-charcoal/20 bg-charcoal/[0.03]">
-              <div className="flex-shrink-0 w-9 h-9 bg-charcoal flex items-center justify-center text-white">
-                <Globe size={17} strokeWidth={2} />
+            {/* Right: Live Search callout */}
+            <div className="flex gap-3 p-4 border border-charcoal/15 bg-charcoal/[0.02] h-fit">
+              <div className="flex-shrink-0 w-8 h-8 bg-charcoal flex items-center justify-center text-white flex-shrink-0">
+                <Globe size={15} strokeWidth={2} />
               </div>
               <div>
                 <p className="text-sm font-semibold text-charcoal mb-1">
-                  Live Search
-                  <span className="ml-2 text-[10px] font-semibold px-1.5 py-0.5 bg-emerald-100 text-emerald-700 align-middle">FEATURED</span>
+                  Try Live Search
                 </p>
-                <p className="text-sm text-mid leading-relaxed">Switch to <strong>Live Search</strong> above to research hyper-local and newly announced grants not yet in our database — searches council sites, community foundations and specialist funders in real time. Takes 15–30 seconds.</p>
+                <p className="text-xs text-mid leading-relaxed">Can&apos;t find what you need? <strong>Live Search</strong> searches council sites, community foundations and specialist funders in real time — surfacing hyper-local and newly announced grants not yet in our database.</p>
               </div>
             </div>
           </div>
