@@ -205,7 +205,7 @@ function LiveGrantCard({ grant, onAddToPipeline }: {
           <p className="text-sm text-mid leading-relaxed mb-3">{grant.description}</p>
           {grant.notes && (
             <div className="bg-coral/5 border border-coral/20 px-3.5 py-2.5 flex items-start gap-2">
-              <span className="text-sage text-sm">💡</span>
+              <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-sage" strokeWidth={2} />
               <p className="text-sm text-charcoal">{grant.notes}</p>
             </div>
           )}
