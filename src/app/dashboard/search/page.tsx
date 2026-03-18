@@ -815,6 +815,11 @@ export default function SearchPage() {
       if (!response.ok) throw new Error(data?.error ?? `Request failed (${response.status})`)
       setLiveResults(data as LiveSearchResponse)
       if (isSmartMatch) setLiveSmartMatched(true)
+      // Save results to localStorage so history items can restore instantly
+      try {
+        const lsKey = `liveSearch:${q}:${liveSelectedSectors.sort().join('|')}:${locationFilter}`
+        localStorage.setItem(lsKey, JSON.stringify(data))
+      } catch { /* ignore storage errors */ }
       if (org) {
         await saveSearchHistory({
           orgId: org.id,
@@ -840,6 +845,18 @@ export default function SearchPage() {
   function restoreSearch(item: SearchHistoryItem) {
     if (item.sectors?.length) setLiveSelectedSectors(item.sectors)
     if (item.location)        setLocationFilter(item.location)
+    setInputValue(item.query)
+    // Try to restore from localStorage instantly — no network call needed
+    try {
+      const lsKey = `liveSearch:${item.query}:${(item.sectors ?? []).sort().join('|')}:${item.location ?? ''}`
+      const saved = localStorage.getItem(lsKey)
+      if (saved) {
+        setLiveResults(JSON.parse(saved) as LiveSearchResponse)
+        setHasSearched(true)
+        return
+      }
+    } catch { /* ignore */ }
+    // Fallback: re-run the search (server cache will serve it quickly)
     runLiveSearch(item.query)
   }
 
