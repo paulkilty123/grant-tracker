@@ -737,28 +737,36 @@ export default function PipelinePage() {
         <div>
           <h2 className="font-serif text-2xl text-charcoal">Funding Pipeline</h2>
           <p className="text-mid text-sm mt-1">Drag cards between columns or click to edit · {items.length} opportunities tracked</p>
+        </div>
+        <div className="flex flex-col items-end gap-3">
           {items.length > 0 && (() => {
-            const activeItems  = items.filter(i => !['won', 'declined'].includes(i.stage))
-            const activeTotal  = activeItems.reduce((s, i) => s + (i.amount_max ?? i.amount_requested ?? 0), 0)
-            const wonTotal     = items.filter(i => i.stage === 'won').reduce((s, i) => s + (i.amount_requested ?? i.amount_max ?? 0), 0)
-            const fmt = (n: number) => n >= 1000 ? `£${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}k` : `£${n.toLocaleString()}`
+            const activeItems = items.filter(i => !['won', 'declined'].includes(i.stage))
+            const activeTotal = activeItems.reduce((s, i) => s + (i.amount_max ?? i.amount_requested ?? 0), 0)
+            const wonTotal    = items.filter(i => i.stage === 'won').reduce((s, i) => s + (i.amount_requested ?? i.amount_max ?? 0), 0)
+            const fmt = (n: number) => n >= 1000000
+              ? `£${(n / 1000000).toFixed(1)}m`
+              : n >= 1000
+                ? `£${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}k`
+                : `£${n.toLocaleString()}`
             return (
-              <div className="flex items-center gap-3 mt-2">
+              <div className="flex items-center gap-2.5">
                 {activeTotal > 0 && (
-                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-warm border border-warm/80 text-charcoal">
-                    Pipeline value: <span className="text-forest">{fmt(activeTotal)}</span>
-                  </span>
+                  <div className="text-right px-4 py-2.5 border border-warm/80 bg-warm/40 rounded-lg">
+                    <p className="text-[10px] font-semibold text-light uppercase tracking-wider mb-0.5">Pipeline value</p>
+                    <p className="text-2xl font-bold text-forest leading-none">{fmt(activeTotal)}</p>
+                  </div>
                 )}
                 {wonTotal > 0 && (
-                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700">
-                    Won: {fmt(wonTotal)}
-                  </span>
+                  <div className="text-right px-4 py-2.5 border border-emerald-200 bg-emerald-50 rounded-lg">
+                    <p className="text-[10px] font-semibold text-emerald-600 uppercase tracking-wider mb-0.5">Won</p>
+                    <p className="text-2xl font-bold text-emerald-700 leading-none">{fmt(wonTotal)}</p>
+                  </div>
                 )}
               </div>
             )
           })()}
+          <button onClick={() => setShowAdd(true)} className="btn-gold">＋ Add Opportunity</button>
         </div>
-        <button onClick={() => setShowAdd(true)} className="btn-gold">＋ Add Opportunity</button>
       </div>
 
       {/* Board */}
