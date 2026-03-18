@@ -405,7 +405,7 @@ export default function ProfilePage() {
       <div className="card mb-6">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-charcoal">{scoreLabel}</span>
+            <span className="font-display text-base font-bold text-charcoal">{scoreLabel}</span>
             <span className="text-xs text-mid">— {score}% complete</span>
           </div>
           <span className={`text-xs font-semibold px-2.5 py-1 rounded text-white ${scoreColor}`}>
@@ -436,7 +436,7 @@ export default function ProfilePage() {
             <Sparkles className="h-4 w-4 text-gold" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-charcoal">Auto-fill from your website</h3>
+            <h3 className="font-display text-base font-bold text-charcoal">Auto-fill from your website</h3>
             <p className="text-xs text-mid mt-0.5">
               Enter your website and AI will read it and fill in your profile automatically.
             </p>
