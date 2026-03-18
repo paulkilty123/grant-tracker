@@ -1867,17 +1867,21 @@ export default function SearchPage() {
               </div>
             </div>
             {/* Right: Live Search callout */}
-            <div className="flex gap-3 p-4 border border-charcoal/15 bg-charcoal/[0.02] h-fit">
-              <div className="flex-shrink-0 w-8 h-8 bg-charcoal flex items-center justify-center text-white flex-shrink-0">
+            <button
+              type="button"
+              onClick={() => setActiveMode('live')}
+              className="flex gap-3 p-4 border border-charcoal/15 bg-charcoal/[0.02] h-fit text-left hover:border-charcoal/30 hover:bg-charcoal/[0.04] transition-colors w-full"
+            >
+              <div className="flex-shrink-0 w-8 h-8 bg-charcoal flex items-center justify-center text-white">
                 <Globe size={15} strokeWidth={2} />
               </div>
               <div>
                 <p className="text-sm font-semibold text-charcoal mb-1">
-                  Try Live Search
+                  Try Live Search →
                 </p>
                 <p className="text-xs text-mid leading-relaxed">Can&apos;t find what you need? <strong>Live Search</strong> searches council sites, community foundations and specialist funders in real time — surfacing hyper-local and newly announced grants not yet in our database.</p>
               </div>
-            </div>
+            </button>
           </div>
 
           <div className="mt-6 pt-4 border-t border-warm flex flex-wrap gap-3">
@@ -1924,7 +1928,7 @@ export default function SearchPage() {
           <p className="text-4xl mb-3">🔍</p>
           <p className="mb-3">No grants found — try different keywords or clear the filters.</p>
           <button
-            onClick={() => setSearchMode('live')}
+            onClick={() => setActiveMode('live')}
             className="text-forest text-sm hover:underline font-medium"
           >
             Try 🌐 Live Search for live web results →
