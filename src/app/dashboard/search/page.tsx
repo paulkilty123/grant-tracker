@@ -1253,10 +1253,12 @@ export default function SearchPage() {
     } else if (mode === 'search') {
       setSearchMode('database')
       setLiveResults(null)
+      setLocationFilter('')
       // Preserve existing search results — user clears them explicitly
     } else {
       setSearchMode('live')
       setAiResults(null)
+      setLocationFilter('')
     }
   }
 
