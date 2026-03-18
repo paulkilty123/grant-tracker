@@ -55,7 +55,7 @@ export default async function DashboardPage() {
     (user?.user_metadata?.name as string | undefined) ??
     (user?.email ?? '')
   const personName = rawName.includes('@')
-    ? rawName.split('@')[0].split('.')[0]   // e.g. paul.kilty@… → paul
+    ? rawName.split('@')[0].split('.')[0].replace(/\d+$/, '')  // e.g. paulkilty1@… → paulkilty, paul.kilty@… → paul
     : rawName.split(' ')[0]                  // e.g. Paul Kilty → Paul
   const firstName = personName
     ? personName.charAt(0).toUpperCase() + personName.slice(1)

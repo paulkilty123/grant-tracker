@@ -758,7 +758,7 @@ export default function PipelinePage() {
 
       {/* Board */}
       <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 pb-4">
-      <div className="grid grid-cols-5 gap-3.5 min-h-[60vh] min-w-[600px] md:min-w-0">
+      <div className="grid grid-cols-5 gap-3.5 min-h-[60vh] min-w-[850px] md:min-w-0">
         {PIPELINE_STAGES.map(stage => {
           const stageItems = items.filter(i => i.stage === stage.id)
 
