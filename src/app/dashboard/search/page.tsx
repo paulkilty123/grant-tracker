@@ -658,7 +658,8 @@ export default function SearchPage() {
   const isWelcome       = searchParams.get('welcome') === '1'
   const [welcomeDismissed, setWelcomeDismissed] = useState(false)
 
-  const [query, setQuery]               = useState('')
+  const [query, setQuery]               = useState('')       // committed (drives filter)
+  const [inputValue, setInputValue]     = useState('')       // live input value (typing only)
   const [activeType, setActiveType]     = useState('all')
   const [aiResults, setAiResults]       = useState<AIResult[] | null>(null)
   const [aiLoading, setAiLoading]       = useState(false)
@@ -716,7 +717,7 @@ export default function SearchPage() {
       const saved = sessionStorage.getItem('grantSearch')
       if (saved) {
         const { query: q, aiResults: r, activeType: t, smartMatched: sm, liveResults: lr, liveSmartMatched: lsm, activeMode: am } = JSON.parse(saved)
-        if (q)   setQuery(q)
+        if (q)   { setQuery(q); setInputValue(q) }
         if (r)   setAiResults(r)
         if (t)   setActiveType(t)
         if (sm)  setSmartMatched(sm)
@@ -1216,10 +1217,13 @@ export default function SearchPage() {
     }
   }
 
-  async function handleAISearch() {
-    if (!query.trim() && !locationFilter.trim()) return
+  async function handleAISearch(searchText?: string) {
+    const q = searchText ?? inputValue
+    if (!q.trim() && !locationFilter.trim()) return
+    setQuery(q)
+    setInputValue(q)
     setHasSearched(true)
-    const combined = [query.trim(), locationFilter.trim()].filter(Boolean).join(' ')
+    const combined = [q.trim(), locationFilter.trim()].filter(Boolean).join(' ')
     await runAISearch(combined)
   }
 
@@ -1228,6 +1232,7 @@ export default function SearchPage() {
     const smartQuery = buildSmartQuery(org)
     if (!smartQuery) return
     setQuery(smartQuery)
+    setInputValue(smartQuery)
   }
 
   function switchMode(mode: 'matches' | 'search' | 'live') {
@@ -1238,7 +1243,7 @@ export default function SearchPage() {
       setSearchMode('database')
       setLiveResults(null)
       setAiResults(null)
-      setQuery('')
+      setQuery(''); setInputValue('')
       // Re-apply profile filters
       if (org?.primary_location) setLocationFilter(org.primary_location)
       if (org?.impact_sectors?.length) setActiveSectors(new Set(org.impact_sectors as ImpactSector[]))
@@ -1249,7 +1254,7 @@ export default function SearchPage() {
       setSearchMode('database')
       setLiveResults(null)
       setAiResults(null)
-      setQuery('')
+      setQuery(''); setInputValue('')
       setSortBy('match')
       // Clear all profile-applied filters for a clean slate
       setLocationFilter('')
@@ -1445,12 +1450,12 @@ export default function SearchPage() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-light" />
               <input
                 type="text"
-                value={query}
-                onChange={e => { setQuery(e.target.value); if (searchMode === 'database') setAiResults(null) }}
+                value={inputValue}
+                onChange={e => setInputValue(e.target.value)}
                 onKeyDown={e => {
                   if (e.key !== 'Enter') return
                   setHasSearched(true)
-                  searchMode === 'live' ? runLiveSearch(query) : handleAISearch()
+                  searchMode === 'live' ? runLiveSearch(inputValue) : handleAISearch(inputValue)
                 }}
                 className="form-input h-12 pl-11 pr-4"
                 placeholder={
@@ -1461,8 +1466,8 @@ export default function SearchPage() {
               />
             </div>
             <button
-              onClick={() => searchMode === 'live' ? runLiveSearch(query) : handleAISearch()}
-              disabled={searchMode === 'live' ? (liveLoading || (!isAdmin && weeklySearchCount >= WEEKLY_LIMIT)) : (aiLoading || (!query.trim() && !locationFilter.trim()))}
+              onClick={() => searchMode === 'live' ? runLiveSearch(inputValue) : handleAISearch(inputValue)}
+              disabled={searchMode === 'live' ? (liveLoading || (!isAdmin && weeklySearchCount >= WEEKLY_LIMIT)) : (aiLoading || (!inputValue.trim() && !locationFilter.trim()))}
               className={`px-5 h-12 text-white text-sm font-semibold whitespace-nowrap transition-colors disabled:opacity-50 ${
                 activeMode === 'live' ? 'bg-charcoal hover:bg-charcoal/90' : 'bg-coral hover:bg-coral/90'
               }`}
@@ -1487,7 +1492,7 @@ export default function SearchPage() {
                 onChange={e => setLocationFilter(e.target.value)}
                 onKeyDown={e => {
                   if (e.key !== 'Enter') return
-                  if (activeMode !== 'live') { setHasSearched(true); handleAISearch() }
+                  if (activeMode !== 'live') { setHasSearched(true); handleAISearch(inputValue) }
                 }}
                 className="form-input h-10 pl-11 pr-4 text-sm w-full"
                 placeholder='Location (optional)'
@@ -1497,14 +1502,14 @@ export default function SearchPage() {
 
           {aiResults && (
             <div className="mt-2.5">
-              <button onClick={() => { setAiResults(null); setSmartMatched(false); setQuery('') }} className="text-xs text-light hover:text-charcoal underline">
+              <button onClick={() => { setAiResults(null); setSmartMatched(false); setQuery(''); setInputValue('') }} className="text-xs text-light hover:text-charcoal underline">
                 Clear search results
               </button>
             </div>
           )}
           {liveResults && (
             <div className="mt-2.5">
-              <button onClick={() => { setLiveResults(null); setLiveSmartMatched(false); setQuery('') }} className="text-xs text-light hover:text-charcoal underline">
+              <button onClick={() => { setLiveResults(null); setLiveSmartMatched(false); setQuery(''); setInputValue('') }} className="text-xs text-light hover:text-charcoal underline">
                 Clear results
               </button>
             </div>
@@ -1900,7 +1905,7 @@ export default function SearchPage() {
                     setActiveSectors(new Set(org.impact_sectors as ImpactSector[]))
                   }
                   const smartQ = buildSmartQuery(org)
-                  if (smartQ) setQuery(smartQ)
+                  if (smartQ) { setQuery(smartQ); setInputValue(smartQ) }
                   setSearchModeToggle('profile')
                   setProfileChipsApplied(true)
                   setHasSearched(true)
