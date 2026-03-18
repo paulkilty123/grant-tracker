@@ -20,6 +20,7 @@ import {
   LogOut,
   Menu,
   X,
+  BookOpen,
 } from 'lucide-react'
 
 interface Props {
@@ -142,8 +143,9 @@ export default function Sidebar({ org, userEmail }: Props) {
         </button>
       </div>
 
-      {/* Dashboard link */}
-      <div className="px-3 pt-4">
+      {/* Instructions + Dashboard links */}
+      <div className="px-3 pt-4 space-y-0.5">
+        {navLink('/dashboard/instructions', 'How to use', BookOpen)}
         {navLink('/dashboard', 'Dashboard', LayoutDashboard)}
       </div>
 
