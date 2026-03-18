@@ -352,7 +352,7 @@ export default function LandingPage() {
       >
 
         {/* Two-column layout */}
-        <div className="relative z-10 mx-auto max-w-7xl px-6 md:px-8 flex flex-col lg:flex-row items-center gap-12 lg:gap-16" style={{ minHeight: '100vh', paddingTop: 'clamp(90px, 15vw, 120px)', paddingBottom: '80px' }}>
+        <div className="relative z-10 mx-auto max-w-7xl px-6 md:px-8 flex flex-col lg:flex-row items-center gap-12 lg:gap-16 lg:min-h-screen" style={{ paddingTop: 'clamp(90px, 15vw, 120px)', paddingBottom: '80px' }}>
 
           {/* Left: text */}
           <div className="flex-1 max-w-xl lg:pl-12">

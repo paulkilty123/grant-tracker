@@ -196,7 +196,7 @@ export default function Sidebar({ org, userEmail }: Props) {
         onClick={() => setMobileOpen(true)}
         className={cn(
           'fixed top-4 left-4 z-40 md:hidden',
-          'w-10 h-10 flex items-center justify-center shadow-lg',
+          'w-10 h-10 flex items-center justify-center shadow-lg bg-[#1a2e2b] rounded-md',
           'transition-opacity duration-200',
           mobileOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'
         )}
