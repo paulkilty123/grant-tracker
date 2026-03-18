@@ -496,14 +496,14 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
                 if (!structures?.length) return null
                 const chips = structures.slice(0, 5).map(s => {
                   const lbl = STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' ')
-                  return <span key={s} className="tag bg-emerald-50 text-emerald-600 capitalize">{lbl}</span>
+                  return <span key={s} className="tag bg-orange-50 text-orange-600 capitalize">{lbl}</span>
                 })
                 const overflow = structures.length > 5 ? structures.length - 5 : 0
                 return (
                   <div className="flex flex-wrap items-center gap-1.5 mt-1">
                     <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider w-12 flex-shrink-0">For</span>
                     {chips}
-                    {overflow > 0 && <span className="tag bg-emerald-50 text-emerald-600">+{overflow}</span>}
+                    {overflow > 0 && <span className="tag bg-orange-50 text-orange-600">+{overflow}</span>}
                   </div>
                 )
               })()}
