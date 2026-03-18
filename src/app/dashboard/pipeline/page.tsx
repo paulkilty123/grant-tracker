@@ -738,7 +738,8 @@ export default function PipelinePage() {
           <h2 className="font-serif text-2xl text-charcoal">Funding Pipeline</h2>
           <p className="text-mid text-sm mt-1">Drag cards between columns or click to edit · {items.length} opportunities tracked</p>
         </div>
-        <div className="flex flex-col items-end gap-3">
+        <div className="flex flex-col items-end gap-2">
+          <button onClick={() => setShowAdd(true)} className="btn-gold">＋ Add Opportunity</button>
           {items.length > 0 && (() => {
             const activeItems = items.filter(i => !['won', 'declined'].includes(i.stage))
             const activeTotal = activeItems.reduce((s, i) => s + (i.amount_max ?? i.amount_requested ?? 0), 0)
@@ -749,23 +750,17 @@ export default function PipelinePage() {
                 ? `£${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}k`
                 : `£${n.toLocaleString()}`
             return (
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2 text-xs text-right">
                 {activeTotal > 0 && (
-                  <div className="text-right px-4 py-2.5 border border-warm/80 bg-warm/40 rounded-lg">
-                    <p className="text-[10px] font-semibold text-light uppercase tracking-wider mb-0.5">Pipeline value</p>
-                    <p className="text-2xl font-bold text-forest leading-none">{fmt(activeTotal)}</p>
-                  </div>
+                  <span className="text-light">Pipeline: <span className="font-semibold text-forest">{fmt(activeTotal)}</span></span>
                 )}
+                {activeTotal > 0 && wonTotal > 0 && <span className="text-warm/80">·</span>}
                 {wonTotal > 0 && (
-                  <div className="text-right px-4 py-2.5 border border-emerald-200 bg-emerald-50 rounded-lg">
-                    <p className="text-[10px] font-semibold text-emerald-600 uppercase tracking-wider mb-0.5">Won</p>
-                    <p className="text-2xl font-bold text-emerald-700 leading-none">{fmt(wonTotal)}</p>
-                  </div>
+                  <span className="text-light">Won: <span className="font-semibold text-emerald-600">{fmt(wonTotal)}</span></span>
                 )}
               </div>
             )
           })()}
-          <button onClick={() => setShowAdd(true)} className="btn-gold">＋ Add Opportunity</button>
         </div>
       </div>
 
