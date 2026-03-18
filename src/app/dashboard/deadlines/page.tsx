@@ -130,7 +130,7 @@ export default function DeadlinesPage() {
     <div>
       <div className="flex items-start justify-between mb-7">
         <div>
-          <h2 className="text-2xl font-bold text-charcoal">Deadlines</h2>
+          <h2 className="font-display text-2xl font-bold text-charcoal">Deadlines</h2>
           <p className="text-mid text-sm mt-1">Never miss an application window</p>
         </div>
         <a href="/dashboard/pipeline" className="flex items-center gap-1.5 px-4 py-2 rounded border border-warm text-sm font-medium text-mid hover:border-coral hover:text-coral transition-colors">

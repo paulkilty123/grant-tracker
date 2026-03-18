@@ -384,7 +384,7 @@ export default function ProfilePage() {
       {/* ── Header ── */}
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-semibold text-charcoal">Your Profile</h2>
+          <h2 className="font-display text-2xl font-bold text-charcoal">Your Profile</h2>
           <p className="text-mid text-sm mt-1">A complete profile means better grant matches and more relevant alerts</p>
         </div>
         <div className="flex items-center gap-3">

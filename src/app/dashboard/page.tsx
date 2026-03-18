@@ -82,7 +82,7 @@ export default async function DashboardPage() {
       {/* Top bar */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-7">
         <div>
-          <h2 className="font-serif text-2xl text-charcoal">
+          <h2 className="font-display text-2xl font-bold text-charcoal">
             {greeting}, {firstName}
           </h2>
           <p className="text-mid text-sm mt-1">
@@ -118,7 +118,7 @@ export default async function DashboardPage() {
         <div className="card mb-5">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <h3 className="font-serif text-base text-charcoal">New This Week</h3>
+              <h3 className="font-display text-base font-bold text-charcoal">New This Week</h3>
               <span className="bg-forest/10 text-forest text-[10px] font-bold px-2 py-0.5 uppercase tracking-wide">
                 {newGrantsCount} new
               </span>
@@ -157,7 +157,7 @@ export default async function DashboardPage() {
         {/* Pipeline mini */}
         <div className="md:col-span-2 card">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-serif text-base text-charcoal">Pipeline Overview</h3>
+            <h3 className="font-display text-base font-bold text-charcoal">Pipeline Overview</h3>
             <a href="/dashboard/pipeline" className="text-xs text-coral hover:underline">View full pipeline →</a>
           </div>
           {items.length === 0 ? (
@@ -217,7 +217,7 @@ export default async function DashboardPage() {
 
         {/* Deadlines */}
         <div className="card">
-          <h3 className="font-serif text-base text-charcoal mb-4">Upcoming Deadlines</h3>
+          <h3 className="font-display text-base font-bold text-charcoal mb-4">Upcoming Deadlines</h3>
           {alerts.length === 0 ? (
             <div className="text-center py-6 text-mid">
               <p className="text-sm">No upcoming deadlines</p>

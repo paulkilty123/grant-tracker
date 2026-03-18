@@ -76,8 +76,8 @@ export default function InstructionsPage() {
 
       {/* Header */}
       <div className="mb-8">
-        <h1 className="font-display text-3xl font-bold text-forest mb-2">How to use Grant Tracker</h1>
-        <p className="text-mid text-base leading-relaxed">
+        <h1 className="font-display text-2xl font-bold text-charcoal mb-2">How to use Grant Tracker</h1>
+        <p className="text-mid text-sm leading-relaxed">
           Everything you need to find funding, track applications, and stay on top of deadlines — in one place.
         </p>
       </div>

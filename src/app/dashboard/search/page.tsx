@@ -1415,7 +1415,7 @@ export default function SearchPage() {
   return (
     <div>
       <div className="mb-5">
-        <h2 className="text-2xl font-bold text-charcoal">Find Funding</h2>
+        <h2 className="font-display text-2xl font-bold text-charcoal">Find Funding</h2>
       </div>
 
       {/* Welcome banner — shown after first profile save */}

@@ -192,7 +192,7 @@ function PipelineModal({
       <div className="bg-white w-full max-w-lg max-h-[85vh] overflow-y-auto" style={{ boxShadow: '0 16px 64px rgba(26,46,43,0.18)' }} onClick={e => e.stopPropagation()}>
         <div className="p-6 border-b border-warm flex justify-between items-start">
           <div>
-            <h3 className="font-serif text-lg text-charcoal">{item.grant_name}</h3>
+            <h3 className="font-display text-lg font-bold text-charcoal">{item.grant_name}</h3>
             <p className="text-sm text-mid mt-0.5">{item.funder_name}</p>
           </div>
           <button onClick={onClose} className="text-light hover:text-mid text-xl leading-none">✕</button>
@@ -517,7 +517,7 @@ function AddModal({
         <div className="px-6 py-5 border-b border-warm flex justify-between items-start flex-shrink-0"
              style={{ background: '#faf7f2' }}>
           <div>
-            <h3 className="font-serif text-lg text-charcoal">Add Opportunity</h3>
+            <h3 className="font-display text-lg font-bold text-charcoal">Add Opportunity</h3>
             <p className="text-sm text-mid mt-0.5">Track a funding opportunity in your pipeline</p>
           </div>
           <button onClick={onClose} className="text-light hover:text-mid text-xl leading-none mt-0.5">✕</button>
@@ -735,7 +735,7 @@ export default function PipelinePage() {
     <div>
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-7">
         <div>
-          <h2 className="font-serif text-2xl text-charcoal">Funding Pipeline</h2>
+          <h2 className="font-display text-2xl font-bold text-charcoal">Funding Pipeline</h2>
           <p className="text-mid text-sm mt-1">Drag cards between columns or click to edit · {items.length} opportunities tracked</p>
         </div>
         <div className="flex items-center gap-4">

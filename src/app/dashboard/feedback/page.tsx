@@ -57,7 +57,7 @@ export default function FeedbackPage() {
 
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-charcoal mb-1">Share your feedback</h1>
+        <h1 className="font-display text-2xl font-bold text-charcoal mb-1">Share your feedback</h1>
         <p className="text-mid text-sm">
           Help us make Grant Tracker better. Every message is read and taken seriously.
         </p>
