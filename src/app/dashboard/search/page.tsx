@@ -17,10 +17,14 @@ import type { InteractionAction } from '@/lib/interactions'
 import type { SearchHistoryItem } from '@/lib/searchHistory'
 
 // Format a YYYY-MM-DD deadline string as "Deadline: 10 July 2026"
+// Returns null for non-YYYY-MM-DD strings (e.g. free-text from live search)
 function formatDeadline(dateStr: string | null): string | null {
   if (!dateStr) return null
-  const [y, m, d] = dateStr.split('-').map(Number)
+  const parts = dateStr.split('-').map(Number)
+  if (parts.length !== 3 || parts.some(isNaN)) return null
+  const [y, m, d] = parts
   const date = new Date(y, m - 1, d)
+  if (isNaN(date.getTime())) return null
   const formatted = date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
   return `Deadline: ${formatted}`
 }
@@ -219,7 +223,7 @@ function LiveGrantCard({ grant, onAddToPipeline }: {
           )}
           <div className="text-right">
             <p className="text-xs text-mid">Deadline</p>
-            <p className="text-sm font-medium text-charcoal">{formatDeadline(grant.deadline) ?? 'Check website'}</p>
+            <p className="text-sm font-medium text-charcoal">{formatDeadline(grant.deadline) ?? (grant.deadline ? `Deadline: ${grant.deadline}` : 'Check website')}</p>
           </div>
           <div className="flex flex-col gap-1.5 w-full">
             <a href={grant.applyUrl} target="_blank" rel="noopener noreferrer"
