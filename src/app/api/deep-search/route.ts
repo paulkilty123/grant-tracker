@@ -247,16 +247,15 @@ Return ONLY valid JSON — no markdown fences, no commentary outside the JSON ob
       return NextResponse.json({ error: 'No response from AI' }, { status: 502 })
     }
 
-    // Strip markdown fences, then extract the JSON object even if the model
-    // prepended prose (e.g. "Based on my research, here is...")
+    // Strip markdown fences, then extract the outermost JSON object.
+    // Always use regex extraction so trailing commentary (text after the final
+    // closing brace) or leading prose don't break JSON.parse.
     let cleaned = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
-    if (!cleaned.startsWith('{')) {
-      const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
-      if (!jsonMatch) {
-        return NextResponse.json({ error: 'AI did not return valid JSON — please try again' }, { status: 502 })
-      }
-      cleaned = jsonMatch[0]
+    const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
+    if (!jsonMatch) {
+      return NextResponse.json({ error: 'AI did not return valid JSON — please try again' }, { status: 502 })
     }
+    cleaned = jsonMatch[0]
     const result = JSON.parse(cleaned)
 
     // ── 3. Verify URLs — fall back to funder homepage if specific page is dead
