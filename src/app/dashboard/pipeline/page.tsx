@@ -738,8 +738,7 @@ export default function PipelinePage() {
           <h2 className="font-serif text-2xl text-charcoal">Funding Pipeline</h2>
           <p className="text-mid text-sm mt-1">Drag cards between columns or click to edit · {items.length} opportunities tracked</p>
         </div>
-        <div className="flex flex-col items-end gap-2">
-          <button onClick={() => setShowAdd(true)} className="btn-gold">＋ Add Opportunity</button>
+        <div className="flex items-center gap-4">
           {items.length > 0 && (() => {
             const activeItems = items.filter(i => !['won', 'declined'].includes(i.stage))
             const activeTotal = activeItems.reduce((s, i) => s + (i.amount_max ?? i.amount_requested ?? 0), 0)
@@ -750,17 +749,18 @@ export default function PipelinePage() {
                 ? `£${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}k`
                 : `£${n.toLocaleString()}`
             return (
-              <div className="flex items-center gap-2 text-sm text-right">
+              <div className="flex items-center gap-3 text-sm">
                 {activeTotal > 0 && (
                   <span className="text-light">Pipeline: <span className="font-semibold text-forest">{fmt(activeTotal)}</span></span>
                 )}
-                {activeTotal > 0 && wonTotal > 0 && <span className="text-warm/80">·</span>}
+                {activeTotal > 0 && wonTotal > 0 && <span className="text-light/40">·</span>}
                 {wonTotal > 0 && (
                   <span className="text-light">Won: <span className="font-semibold text-emerald-600">{fmt(wonTotal)}</span></span>
                 )}
               </div>
             )
           })()}
+          <button onClick={() => setShowAdd(true)} className="btn-gold">＋ Add Opportunity</button>
         </div>
       </div>
 
