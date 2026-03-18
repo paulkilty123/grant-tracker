@@ -456,14 +456,14 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
                 const sectorTags = (grant as EnrichedGrant).impactSectors?.length
                   ? (grant as EnrichedGrant).impactSectors!.slice(0, 4).map(s => {
                       const lbl = IMPACT_SECTOR_FILTERS.find(f => f.id === s)?.label ?? s
-                      return <span key={s} className="tag bg-emerald-50 text-emerald-700 capitalize">{lbl}</span>
+                      return <span key={s} className="tag bg-violet-50 text-violet-600 capitalize">{lbl}</span>
                     })
                   : grant.sectors
                       .map(s => ({ raw: s, label: sectorLabel(s) }))
                       .filter(({ label }) => label !== null)
                       .slice(0, 3)
                       .map(({ raw, label }) => (
-                        <span key={raw} className="tag bg-emerald-50 text-emerald-700 capitalize">{label}</span>
+                        <span key={raw} className="tag bg-violet-50 text-violet-600 capitalize">{label}</span>
                       ))
                 if (sectorTags.length === 0) return null
                 return (
@@ -480,14 +480,14 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
                 if (!structures?.length) return null
                 const chips = structures.slice(0, 5).map(s => {
                   const lbl = STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' ')
-                  return <span key={s} className="tag bg-gray-100 text-gray-700 capitalize">{lbl}</span>
+                  return <span key={s} className="tag bg-emerald-50 text-emerald-600 border border-emerald-300 capitalize">{lbl}</span>
                 })
                 const overflow = structures.length > 5 ? structures.length - 5 : 0
                 return (
                   <div className="flex flex-wrap items-center gap-1.5 mt-1">
                     <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider w-12 flex-shrink-0">For</span>
                     {chips}
-                    {overflow > 0 && <span className="tag bg-gray-100 text-gray-500">+{overflow}</span>}
+                    {overflow > 0 && <span className="tag bg-emerald-50 text-emerald-600 border border-emerald-300">+{overflow}</span>}
                   </div>
                 )
               })()}
