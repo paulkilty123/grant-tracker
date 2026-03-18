@@ -12,7 +12,7 @@ import {
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { PIPELINE_STAGES, formatDeadline, formatRange, cn } from '@/lib/utils'
 import type { PipelineItem, PipelineStage, Organisation } from '@/types'
-import { Search, Pencil, Send, Trophy, XCircle } from 'lucide-react'
+import { Search, Pencil, Send, Trophy, XCircle, Sparkles, Loader2, Link, ArrowRight } from 'lucide-react'
 
 const STAGE_ICONS: Record<string, React.ReactNode> = {
   identified: <Search size={13} strokeWidth={2.5} />,
@@ -437,10 +437,46 @@ function AddModal({
     funder_type: 'trust_foundation',
     amount_max: '',
     deadline: '',
+    grant_url: '',
     stage: 'identified' as PipelineStage,
     notes: '',
   })
-  const [saving, setSaving] = useState(false)
+  const [saving, setSaving]       = useState(false)
+  const [urlInput, setUrlInput]   = useState('')
+  const [autofilling, setAutofilling] = useState(false)
+  const [autofillError, setAutofillError] = useState<string | null>(null)
+  const [autofillDone, setAutofillDone]   = useState(false)
+
+  async function handleAutofill() {
+    if (!urlInput.trim()) return
+    setAutofilling(true)
+    setAutofillError(null)
+    setAutofillDone(false)
+    try {
+      const res = await fetch('/api/autofill-grant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: urlInput.trim() }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setAutofillError(data.error ?? 'Auto-fill failed'); return }
+      setForm(prev => ({
+        ...prev,
+        grant_name:  data.grant_name  ?? prev.grant_name,
+        funder_name: data.funder_name ?? prev.funder_name,
+        funder_type: data.funder_type ?? prev.funder_type,
+        amount_max:  data.amount_max != null ? String(data.amount_max) : prev.amount_max,
+        deadline:    data.deadline    ?? prev.deadline,
+        grant_url:   data.grant_url   ?? urlInput.trim(),
+        notes:       data.notes       ?? prev.notes,
+      }))
+      setAutofillDone(true)
+    } catch {
+      setAutofillError('Could not reach auto-fill service')
+    } finally {
+      setAutofilling(false)
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -460,7 +496,7 @@ function AddModal({
       is_urgent: false,
       contact_name: null,
       contact_email: null,
-      grant_url: null,
+      grant_url: form.grant_url || null,
       outcome_date: null,
       outcome_notes: null,
       created_by: userId,
@@ -472,50 +508,127 @@ function AddModal({
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-white w-full max-w-md" style={{ boxShadow: '0 16px 64px rgba(26,46,43,0.18)' }} onClick={e => e.stopPropagation()}>
-        <div className="p-6 border-b border-warm flex justify-between items-start">
+      <div
+        className="bg-white w-full max-w-lg rounded-lg overflow-hidden flex flex-col"
+        style={{ boxShadow: '0 16px 64px rgba(26,46,43,0.18)', maxHeight: '90vh' }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="px-6 py-5 border-b border-warm flex justify-between items-start flex-shrink-0"
+             style={{ background: '#faf7f2' }}>
           <div>
-            <h3 className="font-serif text-lg text-charcoal">Add to Pipeline</h3>
-            <p className="text-sm text-mid mt-0.5">Track a new funding opportunity</p>
+            <h3 className="font-serif text-lg text-charcoal">Add Opportunity</h3>
+            <p className="text-sm text-mid mt-0.5">Track a funding opportunity in your pipeline</p>
           </div>
-          <button onClick={onClose} className="text-light hover:text-mid text-xl leading-none">✕</button>
+          <button onClick={onClose} className="text-light hover:text-mid text-xl leading-none mt-0.5">✕</button>
         </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-charcoal mb-1.5">Grant name *</label>
-            <input className="form-input" value={form.grant_name} onChange={e => setForm({...form, grant_name: e.target.value})} required placeholder="e.g. Awards for All" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-charcoal mb-1.5">Funder name *</label>
-            <input className="form-input" value={form.funder_name} onChange={e => setForm({...form, funder_name: e.target.value})} required placeholder="e.g. National Lottery Community Fund" />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-charcoal mb-1.5">Max amount (£)</label>
-              <input type="number" className="form-input" value={form.amount_max} onChange={e => setForm({...form, amount_max: e.target.value})} placeholder="10000" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-charcoal mb-1.5">Deadline</label>
-              <input type="date" className="form-input" value={form.deadline} onChange={e => setForm({...form, deadline: e.target.value})} />
+
+        <div className="overflow-y-auto flex-1">
+          {/* Tip: add from funding list */}
+          <div className="mx-6 mt-5 flex items-start gap-3 px-4 py-3 rounded-lg border border-sage/30 bg-sage/5">
+            <Sparkles className="w-4 h-4 text-forest flex-shrink-0 mt-0.5" strokeWidth={2} />
+            <div className="text-sm text-forest leading-relaxed">
+              <span className="font-semibold">Already in our database?</span> The fastest way to add a grant is directly from the{' '}
+              <a
+                href="/dashboard/search"
+                className="underline underline-offset-2 font-semibold hover:text-forest/70 inline-flex items-center gap-0.5"
+              >
+                funding search <ArrowRight className="w-3 h-3" />
+              </a>
+              {' '}— just hit <span className="font-semibold">+ Pipeline</span> on any result.
             </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-charcoal mb-1.5">Stage</label>
-            <select className="form-select" value={form.stage} onChange={e => setForm({...form, stage: e.target.value as PipelineStage})}>
-              {PIPELINE_STAGES.map(s => <option key={s.id} value={s.id}>{s.emoji} {s.label}</option>)}
-            </select>
+
+          {/* Divider */}
+          <div className="flex items-center gap-3 mx-6 mt-5">
+            <div className="flex-1 h-px bg-warm" />
+            <span className="text-xs text-light font-medium uppercase tracking-wider">Or add manually</span>
+            <div className="flex-1 h-px bg-warm" />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-charcoal mb-1.5">Notes</label>
-            <textarea className="form-textarea" value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} placeholder="Any notes…" />
+          <p className="text-xs text-mid text-center mt-1.5 mx-6">
+            Found a grant not in our database? Paste the URL below to auto-fill the details, or fill in the form yourself.
+          </p>
+
+          {/* URL auto-fill */}
+          <div className="mx-6 mt-4 p-4 border border-warm rounded-lg bg-white">
+            <label className="block text-xs font-semibold text-charcoal uppercase tracking-wider mb-2">
+              Auto-fill from URL
+            </label>
+            <div className="flex gap-2">
+              <div className="flex-1 flex items-center gap-2 border border-warm rounded px-3 bg-white focus-within:border-forest transition-colors">
+                <Link className="w-3.5 h-3.5 text-light flex-shrink-0" />
+                <input
+                  type="url"
+                  value={urlInput}
+                  onChange={e => { setUrlInput(e.target.value); setAutofillDone(false); setAutofillError(null) }}
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAutofill() } }}
+                  placeholder="https://www.funder.org.uk/grant-name"
+                  className="flex-1 py-2 text-sm outline-none bg-transparent text-charcoal placeholder:text-light"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handleAutofill}
+                disabled={autofilling || !urlInput.trim()}
+                className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-white rounded disabled:opacity-40 transition-colors whitespace-nowrap"
+                style={{ background: '#1a2e2b' }}
+              >
+                {autofilling
+                  ? <><Loader2 className="w-3.5 h-3.5 animate-spin" />Filling…</>
+                  : <><Sparkles className="w-3.5 h-3.5" />Auto-fill</>
+                }
+              </button>
+            </div>
+            {autofillError && (
+              <p className="text-xs text-red-500 mt-1.5">{autofillError}</p>
+            )}
+            {autofillDone && (
+              <p className="text-xs text-forest mt-1.5 font-medium">✓ Fields filled — please review and adjust if needed</p>
+            )}
           </div>
-          <div className="flex gap-2 justify-end pt-2">
-            <button type="button" onClick={onClose} className="btn-outline btn-sm">Cancel</button>
-            <button type="submit" disabled={saving} className="btn-gold btn-sm">
-              {saving ? 'Adding…' : 'Add to Pipeline'}
-            </button>
-          </div>
-        </form>
+
+          {/* Manual form */}
+          <form onSubmit={handleSubmit} className="px-6 pb-6 pt-4 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-charcoal mb-1.5">Grant name *</label>
+              <input className="form-input" value={form.grant_name} onChange={e => setForm({...form, grant_name: e.target.value})} required placeholder="e.g. Awards for All" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-charcoal mb-1.5">Funder name *</label>
+              <input className="form-input" value={form.funder_name} onChange={e => setForm({...form, funder_name: e.target.value})} required placeholder="e.g. National Lottery Community Fund" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-charcoal mb-1.5">Max amount (£)</label>
+                <input type="number" className="form-input" value={form.amount_max} onChange={e => setForm({...form, amount_max: e.target.value})} placeholder="10000" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-charcoal mb-1.5">Deadline</label>
+                <input type="date" className="form-input" value={form.deadline} onChange={e => setForm({...form, deadline: e.target.value})} />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-charcoal mb-1.5">Grant URL</label>
+              <input type="url" className="form-input" value={form.grant_url} onChange={e => setForm({...form, grant_url: e.target.value})} placeholder="https://…" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-charcoal mb-1.5">Stage</label>
+              <select className="form-select" value={form.stage} onChange={e => setForm({...form, stage: e.target.value as PipelineStage})}>
+                {PIPELINE_STAGES.map(s => <option key={s.id} value={s.id}>{s.emoji} {s.label}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-charcoal mb-1.5">Notes</label>
+              <textarea className="form-textarea" value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} placeholder="Any notes…" />
+            </div>
+            <div className="flex gap-2 justify-end pt-2">
+              <button type="button" onClick={onClose} className="btn-outline btn-sm">Cancel</button>
+              <button type="submit" disabled={saving} className="btn-gold btn-sm">
+                {saving ? 'Adding…' : 'Add to Pipeline'}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   )
