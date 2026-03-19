@@ -60,7 +60,7 @@ const NAV_GROUPS = [
   {
     label: 'Settings',
     items: [
-      { href: '/dashboard/profile',  label: 'Profile',      Icon: User },
+      { href: '/dashboard/profile',  label: 'Account',      Icon: User },
       { href: '/dashboard/feedback', label: 'Feedback',     Icon: MessageSquare },
     ],
   },
@@ -143,9 +143,8 @@ export default function Sidebar({ org, userEmail }: Props) {
         </button>
       </div>
 
-      {/* Instructions + Dashboard links */}
+      {/* Dashboard link */}
       <div className="px-3 pt-4 space-y-0.5">
-        {navLink('/dashboard/instructions', 'How to use', BookOpen)}
         {navLink('/dashboard', 'Dashboard', LayoutDashboard)}
       </div>
 
@@ -166,6 +165,11 @@ export default function Sidebar({ org, userEmail }: Props) {
           </div>
         ))}
       </nav>
+
+      {/* How to use — pinned above user chip */}
+      <div className="px-3 pb-2">
+        {navLink('/dashboard/instructions', 'How to use', BookOpen)}
+      </div>
 
       {/* User chip */}
       <div className="border-t border-white/10 px-4 py-4">

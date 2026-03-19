@@ -526,11 +526,29 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
       <div className="flex flex-wrap items-center justify-between gap-2 mt-3 pt-3 border-t border-warm/60">
         {/* Left: deadline + match badge + eligibility toggle */}
         <div className="flex items-center gap-3 flex-wrap">
-          <p className="text-xs text-light">
-            {entryType === 'live'    ? (formatDeadline(grant.deadline) ?? grant.deadline) :
-             entryType === 'rolling' ? 'Always open' :
-             /* profile */            'Typical range'}
-          </p>
+          <div className="flex items-center gap-1.5">
+            <p className="text-xs text-light">
+              {entryType === 'live'    ? (formatDeadline(grant.deadline) ?? grant.deadline) :
+               entryType === 'rolling' ? 'Always open' :
+               /* profile */            'Typical range'}
+            </p>
+            {entryType === 'live' && grant.deadline && (() => {
+              const parts = grant.deadline.split('-').map(Number)
+              if (parts.length !== 3) return null
+              const days = Math.ceil((new Date(parts[0], parts[1]-1, parts[2]).getTime() - new Date().setHours(0,0,0,0)) / 86400000)
+              if (days > 10) return null
+              return (
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                  days < 0  ? 'bg-red-100 text-red-600' :
+                  days <= 3 ? 'bg-red-100 text-red-600' :
+                  days <= 7 ? 'bg-amber-100 text-amber-600' :
+                              'bg-orange-50 text-orange-500'
+                }`}>
+                  {days < 0 ? 'Overdue' : days === 0 ? 'Today!' : `${days}d left`}
+                </span>
+              )
+            })()}
+          </div>
           {hasOrg && hasSearch && <MatchBadge score={score} isAi={isAiScore} breakdown={breakdown} />}
           <button onClick={() => setExpanded(!expanded)} className="text-xs text-coral font-medium hover:underline">
             {expanded ? 'Show less ↑' : 'Eligibility ↓'}

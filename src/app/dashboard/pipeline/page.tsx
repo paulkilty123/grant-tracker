@@ -63,6 +63,15 @@ function PipelineCard({
   const isWon = stage.id === 'won'
   const isDeclined = stage.id === 'declined'
 
+  // Compute days remaining for urgency badge
+  const daysLeft = (() => {
+    if (!item.deadline) return null
+    const parts = item.deadline.split('-').map(Number)
+    if (parts.length !== 3) return null
+    const diff = new Date(parts[0], parts[1] - 1, parts[2]).getTime() - new Date().setHours(0,0,0,0)
+    return Math.ceil(diff / 86400000)
+  })()
+
   return (
     <div
       draggable
@@ -78,9 +87,22 @@ function PipelineCard({
       )}>
         {amountStr}{isWon ? ' ✓' : isDeclined ? ' ✗' : ''}
       </p>
-      <p className={cn('text-[11px] mt-1', item.is_urgent ? 'text-red-500 font-semibold' : 'text-mid')}>
-        {item.is_urgent && '⚠ '}{deadlineStr}
-      </p>
+      {deadlineStr && (
+        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+          <p className="text-[11px] text-mid">{deadlineStr}</p>
+          {daysLeft !== null && daysLeft <= 10 && (
+            <span className={cn(
+              'text-[9px] font-bold px-1.5 py-0.5 rounded-full',
+              daysLeft < 0  ? 'bg-red-100 text-red-600' :
+              daysLeft <= 3 ? 'bg-red-100 text-red-600' :
+              daysLeft <= 7 ? 'bg-amber-100 text-amber-600' :
+                              'bg-orange-50 text-orange-500'
+            )}>
+              {daysLeft < 0 ? 'Overdue' : daysLeft === 0 ? 'Today' : `${daysLeft}d left`}
+            </span>
+          )}
+        </div>
+      )}
       {item.application_progress != null && item.application_progress > 0 && (
         <div className="mt-2">
           <p className="text-[10px] text-light mb-0.5">{getWritingStage(item.application_progress).emoji} {getWritingStage(item.application_progress).label}</p>

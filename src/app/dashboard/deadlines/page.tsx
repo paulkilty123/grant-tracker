@@ -154,7 +154,7 @@ export default function DeadlinesPage() {
             Add grants to your pipeline from Search or Deep Search, then set deadlines to track them here.
           </p>
           <a href="/dashboard/search" className="btn-primary inline-block">
-            Find Grants →
+            Find Funding →
           </a>
         </div>
       ) : (
