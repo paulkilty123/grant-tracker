@@ -60,7 +60,7 @@ const NAV_GROUPS = [
   {
     label: 'Settings',
     items: [
-      { href: '/dashboard/profile',  label: 'Account',      Icon: User },
+      { href: '/dashboard/profile',  label: 'My Profile',   Icon: User },
       { href: '/dashboard/feedback', label: 'Feedback',     Icon: MessageSquare },
     ],
   },
@@ -178,7 +178,7 @@ export default function Sidebar({ org, userEmail }: Props) {
             {initials}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-white">{org?.name ?? 'My Profile'}</p>
+            <p className="truncate text-sm font-medium text-white">{org?.name ?? 'Account'}</p>
             <p className="truncate text-[10px] text-white/40">{userEmail}</p>
           </div>
         </div>
