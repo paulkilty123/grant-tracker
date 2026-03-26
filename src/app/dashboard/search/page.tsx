@@ -402,206 +402,236 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
     )
   }
 
+  // Score ring colour
+  const ringColour = score >= 80 ? '#2d8a7a' : score >= 65 ? '#e8a030' : '#8fa8a5'
+
   return (
-    <div className="bg-white p-4 sm:p-5 shadow-warm mb-3 border border-warm/80 hover:shadow-lg transition-all">
+    <div className="bg-white mb-3 border border-warm/80 hover:shadow-lg transition-all flex overflow-hidden"
+      style={{ borderLeft: `3px solid ${hasOrg && hasSearch ? ringColour : 'transparent'}` }}>
 
-      {/* ── Header: avatar + funder + title + amount ── */}
-      <div className="flex items-start gap-3 mb-2">
-        <div className="h-9 w-9 bg-[#f5f2ed] flex items-center justify-center text-charcoal font-bold text-sm flex-shrink-0 border border-warm mt-0.5">
-          {grant.funder[0].toUpperCase()}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="font-semibold text-charcoal text-base leading-snug">{grant.title}</h3>
-            <p className="text-base font-bold text-gold flex-shrink-0 ml-1">
-              {formatRange(grant.amountMin, grant.amountMax)}
-            </p>
+      {/* ── Score column ── */}
+      {hasOrg && hasSearch && (
+        <div
+          className="w-[108px] flex-shrink-0 flex flex-col items-center justify-center border-r border-warm/60 cursor-pointer select-none"
+          style={{ background: 'rgba(250,247,242,0.4)', padding: '16px' }}
+          onClick={() => setExpanded(!expanded)}
+          title="Click to see match breakdown"
+        >
+          <div className="relative w-16 h-16">
+            <svg viewBox="0 0 36 36" className="w-16 h-16" style={{ transform: 'rotate(-90deg)' }}>
+              <circle cx="18" cy="18" r="14" fill="none" stroke="rgba(232,221,208,0.6)" strokeWidth="3.5" />
+              <circle
+                cx="18" cy="18" r="14" fill="none"
+                stroke={ringColour}
+                strokeWidth="3.5"
+                strokeDasharray={`${(score / 100) * 87.96} 87.96`}
+                strokeLinecap="square"
+              />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-sm font-bold leading-none" style={{ color: ringColour }}>{score}%</span>
+            </div>
           </div>
-          <div className="flex items-center gap-2 flex-wrap mt-0.5">
-            <p className="text-sm text-mid">{grant.funder}</p>
-            <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${typeColour[grant.funderType] ?? 'bg-gray-50 text-gray-600'}`}>
-              {FUNDER_TYPES.find(t => t.id === grant.funderType)?.label ?? grant.funderType}
+          <span className="text-[8px] font-bold uppercase tracking-widest mt-1.5" style={{ color: '#5a7370' }}>Match</span>
+          {isAiScore && <span className="text-[8px] text-coral mt-0.5">✦ AI</span>}
+        </div>
+      )}
+
+      {/* ── Content column ── */}
+      <div className="flex-1 min-w-0 p-4 sm:p-5 cursor-pointer" onClick={() => setExpanded(!expanded)}>
+
+        {/* Badges */}
+        <div className="flex flex-wrap items-center gap-1.5 mb-2">
+          {ftBadge && (
+            <span className={`inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 uppercase tracking-wide ${ftBadge.cls}`}>
+              <ftBadge.Icon className="w-2.5 h-2.5" />{ftBadge.label}
             </span>
-            {grant.isLocal && (
-              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-green-50 text-green-700 inline-flex items-center gap-0.5">
-                <MapPin className="w-2.5 h-2.5" />Local
-              </span>
-            )}
-            {grant.source === 'scraped' && <StalenessBadge lastVerifiedAt={grant.lastVerifiedAt} />}
-          </div>
-        </div>
-      </div>
-
-      {/* ── Badges row ── */}
-      <div className="flex flex-wrap items-center gap-1.5 mb-3 ml-12">
-        {ftBadge && (
-          <span className={`inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide ${ftBadge.cls}`}>
-            <ftBadge.Icon className="w-2.5 h-2.5" />{ftBadge.label}
+          )}
+          <span className={`inline-flex items-center gap-1 text-[9px] font-medium px-1.5 py-0.5 ${entryBadge.cls}`}>
+            <entryBadge.Icon className="w-2.5 h-2.5" />{entryBadge.label}
           </span>
+          {isNewThisWeek && (
+            <span className="bg-emerald-100 text-emerald-700 text-[9px] font-bold px-1.5 py-0.5 uppercase tracking-wide">New</span>
+          )}
+          {grant.isInviteOnly && (
+            <span className="bg-purple-50 text-purple-700 border border-purple-200 text-[9px] font-bold px-1.5 py-0.5 uppercase tracking-wide">✉ Invite Only</span>
+          )}
+          {grant.nextOpenDate && (
+            <span className="bg-blue-50 text-blue-700 border border-blue-200 text-[9px] font-bold px-1.5 py-0.5 uppercase tracking-wide">🔔 Opens {grant.nextOpenDate}</span>
+          )}
+          {grant.source === 'scraped' && <StalenessBadge lastVerifiedAt={grant.lastVerifiedAt} />}
+        </div>
+
+        {/* Title */}
+        <h3 className="font-display text-lg text-charcoal leading-snug mb-0.5">{grant.title}</h3>
+
+        {/* Funder line */}
+        <div className="flex items-center gap-2 flex-wrap mb-2">
+          <p className="text-sm text-mid">{grant.funder}</p>
+          <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${typeColour[grant.funderType] ?? 'bg-gray-50 text-gray-600'}`}>
+            {FUNDER_TYPES.find(t => t.id === grant.funderType)?.label ?? grant.funderType}
+          </span>
+          {grant.isLocal && (
+            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-green-50 text-green-700 inline-flex items-center gap-0.5">
+              <MapPin className="w-2.5 h-2.5" />Local
+            </span>
+          )}
+        </div>
+
+        {/* Description */}
+        <p className="text-sm text-mid leading-relaxed mb-3">
+          {grant.description.length > 180
+            ? `${grant.description.slice(0, 180).trimEnd()}…`
+            : grant.description}
+        </p>
+
+        {/* Match reason */}
+        {hasOrg && hasSearch && reason && (
+          <p className="text-xs text-mid/80 italic leading-relaxed mb-3 pl-2 border-l-2 border-coral/40">
+            {reason.replace(/<[^>]*>/g, '').trim()}
+          </p>
         )}
-        <span className={`inline-flex items-center gap-1 text-[9px] font-medium px-1.5 py-0.5 ${entryBadge.cls}`}>
-          <entryBadge.Icon className="w-2.5 h-2.5" />{entryBadge.label}
-        </span>
-        {isNewThisWeek && (
-          <span className="bg-emerald-100 text-emerald-700 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide">New</span>
-        )}
-        {grant.isInviteOnly && (
-          <span className="bg-purple-50 text-purple-700 border border-purple-200 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide" title="Invite only">✉ Invite Only</span>
-        )}
-        {grant.nextOpenDate && (
-          <span className="bg-blue-50 text-blue-700 border border-blue-200 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide">🔔 Opens {grant.nextOpenDate}</span>
+
+        {/* Sector + For tags */}
+        {(() => {
+          const sectorTags = (grant as EnrichedGrant).impactSectors?.length
+            ? (grant as EnrichedGrant).impactSectors!.slice(0, 4).map(s => {
+                const lbl = IMPACT_SECTOR_FILTERS.find(f => f.id === s)?.label ?? s
+                return <span key={s} className="tag bg-violet-50 text-violet-600 capitalize">{lbl}</span>
+              })
+            : grant.sectors
+                .map(s => ({ raw: s, label: sectorLabel(s) }))
+                .filter(({ label }) => label !== null)
+                .slice(0, 3)
+                .map(({ raw, label }) => (
+                  <span key={raw} className="tag bg-violet-50 text-violet-600 capitalize">{label}</span>
+                ))
+          if (sectorTags.length === 0) return null
+          return (
+            <div className="flex flex-wrap items-center gap-1.5 mb-1">
+              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider w-12 flex-shrink-0">Sector</span>
+              {sectorTags}
+            </div>
+          )
+        })()}
+
+        {(() => {
+          const structures = (grant as EnrichedGrant).eligibleStructures
+          if (!structures?.length) return null
+          const chips = structures.slice(0, 5).map(s => {
+            const lbl = STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' ')
+            return <span key={s} className="tag bg-orange-50 text-orange-600 capitalize">{lbl}</span>
+          })
+          const overflow = structures.length > 5 ? structures.length - 5 : 0
+          return (
+            <div className="flex flex-wrap items-center gap-1.5 mb-1">
+              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider w-12 flex-shrink-0">For</span>
+              {chips}
+              {overflow > 0 && <span className="tag bg-orange-50 text-orange-600">+{overflow}</span>}
+            </div>
+          )
+        })()}
+
+        {/* Key data row */}
+        <div className="flex flex-wrap gap-5 border-t border-warm/50 mt-3 pt-3">
+          <div>
+            <p className="text-[9px] font-bold uppercase tracking-wider text-light mb-0.5">Amount</p>
+            <p className="text-sm font-bold text-charcoal">{formatRange(grant.amountMin, grant.amountMax)}</p>
+          </div>
+          <div>
+            <p className="text-[9px] font-bold uppercase tracking-wider text-light mb-0.5">Deadline</p>
+            <p className="text-sm font-bold text-charcoal">
+              {entryType === 'live' ? (formatDeadline(grant.deadline) ?? grant.deadline) :
+               entryType === 'rolling' ? 'Always open' : 'Typical range'}
+              {entryType === 'live' && grant.deadline && (() => {
+                const parts = grant.deadline.split('-').map(Number)
+                if (parts.length !== 3) return null
+                const days = Math.ceil((new Date(parts[0], parts[1]-1, parts[2]).getTime() - new Date().setHours(0,0,0,0)) / 86400000)
+                if (days > 10) return null
+                return (
+                  <span className={`ml-1.5 text-[10px] font-bold px-1.5 py-0.5 ${
+                    days < 0  ? 'bg-red-100 text-red-600' :
+                    days <= 3 ? 'bg-red-100 text-red-600' :
+                    days <= 7 ? 'bg-amber-100 text-amber-600' :
+                                'bg-orange-50 text-orange-500'
+                  }`}>
+                    {days < 0 ? 'Overdue' : days === 0 ? 'Today!' : `${days}d left`}
+                  </span>
+                )
+              })()}
+            </p>
+          </div>
+        </div>
+
+        {/* Expandable eligibility */}
+        {expanded && grant.eligibilityCriteria.length > 0 && (
+          <div className="mt-3 pt-3 border-t border-warm">
+            <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Eligibility criteria</p>
+            <ul className="space-y-1">
+              {grant.eligibilityCriteria.map(c => (
+                <li key={c} className="text-sm text-mid flex gap-2">
+                  <span className="text-forest flex-shrink-0">✓</span>{c}
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
       </div>
 
-      {/* ── Description ── */}
-      <p className="text-sm text-mid leading-relaxed mb-3">
-        {grant.description.length > 200
-          ? `${grant.description.slice(0, 200).trimEnd()}…`
-          : grant.description}
-      </p>
-
-      {/* ── Match reason ── */}
-      {hasOrg && hasSearch && reason && (
-        <div className="border px-3.5 py-2.5 mb-3 flex items-start gap-2" style={{ backgroundColor: 'rgba(26,122,94,0.06)', borderColor: 'rgba(26,122,94,0.18)' }}>
-          <span className="text-sm flex-shrink-0 text-forest/70">{isAiScore ? '✦' : '●'}</span>
-          <p className="text-sm text-forest leading-snug">{reason.replace(/<[^>]*>/g, '').trim()}</p>
-        </div>
-      )}
-
-      {/* ── Sector + For tags ── */}
-      {(() => {
-        const sectorTags = (grant as EnrichedGrant).impactSectors?.length
-          ? (grant as EnrichedGrant).impactSectors!.slice(0, 4).map(s => {
-              const lbl = IMPACT_SECTOR_FILTERS.find(f => f.id === s)?.label ?? s
-              return <span key={s} className="tag bg-violet-50 text-violet-600 capitalize">{lbl}</span>
-            })
-          : grant.sectors
-              .map(s => ({ raw: s, label: sectorLabel(s) }))
-              .filter(({ label }) => label !== null)
-              .slice(0, 3)
-              .map(({ raw, label }) => (
-                <span key={raw} className="tag bg-violet-50 text-violet-600 capitalize">{label}</span>
-              ))
-        if (sectorTags.length === 0) return null
-        return (
-          <div className="flex flex-wrap items-center gap-1.5 mb-1">
-            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider w-12 flex-shrink-0">Sector</span>
-            {sectorTags}
-          </div>
-        )
-      })()}
-
-      {(() => {
-        const structures = (grant as EnrichedGrant).eligibleStructures
-        if (!structures?.length) return null
-        const chips = structures.slice(0, 5).map(s => {
-          const lbl = STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' ')
-          return <span key={s} className="tag bg-orange-50 text-orange-600 capitalize">{lbl}</span>
-        })
-        const overflow = structures.length > 5 ? structures.length - 5 : 0
-        return (
-          <div className="flex flex-wrap items-center gap-1.5 mb-1">
-            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider w-12 flex-shrink-0">For</span>
-            {chips}
-            {overflow > 0 && <span className="tag bg-orange-50 text-orange-600">+{overflow}</span>}
-          </div>
-        )
-      })()}
-
-      {/* ── Expandable eligibility ── */}
-      {expanded && (
-        <div className="mt-3 pt-3 border-t border-warm">
-          <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Eligibility criteria</p>
-          <ul className="space-y-1">
-            {grant.eligibilityCriteria.map(c => (
-              <li key={c} className="text-sm text-mid flex gap-2">
-                <span className="text-forest flex-shrink-0">✓</span>{c}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* ── Bottom row: deadline + match score + actions + train ── */}
-      <div className="flex flex-wrap items-center justify-between gap-2 mt-3 pt-3 border-t border-warm/60">
-        {/* Left: deadline + match badge + eligibility toggle */}
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="flex items-center gap-1.5">
-            <p className="text-xs text-light">
-              {entryType === 'live'    ? (formatDeadline(grant.deadline) ?? grant.deadline) :
-               entryType === 'rolling' ? 'Always open' :
-               /* profile */            'Typical range'}
-            </p>
-            {entryType === 'live' && grant.deadline && (() => {
-              const parts = grant.deadline.split('-').map(Number)
-              if (parts.length !== 3) return null
-              const days = Math.ceil((new Date(parts[0], parts[1]-1, parts[2]).getTime() - new Date().setHours(0,0,0,0)) / 86400000)
-              if (days > 10) return null
-              return (
-                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                  days < 0  ? 'bg-red-100 text-red-600' :
-                  days <= 3 ? 'bg-red-100 text-red-600' :
-                  days <= 7 ? 'bg-amber-100 text-amber-600' :
-                              'bg-orange-50 text-orange-500'
-                }`}>
-                  {days < 0 ? 'Overdue' : days === 0 ? 'Today!' : `${days}d left`}
-                </span>
-              )
-            })()}
-          </div>
-          {hasOrg && hasSearch && <MatchBadge score={score} isAi={isAiScore} breakdown={breakdown} />}
-          <button onClick={() => setExpanded(!expanded)} className="text-xs text-coral font-medium hover:underline">
-            {expanded ? 'Show less ↑' : 'Eligibility ↓'}
-          </button>
-        </div>
-
-        {/* Right: action buttons + thumbs */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {hasOrg && (
-            <>
-              <button
-                onClick={() => onLike(grant.id)}
-                title="Good match"
-                className={`transition-all ${isLiked ? 'text-forest scale-110' : 'text-light hover:text-forest'}`}
-              >
-                <ThumbsUp className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => onDislike(grant.id)}
-                title="Not relevant"
-                className={`transition-all ${isDisliked ? 'text-red-500 scale-110' : 'text-light hover:text-red-400'}`}
-              >
-                <ThumbsDown className="h-4 w-4" />
-              </button>
-            </>
-          )}
-          {grant.source === 'scraped' && (
+      {/* ── Action column ── */}
+      <div className="flex flex-col gap-2 p-3 border-l border-warm/60 justify-center flex-shrink-0 w-[124px]">
+        {/* Thumbs */}
+        {hasOrg && (
+          <div className="flex items-center justify-center gap-3 pb-2 border-b border-warm/40">
             <button
-              onClick={() => onViewDetail(grant.id)}
-              className="px-3 py-1.5 text-xs font-medium transition-colors"
-              style={{ background: '#faf7f2', color: '#1f5c52', border: '1px solid #e8ddd0' }}
+              onClick={() => onLike(grant.id)}
+              title="Good match"
+              className={`transition-all ${isLiked ? 'text-forest scale-110' : 'text-light hover:text-forest'}`}
             >
-              View details →
+              <ThumbsUp className="h-3.5 w-3.5" />
             </button>
-          )}
-          {grant.applyUrl && (
-            <a
-              href={grant.applyUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-3 py-1.5 text-xs font-medium transition-colors"
-              style={{ background: '#1a2e2b', color: '#ffffff' }}
+            <button
+              onClick={() => onDislike(grant.id)}
+              title="Not relevant"
+              className={`transition-all ${isDisliked ? 'text-red-500 scale-110' : 'text-light hover:text-red-400'}`}
             >
-              Visit website →
-            </a>
-          )}
+              <ThumbsDown className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
+        {/* View Details */}
+        {grant.source === 'scraped' && (
           <button
-            onClick={() => onAddToPipeline(grant)}
-            className="px-3 py-1.5 bg-coral text-white text-xs font-semibold hover:bg-coral/90 transition-colors"
+            onClick={() => onViewDetail(grant.id)}
+            className="px-3 py-2 bg-coral text-white text-xs font-semibold text-center hover:opacity-90 transition-opacity"
           >
-            + Pipeline
+            View Details
           </button>
-        </div>
+        )}
+        {/* Visit website */}
+        {grant.applyUrl && (
+          <a
+            href={grant.applyUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3 py-2 text-xs font-medium text-center border border-warm text-mid hover:border-sage hover:text-sage transition-colors"
+            style={{ background: 'rgba(250,247,242,0.5)' }}
+          >
+            Visit site →
+          </a>
+        )}
+        {/* Pipeline */}
+        <button
+          onClick={() => onAddToPipeline(grant)}
+          className="px-3 py-2 text-xs font-medium text-center border border-warm text-mid hover:border-sage hover:text-sage transition-colors"
+          style={{ background: 'rgba(250,247,242,0.3)' }}
+        >
+          + Pipeline
+        </button>
+        {/* Eligibility toggle */}
+        <button onClick={() => setExpanded(!expanded)} className="text-[10px] text-coral font-medium hover:underline text-center mt-1">
+          {expanded ? 'Show less ↑' : 'Eligibility ↓'}
+        </button>
       </div>
 
     </div>
@@ -1419,8 +1449,38 @@ export default function SearchPage() {
 
   return (
     <div>
-      <div className="mb-5">
-        <h2 className="font-display text-2xl font-bold text-charcoal">Find Funding</h2>
+      {/* ── DISCOVERY HUB Hero ── */}
+      <div className="mb-6">
+        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-coral mb-3">Grant Discovery</p>
+        <div className="flex items-center justify-between gap-6 flex-wrap">
+          <h2 className="font-display text-3xl text-charcoal leading-snug">
+            Discover your<br />
+            <span className="text-coral">perfect</span> funding match
+          </h2>
+          {/* Mode tabs — compact pill row */}
+          <div className="flex items-center border border-warm overflow-hidden flex-shrink-0 bg-white">
+            {([
+              { id: 'matches' as const, label: 'My Matches' },
+              { id: 'search'  as const, label: 'Search' },
+              { id: 'live'    as const, label: 'Live Search' },
+            ] as const).map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => switchMode(tab.id)}
+                className={`px-5 py-2.5 text-xs font-semibold border-r border-warm last:border-r-0 transition-colors ${
+                  activeMode === tab.id
+                    ? 'bg-charcoal text-white'
+                    : 'text-mid hover:bg-warm/30 hover:text-charcoal'
+                }`}
+              >
+                {tab.label}
+                {tab.id === 'live' && activeMode !== 'live' && (
+                  <span className="ml-1 text-[9px] font-bold px-1 py-0.5 bg-emerald-100 text-emerald-700 leading-none">NEW</span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Welcome banner — shown after first profile save */}
@@ -1434,67 +1494,40 @@ export default function SearchPage() {
         </div>
       )}
 
-      {/* ── Search card ── */}
-      <div className="bg-white shadow-card mb-5 border border-warm/60">
+      {/* ── Search / Filter card ── */}
+      <div className="bg-white shadow-card mb-5 border border-warm/60 p-4 sm:p-5">
 
-        {/* ── Mode tabs ── */}
-        <div className="flex border-b border-warm">
-          {([
-            { id: 'matches' as const, icon: <Users size={14} strokeWidth={2} />, label: 'My Matches',    sub: 'Ranked by your profile' },
-            { id: 'search'  as const, icon: <Search size={14} strokeWidth={2} />, label: 'Search',        sub: 'Fresh keyword search'   },
-            { id: 'live'    as const, icon: <Globe  size={14} strokeWidth={2} />, label: 'Live Search',   sub: 'Real-time web research'  },
-          ] as const).map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => switchMode(tab.id)}
-              className={`flex-1 flex flex-col items-center gap-0.5 py-3 sm:py-3.5 px-1 sm:px-2 border-b-2 transition-colors ${
-                activeMode === tab.id
-                  ? 'border-coral text-charcoal'
-                  : 'border-transparent text-mid hover:text-charcoal hover:bg-warm/30'
-              }`}
-            >
-              <span className={`flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm font-semibold ${activeMode === tab.id ? 'text-coral' : ''}`}>
-                {tab.icon}{tab.label}
-                {tab.id === 'live' && (
-                  <span className="hidden sm:inline text-[9px] font-bold px-1 py-0.5 bg-emerald-100 text-emerald-700 leading-none">NEW</span>
-                )}
-              </span>
-              <span className="text-[11px] text-light hidden sm:block">{tab.sub}</span>
-            </button>
-          ))}
-        </div>
+        {/* Org context line */}
+        {activeMode === 'matches' && org && (
+          <div className="flex items-center gap-2 text-xs text-mid mb-4 flex-wrap">
+            <span className="w-1.5 h-1.5 rounded-full bg-coral flex-shrink-0" />
+            Ranked for <strong className="text-charcoal">{org.name ?? 'your organisation'}</strong>
+            {org.primary_location && <span>· {org.primary_location}</span>}
+            <a href="/dashboard/profile" className="ml-auto text-coral hover:underline font-medium">Edit profile →</a>
+          </div>
+        )}
+        {activeMode === 'matches' && !org && (
+          <div className="mb-4 text-xs border border-amber-200 bg-amber-50 px-3 py-2">
+            <a href="/dashboard/profile" className="font-semibold text-amber-700 underline">Set up your profile</a>
+            <span className="text-amber-800"> to see grants ranked for your organisation.</span>
+          </div>
+        )}
+        {activeMode === 'live' && (
+          <div className="mb-3 flex items-center justify-between text-xs text-mid">
+            <span>Searches the live web in real time — takes 15–30 seconds</span>
+            <span className={`font-semibold ${(!isAdmin && weeklySearchCount >= WEEKLY_LIMIT) ? 'text-red-500' : 'text-charcoal'}`}>
+              {isAdmin ? '∞ unlimited' : weeklySearchCount >= WEEKLY_LIMIT ? '⚠ limit reached' : `${WEEKLY_LIMIT - weeklySearchCount}/${WEEKLY_LIMIT} searches left this week`}
+            </span>
+          </div>
+        )}
 
-        <div className="p-5">
-          {/* Live search usage counter inside tab */}
-          {activeMode === 'live' && (
-            <div className="mb-3 flex items-center justify-between text-xs text-mid">
-              <span>Searches the live web in real time — takes 15–30 seconds</span>
-              <span className={`font-semibold ${(!isAdmin && weeklySearchCount >= WEEKLY_LIMIT) ? 'text-red-500' : 'text-charcoal'}`}>
-                {isAdmin ? '∞ unlimited' : weeklySearchCount >= WEEKLY_LIMIT ? '⚠ limit reached' : `${WEEKLY_LIMIT - weeklySearchCount}/${WEEKLY_LIMIT} searches left this week`}
-              </span>
-            </div>
-          )}
-
-          {/* My Matches context label */}
-          {activeMode === 'matches' && org && (
-            <div className="mb-3 flex items-center gap-2 text-xs text-mid">
-              <span className="w-1.5 h-1.5 rounded-full bg-forest inline-block" />
-              Ranked for <strong className="text-charcoal">{org.name ?? 'your organisation'}</strong>
-              {org.primary_location && <span>· {org.primary_location}</span>}
-              <a href="/dashboard/profile" className="ml-auto text-coral hover:underline font-medium">Edit profile →</a>
-            </div>
-          )}
-          {activeMode === 'matches' && !org && (
-            <div className="mb-3 text-xs border border-amber-200 bg-amber-50 px-3 py-2">
-              <a href="/dashboard/profile" className="font-semibold text-amber-700 underline">Set up your profile</a>
-              <span className="text-amber-800"> to see grants ranked for your organisation.</span>
-            </div>
-          )}
-
-          {/* Input row */}
-          <div className="flex gap-3">
-            <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-light" />
+        {/* ── Horizontal filter bar ── */}
+        <div className="flex gap-3 flex-wrap items-end">
+          {/* Keywords */}
+          <div className="flex-1 min-w-[160px]">
+            <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-light mb-1.5">Keywords</p>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-light" />
               <input
                 type="text"
                 value={inputValue}
@@ -1504,20 +1537,98 @@ export default function SearchPage() {
                   setHasSearched(true)
                   searchMode === 'live' ? runLiveSearch(inputValue) : handleAISearch(inputValue)
                 }}
-                className="form-input h-12 pl-11 pr-4"
+                className="form-input h-10 pl-9 pr-3 text-sm w-full"
                 placeholder={
-                  activeMode === 'live'    ? 'e.g. "youth mental health London" or "arts grants Cornwall"' :
-                  activeMode === 'matches' ? 'Refine your matches — e.g. "core costs" or "capital project"' :
-                                            'Search all grants — e.g. "youth sport Manchester"'
+                  activeMode === 'live'    ? '"youth mental health London"' :
+                  activeMode === 'matches' ? 'Refine matches…' :
+                                            'e.g. "youth sport Manchester"'
                 }
               />
             </div>
+          </div>
+
+          {/* Location */}
+          <div className="w-44">
+            <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-light mb-1.5">Location</p>
+            <div className="relative">
+              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-light" />
+              <input
+                type="text"
+                value={locationFilter}
+                onChange={e => setLocationFilter(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key !== 'Enter') return
+                  if (activeMode !== 'live') { setHasSearched(true); handleAISearch(inputValue) }
+                }}
+                className="form-input h-10 pl-9 pr-3 text-sm w-full"
+                placeholder="Optional"
+              />
+            </div>
+          </div>
+
+          {/* Profile Filter button (database modes only) */}
+          {activeMode !== 'live' && org && (
+            <div className="flex flex-col gap-1.5">
+              <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-light">Profile Filter</p>
+              <button
+                onClick={() => {
+                  if (profileChipsApplied) {
+                    setActiveSectors(new Set())
+                    setLocationFilter('')
+                    setSearchModeToggle('browse')
+                    setProfileChipsApplied(false)
+                  } else {
+                    if (org.primary_location) setLocationFilter(org.primary_location)
+                    if ((org.impact_sectors as string[] | undefined)?.length) {
+                      setActiveSectors(new Set(org.impact_sectors as ImpactSector[]))
+                    }
+                    const smartQ = buildSmartQuery(org)
+                    if (smartQ) { setQuery(smartQ); setInputValue(smartQ) }
+                    setSearchModeToggle('profile')
+                    setProfileChipsApplied(true)
+                    setHasSearched(true)
+                  }
+                }}
+                className={`h-10 px-3 text-xs font-semibold flex items-center gap-1.5 border transition-all whitespace-nowrap ${
+                  profileChipsApplied
+                    ? 'bg-forest text-white border-forest'
+                    : 'border-warm text-mid hover:border-forest hover:text-forest bg-white'
+                }`}
+              >
+                <Users size={12} strokeWidth={2} />
+                {profileChipsApplied ? 'Profile Filter On' : 'Profile Filter Off'}
+              </button>
+            </div>
+          )}
+
+          {/* Refine Results (Filters toggle) — database modes only */}
+          {activeMode !== 'live' && (
+            <div className="flex flex-col gap-1.5">
+              <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-light opacity-0 pointer-events-none">Filters</p>
+              <button
+                onClick={() => setFiltersOpen(o => !o)}
+                className={`h-10 px-4 text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                  filtersOpen || activeFilterCount > 0
+                    ? 'bg-charcoal text-white'
+                    : 'bg-charcoal text-white hover:opacity-90'
+                }`}
+              >
+                <SlidersHorizontal size={13} strokeWidth={2} />
+                {activeFilterCount > 0 ? `Refine · ${activeFilterCount}` : 'Refine Results'}
+                <ChevronDown size={13} strokeWidth={2} className={`transition-transform duration-200 ${filtersOpen ? 'rotate-180' : ''}`} />
+              </button>
+            </div>
+          )}
+
+          {/* Search button */}
+          <div className="flex flex-col gap-1.5">
+            <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-light opacity-0 pointer-events-none">Go</p>
             <button
               onClick={() => searchMode === 'live' ? runLiveSearch(inputValue) : handleAISearch(inputValue)}
               disabled={searchMode === 'live'
                 ? (!isAdmin && weeklySearchCount >= WEEKLY_LIMIT)
                 : (!inputValue.trim() && !locationFilter.trim())}
-              className={`px-5 h-12 text-white text-sm font-semibold whitespace-nowrap transition-colors disabled:opacity-40 ${
+              className={`h-10 px-5 text-white text-sm font-semibold whitespace-nowrap transition-colors disabled:opacity-40 ${
                 (aiLoading || liveLoading) ? 'pointer-events-none' : ''
               } ${activeMode === 'live' ? 'bg-charcoal hover:bg-charcoal/90' : 'bg-coral hover:bg-coral/90'}`}
             >
@@ -1530,50 +1641,17 @@ export default function SearchPage() {
                     : <><Search size={14} className="inline -mt-0.5 mr-1" />Search</>)}
             </button>
           </div>
+        </div>
 
-          {/* Location row — all modes */}
-          <div className="flex gap-3 mt-2">
-            <div className="relative w-72">
-              <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-light" />
-              <input
-                type="text"
-                value={locationFilter}
-                onChange={e => setLocationFilter(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key !== 'Enter') return
-                  if (activeMode !== 'live') { setHasSearched(true); handleAISearch(inputValue) }
-                }}
-                className="form-input h-10 pl-11 pr-4 text-sm w-full"
-                placeholder='Location (optional)'
-              />
-            </div>
+        {/* Clear AI results link */}
+        {aiResults && activeMode !== 'live' && (
+          <div className="mt-2">
+            <button onClick={() => { setAiResults(null); setSmartMatched(false); setQuery(''); setInputValue('') }} className="text-xs text-mid hover:text-coral transition-colors">
+              ✕ Clear results
+            </button>
           </div>
-
-          {/* ── Filters (database modes) ── */}
-          {activeMode !== 'live' && (
-            <>
-              <div className="mt-3 flex items-center gap-2 flex-wrap">
-                <button
-                  onClick={() => setFiltersOpen(o => !o)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 border text-xs font-semibold transition-all ${
-                    filtersOpen || activeFilterCount > 0
-                      ? 'bg-charcoal text-white border-charcoal'
-                      : 'border-warm text-mid hover:border-coral hover:text-coral bg-white'
-                  }`}
-                >
-                  <SlidersHorizontal size={13} strokeWidth={2} />
-                  {activeFilterCount > 0 ? `Filters · ${activeFilterCount} active` : 'Filters'}
-                  <ChevronDown size={13} strokeWidth={2} className={`transition-transform duration-200 ${filtersOpen ? 'rotate-180' : ''}`} />
-                </button>
-                {aiResults && (
-                  <button onClick={() => { setAiResults(null); setSmartMatched(false); setQuery(''); setInputValue('') }} className="px-3 py-1.5 border border-warm text-xs font-medium text-mid hover:border-coral hover:text-coral transition-all bg-white">
-                    Clear results
-                  </button>
-                )}
-              </div>
-              {aiError && <p className="text-amber-600 text-xs mt-3">⚠ {aiError}</p>}
-            </>
-          )}
+        )}
+        {aiError && <p className="text-amber-600 text-xs mt-3">⚠ {aiError}</p>}
 
           {/* ── LIVE SEARCH MODE: explainer + limit ── */}
           {activeMode === 'live' && (
@@ -1834,28 +1912,55 @@ export default function SearchPage() {
             )}
           </div>
         )}
-        </div>{/* end p-5 */}
       </div>{/* end search card */}
+
+      {/* ── Funding type category tabs (above results) ── */}
+      {activeMode !== 'live' && hasSearched && (
+        <div className="flex flex-wrap gap-1.5 mb-4">
+          {CATEGORY_TABS.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setCategoryFilter(tab.id)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border transition-all ${
+                categoryFilter === tab.id
+                  ? 'bg-charcoal border-charcoal text-white'
+                  : 'border-warm text-mid hover:border-charcoal/40 hover:text-charcoal bg-white'
+              }`}
+            >
+              {tab.icon}
+              {tab.label}
+              <span className={`text-[10px] font-bold ${categoryFilter === tab.id ? 'opacity-70' : 'opacity-50'}`}>
+                {tab.count}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* ── Results header ── */}
       {activeMode !== 'live' && hasSearched && (
-        <div className="flex justify-between items-center mb-3">
-          <p className="text-sm text-mid">
-            {aiResults && smartMatched ? (
-              <><strong className="text-coral">✦ {displayGrants.length}</strong> grants matched for <strong className="text-charcoal">{org?.name}</strong></>
-            ) : aiResults ? (
-              <><strong className="text-coral">✦ {displayGrants.length}</strong> results ranked for &ldquo;{query}&rdquo;</>
-            ) : activeMode === 'matches' ? (
-              <><strong className="text-charcoal">{displayGrants.length}</strong> grants ranked for you{query ? ` · refined by "${query}"` : ''}</>
-            ) : (
-              <><strong className="text-charcoal">{displayGrants.length}</strong> grants{query ? ` matching "${query}"` : ''}</>
-            )}
-          </p>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <span className="inline-flex items-center px-3 py-1.5 bg-charcoal text-white text-xs font-bold">
+              {displayGrants.length}
+            </span>
+            <span className="text-sm text-mid">
+              {aiResults && smartMatched ? (
+                <>grants matched for <strong className="text-charcoal">{org?.name}</strong></>
+              ) : aiResults ? (
+                <>results ranked for &ldquo;{query}&rdquo;</>
+              ) : activeMode === 'matches' ? (
+                <>grants ranked to your profile{query ? ` · &ldquo;${query}&rdquo;` : ''}</>
+              ) : (
+                <>grants{query ? ` matching &ldquo;${query}&rdquo;` : ''}</>
+              )}
+            </span>
+          </div>
           {activeMode === 'matches' && !aiResults && (
-            <div className="flex items-center gap-0 border border-warm rounded-md overflow-hidden text-xs">
+            <div className="flex items-center border border-warm overflow-hidden text-xs bg-white">
               <button
                 onClick={() => setSortBy('match')}
-                className="px-3 py-1.5 font-medium transition-colors"
+                className="px-3 py-1.5 font-medium transition-colors border-r border-warm"
                 style={sortBy !== 'freshest'
                   ? { backgroundColor: '#1a2e2b', color: '#fff' }
                   : { backgroundColor: '#fff', color: '#6b7280' }}
