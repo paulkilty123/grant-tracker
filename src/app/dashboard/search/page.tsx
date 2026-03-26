@@ -1868,7 +1868,7 @@ export default function SearchPage() {
               key={item.grant.id}
               item={item}
               hasOrg={!!org}
-              hasSearch={query.trim() !== '' || item.isAiScore}
+              hasSearch={!!org}
               interactions={interactions.get(item.grant.id) ?? new Set()}
               onAddToPipeline={handleAddToPipeline}
               onDismiss={handleDismiss}
