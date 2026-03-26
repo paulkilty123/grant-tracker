@@ -588,8 +588,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
           {grant.source === 'scraped' && (
             <button
               onClick={() => onViewDetail(grant.id)}
-              className="px-3 py-1.5 text-xs font-medium transition-colors"
-              style={{ background: '#faf7f2', color: '#1f5c52', border: '1px solid #e8ddd0' }}
+              className="px-3 py-1.5 text-xs font-medium transition-colors border border-[#e8ddd0] text-[#444] hover:border-coral hover:text-coral bg-white"
             >
               View details →
             </button>
@@ -599,8 +598,8 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
               href={grant.applyUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-3 py-1.5 text-xs font-medium transition-colors"
-              style={{ background: '#1a2e2b', color: '#ffffff' }}
+              className="px-3 py-1.5 text-xs font-medium transition-colors text-white hover:opacity-90"
+              style={{ backgroundColor: '#E8725C' }}
             >
               Visit website →
             </a>
