@@ -1743,6 +1743,35 @@ export default function SearchPage() {
             )}
           </div>
         )}
+          {/* ── Funding type tabs ── */}
+          {activeView === 'matches' && (
+            <div className="mt-4 -mx-5 border-t border-[#e8ddd0]">
+              <div className="flex overflow-x-auto">
+                {TYPE_TABS.map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold whitespace-nowrap border-b-2 transition-colors flex-shrink-0 ${
+                      activeTab === tab.id
+                        ? 'border-coral text-coral'
+                        : 'border-transparent text-mid hover:text-charcoal'
+                    }`}
+                  >
+                    {tab.icon}
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+              {TAB_DESCS[activeTab] && (
+                <div className="flex items-start gap-3 mx-5 mb-1 mt-3 px-4 py-3 bg-[#faf7f2] border-l-4 border-[#2d8a7a]">
+                  <span className="flex-shrink-0 mt-0.5 text-[#2d8a7a]">
+                    {TYPE_TABS.find(t => t.id === activeTab)?.icon}
+                  </span>
+                  <p className="text-sm text-[#444] leading-relaxed">{TAB_DESCS[activeTab]}</p>
+                </div>
+              )}
+            </div>
+          )}
         </div>{/* end p-5 */}
       </div>{/* end search card */}
 
@@ -1778,36 +1807,6 @@ export default function SearchPage() {
               </div>
             )}
           </div>
-        </div>
-      )}
-
-      {/* ── Funding type tabs ── */}
-      {activeView === 'matches' && (
-        <div className="bg-white border border-warm/60 shadow-card mb-4">
-          <div className="flex overflow-x-auto border-b border-warm">
-            {TYPE_TABS.map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1.5 px-4 py-3 text-xs font-semibold whitespace-nowrap border-b-2 transition-colors flex-shrink-0 ${
-                  activeTab === tab.id
-                    ? 'border-coral text-coral'
-                    : 'border-transparent text-mid hover:text-charcoal'
-                }`}
-              >
-                {tab.icon}
-                {tab.label}
-              </button>
-            ))}
-          </div>
-          {TAB_DESCS[activeTab] && (
-            <div className="flex items-start gap-3 px-4 py-3 bg-[#faf7f2] border-l-4 border-[#2d8a7a]">
-              <span className="flex-shrink-0 mt-0.5 text-[#2d8a7a]">
-                {TYPE_TABS.find(t => t.id === activeTab)?.icon}
-              </span>
-              <p className="text-sm text-[#444] leading-relaxed">{TAB_DESCS[activeTab]}</p>
-            </div>
-          )}
         </div>
       )}
 
