@@ -1503,10 +1503,10 @@ export default function SearchPage() {
             </div>
           )}
 
-          {/* Input row */}
+          {/* Input row — search + location + button all on one line */}
           {activeView === 'matches' && (
-            <div className="flex gap-3">
-              <div className="flex-1 relative">
+            <div className="flex gap-2">
+              <div className="flex-1 relative min-w-0">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-light" />
                 <input
                   type="text"
@@ -1517,29 +1517,12 @@ export default function SearchPage() {
                     setHasSearched(true)
                     handleAISearch(inputValue)
                   }}
-                  className="form-input h-12 pl-11 pr-4"
-                  placeholder="Refine your matches — e.g. 'core costs' or 'capital project'"
+                  className="form-input h-12 pl-11 pr-4 w-full"
+                  placeholder="Refine your matches — e.g. 'core costs'"
                 />
               </div>
-              <button
-                onClick={() => handleAISearch(inputValue)}
-                disabled={!inputValue.trim() && !locationFilter.trim()}
-                className={`px-5 h-12 text-white text-sm font-semibold whitespace-nowrap transition-colors disabled:opacity-40 ${
-                  aiLoading ? 'pointer-events-none' : ''
-                } bg-coral hover:bg-coral/90`}
-              >
-                {aiLoading
-                  ? <span className="flex items-center gap-2"><span className="dot-bounce flex gap-1"><span/><span/><span/></span>Searching…</span>
-                  : <><Search size={14} className="inline -mt-0.5 mr-1" />Search</>}
-              </button>
-            </div>
-          )}
-
-          {/* Location row — for matches view */}
-          {activeView === 'matches' && (
-            <div className="flex gap-3 mt-2">
-              <div className="relative w-72">
-                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-light" />
+              <div className="relative w-40 flex-shrink-0">
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-light" />
                 <input
                   type="text"
                   value={locationInput}
@@ -1551,10 +1534,21 @@ export default function SearchPage() {
                     handleAISearch(inputValue)
                   }}
                   onBlur={() => setLocationFilter(locationInput)}
-                  className="form-input h-10 pl-11 pr-4 text-sm w-full"
-                  placeholder='Location (optional)'
+                  className="form-input h-12 pl-10 pr-3 text-sm w-full"
+                  placeholder="Location"
                 />
               </div>
+              <button
+                onClick={() => handleAISearch(inputValue)}
+                disabled={!inputValue.trim() && !locationFilter.trim()}
+                className={`px-5 h-12 text-white text-sm font-semibold whitespace-nowrap transition-colors disabled:opacity-40 flex-shrink-0 ${
+                  aiLoading ? 'pointer-events-none' : ''
+                } bg-coral hover:bg-coral/90`}
+              >
+                {aiLoading
+                  ? <span className="flex items-center gap-2"><span className="dot-bounce flex gap-1"><span/><span/><span/></span>Searching…</span>
+                  : <><Search size={14} className="inline -mt-0.5 mr-1" />Search</>}
+              </button>
             </div>
           )}
 
