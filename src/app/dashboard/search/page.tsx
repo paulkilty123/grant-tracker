@@ -695,7 +695,7 @@ export default function SearchPage() {
   const [toast, setToast]               = useState<string | null>(null)
   const [org, setOrg]                   = useState<Organisation | null>(null)
   const [userId, setUserId]             = useState('')
-  const [sortBy, setSortBy]             = useState<'match' | 'amount' | 'freshest'>('match')
+  const [sortBy, setSortBy]             = useState<'match' | 'amount' | 'freshest' | 'deadline'>('match')
   const [freshnessFilter, setFreshnessFilter] = useState<'all' | '7d' | '14d' | '30d'>('all')
   const [bannerDismissed, setBannerDismissed] = useState(false)
   const [interactions, setInteractions] = useState<Map<string, Set<InteractionAction>>>(new Map())
@@ -723,6 +723,7 @@ export default function SearchPage() {
   const [pipelineNudge, setPipelineNudge]         = useState<{ name: string; url: string | null } | null>(null)
   const [hasSearched, setHasSearched]             = useState(false)
   const [profileFiltersOpen, setProfileFiltersOpen] = useState(false)
+  const [activeTab, setActiveTab]                 = useState<'grant' | 'social_investment' | 'blended_finance' | 'accelerator' | 'support_programme' | 'in_kind' | 'corporate'>('grant')
   const [activeView, setActiveView]               = useState<'matches' | 'saved'>('matches')
 
   // ── Live search (web) state ───────────────────────────────────────────────
@@ -1145,8 +1146,12 @@ export default function SearchPage() {
       const matchesLocationText = !locationFilter ||
         !ge.geoScope?.length ||
         ge.geoScope.some(s => s.toLowerCase().includes(locationFilter.toLowerCase()) || locationFilter.toLowerCase().includes(s.toLowerCase()))
+      // Funding type tab filter — filter by activeTab
+      const matchesTab = activeTab === 'grant'
+        ? (['grant', 'diversity_fund'] as string[]).includes(gFundingType ?? 'grant')
+        : gFundingType === activeTab
 
-      return matchesQuery && matchesType && matchesAmount && matchesDeadline && matchesSectors && matchesEntryType && matchesFreshness && matchesInviteOnly && matchesFundingType && matchesCategory && matchesFunderCategory && matchesGeoScope && matchesLocationText
+      return matchesQuery && matchesType && matchesAmount && matchesDeadline && matchesSectors && matchesEntryType && matchesFreshness && matchesInviteOnly && matchesFundingType && matchesCategory && matchesFunderCategory && matchesGeoScope && matchesLocationText && matchesTab
     })
 
     if (aiResults) {
@@ -1230,6 +1235,12 @@ export default function SearchPage() {
         const aDate = a.grant.lastVerifiedAt ?? a.grant.dateAdded ?? ''
         const bDate = b.grant.lastVerifiedAt ?? b.grant.dateAdded ?? ''
         return bDate.localeCompare(aDate)
+      })
+    } else if (sortBy === 'deadline') {
+      withScores.sort((a, b) => {
+        const aDeadline = a.grant.deadline ?? '9999-12-31'
+        const bDeadline = b.grant.deadline ?? '9999-12-31'
+        return aDeadline.localeCompare(bDeadline)
       })
     }
 
@@ -1397,6 +1408,26 @@ export default function SearchPage() {
   const grantsCount     = allGrants_raw.filter(g => GRANT_TYPES.includes((g as GrantOpportunity & { fundingType?: FundingType }).fundingType ?? 'grant')).length
   const programmesCount = allGrants_raw.filter(g => PROGRAMME_TYPES.includes((g as GrantOpportunity & { fundingType?: FundingType }).fundingType ?? 'grant')).length
 
+  const TYPE_TABS = [
+    { id: 'grant'             as const, label: 'Grants',                    icon: <DollarSign size={14} strokeWidth={2} /> },
+    { id: 'social_investment' as const, label: 'Social Investment',         icon: <TrendingUp size={14} strokeWidth={2} /> },
+    { id: 'blended_finance'   as const, label: 'Blended Finance',           icon: <GitMerge size={14} strokeWidth={2} /> },
+    { id: 'accelerator'       as const, label: 'Incubators & Accelerators', icon: <Rocket size={14} strokeWidth={2} /> },
+    { id: 'support_programme' as const, label: 'Fellowships & Support',     icon: <GraduationCap size={14} strokeWidth={2} /> },
+    { id: 'in_kind'           as const, label: 'In-Kind & Pro Bono',        icon: <Gift size={14} strokeWidth={2} /> },
+    { id: 'corporate'         as const, label: 'Corporate Partners',        icon: <Building2 size={14} strokeWidth={2} /> },
+  ]
+
+  const TAB_DESCS: Record<string, string> = {
+    grant:             'Grants are non-repayable funds awarded by foundations, trusts, and public bodies to support your mission. They typically require an application, reporting on outcomes, and have specific eligibility criteria. Deadlines are firm — plan ahead.',
+    social_investment: 'Social investment is repayable finance for organisations that generate both social impact and financial return. This includes loans, bonds, and equity from social investors who want their capital back alongside evidence of impact.',
+    blended_finance:   'Blended finance combines grants with repayable finance — you might receive part-grant, part-loan to fund a project. It\'s designed for organisations that can generate some revenue but need grant support to make a project viable.',
+    accelerator:       'Incubators and accelerators offer structured programmes — often 3–6 months — combining funding, mentorship, workspace, and expert support. They\'re ideal if you\'re at an early stage and want to grow quickly with hands-on guidance.',
+    support_programme: 'Fellowships and support programmes provide non-financial resources: training, mentorship, networking, and capacity-building. Some include a stipend or small grant. They\'re valuable for developing leadership, skills, and connections.',
+    in_kind:           'In-kind support means receiving goods, services, or expertise instead of cash — such as free legal advice, office space, technology, or marketing support. Pro bono professionals donate their time to help organisations like yours.',
+    corporate:         'Corporate partnership opportunities are not grants. They are chances to explore mutually beneficial relationships with businesses — sponsorship, cause-related marketing, employee volunteering, or skills support. Approach these as a business relationship, not a funding application.',
+  }
+
   const CATEGORY_TABS = [
     {
       id:    'all'        as const,
@@ -1542,6 +1573,31 @@ export default function SearchPage() {
                   {activeFilterCount > 0 ? `Filters · ${activeFilterCount} active` : 'Filters'}
                   <ChevronDown size={13} strokeWidth={2} className={`transition-transform duration-200 ${filtersOpen ? 'rotate-180' : ''}`} />
                 </button>
+                {org && (() => {
+                  const profileFilterOn = activeSectors.size > 0 || !!locationFilter
+                  return (
+                    <button
+                      onClick={() => {
+                        if (profileFilterOn) {
+                          setActiveSectors(new Set())
+                          setLocationFilter('')
+                          setLocationInput('')
+                        } else {
+                          if (org.primary_location) { setLocationFilter(org.primary_location); setLocationInput(org.primary_location) }
+                          if ((org.impact_sectors as string[] | undefined)?.length) setActiveSectors(new Set(org.impact_sectors as ImpactSector[]))
+                        }
+                      }}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 border text-xs font-semibold transition-all ${
+                        profileFilterOn
+                          ? 'bg-[#E8725C] text-white border-[#E8725C]'
+                          : 'border-warm text-mid hover:border-coral hover:text-coral bg-white'
+                      }`}
+                    >
+                      <Users size={13} strokeWidth={2} />
+                      {profileFilterOn ? 'Profile Filter On' : 'Profile Filter Off'}
+                    </button>
+                  )
+                })()}
                 {aiResults && (
                   <button onClick={() => { setAiResults(null); setSmartMatched(false); setQuery(''); setInputValue('') }} className="px-3 py-1.5 border border-warm text-xs font-medium text-mid hover:border-coral hover:text-coral transition-all bg-white">
                     Clear results
@@ -1702,64 +1758,58 @@ export default function SearchPage() {
             )}
           </p>
           {!aiResults && (
-            <div className="flex items-center gap-0 border border-warm rounded-md overflow-hidden text-xs">
-              <button
-                onClick={() => setSortBy('match')}
-                className="px-3 py-1.5 font-medium transition-colors"
-                style={sortBy !== 'freshest'
-                  ? { backgroundColor: '#1a2e2b', color: '#fff' }
-                  : { backgroundColor: '#fff', color: '#6b7280' }}
-              >
-                Rank
-              </button>
-              <button
-                onClick={() => setSortBy('freshest')}
-                className="px-3 py-1.5 font-medium transition-colors"
-                style={sortBy === 'freshest'
-                  ? { backgroundColor: '#1a2e2b', color: '#fff' }
-                  : { backgroundColor: '#fff', color: '#6b7280' }}
-              >
-                Latest
-              </button>
+            <div className="flex items-center gap-0 border border-[#e8ddd0] overflow-hidden text-xs">
+              {([
+                { id: 'match',    label: 'Match to you'   },
+                { id: 'freshest', label: 'Recently Added' },
+                { id: 'deadline', label: 'Closes Soon'    },
+              ] as const).map((tab, i) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setSortBy(tab.id as 'match' | 'freshest' | 'deadline')}
+                  className={`px-3 py-1.5 font-medium transition-colors${i > 0 ? ' border-l border-[#e8ddd0]' : ''}`}
+                  style={sortBy === tab.id
+                    ? { backgroundColor: '#E8725C', color: '#fff' }
+                    : { backgroundColor: '#fff', color: '#6b7280' }}
+                >{tab.label}</button>
+              ))}
             </div>
           )}
         </div>
       )}
 
-      {/* ── Live Search results ── */}
-      {searchMode === 'live' && liveResults && (
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="font-semibold text-charcoal text-base flex items-center gap-2">
-                {liveSmartMatched ? `Live results for ${org?.name}` : 'Live Research Results'}
-                <span className="text-xs font-normal bg-warm text-mid px-2 py-0.5">
-                  {liveResults.grants.length} found
-                </span>
-                {liveResults._cached && (
-                  <span className="text-xs font-normal bg-warm text-mid px-2 py-0.5">cached</span>
-                )}
-              </h3>
-              <p className="text-sm text-mid mt-1 max-w-2xl">{liveResults.summary}</p>
+      {/* ── Funding type tabs ── */}
+      {activeView === 'matches' && (
+        <div className="bg-white border border-warm/60 shadow-card mb-4">
+          <div className="flex overflow-x-auto border-b border-warm">
+            {TYPE_TABS.map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-1.5 px-4 py-3 text-xs font-semibold whitespace-nowrap border-b-2 transition-colors flex-shrink-0 ${
+                  activeTab === tab.id
+                    ? 'border-coral text-coral'
+                    : 'border-transparent text-mid hover:text-charcoal'
+                }`}
+              >
+                {tab.icon}
+                {tab.label}
+              </button>
+            ))}
+          </div>
+          {TAB_DESCS[activeTab] && (
+            <div className="flex items-start gap-3 px-4 py-3 bg-[#faf7f2] border-l-4 border-[#2d8a7a]">
+              <span className="flex-shrink-0 mt-0.5 text-[#2d8a7a]">
+                {TYPE_TABS.find(t => t.id === activeTab)?.icon}
+              </span>
+              <p className="text-sm text-[#444] leading-relaxed">{TAB_DESCS[activeTab]}</p>
             </div>
-            <button onClick={() => { setLiveResults(null); setLiveSmartMatched(false); setQuery(''); setInputValue('') }} className="px-3 py-1.5 border border-warm text-xs font-medium text-mid hover:border-coral hover:text-coral transition-all bg-white flex-shrink-0 self-start">
-              Clear results
-            </button>
-          </div>
-          {liveResults.grants.map((g, i) => (
-            <LiveGrantCard key={i} grant={g} onAddToPipeline={handleLiveAddToPipeline} />
-          ))}
-          <div className="mt-4 border border-amber-200 bg-amber-50 px-4 py-3 flex items-start gap-2.5">
-            <Info className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" strokeWidth={2} />
-            <p className="text-xs text-amber-700 leading-relaxed">
-              <strong className="text-amber-800">Live Search is experimental.</strong> Results are researched in real time and generally turn up great opportunities — but details may be outdated and links can occasionally point to the wrong page. If a link doesn&apos;t work, search the grant or funder name on Google to find the right page. Always verify deadlines and eligibility directly with the funder before applying.
-            </p>
-          </div>
+          )}
         </div>
       )}
 
-      {/* ── Match quality banner (database mode only) ── */}
-      {searchMode === 'database' && hasSearched && matchQuality && matchQuality.score < 80 && !bannerDismissed && (
+      {/* ── Match quality banner ── */}
+      {hasSearched && matchQuality && matchQuality.score < 80 && !bannerDismissed && (
         <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3.5 flex items-start gap-3">
           {/* Quality ring */}
           <div className="flex-shrink-0 mt-0.5">
