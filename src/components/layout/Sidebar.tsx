@@ -21,6 +21,7 @@ import {
   Menu,
   X,
   BookOpen,
+  Rocket,
 } from 'lucide-react'
 
 interface Props {
@@ -47,7 +48,7 @@ const NAV_GROUPS = [
   {
     label: 'Find Funding',
     items: [
-      { href: '/dashboard/search', label: 'Find Funding', Icon: Search },
+      { href: '/dashboard/search',      label: 'Find Funding',        Icon: Search },
     ],
   },
   {
@@ -67,10 +68,9 @@ const NAV_GROUPS = [
 ]
 
 const ADMIN_NAV_GROUP = {
-  label: 'Admin',
+  label: 'Analytics',
   items: [
     { href: '/dashboard/admin',             label: 'Source Health',    Icon: Activity },
-    { href: '/dashboard/admin/urls',        label: 'URL Health',       Icon: LinkIcon  },
     { href: '/dashboard/admin/watchlist',   label: 'Funder Watchlist', Icon: Bell      },
   ],
 }
@@ -133,7 +133,10 @@ export default function Sidebar({ org, userEmail }: Props) {
           <div className="relative flex items-center justify-center bg-coral w-7 h-7 flex-shrink-0" style={{ borderRadius: '6px' }}>
             <div className="w-2.5 h-2.5 rounded-full border-2 border-white" />
           </div>
-          <span className="font-serif text-[18px] text-white">GrantTracker</span>
+          <div>
+            <span className="font-serif text-[18px] text-white leading-none">GrantTracker</span>
+            <p className="text-[8px] font-bold tracking-widest text-white/35 uppercase mt-0.5">Editorial Discovery</p>
+          </div>
         </Link>
         <button
           className="md:hidden text-white/50 hover:text-white"
@@ -165,6 +168,44 @@ export default function Sidebar({ org, userEmail }: Props) {
           </div>
         ))}
       </nav>
+
+      {/* Profile completion nudge */}
+      {org !== null && profileScore < 100 && (
+        <div className="px-3 pb-2">
+          <Link
+            href="/dashboard/profile"
+            onClick={() => setMobileOpen(false)}
+            className="block px-3 py-3 bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">Profile</p>
+              <span className="text-[11px] font-bold text-gold">{profileScore}%</span>
+            </div>
+            <div className="w-full h-1.5 bg-white/10 overflow-hidden">
+              <div
+                className="h-full bg-gold transition-all duration-500"
+                style={{ width: `${profileScore}%` }}
+              />
+            </div>
+            <p className="text-[10px] text-white/40 mt-1.5 leading-relaxed">
+              Better profile = better matches
+            </p>
+          </Link>
+        </div>
+      )}
+
+      {/* New Grant Search CTA */}
+      <div className="px-3 pb-3">
+        <Link
+          href="/dashboard/search"
+          onClick={() => setMobileOpen(false)}
+          className="flex items-center justify-center gap-2 w-full py-2.5 text-xs font-bold text-white transition-colors hover:opacity-90"
+          style={{ background: '#1f5c52' }}
+        >
+          <Rocket className="h-3.5 w-3.5" />
+          New Grant Search
+        </Link>
+      </div>
 
       {/* How to use — pinned above user chip */}
       <div className="px-3 pb-2">
