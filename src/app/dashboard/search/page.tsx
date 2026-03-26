@@ -748,7 +748,8 @@ export default function SearchPage() {
       const saved = sessionStorage.getItem('grantSearch')
       if (saved) {
         const { query: q, aiResults: r, activeType: t, smartMatched: sm, liveResults: lr, liveSmartMatched: lsm, activeView: av } = JSON.parse(saved)
-        if (q)   { setQuery(q); setInputValue(q) }
+        // Only restore query if there are also AI results to go with it
+        if (r && q) { setQuery(q); setInputValue(q) }
         if (r)   setAiResults(r)
         if (t)   setActiveType(t)
         if (sm)  setSmartMatched(sm)
@@ -1092,11 +1093,9 @@ export default function SearchPage() {
         activeType === 'recent'   ? (g.dateAdded != null && g.dateAdded >= SIXTY_DAYS_AGO) :
         activeType === 'scraped'  ? g.source === 'scraped' :
         g.funderType === activeType
-      const matchesQuery = !query ||
-        g.title.toLowerCase().includes(query.toLowerCase()) ||
-        g.funder.toLowerCase().includes(query.toLowerCase()) ||
-        g.description.toLowerCase().includes(query.toLowerCase()) ||
-        g.sectors.some(s => s.toLowerCase().includes(query.toLowerCase()))
+      // Text query only applies when there are AI results — in My Matches mode
+      // the search box triggers AI search, not local text filtering
+      const matchesQuery = true
       const matchesAmount =
         (minAmt === null || (g.amountMax ?? 0) >= minAmt) &&
         (maxAmt === null || (g.amountMin ?? 0) <= maxAmt)
@@ -1143,8 +1142,11 @@ export default function SearchPage() {
         activeGeoScope === 'all' ||
         (ge.geoScope && ge.geoScope.includes(activeGeoScope))
       // Location text filter — soft match against geoScope values (grants with no geo data always pass)
+      // UK/England/nationwide grants always pass regardless of location filter
+      const BROAD_SCOPES = ['uk', 'uk-wide', 'england', 'nationwide', 'national', 'uk wide', 'all uk']
       const matchesLocationText = !locationFilter ||
         !ge.geoScope?.length ||
+        ge.geoScope.some(s => BROAD_SCOPES.includes(s.toLowerCase())) ||
         ge.geoScope.some(s => s.toLowerCase().includes(locationFilter.toLowerCase()) || locationFilter.toLowerCase().includes(s.toLowerCase()))
       // Funding type tab filter — filter by activeTab
       const matchesTab = activeTab === 'grant'
@@ -1747,34 +1749,36 @@ export default function SearchPage() {
 
       {/* ── Results header ── */}
       {activeView === 'matches' && hasSearched && (
-        <div className="flex justify-between items-center mb-3">
-          <p className="text-sm text-mid">
-            {aiResults && smartMatched ? (
-              <><strong className="text-coral">✦ {displayGrants.length}</strong> grants matched for <strong className="text-charcoal">{org?.name}</strong></>
-            ) : aiResults ? (
-              <><strong className="text-coral">✦ {displayGrants.length}</strong> results ranked for &ldquo;{query}&rdquo;</>
-            ) : (
-              <><strong className="text-charcoal">{displayGrants.length}</strong> grants ranked for you{query ? ` · refined by "${query}"` : ''}</>
+        <div className="mb-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm text-mid">
+              {aiResults && smartMatched ? (
+                <><strong className="text-coral">✦ {displayGrants.length}</strong> grants matched for <strong className="text-charcoal">{org?.name}</strong></>
+              ) : aiResults ? (
+                <><strong className="text-coral">✦ {displayGrants.length}</strong> results for &ldquo;{query}&rdquo;</>
+              ) : (
+                <><strong className="text-charcoal">{displayGrants.length}</strong> grants ranked for you</>
+              )}
+            </p>
+            {!aiResults && (
+              <div className="flex items-center gap-0 border border-[#e8ddd0] overflow-hidden text-xs flex-shrink-0">
+                {([
+                  { id: 'match',    label: 'Match to you'   },
+                  { id: 'freshest', label: 'Recently Added' },
+                  { id: 'deadline', label: 'Closes Soon'    },
+                ] as const).map((tab, i) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setSortBy(tab.id as 'match' | 'freshest' | 'deadline')}
+                    className={`px-3 py-1.5 font-medium transition-colors${i > 0 ? ' border-l border-[#e8ddd0]' : ''}`}
+                    style={sortBy === tab.id
+                      ? { backgroundColor: '#E8725C', color: '#fff' }
+                      : { backgroundColor: '#fff', color: '#6b7280' }}
+                  >{tab.label}</button>
+                ))}
+              </div>
             )}
-          </p>
-          {!aiResults && (
-            <div className="flex items-center gap-0 border border-[#e8ddd0] overflow-hidden text-xs">
-              {([
-                { id: 'match',    label: 'Match to you'   },
-                { id: 'freshest', label: 'Recently Added' },
-                { id: 'deadline', label: 'Closes Soon'    },
-              ] as const).map((tab, i) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setSortBy(tab.id as 'match' | 'freshest' | 'deadline')}
-                  className={`px-3 py-1.5 font-medium transition-colors${i > 0 ? ' border-l border-[#e8ddd0]' : ''}`}
-                  style={sortBy === tab.id
-                    ? { backgroundColor: '#E8725C', color: '#fff' }
-                    : { backgroundColor: '#fff', color: '#6b7280' }}
-                >{tab.label}</button>
-              ))}
-            </div>
-          )}
+          </div>
         </div>
       )}
 
