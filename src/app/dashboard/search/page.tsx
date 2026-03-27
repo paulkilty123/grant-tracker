@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Search, ChevronDown, Layers, DollarSign, Rocket, Building2, SlidersHorizontal, MapPin, GraduationCap, TrendingUp, GitMerge, Gift, Landmark, CalendarDays, RefreshCw, Info, Bookmark } from 'lucide-react'
+import { Search, ChevronDown, Layers, DollarSign, Rocket, Building2, SlidersHorizontal, MapPin, GraduationCap, TrendingUp, GitMerge, Gift, Landmark, CalendarDays, RefreshCw, Bookmark, Lightbulb, PlusCircle } from 'lucide-react'
 import GrantDetailModal from '@/components/GrantDetailModal'
 import { SEED_GRANTS } from '@/lib/grants'
 import { formatRange } from '@/lib/utils'
@@ -389,66 +389,63 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
     .slice(0, 3).map(s => STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' '))
 
   return (
-    <div className="bg-white mb-3 border border-[#e8ddd0] hover:shadow-md transition-shadow rounded-lg overflow-hidden">
+    <div className="bg-white mb-3 border border-[#e8ddd0] hover:shadow-md transition-shadow rounded-xl overflow-hidden">
       <div className="flex">
 
-        {/* ── Centre: content ── */}
+        {/* ── Content ── */}
         <div className="flex-1 min-w-0 p-5">
 
-          {/* Top badges: primary sector + days left */}
+          {/* Top badges */}
           <div className="flex flex-wrap items-center gap-2 mb-3">
             {sectorLabels[0] && (
-              <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 bg-sage/10 text-forest border border-sage/20 rounded">
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 bg-[#e8ddd0] text-[#3a3a3a]" style={{ borderRadius: 9999 }}>
                 {sectorLabels[0]}
               </span>
             )}
             {entryType === 'live' && daysLeft !== null && daysLeft >= 0 && (
-              <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 border rounded ${
-                daysLeft <= 7  ? 'bg-red-50 text-red-600 border-red-200' :
-                daysLeft <= 14 ? 'bg-amber-50 text-amber-600 border-amber-200' :
-                                 'bg-gray-50 text-gray-500 border-gray-200'
-              }`}>
+              <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 ${
+                daysLeft <= 7 ? 'bg-red-50 text-red-600' : 'bg-[#e8ddd0] text-[#3a3a3a]'
+              }`} style={{ borderRadius: 9999 }}>
                 {daysLeft === 0 ? 'Closes today' : `${daysLeft} days left`}
               </span>
             )}
             {isNewThisWeek && (
-              <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded">New</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 bg-emerald-50 text-emerald-700" style={{ borderRadius: 9999 }}>New</span>
             )}
             {grant.isInviteOnly && (
-              <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 bg-purple-50 text-purple-700 border border-purple-200 rounded">Invite Only</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 bg-purple-50 text-purple-700" style={{ borderRadius: 9999 }}>Invite Only</span>
             )}
           </div>
 
           {/* Title */}
           <h3 className="font-lora text-xl font-bold text-charcoal leading-snug mb-1">{grant.title}</h3>
 
-          {/* Funder — coral accent */}
-          <p className="text-sm font-medium mb-3" style={{ color: '#E8725C' }}>{grant.funder}</p>
+          {/* Funder — teal */}
+          <p className="text-sm font-semibold mb-3" style={{ color: '#2d8a7a' }}>{grant.funder}</p>
 
           {/* Description */}
-          <p className="text-sm text-[#555] leading-relaxed mb-3">
+          <p className="text-sm text-[#555] leading-relaxed mb-4">
             {grant.description.length > 200
               ? `${grant.description.slice(0, 200).trimEnd()}…`
               : grant.description}
           </p>
 
-          {/* Match insight box */}
+          {/* Match insight — left border bar style */}
           {hasOrg && hasSearch && reason && (
-            <div className="flex items-start gap-3 px-3.5 py-2.5 mb-4 rounded-lg"
-              style={{ backgroundColor: 'rgba(45,138,122,0.06)', border: '1px solid rgba(45,138,122,0.14)' }}>
-              <Info className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#2d8a7a' }} />
+            <div className="flex items-start gap-3 px-3.5 py-2.5 mb-4"
+              style={{ backgroundColor: 'rgba(45,138,122,0.05)', borderLeft: '3px solid #2d8a7a' }}>
+              <Lightbulb className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#2d8a7a' }} />
               <p className="text-sm leading-snug flex-1" style={{ color: '#2d6b5c' }}>
                 <span className="font-bold text-[10px] uppercase tracking-wider mr-1.5" style={{ color: '#1f5c52' }}>Match Insight:</span>
                 {reason.replace(/<[^>]*>/g, '').trim()}
               </p>
-              <span className="flex-shrink-0 text-xs font-bold px-2.5 py-1 rounded whitespace-nowrap"
-                style={{ backgroundColor: 'rgba(45,138,122,0.14)', color: '#1f5c52' }}>
+              <span className="flex-shrink-0 text-xs font-bold whitespace-nowrap ml-3" style={{ color: '#1f5c52' }}>
                 {score}% Match
               </span>
             </div>
           )}
 
-          {/* Bottom metadata: Amount / Deadline / Sector / Beneficiary */}
+          {/* Bottom metadata */}
           <div className="grid grid-cols-4 gap-3 pt-3 border-t border-[#e8ddd0]">
             <div>
               <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-0.5">Amount</p>
@@ -500,32 +497,35 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
         </div>
 
         {/* ── Right: action buttons ── */}
-        <div className="flex flex-col gap-2 p-4 border-l border-[#e8ddd0] justify-center flex-shrink-0 w-[130px]">
+        <div className="flex flex-col gap-2.5 p-5 justify-center flex-shrink-0 w-[160px]">
           {grant.source === 'scraped' && (
             <button
               onClick={() => onViewDetail(grant.id)}
-              className="w-full px-3 py-2 text-xs font-semibold text-white text-center transition-opacity hover:opacity-90 rounded-lg"
-              style={{ backgroundColor: '#1f5c52' }}
+              className="w-full px-4 py-2.5 text-sm font-semibold text-white text-center transition-opacity hover:opacity-90"
+              style={{ backgroundColor: '#1f5c52', borderRadius: 9999 }}
             >
               View Details
             </button>
           )}
           <button
             onClick={() => isSaved ? onUnsave?.(grant.id) : onSave?.(grant.id)}
-            className={`w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold border transition-colors rounded-lg ${
+            className={`w-full flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-semibold border transition-colors ${
               isSaved
                 ? 'bg-[#E8725C]/10 text-[#E8725C] border-[#E8725C]/30'
-                : 'border-[#e8ddd0] text-[#555] hover:border-[#E8725C] hover:text-[#E8725C]'
+                : 'border-[#e8ddd0] text-charcoal hover:border-[#E8725C] hover:text-[#E8725C]'
             }`}
+            style={{ borderRadius: 9999 }}
           >
-            <Bookmark className="w-3.5 h-3.5" />
+            <Bookmark className="w-4 h-4" />
             {isSaved ? 'Saved' : 'Save'}
           </button>
           <button
             onClick={() => onAddToPipeline(grant)}
-            className="w-full px-2 py-1.5 text-[11px] font-semibold text-center text-[#6b7280] hover:text-forest transition-colors"
+            className="w-full flex items-center justify-center gap-1.5 px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wide transition-colors hover:opacity-80"
+            style={{ color: '#2d8a7a' }}
           >
-            <span className="text-sm leading-none mr-0.5">+</span> Add to Pipeline
+            <PlusCircle className="w-3.5 h-3.5" />
+            Add to Pipeline
           </button>
         </div>
 
