@@ -435,9 +435,9 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
 
         {/* ── Left: match score ── */}
         {hasOrg && hasSearch && (
-          <div className="flex flex-col items-center justify-center px-4 py-5 border-r border-[#e8ddd0] flex-shrink-0 w-[90px]">
-            <div className="relative w-[64px] h-[64px]">
-              <svg viewBox="0 0 36 36" className="w-[64px] h-[64px] -rotate-90">
+          <div className="flex flex-col items-center justify-center py-5 border-r border-[#e8ddd0] flex-shrink-0 w-[120px]">
+            <div className="relative w-[88px] h-[88px]">
+              <svg viewBox="0 0 36 36" className="w-[88px] h-[88px] -rotate-90">
                 <circle cx="18" cy="18" r={radius} fill="none" stroke="#e8ddd0" strokeWidth="2.5" />
                 <circle
                   cx="18" cy="18" r={radius} fill="none"
@@ -446,7 +446,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
                   strokeLinecap="butt"
                 />
               </svg>
-              <span className="absolute inset-0 flex items-center justify-center text-sm font-bold" style={{ color: ringColour }}>
+              <span className="absolute inset-0 flex items-center justify-center text-base font-bold" style={{ color: ringColour }}>
                 {score}%
               </span>
             </div>
