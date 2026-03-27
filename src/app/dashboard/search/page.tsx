@@ -1427,7 +1427,7 @@ export default function SearchPage() {
     <div>
       {/* ── Page heading + view tabs ── */}
       <div className="mb-5 flex items-baseline">
-        <h2 className="font-display text-2xl font-bold text-charcoal flex-shrink-0">Find Funding</h2>
+        <h2 className="font-serif text-2xl font-bold text-charcoal flex-shrink-0">Find Funding</h2>
         <div className="flex items-center gap-0 ml-auto">
           <button
             onClick={() => setActiveView('matches')}
