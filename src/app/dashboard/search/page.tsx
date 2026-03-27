@@ -1472,8 +1472,8 @@ export default function SearchPage() {
           {/* ── Single control row: search + location + filters + profile filter ── */}
           {activeView === 'matches' && (
             <div className="flex gap-2 items-center">
-              {/* Search input */}
-              <div className="relative min-w-0 w-72 flex-shrink">
+              {/* Search input — flex-1 fills available space */}
+              <div className="relative flex-1 min-w-0">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-light pointer-events-none" />
                 <input
                   type="text"
@@ -1542,7 +1542,7 @@ export default function SearchPage() {
                       className="relative flex-shrink-0 transition-colors duration-200"
                       style={{
                         width: 44, height: 24,
-                        backgroundColor: profileFilterOn ? '#E8725C' : '#1a1a1a',
+                        backgroundColor: '#1a1a1a',
                         display: 'inline-flex', alignItems: 'center',
                       }}
                     >
@@ -1556,7 +1556,7 @@ export default function SearchPage() {
                         }}
                       />
                     </span>
-                    <span className={`text-sm font-medium transition-colors ${profileFilterOn ? 'text-[#E8725C]' : 'text-charcoal'}`}>
+                    <span className="text-sm font-medium text-charcoal">
                       Profile Filter {profileFilterOn ? 'On' : 'Off'}
                     </span>
                   </button>
@@ -1566,12 +1566,12 @@ export default function SearchPage() {
               <button
                 onClick={() => { setHasSearched(true); handleAISearch(inputValue) }}
                 disabled={!inputValue.trim() && !locationFilter.trim()}
-                className={`px-3 h-11 text-white font-semibold flex-shrink-0 transition-opacity disabled:opacity-40 flex items-center gap-1.5 ${aiLoading ? 'pointer-events-none' : ''}`}
+                className={`px-4 h-11 text-white text-sm font-semibold flex-shrink-0 transition-opacity disabled:opacity-40 flex items-center gap-1.5 ${aiLoading ? 'pointer-events-none' : ''}`}
                 style={{ backgroundColor: '#E8725C' }}
               >
                 {aiLoading
-                  ? <span className="dot-bounce flex gap-0.5"><span/><span/><span/></span>
-                  : <Search size={15} strokeWidth={2} />}
+                  ? <><span className="dot-bounce flex gap-0.5"><span/><span/><span/></span> Searching…</>
+                  : <><Search size={14} strokeWidth={2} /> Search</>}
               </button>
             </div>
           )}
