@@ -548,7 +548,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
           {grant.source === 'scraped' && (
             <button
               onClick={() => onViewDetail(grant.id)}
-              className="w-full px-3 py-2 text-xs font-semibold text-white text-center transition-opacity hover:opacity-90"
+              className="w-full px-3 py-2 text-xs font-semibold text-white text-center transition-opacity hover:opacity-90 rounded-lg"
               style={{ backgroundColor: '#E8725C' }}
             >
               View Details
@@ -556,7 +556,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
           )}
           <button
             onClick={() => isSaved ? onUnsave?.(grant.id) : onSave?.(grant.id)}
-            className={`w-full px-3 py-2 text-xs font-semibold text-center border transition-colors ${
+            className={`w-full px-3 py-2 text-xs font-semibold text-center border transition-colors rounded-lg ${
               isSaved
                 ? 'bg-[#E8725C]/10 text-[#E8725C] border-[#E8725C]/30'
                 : 'border-[#e8ddd0] text-[#444] hover:border-[#E8725C] hover:text-[#E8725C]'
