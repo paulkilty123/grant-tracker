@@ -1472,8 +1472,8 @@ export default function SearchPage() {
           {/* ── Single control row: search + location + filters + profile filter ── */}
           {activeView === 'matches' && (
             <div className="flex gap-2 items-center">
-              {/* Search input — AI search button embedded as a right-side icon */}
-              <div className="flex-1 relative min-w-0">
+              {/* Search input */}
+              <div className="relative min-w-0 w-72 flex-shrink">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-light pointer-events-none" />
                 <input
                   type="text"
@@ -1484,21 +1484,9 @@ export default function SearchPage() {
                     setHasSearched(true)
                     handleAISearch(inputValue)
                   }}
-                  className="form-input h-11 pl-11 pr-11 w-full"
+                  className="form-input h-11 pl-11 pr-4 w-full"
                   placeholder="Search by keyword or funder..."
                 />
-                {/* Submit icon — visible when there's a value, or always show as subtle affordance */}
-                <button
-                  onClick={() => { setHasSearched(true); handleAISearch(inputValue) }}
-                  disabled={!inputValue.trim()}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-light hover:text-coral disabled:opacity-0 transition-colors"
-                  tabIndex={-1}
-                  title="Search (or press Enter)"
-                >
-                  {aiLoading
-                    ? <span className="dot-bounce flex gap-0.5"><span/><span/><span/></span>
-                    : <Sparkles size={15} strokeWidth={2} />}
-                </button>
               </div>
               {/* Location input */}
               <div className="relative w-44 flex-shrink-0">
@@ -1554,7 +1542,7 @@ export default function SearchPage() {
                       className="relative flex-shrink-0 transition-colors duration-200"
                       style={{
                         width: 44, height: 24,
-                        backgroundColor: profileFilterOn ? '#E8725C' : '#d1d5db',
+                        backgroundColor: profileFilterOn ? '#E8725C' : '#1a1a1a',
                         display: 'inline-flex', alignItems: 'center',
                       }}
                     >
@@ -1568,12 +1556,23 @@ export default function SearchPage() {
                         }}
                       />
                     </span>
-                    <span className={`text-sm font-medium transition-colors ${profileFilterOn ? 'text-[#E8725C]' : 'text-gray-400 group-hover:text-mid'}`}>
+                    <span className={`text-sm font-medium transition-colors ${profileFilterOn ? 'text-[#E8725C]' : 'text-charcoal'}`}>
                       Profile Filter {profileFilterOn ? 'On' : 'Off'}
                     </span>
                   </button>
                 )
               })()}
+              {/* Search button */}
+              <button
+                onClick={() => { setHasSearched(true); handleAISearch(inputValue) }}
+                disabled={!inputValue.trim() && !locationFilter.trim()}
+                className={`px-3 h-11 text-white font-semibold flex-shrink-0 transition-opacity disabled:opacity-40 flex items-center gap-1.5 ${aiLoading ? 'pointer-events-none' : ''}`}
+                style={{ backgroundColor: '#E8725C' }}
+              >
+                {aiLoading
+                  ? <span className="dot-bounce flex gap-0.5"><span/><span/><span/></span>
+                  : <Search size={15} strokeWidth={2} />}
+              </button>
             </div>
           )}
 
