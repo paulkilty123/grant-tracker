@@ -434,8 +434,9 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
 
           {/* Match insight box */}
           {hasOrg && hasSearch && reason && (
-            <div className="flex items-start justify-between gap-3 px-3.5 py-2.5 mb-4 rounded-lg"
+            <div className="flex items-start gap-3 px-3.5 py-2.5 mb-4 rounded-lg"
               style={{ backgroundColor: 'rgba(45,138,122,0.06)', border: '1px solid rgba(45,138,122,0.14)' }}>
+              <Info className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#2d8a7a' }} />
               <p className="text-sm leading-snug flex-1" style={{ color: '#2d6b5c' }}>
                 <span className="font-bold text-[10px] uppercase tracking-wider mr-1.5" style={{ color: '#1f5c52' }}>Match Insight:</span>
                 {reason.replace(/<[^>]*>/g, '').trim()}
@@ -451,7 +452,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
           <div className="grid grid-cols-4 gap-3 pt-3 border-t border-[#e8ddd0]">
             <div>
               <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-0.5">Amount</p>
-              <p className="text-sm font-bold text-charcoal">{formatRange(grant.amountMin, grant.amountMax)}</p>
+              <p className="text-sm font-bold" style={{ color: '#2d8a7a' }}>{formatRange(grant.amountMin, grant.amountMax)}</p>
             </div>
             <div>
               {(() => {
@@ -504,7 +505,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
             <button
               onClick={() => onViewDetail(grant.id)}
               className="w-full px-3 py-2 text-xs font-semibold text-white text-center transition-opacity hover:opacity-90 rounded-lg"
-              style={{ backgroundColor: '#E8725C' }}
+              style={{ backgroundColor: '#1f5c52' }}
             >
               View Details
             </button>
@@ -524,7 +525,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
             onClick={() => onAddToPipeline(grant)}
             className="w-full px-2 py-1.5 text-[11px] font-semibold text-center text-[#6b7280] hover:text-forest transition-colors"
           >
-            + Add to Pipeline
+            <span className="text-sm leading-none mr-0.5">+</span> Add to Pipeline
           </button>
         </div>
 
