@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import Sidebar from '@/components/layout/Sidebar'
+import TopBar from '@/components/layout/TopBar'
 
 export default async function AppLayout({
   children,
@@ -18,7 +19,8 @@ export default async function AppLayout({
   return (
     <div className="flex min-h-screen">
       <Sidebar org={org} userEmail={user.email ?? ''} />
-      <main className="md:ml-60 flex-1 p-4 pt-16 md:pt-8 md:p-8 min-h-screen overflow-x-hidden">
+      <TopBar />
+      <main className="md:ml-60 flex-1 p-4 pt-20 md:pt-20 md:p-8 md:pt-20 min-h-screen overflow-x-hidden">
         {children}
       </main>
     </div>

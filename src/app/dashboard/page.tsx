@@ -1,8 +1,30 @@
-import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { getDeadlineAlerts, formatCurrency, formatDeadline } from '@/lib/utils'
+import { getDeadlineAlerts, formatCurrency } from '@/lib/utils'
 import { PIPELINE_STAGES } from '@/lib/utils'
 import type { PipelineItem } from '@/types'
+import { Award, TrendingUp, Users, Rocket, GraduationCap, Gift, ArrowRight, CalendarDays, AlertTriangle, Clock } from 'lucide-react'
+
+function formatDeadlineDate(deadline: string | null): { month: string; day: string } | null {
+  if (!deadline) return null
+  const parts = deadline.split('-').map(Number)
+  if (parts.length !== 3) return null
+  const date = new Date(parts[0], parts[1] - 1, parts[2])
+  return {
+    month: date.toLocaleDateString('en-GB', { month: 'short' }).toUpperCase(),
+    day:   String(parts[2]).padStart(2, '0'),
+  }
+}
+
+// Pick a lucide icon for a grant based on its title keywords
+function grantIcon(title: string) {
+  const t = title.toLowerCase()
+  if (t.includes('invest') || t.includes('loan') || t.includes('finance')) return TrendingUp
+  if (t.includes('women') || t.includes('diversity') || t.includes('inclusion')) return Users
+  if (t.includes('accelerat') || t.includes('incubat') || t.includes('startup')) return Rocket
+  if (t.includes('fellowship') || t.includes('training') || t.includes('education')) return GraduationCap
+  if (t.includes('in-kind') || t.includes('pro bono') || t.includes('support')) return Gift
+  return Award
+}
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -11,8 +33,6 @@ export default async function DashboardPage() {
   const { data: org } = user
     ? await supabase.from('organisations').select('*').eq('owner_id', user.id).maybeSingle()
     : { data: null }
-
-  // No longer hard-block on profile — show dashboard with setup banner instead
 
   const { data: rawItems } = org
     ? await supabase.from('pipeline_items').select('*').eq('org_id', org.id).order('created_at', { ascending: false })
@@ -23,232 +43,300 @@ export default async function DashboardPage() {
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
   const { data: newGrants, count: newGrantsCount } = await supabase
     .from('scraped_grants')
-    .select('id, title, funder, amount_min, amount_max, deadline, external_id', { count: 'exact' })
+    .select('id, title, funder, description, amount_min, amount_max, deadline, external_id, funding_type', { count: 'exact' })
     .eq('is_active', true)
     .gte('first_seen_at', sevenDaysAgo)
     .order('first_seen_at', { ascending: false })
-    .limit(4)
+    .limit(3)
 
-  const active  = items.filter(i => !['won', 'declined'].includes(i.stage))
-  const won     = items.filter(i => i.stage === 'won')
+  const active    = items.filter(i => !['won', 'declined'].includes(i.stage))
+  const won       = items.filter(i => i.stage === 'won')
+  const submitted = items.filter(i => i.stage === 'submitted')
+
+  // Stage pipeline values
+  const stageData = [
+    { id: 'identified', label: 'Identified', sublabel: 'Leads',    bg: '#2d8a7a', text: '#fff' },
+    { id: 'applying',   label: 'Applying',   sublabel: 'Active',   bg: '#1f5c52', text: '#fff' },
+    { id: 'submitted',  label: 'Submitted',  sublabel: 'Pending',  bg: '#163d36', text: '#fff' },
+    { id: 'won',        label: 'Won',        sublabel: 'Wins',     bg: '#0e2722', text: '#e8a030' },
+    { id: 'declined',   label: 'Declined',   sublabel: 'Archived', bg: '#e8ddd0', text: '#5a7370' },
+  ]
+  const stageValues = stageData.map(s => ({
+    ...s,
+    count: items.filter(i => i.stage === s.id).length,
+    value: items.filter(i => i.stage === s.id).reduce((sum, i) => sum + (i.amount_max ?? i.amount_requested ?? 0), 0),
+  }))
+  const totalValue = stageValues.reduce((sum, s) => sum + s.value, 0)
+
   const stats = {
     totalPipelineValue: active.reduce((s, i) => s + (i.amount_max ?? i.amount_requested ?? 0), 0),
     totalWon:           won.reduce((s, i) => s + (i.amount_requested ?? 0), 0),
     wonCount:           won.length,
     activeCount:        active.length,
-    submittedCount:     items.filter(i => i.stage === 'submitted').length,
-    byStageCounts:      Object.fromEntries(
-      ['identified','applying','submitted','won','declined'].map(s => [
-        s, items.filter(i => i.stage === s).length,
-      ])
-    ),
+    submittedCount:     submitted.length,
   }
 
-  const alerts = getDeadlineAlerts(items).slice(0, 5)
+  const alerts = getDeadlineAlerts(items).slice(0, 4)
   const urgentCount = alerts.filter(a => ['urgent','overdue'].includes(a.urgency)).length
 
-  const orgName = org?.name ?? 'there'
-
-  // Derive display name: prefer auth metadata full name, fall back to email prefix
+  // Derive full display name
   const rawName: string =
     (user?.user_metadata?.full_name as string | undefined) ??
     (user?.user_metadata?.name as string | undefined) ??
     (user?.email ?? '')
-  const firstName = rawName.includes('@')
-    ? (() => { const p = rawName.split('@')[0].split('.')[0].replace(/\d+$/, ''); return p ? p.charAt(0).toUpperCase() + p.slice(1) : 'there' })()
+  const displayName = rawName.includes('@')
+    ? (() => { const p = rawName.split('@')[0].replace(/\d+$/, '').replace(/\./g, ' '); return p ? p.split(' ').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : 'there' })()
     : (rawName.trim() || 'there')
 
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
-
   const profileIncomplete = !org?.name
 
   return (
     <div>
-      {/* Setup banner — shown until profile is saved */}
+      {/* Setup banner */}
       {profileIncomplete && (
         <div className="mb-6 border border-amber-200 bg-amber-50 p-4 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <p className="text-sm font-semibold text-amber-800">Complete your profile to unlock matched grants</p>
-            <p className="text-xs text-amber-700 mt-0.5">Takes about 3 minutes — tells us your sector, location and legal structure so we can filter results for you.</p>
+            <p className="text-xs text-amber-700 mt-0.5">Takes about 3 minutes — tells us your sector, location and legal structure.</p>
           </div>
           <a href="/dashboard/profile" className="flex-shrink-0 px-4 py-2 bg-amber-600 text-white text-xs font-semibold rounded-lg hover:opacity-90 transition-colors whitespace-nowrap">Set up profile →</a>
         </div>
       )}
 
-      {/* Top bar */}
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-7">
-        <div>
-          <h2 className="font-display text-2xl font-bold text-charcoal">
-            {greeting}, {firstName}
-          </h2>
-          <p className="text-mid text-sm mt-1">
-            {profileIncomplete
-              ? 'Welcome to GrantTracker — your funding dashboard'
-              : `${urgentCount} urgent deadline${urgentCount !== 1 ? 's' : ''} · ${stats.activeCount} active opportunit${stats.activeCount !== 1 ? 'ies' : 'y'}`
-            }
-          </p>
+      {/* Greeting */}
+      <div className="mb-7">
+        <h2 className="font-display text-3xl font-bold text-charcoal mb-1.5">
+          {greeting}, {displayName}
+        </h2>
+        <div className="flex items-center flex-wrap gap-2 text-sm text-mid">
+          {!profileIncomplete && (
+            <>
+              <span>{urgentCount} urgent deadline{urgentCount !== 1 ? 's' : ''}</span>
+              <span className="text-warm">•</span>
+              <span>{stats.activeCount} active opportunit{stats.activeCount !== 1 ? 'ies' : 'y'}</span>
+              {urgentCount > 0 && (
+                <>
+                  <span className="text-warm">•</span>
+                  <a href="/dashboard/deadlines"
+                    className="text-coral text-xs font-bold uppercase tracking-wider hover:underline">
+                    Action Required
+                  </a>
+                </>
+              )}
+            </>
+          )}
+          {profileIncomplete && <span>Welcome to GrantTracker — your funding dashboard</span>}
         </div>
-        <a href="/dashboard/search" className="btn-primary">Find New Grants</a>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-7">
-        {[
-          { label: 'Total Pipeline', value: formatCurrency(stats.totalPipelineValue), sub: `${stats.activeCount} active opportunities`, accent: true },
-          { label: 'Won This Year',  value: formatCurrency(stats.totalWon),            sub: `${stats.wonCount} grants secured` },
-          { label: 'Submitted',      value: String(stats.submittedCount),              sub: 'awaiting decision' },
-          { label: 'Urgent Deadlines', value: String(urgentCount),                     sub: 'in the next 10 days', urgent: urgentCount > 0 },
-        ].map(s => (
-          <div key={s.label} className="bg-white border border-warm/80 p-5 rounded-lg" style={{ boxShadow: '0 2px 16px rgba(26,46,43,0.06)' }}>
-            <p className="text-[10px] font-semibold text-mid uppercase tracking-wider mb-2">{s.label}</p>
-            <p className={`font-serif text-3xl ${s.accent ? 'text-forest' : s.urgent ? 'text-coral' : 'text-charcoal'}`}>
-              {s.value}
-            </p>
-            <p className="text-xs text-mid mt-1.5">{s.sub}</p>
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        {/* Card 1 — Total Pipeline (forest bg) */}
+        <div className="p-5 rounded-xl text-white col-span-1" style={{ background: '#1f5c52', boxShadow: '0 4px 20px rgba(31,92,82,0.25)' }}>
+          <p className="text-[10px] font-semibold uppercase tracking-wider mb-3 text-white/60">Total Pipeline</p>
+          <p className="font-serif text-3xl font-bold text-white leading-none mb-2">
+            {formatCurrency(stats.totalPipelineValue)}
+          </p>
+          <p className="text-xs text-white/60">{stats.activeCount} active opportunit{stats.activeCount !== 1 ? 'ies' : 'y'}</p>
+        </div>
+
+        {/* Card 2 — Won This Year */}
+        <div className="p-5 rounded-xl bg-white border border-warm/80" style={{ boxShadow: '0 2px 16px rgba(26,46,43,0.06)' }}>
+          <p className="text-[10px] font-semibold text-mid uppercase tracking-wider mb-3">Won This Year</p>
+          <p className="font-serif text-3xl text-charcoal leading-none mb-2">{formatCurrency(stats.totalWon)}</p>
+          <p className="text-xs text-mid">{stats.wonCount} grant{stats.wonCount !== 1 ? 's' : ''} secured</p>
+        </div>
+
+        {/* Card 3 — Submitted */}
+        <div className="p-5 rounded-xl bg-white border border-warm/80" style={{ boxShadow: '0 2px 16px rgba(26,46,43,0.06)' }}>
+          <p className="text-[10px] font-semibold text-mid uppercase tracking-wider mb-3">Submitted</p>
+          <p className="font-serif text-3xl text-charcoal leading-none mb-2">{stats.submittedCount}</p>
+          <p className="text-xs text-mid">Application{stats.submittedCount !== 1 ? 's' : ''} awaiting decision</p>
+        </div>
+
+        {/* Card 4 — Urgent Deadlines */}
+        <div className="p-5 rounded-xl bg-white border border-warm/80" style={{ boxShadow: '0 2px 16px rgba(26,46,43,0.06)' }}>
+          <p className="text-[10px] font-semibold text-mid uppercase tracking-wider mb-3">Urgent Deadlines</p>
+          <div className="flex items-center gap-3 mb-2">
+            <p className={`font-serif text-3xl leading-none ${urgentCount > 0 ? 'text-coral' : 'text-charcoal'}`}>{urgentCount}</p>
+            {urgentCount > 0 && <AlertTriangle className="w-5 h-5 text-coral" />}
           </div>
-        ))}
+          <p className="text-xs text-mid">In the next 10 days</p>
+        </div>
       </div>
 
       {/* New This Week */}
       {(newGrantsCount ?? 0) > 0 && (
-        <div className="card mb-5">
+        <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <h3 className="font-display text-base font-bold text-charcoal">New This Week</h3>
-              <span className="bg-forest/10 text-forest text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wide">
-                {newGrantsCount} new
-              </span>
-            </div>
-            <a href="/dashboard/search" className="text-xs text-coral hover:underline">Search all grants →</a>
+            <h3 className="font-display text-xl font-bold text-charcoal">New This Week</h3>
+            <a href="/dashboard/search" className="text-xs font-semibold text-coral uppercase tracking-wider hover:underline">
+              View All Opportunities →
+            </a>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {(newGrants ?? []).map(g => (
-              <a key={g.id} href={`/dashboard/grants/${encodeURIComponent(g.external_id ?? g.id)}`}
-                className="flex flex-col gap-0.5 p-3 border border-warm bg-[#f5f2ed] rounded-lg hover:bg-warm transition-colors group">
-                <div className="flex items-start justify-between gap-2">
-                  <p className="text-sm font-medium text-charcoal group-hover:text-forest leading-snug line-clamp-2">{g.title}</p>
-                  <span className="bg-forest/10 text-forest text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide flex-shrink-0 mt-0.5">New</span>
-                </div>
-                <p className="text-xs text-mid truncate">{g.funder ?? 'Unknown funder'}</p>
-                {(g.amount_min || g.amount_max) && (
-                  <p className="text-xs text-forest font-medium mt-0.5">
-                    {g.amount_min && g.amount_max && g.amount_min !== g.amount_max
-                      ? `${formatCurrency(g.amount_min)} – ${formatCurrency(g.amount_max)}`
-                      : formatCurrency(g.amount_max ?? g.amount_min ?? 0)}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {(newGrants ?? []).map(g => {
+              const Icon = grantIcon(g.title ?? '')
+              const amountStr = g.amount_min || g.amount_max
+                ? (g.amount_min && g.amount_max && g.amount_min !== g.amount_max
+                    ? `${formatCurrency(g.amount_min)} – ${formatCurrency(g.amount_max)}`
+                    : formatCurrency(g.amount_max ?? g.amount_min ?? 0))
+                : 'Amount TBC'
+              return (
+                <a key={g.id}
+                  href={`/dashboard/grants/${encodeURIComponent(g.external_id ?? g.id)}`}
+                  className="bg-white border border-warm/80 rounded-xl p-5 flex flex-col hover:border-sage/40 hover:-translate-y-0.5 transition-all group"
+                  style={{ boxShadow: '0 2px 16px rgba(26,46,43,0.06)' }}>
+                  {/* Icon + NEW badge */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-11 h-11 rounded-xl bg-coral/10 flex items-center justify-center flex-shrink-0">
+                      <Icon className="w-5 h-5 text-coral" />
+                    </div>
+                    <span className="text-[9px] font-bold text-forest bg-forest/10 px-2 py-0.5 rounded uppercase tracking-wide">New</span>
+                  </div>
+                  {/* Title + description */}
+                  <h4 className="font-display text-base font-bold text-charcoal leading-snug mb-1.5 group-hover:text-forest transition-colors line-clamp-2">
+                    {g.title}
+                  </h4>
+                  <p className="text-xs text-mid leading-relaxed line-clamp-2 mb-4 flex-1">
+                    {g.description ?? ''}
                   </p>
-                )}
-              </a>
-            ))}
+                  {/* Amount + Funder */}
+                  <div className="border-t border-warm pt-3 flex gap-6">
+                    <div>
+                      <p className="text-[9px] font-semibold text-mid uppercase tracking-wider mb-0.5">Amount</p>
+                      <p className="text-sm font-bold text-charcoal">{amountStr}</p>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[9px] font-semibold text-mid uppercase tracking-wider mb-0.5">Funder</p>
+                      <p className="text-sm font-medium text-charcoal truncate">{g.funder ?? 'Unknown'}</p>
+                    </div>
+                  </div>
+                </a>
+              )
+            })}
           </div>
-          {(newGrantsCount ?? 0) > 4 && (
-            <p className="text-xs text-mid mt-3 text-center">
-              + {(newGrantsCount ?? 0) - 4} more new grants ·{' '}
-              <a href="/dashboard/search" className="text-coral hover:underline">search to see all →</a>
-            </p>
-          )}
         </div>
       )}
 
+      {/* Pipeline + Deadlines */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        {/* Pipeline mini */}
+
+        {/* Pipeline Overview */}
         <div className="md:col-span-2 card">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-display text-base font-bold text-charcoal">Pipeline Overview</h3>
-            <a href="/dashboard/pipeline" className="text-xs text-coral hover:underline">View full pipeline →</a>
+          <div className="flex items-center justify-between mb-5">
+            <h3 className="font-display text-xl font-bold text-charcoal">Pipeline Overview</h3>
+            <a href="/dashboard/pipeline" className="text-xs font-semibold text-coral uppercase tracking-wider hover:underline">View Pipeline →</a>
           </div>
+
           {items.length === 0 ? (
             <div className="text-center py-10 text-mid">
               <p className="text-2xl mb-3">🔍</p>
               <p className="text-sm font-medium text-charcoal mb-1">No grants tracked yet</p>
-              <p className="text-xs mb-4">Find a grant and hit <strong>+ Pipeline</strong> to start tracking your applications here.</p>
-              <a href="/dashboard/search" className="inline-flex items-center gap-1.5 px-4 py-2 bg-forest text-white text-xs font-semibold rounded-lg hover:opacity-90 transition-colors">Find your first grant →</a>
+              <p className="text-xs mb-4">Find a grant and hit <strong>+ Pipeline</strong> to start tracking.</p>
+              <a href="/dashboard/search" className="inline-flex items-center gap-1.5 px-4 py-2 bg-forest text-white text-xs font-semibold rounded-lg hover:opacity-90 transition-colors">
+                Find your first grant →
+              </a>
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-4">
-                {[
-                  { id: 'identified',  label: 'Identified',  cls: 'bg-[#f5f2ed] text-mid' },
-                  { id: 'applying',    label: 'Applying',    cls: 'bg-coral/10 text-coral' },
-                  { id: 'submitted',   label: 'Submitted',   cls: 'bg-forest/10 text-forest' },
-                  { id: 'won',         label: 'Won',         cls: 'bg-forest/20 text-forest' },
-                  { id: 'declined',    label: 'Declined',    cls: 'bg-warm text-mid' },
-                ].map(s => (
-                  <a key={s.id} href="/dashboard/pipeline"
-                    className={`p-3 text-center rounded-lg transition-opacity hover:opacity-80 ${s.cls}`}>
-                    <span className="block font-serif text-2xl">
-                      {stats.byStageCounts[s.id] ?? 0}
-                    </span>
-                    <span className="text-[10px] font-medium mt-0.5 block">{s.label}</span>
-                  </a>
-                ))}
+              {/* Horizontal bar */}
+              <div className="flex rounded-lg overflow-hidden mb-3 h-16">
+                {stageValues.map((s, i) => {
+                  const pct = totalValue > 0 ? (s.value / totalValue) * 100 : 20
+                  return (
+                    <a key={s.id} href="/dashboard/pipeline"
+                      className="flex flex-col items-center justify-center flex-shrink-0 hover:opacity-90 transition-opacity"
+                      style={{ width: `${pct}%`, minWidth: 48, background: s.bg }}>
+                      <span className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: s.text, opacity: 0.7 }}>{s.label}</span>
+                      <span className="text-sm font-bold" style={{ color: s.text }}>
+                        {s.value > 0 ? formatCurrency(s.value) : '—'}
+                      </span>
+                    </a>
+                  )
+                })}
               </div>
-              {active.slice(0, 3).length > 0 && (
-                <div className="border-t border-warm pt-3">
-                  {active.slice(0, 3).map(item => {
-                    const stage = PIPELINE_STAGES.find(s => s.id === item.stage)
-                    const stageCls =
-                      item.stage === 'won'         ? 'bg-forest/15 text-forest' :
-                      item.stage === 'declined'    ? 'bg-warm text-mid' :
-                      item.stage === 'identified'  ? 'bg-[#f5f2ed] text-mid' :
-                      item.stage === 'applying'    ? 'bg-coral/10 text-coral' :
-                      'bg-forest/10 text-forest'
-                    return (
-                      <a key={item.id} href="/dashboard/pipeline"
-                        className="flex items-center justify-between py-2.5 border-b border-warm last:border-0 hover:bg-[#f5f2ed] -mx-1 px-1 rounded transition-colors">
-                        <div className="flex-1 min-w-0 mr-3">
-                          <p className="text-sm font-medium text-charcoal truncate">{item.grant_name}</p>
-                          <p className="text-xs text-mid truncate">{item.funder_name}</p>
-                        </div>
-                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded flex-shrink-0 ${stageCls}`}>
-                          {stage?.label ?? item.stage}
-                        </span>
-                      </a>
-                    )
-                  })}
-                </div>
-              )}
+              {/* Count row */}
+              <div className="flex">
+                {stageValues.map((s, i) => {
+                  const pct = totalValue > 0 ? (s.value / totalValue) * 100 : 20
+                  return (
+                    <div key={s.id} className="flex flex-col items-center flex-shrink-0" style={{ width: `${pct}%`, minWidth: 48 }}>
+                      <span className="text-[9px] font-bold text-charcoal">{s.count}</span>
+                      <span className="text-[9px] text-mid uppercase tracking-wide">{s.sublabel}</span>
+                    </div>
+                  )
+                })}
+              </div>
             </>
           )}
         </div>
 
         {/* Deadlines */}
         <div className="card">
-          <h3 className="font-display text-base font-bold text-charcoal mb-4">Upcoming Deadlines</h3>
+          <div className="flex items-center justify-between mb-5">
+            <h3 className="font-display text-xl font-bold text-charcoal">Deadlines</h3>
+            <CalendarDays className="w-4 h-4 text-mid" />
+          </div>
+
           {alerts.length === 0 ? (
             <div className="text-center py-6 text-mid">
               <p className="text-sm">No upcoming deadlines</p>
-              <p className="text-xs mt-1">Open a pipeline item and set a deadline to track it here</p>
+              <p className="text-xs mt-1">Add deadlines in the pipeline to track them here</p>
             </div>
           ) : (
-            <div className="space-y-0">
-              {alerts.map(alert => (
-                <div key={alert.item.id} className="flex items-center justify-between py-3 border-b border-warm last:border-0">
-                  <div className="flex-1 min-w-0 mr-3">
-                    <p className="text-sm font-medium text-charcoal truncate">{alert.item.grant_name}</p>
-                    <p className="text-xs text-mid mt-0.5 truncate">{alert.item.funder_name}</p>
-                  </div>
-                  <span className={`text-xs font-semibold px-2.5 py-1 rounded whitespace-nowrap flex-shrink-0 ${
-                    alert.urgency === 'urgent' || alert.urgency === 'overdue'
-                      ? 'bg-coral text-white'
-                      : alert.urgency === 'soon'
-                      ? 'bg-amber-50 text-amber-600'
-                      : 'bg-forest/10 text-forest'
-                  }`}>
-                    {formatDeadline(alert.item.deadline)}
-                  </span>
-                </div>
-              ))}
+            <div className="space-y-1">
+              {alerts.map(alert => {
+                const dateObj = formatDeadlineDate(alert.item.deadline)
+                const urgencyBadge =
+                  alert.urgency === 'overdue' ? { label: 'Overdue',  cls: 'bg-coral text-white' } :
+                  alert.urgency === 'urgent'  ? { label: 'Tomorrow', cls: 'bg-gold/20 text-gold font-bold' } :
+                  alert.urgency === 'soon'    ? { label: `In ${alert.daysUntil}d`, cls: 'bg-forest/10 text-forest' } :
+                                                { label: `${alert.daysUntil}d`,    cls: 'bg-forest/10 text-forest' }
+                const amountStr = alert.item.amount_max ?? alert.item.amount_requested
+                  ? formatCurrency(alert.item.amount_max ?? alert.item.amount_requested ?? 0)
+                  : null
+
+                return (
+                  <a key={alert.item.id} href="/dashboard/deadlines"
+                    className="flex items-center gap-3 py-2.5 border-b border-warm last:border-0 hover:bg-[#faf7f2] -mx-2 px-2 rounded transition-colors">
+                    {/* Date column */}
+                    {dateObj ? (
+                      <div className="flex flex-col items-center flex-shrink-0 w-9 text-center">
+                        <span className="text-[9px] font-bold text-mid uppercase">{dateObj.month}</span>
+                        <span className="text-lg font-bold text-charcoal leading-none">{dateObj.day}</span>
+                      </div>
+                    ) : (
+                      <div className="w-9 flex-shrink-0" />
+                    )}
+                    {/* Name + badge */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-charcoal truncate">{alert.item.grant_name}</p>
+                      <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide ${urgencyBadge.cls}`}>
+                          {urgencyBadge.label}
+                        </span>
+                        {amountStr && <span className="text-[10px] text-mid">{amountStr}</span>}
+                      </div>
+                    </div>
+                  </a>
+                )
+              })}
             </div>
           )}
+
           <div className="mt-4">
-            <a href="/dashboard/deadlines" className="btn-outline btn-sm inline-block">
-              View all deadlines →
+            <a href="/dashboard/deadlines"
+              className="flex items-center justify-center gap-1.5 w-full py-2 text-xs font-semibold text-mid uppercase tracking-wider rounded-lg border border-warm hover:border-charcoal/30 transition-colors">
+              Calendar View
+              <ArrowRight className="w-3 h-3" />
             </a>
           </div>
         </div>
-      </div>
 
+      </div>
     </div>
   )
 }

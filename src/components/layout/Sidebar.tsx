@@ -171,6 +171,18 @@ export default function Sidebar({ org, userEmail }: Props) {
         {navLink('/dashboard/instructions', 'How to use', BookOpen)}
       </div>
 
+      {/* Find New Grants CTA */}
+      <div className="px-4 pb-3">
+        <a
+          href="/dashboard/search"
+          className="flex items-center justify-center gap-2 w-full py-2.5 text-sm font-semibold text-white rounded-lg hover:opacity-90 transition-opacity"
+          style={{ backgroundColor: '#E8725C' }}
+        >
+          <Search className="h-4 w-4" />
+          Find New Grants
+        </a>
+      </div>
+
       {/* User chip */}
       <div className="border-t border-white/10 px-4 py-4">
         <div className="flex items-center gap-2.5 mb-3">
