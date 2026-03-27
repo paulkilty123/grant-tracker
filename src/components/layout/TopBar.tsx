@@ -1,39 +1,81 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import { Search, Bell } from 'lucide-react'
 import Link from 'next/link'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import { LogOut } from 'lucide-react'
 
-export default function TopBar() {
+interface Props {
+  userEmail: string
+  orgName?: string | null
+}
+
+export default function TopBar({ userEmail, orgName }: Props) {
   const router = useRouter()
+  const [menuOpen, setMenuOpen] = useState(false)
+
+  const initials = orgName
+    ? orgName.split(' ').map((w: string) => w[0]).slice(0, 2).join('').toUpperCase()
+    : userEmail.slice(0, 2).toUpperCase()
+
+  async function handleSignOut() {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.push('/auth/login')
+  }
 
   return (
-    <div className="fixed top-0 right-0 left-0 md:left-60 z-30 bg-white border-b border-warm/60 px-6 h-14 flex items-center gap-4"
-      style={{ boxShadow: '0 1px 0 rgba(26,46,43,0.06)' }}>
-      {/* Search */}
-      <div className="flex-1 max-w-lg">
-        <button
-          onClick={() => router.push('/dashboard/search')}
-          className="w-full flex items-center gap-2.5 px-3.5 py-2 rounded-lg border border-warm bg-[#faf7f2] text-sm text-gray-400 hover:border-gray-300 transition-colors text-left"
-        >
-          <Search className="w-3.5 h-3.5 flex-shrink-0" />
-          Search grants or projects…
-        </button>
-      </div>
+    <div className="flex items-center gap-3">
+      {/* Feedback link */}
+      <Link
+        href="/dashboard/feedback"
+        className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 hover:text-gray-600 transition-colors no-underline"
+      >
+        Feedback
+      </Link>
 
-      {/* Right side */}
-      <div className="flex items-center gap-1 ml-auto">
-        <button className="p-2 rounded-lg text-mid hover:bg-[#f5f2ed] transition-colors">
-          <Bell className="w-4 h-4" />
+      {/* Edit Profile button */}
+      <Link
+        href="/dashboard/profile"
+        className="text-[11px] font-semibold uppercase tracking-wider text-charcoal border border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-colors no-underline px-4 py-1.5 rounded-full"
+        style={{ letterSpacing: '0.07em' }}
+      >
+        Edit Profile
+      </Link>
+
+      {/* Account avatar with hover dropdown */}
+      <div
+        className="relative"
+        onMouseEnter={() => setMenuOpen(true)}
+        onMouseLeave={() => setMenuOpen(false)}
+      >
+        <button
+          className="flex items-center justify-center w-8 h-8 rounded-full bg-[#1f5c52] text-white text-xs font-bold hover:opacity-90 transition-opacity"
+          aria-label="Account"
+        >
+          {initials}
         </button>
-        <Link href="/dashboard/profile"
-          className="px-3 py-1.5 text-xs font-semibold text-mid hover:text-charcoal uppercase tracking-wider transition-colors">
-          Edit Profile
-        </Link>
-        <Link href="/dashboard/feedback"
-          className="px-3 py-1.5 text-xs font-semibold text-mid hover:text-charcoal uppercase tracking-wider transition-colors">
-          Feedback
-        </Link>
+
+        {/* Dropdown */}
+        {menuOpen && (
+          <div
+            className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-1"
+            style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.10)' }}
+          >
+            <div className="px-3 py-2 border-b border-gray-100">
+              <p className="text-xs font-semibold text-charcoal truncate">{orgName ?? 'Account'}</p>
+              <p className="text-[10px] text-gray-400 truncate">{userEmail}</p>
+            </div>
+            <button
+              onClick={handleSignOut}
+              className="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition-colors"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              Sign out
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
