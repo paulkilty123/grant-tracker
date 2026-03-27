@@ -1383,7 +1383,7 @@ export default function SearchPage() {
   return (
     <div>
       {/* ── Page heading ── */}
-      <div className="mb-8 mt-6">
+      <div className="mb-3">
         <h2 className="font-serif text-5xl font-bold text-charcoal leading-tight">Find Funding</h2>
       </div>
 
