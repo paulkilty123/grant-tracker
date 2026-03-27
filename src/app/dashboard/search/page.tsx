@@ -430,7 +430,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
   const ringColour = score >= 70 ? '#2d8a7a' : score >= 45 ? '#e8a030' : '#9ca3af'
 
   return (
-    <div className="bg-white mb-3 border border-[#e8ddd0] hover:shadow-md transition-shadow">
+    <div className="bg-white mb-3 border border-[#e8ddd0] hover:shadow-md transition-shadow rounded-lg overflow-hidden">
       <div className="flex">
 
         {/* ── Left: match score ── */}
@@ -500,7 +500,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
 
           {/* Match reason */}
           {hasOrg && hasSearch && reason && (
-            <div className="border-l-2 border-[#e8ddd0] pl-3 pr-3 py-2 mb-4 bg-[#faf7f2]">
+            <div className="border-l-2 border-[#e8ddd0] pl-3 pr-3 py-2 mb-4 bg-[#faf7f2] rounded-r-lg">
               <p className="text-sm text-[#444] leading-snug">
                 {reason.replace(/<[^>]*>/g, '').trim()}
               </p>
@@ -1473,7 +1473,7 @@ export default function SearchPage() {
       )}
 
       {/* ── Search card ── */}
-      <div className="bg-white shadow-card mb-5 border border-warm/60">
+      <div className="bg-white shadow-card mb-5 border border-warm/60 rounded-xl overflow-hidden">
 
         <div className="p-5">
 
@@ -1517,7 +1517,7 @@ export default function SearchPage() {
               {/* Filters button */}
               <button
                 onClick={() => setFiltersOpen(o => !o)}
-                className={`flex items-center gap-1.5 px-4 h-11 border text-sm font-semibold transition-all flex-shrink-0 ${
+                className={`flex items-center gap-1.5 px-4 h-11 border text-sm font-semibold transition-all flex-shrink-0 rounded-lg ${
                   filtersOpen || activeFilterCount > 0
                     ? 'bg-charcoal text-white border-charcoal'
                     : 'border-warm text-mid hover:border-coral hover:text-coral bg-white'
@@ -1551,6 +1551,7 @@ export default function SearchPage() {
                         width: 44, height: 24,
                         backgroundColor: '#1a1a1a',
                         display: 'inline-flex', alignItems: 'center',
+                        borderRadius: 4,
                       }}
                     >
                       <span
@@ -1573,7 +1574,7 @@ export default function SearchPage() {
               <button
                 onClick={() => { setHasSearched(true); handleAISearch(inputValue) }}
                 disabled={!inputValue.trim() && !locationFilter.trim()}
-                className={`px-4 h-11 text-white text-sm font-semibold flex-shrink-0 transition-opacity disabled:opacity-40 flex items-center gap-1.5 ${aiLoading ? 'pointer-events-none' : ''}`}
+                className={`px-4 h-11 text-white text-sm font-semibold flex-shrink-0 transition-opacity disabled:opacity-40 flex items-center gap-1.5 rounded-lg ${aiLoading ? 'pointer-events-none' : ''}`}
                 style={{ backgroundColor: '#E8725C' }}
               >
                 {aiLoading
@@ -1587,7 +1588,7 @@ export default function SearchPage() {
           {activeView === 'matches' && (aiResults || aiError) && (
             <div className="mt-2 flex items-center gap-2">
               {aiResults && (
-                <button onClick={() => { setAiResults(null); setSmartMatched(false); setQuery(''); setInputValue('') }} className="px-3 py-1 border border-warm text-xs font-medium text-mid hover:border-coral hover:text-coral transition-all bg-white">
+                <button onClick={() => { setAiResults(null); setSmartMatched(false); setQuery(''); setInputValue('') }} className="px-3 py-1 border border-warm text-xs font-medium text-mid hover:border-coral hover:text-coral transition-all bg-white rounded-md">
                   Clear results
                 </button>
               )}
@@ -1608,7 +1609,7 @@ export default function SearchPage() {
                   {visibleFundingTypes.map(t => (
                     <button key={t.id} onClick={() => setActiveFundingType(t.id as FundingType | 'all')}
                       title={t.desc}
-                      className={`px-3 py-1.5 border text-xs font-medium transition-all ${
+                      className={`px-3 py-1.5 border text-xs font-medium transition-all rounded-md ${
                         activeFundingType === t.id
                           ? 'bg-charcoal border-charcoal text-white'
                           : 'border-warm text-mid hover:border-coral hover:text-coral'
@@ -1626,7 +1627,7 @@ export default function SearchPage() {
                     if (!t) return null
                     return (
                       <button key={t.id} onClick={() => setActiveType(t.id)}
-                        className={`px-3 py-1.5 border text-xs font-medium transition-all ${
+                        className={`px-3 py-1.5 border text-xs font-medium transition-all rounded-md ${
                           activeType === t.id
                             ? 'bg-charcoal border-charcoal text-white'
                             : 'border-warm text-mid hover:border-coral hover:text-coral'
@@ -1646,7 +1647,7 @@ export default function SearchPage() {
                 <div className="flex gap-1.5 flex-wrap">
                   <button
                     onClick={() => setActiveGeoScope('all')}
-                    className={`px-3 py-1.5 border text-xs font-medium transition-all ${
+                    className={`px-3 py-1.5 border text-xs font-medium transition-all rounded-md ${
                       activeGeoScope === 'all'
                         ? 'bg-charcoal border-charcoal text-white'
                         : 'border-warm text-mid hover:border-coral hover:text-coral'
@@ -1658,7 +1659,7 @@ export default function SearchPage() {
                     <button
                       key={scope.id}
                       onClick={() => setActiveGeoScope(activeGeoScope === scope.id ? 'all' : scope.id)}
-                      className={`px-3 py-1.5 border text-xs font-medium transition-all ${
+                      className={`px-3 py-1.5 border text-xs font-medium transition-all rounded-md ${
                         activeGeoScope === scope.id
                           ? 'bg-charcoal border-charcoal text-white'
                           : 'border-warm text-mid hover:border-coral hover:text-coral'
@@ -1686,7 +1687,7 @@ export default function SearchPage() {
                 <div className="flex gap-1.5 flex-wrap">
                   {(['all', 'rolling', 'has_deadline'] as const).map(v => (
                     <button key={v} onClick={() => setDeadlineFilter(v)}
-                      className={`px-3 py-1.5 border text-xs font-medium transition-all ${
+                      className={`px-3 py-1.5 border text-xs font-medium transition-all rounded-md ${
                         deadlineFilter === v
                           ? 'bg-charcoal border-charcoal text-white'
                           : 'border-warm text-mid hover:border-coral hover:text-coral'
@@ -1706,7 +1707,7 @@ export default function SearchPage() {
                   const isActive = activeSectors.has(s.id)
                   return (
                     <button key={s.id} onClick={() => toggleSector(s.id)}
-                      className={`px-3 py-1.5 border text-xs font-medium transition-all ${
+                      className={`px-3 py-1.5 border text-xs font-medium transition-all rounded-md ${
                         isActive
                           ? 'bg-charcoal border-charcoal text-white'
                           : 'border-warm text-mid hover:border-coral hover:text-coral'
@@ -1722,7 +1723,7 @@ export default function SearchPage() {
             {activeFilterCount > 0 && (
               <button
                 onClick={resetAllFilters}
-                className="text-xs font-semibold text-red-500 hover:text-red-700 border border-red-200 hover:border-red-400 px-3 py-1.5 transition-all"
+                className="text-xs font-semibold text-red-500 hover:text-red-700 border border-red-200 hover:border-red-400 px-3 py-1.5 transition-all rounded-md"
               >
                 ✕ Reset all filters
               </button>
@@ -1749,7 +1750,7 @@ export default function SearchPage() {
                 ))}
               </div>
               {TAB_DESCS[activeTab] && (
-                <div className="flex items-start gap-3 mx-5 mb-1 mt-3 px-4 py-3 bg-[#faf7f2] border-l-4 border-[#2d8a7a]">
+                <div className="flex items-start gap-3 mx-5 mb-1 mt-3 px-4 py-3 bg-[#faf7f2] border-l-4 border-[#2d8a7a] rounded-r-lg">
                   <span className="flex-shrink-0 mt-0.5 text-[#2d8a7a]">
                     {TYPE_TABS.find(t => t.id === activeTab)?.icon}
                   </span>
@@ -1775,7 +1776,7 @@ export default function SearchPage() {
               )}
             </p>
             {!aiResults && (
-              <div className="flex items-center border border-[#e8ddd0] overflow-hidden flex-shrink-0">
+              <div className="flex items-center border border-[#e8ddd0] overflow-hidden flex-shrink-0 rounded-lg">
                 {/* Sort By label */}
                 <span className="px-3 py-2 text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider border-r border-[#e8ddd0] bg-[#faf7f2] whitespace-nowrap">
                   Sort By
