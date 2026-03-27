@@ -435,22 +435,22 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
 
         {/* ── Left: match score ── */}
         {hasOrg && hasSearch && (
-          <div className="flex flex-col items-center justify-center px-4 py-5 border-r border-[#e8ddd0] flex-shrink-0 w-[72px]">
-            <div className="relative w-[44px] h-[44px]">
-              <svg viewBox="0 0 36 36" className="w-[44px] h-[44px] -rotate-90">
-                <circle cx="18" cy="18" r={radius} fill="none" stroke="#e8ddd0" strokeWidth="3" />
+          <div className="flex flex-col items-center justify-center px-4 py-5 border-r border-[#e8ddd0] flex-shrink-0 w-[90px]">
+            <div className="relative w-[64px] h-[64px]">
+              <svg viewBox="0 0 36 36" className="w-[64px] h-[64px] -rotate-90">
+                <circle cx="18" cy="18" r={radius} fill="none" stroke="#e8ddd0" strokeWidth="2.5" />
                 <circle
                   cx="18" cy="18" r={radius} fill="none"
-                  stroke={ringColour} strokeWidth="3"
+                  stroke={ringColour} strokeWidth="2.5"
                   strokeDasharray={`${arc} ${circ}`}
                   strokeLinecap="butt"
                 />
               </svg>
-              <span className="absolute inset-0 flex items-center justify-center text-[11px] font-bold" style={{ color: ringColour }}>
+              <span className="absolute inset-0 flex items-center justify-center text-sm font-bold" style={{ color: ringColour }}>
                 {score}%
               </span>
             </div>
-            <span className="text-[9px] font-semibold text-[#9ca3af] uppercase tracking-wider mt-1.5">Match</span>
+            <span className="text-[9px] font-semibold text-[#9ca3af] uppercase tracking-wider mt-2">Match</span>
           </div>
         )}
 
@@ -495,8 +495,8 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
 
           {/* Match reason */}
           {hasOrg && hasSearch && reason && (
-            <div className="border-l-2 border-[#2d8a7a] pl-3 mb-4">
-              <p className="text-sm text-[#2d8a7a] leading-snug italic">
+            <div className="border-l-2 border-[#e8ddd0] pl-3 mb-4">
+              <p className="text-sm text-[#444] leading-snug">
                 {reason.replace(/<[^>]*>/g, '').trim()}
               </p>
             </div>
