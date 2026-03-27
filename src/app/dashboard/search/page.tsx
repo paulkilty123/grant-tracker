@@ -517,8 +517,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
             {/* Deadline — always shown: formatted date, "Rolling", or "Opens [date]" */}
             <div>
               {(() => {
-                const g = grant as typeof grant & { nextOpenDateParsed?: string | null }
-                const opensDate = g.nextOpenDateParsed
+                const opensDate = grant.nextOpenDateParsed
                 const todayStr = new Date().toISOString().split('T')[0]
                 const notYetOpen = !grant.deadline && !grant.isRolling && opensDate && opensDate > todayStr
                 if (notYetOpen) {
