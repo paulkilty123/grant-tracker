@@ -1773,10 +1773,7 @@ export default function SearchPage() {
                 ))}
               </div>
               {TAB_DESCS[activeTab] && (
-                <div className="flex items-start gap-3 mx-5 mb-1 mt-3 px-4 py-3 bg-[#faf7f2] border-l-4 border-[#e8ddd0] rounded-r-lg">
-                  <span className="flex-shrink-0 mt-0.5 text-gray-400">
-                    {TYPE_TABS.find(t => t.id === activeTab)?.icon}
-                  </span>
+                <div className="mx-5 mb-1 mt-3 px-4 py-3 bg-[#faf7f2] rounded-lg">
                   <p className="text-sm text-[#444] leading-relaxed">{TAB_DESCS[activeTab]}</p>
                 </div>
               )}
