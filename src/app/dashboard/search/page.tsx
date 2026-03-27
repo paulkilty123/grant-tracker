@@ -1792,7 +1792,7 @@ export default function SearchPage() {
                     onClick={() => setSortBy(tab.id as 'match' | 'freshest' | 'deadline')}
                     className={`px-4 py-2 text-xs font-medium transition-colors whitespace-nowrap${i > 0 ? ' border-l border-[#e8ddd0]' : ''}`}
                     style={sortBy === tab.id
-                      ? { backgroundColor: '#E8725C', color: '#fff' }
+                      ? { backgroundColor: '#fff', color: '#E8725C' }
                       : { backgroundColor: '#fff', color: '#6b7280' }}
                   >{tab.label}</button>
                 ))}
