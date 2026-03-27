@@ -514,20 +514,41 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
               <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-0.5">Funding Amount</p>
               <p className="text-sm font-bold text-[#2c3e35]">{formatRange(grant.amountMin, grant.amountMax)}</p>
             </div>
-            {/* Deadline — always shown: formatted date or "Rolling" */}
+            {/* Deadline — always shown: formatted date, "Rolling", or "Opens [date]" */}
             <div>
-              <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-0.5">Deadline</p>
-              <p className="text-sm font-semibold text-[#2c3e35]">
-                {grant.isRolling || !grant.deadline
-                  ? 'Rolling'
-                  : (() => {
-                      const parts = grant.deadline.split('-').map(Number)
-                      if (parts.length !== 3 || parts.some(isNaN)) return 'Rolling'
-                      return new Date(parts[0], parts[1] - 1, parts[2])
-                        .toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-                    })()
+              {(() => {
+                const g = grant as typeof grant & { nextOpenDateParsed?: string | null }
+                const opensDate = g.nextOpenDateParsed
+                const todayStr = new Date().toISOString().split('T')[0]
+                const notYetOpen = !grant.deadline && !grant.isRolling && opensDate && opensDate > todayStr
+                if (notYetOpen) {
+                  const parts = opensDate!.split('-').map(Number)
+                  const formatted = new Date(parts[0], parts[1] - 1, parts[2])
+                    .toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                  return (
+                    <>
+                      <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-0.5">Opens</p>
+                      <p className="text-sm font-semibold text-[#2c3e35]">{formatted}</p>
+                    </>
+                  )
                 }
-              </p>
+                return (
+                  <>
+                    <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-0.5">Deadline</p>
+                    <p className="text-sm font-semibold text-[#2c3e35]">
+                      {grant.isRolling || !grant.deadline
+                        ? 'Rolling'
+                        : (() => {
+                            const parts = grant.deadline!.split('-').map(Number)
+                            if (parts.length !== 3 || parts.some(isNaN)) return 'Rolling'
+                            return new Date(parts[0], parts[1] - 1, parts[2])
+                              .toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                          })()
+                      }
+                    </p>
+                  </>
+                )
+              })()}
             </div>
             {sectorLabels.length > 0 && (
               <div>
@@ -624,6 +645,7 @@ function normaliseScrapedGrant(row: Record<string, unknown>): EnrichedGrant {
     applyUrl:             row.apply_url ? String(row.apply_url) : null,
     isInviteOnly:         Boolean(row.is_invite_only),
     nextOpenDate:         row.next_open_date ? String(row.next_open_date) : null,
+    nextOpenDateParsed:   row.next_open_date_parsed ? String(row.next_open_date_parsed) : null,
     fundingType:          (row.funding_type ? String(row.funding_type) : 'grant') as FundingType,
     impactSectors:        Array.isArray(row.impact_sectors)     ? (row.impact_sectors     as ImpactSector[])   : undefined,
     eligibleStructures:   Array.isArray(row.eligible_structures) ? (row.eligible_structures as LegalStructure[]) : undefined,
