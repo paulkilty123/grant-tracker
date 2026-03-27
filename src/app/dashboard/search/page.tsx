@@ -1415,6 +1415,13 @@ export default function SearchPage() {
 
   const savedCount = Array.from(interactions.values()).filter(s => s.has('saved')).length
 
+  // Match scores + reasons are only meaningful when the profile filter is active
+  // (sectors/location applied) OR when an AI search has produced scored results.
+  // When profile filter is off and no AI search is active, suppress them so the
+  // UI doesn't show match data that isn't actually filtering anything.
+  const profileFilterOn = activeSectors.size > 0 || !!locationFilter
+  const showMatchInfo = !!org && (profileFilterOn || !!aiResults)
+
   return (
     <div>
       {/* ── Page heading + view tabs ── */}
@@ -1521,7 +1528,6 @@ export default function SearchPage() {
               </button>
               {/* Profile Filter toggle */}
               {org && (() => {
-                const profileFilterOn = activeSectors.size > 0 || !!locationFilter
                 return (
                   <button
                     onClick={() => {
@@ -1853,7 +1859,7 @@ export default function SearchPage() {
               key={item.grant.id}
               item={item}
               hasOrg={!!org}
-              hasSearch={!!org}
+              hasSearch={showMatchInfo}
               interactions={interactions.get(item.grant.id) ?? new Set()}
               onAddToPipeline={handleAddToPipeline}
               onDismiss={handleDismiss}
