@@ -1382,25 +1382,9 @@ export default function SearchPage() {
 
   return (
     <div>
-      {/* ── Page heading + view tabs ── */}
-      <div className="mb-4 flex items-start justify-between">
+      {/* ── Page heading ── */}
+      <div className="mb-4">
         <h2 className="font-serif text-5xl font-bold text-charcoal leading-tight">Find Funding</h2>
-        <div className="flex items-center gap-0 bg-white border border-warm/60 rounded-full shadow-sm overflow-hidden mt-1">
-          <button
-            onClick={() => setActiveView('matches')}
-            className={`px-5 py-2 text-sm font-medium transition-colors ${activeView === 'matches' ? 'text-coral border-b-2 border-coral' : 'border-b-2 border-transparent text-gray-500 hover:text-charcoal'}`}
-          >
-            My Matches
-          </button>
-          <div className="w-px h-5 bg-warm/80" />
-          <button
-            onClick={() => setActiveView('saved')}
-            className={`px-5 py-2 text-sm font-medium transition-colors flex items-center gap-1.5 ${activeView === 'saved' ? 'text-coral border-b-2 border-coral' : 'border-b-2 border-transparent text-gray-500 hover:text-charcoal'}`}
-          >
-            Saved
-            {savedCount > 0 && <span className="text-xs bg-coral text-white px-1.5 py-0.5 rounded-full">{savedCount}</span>}
-          </button>
-        </div>
       </div>
 
       {/* Welcome banner — shown after first profile save */}
@@ -1428,6 +1412,24 @@ export default function SearchPage() {
           <span className="text-amber-800"> to see grants ranked for your organisation.</span>
         </div>
       )}
+
+      {/* ── My Matches / Saved tabs ── */}
+      <div className="flex items-center gap-0 bg-white border border-warm/60 rounded-full shadow-sm overflow-hidden w-fit mb-4">
+        <button
+          onClick={() => setActiveView('matches')}
+          className={`px-5 py-2 text-sm font-medium transition-colors ${activeView === 'matches' ? 'text-coral border-b-2 border-coral' : 'border-b-2 border-transparent text-gray-500 hover:text-charcoal'}`}
+        >
+          My Matches
+        </button>
+        <div className="w-px h-5 bg-warm/80" />
+        <button
+          onClick={() => setActiveView('saved')}
+          className={`px-5 py-2 text-sm font-medium transition-colors flex items-center gap-1.5 ${activeView === 'saved' ? 'text-coral border-b-2 border-coral' : 'border-b-2 border-transparent text-gray-500 hover:text-charcoal'}`}
+        >
+          Saved
+          {savedCount > 0 && <span className="text-xs bg-coral text-white px-1.5 py-0.5 rounded-full">{savedCount}</span>}
+        </button>
+      </div>
 
       {/* ── Search card ── */}
       <div className="bg-white shadow-card mb-5 border border-warm/60 rounded-xl overflow-hidden">
