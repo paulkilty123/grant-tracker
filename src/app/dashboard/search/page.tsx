@@ -405,214 +405,164 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
     )
   }
 
-  return (
-    <div className="bg-white p-4 sm:p-5 shadow-warm mb-3 border border-warm/80 hover:shadow-lg transition-all">
+  // Deadline days remaining
+  const daysLeft = (() => {
+    if (!grant.deadline || grant.isRolling) return null
+    const parts = grant.deadline.split('-').map(Number)
+    if (parts.length !== 3) return null
+    return Math.ceil((new Date(parts[0], parts[1]-1, parts[2]).getTime() - new Date().setHours(0,0,0,0)) / 86400000)
+  })()
 
-      {/* ── Header: avatar + funder + title + amount ── */}
-      <div className="flex items-start gap-3 mb-2">
-        <div className="h-9 w-9 bg-[#f5f2ed] flex items-center justify-center text-charcoal font-bold text-sm flex-shrink-0 border border-warm mt-0.5">
-          {grant.funder[0].toUpperCase()}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="font-semibold text-charcoal text-base leading-snug">{grant.title}</h3>
-            <p className="text-base font-bold text-gold flex-shrink-0 ml-1">
-              {formatRange(grant.amountMin, grant.amountMax)}
-            </p>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap mt-0.5">
-            <p className="text-sm text-mid">{grant.funder}</p>
-            <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${typeColour[grant.funderType] ?? 'bg-gray-50 text-gray-600'}`}>
-              {FUNDER_TYPES.find(t => t.id === grant.funderType)?.label ?? grant.funderType}
-            </span>
-            {grant.isLocal && (
-              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-green-50 text-green-700 inline-flex items-center gap-0.5">
-                <MapPin className="w-2.5 h-2.5" />Local
+  // Sector labels
+  const sectorLabels = (grant as EnrichedGrant).impactSectors?.length
+    ? (grant as EnrichedGrant).impactSectors!.slice(0, 3).map(s =>
+        IMPACT_SECTOR_FILTERS.find(f => f.id === s)?.label ?? s
+      )
+    : grant.sectors.map(s => sectorLabel(s)).filter(Boolean).slice(0, 3) as string[]
+
+  // Eligible structure labels
+  const structureLabels = ((grant as EnrichedGrant).eligibleStructures ?? [])
+    .slice(0, 3).map(s => STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' '))
+
+  // Score ring arc
+  const radius = 14, circ = 2 * Math.PI * radius
+  const arc = hasOrg && hasSearch ? (score / 100) * circ : 0
+  const ringColour = score >= 70 ? '#2d8a7a' : score >= 45 ? '#e8a030' : '#9ca3af'
+
+  return (
+    <div className="bg-white mb-3 border border-[#e8ddd0] hover:shadow-md transition-shadow">
+      <div className="flex">
+
+        {/* ── Left: match score ── */}
+        {hasOrg && hasSearch && (
+          <div className="flex flex-col items-center justify-center px-4 py-5 border-r border-[#e8ddd0] flex-shrink-0 w-[72px]">
+            <div className="relative w-[44px] h-[44px]">
+              <svg viewBox="0 0 36 36" className="w-[44px] h-[44px] -rotate-90">
+                <circle cx="18" cy="18" r={radius} fill="none" stroke="#e8ddd0" strokeWidth="3" />
+                <circle
+                  cx="18" cy="18" r={radius} fill="none"
+                  stroke={ringColour} strokeWidth="3"
+                  strokeDasharray={`${arc} ${circ}`}
+                  strokeLinecap="butt"
+                />
+              </svg>
+              <span className="absolute inset-0 flex items-center justify-center text-[11px] font-bold" style={{ color: ringColour }}>
+                {score}%
               </span>
+            </div>
+            <span className="text-[9px] font-semibold text-[#9ca3af] uppercase tracking-wider mt-1.5">Match</span>
+          </div>
+        )}
+
+        {/* ── Centre: content ── */}
+        <div className="flex-1 min-w-0 p-4 sm:p-5">
+
+          {/* Badges */}
+          <div className="flex flex-wrap items-center gap-1.5 mb-2">
+            <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 ${entryBadge.cls}`}>
+              <entryBadge.Icon className="w-3 h-3" />
+              {entryBadge.label}
+            </span>
+            {entryType === 'live' && daysLeft !== null && daysLeft >= 0 && (
+              <span className={`text-[11px] font-semibold px-2 py-0.5 border ${
+                daysLeft <= 3  ? 'bg-red-50 text-red-600 border-red-200' :
+                daysLeft <= 7  ? 'bg-amber-50 text-amber-600 border-amber-200' :
+                daysLeft <= 14 ? 'bg-orange-50 text-orange-500 border-orange-200' :
+                                 'bg-gray-50 text-gray-500 border-gray-200'
+              }`}>
+                {daysLeft === 0 ? 'Closes today' : `Closes in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`}
+              </span>
+            )}
+            {isNewThisWeek && (
+              <span className="text-[11px] font-semibold px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200">New</span>
+            )}
+            {grant.isInviteOnly && (
+              <span className="text-[11px] font-semibold px-2 py-0.5 bg-purple-50 text-purple-700 border border-purple-200">Invite Only</span>
             )}
             {grant.source === 'scraped' && <StalenessBadge lastVerifiedAt={grant.lastVerifiedAt} />}
           </div>
-        </div>
-      </div>
 
-      {/* ── Badges row ── */}
-      <div className="flex flex-wrap items-center gap-1.5 mb-3 ml-12">
-        {ftBadge && (
-          <span className={`inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide ${ftBadge.cls}`}>
-            <ftBadge.Icon className="w-2.5 h-2.5" />{ftBadge.label}
-          </span>
-        )}
-        <span className={`inline-flex items-center gap-1 text-[9px] font-medium px-1.5 py-0.5 ${entryBadge.cls}`}>
-          <entryBadge.Icon className="w-2.5 h-2.5" />{entryBadge.label}
-        </span>
-        {isNewThisWeek && (
-          <span className="bg-emerald-100 text-emerald-700 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide">New</span>
-        )}
-        {grant.isInviteOnly && (
-          <span className="bg-purple-50 text-purple-700 border border-purple-200 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide" title="Invite only">✉ Invite Only</span>
-        )}
-        {grant.nextOpenDate && (
-          <span className="bg-blue-50 text-blue-700 border border-blue-200 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide">🔔 Opens {grant.nextOpenDate}</span>
-        )}
-      </div>
+          {/* Title + funder */}
+          <h3 className="font-display text-lg font-bold text-[#2c3e35] leading-snug mb-0.5">{grant.title}</h3>
+          <p className="text-sm text-[#6b7280] mb-3">{grant.funder}</p>
 
-      {/* ── Description ── */}
-      <p className="text-sm text-mid leading-relaxed mb-3">
-        {grant.description.length > 200
-          ? `${grant.description.slice(0, 200).trimEnd()}…`
-          : grant.description}
-      </p>
+          {/* Description */}
+          <p className="text-sm text-[#444] leading-relaxed mb-3">
+            {grant.description.length > 220
+              ? `${grant.description.slice(0, 220).trimEnd()}…`
+              : grant.description}
+          </p>
 
-      {/* ── Match reason ── */}
-      {hasOrg && hasSearch && reason && (
-        <div className="border px-3.5 py-2.5 mb-3 flex items-start gap-2" style={{ backgroundColor: 'rgba(26,122,94,0.06)', borderColor: 'rgba(26,122,94,0.18)' }}>
-          <span className="text-sm flex-shrink-0 text-forest/70">{isAiScore ? '✦' : '●'}</span>
-          <p className="text-sm text-forest leading-snug">{reason.replace(/<[^>]*>/g, '').trim()}</p>
-        </div>
-      )}
-
-      {/* ── Sector + For tags ── */}
-      {(() => {
-        const sectorTags = (grant as EnrichedGrant).impactSectors?.length
-          ? (grant as EnrichedGrant).impactSectors!.slice(0, 4).map(s => {
-              const lbl = IMPACT_SECTOR_FILTERS.find(f => f.id === s)?.label ?? s
-              return <span key={s} className="tag bg-violet-50 text-violet-600 capitalize">{lbl}</span>
-            })
-          : grant.sectors
-              .map(s => ({ raw: s, label: sectorLabel(s) }))
-              .filter(({ label }) => label !== null)
-              .slice(0, 3)
-              .map(({ raw, label }) => (
-                <span key={raw} className="tag bg-violet-50 text-violet-600 capitalize">{label}</span>
-              ))
-        if (sectorTags.length === 0) return null
-        return (
-          <div className="flex flex-wrap items-center gap-1.5 mb-1">
-            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider w-12 flex-shrink-0">Sector</span>
-            {sectorTags}
-          </div>
-        )
-      })()}
-
-      {(() => {
-        const structures = (grant as EnrichedGrant).eligibleStructures
-        if (!structures?.length) return null
-        const chips = structures.slice(0, 5).map(s => {
-          const lbl = STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' ')
-          return <span key={s} className="tag bg-orange-50 text-orange-600 capitalize">{lbl}</span>
-        })
-        const overflow = structures.length > 5 ? structures.length - 5 : 0
-        return (
-          <div className="flex flex-wrap items-center gap-1.5 mb-1">
-            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider w-12 flex-shrink-0">For</span>
-            {chips}
-            {overflow > 0 && <span className="tag bg-orange-50 text-orange-600">+{overflow}</span>}
-          </div>
-        )
-      })()}
-
-      {/* ── Expandable eligibility ── */}
-      {expanded && (
-        <div className="mt-3 pt-3 border-t border-warm">
-          <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Eligibility criteria</p>
-          <ul className="space-y-1">
-            {grant.eligibilityCriteria.map(c => (
-              <li key={c} className="text-sm text-mid flex gap-2">
-                <span className="text-forest flex-shrink-0">✓</span>{c}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* ── Bottom row: deadline + match score + actions + train ── */}
-      <div className="flex flex-wrap items-center justify-between gap-2 mt-3 pt-3 border-t border-warm/60">
-        {/* Left: deadline + match badge + eligibility toggle */}
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="flex items-center gap-1.5">
-            <p className="text-xs text-light">
-              {entryType === 'live'    ? (formatDeadline(grant.deadline) ?? grant.deadline) :
-               entryType === 'rolling' ? 'Always open' :
-               /* profile */            'Typical range'}
-            </p>
-            {entryType === 'live' && grant.deadline && (() => {
-              const parts = grant.deadline.split('-').map(Number)
-              if (parts.length !== 3) return null
-              const days = Math.ceil((new Date(parts[0], parts[1]-1, parts[2]).getTime() - new Date().setHours(0,0,0,0)) / 86400000)
-              if (days > 10) return null
-              return (
-                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                  days < 0  ? 'bg-red-100 text-red-600' :
-                  days <= 3 ? 'bg-red-100 text-red-600' :
-                  days <= 7 ? 'bg-amber-100 text-amber-600' :
-                              'bg-orange-50 text-orange-500'
-                }`}>
-                  {days < 0 ? 'Overdue' : days === 0 ? 'Today!' : `${days}d left`}
-                </span>
-              )
-            })()}
-          </div>
-          {hasOrg && hasSearch && <MatchBadge score={score} isAi={isAiScore} breakdown={breakdown} />}
-          <button onClick={() => setExpanded(!expanded)} className="text-xs text-coral font-medium hover:underline">
-            {expanded ? 'Show less ↑' : 'Eligibility ↓'}
-          </button>
-        </div>
-
-        {/* Right: action buttons + thumbs */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {hasOrg && (
-            <>
-              <button
-                onClick={() => onLike(grant.id)}
-                title="Good match"
-                className={`transition-all ${isLiked ? 'text-forest scale-110' : 'text-light hover:text-forest'}`}
-              >
-                <ThumbsUp className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => onDislike(grant.id)}
-                title="Not relevant"
-                className={`transition-all ${isDisliked ? 'text-red-500 scale-110' : 'text-light hover:text-red-400'}`}
-              >
-                <ThumbsDown className="h-4 w-4" />
-              </button>
-            </>
+          {/* Match reason */}
+          {hasOrg && hasSearch && reason && (
+            <div className="border-l-2 border-[#2d8a7a] pl-3 mb-4">
+              <p className="text-sm text-[#2d8a7a] leading-snug italic">
+                {reason.replace(/<[^>]*>/g, '').trim()}
+              </p>
+            </div>
           )}
-          <button
-            onClick={() => isSaved ? onUnsave?.(grant.id) : onSave?.(grant.id)}
-            title={isSaved ? 'Remove bookmark' : 'Save for later'}
-            className={`transition-all ${isSaved ? 'text-coral scale-110' : 'text-light hover:text-coral'}`}
-          >
-            <Bookmark className={`h-4 w-4 ${isSaved ? 'fill-coral' : ''}`} />
-          </button>
+
+          {/* Bottom metrics */}
+          <div className="flex gap-6 pt-3 border-t border-[#e8ddd0]">
+            <div>
+              <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-0.5">Funding Amount</p>
+              <p className="text-sm font-bold text-[#2c3e35]">{formatRange(grant.amountMin, grant.amountMax)}</p>
+            </div>
+            {sectorLabels.length > 0 && (
+              <div>
+                <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-0.5">Sector</p>
+                <p className="text-sm font-semibold text-[#2c3e35]">{sectorLabels.join(', ')}</p>
+              </div>
+            )}
+            {structureLabels.length > 0 && (
+              <div>
+                <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-0.5">For</p>
+                <p className="text-sm font-semibold text-[#2c3e35]">{structureLabels.join(', ')}</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── Right: action buttons ── */}
+        <div className="flex flex-col gap-2 p-3 border-l border-[#e8ddd0] justify-center flex-shrink-0 w-[120px]">
           {grant.source === 'scraped' && (
             <button
               onClick={() => onViewDetail(grant.id)}
-              className="px-3 py-1.5 text-xs font-medium transition-colors border border-[#e8ddd0] text-[#444] hover:border-coral hover:text-coral bg-white"
+              className="w-full px-3 py-2 text-xs font-semibold text-white text-center transition-opacity hover:opacity-90"
+              style={{ backgroundColor: '#E8725C' }}
             >
-              View details →
+              View Details
             </button>
           )}
+          <button
+            onClick={() => isSaved ? onUnsave?.(grant.id) : onSave?.(grant.id)}
+            className={`w-full px-3 py-2 text-xs font-semibold text-center border transition-colors ${
+              isSaved
+                ? 'bg-[#E8725C]/10 text-[#E8725C] border-[#E8725C]/30'
+                : 'border-[#e8ddd0] text-[#444] hover:border-[#E8725C] hover:text-[#E8725C]'
+            }`}
+          >
+            {isSaved ? 'Saved ✓' : 'Save for Later'}
+          </button>
+          <button
+            onClick={() => onAddToPipeline(grant)}
+            className="w-full px-3 py-2 text-xs font-semibold text-center border border-[#e8ddd0] text-[#444] hover:border-[#2d8a7a] hover:text-[#2d8a7a] transition-colors"
+          >
+            + Pipeline
+          </button>
           {grant.applyUrl && (
             <a
               href={grant.applyUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-3 py-1.5 text-xs font-medium transition-colors text-white hover:opacity-90"
-              style={{ backgroundColor: '#E8725C' }}
+              className="w-full px-3 py-2 text-xs font-semibold text-center border border-[#e8ddd0] text-[#444] hover:border-coral hover:text-coral transition-colors"
             >
-              Visit website →
+              Website →
             </a>
           )}
-          <button
-            onClick={() => onAddToPipeline(grant)}
-            className="px-3 py-1.5 bg-coral text-white text-xs font-semibold hover:bg-coral/90 transition-colors"
-          >
-            + Pipeline
-          </button>
         </div>
-      </div>
 
+      </div>
     </div>
   )
 }
