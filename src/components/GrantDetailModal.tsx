@@ -201,7 +201,7 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
           <p className="text-xs font-semibold text-[#6b7280] uppercase tracking-wider">Grant Details</p>
           <button
             onClick={onClose}
-            className="p-1.5 hover:bg-[#e8ddd0] transition-colors text-[#6b7280] hover:text-[#2c3e35]"
+            className="p-1.5 rounded hover:bg-[#e8ddd0] transition-colors text-[#6b7280] hover:text-[#2c3e35]"
             aria-label="Close"
           >
             <X className="w-4 h-4" />
@@ -250,12 +250,12 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
                     {ftBadge.label}
                   </span>
                   {grant.is_local && (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 bg-green-50 text-green-700 border border-green-200">
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded bg-green-50 text-green-700 border border-green-200">
                       <MapPin className="w-3 h-3" />Local
                     </span>
                   )}
                   {grant.next_open_date && (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200">
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
                       <Bell className="w-3 h-3" />Opens {grant.next_open_date}
                     </span>
                   )}
@@ -321,7 +321,7 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
                     </h3>
                     <div className="flex flex-wrap gap-1.5 mb-2">
                       {structures.map(s => (
-                        <span key={s} className="text-[11px] font-medium px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <span key={s} className="text-[11px] font-medium px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
                           {STRUCTURE_LABELS[s] ?? s}
                         </span>
                       ))}
@@ -339,7 +339,7 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
                     <h3 className="text-xs font-semibold text-[#6b7280] uppercase tracking-wider mb-2">Impact sectors</h3>
                     <div className="flex flex-wrap gap-1.5">
                       {impactSectors.map(s => (
-                        <span key={s} className="text-[11px] font-medium px-2 py-0.5 bg-violet-50 text-violet-700 border border-violet-200">
+                        <span key={s} className="text-[11px] font-medium px-2 py-0.5 rounded bg-violet-50 text-violet-700 border border-violet-200">
                           {IMPACT_SECTOR_LABELS[s] ?? s}
                         </span>
                       ))}
@@ -353,7 +353,7 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
                     <h3 className="text-xs font-semibold text-[#6b7280] uppercase tracking-wider mb-2">Sectors</h3>
                     <div className="flex flex-wrap gap-1.5">
                       {sectors.map(s => (
-                        <span key={s} className="text-[11px] font-medium px-2 py-0.5 bg-violet-50 text-violet-700 border border-violet-200 capitalize">{s}</span>
+                        <span key={s} className="text-[11px] font-medium px-2 py-0.5 rounded bg-violet-50 text-violet-700 border border-violet-200 capitalize">{s}</span>
                       ))}
                     </div>
                   </div>

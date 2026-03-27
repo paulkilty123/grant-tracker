@@ -203,7 +203,7 @@ function PipelineModal({
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-white w-full max-w-lg max-h-[85vh] overflow-y-auto" style={{ boxShadow: '0 16px 64px rgba(26,46,43,0.18)' }} onClick={e => e.stopPropagation()}>
+      <div className="bg-white w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-lg" style={{ boxShadow: '0 16px 64px rgba(26,46,43,0.18)' }} onClick={e => e.stopPropagation()}>
         <div className="p-6 border-b border-warm flex justify-between items-start">
           <div>
             <h3 className="font-display text-lg font-bold text-charcoal">{item.grant_name}</h3>
@@ -806,7 +806,7 @@ export default function PipelinePage() {
               >
                 <span className="flex items-center gap-1.5">{STAGE_ICONS[stage.id]}{stage.label}</span>
                 <span
-                  className="px-1.5 py-0.5 text-[10px] font-bold"
+                  className="px-1.5 py-0.5 text-[10px] font-bold rounded"
                   style={{ background: stageColour.badgeBg, color: stageColour.badgeText }}
                 >
                   {stageItems.length}

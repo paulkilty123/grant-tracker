@@ -22,33 +22,30 @@
   }
 
   h1, h2, h3 {
-    font-family: var(--font-dm-serif), serif;
+    font-family: var(--font-lora), Georgia, serif;
   }
 }
 
 @layer components {
   /* Cards */
   .card {
-    @apply bg-white border border-warm/80 p-6;
+    @apply bg-white border border-warm/80 p-6 rounded-lg;
     box-shadow: 0 2px 16px rgba(26,46,43,0.06);
   }
 
   /* Buttons */
   .btn-primary {
-    @apply bg-coral text-white px-5 py-2.5 text-sm font-medium
+    @apply bg-coral text-white px-5 py-2.5 text-sm font-medium rounded-lg
            hover:opacity-90 transition-colors duration-150 cursor-pointer border-none;
-    border-radius: 0;
   }
   .btn-outline {
     @apply bg-transparent text-charcoal border border-warm px-5 py-2.5
-           text-sm font-medium hover:border-charcoal transition-colors
+           text-sm font-medium rounded-lg hover:border-charcoal transition-colors
            duration-150 cursor-pointer;
-    border-radius: 0;
   }
   .btn-gold {
-    @apply bg-coral text-white px-5 py-2.5 text-sm font-medium
+    @apply bg-coral text-white px-5 py-2.5 text-sm font-medium rounded-lg
            hover:opacity-90 transition-all duration-150 cursor-pointer border-none;
-    border-radius: 0;
   }
   .btn-sm {
     @apply px-3.5 py-1.5 text-xs;
@@ -66,15 +63,13 @@
   }
   .form-select {
     @apply w-full px-3.5 py-2.5 border border-warm text-sm text-charcoal
-           outline-none focus:border-coral transition-colors font-sans bg-white cursor-pointer;
-    border-radius: 0;
+           outline-none focus:border-coral transition-colors font-sans bg-white cursor-pointer rounded-lg;
   }
 
   /* Nav */
   .nav-item {
     @apply flex items-center gap-2.5 px-3 py-2.5 text-white/65 text-sm
-           cursor-pointer transition-all duration-150 hover:bg-white/10 hover:text-white;
-    border-radius: 0;
+           cursor-pointer transition-all duration-150 hover:bg-white/10 hover:text-white rounded;
   }
   .nav-item.active {
     @apply bg-white/15 text-white font-medium;
@@ -82,13 +77,13 @@
 
   /* Stat cards */
   .stat-card {
-    @apply bg-white p-5 border border-warm/80;
+    @apply bg-white p-5 border border-warm/80 rounded-lg;
     box-shadow: 0 2px 16px rgba(26,46,43,0.06);
   }
 
   /* Pipeline */
   .pipeline-card {
-    @apply bg-white p-3.5 mb-2.5 cursor-pointer
+    @apply bg-white p-3.5 mb-2.5 cursor-pointer rounded-lg
            transition-all duration-150 hover:-translate-y-px
            border border-warm/60;
     box-shadow: 0 1px 6px rgba(26,46,43,0.06);
@@ -98,7 +93,7 @@
     box-shadow: none;
   }
   .pipeline-col {
-    @apply bg-[#f5f2ed] p-3.5 min-h-[300px];
+    @apply bg-[#f5f2ed] p-3.5 min-h-[300px] rounded-lg;
   }
   .pipeline-col.drag-over {
     @apply outline-2 outline-dashed outline-coral bg-coral/5;
@@ -135,6 +130,6 @@
   }
 
   .font-display {
-    font-family: var(--font-dm-serif), serif;
+    font-family: var(--font-lora), Georgia, serif;
   }
 }

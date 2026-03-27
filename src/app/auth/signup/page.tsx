@@ -59,11 +59,11 @@ export default function SignupPage() {
   if (done) {
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center p-4">
-        <div className="bg-white border border-warm/60 max-w-md w-full p-10 text-center" style={{ boxShadow: '0 8px 40px rgba(26,46,43,0.10)' }}>
-          <div className="w-12 h-12 bg-forest/10 flex items-center justify-center mx-auto mb-5">
+        <div className="bg-white border border-warm/60 rounded-xl max-w-md w-full p-10 text-center" style={{ boxShadow: '0 8px 40px rgba(26,46,43,0.10)' }}>
+          <div className="w-12 h-12 bg-forest/10 rounded-lg flex items-center justify-center mx-auto mb-5">
             <Bell size={22} className="text-forest" />
           </div>
-          <h2 className="font-serif text-[26px] text-charcoal mb-2">Check your email</h2>
+          <h2 className="font-display text-[26px] text-charcoal mb-2">Check your email</h2>
           <p className="text-mid text-sm leading-relaxed">We&apos;ve sent a confirmation link to <strong className="text-charcoal">{email}</strong>. Click it to activate your account.</p>
           <p className="text-xs text-mid mt-3">Can&apos;t find it? Check your spam folder.</p>
           <div className="mt-5">
@@ -110,7 +110,7 @@ export default function SignupPage() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 overflow-hidden border border-warm/60" style={{ boxShadow: '0 8px 40px rgba(26,46,43,0.10)' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 overflow-hidden border border-warm/60 rounded-xl" style={{ boxShadow: '0 8px 40px rgba(26,46,43,0.10)' }}>
 
           {/* ── Left: value props ── */}
           <div className="bg-[#121f2b] text-white p-10 hidden lg:flex flex-col justify-between">
@@ -162,12 +162,12 @@ export default function SignupPage() {
               </a>
             </div>
 
-            <h1 className="font-serif text-[28px] leading-tight text-charcoal mb-1">Create your free account</h1>
+            <h1 className="font-display text-[28px] leading-tight text-charcoal mb-1">Create your free account</h1>
             <p className="text-mid text-sm mb-7">Set up in 2 minutes — no credit card needed</p>
 
             <form onSubmit={handleSignup} className="space-y-4">
               {error && (
-                <div className="bg-red-50 text-red-600 text-sm px-4 py-3 border border-red-100">
+                <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-lg border border-red-100">
                   {error}
                 </div>
               )}
@@ -179,7 +179,6 @@ export default function SignupPage() {
                   value={fullName}
                   onChange={e => setFullName(e.target.value)}
                   className="form-input"
-                  style={{ borderRadius: '0' }}
                   placeholder="Jane Smith"
                   autoComplete="name"
                   required
@@ -193,7 +192,6 @@ export default function SignupPage() {
                   value={orgName}
                   onChange={e => setOrgName(e.target.value)}
                   className="form-input"
-                  style={{ borderRadius: '0' }}
                   placeholder="Green Communities CIC"
                   autoComplete="organization"
                   required
@@ -206,7 +204,6 @@ export default function SignupPage() {
                   value={orgType}
                   onChange={e => setOrgType(e.target.value)}
                   className="form-input"
-                  style={{ borderRadius: '0' }}
                   required
                 >
                   <option value="" disabled>Select your organisation type…</option>
@@ -225,7 +222,6 @@ export default function SignupPage() {
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   className="form-input"
-                  style={{ borderRadius: '0' }}
                   placeholder="you@organisation.org"
                   autoComplete="email"
                   required
@@ -265,8 +261,7 @@ export default function SignupPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center items-center bg-coral text-white py-3 text-sm font-semibold hover:opacity-90 transition-colors mt-2"
-                style={{ borderRadius: '0' }}
+                className="w-full flex justify-center items-center bg-coral text-white py-3 text-sm font-semibold rounded-lg hover:opacity-90 transition-colors mt-2"
               >
                 {loading ? 'Creating account…' : 'Create free account'}
               </button>

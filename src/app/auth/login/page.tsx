@@ -62,7 +62,7 @@ function LoginForm() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 overflow-hidden border border-warm/60" style={{ boxShadow: '0 8px 40px rgba(26,46,43,0.10)' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 overflow-hidden border border-warm/60 rounded-xl" style={{ boxShadow: '0 8px 40px rgba(26,46,43,0.10)' }}>
 
           {/* ── Left: value props ── */}
           <div className="bg-[#121f2b] text-white p-10 hidden lg:flex flex-col justify-between">
@@ -114,17 +114,17 @@ function LoginForm() {
               </a>
             </div>
 
-            <h1 className="font-serif text-[28px] leading-tight text-charcoal mb-1">Welcome back</h1>
+            <h1 className="font-display text-[28px] leading-tight text-charcoal mb-1">Welcome back</h1>
             <p className="text-mid text-sm mb-7">Sign in to your Grant Tracker account</p>
 
             <form onSubmit={handleLogin} className="space-y-4">
               {urlErrorMessage && (
-                <div className="bg-amber-50 text-amber-700 text-sm px-4 py-3 border border-amber-200">
+                <div className="bg-amber-50 text-amber-700 text-sm px-4 py-3 rounded-lg border border-amber-200">
                   {urlErrorMessage}
                 </div>
               )}
               {error && (
-                <div className="bg-red-50 text-red-600 text-sm px-4 py-3 border border-red-100">
+                <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-lg border border-red-100">
                   {error}
                 </div>
               )}
@@ -136,7 +136,6 @@ function LoginForm() {
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   className="form-input"
-                  style={{ borderRadius: '0' }}
                   placeholder="you@organisation.org"
                   autoComplete="email"
                   required
@@ -175,8 +174,7 @@ function LoginForm() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center items-center bg-coral text-white py-3 text-sm font-semibold hover:opacity-90 transition-colors mt-2"
-                style={{ borderRadius: '0' }}
+                className="w-full flex justify-center items-center bg-coral text-white py-3 text-sm font-semibold rounded-lg hover:opacity-90 transition-colors mt-2"
               >
                 {loading ? 'Signing in…' : 'Sign in'}
               </button>

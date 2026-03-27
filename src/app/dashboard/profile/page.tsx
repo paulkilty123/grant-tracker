@@ -473,7 +473,7 @@ export default function ProfilePage() {
             <button
               onClick={handleAutoFill}
               disabled={autoFilling || !websiteUrl.trim()}
-              className="px-5 py-2.5 bg-coral text-white text-sm font-semibold flex items-center gap-2 hover:opacity-90 transition-colors disabled:opacity-50 whitespace-nowrap"
+              className="px-5 py-2.5 bg-coral text-white text-sm font-semibold rounded-lg flex items-center gap-2 hover:opacity-90 transition-colors disabled:opacity-50 whitespace-nowrap"
             >
               <Sparkles className="h-3.5 w-3.5" />
               {autoFilling ? 'Reading…' : 'Auto-fill'}
@@ -713,7 +713,7 @@ export default function ProfilePage() {
           <button
             onClick={handleSave}
             disabled={saving || !form.name.trim()}
-            className="px-5 py-2.5 bg-coral text-white text-sm font-semibold hover:opacity-90 transition-colors disabled:opacity-50"
+            className="px-5 py-2.5 bg-coral text-white text-sm font-semibold rounded-lg hover:opacity-90 transition-colors disabled:opacity-50"
           >
             {saving ? 'Saving…' : saveStatus === 'saved' ? '✓ Saved!' : 'Save Profile'}
           </button>
@@ -773,7 +773,7 @@ export default function ProfilePage() {
           <button
             onClick={handleAutoFill}
             disabled={autoFilling || !websiteUrl.trim()}
-            className="px-4 py-2 bg-coral text-white text-sm font-medium flex items-center gap-2 hover:opacity-90 transition-colors disabled:opacity-50 whitespace-nowrap"
+            className="px-4 py-2 bg-coral text-white text-sm font-medium rounded-lg flex items-center gap-2 hover:opacity-90 transition-colors disabled:opacity-50 whitespace-nowrap"
           >
             <Sparkles className="h-3.5 w-3.5" />
             {autoFilling ? 'Reading…' : 'Auto-fill'}

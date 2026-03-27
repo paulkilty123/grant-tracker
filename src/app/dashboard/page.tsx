@@ -67,12 +67,12 @@ export default async function DashboardPage() {
     <div>
       {/* Setup banner — shown until profile is saved */}
       {profileIncomplete && (
-        <div className="mb-6 border border-amber-200 bg-amber-50 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="mb-6 border border-amber-200 bg-amber-50 p-4 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <p className="text-sm font-semibold text-amber-800">Complete your profile to unlock matched grants</p>
             <p className="text-xs text-amber-700 mt-0.5">Takes about 3 minutes — tells us your sector, location and legal structure so we can filter results for you.</p>
           </div>
-          <a href="/dashboard/profile" className="flex-shrink-0 px-4 py-2 bg-amber-600 text-white text-xs font-semibold hover:opacity-90 transition-colors whitespace-nowrap">Set up profile →</a>
+          <a href="/dashboard/profile" className="flex-shrink-0 px-4 py-2 bg-amber-600 text-white text-xs font-semibold rounded-lg hover:opacity-90 transition-colors whitespace-nowrap">Set up profile →</a>
         </div>
       )}
 
@@ -100,7 +100,7 @@ export default async function DashboardPage() {
           { label: 'Submitted',      value: String(stats.submittedCount),              sub: 'awaiting decision' },
           { label: 'Urgent Deadlines', value: String(urgentCount),                     sub: 'in the next 10 days', urgent: urgentCount > 0 },
         ].map(s => (
-          <div key={s.label} className="bg-white border border-warm/80 p-5" style={{ boxShadow: '0 2px 16px rgba(26,46,43,0.06)' }}>
+          <div key={s.label} className="bg-white border border-warm/80 p-5 rounded-lg" style={{ boxShadow: '0 2px 16px rgba(26,46,43,0.06)' }}>
             <p className="text-[10px] font-semibold text-mid uppercase tracking-wider mb-2">{s.label}</p>
             <p className={`font-serif text-3xl ${s.accent ? 'text-forest' : s.urgent ? 'text-coral' : 'text-charcoal'}`}>
               {s.value}
@@ -116,7 +116,7 @@ export default async function DashboardPage() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <h3 className="font-display text-base font-bold text-charcoal">New This Week</h3>
-              <span className="bg-forest/10 text-forest text-[10px] font-bold px-2 py-0.5 uppercase tracking-wide">
+              <span className="bg-forest/10 text-forest text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wide">
                 {newGrantsCount} new
               </span>
             </div>
@@ -125,10 +125,10 @@ export default async function DashboardPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {(newGrants ?? []).map(g => (
               <a key={g.id} href={`/dashboard/grants/${encodeURIComponent(g.external_id ?? g.id)}`}
-                className="flex flex-col gap-0.5 p-3 border border-warm bg-[#f5f2ed] hover:bg-warm transition-colors group">
+                className="flex flex-col gap-0.5 p-3 border border-warm bg-[#f5f2ed] rounded-lg hover:bg-warm transition-colors group">
                 <div className="flex items-start justify-between gap-2">
                   <p className="text-sm font-medium text-charcoal group-hover:text-forest leading-snug line-clamp-2">{g.title}</p>
-                  <span className="bg-forest/10 text-forest text-[9px] font-bold px-1.5 py-0.5 uppercase tracking-wide flex-shrink-0 mt-0.5">New</span>
+                  <span className="bg-forest/10 text-forest text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide flex-shrink-0 mt-0.5">New</span>
                 </div>
                 <p className="text-xs text-mid truncate">{g.funder ?? 'Unknown funder'}</p>
                 {(g.amount_min || g.amount_max) && (
@@ -162,7 +162,7 @@ export default async function DashboardPage() {
               <p className="text-2xl mb-3">🔍</p>
               <p className="text-sm font-medium text-charcoal mb-1">No grants tracked yet</p>
               <p className="text-xs mb-4">Find a grant and hit <strong>+ Pipeline</strong> to start tracking your applications here.</p>
-              <a href="/dashboard/search" className="inline-flex items-center gap-1.5 px-4 py-2 bg-forest text-white text-xs font-semibold hover:opacity-90 transition-colors">Find your first grant →</a>
+              <a href="/dashboard/search" className="inline-flex items-center gap-1.5 px-4 py-2 bg-forest text-white text-xs font-semibold rounded-lg hover:opacity-90 transition-colors">Find your first grant →</a>
             </div>
           ) : (
             <>
@@ -175,7 +175,7 @@ export default async function DashboardPage() {
                   { id: 'declined',    label: 'Declined',    cls: 'bg-warm text-mid' },
                 ].map(s => (
                   <a key={s.id} href="/dashboard/pipeline"
-                    className={`p-3 text-center transition-opacity hover:opacity-80 ${s.cls}`}>
+                    className={`p-3 text-center rounded-lg transition-opacity hover:opacity-80 ${s.cls}`}>
                     <span className="block font-serif text-2xl">
                       {stats.byStageCounts[s.id] ?? 0}
                     </span>
@@ -195,12 +195,12 @@ export default async function DashboardPage() {
                       'bg-forest/10 text-forest'
                     return (
                       <a key={item.id} href="/dashboard/pipeline"
-                        className="flex items-center justify-between py-2.5 border-b border-warm last:border-0 hover:bg-[#f5f2ed] -mx-1 px-1 transition-colors">
+                        className="flex items-center justify-between py-2.5 border-b border-warm last:border-0 hover:bg-[#f5f2ed] -mx-1 px-1 rounded transition-colors">
                         <div className="flex-1 min-w-0 mr-3">
                           <p className="text-sm font-medium text-charcoal truncate">{item.grant_name}</p>
                           <p className="text-xs text-mid truncate">{item.funder_name}</p>
                         </div>
-                        <span className={`text-[10px] font-semibold px-2 py-0.5 flex-shrink-0 ${stageCls}`}>
+                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded flex-shrink-0 ${stageCls}`}>
                           {stage?.label ?? item.stage}
                         </span>
                       </a>
@@ -228,7 +228,7 @@ export default async function DashboardPage() {
                     <p className="text-sm font-medium text-charcoal truncate">{alert.item.grant_name}</p>
                     <p className="text-xs text-mid mt-0.5 truncate">{alert.item.funder_name}</p>
                   </div>
-                  <span className={`text-xs font-semibold px-2.5 py-1 whitespace-nowrap flex-shrink-0 ${
+                  <span className={`text-xs font-semibold px-2.5 py-1 rounded whitespace-nowrap flex-shrink-0 ${
                     alert.urgency === 'urgent' || alert.urgency === 'overdue'
                       ? 'bg-coral text-white'
                       : alert.urgency === 'soon'
