@@ -1572,9 +1572,10 @@ export default function SearchPage() {
                       className="relative flex-shrink-0 transition-colors duration-200"
                       style={{
                         width: 44, height: 24,
-                        backgroundColor: '#1a1a1a',
+                        backgroundColor: profileFilterOn ? '#E8725C' : '#d1d5db',
                         display: 'inline-flex', alignItems: 'center',
                         borderRadius: 4,
+                        transition: 'background-color 0.2s',
                       }}
                     >
                       <span
