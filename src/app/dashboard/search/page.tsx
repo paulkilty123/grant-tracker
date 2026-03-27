@@ -52,7 +52,8 @@ const SECTOR_DISPLAY: Record<string, string | null> = {
 
 function sectorLabel(s: string): string | null {
   if (s in SECTOR_DISPLAY) return SECTOR_DISPLAY[s]
-  return s
+  // Fallback: replace underscores with spaces and title-case each word
+  return s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
 }
 
 // Eligible org structure labels — maps DB keys to short display names
