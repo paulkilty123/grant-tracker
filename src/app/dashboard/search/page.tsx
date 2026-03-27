@@ -1426,9 +1426,9 @@ export default function SearchPage() {
   return (
     <div>
       {/* ── Page heading + view tabs ── */}
-      <div className="mb-5 flex items-baseline gap-6">
+      <div className="mb-5 flex items-baseline">
         <h2 className="font-display text-2xl font-bold text-charcoal flex-shrink-0">Find Funding</h2>
-        <div className="flex items-center gap-0">
+        <div className="flex items-center gap-0 ml-auto">
           <button
             onClick={() => setActiveView('matches')}
             className={`px-1 py-1 text-sm font-medium border-b-2 mr-5 transition-colors ${activeView === 'matches' ? 'border-coral text-coral' : 'border-transparent text-gray-500 hover:text-charcoal'}`}
