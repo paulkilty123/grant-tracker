@@ -485,7 +485,6 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
             {grant.isInviteOnly && (
               <span className="text-[11px] font-semibold px-2 py-0.5 bg-purple-50 text-purple-700 border border-purple-200">Invite Only</span>
             )}
-            {grant.source === 'scraped' && <StalenessBadge lastVerifiedAt={grant.lastVerifiedAt} />}
           </div>
 
           {/* Title + funder */}
@@ -514,19 +513,21 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
               <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-0.5">Funding Amount</p>
               <p className="text-sm font-bold text-[#2c3e35]">{formatRange(grant.amountMin, grant.amountMax)}</p>
             </div>
-            {/* Deadline — shown for grants with a fixed close date */}
-            {grant.deadline && !grant.isRolling && (() => {
-              const parts = grant.deadline.split('-').map(Number)
-              if (parts.length !== 3 || parts.some(isNaN)) return null
-              const formatted = new Date(parts[0], parts[1] - 1, parts[2])
-                .toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-              return (
-                <div>
-                  <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-0.5">Deadline</p>
-                  <p className="text-sm font-semibold text-[#2c3e35]">{formatted}</p>
-                </div>
-              )
-            })()}
+            {/* Deadline — always shown: formatted date or "Rolling" */}
+            <div>
+              <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-0.5">Deadline</p>
+              <p className="text-sm font-semibold text-[#2c3e35]">
+                {grant.isRolling || !grant.deadline
+                  ? 'Rolling'
+                  : (() => {
+                      const parts = grant.deadline.split('-').map(Number)
+                      if (parts.length !== 3 || parts.some(isNaN)) return 'Rolling'
+                      return new Date(parts[0], parts[1] - 1, parts[2])
+                        .toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                    })()
+                }
+              </p>
+            </div>
             {sectorLabels.length > 0 && (
               <div>
                 <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-0.5">Sector</p>
