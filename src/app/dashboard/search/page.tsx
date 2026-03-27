@@ -468,7 +468,8 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
               <entryBadge.Icon className="w-3 h-3" />
               {entryBadge.label}
             </span>
-            {entryType === 'live' && daysLeft !== null && daysLeft >= 0 && (
+            {/* Days-countdown badge — only shown when closing within 90 days (urgency signal) */}
+            {entryType === 'live' && daysLeft !== null && daysLeft >= 0 && daysLeft <= 90 && (
               <span className={`text-[11px] font-semibold px-2 py-0.5 border ${
                 daysLeft <= 3  ? 'bg-red-50 text-red-600 border-red-200' :
                 daysLeft <= 7  ? 'bg-amber-50 text-amber-600 border-amber-200' :
@@ -513,6 +514,19 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
               <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-0.5">Funding Amount</p>
               <p className="text-sm font-bold text-[#2c3e35]">{formatRange(grant.amountMin, grant.amountMax)}</p>
             </div>
+            {/* Deadline — shown for grants with a fixed close date */}
+            {grant.deadline && !grant.isRolling && (() => {
+              const parts = grant.deadline.split('-').map(Number)
+              if (parts.length !== 3 || parts.some(isNaN)) return null
+              const formatted = new Date(parts[0], parts[1] - 1, parts[2])
+                .toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+              return (
+                <div>
+                  <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-0.5">Deadline</p>
+                  <p className="text-sm font-semibold text-[#2c3e35]">{formatted}</p>
+                </div>
+              )
+            })()}
             {sectorLabels.length > 0 && (
               <div>
                 <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-0.5">Sector</p>
