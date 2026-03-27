@@ -1565,7 +1565,7 @@ export default function SearchPage() {
                         }}
                       />
                     </span>
-                    <span className={`text-sm font-medium ${profileFilterOn ? 'text-mid' : 'text-gray-400'}`}>
+                    <span className={`text-sm font-medium ${profileFilterOn ? 'text-gray-500' : 'text-gray-400'}`}>
                       Profile Filter {profileFilterOn ? 'On' : 'Off'}
                     </span>
                   </button>
