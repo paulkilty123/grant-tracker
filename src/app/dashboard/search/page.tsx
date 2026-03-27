@@ -495,7 +495,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
 
           {/* Match reason */}
           {hasOrg && hasSearch && reason && (
-            <div className="border-l-2 border-[#e8ddd0] pl-3 mb-4">
+            <div className="border-l-2 border-[#e8ddd0] pl-3 pr-3 py-2 mb-4 bg-[#faf7f2]">
               <p className="text-sm text-[#444] leading-snug">
                 {reason.replace(/<[^>]*>/g, '').trim()}
               </p>
