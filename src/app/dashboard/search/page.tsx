@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Search, ChevronDown, Layers, DollarSign, Rocket, Building2, SlidersHorizontal, MapPin, GraduationCap, TrendingUp, GitMerge, Gift, Landmark, CalendarDays, RefreshCw, Info, Bookmark } from 'lucide-react'
+import { Search, ChevronDown, Layers, DollarSign, Rocket, SlidersHorizontal, MapPin, GraduationCap, TrendingUp, GitMerge, Landmark, CalendarDays, RefreshCw, Info, Bookmark } from 'lucide-react'
 import GrantDetailModal from '@/components/GrantDetailModal'
 import { SEED_GRANTS } from '@/lib/grants'
 import { formatRange } from '@/lib/utils'
@@ -1328,13 +1328,11 @@ export default function SearchPage() {
   const programmesCount = allGrants_raw.filter(g => PROGRAMME_TYPES.includes((g as GrantOpportunity & { fundingType?: FundingType }).fundingType ?? 'grant')).length
 
   const TYPE_TABS = [
-    { id: 'grant'             as const, label: 'Grants',                    icon: <DollarSign size={14} strokeWidth={2} /> },
-    { id: 'social_investment' as const, label: 'Social Investment',         icon: <TrendingUp size={14} strokeWidth={2} /> },
-    { id: 'blended_finance'   as const, label: 'Blended Finance',           icon: <GitMerge size={14} strokeWidth={2} /> },
-    { id: 'accelerator'       as const, label: 'Incubators & Accelerators', icon: <Rocket size={14} strokeWidth={2} /> },
-    { id: 'support_programme' as const, label: 'Fellowships & Support',     icon: <GraduationCap size={14} strokeWidth={2} /> },
-    { id: 'in_kind'           as const, label: 'In-Kind & Pro Bono',        icon: <Gift size={14} strokeWidth={2} /> },
-    { id: 'corporate'         as const, label: 'Corporate Partners',        icon: <Building2 size={14} strokeWidth={2} /> },
+    { id: 'grant'             as const, label: 'Grants',           icon: <DollarSign size={14} strokeWidth={2} /> },
+    { id: 'social_investment' as const, label: 'Social Investment',icon: <TrendingUp size={14} strokeWidth={2} /> },
+    { id: 'blended_finance'   as const, label: 'Blended Finance',  icon: <GitMerge size={14} strokeWidth={2} /> },
+    { id: 'accelerator'       as const, label: 'Accelerators',     icon: <Rocket size={14} strokeWidth={2} /> },
+    { id: 'support_programme' as const, label: 'Fellowships',      icon: <GraduationCap size={14} strokeWidth={2} /> },
   ]
 
   const TAB_DESCS: Record<string, string> = {
@@ -1383,22 +1381,22 @@ export default function SearchPage() {
   return (
     <div>
       {/* ── Page heading + view tabs ── */}
-      <div className="mb-5 flex items-baseline">
-        <h2 className="font-serif text-2xl font-bold text-charcoal flex-shrink-0">Find Funding</h2>
-        <div className="flex items-center gap-0 ml-auto bg-white border border-warm/60 rounded-lg shadow-sm overflow-hidden">
+      <div className="mb-4 flex items-start justify-between">
+        <h2 className="font-serif text-5xl font-bold text-charcoal leading-tight">Find Funding</h2>
+        <div className="flex items-center gap-0 bg-white border border-warm/60 rounded-full shadow-sm overflow-hidden mt-1">
           <button
             onClick={() => setActiveView('matches')}
-            className={`px-4 py-2 text-sm font-medium transition-colors ${activeView === 'matches' ? 'text-coral border-b-2 border-coral' : 'border-b-2 border-transparent text-gray-500 hover:text-charcoal'}`}
+            className={`px-5 py-2 text-sm font-medium transition-colors ${activeView === 'matches' ? 'text-coral border-b-2 border-coral' : 'border-b-2 border-transparent text-gray-500 hover:text-charcoal'}`}
           >
             My Matches
           </button>
           <div className="w-px h-5 bg-warm/80" />
           <button
             onClick={() => setActiveView('saved')}
-            className={`px-4 py-2 text-sm font-medium transition-colors flex items-center gap-1.5 ${activeView === 'saved' ? 'text-coral border-b-2 border-coral' : 'border-b-2 border-transparent text-gray-500 hover:text-charcoal'}`}
+            className={`px-5 py-2 text-sm font-medium transition-colors flex items-center gap-1.5 ${activeView === 'saved' ? 'text-coral border-b-2 border-coral' : 'border-b-2 border-transparent text-gray-500 hover:text-charcoal'}`}
           >
             Saved
-            {savedCount > 0 && <span className="text-xs bg-coral text-white px-1.5 py-0.5 rounded">{savedCount}</span>}
+            {savedCount > 0 && <span className="text-xs bg-coral text-white px-1.5 py-0.5 rounded-full">{savedCount}</span>}
           </button>
         </div>
       </div>
@@ -1414,13 +1412,12 @@ export default function SearchPage() {
         </div>
       )}
 
-      {/* ── Ranked-for strip — sits between heading and search card ── */}
+      {/* ── Subtitle strip ── */}
       {activeView === 'matches' && org && (
-        <div className="mb-3 flex items-center gap-2 text-sm text-mid">
-          <span className="w-2 h-2 flex-shrink-0" style={{ backgroundColor: '#1f5c52', borderRadius: '50%' }} />
-          Ranked for <strong className="text-charcoal">{org.name ?? 'your organisation'}</strong>
-          {org.primary_location && <span className="text-mid">· {org.primary_location}</span>}
-          <a href="/dashboard/profile" className="ml-auto text-coral hover:underline font-medium text-xs">Edit profile →</a>
+        <div className="mb-5 flex items-center gap-2 text-sm text-mid">
+          <span className="w-2 h-2 flex-shrink-0 rounded-full" style={{ backgroundColor: '#1f5c52' }} />
+          Intelligent matches for <strong className="text-charcoal">{org.name ?? 'your organisation'}</strong>
+          {org.primary_location && <span className="text-mid">· {org.primary_location}, UK</span>}
         </div>
       )}
       {activeView === 'matches' && !org && (
@@ -1435,59 +1432,68 @@ export default function SearchPage() {
 
         <div className="p-5">
 
-          {/* ── Single control row: search + location + filters + profile filter ── */}
+          {/* ── Unified search pill + Search button ── */}
           {activeView === 'matches' && (
-            <div className="flex gap-2 items-center">
-              {/* Search input — flex-1 fills available space */}
-              <div className="relative flex-1 min-w-0">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-light pointer-events-none" />
-                <input
-                  type="text"
-                  value={inputValue}
-                  onChange={e => setInputValue(e.target.value)}
-                  onKeyDown={e => {
-                    if (e.key !== 'Enter') return
-                    setHasSearched(true)
-                    handleAISearch(inputValue)
-                  }}
-                  className="form-input h-11 pl-11 pr-4 w-full"
-                  placeholder="Search by keyword or funder..."
-                />
-              </div>
-              {/* Location input */}
-              <div className="relative w-44 flex-shrink-0">
-                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-light" />
-                <input
-                  type="text"
-                  value={locationInput}
-                  onChange={e => setLocationInput(e.target.value)}
-                  onKeyDown={e => {
-                    if (e.key !== 'Enter') return
-                    setLocationFilter(locationInput)
-                    setHasSearched(true)
-                    handleAISearch(inputValue)
-                  }}
-                  onBlur={() => setLocationFilter(locationInput)}
-                  className="form-input h-11 pl-10 pr-3 text-sm w-full"
-                  placeholder="Location"
-                />
-              </div>
-              {/* Filters button */}
-              <button
-                onClick={() => setFiltersOpen(o => !o)}
-                className={`flex items-center gap-1.5 px-4 h-11 border text-sm font-semibold transition-all flex-shrink-0 rounded-lg ${
-                  filtersOpen || activeFilterCount > 0
-                    ? 'bg-charcoal text-white border-charcoal'
-                    : 'border-warm text-mid hover:border-coral hover:text-coral bg-white'
-                }`}
-              >
-                <SlidersHorizontal size={15} strokeWidth={2} />
-                {activeFilterCount > 0 ? `Filters · ${activeFilterCount}` : 'Filters'}
-                <ChevronDown size={13} strokeWidth={2} className={`transition-transform duration-200 ${filtersOpen ? 'rotate-180' : ''}`} />
-              </button>
-              {/* Profile Filter toggle */}
-              {org && (() => {
-                return (
+            <div className="flex gap-3 items-center">
+              {/* Single pill container */}
+              <div className="flex-1 flex items-center bg-white border border-gray-200 rounded-full h-12 overflow-hidden"
+                style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+                {/* Search icon + input */}
+                <div className="flex items-center flex-1 min-w-0 px-4">
+                  <Search className="h-4 w-4 text-gray-400 flex-shrink-0 mr-2.5" />
+                  <input
+                    type="text"
+                    value={inputValue}
+                    onChange={e => setInputValue(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key !== 'Enter') return
+                      setHasSearched(true)
+                      handleAISearch(inputValue)
+                    }}
+                    className="flex-1 bg-transparent outline-none text-sm text-charcoal placeholder-gray-400 min-w-0"
+                    placeholder="Search by grant name, keyword or funder..."
+                  />
+                </div>
+                {/* Divider */}
+                <div className="w-px h-6 bg-gray-200 flex-shrink-0" />
+                {/* Location */}
+                <div className="flex items-center w-36 px-4 flex-shrink-0">
+                  <MapPin className="h-4 w-4 text-gray-400 flex-shrink-0 mr-2" />
+                  <input
+                    type="text"
+                    value={locationInput}
+                    onChange={e => setLocationInput(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key !== 'Enter') return
+                      setLocationFilter(locationInput)
+                      setHasSearched(true)
+                      handleAISearch(inputValue)
+                    }}
+                    onBlur={() => setLocationFilter(locationInput)}
+                    className="flex-1 bg-transparent outline-none text-sm text-charcoal placeholder-gray-400 min-w-0"
+                    placeholder="Location"
+                  />
+                </div>
+                {/* Divider */}
+                <div className="w-px h-6 bg-gray-200 flex-shrink-0" />
+                {/* Filters */}
+                <button
+                  onClick={() => setFiltersOpen(o => !o)}
+                  className={`flex items-center gap-1.5 px-4 h-full text-sm font-medium transition-colors flex-shrink-0 ${
+                    filtersOpen || activeFilterCount > 0 ? 'text-charcoal' : 'text-gray-500 hover:text-charcoal'
+                  }`}
+                >
+                  <SlidersHorizontal size={14} strokeWidth={2} />
+                  Filters
+                  {activeFilterCount > 0 && (
+                    <span className="text-xs bg-charcoal text-white px-1.5 py-0.5 rounded-full leading-none">{activeFilterCount}</span>
+                  )}
+                  <ChevronDown size={12} strokeWidth={2} className={`transition-transform duration-200 ${filtersOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {/* Divider */}
+                <div className="w-px h-6 bg-gray-200 flex-shrink-0" />
+                {/* Profile toggle */}
+                {org && (
                   <button
                     onClick={() => {
                       if (profileFilterOn) {
@@ -1499,42 +1505,31 @@ export default function SearchPage() {
                         if ((org.impact_sectors as string[] | undefined)?.length) setActiveSectors(new Set(org.impact_sectors as ImpactSector[]))
                       }
                     }}
-                    className="flex items-center gap-2 flex-shrink-0 whitespace-nowrap group"
-                    title={profileFilterOn ? 'Click to turn off profile filtering' : 'Click to filter by your profile (location + sectors)'}
+                    className="flex items-center gap-2 px-4 h-full flex-shrink-0 whitespace-nowrap"
+                    title={profileFilterOn ? 'Turn off profile filter' : 'Filter by your profile'}
                   >
-                    {/* Toggle pill */}
-                    <span
-                      className="relative flex-shrink-0"
-                      style={{
-                        width: 44, height: 24,
-                        backgroundColor: profileFilterOn ? '#2d8a7a' : '#d1d5db',
-                        display: 'inline-flex', alignItems: 'center',
-                        borderRadius: 9999,
-                        transition: 'background-color 0.2s',
-                      }}
-                    >
-                      <span
-                        className="absolute bg-white transition-transform duration-200"
-                        style={{
-                          width: 18, height: 18,
-                          borderRadius: 9999,
-                          top: 3,
-                          left: 3,
-                          transform: profileFilterOn ? 'translateX(20px)' : 'translateX(0)',
-                        }}
-                      />
+                    <span className="relative flex-shrink-0" style={{
+                      width: 40, height: 22,
+                      backgroundColor: profileFilterOn ? '#2d8a7a' : '#d1d5db',
+                      borderRadius: 9999, display: 'inline-flex', alignItems: 'center',
+                      transition: 'background-color 0.2s',
+                    }}>
+                      <span className="absolute bg-white transition-transform duration-200" style={{
+                        width: 16, height: 16, borderRadius: 9999, top: 3, left: 3,
+                        transform: profileFilterOn ? 'translateX(18px)' : 'translateX(0)',
+                      }} />
                     </span>
-                    <span className={`text-sm font-medium ${profileFilterOn ? 'text-gray-600' : 'text-gray-400'}`}>
+                    <span className={`text-[11px] font-semibold uppercase tracking-wider ${profileFilterOn ? 'text-gray-600' : 'text-gray-400'}`}>
                       Profile
                     </span>
                   </button>
-                )
-              })()}
-              {/* Search button */}
+                )}
+              </div>
+              {/* Search button — outside the pill */}
               <button
                 onClick={() => { setHasSearched(true); handleAISearch(inputValue) }}
                 disabled={!inputValue.trim() && !locationFilter.trim()}
-                className={`px-5 h-11 text-white text-sm font-semibold flex-shrink-0 transition-opacity disabled:opacity-40 flex items-center gap-1.5 rounded-xl ${aiLoading ? 'pointer-events-none' : ''}`}
+                className={`h-12 px-6 text-white text-sm font-semibold flex-shrink-0 transition-opacity disabled:opacity-40 flex items-center gap-2 rounded-full ${aiLoading ? 'pointer-events-none' : ''}`}
                 style={{ backgroundColor: '#1f5c52' }}
               >
                 {aiLoading
@@ -1729,7 +1724,7 @@ export default function SearchPage() {
               ) : aiResults ? (
                 <><strong className="text-coral">✦ {displayGrants.length}</strong> results for &ldquo;{query}&rdquo;</>
               ) : (
-                <><strong className="text-charcoal text-lg">{displayGrants.length}</strong><span className="text-sm"> grants ranked for your mission</span></>
+                <><strong className="font-serif text-3xl font-bold text-charcoal">{displayGrants.length} grants</strong><span className="text-base text-mid ml-2">ranked for your mission</span></>
               )}
             </p>
             {!aiResults && (
