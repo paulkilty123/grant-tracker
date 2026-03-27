@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Search, ThumbsUp, ThumbsDown, ChevronDown, Layers, DollarSign, Rocket, Database, Globe, Clock, Building2, SlidersHorizontal, Sparkles, MapPin, Award, GraduationCap, TrendingUp, Users, GitMerge, Gift, Landmark, CalendarDays, RefreshCw, Info, Trophy, HandCoins, Bookmark } from 'lucide-react'
+import { Search, ChevronDown, Layers, DollarSign, Rocket, Building2, SlidersHorizontal, MapPin, GraduationCap, TrendingUp, GitMerge, Gift, Landmark, CalendarDays, RefreshCw, Info, Bookmark } from 'lucide-react'
 import GrantDetailModal from '@/components/GrantDetailModal'
 import { SEED_GRANTS } from '@/lib/grants'
 import { formatRange } from '@/lib/utils'
@@ -347,37 +347,6 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
   const isDisliked   = interactions.has('disliked')
   const isSaved      = interactions.has('saved')
 
-  const typeColour: Record<string, string> = {
-    lottery:             'bg-green-50 text-green-700',
-    trust_foundation:    'bg-slate-100 text-slate-600',
-    corporate:           'bg-amber-50 text-amber-700',
-    local_authority:     'bg-purple-50 text-purple-700',
-    housing_association: 'bg-teal-50 text-teal-700',
-    government:          'bg-red-50 text-red-700',
-    competition:         'bg-yellow-50 text-yellow-700',
-    loan:                'bg-sky-50 text-sky-700',
-    crowdfund_match:     'bg-pink-50 text-pink-700',
-  }
-
-  const { text: scoreText } = scoreColour(score)
-
-  // Funding type badge — shown on every card so users always know the category
-  const fundingTypeBadge: Record<string, { Icon: React.ComponentType<{ className?: string }>; label: string; cls: string }> = {
-    grant:              { Icon: Award,         label: 'Grant',             cls: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
-    accelerator:        { Icon: Rocket,        label: 'Accelerator',       cls: 'bg-orange-50 text-orange-700 border border-orange-200' },
-    support_programme:  { Icon: GraduationCap, label: 'Support Programme', cls: 'bg-indigo-50 text-indigo-700 border border-indigo-200' },
-    programme:          { Icon: GraduationCap, label: 'Support Programme', cls: 'bg-indigo-50 text-indigo-700 border border-indigo-200' },
-    social_investment:  { Icon: TrendingUp,    label: 'Social Investment', cls: 'bg-cyan-50 text-cyan-700 border border-cyan-200' },
-    loan:               { Icon: TrendingUp,    label: 'Loan',              cls: 'bg-cyan-50 text-cyan-700 border border-cyan-200' },
-    equity:             { Icon: TrendingUp,    label: 'Equity',            cls: 'bg-cyan-50 text-cyan-700 border border-cyan-200' },
-    diversity_fund:     { Icon: Users,         label: 'Diversity Fund',    cls: 'bg-violet-50 text-violet-700 border border-violet-200' },
-    blended_finance:    { Icon: GitMerge,      label: 'Blended Finance',   cls: 'bg-teal-50 text-teal-700 border border-teal-200' },
-    in_kind:            { Icon: Gift,          label: 'In-Kind Support',   cls: 'bg-rose-50 text-rose-700 border border-rose-200' },
-    'in-kind':          { Icon: Gift,          label: 'In-Kind Support',   cls: 'bg-rose-50 text-rose-700 border border-rose-200' },
-    'tax-relief':       { Icon: Landmark,      label: 'Tax Relief',        cls: 'bg-stone-100 text-stone-700 border border-stone-300' },
-  }
-  const effectiveFundingType = grant.fundingType ?? 'grant'
-  const ftBadge = fundingTypeBadge[effectiveFundingType] ?? fundingTypeBadge['grant']
 
   // "New this week" badge — show if added within last 7 days
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
@@ -388,12 +357,6 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
     grant.deadline   ? 'live' :
     grant.isRolling  ? 'rolling' :
     /* else */         'profile'
-
-  const entryBadge = {
-    live:    { Icon: CalendarDays, label: 'Open grant',  cls: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
-    rolling: { Icon: RefreshCw,    label: 'Always open', cls: 'bg-sage/10 text-sage border border-sage/20' },
-    profile: { Icon: Info,         label: 'Funder info', cls: 'bg-gray-100 text-gray-500 border border-gray-200' },
-  }[entryType]
 
   if (isDismissed) {
     return (
@@ -424,11 +387,6 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
   // Eligible structure labels
   const structureLabels = ((grant as EnrichedGrant).eligibleStructures ?? [])
     .slice(0, 3).map(s => STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' '))
-
-  // Score ring arc
-  const radius = 14, circ = 2 * Math.PI * radius
-  const arc = hasOrg && hasSearch ? (score / 100) * circ : 0
-  const ringColour = score >= 70 ? '#2d8a7a' : score >= 45 ? '#e8a030' : '#9ca3af'
 
   return (
     <div className="bg-white mb-3 border border-[#e8ddd0] hover:shadow-md transition-shadow rounded-lg overflow-hidden">
