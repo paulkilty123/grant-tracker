@@ -1775,7 +1775,11 @@ export default function SearchPage() {
               )}
             </p>
             {!aiResults && (
-              <div className="flex items-center gap-0 border border-[#e8ddd0] overflow-hidden text-xs flex-shrink-0">
+              <div className="flex items-center border border-[#e8ddd0] overflow-hidden flex-shrink-0">
+                {/* Sort By label */}
+                <span className="px-3 py-2 text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider border-r border-[#e8ddd0] bg-[#faf7f2] whitespace-nowrap">
+                  Sort By
+                </span>
                 {([
                   { id: 'match',    label: 'Match to you'   },
                   { id: 'freshest', label: 'Recently Added' },
@@ -1784,7 +1788,7 @@ export default function SearchPage() {
                   <button
                     key={tab.id}
                     onClick={() => setSortBy(tab.id as 'match' | 'freshest' | 'deadline')}
-                    className={`px-3 py-1.5 font-medium transition-colors${i > 0 ? ' border-l border-[#e8ddd0]' : ''}`}
+                    className={`px-4 py-2 text-xs font-medium transition-colors whitespace-nowrap${i > 0 ? ' border-l border-[#e8ddd0]' : ''}`}
                     style={sortBy === tab.id
                       ? { backgroundColor: '#E8725C', color: '#fff' }
                       : { backgroundColor: '#fff', color: '#6b7280' }}
