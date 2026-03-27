@@ -1380,13 +1380,13 @@ export default function SearchPage() {
   ]
 
   const TAB_DESCS: Record<string, string> = {
-    grant:             'Grants are non-repayable funds awarded by foundations, trusts, and public bodies to support your mission. They typically require an application, reporting on outcomes, and have specific eligibility criteria. Deadlines are firm — plan ahead.',
-    social_investment: 'Social investment is repayable finance for organisations that generate both social impact and financial return. This includes loans, bonds, and equity from social investors who want their capital back alongside evidence of impact.',
-    blended_finance:   'Blended finance combines grants with repayable finance — you might receive part-grant, part-loan to fund a project. It\'s designed for organisations that can generate some revenue but need grant support to make a project viable.',
-    accelerator:       'Incubators and accelerators offer structured programmes — often 3–6 months — combining funding, mentorship, workspace, and expert support. They\'re ideal if you\'re at an early stage and want to grow quickly with hands-on guidance.',
-    support_programme: 'Fellowships and support programmes provide non-financial resources: training, mentorship, networking, and capacity-building. Some include a stipend or small grant. They\'re valuable for developing leadership, skills, and connections.',
-    in_kind:           'In-kind support means receiving goods, services, or expertise instead of cash — such as free legal advice, office space, technology, or marketing support. Pro bono professionals donate their time to help organisations like yours.',
-    corporate:         'Corporate partnership opportunities are not grants. They are chances to explore mutually beneficial relationships with businesses — sponsorship, cause-related marketing, employee volunteering, or skills support. Approach these as a business relationship, not a funding application.',
+    grant:             'Non-repayable funds from foundations, trusts, and public bodies. Applications required; deadlines are firm.',
+    social_investment: 'Repayable finance (loans, bonds, equity) for organisations that generate social impact alongside financial returns.',
+    blended_finance:   'Part-grant, part-loan structures for organisations that generate some revenue but need grant support to be viable.',
+    accelerator:       'Structured 3–6 month programmes combining funding, mentorship, and expert support. Best for early-stage growth.',
+    support_programme: 'Non-financial support: training, mentorship, and networking. Some include a small stipend or grant.',
+    in_kind:           'Goods, services, or expertise instead of cash — free legal advice, office space, technology, or pro bono support.',
+    corporate:         'Not grants — these are partnership opportunities with businesses. Approach them as a commercial relationship, not a funding application.',
   }
 
   const CATEGORY_TABS = [
@@ -1448,32 +1448,33 @@ export default function SearchPage() {
         </div>
       )}
 
+      {/* ── Ranked-for strip — sits between heading and search card ── */}
+      {activeView === 'matches' && org && (
+        <div className="mb-3 flex items-center gap-2 text-sm text-mid">
+          <span className="w-2 h-2 flex-shrink-0" style={{ backgroundColor: '#1f5c52', borderRadius: '50%' }} />
+          Ranked for <strong className="text-charcoal">{org.name ?? 'your organisation'}</strong>
+          {org.primary_location && <span className="text-mid">· {org.primary_location}</span>}
+          <a href="/dashboard/profile" className="ml-auto text-coral hover:underline font-medium text-xs">Edit profile →</a>
+        </div>
+      )}
+      {activeView === 'matches' && !org && (
+        <div className="mb-3 text-xs border border-amber-200 bg-amber-50 px-3 py-2">
+          <a href="/dashboard/profile" className="font-semibold text-amber-700 underline">Set up your profile</a>
+          <span className="text-amber-800"> to see grants ranked for your organisation.</span>
+        </div>
+      )}
+
       {/* ── Search card ── */}
       <div className="bg-white shadow-card mb-5 border border-warm/60">
 
         <div className="p-5">
-          {/* My Matches context label */}
-          {activeView === 'matches' && org && (
-            <div className="mb-3 flex items-center gap-2 text-xs text-mid">
-              <span className="w-1.5 h-1.5 rounded-full bg-forest inline-block" />
-              Ranked for <strong className="text-charcoal">{org.name ?? 'your organisation'}</strong>
-              {org.primary_location && <span>· {org.primary_location}</span>}
-              <a href="/dashboard/profile" className="ml-auto text-coral hover:underline font-medium">Edit profile →</a>
-            </div>
-          )}
-          {activeView === 'matches' && !org && (
-            <div className="mb-3 text-xs border border-amber-200 bg-amber-50 px-3 py-2">
-              <a href="/dashboard/profile" className="font-semibold text-amber-700 underline">Set up your profile</a>
-              <span className="text-amber-800"> to see grants ranked for your organisation.</span>
-            </div>
-          )}
 
           {/* ── Single control row: search + location + filters + profile filter ── */}
           {activeView === 'matches' && (
             <div className="flex gap-2 items-center">
-              {/* Search input */}
+              {/* Search input — AI search button embedded as a right-side icon */}
               <div className="flex-1 relative min-w-0">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-light" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-light pointer-events-none" />
                 <input
                   type="text"
                   value={inputValue}
@@ -1483,9 +1484,21 @@ export default function SearchPage() {
                     setHasSearched(true)
                     handleAISearch(inputValue)
                   }}
-                  className="form-input h-11 pl-11 pr-4 w-full"
-                  placeholder="Search by funder, keyword, or sector..."
+                  className="form-input h-11 pl-11 pr-11 w-full"
+                  placeholder="Search by keyword or funder..."
                 />
+                {/* Submit icon — visible when there's a value, or always show as subtle affordance */}
+                <button
+                  onClick={() => { setHasSearched(true); handleAISearch(inputValue) }}
+                  disabled={!inputValue.trim()}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-light hover:text-coral disabled:opacity-0 transition-colors"
+                  tabIndex={-1}
+                  title="Search (or press Enter)"
+                >
+                  {aiLoading
+                    ? <span className="dot-bounce flex gap-0.5"><span/><span/><span/></span>
+                    : <Sparkles size={15} strokeWidth={2} />}
+                </button>
               </div>
               {/* Location input */}
               <div className="relative w-44 flex-shrink-0">
@@ -1533,28 +1546,34 @@ export default function SearchPage() {
                         if ((org.impact_sectors as string[] | undefined)?.length) setActiveSectors(new Set(org.impact_sectors as ImpactSector[]))
                       }
                     }}
-                    className="flex items-center gap-2 flex-shrink-0 text-sm font-medium text-mid hover:text-charcoal transition-colors whitespace-nowrap"
+                    className="flex items-center gap-2 flex-shrink-0 whitespace-nowrap group"
+                    title={profileFilterOn ? 'Click to turn off profile filtering' : 'Click to filter by your profile (location + sectors)'}
                   >
-                    Profile Filter
-                    {/* Toggle pill */}
-                    <span className={`relative inline-flex h-5 w-9 flex-shrink-0 items-center transition-colors ${profileFilterOn ? 'bg-[#E8725C]' : 'bg-gray-300'}`}>
-                      <span className={`inline-block h-3.5 w-3.5 bg-white transition-transform ${profileFilterOn ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                    {/* Toggle pill — fixed size so it always reads clearly */}
+                    <span
+                      className="relative flex-shrink-0 transition-colors duration-200"
+                      style={{
+                        width: 44, height: 24,
+                        backgroundColor: profileFilterOn ? '#E8725C' : '#d1d5db',
+                        display: 'inline-flex', alignItems: 'center',
+                      }}
+                    >
+                      <span
+                        className="absolute bg-white transition-transform duration-200"
+                        style={{
+                          width: 18, height: 18,
+                          top: 3,
+                          left: 3,
+                          transform: profileFilterOn ? 'translateX(20px)' : 'translateX(0)',
+                        }}
+                      />
+                    </span>
+                    <span className={`text-sm font-medium transition-colors ${profileFilterOn ? 'text-[#E8725C]' : 'text-gray-400 group-hover:text-mid'}`}>
+                      Profile Filter {profileFilterOn ? 'On' : 'Off'}
                     </span>
                   </button>
                 )
               })()}
-              {/* AI Search button — triggers smart matching */}
-              <button
-                onClick={() => handleAISearch(inputValue)}
-                disabled={!inputValue.trim() && !locationFilter.trim()}
-                className={`px-4 h-11 text-white text-sm font-semibold whitespace-nowrap transition-colors disabled:opacity-40 flex-shrink-0 ${
-                  aiLoading ? 'pointer-events-none' : ''
-                } bg-coral hover:bg-coral/90`}
-              >
-                {aiLoading
-                  ? <span className="flex items-center gap-2"><span className="dot-bounce flex gap-1"><span/><span/><span/></span>…</span>
-                  : <Search size={15} className="inline" />}
-              </button>
             </div>
           )}
 
@@ -1706,7 +1725,7 @@ export default function SearchPage() {
         )}
           {/* ── Funding type tabs ── */}
           {activeView === 'matches' && (
-            <div className="mt-4 -mx-5 border-t border-[#e8ddd0]">
+            <div className="mt-5 -mx-5 border-t border-[#e8ddd0]">
               <div className="flex overflow-x-auto">
                 {TYPE_TABS.map(tab => (
                   <button
