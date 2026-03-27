@@ -434,87 +434,67 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
     <div className="bg-white mb-3 border border-[#e8ddd0] hover:shadow-md transition-shadow rounded-lg overflow-hidden">
       <div className="flex">
 
-        {/* ── Left: match score ── */}
-        {hasOrg && hasSearch && (
-          <div className="flex flex-col items-center justify-center py-5 border-r border-[#e8ddd0] flex-shrink-0 w-[120px]">
-            <div className="relative w-[88px] h-[88px]">
-              <svg viewBox="0 0 36 36" className="w-[88px] h-[88px] -rotate-90">
-                <circle cx="18" cy="18" r={radius} fill="none" stroke="#e8ddd0" strokeWidth="2.5" />
-                <circle
-                  cx="18" cy="18" r={radius} fill="none"
-                  stroke={ringColour} strokeWidth="2.5"
-                  strokeDasharray={`${arc} ${circ}`}
-                  strokeLinecap="butt"
-                />
-              </svg>
-              <span className="absolute inset-0 flex items-center justify-center text-base font-bold" style={{ color: ringColour }}>
-                {score}%
-              </span>
-            </div>
-            <span className="text-[9px] font-semibold text-[#9ca3af] uppercase tracking-wider mt-2">Match</span>
-          </div>
-        )}
-
         {/* ── Centre: content ── */}
-        <div className="flex-1 min-w-0 p-4 sm:p-5">
+        <div className="flex-1 min-w-0 p-5">
 
-          {/* Badges */}
-          <div className="flex flex-wrap items-center gap-1.5 mb-2">
-            {/* Funding type badge — always first so users know the category */}
-            <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 ${ftBadge.cls}`}>
-              <ftBadge.Icon className="w-3 h-3" />
-              {ftBadge.label}
-            </span>
-            <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 ${entryBadge.cls}`}>
-              <entryBadge.Icon className="w-3 h-3" />
-              {entryBadge.label}
-            </span>
-            {/* Days-countdown badge — only shown when closing within 90 days (urgency signal) */}
-            {entryType === 'live' && daysLeft !== null && daysLeft >= 0 && daysLeft <= 90 && (
-              <span className={`text-[11px] font-semibold px-2 py-0.5 border ${
-                daysLeft <= 3  ? 'bg-red-50 text-red-600 border-red-200' :
-                daysLeft <= 7  ? 'bg-amber-50 text-amber-600 border-amber-200' :
-                daysLeft <= 14 ? 'bg-orange-50 text-orange-500 border-orange-200' :
+          {/* Top badges: primary sector + days left */}
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            {sectorLabels[0] && (
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 bg-sage/10 text-forest border border-sage/20 rounded">
+                {sectorLabels[0]}
+              </span>
+            )}
+            {entryType === 'live' && daysLeft !== null && daysLeft >= 0 && (
+              <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 border rounded ${
+                daysLeft <= 7  ? 'bg-red-50 text-red-600 border-red-200' :
+                daysLeft <= 14 ? 'bg-amber-50 text-amber-600 border-amber-200' :
                                  'bg-gray-50 text-gray-500 border-gray-200'
               }`}>
-                {daysLeft === 0 ? 'Closes today' : `Closes in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`}
+                {daysLeft === 0 ? 'Closes today' : `${daysLeft} days left`}
               </span>
             )}
             {isNewThisWeek && (
-              <span className="text-[11px] font-semibold px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200">New</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded">New</span>
             )}
             {grant.isInviteOnly && (
-              <span className="text-[11px] font-semibold px-2 py-0.5 bg-purple-50 text-purple-700 border border-purple-200">Invite Only</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 bg-purple-50 text-purple-700 border border-purple-200 rounded">Invite Only</span>
             )}
           </div>
 
-          {/* Title + funder */}
-          <h3 className="font-lora text-lg font-semibold text-[#2c3e35] leading-snug mb-0.5">{grant.title}</h3>
-          <p className="text-sm text-[#6b7280] mb-3">{grant.funder}</p>
+          {/* Title */}
+          <h3 className="font-lora text-xl font-bold text-charcoal leading-snug mb-1">{grant.title}</h3>
+
+          {/* Funder — coral accent */}
+          <p className="text-sm font-medium mb-3" style={{ color: '#E8725C' }}>{grant.funder}</p>
 
           {/* Description */}
-          <p className="text-sm text-[#444] leading-relaxed mb-3">
-            {grant.description.length > 220
-              ? `${grant.description.slice(0, 220).trimEnd()}…`
+          <p className="text-sm text-[#555] leading-relaxed mb-3">
+            {grant.description.length > 200
+              ? `${grant.description.slice(0, 200).trimEnd()}…`
               : grant.description}
           </p>
 
-          {/* Match reason */}
+          {/* Match insight box */}
           {hasOrg && hasSearch && reason && (
-            <div className="border-l-2 border-[#e8ddd0] pl-3 pr-3 py-2 mb-4 bg-[#faf7f2] rounded-r-lg">
-              <p className="text-sm text-[#444] leading-snug">
+            <div className="flex items-start justify-between gap-3 px-3.5 py-2.5 mb-4 rounded-lg"
+              style={{ backgroundColor: 'rgba(45,138,122,0.06)', border: '1px solid rgba(45,138,122,0.14)' }}>
+              <p className="text-sm leading-snug flex-1" style={{ color: '#2d6b5c' }}>
+                <span className="font-bold text-[10px] uppercase tracking-wider mr-1.5" style={{ color: '#1f5c52' }}>Match Insight:</span>
                 {reason.replace(/<[^>]*>/g, '').trim()}
               </p>
+              <span className="flex-shrink-0 text-xs font-bold px-2.5 py-1 rounded whitespace-nowrap"
+                style={{ backgroundColor: 'rgba(45,138,122,0.14)', color: '#1f5c52' }}>
+                {score}% Match
+              </span>
             </div>
           )}
 
-          {/* Bottom metrics */}
-          <div className="flex gap-6 pt-3 border-t border-[#e8ddd0]">
+          {/* Bottom metadata: Amount / Deadline / Sector / Beneficiary */}
+          <div className="grid grid-cols-4 gap-3 pt-3 border-t border-[#e8ddd0]">
             <div>
-              <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-0.5">Funding Amount</p>
-              <p className="text-sm font-bold text-[#2c3e35]">{formatRange(grant.amountMin, grant.amountMax)}</p>
+              <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-0.5">Amount</p>
+              <p className="text-sm font-bold text-charcoal">{formatRange(grant.amountMin, grant.amountMax)}</p>
             </div>
-            {/* Deadline — always shown: formatted date, "Rolling", or "Opens [date]" */}
             <div>
               {(() => {
                 const opensDate = grant.nextOpenDateParsed
@@ -527,21 +507,21 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
                   return (
                     <>
                       <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-0.5">Opens</p>
-                      <p className="text-sm font-semibold text-[#2c3e35]">{formatted}</p>
+                      <p className="text-sm font-semibold text-charcoal">{formatted}</p>
                     </>
                   )
                 }
                 return (
                   <>
                     <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-0.5">Deadline</p>
-                    <p className="text-sm font-semibold text-[#2c3e35]">
+                    <p className="text-sm font-semibold text-charcoal">
                       {grant.isRolling || !grant.deadline
                         ? 'Rolling'
                         : (() => {
                             const parts = grant.deadline!.split('-').map(Number)
                             if (parts.length !== 3 || parts.some(isNaN)) return 'Rolling'
                             return new Date(parts[0], parts[1] - 1, parts[2])
-                              .toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                              .toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
                           })()
                       }
                     </p>
@@ -549,23 +529,19 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
                 )
               })()}
             </div>
-            {sectorLabels.length > 0 && (
-              <div>
-                <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-0.5">Sector</p>
-                <p className="text-sm font-semibold text-[#2c3e35]">{sectorLabels.join(', ')}</p>
-              </div>
-            )}
-            {structureLabels.length > 0 && (
-              <div>
-                <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-0.5">For</p>
-                <p className="text-sm font-semibold text-[#2c3e35]">{structureLabels.join(', ')}</p>
-              </div>
-            )}
+            <div>
+              <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-0.5">Sector</p>
+              <p className="text-sm font-semibold text-charcoal">{sectorLabels.length > 0 ? sectorLabels.join(', ') : '—'}</p>
+            </div>
+            <div>
+              <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-0.5">Beneficiary</p>
+              <p className="text-sm font-semibold text-charcoal">{structureLabels.length > 0 ? structureLabels.join(', ') : '—'}</p>
+            </div>
           </div>
         </div>
 
         {/* ── Right: action buttons ── */}
-        <div className="flex flex-col gap-2 p-3 border-l border-[#e8ddd0] justify-center flex-shrink-0 w-[120px]">
+        <div className="flex flex-col gap-2 p-4 border-l border-[#e8ddd0] justify-center flex-shrink-0 w-[130px]">
           {grant.source === 'scraped' && (
             <button
               onClick={() => onViewDetail(grant.id)}
@@ -577,18 +553,18 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
           )}
           <button
             onClick={() => isSaved ? onUnsave?.(grant.id) : onSave?.(grant.id)}
-            className={`w-full px-3 py-2 text-xs font-semibold text-center border transition-colors rounded-lg ${
+            className={`w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold border transition-colors rounded-lg ${
               isSaved
                 ? 'bg-[#E8725C]/10 text-[#E8725C] border-[#E8725C]/30'
-                : 'border-[#e8ddd0] text-[#444] hover:border-[#E8725C] hover:text-[#E8725C]'
+                : 'border-[#e8ddd0] text-[#555] hover:border-[#E8725C] hover:text-[#E8725C]'
             }`}
           >
-            {isSaved ? 'Saved ✓' : 'Save'}
+            <Bookmark className="w-3.5 h-3.5" />
+            {isSaved ? 'Saved' : 'Save'}
           </button>
-          {/* Pipeline as a smaller text link to reduce visual clutter */}
           <button
             onClick={() => onAddToPipeline(grant)}
-            className="w-full px-2 py-1.5 text-[11px] font-semibold text-center text-[#6b7280] hover:text-[#2d8a7a] transition-colors"
+            className="w-full px-2 py-1.5 text-[11px] font-semibold text-center text-[#6b7280] hover:text-forest transition-colors"
           >
             + Add to Pipeline
           </button>
@@ -1793,7 +1769,7 @@ export default function SearchPage() {
               ) : aiResults ? (
                 <><strong className="text-coral">✦ {displayGrants.length}</strong> results for &ldquo;{query}&rdquo;</>
               ) : (
-                <><strong className="text-charcoal">{displayGrants.length}</strong> grants ranked for you</>
+                <><strong className="text-charcoal text-lg">{displayGrants.length}</strong><span className="text-sm"> grants ranked for your mission</span></>
               )}
             </p>
             {!aiResults && (
@@ -1803,9 +1779,9 @@ export default function SearchPage() {
                   Sort By
                 </span>
                 {([
-                  { id: 'match',    label: 'Match to you'   },
-                  { id: 'freshest', label: 'Recently Added' },
-                  { id: 'deadline', label: 'Closes Soon'    },
+                  { id: 'match',    label: 'Best Match'   },
+                  { id: 'freshest', label: 'Newest'       },
+                  { id: 'deadline', label: 'Closing Soon' },
                 ] as const).map((tab, i) => (
                   <button
                     key={tab.id}
