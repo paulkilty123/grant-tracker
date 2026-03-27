@@ -1383,7 +1383,7 @@ export default function SearchPage() {
   return (
     <div>
       {/* ── Page heading ── */}
-      <div className="mt-10 mb-3">
+      <div className="mb-2">
         <h2 className="font-serif text-5xl font-bold text-charcoal leading-tight">Find Funding</h2>
       </div>
 
@@ -1400,7 +1400,7 @@ export default function SearchPage() {
 
       {/* ── Subtitle strip ── */}
       {activeView === 'matches' && org && (
-        <div className="mb-5 flex items-center gap-2 text-sm text-mid">
+        <div className="mb-3 flex items-center gap-2 text-sm text-mid">
           <span className="w-2 h-2 flex-shrink-0 rounded-full" style={{ backgroundColor: '#1f5c52' }} />
           Intelligent matches for <strong className="text-charcoal">{org.name ?? 'your organisation'}</strong>
           {org.primary_location && <span className="text-mid">· {org.primary_location}, UK</span>}
