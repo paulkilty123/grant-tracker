@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Search, ChevronDown, Layers, DollarSign, Rocket, SlidersHorizontal, MapPin, GraduationCap, TrendingUp, GitMerge, Landmark, CalendarDays, RefreshCw, Info, Bookmark } from 'lucide-react'
+import { Search, ChevronDown, Layers, DollarSign, Rocket, Building2, SlidersHorizontal, MapPin, GraduationCap, TrendingUp, GitMerge, Gift, Landmark, CalendarDays, RefreshCw, Info, Bookmark } from 'lucide-react'
 import GrantDetailModal from '@/components/GrantDetailModal'
 import { SEED_GRANTS } from '@/lib/grants'
 import { formatRange } from '@/lib/utils'
@@ -1328,11 +1328,13 @@ export default function SearchPage() {
   const programmesCount = allGrants_raw.filter(g => PROGRAMME_TYPES.includes((g as GrantOpportunity & { fundingType?: FundingType }).fundingType ?? 'grant')).length
 
   const TYPE_TABS = [
-    { id: 'grant'             as const, label: 'Grants',           icon: <DollarSign size={14} strokeWidth={2} /> },
-    { id: 'social_investment' as const, label: 'Social Investment',icon: <TrendingUp size={14} strokeWidth={2} /> },
-    { id: 'blended_finance'   as const, label: 'Blended Finance',  icon: <GitMerge size={14} strokeWidth={2} /> },
-    { id: 'accelerator'       as const, label: 'Accelerators',     icon: <Rocket size={14} strokeWidth={2} /> },
-    { id: 'support_programme' as const, label: 'Fellowships',      icon: <GraduationCap size={14} strokeWidth={2} /> },
+    { id: 'grant'             as const, label: 'Grants',                    icon: <DollarSign size={14} strokeWidth={2} /> },
+    { id: 'social_investment' as const, label: 'Social Investment',         icon: <TrendingUp size={14} strokeWidth={2} /> },
+    { id: 'blended_finance'   as const, label: 'Blended Finance',           icon: <GitMerge size={14} strokeWidth={2} /> },
+    { id: 'accelerator'       as const, label: 'Incubators & Accelerators', icon: <Rocket size={14} strokeWidth={2} /> },
+    { id: 'support_programme' as const, label: 'Fellowships & Support',     icon: <GraduationCap size={14} strokeWidth={2} /> },
+    { id: 'in_kind'           as const, label: 'In-Kind & Pro Bono',        icon: <Gift size={14} strokeWidth={2} /> },
+    { id: 'corporate'         as const, label: 'Corporate Partners',        icon: <Building2 size={14} strokeWidth={2} /> },
   ]
 
   const TAB_DESCS: Record<string, string> = {
