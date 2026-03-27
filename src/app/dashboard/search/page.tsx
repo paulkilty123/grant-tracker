@@ -1417,8 +1417,24 @@ export default function SearchPage() {
 
   return (
     <div>
-      <div className="mb-5">
-        <h2 className="font-display text-2xl font-bold text-charcoal">Find Funding</h2>
+      {/* ── Page heading + view tabs ── */}
+      <div className="mb-5 flex items-baseline gap-6">
+        <h2 className="font-display text-2xl font-bold text-charcoal flex-shrink-0">Find Funding</h2>
+        <div className="flex items-center gap-0">
+          <button
+            onClick={() => setActiveView('matches')}
+            className={`px-1 py-1 text-sm font-medium border-b-2 mr-5 transition-colors ${activeView === 'matches' ? 'border-coral text-coral' : 'border-transparent text-gray-500 hover:text-charcoal'}`}
+          >
+            My Matches
+          </button>
+          <button
+            onClick={() => setActiveView('saved')}
+            className={`px-1 py-1 text-sm font-medium border-b-2 transition-colors flex items-center gap-1.5 ${activeView === 'saved' ? 'border-coral text-coral' : 'border-transparent text-gray-500 hover:text-charcoal'}`}
+          >
+            Saved
+            {savedCount > 0 && <span className="text-xs bg-coral text-white px-1.5 py-0.5">{savedCount}</span>}
+          </button>
+        </div>
       </div>
 
       {/* Welcome banner — shown after first profile save */}
@@ -1434,17 +1450,6 @@ export default function SearchPage() {
 
       {/* ── Search card ── */}
       <div className="bg-white shadow-card mb-5 border border-warm/60">
-
-        {/* ── View tabs ── */}
-        <div className="flex border-b border-[#e8ddd0]">
-          <button onClick={() => setActiveView('matches')} className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeView === 'matches' ? 'border-coral text-coral' : 'border-transparent text-gray-500'}`}>
-            My Matches
-          </button>
-          <button onClick={() => setActiveView('saved')} className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors flex items-center gap-1.5 ${activeView === 'saved' ? 'border-coral text-coral' : 'border-transparent text-gray-500'}`}>
-            <Bookmark className="h-3.5 w-3.5" />
-            Saved {savedCount > 0 && <span className="text-xs bg-coral text-white px-1.5 py-0.5">{savedCount}</span>}
-          </button>
-        </div>
 
         <div className="p-5">
           {/* My Matches context label */}
@@ -1463,9 +1468,10 @@ export default function SearchPage() {
             </div>
           )}
 
-          {/* Input row — search + location + button all on one line */}
+          {/* ── Single control row: search + location + filters + profile filter ── */}
           {activeView === 'matches' && (
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
+              {/* Search input */}
               <div className="flex-1 relative min-w-0">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-light" />
                 <input
@@ -1477,11 +1483,12 @@ export default function SearchPage() {
                     setHasSearched(true)
                     handleAISearch(inputValue)
                   }}
-                  className="form-input h-12 pl-11 pr-4 w-full"
-                  placeholder="Refine your matches — e.g. 'core costs'"
+                  className="form-input h-11 pl-11 pr-4 w-full"
+                  placeholder="Search by funder, keyword, or sector..."
                 />
               </div>
-              <div className="relative w-40 flex-shrink-0">
+              {/* Location input */}
+              <div className="relative w-44 flex-shrink-0">
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-light" />
                 <input
                   type="text"
@@ -1494,73 +1501,73 @@ export default function SearchPage() {
                     handleAISearch(inputValue)
                   }}
                   onBlur={() => setLocationFilter(locationInput)}
-                  className="form-input h-12 pl-10 pr-3 text-sm w-full"
+                  className="form-input h-11 pl-10 pr-3 text-sm w-full"
                   placeholder="Location"
                 />
               </div>
+              {/* Filters button */}
+              <button
+                onClick={() => setFiltersOpen(o => !o)}
+                className={`flex items-center gap-1.5 px-4 h-11 border text-sm font-semibold transition-all flex-shrink-0 ${
+                  filtersOpen || activeFilterCount > 0
+                    ? 'bg-charcoal text-white border-charcoal'
+                    : 'border-warm text-mid hover:border-coral hover:text-coral bg-white'
+                }`}
+              >
+                <SlidersHorizontal size={15} strokeWidth={2} />
+                {activeFilterCount > 0 ? `Filters · ${activeFilterCount}` : 'Filters'}
+                <ChevronDown size={13} strokeWidth={2} className={`transition-transform duration-200 ${filtersOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {/* Profile Filter toggle */}
+              {org && (() => {
+                const profileFilterOn = activeSectors.size > 0 || !!locationFilter
+                return (
+                  <button
+                    onClick={() => {
+                      if (profileFilterOn) {
+                        setActiveSectors(new Set())
+                        setLocationFilter('')
+                        setLocationInput('')
+                      } else {
+                        if (org.primary_location) { setLocationFilter(org.primary_location); setLocationInput(org.primary_location) }
+                        if ((org.impact_sectors as string[] | undefined)?.length) setActiveSectors(new Set(org.impact_sectors as ImpactSector[]))
+                      }
+                    }}
+                    className="flex items-center gap-2 flex-shrink-0 text-sm font-medium text-mid hover:text-charcoal transition-colors whitespace-nowrap"
+                  >
+                    Profile Filter
+                    {/* Toggle pill */}
+                    <span className={`relative inline-flex h-5 w-9 flex-shrink-0 items-center transition-colors ${profileFilterOn ? 'bg-[#E8725C]' : 'bg-gray-300'}`}>
+                      <span className={`inline-block h-3.5 w-3.5 bg-white transition-transform ${profileFilterOn ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                    </span>
+                  </button>
+                )
+              })()}
+              {/* AI Search button — triggers smart matching */}
               <button
                 onClick={() => handleAISearch(inputValue)}
                 disabled={!inputValue.trim() && !locationFilter.trim()}
-                className={`px-5 h-12 text-white text-sm font-semibold whitespace-nowrap transition-colors disabled:opacity-40 flex-shrink-0 ${
+                className={`px-4 h-11 text-white text-sm font-semibold whitespace-nowrap transition-colors disabled:opacity-40 flex-shrink-0 ${
                   aiLoading ? 'pointer-events-none' : ''
                 } bg-coral hover:bg-coral/90`}
               >
                 {aiLoading
-                  ? <span className="flex items-center gap-2"><span className="dot-bounce flex gap-1"><span/><span/><span/></span>Searching…</span>
-                  : <><Search size={14} className="inline -mt-0.5 mr-1" />Search</>}
+                  ? <span className="flex items-center gap-2"><span className="dot-bounce flex gap-1"><span/><span/><span/></span>…</span>
+                  : <Search size={15} className="inline" />}
               </button>
             </div>
           )}
 
-          {/* ── Filters (matches view) ── */}
-          {activeView === 'matches' && (
-            <>
-              <div className="mt-3 flex items-center gap-2 flex-wrap">
-                <button
-                  onClick={() => setFiltersOpen(o => !o)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 border text-xs font-semibold transition-all ${
-                    filtersOpen || activeFilterCount > 0
-                      ? 'bg-charcoal text-white border-charcoal'
-                      : 'border-warm text-mid hover:border-coral hover:text-coral bg-white'
-                  }`}
-                >
-                  <SlidersHorizontal size={13} strokeWidth={2} />
-                  {activeFilterCount > 0 ? `Filters · ${activeFilterCount} active` : 'Filters'}
-                  <ChevronDown size={13} strokeWidth={2} className={`transition-transform duration-200 ${filtersOpen ? 'rotate-180' : ''}`} />
+          {/* ── Secondary row: clear results + error ── */}
+          {activeView === 'matches' && (aiResults || aiError) && (
+            <div className="mt-2 flex items-center gap-2">
+              {aiResults && (
+                <button onClick={() => { setAiResults(null); setSmartMatched(false); setQuery(''); setInputValue('') }} className="px-3 py-1 border border-warm text-xs font-medium text-mid hover:border-coral hover:text-coral transition-all bg-white">
+                  Clear results
                 </button>
-                {org && (() => {
-                  const profileFilterOn = activeSectors.size > 0 || !!locationFilter
-                  return (
-                    <button
-                      onClick={() => {
-                        if (profileFilterOn) {
-                          setActiveSectors(new Set())
-                          setLocationFilter('')
-                          setLocationInput('')
-                        } else {
-                          if (org.primary_location) { setLocationFilter(org.primary_location); setLocationInput(org.primary_location) }
-                          if ((org.impact_sectors as string[] | undefined)?.length) setActiveSectors(new Set(org.impact_sectors as ImpactSector[]))
-                        }
-                      }}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 border text-xs font-semibold transition-all ${
-                        profileFilterOn
-                          ? 'bg-[#E8725C] text-white border-[#E8725C]'
-                          : 'border-warm text-mid hover:border-coral hover:text-coral bg-white'
-                      }`}
-                    >
-                      <Users size={13} strokeWidth={2} />
-                      {profileFilterOn ? 'Profile Filter On' : 'Profile Filter Off'}
-                    </button>
-                  )
-                })()}
-                {aiResults && (
-                  <button onClick={() => { setAiResults(null); setSmartMatched(false); setQuery(''); setInputValue('') }} className="px-3 py-1.5 border border-warm text-xs font-medium text-mid hover:border-coral hover:text-coral transition-all bg-white">
-                    Clear results
-                  </button>
-                )}
-              </div>
-              {aiError && <p className="text-amber-600 text-xs mt-3">⚠ {aiError}</p>}
-            </>
+              )}
+              {aiError && <p className="text-amber-600 text-xs">⚠ {aiError}</p>}
+            </div>
           )}
 
 
