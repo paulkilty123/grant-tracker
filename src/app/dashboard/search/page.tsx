@@ -488,7 +488,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
           </div>
 
           {/* Title + funder */}
-          <h3 className="font-display text-lg font-bold text-[#2c3e35] leading-snug mb-0.5">{grant.title}</h3>
+          <h3 className="font-lora text-lg font-semibold text-[#2c3e35] leading-snug mb-0.5">{grant.title}</h3>
           <p className="text-sm text-[#6b7280] mb-3">{grant.funder}</p>
 
           {/* Description */}

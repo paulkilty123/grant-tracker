@@ -239,7 +239,7 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
                 </div>
 
                 {/* Title */}
-                <h2 className="font-display text-xl font-bold text-[#2c3e35] leading-snug mb-3">
+                <h2 className="font-lora text-xl font-semibold text-[#2c3e35] leading-snug mb-3">
                   {grant.title}
                 </h2>
 

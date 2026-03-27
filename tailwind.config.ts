@@ -31,9 +31,11 @@ const config: Config = {
       },
       fontFamily: {
         sans:    ['var(--font-dm-sans)', 'system-ui', 'sans-serif'],
-        // font-display maps to DM Serif — used as heading/display throughout the app
+        // font-display → DM Serif Display — page-level headings only (e.g. "Find Funding")
         display: ['var(--font-dm-serif)', 'serif'],
         serif:   ['var(--font-dm-serif)', 'serif'],
+        // font-lora → Lora — card titles and section headings
+        lora:    ['var(--font-lora)', 'Georgia', 'serif'],
       },
       borderRadius: {
         DEFAULT: '12px',
