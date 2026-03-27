@@ -1502,14 +1502,14 @@ export default function SearchPage() {
                     className="flex items-center gap-2 flex-shrink-0 whitespace-nowrap group"
                     title={profileFilterOn ? 'Click to turn off profile filtering' : 'Click to filter by your profile (location + sectors)'}
                   >
-                    {/* Toggle pill — fixed size so it always reads clearly */}
+                    {/* Toggle pill */}
                     <span
-                      className="relative flex-shrink-0 transition-colors duration-200"
+                      className="relative flex-shrink-0"
                       style={{
                         width: 44, height: 24,
-                        backgroundColor: profileFilterOn ? '#E8725C' : '#d1d5db',
+                        backgroundColor: profileFilterOn ? '#2d8a7a' : '#d1d5db',
                         display: 'inline-flex', alignItems: 'center',
-                        borderRadius: 4,
+                        borderRadius: 9999,
                         transition: 'background-color 0.2s',
                       }}
                     >
@@ -1517,14 +1517,15 @@ export default function SearchPage() {
                         className="absolute bg-white transition-transform duration-200"
                         style={{
                           width: 18, height: 18,
+                          borderRadius: 9999,
                           top: 3,
                           left: 3,
                           transform: profileFilterOn ? 'translateX(20px)' : 'translateX(0)',
                         }}
                       />
                     </span>
-                    <span className={`text-sm font-medium ${profileFilterOn ? 'text-gray-500' : 'text-gray-400'}`}>
-                      Profile Filter {profileFilterOn ? 'On' : 'Off'}
+                    <span className={`text-sm font-medium ${profileFilterOn ? 'text-gray-600' : 'text-gray-400'}`}>
+                      Profile
                     </span>
                   </button>
                 )
@@ -1533,8 +1534,8 @@ export default function SearchPage() {
               <button
                 onClick={() => { setHasSearched(true); handleAISearch(inputValue) }}
                 disabled={!inputValue.trim() && !locationFilter.trim()}
-                className={`px-4 h-11 text-white text-sm font-semibold flex-shrink-0 transition-opacity disabled:opacity-40 flex items-center gap-1.5 rounded-lg ${aiLoading ? 'pointer-events-none' : ''}`}
-                style={{ backgroundColor: '#E8725C' }}
+                className={`px-5 h-11 text-white text-sm font-semibold flex-shrink-0 transition-opacity disabled:opacity-40 flex items-center gap-1.5 rounded-xl ${aiLoading ? 'pointer-events-none' : ''}`}
+                style={{ backgroundColor: '#1f5c52' }}
               >
                 {aiLoading
                   ? <><span className="dot-bounce flex gap-0.5"><span/><span/><span/></span> Searching…</>
