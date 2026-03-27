@@ -1383,7 +1383,7 @@ export default function SearchPage() {
   return (
     <div>
       {/* ── Page heading ── */}
-      <div className="mb-4">
+      <div className="mb-8 mt-6">
         <h2 className="font-serif text-5xl font-bold text-charcoal leading-tight">Find Funding</h2>
       </div>
 
@@ -1418,16 +1418,14 @@ export default function SearchPage() {
         <div className="flex items-center gap-0 bg-white border border-warm/60 shadow-sm overflow-hidden" style={{ borderRadius: 9999 }}>
           <button
             onClick={() => setActiveView('matches')}
-            className={`px-5 py-2 text-sm font-medium transition-colors ${activeView === 'matches' ? 'bg-forest text-white' : 'text-gray-500 hover:text-charcoal'}`}
-            style={{ borderRadius: 0 }}
+            className={`px-5 py-2 text-sm font-medium transition-colors ${activeView === 'matches' ? 'text-coral border-b-2 border-coral' : 'border-b-2 border-transparent text-gray-500 hover:text-charcoal'}`}
           >
             My Matches
           </button>
           <div className="w-px h-5 bg-warm/80" />
           <button
             onClick={() => setActiveView('saved')}
-            className={`px-5 py-2 text-sm font-medium transition-colors flex items-center gap-1.5 ${activeView === 'saved' ? 'bg-forest text-white' : 'text-gray-500 hover:text-charcoal'}`}
-            style={{ borderRadius: 0 }}
+            className={`px-5 py-2 text-sm font-medium transition-colors flex items-center gap-1.5 ${activeView === 'saved' ? 'text-coral border-b-2 border-coral' : 'border-b-2 border-transparent text-gray-500 hover:text-charcoal'}`}
           >
             Saved
             {savedCount > 0 && <span className="text-xs bg-coral text-white px-1.5 py-0.5 ml-1" style={{ borderRadius: 9999 }}>{savedCount}</span>}
