@@ -362,13 +362,13 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
               </div>
 
               {/* CTA footer — sticky */}
-              <div className="sticky bottom-0 bg-white border-t border-[#e8ddd0] px-6 py-4 flex flex-col gap-2.5">
+              <div className="sticky bottom-0 bg-white border-t border-[#e8ddd0] px-6 py-4 flex flex-row flex-wrap gap-2.5">
                 {grant.apply_url && (
                   <a
                     href={grant.apply_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 px-4 py-3 text-white text-sm font-semibold hover:opacity-90 transition-opacity"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 text-white text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity"
                     style={{ backgroundColor: '#E8725C' }}
                   >
                     <ExternalLink className="w-4 h-4" />
@@ -378,7 +378,7 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
                 {onAddToPipeline && (
                   <button
                     onClick={handleAddToPipeline}
-                    className="flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold border border-[#e8ddd0] hover:border-[#2d8a7a] hover:text-[#2d8a7a] transition-colors text-[#444]"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg border border-[#e8ddd0] hover:border-[#2d8a7a] hover:text-[#2d8a7a] transition-colors text-[#444]"
                   >
                     <BookmarkPlus className="w-4 h-4" />
                     {pipelineMsg ?? 'Add to pipeline'}

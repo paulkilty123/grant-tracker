@@ -75,12 +75,12 @@ function DeadlineCard({ alert }: { alert: DeadlineAlert }) {
   const amountStr = formatRange(alert.item.amount_min, alert.item.amount_max ?? alert.item.amount_requested)
 
   return (
-    <div className={`bg-white border border-warm/80 p-5 mb-3 border-l-4 ${cfg.border}`}
+    <div className={`bg-white border border-warm/80 p-5 mb-3 rounded-lg border-l-4 ${cfg.border}`}
       style={{ boxShadow: '0 2px 16px rgba(26,46,43,0.06)' }}>
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1.5">
-            <span className={`text-[10px] font-bold uppercase tracking-wide px-2.5 py-0.5 ${cfg.badgeBg} ${cfg.badgeText}`}>
+            <span className={`text-[10px] font-bold uppercase tracking-wide px-2.5 py-0.5 rounded ${cfg.badgeBg} ${cfg.badgeText}`}>
               {alert.urgency === 'overdue' ? 'Overdue' : `${alert.daysUntil}d left`}
             </span>
             {stage && (
@@ -234,7 +234,7 @@ export default function DeadlinesPage() {
               { label: 'On Track',  count: ok.length,      cfg: URGENCY_CONFIG.ok      },
             ].map(s => (
               <div key={s.label}
-                className={`bg-white border border-warm/80 p-5 ${s.cfg.statBorder}`}
+                className={`bg-white border border-warm/80 p-5 rounded-lg ${s.cfg.statBorder}`}
                 style={{ boxShadow: '0 2px 16px rgba(26,46,43,0.06)' }}>
                 <p className="text-[10px] font-semibold text-mid uppercase tracking-wider mb-2">{s.label}</p>
                 <p className={`font-serif text-3xl ${s.cfg.accent}`}>{s.count}</p>
@@ -253,7 +253,7 @@ export default function DeadlinesPage() {
                 <h3 className="font-display text-base font-bold text-coral">
                   Overdue
                 </h3>
-                <span className="text-[10px] font-bold text-coral bg-coral/10 px-2 py-0.5 uppercase tracking-wide">
+                <span className="text-[10px] font-bold text-coral bg-coral/10 px-2 py-0.5 rounded uppercase tracking-wide">
                   {overdue.length}
                 </span>
               </div>
@@ -269,7 +269,7 @@ export default function DeadlinesPage() {
                 <h3 className="font-display text-base font-bold text-charcoal">
                   Due within 10 days
                 </h3>
-                <span className="text-[10px] font-bold text-gold bg-gold/10 px-2 py-0.5 uppercase tracking-wide">
+                <span className="text-[10px] font-bold text-gold bg-gold/10 px-2 py-0.5 rounded uppercase tracking-wide">
                   {urgent.length}
                 </span>
               </div>
@@ -285,7 +285,7 @@ export default function DeadlinesPage() {
                 <h3 className="font-display text-base font-bold text-charcoal">
                   Coming up
                 </h3>
-                <span className="text-[10px] font-bold text-mid bg-warm px-2 py-0.5 uppercase tracking-wide">
+                <span className="text-[10px] font-bold text-mid bg-warm px-2 py-0.5 rounded uppercase tracking-wide">
                   {soon.length}
                 </span>
               </div>
@@ -301,7 +301,7 @@ export default function DeadlinesPage() {
                 <h3 className="font-display text-base font-bold text-charcoal">
                   On track
                 </h3>
-                <span className="text-[10px] font-bold text-forest bg-forest/10 px-2 py-0.5 uppercase tracking-wide">
+                <span className="text-[10px] font-bold text-forest bg-forest/10 px-2 py-0.5 rounded uppercase tracking-wide">
                   {ok.length}
                 </span>
               </div>
@@ -316,7 +316,7 @@ export default function DeadlinesPage() {
                 <h3 className="font-display text-base font-bold text-charcoal">
                   No deadline set
                 </h3>
-                <span className="text-[10px] font-bold text-mid bg-warm px-2 py-0.5 uppercase tracking-wide">
+                <span className="text-[10px] font-bold text-mid bg-warm px-2 py-0.5 rounded uppercase tracking-wide">
                   {noDeadlineItems.length}
                 </span>
               </div>
@@ -328,7 +328,7 @@ export default function DeadlinesPage() {
                 const amountStr = formatRange(item.amount_min, item.amount_max ?? item.amount_requested)
                 return (
                   <a key={item.id} href="/dashboard/pipeline"
-                    className="bg-white border border-warm/80 p-4 mb-2 flex items-center justify-between gap-4 hover:bg-[#f5f2ed] transition-colors block"
+                    className="bg-white border border-warm/80 p-4 mb-2 rounded-lg flex items-center justify-between gap-4 hover:bg-[#f5f2ed] transition-colors block"
                     style={{ boxShadow: '0 1px 8px rgba(26,46,43,0.04)' }}>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-charcoal truncate">{item.grant_name}</p>

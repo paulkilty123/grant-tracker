@@ -79,12 +79,11 @@ export default function FeedbackPage() {
             <button
               key={t.id}
               onClick={() => { setActiveType(t.id); setStatus('idle') }}
-              className={`flex flex-col items-center gap-2 px-3 py-4 text-center border transition-all ${
+              className={`flex flex-col items-center gap-2 px-3 py-4 text-center border rounded-lg transition-all ${
                 isActive
                   ? 'bg-[#121f2b] border-[#121f2b] text-white'
                   : 'bg-white border-warm/60 text-mid hover:border-charcoal/40 hover:text-charcoal'
               }`}
-              style={{ borderRadius: 0 }}
             >
               <Icon
                 size={18}
@@ -97,11 +96,11 @@ export default function FeedbackPage() {
       </div>
 
       {/* Form card */}
-      <div className="bg-white border border-warm/60" style={{ boxShadow: '0 2px 16px rgba(26,46,43,0.06)' }}>
+      <div className="bg-white border border-warm/60 rounded-xl" style={{ boxShadow: '0 2px 16px rgba(26,46,43,0.06)' }}>
 
         {status === 'sent' ? (
           <div className="text-center py-12 px-8">
-            <div className="w-12 h-12 bg-forest/10 flex items-center justify-center mx-auto mb-4">
+            <div className="w-12 h-12 bg-forest/10 rounded-lg flex items-center justify-center mx-auto mb-4">
               <CheckCircle size={22} className="text-forest" />
             </div>
             <p className="font-display text-xl font-bold text-charcoal mb-1">Thank you!</p>
@@ -130,7 +129,6 @@ export default function FeedbackPage() {
                 rows={7}
                 required
                 className="form-input w-full resize-none text-sm"
-                style={{ borderRadius: 0 }}
               />
               {status === 'error' && (
                 <p className="text-xs text-red-500 mt-2">
@@ -146,8 +144,7 @@ export default function FeedbackPage() {
               <button
                 type="submit"
                 disabled={status === 'sending' || !message.trim()}
-                className="px-5 py-2.5 bg-coral text-white text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-40"
-                style={{ borderRadius: 0 }}
+                className="px-5 py-2.5 bg-coral text-white text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-40"
               >
                 {status === 'sending' ? 'Sending…' : 'Send feedback →'}
               </button>
