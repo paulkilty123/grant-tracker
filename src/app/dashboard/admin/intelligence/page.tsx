@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Sparkles, ExternalLink, RefreshCw, CheckCircle, Clock, AlertTriangle, Zap } from 'lucide-react'
+import { Sparkles, ExternalLink, RefreshCw, CheckCircle, Clock, AlertTriangle, Zap, PlusCircle, X, BookOpen } from 'lucide-react'
 
 type GrantRow = {
   id: string
@@ -14,6 +14,7 @@ type GrantRow = {
 }
 
 type EnrichStatus = 'idle' | 'loading' | 'done' | 'error'
+type Source = { label: string; text: string }
 
 export default function FunderIntelligencePage() {
   const [grants, setGrants] = useState<GrantRow[]>([])
@@ -24,8 +25,9 @@ export default function FunderIntelligencePage() {
   const [brief, setBrief] = useState<Record<string, Record<string, string | null>>>({})
   const [bulkRunning, setBulkRunning] = useState(false)
   const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number } | null>(null)
-  const [pasteOpen, setPasteOpen] = useState<Record<string, boolean>>({})
-  const [pasteText, setPasteText] = useState<Record<string, string>>({})
+  // Multi-source state
+  const [sourcesOpen, setSourcesOpen] = useState<Record<string, boolean>>({})
+  const [sources, setSources] = useState<Record<string, Source[]>>({})
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -41,14 +43,38 @@ export default function FunderIntelligencePage() {
 
   useEffect(() => { load() }, [load])
 
-  const enrichSingle = async (grant: GrantRow, pasted?: string): Promise<boolean> => {
+  const addSource = (grantId: string) => {
+    setSources(s => ({ ...s, [grantId]: [...(s[grantId] ?? []), { label: '', text: '' }] }))
+  }
+
+  const updateSource = (grantId: string, idx: number, field: keyof Source, value: string) => {
+    setSources(s => {
+      const updated = [...(s[grantId] ?? [])]
+      updated[idx] = { ...updated[idx], [field]: value }
+      return { ...s, [grantId]: updated }
+    })
+  }
+
+  const removeSource = (grantId: string, idx: number) => {
+    setSources(s => {
+      const updated = [...(s[grantId] ?? [])]
+      updated.splice(idx, 1)
+      return { ...s, [grantId]: updated }
+    })
+  }
+
+  const enrichSingle = async (grant: GrantRow): Promise<boolean> => {
     setEnrichStatus(s => ({ ...s, [grant.id]: 'loading' }))
     setEnrichMsg(s => ({ ...s, [grant.id]: '' }))
+    const grantSources = sources[grant.id] ?? []
     try {
       const res = await fetch('/api/admin/enrich-grant', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ grantId: grant.id, pastedContent: pasted ?? pasteText[grant.id] ?? undefined }),
+        body: JSON.stringify({
+          grantId: grant.id,
+          additionalSources: grantSources.filter(s => s.text.trim().length > 50),
+        }),
       })
       const json = await res.json()
       if (!res.ok) {
@@ -59,6 +85,7 @@ export default function FunderIntelligencePage() {
         setEnrichStatus(s => ({ ...s, [grant.id]: 'done' }))
         setBrief(b => ({ ...b, [grant.id]: json.brief }))
         setGrants(gs => gs.map(g => g.id === grant.id ? { ...g, funder_brief: json.brief } : g))
+        setSourcesOpen(o => ({ ...o, [grant.id]: false }))
         return true
       }
     } catch {
@@ -67,8 +94,6 @@ export default function FunderIntelligencePage() {
       return false
     }
   }
-
-  const enrich = (grant: GrantRow) => enrichSingle(grant)
 
   const enrichAll = async () => {
     const unenriched = grants.filter(g => !g.funder_brief && enrichStatus[g.id] !== 'done')
@@ -80,7 +105,6 @@ export default function FunderIntelligencePage() {
       await enrichSingle(grant)
       done++
       setBulkProgress({ done, total: unenriched.length })
-      // Small delay between calls to avoid rate limits
       await new Promise(r => setTimeout(r, 500))
     }
     setBulkRunning(false)
@@ -96,14 +120,14 @@ export default function FunderIntelligencePage() {
   const enrichedCount = grants.filter(g => !!g.funder_brief).length
 
   const BRIEF_LABELS: Record<string, string> = {
-    what_they_fund:    'What they fund',
-    priorities:        'Priorities',
-    strong_application:'Strong application',
-    exclusions:        'Exclusions',
-    typical_award:     'Typical award',
-    decision_timeline: 'Decision timeline',
-    how_to_apply:      'How to apply',
-    funder_tips:       'Tips',
+    what_they_fund:     'What they fund',
+    priorities:         'Priorities',
+    strong_application: 'Strong application',
+    exclusions:         'Exclusions',
+    typical_award:      'Typical award',
+    decision_timeline:  'Decision timeline',
+    how_to_apply:       'How to apply',
+    funder_tips:        'Tips',
   }
 
   return (
@@ -117,7 +141,7 @@ export default function FunderIntelligencePage() {
               <h1 className="text-2xl font-bold text-[#1C1C2E]">Funder Intelligence</h1>
             </div>
             <p className="text-sm text-[#6E6E80]">
-              Enrich grants with AI-generated summaries scraped from funder websites. Summaries are stored in Supabase and shown to users in the grant card.
+              Enrich grants with AI-generated summaries. Add extra source pages to fill in any gaps — how to apply, guidelines, criteria, etc.
             </p>
           </div>
           <button
@@ -173,11 +197,15 @@ export default function FunderIntelligencePage() {
             const status = enrichStatus[grant.id] ?? 'idle'
             const existingBrief = brief[grant.id] ?? grant.funder_brief
             const isEnriched = !!existingBrief
+            const grantSources = sources[grant.id] ?? []
+            const isSourcesOpen = sourcesOpen[grant.id] ?? false
+            const hasFilledSources = grantSources.some(s => s.text.trim().length > 50)
+
             return (
               <div key={grant.id} className="bg-white border border-[#E8E8EC] overflow-hidden" style={{ borderRadius: 12 }}>
                 {/* Grant row */}
                 <div className="flex items-start gap-4 p-4">
-                  {/* Status dot */}
+                  {/* Status icon */}
                   <div className="flex-shrink-0 mt-1">
                     {isEnriched
                       ? <CheckCircle className="w-4 h-4" style={{ color: '#008080' }} />
@@ -199,6 +227,7 @@ export default function FunderIntelligencePage() {
                     {isEnriched && (
                       <p className="text-xs mt-1" style={{ color: '#008080' }}>
                         Enriched {existingBrief.last_enriched ?? ''}
+                        {grantSources.length > 0 && ` · ${grantSources.length} extra source${grantSources.length > 1 ? 's' : ''} added`}
                       </p>
                     )}
                   </div>
@@ -207,20 +236,27 @@ export default function FunderIntelligencePage() {
                   <div className="flex items-center gap-2 flex-shrink-0">
                     {grant.apply_url && (
                       <a href={grant.apply_url} target="_blank" rel="noopener noreferrer"
-                        className="p-1.5 text-[#6E6E80] hover:text-[#1C1C2E] transition-colors">
+                        className="p-1.5 text-[#6E6E80] hover:text-[#1C1C2E] transition-colors"
+                        title="Open primary URL">
                         <ExternalLink className="w-4 h-4" />
                       </a>
                     )}
-                    {status === 'error' && (
-                      <button
-                        onClick={() => setPasteOpen(p => ({ ...p, [grant.id]: !p[grant.id] }))}
-                        className="px-3 py-1.5 text-xs font-bold border transition-colors"
-                        style={{ borderRadius: 9999, borderColor: '#E8E8EC', color: '#6E6E80' }}>
-                        Paste text
-                      </button>
-                    )}
+                    {/* Sources toggle — always available */}
                     <button
-                      onClick={() => enrich(grant)}
+                      onClick={() => setSourcesOpen(o => ({ ...o, [grant.id]: !o[grant.id] }))}
+                      className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold border transition-colors"
+                      style={{
+                        borderRadius: 9999,
+                        borderColor: isSourcesOpen ? '#008080' : '#E8E8EC',
+                        color: isSourcesOpen ? '#008080' : '#6E6E80',
+                        backgroundColor: isSourcesOpen ? 'rgba(0,128,128,0.08)' : 'white',
+                      }}
+                      title="Add extra source pages">
+                      <BookOpen className="w-3 h-3" />
+                      {grantSources.length > 0 ? `${grantSources.length} source${grantSources.length > 1 ? 's' : ''}` : 'Sources'}
+                    </button>
+                    <button
+                      onClick={() => enrichSingle(grant)}
                       disabled={status === 'loading'}
                       className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold transition-colors disabled:opacity-50"
                       style={{
@@ -234,42 +270,88 @@ export default function FunderIntelligencePage() {
                   </div>
                 </div>
 
-                {/* Paste panel for failed grants */}
-                {pasteOpen[grant.id] && (
-                  <div className="border-t border-[#E8E8EC] px-4 py-4" style={{ backgroundColor: '#FAF8F5' }}>
-                    <p className="text-xs font-semibold text-[#1C1C2E] mb-2">
-                      Paste the text content from the funder's website below, then click Enrich from text.
-                    </p>
-                    <textarea
-                      rows={6}
-                      placeholder="Open the funder's website, select all text (Ctrl+A / Cmd+A), copy it, and paste here…"
-                      value={pasteText[grant.id] ?? ''}
-                      onChange={e => setPasteText(p => ({ ...p, [grant.id]: e.target.value }))}
-                      className="w-full text-xs border border-[#E8E8EC] p-3 resize-y outline-none focus:border-[#008080]"
-                      style={{ borderRadius: 8, fontFamily: 'inherit' }}
-                    />
-                    <div className="flex justify-end mt-2">
+                {/* Sources panel */}
+                {isSourcesOpen && (
+                  <div className="border-t border-[#E8E8EC] px-4 py-4 space-y-3" style={{ backgroundColor: '#FAF8F5' }}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-bold text-[#1C1C2E]">Additional sources</p>
+                        <p className="text-[11px] text-[#6E6E80] mt-0.5">
+                          Paste text from other pages (How to apply, Guidelines, Criteria, etc.) to fill in any gaps. Claude combines all sources.
+                        </p>
+                      </div>
                       <button
-                        onClick={() => {
-                          setPasteOpen(p => ({ ...p, [grant.id]: false }))
-                          enrichSingle(grant, pasteText[grant.id])
-                        }}
-                        disabled={!pasteText[grant.id] || pasteText[grant.id].trim().length < 50}
-                        className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white disabled:opacity-40"
+                        onClick={() => addSource(grant.id)}
+                        className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-white flex-shrink-0"
                         style={{ borderRadius: 9999, backgroundColor: '#008080' }}>
-                        <Sparkles className="w-3 h-3" />
-                        Enrich from text
+                        <PlusCircle className="w-3 h-3" />
+                        Add source
                       </button>
                     </div>
+
+                    {grantSources.length === 0 && (
+                      <p className="text-xs text-[#9E9EA8] italic">
+                        No extra sources yet. Click "Add source" to paste content from another page.
+                      </p>
+                    )}
+
+                    {grantSources.map((src, idx) => (
+                      <div key={idx} className="bg-white border border-[#E8E8EC] p-3 space-y-2" style={{ borderRadius: 8 }}>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            placeholder="Label (optional) — e.g. How to apply, Guidelines, Criteria…"
+                            value={src.label}
+                            onChange={e => updateSource(grant.id, idx, 'label', e.target.value)}
+                            className="flex-1 text-xs border border-[#E8E8EC] px-2.5 py-1.5 outline-none focus:border-[#008080]"
+                            style={{ borderRadius: 6, fontFamily: 'inherit' }}
+                          />
+                          <button
+                            onClick={() => removeSource(grant.id, idx)}
+                            className="p-1 text-[#9E9EA8] hover:text-red-400 transition-colors flex-shrink-0">
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <textarea
+                          rows={5}
+                          placeholder="Go to the page, select all text (Cmd+A / Ctrl+A), copy and paste here…"
+                          value={src.text}
+                          onChange={e => updateSource(grant.id, idx, 'text', e.target.value)}
+                          className="w-full text-xs border border-[#E8E8EC] p-2.5 resize-y outline-none focus:border-[#008080]"
+                          style={{ borderRadius: 6, fontFamily: 'inherit' }}
+                        />
+                        {src.text.trim().length > 0 && (
+                          <p className="text-[10px] text-[#9E9EA8]">{src.text.trim().length.toLocaleString()} characters</p>
+                        )}
+                      </div>
+                    ))}
+
+                    {grantSources.length > 0 && (
+                      <div className="flex justify-end pt-1">
+                        <button
+                          onClick={() => enrichSingle(grant)}
+                          disabled={status === 'loading' || !hasFilledSources}
+                          className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white disabled:opacity-40 transition-opacity"
+                          style={{ borderRadius: 9999, backgroundColor: '#008080' }}>
+                          <Sparkles className="w-3 h-3" />
+                          {status === 'loading' ? 'Enriching…' : isEnriched ? 'Re-enrich with sources' : 'Enrich with sources'}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
 
                 {/* Brief preview */}
-                {existingBrief && (
+                {existingBrief && !isSourcesOpen && (
                   <div className="border-t border-[#E8E8EC] px-4 py-4 grid grid-cols-2 gap-x-6 gap-y-3" style={{ backgroundColor: '#FAF8F5' }}>
                     {Object.entries(BRIEF_LABELS).map(([key, label]) => {
                       const val = existingBrief[key]
-                      if (!val) return null
+                      if (!val) return (
+                        <div key={key} className="opacity-40">
+                          <p className="text-[10px] font-bold text-[#6E6E80] uppercase tracking-wider mb-0.5">{label}</p>
+                          <p className="text-xs text-[#9E9EA8] italic">Not found — add a source to fill this in</p>
+                        </div>
+                      )
                       return (
                         <div key={key}>
                           <p className="text-[10px] font-bold text-[#6E6E80] uppercase tracking-wider mb-0.5">{label}</p>

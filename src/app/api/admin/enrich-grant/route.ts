@@ -40,7 +40,11 @@ async function fetchPageText(url: string): Promise<string> {
 }
 
 export async function POST(req: NextRequest) {
-  const { grantId, pastedContent } = await req.json()
+  const { grantId, pastedContent, additionalSources } = await req.json() as {
+    grantId: string
+    pastedContent?: string
+    additionalSources?: Array<{ label: string; text: string }>
+  }
   if (!grantId) return NextResponse.json({ error: 'grantId required' }, { status: 400 })
 
   // Load grant
@@ -52,35 +56,48 @@ export async function POST(req: NextRequest) {
 
   if (error || !grant) return NextResponse.json({ error: 'Grant not found' }, { status: 404 })
 
-  // Use pasted content if provided, otherwise fetch the funder page
-  let pageText = ''
-  if (pastedContent && pastedContent.trim().length > 200) {
-    pageText = pastedContent.trim().slice(0, 12000)
-  } else {
-    if (!grant.apply_url) return NextResponse.json({ error: 'No apply URL for this grant' }, { status: 400 })
+  // Build primary content block
+  const sections: string[] = []
+
+  if (pastedContent && pastedContent.trim().length > 100) {
+    sections.push(`Primary source (pasted):\n---\n${pastedContent.trim().slice(0, 10000)}\n---`)
+  } else if (grant.apply_url) {
     try {
-      pageText = await fetchPageText(grant.apply_url)
-    } catch (e) {
-      return NextResponse.json({ error: `Could not fetch URL: ${grant.apply_url}` }, { status: 422 })
-    }
-    if (pageText.length < 200) {
-      return NextResponse.json({ error: 'Page content too short to summarise' }, { status: 422 })
+      const fetched = await fetchPageText(grant.apply_url)
+      if (fetched.length >= 200) {
+        sections.push(`Primary source (${grant.apply_url}):\n---\n${fetched}\n---`)
+      }
+    } catch {
+      // Primary fetch failed — will rely on additional sources if provided
     }
   }
 
-  // Ask Claude to extract a structured funder brief
-  const prompt = `You are analysing a grant funder's website page for a UK charity/CIC grant tracker tool.
+  // Append any additional sources
+  if (additionalSources?.length) {
+    for (const src of additionalSources) {
+      if (src.text && src.text.trim().length > 50) {
+        const heading = src.label?.trim() ? `Additional source — ${src.label}` : 'Additional source'
+        sections.push(`${heading}:\n---\n${src.text.trim().slice(0, 8000)}\n---`)
+      }
+    }
+  }
+
+  if (sections.length === 0) {
+    return NextResponse.json({ error: 'No usable content — provide a URL that can be fetched or paste the page text' }, { status: 422 })
+  }
+
+  const combinedContent = sections.join('\n\n')
+
+  // Ask Claude to extract a structured funder brief across all sources
+  const prompt = `You are analysing content from a grant funder's website for a UK charity/CIC grant tracker tool. You may have been given content from multiple pages — use all of it to fill in as many fields as possible.
 
 Grant title: ${grant.title}
 Funder: ${grant.funder}
 Existing description: ${grant.description ?? 'None'}
 
-Page content from ${grant.apply_url}:
----
-${pageText}
----
+${combinedContent}
 
-Extract a structured "funder brief" as JSON. Be concise — each field should be 1–3 sentences max. If a field isn't mentioned on the page, use null.
+Extract a structured "funder brief" as JSON. Be concise — each field should be 1–3 sentences max. Draw from whichever source contains the relevant information. If a field isn't covered in any source, use null.
 
 Return ONLY valid JSON in this exact shape:
 {
