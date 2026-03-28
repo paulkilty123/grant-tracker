@@ -469,7 +469,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
             }
             const ftStyle = grant.fundingType ? FUNDING_TYPE_STYLE[grant.fundingType] : null
             return (
-          <div className="flex justify-between">
+          <div className="flex gap-10">
             <div>
               <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">Amount</p>
               <p className="text-sm font-bold" style={{ color: '#26A69A' }}>{formatRange(grant.amountMin, grant.amountMax)}</p>
