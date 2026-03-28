@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Search, ChevronDown, Layers, DollarSign, Rocket, Building2, SlidersHorizontal, MapPin, GraduationCap, TrendingUp, GitMerge, Gift, Landmark, CalendarDays, RefreshCw, Bookmark, PlusCircle, Activity, BadgeCheck, Info } from 'lucide-react'
+import { Search, ChevronDown, Layers, DollarSign, Rocket, Building2, SlidersHorizontal, MapPin, GraduationCap, TrendingUp, GitMerge, Gift, Landmark, CalendarDays, RefreshCw, Bookmark, PlusCircle, Activity, Info } from 'lucide-react'
 import GrantDetailModal from '@/components/GrantDetailModal'
 import { SEED_GRANTS } from '@/lib/grants'
 import { formatRange } from '@/lib/utils'
@@ -397,35 +397,26 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
         {/* ── Content ── */}
         <div className="flex-1 min-w-0 p-6">
 
-          {/* Badges row + match score */}
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex flex-wrap items-center gap-2">
-              {sectorLabels[0] && (
-                <span className="text-[10px] font-bold uppercase tracking-wider px-3 py-1"
-                  style={{ borderRadius: 9999, backgroundColor: 'rgba(45,138,122,0.12)', color: '#2d8a7a' }}>
-                  {sectorLabels[0]}
-                </span>
-              )}
-              {entryType === 'live' && daysLeft !== null && daysLeft >= 0 && (
-                <span className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1 ${
-                  daysLeft <= 7 ? 'bg-red-50 text-red-600' : 'bg-gray-100 text-gray-500'
-                }`} style={{ borderRadius: 9999 }}>
-                  {daysLeft === 0 ? 'Closes today' : `${daysLeft} days left`}
-                </span>
-              )}
-              {isNewThisWeek && (
-                <span className="text-[10px] font-bold uppercase tracking-wider px-3 py-1 bg-emerald-50 text-emerald-700" style={{ borderRadius: 9999 }}>New</span>
-              )}
-              {grant.isInviteOnly && (
-                <span className="text-[10px] font-bold uppercase tracking-wider px-3 py-1 bg-purple-50 text-purple-700" style={{ borderRadius: 9999 }}>Invite Only</span>
-              )}
-            </div>
-            {/* Match % — top right of content */}
-            {score > 0 && (
-              <div className="flex items-center gap-1.5 flex-shrink-0">
-                <BadgeCheck className="w-4 h-4" style={{ color: '#E8725C' }} />
-                <span className="text-sm font-bold uppercase tracking-wide" style={{ color: '#E8725C' }}>{score}% Match</span>
-              </div>
+          {/* Badges row */}
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            {sectorLabels[0] && (
+              <span className="text-[10px] font-bold uppercase tracking-wider px-3 py-1"
+                style={{ borderRadius: 9999, backgroundColor: 'rgba(45,138,122,0.12)', color: '#2d8a7a' }}>
+                {sectorLabels[0]}
+              </span>
+            )}
+            {entryType === 'live' && daysLeft !== null && daysLeft >= 0 && (
+              <span className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1 ${
+                daysLeft <= 7 ? 'bg-red-50 text-red-600' : 'bg-gray-100 text-gray-500'
+              }`} style={{ borderRadius: 9999 }}>
+                {daysLeft === 0 ? 'Closes today' : `${daysLeft} days left`}
+              </span>
+            )}
+            {isNewThisWeek && (
+              <span className="text-[10px] font-bold uppercase tracking-wider px-3 py-1 bg-emerald-50 text-emerald-700" style={{ borderRadius: 9999 }}>New</span>
+            )}
+            {grant.isInviteOnly && (
+              <span className="text-[10px] font-bold uppercase tracking-wider px-3 py-1 bg-purple-50 text-purple-700" style={{ borderRadius: 9999 }}>Invite Only</span>
             )}
           </div>
 
@@ -493,49 +484,53 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
           </div>
         </div>
 
-        {/* ── Right: View Details + Save only ── */}
-        <div className="flex flex-col gap-3 p-6 justify-center flex-shrink-0 w-[180px]">
-          {grant.source === 'scraped' && (
+        {/* ── Right: buttons top, Add to Pipeline bottom ── */}
+        <div className="flex flex-col p-6 flex-shrink-0 w-[180px]">
+          {/* View Details + Save at top */}
+          <div className="flex flex-col gap-3">
+            {grant.source === 'scraped' && (
+              <button
+                onClick={() => onViewDetail(grant.id)}
+                className="w-full px-4 py-3 text-sm font-semibold text-white text-center transition-opacity hover:opacity-90"
+                style={{ backgroundColor: '#1f5c52', borderRadius: 9999 }}
+              >
+                View Details
+              </button>
+            )}
             <button
-              onClick={() => onViewDetail(grant.id)}
-              className="w-full px-4 py-3 text-sm font-semibold text-white text-center transition-opacity hover:opacity-90"
-              style={{ backgroundColor: '#1f5c52', borderRadius: 9999 }}
+              onClick={() => isSaved ? onUnsave?.(grant.id) : onSave?.(grant.id)}
+              className={`w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold border transition-colors ${
+                isSaved
+                  ? 'bg-[#E8725C]/10 text-[#E8725C] border-[#E8725C]/30'
+                  : 'border-[#e8ddd0] text-charcoal hover:border-[#E8725C] hover:text-[#E8725C]'
+              }`}
+              style={{ borderRadius: 9999 }}
             >
-              View Details
+              <Bookmark className="w-4 h-4" fill={isSaved ? 'currentColor' : 'none'} />
+              {isSaved ? 'Saved' : 'Save'}
             </button>
-          )}
+          </div>
+          {/* Spacer */}
+          <div className="flex-1" />
+          {/* Add to Pipeline at bottom of white area */}
           <button
-            onClick={() => isSaved ? onUnsave?.(grant.id) : onSave?.(grant.id)}
-            className={`w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold border transition-colors ${
-              isSaved
-                ? 'bg-[#E8725C]/10 text-[#E8725C] border-[#E8725C]/30'
-                : 'border-[#e8ddd0] text-charcoal hover:border-[#E8725C] hover:text-[#E8725C]'
-            }`}
-            style={{ borderRadius: 9999 }}
+            onClick={() => onAddToPipeline(grant)}
+            className="w-full flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-widest transition-colors hover:opacity-70 pb-1"
+            style={{ color: '#2d8a7a' }}
           >
-            <Bookmark className="w-4 h-4" fill={isSaved ? 'currentColor' : 'none'} />
-            {isSaved ? 'Saved' : 'Save'}
+            <PlusCircle className="w-3.5 h-3.5" />
+            Add to Pipeline
           </button>
-          {/* Fallback pipeline button when there's no insight strip */}
-          {!(hasOrg && hasSearch && reason) && (
-            <button
-              onClick={() => onAddToPipeline(grant)}
-              className="w-full flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-wide transition-colors hover:opacity-80"
-              style={{ color: '#2d8a7a' }}
-            >
-              <PlusCircle className="w-3.5 h-3.5" />
-              Add to Pipeline
-            </button>
-          )}
         </div>
 
       </div>
 
       {/* ── Full-width Match Insight strip ── */}
       {hasOrg && hasSearch && reason && (
-        <div className="flex items-start gap-4 px-6 py-4 border-t border-[#e8ddd0]"
+        <div className="flex items-center gap-4 px-6 py-4 border-t border-[#e8ddd0]"
           style={{ backgroundColor: '#f7f5f2', borderLeft: '4px solid #1f5c52' }}>
-          <Activity className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#2d8a7a' }} />
+          {/* Icon + text */}
+          <Activity className="w-5 h-5 flex-shrink-0" style={{ color: '#2d8a7a' }} />
           <div className="flex-1 min-w-0">
             <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#2d8a7a' }}>Match Insight</p>
             <p className="text-sm leading-relaxed" style={{ color: '#333' }}>
@@ -549,14 +544,33 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
               })()}
             </p>
           </div>
-          <button
-            onClick={() => onAddToPipeline(grant)}
-            className="flex items-center gap-1.5 flex-shrink-0 text-[11px] font-bold uppercase tracking-widest transition-colors hover:opacity-80 mt-0.5"
-            style={{ color: '#2d8a7a' }}
-          >
-            <PlusCircle className="w-4 h-4" />
-            Add to Pipeline
-          </button>
+          {/* Score ring graphic */}
+          {score > 0 && (
+            <div className="flex-shrink-0 flex flex-col items-center gap-0.5 ml-2">
+              <svg width="68" height="68" viewBox="0 0 68 68">
+                {/* Track */}
+                <circle cx="34" cy="34" r="27" fill="none" stroke="#e8ddd0" strokeWidth="5" />
+                {/* Progress arc — circumference ≈ 169.6 */}
+                <circle
+                  cx="34" cy="34" r="27"
+                  fill="none"
+                  stroke="#1f5c52"
+                  strokeWidth="5"
+                  strokeLinecap="round"
+                  strokeDasharray={`${(score / 100) * 169.6} 169.6`}
+                  transform="rotate(-90 34 34)"
+                />
+                <text x="34" y="31" textAnchor="middle" dominantBaseline="middle"
+                  style={{ fontSize: '13px', fontWeight: '700', fill: '#1f5c52', fontFamily: 'inherit' }}>
+                  {score}%
+                </text>
+                <text x="34" y="46" textAnchor="middle"
+                  style={{ fontSize: '8px', fill: '#2d8a7a', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: '600' }}>
+                  MATCH
+                </text>
+              </svg>
+            </div>
+          )}
         </div>
       )}
 
