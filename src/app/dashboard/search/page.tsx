@@ -327,11 +327,12 @@ function StalenessBadge({ lastVerifiedAt }: { lastVerifiedAt?: string }) {
 }
 
 // ── Grant Card ───────────────────────────────────────────────────────────────
-function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onDismiss, onUndismiss, onLike, onDislike, onSave, onUnsave }: {
+function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline, onDismiss, onUndismiss, onLike, onDislike, onSave, onUnsave }: {
   item: DisplayGrant
   hasOrg: boolean
   hasSearch: boolean
   interactions: Set<InteractionAction>
+  org?: Organisation | null
   onAddToPipeline: (g: GrantOpportunity) => void
   onDismiss: (grantId: string) => void
   onUndismiss: (grantId: string) => void
@@ -600,6 +601,38 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
                   <span className="text-[9px] px-1.5 py-0.5 font-bold uppercase tracking-wider" style={{ backgroundColor: 'rgba(0,128,128,0.10)', color: '#008080', borderRadius: 9999 }}>AI</span>
                   {brief.last_enriched && <span className="text-[10px] text-[#9E9EA8] ml-auto">Updated {brief.last_enriched}</span>}
                 </div>
+
+                {/* ── Contextual match callouts ── */}
+                <div className="space-y-2 mb-5">
+                  {/* Exclusions warning */}
+                  {brief.exclusions && (
+                    <div className="flex gap-2.5 px-3 py-2.5" style={{ backgroundColor: 'rgba(255,183,77,0.15)', borderLeft: '3px solid #FFB74D' }}>
+                      <span className="flex-shrink-0 text-sm">⚠️</span>
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider mb-0.5" style={{ color: '#8B5E00' }}>Check exclusions</p>
+                        <p className="text-xs leading-relaxed" style={{ color: '#5C3D00' }}>{brief.exclusions}</p>
+                      </div>
+                    </div>
+                  )}
+                  {/* Why you match */}
+                  {hasSearch && org && (brief.priorities || brief.what_they_fund) && (
+                    <div className="flex gap-2.5 px-3 py-2.5" style={{ backgroundColor: 'rgba(0,128,128,0.07)', borderLeft: '3px solid #008080' }}>
+                      <span className="flex-shrink-0 text-sm">🎯</span>
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider mb-0.5" style={{ color: '#008080' }}>Why this matches you</p>
+                        <p className="text-xs leading-relaxed text-[#333]">
+                          {brief.priorities
+                            ? <><strong>Current priorities:</strong> {brief.priorities}</>
+                            : <><strong>They fund:</strong> {brief.what_they_fund}</>}
+                          {[...(org.themes ?? []), ...(org.areas_of_work ?? [])].slice(0, 3).length > 0 && (
+                            <> — your organisation works in <strong>{[...(org.themes ?? []), ...(org.areas_of_work ?? [])].slice(0, 3).join(', ')}</strong>.</>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 <div className="grid grid-cols-2 gap-x-8 gap-y-4">
                   {BRIEF_FIELDS.map(({ key, label, icon }) => {
                     const val = brief[key]
@@ -660,9 +693,12 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
       })()}
 
       {/* ── Full-width Match Insight strip ── */}
-      {hasOrg && hasSearch && reason && (
-        <div className="flex items-center gap-4 px-6 py-4 border-t border-[#E8E8EC]"
-          style={{ backgroundColor: '#EDF4F4', borderLeft: '4px solid #008080' }}>
+      {hasOrg && hasSearch && reason && (() => {
+        const brief = (grant as EnrichedGrant).funderBrief
+        return (
+        <div className="border-t border-[#E8E8EC]">
+          <div className="flex items-center gap-4 px-6 py-4"
+            style={{ backgroundColor: '#EDF4F4', borderLeft: '4px solid #008080' }}>
           {/* Icon + text */}
           <Activity className="w-5 h-5 flex-shrink-0" style={{ color: '#26A69A' }} />
           <div className="flex-1 min-w-0">
@@ -677,6 +713,16 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
                 return text
               })()}
             </p>
+            {brief?.priorities && (
+              <p className="text-xs mt-1.5 leading-relaxed" style={{ color: '#26A69A' }}>
+                <strong>Funder priorities:</strong> {brief.priorities}
+              </p>
+            )}
+            {brief?.exclusions && (
+              <p className="text-xs mt-1 leading-relaxed" style={{ color: '#B45309' }}>
+                <strong>⚠ Exclusions:</strong> {brief.exclusions}
+              </p>
+            )}
           </div>
           {/* Score ring graphic */}
           {score > 0 && (
@@ -706,7 +752,9 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
             </div>
           )}
         </div>
-      )}
+        </div>
+        )
+      })()}
 
     </div>
   )
@@ -2006,6 +2054,7 @@ export default function SearchPage() {
               item={item}
               hasOrg={!!org}
               hasSearch={showMatchInfo}
+              org={org}
               interactions={interactions.get(item.grant.id) ?? new Set()}
               onAddToPipeline={handleAddToPipeline}
               onDismiss={handleDismiss}
