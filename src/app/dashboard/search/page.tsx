@@ -59,6 +59,8 @@ function sectorLabel(s: string): string | null {
 // Eligible org structure labels — maps DB keys to short display names
 const STRUCTURE_LABELS: Record<string, string> = {
   cic:                            'CIC',
+  cic_guarantee:                  'CIC (Guarantee)',
+  cic_shares:                     'CIC (Shares)',
   charity:                        'Charity',
   registered_charity:             'Charity',
   charitable_incorporated_organisation: 'CIO',
@@ -380,13 +382,14 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
   // Sector labels
   const sectorLabels = (grant as EnrichedGrant).impactSectors?.length
     ? (grant as EnrichedGrant).impactSectors!.slice(0, 3).map(s =>
-        IMPACT_SECTOR_FILTERS.find(f => f.id === s)?.label ?? s
+        IMPACT_SECTOR_FILTERS.find(f => f.id === s.toLowerCase())?.label
+          ?? s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
       )
     : grant.sectors.map(s => sectorLabel(s)).filter(Boolean).slice(0, 3) as string[]
 
   // Eligible structure labels
   const structureLabels = ((grant as EnrichedGrant).eligibleStructures ?? [])
-    .slice(0, 3).map(s => STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' '))
+    .slice(0, 3).map(s => STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()))
 
   return (
     <div className="bg-white mb-3 border border-[#E8E8EC] hover:shadow-md transition-shadow rounded-xl overflow-hidden">
