@@ -585,16 +585,6 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                   return text
                 })()}
               </p>
-              {brief?.priorities && (
-                <p className="text-xs mt-1.5 leading-relaxed" style={{ color: '#26A69A' }}>
-                  <strong>Funder priorities:</strong> {brief.priorities}
-                </p>
-              )}
-              {brief?.exclusions && (
-                <p className="text-xs mt-1 leading-relaxed" style={{ color: '#B45309' }}>
-                  <strong>⚠ Exclusions:</strong> {brief.exclusions}
-                </p>
-              )}
             </div>
             {score > 0 && (
               <div className="flex-shrink-0 flex flex-col items-center gap-0.5 ml-2">
