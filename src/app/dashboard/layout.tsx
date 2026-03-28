@@ -23,7 +23,7 @@ export default async function AppLayout({
         <div className="flex justify-end items-center gap-3 px-8 py-4 pt-16 md:pt-4 flex-shrink-0">
           <TopBar userEmail={user.email ?? ''} orgName={org?.name} />
         </div>
-        <div className="flex-1 px-4 pb-8 md:px-8">{children}</div>
+        <div className="flex-1 px-4 pb-8 md:px-16">{children}</div>
       </main>
     </div>
   )
