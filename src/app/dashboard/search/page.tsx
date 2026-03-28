@@ -457,7 +457,19 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
           </p>
 
           {/* Metadata */}
-          <div className="flex gap-8">
+          {(() => {
+            const FUNDING_TYPE_STYLE: Record<string, { label: string; bg: string; color: string }> = {
+              grant:              { label: 'Grant',              bg: 'rgba(0,128,128,0.12)',    color: '#008080' },
+              social_investment:  { label: 'Social Investment',  bg: 'rgba(255,112,67,0.12)',   color: '#D84315' },
+              blended_finance:    { label: 'Blended Finance',    bg: 'rgba(255,183,77,0.20)',   color: '#A06000' },
+              accelerator:        { label: 'Accelerator',        bg: 'rgba(16,185,129,0.13)',   color: '#047857' },
+              support_programme:  { label: 'Fellowship / Support', bg: 'rgba(139,92,246,0.12)', color: '#6D28D9' },
+              diversity_fund:     { label: 'Diversity Fund',     bg: 'rgba(236,72,153,0.12)',   color: '#9D174D' },
+              in_kind:            { label: 'In-Kind',            bg: 'rgba(99,102,241,0.12)',   color: '#4338CA' },
+            }
+            const ftStyle = grant.fundingType ? FUNDING_TYPE_STYLE[grant.fundingType] : null
+            return (
+          <div className="flex justify-between">
             <div>
               <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">Amount</p>
               <p className="text-sm font-bold" style={{ color: '#26A69A' }}>{formatRange(grant.amountMin, grant.amountMax)}</p>
@@ -500,7 +512,20 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
               <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">Beneficiary</p>
               <p className="text-sm font-semibold text-charcoal">{structureLabels.length > 0 ? structureLabels.join(', ') : '—'}</p>
             </div>
+            <div>
+              <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">Type</p>
+              {ftStyle ? (
+                <span className="text-[11px] font-bold px-2.5 py-1 inline-block"
+                  style={{ borderRadius: 9999, backgroundColor: ftStyle.bg, color: ftStyle.color }}>
+                  {ftStyle.label}
+                </span>
+              ) : (
+                <p className="text-sm font-semibold text-charcoal">—</p>
+              )}
+            </div>
           </div>
+            )
+          })()}
         </div>
 
         {/* ── Right: buttons top, Add to Pipeline bottom ── */}
