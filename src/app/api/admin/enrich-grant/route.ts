@@ -40,7 +40,7 @@ async function fetchPageText(url: string): Promise<string> {
 }
 
 export async function POST(req: NextRequest) {
-  const { grantId } = await req.json()
+  const { grantId, pastedContent } = await req.json()
   if (!grantId) return NextResponse.json({ error: 'grantId required' }, { status: 400 })
 
   // Load grant
@@ -51,18 +51,21 @@ export async function POST(req: NextRequest) {
     .single()
 
   if (error || !grant) return NextResponse.json({ error: 'Grant not found' }, { status: 404 })
-  if (!grant.apply_url) return NextResponse.json({ error: 'No apply URL for this grant' }, { status: 400 })
 
-  // Fetch the funder page
+  // Use pasted content if provided, otherwise fetch the funder page
   let pageText = ''
-  try {
-    pageText = await fetchPageText(grant.apply_url)
-  } catch (e) {
-    return NextResponse.json({ error: `Could not fetch URL: ${grant.apply_url}` }, { status: 422 })
-  }
-
-  if (pageText.length < 200) {
-    return NextResponse.json({ error: 'Page content too short to summarise' }, { status: 422 })
+  if (pastedContent && pastedContent.trim().length > 200) {
+    pageText = pastedContent.trim().slice(0, 12000)
+  } else {
+    if (!grant.apply_url) return NextResponse.json({ error: 'No apply URL for this grant' }, { status: 400 })
+    try {
+      pageText = await fetchPageText(grant.apply_url)
+    } catch (e) {
+      return NextResponse.json({ error: `Could not fetch URL: ${grant.apply_url}` }, { status: 422 })
+    }
+    if (pageText.length < 200) {
+      return NextResponse.json({ error: 'Page content too short to summarise' }, { status: 422 })
+    }
   }
 
   // Ask Claude to extract a structured funder brief

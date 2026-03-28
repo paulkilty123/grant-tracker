@@ -24,6 +24,8 @@ export default function FunderIntelligencePage() {
   const [brief, setBrief] = useState<Record<string, Record<string, string | null>>>({})
   const [bulkRunning, setBulkRunning] = useState(false)
   const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number } | null>(null)
+  const [pasteOpen, setPasteOpen] = useState<Record<string, boolean>>({})
+  const [pasteText, setPasteText] = useState<Record<string, string>>({})
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -39,14 +41,14 @@ export default function FunderIntelligencePage() {
 
   useEffect(() => { load() }, [load])
 
-  const enrichSingle = async (grant: GrantRow): Promise<boolean> => {
+  const enrichSingle = async (grant: GrantRow, pasted?: string): Promise<boolean> => {
     setEnrichStatus(s => ({ ...s, [grant.id]: 'loading' }))
     setEnrichMsg(s => ({ ...s, [grant.id]: '' }))
     try {
       const res = await fetch('/api/admin/enrich-grant', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ grantId: grant.id }),
+        body: JSON.stringify({ grantId: grant.id, pastedContent: pasted ?? pasteText[grant.id] ?? undefined }),
       })
       const json = await res.json()
       if (!res.ok) {
@@ -209,6 +211,14 @@ export default function FunderIntelligencePage() {
                         <ExternalLink className="w-4 h-4" />
                       </a>
                     )}
+                    {status === 'error' && (
+                      <button
+                        onClick={() => setPasteOpen(p => ({ ...p, [grant.id]: !p[grant.id] }))}
+                        className="px-3 py-1.5 text-xs font-bold border transition-colors"
+                        style={{ borderRadius: 9999, borderColor: '#E8E8EC', color: '#6E6E80' }}>
+                        Paste text
+                      </button>
+                    )}
                     <button
                       onClick={() => enrich(grant)}
                       disabled={status === 'loading'}
@@ -223,6 +233,36 @@ export default function FunderIntelligencePage() {
                     </button>
                   </div>
                 </div>
+
+                {/* Paste panel for failed grants */}
+                {pasteOpen[grant.id] && (
+                  <div className="border-t border-[#E8E8EC] px-4 py-4" style={{ backgroundColor: '#FAF8F5' }}>
+                    <p className="text-xs font-semibold text-[#1C1C2E] mb-2">
+                      Paste the text content from the funder's website below, then click Enrich from text.
+                    </p>
+                    <textarea
+                      rows={6}
+                      placeholder="Open the funder's website, select all text (Ctrl+A / Cmd+A), copy it, and paste here…"
+                      value={pasteText[grant.id] ?? ''}
+                      onChange={e => setPasteText(p => ({ ...p, [grant.id]: e.target.value }))}
+                      className="w-full text-xs border border-[#E8E8EC] p-3 resize-y outline-none focus:border-[#008080]"
+                      style={{ borderRadius: 8, fontFamily: 'inherit' }}
+                    />
+                    <div className="flex justify-end mt-2">
+                      <button
+                        onClick={() => {
+                          setPasteOpen(p => ({ ...p, [grant.id]: false }))
+                          enrichSingle(grant, pasteText[grant.id])
+                        }}
+                        disabled={!pasteText[grant.id] || pasteText[grant.id].trim().length < 50}
+                        className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white disabled:opacity-40"
+                        style={{ borderRadius: 9999, backgroundColor: '#008080' }}>
+                        <Sparkles className="w-3 h-3" />
+                        Enrich from text
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {/* Brief preview */}
                 {existingBrief && (
