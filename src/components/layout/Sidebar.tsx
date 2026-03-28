@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import type { Organisation } from '@/types'
 import { cn } from '@/lib/utils'
 import RadioWaveIcon from '@/components/icons/RadioWaveIcon'
@@ -16,6 +17,7 @@ import {
   Activity,
   LinkIcon,
   Bell,
+  LogOut,
   Menu,
   X,
   BookOpen,
@@ -75,10 +77,21 @@ const ADMIN_NAV_GROUP = {
 
 export default function Sidebar({ org, userEmail }: Props) {
   const pathname = usePathname()
+  const router = useRouter()
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const profileScore = matchProfileScore(org)
   const showProfileDot = org !== null && profileScore < 80
+
+  async function handleSignOut() {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.push('/auth/login')
+  }
+
+  const initials = org?.name
+    ? org.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
+    : userEmail.slice(0, 2).toUpperCase()
 
   const navLink = (href: string, label: string, Icon: React.ElementType, showDot?: boolean, score?: number) => {
     const isActive = pathname === href || (href !== '/dashboard' && pathname.startsWith(href))
@@ -113,7 +126,7 @@ export default function Sidebar({ org, userEmail }: Props) {
       'fixed left-0 top-0 bottom-0 w-60 flex flex-col z-50 transition-transform duration-300',
       'md:translate-x-0',
       mobileOpen ? 'translate-x-0' : '-translate-x-full'
-    )} style={{ background: '#121f2b' }}>
+    )} style={{ background: '#1C1C2E' }}>
       {/* Logo */}
       <div className="px-6 py-6 flex items-center justify-between border-b border-white/10">
         <Link href="/dashboard" className="flex items-center gap-2.5 no-underline">
@@ -158,6 +171,25 @@ export default function Sidebar({ org, userEmail }: Props) {
         {navLink('/dashboard/instructions', 'How to use', BookOpen)}
       </div>
 
+      {/* User chip */}
+      <div className="border-t border-white/10 px-4 py-4">
+        <div className="flex items-center gap-2.5 mb-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-white text-xs font-bold flex-shrink-0">
+            {initials}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium text-white">{org?.name ?? 'Account'}</p>
+            <p className="truncate text-[10px] text-white/40">{userEmail}</p>
+          </div>
+        </div>
+        <button
+          onClick={handleSignOut}
+          className="flex items-center gap-2 text-xs text-white/40 hover:text-white/80 transition-colors"
+        >
+          <LogOut className="h-3.5 w-3.5" />
+          Sign out
+        </button>
+      </div>
     </aside>
   )
 
@@ -168,7 +200,7 @@ export default function Sidebar({ org, userEmail }: Props) {
         onClick={() => setMobileOpen(true)}
         className={cn(
           'fixed top-4 left-4 z-40 md:hidden',
-          'w-10 h-10 flex items-center justify-center shadow-lg bg-[#1a2e2b] rounded-md',
+          'w-10 h-10 flex items-center justify-center shadow-lg bg-[#1C1C2E] rounded-md',
           'transition-opacity duration-200',
           mobileOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'
         )}
