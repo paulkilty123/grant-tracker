@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Search, ChevronDown, Layers, DollarSign, Rocket, Building2, SlidersHorizontal, MapPin, GraduationCap, TrendingUp, GitMerge, Gift, Landmark, CalendarDays, RefreshCw, Bookmark, PlusCircle, Activity, Info } from 'lucide-react'
+import { Search, ChevronDown, Layers, DollarSign, Rocket, Building2, SlidersHorizontal, MapPin, GraduationCap, TrendingUp, GitMerge, Gift, Landmark, CalendarDays, RefreshCw, Bookmark, PlusCircle, Activity, Info, Target, Star, CheckCircle2, XCircle, Lightbulb, AlertTriangle, Sparkles, ExternalLink, ClipboardList } from 'lucide-react'
 import { SEED_GRANTS } from '@/lib/grants'
 import { formatRange } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -581,45 +581,40 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
       {/* ── Expanded details panel ── */}
       {expanded && (() => {
         const brief = (grant as EnrichedGrant).funderBrief
-        const BRIEF_FIELDS: { key: string; label: string; icon: string }[] = [
-          { key: 'what_they_fund',    label: 'What they fund',       icon: '🎯' },
-          { key: 'priorities',        label: 'Current priorities',   icon: '⭐' },
-          { key: 'strong_application',label: 'Strong application',   icon: '✅' },
-          { key: 'exclusions',        label: 'They won\'t fund',     icon: '🚫' },
-          { key: 'typical_award',     label: 'Typical award',        icon: '💰' },
-          { key: 'decision_timeline', label: 'Decision timeline',    icon: '📅' },
-          { key: 'how_to_apply',      label: 'How to apply',         icon: '📋' },
-          { key: 'funder_tips',       label: 'Insider tips',         icon: '💡' },
+
+        // Grid fields — excludes how_to_apply which gets its own section
+        type BriefField = { key: string; label: string; Icon: React.ElementType }
+        const GRID_FIELDS: BriefField[] = [
+          { key: 'what_they_fund',     label: 'What they fund',     Icon: Target },
+          { key: 'priorities',         label: 'Current priorities', Icon: Star },
+          { key: 'typical_award',      label: 'Typical award',      Icon: DollarSign },
+          { key: 'decision_timeline',  label: 'Decision timeline',  Icon: CalendarDays },
+          { key: 'strong_application', label: 'Strong application', Icon: CheckCircle2 },
+          { key: 'funder_tips',        label: 'Insider tips',       Icon: Lightbulb },
         ]
+
         return (
           <div className="border-t border-[#E8E8EC]" style={{ backgroundColor: '#FAF8F5' }}>
             {brief ? (
               /* ── Funder Intelligence brief ── */
-              <div className="px-6 py-5">
-                <div className="flex items-center gap-1.5 mb-4">
+              <div className="px-6 py-5 space-y-5">
+
+                {/* Header row */}
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-3.5 h-3.5" style={{ color: '#008080' }} />
                   <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#008080' }}>Funder Intelligence</span>
                   <span className="text-[9px] px-1.5 py-0.5 font-bold uppercase tracking-wider" style={{ backgroundColor: 'rgba(0,128,128,0.10)', color: '#008080', borderRadius: 9999 }}>AI</span>
                   {brief.last_enriched && <span className="text-[10px] text-[#9E9EA8] ml-auto">Updated {brief.last_enriched}</span>}
                 </div>
 
-                {/* ── Contextual match callouts ── */}
-                <div className="space-y-2 mb-5">
-                  {/* Exclusions warning */}
-                  {brief.exclusions && (
-                    <div className="flex gap-2.5 px-3 py-2.5" style={{ backgroundColor: 'rgba(255,183,77,0.15)', borderLeft: '3px solid #FFB74D' }}>
-                      <span className="flex-shrink-0 text-sm">⚠️</span>
-                      <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wider mb-0.5" style={{ color: '#8B5E00' }}>Check exclusions</p>
-                        <p className="text-xs leading-relaxed" style={{ color: '#5C3D00' }}>{brief.exclusions}</p>
-                      </div>
-                    </div>
-                  )}
+                {/* Contextual callouts */}
+                <div className="space-y-2">
                   {/* Why you match */}
                   {hasSearch && org && (brief.priorities || brief.what_they_fund) && (
-                    <div className="flex gap-2.5 px-3 py-2.5" style={{ backgroundColor: 'rgba(0,128,128,0.07)', borderLeft: '3px solid #008080' }}>
-                      <span className="flex-shrink-0 text-sm">🎯</span>
+                    <div className="flex gap-3 px-3 py-3" style={{ backgroundColor: 'rgba(0,128,128,0.07)', borderLeft: '3px solid #008080' }}>
+                      <Target className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: '#008080' }} />
                       <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wider mb-0.5" style={{ color: '#008080' }}>Why this matches you</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: '#008080' }}>Why this matches you</p>
                         <p className="text-xs leading-relaxed text-[#333]">
                           {brief.priorities
                             ? <><strong>Current priorities:</strong> {brief.priorities}</>
@@ -631,22 +626,60 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                       </div>
                     </div>
                   )}
+                  {/* Exclusions warning */}
+                  {brief.exclusions && (
+                    <div className="flex gap-3 px-3 py-3" style={{ backgroundColor: 'rgba(255,183,77,0.12)', borderLeft: '3px solid #FFB74D' }}>
+                      <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: '#B45309' }} />
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: '#8B5E00' }}>Check exclusions</p>
+                        <p className="text-xs leading-relaxed" style={{ color: '#5C3D00' }}>{brief.exclusions}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-                  {BRIEF_FIELDS.map(({ key, label, icon }) => {
+                {/* Main info grid */}
+                <div className="grid grid-cols-2 gap-x-8 gap-y-5">
+                  {GRID_FIELDS.map(({ key, label, Icon }) => {
                     const val = brief[key]
                     if (!val) return null
                     return (
                       <div key={key}>
-                        <p className="text-[10px] font-bold text-[#6E6E80] uppercase tracking-wider mb-1">
-                          {icon} {label}
-                        </p>
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          <Icon className="w-3 h-3 flex-shrink-0" style={{ color: '#6E6E80' }} />
+                          <p className="text-[10px] font-bold text-[#6E6E80] uppercase tracking-wider">{label}</p>
+                        </div>
                         <p className="text-sm text-[#333] leading-relaxed">{val}</p>
                       </div>
                     )
                   })}
                 </div>
+
+                {/* How to apply — full-width footer with Apply button */}
+                {brief.how_to_apply && (
+                  <div className="border-t border-[#E8E8EC] pt-4">
+                    <div className="flex items-start justify-between gap-6">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          <ClipboardList className="w-3 h-3 flex-shrink-0" style={{ color: '#6E6E80' }} />
+                          <p className="text-[10px] font-bold text-[#6E6E80] uppercase tracking-wider">How to apply</p>
+                        </div>
+                        <p className="text-sm text-[#333] leading-relaxed">{brief.how_to_apply}</p>
+                      </div>
+                      {grant.applyUrl && (
+                        <a
+                          href={grant.applyUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-shrink-0 flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white transition-opacity hover:opacity-80"
+                          style={{ borderRadius: 9999, backgroundColor: '#FF7043' }}>
+                          Apply
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               /* ── Fallback: structured eligibility data ── */
@@ -663,7 +696,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                     <ul className="space-y-2">
                       {grant.eligibilityCriteria.map((c, i) => (
                         <li key={i} className="flex gap-2.5 text-sm text-[#444]">
-                          <span className="flex-shrink-0 font-bold mt-0.5" style={{ color: '#008080' }}>✓</span>
+                          <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: '#008080' }} />
                           <span className="leading-snug">{c}</span>
                         </li>
                       ))}
@@ -683,9 +716,22 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                     </div>
                   </div>
                 ) : null}
-                <p className="text-xs text-[#9E9EA8] pt-1">
-                  No funder intelligence yet — an admin can enrich this grant from the Funder Intelligence page.
-                </p>
+                <div className="flex items-center justify-between pt-1">
+                  <p className="text-xs text-[#9E9EA8]">
+                    No funder intelligence yet — an admin can enrich this grant from the Funder Intelligence page.
+                  </p>
+                  {grant.applyUrl && (
+                    <a
+                      href={grant.applyUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-shrink-0 flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white transition-opacity hover:opacity-80"
+                      style={{ borderRadius: 9999, backgroundColor: '#FF7043' }}>
+                      Apply
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  )}
+                </div>
               </div>
             )}
           </div>
