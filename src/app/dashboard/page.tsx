@@ -242,33 +242,39 @@ export default async function DashboardPage() {
             </div>
           ) : (
             <>
-              {/* Horizontal bar */}
-              <div className="flex rounded-lg overflow-hidden mb-3 h-16">
-                {stageValues.map((s, i) => {
-                  const pct = totalValue > 0 ? (s.value / totalValue) * 100 : 20
+              {/* Amount labels row */}
+              <div className="flex mb-1">
+                {stageValues.map(s => (
+                  <div key={s.id} className="flex-1 text-center">
+                    <span className="text-[10px] font-bold" style={{ color: s.value > 0 ? '#1f5c52' : '#bbb' }}>
+                      {s.value > 0 ? formatCurrency(s.value) : ''}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              {/* Proportional bar — uses flex-grow so it never overflows */}
+              <div className="flex gap-0.5 mb-3" style={{ height: 56 }}>
+                {stageValues.map(s => {
+                  const grow = totalValue > 0 ? s.value : 1
                   return (
                     <a key={s.id} href="/dashboard/pipeline"
-                      className="flex flex-col items-center justify-center flex-shrink-0 hover:opacity-90 transition-opacity"
-                      style={{ width: `${pct}%`, minWidth: 48, background: s.bg }}>
-                      <span className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: s.text, opacity: 0.7 }}>{s.label}</span>
-                      <span className="text-sm font-bold" style={{ color: s.text }}>
-                        {s.value > 0 ? formatCurrency(s.value) : '—'}
+                      className="flex flex-col items-center justify-end pb-2 hover:opacity-90 transition-opacity rounded overflow-hidden"
+                      style={{ flexGrow: grow, flexBasis: 0, background: s.bg, minWidth: 0 }}>
+                      <span className="text-[9px] font-semibold uppercase tracking-wider truncate px-1" style={{ color: s.text, opacity: 0.75 }}>
+                        {s.label}
                       </span>
                     </a>
                   )
                 })}
               </div>
-              {/* Count row */}
-              <div className="flex">
-                {stageValues.map((s, i) => {
-                  const pct = totalValue > 0 ? (s.value / totalValue) * 100 : 20
-                  return (
-                    <div key={s.id} className="flex flex-col items-center flex-shrink-0" style={{ width: `${pct}%`, minWidth: 48 }}>
-                      <span className="text-[9px] font-bold text-charcoal">{s.count}</span>
-                      <span className="text-[9px] text-mid uppercase tracking-wide">{s.sublabel}</span>
-                    </div>
-                  )
-                })}
+              {/* Count row — evenly spaced, independent of bar widths */}
+              <div className="grid grid-cols-5 border-t border-warm/60 pt-3">
+                {stageValues.map(s => (
+                  <div key={s.id} className="flex flex-col items-center gap-0.5">
+                    <span className="text-base font-bold text-charcoal">{s.count}</span>
+                    <span className="text-[9px] font-semibold text-mid uppercase tracking-wider">{s.sublabel}</span>
+                  </div>
+                ))}
               </div>
             </>
           )}
