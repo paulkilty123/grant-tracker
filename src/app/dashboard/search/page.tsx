@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Search, ChevronDown, Layers, DollarSign, Rocket, Building2, SlidersHorizontal, MapPin, GraduationCap, TrendingUp, GitMerge, Gift, Landmark, CalendarDays, RefreshCw, Bookmark, PlusCircle, Activity, Info } from 'lucide-react'
-import GrantDetailModal from '@/components/GrantDetailModal'
 import { SEED_GRANTS } from '@/lib/grants'
 import { formatRange } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -328,7 +327,7 @@ function StalenessBadge({ lastVerifiedAt }: { lastVerifiedAt?: string }) {
 }
 
 // ── Grant Card ───────────────────────────────────────────────────────────────
-function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onDismiss, onUndismiss, onLike, onDislike, onViewDetail, onSave, onUnsave }: {
+function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onDismiss, onUndismiss, onLike, onDislike, onSave, onUnsave }: {
   item: DisplayGrant
   hasOrg: boolean
   hasSearch: boolean
@@ -338,7 +337,6 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
   onUndismiss: (grantId: string) => void
   onLike: (grantId: string) => void
   onDislike: (grantId: string) => void
-  onViewDetail: (grantId: string) => void
   onSave?: (grantId: string) => void
   onUnsave?: (grantId: string) => void
 }) {
@@ -531,19 +529,9 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
           })()}
         </div>
 
-        {/* ── Right: buttons top, Add to Pipeline bottom ── */}
-        <div className="flex flex-col p-6 flex-shrink-0 w-[180px]">
-          {/* View Details + Save at top */}
+        {/* ── Right: actions ── */}
+        <div className="flex flex-col p-6 flex-shrink-0 w-[160px]">
           <div className="flex flex-col gap-3">
-            {grant.source === 'scraped' && (
-              <button
-                onClick={() => onViewDetail(grant.id)}
-                className="w-full px-4 py-3 text-sm font-semibold text-white text-center transition-opacity hover:opacity-90"
-                style={{ backgroundColor: '#008080', borderRadius: 9999 }}
-              >
-                View Details
-              </button>
-            )}
             <button
               onClick={() => isSaved ? onUnsave?.(grant.id) : onSave?.(grant.id)}
               className={`w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold border transition-colors ${
@@ -564,9 +552,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
               </a>
             )}
           </div>
-          {/* Spacer */}
           <div className="flex-1" />
-          {/* Add to Pipeline at bottom of white area */}
           <button
             onClick={() => onAddToPipeline(grant)}
             className="w-full flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-widest transition-colors hover:opacity-70 pb-1"
@@ -578,6 +564,82 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
         </div>
 
       </div>
+
+      {/* ── Expand toggle ── */}
+      {(grant.eligibilityCriteria?.length > 0 || (grant as EnrichedGrant).impactSectors?.length || grant.sectors?.length) && (
+        <button
+          onClick={() => setExpanded(v => !v)}
+          className="w-full flex items-center justify-center gap-1.5 py-2.5 border-t border-[#E8E8EC] text-[11px] font-bold uppercase tracking-widest transition-colors hover:bg-[#F5F5F5]"
+          style={{ color: '#6E6E80' }}
+        >
+          <ChevronDown className="w-3.5 h-3.5 transition-transform" style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+          {expanded ? 'Show less' : 'Eligibility & details'}
+        </button>
+      )}
+
+      {/* ── Expanded details panel ── */}
+      {expanded && (
+        <div className="border-t border-[#E8E8EC] px-6 py-5 space-y-4" style={{ backgroundColor: '#FAF8F5' }}>
+
+          {/* Full description if truncated */}
+          {grant.description.length > 180 && (
+            <div>
+              <p className="text-[10px] font-bold text-[#6E6E80] uppercase tracking-wider mb-2">Full description</p>
+              <p className="text-sm text-[#444] leading-relaxed">{grant.description}</p>
+            </div>
+          )}
+
+          {/* Eligibility criteria */}
+          {grant.eligibilityCriteria?.length > 0 && (
+            <div>
+              <p className="text-[10px] font-bold text-[#6E6E80] uppercase tracking-wider mb-2.5">Eligibility criteria</p>
+              <ul className="space-y-2">
+                {grant.eligibilityCriteria.map((c, i) => (
+                  <li key={i} className="flex gap-2.5 text-sm text-[#444]">
+                    <span className="flex-shrink-0 font-bold mt-0.5" style={{ color: '#008080' }}>✓</span>
+                    <span className="leading-snug">{c}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Eligible org types */}
+          {(grant as EnrichedGrant).eligibleStructures?.length ? (
+            <div>
+              <p className="text-[10px] font-bold text-[#6E6E80] uppercase tracking-wider mb-2">Eligible organisations</p>
+              <div className="flex flex-wrap gap-1.5">
+                {((grant as EnrichedGrant).eligibleStructures ?? []).map(s => (
+                  <span key={s} className="text-[11px] font-semibold px-2.5 py-1"
+                    style={{ backgroundColor: 'rgba(0,128,128,0.10)', color: '#008080', borderRadius: 9999 }}>
+                    {STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {/* Impact sectors */}
+          {((grant as EnrichedGrant).impactSectors?.length ? (grant as EnrichedGrant).impactSectors! : grant.sectors)?.length ? (
+            <div>
+              <p className="text-[10px] font-bold text-[#6E6E80] uppercase tracking-wider mb-2">Impact sectors</p>
+              <div className="flex flex-wrap gap-1.5">
+                {((grant as EnrichedGrant).impactSectors?.length
+                  ? (grant as EnrichedGrant).impactSectors!
+                  : grant.sectors
+                ).map(s => (
+                  <span key={s} className="text-[11px] font-semibold px-2.5 py-1"
+                    style={{ backgroundColor: 'rgba(255,183,77,0.20)', color: '#8B5E00', borderRadius: 9999 }}>
+                    {IMPACT_SECTOR_FILTERS.find(f => f.id === s.toLowerCase())?.label
+                      ?? s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+        </div>
+      )}
 
       {/* ── Full-width Match Insight strip ── */}
       {hasOrg && hasSearch && reason && (
@@ -751,7 +813,6 @@ export default function SearchPage() {
   const [liveError, setLiveError]                 = useState<string | null>(null)
   const [liveSmartMatched, setLiveSmartMatched]   = useState(false)
   const [recentSearchesOpen, setRecentSearchesOpen] = useState(false)
-  const [detailGrantId, setDetailGrantId]           = useState<string | null>(null)
   const [searchHistory, setSearchHistory]         = useState<SearchHistoryItem[]>([])
   const [weeklySearchCount, setWeeklySearchCount] = useState(0)
   const [isAdmin, setIsAdmin]                     = useState(false)
@@ -1931,7 +1992,6 @@ export default function SearchPage() {
               onUndismiss={handleUndismiss}
               onLike={handleLike}
               onDislike={handleDislike}
-              onViewDetail={setDetailGrantId}
               onSave={handleSave}
               onUnsave={handleUnsave}
             />
@@ -1974,8 +2034,7 @@ export default function SearchPage() {
                 onUndismiss={handleUndismiss}
                 onLike={handleLike}
                 onDislike={handleDislike}
-                onViewDetail={setDetailGrantId}
-                onSave={handleSave}
+                  onSave={handleSave}
                 onUnsave={handleUnsave}
               />
             ))}
@@ -2025,29 +2084,6 @@ export default function SearchPage() {
         </div>
       )}
 
-      {/* Grant detail modal */}
-      <GrantDetailModal
-        grantId={detailGrantId}
-        onClose={() => setDetailGrantId(null)}
-        onAddToPipeline={g => handleAddToPipeline({
-          id:                 g.external_id ?? g.id,
-          title:              g.title,
-          funder:             g.funder,
-          funderType:         (g.funder_type ?? 'other') as GrantOpportunity['funderType'],
-          fundingType:        (g.funding_type ?? 'grant') as GrantOpportunity['fundingType'],
-          description:        g.description ?? '',
-          amountMin:          g.amount_min ?? 0,
-          amountMax:          g.amount_max ?? 0,
-          deadline:           g.deadline,
-          isRolling:          g.is_rolling ?? false,
-          isLocal:            g.is_local ?? false,
-          sectors:            Array.isArray(g.sectors) ? g.sectors : [],
-          eligibilityCriteria: Array.isArray(g.eligibility_criteria) ? g.eligibility_criteria : [],
-          applyUrl:           g.apply_url ?? null,
-          isInviteOnly:       false,
-          source:             'scraped',
-        })}
-      />
     </div>
   )
 }
