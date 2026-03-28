@@ -402,7 +402,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
             {/* Up to 3 sector pills */}
             {sectorLabels.slice(0, 3).map(label => (
               <span key={label} className="text-[10px] font-bold uppercase tracking-wider px-3 py-1"
-                style={{ borderRadius: 9999, backgroundColor: 'rgba(0,128,128,0.12)', color: '#26A69A' }}>
+                style={{ borderRadius: 9999, backgroundColor: 'rgba(255,183,77,0.20)', color: '#8B5E00' }}>
                 {label}
               </span>
             ))}
