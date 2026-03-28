@@ -1426,25 +1426,9 @@ export default function SearchPage() {
 
   return (
     <div>
-      {/* ── Heading row: title left, tabs right — same baseline ── */}
-      <div className="flex items-center justify-between mb-2">
+      {/* ── Page heading ── */}
+      <div className="mb-2">
         <h2 className="font-serif text-5xl font-bold text-charcoal leading-tight">Find Funding</h2>
-        <div className="flex items-center gap-0 bg-white border border-warm/60 shadow-sm overflow-hidden flex-shrink-0" style={{ borderRadius: 9999 }}>
-          <button
-            onClick={() => setActiveView('matches')}
-            className={`px-5 py-2 text-sm font-medium transition-colors ${activeView === 'matches' ? 'text-coral border-b-2 border-coral' : 'border-b-2 border-transparent text-gray-500 hover:text-charcoal'}`}
-          >
-            My Matches
-          </button>
-          <div className="w-px h-5 bg-warm/80" />
-          <button
-            onClick={() => setActiveView('saved')}
-            className={`px-5 py-2 text-sm font-medium transition-colors flex items-center gap-1.5 ${activeView === 'saved' ? 'text-coral border-b-2 border-coral' : 'border-b-2 border-transparent text-gray-500 hover:text-charcoal'}`}
-          >
-            Saved
-            {savedCount > 0 && <span className="text-xs bg-coral text-white px-1.5 py-0.5 ml-1" style={{ borderRadius: 9999 }}>{savedCount}</span>}
-          </button>
-        </div>
       </div>
 
       {/* Welcome banner — shown after first profile save */}
@@ -1458,18 +1442,54 @@ export default function SearchPage() {
         </div>
       )}
 
-      {/* ── Subtitle strip ── */}
+      {/* ── Subtitle row: text left, tabs right ── */}
       {activeView === 'matches' && org && (
-        <div className="mb-3 flex items-center gap-2 text-sm text-mid">
-          <span className="w-2 h-2 flex-shrink-0 rounded-full" style={{ backgroundColor: '#1f5c52' }} />
-          Intelligent matches for <strong className="text-charcoal">{org.name ?? 'your organisation'}</strong>
-          {org.primary_location && <span className="text-mid">· {org.primary_location}, UK</span>}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2 text-sm text-mid">
+            <span className="w-2 h-2 flex-shrink-0 rounded-full" style={{ backgroundColor: '#1f5c52' }} />
+            Intelligent matches for <strong className="text-charcoal">{org.name ?? 'your organisation'}</strong>
+            {org.primary_location && <span className="text-mid">· {org.primary_location}, UK</span>}
+          </div>
+          <div className="flex items-center gap-0 bg-white border border-warm/60 shadow-sm overflow-hidden flex-shrink-0" style={{ borderRadius: 9999 }}>
+            <button
+              onClick={() => setActiveView('matches')}
+              className={`px-5 py-2 text-sm font-medium transition-colors ${activeView === 'matches' ? 'text-coral border-b-2 border-coral' : 'border-b-2 border-transparent text-gray-500 hover:text-charcoal'}`}
+            >
+              My Matches
+            </button>
+            <div className="w-px h-5 bg-warm/80" />
+            <button
+              onClick={() => setActiveView('saved')}
+              className={`px-5 py-2 text-sm font-medium transition-colors flex items-center gap-1.5 ${activeView === 'saved' ? 'text-coral border-b-2 border-coral' : 'border-b-2 border-transparent text-gray-500 hover:text-charcoal'}`}
+            >
+              Saved
+              {savedCount > 0 && <span className="text-xs bg-coral text-white px-1.5 py-0.5 ml-1" style={{ borderRadius: 9999 }}>{savedCount}</span>}
+            </button>
+          </div>
         </div>
       )}
       {activeView === 'matches' && !org && (
-        <div className="mb-3 text-xs border border-amber-200 bg-amber-50 px-3 py-2">
-          <a href="/dashboard/profile" className="font-semibold text-amber-700 underline">Set up your profile</a>
-          <span className="text-amber-800"> to see grants ranked for your organisation.</span>
+        <div className="flex items-center justify-between mb-3">
+          <div className="text-xs border border-amber-200 bg-amber-50 px-3 py-2">
+            <a href="/dashboard/profile" className="font-semibold text-amber-700 underline">Set up your profile</a>
+            <span className="text-amber-800"> to see grants ranked for your organisation.</span>
+          </div>
+          <div className="flex items-center gap-0 bg-white border border-warm/60 shadow-sm overflow-hidden flex-shrink-0" style={{ borderRadius: 9999 }}>
+            <button
+              onClick={() => setActiveView('matches')}
+              className={`px-5 py-2 text-sm font-medium transition-colors ${activeView === 'matches' ? 'text-coral border-b-2 border-coral' : 'border-b-2 border-transparent text-gray-500 hover:text-charcoal'}`}
+            >
+              My Matches
+            </button>
+            <div className="w-px h-5 bg-warm/80" />
+            <button
+              onClick={() => setActiveView('saved')}
+              className={`px-5 py-2 text-sm font-medium transition-colors flex items-center gap-1.5 ${activeView === 'saved' ? 'text-coral border-b-2 border-coral' : 'border-b-2 border-transparent text-gray-500 hover:text-charcoal'}`}
+            >
+              Saved
+              {savedCount > 0 && <span className="text-xs bg-coral text-white px-1.5 py-0.5 ml-1" style={{ borderRadius: 9999 }}>{savedCount}</span>}
+            </button>
+          </div>
         </div>
       )}
 
