@@ -426,8 +426,8 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
           {/* Funder */}
           <p className="text-sm font-semibold mb-4" style={{ color: '#2d8a7a' }}>{grant.funder}</p>
 
-          {/* Description — italic */}
-          <p className="text-sm italic leading-relaxed mb-6" style={{ color: '#777' }}>
+          {/* Description */}
+          <p className="text-sm leading-relaxed mb-6" style={{ color: '#777' }}>
             {grant.description.length > 180
               ? `${grant.description.slice(0, 180).trimEnd()}…`
               : grant.description}
