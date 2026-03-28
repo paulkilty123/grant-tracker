@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Sparkles, ExternalLink, RefreshCw, CheckCircle, Clock, AlertTriangle } from 'lucide-react'
+import { Sparkles, ExternalLink, RefreshCw, CheckCircle, Clock, AlertTriangle, Zap } from 'lucide-react'
 
 type GrantRow = {
   id: string
@@ -22,6 +22,8 @@ export default function FunderIntelligencePage() {
   const [enrichStatus, setEnrichStatus] = useState<Record<string, EnrichStatus>>({})
   const [enrichMsg, setEnrichMsg] = useState<Record<string, string>>({})
   const [brief, setBrief] = useState<Record<string, Record<string, string | null>>>({})
+  const [bulkRunning, setBulkRunning] = useState(false)
+  const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number } | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -31,14 +33,13 @@ export default function FunderIntelligencePage() {
       .eq('is_active', true)
       .not('apply_url', 'is', null)
       .order('last_seen_at', { ascending: false })
-      .limit(200)
     setGrants((data as GrantRow[]) ?? [])
     setLoading(false)
   }, [])
 
   useEffect(() => { load() }, [load])
 
-  const enrich = async (grant: GrantRow) => {
+  const enrichSingle = async (grant: GrantRow): Promise<boolean> => {
     setEnrichStatus(s => ({ ...s, [grant.id]: 'loading' }))
     setEnrichMsg(s => ({ ...s, [grant.id]: '' }))
     try {
@@ -51,15 +52,37 @@ export default function FunderIntelligencePage() {
       if (!res.ok) {
         setEnrichStatus(s => ({ ...s, [grant.id]: 'error' }))
         setEnrichMsg(s => ({ ...s, [grant.id]: json.error ?? 'Failed' }))
+        return false
       } else {
         setEnrichStatus(s => ({ ...s, [grant.id]: 'done' }))
         setBrief(b => ({ ...b, [grant.id]: json.brief }))
         setGrants(gs => gs.map(g => g.id === grant.id ? { ...g, funder_brief: json.brief } : g))
+        return true
       }
     } catch {
       setEnrichStatus(s => ({ ...s, [grant.id]: 'error' }))
       setEnrichMsg(s => ({ ...s, [grant.id]: 'Network error' }))
+      return false
     }
+  }
+
+  const enrich = (grant: GrantRow) => enrichSingle(grant)
+
+  const enrichAll = async () => {
+    const unenriched = grants.filter(g => !g.funder_brief && enrichStatus[g.id] !== 'done')
+    if (unenriched.length === 0) return
+    setBulkRunning(true)
+    setBulkProgress({ done: 0, total: unenriched.length })
+    let done = 0
+    for (const grant of unenriched) {
+      await enrichSingle(grant)
+      done++
+      setBulkProgress({ done, total: unenriched.length })
+      // Small delay between calls to avoid rate limits
+      await new Promise(r => setTimeout(r, 500))
+    }
+    setBulkRunning(false)
+    setBulkProgress(null)
   }
 
   const filtered = grants.filter(g =>
@@ -85,13 +108,27 @@ export default function FunderIntelligencePage() {
     <div className="max-w-5xl mx-auto px-6 py-8">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center gap-2 mb-1">
-          <Sparkles className="w-5 h-5" style={{ color: '#008080' }} />
-          <h1 className="text-2xl font-bold text-[#1C1C2E]">Funder Intelligence</h1>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <Sparkles className="w-5 h-5" style={{ color: '#008080' }} />
+              <h1 className="text-2xl font-bold text-[#1C1C2E]">Funder Intelligence</h1>
+            </div>
+            <p className="text-sm text-[#6E6E80]">
+              Enrich grants with AI-generated summaries scraped from funder websites. Summaries are stored in Supabase and shown to users in the grant card.
+            </p>
+          </div>
+          <button
+            onClick={enrichAll}
+            disabled={bulkRunning || loading}
+            className="flex-shrink-0 flex items-center gap-2 px-4 py-2 text-sm font-bold text-white transition-opacity disabled:opacity-60"
+            style={{ borderRadius: 9999, backgroundColor: '#FF7043' }}>
+            <Zap className="w-4 h-4" />
+            {bulkRunning && bulkProgress
+              ? `Enriching ${bulkProgress.done}/${bulkProgress.total}…`
+              : 'Enrich All'}
+          </button>
         </div>
-        <p className="text-sm text-[#6E6E80]">
-          Enrich grants with AI-generated summaries scraped from funder websites. Summaries are stored in Supabase and shown to users in the grant card.
-        </p>
       </div>
 
       {/* Stats */}
