@@ -553,6 +553,13 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
               <Bookmark className="w-4 h-4" fill={isSaved ? 'currentColor' : 'none'} />
               {isSaved ? 'Saved' : 'Save'}
             </button>
+            {grant.applyUrl && (
+              <a href={grant.applyUrl} target="_blank" rel="noopener noreferrer"
+                className="text-center text-xs font-medium hover:underline transition-colors"
+                style={{ color: '#FF7043' }}>
+                Visit website →
+              </a>
+            )}
           </div>
           {/* Spacer */}
           <div className="flex-1" />
