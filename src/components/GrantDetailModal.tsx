@@ -197,11 +197,11 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
         }}
       >
         {/* Top bar */}
-        <div className="flex items-center justify-between px-6 py-3.5 border-b border-[#e8ddd0] flex-shrink-0 bg-[#faf7f2]">
+        <div className="flex items-center justify-between px-6 py-3.5 border-b border-[#E8E8EC] flex-shrink-0 bg-[#F5F5F7]">
           <p className="text-xs font-semibold text-[#6b7280] uppercase tracking-wider">Grant Details</p>
           <button
             onClick={onClose}
-            className="p-1.5 rounded hover:bg-[#e8ddd0] transition-colors text-[#6b7280] hover:text-[#2c3e35]"
+            className="p-1.5 hover:bg-[#E8E8EC] transition-colors text-[#6b7280] hover:text-[#2c3e35]"
             aria-label="Close"
           >
             <X className="w-4 h-4" />
@@ -224,10 +224,10 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
           {grant && (
             <>
               {/* Hero section */}
-              <div className="px-6 pt-6 pb-5 border-b border-[#e8ddd0]">
+              <div className="px-6 pt-6 pb-5 border-b border-[#E8E8EC]">
                 {/* Funder row */}
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 bg-[#2d8a7a]/10 flex items-center justify-center text-[#2d8a7a] font-bold text-base flex-shrink-0 border border-[#2d8a7a]/20">
+                  <div className="w-10 h-10 bg-[#26A69A]/10 flex items-center justify-center text-[#26A69A] font-bold text-base flex-shrink-0 border border-[#26A69A]/20">
                     {String(grant.funder ?? '?')[0].toUpperCase()}
                   </div>
                   <div>
@@ -239,7 +239,7 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
                 </div>
 
                 {/* Title */}
-                <h2 className="font-lora text-xl font-semibold text-[#2c3e35] leading-snug mb-3">
+                <h2 className="font-display text-xl font-bold text-[#2c3e35] leading-snug mb-3">
                   {grant.title}
                 </h2>
 
@@ -250,12 +250,12 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
                     {ftBadge.label}
                   </span>
                   {grant.is_local && (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded bg-green-50 text-green-700 border border-green-200">
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 bg-green-50 text-green-700 border border-green-200">
                       <MapPin className="w-3 h-3" />Local
                     </span>
                   )}
                   {grant.next_open_date && (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200">
                       <Bell className="w-3 h-3" />Opens {grant.next_open_date}
                     </span>
                   )}
@@ -263,17 +263,17 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
               </div>
 
               {/* Key metrics */}
-              <div className="grid grid-cols-2 border-b border-[#e8ddd0]">
-                <div className="px-6 py-4 border-r border-[#e8ddd0]">
+              <div className="grid grid-cols-2 border-b border-[#E8E8EC]">
+                <div className="px-6 py-4 border-r border-[#E8E8EC]">
                   <p className="text-[10px] font-semibold text-[#6b7280] uppercase tracking-wider mb-1">Grant amount</p>
-                  <p className="font-display text-2xl font-bold text-[#e8a030]">
+                  <p className="font-display text-2xl font-bold text-[#FFB74D]">
                     {formatRange(grant.amount_min, grant.amount_max)}
                   </p>
                 </div>
                 <div className="px-6 py-4">
                   <p className="text-[10px] font-semibold text-[#6b7280] uppercase tracking-wider mb-1">Deadline</p>
                   {grant.is_rolling ? (
-                    <p className="text-sm font-semibold text-[#2d8a7a] flex items-center gap-1.5 mt-1">
+                    <p className="text-sm font-semibold text-[#26A69A] flex items-center gap-1.5 mt-1">
                       <RefreshCw className="w-3.5 h-3.5" />Always open
                     </p>
                   ) : grant.deadline ? (
@@ -299,12 +299,12 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
 
                 {/* Eligibility criteria */}
                 {eligibility.length > 0 && (
-                  <div className="pt-5 border-t border-[#e8ddd0]">
+                  <div className="pt-5 border-t border-[#E8E8EC]">
                     <h3 className="text-xs font-semibold text-[#6b7280] uppercase tracking-wider mb-3">Eligibility criteria</h3>
                     <ul className="space-y-2.5">
                       {eligibility.map((c, i) => (
                         <li key={i} className="flex gap-2.5 text-sm text-[#444]">
-                          <span className="text-[#2d8a7a] flex-shrink-0 font-bold mt-0.5">✓</span>
+                          <span className="text-[#26A69A] flex-shrink-0 font-bold mt-0.5">✓</span>
                           <span className="leading-snug">{c}</span>
                         </li>
                       ))}
@@ -314,14 +314,14 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
 
                 {/* Eligible structures */}
                 {structures.length > 0 && (
-                  <div className="pt-5 border-t border-[#e8ddd0]">
+                  <div className="pt-5 border-t border-[#E8E8EC]">
                     <h3 className="text-xs font-semibold text-[#6b7280] uppercase tracking-wider mb-2 flex items-center gap-1.5">
                       <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
                       Eligible organisation types
                     </h3>
                     <div className="flex flex-wrap gap-1.5 mb-2">
                       {structures.map(s => (
-                        <span key={s} className="text-[11px] font-medium px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <span key={s} className="text-[11px] font-medium px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200">
                           {STRUCTURE_LABELS[s] ?? s}
                         </span>
                       ))}
@@ -335,11 +335,11 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
 
                 {/* Impact sectors */}
                 {impactSectors.length > 0 && (
-                  <div className="pt-5 border-t border-[#e8ddd0]">
+                  <div className="pt-5 border-t border-[#E8E8EC]">
                     <h3 className="text-xs font-semibold text-[#6b7280] uppercase tracking-wider mb-2">Impact sectors</h3>
                     <div className="flex flex-wrap gap-1.5">
                       {impactSectors.map(s => (
-                        <span key={s} className="text-[11px] font-medium px-2 py-0.5 rounded bg-violet-50 text-violet-700 border border-violet-200">
+                        <span key={s} className="text-[11px] font-medium px-2 py-0.5 bg-violet-50 text-violet-700 border border-violet-200">
                           {IMPACT_SECTOR_LABELS[s] ?? s}
                         </span>
                       ))}
@@ -349,11 +349,11 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
 
                 {/* Fallback free-text sectors */}
                 {impactSectors.length === 0 && sectors.length > 0 && (
-                  <div className="pt-5 border-t border-[#e8ddd0]">
+                  <div className="pt-5 border-t border-[#E8E8EC]">
                     <h3 className="text-xs font-semibold text-[#6b7280] uppercase tracking-wider mb-2">Sectors</h3>
                     <div className="flex flex-wrap gap-1.5">
                       {sectors.map(s => (
-                        <span key={s} className="text-[11px] font-medium px-2 py-0.5 rounded bg-violet-50 text-violet-700 border border-violet-200 capitalize">{s}</span>
+                        <span key={s} className="text-[11px] font-medium px-2 py-0.5 bg-violet-50 text-violet-700 border border-violet-200 capitalize">{s}</span>
                       ))}
                     </div>
                   </div>
@@ -362,14 +362,14 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
               </div>
 
               {/* CTA footer — sticky */}
-              <div className="sticky bottom-0 bg-white border-t border-[#e8ddd0] px-6 py-4 flex flex-row flex-wrap gap-2.5">
+              <div className="sticky bottom-0 bg-white border-t border-[#E8E8EC] px-6 py-4 flex flex-col gap-2.5">
                 {grant.apply_url && (
                   <a
                     href={grant.apply_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-5 py-2.5 text-white text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity"
-                    style={{ backgroundColor: '#E8725C' }}
+                    className="flex items-center justify-center gap-2 px-4 py-3 text-white text-sm font-semibold hover:opacity-90 transition-opacity"
+                    style={{ backgroundColor: '#FF7043' }}
                   >
                     <ExternalLink className="w-4 h-4" />
                     Visit website
@@ -378,7 +378,7 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
                 {onAddToPipeline && (
                   <button
                     onClick={handleAddToPipeline}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg border border-[#e8ddd0] hover:border-[#2d8a7a] hover:text-[#2d8a7a] transition-colors text-[#444]"
+                    className="flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold border border-[#E8E8EC] hover:border-[#26A69A] hover:text-[#26A69A] transition-colors text-[#444]"
                   >
                     <BookmarkPlus className="w-4 h-4" />
                     {pipelineMsg ?? 'Add to pipeline'}

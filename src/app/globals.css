@@ -4,12 +4,12 @@
 
 @layer base {
   :root {
-    --forest: #1f5c52;
-    --sage:   #2d8a7a;
-    --mint:   #b8deda;
-    --cream:  #faf7f2;
-    --warm:   #e8ddd0;
-    --gold:   #e8a030;
+    --forest: #008080;
+    --sage:   #26A69A;
+    --mint:   #B2DFDB;
+    --cream:  #F5F5F7;
+    --warm:   #E8E8EC;
+    --gold:   #FFB74D;
   }
 
   html {
@@ -17,35 +17,38 @@
   }
 
   body {
-    background-color: #faf7f2;
-    color: #1a2e2b;
+    background-color: #F5F5F7;
+    color: #1C1C2E;
   }
 
   h1, h2, h3 {
-    font-family: var(--font-lora), Georgia, serif;
+    font-family: var(--font-dm-serif), serif;
   }
 }
 
 @layer components {
   /* Cards */
   .card {
-    @apply bg-white border border-warm/80 p-6 rounded-lg;
+    @apply bg-white border border-warm/80 p-6;
     box-shadow: 0 2px 16px rgba(26,46,43,0.06);
   }
 
   /* Buttons */
   .btn-primary {
-    @apply bg-coral text-white px-5 py-2.5 text-sm font-medium rounded-lg
+    @apply bg-coral text-white px-5 py-2.5 text-sm font-medium
            hover:opacity-90 transition-colors duration-150 cursor-pointer border-none;
+    border-radius: 0;
   }
   .btn-outline {
     @apply bg-transparent text-charcoal border border-warm px-5 py-2.5
-           text-sm font-medium rounded-lg hover:border-charcoal transition-colors
+           text-sm font-medium hover:border-charcoal transition-colors
            duration-150 cursor-pointer;
+    border-radius: 0;
   }
   .btn-gold {
-    @apply bg-coral text-white px-5 py-2.5 text-sm font-medium rounded-lg
+    @apply bg-coral text-white px-5 py-2.5 text-sm font-medium
            hover:opacity-90 transition-all duration-150 cursor-pointer border-none;
+    border-radius: 0;
   }
   .btn-sm {
     @apply px-3.5 py-1.5 text-xs;
@@ -54,22 +57,26 @@
   /* Form inputs */
   .form-input {
     @apply w-full px-3.5 py-2.5 border border-warm text-sm text-charcoal
-           outline-none focus:border-coral transition-colors font-sans bg-white rounded-lg;
+           outline-none focus:border-coral transition-colors font-sans bg-white;
+    border-radius: 0;
   }
   .form-textarea {
     @apply w-full px-3.5 py-2.5 border border-warm text-sm text-charcoal
            outline-none focus:border-coral transition-colors font-sans bg-white
-           resize-y min-h-[80px] rounded-lg;
+           resize-y min-h-[80px];
+    border-radius: 0;
   }
   .form-select {
     @apply w-full px-3.5 py-2.5 border border-warm text-sm text-charcoal
-           outline-none focus:border-coral transition-colors font-sans bg-white cursor-pointer rounded-lg;
+           outline-none focus:border-coral transition-colors font-sans bg-white cursor-pointer;
+    border-radius: 0;
   }
 
   /* Nav */
   .nav-item {
     @apply flex items-center gap-2.5 px-3 py-2.5 text-white/65 text-sm
-           cursor-pointer transition-all duration-150 hover:bg-white/10 hover:text-white rounded;
+           cursor-pointer transition-all duration-150 hover:bg-white/10 hover:text-white;
+    border-radius: 0;
   }
   .nav-item.active {
     @apply bg-white/15 text-white font-medium;
@@ -77,13 +84,13 @@
 
   /* Stat cards */
   .stat-card {
-    @apply bg-white p-5 border border-warm/80 rounded-lg;
+    @apply bg-white p-5 border border-warm/80;
     box-shadow: 0 2px 16px rgba(26,46,43,0.06);
   }
 
   /* Pipeline */
   .pipeline-card {
-    @apply bg-white p-3.5 mb-2.5 cursor-pointer rounded-lg
+    @apply bg-white p-3.5 mb-2.5 cursor-pointer
            transition-all duration-150 hover:-translate-y-px
            border border-warm/60;
     box-shadow: 0 1px 6px rgba(26,46,43,0.06);
@@ -93,7 +100,7 @@
     box-shadow: none;
   }
   .pipeline-col {
-    @apply bg-[#f5f2ed] p-3.5 min-h-[300px] rounded-lg;
+    @apply bg-[#f5f2ed] p-3.5 min-h-[300px];
   }
   .pipeline-col.drag-over {
     @apply outline-2 outline-dashed outline-coral bg-coral/5;
@@ -126,10 +133,10 @@
 @layer utilities {
   .text-gradient-warm {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, #1f5c52, #e8a030);
+    background-image: linear-gradient(135deg, #008080, #FFB74D);
   }
 
   .font-display {
-    font-family: var(--font-lora), Georgia, serif;
+    font-family: var(--font-dm-serif), serif;
   }
 }

@@ -239,7 +239,7 @@ function LiveGrantCard({ grant, onAddToPipeline }: {
           <div className="flex flex-col gap-1.5 w-full">
             <a href={grant.applyUrl} target="_blank" rel="noopener noreferrer"
               className="flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium transition-colors w-full"
-              style={{ background: '#1a2e2b', color: '#ffffff', border: '1px solid #1a2e2b' }}>
+              style={{ background: '#1C1C2E', color: '#ffffff', border: '1px solid #1C1C2E' }}>
               Visit website →
             </a>
             <button onClick={() => onAddToPipeline(grant)}
@@ -389,7 +389,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
     .slice(0, 3).map(s => STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' '))
 
   return (
-    <div className="bg-white mb-3 border border-[#e8ddd0] hover:shadow-md transition-shadow rounded-xl overflow-hidden">
+    <div className="bg-white mb-3 border border-[#E8E8EC] hover:shadow-md transition-shadow rounded-xl overflow-hidden">
 
       {/* ── Top two-column section ── */}
       <div className="flex">
@@ -401,7 +401,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
           <div className="flex flex-wrap items-center gap-2 mb-3">
             {sectorLabels[0] && (
               <span className="text-[10px] font-bold uppercase tracking-wider px-3 py-1"
-                style={{ borderRadius: 9999, backgroundColor: 'rgba(45,138,122,0.12)', color: '#2d8a7a' }}>
+                style={{ borderRadius: 9999, backgroundColor: 'rgba(0,128,128,0.12)', color: '#26A69A' }}>
                 {sectorLabels[0]}
               </span>
             )}
@@ -424,7 +424,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
           <h3 className="font-lora text-2xl font-bold text-charcoal leading-snug mb-1">{grant.title}</h3>
 
           {/* Funder */}
-          <p className="text-sm font-semibold mb-4" style={{ color: '#2d8a7a' }}>{grant.funder}</p>
+          <p className="text-sm font-semibold mb-4" style={{ color: '#26A69A' }}>{grant.funder}</p>
 
           {/* Description */}
           <p className="text-sm leading-relaxed mb-6" style={{ color: '#777' }}>
@@ -437,7 +437,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
           <div className="grid grid-cols-4 gap-4">
             <div>
               <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">Amount</p>
-              <p className="text-sm font-bold" style={{ color: '#2d8a7a' }}>{formatRange(grant.amountMin, grant.amountMax)}</p>
+              <p className="text-sm font-bold" style={{ color: '#26A69A' }}>{formatRange(grant.amountMin, grant.amountMax)}</p>
             </div>
             <div>
               {(() => {
@@ -492,7 +492,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
               <button
                 onClick={() => onViewDetail(grant.id)}
                 className="w-full px-4 py-3 text-sm font-semibold text-white text-center transition-opacity hover:opacity-90"
-                style={{ backgroundColor: '#1f5c52', borderRadius: 9999 }}
+                style={{ backgroundColor: '#008080', borderRadius: 9999 }}
               >
                 View Details
               </button>
@@ -501,8 +501,8 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
               onClick={() => isSaved ? onUnsave?.(grant.id) : onSave?.(grant.id)}
               className={`w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold border transition-colors ${
                 isSaved
-                  ? 'bg-[#E8725C]/10 text-[#E8725C] border-[#E8725C]/30'
-                  : 'border-[#e8ddd0] text-charcoal hover:border-[#E8725C] hover:text-[#E8725C]'
+                  ? 'bg-[#FF7043]/10 text-[#FF7043] border-[#FF7043]/30'
+                  : 'border-[#E8E8EC] text-charcoal hover:border-[#FF7043] hover:text-[#FF7043]'
               }`}
               style={{ borderRadius: 9999 }}
             >
@@ -516,7 +516,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
           <button
             onClick={() => onAddToPipeline(grant)}
             className="w-full flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-widest transition-colors hover:opacity-70 pb-1"
-            style={{ color: '#2d8a7a' }}
+            style={{ color: '#26A69A' }}
           >
             <PlusCircle className="w-3.5 h-3.5" />
             Add to Pipeline
@@ -527,12 +527,12 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
 
       {/* ── Full-width Match Insight strip ── */}
       {hasOrg && hasSearch && reason && (
-        <div className="flex items-center gap-4 px-6 py-4 border-t border-[#e8ddd0]"
-          style={{ backgroundColor: '#f7f5f2', borderLeft: '4px solid #1f5c52' }}>
+        <div className="flex items-center gap-4 px-6 py-4 border-t border-[#E8E8EC]"
+          style={{ backgroundColor: '#F5F5F7', borderLeft: '4px solid #008080' }}>
           {/* Icon + text */}
-          <Activity className="w-5 h-5 flex-shrink-0" style={{ color: '#2d8a7a' }} />
+          <Activity className="w-5 h-5 flex-shrink-0" style={{ color: '#26A69A' }} />
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#2d8a7a' }}>Match Insight</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#26A69A' }}>Match Insight</p>
             <p className="text-sm leading-relaxed" style={{ color: '#333' }}>
               {(() => {
                 const text = reason.replace(/<[^>]*>/g, '').trim()
@@ -549,23 +549,23 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
             <div className="flex-shrink-0 flex flex-col items-center gap-0.5 ml-2">
               <svg width="68" height="68" viewBox="0 0 68 68">
                 {/* Track */}
-                <circle cx="34" cy="34" r="27" fill="none" stroke="#e8ddd0" strokeWidth="5" />
+                <circle cx="34" cy="34" r="27" fill="none" stroke="#E8E8EC" strokeWidth="5" />
                 {/* Progress arc — circumference ≈ 169.6 */}
                 <circle
                   cx="34" cy="34" r="27"
                   fill="none"
-                  stroke="#1f5c52"
+                  stroke="#008080"
                   strokeWidth="5"
                   strokeLinecap="round"
                   strokeDasharray={`${(score / 100) * 169.6} 169.6`}
                   transform="rotate(-90 34 34)"
                 />
                 <text x="34" y="31" textAnchor="middle" dominantBaseline="middle"
-                  style={{ fontSize: '13px', fontWeight: '700', fill: '#1f5c52', fontFamily: 'inherit' }}>
+                  style={{ fontSize: '13px', fontWeight: '700', fill: '#008080', fontFamily: 'inherit' }}>
                   {score}%
                 </text>
                 <text x="34" y="46" textAnchor="middle"
-                  style={{ fontSize: '8px', fill: '#2d8a7a', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: '600' }}>
+                  style={{ fontSize: '8px', fill: '#26A69A', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: '600' }}>
                   MATCH
                 </text>
               </svg>
@@ -1448,7 +1448,7 @@ export default function SearchPage() {
         <div className="flex items-center gap-2 text-sm text-mid">
           {activeView === 'matches' && org && (
             <>
-              <span className="w-2 h-2 flex-shrink-0 rounded-full" style={{ backgroundColor: '#1f5c52' }} />
+              <span className="w-2 h-2 flex-shrink-0 rounded-full" style={{ backgroundColor: '#008080' }} />
               Intelligent matches for <strong className="text-charcoal">{org.name ?? 'your organisation'}</strong>
               {org.primary_location && <span className="text-mid">· {org.primary_location}, UK</span>}
             </>
@@ -1563,7 +1563,7 @@ export default function SearchPage() {
                   >
                     <span className="relative flex-shrink-0" style={{
                       width: 40, height: 22,
-                      backgroundColor: profileFilterOn ? '#2d8a7a' : '#d1d5db',
+                      backgroundColor: profileFilterOn ? '#26A69A' : '#d1d5db',
                       borderRadius: 9999, display: 'inline-flex', alignItems: 'center',
                       transition: 'background-color 0.2s',
                     }}>
@@ -1583,7 +1583,7 @@ export default function SearchPage() {
                 onClick={() => { setHasSearched(true); handleAISearch(inputValue) }}
                 disabled={!inputValue.trim() && !locationFilter.trim()}
                 className={`h-12 px-6 text-white text-sm font-semibold flex-shrink-0 transition-opacity disabled:opacity-40 flex items-center gap-2 rounded-full ${aiLoading ? 'pointer-events-none' : ''}`}
-                style={{ backgroundColor: '#1f5c52' }}
+                style={{ backgroundColor: '#008080' }}
               >
                 {aiLoading
                   ? <><span className="dot-bounce flex gap-0.5"><span/><span/><span/></span> Searching…</>
@@ -1740,7 +1740,7 @@ export default function SearchPage() {
         )}
           {/* ── Funding type tabs ── */}
           {activeView === 'matches' && (
-            <div className="mt-5 -mx-5 border-t border-[#e8ddd0]">
+            <div className="mt-5 -mx-5 border-t border-[#E8E8EC]">
               <div className="flex overflow-x-auto">
                 {TYPE_TABS.map(tab => (
                   <button
@@ -1758,7 +1758,7 @@ export default function SearchPage() {
                 ))}
               </div>
               {TAB_DESCS[activeTab] && (
-                <div className="mx-5 mb-1 mt-3 px-4 py-3 bg-[#faf7f2] rounded-lg">
+                <div className="mx-5 mb-1 mt-3 px-4 py-3 bg-[#F5F5F7] rounded-lg">
                   <p className="text-sm text-[#444] leading-relaxed">{TAB_DESCS[activeTab]}</p>
                 </div>
               )}
@@ -1781,9 +1781,9 @@ export default function SearchPage() {
               )}
             </p>
             {!aiResults && (
-              <div className="flex items-center border border-[#e8ddd0] overflow-hidden flex-shrink-0 rounded-lg">
+              <div className="flex items-center border border-[#E8E8EC] overflow-hidden flex-shrink-0 rounded-lg">
                 {/* Sort By label */}
-                <span className="px-3 py-2 text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider border-r border-[#e8ddd0] bg-[#faf7f2] whitespace-nowrap">
+                <span className="px-3 py-2 text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider border-r border-[#E8E8EC] bg-[#F5F5F7] whitespace-nowrap">
                   Sort By
                 </span>
                 {([
@@ -1794,9 +1794,9 @@ export default function SearchPage() {
                   <button
                     key={tab.id}
                     onClick={() => setSortBy(tab.id as 'match' | 'freshest' | 'deadline')}
-                    className={`px-4 py-2 text-xs font-medium transition-colors whitespace-nowrap${i > 0 ? ' border-l border-[#e8ddd0]' : ''}`}
+                    className={`px-4 py-2 text-xs font-medium transition-colors whitespace-nowrap${i > 0 ? ' border-l border-[#E8E8EC]' : ''}`}
                     style={sortBy === tab.id
-                      ? { backgroundColor: '#fff', color: '#E8725C' }
+                      ? { backgroundColor: '#fff', color: '#FF7043' }
                       : { backgroundColor: '#fff', color: '#6b7280' }}
                   >{tab.label}</button>
                 ))}

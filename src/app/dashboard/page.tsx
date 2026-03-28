@@ -55,11 +55,11 @@ export default async function DashboardPage() {
 
   // Stage pipeline values
   const stageData = [
-    { id: 'identified', label: 'Identified', sublabel: 'Leads',    bg: '#c8dedd', labelCol: '#1f5c52', valCol: '#1f5c52', dot: '#9abfbc' },
-    { id: 'applying',   label: 'Applying',   sublabel: 'Active',   bg: '#7dbdb5', labelCol: '#1a4a44', valCol: '#1a4a44', dot: '#7dbdb5' },
-    { id: 'submitted',  label: 'Submitted',  sublabel: 'Pending',  bg: '#4a9990', labelCol: '#fff',    valCol: '#d4f0ed', dot: '#4a9990' },
-    { id: 'won',        label: 'Won',        sublabel: 'Wins',     bg: '#1f5c52', labelCol: '#fff',    valCol: '#fff',    dot: '#1f5c52' },
-    { id: 'declined',   label: 'Declined',   sublabel: 'Archived', bg: '#e8ddd0', labelCol: '#7a8c8a', valCol: '#3a5a56', dot: '#bbb' },
+    { id: 'identified', label: 'Identified', sublabel: 'Leads',    bg: '#B2DFDB', labelCol: '#008080', valCol: '#008080', dot: '#80CBC4' },
+    { id: 'applying',   label: 'Applying',   sublabel: 'Active',   bg: '#80CBC4', labelCol: '#00695C', valCol: '#00695C', dot: '#80CBC4' },
+    { id: 'submitted',  label: 'Submitted',  sublabel: 'Pending',  bg: '#26A69A', labelCol: '#fff',    valCol: '#E0F2F1', dot: '#26A69A' },
+    { id: 'won',        label: 'Won',        sublabel: 'Wins',     bg: '#008080', labelCol: '#fff',    valCol: '#fff',    dot: '#008080' },
+    { id: 'declined',   label: 'Declined',   sublabel: 'Archived', bg: '#E8E8EC', labelCol: '#6E6E80', valCol: '#3D3D4E', dot: '#bbb'    },
   ]
   const stageValues = stageData.map(s => ({
     ...s,
@@ -134,7 +134,7 @@ export default async function DashboardPage() {
       {/* Stat cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {/* Card 1 — Total Pipeline (forest bg) */}
-        <div className="p-5 rounded-xl text-white col-span-1" style={{ background: '#1f5c52', boxShadow: '0 4px 20px rgba(31,92,82,0.25)' }}>
+        <div className="p-5 rounded-xl text-white col-span-1" style={{ background: '#008080', boxShadow: '0 4px 20px rgba(0,128,128,0.25)' }}>
           <p className="text-[10px] font-semibold uppercase tracking-wider mb-3 text-white/60">Total Pipeline</p>
           <p className="font-serif text-3xl font-bold text-white leading-none mb-2">
             {formatCurrency(stats.totalPipelineValue)}
@@ -305,7 +305,7 @@ export default async function DashboardPage() {
 
                 return (
                   <a key={alert.item.id} href="/dashboard/deadlines"
-                    className="flex items-center gap-3 py-2.5 border-b border-warm last:border-0 hover:bg-[#faf7f2] -mx-2 px-2 rounded transition-colors">
+                    className="flex items-center gap-3 py-2.5 border-b border-warm last:border-0 hover:bg-[#F5F5F7] -mx-2 px-2 rounded transition-colors">
                     {/* Date column */}
                     {dateObj ? (
                       <div className="flex flex-col items-center flex-shrink-0 w-9 text-center">

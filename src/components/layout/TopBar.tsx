@@ -51,7 +51,7 @@ export default function TopBar({ userEmail, orgName }: Props) {
         onMouseLeave={() => setMenuOpen(false)}
       >
         <button
-          className="flex items-center justify-center w-8 h-8 rounded-full bg-[#1f5c52] text-white text-xs font-bold hover:opacity-90 transition-opacity"
+          className="flex items-center justify-center w-8 h-8 rounded-full bg-[#008080] text-white text-xs font-bold hover:opacity-90 transition-opacity"
           aria-label="Account"
         >
           {initials}

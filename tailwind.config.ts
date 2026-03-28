@@ -9,32 +9,30 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Primary teal (Lovable: hsl(174 55% 32%))
-        forest:  '#1f5c52',
-        sage:    '#2d8a7a',
-        mint:    '#b8deda',
-        // Backgrounds
-        cream:   '#faf7f2',
-        warm:    '#e8ddd0',
-        // Accent amber (Lovable: hsl(36 85% 55%))
-        gold:    '#e8a030',
-        'gold-light': '#f5c86a',
-        // Coral CTA accent (matches reference design)
-        coral:        '#E8725C',
-        'coral-light': '#f09c8c',
-        // Text
-        charcoal: '#1a2e2b',
-        mid:     '#5a7370',
-        light:   '#8fa8a5',
+        // Primary teal — Stitch primary #008080
+        forest:  '#008080',
+        sage:    '#26A69A',
+        mint:    '#B2DFDB',
+        // Backgrounds — Stitch neutral
+        cream:   '#F5F5F7',
+        warm:    '#E8E8EC',
+        // Accent amber — Stitch tertiary #FFB74D
+        gold:    '#FFB74D',
+        'gold-light': '#FFCA28',
+        // Coral CTA — Stitch secondary #FF7043
+        coral:        '#FF7043',
+        'coral-light': '#FF8A65',
+        // Text — Stitch neutral dark
+        charcoal: '#1C1C2E',
+        mid:     '#6E6E80',
+        light:   '#9E9EA8',
         // Border
-        border:  '#e3d8c8',
+        border:  '#D1D1D8',
       },
       fontFamily: {
         sans:    ['var(--font-dm-sans)', 'system-ui', 'sans-serif'],
-        // font-display → Lora — all headings and titles across the app
-        display: ['var(--font-lora)', 'Georgia', 'serif'],
-        lora:    ['var(--font-lora)', 'Georgia', 'serif'],
-        // font-serif → DM Serif Display — reserved for large page-level display headings only
+        // font-display maps to DM Serif — used as heading/display throughout the app
+        display: ['var(--font-dm-serif)', 'serif'],
         serif:   ['var(--font-dm-serif)', 'serif'],
       },
       borderRadius: {
