@@ -197,7 +197,7 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
         }}
       >
         {/* Top bar */}
-        <div className="flex items-center justify-between px-6 py-3.5 border-b border-[#E8E8EC] flex-shrink-0 bg-[#F5F5F7]">
+        <div className="flex items-center justify-between px-6 py-3.5 border-b border-[#E8E8EC] flex-shrink-0 bg-[#FAF8F5]">
           <p className="text-xs font-semibold text-[#6b7280] uppercase tracking-wider">Grant Details</p>
           <button
             onClick={onClose}

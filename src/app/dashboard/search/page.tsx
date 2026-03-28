@@ -528,7 +528,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
       {/* ── Full-width Match Insight strip ── */}
       {hasOrg && hasSearch && reason && (
         <div className="flex items-center gap-4 px-6 py-4 border-t border-[#E8E8EC]"
-          style={{ backgroundColor: '#F5F5F7', borderLeft: '4px solid #008080' }}>
+          style={{ backgroundColor: '#FAF8F5', borderLeft: '4px solid #008080' }}>
           {/* Icon + text */}
           <Activity className="w-5 h-5 flex-shrink-0" style={{ color: '#26A69A' }} />
           <div className="flex-1 min-w-0">
@@ -1758,7 +1758,7 @@ export default function SearchPage() {
                 ))}
               </div>
               {TAB_DESCS[activeTab] && (
-                <div className="mx-5 mb-1 mt-3 px-4 py-3 bg-[#F5F5F7] rounded-lg">
+                <div className="mx-5 mb-1 mt-3 px-4 py-3 bg-[#FAF8F5] rounded-lg">
                   <p className="text-sm text-[#444] leading-relaxed">{TAB_DESCS[activeTab]}</p>
                 </div>
               )}
@@ -1783,7 +1783,7 @@ export default function SearchPage() {
             {!aiResults && (
               <div className="flex items-center border border-[#E8E8EC] overflow-hidden flex-shrink-0 rounded-lg">
                 {/* Sort By label */}
-                <span className="px-3 py-2 text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider border-r border-[#E8E8EC] bg-[#F5F5F7] whitespace-nowrap">
+                <span className="px-3 py-2 text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider border-r border-[#E8E8EC] bg-[#FAF8F5] whitespace-nowrap">
                   Sort By
                 </span>
                 {([

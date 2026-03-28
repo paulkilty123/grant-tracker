@@ -14,7 +14,7 @@ const config: Config = {
         sage:    '#26A69A',
         mint:    '#B2DFDB',
         // Backgrounds — Stitch neutral
-        cream:   '#F5F5F7',
+        cream:   '#FAF8F5',
         warm:    '#E8E8EC',
         // Accent amber — Stitch tertiary #FFB74D
         gold:    '#FFB74D',

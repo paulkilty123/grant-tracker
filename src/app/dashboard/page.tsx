@@ -305,7 +305,7 @@ export default async function DashboardPage() {
 
                 return (
                   <a key={alert.item.id} href="/dashboard/deadlines"
-                    className="flex items-center gap-3 py-2.5 border-b border-warm last:border-0 hover:bg-[#F5F5F7] -mx-2 px-2 rounded transition-colors">
+                    className="flex items-center gap-3 py-2.5 border-b border-warm last:border-0 hover:bg-[#FAF8F5] -mx-2 px-2 rounded transition-colors">
                     {/* Date column */}
                     {dateObj ? (
                       <div className="flex flex-col items-center flex-shrink-0 w-9 text-center">

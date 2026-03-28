@@ -7,7 +7,7 @@
     --forest: #008080;
     --sage:   #26A69A;
     --mint:   #B2DFDB;
-    --cream:  #F5F5F7;
+    --cream:  #FAF8F5;
     --warm:   #E8E8EC;
     --gold:   #FFB74D;
   }
@@ -17,7 +17,7 @@
   }
 
   body {
-    background-color: #F5F5F7;
+    background-color: #FAF8F5;
     color: #1C1C2E;
   }
 
