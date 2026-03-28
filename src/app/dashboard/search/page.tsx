@@ -630,12 +630,13 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
             {brief ? (
               /* ── Funder Intelligence brief ── */
               (() => {
-                // Cap text to first N sentences for display
-                const cap = (text: string, sentences = 2) => {
-                  const parts = text.split(/(?<=[.!?])\s+/)
-                  return parts.slice(0, sentences).join(' ')
+                // Truncate to ~130 chars at a word boundary
+                const truncate = (text: string, chars = 130) => {
+                  if (text.length <= chars) return text
+                  const cut = text.slice(0, chars)
+                  return cut.slice(0, cut.lastIndexOf(' ')) + '…'
                 }
-                const clamp: React.CSSProperties = {
+                const clamp4: React.CSSProperties = {
                   display: '-webkit-box', WebkitLineClamp: 4,
                   WebkitBoxOrient: 'vertical', overflow: 'hidden',
                 }
@@ -644,106 +645,106 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                   WebkitBoxOrient: 'vertical', overflow: 'hidden',
                 }
                 const orgTerms = [...(org?.themes ?? []), ...(org?.areas_of_work ?? [])].slice(0, 3)
+
+                // Reusable section block: consistent label + body style throughout
+                const Section = ({ icon: Icon, iconColor, label, children, className = '', style }: {
+                  icon: React.ElementType, iconColor: string, label: string, children: React.ReactNode, className?: string, style?: React.CSSProperties
+                }) => (
+                  <div className={className} style={style}>
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <Icon className="w-3 h-3 flex-shrink-0" style={{ color: iconColor }} />
+                      <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#6E6E80' }}>{label}</p>
+                    </div>
+                    {children}
+                  </div>
+                )
+
+                // Build top-row items so grid cols match actual count
+                const topItems = [
+                  brief.what_they_fund && (
+                    <Section key="fund" icon={CheckCircle2} iconColor="#008080" label="What they fund">
+                      <p className="text-sm text-[#444] leading-relaxed" style={clamp4}>{brief.what_they_fund}</p>
+                    </Section>
+                  ),
+                  brief.priorities && (
+                    <Section key="prio" icon={TrendingUp} iconColor="#FF7043" label="Current priorities">
+                      <p className="text-sm text-[#444] leading-relaxed" style={clamp4}>{brief.priorities}</p>
+                    </Section>
+                  ),
+                  brief.exclusions && (
+                    <Section key="excl" icon={AlertTriangle} iconColor="#B45309" label="Exclusions"
+                      className="px-3 py-3" style={{ backgroundColor: 'rgba(255,183,77,0.15)' } as React.CSSProperties}>
+                      <p className="text-sm leading-relaxed" style={{ ...clamp4, color: '#5C3D00' }}>{brief.exclusions}</p>
+                    </Section>
+                  ),
+                ].filter(Boolean)
+
+                const topCols = topItems.length === 3 ? 'grid-cols-3' : topItems.length === 2 ? 'grid-cols-2' : 'grid-cols-1'
+
+                const bottomItems = [
+                  brief.strong_application && (
+                    <Section key="strong" icon={Star} iconColor="#6E6E80" label="Strong application">
+                      <p className="text-sm text-[#444] leading-relaxed" style={clamp3}>{brief.strong_application}</p>
+                    </Section>
+                  ),
+                  brief.typical_award && (
+                    <Section key="award" icon={DollarSign} iconColor="#6E6E80" label="Typical award">
+                      <p className="text-sm text-[#444] leading-relaxed" style={clamp3}>{brief.typical_award}</p>
+                    </Section>
+                  ),
+                  brief.decision_timeline && (
+                    <Section key="timeline" icon={CalendarDays} iconColor="#6E6E80" label="Decision timeline">
+                      <p className="text-sm text-[#444] leading-relaxed" style={clamp3}>{brief.decision_timeline}</p>
+                    </Section>
+                  ),
+                  brief.funder_tips && (
+                    <Section key="tips" icon={Lightbulb} iconColor="#6E6E80" label="Insider tips">
+                      <p className="text-sm text-[#444] leading-relaxed" style={clamp3}>{brief.funder_tips}</p>
+                    </Section>
+                  ),
+                ].filter(Boolean)
+
                 return (
-                  <div className="px-6 pt-5 pb-6 space-y-6">
+                  <div className="px-6 pt-5 pb-6 space-y-5">
 
                     {/* Header */}
                     <div className="flex items-center gap-2">
                       <Sparkles className="w-4 h-4" style={{ color: '#008080' }} />
-                      <span className="text-base font-bold" style={{ color: '#008080' }}>Funder Intelligence</span>
+                      <span className="text-sm font-bold" style={{ color: '#008080' }}>Funder Intelligence</span>
                       <span className="text-[9px] px-1.5 py-0.5 font-bold uppercase tracking-wider" style={{ backgroundColor: 'rgba(0,128,128,0.12)', color: '#008080', borderRadius: 9999 }}>AI</span>
                       {brief.last_enriched && <span className="text-[10px] text-[#9E9EA8] ml-auto">Updated {brief.last_enriched}</span>}
                     </div>
 
-                    {/* Why this matches you — concise 2-sentence cap */}
-                    {hasSearch && org && orgTerms.length > 0 && (brief.priorities || brief.what_they_fund) && (
+                    {/* Why this matches you */}
+                    {hasSearch && org && orgTerms.length > 0 && (
                       <div className="px-4 py-3" style={{ backgroundColor: 'rgba(0,128,128,0.06)', borderLeft: '3px solid #008080' }}>
                         <p className="text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: '#008080' }}>Why this matches you</p>
                         <p className="text-sm leading-relaxed text-[#1C1C2E]">
-                          Your organisation works in{' '}
+                          This funder&apos;s priorities align with your work in{' '}
                           {orgTerms.map((t, i, arr) => (
                             <React.Fragment key={t}>
                               <span style={{ color: '#008080', textDecoration: 'underline', textDecorationStyle: 'dotted' }}>{t}</span>
-                              {i < arr.length - 1 ? ', ' : '. '}
+                              {i < arr.length - 2 ? ', ' : i < arr.length - 1 ? ' and ' : '.'}
                             </React.Fragment>
                           ))}
-                          {brief.priorities
-                            ? cap(brief.priorities, 1)
-                            : cap(brief.what_they_fund!, 1)}
+                          {(brief.priorities || brief.what_they_fund) && (
+                            <> {truncate(brief.priorities ?? brief.what_they_fund!)}</>
+                          )}
                         </p>
                       </div>
                     )}
 
-                    {/* Top 3-column row: What they fund | Priorities | Exclusions */}
-                    <div className="grid grid-cols-3 gap-5 items-start">
-                      {brief.what_they_fund && (
-                        <div>
-                          <div className="flex items-center gap-1.5 mb-2">
-                            <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#008080' }} />
-                            <p className="text-sm font-semibold text-[#1C1C2E]">What they fund</p>
-                          </div>
-                          <p className="text-sm text-[#444] leading-relaxed" style={clamp}>{brief.what_they_fund}</p>
-                        </div>
-                      )}
-                      {brief.priorities && (
-                        <div>
-                          <div className="flex items-center gap-1.5 mb-2">
-                            <TrendingUp className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#FF7043' }} />
-                            <p className="text-sm font-semibold text-[#1C1C2E]">Current Priorities</p>
-                          </div>
-                          <p className="text-sm text-[#444] leading-relaxed" style={clamp}>{brief.priorities}</p>
-                        </div>
-                      )}
-                      {brief.exclusions && (
-                        <div className="px-3 py-3 h-full" style={{ backgroundColor: 'rgba(255,183,77,0.15)', borderRadius: 8 }}>
-                          <div className="flex items-center gap-1.5 mb-2">
-                            <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#B45309' }} />
-                            <p className="text-sm font-semibold" style={{ color: '#8B5E00' }}>Check Exclusions</p>
-                          </div>
-                          <p className="text-sm leading-relaxed" style={{ ...clamp, color: '#5C3D00' }}>{brief.exclusions}</p>
-                        </div>
-                      )}
-                    </div>
+                    {/* Top row: What they fund | Priorities | Exclusions */}
+                    {topItems.length > 0 && (
+                      <div className={`grid ${topCols} gap-5 items-start pt-1`}>
+                        {topItems}
+                      </div>
+                    )}
 
-                    {/* Second row: 4 supporting fields in 2-col compact grid */}
-                    {(brief.strong_application || brief.typical_award || brief.decision_timeline || brief.funder_tips) && (
+                    {/* Bottom row: 4 supporting fields in 2-col grid */}
+                    {bottomItems.length > 0 && (
                       <div className="grid grid-cols-2 gap-x-8 gap-y-5 pt-4 border-t border-[#E8E8EC]">
-                        {brief.strong_application && (
-                          <div>
-                            <div className="flex items-center gap-1.5 mb-1.5">
-                              <Star className="w-3 h-3 flex-shrink-0" style={{ color: '#6E6E80' }} />
-                              <p className="text-xs font-semibold text-[#6E6E80] uppercase tracking-wider">Strong application</p>
-                            </div>
-                            <p className="text-sm text-[#444] leading-relaxed" style={clamp3}>{brief.strong_application}</p>
-                          </div>
-                        )}
-                        {brief.typical_award && (
-                          <div>
-                            <div className="flex items-center gap-1.5 mb-1.5">
-                              <DollarSign className="w-3 h-3 flex-shrink-0" style={{ color: '#6E6E80' }} />
-                              <p className="text-xs font-semibold text-[#6E6E80] uppercase tracking-wider">Typical award</p>
-                            </div>
-                            <p className="text-sm text-[#444] leading-relaxed" style={clamp3}>{brief.typical_award}</p>
-                          </div>
-                        )}
-                        {brief.decision_timeline && (
-                          <div>
-                            <div className="flex items-center gap-1.5 mb-1.5">
-                              <CalendarDays className="w-3 h-3 flex-shrink-0" style={{ color: '#6E6E80' }} />
-                              <p className="text-xs font-semibold text-[#6E6E80] uppercase tracking-wider">Decision timeline</p>
-                            </div>
-                            <p className="text-sm text-[#444] leading-relaxed" style={clamp3}>{brief.decision_timeline}</p>
-                          </div>
-                        )}
-                        {brief.funder_tips && (
-                          <div>
-                            <div className="flex items-center gap-1.5 mb-1.5">
-                              <Lightbulb className="w-3 h-3 flex-shrink-0" style={{ color: '#6E6E80' }} />
-                              <p className="text-xs font-semibold text-[#6E6E80] uppercase tracking-wider">Insider tips</p>
-                            </div>
-                            <p className="text-sm text-[#444] leading-relaxed" style={clamp3}>{brief.funder_tips}</p>
-                          </div>
-                        )}
+                        {bottomItems}
                       </div>
                     )}
 
