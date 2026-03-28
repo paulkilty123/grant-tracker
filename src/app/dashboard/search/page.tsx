@@ -399,12 +399,35 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
 
           {/* Badges row */}
           <div className="flex flex-wrap items-center gap-2 mb-3">
-            {sectorLabels[0] && (
-              <span className="text-[10px] font-bold uppercase tracking-wider px-3 py-1"
+            {/* Up to 3 sector pills */}
+            {sectorLabels.slice(0, 3).map(label => (
+              <span key={label} className="text-[10px] font-bold uppercase tracking-wider px-3 py-1"
                 style={{ borderRadius: 9999, backgroundColor: 'rgba(0,128,128,0.12)', color: '#26A69A' }}>
-                {sectorLabels[0]}
+                {label}
               </span>
-            )}
+            ))}
+            {/* Funder type pill */}
+            {grant.funderType && grant.funderType !== 'other' && (() => {
+              const FUNDER_PILL_LABELS: Record<string, string> = {
+                trust_foundation:  'Trust / Foundation',
+                local_authority:   'Local Authority',
+                housing_association: 'Housing Assoc.',
+                corporate:         'Corporate',
+                lottery:           'Lottery',
+                government:        'Government',
+                competition:       'Competition',
+                loan:              'Loan',
+                crowdfund_match:   'Crowd Match',
+              }
+              const label = FUNDER_PILL_LABELS[grant.funderType] ?? grant.funderType
+              return (
+                <span className="text-[10px] font-bold uppercase tracking-wider px-3 py-1"
+                  style={{ borderRadius: 9999, backgroundColor: 'rgba(110,110,128,0.10)', color: '#6E6E80' }}>
+                  {label}
+                </span>
+              )
+            })()}
+            {/* Status badges */}
             {entryType === 'live' && daysLeft !== null && daysLeft >= 0 && (
               <span className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1 ${
                 daysLeft <= 7 ? 'bg-red-50 text-red-600' : 'bg-gray-100 text-gray-500'
@@ -434,7 +457,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
           </p>
 
           {/* Metadata */}
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div>
               <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">Amount</p>
               <p className="text-sm font-bold" style={{ color: '#26A69A' }}>{formatRange(grant.amountMin, grant.amountMax)}</p>
@@ -472,10 +495,6 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
                   </>
                 )
               })()}
-            </div>
-            <div>
-              <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">Sector</p>
-              <p className="text-sm font-semibold text-charcoal">{sectorLabels.length > 0 ? sectorLabels.join(', ') : '—'}</p>
             </div>
             <div>
               <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">Beneficiary</p>
