@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getDeadlineAlerts, formatCurrency } from '@/lib/utils'
 import { PIPELINE_STAGES } from '@/lib/utils'
 import type { PipelineItem } from '@/types'
-import { Award, TrendingUp, Users, Rocket, GraduationCap, Gift, ArrowRight, CalendarDays, AlertTriangle, Clock } from 'lucide-react'
+import { Award, TrendingUp, Users, Rocket, GraduationCap, Gift, ArrowRight, CalendarDays, AlarmClock, Clock } from 'lucide-react'
 
 function formatDeadlineDate(deadline: string | null): { month: string; day: string } | null {
   if (!deadline) return null
@@ -161,7 +161,9 @@ export default async function DashboardPage() {
           <p className="text-[10px] font-semibold text-mid uppercase tracking-wider mb-3">Urgent Deadlines</p>
           <div className="flex items-center gap-3 mb-2">
             <p className={`font-serif text-3xl leading-none ${urgentCount > 0 ? 'text-coral' : 'text-charcoal'}`}>{urgentCount}</p>
-            {urgentCount > 0 && <AlertTriangle className="w-5 h-5 text-coral" />}
+            <span className="flex items-center justify-center w-10 h-10 rounded-full" style={{ backgroundColor: '#fde8e4' }}>
+              <AlarmClock className="w-5 h-5" style={{ color: '#9b1c1c' }} />
+            </span>
           </div>
           <p className="text-xs text-mid">In the next 10 days</p>
         </div>
