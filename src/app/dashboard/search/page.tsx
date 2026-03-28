@@ -555,7 +555,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
             </button>
             {grant.applyUrl && (
               <a href={grant.applyUrl} target="_blank" rel="noopener noreferrer"
-                className="text-center text-xs font-medium hover:underline transition-colors"
+                className="text-center text-[11px] font-bold uppercase tracking-widest hover:underline transition-colors"
                 style={{ color: '#FF7043' }}>
                 Visit website →
               </a>
