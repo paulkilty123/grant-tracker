@@ -20,7 +20,7 @@ export default async function AppLayout({
     <div className="flex min-h-screen">
       <Sidebar org={org} userEmail={user.email ?? ''} />
       <main className="md:ml-60 flex-1 min-h-screen overflow-x-hidden flex flex-col">
-        <div className="flex justify-end items-center gap-3 px-8 py-4 pt-16 md:pt-4 flex-shrink-0">
+        <div className="flex justify-end items-center gap-3 px-4 py-4 pt-16 md:pt-4 md:px-16 flex-shrink-0">
           <TopBar userEmail={user.email ?? ''} orgName={org?.name} />
         </div>
         <div className="flex-1 px-4 pb-8 md:px-16">{children}</div>
