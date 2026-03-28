@@ -578,68 +578,86 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
       )}
 
       {/* ── Expanded details panel ── */}
-      {expanded && (
-        <div className="border-t border-[#E8E8EC] px-6 py-5 space-y-4" style={{ backgroundColor: '#FAF8F5' }}>
-
-          {/* Full description if truncated */}
-          {grant.description.length > 180 && (
-            <div>
-              <p className="text-[10px] font-bold text-[#6E6E80] uppercase tracking-wider mb-2">Full description</p>
-              <p className="text-sm text-[#444] leading-relaxed">{grant.description}</p>
-            </div>
-          )}
-
-          {/* Eligibility criteria */}
-          {grant.eligibilityCriteria?.length > 0 && (
-            <div>
-              <p className="text-[10px] font-bold text-[#6E6E80] uppercase tracking-wider mb-2.5">Eligibility criteria</p>
-              <ul className="space-y-2">
-                {grant.eligibilityCriteria.map((c, i) => (
-                  <li key={i} className="flex gap-2.5 text-sm text-[#444]">
-                    <span className="flex-shrink-0 font-bold mt-0.5" style={{ color: '#008080' }}>✓</span>
-                    <span className="leading-snug">{c}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Eligible org types */}
-          {(grant as EnrichedGrant).eligibleStructures?.length ? (
-            <div>
-              <p className="text-[10px] font-bold text-[#6E6E80] uppercase tracking-wider mb-2">Eligible organisations</p>
-              <div className="flex flex-wrap gap-1.5">
-                {((grant as EnrichedGrant).eligibleStructures ?? []).map(s => (
-                  <span key={s} className="text-[11px] font-semibold px-2.5 py-1"
-                    style={{ backgroundColor: 'rgba(0,128,128,0.10)', color: '#008080', borderRadius: 9999 }}>
-                    {STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
-                  </span>
-                ))}
+      {expanded && (() => {
+        const brief = (grant as EnrichedGrant).funderBrief
+        const BRIEF_FIELDS: { key: string; label: string; icon: string }[] = [
+          { key: 'what_they_fund',    label: 'What they fund',       icon: '🎯' },
+          { key: 'priorities',        label: 'Current priorities',   icon: '⭐' },
+          { key: 'strong_application',label: 'Strong application',   icon: '✅' },
+          { key: 'exclusions',        label: 'They won\'t fund',     icon: '🚫' },
+          { key: 'typical_award',     label: 'Typical award',        icon: '💰' },
+          { key: 'decision_timeline', label: 'Decision timeline',    icon: '📅' },
+          { key: 'how_to_apply',      label: 'How to apply',         icon: '📋' },
+          { key: 'funder_tips',       label: 'Insider tips',         icon: '💡' },
+        ]
+        return (
+          <div className="border-t border-[#E8E8EC]" style={{ backgroundColor: '#FAF8F5' }}>
+            {brief ? (
+              /* ── Funder Intelligence brief ── */
+              <div className="px-6 py-5">
+                <div className="flex items-center gap-1.5 mb-4">
+                  <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#008080' }}>Funder Intelligence</span>
+                  <span className="text-[9px] px-1.5 py-0.5 font-bold uppercase tracking-wider" style={{ backgroundColor: 'rgba(0,128,128,0.10)', color: '#008080', borderRadius: 9999 }}>AI</span>
+                  {brief.last_enriched && <span className="text-[10px] text-[#9E9EA8] ml-auto">Updated {brief.last_enriched}</span>}
+                </div>
+                <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+                  {BRIEF_FIELDS.map(({ key, label, icon }) => {
+                    const val = brief[key]
+                    if (!val) return null
+                    return (
+                      <div key={key}>
+                        <p className="text-[10px] font-bold text-[#6E6E80] uppercase tracking-wider mb-1">
+                          {icon} {label}
+                        </p>
+                        <p className="text-sm text-[#333] leading-relaxed">{val}</p>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
-            </div>
-          ) : null}
-
-          {/* Impact sectors */}
-          {((grant as EnrichedGrant).impactSectors?.length ? (grant as EnrichedGrant).impactSectors! : grant.sectors)?.length ? (
-            <div>
-              <p className="text-[10px] font-bold text-[#6E6E80] uppercase tracking-wider mb-2">Impact sectors</p>
-              <div className="flex flex-wrap gap-1.5">
-                {((grant as EnrichedGrant).impactSectors?.length
-                  ? (grant as EnrichedGrant).impactSectors!
-                  : grant.sectors
-                ).map(s => (
-                  <span key={s} className="text-[11px] font-semibold px-2.5 py-1"
-                    style={{ backgroundColor: 'rgba(255,183,77,0.20)', color: '#8B5E00', borderRadius: 9999 }}>
-                    {IMPACT_SECTOR_FILTERS.find(f => f.id === s.toLowerCase())?.label
-                      ?? s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
-                  </span>
-                ))}
+            ) : (
+              /* ── Fallback: structured eligibility data ── */
+              <div className="px-6 py-5 space-y-4">
+                {grant.description.length > 180 && (
+                  <div>
+                    <p className="text-[10px] font-bold text-[#6E6E80] uppercase tracking-wider mb-2">Full description</p>
+                    <p className="text-sm text-[#444] leading-relaxed">{grant.description}</p>
+                  </div>
+                )}
+                {grant.eligibilityCriteria?.length > 0 && (
+                  <div>
+                    <p className="text-[10px] font-bold text-[#6E6E80] uppercase tracking-wider mb-2.5">Eligibility criteria</p>
+                    <ul className="space-y-2">
+                      {grant.eligibilityCriteria.map((c, i) => (
+                        <li key={i} className="flex gap-2.5 text-sm text-[#444]">
+                          <span className="flex-shrink-0 font-bold mt-0.5" style={{ color: '#008080' }}>✓</span>
+                          <span className="leading-snug">{c}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {(grant as EnrichedGrant).eligibleStructures?.length ? (
+                  <div>
+                    <p className="text-[10px] font-bold text-[#6E6E80] uppercase tracking-wider mb-2">Eligible organisations</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {((grant as EnrichedGrant).eligibleStructures ?? []).map(s => (
+                        <span key={s} className="text-[11px] font-semibold px-2.5 py-1"
+                          style={{ backgroundColor: 'rgba(0,128,128,0.10)', color: '#008080', borderRadius: 9999 }}>
+                          {STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+                <p className="text-xs text-[#9E9EA8] pt-1">
+                  No funder intelligence yet — an admin can enrich this grant from the Funder Intelligence page.
+                </p>
               </div>
-            </div>
-          ) : null}
-
-        </div>
-      )}
+            )}
+          </div>
+        )
+      })()}
 
       {/* ── Full-width Match Insight strip ── */}
       {hasOrg && hasSearch && reason && (
@@ -717,6 +735,7 @@ const VALID_FUNDER_TYPES: FunderType[] = [
 interface EnrichedGrant extends GrantOpportunity {
   funderCategory?: string       // funders.funder_type (our 8-category taxonomy)
   geoScope?: string[]           // funders.geographic_scope
+  funderBrief?: Record<string, string | null> | null  // AI-generated funder intelligence
 }
 
 function normaliseScrapedGrant(row: Record<string, unknown>): EnrichedGrant {
@@ -749,6 +768,7 @@ function normaliseScrapedGrant(row: Record<string, unknown>): EnrichedGrant {
     // Funder-table enrichment (null for 'manual' source grants)
     funderCategory:       row.funder_category ? String(row.funder_category) : undefined,
     geoScope:             Array.isArray(row.geographic_scope) ? (row.geographic_scope as string[]) : undefined,
+    funderBrief:          row.funder_brief && typeof row.funder_brief === 'object' ? (row.funder_brief as Record<string, string | null>) : null,
   }
 }
 
