@@ -55,11 +55,11 @@ export default async function DashboardPage() {
 
   // Stage pipeline values
   const stageData = [
-    { id: 'identified', label: 'Identified', sublabel: 'Leads',    bg: '#2d8a7a', text: '#fff' },
-    { id: 'applying',   label: 'Applying',   sublabel: 'Active',   bg: '#1f5c52', text: '#fff' },
-    { id: 'submitted',  label: 'Submitted',  sublabel: 'Pending',  bg: '#163d36', text: '#fff' },
-    { id: 'won',        label: 'Won',        sublabel: 'Wins',     bg: '#0e2722', text: '#e8a030' },
-    { id: 'declined',   label: 'Declined',   sublabel: 'Archived', bg: '#e8ddd0', text: '#5a7370' },
+    { id: 'identified', label: 'Identified', sublabel: 'Leads',    bg: '#c8dedd', labelCol: '#1f5c52', valCol: '#1f5c52', dot: '#9abfbc' },
+    { id: 'applying',   label: 'Applying',   sublabel: 'Active',   bg: '#7dbdb5', labelCol: '#1a4a44', valCol: '#1a4a44', dot: '#7dbdb5' },
+    { id: 'submitted',  label: 'Submitted',  sublabel: 'Pending',  bg: '#4a9990', labelCol: '#fff',    valCol: '#d4f0ed', dot: '#4a9990' },
+    { id: 'won',        label: 'Won',        sublabel: 'Wins',     bg: '#1f5c52', labelCol: '#fff',    valCol: '#fff',    dot: '#1f5c52' },
+    { id: 'declined',   label: 'Declined',   sublabel: 'Archived', bg: '#e8ddd0', labelCol: '#7a8c8a', valCol: '#3a5a56', dot: '#bbb' },
   ]
   const stageValues = stageData.map(s => ({
     ...s,
@@ -244,37 +244,33 @@ export default async function DashboardPage() {
             </div>
           ) : (
             <>
-              {/* Amount labels row */}
-              <div className="flex mb-1">
-                {stageValues.map(s => (
-                  <div key={s.id} className="flex-1 text-center">
-                    <span className="text-[10px] font-bold" style={{ color: s.value > 0 ? '#1f5c52' : '#bbb' }}>
-                      {s.value > 0 ? formatCurrency(s.value) : ''}
-                    </span>
-                  </div>
-                ))}
-              </div>
-              {/* Proportional bar — uses flex-grow so it never overflows */}
-              <div className="flex gap-0.5 mb-3" style={{ height: 56 }}>
+              {/* Tall proportional bar with rounded corners */}
+              <a href="/dashboard/pipeline" className="flex rounded-2xl overflow-hidden mb-6 hover:opacity-95 transition-opacity" style={{ height: 140 }}>
                 {stageValues.map(s => {
-                  const grow = totalValue > 0 ? s.value : 1
+                  const grow = totalValue > 0 ? (s.value > 0 ? s.value : 0) : 1
+                  if (grow === 0) return null
                   return (
-                    <a key={s.id} href="/dashboard/pipeline"
-                      className="flex flex-col items-center justify-end pb-2 hover:opacity-90 transition-opacity rounded overflow-hidden"
+                    <div key={s.id} className="flex flex-col justify-center px-4"
                       style={{ flexGrow: grow, flexBasis: 0, background: s.bg, minWidth: 0 }}>
-                      <span className="text-[9px] font-semibold uppercase tracking-wider truncate px-1" style={{ color: s.text, opacity: 0.75 }}>
+                      <span className="text-[10px] font-bold uppercase tracking-widest mb-2 truncate"
+                        style={{ color: s.labelCol }}>
                         {s.label}
                       </span>
-                    </a>
+                      <span className="font-display font-bold leading-none truncate"
+                        style={{ color: s.valCol, fontSize: 'clamp(18px, 2.2vw, 32px)' }}>
+                        {formatCurrency(s.value)}
+                      </span>
+                    </div>
                   )
                 })}
-              </div>
-              {/* Count row — evenly spaced, independent of bar widths */}
-              <div className="grid grid-cols-5 border-t border-warm/60 pt-3">
+              </a>
+              {/* Count row — evenly spaced with coloured dot */}
+              <div className="grid grid-cols-5">
                 {stageValues.map(s => (
-                  <div key={s.id} className="flex flex-col items-center gap-0.5">
-                    <span className="text-base font-bold text-charcoal">{s.count}</span>
-                    <span className="text-[9px] font-semibold text-mid uppercase tracking-wider">{s.sublabel}</span>
+                  <div key={s.id} className="flex flex-col items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: s.dot }} />
+                    <span className="text-lg font-bold text-charcoal leading-none">{s.count}</span>
+                    <span className="text-[9px] font-semibold text-mid uppercase tracking-widest">{s.sublabel}</span>
                   </div>
                 ))}
               </div>
