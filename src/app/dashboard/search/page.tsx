@@ -566,6 +566,59 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
 
       </div>
 
+      {/* ── Match Insight (white, part of card body) ── */}
+      {hasOrg && hasSearch && reason && (() => {
+        const brief = (grant as EnrichedGrant).funderBrief
+        return (
+          <div className="flex items-center gap-4 px-6 py-4 border-t border-[#E8E8EC]"
+            style={{ borderLeft: '3px solid #008080' }}>
+            <Activity className="w-4 h-4 flex-shrink-0" style={{ color: '#26A69A' }} />
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#26A69A' }}>Match Insight</p>
+              <p className="text-sm leading-relaxed" style={{ color: '#333' }}>
+                {(() => {
+                  const text = reason.replace(/<[^>]*>/g, '').trim()
+                  const dotIdx = text.indexOf('.')
+                  if (dotIdx > 0 && dotIdx < 60) {
+                    return <><strong>{text.slice(0, dotIdx + 1)}</strong>{text.slice(dotIdx + 1)}</>
+                  }
+                  return text
+                })()}
+              </p>
+              {brief?.priorities && (
+                <p className="text-xs mt-1.5 leading-relaxed" style={{ color: '#26A69A' }}>
+                  <strong>Funder priorities:</strong> {brief.priorities}
+                </p>
+              )}
+              {brief?.exclusions && (
+                <p className="text-xs mt-1 leading-relaxed" style={{ color: '#B45309' }}>
+                  <strong>⚠ Exclusions:</strong> {brief.exclusions}
+                </p>
+              )}
+            </div>
+            {score > 0 && (
+              <div className="flex-shrink-0 flex flex-col items-center gap-0.5 ml-2">
+                <svg width="68" height="68" viewBox="0 0 68 68">
+                  <circle cx="34" cy="34" r="27" fill="none" stroke="#E8E8EC" strokeWidth="5" />
+                  <circle cx="34" cy="34" r="27" fill="none" stroke="#008080" strokeWidth="5"
+                    strokeLinecap="round"
+                    strokeDasharray={`${(score / 100) * 169.6} 169.6`}
+                    transform="rotate(-90 34 34)" />
+                  <text x="34" y="31" textAnchor="middle" dominantBaseline="middle"
+                    style={{ fontSize: '13px', fontWeight: '700', fill: '#008080', fontFamily: 'inherit' }}>
+                    {score}%
+                  </text>
+                  <text x="34" y="46" textAnchor="middle"
+                    style={{ fontSize: '8px', fill: '#26A69A', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: '600' }}>
+                    MATCH
+                  </text>
+                </svg>
+              </div>
+            )}
+          </div>
+        )
+      })()}
+
       {/* ── Expand toggle ── */}
       {(grant.eligibilityCriteria?.length > 0 || (grant as EnrichedGrant).impactSectors?.length || grant.sectors?.length) && (
         <button
@@ -738,69 +791,6 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
         )
       })()}
 
-      {/* ── Full-width Match Insight strip ── */}
-      {hasOrg && hasSearch && reason && (() => {
-        const brief = (grant as EnrichedGrant).funderBrief
-        return (
-        <div className="border-t border-[#E8E8EC]">
-          <div className="flex items-center gap-4 px-6 py-4"
-            style={{ backgroundColor: '#EDF4F4', borderLeft: '4px solid #008080' }}>
-          {/* Icon + text */}
-          <Activity className="w-5 h-5 flex-shrink-0" style={{ color: '#26A69A' }} />
-          <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#26A69A' }}>Match Insight</p>
-            <p className="text-sm leading-relaxed" style={{ color: '#333' }}>
-              {(() => {
-                const text = reason.replace(/<[^>]*>/g, '').trim()
-                const dotIdx = text.indexOf('.')
-                if (dotIdx > 0 && dotIdx < 60) {
-                  return <><strong>{text.slice(0, dotIdx + 1)}</strong>{text.slice(dotIdx + 1)}</>
-                }
-                return text
-              })()}
-            </p>
-            {brief?.priorities && (
-              <p className="text-xs mt-1.5 leading-relaxed" style={{ color: '#26A69A' }}>
-                <strong>Funder priorities:</strong> {brief.priorities}
-              </p>
-            )}
-            {brief?.exclusions && (
-              <p className="text-xs mt-1 leading-relaxed" style={{ color: '#B45309' }}>
-                <strong>⚠ Exclusions:</strong> {brief.exclusions}
-              </p>
-            )}
-          </div>
-          {/* Score ring graphic */}
-          {score > 0 && (
-            <div className="flex-shrink-0 flex flex-col items-center gap-0.5 ml-2">
-              <svg width="68" height="68" viewBox="0 0 68 68">
-                {/* Track */}
-                <circle cx="34" cy="34" r="27" fill="none" stroke="#E8E8EC" strokeWidth="5" />
-                {/* Progress arc — circumference ≈ 169.6 */}
-                <circle
-                  cx="34" cy="34" r="27"
-                  fill="none"
-                  stroke="#008080"
-                  strokeWidth="5"
-                  strokeLinecap="round"
-                  strokeDasharray={`${(score / 100) * 169.6} 169.6`}
-                  transform="rotate(-90 34 34)"
-                />
-                <text x="34" y="31" textAnchor="middle" dominantBaseline="middle"
-                  style={{ fontSize: '13px', fontWeight: '700', fill: '#008080', fontFamily: 'inherit' }}>
-                  {score}%
-                </text>
-                <text x="34" y="46" textAnchor="middle"
-                  style={{ fontSize: '8px', fill: '#26A69A', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: '600' }}>
-                  MATCH
-                </text>
-              </svg>
-            </div>
-          )}
-        </div>
-        </div>
-        )
-      })()}
 
     </div>
   )
