@@ -579,7 +579,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
       {/* ── Full-width Match Insight strip ── */}
       {hasOrg && hasSearch && reason && (
         <div className="flex items-center gap-4 px-6 py-4 border-t border-[#E8E8EC]"
-          style={{ backgroundColor: '#FAF8F5', borderLeft: '4px solid #008080' }}>
+          style={{ backgroundColor: '#EDF4F4', borderLeft: '4px solid #008080' }}>
           {/* Icon + text */}
           <Activity className="w-5 h-5 flex-shrink-0" style={{ color: '#26A69A' }} />
           <div className="flex-1 min-w-0">
