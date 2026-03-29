@@ -653,7 +653,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                   <div className={className} style={style}>
                     <div className="flex items-center gap-1.5 mb-2">
                       <Icon className="w-3 h-3 flex-shrink-0" style={{ color: iconColor }} />
-                      <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#6E6E80' }}>{label}</p>
+                      <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#3D3D4E' }}>{label}</p>
                     </div>
                     {children}
                   </div>
@@ -718,7 +718,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                     {/* Why this matches you */}
                     {hasSearch && org && orgTerms.length > 0 && (
                       <div className="px-4 py-3" style={{ backgroundColor: 'rgba(0,128,128,0.06)', borderLeft: '3px solid #008080' }}>
-                        <p className="text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: '#008080' }}>Why this matches you</p>
+                        <p className="text-xs font-bold uppercase tracking-widest mb-1.5" style={{ color: '#008080' }}>Why this matches you</p>
                         <p className="text-sm leading-relaxed text-[#1C1C2E]">
                           This funder&apos;s priorities align with your work in{' '}
                           {orgTerms.map((t, i, arr) => (
