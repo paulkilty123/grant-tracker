@@ -617,7 +617,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
           style={{ color: '#6E6E80' }}
         >
           <ChevronDown className="w-3.5 h-3.5 transition-transform" style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }} />
-          {expanded ? 'Show less' : 'Eligibility & details'}
+          {expanded ? 'Show less' : (grant as EnrichedGrant).funderBrief ? 'Funder Intelligence' : 'Eligibility & details'}
         </button>
       )}
 
@@ -707,13 +707,9 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                 return (
                   <div className="px-6 pt-5 pb-6 space-y-5">
 
-                    {/* Header */}
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="w-4 h-4" style={{ color: '#008080' }} />
-                      <span className="text-sm font-bold" style={{ color: '#008080' }}>Funder Intelligence</span>
-                      <span className="text-[9px] px-1.5 py-0.5 font-bold uppercase tracking-wider" style={{ backgroundColor: 'rgba(0,128,128,0.12)', color: '#008080', borderRadius: 9999 }}>AI</span>
-                      {brief.last_enriched && <span className="text-[10px] text-[#9E9EA8] ml-auto">Updated {brief.last_enriched}</span>}
-                    </div>
+                    {brief.last_enriched && (
+                      <p className="text-[10px] text-[#9E9EA8] text-right -mb-2">Updated {brief.last_enriched}</p>
+                    )}
 
                     {/* Why this matches you */}
                     {hasSearch && org && orgTerms.length > 0 && (
