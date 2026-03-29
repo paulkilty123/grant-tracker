@@ -1275,8 +1275,8 @@ export default function UrlAdminPage() {
       {/* Header */}
       <div className="mb-7 flex items-start justify-between gap-4">
         <div>
-          <h2 className="font-display text-2xl font-bold text-forest">URL Health</h2>
-          <p className="mt-1 text-sm text-mid">Find and fix dead grant links · browse by category · add new funders</p>
+          <h2 className="font-display text-2xl font-bold text-forest">Grant Manager</h2>
+          <p className="mt-1 text-sm text-mid">Review, classify, validate and manage your grant database</p>
         </div>
         <div className="flex items-center gap-2">
           <button

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Sparkles, ExternalLink, RefreshCw, CheckCircle, Clock, AlertTriangle, Zap, PlusCircle, X, BookOpen, Link } from 'lucide-react'
+import NextLink from 'next/link'
 
 type GrantRow = {
   id: string
@@ -132,16 +133,16 @@ export default function FunderIntelligencePage() {
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-8">
-      {/* Header */}
+      {/* Header + Tabs */}
       <div className="mb-8">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start justify-between gap-4 mb-5">
           <div>
             <div className="flex items-center gap-2 mb-1">
               <Sparkles className="w-5 h-5" style={{ color: '#008080' }} />
               <h1 className="text-2xl font-bold text-[#1C1C2E]">Funder Intelligence</h1>
             </div>
             <p className="text-sm text-[#6E6E80]">
-              Enrich grants with AI-generated summaries. Add extra source pages to fill in any gaps — how to apply, guidelines, criteria, etc.
+              Enrich grants with AI-generated summaries. Add extra source pages to fill in any gaps.
             </p>
           </div>
           <button
@@ -154,6 +155,17 @@ export default function FunderIntelligencePage() {
               ? `Enriching ${bulkProgress.done}/${bulkProgress.total}…`
               : 'Enrich All'}
           </button>
+        </div>
+        <div className="flex gap-1 border-b border-[#E8E8EC]">
+          <NextLink href="/dashboard/admin/intelligence"
+            className="px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors"
+            style={{ borderColor: '#008080', color: '#008080' }}>
+            Enrichment
+          </NextLink>
+          <NextLink href="/dashboard/admin/watchlist"
+            className="px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-[#6E6E80] hover:text-[#1C1C2E] transition-colors">
+            Watchlist
+          </NextLink>
         </div>
       </div>
 

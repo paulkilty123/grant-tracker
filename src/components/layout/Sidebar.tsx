@@ -15,8 +15,7 @@ import {
   User,
   MessageSquare,
   Activity,
-  LinkIcon,
-  Bell,
+  ClipboardList,
   Sparkles,
   LogOut,
   Menu,
@@ -70,10 +69,9 @@ const NAV_GROUPS = [
 const ADMIN_NAV_GROUP = {
   label: 'Admin',
   items: [
-    { href: '/dashboard/admin',                  label: 'Source Health',       Icon: Activity  },
-    { href: '/dashboard/admin/urls',             label: 'URL Health',          Icon: LinkIcon  },
-    { href: '/dashboard/admin/watchlist',        label: 'Funder Watchlist',    Icon: Bell      },
-    { href: '/dashboard/admin/intelligence',     label: 'Funder Intelligence', Icon: Sparkles  },
+    { href: '/dashboard/admin',                  label: 'Grant Health',        Icon: Activity      },
+    { href: '/dashboard/admin/urls',             label: 'Grant Manager',       Icon: ClipboardList },
+    { href: '/dashboard/admin/intelligence',     label: 'Funder Intelligence', Icon: Sparkles      },
   ],
 }
 
@@ -97,6 +95,7 @@ export default function Sidebar({ org, userEmail }: Props) {
 
   const navLink = (href: string, label: string, Icon: React.ElementType, showDot?: boolean, score?: number) => {
     const isActive = pathname === href || (href !== '/dashboard' && pathname.startsWith(href))
+      || (href === '/dashboard/admin/intelligence' && pathname.startsWith('/dashboard/admin/watchlist'))
     return (
       <Link
         key={href}
