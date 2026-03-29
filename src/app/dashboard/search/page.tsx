@@ -725,38 +725,6 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                       </div>
                     )}
 
-                    {/* Missing fields notice */}
-                    {(() => {
-                      const FIELD_LABELS: Record<string, string> = {
-                        what_they_fund: 'What they fund',
-                        priorities: 'Current priorities',
-                        exclusions: 'Exclusions',
-                        strong_application: 'Strong application',
-                        typical_award: 'Typical award',
-                        decision_timeline: 'Decision timeline',
-                        how_to_apply: 'How to apply',
-                        funder_tips: 'Insider tips',
-                      }
-                      const missing = Object.entries(FIELD_LABELS)
-                        .filter(([key]) => !brief[key])
-                        .map(([, label]) => label)
-                      if (missing.length === 0) return null
-                      return (
-                        <div className="flex items-start justify-between gap-4 pt-4 border-t border-[#E8E8EC]">
-                          <div className="flex items-start gap-2">
-                            <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: '#B45309' }} />
-                            <p className="text-xs text-[#6E6E80]">
-                              <span className="font-semibold text-[#3D3D4E]">Missing: </span>
-                              {missing.join(', ')}
-                            </p>
-                          </div>
-                          <a href="/dashboard/admin/intelligence" className="text-xs font-semibold flex-shrink-0 hover:underline" style={{ color: '#008080' }}>
-                            Add sources →
-                          </a>
-                        </div>
-                      )
-                    })()}
-
                     {/* How to apply — full-width footer with Apply button */}
                     {(brief.how_to_apply || grant.applyUrl) && (
                       <div className="flex items-start justify-between gap-6 pt-4 border-t border-[#E8E8EC]">
