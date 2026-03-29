@@ -711,14 +711,6 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                       <p className="text-[10px] text-[#9E9EA8] text-right -mb-2">Updated {brief.last_enriched}</p>
                     )}
 
-                    {/* Why this matches you */}
-                    {hasSearch && reason && (
-                      <div className="px-4 py-3" style={{ backgroundColor: 'rgba(0,128,128,0.06)', borderLeft: '3px solid #008080', borderRadius: 8 }}>
-                        <p className="text-xs font-bold uppercase tracking-widest mb-1.5" style={{ color: '#008080' }}>Why this matches you</p>
-                        <p className="text-sm leading-relaxed text-[#1C1C2E]">{reason}</p>
-                      </div>
-                    )}
-
                     {/* Top row: What they fund | Priorities | Exclusions */}
                     {topItems.length > 0 && (
                       <div className={`grid ${topCols} gap-5 items-start pt-1`}>
