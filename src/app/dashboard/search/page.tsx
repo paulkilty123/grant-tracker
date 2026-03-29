@@ -673,7 +673,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                   ),
                   brief.exclusions && (
                     <Section key="excl" icon={AlertTriangle} iconColor="#B45309" label="Exclusions"
-                      className="px-3 py-3" style={{ backgroundColor: 'rgba(255,183,77,0.15)' } as React.CSSProperties}>
+                      className="px-3 py-3" style={{ backgroundColor: 'rgba(255,183,77,0.15)', borderRadius: 8 } as React.CSSProperties}>
                       <p className="text-sm leading-relaxed" style={{ ...clamp4, color: '#5C3D00' }}>{brief.exclusions}</p>
                     </Section>
                   ),
@@ -717,7 +717,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
 
                     {/* Why this matches you */}
                     {hasSearch && org && orgTerms.length > 0 && (
-                      <div className="px-4 py-3" style={{ backgroundColor: 'rgba(0,128,128,0.06)', borderLeft: '3px solid #008080' }}>
+                      <div className="px-4 py-3" style={{ backgroundColor: 'rgba(0,128,128,0.06)', borderLeft: '3px solid #008080', borderRadius: 8 }}>
                         <p className="text-xs font-bold uppercase tracking-widest mb-1.5" style={{ color: '#008080' }}>Why this matches you</p>
                         <p className="text-sm leading-relaxed text-[#1C1C2E]">
                           This funder&apos;s priorities align with your work in{' '}
