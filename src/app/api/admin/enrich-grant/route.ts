@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
   const { grantId, pastedContent, additionalSources } = await req.json() as {
     grantId: string
     pastedContent?: string
-    additionalSources?: Array<{ label: string; text: string }>
+    additionalSources?: Array<{ label: string; text?: string; url?: string }>
   }
   if (!grantId) return NextResponse.json({ error: 'grantId required' }, { status: 400 })
 
@@ -72,11 +72,21 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Append any additional sources
+  // Append any additional sources (URL fetch or pasted text)
   if (additionalSources?.length) {
     for (const src of additionalSources) {
-      if (src.text && src.text.trim().length > 50) {
-        const heading = src.label?.trim() ? `Additional source — ${src.label}` : 'Additional source'
+      const heading = src.label?.trim() ? `Additional source — ${src.label}` : 'Additional source'
+      // If a URL is provided and there's no pasted text, try fetching it
+      if (src.url?.trim() && (!src.text || src.text.trim().length < 50)) {
+        try {
+          const fetched = await fetchPageText(src.url.trim())
+          if (fetched.length >= 100) {
+            sections.push(`${heading} (${src.url}):\n---\n${fetched}\n---`)
+          }
+        } catch {
+          // URL fetch failed — skip this source
+        }
+      } else if (src.text && src.text.trim().length > 50) {
         sections.push(`${heading}:\n---\n${src.text.trim().slice(0, 8000)}\n---`)
       }
     }

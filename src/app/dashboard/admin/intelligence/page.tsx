@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Sparkles, ExternalLink, RefreshCw, CheckCircle, Clock, AlertTriangle, Zap, PlusCircle, X, BookOpen } from 'lucide-react'
+import { Sparkles, ExternalLink, RefreshCw, CheckCircle, Clock, AlertTriangle, Zap, PlusCircle, X, BookOpen, Link } from 'lucide-react'
 
 type GrantRow = {
   id: string
@@ -14,7 +14,7 @@ type GrantRow = {
 }
 
 type EnrichStatus = 'idle' | 'loading' | 'done' | 'error'
-type Source = { label: string; text: string }
+type Source = { label: string; url: string; text: string }
 
 export default function FunderIntelligencePage() {
   const [grants, setGrants] = useState<GrantRow[]>([])
@@ -44,7 +44,7 @@ export default function FunderIntelligencePage() {
   useEffect(() => { load() }, [load])
 
   const addSource = (grantId: string) => {
-    setSources(s => ({ ...s, [grantId]: [...(s[grantId] ?? []), { label: '', text: '' }] }))
+    setSources(s => ({ ...s, [grantId]: [...(s[grantId] ?? []), { label: '', url: '', text: '' }] }))
   }
 
   const updateSource = (grantId: string, idx: number, field: keyof Source, value: string) => {
@@ -73,7 +73,7 @@ export default function FunderIntelligencePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           grantId: grant.id,
-          additionalSources: grantSources.filter(s => s.text.trim().length > 50),
+          additionalSources: grantSources.filter(s => s.text.trim().length > 50 || s.url.trim().length > 5),
         }),
       })
       const json = await res.json()
@@ -199,7 +199,7 @@ export default function FunderIntelligencePage() {
             const isEnriched = !!existingBrief
             const grantSources = sources[grant.id] ?? []
             const isSourcesOpen = sourcesOpen[grant.id] ?? false
-            const hasFilledSources = grantSources.some(s => s.text.trim().length > 50)
+            const hasFilledSources = grantSources.some(s => s.text.trim().length > 50 || s.url.trim().length > 5)
 
             return (
               <div key={grant.id} className="bg-white border border-[#E8E8EC] overflow-hidden" style={{ borderRadius: 12 }}>
@@ -277,7 +277,7 @@ export default function FunderIntelligencePage() {
                       <div>
                         <p className="text-xs font-bold text-[#1C1C2E]">Additional sources</p>
                         <p className="text-[11px] text-[#6E6E80] mt-0.5">
-                          Paste text from other pages (How to apply, Guidelines, Criteria, etc.) to fill in any gaps. Claude combines all sources.
+                          Add extra pages to fill in any gaps. Provide a URL (fetched automatically) or paste the text directly. Claude combines all sources.
                         </p>
                       </div>
                       <button
@@ -291,12 +291,13 @@ export default function FunderIntelligencePage() {
 
                     {grantSources.length === 0 && (
                       <p className="text-xs text-[#9E9EA8] italic">
-                        No extra sources yet. Click "Add source" to paste content from another page.
+                        No extra sources yet. Click &quot;Add source&quot; to add a URL or paste content from another page.
                       </p>
                     )}
 
                     {grantSources.map((src, idx) => (
                       <div key={idx} className="bg-white border border-[#E8E8EC] p-3 space-y-2" style={{ borderRadius: 8 }}>
+                        {/* Label + remove */}
                         <div className="flex items-center gap-2">
                           <input
                             type="text"
@@ -312,9 +313,34 @@ export default function FunderIntelligencePage() {
                             <X className="w-3.5 h-3.5" />
                           </button>
                         </div>
+                        {/* URL input */}
+                        <div className="flex items-center gap-2">
+                          <Link className="w-3 h-3 flex-shrink-0 text-[#9E9EA8]" />
+                          <input
+                            type="url"
+                            placeholder="Page URL (optional) — fetched automatically during enrichment"
+                            value={src.url}
+                            onChange={e => updateSource(grant.id, idx, 'url', e.target.value)}
+                            className="flex-1 text-xs border border-[#E8E8EC] px-2.5 py-1.5 outline-none focus:border-[#008080]"
+                            style={{ borderRadius: 6, fontFamily: 'inherit' }}
+                          />
+                          {src.url.trim().length > 0 && (
+                            <a href={src.url} target="_blank" rel="noopener noreferrer"
+                              className="p-1 text-[#9E9EA8] hover:text-[#008080] transition-colors flex-shrink-0"
+                              title="Open URL">
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                          )}
+                        </div>
+                        {/* Divider with "or paste below" label */}
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 border-t border-[#E8E8EC]" />
+                          <span className="text-[10px] text-[#9E9EA8]">or paste text</span>
+                          <div className="flex-1 border-t border-[#E8E8EC]" />
+                        </div>
                         <textarea
-                          rows={5}
-                          placeholder="Go to the page, select all text (Cmd+A / Ctrl+A), copy and paste here…"
+                          rows={4}
+                          placeholder="Select all text on the page (Cmd+A / Ctrl+A), copy and paste here…"
                           value={src.text}
                           onChange={e => updateSource(grant.id, idx, 'text', e.target.value)}
                           className="w-full text-xs border border-[#E8E8EC] p-2.5 resize-y outline-none focus:border-[#008080]"
