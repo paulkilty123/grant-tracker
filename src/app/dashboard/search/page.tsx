@@ -728,7 +728,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                             </React.Fragment>
                           ))}
                           {(brief.priorities || brief.what_they_fund) && (
-                            <> {truncate(brief.priorities ?? brief.what_they_fund!)}</>
+                            <> {brief.priorities ?? brief.what_they_fund}</>
                           )}
                         </p>
                       </div>
