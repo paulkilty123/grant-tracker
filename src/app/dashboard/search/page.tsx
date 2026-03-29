@@ -712,21 +712,10 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                     )}
 
                     {/* Why this matches you */}
-                    {hasSearch && org && orgTerms.length > 0 && (
+                    {hasSearch && reason && (
                       <div className="px-4 py-3" style={{ backgroundColor: 'rgba(0,128,128,0.06)', borderLeft: '3px solid #008080', borderRadius: 8 }}>
                         <p className="text-xs font-bold uppercase tracking-widest mb-1.5" style={{ color: '#008080' }}>Why this matches you</p>
-                        <p className="text-sm leading-relaxed text-[#1C1C2E]">
-                          This funder&apos;s priorities align with your work in{' '}
-                          {orgTerms.map((t, i, arr) => (
-                            <React.Fragment key={t}>
-                              <span style={{ color: '#008080', textDecoration: 'underline', textDecorationStyle: 'dotted' }}>{t}</span>
-                              {i < arr.length - 2 ? ', ' : i < arr.length - 1 ? ' and ' : '.'}
-                            </React.Fragment>
-                          ))}
-                          {(brief.priorities || brief.what_they_fund) && (
-                            <> {brief.priorities ?? brief.what_they_fund}</>
-                          )}
-                        </p>
+                        <p className="text-sm leading-relaxed text-[#1C1C2E]">{reason}</p>
                       </div>
                     )}
 
