@@ -525,6 +525,14 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                 <p className="text-sm font-semibold text-charcoal">—</p>
               )}
             </div>
+            {(grant as EnrichedGrant).geoScope?.length ? (
+              <div>
+                <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">Location</p>
+                <p className="text-sm font-semibold text-charcoal">
+                  {(grant as EnrichedGrant).geoScope!.slice(0, 2).join(', ')}
+                </p>
+              </div>
+            ) : null}
           </div>
             )
           })()}
