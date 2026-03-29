@@ -1287,21 +1287,12 @@ export default function UrlAdminPage() {
             Add funder
           </button>
           <button
-            onClick={promoteAllSeeds}
-            disabled={promotingSeeds}
-            title="Copy all seed grants into the database so their URLs can be validated"
-            className="flex items-center gap-2 rounded-full border border-forest px-4 py-2.5 text-sm font-semibold text-forest hover:bg-forest/5 disabled:opacity-60 transition-colors whitespace-nowrap"
-          >
-            <Database className={`h-4 w-4 ${promotingSeeds ? 'animate-pulse' : ''}`} />
-            {promotingSeeds ? 'Promoting seeds…' : 'Promote all seeds'}
-          </button>
-          <button
             onClick={runValidation}
             disabled={running || auditing || classifying}
             className="flex items-center gap-2 rounded-full bg-forest px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60 hover:bg-forest/90 transition-colors whitespace-nowrap"
           >
             <RefreshCw className={`h-4 w-4 ${running ? 'animate-spin' : ''}`} />
-            {running ? 'Checking all URLs…' : 'Run validation now'}
+            {running ? 'Checking all URLs…' : 'Run validation'}
           </button>
           <button
             onClick={runAudit}
@@ -1310,14 +1301,6 @@ export default function UrlAdminPage() {
           >
             <Search className={`h-4 w-4 ${auditing ? 'animate-pulse' : ''}`} />
             {auditing ? 'Deep auditing…' : 'Run deep audit'}
-          </button>
-          <button
-            onClick={() => runClassify(false)}
-            disabled={running || auditing || classifying}
-            className="flex items-center gap-2 rounded-full border-2 border-charcoal bg-charcoal px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60 hover:bg-charcoal/90 transition-colors whitespace-nowrap"
-          >
-            <Tag className={`h-4 w-4 ${classifying ? 'animate-pulse' : ''}`} />
-            {classifying ? 'Classifying…' : 'Classify grants'}
           </button>
         </div>
       </div>
