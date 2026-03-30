@@ -62,24 +62,26 @@ function PartnerCard({
     }`}>
       <div className="p-5 flex flex-col gap-3">
 
-        {/* ── Header row: avatar / name / match insight box ── */}
+        {/* ── Header row: avatar / name + match insight ── */}
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0 w-10 h-10 bg-charcoal flex items-center justify-center text-white font-bold text-base select-none rounded-lg">
             {partner.company_name[0]?.toUpperCase() ?? '?'}
           </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-charcoal text-base leading-snug">{partner.company_name}</h3>
-            {partner.programme_name && (
-              <p className="text-xs text-mid leading-snug">{partner.programme_name}</p>
+          <div className="flex-1 min-w-0 flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <h3 className="font-semibold text-charcoal text-base leading-snug">{partner.company_name}</h3>
+              {partner.programme_name && (
+                <p className="text-xs text-mid leading-snug">{partner.programme_name}</p>
+              )}
+            </div>
+            {/* Match insight — sits in the natural white space to the right of the name */}
+            {showScore && score > 0 && (
+              <div className="flex-shrink-0 w-44 flex items-start gap-1.5 px-2.5 py-1.5 bg-forest/5 border border-forest/20 rounded-lg">
+                <Handshake className="h-3 w-3 text-forest flex-shrink-0 mt-0.5" />
+                <p className="text-[11px] text-forest/80 leading-snug line-clamp-3">{reason}</p>
+              </div>
             )}
           </div>
-          {/* Match insight — highlighted box in the white space to the right of the name */}
-          {showScore && score > 0 && (
-            <div className="flex-shrink-0 max-w-[200px] flex items-start gap-1.5 px-2.5 py-2 bg-forest/5 border border-forest/20 rounded-lg">
-              <Handshake className="h-3 w-3 text-forest flex-shrink-0 mt-0.5" />
-              <p className="text-[11px] text-forest/80 leading-relaxed">{reason}</p>
-            </div>
-          )}
         </div>
 
         {/* Description */}
