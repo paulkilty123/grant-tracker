@@ -1,7 +1,11 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { Search, Building2, ExternalLink, MapPin, Handshake, SlidersHorizontal, User, CheckCircle2 } from 'lucide-react'
+import {
+  Search, Building2, ExternalLink, MapPin, Handshake,
+  SlidersHorizontal, User, CheckCircle2, ChevronDown, ChevronUp,
+  Users, Globe, Phone, Calendar, Tag,
+} from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import {
@@ -16,9 +20,9 @@ import type { Organisation } from '@/types'
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function matchBand(score: number): { label: string; fg: string; bg: string; border: string } {
-  if (score >= 70) return { label: 'Strong match',   fg: '#1f5c52', bg: 'rgba(31,92,82,0.10)',   border: 'rgba(31,92,82,0.30)'   }
-  if (score >= 50) return { label: 'Good match',     fg: '#2d8a7a', bg: 'rgba(45,138,122,0.10)', border: 'rgba(45,138,122,0.30)' }
-  if (score >= 35) return { label: 'Possible match', fg: '#b07a10', bg: 'rgba(232,160,48,0.12)', border: 'rgba(232,160,48,0.35)' }
+  if (score >= 70) return { label: 'Strong match',   fg: '#1f5c52', bg: 'rgba(31,92,82,0.10)',    border: 'rgba(31,92,82,0.30)'    }
+  if (score >= 50) return { label: 'Good match',     fg: '#2d8a7a', bg: 'rgba(45,138,122,0.10)',  border: 'rgba(45,138,122,0.30)'  }
+  if (score >= 35) return { label: 'Possible match', fg: '#b07a10', bg: 'rgba(232,160,48,0.12)',  border: 'rgba(232,160,48,0.35)'  }
   return             { label: 'Broad match',         fg: '#6b7280', bg: 'rgba(107,114,128,0.08)', border: 'rgba(107,114,128,0.25)' }
 }
 
@@ -31,43 +35,60 @@ function formatAmount(min: number | null, max: number | null): string | null {
   return null
 }
 
+function formatBudget(n: number | null): string | null {
+  if (!n) return null
+  if (n >= 1_000_000) return `£${(n / 1_000_000).toFixed(1)}m / year`
+  return `£${(n / 1000).toFixed(0)}k / year`
+}
+
 // ── Partner card ──────────────────────────────────────────────────────────────
 
-function PartnerCard({ result, showScore }: { result: CorporateMatchResult; showScore: boolean }) {
+function PartnerCard({
+  result, showScore, expanded, onToggle,
+}: {
+  result: CorporateMatchResult
+  showScore: boolean
+  expanded: boolean
+  onToggle: () => void
+}) {
   const { partner, score, reason } = result
   const band = matchBand(score)
   const amountStr = formatAmount(partner.amount_min, partner.amount_max)
+  const budgetStr = formatBudget(partner.annual_investment_estimate)
 
   return (
-    <div className="bg-white border border-[#E8E8EC] hover:border-[#c8d5c2] hover:shadow-md transition-all flex flex-col rounded-xl overflow-hidden">
+    <div className={`bg-white border transition-all flex flex-col rounded-xl overflow-hidden ${
+      expanded ? 'border-forest/40 shadow-md' : 'border-[#E8E8EC] hover:border-[#c8d5c2] hover:shadow-sm'
+    }`}>
 
       {/* ── Card header ── */}
       <div className="p-5 pb-4 flex items-start gap-4 border-b border-[#F0EDE8]">
-        {/* Avatar */}
         <div className="flex-shrink-0 w-12 h-12 bg-charcoal flex items-center justify-center text-white font-bold text-lg select-none rounded-lg">
           {partner.company_name[0]?.toUpperCase() ?? '?'}
         </div>
 
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-charcoal text-lg leading-snug truncate">
+          <h3 className="font-semibold text-charcoal text-base leading-snug">
             {partner.company_name}
           </h3>
-          <p className="text-xs text-mid mt-0.5 truncate">
-            {partner.programme_name ?? partner.industry_sector ?? ''}
-          </p>
+          {partner.programme_name && (
+            <p className="text-xs text-mid mt-0.5 leading-snug">{partner.programme_name}</p>
+          )}
+          {partner.industry_sector && (
+            <p className="text-[10px] text-mid/70 mt-0.5">{partner.industry_sector}</p>
+          )}
         </div>
 
-        {/* Match score — only shown when profile is on */}
         {showScore && score > 0 && (
-          <div className="flex-shrink-0 flex flex-col items-end">
+          <div className="flex-shrink-0 flex flex-col items-end gap-1">
             <span
-              className="text-[9px] font-bold px-1.5 py-0.5 uppercase tracking-widest border mb-1 whitespace-nowrap rounded-md"
+              className="text-[9px] font-bold px-1.5 py-0.5 uppercase tracking-widest border whitespace-nowrap rounded-md"
               style={{ color: band.fg, backgroundColor: band.bg, borderColor: band.border }}
             >
               {band.label}
             </span>
-            <div>
-              <span className="text-2xl font-bold leading-none" style={{ color: band.fg }}>{score}</span>
+            <div className="leading-none">
+              <span className="text-2xl font-bold" style={{ color: band.fg }}>{score}</span>
               <span className="text-xs text-mid">/100</span>
             </div>
           </div>
@@ -88,81 +109,200 @@ function PartnerCard({ result, showScore }: { result: CorporateMatchResult; show
         {/* Description */}
         {partner.description && (
           <p className="text-sm text-mid leading-relaxed">
-            {partner.description.length > 160
-              ? `${partner.description.slice(0, 160).trimEnd()}…`
-              : partner.description}
+            {expanded
+              ? partner.description
+              : partner.description.length > 140
+                ? `${partner.description.slice(0, 140).trimEnd()}…`
+                : partner.description}
           </p>
         )}
 
-        {/* Stats grid */}
+        {/* Key stats row */}
         <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
           {amountStr && (
             <div>
-              <p className="text-[9px] font-bold uppercase tracking-widest text-mid mb-0.5">Max Funding</p>
+              <p className="text-[9px] font-bold uppercase tracking-widest text-mid mb-0.5">Grant size</p>
               <p className="text-sm font-bold text-charcoal">{amountStr}</p>
             </div>
           )}
           {partner.application_route && (
             <div>
-              <p className="text-[9px] font-bold uppercase tracking-widest text-mid mb-0.5">Status</p>
-              <p className="text-sm font-semibold text-charcoal">
+              <p className="text-[9px] font-bold uppercase tracking-widest text-mid mb-0.5">How to apply</p>
+              <p className="text-sm text-charcoal">
                 {APPLICATION_ROUTE_LABELS[partner.application_route] ?? partner.application_route}
               </p>
             </div>
           )}
           {partner.geographic_focus.length > 0 && (
             <div>
-              <p className="text-[9px] font-bold uppercase tracking-widest text-mid mb-0.5">Location</p>
+              <p className="text-[9px] font-bold uppercase tracking-widest text-mid mb-0.5">Geography</p>
               <p className="text-sm text-charcoal flex items-center gap-1">
                 <MapPin className="h-3 w-3 text-mid flex-shrink-0" />
                 {partner.geographic_focus.slice(0, 2).join(', ')}
                 {partner.geographic_focus.length > 2 && (
-                  <span className="text-mid">+{partner.geographic_focus.length - 2}</span>
+                  <span className="text-mid text-xs">+{partner.geographic_focus.length - 2}</span>
                 )}
               </p>
             </div>
           )}
-          {partner.annual_investment_estimate && (
+          {budgetStr && (
             <div>
-              <p className="text-[9px] font-bold uppercase tracking-widest text-mid mb-0.5">Annual Budget</p>
-              <p className="text-sm font-semibold text-charcoal">
-                £{(partner.annual_investment_estimate / 1000).toFixed(0)}k
-              </p>
+              <p className="text-[9px] font-bold uppercase tracking-widest text-mid mb-0.5">Annual budget</p>
+              <p className="text-sm text-charcoal">{budgetStr}</p>
             </div>
           )}
         </div>
+
+        {/* CSR themes */}
+        {partner.csr_themes.length > 0 && (
+          <div>
+            <p className="text-[9px] font-bold uppercase tracking-widest text-mid mb-1.5">CSR priorities</p>
+            <div className="flex flex-wrap gap-1.5">
+              {(expanded ? partner.csr_themes : partner.csr_themes.slice(0, 4)).map(t => (
+                <span key={t} className="text-[10px] px-2 py-0.5 bg-sage/10 text-forest border border-sage/25 rounded-md capitalize">
+                  {t}
+                </span>
+              ))}
+              {!expanded && partner.csr_themes.length > 4 && (
+                <span className="text-[10px] px-2 py-0.5 text-mid rounded-md">
+                  +{partner.csr_themes.length - 4} more
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── Expanded detail panel ── */}
+        {expanded && (
+          <div className="mt-1 pt-4 border-t border-[#F0EDE8] flex flex-col gap-4">
+
+            {/* Example recipients */}
+            {partner.example_recipients && partner.example_recipients.length > 0 && (
+              <div>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <Users className="h-3.5 w-3.5 text-mid" />
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-mid">Previous recipients</p>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {partner.example_recipients.map((r: string) => (
+                    <span key={r} className="text-[10px] px-2 py-0.5 bg-[#f5f2ed] text-charcoal border border-[#e4dfd8] rounded-md">
+                      {r}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* All impact sectors */}
+            {partner.impact_sectors && partner.impact_sectors.length > 0 && (
+              <div>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <Tag className="h-3.5 w-3.5 text-mid" />
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-mid">Focus areas</p>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {partner.impact_sectors.map((s: string) => (
+                    <span key={s} className="text-[10px] px-2 py-0.5 bg-[#f0ede8] text-charcoal border border-[#e4dfd8] rounded-md capitalize">
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* All geographies */}
+            {partner.geographic_focus.length > 2 && (
+              <div>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <Globe className="h-3.5 w-3.5 text-mid" />
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-mid">All locations</p>
+                </div>
+                <p className="text-sm text-charcoal">{partner.geographic_focus.join(', ')}</p>
+              </div>
+            )}
+
+            {/* Contact / approach */}
+            {(partner.contact_role || partner.contact_url || partner.website) && (
+              <div>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <Phone className="h-3.5 w-3.5 text-mid" />
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-mid">Contact</p>
+                </div>
+                <div className="flex flex-col gap-1">
+                  {partner.contact_role && (
+                    <p className="text-sm text-charcoal">{partner.contact_role}</p>
+                  )}
+                  {(partner.contact_url || partner.website) && (
+                    <a
+                      href={partner.contact_url ?? partner.website ?? '#'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-forest hover:text-sage flex items-center gap-1"
+                    >
+                      <ExternalLink className="h-3 w-3" />
+                      {partner.contact_url ? 'Contact page' : 'Website'}
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* How to approach tip */}
+            <div className="px-3 py-3 bg-gold/8 border border-gold/25 rounded-lg">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Calendar className="h-3.5 w-3.5 text-gold flex-shrink-0" />
+                <p className="text-[9px] font-bold uppercase tracking-widest text-mid">How to approach</p>
+              </div>
+              <p className="text-xs text-mid leading-relaxed">
+                {partner.application_route === 'open_application'
+                  ? 'Applications are open — apply directly via their website. Read their guidelines carefully and address their stated priorities explicitly in your application.'
+                  : partner.application_route === 'invitation_only'
+                    ? 'Invitation only. Build a relationship first — connect with their CSR or community team on LinkedIn before making any approach.'
+                    : partner.application_route === 'relationship_based'
+                      ? 'Relationship-based. Do your research on their CSR goals, find a warm introduction if possible, and lead with shared values rather than a funding ask.'
+                      : partner.application_route === 'community_fund'
+                        ? 'Community-voted fund. Check their website for when voting opens and mobilise your supporters to vote for your project.'
+                        : 'Contact their CSR or community team directly. Lead with how your mission aligns with their stated priorities.'}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── Footer ── */}
-      <div className="px-5 pb-5 flex items-center justify-between gap-3 mt-auto">
+      <div className="px-5 pb-4 flex items-center justify-between gap-3 mt-auto border-t border-[#F0EDE8] pt-3">
         {/* Support type tags */}
         <div className="flex flex-wrap gap-1.5 flex-1 min-w-0">
-          {partner.support_types.slice(0, 3).map(t => (
-            <span
-              key={t}
-              className="text-[9px] font-bold px-2 py-1 uppercase tracking-wider bg-[#f0ede8] text-charcoal border border-[#e4dfd8] rounded-md"
-            >
+          {partner.support_types.map(t => (
+            <span key={t} className="text-[9px] font-bold px-2 py-1 uppercase tracking-wider bg-[#f0ede8] text-charcoal border border-[#e4dfd8] rounded-md">
               {SUPPORT_TYPE_LABELS[t] ?? t}
             </span>
           ))}
-          {partner.support_types.length > 3 && (
-            <span className="text-[9px] font-bold px-2 py-1 uppercase tracking-wider text-mid rounded-md">
-              +{partner.support_types.length - 3}
-            </span>
-          )}
         </div>
 
-        {(partner.programme_url || partner.website || partner.contact_url) && (
-          <a
-            href={partner.programme_url ?? partner.contact_url ?? partner.website ?? '#'}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-shrink-0 inline-flex items-center gap-1 text-xs font-semibold text-coral hover:text-[#d45a30] transition-colors"
+        <div className="flex items-center gap-3 flex-shrink-0">
+          {(partner.programme_url || partner.website || partner.contact_url) && (
+            <a
+              href={partner.programme_url ?? partner.contact_url ?? partner.website ?? '#'}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-coral hover:text-[#d45a30] transition-colors"
+            >
+              Learn more
+              <ExternalLink className="h-3 w-3" />
+            </a>
+          )}
+          <button
+            onClick={onToggle}
+            className="inline-flex items-center gap-1 text-xs font-semibold text-mid hover:text-charcoal transition-colors"
           >
-            Learn more
-            <ExternalLink className="h-3 w-3" />
-          </a>
-        )}
+            {expanded ? (
+              <><ChevronUp className="h-3.5 w-3.5" /> Less</>
+            ) : (
+              <><ChevronDown className="h-3.5 w-3.5" /> More</>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -175,6 +315,7 @@ const SUPPORT_FILTER_OPTIONS = [
   { id: 'cash_grant',     label: 'Cash grant'     },
   { id: 'accelerator',    label: 'Accelerator'    },
   { id: 'in_kind',        label: 'In-kind'        },
+  { id: 'tech_product',   label: 'Free tech'      },
   { id: 'matched_giving', label: 'Matched giving' },
   { id: 'volunteering',   label: 'Volunteering'   },
   { id: 'pro_bono',       label: 'Pro bono'       },
@@ -186,6 +327,7 @@ export default function CorporatePartnersPage() {
   const [partners, setPartners]     = useState<CorporatePartner[]>([])
   const [allResults, setAllResults] = useState<CorporateMatchResult[]>([])
   const [loading, setLoading]       = useState(true)
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
 
   const [searchQuery, setSearchQuery]     = useState('')
   const [supportFilter, setSupportFilter] = useState('all')
@@ -264,9 +406,16 @@ export default function CorporatePartnersPage() {
     return SUPPORT_FILTER_OPTIONS.filter(o => o.id === 'all' || types.has(o.id))
   }, [partners])
 
+  function toggleExpanded(id: string) {
+    setExpandedIds(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
   return (
     <div>
-      {/* ── Page heading ── */}
       <div className="mb-2">
         <h2 className="font-serif text-5xl font-bold text-charcoal leading-tight">Corporate Partners</h2>
       </div>
@@ -274,7 +423,6 @@ export default function CorporatePartnersPage() {
       {/* ── Search + filter card ── */}
       <div className="bg-white border border-[#E8E8EC] shadow-warm mb-5 rounded-xl overflow-hidden">
         <div className="p-5">
-          {/* Search row */}
           <div className="flex gap-3 mb-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-mid pointer-events-none" />
@@ -332,7 +480,6 @@ export default function CorporatePartnersPage() {
             </div>
           </div>
 
-          {/* Guidance panel */}
           {filtersOpen && (
             <div className="mt-4 border-t border-[#F0EDE8] pt-4">
               <div className="flex items-start gap-3 px-4 py-3 bg-[#faf7f2] border border-[#e8ddd0] rounded-xl">
@@ -348,7 +495,7 @@ export default function CorporatePartnersPage() {
           )}
         </div>
 
-        {/* ── Support type filter tabs ── */}
+        {/* Support type filter tabs */}
         <div className="border-t border-[#E8E8EC]">
           <div className="flex overflow-x-auto px-5">
             {activeSupportTypes.map(opt => (
@@ -375,13 +522,21 @@ export default function CorporatePartnersPage() {
         </div>
       ) : (
         <>
-          <div className="mb-4">
+          <div className="mb-4 flex items-center justify-between">
             <p className="text-sm text-mid">
               <span className="font-serif text-3xl font-bold text-charcoal">{displayResults.length}</span>
               <span className="text-base ml-2">
                 {showScore ? 'partners ranked for your mission' : 'corporate partners'}
               </span>
             </p>
+            {expandedIds.size > 0 && (
+              <button
+                onClick={() => setExpandedIds(new Set())}
+                className="text-xs text-mid hover:text-charcoal font-semibold"
+              >
+                Collapse all
+              </button>
+            )}
           </div>
 
           {displayResults.length === 0 ? (
@@ -399,7 +554,13 @@ export default function CorporatePartnersPage() {
           ) : (
             <div className="grid gap-4 sm:grid-cols-2">
               {displayResults.map(r => (
-                <PartnerCard key={r.partner.id} result={r} showScore={showScore} />
+                <PartnerCard
+                  key={r.partner.id}
+                  result={r}
+                  showScore={showScore}
+                  expanded={expandedIds.has(r.partner.id)}
+                  onToggle={() => toggleExpanded(r.partner.id)}
+                />
               ))}
             </div>
           )}

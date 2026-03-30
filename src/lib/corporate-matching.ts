@@ -19,6 +19,7 @@ export interface CorporatePartner {
   annual_investment_estimate: number | null
   application_route: string | null
   description: string | null
+  example_recipients: string[]
   contact_role: string | null
   contact_url: string | null
   is_active: boolean
