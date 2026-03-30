@@ -17,6 +17,11 @@ When given a bug or UI issue, diagnose and fix it autonomously. Don't ask clarif
 ## Keep Changes Simple
 Make the smallest change that solves the problem. Don't refactor surrounding code unless asked.
 
+## Design System
+- **Use rounded corners on all design updates** — `rounded-xl` for cards/panels, `rounded-lg` for inputs/buttons, `rounded-md` for small pills/badges
+- CSS vars: forest #1f5c52, sage #2d8a7a, coral, gold #e8a030, warm #e8ddd0, cream #faf7f2
+- DM Serif Display (headings), DM Sans (body)
+
 ## Lessons Learned
 - Changes not appearing on live site → almost always means the edit was never committed/pushed to git
 - SVG z-index: give parent span `zIndex: 0` to create a stacking context, then `zIndex: -1` on the SVG child so it renders behind text without disappearing behind the page background

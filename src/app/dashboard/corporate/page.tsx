@@ -16,7 +16,7 @@ import type { Organisation } from '@/types'
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function matchBand(score: number): { label: string; fg: string; bg: string; border: string } {
-  if (score >= 70) return { label: 'Strong match',   fg: '#1f5c52', bg: 'rgba(31,92,82,0.10)',  border: 'rgba(31,92,82,0.30)' }
+  if (score >= 70) return { label: 'Strong match',   fg: '#1f5c52', bg: 'rgba(31,92,82,0.10)',   border: 'rgba(31,92,82,0.30)'   }
   if (score >= 50) return { label: 'Good match',     fg: '#2d8a7a', bg: 'rgba(45,138,122,0.10)', border: 'rgba(45,138,122,0.30)' }
   if (score >= 35) return { label: 'Possible match', fg: '#b07a10', bg: 'rgba(232,160,48,0.12)', border: 'rgba(232,160,48,0.35)' }
   return             { label: 'Broad match',         fg: '#6b7280', bg: 'rgba(107,114,128,0.08)', border: 'rgba(107,114,128,0.25)' }
@@ -39,12 +39,12 @@ function PartnerCard({ result, showScore }: { result: CorporateMatchResult; show
   const amountStr = formatAmount(partner.amount_min, partner.amount_max)
 
   return (
-    <div className="bg-white border border-[#E8E8EC] hover:border-[#c8d5c2] hover:shadow-md transition-all flex flex-col">
+    <div className="bg-white border border-[#E8E8EC] hover:border-[#c8d5c2] hover:shadow-md transition-all flex flex-col rounded-xl overflow-hidden">
 
       {/* ── Card header ── */}
       <div className="p-5 pb-4 flex items-start gap-4 border-b border-[#F0EDE8]">
         {/* Avatar */}
-        <div className="flex-shrink-0 w-12 h-12 bg-charcoal flex items-center justify-center text-white font-bold text-lg select-none">
+        <div className="flex-shrink-0 w-12 h-12 bg-charcoal flex items-center justify-center text-white font-bold text-lg select-none rounded-lg">
           {partner.company_name[0]?.toUpperCase() ?? '?'}
         </div>
 
@@ -61,7 +61,7 @@ function PartnerCard({ result, showScore }: { result: CorporateMatchResult; show
         {showScore && score > 0 && (
           <div className="flex-shrink-0 flex flex-col items-end">
             <span
-              className="text-[9px] font-bold px-1.5 py-0.5 uppercase tracking-widest border mb-1 whitespace-nowrap"
+              className="text-[9px] font-bold px-1.5 py-0.5 uppercase tracking-widest border mb-1 whitespace-nowrap rounded-md"
               style={{ color: band.fg, backgroundColor: band.bg, borderColor: band.border }}
             >
               {band.label}
@@ -79,7 +79,7 @@ function PartnerCard({ result, showScore }: { result: CorporateMatchResult; show
 
         {/* Match insight */}
         {showScore && score > 0 && (
-          <div className="flex items-start gap-2.5 px-3 py-2.5 bg-[#f5f9f7] border-l-2 border-forest">
+          <div className="flex items-start gap-2.5 px-3 py-2.5 bg-[#f5f9f7] border-l-2 border-forest rounded-lg">
             <Handshake className="h-3.5 w-3.5 text-forest flex-shrink-0 mt-0.5" />
             <p className="text-xs text-mid leading-relaxed">{reason}</p>
           </div>
@@ -116,7 +116,9 @@ function PartnerCard({ result, showScore }: { result: CorporateMatchResult; show
               <p className="text-sm text-charcoal flex items-center gap-1">
                 <MapPin className="h-3 w-3 text-mid flex-shrink-0" />
                 {partner.geographic_focus.slice(0, 2).join(', ')}
-                {partner.geographic_focus.length > 2 && <span className="text-mid">+{partner.geographic_focus.length - 2}</span>}
+                {partner.geographic_focus.length > 2 && (
+                  <span className="text-mid">+{partner.geographic_focus.length - 2}</span>
+                )}
               </p>
             </div>
           )}
@@ -138,13 +140,13 @@ function PartnerCard({ result, showScore }: { result: CorporateMatchResult; show
           {partner.support_types.slice(0, 3).map(t => (
             <span
               key={t}
-              className="text-[9px] font-bold px-2 py-1 uppercase tracking-wider bg-[#f0ede8] text-charcoal border border-[#e4dfd8]"
+              className="text-[9px] font-bold px-2 py-1 uppercase tracking-wider bg-[#f0ede8] text-charcoal border border-[#e4dfd8] rounded-md"
             >
               {SUPPORT_TYPE_LABELS[t] ?? t}
             </span>
           ))}
           {partner.support_types.length > 3 && (
-            <span className="text-[9px] font-bold px-2 py-1 uppercase tracking-wider text-mid">
+            <span className="text-[9px] font-bold px-2 py-1 uppercase tracking-wider text-mid rounded-md">
               +{partner.support_types.length - 3}
             </span>
           )}
@@ -169,14 +171,14 @@ function PartnerCard({ result, showScore }: { result: CorporateMatchResult; show
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 const SUPPORT_FILTER_OPTIONS = [
-  { id: 'all',              label: 'All types' },
-  { id: 'cash_grant',       label: 'Cash grant' },
-  { id: 'accelerator',      label: 'Accelerator' },
-  { id: 'in_kind',          label: 'In-kind' },
-  { id: 'matched_giving',   label: 'Matched giving' },
-  { id: 'volunteering',     label: 'Volunteering' },
-  { id: 'pro_bono',         label: 'Pro bono' },
-  { id: 'sponsorship',      label: 'Sponsorship' },
+  { id: 'all',            label: 'All types'      },
+  { id: 'cash_grant',     label: 'Cash grant'     },
+  { id: 'accelerator',    label: 'Accelerator'    },
+  { id: 'in_kind',        label: 'In-kind'        },
+  { id: 'matched_giving', label: 'Matched giving' },
+  { id: 'volunteering',   label: 'Volunteering'   },
+  { id: 'pro_bono',       label: 'Pro bono'       },
+  { id: 'sponsorship',    label: 'Sponsorship'    },
 ]
 
 export default function CorporatePartnersPage() {
@@ -185,11 +187,10 @@ export default function CorporatePartnersPage() {
   const [allResults, setAllResults] = useState<CorporateMatchResult[]>([])
   const [loading, setLoading]       = useState(true)
 
-  // Filters
-  const [searchQuery, setSearchQuery]       = useState('')
-  const [supportFilter, setSupportFilter]   = useState('all')
-  const [profileMode, setProfileMode]       = useState(true)
-  const [filtersOpen, setFiltersOpen]       = useState(false)
+  const [searchQuery, setSearchQuery]     = useState('')
+  const [supportFilter, setSupportFilter] = useState('all')
+  const [profileMode, setProfileMode]     = useState(true)
+  const [filtersOpen, setFiltersOpen]     = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -230,11 +231,9 @@ export default function CorporatePartnersPage() {
     load()
   }, [])
 
-  // Derived: filtered + sorted results
   const displayResults = useMemo(() => {
     let results = [...allResults]
 
-    // Text search
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase()
       results = results.filter(r =>
@@ -245,12 +244,10 @@ export default function CorporatePartnersPage() {
       )
     }
 
-    // Support type filter
     if (supportFilter !== 'all') {
       results = results.filter(r => r.partner.support_types.includes(supportFilter))
     }
 
-    // Sort: profile mode → by score desc; browse mode → alphabetical
     if (profileMode && org) {
       results.sort((a, b) => b.score - a.score)
     } else {
@@ -262,7 +259,6 @@ export default function CorporatePartnersPage() {
 
   const showScore = profileMode && !!org
 
-  // Only show filter pills that actually have results
   const activeSupportTypes = useMemo(() => {
     const types = new Set(partners.flatMap(p => p.support_types))
     return SUPPORT_FILTER_OPTIONS.filter(o => o.id === 'all' || types.has(o.id))
@@ -276,7 +272,7 @@ export default function CorporatePartnersPage() {
       </div>
 
       {/* ── Search + filter card ── */}
-      <div className="bg-white border border-[#E8E8EC] shadow-warm mb-5">
+      <div className="bg-white border border-[#E8E8EC] shadow-warm mb-5 rounded-xl overflow-hidden">
         <div className="p-5">
           {/* Search row */}
           <div className="flex gap-3 mb-4">
@@ -287,12 +283,16 @@ export default function CorporatePartnersPage() {
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Search companies, programmes, CSR themes…"
-                className="w-full pl-9 pr-4 py-2.5 text-sm border border-[#E8E8EC] focus:border-forest focus:outline-none bg-[#FAFAF9] text-charcoal placeholder:text-[#9ca3af]"
+                className="w-full pl-9 pr-4 py-2.5 text-sm border border-[#E8E8EC] focus:border-forest focus:outline-none bg-[#FAFAF9] text-charcoal placeholder:text-[#9ca3af] rounded-lg"
               />
             </div>
             <button
               onClick={() => setFiltersOpen(v => !v)}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border transition-colors ${filtersOpen ? 'bg-forest text-white border-forest' : 'bg-white text-mid border-[#E8E8EC] hover:border-forest hover:text-forest'}`}
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border transition-colors rounded-lg ${
+                filtersOpen
+                  ? 'bg-forest text-white border-forest'
+                  : 'bg-white text-mid border-[#E8E8EC] hover:border-forest hover:text-forest'
+              }`}
             >
               <SlidersHorizontal className="h-4 w-4" />
               Filters
@@ -300,40 +300,42 @@ export default function CorporatePartnersPage() {
           </div>
 
           {/* Profile toggle */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <button
-                role="switch"
-                aria-checked={profileMode}
-                onClick={() => setProfileMode(v => !v)}
-                className={`relative inline-flex h-5 w-9 flex-shrink-0 items-center transition-colors ${profileMode && org ? 'bg-forest' : 'bg-[#D1D5DB]'}`}
-                disabled={!org}
-              >
-                <span className={`inline-block h-3.5 w-3.5 bg-white shadow transform transition-transform ${profileMode && org ? 'translate-x-4' : 'translate-x-1'}`} />
-              </button>
-              <div className="flex items-center gap-1.5">
-                <User className="h-3.5 w-3.5 text-mid" />
-                <span className="text-xs font-semibold text-charcoal">Match to my profile</span>
-                {org ? (
-                  profileMode && (
-                    <span className="flex items-center gap-0.5 text-[10px] text-forest font-semibold">
-                      <CheckCircle2 className="h-3 w-3" />
-                      {org.name}
-                    </span>
-                  )
-                ) : (
-                  <a href="/dashboard/profile" className="text-[10px] text-coral font-semibold hover:underline">
-                    Complete your profile to enable
-                  </a>
-                )}
-              </div>
+          <div className="flex items-center gap-2.5">
+            <button
+              role="switch"
+              aria-checked={profileMode}
+              onClick={() => setProfileMode(v => !v)}
+              className={`relative inline-flex h-5 w-9 flex-shrink-0 items-center transition-colors rounded-full ${
+                profileMode && org ? 'bg-forest' : 'bg-[#D1D5DB]'
+              }`}
+              disabled={!org}
+            >
+              <span className={`inline-block h-3.5 w-3.5 bg-white shadow transform transition-transform rounded-full ${
+                profileMode && org ? 'translate-x-4' : 'translate-x-1'
+              }`} />
+            </button>
+            <div className="flex items-center gap-1.5">
+              <User className="h-3.5 w-3.5 text-mid" />
+              <span className="text-xs font-semibold text-charcoal">Match to my profile</span>
+              {org ? (
+                profileMode && (
+                  <span className="flex items-center gap-0.5 text-[10px] text-forest font-semibold">
+                    <CheckCircle2 className="h-3 w-3" />
+                    {org.name}
+                  </span>
+                )
+              ) : (
+                <a href="/dashboard/profile" className="text-[10px] text-coral font-semibold hover:underline">
+                  Complete your profile to enable
+                </a>
+              )}
             </div>
           </div>
 
-          {/* Guidance banner — collapsed until filters open */}
+          {/* Guidance panel */}
           {filtersOpen && (
             <div className="mt-4 border-t border-[#F0EDE8] pt-4">
-              <div className="flex items-start gap-3 px-4 py-3 bg-[#faf7f2] border border-[#e8ddd0]">
+              <div className="flex items-start gap-3 px-4 py-3 bg-[#faf7f2] border border-[#e8ddd0] rounded-xl">
                 <Building2 className="h-4 w-4 text-gold flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="text-xs font-semibold text-charcoal">How to approach corporate partnerships</p>
@@ -347,7 +349,7 @@ export default function CorporatePartnersPage() {
         </div>
 
         {/* ── Support type filter tabs ── */}
-        <div className="-mx-0 border-t border-[#E8E8EC]">
+        <div className="border-t border-[#E8E8EC]">
           <div className="flex overflow-x-auto px-5">
             {activeSupportTypes.map(opt => (
               <button
@@ -369,12 +371,11 @@ export default function CorporatePartnersPage() {
       {/* ── Results ── */}
       {loading ? (
         <div className="flex items-center justify-center py-24">
-          <div className="h-8 w-8 animate-spin border-2 border-forest border-t-transparent" />
+          <div className="h-8 w-8 animate-spin border-2 border-forest border-t-transparent rounded-full" />
         </div>
       ) : (
         <>
-          {/* Results header */}
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-4">
             <p className="text-sm text-mid">
               <span className="font-serif text-3xl font-bold text-charcoal">{displayResults.length}</span>
               <span className="text-base ml-2">
@@ -384,7 +385,7 @@ export default function CorporatePartnersPage() {
           </div>
 
           {displayResults.length === 0 ? (
-            <div className="text-center py-20 text-mid bg-white border border-[#E8E8EC]">
+            <div className="text-center py-20 text-mid bg-white border border-[#E8E8EC] rounded-xl">
               <Building2 className="h-10 w-10 mx-auto mb-3 opacity-20" />
               <p className="text-sm font-semibold text-charcoal mb-1">No partners found</p>
               <p className="text-xs text-mid">Try adjusting your search or filters.</p>
