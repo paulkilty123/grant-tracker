@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { Search, ArrowRight, Bell, Lock } from 'lucide-react'
+import Logo from '@/components/Logo'
 
 export default function SignupPage() {
   const router                  = useRouter()
@@ -115,7 +116,7 @@ export default function SignupPage() {
             <div>
               {/* Logo */}
               <a href="/" className="no-underline mb-2">
-                <span className="font-serif italic text-[22px] text-white">GrantTracker</span>
+                <Logo variant="light" size="md" />
               </a>
               <p className="text-white/50 text-sm mb-10">Find grants, accelerators, investment and support programmes — matched to you, managed in one place.</p>
 
@@ -150,7 +151,7 @@ export default function SignupPage() {
             {/* Mobile logo */}
             <div className="mb-8 lg:hidden flex justify-center">
               <a href="/" className="no-underline">
-                <span className="font-serif italic text-[22px] text-charcoal">GrantTracker</span>
+                <Logo variant="dark" size="md" />
               </a>
             </div>
 

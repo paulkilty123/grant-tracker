@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import type { Organisation } from '@/types'
 import { cn } from '@/lib/utils'
 import RadioWaveIcon from '@/components/icons/RadioWaveIcon'
+import Logo from '@/components/Logo'
 import {
   LayoutDashboard,
   Search,
@@ -131,7 +132,7 @@ export default function Sidebar({ org, userEmail }: Props) {
       {/* Logo */}
       <div className="px-6 py-6 flex items-center justify-between border-b border-white/10">
         <Link href="/dashboard" className="no-underline">
-          <span className="font-serif italic text-[22px] text-white">GrantTracker</span>
+          <Logo variant="light" size="md" />
         </Link>
         <button
           className="md:hidden text-white/50 hover:text-white"

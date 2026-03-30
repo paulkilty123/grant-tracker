@@ -6,6 +6,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Menu, X, Check, Search, Calendar, TrendingUp, Activity, Clock, Mail, MessageSquare, Bell, LayoutGrid, ArrowRight, Award } from 'lucide-react'
 import ContactForm from '@/components/ContactForm'
+import Logo from '@/components/Logo'
 
 
 /* ─── helpers ─── */
@@ -302,7 +303,7 @@ export default function LandingPage() {
       >
         <div className="flex w-full items-center justify-between px-5 md:px-8 py-4 md:py-5">
           <a href="/" className="no-underline">
-            <span className="font-serif italic text-[24px] text-charcoal">GrantTracker</span>
+            <Logo variant="dark" size="md" />
           </a>
           {/* Desktop nav links */}
           <div className="hidden md:flex items-center gap-6 lg:gap-10">
@@ -865,7 +866,7 @@ export default function LandingPage() {
       <footer className="border-t border-warm py-12">
         <div className="mx-auto flex max-w-5xl flex-col items-center gap-8 px-6 md:flex-row md:justify-between">
           <a href="/" className="no-underline">
-            <span className="font-serif italic text-[20px] text-charcoal">GrantTracker</span>
+            <Logo variant="dark" size="sm" />
           </a>
           <div className="flex gap-8 text-sm text-mid">
             <a href="#how" className="hover:text-charcoal transition-colors">How it works</a>

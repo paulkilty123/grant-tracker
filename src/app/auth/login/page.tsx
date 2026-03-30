@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Search, ArrowRight, Bell, Lock } from 'lucide-react'
+import Logo from '@/components/Logo'
 
 const ERROR_MESSAGES: Record<string, string> = {
   'Invalid login credentials': 'Incorrect email or password — please try again.',
@@ -69,7 +70,7 @@ function LoginForm() {
             <div>
               {/* Logo */}
               <a href="/" className="no-underline mb-2">
-                <span className="font-serif italic text-[22px] text-white">GrantTracker</span>
+                <Logo variant="light" size="md" />
               </a>
               <p className="text-white/50 text-sm mb-10">Find grants, accelerators, investment and support programmes — matched to you, managed in one place.</p>
 
@@ -104,7 +105,7 @@ function LoginForm() {
             {/* Mobile logo */}
             <div className="mb-8 lg:hidden flex justify-center">
               <a href="/" className="no-underline">
-                <span className="font-serif italic text-[22px] text-charcoal">GrantTracker</span>
+                <Logo variant="dark" size="md" />
               </a>
             </div>
 
