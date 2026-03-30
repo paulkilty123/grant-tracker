@@ -33,6 +33,83 @@ const INCOME_BAND_ORDER = [
 ] as const
 
 /**
+ * Inverse-document-frequency weights per impact sector, derived from the live
+ * grant catalogue (~300 grants).  Sectors that appear in fewer grants carry
+ * more discriminative power — a match on "heritage" is far more meaningful
+ * than a match on "community".
+ *
+ * Formula: normalised log(N / df) scaled to [0.2, 2.5].
+ * Update these weights periodically as the catalogue grows.
+ */
+const SECTOR_IDF: Record<string, number> = {
+  community:    0.2,   // 193 grants — nearly ubiquitous
+  young_people: 0.5,   // 117 grants
+  creative:     0.9,   //  64 grants
+  health:       0.9,   //  62 grants
+  education:    0.9,   //  61 grants
+  employment:   1.0,   //  53 grants
+  environment:  1.1,   //  43 grants
+  tech:         1.1,   //  40 grants
+  justice:      1.3,   //  28 grants
+  mental_health: 1.4,  //  27 grants
+  financial:    1.4,   //  26 grants
+  disability:   1.5,   //  22 grants
+  older_people: 1.6,   //  19 grants
+  housing:      1.7,   //  16 grants
+  sport:        1.8,   //  14 grants
+  heritage:     2.0,   //   9 grants
+  international: 2.2,  //   7 grants
+  food:         2.3,   //   6 grants
+  women:        2.5,   //   4 grants
+}
+
+/** IDF weight for a sector — falls back to 1.0 for unknown tags */
+function idfWeight(sector: string): number {
+  return SECTOR_IDF[sector] ?? 1.0
+}
+
+/**
+ * Title-level domain keyword map.  Grant titles are very high-confidence
+ * signals — "FA Foundation Grassroots Football Grants" is obviously sport
+ * regardless of how its impact_sectors are tagged.  Used to fire
+ * primaryDomainMismatch on the free-text path (where impact_sectors may
+ * be absent) or as a cross-check on the structured path.
+ */
+const TITLE_DOMAIN_KEYWORDS: Array<{
+  words: string[]
+  sector: string
+  orgTerms: string[]
+}> = [
+  {
+    words: ['football', 'cricket', 'tennis', 'rugby', 'athletics', 'swimming',
+            'cycling', 'basketball', 'netball', 'grassroots sport', 'physical activity'],
+    sector: 'sport',
+    orgTerms: ['sport'],
+  },
+  {
+    words: ['environmental', 'conservation', 'climate', 'wildlife', 'biodiversity',
+            'ecological', 'green spaces', 'rewilding', 'nature'],
+    sector: 'environment',
+    orgTerms: ['environment', 'environmental', 'conservation'],
+  },
+  {
+    words: ['heritage', 'historic', 'archaeological', 'listed building'],
+    sector: 'heritage',
+    orgTerms: ['heritage', 'historic', 'museum'],
+  },
+  {
+    words: ['overseas', 'international development', 'global south', 'developing world'],
+    sector: 'international',
+    orgTerms: ['international', 'overseas', 'global'],
+  },
+  {
+    words: ['food bank', 'food poverty', 'food growing', 'agriculture', 'horticulture'],
+    sector: 'food',
+    orgTerms: ['food', 'agriculture', 'farming'],
+  },
+]
+
+/**
  * London borough names used for borough-level geographic restriction detection.
  * When a grant text or eligibility criteria mentions one of these and it does NOT
  * match the org's city, the grant is likely restricted to that specific borough.
@@ -274,25 +351,31 @@ export function computeMatchScore(
   const grantImpactSectors = grant.impactSectors ?? []
 
   if (orgImpactSectors.length > 0 && grantImpactSectors.length > 0) {
-    // ── Structured path: intersection of 12-sector taxonomy ──────────────
+    // ── Structured path: IDF-weighted bidirectional coverage ──────────────
     const intersection = grantImpactSectors.filter(s => orgImpactSectors.includes(s))
     const hits = intersection.length
 
-    // Score curve: each matching sector adds significant weight
-    //   0 hits → 3  (genuine mismatch, not 0 — avoids filtering out borderline)
-    //   1 hit  → 15
-    //   2 hits → 21
-    //   3+     → 25
-    themesScore = hits === 0 ? 3 : hits === 1 ? 15 : hits === 2 ? 21 : 25
+    // IDF-weighted sums — rarer sectors count for more than ubiquitous ones
+    const weightedIntersection = intersection.reduce((s, sec) => s + idfWeight(sec), 0)
+    const weightedGrantTotal   = grantImpactSectors.reduce((s, sec) => s + idfWeight(sec), 0)
+    const weightedOrgTotal     = orgImpactSectors.reduce((s, sec) => s + idfWeight(sec), 0)
+
+    // Bidirectional coverage:
+    //   grantCoverage — what fraction of the grant's weighted focus the org covers (primary signal)
+    //   orgCoverage   — what fraction of the org's weighted work the grant covers (secondary signal)
+    // Combining both rewards mutual specificity: a focused arts org matching an arts
+    // grant scores higher than a broad org matching on generic sectors only.
+    const grantCoverage = weightedGrantTotal > 0 ? weightedIntersection / weightedGrantTotal : 0
+    const orgCoverage   = weightedOrgTotal   > 0 ? weightedIntersection / weightedOrgTotal   : 0
+    const coverage      = 0.7 * grantCoverage + 0.3 * orgCoverage
+
+    themesScore = hits > 0 ? Math.max(3, Math.round(coverage * 25)) : 3
 
     // ── Primary domain mismatch check ─────────────────────────────────────
-    // These sectors are "specialist" — their presence in a grant strongly
-    // characterises what the grant is fundamentally about.  If a grant
-    // includes any of these but the org does NOT, the match is misleading
-    // even when generic cross-cutting sectors (community, health,
-    // young_people) happen to overlap.  We flag a mismatch and cap the
-    // themes score so that incidental overlap doesn't surface irrelevant
-    // results — e.g. football grants appearing for a theatre.
+    // These sectors strongly characterise what a grant is fundamentally about.
+    // If a grant includes any of these but the org does NOT, the match is
+    // misleading even when generic cross-cutting sectors (community, health,
+    // young_people) produce high coverage — e.g. football grants for a theatre.
     const PRIMARY_DOMAINS = [
       'sport', 'environment', 'heritage', 'international',
       'food', 'animal_welfare', 'faith',
@@ -302,8 +385,6 @@ export function computeMatchScore(
       const orgCoversDomain = grantPrimaryDomains.some(s => orgImpactSectors.includes(s))
       if (!orgCoversDomain) {
         primaryDomainMismatch = true
-        // Clamp to just above zero — the grant may still be technically
-        // eligible so we keep it visible, but ranked well below relevant grants.
         themesScore = Math.min(themesScore, 5)
       }
     }
@@ -333,7 +414,11 @@ export function computeMatchScore(
     const allOrgTerms = [...orgTerms, ...missionTerms, ...outcomeTerms]
 
     if (allOrgTerms.length === 0) {
-      themesScore = 12 // neutral when profile is incomplete
+      // Profile is effectively blank — we can't score relevance.
+      // Use a below-neutral score (8) so well-matched grants for orgs
+      // with complete profiles naturally rank higher, and to encourage
+      // profile completion.
+      themesScore = 8
     } else {
       let weightedHits = 0
       let totalWeight  = 0
@@ -363,6 +448,30 @@ export function computeMatchScore(
       orgThemesFlat.some(t => s.includes(t.split(' ')[0]) || t.includes(s.split(' ')[0]))
     ).length
     themesScore = Math.min(25, themesScore + sectorHits * 4)
+  }
+
+  // ── Title keyword veto ────────────────────────────────────────────────
+  // Grant titles are very high-confidence domain signals — catches mismatches
+  // even when impact_sectors is absent or sparsely tagged.  Only fires when
+  // the org has some sector/theme data (can't veto a completely blank profile).
+  // Supplements the structured primaryDomainMismatch check above.
+  const orgHasProfile = orgImpactSectors.length > 0 || (org.themes ?? []).length > 0
+  if (orgHasProfile && !primaryDomainMismatch) {
+    const orgAllTerms = new Set([
+      ...orgImpactSectors,
+      ...(org.themes ?? []).map(t => t.toLowerCase()),
+    ])
+    const titleLower = grant.title.toLowerCase()
+    for (const { words, orgTerms } of TITLE_DOMAIN_KEYWORDS) {
+      if (words.some(w => titleLower.includes(w))) {
+        const orgCovers = orgTerms.some(t => orgAllTerms.has(t))
+        if (!orgCovers) {
+          primaryDomainMismatch = true
+          themesScore = Math.min(themesScore, 5)
+        }
+        break
+      }
+    }
   }
 
   // ── Feedback signal boost on themes ───────────────────────────────────
