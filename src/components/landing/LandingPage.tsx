@@ -782,7 +782,7 @@ export default function LandingPage() {
                 </ul>
                 <Link
                   href="/auth/signup"
-                  className={`mt-8 block text-center py-3 text-sm font-semibold transition-colors ${plan.popular ? 'bg-coral text-white hover:bg-coral-light' : 'bg-[#1C1C2E] text-white hover:bg-[#1C1C2E]/90'}`}
+                  className={`mt-8 block rounded-lg text-center py-3 text-sm font-semibold transition-colors ${plan.popular ? 'bg-coral text-white hover:bg-coral-light' : 'bg-[#1C1C2E] text-white hover:bg-[#1C1C2E]/90'}`}
                 >
                   {plan.cta}
                 </Link>
