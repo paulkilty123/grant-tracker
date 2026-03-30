@@ -268,6 +268,7 @@ export function computeMatchScore(
 
   // ── 2. Themes / sectors (max 25) ──────────────────────────────────────
   let themesScore = 0
+  let primaryDomainMismatch = false
 
   const orgImpactSectors  = org.impact_sectors  ?? []
   const grantImpactSectors = grant.impactSectors ?? []
@@ -284,7 +285,30 @@ export function computeMatchScore(
     //   3+     → 25
     themesScore = hits === 0 ? 3 : hits === 1 ? 15 : hits === 2 ? 21 : 25
 
-    if (intersection.length > 0) {
+    // ── Primary domain mismatch check ─────────────────────────────────────
+    // These sectors are "specialist" — their presence in a grant strongly
+    // characterises what the grant is fundamentally about.  If a grant
+    // includes any of these but the org does NOT, the match is misleading
+    // even when generic cross-cutting sectors (community, health,
+    // young_people) happen to overlap.  We flag a mismatch and cap the
+    // themes score so that incidental overlap doesn't surface irrelevant
+    // results — e.g. football grants appearing for a theatre.
+    const PRIMARY_DOMAINS = [
+      'sport', 'environment', 'heritage', 'international',
+      'food', 'animal_welfare', 'faith',
+    ]
+    const grantPrimaryDomains = grantImpactSectors.filter(s => PRIMARY_DOMAINS.includes(s))
+    if (grantPrimaryDomains.length > 0) {
+      const orgCoversDomain = grantPrimaryDomains.some(s => orgImpactSectors.includes(s))
+      if (!orgCoversDomain) {
+        primaryDomainMismatch = true
+        // Clamp to just above zero — the grant may still be technically
+        // eligible so we keep it visible, but ranked well below relevant grants.
+        themesScore = Math.min(themesScore, 5)
+      }
+    }
+
+    if (intersection.length > 0 && !primaryDomainMismatch) {
       reasons.push(`Sector match: ${intersection.join(', ')}`)
     }
 
@@ -613,6 +637,14 @@ export function computeMatchScore(
   // Cap total score for local grants outside the org's area — a strong sector
   // match shouldn't make a Somerset grant look relevant to a London org.
   if (locationMismatch) {
+    score = Math.min(score, 44)
+  }
+
+  // Cap total score when the grant is in a specialist domain the org doesn't
+  // cover.  Generic sector overlaps (community, health, young_people) must not
+  // elevate an irrelevant grant — e.g. a football grant should never rank
+  // highly for a theatre, even if both work with young people.
+  if (primaryDomainMismatch) {
     score = Math.min(score, 44)
   }
 
