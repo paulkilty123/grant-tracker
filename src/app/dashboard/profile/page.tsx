@@ -442,10 +442,10 @@ export default function ProfilePage() {
       <div className="max-w-xl mx-auto py-8">
         {/* Welcome header */}
         <div className="text-center mb-8">
-          <div className="w-14 h-14 bg-coral/10 flex items-center justify-center mx-auto mb-5">
+          <div className="w-14 h-14 bg-coral/10 rounded-2xl flex items-center justify-center mx-auto mb-5">
             <Zap className="h-7 w-7 text-coral" />
           </div>
-          <h2 className="font-display text-2xl font-bold text-charcoal mb-2">
+          <h2 className="font-serif text-3xl font-bold text-charcoal mb-2">
             Let&apos;s set up your profile
           </h2>
           <p className="text-mid text-sm leading-relaxed max-w-md mx-auto">
@@ -460,7 +460,7 @@ export default function ProfilePage() {
               <Sparkles className="h-4 w-4 text-gold" />
             </div>
             <div>
-              <h3 className="font-display text-base font-bold text-charcoal">
+              <h3 className="font-serif text-base font-bold text-charcoal">
                 Fastest way: paste your website URL
               </h3>
               <p className="text-xs text-mid mt-0.5">
@@ -480,7 +480,7 @@ export default function ProfilePage() {
             <button
               onClick={handleAutoFill}
               disabled={autoFilling || !websiteUrl.trim()}
-              className="px-5 py-2.5 bg-coral text-white text-sm font-semibold flex items-center gap-2 hover:opacity-90 transition-colors disabled:opacity-50 whitespace-nowrap"
+              className="px-5 py-2.5 bg-forest text-white text-sm font-semibold rounded-lg flex items-center gap-2 hover:opacity-90 transition-colors disabled:opacity-50 whitespace-nowrap"
             >
               <Sparkles className="h-3.5 w-3.5" />
               {autoFilling ? 'Reading…' : 'Auto-fill'}
@@ -513,7 +513,7 @@ export default function ProfilePage() {
             <ArrowRight className="h-4 w-4 text-forest" />
           </div>
           <div className="flex-1">
-            <h3 className="font-display text-base font-bold text-charcoal group-hover:text-coral transition-colors">
+            <h3 className="font-serif text-base font-bold text-charcoal group-hover:text-coral transition-colors">
               Fill it in step by step
             </h3>
             <p className="text-xs text-mid mt-0.5">
@@ -556,10 +556,10 @@ export default function ProfilePage() {
       <div className="max-w-2xl mx-auto py-8">
         {/* Success header */}
         <div className="text-center mb-6">
-          <div className="w-14 h-14 bg-forest/10 flex items-center justify-center mx-auto mb-4">
+          <div className="w-14 h-14 bg-forest/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <CheckCircle2 className="h-7 w-7 text-forest" />
           </div>
-          <h2 className="font-display text-2xl font-bold text-charcoal mb-2">
+          <h2 className="font-serif text-3xl font-bold text-charcoal mb-2">
             Profile populated from your website
           </h2>
           <p className="text-mid text-sm">
@@ -570,11 +570,11 @@ export default function ProfilePage() {
         {/* Completeness nudge */}
         <div className="card mb-6">
           <div className="flex items-center justify-between mb-2">
-            <span className="font-display text-sm font-bold text-charcoal">{scoreLabel} — {score}% complete</span>
-            <span className={`text-xs font-semibold px-2.5 py-1 text-white ${scoreColor}`}>{score}%</span>
+            <span className="font-serif text-sm font-bold text-charcoal">{scoreLabel} — {score}% complete</span>
+            <span className={`text-xs font-semibold px-2.5 py-1 rounded-full text-white ${scoreColor}`}>{score}%</span>
           </div>
-          <div className="w-full bg-warm h-2 mb-2">
-            <div className={`h-2 transition-all duration-500 ${scoreColor}`} style={{ width: `${score}%` }} />
+          <div className="w-full bg-warm rounded-full h-2 mb-2">
+            <div className={`h-2 rounded-full transition-all duration-500 ${scoreColor}`} style={{ width: `${score}%` }} />
           </div>
           {missing.length > 0 && (
             <p className="text-xs text-mid">
@@ -639,7 +639,7 @@ export default function ProfilePage() {
             {ONBOARDING_STEPS.map((s) => (
               <div
                 key={s.id}
-                className={`h-1.5 flex-1 transition-colors ${
+                className={`h-1.5 flex-1 rounded-full transition-colors ${
                   s.id < currentStep ? 'bg-forest' : s.id === currentStep ? 'bg-coral' : 'bg-warm'
                 }`}
               />
@@ -648,7 +648,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Step title */}
-        <h2 className="font-display text-xl font-bold text-charcoal mb-1">{stepInfo.title}</h2>
+        <h2 className="font-serif text-2xl font-bold text-charcoal mb-1">{stepInfo.title}</h2>
         <p className="text-xs text-mid mb-5">
           {currentStep === 1 && 'The basics about your organisation — name, legal structure, and stage.'}
           {currentStep === 2 && 'Select 1 to 5 impact sectors that describe your work. This drives which funding pools you match against.'}
@@ -708,19 +708,19 @@ export default function ProfilePage() {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
         <div>
-          <h2 className="font-display text-2xl font-bold text-charcoal">Your Profile</h2>
-          <p className="text-mid text-sm mt-1">A complete profile means better grant matches and more relevant alerts</p>
+          <h2 className="font-serif text-4xl font-bold text-charcoal leading-tight">Your Profile</h2>
+          <p className="text-mid text-sm mt-1.5">A complete profile means better grant matches and more relevant alerts</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-shrink-0">
           {saveStatus === 'error' && (
             <p className="text-xs text-red-500">Save failed — please try again</p>
           )}
           <button
             onClick={handleSave}
             disabled={saving || !form.name.trim()}
-            className="px-5 py-2.5 bg-coral text-white text-sm font-semibold hover:opacity-90 transition-colors disabled:opacity-50"
+            className="px-5 py-2.5 bg-forest text-white text-sm font-semibold rounded-lg hover:opacity-90 transition-colors disabled:opacity-50"
           >
             {saving ? 'Saving…' : saveStatus === 'saved' ? '✓ Saved!' : 'Save Profile'}
           </button>
@@ -731,16 +731,16 @@ export default function ProfilePage() {
       <div className="card mb-6">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <span className="font-display text-base font-bold text-charcoal">{scoreLabel}</span>
+            <span className="font-serif text-base font-bold text-charcoal">{scoreLabel}</span>
             <span className="text-xs text-mid">— {score}% complete</span>
           </div>
-          <span className={`text-xs font-semibold px-2.5 py-1 rounded text-white ${scoreColor}`}>
+          <span className={`text-xs font-semibold px-2.5 py-1 rounded-full text-white ${scoreColor}`}>
             {score}%
           </span>
         </div>
-        <div className="w-full bg-warm rounded h-2 mb-3">
+        <div className="w-full bg-warm rounded-full h-2 mb-3">
           <div
-            className={`h-2 rounded transition-all duration-500 ${scoreColor}`}
+            className={`h-2 rounded-full transition-all duration-500 ${scoreColor}`}
             style={{ width: `${score}%` }}
           />
         </div>
@@ -762,7 +762,7 @@ export default function ProfilePage() {
             <Sparkles className="h-4 w-4 text-gold" />
           </div>
           <div>
-            <h3 className="font-display text-base font-bold text-charcoal">Auto-fill from your website</h3>
+            <h3 className="font-serif text-base font-bold text-charcoal">Auto-fill from your website</h3>
             <p className="text-xs text-mid mt-0.5">
               Enter your website and Grant Tracker will read it and fill in your profile automatically.
             </p>
@@ -780,7 +780,7 @@ export default function ProfilePage() {
           <button
             onClick={handleAutoFill}
             disabled={autoFilling || !websiteUrl.trim()}
-            className="px-4 py-2 bg-coral text-white text-sm font-medium flex items-center gap-2 hover:opacity-90 transition-colors disabled:opacity-50 whitespace-nowrap"
+            className="px-4 py-2 bg-forest text-white text-sm font-medium rounded-lg flex items-center gap-2 hover:opacity-90 transition-colors disabled:opacity-50 whitespace-nowrap"
           >
             <Sparkles className="h-3.5 w-3.5" />
             {autoFilling ? 'Reading…' : 'Auto-fill'}
@@ -799,8 +799,8 @@ export default function ProfilePage() {
       {/* Sticky save footer */}
       <div className="sticky bottom-0 mt-6 -mx-6 px-6 py-4 bg-cream/95 backdrop-blur border-t border-warm flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-24 bg-warm rounded h-1.5">
-            <div className={`h-1.5 rounded ${scoreColor}`} style={{ width: `${score}%` }} />
+          <div className="w-24 bg-warm rounded-full h-1.5">
+            <div className={`h-1.5 rounded-full ${scoreColor}`} style={{ width: `${score}%` }} />
           </div>
           <span className="text-xs text-mid">{score}% complete</span>
         </div>
@@ -864,7 +864,7 @@ export default function ProfilePage() {
 
         {/* Social mission flags */}
         {form.legalStructure && SOFT_MATCH_STRUCTURES.includes(form.legalStructure as LegalStructure) && (
-          <div className="md:col-span-2 border border-gold/30 bg-gold/5 p-4 space-y-3">
+          <div className="md:col-span-2 border border-gold/30 bg-gold/5 p-4 space-y-3 rounded-xl">
             <p className="text-xs font-semibold text-charcoal">
               Social mission flags — help us soft-match you to funders who accept &ldquo;social enterprises&rdquo;
             </p>
@@ -918,7 +918,7 @@ export default function ProfilePage() {
 
         {/* Individual practitioner toggle */}
         <div className="md:col-span-2">
-          <div className="flex items-center justify-between p-3 bg-warm border border-warm">
+          <div className="flex items-center justify-between p-3 bg-warm border border-warm rounded-xl">
             <div>
               <p className="text-sm text-charcoal font-medium">I am also an individual practitioner (e.g. artist, filmmaker, musician)</p>
               <p className="text-xs text-mid mt-0.5">Shows both organisational and individual grants — e.g. Arts Council DYCP, PRS Foundation</p>
@@ -949,12 +949,12 @@ export default function ProfilePage() {
                 type="button"
                 onClick={() => toggleImpactSector(s.value)}
                 disabled={atMax}
-                className={`flex items-center gap-2 px-3 py-2.5 border text-sm font-medium transition-all text-left ${
+                className={`flex items-center gap-2 px-3 py-2.5 border text-sm font-medium transition-all text-left rounded-lg ${
                   selected
-                    ? 'border-charcoal bg-charcoal/10 text-charcoal'
+                    ? 'border-forest bg-forest/10 text-forest'
                     : atMax
                       ? 'border-warm text-mid opacity-40 cursor-not-allowed'
-                      : 'border-warm text-mid hover:border-coral hover:text-coral'
+                      : 'border-warm text-mid hover:border-forest hover:text-forest'
                 }`}
               >
                 <span className="text-xs">{s.label}</span>
@@ -1056,10 +1056,10 @@ export default function ProfilePage() {
                   key={opt.value}
                   type="button"
                   onClick={() => toggleFundingType(opt.value)}
-                  className={`flex flex-col items-start px-3 py-2.5 border text-left transition-all ${
+                  className={`flex flex-col items-start px-3 py-2.5 border text-left transition-all rounded-lg ${
                     selected
-                      ? 'border-charcoal bg-charcoal/10 text-charcoal'
-                      : 'border-warm text-mid hover:border-coral hover:text-coral'
+                      ? 'border-forest bg-forest/10 text-forest'
+                      : 'border-warm text-mid hover:border-forest hover:text-forest'
                   }`}
                 >
                   <span className="text-xs font-semibold">{opt.label}</span>
@@ -1086,10 +1086,10 @@ export default function ProfilePage() {
                   key={opt.value}
                   type="button"
                   onClick={() => toggleFunderType(opt.value)}
-                  className={`px-3 py-1.5 border text-xs font-medium transition-all ${
+                  className={`px-3 py-1.5 border text-xs font-medium transition-all rounded-full ${
                     selected
-                      ? 'border-charcoal bg-charcoal/10 text-charcoal'
-                      : 'border-warm text-mid hover:border-coral hover:text-coral'
+                      ? 'border-forest bg-forest/10 text-forest'
+                      : 'border-warm text-mid hover:border-forest hover:text-forest'
                   }`}
                 >
                   {opt.label}
@@ -1107,9 +1107,9 @@ export default function ProfilePage() {
   function renderSection6() {
     return (
       <div>
-        <div className="flex items-center justify-between mb-4 p-4 bg-warm border border-warm">
+        <div className="flex items-center justify-between mb-4 p-4 bg-warm border border-warm rounded-xl">
           <div>
-            <p className="font-display text-base font-bold text-charcoal">Grant match alerts</p>
+            <p className="font-serif text-base font-bold text-charcoal">Grant match alerts</p>
             <p className="text-xs text-mid mt-0.5">
               {form.alertsEnabled
                 ? 'You\'ll receive emails when new matching grants are found'
@@ -1156,8 +1156,8 @@ export default function ProfilePage() {
       <div className="space-y-5">
         {/* Section 1 */}
         <div className="card">
-          <h3 className="font-display text-base font-bold text-charcoal mb-4 flex items-center gap-2">
-            <span className="w-6 h-6 bg-charcoal/10 text-charcoal text-xs flex items-center justify-center font-bold">1</span>
+          <h3 className="font-serif text-base font-bold text-charcoal mb-4 flex items-center gap-2">
+            <span className="w-6 h-6 bg-charcoal/10 text-charcoal text-xs flex items-center justify-center font-bold rounded-full">1</span>
             About Your Organisation
           </h3>
           {renderSection1()}
@@ -1165,8 +1165,8 @@ export default function ProfilePage() {
 
         {/* Section 2 */}
         <div className="card">
-          <h3 className="font-display text-base font-bold text-charcoal mb-1 flex items-center gap-2">
-            <span className="w-6 h-6 bg-charcoal/10 text-charcoal text-xs flex items-center justify-center font-bold">2</span>
+          <h3 className="font-serif text-base font-bold text-charcoal mb-1 flex items-center gap-2">
+            <span className="w-6 h-6 bg-charcoal/10 text-charcoal text-xs flex items-center justify-center font-bold rounded-full">2</span>
             Impact Sectors
             <span className="text-xs text-light font-normal ml-1">— choose 1 to 5</span>
           </h3>
@@ -1175,8 +1175,8 @@ export default function ProfilePage() {
 
         {/* Section 3 */}
         <div className="card">
-          <h3 className="font-display text-base font-bold text-charcoal mb-4 flex items-center gap-2">
-            <span className="w-6 h-6 bg-charcoal/10 text-charcoal text-xs flex items-center justify-center font-bold">3</span>
+          <h3 className="font-serif text-base font-bold text-charcoal mb-4 flex items-center gap-2">
+            <span className="w-6 h-6 bg-charcoal/10 text-charcoal text-xs flex items-center justify-center font-bold rounded-full">3</span>
             Location & Focus
           </h3>
           {renderSection3()}
@@ -1184,8 +1184,8 @@ export default function ProfilePage() {
 
         {/* Section 4 */}
         <div className="card">
-          <h3 className="font-display text-base font-bold text-charcoal mb-1 flex items-center gap-2">
-            <span className="w-6 h-6 bg-charcoal/10 text-charcoal text-xs flex items-center justify-center font-bold">4</span>
+          <h3 className="font-serif text-base font-bold text-charcoal mb-1 flex items-center gap-2">
+            <span className="w-6 h-6 bg-charcoal/10 text-charcoal text-xs flex items-center justify-center font-bold rounded-full">4</span>
             Mission Statement
           </h3>
           <p className="text-xs text-mid mb-3 ml-8">Used to find the most relevant grants for your work</p>
@@ -1194,8 +1194,8 @@ export default function ProfilePage() {
 
         {/* Section 5 */}
         <div className="card">
-          <h3 className="font-display text-base font-bold text-charcoal mb-1 flex items-center gap-2">
-            <span className="w-6 h-6 bg-charcoal/10 text-charcoal text-xs flex items-center justify-center font-bold">5</span>
+          <h3 className="font-serif text-base font-bold text-charcoal mb-1 flex items-center gap-2">
+            <span className="w-6 h-6 bg-charcoal/10 text-charcoal text-xs flex items-center justify-center font-bold rounded-full">5</span>
             Grant Preferences
           </h3>
           <p className="text-xs text-mid mb-4 ml-8">Tell us what kinds of funding you&apos;re interested in — improves your match scores</p>
@@ -1204,8 +1204,8 @@ export default function ProfilePage() {
 
         {/* Section 6 */}
         <div className="card">
-          <h3 className="font-display text-base font-bold text-charcoal mb-1 flex items-center gap-2">
-            <span className="w-6 h-6 bg-charcoal/10 text-charcoal text-xs flex items-center justify-center font-bold">6</span>
+          <h3 className="font-serif text-base font-bold text-charcoal mb-1 flex items-center gap-2">
+            <span className="w-6 h-6 bg-charcoal/10 text-charcoal text-xs flex items-center justify-center font-bold rounded-full">6</span>
             Email Alerts
           </h3>
           <p className="text-xs text-mid mb-4 ml-8">Get notified by email when new grants match your organisation</p>

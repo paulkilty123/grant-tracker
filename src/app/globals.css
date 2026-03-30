@@ -29,8 +29,8 @@
 @layer components {
   /* Cards */
   .card {
-    @apply bg-white border border-warm/80 p-6;
-    box-shadow: 0 2px 16px rgba(26,46,43,0.06);
+    @apply bg-white border border-warm/80 p-6 rounded-xl;
+    box-shadow: 0 2px 12px rgba(26,46,43,0.07);
   }
 
   /* Buttons */
