@@ -17,7 +17,7 @@ export default function Logo({ variant = 'dark', size = 'md' }: LogoProps) {
   return (
     <span className={`inline-flex items-center gap-1.5 ${color}`}>
       <RadioWaveIcon className={iconSize} />
-      <span className={`font-serif font-bold tracking-tight leading-none ${textSize}`}>
+      <span className={`font-serif font-normal tracking-tight leading-none ${textSize}`}>
         GrantTracker
       </span>
     </span>
