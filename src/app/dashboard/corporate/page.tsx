@@ -227,31 +227,29 @@ function PartnerCard({
           </div>
         )}
 
-        {/* Score row — above the footer line */}
-        {showScore && score > 0 && (
-          <div className="flex justify-end items-center gap-1.5">
-            <span
-              className="text-[9px] font-bold px-1.5 py-0.5 uppercase tracking-widest border whitespace-nowrap rounded-md"
-              style={{ color: band.fg, backgroundColor: band.bg, borderColor: band.border }}
-            >
-              {band.label}
-            </span>
-            <span className="text-lg font-bold leading-none" style={{ color: band.fg }}>
-              {score}<span className="text-[10px] font-normal text-mid">/100</span>
-            </span>
-          </div>
-        )}
-
-        {/* Footer: support tags + actions */}
+        {/* Footer: support tags + score + actions — all on one line */}
         <div className="flex items-center justify-between gap-3 pt-1 border-t border-[#F0EDE8]">
-          <div className="flex flex-wrap gap-1.5 flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-1.5 flex-1 min-w-0">
             {partner.support_types.map(t => (
               <span key={t} className="text-[9px] font-bold px-2 py-0.5 uppercase tracking-wider bg-[#f0ede8] text-charcoal border border-[#e4dfd8] rounded-md">
                 {SUPPORT_TYPE_LABELS[t] ?? t}
               </span>
             ))}
+            {showScore && score > 0 && (
+              <span
+                className="text-[9px] font-bold px-2 py-0.5 uppercase tracking-widest border whitespace-nowrap rounded-md"
+                style={{ color: band.fg, backgroundColor: band.bg, borderColor: band.border }}
+              >
+                {band.label}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-3 flex-shrink-0">
+            {showScore && score > 0 && (
+              <span className="text-base font-bold leading-none" style={{ color: band.fg }}>
+                {score}%
+              </span>
+            )}
             {(partner.programme_url || partner.website || partner.contact_url) && (
               <a
                 href={partner.programme_url ?? partner.contact_url ?? partner.website ?? '#'}
