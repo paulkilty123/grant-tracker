@@ -6,13 +6,13 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Menu, X, Check, Search, Calendar, TrendingUp, Activity, Clock, Mail, MessageSquare, Bell, LayoutGrid, ArrowRight, Award } from 'lucide-react'
 import ContactForm from '@/components/ContactForm'
-import RadioWaveIcon from '@/components/icons/RadioWaveIcon'
+
 
 /* ─── helpers ─── */
 const fadeUp = (delay = 0) => ({
-  initial: { opacity: 0, y: 24 },
+  initial: { opacity: 1, y: 18 },
   animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.55, delay },
+  transition: { duration: 0.5, delay },
 })
 
 const fadeInView = (delay = 0) => ({
@@ -302,7 +302,7 @@ export default function LandingPage() {
       >
         <div className="flex w-full items-center justify-between px-5 md:px-8 py-4 md:py-5">
           <a href="/" className="flex items-center gap-2.5 no-underline">
-            <div className="relative flex items-center justify-center bg-coral w-7 h-7 flex-shrink-0" style={{ borderRadius: '6px' }}>
+            <div className="relative flex items-center justify-center bg-coral w-7 h-7 flex-shrink-0">
               <div className="w-2.5 h-2.5 rounded-full border-2 border-white" />
             </div>
             <span className="font-serif text-[22px] text-charcoal">GrantTracker</span>
@@ -338,7 +338,7 @@ export default function LandingPage() {
               ))}
               <div className="flex flex-col gap-2 pt-2">
                 <Link href="/auth/login" onClick={() => setMobileOpen(false)} className="text-center text-sm text-mid py-2 border border-warm">Sign in</Link>
-                <Link href="/auth/signup" onClick={() => setMobileOpen(false)} className="bg-coral text-white rounded-xl text-center text-sm font-medium py-2 hover:opacity-90 transition-colors">Get started free</Link>
+                <Link href="/auth/signup" onClick={() => setMobileOpen(false)} className="bg-coral text-white text-center text-sm font-medium py-2 hover:opacity-90 transition-colors">Get started free</Link>
               </div>
             </div>
           </motion.div>
@@ -374,7 +374,7 @@ export default function LandingPage() {
               Find grants, accelerators, investment and support programmes — matched to you, managed in one place.
             </motion.p>
 
-            <motion.div {...fadeUp(0.3)} className="flex flex-wrap gap-3 mb-14">
+            <motion.div {...fadeUp(0.3)} className="flex flex-wrap gap-3 mb-6">
               <Link href="/auth/signup" className="bg-coral text-white px-6 py-3 text-[15px] font-semibold hover:opacity-90 transition-colors" style={{ borderRadius: '0px' }}>
                 Start for free
               </Link>
@@ -382,6 +382,11 @@ export default function LandingPage() {
                 See how it works
               </a>
             </motion.div>
+
+            <motion.p {...fadeUp(0.4)} className="text-xs text-mid mb-14 flex items-center gap-2">
+              <span className="inline-block w-1.5 h-1.5 bg-forest rounded-full flex-shrink-0" />
+              Trusted by nonprofits, CICs and social enterprises across the UK
+            </motion.p>
 
           </div>
 
@@ -398,11 +403,11 @@ export default function LandingPage() {
                   <p className="text-[11px] font-bold text-charcoal uppercase tracking-wider">Dashboard</p>
                 </div>
                 <div className="grid grid-cols-2 gap-2 mb-3">
-                  <div className="bg-[#f5f2ed] rounded-xl p-2.5">
+                  <div className="bg-[#f5f2ed] p-2.5">
                     <p className="text-[17px] font-bold text-charcoal leading-tight">42k</p>
                     <p className="text-[9px] text-mid uppercase tracking-wide font-medium">Won</p>
                   </div>
-                  <div className="bg-[#f5f2ed] rounded-xl p-2.5">
+                  <div className="bg-[#f5f2ed] p-2.5">
                     <p className="text-[17px] font-bold text-charcoal leading-tight">68%</p>
                     <p className="text-[9px] text-mid uppercase tracking-wide font-medium">Success</p>
                   </div>
@@ -493,7 +498,7 @@ export default function LandingPage() {
                 </div>
                 <p className="text-[13px] font-semibold text-charcoal leading-snug mb-1">London Community Foundation</p>
                 <p className="text-[11px] text-mid mb-3">Grow to Give — Community Growing</p>
-                <div className="flex items-center justify-between bg-forest/8 rounded-xl px-3 py-2" style={{ background: 'rgba(45,107,74,0.08)' }}>
+                <div className="flex items-center justify-between px-3 py-2" style={{ background: 'rgba(45,107,74,0.08)' }}>
                   <span className="text-[11px] text-mid">Grant awarded</span>
                   <span className="text-[15px] font-bold text-forest">£8,000</span>
                 </div>
@@ -598,8 +603,7 @@ export default function LandingPage() {
               <Link
                 href="/auth/signup"
                 className="inline-flex items-center gap-2 bg-forest text-white px-8 py-3.5 text-sm font-semibold hover:opacity-90 transition-colors"
-                style={{ borderRadius: '0px' }}
-              >
+                             >
                 Search all opportunities free <ArrowRight size={16} />
               </Link>
               <p className="text-xs text-mid mt-3">No credit card · Takes 2 minutes</p>
@@ -628,7 +632,7 @@ export default function LandingPage() {
       </section>
 
       {/* FUNDING TYPES */}
-      <section className="py-16 md:py-20 bg-[#121f2b]">
+      <section className="py-16 md:py-20 bg-[#1C1C2E]">
         <div className="mx-auto max-w-5xl px-6">
           <motion.div {...fadeInView(0)} className="mb-16">
             <p className="text-sm font-semibold text-coral uppercase tracking-wider">Funding Types</p>
@@ -636,7 +640,7 @@ export default function LandingPage() {
           </motion.div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-white/10">
             {fundingTypes.map((t, i) => (
-              <motion.div key={t.title} {...fadeInView(i * 0.05)} className="bg-[#121f2b] p-8">
+              <motion.div key={t.title} {...fadeInView(i * 0.05)} className="bg-[#1C1C2E] p-8">
                 <span className="text-xs font-semibold text-coral uppercase tracking-wider">{t.range}</span>
                 <h3 className="mt-3 font-serif text-xl text-cream">{t.title}</h3>
                 <p className="mt-3 text-sm text-cream/50 leading-relaxed">{t.desc}</p>
@@ -759,7 +763,7 @@ export default function LandingPage() {
               <motion.div
                 key={plan.name}
                 {...fadeInView(i * 0.1)}
-                className={`relative p-8 flex flex-col ${plan.popular ? 'bg-[#121f2b] text-cream' : 'bg-cream'}`}
+                className={`relative p-8 flex flex-col ${plan.popular ? 'bg-[#1C1C2E] text-cream' : 'bg-cream'}`}
               >
                 {plan.popular && (
                   <span className="absolute top-4 right-4 bg-coral px-3 py-1 text-xs font-semibold text-white">Most Popular</span>
@@ -779,7 +783,7 @@ export default function LandingPage() {
                 </ul>
                 <Link
                   href="/auth/signup"
-                  className={`mt-8 block rounded-xl text-center py-3 text-sm font-semibold transition-colors ${plan.popular ? 'bg-coral text-white hover:bg-coral-light' : 'bg-[#121f2b] text-white hover:bg-[#121f2b]/90'}`}
+                  className={`mt-8 block text-center py-3 text-sm font-semibold transition-colors ${plan.popular ? 'bg-coral text-white hover:bg-coral-light' : 'bg-[#1C1C2E] text-white hover:bg-[#1C1C2E]/90'}`}
                 >
                   {plan.cta}
                 </Link>
@@ -801,7 +805,7 @@ export default function LandingPage() {
               <motion.div key={t.name} {...fadeInView(i * 0.1)} className="bg-cream p-8">
                 <p className="text-sm text-charcoal leading-relaxed">"{t.quote}"</p>
                 <div className="mt-6 flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center bg-[#121f2b] text-white font-semibold text-sm">{t.initials}</div>
+                  <div className="flex h-10 w-10 items-center justify-center bg-[#1C1C2E] text-white font-semibold text-sm">{t.initials}</div>
                   <div>
                     <p className="text-sm font-semibold text-charcoal">{t.name}</p>
                     <p className="text-xs text-mid">{t.role}</p>
@@ -846,13 +850,13 @@ export default function LandingPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-16 md:py-20 bg-[#121f2b]">
+      <section className="py-16 md:py-20 bg-[#1C1C2E]">
         <div className="mx-auto max-w-4xl px-6 text-center">
           <motion.div {...fadeInView(0)}>
             <h2 className="font-serif text-4xl text-cream md:text-6xl leading-tight">Find your funding. Free to start.</h2>
             <p className="mx-auto mt-6 max-w-lg text-cream/60 leading-relaxed">Join CICs, charities, social enterprises and impact founders already discovering funding that actually fits.</p>
             <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-              <Link href="/auth/signup" className="bg-coral text-white rounded-xl px-10 py-3.5 text-base font-semibold hover:opacity-90 transition-colors">Start for free</Link>
+              <Link href="/auth/signup" className="bg-coral text-white px-10 py-3.5 text-base font-semibold hover:opacity-90 transition-colors">Start for free</Link>
             </div>
             <p className="mt-4 text-sm text-cream/40">No credit card required</p>
           </motion.div>
@@ -862,9 +866,11 @@ export default function LandingPage() {
       {/* FOOTER */}
       <footer className="border-t border-warm py-12">
         <div className="mx-auto flex max-w-5xl flex-col items-center gap-8 px-6 md:flex-row md:justify-between">
-          <a href="/" className="flex items-center gap-2">
-            <RadioWaveIcon className="h-6 w-6 text-coral" />
-            <span className="font-serif text-lg text-charcoal">Grant<span className="text-coral">Tracker</span></span>
+          <a href="/" className="flex items-center gap-2.5">
+            <div className="relative flex items-center justify-center bg-coral w-6 h-6 flex-shrink-0">
+              <div className="w-2 h-2 rounded-full border-2 border-white" />
+            </div>
+            <span className="font-serif text-lg text-charcoal">GrantTracker</span>
           </a>
           <div className="flex gap-8 text-sm text-mid">
             <a href="#how" className="hover:text-charcoal transition-colors">How it works</a>
@@ -873,7 +879,7 @@ export default function LandingPage() {
             <a href="#about" className="hover:text-charcoal transition-colors">About</a>
             <a href="#contact" className="hover:text-charcoal transition-colors">Contact</a>
           </div>
-          <p className="text-xs text-mid">© 2025 Grant Tracker</p>
+          <p className="text-xs text-mid">© 2026 Grant Tracker</p>
         </div>
       </footer>
 
