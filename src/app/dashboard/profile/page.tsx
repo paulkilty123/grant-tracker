@@ -34,17 +34,24 @@ const ORG_STAGE_OPTIONS: { value: OrgStage; label: string; desc: string }[] = [
 ]
 
 const IMPACT_SECTOR_OPTIONS: { value: ImpactSector; label: string }[] = [
-  { value: 'creative',      label: 'Creative Industries'        },
-  { value: 'environment',   label: 'Environment & Climate'      },
-  { value: 'health',        label: 'Health & Wellbeing'         },
-  { value: 'education',     label: 'Education & Skills'         },
-  { value: 'tech',          label: 'Tech for Good'              },
-  { value: 'housing',       label: 'Housing & Homelessness'     },
-  { value: 'food',          label: 'Food & Agriculture'         },
-  { value: 'employment',    label: 'Employment & Livelihoods'   },
+  { value: 'young_people',  label: 'Young People & Youth'       },
   { value: 'community',     label: 'Community Dev & Spaces'     },
+  { value: 'health',        label: 'Health & Wellbeing'         },
+  { value: 'mental_health', label: 'Mental Health'              },
+  { value: 'housing',       label: 'Housing & Homelessness'     },
+  { value: 'education',     label: 'Education & Skills'         },
+  { value: 'employment',    label: 'Employment & Livelihoods'   },
+  { value: 'disability',    label: 'Disability'                 },
+  { value: 'older_people',  label: 'Older People'               },
+  { value: 'environment',   label: 'Environment & Climate'      },
+  { value: 'creative',      label: 'Arts & Creative Industries' },
+  { value: 'heritage',      label: 'Heritage & Conservation'    },
+  { value: 'sport',         label: 'Sport & Physical Activity'  },
+  { value: 'women',         label: 'Women & Gender Equality'    },
   { value: 'justice',       label: 'Justice, Rights & Democracy'},
+  { value: 'tech',          label: 'Tech for Good'              },
   { value: 'financial',     label: 'Financial Inclusion'        },
+  { value: 'food',          label: 'Food & Agriculture'         },
   { value: 'international', label: 'International & Fair Trade' },
 ]
 
@@ -309,7 +316,7 @@ export default function ProfilePage() {
       if (current.includes(sector)) {
         return { ...prev, impactSectors: current.filter(s => s !== sector) }
       }
-      if (current.length >= 3) return prev
+      if (current.length >= 5) return prev
       return { ...prev, impactSectors: [...current, sector] }
     })
   }
@@ -644,7 +651,7 @@ export default function ProfilePage() {
         <h2 className="font-display text-xl font-bold text-charcoal mb-1">{stepInfo.title}</h2>
         <p className="text-xs text-mid mb-5">
           {currentStep === 1 && 'The basics about your organisation — name, legal structure, and stage.'}
-          {currentStep === 2 && 'Select 1 to 3 impact sectors that describe your work. This drives which funding pools you match against.'}
+          {currentStep === 2 && 'Select 1 to 5 impact sectors that describe your work. This drives which funding pools you match against.'}
           {currentStep === 3 && 'Where you\'re based and what your work focuses on.'}
           {currentStep === 4 && 'A short description of what you do, who you serve, and the difference you make.'}
           {currentStep === 5 && 'What kinds of funding are you looking for?'}
@@ -927,15 +934,15 @@ export default function ProfilePage() {
     return (
       <div>
         <p className="text-xs text-mid mb-4">
-          Choose 1 to 3 sectors. More specific = better matches.
-          {form.impactSectors.length >= 3 && (
-            <span className="text-gold font-medium"> Maximum 3 sectors reached.</span>
+          Choose 1 to 5 sectors. More specific = better matches.
+          {form.impactSectors.length >= 5 && (
+            <span className="text-gold font-medium"> Maximum 5 sectors reached.</span>
           )}
         </p>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {IMPACT_SECTOR_OPTIONS.map(s => {
             const selected = form.impactSectors.includes(s.value)
-            const atMax = !selected && form.impactSectors.length >= 3
+            const atMax = !selected && form.impactSectors.length >= 5
             return (
               <button
                 key={s.value}
@@ -1161,7 +1168,7 @@ export default function ProfilePage() {
           <h3 className="font-display text-base font-bold text-charcoal mb-1 flex items-center gap-2">
             <span className="w-6 h-6 bg-charcoal/10 text-charcoal text-xs flex items-center justify-center font-bold">2</span>
             Impact Sectors
-            <span className="text-xs text-light font-normal ml-1">— choose 1 to 3</span>
+            <span className="text-xs text-light font-normal ml-1">— choose 1 to 5</span>
           </h3>
           {renderSection2()}
         </div>

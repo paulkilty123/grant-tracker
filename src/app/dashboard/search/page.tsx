@@ -1,9 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Search, ThumbsUp, ThumbsDown, ChevronDown, Layers, DollarSign, Rocket, Database, Globe, Clock, Building2, SlidersHorizontal, Sparkles, MapPin, Award, GraduationCap, TrendingUp, Users, GitMerge, Gift, Landmark, CalendarDays, RefreshCw, Info, Trophy, HandCoins } from 'lucide-react'
-import GrantDetailModal from '@/components/GrantDetailModal'
+import { Search, ChevronDown, Layers, DollarSign, Rocket, Building2, SlidersHorizontal, MapPin, GraduationCap, TrendingUp, GitMerge, Gift, Landmark, CalendarDays, RefreshCw, Bookmark, PlusCircle, Activity, Info, Target, Star, CheckCircle2, XCircle, Lightbulb, AlertTriangle, Sparkles, ExternalLink, ClipboardList } from 'lucide-react'
 import { SEED_GRANTS } from '@/lib/grants'
 import { formatRange } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -52,12 +51,15 @@ const SECTOR_DISPLAY: Record<string, string | null> = {
 
 function sectorLabel(s: string): string | null {
   if (s in SECTOR_DISPLAY) return SECTOR_DISPLAY[s]
-  return s
+  // Fallback: replace underscores with spaces and title-case each word
+  return s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
 }
 
 // Eligible org structure labels — maps DB keys to short display names
 const STRUCTURE_LABELS: Record<string, string> = {
   cic:                            'CIC',
+  cic_guarantee:                  'CIC (Guarantee)',
+  cic_shares:                     'CIC (Shares)',
   charity:                        'Charity',
   registered_charity:             'Charity',
   charitable_incorporated_organisation: 'CIO',
@@ -238,7 +240,7 @@ function LiveGrantCard({ grant, onAddToPipeline }: {
           <div className="flex flex-col gap-1.5 w-full">
             <a href={grant.applyUrl} target="_blank" rel="noopener noreferrer"
               className="flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium transition-colors w-full"
-              style={{ background: '#1a2e2b', color: '#ffffff', border: '1px solid #1a2e2b' }}>
+              style={{ background: '#1C1C2E', color: '#ffffff', border: '1px solid #1C1C2E' }}>
               Visit website →
             </a>
             <button onClick={() => onAddToPipeline(grant)}
@@ -325,55 +327,27 @@ function StalenessBadge({ lastVerifiedAt }: { lastVerifiedAt?: string }) {
 }
 
 // ── Grant Card ───────────────────────────────────────────────────────────────
-function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onDismiss, onUndismiss, onLike, onDislike, onViewDetail }: {
+function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline, onDismiss, onUndismiss, onLike, onDislike, onSave, onUnsave }: {
   item: DisplayGrant
   hasOrg: boolean
   hasSearch: boolean
   interactions: Set<InteractionAction>
+  org?: Organisation | null
   onAddToPipeline: (g: GrantOpportunity) => void
   onDismiss: (grantId: string) => void
   onUndismiss: (grantId: string) => void
   onLike: (grantId: string) => void
   onDislike: (grantId: string) => void
-  onViewDetail: (grantId: string) => void
+  onSave?: (grantId: string) => void
+  onUnsave?: (grantId: string) => void
 }) {
   const { grant, score, reason, isAiScore, breakdown } = item
   const [expanded, setExpanded] = useState(false)
   const isDismissed  = interactions.has('dismissed')
   const isLiked      = interactions.has('liked')
   const isDisliked   = interactions.has('disliked')
+  const isSaved      = interactions.has('saved')
 
-  const typeColour: Record<string, string> = {
-    lottery:             'bg-green-50 text-green-700',
-    trust_foundation:    'bg-slate-100 text-slate-600',
-    corporate:           'bg-amber-50 text-amber-700',
-    local_authority:     'bg-purple-50 text-purple-700',
-    housing_association: 'bg-teal-50 text-teal-700',
-    government:          'bg-red-50 text-red-700',
-    competition:         'bg-yellow-50 text-yellow-700',
-    loan:                'bg-sky-50 text-sky-700',
-    crowdfund_match:     'bg-pink-50 text-pink-700',
-  }
-
-  const { text: scoreText } = scoreColour(score)
-
-  // Funding type badge — shown on every card so users always know the category
-  const fundingTypeBadge: Record<string, { Icon: React.ComponentType<{ className?: string }>; label: string; cls: string }> = {
-    grant:              { Icon: Award,         label: 'Grant',             cls: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
-    accelerator:        { Icon: Rocket,        label: 'Accelerator',       cls: 'bg-orange-50 text-orange-700 border border-orange-200' },
-    support_programme:  { Icon: GraduationCap, label: 'Support Programme', cls: 'bg-indigo-50 text-indigo-700 border border-indigo-200' },
-    programme:          { Icon: GraduationCap, label: 'Support Programme', cls: 'bg-indigo-50 text-indigo-700 border border-indigo-200' },
-    social_investment:  { Icon: TrendingUp,    label: 'Social Investment', cls: 'bg-cyan-50 text-cyan-700 border border-cyan-200' },
-    loan:               { Icon: TrendingUp,    label: 'Loan',              cls: 'bg-cyan-50 text-cyan-700 border border-cyan-200' },
-    equity:             { Icon: TrendingUp,    label: 'Equity',            cls: 'bg-cyan-50 text-cyan-700 border border-cyan-200' },
-    diversity_fund:     { Icon: Users,         label: 'Diversity Fund',    cls: 'bg-violet-50 text-violet-700 border border-violet-200' },
-    blended_finance:    { Icon: GitMerge,      label: 'Blended Finance',   cls: 'bg-teal-50 text-teal-700 border border-teal-200' },
-    in_kind:            { Icon: Gift,          label: 'In-Kind Support',   cls: 'bg-rose-50 text-rose-700 border border-rose-200' },
-    'in-kind':          { Icon: Gift,          label: 'In-Kind Support',   cls: 'bg-rose-50 text-rose-700 border border-rose-200' },
-    'tax-relief':       { Icon: Landmark,      label: 'Tax Relief',        cls: 'bg-stone-100 text-stone-700 border border-stone-300' },
-  }
-  const effectiveFundingType = grant.fundingType ?? 'grant'
-  const ftBadge = fundingTypeBadge[effectiveFundingType] ?? fundingTypeBadge['grant']
 
   // "New this week" badge — show if added within last 7 days
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
@@ -384,12 +358,6 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
     grant.deadline   ? 'live' :
     grant.isRolling  ? 'rolling' :
     /* else */         'profile'
-
-  const entryBadge = {
-    live:    { Icon: CalendarDays, label: 'Open grant',  cls: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
-    rolling: { Icon: RefreshCw,    label: 'Always open', cls: 'bg-sage/10 text-sage border border-sage/20' },
-    profile: { Icon: Info,         label: 'Funder info', cls: 'bg-gray-100 text-gray-500 border border-gray-200' },
-  }[entryType]
 
   if (isDismissed) {
     return (
@@ -402,207 +370,453 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, onAddToPipeline, onD
     )
   }
 
+  // Deadline days remaining
+  const daysLeft = (() => {
+    if (!grant.deadline || grant.isRolling) return null
+    const parts = grant.deadline.split('-').map(Number)
+    if (parts.length !== 3) return null
+    return Math.ceil((new Date(parts[0], parts[1]-1, parts[2]).getTime() - new Date().setHours(0,0,0,0)) / 86400000)
+  })()
+
+  // Sector labels
+  const sectorLabels = (grant as EnrichedGrant).impactSectors?.length
+    ? (grant as EnrichedGrant).impactSectors!.slice(0, 3).map(s =>
+        IMPACT_SECTOR_FILTERS.find(f => f.id === s.toLowerCase())?.label
+          ?? s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+      )
+    : grant.sectors.map(s => sectorLabel(s)).filter(Boolean).slice(0, 3) as string[]
+
+  // Eligible structure labels
+  const structureLabels = ((grant as EnrichedGrant).eligibleStructures ?? [])
+    .slice(0, 3).map(s => STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()))
+
   return (
-    <div className="bg-white p-4 sm:p-5 shadow-warm mb-3 border border-warm/80 hover:shadow-lg transition-all">
+    <div className="bg-white mb-3 border border-[#E8E8EC] hover:shadow-md transition-shadow rounded-xl overflow-hidden">
 
-      {/* ── Header: avatar + funder + title + amount ── */}
-      <div className="flex items-start gap-3 mb-2">
-        <div className="h-9 w-9 bg-[#f5f2ed] flex items-center justify-center text-charcoal font-bold text-sm flex-shrink-0 border border-warm mt-0.5">
-          {grant.funder[0].toUpperCase()}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="font-semibold text-charcoal text-base leading-snug">{grant.title}</h3>
-            <p className="text-base font-bold text-gold flex-shrink-0 ml-1">
-              {formatRange(grant.amountMin, grant.amountMax)}
-            </p>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap mt-0.5">
-            <p className="text-sm text-mid">{grant.funder}</p>
-            <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${typeColour[grant.funderType] ?? 'bg-gray-50 text-gray-600'}`}>
-              {FUNDER_TYPES.find(t => t.id === grant.funderType)?.label ?? grant.funderType}
-            </span>
-            {grant.isLocal && (
-              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-green-50 text-green-700 inline-flex items-center gap-0.5">
-                <MapPin className="w-2.5 h-2.5" />Local
+      {/* ── Top two-column section ── */}
+      <div className="flex">
+
+        {/* ── Content ── */}
+        <div className="flex-1 min-w-0 p-6">
+
+          {/* Badges row */}
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            {/* Up to 3 sector pills */}
+            {sectorLabels.slice(0, 3).map(label => (
+              <span key={label} className="text-[10px] font-bold uppercase tracking-wider px-3 py-1"
+                style={{ borderRadius: 9999, backgroundColor: 'rgba(255,183,77,0.20)', color: '#8B5E00' }}>
+                {label}
               </span>
-            )}
-            {grant.source === 'scraped' && <StalenessBadge lastVerifiedAt={grant.lastVerifiedAt} />}
-          </div>
-        </div>
-      </div>
-
-      {/* ── Badges row ── */}
-      <div className="flex flex-wrap items-center gap-1.5 mb-3 ml-12">
-        {ftBadge && (
-          <span className={`inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide ${ftBadge.cls}`}>
-            <ftBadge.Icon className="w-2.5 h-2.5" />{ftBadge.label}
-          </span>
-        )}
-        <span className={`inline-flex items-center gap-1 text-[9px] font-medium px-1.5 py-0.5 ${entryBadge.cls}`}>
-          <entryBadge.Icon className="w-2.5 h-2.5" />{entryBadge.label}
-        </span>
-        {isNewThisWeek && (
-          <span className="bg-emerald-100 text-emerald-700 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide">New</span>
-        )}
-        {grant.isInviteOnly && (
-          <span className="bg-purple-50 text-purple-700 border border-purple-200 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide" title="Invite only">✉ Invite Only</span>
-        )}
-        {grant.nextOpenDate && (
-          <span className="bg-blue-50 text-blue-700 border border-blue-200 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide">🔔 Opens {grant.nextOpenDate}</span>
-        )}
-      </div>
-
-      {/* ── Description ── */}
-      <p className="text-sm text-mid leading-relaxed mb-3">
-        {grant.description.length > 200
-          ? `${grant.description.slice(0, 200).trimEnd()}…`
-          : grant.description}
-      </p>
-
-      {/* ── Match reason ── */}
-      {hasOrg && hasSearch && reason && (
-        <div className="border px-3.5 py-2.5 mb-3 flex items-start gap-2" style={{ backgroundColor: 'rgba(26,122,94,0.06)', borderColor: 'rgba(26,122,94,0.18)' }}>
-          <span className="text-sm flex-shrink-0 text-forest/70">{isAiScore ? '✦' : '●'}</span>
-          <p className="text-sm text-forest leading-snug">{reason.replace(/<[^>]*>/g, '').trim()}</p>
-        </div>
-      )}
-
-      {/* ── Sector + For tags ── */}
-      {(() => {
-        const sectorTags = (grant as EnrichedGrant).impactSectors?.length
-          ? (grant as EnrichedGrant).impactSectors!.slice(0, 4).map(s => {
-              const lbl = IMPACT_SECTOR_FILTERS.find(f => f.id === s)?.label ?? s
-              return <span key={s} className="tag bg-violet-50 text-violet-600 capitalize">{lbl}</span>
-            })
-          : grant.sectors
-              .map(s => ({ raw: s, label: sectorLabel(s) }))
-              .filter(({ label }) => label !== null)
-              .slice(0, 3)
-              .map(({ raw, label }) => (
-                <span key={raw} className="tag bg-violet-50 text-violet-600 capitalize">{label}</span>
-              ))
-        if (sectorTags.length === 0) return null
-        return (
-          <div className="flex flex-wrap items-center gap-1.5 mb-1">
-            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider w-12 flex-shrink-0">Sector</span>
-            {sectorTags}
-          </div>
-        )
-      })()}
-
-      {(() => {
-        const structures = (grant as EnrichedGrant).eligibleStructures
-        if (!structures?.length) return null
-        const chips = structures.slice(0, 5).map(s => {
-          const lbl = STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' ')
-          return <span key={s} className="tag bg-orange-50 text-orange-600 capitalize">{lbl}</span>
-        })
-        const overflow = structures.length > 5 ? structures.length - 5 : 0
-        return (
-          <div className="flex flex-wrap items-center gap-1.5 mb-1">
-            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider w-12 flex-shrink-0">For</span>
-            {chips}
-            {overflow > 0 && <span className="tag bg-orange-50 text-orange-600">+{overflow}</span>}
-          </div>
-        )
-      })()}
-
-      {/* ── Expandable eligibility ── */}
-      {expanded && (
-        <div className="mt-3 pt-3 border-t border-warm">
-          <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Eligibility criteria</p>
-          <ul className="space-y-1">
-            {grant.eligibilityCriteria.map(c => (
-              <li key={c} className="text-sm text-mid flex gap-2">
-                <span className="text-forest flex-shrink-0">✓</span>{c}
-              </li>
             ))}
-          </ul>
-        </div>
-      )}
-
-      {/* ── Bottom row: deadline + match score + actions + train ── */}
-      <div className="flex flex-wrap items-center justify-between gap-2 mt-3 pt-3 border-t border-warm/60">
-        {/* Left: deadline + match badge + eligibility toggle */}
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="flex items-center gap-1.5">
-            <p className="text-xs text-light">
-              {entryType === 'live'    ? (formatDeadline(grant.deadline) ?? grant.deadline) :
-               entryType === 'rolling' ? 'Always open' :
-               /* profile */            'Typical range'}
-            </p>
-            {entryType === 'live' && grant.deadline && (() => {
-              const parts = grant.deadline.split('-').map(Number)
-              if (parts.length !== 3) return null
-              const days = Math.ceil((new Date(parts[0], parts[1]-1, parts[2]).getTime() - new Date().setHours(0,0,0,0)) / 86400000)
-              if (days > 10) return null
+            {/* Funder type pill */}
+            {grant.funderType && grant.funderType !== 'other' && (() => {
+              const FUNDER_PILL_LABELS: Record<string, string> = {
+                trust_foundation:  'Trust / Foundation',
+                local_authority:   'Local Authority',
+                housing_association: 'Housing Assoc.',
+                corporate:         'Corporate',
+                lottery:           'Lottery',
+                government:        'Government',
+                competition:       'Competition',
+                loan:              'Loan',
+                crowdfund_match:   'Crowd Match',
+              }
+              const label = FUNDER_PILL_LABELS[grant.funderType] ?? grant.funderType
               return (
-                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                  days < 0  ? 'bg-red-100 text-red-600' :
-                  days <= 3 ? 'bg-red-100 text-red-600' :
-                  days <= 7 ? 'bg-amber-100 text-amber-600' :
-                              'bg-orange-50 text-orange-500'
-                }`}>
-                  {days < 0 ? 'Overdue' : days === 0 ? 'Today!' : `${days}d left`}
+                <span className="text-[10px] font-bold uppercase tracking-wider px-3 py-1"
+                  style={{ borderRadius: 9999, backgroundColor: 'rgba(110,110,128,0.10)', color: '#6E6E80' }}>
+                  {label}
                 </span>
               )
             })()}
+            {/* Status badges */}
+            {entryType === 'live' && daysLeft !== null && daysLeft >= 0 && (
+              <span className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1 ${
+                daysLeft <= 7 ? 'bg-red-50 text-red-600' : 'bg-gray-100 text-gray-500'
+              }`} style={{ borderRadius: 9999 }}>
+                {daysLeft === 0 ? 'Closes today' : `${daysLeft} days left`}
+              </span>
+            )}
+            {isNewThisWeek && (
+              <span className="text-[10px] font-bold uppercase tracking-wider px-3 py-1 bg-emerald-50 text-emerald-700" style={{ borderRadius: 9999 }}>New</span>
+            )}
+            {grant.isInviteOnly && (
+              <span className="text-[10px] font-bold uppercase tracking-wider px-3 py-1 bg-purple-50 text-purple-700" style={{ borderRadius: 9999 }}>Invite Only</span>
+            )}
           </div>
-          {hasOrg && hasSearch && <MatchBadge score={score} isAi={isAiScore} breakdown={breakdown} />}
-          <button onClick={() => setExpanded(!expanded)} className="text-xs text-coral font-medium hover:underline">
-            {expanded ? 'Show less ↑' : 'Eligibility ↓'}
+
+          {/* Title */}
+          <h3 className="font-lora text-2xl font-bold text-charcoal leading-snug mb-1">{grant.title}</h3>
+
+          {/* Funder */}
+          <p className="text-sm font-semibold mb-4" style={{ color: '#26A69A' }}>{grant.funder}</p>
+
+          {/* Description */}
+          <p className="text-sm leading-relaxed mb-6" style={{ color: '#777' }}>
+            {grant.description.length > 180
+              ? `${grant.description.slice(0, 180).trimEnd()}…`
+              : grant.description}
+          </p>
+
+          {/* Metadata */}
+          {(() => {
+            const FUNDING_TYPE_STYLE: Record<string, { label: string; bg: string; color: string }> = {
+              grant:              { label: 'Grant',              bg: 'rgba(0,128,128,0.12)',    color: '#008080' },
+              social_investment:  { label: 'Social Investment',  bg: 'rgba(255,112,67,0.12)',   color: '#D84315' },
+              blended_finance:    { label: 'Blended Finance',    bg: 'rgba(255,183,77,0.20)',   color: '#A06000' },
+              accelerator:        { label: 'Accelerator',        bg: 'rgba(16,185,129,0.13)',   color: '#047857' },
+              support_programme:  { label: 'Fellowship / Support', bg: 'rgba(139,92,246,0.12)', color: '#6D28D9' },
+              diversity_fund:     { label: 'Diversity Fund',     bg: 'rgba(236,72,153,0.12)',   color: '#9D174D' },
+              in_kind:            { label: 'In-Kind',            bg: 'rgba(99,102,241,0.12)',   color: '#4338CA' },
+            }
+            const ftStyle = grant.fundingType ? FUNDING_TYPE_STYLE[grant.fundingType] : null
+            return (
+          <div className="flex gap-10">
+            <div>
+              <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">Amount</p>
+              <p className="text-sm font-bold" style={{ color: '#26A69A' }}>{formatRange(grant.amountMin, grant.amountMax)}</p>
+            </div>
+            <div>
+              {(() => {
+                const opensDate = grant.nextOpenDateParsed
+                const todayStr = new Date().toISOString().split('T')[0]
+                const notYetOpen = !grant.deadline && !grant.isRolling && opensDate && opensDate > todayStr
+                if (notYetOpen) {
+                  const parts = opensDate!.split('-').map(Number)
+                  const formatted = new Date(parts[0], parts[1] - 1, parts[2])
+                    .toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                  return (
+                    <>
+                      <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">Opens</p>
+                      <p className="text-sm font-semibold text-charcoal">{formatted}</p>
+                    </>
+                  )
+                }
+                return (
+                  <>
+                    <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">Deadline</p>
+                    <p className="text-sm font-semibold text-charcoal">
+                      {grant.isRolling || !grant.deadline
+                        ? 'Rolling'
+                        : (() => {
+                            const parts = grant.deadline!.split('-').map(Number)
+                            if (parts.length !== 3 || parts.some(isNaN)) return 'Rolling'
+                            return new Date(parts[0], parts[1] - 1, parts[2])
+                              .toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+                          })()
+                      }
+                    </p>
+                  </>
+                )
+              })()}
+            </div>
+            <div>
+              <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">Beneficiary</p>
+              <p className="text-sm font-semibold text-charcoal">{structureLabels.length > 0 ? structureLabels.join(', ') : '—'}</p>
+            </div>
+            <div>
+              <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">Type</p>
+              {ftStyle ? (
+                <span className="text-[11px] font-bold px-2.5 py-1 inline-block"
+                  style={{ borderRadius: 9999, backgroundColor: ftStyle.bg, color: ftStyle.color }}>
+                  {ftStyle.label}
+                </span>
+              ) : (
+                <p className="text-sm font-semibold text-charcoal">—</p>
+              )}
+            </div>
+            {(grant as EnrichedGrant).geoScope?.length ? (
+              <div>
+                <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">Location</p>
+                <p className="text-sm font-semibold text-charcoal">
+                  {(grant as EnrichedGrant).geoScope!.slice(0, 2).join(', ')}
+                </p>
+              </div>
+            ) : null}
+          </div>
+            )
+          })()}
+        </div>
+
+        {/* ── Right: actions ── */}
+        <div className="flex flex-col p-6 flex-shrink-0 w-[160px]">
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => isSaved ? onUnsave?.(grant.id) : onSave?.(grant.id)}
+              className={`w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold border transition-colors ${
+                isSaved
+                  ? 'bg-[#FF7043]/10 text-[#FF7043] border-[#FF7043]/30'
+                  : 'border-[#E8E8EC] text-charcoal hover:border-[#FF7043] hover:text-[#FF7043]'
+              }`}
+              style={{ borderRadius: 9999 }}
+            >
+              <Bookmark className="w-4 h-4" fill={isSaved ? 'currentColor' : 'none'} />
+              {isSaved ? 'Saved' : 'Save'}
+            </button>
+            {grant.applyUrl && (
+              <a href={grant.applyUrl} target="_blank" rel="noopener noreferrer"
+                className="text-center text-[11px] font-bold uppercase tracking-widest hover:underline transition-colors"
+                style={{ color: '#FF7043' }}>
+                Visit website →
+              </a>
+            )}
+          </div>
+          <div className="flex-1" />
+          <button
+            onClick={() => onAddToPipeline(grant)}
+            className="w-full flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-widest transition-colors hover:opacity-70 pb-1"
+            style={{ color: '#26A69A' }}
+          >
+            <PlusCircle className="w-3.5 h-3.5" />
+            Add to Pipeline
           </button>
         </div>
 
-        {/* Right: action buttons + thumbs */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {hasOrg && (
-            <>
-              <button
-                onClick={() => onLike(grant.id)}
-                title="Good match"
-                className={`transition-all ${isLiked ? 'text-forest scale-110' : 'text-light hover:text-forest'}`}
-              >
-                <ThumbsUp className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => onDislike(grant.id)}
-                title="Not relevant"
-                className={`transition-all ${isDisliked ? 'text-red-500 scale-110' : 'text-light hover:text-red-400'}`}
-              >
-                <ThumbsDown className="h-4 w-4" />
-              </button>
-            </>
-          )}
-          {grant.source === 'scraped' && (
-            <button
-              onClick={() => onViewDetail(grant.id)}
-              className="px-3 py-1.5 text-xs font-medium transition-colors"
-              style={{ background: '#faf7f2', color: '#1f5c52', border: '1px solid #e8ddd0' }}
-            >
-              View details →
-            </button>
-          )}
-          {grant.applyUrl && (
-            <a
-              href={grant.applyUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-3 py-1.5 text-xs font-medium transition-colors"
-              style={{ background: '#1a2e2b', color: '#ffffff' }}
-            >
-              Visit website →
-            </a>
-          )}
-          <button
-            onClick={() => onAddToPipeline(grant)}
-            className="px-3 py-1.5 bg-coral text-white text-xs font-semibold hover:bg-coral/90 transition-colors"
-          >
-            + Pipeline
-          </button>
-        </div>
       </div>
+
+      {/* ── Match Insight (white, part of card body) ── */}
+      {hasOrg && hasSearch && reason && (() => {
+        const brief = (grant as EnrichedGrant).funderBrief
+        return (
+          <div className="flex items-center gap-4 px-6 py-4 border-t border-[#E8E8EC]"
+            style={{ borderLeft: '3px solid #008080' }}>
+            <Activity className="w-4 h-4 flex-shrink-0" style={{ color: '#26A69A' }} />
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#26A69A' }}>Match Insight</p>
+              <p className="text-sm leading-relaxed" style={{ color: '#333' }}>
+                {(() => {
+                  const text = reason.replace(/<[^>]*>/g, '').trim()
+                  const dotIdx = text.indexOf('.')
+                  if (dotIdx > 0 && dotIdx < 60) {
+                    return <><strong>{text.slice(0, dotIdx + 1)}</strong>{text.slice(dotIdx + 1)}</>
+                  }
+                  return text
+                })()}
+              </p>
+            </div>
+            {score > 0 && (
+              <div className="flex-shrink-0 flex flex-col items-center gap-0.5 ml-2">
+                <svg width="68" height="68" viewBox="0 0 68 68">
+                  <circle cx="34" cy="34" r="27" fill="none" stroke="#E8E8EC" strokeWidth="5" />
+                  <circle cx="34" cy="34" r="27" fill="none" stroke="#008080" strokeWidth="5"
+                    strokeLinecap="round"
+                    strokeDasharray={`${(score / 100) * 169.6} 169.6`}
+                    transform="rotate(-90 34 34)" />
+                  <text x="34" y="31" textAnchor="middle" dominantBaseline="middle"
+                    style={{ fontSize: '13px', fontWeight: '700', fill: '#008080', fontFamily: 'inherit' }}>
+                    {score}%
+                  </text>
+                  <text x="34" y="46" textAnchor="middle"
+                    style={{ fontSize: '8px', fill: '#26A69A', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: '600' }}>
+                    MATCH
+                  </text>
+                </svg>
+              </div>
+            )}
+          </div>
+        )
+      })()}
+
+      {/* ── Expand toggle ── */}
+      {(!!(grant as EnrichedGrant).funderBrief || grant.eligibilityCriteria?.length > 0 || (grant as EnrichedGrant).impactSectors?.length || grant.sectors?.length) && (
+        <button
+          onClick={() => setExpanded(v => !v)}
+          className="w-full flex items-center justify-center gap-1.5 py-2.5 border-t border-[#E8E8EC] text-[11px] font-bold uppercase tracking-widest transition-colors hover:bg-[#F5F5F5]"
+          style={{ color: '#6E6E80' }}
+        >
+          <ChevronDown className="w-3.5 h-3.5 transition-transform" style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+          {expanded ? 'Show less' : (grant as EnrichedGrant).funderBrief ? 'Funder Intelligence' : 'Eligibility & details'}
+        </button>
+      )}
+
+      {/* ── Expanded details panel ── */}
+      {expanded && (() => {
+        const brief = (grant as EnrichedGrant).funderBrief
+
+        return (
+          <div className="border-t border-[#E8E8EC]" style={{ backgroundColor: '#FAF8F5' }}>
+            {brief ? (
+              /* ── Funder Intelligence brief ── */
+              (() => {
+                // Truncate to ~130 chars at a word boundary
+                const truncate = (text: string, chars = 130) => {
+                  if (text.length <= chars) return text
+                  const cut = text.slice(0, chars)
+                  return cut.slice(0, cut.lastIndexOf(' ')) + '…'
+                }
+                const clamp4: React.CSSProperties = {
+                  display: '-webkit-box', WebkitLineClamp: 4,
+                  WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                }
+                const clamp3: React.CSSProperties = {
+                  display: '-webkit-box', WebkitLineClamp: 3,
+                  WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                }
+                const orgTerms = [...(org?.themes ?? []), ...(org?.areas_of_work ?? [])].slice(0, 3)
+
+                // Reusable section block: consistent label + body style throughout
+                const Section = ({ icon: Icon, iconColor, label, children, className = '', style }: {
+                  icon: React.ElementType, iconColor: string, label: string, children: React.ReactNode, className?: string, style?: React.CSSProperties
+                }) => (
+                  <div className={className} style={style}>
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <Icon className="w-3 h-3 flex-shrink-0" style={{ color: iconColor }} />
+                      <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#3D3D4E' }}>{label}</p>
+                    </div>
+                    {children}
+                  </div>
+                )
+
+                // Build top-row items so grid cols match actual count
+                const topItems = [
+                  brief.what_they_fund && (
+                    <Section key="fund" icon={CheckCircle2} iconColor="#008080" label="What they fund">
+                      <p className="text-sm text-[#444] leading-relaxed" style={clamp4}>{brief.what_they_fund}</p>
+                    </Section>
+                  ),
+                  brief.priorities && (
+                    <Section key="prio" icon={TrendingUp} iconColor="#FF7043" label="Current priorities">
+                      <p className="text-sm text-[#444] leading-relaxed" style={clamp4}>{brief.priorities}</p>
+                    </Section>
+                  ),
+                  brief.exclusions && (
+                    <Section key="excl" icon={AlertTriangle} iconColor="#B45309" label="Exclusions"
+                      className="px-3 py-3" style={{ backgroundColor: 'rgba(255,183,77,0.15)', borderRadius: 8 } as React.CSSProperties}>
+                      <p className="text-sm leading-relaxed" style={{ ...clamp4, color: '#5C3D00' }}>{brief.exclusions}</p>
+                    </Section>
+                  ),
+                ].filter(Boolean)
+
+                const topCols = topItems.length === 3 ? 'grid-cols-3' : topItems.length === 2 ? 'grid-cols-2' : 'grid-cols-1'
+
+                const bottomItems = [
+                  brief.strong_application && (
+                    <Section key="strong" icon={Star} iconColor="#6E6E80" label="Strong application">
+                      <p className="text-sm text-[#444] leading-relaxed" style={clamp3}>{brief.strong_application}</p>
+                    </Section>
+                  ),
+                  brief.typical_award && (
+                    <Section key="award" icon={DollarSign} iconColor="#6E6E80" label="Typical award">
+                      <p className="text-sm text-[#444] leading-relaxed" style={clamp3}>{brief.typical_award}</p>
+                    </Section>
+                  ),
+                  brief.decision_timeline && (
+                    <Section key="timeline" icon={CalendarDays} iconColor="#6E6E80" label="Decision timeline">
+                      <p className="text-sm text-[#444] leading-relaxed" style={clamp3}>{brief.decision_timeline}</p>
+                    </Section>
+                  ),
+                  brief.funder_tips && (
+                    <Section key="tips" icon={Lightbulb} iconColor="#6E6E80" label="Insider tips">
+                      <p className="text-sm text-[#444] leading-relaxed" style={clamp3}>{brief.funder_tips}</p>
+                    </Section>
+                  ),
+                ].filter(Boolean)
+
+                return (
+                  <div className="px-6 pt-5 pb-6 space-y-5">
+
+                    {brief.last_enriched && (
+                      <p className="text-[10px] text-[#9E9EA8] text-right -mb-2">Updated {brief.last_enriched}</p>
+                    )}
+
+                    {/* Top row: What they fund | Priorities | Exclusions */}
+                    {topItems.length > 0 && (
+                      <div className={`grid ${topCols} gap-5 items-start pt-1`}>
+                        {topItems}
+                      </div>
+                    )}
+
+                    {/* Bottom row: 4 supporting fields in 2-col grid */}
+                    {bottomItems.length > 0 && (
+                      <div className="grid grid-cols-2 gap-x-8 gap-y-5 pt-4 border-t border-[#E8E8EC]">
+                        {bottomItems}
+                      </div>
+                    )}
+
+                    {/* How to apply — full-width footer with Apply button */}
+                    {(brief.how_to_apply || grant.applyUrl) && (
+                      <div className="flex items-start justify-between gap-6 pt-4 border-t border-[#E8E8EC]">
+                        <div className="flex-1 min-w-0">
+                          {brief.how_to_apply && (
+                            <>
+                              <div className="flex items-center gap-1.5 mb-1.5">
+                                <ClipboardList className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#6E6E80' }} />
+                                <p className="text-sm font-semibold text-[#1C1C2E]">How to apply</p>
+                              </div>
+                              <p className="text-sm text-[#444] leading-relaxed">{brief.how_to_apply}</p>
+                            </>
+                          )}
+                        </div>
+                        {grant.applyUrl && (
+                          <a href={grant.applyUrl} target="_blank" rel="noopener noreferrer"
+                            className="flex-shrink-0 flex items-center gap-1.5 px-5 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-80"
+                            style={{ borderRadius: 9999, backgroundColor: '#FF7043' }}>
+                            Apply
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )
+              })()
+            ) : (
+              /* ── Fallback: structured eligibility data ── */
+              <div className="px-6 py-5 space-y-4">
+                {grant.description.length > 180 && (
+                  <div>
+                    <p className="text-[10px] font-bold text-[#6E6E80] uppercase tracking-wider mb-2">Full description</p>
+                    <p className="text-sm text-[#444] leading-relaxed">{grant.description}</p>
+                  </div>
+                )}
+                {grant.eligibilityCriteria?.length > 0 && (
+                  <div>
+                    <p className="text-[10px] font-bold text-[#6E6E80] uppercase tracking-wider mb-2.5">Eligibility criteria</p>
+                    <ul className="space-y-2">
+                      {grant.eligibilityCriteria.map((c, i) => (
+                        <li key={i} className="flex gap-2.5 text-sm text-[#444]">
+                          <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: '#008080' }} />
+                          <span className="leading-snug">{c}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {(grant as EnrichedGrant).eligibleStructures?.length ? (
+                  <div>
+                    <p className="text-[10px] font-bold text-[#6E6E80] uppercase tracking-wider mb-2">Eligible organisations</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {((grant as EnrichedGrant).eligibleStructures ?? []).map(s => (
+                        <span key={s} className="text-[11px] font-semibold px-2.5 py-1"
+                          style={{ backgroundColor: 'rgba(0,128,128,0.10)', color: '#008080', borderRadius: 9999 }}>
+                          {STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+                <div className="flex items-center justify-between pt-1">
+                  <p className="text-xs text-[#9E9EA8]">
+                    No funder intelligence yet — an admin can enrich this grant from the Funder Intelligence page.
+                  </p>
+                  {grant.applyUrl && (
+                    <a
+                      href={grant.applyUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-shrink-0 flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white transition-opacity hover:opacity-80"
+                      style={{ borderRadius: 9999, backgroundColor: '#FF7043' }}>
+                      Apply
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )
+      })()}
+
 
     </div>
   )
@@ -631,6 +845,7 @@ const VALID_FUNDER_TYPES: FunderType[] = [
 interface EnrichedGrant extends GrantOpportunity {
   funderCategory?: string       // funders.funder_type (our 8-category taxonomy)
   geoScope?: string[]           // funders.geographic_scope
+  funderBrief?: Record<string, string | null> | null  // AI-generated funder intelligence
 }
 
 function normaliseScrapedGrant(row: Record<string, unknown>): EnrichedGrant {
@@ -653,6 +868,7 @@ function normaliseScrapedGrant(row: Record<string, unknown>): EnrichedGrant {
     applyUrl:             row.apply_url ? String(row.apply_url) : null,
     isInviteOnly:         Boolean(row.is_invite_only),
     nextOpenDate:         row.next_open_date ? String(row.next_open_date) : null,
+    nextOpenDateParsed:   row.next_open_date_parsed ? String(row.next_open_date_parsed) : null,
     fundingType:          (row.funding_type ? String(row.funding_type) : 'grant') as FundingType,
     impactSectors:        Array.isArray(row.impact_sectors)     ? (row.impact_sectors     as ImpactSector[])   : undefined,
     eligibleStructures:   Array.isArray(row.eligible_structures) ? (row.eligible_structures as LegalStructure[]) : undefined,
@@ -662,6 +878,7 @@ function normaliseScrapedGrant(row: Record<string, unknown>): EnrichedGrant {
     // Funder-table enrichment (null for 'manual' source grants)
     funderCategory:       row.funder_category ? String(row.funder_category) : undefined,
     geoScope:             Array.isArray(row.geographic_scope) ? (row.geographic_scope as string[]) : undefined,
+    funderBrief:          row.funder_brief && typeof row.funder_brief === 'object' ? (row.funder_brief as Record<string, string | null>) : null,
   }
 }
 
@@ -685,7 +902,7 @@ export default function SearchPage() {
   const [toast, setToast]               = useState<string | null>(null)
   const [org, setOrg]                   = useState<Organisation | null>(null)
   const [userId, setUserId]             = useState('')
-  const [sortBy, setSortBy]             = useState<'match' | 'amount' | 'freshest'>('match')
+  const [sortBy, setSortBy]             = useState<'match' | 'amount' | 'freshest' | 'deadline'>('match')
   const [freshnessFilter, setFreshnessFilter] = useState<'all' | '7d' | '14d' | '30d'>('all')
   const [bannerDismissed, setBannerDismissed] = useState(false)
   const [interactions, setInteractions] = useState<Map<string, Set<InteractionAction>>>(new Map())
@@ -713,18 +930,19 @@ export default function SearchPage() {
   const [pipelineNudge, setPipelineNudge]         = useState<{ name: string; url: string | null } | null>(null)
   const [hasSearched, setHasSearched]             = useState(false)
   const [profileFiltersOpen, setProfileFiltersOpen] = useState(false)
-  const [activeMode, setActiveMode]               = useState<'matches' | 'search' | 'live'>('matches')
+  const [activeTab, setActiveTab]                 = useState<'grant' | 'social_investment' | 'blended_finance' | 'accelerator' | 'support_programme' | 'in_kind' | 'corporate'>('grant')
+  const [activeView, setActiveView]               = useState<'matches' | 'saved'>('matches')
 
   // ── Live search (web) state ───────────────────────────────────────────────
   const [searchMode, setSearchMode]               = useState<'database' | 'live'>('database')
   const [locationFilter, setLocationFilter]       = useState('')
+  const [locationInput, setLocationInput]         = useState('')
   const [liveSelectedSectors, setLiveSelectedSectors] = useState<string[]>([])
   const [liveResults, setLiveResults]             = useState<LiveSearchResponse | null>(null)
   const [liveLoading, setLiveLoading]             = useState(false)
   const [liveError, setLiveError]                 = useState<string | null>(null)
   const [liveSmartMatched, setLiveSmartMatched]   = useState(false)
   const [recentSearchesOpen, setRecentSearchesOpen] = useState(false)
-  const [detailGrantId, setDetailGrantId]           = useState<string | null>(null)
   const [searchHistory, setSearchHistory]         = useState<SearchHistoryItem[]>([])
   const [weeklySearchCount, setWeeklySearchCount] = useState(0)
   const [isAdmin, setIsAdmin]                     = useState(false)
@@ -735,23 +953,24 @@ export default function SearchPage() {
     try {
       const saved = sessionStorage.getItem('grantSearch')
       if (saved) {
-        const { query: q, aiResults: r, activeType: t, smartMatched: sm, liveResults: lr, liveSmartMatched: lsm, activeMode: am } = JSON.parse(saved)
-        if (q)   { setQuery(q); setInputValue(q) }
+        const { query: q, aiResults: r, activeType: t, smartMatched: sm, liveResults: lr, liveSmartMatched: lsm, activeView: av } = JSON.parse(saved)
+        // Only restore query if there are also AI results to go with it
+        if (r && q) { setQuery(q); setInputValue(q) }
         if (r)   setAiResults(r)
         if (t)   setActiveType(t)
         if (sm)  setSmartMatched(sm)
         if (lr)  setLiveResults(lr)
         if (lsm) setLiveSmartMatched(lsm)
-        if (am)  setActiveMode(am)
+        if (av)  setActiveView(av)
       }
     } catch { /* ignore */ }
   }, [])
 
   useEffect(() => {
     try {
-      sessionStorage.setItem('grantSearch', JSON.stringify({ query, aiResults, activeType, smartMatched, liveResults, liveSmartMatched, activeMode }))
+      sessionStorage.setItem('grantSearch', JSON.stringify({ query, aiResults, activeType, smartMatched, liveResults, liveSmartMatched, activeView }))
     } catch { /* ignore */ }
-  }, [query, aiResults, activeType, smartMatched, liveResults, liveSmartMatched, activeMode])
+  }, [query, aiResults, activeType, smartMatched, liveResults, liveSmartMatched, activeView])
 
   useEffect(() => {
     async function loadOrg() {
@@ -930,6 +1149,27 @@ export default function SearchPage() {
     })
   }
 
+  async function handleSave(grantId: string) {
+    if (!org) return
+    await recordInteraction(org.id, grantId, 'saved')
+    setInteractions(prev => {
+      const next = new Map(prev)
+      if (!next.has(grantId)) next.set(grantId, new Set())
+      next.get(grantId)!.add('saved')
+      return next
+    })
+  }
+
+  async function handleUnsave(grantId: string) {
+    if (!org) return
+    // optimistic update only for now
+    setInteractions(prev => {
+      const next = new Map(prev)
+      next.get(grantId)?.delete('saved')
+      return next
+    })
+  }
+
   async function handleLike(grantId: string) {
     if (!org) return
     const current = interactions.get(grantId) ?? new Set()
@@ -1059,11 +1299,9 @@ export default function SearchPage() {
         activeType === 'recent'   ? (g.dateAdded != null && g.dateAdded >= SIXTY_DAYS_AGO) :
         activeType === 'scraped'  ? g.source === 'scraped' :
         g.funderType === activeType
-      const matchesQuery = !query ||
-        g.title.toLowerCase().includes(query.toLowerCase()) ||
-        g.funder.toLowerCase().includes(query.toLowerCase()) ||
-        g.description.toLowerCase().includes(query.toLowerCase()) ||
-        g.sectors.some(s => s.toLowerCase().includes(query.toLowerCase()))
+      // Text query only applies when there are AI results — in My Matches mode
+      // the search box triggers AI search, not local text filtering
+      const matchesQuery = true
       const matchesAmount =
         (minAmt === null || (g.amountMax ?? 0) >= minAmt) &&
         (maxAmt === null || (g.amountMin ?? 0) <= maxAmt)
@@ -1110,11 +1348,18 @@ export default function SearchPage() {
         activeGeoScope === 'all' ||
         (ge.geoScope && ge.geoScope.includes(activeGeoScope))
       // Location text filter — soft match against geoScope values (grants with no geo data always pass)
+      // UK/England/nationwide grants always pass regardless of location filter
+      const BROAD_SCOPES = ['uk', 'uk-wide', 'england', 'nationwide', 'national', 'uk wide', 'all uk']
       const matchesLocationText = !locationFilter ||
         !ge.geoScope?.length ||
+        ge.geoScope.some(s => BROAD_SCOPES.includes(s.toLowerCase())) ||
         ge.geoScope.some(s => s.toLowerCase().includes(locationFilter.toLowerCase()) || locationFilter.toLowerCase().includes(s.toLowerCase()))
+      // Funding type tab filter — filter by activeTab
+      const matchesTab = activeTab === 'grant'
+        ? (['grant', 'diversity_fund'] as string[]).includes(gFundingType ?? 'grant')
+        : gFundingType === activeTab
 
-      return matchesQuery && matchesType && matchesAmount && matchesDeadline && matchesSectors && matchesEntryType && matchesFreshness && matchesInviteOnly && matchesFundingType && matchesCategory && matchesFunderCategory && matchesGeoScope && matchesLocationText
+      return matchesQuery && matchesType && matchesAmount && matchesDeadline && matchesSectors && matchesEntryType && matchesFreshness && matchesInviteOnly && matchesFundingType && matchesCategory && matchesFunderCategory && matchesGeoScope && matchesLocationText && matchesTab
     })
 
     if (aiResults) {
@@ -1199,6 +1444,12 @@ export default function SearchPage() {
         const bDate = b.grant.lastVerifiedAt ?? b.grant.dateAdded ?? ''
         return bDate.localeCompare(aDate)
       })
+    } else if (sortBy === 'deadline') {
+      withScores.sort((a, b) => {
+        const aDeadline = a.grant.deadline ?? '9999-12-31'
+        const bDeadline = b.grant.deadline ?? '9999-12-31'
+        return aDeadline.localeCompare(bDeadline)
+      })
     }
 
     return withScores
@@ -1276,7 +1527,7 @@ export default function SearchPage() {
     setInputValue(q)
     setHasSearched(true)
     const combined = [q.trim(), locationFilter.trim()].filter(Boolean).join(' ')
-    await runAISearch(combined, false, activeMode === 'matches')
+    await runAISearch(combined, false, true)
   }
 
   function handleSmartMatch() {
@@ -1285,34 +1536,6 @@ export default function SearchPage() {
     if (!smartQuery) return
     setQuery(smartQuery)
     setInputValue(smartQuery)
-  }
-
-  function switchMode(mode: 'matches' | 'search' | 'live') {
-    setActiveMode(mode)
-    setFiltersOpen(false)
-    setProfileFiltersOpen(false)
-    if (mode === 'matches') {
-      setSearchMode('database')
-      setLiveResults(null)
-      setAiResults(null)
-      setQuery(''); setInputValue('')
-      // Re-apply profile filters
-      if (org?.primary_location) setLocationFilter(org.primary_location)
-      if (org?.impact_sectors?.length) setActiveSectors(new Set(org.impact_sectors as ImpactSector[]))
-      setSearchModeToggle('profile')
-      setProfileChipsApplied(true)
-      setHasSearched(true)
-    } else if (mode === 'search') {
-      setSearchMode('database')
-      setLiveResults(null)
-      setLocationFilter('')
-      // Preserve existing search results — user clears them explicitly
-    } else {
-      setSearchMode('live')
-      setAiResults(null)
-      setLocationFilter('')
-      setRecentSearchesOpen(false)
-    }
   }
 
   const orgIsIncomplete = org && !org.themes?.length && !org.areas_of_work?.length && !org.primary_location
@@ -1393,6 +1616,26 @@ export default function SearchPage() {
   const grantsCount     = allGrants_raw.filter(g => GRANT_TYPES.includes((g as GrantOpportunity & { fundingType?: FundingType }).fundingType ?? 'grant')).length
   const programmesCount = allGrants_raw.filter(g => PROGRAMME_TYPES.includes((g as GrantOpportunity & { fundingType?: FundingType }).fundingType ?? 'grant')).length
 
+  const TYPE_TABS = [
+    { id: 'grant'             as const, label: 'Grants',                    icon: <DollarSign size={14} strokeWidth={2} /> },
+    { id: 'social_investment' as const, label: 'Social Investment',         icon: <TrendingUp size={14} strokeWidth={2} /> },
+    { id: 'blended_finance'   as const, label: 'Blended Finance',           icon: <GitMerge size={14} strokeWidth={2} /> },
+    { id: 'accelerator'       as const, label: 'Incubators & Accelerators', icon: <Rocket size={14} strokeWidth={2} /> },
+    { id: 'support_programme' as const, label: 'Fellowships & Support',     icon: <GraduationCap size={14} strokeWidth={2} /> },
+    { id: 'in_kind'           as const, label: 'In-Kind & Pro Bono',        icon: <Gift size={14} strokeWidth={2} /> },
+    { id: 'corporate'         as const, label: 'Corporate Partners',        icon: <Building2 size={14} strokeWidth={2} /> },
+  ]
+
+  const TAB_DESCS: Record<string, string> = {
+    grant:             'Non-repayable funds from foundations, trusts, and public bodies. Applications required; deadlines are firm.',
+    social_investment: 'Repayable finance (loans, bonds, equity) for organisations that generate social impact alongside financial returns.',
+    blended_finance:   'Part-grant, part-loan structures for organisations that generate some revenue but need grant support to be viable.',
+    accelerator:       'Structured 3–6 month programmes combining funding, mentorship, and expert support. Best for early-stage growth.',
+    support_programme: 'Non-financial support: training, mentorship, and networking. Some include a small stipend or grant.',
+    in_kind:           'Goods, services, or expertise instead of cash — free legal advice, office space, technology, or pro bono support.',
+    corporate:         'Not grants — these are partnership opportunities with businesses. Approach them as a commercial relationship, not a funding application.',
+  }
+
   const CATEGORY_TABS = [
     {
       id:    'all'        as const,
@@ -1417,10 +1660,20 @@ export default function SearchPage() {
     },
   ]
 
+  const savedCount = Array.from(interactions.values()).filter(s => s.has('saved')).length
+
+  // Match scores + reasons are only meaningful when the profile filter is active
+  // (sectors/location applied) OR when an AI search has produced scored results.
+  // When profile filter is off and no AI search is active, suppress them so the
+  // UI doesn't show match data that isn't actually filtering anything.
+  const profileFilterOn = activeSectors.size > 0 || !!locationFilter
+  const showMatchInfo = !!org && (profileFilterOn || !!aiResults)
+
   return (
     <div>
-      <div className="mb-5">
-        <h2 className="font-display text-2xl font-bold text-charcoal">Find Funding</h2>
+      {/* ── Page heading ── */}
+      <div className="mb-2">
+        <h2 className="font-serif text-5xl font-bold text-charcoal leading-tight">Find Funding</h2>
       </div>
 
       {/* Welcome banner — shown after first profile save */}
@@ -1434,272 +1687,168 @@ export default function SearchPage() {
         </div>
       )}
 
-      {/* ── Search card ── */}
-      <div className="bg-white shadow-card mb-5 border border-warm/60">
-
-        {/* ── Mode tabs ── */}
-        <div className="flex border-b border-warm">
-          {([
-            { id: 'matches' as const, icon: <Users size={14} strokeWidth={2} />, label: 'My Matches',    sub: 'Ranked by your profile' },
-            { id: 'search'  as const, icon: <Search size={14} strokeWidth={2} />, label: 'Search',        sub: 'Fresh keyword search'   },
-            { id: 'live'    as const, icon: <Globe  size={14} strokeWidth={2} />, label: 'Live Search',   sub: 'Real-time web research'  },
-          ] as const).map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => switchMode(tab.id)}
-              className={`flex-1 flex flex-col items-center gap-0.5 py-3 sm:py-3.5 px-1 sm:px-2 border-b-2 transition-colors ${
-                activeMode === tab.id
-                  ? 'border-coral text-charcoal'
-                  : 'border-transparent text-mid hover:text-charcoal hover:bg-warm/30'
-              }`}
-            >
-              <span className={`flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm font-semibold ${activeMode === tab.id ? 'text-coral' : ''}`}>
-                {tab.icon}{tab.label}
-                {tab.id === 'live' && (
-                  <span className="hidden sm:inline text-[9px] font-bold px-1 py-0.5 bg-emerald-100 text-emerald-700 leading-none">NEW</span>
-                )}
-              </span>
-              <span className="text-[11px] text-light hidden sm:block">{tab.sub}</span>
-            </button>
-          ))}
-        </div>
-
-        <div className="p-5">
-          {/* Live search usage counter inside tab */}
-          {activeMode === 'live' && (
-            <div className="mb-3 flex items-center justify-between text-xs text-mid">
-              <span>Searches the live web in real time — takes 15–30 seconds</span>
-              <span className={`font-semibold ${(!isAdmin && weeklySearchCount >= WEEKLY_LIMIT) ? 'text-red-500' : 'text-charcoal'}`}>
-                {isAdmin ? '∞ unlimited' : weeklySearchCount >= WEEKLY_LIMIT ? '⚠ limit reached' : `${WEEKLY_LIMIT - weeklySearchCount}/${WEEKLY_LIMIT} searches left this week`}
-              </span>
-            </div>
+      {/* ── Subtitle row: text left, tabs right ── */}
+      <div className="flex items-center justify-between mb-3">
+        {/* Left: subtitle (conditional) */}
+        <div className="flex items-center gap-2 text-sm text-mid">
+          {activeView === 'matches' && org && (
+            <>
+              <span className="w-2 h-2 flex-shrink-0 rounded-full" style={{ backgroundColor: '#008080' }} />
+              Intelligent matches for <strong className="text-charcoal">{org.name ?? 'your organisation'}</strong>
+              {org.primary_location && <span className="text-mid">· {org.primary_location}, UK</span>}
+            </>
           )}
-
-          {/* My Matches context label */}
-          {activeMode === 'matches' && org && (
-            <div className="mb-3 flex items-center gap-2 text-xs text-mid">
-              <span className="w-1.5 h-1.5 rounded-full bg-forest inline-block" />
-              Ranked for <strong className="text-charcoal">{org.name ?? 'your organisation'}</strong>
-              {org.primary_location && <span>· {org.primary_location}</span>}
-              <a href="/dashboard/profile" className="ml-auto text-coral hover:underline font-medium">Edit profile →</a>
-            </div>
-          )}
-          {activeMode === 'matches' && !org && (
-            <div className="mb-3 text-xs border border-amber-200 bg-amber-50 px-3 py-2">
+          {activeView === 'matches' && !org && (
+            <div className="text-xs border border-amber-200 bg-amber-50 px-3 py-2">
               <a href="/dashboard/profile" className="font-semibold text-amber-700 underline">Set up your profile</a>
               <span className="text-amber-800"> to see grants ranked for your organisation.</span>
             </div>
           )}
-
-          {/* Input row */}
-          <div className="flex gap-3">
-            <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-light" />
-              <input
-                type="text"
-                value={inputValue}
-                onChange={e => setInputValue(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key !== 'Enter') return
-                  setHasSearched(true)
-                  searchMode === 'live' ? runLiveSearch(inputValue) : handleAISearch(inputValue)
-                }}
-                className="form-input h-12 pl-11 pr-4"
-                placeholder={
-                  activeMode === 'live'    ? 'e.g. "youth mental health London" or "arts grants Cornwall"' :
-                  activeMode === 'matches' ? 'Refine your matches — e.g. "core costs" or "capital project"' :
-                                            'Search all grants — e.g. "youth sport Manchester"'
-                }
-              />
-            </div>
-            <button
-              onClick={() => searchMode === 'live' ? runLiveSearch(inputValue) : handleAISearch(inputValue)}
-              disabled={searchMode === 'live'
-                ? (!isAdmin && weeklySearchCount >= WEEKLY_LIMIT)
-                : (!inputValue.trim() && !locationFilter.trim())}
-              className={`px-5 h-12 text-white text-sm font-semibold whitespace-nowrap transition-colors disabled:opacity-40 ${
-                (aiLoading || liveLoading) ? 'pointer-events-none' : ''
-              } ${activeMode === 'live' ? 'bg-charcoal hover:bg-charcoal/90' : 'bg-coral hover:bg-coral/90'}`}
-            >
-              {activeMode === 'live'
-                ? (liveLoading
-                    ? <span className="flex items-center gap-2"><span className="dot-bounce flex gap-1"><span/><span/><span/></span>Searching…</span>
-                    : <><Globe size={14} className="inline -mt-0.5 mr-1" />Search</>)
-                : (aiLoading
-                    ? <span className="flex items-center gap-2"><span className="dot-bounce flex gap-1"><span/><span/><span/></span>Searching…</span>
-                    : <><Search size={14} className="inline -mt-0.5 mr-1" />Search</>)}
-            </button>
-          </div>
-
-          {/* Location row — all modes */}
-          <div className="flex gap-3 mt-2">
-            <div className="relative w-72">
-              <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-light" />
-              <input
-                type="text"
-                value={locationFilter}
-                onChange={e => setLocationFilter(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key !== 'Enter') return
-                  if (activeMode !== 'live') { setHasSearched(true); handleAISearch(inputValue) }
-                }}
-                className="form-input h-10 pl-11 pr-4 text-sm w-full"
-                placeholder='Location (optional)'
-              />
-            </div>
-          </div>
-
-          {/* ── Filters (database modes) ── */}
-          {activeMode !== 'live' && (
+        </div>
+        {/* Right: tabs always visible */}
+        <div className="flex items-center gap-0 bg-white border border-warm/60 shadow-sm overflow-hidden flex-shrink-0" style={{ borderRadius: 9999 }}>
+          {(['matches', 'saved'] as const).map((v, i) => (
             <>
-              <div className="mt-3 flex items-center gap-2 flex-wrap">
+              {i > 0 && <div key="sep" className="w-px h-5 bg-warm/80" />}
+              <button
+                key={v}
+                onClick={() => setActiveView(v)}
+                className={`px-5 py-2 text-sm font-medium transition-colors flex items-center gap-1.5 ${activeView === v ? 'text-coral border-b-2 border-coral' : 'border-b-2 border-transparent text-gray-500 hover:text-charcoal'}`}
+              >
+                {v === 'matches' ? 'My Matches' : 'Saved'}
+                {v === 'saved' && savedCount > 0 && (
+                  <span className="text-xs bg-coral text-white px-1.5 py-0.5 ml-1" style={{ borderRadius: 9999 }}>{savedCount}</span>
+                )}
+              </button>
+            </>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Search card ── */}
+      <div className="bg-white shadow-card mb-5 border border-warm/60 rounded-xl overflow-hidden">
+
+        <div className="p-5">
+
+          {/* ── Unified search pill + Search button ── */}
+          {activeView === 'matches' && (
+            <div className="flex gap-3 items-center">
+              {/* Single pill container */}
+              <div className="flex-1 flex items-center bg-white border border-gray-200 rounded-full h-12 overflow-hidden"
+                style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+                {/* Search icon + input */}
+                <div className="flex items-center flex-1 min-w-0 px-4">
+                  <Search className="h-4 w-4 text-gray-400 flex-shrink-0 mr-2.5" />
+                  <input
+                    type="text"
+                    value={inputValue}
+                    onChange={e => setInputValue(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key !== 'Enter') return
+                      setHasSearched(true)
+                      handleAISearch(inputValue)
+                    }}
+                    className="flex-1 bg-transparent outline-none text-sm text-charcoal placeholder-gray-400 min-w-0"
+                    placeholder="Search by grant name, keyword or funder..."
+                  />
+                </div>
+                {/* Divider */}
+                <div className="w-px h-6 bg-gray-200 flex-shrink-0" />
+                {/* Location */}
+                <div className="flex items-center w-36 px-4 flex-shrink-0">
+                  <MapPin className="h-4 w-4 text-gray-400 flex-shrink-0 mr-2" />
+                  <input
+                    type="text"
+                    value={locationInput}
+                    onChange={e => setLocationInput(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key !== 'Enter') return
+                      setLocationFilter(locationInput)
+                      setHasSearched(true)
+                      handleAISearch(inputValue)
+                    }}
+                    onBlur={() => setLocationFilter(locationInput)}
+                    className="flex-1 bg-transparent outline-none text-sm text-charcoal placeholder-gray-400 min-w-0"
+                    placeholder="Location"
+                  />
+                </div>
+                {/* Divider */}
+                <div className="w-px h-6 bg-gray-200 flex-shrink-0" />
+                {/* Filters */}
                 <button
                   onClick={() => setFiltersOpen(o => !o)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 border text-xs font-semibold transition-all ${
-                    filtersOpen || activeFilterCount > 0
-                      ? 'bg-charcoal text-white border-charcoal'
-                      : 'border-warm text-mid hover:border-coral hover:text-coral bg-white'
+                  className={`flex items-center gap-1.5 px-4 h-full text-sm font-medium transition-colors flex-shrink-0 ${
+                    filtersOpen || activeFilterCount > 0 ? 'text-charcoal' : 'text-gray-500 hover:text-charcoal'
                   }`}
                 >
-                  <SlidersHorizontal size={13} strokeWidth={2} />
-                  {activeFilterCount > 0 ? `Filters · ${activeFilterCount} active` : 'Filters'}
-                  <ChevronDown size={13} strokeWidth={2} className={`transition-transform duration-200 ${filtersOpen ? 'rotate-180' : ''}`} />
+                  <SlidersHorizontal size={14} strokeWidth={2} />
+                  Filters
+                  {activeFilterCount > 0 && (
+                    <span className="text-xs bg-charcoal text-white px-1.5 py-0.5 rounded-full leading-none">{activeFilterCount}</span>
+                  )}
+                  <ChevronDown size={12} strokeWidth={2} className={`transition-transform duration-200 ${filtersOpen ? 'rotate-180' : ''}`} />
                 </button>
-                {aiResults && (
-                  <button onClick={() => { setAiResults(null); setSmartMatched(false); setQuery(''); setInputValue('') }} className="px-3 py-1.5 border border-warm text-xs font-medium text-mid hover:border-coral hover:text-coral transition-all bg-white">
-                    Clear results
+                {/* Divider */}
+                <div className="w-px h-6 bg-gray-200 flex-shrink-0" />
+                {/* Profile toggle */}
+                {org && (
+                  <button
+                    onClick={() => {
+                      if (profileFilterOn) {
+                        setActiveSectors(new Set())
+                        setLocationFilter('')
+                        setLocationInput('')
+                      } else {
+                        if (org.primary_location) { setLocationFilter(org.primary_location); setLocationInput(org.primary_location) }
+                        if ((org.impact_sectors as string[] | undefined)?.length) setActiveSectors(new Set(org.impact_sectors as ImpactSector[]))
+                      }
+                    }}
+                    className="flex items-center gap-2 px-4 h-full flex-shrink-0 whitespace-nowrap"
+                    title={profileFilterOn ? 'Turn off profile filter' : 'Filter by your profile'}
+                  >
+                    <span className="relative flex-shrink-0" style={{
+                      width: 40, height: 22,
+                      backgroundColor: profileFilterOn ? '#26A69A' : '#d1d5db',
+                      borderRadius: 9999, display: 'inline-flex', alignItems: 'center',
+                      transition: 'background-color 0.2s',
+                    }}>
+                      <span className="absolute bg-white transition-transform duration-200" style={{
+                        width: 16, height: 16, borderRadius: 9999, top: 3, left: 3,
+                        transform: profileFilterOn ? 'translateX(18px)' : 'translateX(0)',
+                      }} />
+                    </span>
+                    <span className={`text-[11px] font-semibold uppercase tracking-wider ${profileFilterOn ? 'text-gray-600' : 'text-gray-400'}`}>
+                      Profile
+                    </span>
                   </button>
                 )}
               </div>
-              {aiError && <p className="text-amber-600 text-xs mt-3">⚠ {aiError}</p>}
-            </>
-          )}
-
-          {/* ── LIVE SEARCH MODE: explainer + limit ── */}
-          {activeMode === 'live' && (
-            <div className="mt-4 space-y-3">
-
-              {/* Limit reached message */}
-              {!isAdmin && weeklySearchCount >= WEEKLY_LIMIT && (
-                <div className="bg-amber-50 border border-amber-200 px-4 py-3">
-                  <p className="text-xs font-semibold text-amber-900 mb-1">Weekly limit reached</p>
-                  <p className="text-xs text-amber-800">
-                    You&apos;ve used your {WEEKLY_LIMIT} Live Searches for this week. Your allowance resets every Monday — or switch to our database above for instant results.
-                  </p>
-                </div>
-              )}
-
-              {/* Recent searches */}
-              {!liveResults && !liveLoading && searchHistory.length > 0 && (
-                <div className="border border-warm bg-white mb-3">
-                  <button
-                    onClick={() => setRecentSearchesOpen(o => !o)}
-                    className="w-full flex items-center justify-between px-5 py-3 hover:bg-[#f5f2ed] transition-colors"
-                  >
-                    <span className="text-xs font-semibold text-light uppercase tracking-wider">Recent searches</span>
-                    <ChevronDown size={13} strokeWidth={2} className={`text-light transition-transform duration-200 ${recentSearchesOpen ? 'rotate-180' : ''}`} />
-                  </button>
-                  {recentSearchesOpen && <div className="px-2 pb-3 space-y-1">
-                    {searchHistory.slice(0, 6).map(item => (
-                      <div key={item.id} className="flex items-center gap-2 group">
-                        <button
-                          onClick={() => restoreSearch(item)}
-                          className="flex-1 flex items-center gap-2.5 px-3 py-2 text-left hover:bg-[#f5f2ed] transition-colors rounded-sm min-w-0"
-                        >
-                          <Clock className="w-3.5 h-3.5 text-light flex-shrink-0" strokeWidth={2} />
-                          <span className="text-sm text-charcoal truncate flex-1">{item.query}</span>
-                          {item.location && (
-                            <span className="text-xs text-light flex-shrink-0 flex items-center gap-1">
-                              <MapPin className="w-3 h-3" strokeWidth={2} />{item.location}
-                            </span>
-                          )}
-                          {item.result_count != null && (
-                            <span className="text-xs text-light flex-shrink-0">{item.result_count} found</span>
-                          )}
-                          <span className="text-xs text-light flex-shrink-0">{timeAgo(item.created_at)}</span>
-                        </button>
-                        <button
-                          onClick={async () => {
-                            await deleteSearchHistory(item.id)
-                            if (org) setSearchHistory(await getSearchHistory(org.id))
-                          }}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity text-light hover:text-red-400 px-1 flex-shrink-0"
-                          title="Remove"
-                        >×</button>
-                      </div>
-                    ))}
-                  </div>}
-                </div>
-              )}
-
-              {/* Benefits explainer */}
-              {!liveResults && !liveLoading && (
-                <div className="space-y-3">
-                  {/* Experimental notice */}
-                  <div className="border border-amber-200 bg-amber-50 px-4 py-3 flex items-start gap-2.5">
-                    <Info className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" strokeWidth={2} />
-                    <div>
-                      <p className="text-sm font-semibold text-amber-800 mb-0.5">Live Search is experimental</p>
-                      <p className="text-xs text-amber-700 leading-relaxed">Results are researched in real time and are generally very useful — but some details may be outdated, and links occasionally point to the wrong page. Always verify on the funder's website before investing time in an application.</p>
-                    </div>
-                  </div>
-
-                  {/* Why use it */}
-                  <div className="border border-warm/60 bg-white px-5 py-5">
-                    <p className="text-sm font-semibold text-charcoal mb-4">Why use Live Search?</p>
-                    <div className="space-y-3">
-                      {([
-                        { Icon: Search,    text: 'Finds grants not yet in our database — newly announced and hyper-local opportunities that standard searches miss' },
-                        { Icon: Globe,     text: 'Searches council sites, community foundations and specialist funders in real time across the live web' },
-                        { Icon: Sparkles,  text: 'Returns smart matching recommendations tailored to your query — not just a list, but prioritised suggestions with context' },
-                        { Icon: MapPin,    text: 'Ideal for niche or geographic queries — great for finding area-specific funds that rarely appear in grant databases' },
-                        { Icon: RefreshCw, text: "Always up to date — results reflect what's live right now, not what was scraped weeks ago" },
-                      ] as const).map(({ Icon, text }) => (
-                        <div key={text} className="flex items-start gap-3">
-                          <span className="flex-shrink-0 w-7 h-7 flex items-center justify-center" style={{ backgroundColor: 'rgba(26,122,94,0.08)' }}>
-                            <Icon className="w-3.5 h-3.5 text-forest" strokeWidth={2} />
-                          </span>
-                          <p className="text-sm text-mid leading-relaxed pt-0.5">{text}</p>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="mt-4 pt-4 border-t border-warm">
-                      <p className="text-xs text-light leading-relaxed">
-                        <strong className="text-mid">Why is search limited to {WEEKLY_LIMIT} per week?</strong> Live Search queries real-time external services on every search, which carry significant per-use costs. The weekly allowance keeps the feature sustainable while we scale.
-                      </p>
-                      <p className="text-xs text-light mt-1">Each search takes 15–30 seconds.</p>
-                    </div>
-                  </div>
-
-                  {/* Tips */}
-                  <div className="border border-warm/60 bg-white px-5 py-5">
-                    <p className="text-sm font-semibold text-charcoal mb-3">Tips for getting the best results</p>
-                    <div className="space-y-2.5">
-                      {([
-                        { tip: 'Be specific with your query', detail: 'e.g. "youth mental health grants Hackney" rather than just "mental health" — the more context, the more relevant the results.' },
-                        { tip: 'If a link goes to the wrong page', detail: "copy the grant or funder name and search for it on Google — you'll usually find the right funding page within the first result or two." },
-                        { tip: 'Check the deadline carefully', detail: "Closing dates can be misread from complex funder websites. Always confirm directly with the funder before starting an application." },
-                        { tip: 'Use it alongside the database', detail: 'Live Search is best for finding niche or newly announced grants. Our curated database is better for well-established programmes with verified details.' },
-                        { tip: 'Try different phrasings', detail: 'If results feel off, reframe your query. "Tech for good funding London" and "digital innovation social enterprise grants" will return different funders.' },
-                      ]).map(({ tip, detail }) => (
-                        <div key={tip} className="flex items-start gap-2.5">
-                          <span className="flex-shrink-0 text-forest font-bold text-sm mt-0.5">→</span>
-                          <p className="text-sm text-mid leading-relaxed"><strong className="text-charcoal">{tip}:</strong> {detail}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {liveLoading && (
-                <div className="bg-[#f5f2ed] border border-warm px-4 py-3 text-sm text-mid">
-                  Searching live funding sources, council sites and specialist funders… this takes 15–30 seconds.
-                </div>
-              )}
-              {liveError && <p className="text-red-600 text-xs">⚠ {liveError}</p>}
+              {/* Search button — outside the pill */}
+              <button
+                onClick={() => { setHasSearched(true); handleAISearch(inputValue) }}
+                disabled={!inputValue.trim() && !locationFilter.trim()}
+                className={`h-12 px-6 text-white text-sm font-semibold flex-shrink-0 transition-opacity disabled:opacity-40 flex items-center gap-2 rounded-full ${aiLoading ? 'pointer-events-none' : ''}`}
+                style={{ backgroundColor: '#008080' }}
+              >
+                {aiLoading
+                  ? <><span className="dot-bounce flex gap-0.5"><span/><span/><span/></span> Searching…</>
+                  : <><Search size={14} strokeWidth={2} /> Search</>}
+              </button>
             </div>
           )}
+
+          {/* ── Secondary row: clear results + error ── */}
+          {activeView === 'matches' && (aiResults || aiError) && (
+            <div className="mt-2 flex items-center gap-2">
+              {aiResults && (
+                <button onClick={() => { setAiResults(null); setSmartMatched(false); setQuery(''); setInputValue('') }} className="px-3 py-1 border border-warm text-xs font-medium text-mid hover:border-coral hover:text-coral transition-all bg-white rounded-md">
+                  Clear results
+                </button>
+              )}
+              {aiError && <p className="text-amber-600 text-xs">⚠ {aiError}</p>}
+            </div>
+          )}
+
 
           {/* ── Collapsible filters panel ── */}
           {filtersOpen && (
@@ -1713,7 +1862,7 @@ export default function SearchPage() {
                   {visibleFundingTypes.map(t => (
                     <button key={t.id} onClick={() => setActiveFundingType(t.id as FundingType | 'all')}
                       title={t.desc}
-                      className={`px-3 py-1.5 border text-xs font-medium transition-all ${
+                      className={`px-3 py-1.5 border text-xs font-medium transition-all rounded-md ${
                         activeFundingType === t.id
                           ? 'bg-charcoal border-charcoal text-white'
                           : 'border-warm text-mid hover:border-coral hover:text-coral'
@@ -1731,7 +1880,7 @@ export default function SearchPage() {
                     if (!t) return null
                     return (
                       <button key={t.id} onClick={() => setActiveType(t.id)}
-                        className={`px-3 py-1.5 border text-xs font-medium transition-all ${
+                        className={`px-3 py-1.5 border text-xs font-medium transition-all rounded-md ${
                           activeType === t.id
                             ? 'bg-charcoal border-charcoal text-white'
                             : 'border-warm text-mid hover:border-coral hover:text-coral'
@@ -1751,7 +1900,7 @@ export default function SearchPage() {
                 <div className="flex gap-1.5 flex-wrap">
                   <button
                     onClick={() => setActiveGeoScope('all')}
-                    className={`px-3 py-1.5 border text-xs font-medium transition-all ${
+                    className={`px-3 py-1.5 border text-xs font-medium transition-all rounded-md ${
                       activeGeoScope === 'all'
                         ? 'bg-charcoal border-charcoal text-white'
                         : 'border-warm text-mid hover:border-coral hover:text-coral'
@@ -1763,7 +1912,7 @@ export default function SearchPage() {
                     <button
                       key={scope.id}
                       onClick={() => setActiveGeoScope(activeGeoScope === scope.id ? 'all' : scope.id)}
-                      className={`px-3 py-1.5 border text-xs font-medium transition-all ${
+                      className={`px-3 py-1.5 border text-xs font-medium transition-all rounded-md ${
                         activeGeoScope === scope.id
                           ? 'bg-charcoal border-charcoal text-white'
                           : 'border-warm text-mid hover:border-coral hover:text-coral'
@@ -1791,7 +1940,7 @@ export default function SearchPage() {
                 <div className="flex gap-1.5 flex-wrap">
                   {(['all', 'rolling', 'has_deadline'] as const).map(v => (
                     <button key={v} onClick={() => setDeadlineFilter(v)}
-                      className={`px-3 py-1.5 border text-xs font-medium transition-all ${
+                      className={`px-3 py-1.5 border text-xs font-medium transition-all rounded-md ${
                         deadlineFilter === v
                           ? 'bg-charcoal border-charcoal text-white'
                           : 'border-warm text-mid hover:border-coral hover:text-coral'
@@ -1811,7 +1960,7 @@ export default function SearchPage() {
                   const isActive = activeSectors.has(s.id)
                   return (
                     <button key={s.id} onClick={() => toggleSector(s.id)}
-                      className={`px-3 py-1.5 border text-xs font-medium transition-all ${
+                      className={`px-3 py-1.5 border text-xs font-medium transition-all rounded-md ${
                         isActive
                           ? 'bg-charcoal border-charcoal text-white'
                           : 'border-warm text-mid hover:border-coral hover:text-coral'
@@ -1827,89 +1976,83 @@ export default function SearchPage() {
             {activeFilterCount > 0 && (
               <button
                 onClick={resetAllFilters}
-                className="text-xs font-semibold text-red-500 hover:text-red-700 border border-red-200 hover:border-red-400 px-3 py-1.5 transition-all"
+                className="text-xs font-semibold text-red-500 hover:text-red-700 border border-red-200 hover:border-red-400 px-3 py-1.5 transition-all rounded-md"
               >
                 ✕ Reset all filters
               </button>
             )}
           </div>
         )}
+          {/* ── Funding type tabs ── */}
+          {activeView === 'matches' && (
+            <div className="mt-5 -mx-5 border-t border-[#E8E8EC]">
+              <div className="flex overflow-x-auto">
+                {TYPE_TABS.map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold whitespace-nowrap border-b-2 transition-colors flex-shrink-0 ${
+                      activeTab === tab.id
+                        ? 'border-coral text-coral'
+                        : 'border-transparent text-mid hover:text-charcoal'
+                    }`}
+                  >
+                    {tab.icon}
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+              {TAB_DESCS[activeTab] && (
+                <div className="mx-5 mb-1 mt-3 px-4 py-3 bg-[#FAF8F5] rounded-lg">
+                  <p className="text-sm text-[#444] leading-relaxed">{TAB_DESCS[activeTab]}</p>
+                </div>
+              )}
+            </div>
+          )}
         </div>{/* end p-5 */}
       </div>{/* end search card */}
 
       {/* ── Results header ── */}
-      {activeMode !== 'live' && hasSearched && (
-        <div className="flex justify-between items-center mb-3">
-          <p className="text-sm text-mid">
-            {aiResults && smartMatched ? (
-              <><strong className="text-coral">✦ {displayGrants.length}</strong> grants matched for <strong className="text-charcoal">{org?.name}</strong></>
-            ) : aiResults ? (
-              <><strong className="text-coral">✦ {displayGrants.length}</strong> results ranked for &ldquo;{query}&rdquo;</>
-            ) : activeMode === 'matches' ? (
-              <><strong className="text-charcoal">{displayGrants.length}</strong> grants ranked for you{query ? ` · refined by "${query}"` : ''}</>
-            ) : (
-              <><strong className="text-charcoal">{displayGrants.length}</strong> grants{query ? ` matching "${query}"` : ''}</>
-            )}
-          </p>
-          {activeMode === 'matches' && !aiResults && (
-            <div className="flex items-center gap-0 border border-warm rounded-md overflow-hidden text-xs">
-              <button
-                onClick={() => setSortBy('match')}
-                className="px-3 py-1.5 font-medium transition-colors"
-                style={sortBy !== 'freshest'
-                  ? { backgroundColor: '#1a2e2b', color: '#fff' }
-                  : { backgroundColor: '#fff', color: '#6b7280' }}
-              >
-                Rank
-              </button>
-              <button
-                onClick={() => setSortBy('freshest')}
-                className="px-3 py-1.5 font-medium transition-colors"
-                style={sortBy === 'freshest'
-                  ? { backgroundColor: '#1a2e2b', color: '#fff' }
-                  : { backgroundColor: '#fff', color: '#6b7280' }}
-              >
-                Latest
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── Live Search results ── */}
-      {searchMode === 'live' && liveResults && (
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="font-semibold text-charcoal text-base flex items-center gap-2">
-                {liveSmartMatched ? `Live results for ${org?.name}` : 'Live Research Results'}
-                <span className="text-xs font-normal bg-warm text-mid px-2 py-0.5">
-                  {liveResults.grants.length} found
-                </span>
-                {liveResults._cached && (
-                  <span className="text-xs font-normal bg-warm text-mid px-2 py-0.5">cached</span>
-                )}
-              </h3>
-              <p className="text-sm text-mid mt-1 max-w-2xl">{liveResults.summary}</p>
-            </div>
-            <button onClick={() => { setLiveResults(null); setLiveSmartMatched(false); setQuery(''); setInputValue('') }} className="px-3 py-1.5 border border-warm text-xs font-medium text-mid hover:border-coral hover:text-coral transition-all bg-white flex-shrink-0 self-start">
-              Clear results
-            </button>
-          </div>
-          {liveResults.grants.map((g, i) => (
-            <LiveGrantCard key={i} grant={g} onAddToPipeline={handleLiveAddToPipeline} />
-          ))}
-          <div className="mt-4 border border-amber-200 bg-amber-50 px-4 py-3 flex items-start gap-2.5">
-            <Info className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" strokeWidth={2} />
-            <p className="text-xs text-amber-700 leading-relaxed">
-              <strong className="text-amber-800">Live Search is experimental.</strong> Results are researched in real time and generally turn up great opportunities — but details may be outdated and links can occasionally point to the wrong page. If a link doesn&apos;t work, search the grant or funder name on Google to find the right page. Always verify deadlines and eligibility directly with the funder before applying.
+      {activeView === 'matches' && hasSearched && (
+        <div className="mb-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm text-mid">
+              {aiResults && smartMatched ? (
+                <><strong className="text-coral">✦ {displayGrants.length}</strong> grants matched for <strong className="text-charcoal">{org?.name}</strong></>
+              ) : aiResults ? (
+                <><strong className="text-coral">✦ {displayGrants.length}</strong> results for &ldquo;{query}&rdquo;</>
+              ) : (
+                <><strong className="font-serif text-3xl font-bold text-charcoal">{displayGrants.length} grants</strong><span className="text-base text-mid ml-2">ranked for your mission</span></>
+              )}
             </p>
+            {!aiResults && (
+              <div className="flex items-center border border-[#E8E8EC] overflow-hidden flex-shrink-0 rounded-lg">
+                {/* Sort By label */}
+                <span className="px-3 py-2 text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider border-r border-[#E8E8EC] bg-[#FAF8F5] whitespace-nowrap">
+                  Sort By
+                </span>
+                {([
+                  { id: 'match',    label: 'Best Match'   },
+                  { id: 'freshest', label: 'Newest'       },
+                  { id: 'deadline', label: 'Closing Soon' },
+                ] as const).map((tab, i) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setSortBy(tab.id as 'match' | 'freshest' | 'deadline')}
+                    className={`px-4 py-2 text-xs font-medium transition-colors whitespace-nowrap${i > 0 ? ' border-l border-[#E8E8EC]' : ''}`}
+                    style={sortBy === tab.id
+                      ? { backgroundColor: '#fff', color: '#FF7043' }
+                      : { backgroundColor: '#fff', color: '#6b7280' }}
+                  >{tab.label}</button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {/* ── Match quality banner (database mode only) ── */}
-      {searchMode === 'database' && hasSearched && matchQuality && matchQuality.score < 80 && !bannerDismissed && (
+      {/* ── Match quality banner ── */}
+      {hasSearched && matchQuality && matchQuality.score < 80 && !bannerDismissed && (
         <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3.5 flex items-start gap-3">
           {/* Quality ring */}
           <div className="flex-shrink-0 mt-0.5">
@@ -1959,103 +2102,11 @@ export default function SearchPage() {
         </div>
       )}
 
-      {/* ── Instructions panel (shown before any search in Search mode) ── */}
-      {activeMode === 'search' && !hasSearched && (
-        <div className="bg-white border border-warm/60 p-6 shadow-card">
-          <p className="text-base font-bold text-charcoal mb-4">Search — a fresh start</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {/* Left: the 3 steps */}
-            <div className="space-y-4">
-              <p className="text-xs text-mid leading-relaxed">No profile filters applied here — Search works across all grants from scratch. Use keywords and location to find exactly what you need.</p>
-              <div className="flex gap-3">
-                <div className="flex-shrink-0 w-7 h-7 bg-coral/10 flex items-center justify-center text-coral font-bold text-sm">1</div>
-                <div>
-                  <p className="text-sm font-semibold text-charcoal">Keyword search</p>
-                  <p className="text-xs text-mid leading-relaxed mt-0.5">Type what you&apos;re looking for — e.g. <em>&ldquo;youth sport&rdquo;</em> or <em>&ldquo;food bank capital&rdquo;</em> — then hit <strong>Search</strong>.</p>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <div className="flex-shrink-0 w-7 h-7 bg-coral/10 flex items-center justify-center text-coral font-bold text-sm">2</div>
-                <div>
-                  <p className="text-sm font-semibold text-charcoal">Add a location</p>
-                  <p className="text-xs text-mid leading-relaxed mt-0.5">Use the location field to narrow geographically — e.g. <em>&ldquo;London&rdquo;</em> or <em>&ldquo;rural Wales&rdquo;</em>.</p>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <div className="flex-shrink-0 w-7 h-7 bg-coral/10 flex items-center justify-center text-coral font-bold text-sm">3</div>
-                <div>
-                  <p className="text-sm font-semibold text-charcoal">Refine with Filters</p>
-                  <p className="text-xs text-mid leading-relaxed mt-0.5">Filter by sector, funding type, amount or deadline using the <strong>Filters</strong> button.</p>
-                </div>
-              </div>
-            </div>
-            {/* Right: Live Search callout */}
-            <button
-              type="button"
-              onClick={() => setActiveMode('live')}
-              className="flex gap-3 p-4 border border-charcoal/15 bg-charcoal/[0.02] h-fit text-left hover:border-charcoal/30 hover:bg-charcoal/[0.04] transition-colors w-full"
-            >
-              <div className="flex-shrink-0 w-8 h-8 bg-charcoal flex items-center justify-center text-white">
-                <Globe size={15} strokeWidth={2} />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-charcoal mb-1">
-                  Try Live Search →
-                </p>
-                <p className="text-xs text-mid leading-relaxed">Can&apos;t find what you need? <strong>Live Search</strong> searches council sites, community foundations and specialist funders in real time — surfacing hyper-local and newly announced grants not yet in our database.</p>
-              </div>
-            </button>
-          </div>
-
-          <div className="mt-6 pt-4 border-t border-warm flex flex-wrap gap-3">
-            <button
-              onClick={() => { setHasSearched(true) }}
-              className="flex items-center gap-1.5 px-4 py-2.5 bg-coral text-white text-sm font-semibold hover:opacity-90 transition-colors"
-            >
-              <Search size={14} strokeWidth={2} />
-              Browse all grants
-            </button>
-            {org && (
-              <button
-                onClick={() => {
-                  if (org.primary_location) setLocationFilter(org.primary_location)
-                  if ((org.impact_sectors as string[] | undefined)?.length) {
-                    setActiveSectors(new Set(org.impact_sectors as ImpactSector[]))
-                  }
-                  const smartQ = buildSmartQuery(org)
-                  if (smartQ) { setQuery(smartQ); setInputValue(smartQ) }
-                  setSearchModeToggle('profile')
-                  setProfileChipsApplied(true)
-                  setHasSearched(true)
-                }}
-                className="flex items-center gap-1.5 px-4 py-2.5 border border-forest text-forest text-sm font-semibold hover:bg-forest/5 transition-colors"
-              >
-                <Users size={14} strokeWidth={2} />
-                Apply my profile filters
-              </button>
-            )}
-            {!org && (
-              <a href="/dashboard/profile"
-                className="flex items-center gap-1.5 px-4 py-2.5 border border-forest text-forest text-sm font-semibold hover:bg-forest/5 transition-colors"
-              >
-                Set up profile for personalised results →
-              </a>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ── Database grant list ── */}
-      {activeMode !== 'live' && hasSearched && (displayGrants.length === 0 ? (
+      {/* ── Matches view ── */}
+      {activeView === 'matches' && hasSearched && (displayGrants.length === 0 ? (
         <div className="text-center py-16 text-light">
           <p className="text-4xl mb-3">🔍</p>
           <p className="mb-3">No grants found — try different keywords or clear the filters.</p>
-          <button
-            onClick={() => setActiveMode('live')}
-            className="text-forest text-sm hover:underline font-medium"
-          >
-            Try 🌐 Live Search for live web results →
-          </button>
         </div>
       ) : (
         <>
@@ -2064,14 +2115,16 @@ export default function SearchPage() {
               key={item.grant.id}
               item={item}
               hasOrg={!!org}
-              hasSearch={activeMode === 'matches' || query.trim() !== '' || item.isAiScore}
+              hasSearch={showMatchInfo}
+              org={org}
               interactions={interactions.get(item.grant.id) ?? new Set()}
               onAddToPipeline={handleAddToPipeline}
               onDismiss={handleDismiss}
               onUndismiss={handleUndismiss}
               onLike={handleLike}
               onDislike={handleDislike}
-              onViewDetail={setDetailGrantId}
+              onSave={handleSave}
+              onUnsave={handleUnsave}
             />
           ))}
           {visibleCount < displayGrants.length && (
@@ -2086,6 +2139,49 @@ export default function SearchPage() {
           )}
         </>
       ))}
+
+      {/* ── Saved view ── */}
+      {activeView === 'saved' && (() => {
+        const savedGrants: DisplayGrant[] = allGrants
+          .filter(g => interactions.get(g.id)?.has('saved'))
+          .map(g => ({ grant: g, score: 0, reason: '', isAiScore: false, breakdown: undefined }))
+        return savedGrants.length === 0 ? (
+          <div className="text-center py-16 text-light">
+            <Bookmark className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+            <p className="mb-2 font-medium text-charcoal">No saved grants yet</p>
+            <p className="text-sm mb-4">Bookmark grants to save them for later. Switch to "My Matches" to start exploring.</p>
+          </div>
+        ) : (
+          <>
+            {savedGrants.slice(0, visibleCount).map(item => (
+              <GrantCard
+                key={item.grant.id}
+                item={item}
+                hasOrg={!!org}
+                hasSearch={false}
+                interactions={interactions.get(item.grant.id) ?? new Set()}
+                onAddToPipeline={handleAddToPipeline}
+                onDismiss={handleDismiss}
+                onUndismiss={handleUndismiss}
+                onLike={handleLike}
+                onDislike={handleDislike}
+                  onSave={handleSave}
+                onUnsave={handleUnsave}
+              />
+            ))}
+            {visibleCount < savedGrants.length && (
+              <div className="text-center py-6">
+                <button
+                  onClick={() => setVisibleCount(v => v + 30)}
+                  className="btn-outline px-6 py-2.5 text-sm"
+                >
+                  Show more ({savedGrants.length - visibleCount} remaining)
+                </button>
+              </div>
+            )}
+          </>
+        )
+      })()}
 
       {toast && (
         <div className="fixed bottom-6 right-6 bg-charcoal text-white px-5 py-3.5 shadow-card-lg text-sm z-50">
@@ -2119,29 +2215,6 @@ export default function SearchPage() {
         </div>
       )}
 
-      {/* Grant detail modal */}
-      <GrantDetailModal
-        grantId={detailGrantId}
-        onClose={() => setDetailGrantId(null)}
-        onAddToPipeline={g => handleAddToPipeline({
-          id:                 g.external_id ?? g.id,
-          title:              g.title,
-          funder:             g.funder,
-          funderType:         (g.funder_type ?? 'other') as GrantOpportunity['funderType'],
-          fundingType:        (g.funding_type ?? 'grant') as GrantOpportunity['fundingType'],
-          description:        g.description ?? '',
-          amountMin:          g.amount_min ?? 0,
-          amountMax:          g.amount_max ?? 0,
-          deadline:           g.deadline,
-          isRolling:          g.is_rolling ?? false,
-          isLocal:            g.is_local ?? false,
-          sectors:            Array.isArray(g.sectors) ? g.sectors : [],
-          eligibilityCriteria: Array.isArray(g.eligibility_criteria) ? g.eligibility_criteria : [],
-          applyUrl:           g.apply_url ?? null,
-          isInviteOnly:       false,
-          source:             'scraped',
-        })}
-      />
     </div>
   )
 }

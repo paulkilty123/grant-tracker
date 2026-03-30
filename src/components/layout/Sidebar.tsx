@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import type { Organisation } from '@/types'
 import { cn } from '@/lib/utils'
 import RadioWaveIcon from '@/components/icons/RadioWaveIcon'
+import Logo from '@/components/Logo'
 import {
   LayoutDashboard,
   Search,
@@ -15,8 +16,8 @@ import {
   User,
   MessageSquare,
   Activity,
-  LinkIcon,
-  Bell,
+  ClipboardList,
+  Sparkles,
   LogOut,
   Menu,
   X,
@@ -69,9 +70,9 @@ const NAV_GROUPS = [
 const ADMIN_NAV_GROUP = {
   label: 'Admin',
   items: [
-    { href: '/dashboard/admin',             label: 'Source Health',    Icon: Activity },
-    { href: '/dashboard/admin/urls',        label: 'URL Health',       Icon: LinkIcon  },
-    { href: '/dashboard/admin/watchlist',   label: 'Funder Watchlist', Icon: Bell      },
+    { href: '/dashboard/admin',                  label: 'Grant Health',        Icon: Activity      },
+    { href: '/dashboard/admin/urls',             label: 'Grant Manager',       Icon: ClipboardList },
+    { href: '/dashboard/admin/intelligence',     label: 'Funder Intelligence', Icon: Sparkles      },
   ],
 }
 
@@ -95,6 +96,7 @@ export default function Sidebar({ org, userEmail }: Props) {
 
   const navLink = (href: string, label: string, Icon: React.ElementType, showDot?: boolean, score?: number) => {
     const isActive = pathname === href || (href !== '/dashboard' && pathname.startsWith(href))
+      || (href === '/dashboard/admin/intelligence' && pathname.startsWith('/dashboard/admin/watchlist'))
     return (
       <Link
         key={href}
@@ -126,14 +128,11 @@ export default function Sidebar({ org, userEmail }: Props) {
       'fixed left-0 top-0 bottom-0 w-60 flex flex-col z-50 transition-transform duration-300',
       'md:translate-x-0',
       mobileOpen ? 'translate-x-0' : '-translate-x-full'
-    )} style={{ background: '#121f2b' }}>
+    )} style={{ background: '#1C1C2E' }}>
       {/* Logo */}
       <div className="px-6 py-6 flex items-center justify-between border-b border-white/10">
-        <Link href="/dashboard" className="flex items-center gap-2.5 no-underline">
-          <div className="relative flex items-center justify-center bg-coral w-7 h-7 flex-shrink-0" style={{ borderRadius: '6px' }}>
-            <div className="w-2.5 h-2.5 rounded-full border-2 border-white" />
-          </div>
-          <span className="font-serif text-[18px] text-white">GrantTracker</span>
+        <Link href="/dashboard" className="no-underline">
+          <Logo variant="light" size="md" />
         </Link>
         <button
           className="md:hidden text-white/50 hover:text-white"
@@ -200,7 +199,7 @@ export default function Sidebar({ org, userEmail }: Props) {
         onClick={() => setMobileOpen(true)}
         className={cn(
           'fixed top-4 left-4 z-40 md:hidden',
-          'w-10 h-10 flex items-center justify-center shadow-lg bg-[#1a2e2b] rounded-md',
+          'w-10 h-10 flex items-center justify-center shadow-lg bg-[#1C1C2E] rounded-md',
           'transition-opacity duration-200',
           mobileOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'
         )}
