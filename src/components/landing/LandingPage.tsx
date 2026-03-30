@@ -6,13 +6,14 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Menu, X, Check, Search, Calendar, TrendingUp, Activity, Clock, Mail, MessageSquare, Bell, LayoutGrid, ArrowRight, Award } from 'lucide-react'
 import ContactForm from '@/components/ContactForm'
-import RadioWaveIcon from '@/components/icons/RadioWaveIcon'
+import Logo from '@/components/Logo'
+
 
 /* ─── helpers ─── */
 const fadeUp = (delay = 0) => ({
-  initial: { opacity: 0, y: 24 },
+  initial: { opacity: 1, y: 18 },
   animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.55, delay },
+  transition: { duration: 0.5, delay },
 })
 
 const fadeInView = (delay = 0) => ({
@@ -99,17 +100,17 @@ const testimonials = [
 
 /* ─── Mockups ─── */
 const SearchMockup = () => (
-  <div className="bg-white border border-warm/80 p-5" style={{ boxShadow: '0 4px 24px rgba(26,46,43,0.08)' }}>
+  <div className="bg-white border border-warm/80 rounded-xl p-5" style={{ boxShadow: '0 4px 24px rgba(26,46,43,0.08)' }}>
     <div className="flex items-center gap-2 mb-4">
       <div className="w-7 h-7 rounded-full bg-warm flex items-center justify-center flex-shrink-0">
         <Search className="w-3.5 h-3.5 text-mid" />
       </div>
       <p className="text-[11px] font-bold text-charcoal uppercase tracking-wider">Search</p>
     </div>
-    <div className="flex items-center gap-2 bg-[#f5f2ed] px-3 py-2.5 mb-4 border border-warm/40">
+    <div className="flex items-center gap-2 bg-[#f5f2ed] rounded-full px-3 py-2.5 mb-4 border border-warm/40">
       <Search size={14} className="text-mid flex-shrink-0" />
       <span className="text-sm text-mid flex-1">Community garden project in South London</span>
-      <span className="bg-forest px-3 py-1 text-xs font-medium text-white">Search</span>
+      <span className="bg-forest rounded-full px-3 py-1 text-xs font-medium text-white">Search</span>
     </div>
     <div className="flex flex-col">
       {[
@@ -128,7 +129,7 @@ const SearchMockup = () => (
           <div className="flex items-center justify-between gap-3">
             <div className="flex gap-1.5 flex-wrap">
               {r.tags.map((tag) => (
-                <span key={tag} className="bg-[#f5f2ed] px-2 py-0.5 text-[11px] text-mid">{tag}</span>
+                <span key={tag} className="bg-[#f5f2ed] rounded-md px-2 py-0.5 text-[11px] text-mid">{tag}</span>
               ))}
             </div>
             <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -145,7 +146,7 @@ const SearchMockup = () => (
 )
 
 const PipelineMockup = () => (
-  <div className="bg-white border border-warm/80 p-5" style={{ boxShadow: '0 4px 24px rgba(26,46,43,0.08)' }}>
+  <div className="bg-white border border-warm/80 rounded-xl p-5" style={{ boxShadow: '0 4px 24px rgba(26,46,43,0.08)' }}>
     <div className="flex items-center gap-2 mb-3">
       <div className="w-7 h-7 rounded-full bg-coral/15 flex items-center justify-center flex-shrink-0">
         <ArrowRight className="w-3.5 h-3.5 text-coral" />
@@ -160,7 +161,7 @@ const PipelineMockup = () => (
           <div className="mb-2 text-center font-medium text-mid uppercase tracking-wider">{col.name}</div>
           <div className="space-y-2">
             {Array.from({ length: col.items }).map((_, i) => (
-              <div key={i} className="bg-[#f5f2ed] p-2.5">
+              <div key={i} className="bg-[#f5f2ed] rounded-lg p-2.5">
                 <div className="h-2 w-3/4 bg-charcoal/10" />
                 <div className="mt-1.5 h-1.5 w-1/2 bg-charcoal/5" />
               </div>
@@ -169,7 +170,7 @@ const PipelineMockup = () => (
         </div>
       ))}
     </div>
-    <div className="bg-[#f5f2ed] border border-warm/60 p-3.5">
+    <div className="bg-[#f5f2ed] rounded-lg border border-warm/60 p-3.5">
       <div className="flex items-center justify-between mb-2">
         <div>
           <p className="text-[10px] text-mid">Paul Hamlyn Foundation</p>
@@ -186,7 +187,7 @@ const PipelineMockup = () => (
 )
 
 const DashboardMockup = () => (
-  <div className="bg-white border border-warm/80 p-5" style={{ boxShadow: '0 4px 24px rgba(26,46,43,0.08)' }}>
+  <div className="bg-white border border-warm/80 rounded-xl p-5" style={{ boxShadow: '0 4px 24px rgba(26,46,43,0.08)' }}>
     <div className="flex items-center gap-2 mb-4">
       <div className="w-7 h-7 rounded-full bg-warm flex items-center justify-center flex-shrink-0">
         <LayoutGrid className="w-3.5 h-3.5 text-mid" />
@@ -200,7 +201,7 @@ const DashboardMockup = () => (
         { label: 'Active', value: '7', Icon: Activity, accent: false },
         { label: 'Due this week', value: '2', Icon: Clock, accent: false },
       ].map((s) => (
-        <div key={s.label} className={`p-3 ${s.accent ? 'bg-forest/8 border border-forest/20' : 'bg-[#f5f2ed]'}`} style={s.accent ? { background: 'rgba(45,107,74,0.08)' } : {}}>
+        <div key={s.label} className={`rounded-lg p-3 ${s.accent ? 'bg-forest/8 border border-forest/20' : 'bg-[#f5f2ed]'}`} style={s.accent ? { background: 'rgba(45,107,74,0.08)' } : {}}>
           <s.Icon size={14} className={`${s.accent ? 'text-forest' : 'text-mid'} mb-1.5`} />
           <p className={`text-lg font-bold leading-tight ${s.accent ? 'text-forest' : 'text-charcoal'}`}>{s.value}</p>
           <p className="text-[10px] text-mid mt-0.5">{s.label}</p>
@@ -209,7 +210,7 @@ const DashboardMockup = () => (
     </div>
     <div className="mb-4">
       <p className="text-[11px] font-medium text-mid uppercase tracking-wider mb-2">Pipeline breakdown</p>
-      <div className="flex h-2 w-full overflow-hidden">
+      <div className="flex h-2 w-full rounded-full overflow-hidden">
         <div className="bg-forest/30 w-[35%]" /><div className="bg-forest/60 w-[30%]" />
         <div className="bg-forest w-[20%]" /><div className="bg-coral/70 w-[15%]" />
       </div>
@@ -217,7 +218,7 @@ const DashboardMockup = () => (
         <span>Identified</span><span>Applying</span><span>Submitted</span><span>Awarded</span>
       </div>
     </div>
-    <div className="bg-[#f5f2ed] border border-warm/60 p-3.5">
+    <div className="bg-[#f5f2ed] rounded-lg border border-warm/60 p-3.5">
       <div className="flex items-center gap-1.5 mb-2.5">
         <Calendar size={12} className="text-mid" />
         <p className="text-[11px] font-bold text-charcoal uppercase tracking-wider">Upcoming deadlines</p>
@@ -301,11 +302,8 @@ export default function LandingPage() {
         className="fixed top-0 left-0 right-0 z-50 bg-cream/95 backdrop-blur-sm border-b border-warm/60"
       >
         <div className="flex w-full items-center justify-between px-5 md:px-8 py-4 md:py-5">
-          <a href="/" className="flex items-center gap-2.5 no-underline">
-            <div className="relative flex items-center justify-center bg-coral w-7 h-7 flex-shrink-0" style={{ borderRadius: '6px' }}>
-              <div className="w-2.5 h-2.5 rounded-full border-2 border-white" />
-            </div>
-            <span className="font-serif text-[22px] text-charcoal">GrantTracker</span>
+          <a href="/" className="no-underline">
+            <Logo variant="dark" size="md" />
           </a>
           {/* Desktop nav links */}
           <div className="hidden md:flex items-center gap-6 lg:gap-10">
@@ -316,11 +314,11 @@ export default function LandingPage() {
           {/* Desktop CTAs */}
           <div className="hidden md:flex items-center gap-3">
             <Link href="/auth/login" className="text-sm text-mid hover:text-charcoal transition-colors px-3 py-2">Sign in</Link>
-            <Link href="/auth/signup" className="bg-coral text-white px-5 py-2 text-sm font-medium hover:opacity-90 transition-colors" style={{ borderRadius: '0px' }}>Get started free</Link>
+            <Link href="/auth/signup" className="bg-coral text-white px-5 py-2 text-sm font-medium rounded-lg hover:opacity-90 transition-colors">Get started free</Link>
           </div>
           {/* Mobile: sign up + hamburger */}
           <div className="flex md:hidden items-center gap-3">
-            <Link href="/auth/signup" className="bg-coral text-white px-4 py-2 text-sm font-medium hover:opacity-90 transition-colors" style={{ borderRadius: '0px' }}>Get started</Link>
+            <Link href="/auth/signup" className="bg-coral text-white px-4 py-2 text-sm font-medium rounded-lg hover:opacity-90 transition-colors">Get started</Link>
             <button onClick={() => setMobileOpen(o => !o)} className="p-1 text-charcoal" aria-label="Toggle menu">
               {mobileOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
@@ -337,8 +335,8 @@ export default function LandingPage() {
                 <a key={link.label} href={link.href} className="text-sm text-mid" onClick={() => setMobileOpen(false)}>{link.label}</a>
               ))}
               <div className="flex flex-col gap-2 pt-2">
-                <Link href="/auth/login" onClick={() => setMobileOpen(false)} className="text-center text-sm text-mid py-2 border border-warm">Sign in</Link>
-                <Link href="/auth/signup" onClick={() => setMobileOpen(false)} className="bg-coral text-white rounded-xl text-center text-sm font-medium py-2 hover:opacity-90 transition-colors">Get started free</Link>
+                <Link href="/auth/login" onClick={() => setMobileOpen(false)} className="text-center text-sm text-mid py-2 border border-warm rounded-lg">Sign in</Link>
+                <Link href="/auth/signup" onClick={() => setMobileOpen(false)} className="bg-coral text-white text-center text-sm font-medium py-2 rounded-lg hover:opacity-90 transition-colors">Get started free</Link>
               </div>
             </div>
           </motion.div>
@@ -374,14 +372,19 @@ export default function LandingPage() {
               Find grants, accelerators, investment and support programmes — matched to you, managed in one place.
             </motion.p>
 
-            <motion.div {...fadeUp(0.3)} className="flex flex-wrap gap-3 mb-14">
-              <Link href="/auth/signup" className="bg-coral text-white px-6 py-3 text-[15px] font-semibold hover:opacity-90 transition-colors" style={{ borderRadius: '0px' }}>
+            <motion.div {...fadeUp(0.3)} className="flex flex-wrap gap-3 mb-6">
+              <Link href="/auth/signup" className="bg-coral text-white px-6 py-3 text-[15px] font-semibold rounded-lg hover:opacity-90 transition-colors">
                 Start for free
               </Link>
-              <a href="#how" className="border border-coral/50 text-coral px-6 py-3 text-[15px] font-semibold transition-colors hover:bg-coral/10" style={{ borderRadius: '0px' }}>
+              <a href="#how" className="bg-[#1C1C2E] text-white px-6 py-3 text-[15px] font-semibold rounded-lg transition-colors hover:opacity-90">
                 See how it works
               </a>
             </motion.div>
+
+            <motion.p {...fadeUp(0.4)} className="text-xs text-mid mb-14 flex items-center gap-2">
+              <span className="inline-block w-1.5 h-1.5 bg-forest rounded-full flex-shrink-0" />
+              Trusted by nonprofits, CICs and social enterprises across the UK
+            </motion.p>
 
           </div>
 
@@ -390,7 +393,7 @@ export default function LandingPage() {
 
             {/* Dashboard — back right */}
             <motion.div {...fadeUp(0.4)} className="absolute" style={{ width: '240px', top: '20px', right: '0px', zIndex: 1 }}>
-              <div className="bg-white rounded-none border border-warm/80 p-4" style={{ transform: 'rotate(7deg)', boxShadow: '0 4px 20px rgba(26,46,43,0.08)' }}>
+              <div className="bg-white rounded-xl border border-warm/80 p-4" style={{ transform: 'rotate(7deg)', boxShadow: '0 4px 20px rgba(26,46,43,0.08)' }}>
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-7 h-7 rounded-full bg-warm flex items-center justify-center flex-shrink-0">
                     <LayoutGrid className="w-3.5 h-3.5 text-mid" />
@@ -398,11 +401,11 @@ export default function LandingPage() {
                   <p className="text-[11px] font-bold text-charcoal uppercase tracking-wider">Dashboard</p>
                 </div>
                 <div className="grid grid-cols-2 gap-2 mb-3">
-                  <div className="bg-[#f5f2ed] rounded-xl p-2.5">
+                  <div className="bg-[#f5f2ed] rounded-lg p-2.5">
                     <p className="text-[17px] font-bold text-charcoal leading-tight">42k</p>
                     <p className="text-[9px] text-mid uppercase tracking-wide font-medium">Won</p>
                   </div>
-                  <div className="bg-[#f5f2ed] rounded-xl p-2.5">
+                  <div className="bg-[#f5f2ed] rounded-lg p-2.5">
                     <p className="text-[17px] font-bold text-charcoal leading-tight">68%</p>
                     <p className="text-[9px] text-mid uppercase tracking-wide font-medium">Success</p>
                   </div>
@@ -418,7 +421,7 @@ export default function LandingPage() {
 
             {/* Pipeline — front left */}
             <motion.div {...fadeUp(0.2)} className="absolute" style={{ width: '230px', top: '60px', left: '0px', zIndex: 3 }}>
-              <div className="bg-white rounded-none border border-warm/80 p-4" style={{ transform: 'rotate(-8deg)', boxShadow: '0 8px 32px rgba(26,46,43,0.12)' }}>
+              <div className="bg-white rounded-xl border border-warm/80 p-4" style={{ transform: 'rotate(-8deg)', boxShadow: '0 8px 32px rgba(26,46,43,0.12)' }}>
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-7 h-7 rounded-full bg-coral/15 flex items-center justify-center flex-shrink-0">
                     <ArrowRight className="w-3.5 h-3.5 text-coral" />
@@ -433,7 +436,7 @@ export default function LandingPage() {
                     { label: 'Applying',   dots: [true,  true] },
                     { label: 'Submitted',  dots: [false, false] },
                   ].map((stage) => (
-                    <div key={stage.label} className="flex items-center justify-between bg-[#f5f2ed] rounded-none px-2.5 py-1.5">
+                    <div key={stage.label} className="flex items-center justify-between bg-[#f5f2ed] rounded-lg px-2.5 py-1.5">
                       <div className="flex items-center gap-1.5">
                         <div className="w-3.5 h-3.5 rounded-full border border-mid/30 flex items-center justify-center flex-shrink-0">
                           <div className="w-1.5 h-1.5 rounded-full bg-mid/30" />
@@ -453,9 +456,9 @@ export default function LandingPage() {
 
             {/* Search — centre, largest, front */}
             <motion.div {...fadeUp(0.3)} className="absolute" style={{ width: '300px', top: '100px', left: 'calc(50% - 150px)', zIndex: 5 }}>
-              <div className="bg-white rounded-none border border-warm/80 p-5" style={{ transform: 'rotate(-1deg)', boxShadow: '0 14px 44px rgba(26,46,43,0.14)' }}>
+              <div className="bg-white rounded-xl border border-warm/80 p-5" style={{ transform: 'rotate(-1deg)', boxShadow: '0 14px 44px rgba(26,46,43,0.14)' }}>
                 <p className="text-[11px] font-bold text-charcoal uppercase tracking-wider mb-2.5">Search</p>
-                <div className="flex items-center gap-2 bg-[#f5f2ed] rounded-none px-3 py-2 mb-3 border border-warm/40">
+                <div className="flex items-center gap-2 bg-[#f5f2ed] rounded-full px-3 py-2 mb-3 border border-warm/40">
                   <Search className="w-3 h-3 text-mid flex-shrink-0" />
                   <span className="text-[11px] text-mid">community garden...</span>
                 </div>
@@ -484,7 +487,7 @@ export default function LandingPage() {
 
             {/* Awarded — bottom right */}
             <motion.div {...fadeUp(0.45)} className="absolute" style={{ width: '220px', top: '340px', right: '0px', zIndex: 2 }}>
-              <div className="bg-white rounded-none border border-warm/80 p-4" style={{ transform: 'rotate(4deg)', boxShadow: '0 8px 32px rgba(26,46,43,0.10)' }}>
+              <div className="bg-white rounded-xl border border-warm/80 p-4" style={{ transform: 'rotate(4deg)', boxShadow: '0 8px 32px rgba(26,46,43,0.10)' }}>
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-7 h-7 rounded-full bg-forest/10 flex items-center justify-center flex-shrink-0">
                     <Award className="w-3.5 h-3.5 text-forest" />
@@ -493,7 +496,7 @@ export default function LandingPage() {
                 </div>
                 <p className="text-[13px] font-semibold text-charcoal leading-snug mb-1">London Community Foundation</p>
                 <p className="text-[11px] text-mid mb-3">Grow to Give — Community Growing</p>
-                <div className="flex items-center justify-between bg-forest/8 rounded-xl px-3 py-2" style={{ background: 'rgba(45,107,74,0.08)' }}>
+                <div className="flex items-center justify-between rounded-lg px-3 py-2" style={{ background: 'rgba(45,107,74,0.08)' }}>
                   <span className="text-[11px] text-mid">Grant awarded</span>
                   <span className="text-[15px] font-bold text-forest">£8,000</span>
                 </div>
@@ -502,7 +505,7 @@ export default function LandingPage() {
 
             {/* Alerts — front bottom */}
             <motion.div {...fadeUp(0.35)} className="absolute" style={{ width: '250px', top: '320px', left: '10px', zIndex: 4 }}>
-              <div className="bg-white rounded-none border border-warm/80 p-4" style={{ transform: 'rotate(-3deg)', boxShadow: '0 8px 32px rgba(26,46,43,0.12)' }}>
+              <div className="bg-white rounded-xl border border-warm/80 p-4" style={{ transform: 'rotate(-3deg)', boxShadow: '0 8px 32px rgba(26,46,43,0.12)' }}>
                 <div className="flex items-center gap-2 mb-3">
                   <div className="relative w-7 h-7 rounded-full bg-warm flex items-center justify-center flex-shrink-0">
                     <Bell className="w-3.5 h-3.5 text-mid" />
@@ -597,9 +600,8 @@ export default function LandingPage() {
             <motion.div {...fadeInView(0.2)} className="text-center">
               <Link
                 href="/auth/signup"
-                className="inline-flex items-center gap-2 bg-forest text-white px-8 py-3.5 text-sm font-semibold hover:opacity-90 transition-colors"
-                style={{ borderRadius: '0px' }}
-              >
+                className="inline-flex items-center gap-2 bg-forest text-white rounded-lg px-8 py-3.5 text-sm font-semibold hover:opacity-90 transition-colors"
+                             >
                 Search all opportunities free <ArrowRight size={16} />
               </Link>
               <p className="text-xs text-mid mt-3">No credit card · Takes 2 minutes</p>
@@ -615,7 +617,7 @@ export default function LandingPage() {
             <p className="text-sm font-semibold text-coral uppercase tracking-wider">How it works</p>
             <h2 className="mt-3 font-serif text-4xl md:text-5xl leading-tight max-w-lg">Set up once, search and track what matters.</h2>
           </motion.div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-px bg-warm">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-px bg-warm rounded-xl overflow-hidden">
             {howSteps.map((step, i) => (
               <motion.div key={step.title} {...fadeInView(i * 0.08)} className="bg-cream p-8">
                 <span className={`font-serif text-coral ${step.featured ? 'text-6xl' : 'text-4xl'}`}>{step.num}</span>
@@ -628,15 +630,15 @@ export default function LandingPage() {
       </section>
 
       {/* FUNDING TYPES */}
-      <section className="py-16 md:py-20 bg-[#121f2b]">
+      <section className="py-16 md:py-20 bg-[#1C1C2E]">
         <div className="mx-auto max-w-5xl px-6">
           <motion.div {...fadeInView(0)} className="mb-16">
             <p className="text-sm font-semibold text-coral uppercase tracking-wider">Funding Types</p>
             <h2 className="mt-3 font-serif text-4xl md:text-5xl leading-tight max-w-lg text-cream">Not just grants, the full picture.</h2>
           </motion.div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-white/10">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-white/10 rounded-xl overflow-hidden">
             {fundingTypes.map((t, i) => (
-              <motion.div key={t.title} {...fadeInView(i * 0.05)} className="bg-[#121f2b] p-8">
+              <motion.div key={t.title} {...fadeInView(i * 0.05)} className="bg-[#1C1C2E] p-8">
                 <span className="text-xs font-semibold text-coral uppercase tracking-wider">{t.range}</span>
                 <h3 className="mt-3 font-serif text-xl text-cream">{t.title}</h3>
                 <p className="mt-3 text-sm text-cream/50 leading-relaxed">{t.desc}</p>
@@ -658,7 +660,7 @@ export default function LandingPage() {
               <ul className="mt-8 space-y-4">
                 {['Profile-based filtering — your structure, stage and sector shape every result', 'Live Search — finds matching funding across all seven types in real time', 'Match scores ranked by structure, sector, geography, stage and mission'].map((b, i) => (
                   <li key={i} className="flex items-start gap-3 text-sm text-charcoal">
-                    <span className="mt-0.5 flex h-5 w-5 items-center justify-center bg-coral/10 text-coral text-xs font-bold shrink-0">✓</span>
+                    <span className="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-coral/10 text-coral text-xs font-bold shrink-0">✓</span>
                     <span className="leading-relaxed">{b}</span>
                   </li>
                 ))}
@@ -678,7 +680,7 @@ export default function LandingPage() {
               <ul className="mt-8 space-y-4">
                 {['Visual board with pipeline values at a glance', 'Per-card writing tracker from first draft to final submission', 'Notes, funder contacts, deadlines and grant URLs all on the card', 'Email alerts and urgency flags for grants closing within 14 days'].map((b, i) => (
                   <li key={i} className="flex items-start gap-3 text-sm text-charcoal">
-                    <span className="mt-0.5 flex h-5 w-5 items-center justify-center bg-coral/10 text-coral text-xs font-bold shrink-0">✓</span>
+                    <span className="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-coral/10 text-coral text-xs font-bold shrink-0">✓</span>
                     <span className="leading-relaxed">{b}</span>
                   </li>
                 ))}
@@ -698,7 +700,7 @@ export default function LandingPage() {
               <ul className="mt-8 space-y-4">
                 {['Pipeline summary with total value and stage breakdown', 'Upcoming deadlines highlighted so nothing slips', 'Match quality score with tips to improve your profile', 'Recent activity feed tracking your latest actions'].map((b, i) => (
                   <li key={i} className="flex items-start gap-3 text-sm text-charcoal">
-                    <span className="mt-0.5 flex h-5 w-5 items-center justify-center bg-coral/10 text-coral text-xs font-bold shrink-0">✓</span>
+                    <span className="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-coral/10 text-coral text-xs font-bold shrink-0">✓</span>
                     <span className="leading-relaxed">{b}</span>
                   </li>
                 ))}
@@ -716,7 +718,7 @@ export default function LandingPage() {
             <p className="text-sm font-semibold text-coral uppercase tracking-wider">Who it's for</p>
             <h2 className="mt-3 font-serif text-4xl md:text-5xl leading-tight max-w-lg">Built for the people doing the work.</h2>
           </motion.div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-warm">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-warm rounded-xl overflow-hidden">
             {audiences.map((v, i) => (
               <motion.div key={v.title} {...fadeInView(i * 0.06)} className="bg-cream p-8">
                 <h3 className="font-serif text-xl">{v.title}</h3>
@@ -754,15 +756,16 @@ export default function LandingPage() {
             <h2 className="mt-3 font-serif text-4xl md:text-5xl leading-tight max-w-lg">Plans that respect your budget.</h2>
             <p className="mt-4 text-mid max-w-xl leading-relaxed">Start free. Upgrade to Live Search and tracking tools.</p>
           </motion.div>
-          <div className="grid md:grid-cols-3 gap-px bg-warm">
+          <div className="grid md:grid-cols-3 gap-4">
             {plans.map((plan, i) => (
               <motion.div
                 key={plan.name}
                 {...fadeInView(i * 0.1)}
-                className={`relative p-8 flex flex-col ${plan.popular ? 'bg-[#121f2b] text-cream' : 'bg-cream'}`}
+                className={`relative p-8 flex flex-col rounded-xl ${plan.popular ? 'bg-[#1C1C2E] text-cream' : 'bg-cream border border-warm'}`}
+                style={{ boxShadow: plan.popular ? 'none' : '0 2px 12px rgba(26,46,43,0.06)' }}
               >
                 {plan.popular && (
-                  <span className="absolute top-4 right-4 bg-coral px-3 py-1 text-xs font-semibold text-white">Most Popular</span>
+                  <span className="absolute top-4 right-4 bg-coral rounded-full px-3 py-1 text-xs font-semibold text-white">Most Popular</span>
                 )}
                 <h3 className={`font-serif text-xl ${plan.popular ? 'text-cream' : ''}`}>{plan.name}</h3>
                 <div className="mt-4">
@@ -779,7 +782,7 @@ export default function LandingPage() {
                 </ul>
                 <Link
                   href="/auth/signup"
-                  className={`mt-8 block rounded-xl text-center py-3 text-sm font-semibold transition-colors ${plan.popular ? 'bg-coral text-white hover:bg-coral-light' : 'bg-[#121f2b] text-white hover:bg-[#121f2b]/90'}`}
+                  className={`mt-8 block rounded-lg text-center py-3 text-sm font-semibold transition-colors ${plan.popular ? 'bg-coral text-white hover:opacity-90' : 'bg-[#1C1C2E] text-white hover:opacity-90'}`}
                 >
                   {plan.cta}
                 </Link>
@@ -796,12 +799,12 @@ export default function LandingPage() {
             <p className="text-sm font-semibold text-coral uppercase tracking-wider">Testimonials</p>
             <h2 className="mt-3 font-serif text-4xl md:text-5xl leading-tight">Loved by small organisations.</h2>
           </motion.div>
-          <div className="grid md:grid-cols-3 gap-px bg-warm">
+          <div className="grid md:grid-cols-3 gap-px bg-warm rounded-xl overflow-hidden">
             {testimonials.map((t, i) => (
               <motion.div key={t.name} {...fadeInView(i * 0.1)} className="bg-cream p-8">
                 <p className="text-sm text-charcoal leading-relaxed">"{t.quote}"</p>
                 <div className="mt-6 flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center bg-[#121f2b] text-white font-semibold text-sm">{t.initials}</div>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#1C1C2E] text-white font-semibold text-sm">{t.initials}</div>
                   <div>
                     <p className="text-sm font-semibold text-charcoal">{t.name}</p>
                     <p className="text-xs text-mid">{t.role}</p>
@@ -823,14 +826,14 @@ export default function LandingPage() {
               <p className="mt-4 text-mid leading-relaxed">Have a question, partnership idea, or just want to say hello? We'd love to hear from you.</p>
               <div className="mt-10 space-y-6">
                 <div className="flex items-center gap-4">
-                  <div className="flex h-11 w-11 items-center justify-center bg-coral/10 text-coral"><Mail size={18} /></div>
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-coral/10 text-coral"><Mail size={18} /></div>
                   <div>
                     <p className="text-sm font-semibold">Email us</p>
                     <a href="mailto:hello@granttracker.co.uk" className="text-sm text-coral hover:underline">hello@granttracker.co.uk</a>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
-                  <div className="flex h-11 w-11 items-center justify-center bg-coral/10 text-coral"><MessageSquare size={18} /></div>
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-coral/10 text-coral"><MessageSquare size={18} /></div>
                   <div>
                     <p className="text-sm font-semibold">Response time</p>
                     <p className="text-sm text-mid">Usually within 24 hours</p>
@@ -838,7 +841,7 @@ export default function LandingPage() {
                 </div>
               </div>
             </div>
-            <div className="border border-warm bg-white p-8">
+            <div className="border border-warm bg-white rounded-xl p-8">
               <ContactForm />
             </div>
           </motion.div>
@@ -846,13 +849,13 @@ export default function LandingPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-16 md:py-20 bg-[#121f2b]">
+      <section className="py-16 md:py-20 bg-[#1C1C2E]">
         <div className="mx-auto max-w-4xl px-6 text-center">
           <motion.div {...fadeInView(0)}>
             <h2 className="font-serif text-4xl text-cream md:text-6xl leading-tight">Find your funding. Free to start.</h2>
             <p className="mx-auto mt-6 max-w-lg text-cream/60 leading-relaxed">Join CICs, charities, social enterprises and impact founders already discovering funding that actually fits.</p>
             <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-              <Link href="/auth/signup" className="bg-coral text-white rounded-xl px-10 py-3.5 text-base font-semibold hover:opacity-90 transition-colors">Start for free</Link>
+              <Link href="/auth/signup" className="bg-coral text-white rounded-lg px-10 py-3.5 text-base font-semibold hover:opacity-90 transition-colors">Start for free</Link>
             </div>
             <p className="mt-4 text-sm text-cream/40">No credit card required</p>
           </motion.div>
@@ -862,9 +865,8 @@ export default function LandingPage() {
       {/* FOOTER */}
       <footer className="border-t border-warm py-12">
         <div className="mx-auto flex max-w-5xl flex-col items-center gap-8 px-6 md:flex-row md:justify-between">
-          <a href="/" className="flex items-center gap-2">
-            <RadioWaveIcon className="h-6 w-6 text-coral" />
-            <span className="font-serif text-lg text-charcoal">Grant<span className="text-coral">Tracker</span></span>
+          <a href="/" className="no-underline">
+            <Logo variant="dark" size="sm" />
           </a>
           <div className="flex gap-8 text-sm text-mid">
             <a href="#how" className="hover:text-charcoal transition-colors">How it works</a>
@@ -873,7 +875,7 @@ export default function LandingPage() {
             <a href="#about" className="hover:text-charcoal transition-colors">About</a>
             <a href="#contact" className="hover:text-charcoal transition-colors">Contact</a>
           </div>
-          <p className="text-xs text-mid">© 2025 Grant Tracker</p>
+          <p className="text-xs text-mid">© 2026 Grant Tracker</p>
         </div>
       </footer>
 

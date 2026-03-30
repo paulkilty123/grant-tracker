@@ -5,14 +5,13 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { Search, ArrowRight, Bell, Lock } from 'lucide-react'
+import Logo from '@/components/Logo'
 
 export default function SignupPage() {
   const router                  = useRouter()
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
-  const [orgName, setOrgName]   = useState('')
-  const [orgType, setOrgType]   = useState('')
   const [showPw, setShowPw]     = useState(false)
   const [error, setError]       = useState<string | null>(null)
   const [loading, setLoading]   = useState(false)
@@ -29,7 +28,7 @@ export default function SignupPage() {
       email,
       password,
       options: {
-        data: { full_name: fullName, org_name: orgName, org_type: orgType },
+        data: { full_name: fullName },
         emailRedirectTo: `${location.origin}/auth/callback`,
       },
     })
@@ -110,17 +109,14 @@ export default function SignupPage() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 overflow-hidden border border-warm/60" style={{ boxShadow: '0 8px 40px rgba(26,46,43,0.10)' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 overflow-hidden rounded-xl border border-warm/60" style={{ boxShadow: '0 8px 40px rgba(26,46,43,0.10)' }}>
 
           {/* ── Left: value props ── */}
-          <div className="bg-[#121f2b] text-white p-10 hidden lg:flex flex-col justify-between">
+          <div className="bg-[#1C1C2E] text-white p-10 hidden lg:flex flex-col justify-between">
             <div>
               {/* Logo */}
-              <a href="/" className="flex items-center gap-2.5 no-underline mb-2">
-                <div className="relative flex items-center justify-center bg-coral w-7 h-7 flex-shrink-0" style={{ borderRadius: '6px' }}>
-                  <div className="w-2.5 h-2.5 rounded-full border-2 border-white" />
-                </div>
-                <span className="font-serif text-[20px] text-white">GrantTracker</span>
+              <a href="/" className="no-underline mb-2">
+                <Logo variant="light" size="md" />
               </a>
               <p className="text-white/50 text-sm mb-10">Find grants, accelerators, investment and support programmes — matched to you, managed in one place.</p>
 
@@ -154,16 +150,14 @@ export default function SignupPage() {
 
             {/* Mobile logo */}
             <div className="mb-8 lg:hidden flex justify-center">
-              <a href="/" className="flex items-center gap-2.5 no-underline">
-                <div className="relative flex items-center justify-center bg-coral w-7 h-7 flex-shrink-0" style={{ borderRadius: '6px' }}>
-                  <div className="w-2.5 h-2.5 rounded-full border-2 border-white" />
-                </div>
-                <span className="font-serif text-[20px] text-charcoal">GrantTracker</span>
+              <a href="/" className="no-underline">
+                <Logo variant="dark" size="md" />
               </a>
             </div>
 
+            <p className="text-xs text-mid mb-4 lg:hidden">Search 500+ grants · AI-matched to your mission · Free to start</p>
             <h1 className="font-serif text-[28px] leading-tight text-charcoal mb-1">Create your free account</h1>
-            <p className="text-mid text-sm mb-7">Set up in 2 minutes — no credit card needed</p>
+            <p className="text-mid text-sm mb-7">Takes 30 seconds — no credit card needed</p>
 
             <form onSubmit={handleSignup} className="space-y-4">
               {error && (
@@ -178,44 +172,11 @@ export default function SignupPage() {
                   type="text"
                   value={fullName}
                   onChange={e => setFullName(e.target.value)}
-                  className="form-input"
-                  style={{ borderRadius: '0' }}
+                  className="form-input rounded-lg"
                   placeholder="Jane Smith"
                   autoComplete="name"
                   required
                 />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-charcoal mb-1.5">Organisation name</label>
-                <input
-                  type="text"
-                  value={orgName}
-                  onChange={e => setOrgName(e.target.value)}
-                  className="form-input"
-                  style={{ borderRadius: '0' }}
-                  placeholder="Green Communities CIC"
-                  autoComplete="organization"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-charcoal mb-1.5">Organisation type</label>
-                <select
-                  value={orgType}
-                  onChange={e => setOrgType(e.target.value)}
-                  className="form-input"
-                  style={{ borderRadius: '0' }}
-                  required
-                >
-                  <option value="" disabled>Select your organisation type…</option>
-                  <option value="registered_charity">Registered charity</option>
-                  <option value="cic">Community Interest Company (CIC)</option>
-                  <option value="social_enterprise">Social enterprise</option>
-                  <option value="community_group">Community group or voluntary organisation</option>
-                  <option value="other">Other mission-driven organisation</option>
-                </select>
               </div>
 
               <div>
@@ -224,8 +185,7 @@ export default function SignupPage() {
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  className="form-input"
-                  style={{ borderRadius: '0' }}
+                  className="form-input rounded-lg"
                   placeholder="you@organisation.org"
                   autoComplete="email"
                   required
@@ -239,8 +199,7 @@ export default function SignupPage() {
                     type={showPw ? 'text' : 'password'}
                     value={password}
                     onChange={e => setPassword(e.target.value)}
-                    className="form-input pr-14"
-                    style={{ borderRadius: '0' }}
+                    className="form-input pr-14 rounded-lg"
                     placeholder="At least 8 characters"
                     autoComplete="new-password"
                     minLength={8}
@@ -265,8 +224,7 @@ export default function SignupPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center items-center bg-coral text-white py-3 text-sm font-semibold hover:opacity-90 transition-colors mt-2"
-                style={{ borderRadius: '0' }}
+                className="w-full flex justify-center items-center bg-coral text-white py-3 text-sm font-semibold hover:opacity-90 transition-colors mt-2 rounded-lg"
               >
                 {loading ? 'Creating account…' : 'Create free account'}
               </button>

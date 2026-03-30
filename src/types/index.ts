@@ -31,11 +31,12 @@ export type OrgStage =
   | 'growth'
   | 'established'
 
-/** The 12 impact sectors users select during onboarding (1–3 per user) */
+/** The 19 impact sectors users select during onboarding (1–5 per user) */
 export type ImpactSector =
   | 'creative'
   | 'environment'
   | 'health'
+  | 'mental_health'
   | 'education'
   | 'tech'
   | 'housing'
@@ -45,6 +46,12 @@ export type ImpactSector =
   | 'justice'
   | 'financial'
   | 'international'
+  | 'young_people'
+  | 'women'
+  | 'disability'
+  | 'older_people'
+  | 'heritage'
+  | 'sport'
 
 /** Funding opportunity types — extends beyond grants */
 export type FundingType =
@@ -185,6 +192,8 @@ export interface GrantOpportunity {
   isInviteOnly: boolean
   /** Human-readable date when the grant next opens (e.g. "July 2026"). Null if open now or unknown. */
   nextOpenDate?: string | null
+  /** ISO date (YYYY-MM-DD) when the grant next opens — used for "opens soon" display. */
+  nextOpenDateParsed?: string | null
   source: 'three_sixty_giving' | 'manual' | 'scraped'
   dateAdded?: string        // ISO date, used for "Recently Added" section
   lastVerifiedAt?: string   // ISO date: last time crawler confirmed this grant was still live

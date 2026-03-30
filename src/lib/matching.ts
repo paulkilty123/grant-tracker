@@ -110,6 +110,57 @@ function phraseHitRatio(term: string, text: string): number {
 }
 
 /**
+ * Normalize a structure string to a canonical set of tokens.
+ * Bridges the gap between the DB's scraped vocabulary (e.g. 'cic', 'charity',
+ * 'coop') and the code's LegalStructure enum (e.g. 'cic_guarantee', 'cic_shares',
+ * 'registered_charity', 'cooperative').  Both sides are expanded then compared
+ * via intersection, so 'cic_guarantee' ↔ 'cic' correctly resolves to eligible.
+ */
+function normalizeStructureTokens(s: string): string[] {
+  const sl = s.toLowerCase().trim()
+  switch (sl) {
+    case 'cic_guarantee':
+    case 'cic_shares':
+    case 'cic':
+      return ['cic', 'cic_guarantee', 'cic_shares']
+    case 'registered_charity':
+    case 'charity':
+      return ['registered_charity', 'charity']
+    case 'cio':
+      return ['cio', 'charity', 'registered_charity']
+    case 'social_enterprise':
+      return ['social_enterprise', 'cic', 'cic_guarantee', 'cic_shares',
+              'ltd_guarantee', 'ltd_shares', 'company_ltd_guarantee', 'ltd_company', 'cooperative', 'coop']
+    case 'ltd_guarantee':
+    case 'company_ltd_guarantee':
+      return ['ltd_guarantee', 'company_ltd_guarantee', 'ltd_company', 'ltd']
+    case 'ltd_shares':
+      return ['ltd_shares', 'ltd_company', 'ltd']
+    case 'ltd_company':
+    case 'ltd':
+      return ['ltd_company', 'ltd', 'ltd_guarantee', 'ltd_shares', 'company_ltd_guarantee']
+    case 'cooperative':
+    case 'coop':
+    case 'community_benefit_society':
+      return ['cooperative', 'coop', 'community_benefit_society']
+    case 'unincorporated':
+    case 'voluntary_organisation':
+    case 'voluntary_org':
+    case 'unregistered_group':
+    case 'not_registered':
+      return ['unincorporated', 'voluntary_organisation', 'voluntary_org',
+              'not_registered', 'unregistered_group']
+    case 'sole_trader':
+      return ['sole_trader']
+    case 'llp':
+    case 'partnership':
+      return ['llp', 'partnership']
+    default:
+      return [sl]
+  }
+}
+
+/**
  * Map legacy org_type to a list of LegalStructure values for eligibility matching.
  * Used as fallback when org.legal_structure is not set.
  */
@@ -171,6 +222,7 @@ export function computeMatchScore(
 
   // ── 1. Location (max 25) ───────────────────────────────────────────────
   let locationScore = 10 // base for national grants
+  let locationMismatch = false
   if (org.primary_location) {
     const city    = org.primary_location.split(',')[0].trim().toLowerCase()
     const region  = org.primary_location.split(',')[1]?.trim().toLowerCase() ?? ''
@@ -205,8 +257,10 @@ export function computeMatchScore(
         }
       } else {
         // Local grant but no location text match — likely for a different area.
-        // Score below the national base (10) to avoid surfacing wrong-city grants.
-        locationScore = 4
+        // Use a floor of 2 (well below the 10 base for national grants) so these
+        // grants rank significantly lower than anything even partially relevant.
+        locationScore = 2
+        locationMismatch = true
         reasons.push('Local grant — area may not match yours')
       }
     }
@@ -385,6 +439,7 @@ export function computeMatchScore(
     org.org_type === 'cic'               ? 10 :
     org.org_type === 'social_enterprise' ? 9  : 7
 
+  let structureMismatch = false
   const eligibilityText = grant.eligibilityCriteria.join(' ').toLowerCase()
 
   if (eligibilityText) {
@@ -406,7 +461,10 @@ export function computeMatchScore(
     } else if (isSEEligible && (org.org_type === 'social_enterprise' || org.org_type === 'cic')) {
       eligibilityScore = Math.min(15, eligibilityScore + 2)
     } else if (isCharityEligible && org.org_type !== 'registered_charity') {
-      eligibilityScore = Math.max(3, eligibilityScore - 4)
+      // Hard penalty — "registered charity" requirement is a strong eligibility gate
+      eligibilityScore = Math.max(1, eligibilityScore - 12)
+      structureMismatch = true
+      reasons.push('Check eligibility — may require registered charity status')
     }
 
     if (vcseKeywords.some(k => eligibilityText.includes(k))) {
@@ -507,10 +565,16 @@ export function computeMatchScore(
     const orgStructures = orgStructuresToCheck(org)
 
     if (orgStructures.length > 0) {
-      const isEligible = orgStructures.some(s => grant.eligibleStructures!.includes(s))
+      // Normalize both sides before comparing — bridges vocabulary mismatches
+      // between the DB's scraped values ('cic', 'charity', 'coop') and the
+      // code's LegalStructure enum ('cic_guarantee', 'registered_charity', 'cooperative')
+      const orgTokens   = new Set(orgStructures.flatMap(s => normalizeStructureTokens(s)))
+      const grantTokens = grant.eligibleStructures!.flatMap(s => normalizeStructureTokens(s))
+      const isEligible  = grantTokens.some(t => orgTokens.has(t))
 
       if (isEligible) {
-        // Confirmed eligible — boost to full score
+        // Confirmed eligible — structured data overrides any earlier text-based mismatch flag
+        structureMismatch = false
         eligibilityScore = Math.min(15, eligibilityScore + 3)
         const label = structureLabel(org.legal_structure ?? orgStructures[0])
         reasons.push(`Eligible as a ${label}`)
@@ -518,6 +582,7 @@ export function computeMatchScore(
         // Hard ineligibility — significant penalty
         // Leave a floor of 1 so it still appears (with low score) rather than disappearing
         eligibilityScore = Math.max(1, Math.min(eligibilityScore, 4))
+        structureMismatch = true
         reasons.push('Check eligibility — legal structure may not qualify')
       }
     }
@@ -525,15 +590,57 @@ export function computeMatchScore(
   }
 
   // ── Total ──────────────────────────────────────────────────────────────
-  const score = Math.min(100,
+  let score = Math.min(100,
     locationScore + themesScore + grantSizeScore + funderTypeScore + eligibilityScore
   )
 
-  const reason =
-    reasons.length > 0 ? reasons.join(' · ') :
-    score >= 75 ? 'Good overall match for your organisation' :
-    score >= 55 ? 'Partial match — worth reviewing eligibility' :
-    'Lower match — check eligibility carefully'
+  // Freshness bonus — recently added or verified grants get a gentle tiebreaker boost
+  // so fresh opportunities rise above stale grants with identical base scores.
+  // Applied BEFORE mismatch caps so it never inflates a structurally ineligible grant.
+  const freshnessDate = grant.lastVerifiedAt ?? grant.dateAdded
+  if (freshnessDate) {
+    const daysOld = Math.floor((Date.now() - new Date(freshnessDate).getTime()) / (1000 * 60 * 60 * 24))
+    const freshnessBonus = daysOld <= 7 ? 4 : daysOld <= 14 ? 2 : daysOld <= 30 ? 1 : 0
+    score = Math.min(100, score + freshnessBonus)
+  }
+
+  // Cap total score when legal structure is likely ineligible — no matter how
+  // strong the location/sector match is, a structure mismatch is a deal-breaker.
+  if (structureMismatch) {
+    score = Math.min(score, 45)
+  }
+
+  // Cap total score for local grants outside the org's area — a strong sector
+  // match shouldn't make a Somerset grant look relevant to a London org.
+  if (locationMismatch) {
+    score = Math.min(score, 44)
+  }
+
+  // Build a narrative sentence rather than a flat bullet list
+  const warns    = reasons.filter(r => /check|may |likely|not match|exceed|borough|restricted/i.test(r))
+  const positives = reasons.filter(r => !warns.includes(r))
+
+  let reason: string
+  if (reasons.length === 0) {
+    reason = score >= 75 ? 'Good overall match for your organisation.'
+           : score >= 55 ? 'Partial match — worth reviewing eligibility.'
+           : 'Lower match — check eligibility carefully.'
+  } else {
+    const parts: string[] = []
+    if (positives.length === 1) {
+      parts.push(positives[0] + '.')
+    } else if (positives.length >= 2) {
+      const last = positives[positives.length - 1]
+      const rest = positives.slice(0, -1)
+      parts.push(rest.join(', ') + ', and ' + last.toLowerCase() + '.')
+    }
+    if (warns.length === 1) {
+      parts.push(warns[0] + '.')
+    } else if (warns.length >= 2) {
+      parts.push(warns[0] + ' Also: ' + warns[1].toLowerCase() + '.')
+    }
+    reason = parts.join(' ') || reasons[0] + '.'
+  }
 
   return {
     score,
