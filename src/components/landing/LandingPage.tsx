@@ -756,12 +756,13 @@ export default function LandingPage() {
             <h2 className="mt-3 font-serif text-4xl md:text-5xl leading-tight max-w-lg">Plans that respect your budget.</h2>
             <p className="mt-4 text-mid max-w-xl leading-relaxed">Start free. Upgrade to Live Search and tracking tools.</p>
           </motion.div>
-          <div className="grid md:grid-cols-3 gap-px bg-warm rounded-xl overflow-hidden">
+          <div className="grid md:grid-cols-3 gap-4">
             {plans.map((plan, i) => (
               <motion.div
                 key={plan.name}
                 {...fadeInView(i * 0.1)}
-                className={`relative p-8 flex flex-col ${plan.popular ? 'bg-[#1C1C2E] text-cream' : 'bg-cream'}`}
+                className={`relative p-8 flex flex-col rounded-xl ${plan.popular ? 'bg-[#1C1C2E] text-cream' : 'bg-cream border border-warm'}`}
+                style={{ boxShadow: plan.popular ? 'none' : '0 2px 12px rgba(26,46,43,0.06)' }}
               >
                 {plan.popular && (
                   <span className="absolute top-4 right-4 bg-coral rounded-full px-3 py-1 text-xs font-semibold text-white">Most Popular</span>
