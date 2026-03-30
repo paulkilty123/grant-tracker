@@ -764,7 +764,7 @@ export default function LandingPage() {
                 className={`relative p-8 flex flex-col ${plan.popular ? 'bg-[#1C1C2E] text-cream' : 'bg-cream'}`}
               >
                 {plan.popular && (
-                  <span className="absolute top-4 right-4 bg-coral px-3 py-1 text-xs font-semibold text-white">Most Popular</span>
+                  <span className="absolute top-4 right-4 bg-coral rounded-full px-3 py-1 text-xs font-semibold text-white">Most Popular</span>
                 )}
                 <h3 className={`font-serif text-xl ${plan.popular ? 'text-cream' : ''}`}>{plan.name}</h3>
                 <div className="mt-4">
