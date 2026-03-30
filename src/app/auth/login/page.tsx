@@ -5,7 +5,6 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Search, ArrowRight, Bell, Lock } from 'lucide-react'
-import Logo from '@/components/Logo'
 
 const ERROR_MESSAGES: Record<string, string> = {
   'Invalid login credentials': 'Incorrect email or password — please try again.',
@@ -63,14 +62,17 @@ function LoginForm() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 overflow-hidden rounded-xl border border-warm/60" style={{ boxShadow: '0 8px 40px rgba(26,46,43,0.10)' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 overflow-hidden border border-warm/60" style={{ boxShadow: '0 8px 40px rgba(26,46,43,0.10)' }}>
 
           {/* ── Left: value props ── */}
-          <div className="bg-[#1C1C2E] text-white p-10 hidden lg:flex flex-col justify-between">
+          <div className="bg-[#121f2b] text-white p-10 hidden lg:flex flex-col justify-between">
             <div>
               {/* Logo */}
-              <a href="/" className="no-underline mb-2">
-                <Logo variant="light" size="md" />
+              <a href="/" className="flex items-center gap-2.5 no-underline mb-2">
+                <div className="relative flex items-center justify-center bg-coral w-7 h-7 flex-shrink-0" style={{ borderRadius: '6px' }}>
+                  <div className="w-2.5 h-2.5 rounded-full border-2 border-white" />
+                </div>
+                <span className="font-serif text-[20px] text-white">GrantTracker</span>
               </a>
               <p className="text-white/50 text-sm mb-10">Find grants, accelerators, investment and support programmes — matched to you, managed in one place.</p>
 
@@ -104,8 +106,11 @@ function LoginForm() {
 
             {/* Mobile logo */}
             <div className="mb-8 lg:hidden flex justify-center">
-              <a href="/" className="no-underline">
-                <Logo variant="dark" size="md" />
+              <a href="/" className="flex items-center gap-2.5 no-underline">
+                <div className="relative flex items-center justify-center bg-coral w-7 h-7 flex-shrink-0" style={{ borderRadius: '6px' }}>
+                  <div className="w-2.5 h-2.5 rounded-full border-2 border-white" />
+                </div>
+                <span className="font-serif text-[20px] text-charcoal">GrantTracker</span>
               </a>
             </div>
 
@@ -130,7 +135,8 @@ function LoginForm() {
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  className="form-input rounded-lg"
+                  className="form-input"
+                  style={{ borderRadius: '0' }}
                   placeholder="you@organisation.org"
                   autoComplete="email"
                   required
@@ -149,7 +155,8 @@ function LoginForm() {
                     type={showPw ? 'text' : 'password'}
                     value={password}
                     onChange={e => setPassword(e.target.value)}
-                    className="form-input pr-10 rounded-lg"
+                    className="form-input pr-10"
+                    style={{ borderRadius: '0' }}
                     placeholder="••••••••"
                     autoComplete="current-password"
                     required
@@ -168,7 +175,8 @@ function LoginForm() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center items-center bg-coral text-white py-3 text-sm font-semibold hover:opacity-90 transition-colors mt-2 rounded-lg"
+                className="w-full flex justify-center items-center bg-coral text-white py-3 text-sm font-semibold hover:opacity-90 transition-colors mt-2"
+                style={{ borderRadius: '0' }}
               >
                 {loading ? 'Signing in…' : 'Sign in'}
               </button>

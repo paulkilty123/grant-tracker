@@ -80,16 +80,40 @@ function PipelineCard({
       onClick={() => onClick(item)}
       className="pipeline-card"
     >
-      <p className="text-[10px] text-light font-semibold uppercase tracking-wider mb-1">{item.funder_name}</p>
-      <p className="text-sm font-semibold text-charcoal leading-snug mb-1.5">{item.grant_name}</p>
-      <p className={cn('text-sm font-bold',
-        isWon ? 'text-forest' : isDeclined ? 'text-red-400' : 'text-gold'
-      )}>
-        {amountStr}{isWon ? ' ✓' : isDeclined ? ' ✗' : ''}
-      </p>
+      {/* Top badges row */}
+      <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+        {item.application_progress != null && item.application_progress > 0 && item.application_progress < 100 && (
+          <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-[#fff4e6] text-[#c07010] uppercase tracking-wide">
+            {getWritingStage(item.application_progress).label}
+          </span>
+        )}
+        {item.application_progress === 100 && (
+          <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-forest/10 text-forest uppercase tracking-wide">Final</span>
+        )}
+        {item.is_urgent && (
+          <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-red-50 text-red-500 uppercase tracking-wide">Urgent</span>
+        )}
+      </div>
+
+      {/* Grant name */}
+      <p className="font-serif text-[15px] font-bold text-charcoal leading-snug mb-1">{item.grant_name}</p>
+
+      {/* Funder name */}
+      <p className="text-xs text-mid mb-2">{item.funder_name}</p>
+
+      {/* Amount */}
+      {amountStr && (
+        <p className={cn('text-base font-bold mb-1',
+          isDeclined ? 'text-red-400' : 'text-forest'
+        )}>
+          {amountStr}{isWon ? ' ✓' : isDeclined ? ' ✗' : ''}
+        </p>
+      )}
+
+      {/* Deadline + urgency */}
       {deadlineStr && (
-        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-          <p className="text-[11px] text-mid">{deadlineStr}</p>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-[11px] text-mid">📅 {deadlineStr}</span>
           {daysLeft !== null && daysLeft <= 10 && (
             <span className={cn(
               'text-[9px] font-bold px-1.5 py-0.5 rounded-full',
@@ -103,9 +127,10 @@ function PipelineCard({
           )}
         </div>
       )}
+
+      {/* Writing progress bar */}
       {item.application_progress != null && item.application_progress > 0 && (
-        <div className="mt-2">
-          <p className="text-[10px] text-light mb-0.5">{getWritingStage(item.application_progress).emoji} {getWritingStage(item.application_progress).label}</p>
+        <div className="mt-2.5">
           <div className="h-1 bg-warm overflow-hidden rounded-full">
             <div
               className={cn('h-full transition-all', item.application_progress >= 83 ? 'bg-forest' : item.application_progress >= 50 ? 'bg-sage' : 'bg-amber-400')}
@@ -114,11 +139,13 @@ function PipelineCard({
           </div>
         </div>
       )}
+
+      {/* Notes */}
       {item.notes && (
-        <p className="text-[10px] text-light mt-1.5 leading-snug line-clamp-2 italic">
-          {item.notes}
-        </p>
+        <p className="text-[10px] text-light mt-2 leading-snug line-clamp-2 italic">{item.notes}</p>
       )}
+
+      {/* Apply link */}
       {item.grant_url && (
         <a
           href={item.grant_url}
@@ -746,34 +773,35 @@ export default function PipelinePage() {
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-7">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
         <div>
           <h2 className="font-serif text-4xl font-bold text-charcoal leading-tight">Funding Pipeline</h2>
-          <p className="text-mid text-sm mt-1">Drag cards between columns or click to edit · {items.length} opportunities tracked</p>
+          <p className="text-mid text-sm mt-1.5 max-w-md">Manage your active pursuits and funding lifecycles. Drag and drop to update status.</p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-5 flex-shrink-0">
           {items.length > 0 && (() => {
             const activeItems = items.filter(i => !['won', 'declined'].includes(i.stage))
             const activeTotal = activeItems.reduce((s, i) => s + (i.amount_max ?? i.amount_requested ?? 0), 0)
             const wonTotal    = items.filter(i => i.stage === 'won').reduce((s, i) => s + (i.amount_requested ?? i.amount_max ?? 0), 0)
+            const total       = activeTotal + wonTotal
             const fmt = (n: number) => n >= 1000000
               ? `£${(n / 1000000).toFixed(1)}m`
               : n >= 1000
                 ? `£${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}k`
                 : `£${n.toLocaleString()}`
-            return (
-              <div className="flex items-center gap-3 text-sm">
-                {activeTotal > 0 && (
-                  <span className="text-light">Pipeline: <span className="font-semibold text-forest">{fmt(activeTotal)}</span></span>
-                )}
-                {activeTotal > 0 && wonTotal > 0 && <span className="text-light/40">·</span>}
-                {wonTotal > 0 && (
-                  <span className="text-light">Won: <span className="font-semibold text-emerald-600">{fmt(wonTotal)}</span></span>
-                )}
+            return total > 0 ? (
+              <div className="text-right">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-light">Total Pipeline</p>
+                <p className="text-2xl font-bold text-forest leading-tight">{fmt(total)}</p>
               </div>
-            )
+            ) : null
           })()}
-          <button onClick={() => setShowAdd(true)} className="btn-gold">＋ Add Opportunity</button>
+          <button
+            onClick={() => setShowAdd(true)}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-forest/30 text-forest text-sm font-medium bg-white hover:bg-forest/5 transition-colors whitespace-nowrap"
+          >
+            ＋ Add Opportunity
+          </button>
         </div>
       </div>
 
@@ -796,33 +824,19 @@ export default function PipelinePage() {
         {PIPELINE_STAGES.map(stage => {
           const stageItems = items.filter(i => i.stage === stage.id)
 
-          const stageColour =
-            stage.id === 'identified'  ? { bg: '#faf7f2', border: '#c8bfb0', text: '#7a6e62', badgeBg: '#e8ddd0', badgeText: '#7a6e62' } :
-            stage.id === 'applying'    ? { bg: '#fff4f1', border: '#FF7043', text: '#c94020', badgeBg: '#ffddd6', badgeText: '#b03018' } :
-            stage.id === 'submitted'   ? { bg: '#fdf6ea', border: '#e8a030', text: '#9a6a10', badgeBg: '#f5dfa0', badgeText: '#7a5010' } :
-            stage.id === 'won'         ? { bg: '#eaf3f0', border: '#1f5c52', text: '#1f5c52', badgeBg: '#c0ddd6', badgeText: '#1f5c52' } :
-                                         { bg: '#fdf0ee', border: '#e05040', text: '#c03030', badgeBg: '#f8d0cc', badgeText: '#a02020' }
-
           return (
             <div
               key={stage.id}
               className="pipeline-col"
-              style={{ background: stageColour.bg }}
               onDragOver={onColDragOver}
               onDragLeave={onColDragLeave}
               onDrop={e => onColDrop(e, stage.id as PipelineStage)}
             >
-              <div
-                className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wide mb-1 pb-2.5 border-b-2"
-                style={{ borderColor: stageColour.border, color: stageColour.text }}
-              >
-                <span className="flex items-center gap-1.5">{STAGE_ICONS[stage.id]}{stage.label}</span>
-                <span
-                  className="px-1.5 py-0.5 text-[10px] font-bold"
-                  style={{ background: stageColour.badgeBg, color: stageColour.badgeText }}
-                >
-                  {stageItems.length}
+              <div className="flex items-center justify-between mb-3 pb-2.5 border-b border-warm/60">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-light flex items-center gap-1.5">
+                  {STAGE_ICONS[stage.id]}{stage.label}
                 </span>
+                <span className="text-[10px] font-bold text-mid">{stageItems.length}</span>
               </div>
               {stageItems.length === 0 && (
                 <p className="text-[10px] text-light text-center py-4 leading-relaxed">Drag a grant here</p>

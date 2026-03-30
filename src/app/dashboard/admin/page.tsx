@@ -202,7 +202,7 @@ export default async function AdminPage() {
     <div>
       {/* Header */}
       <div className="mb-7">
-        <h2 className="font-display text-2xl font-bold text-forest">Grant Health</h2>
+        <h2 className="font-display text-2xl font-bold text-forest">Source Health Dashboard</h2>
         <p className="text-mid text-sm mt-1">
           {stats.length} sources · {totalActive.toLocaleString()} active grants
         </p>

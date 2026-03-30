@@ -73,34 +73,16 @@ export async function POST(req: NextRequest) {
 
   const supabase = getAdminClient()
 
-  // ── Count total remaining (for progress reporting) ───────────────────────────
-  let totalRemaining = 0
-  if (!force) {
-    // Count unclassified grants (impact_sectors is null)
-    const { count } = await supabase
-      .from('scraped_grants')
-      .select('id', { count: 'exact', head: true })
-      .eq('is_active', true)
-      .is('impact_sectors', null)
-    totalRemaining = count ?? 0
-  }
-
-  // ── Fetch batch ──────────────────────────────────────────────────────────────
+  // Fetch this chunk — unclassified (or all if force)
   let query = supabase
     .from('scraped_grants')
     .select('id, title, funder, description, impact_sectors')
     .eq('is_active', true)
     .order('id')
+    .range(offset, offset + limit - 1)
 
-  if (force) {
-    // Force mode: paginate through ALL grants using offset
-    query = query.range(offset, offset + limit - 1)
-  } else {
-    // Normal mode: fetch first N unclassified grants (no offset needed —
-    // each batch classifies them, so the next fetch gets different ones)
-    query = query.is('impact_sectors', null).limit(limit)
-  }
-
+  // Without --force, only fetch grants that have no impact_sectors yet
+  // We filter client-side after fetch because Supabase array filtering is limited
   const { data: grantsRaw, error } = await query
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -108,7 +90,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ classified: 0, failed: 0, total: 0, done: true, nextOffset: offset })
   }
 
-  const grants = grantsRaw
+  // Filter to unclassified unless force
+  const grants = force
+    ? grantsRaw
+    : grantsRaw.filter(g => !Array.isArray(g.impact_sectors) || g.impact_sectors.length === 0)
 
   let classified = 0
   let failed = 0
@@ -158,9 +143,9 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     classified,
     failed,
-    skipped: 0,
-    total:   force ? grantsRaw.length : totalRemaining,
+    skipped: grantsRaw.length - grants.length,  // already-classified, skipped
+    total:   grantsRaw.length,
     done,
-    nextOffset: force ? offset + grantsRaw.length : 0,  // normal mode doesn't use offset
+    nextOffset: offset + grantsRaw.length,
   })
 }

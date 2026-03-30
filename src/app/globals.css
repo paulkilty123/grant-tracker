@@ -87,17 +87,18 @@
 
   /* Pipeline */
   .pipeline-card {
-    @apply bg-white p-3.5 mb-2.5 cursor-pointer rounded-xl
-           transition-all duration-150 hover:-translate-y-px
-           border border-warm/60;
-    box-shadow: 0 1px 6px rgba(26,46,43,0.06);
+    @apply bg-white p-4 mb-3 cursor-pointer rounded-xl
+           transition-all duration-150 hover:-translate-y-0.5
+           border border-warm/50;
+    box-shadow: 0 2px 12px rgba(26,46,43,0.07);
   }
   .pipeline-card.dragging {
     @apply opacity-40 scale-95;
     box-shadow: none;
   }
   .pipeline-col {
-    @apply bg-[#f5f2ed] p-3.5 min-h-[300px] rounded-xl;
+    @apply p-3.5 min-h-[300px] rounded-xl border border-warm/40;
+    background: #faf7f2;
   }
   .pipeline-col.drag-over {
     @apply outline-2 outline-dashed outline-coral bg-coral/5;
