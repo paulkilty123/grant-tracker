@@ -67,18 +67,18 @@ function PartnerCard({
           <div className="flex-shrink-0 w-10 h-10 bg-charcoal flex items-center justify-center text-white font-bold text-base select-none rounded-lg">
             {partner.company_name[0]?.toUpperCase() ?? '?'}
           </div>
-          <div className="flex-1 min-w-0 flex items-start justify-between gap-2">
-            <div className="min-w-0">
+          <div className="flex-1 min-w-0 flex items-center gap-2">
+            <div className="flex-shrink-0">
               <h3 className="font-semibold text-charcoal text-base leading-snug">{partner.company_name}</h3>
               {partner.programme_name && (
                 <p className="text-xs text-mid leading-snug">{partner.programme_name}</p>
               )}
             </div>
-            {/* Match insight — sits in the natural white space to the right of the name */}
+            {/* Match insight — stretches across remaining white space, 1 line only */}
             {showScore && score > 0 && (
-              <div className="flex-shrink-0 w-44 flex items-start gap-1.5 px-2.5 py-1.5 bg-forest/5 border border-forest/20 rounded-lg">
-                <Handshake className="h-3 w-3 text-forest flex-shrink-0 mt-0.5" />
-                <p className="text-[11px] text-forest/80 leading-snug line-clamp-3">{reason}</p>
+              <div className="flex-1 min-w-0 flex items-center gap-1.5 px-2.5 py-1.5 bg-forest/5 border border-forest/20 rounded-lg">
+                <Handshake className="h-3 w-3 text-forest flex-shrink-0" />
+                <p className="text-[11px] text-forest/80 leading-none truncate">{reason}</p>
               </div>
             )}
           </div>
