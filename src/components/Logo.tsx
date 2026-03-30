@@ -10,8 +10,8 @@ interface LogoProps {
 }
 
 export default function Logo({ variant = 'dark', size = 'md' }: LogoProps) {
-  const textSize = size === 'sm' ? 'text-[24px]' : size === 'lg' ? 'text-[34px]' : 'text-[28px]'
-  const iconSize = size === 'sm' ? 'w-8 h-8' : size === 'lg' ? 'w-11 h-11' : 'w-9 h-9'
+  const textSize = size === 'sm' ? 'text-[18px]' : size === 'lg' ? 'text-[26px]' : 'text-[22px]'
+  const iconSize = size === 'sm' ? 'w-6 h-6' : size === 'lg' ? 'w-9 h-9' : 'w-7 h-7'
   const color = variant === 'light' ? 'text-white' : 'text-[#3A3A4A]'
 
   return (
