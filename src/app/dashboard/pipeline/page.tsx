@@ -12,7 +12,7 @@ import {
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { PIPELINE_STAGES, formatDeadline, formatRange, cn } from '@/lib/utils'
 import type { PipelineItem, PipelineStage, Organisation } from '@/types'
-import { Search, Pencil, Send, Trophy, XCircle, Sparkles, Loader2, Link, ArrowRight, Calendar, AlarmClock } from 'lucide-react'
+import { Search, Pencil, Send, Trophy, XCircle, Sparkles, Loader2, Link, ArrowRight, Calendar, AlarmClock, X as XIcon, Circle, FileText, PenLine, RefreshCw, Eye, CheckCircle2 } from 'lucide-react'
 
 const STAGE_ICONS: Record<string, React.ReactNode> = {
   identified: <Search size={13} strokeWidth={2.5} />,
@@ -20,6 +20,16 @@ const STAGE_ICONS: Record<string, React.ReactNode> = {
   submitted:  <Send    size={13} strokeWidth={2.5} />,
   won:        <Trophy  size={13} strokeWidth={2.5} />,
   declined:   <XCircle size={13} strokeWidth={2.5} />,
+}
+
+const WRITING_STAGE_ICONS: Record<number, React.ReactNode> = {
+  0:   <Circle       size={14} strokeWidth={2} />,
+  17:  <Search       size={14} strokeWidth={2} />,
+  33:  <FileText     size={14} strokeWidth={2} />,
+  50:  <PenLine      size={14} strokeWidth={2} />,
+  67:  <RefreshCw    size={14} strokeWidth={2} />,
+  83:  <Eye          size={14} strokeWidth={2} />,
+  100: <CheckCircle2 size={14} strokeWidth={2} />,
 }
 
 
@@ -235,12 +245,14 @@ function PipelineModal({
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="bg-white w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-xl" style={{ boxShadow: '0 16px 64px rgba(26,46,43,0.18)' }} onClick={e => e.stopPropagation()}>
-        <div className="p-6 border-b border-warm flex justify-between items-start">
+        <div className="px-6 py-5 border-b border-warm flex justify-between items-start" style={{ background: '#faf7f2' }}>
           <div>
-            <h3 className="font-display text-lg font-bold text-charcoal">{item.grant_name}</h3>
+            <h3 className="font-serif text-xl font-bold text-charcoal leading-snug">{item.grant_name}</h3>
             <p className="text-sm text-mid mt-0.5">{item.funder_name}</p>
           </div>
-          <button onClick={onClose} className="text-light hover:text-mid text-xl leading-none">✕</button>
+          <button onClick={onClose} className="text-light hover:text-charcoal transition-colors mt-0.5 flex-shrink-0">
+            <XIcon size={18} strokeWidth={2} />
+          </button>
         </div>
 
         <div className="p-6 space-y-5">
@@ -315,12 +327,12 @@ function PipelineModal({
             </div>
           )}
           {!isApplyingOrLater && (amountMin || amountMax) && (
-            <p className="text-xl font-bold text-gold -mt-2">
+            <p className="text-xl font-bold text-forest -mt-2">
               {formatRange(amountMin ? Number(amountMin) : null, amountMax ? Number(amountMax) : null)}
             </p>
           )}
           {isApplyingOrLater && amountRequested && (
-            <p className="text-xl font-bold text-gold -mt-2">
+            <p className="text-xl font-bold text-forest -mt-2">
               £{Number(amountRequested).toLocaleString('en-GB')} requested
             </p>
           )}
@@ -340,7 +352,10 @@ function PipelineModal({
                       : 'border-warm text-mid hover:border-coral hover:text-coral'
                   )}
                 >
-                  {s.emoji} {s.label}
+                  <span className="flex items-center justify-center gap-1.5">
+                    {STAGE_ICONS[s.id]}
+                    {s.label}
+                  </span>
                 </button>
               ))}
             </div>
@@ -365,7 +380,9 @@ function PipelineModal({
                         : 'border-warm bg-white hover:border-coral/50 hover:bg-coral/5'
                     )}
                   >
-                    <span className="text-base leading-none">{s.emoji}</span>
+                    <span className={cn(isActive ? 'text-coral' : 'text-mid')}>
+                      {WRITING_STAGE_ICONS[s.value]}
+                    </span>
                     <span className={cn('text-[10px] font-semibold leading-tight', isActive ? 'text-forest' : 'text-mid')}>
                       {s.label}
                     </span>
@@ -386,8 +403,9 @@ function PipelineModal({
               />
             </div>
             {progress > 0 && (
-              <p className="text-xs text-mid mt-1.5 text-center">
-                {getWritingStage(progress).emoji} {getWritingStage(progress).label} — {progress}% complete
+              <p className="text-xs text-mid mt-1.5 text-center flex items-center justify-center gap-1">
+                {WRITING_STAGE_ICONS[getWritingStage(progress).value]}
+                {getWritingStage(progress).label} — {progress}% complete
               </p>
             )}
           </div>
