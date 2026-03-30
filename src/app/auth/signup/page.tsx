@@ -112,7 +112,7 @@ export default function SignupPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 overflow-hidden border border-warm/60" style={{ boxShadow: '0 8px 40px rgba(26,46,43,0.10)' }}>
 
           {/* ── Left: value props ── */}
-          <div className="bg-[#121f2b] text-white p-10 hidden lg:flex flex-col justify-between">
+          <div className="bg-forest text-white p-10 hidden lg:flex flex-col justify-between">
             <div>
               {/* Logo */}
               <a href="/" className="no-underline mb-2">
@@ -173,7 +173,7 @@ export default function SignupPage() {
                   value={fullName}
                   onChange={e => setFullName(e.target.value)}
                   className="form-input"
-                  style={{ borderRadius: '0' }}
+                  className="rounded-lg"
                   placeholder="Jane Smith"
                   autoComplete="name"
                   required
@@ -187,7 +187,7 @@ export default function SignupPage() {
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   className="form-input"
-                  style={{ borderRadius: '0' }}
+                  className="rounded-lg"
                   placeholder="you@organisation.org"
                   autoComplete="email"
                   required
@@ -202,7 +202,7 @@ export default function SignupPage() {
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     className="form-input pr-14"
-                    style={{ borderRadius: '0' }}
+                    className="rounded-lg"
                     placeholder="At least 8 characters"
                     autoComplete="new-password"
                     minLength={8}
@@ -227,8 +227,7 @@ export default function SignupPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center items-center bg-coral text-white py-3 text-sm font-semibold hover:opacity-90 transition-colors mt-2"
-                style={{ borderRadius: '0' }}
+                className="w-full flex justify-center items-center bg-coral text-white py-3 text-sm font-semibold hover:opacity-90 transition-colors mt-2 rounded-lg"
               >
                 {loading ? 'Creating account…' : 'Create free account'}
               </button>
