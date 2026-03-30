@@ -22,6 +22,7 @@ import {
   Menu,
   X,
   BookOpen,
+  Building2,
 } from 'lucide-react'
 
 interface Props {
@@ -48,7 +49,8 @@ const NAV_GROUPS = [
   {
     label: 'Find Funding',
     items: [
-      { href: '/dashboard/search', label: 'Find Funding', Icon: Search },
+      { href: '/dashboard/search',    label: 'Find Funding',        Icon: Search    },
+      { href: '/dashboard/corporate', label: 'Corporate Partners',  Icon: Building2 },
     ],
   },
   {

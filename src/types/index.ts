@@ -53,15 +53,12 @@ export type ImpactSector =
   | 'heritage'
   | 'sport'
 
-/** Funding opportunity types — extends beyond grants */
+/** Funding opportunity types — 4-category taxonomy */
 export type FundingType =
-  | 'grant'
-  | 'accelerator'
-  | 'support_programme'   // capacity building, fellowships, mentoring, incubators, training
-  | 'social_investment'
-  | 'diversity_fund'
-  | 'blended_finance'
-  | 'in_kind'
+  | 'grant'        // non-repayable cash: grants, awards, prizes, diversity funds
+  | 'programme'    // accelerators, fellowships, incubators, support programmes (may include cash)
+  | 'investment'   // repayable finance: social investment, blended finance, loans
+  | 'in_kind'      // non-cash: software credits, ad grants, workspace, pro bono
 
 export type PipelineStage =
   | 'identified'

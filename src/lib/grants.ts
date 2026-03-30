@@ -132,7 +132,7 @@ function inferFunderType(name: string): FunderType {
     isInviteOnly: false,
     applyUrl: 'https://www.lloydsbankfoundation.org.uk/we-fund/',
     source: 'manual',
-    fundingType: 'support_programme',
+    fundingType: 'programme',
   },
   {
     id: 'seed-008',
@@ -626,7 +626,7 @@ function inferFunderType(name: string): FunderType {
     isInviteOnly: false,
     applyUrl: 'https://unltd.org.uk/awards/',
     source: 'manual',
-    fundingType: 'support_programme',
+    fundingType: 'programme',
   },
   {
     id: 'seed-042',
@@ -797,7 +797,7 @@ function inferFunderType(name: string): FunderType {
     isInviteOnly: false,
     applyUrl: 'https://www.rosauk.org/funds/',
     source: 'manual',
-    fundingType: 'diversity_fund',
+    fundingType: 'grant',
   },
   {
     id: 'seed-052',
@@ -849,7 +849,7 @@ function inferFunderType(name: string): FunderType {
     isInviteOnly: false,
     applyUrl: 'https://www.lloydsbankfoundation.org.uk/we-fund/enable/',
     source: 'manual',
-    fundingType: 'support_programme',
+    fundingType: 'programme',
   },
   {
     id: 'seed-056',
@@ -1361,7 +1361,7 @@ function inferFunderType(name: string): FunderType {
     isInviteOnly: false,
     applyUrl: 'https://www.nesta.org.uk/funding/',
     source: 'manual',
-    fundingType: 'accelerator',
+    fundingType: 'programme',
   },
   {
     id: 'seed-088',
@@ -1484,7 +1484,7 @@ function inferFunderType(name: string): FunderType {
     isInviteOnly: false,
     applyUrl: 'https://www.emfoundation.org.uk/',
     source: 'manual',
-    fundingType: 'diversity_fund',
+    fundingType: 'grant',
   },
   {
     id: 'seed-097',
@@ -1502,7 +1502,7 @@ function inferFunderType(name: string): FunderType {
     isInviteOnly: false,
     applyUrl: 'https://www.runnymedetrust.org/',
     source: 'manual',
-    fundingType: 'diversity_fund',
+    fundingType: 'grant',
   },
   {
     id: 'seed-098',
@@ -1639,7 +1639,7 @@ function inferFunderType(name: string): FunderType {
     isInviteOnly: false,
     applyUrl: 'https://www.commonwealhousing.org.uk/',
     source: 'manual',
-    fundingType: 'social_investment',
+    fundingType: 'investment',
   },
   {
     id: 'seed-110',
@@ -1674,7 +1674,7 @@ function inferFunderType(name: string): FunderType {
     isInviteOnly: false,
     applyUrl: 'https://www.sibgroup.org.uk/funding/',
     source: 'manual',
-    fundingType: 'social_investment',
+    fundingType: 'investment',
   },
   {
     id: 'seed-114',
@@ -1947,7 +1947,7 @@ function inferFunderType(name: string): FunderType {
     isInviteOnly: false,
     applyUrl: 'https://www.womensaid.org.uk/',
     source: 'manual',
-    fundingType: 'diversity_fund',
+    fundingType: 'grant',
   },
   {
     id: 'seed-131',
@@ -2220,7 +2220,7 @@ function inferFunderType(name: string): FunderType {
     isInviteOnly: false,
     applyUrl: 'https://challengeworks.org/challenge-prizes/big-green-challenge/',
     source: 'manual',
-    fundingType: 'accelerator',
+    fundingType: 'programme',
   },
   {
     id: 'seed-151',
@@ -2238,7 +2238,7 @@ function inferFunderType(name: string): FunderType {
     isInviteOnly: false,
     applyUrl: 'https://localgiving.org/for-charities/',
     source: 'manual',
-    fundingType: 'blended_finance',
+    fundingType: 'investment',
   },
   {
     id: 'seed-153',
@@ -4604,7 +4604,7 @@ function inferFunderType(name: string): FunderType {
     applyUrl: 'https://www.access-socialinvestment.org.uk/our-programmes/growth-fund/',
     dateAdded: '2026-03-06',
     source: 'manual',
-    fundingType: 'social_investment',
+    fundingType: 'investment',
   },
   {
     id: 'seed-301',
@@ -4623,7 +4623,7 @@ function inferFunderType(name: string): FunderType {
     applyUrl: 'https://fair4allfinance.org.uk/our-work/financial-inclusion/',
     dateAdded: '2026-03-06',
     source: 'manual',
-    fundingType: 'social_investment',
+    fundingType: 'investment',
   },
   {
     id: 'seed-302',
@@ -4642,7 +4642,7 @@ function inferFunderType(name: string): FunderType {
     applyUrl: 'https://www.keyfund.org.uk/apply/',
     dateAdded: '2026-03-06',
     source: 'manual',
-    fundingType: 'social_investment',
+    fundingType: 'investment',
   },
   {
     id: 'seed-303',
@@ -4661,7 +4661,7 @@ function inferFunderType(name: string): FunderType {
     applyUrl: 'https://www.the-sse.org/our-programmes/',
     dateAdded: '2026-03-06',
     source: 'manual',
-    fundingType: 'accelerator',
+    fundingType: 'programme',
   },
   {
     id: 'seed-304',
@@ -4716,7 +4716,7 @@ function inferFunderType(name: string): FunderType {
     applyUrl: 'https://www.coopfinance.coop/apply-for-a-loan/',
     dateAdded: '2026-03-06',
     source: 'manual',
-    fundingType: 'social_investment',
+    fundingType: 'investment',
   },
   {
     id: 'seed-307',
@@ -4735,7 +4735,7 @@ function inferFunderType(name: string): FunderType {
     applyUrl: 'https://resonance.ltd.uk/funds/',
     dateAdded: '2026-03-06',
     source: 'manual',
-    fundingType: 'social_investment',
+    fundingType: 'investment',
   },
   {
     id: 'seed-308',
@@ -4754,7 +4754,7 @@ function inferFunderType(name: string): FunderType {
     applyUrl: 'https://www.socialenterprise.org.uk/social-enterprise-uk-programmes/buy-social-corporate-challenge/',
     dateAdded: '2026-03-06',
     source: 'manual',
-    fundingType: 'support_programme',
+    fundingType: 'programme',
   },
   {
     id: 'seed-309',
@@ -4773,7 +4773,7 @@ function inferFunderType(name: string): FunderType {
     applyUrl: 'https://www.goodfinance.org.uk/find-social-investment',
     dateAdded: '2026-03-06',
     source: 'manual',
-    fundingType: 'social_investment',
+    fundingType: 'investment',
   },
   {
     id: 'seed-310',
@@ -4792,7 +4792,7 @@ function inferFunderType(name: string): FunderType {
     applyUrl: 'https://www.fredericksfoundation.org/apply/',
     dateAdded: '2026-03-06',
     source: 'manual',
-    fundingType: 'social_investment',
+    fundingType: 'investment',
   },
   {
     id: 'seed-311',
@@ -4811,7 +4811,7 @@ function inferFunderType(name: string): FunderType {
     applyUrl: 'https://esmeefairbairn.org.uk/how-we-fund/social-investment/',
     dateAdded: '2026-03-06',
     source: 'manual',
-    fundingType: 'social_investment',
+    fundingType: 'investment',
   },
   {
     id: 'seed-312',
@@ -4830,7 +4830,7 @@ function inferFunderType(name: string): FunderType {
     applyUrl: 'https://www.uk.coop/support-your-co-op/community-shares/support/booster-fund/apply',
     dateAdded: '2026-03-06',
     source: 'manual',
-    fundingType: 'blended_finance',
+    fundingType: 'investment',
   },
   {
     id: 'seed-313',

@@ -553,16 +553,13 @@ export function computeMatchScore(
       const isEarly  = ['idea', 'pre_revenue', 'early'].includes(org.org_stage)
       const isGrowth = ['growth', 'established'].includes(org.org_stage)
 
-      if (isEarly && (ft === 'accelerator' || ft === 'support_programme')) {
+      if (isEarly && ft === 'programme') {
         funderTypeScore = Math.min(15, funderTypeScore + 3)
         reasons.push('Programme suits your stage')
-      } else if (isGrowth && ft === 'accelerator') {
-        funderTypeScore = Math.max(0, funderTypeScore - 2)
-      } else if (isGrowth && ft === 'social_investment') {
+      } else if (isGrowth && ft === 'investment') {
         funderTypeScore = Math.min(15, funderTypeScore + 2)
-        reasons.push('Social investment suits growth stage')
+        reasons.push('Investment suits growth stage')
       }
-      // Diversity funds exempt — eligibility depends on founder identity
     }
   }
 

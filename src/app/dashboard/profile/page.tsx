@@ -56,13 +56,10 @@ const IMPACT_SECTOR_OPTIONS: { value: ImpactSector; label: string }[] = [
 ]
 
 const FUNDING_TYPE_OPTIONS: { value: FundingType; label: string; desc: string }[] = [
-  { value: 'grant',              label: 'Grants & Awards',       desc: 'One-off or multi-year cash grants, bursaries, prizes' },
-  { value: 'accelerator',        label: 'Accelerators',          desc: 'Structured cohort programmes with mentoring & network' },
-  { value: 'support_programme',  label: 'Support Programmes',    desc: 'Fellowships, capacity building, training, incubators' },
-  { value: 'social_investment',  label: 'Social Investment',     desc: 'Repayable loans and patient capital' },
-  { value: 'diversity_fund',     label: 'Diversity Funds',       desc: 'Funds explicitly targeting underrepresented groups' },
-  { value: 'blended_finance',    label: 'Blended Finance',       desc: 'Part-grant part-loan, matched trading, community shares' },
-  { value: 'in_kind',            label: 'In-Kind Support',       desc: 'Software credits, ad grants, free workspace, pro bono' },
+  { value: 'grant',      label: 'Grants & Awards',    desc: 'Non-repayable cash: grants, bursaries, prizes, diversity funds' },
+  { value: 'programme',  label: 'Programmes',         desc: 'Accelerators, fellowships, incubators & support programmes' },
+  { value: 'investment', label: 'Social Investment',  desc: 'Repayable finance: loans, patient capital, blended finance' },
+  { value: 'in_kind',    label: 'In-Kind Support',    desc: 'Non-cash: software credits, ad grants, workspace, pro bono' },
 ]
 
 const SOFT_MATCH_STRUCTURES: LegalStructure[] = ['ltd_guarantee', 'ltd_shares', 'llp', 'sole_trader', 'unincorporated']

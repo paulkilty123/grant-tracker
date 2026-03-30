@@ -15,8 +15,7 @@ export const VALID_SECTORS = new Set([
 ])
 
 export const VALID_FUNDING_TYPES = new Set([
-  'grant', 'accelerator', 'support_programme', 'social_investment',
-  'diversity_fund', 'blended_finance', 'in_kind',
+  'grant', 'programme', 'investment', 'in_kind',
 ])
 
 export const VALID_STRUCTURES = new Set([
@@ -91,13 +90,10 @@ international  international development, global south, fair trade, migration, r
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 FUNDING TYPE TAXONOMY — choose exactly one:
 
-grant              One-off or multi-year cash grant, award, bursary, prize money
-accelerator        Structured cohort programme — mentoring, workspace, pitch prep, network (even if includes a small cash element)
-support_programme  Fellowship, capacity building, mentoring, incubator, training, CPD — no significant cash grant
-social_investment  Repayable loan, patient capital, investment — money must be repaid
-diversity_fund     Grant or programme explicitly targeting underrepresented groups: women, Black/ethnic minority founders, disabled people, LGBTQ+, rural communities
-blended_finance    Part grant part loan, matched trading, community shares, crowdfund match
-in_kind            Non-cash support: software credits, tax relief, ad grants, free workspace, pro bono services
+grant       Non-repayable cash: grants, awards, bursaries, prizes, diversity funds, challenge prizes
+programme   Structured support that may include cash: accelerators, fellowships, incubators, support programmes, cohort programmes, capacity building, CPD, mentoring
+investment  Repayable finance: loans, patient capital, social investment, blended finance (part-grant part-loan), community shares
+in_kind     Non-cash support only: software credits, ad grants, free workspace, pro bono services, tax relief
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ELIGIBLE STRUCTURES — legal structures explicitly stated as eligible.

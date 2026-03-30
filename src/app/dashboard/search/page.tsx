@@ -136,14 +136,11 @@ const GEO_SCOPES = [
 ]
 
 const FUNDING_TYPES: { id: FundingType | 'all'; label: string; emoji: string; desc: string }[] = [
-  { id: 'all',               label: 'All types',            emoji: '⚡', desc: 'All funding types' },
-  { id: 'grant',             label: 'Grants & Awards',      emoji: '🎯', desc: 'One-off grants from trusts, foundations, Lottery & government' },
-  { id: 'accelerator',        label: 'Accelerators',         emoji: '🚀', desc: 'Equity-free programmes: mentoring, workspace & networks' },
-  { id: 'support_programme', label: 'Support & Training',  emoji: '🎓', desc: 'Capacity building, fellowships, mentoring, incubators & training programmes' },
-  { id: 'social_investment', label: 'Social Investment',    emoji: '💰', desc: 'Repayable finance for social purpose organisations' },
-  { id: 'diversity_fund',    label: 'Diversity Funds',      emoji: '🌈', desc: 'BBB Pathways, Women in Innovation, Black Seed & more' },
-  { id: 'blended_finance',   label: 'Blended Finance',      emoji: '🔗', desc: 'Community shares, matched crowdfunding & CDFIs' },
-  { id: 'in_kind',           label: 'In-Kind & Tax',        emoji: '🛠️', desc: 'Google Ad Grants, AWS credits, SITR, R&D tax credits' },
+  { id: 'all',        label: 'All types',   emoji: '⚡', desc: 'All funding types' },
+  { id: 'grant',      label: 'Grants',      emoji: '🎯', desc: 'Non-repayable cash: grants, awards, bursaries & prizes' },
+  { id: 'programme',  label: 'Programmes',  emoji: '🚀', desc: 'Accelerators, fellowships, incubators & support programmes' },
+  { id: 'investment', label: 'Investment',  emoji: '💰', desc: 'Repayable finance: loans, patient capital & blended finance' },
+  { id: 'in_kind',    label: 'In-Kind',     emoji: '🛠️', desc: 'Non-cash: software credits, ad grants, workspace & pro bono' },
 ]
 
 // ── Live Search (web) types & constants ──────────────────────────────────────
@@ -461,13 +458,10 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
           {/* Metadata */}
           {(() => {
             const FUNDING_TYPE_STYLE: Record<string, { label: string; bg: string; color: string }> = {
-              grant:              { label: 'Grant',              bg: 'rgba(0,128,128,0.12)',    color: '#008080' },
-              social_investment:  { label: 'Social Investment',  bg: 'rgba(255,112,67,0.12)',   color: '#D84315' },
-              blended_finance:    { label: 'Blended Finance',    bg: 'rgba(255,183,77,0.20)',   color: '#A06000' },
-              accelerator:        { label: 'Accelerator',        bg: 'rgba(16,185,129,0.13)',   color: '#047857' },
-              support_programme:  { label: 'Fellowship / Support', bg: 'rgba(139,92,246,0.12)', color: '#6D28D9' },
-              diversity_fund:     { label: 'Diversity Fund',     bg: 'rgba(236,72,153,0.12)',   color: '#9D174D' },
-              in_kind:            { label: 'In-Kind',            bg: 'rgba(99,102,241,0.12)',   color: '#4338CA' },
+              grant:      { label: 'Grant',      bg: 'rgba(0,128,128,0.12)',   color: '#008080' },
+              programme:  { label: 'Programme',  bg: 'rgba(16,185,129,0.13)',  color: '#047857' },
+              investment: { label: 'Investment', bg: 'rgba(255,112,67,0.12)',  color: '#D84315' },
+              in_kind:    { label: 'In-Kind',    bg: 'rgba(99,102,241,0.12)', color: '#4338CA' },
             }
             const ftStyle = grant.fundingType ? FUNDING_TYPE_STYLE[grant.fundingType] : null
             return (
@@ -930,7 +924,8 @@ export default function SearchPage() {
   const [pipelineNudge, setPipelineNudge]         = useState<{ name: string; url: string | null } | null>(null)
   const [hasSearched, setHasSearched]             = useState(false)
   const [profileFiltersOpen, setProfileFiltersOpen] = useState(false)
-  const [activeTab, setActiveTab]                 = useState<'grant' | 'social_investment' | 'blended_finance' | 'accelerator' | 'support_programme' | 'in_kind' | 'corporate'>('grant')
+  const [activeTab, setActiveTab]                 = useState<'grant' | 'programme' | 'investment' | 'in_kind'>('grant')
+  const [programmeHasCash, setProgrammeHasCash]   = useState(false)
   const [activeView, setActiveView]               = useState<'matches' | 'saved'>('matches')
 
   // ── Live search (web) state ───────────────────────────────────────────────
@@ -1274,9 +1269,9 @@ export default function SearchPage() {
     })
   }
 
-  // Category groupings for the top-level toggle
-  const GRANT_TYPES: (FundingType | 'all')[]      = ['grant', 'social_investment', 'diversity_fund', 'blended_finance', 'in_kind']
-  const PROGRAMME_TYPES: (FundingType | 'all')[]  = ['accelerator', 'support_programme']
+  // Category groupings for the top-level toggle (4-type taxonomy)
+  const GRANT_TYPES: (FundingType | 'all')[]      = ['grant', 'investment', 'in_kind']
+  const PROGRAMME_TYPES: (FundingType | 'all')[]  = ['programme']
 
   // Reset visible count when search/filters change so the user starts from the top
   useEffect(() => {
@@ -1354,12 +1349,13 @@ export default function SearchPage() {
         !ge.geoScope?.length ||
         ge.geoScope.some(s => BROAD_SCOPES.includes(s.toLowerCase())) ||
         ge.geoScope.some(s => s.toLowerCase().includes(locationFilter.toLowerCase()) || locationFilter.toLowerCase().includes(s.toLowerCase()))
-      // Funding type tab filter — filter by activeTab
-      const matchesTab = activeTab === 'grant'
-        ? (['grant', 'diversity_fund'] as string[]).includes(gFundingType ?? 'grant')
-        : gFundingType === activeTab
+      // Funding type tab filter — filter by activeTab (gFundingType defaults to 'grant' when unset)
+      const matchesTab = gFundingType === activeTab
+      // "Includes cash" sub-filter within the Programmes tab
+      const matchesProgrammeCash = !programmeHasCash || activeTab !== 'programme' ||
+        ((g.amountMin ?? 0) > 0 || (g.amountMax ?? 0) > 0)
 
-      return matchesQuery && matchesType && matchesAmount && matchesDeadline && matchesSectors && matchesEntryType && matchesFreshness && matchesInviteOnly && matchesFundingType && matchesCategory && matchesFunderCategory && matchesGeoScope && matchesLocationText && matchesTab
+      return matchesQuery && matchesType && matchesAmount && matchesDeadline && matchesSectors && matchesEntryType && matchesFreshness && matchesInviteOnly && matchesFundingType && matchesCategory && matchesFunderCategory && matchesGeoScope && matchesLocationText && matchesTab && matchesProgrammeCash
     })
 
     if (aiResults) {
@@ -1617,23 +1613,17 @@ export default function SearchPage() {
   const programmesCount = allGrants_raw.filter(g => PROGRAMME_TYPES.includes((g as GrantOpportunity & { fundingType?: FundingType }).fundingType ?? 'grant')).length
 
   const TYPE_TABS = [
-    { id: 'grant'             as const, label: 'Grants',                    icon: <DollarSign size={14} strokeWidth={2} /> },
-    { id: 'social_investment' as const, label: 'Social Investment',         icon: <TrendingUp size={14} strokeWidth={2} /> },
-    { id: 'blended_finance'   as const, label: 'Blended Finance',           icon: <GitMerge size={14} strokeWidth={2} /> },
-    { id: 'accelerator'       as const, label: 'Incubators & Accelerators', icon: <Rocket size={14} strokeWidth={2} /> },
-    { id: 'support_programme' as const, label: 'Fellowships & Support',     icon: <GraduationCap size={14} strokeWidth={2} /> },
-    { id: 'in_kind'           as const, label: 'In-Kind & Pro Bono',        icon: <Gift size={14} strokeWidth={2} /> },
-    { id: 'corporate'         as const, label: 'Corporate Partners',        icon: <Building2 size={14} strokeWidth={2} /> },
+    { id: 'grant'      as const, label: 'Grants',      icon: <DollarSign size={14} strokeWidth={2} /> },
+    { id: 'programme'  as const, label: 'Programmes',  icon: <Rocket size={14} strokeWidth={2} /> },
+    { id: 'investment' as const, label: 'Investment',  icon: <TrendingUp size={14} strokeWidth={2} /> },
+    { id: 'in_kind'    as const, label: 'In-Kind',     icon: <Gift size={14} strokeWidth={2} /> },
   ]
 
   const TAB_DESCS: Record<string, string> = {
-    grant:             'Non-repayable funds from foundations, trusts, and public bodies. Applications required; deadlines are firm.',
-    social_investment: 'Repayable finance (loans, bonds, equity) for organisations that generate social impact alongside financial returns.',
-    blended_finance:   'Part-grant, part-loan structures for organisations that generate some revenue but need grant support to be viable.',
-    accelerator:       'Structured 3–6 month programmes combining funding, mentorship, and expert support. Best for early-stage growth.',
-    support_programme: 'Non-financial support: training, mentorship, and networking. Some include a small stipend or grant.',
-    in_kind:           'Goods, services, or expertise instead of cash — free legal advice, office space, technology, or pro bono support.',
-    corporate:         'Not grants — these are partnership opportunities with businesses. Approach them as a commercial relationship, not a funding application.',
+    grant:      'Non-repayable cash from foundations, trusts, Lottery & government. Includes awards, bursaries, prizes and diversity funds.',
+    programme:  'Structured support that may include cash: accelerators, fellowships, incubators, cohort programmes and capacity-building schemes.',
+    investment: 'Repayable finance for social-purpose organisations — loans, patient capital, blended finance and community shares.',
+    in_kind:    'Non-cash support: software credits, ad grants, free workspace, pro bono legal advice and expert services.',
   }
 
   const CATEGORY_TABS = [
@@ -2003,8 +1993,21 @@ export default function SearchPage() {
                 ))}
               </div>
               {TAB_DESCS[activeTab] && (
-                <div className="mx-5 mb-1 mt-3 px-4 py-3 bg-[#FAF8F5] rounded-lg">
+                <div className="mx-5 mb-1 mt-3 px-4 py-3 bg-[#FAF8F5] rounded-lg flex items-start justify-between gap-4">
                   <p className="text-sm text-[#444] leading-relaxed">{TAB_DESCS[activeTab]}</p>
+                  {activeTab === 'programme' && (
+                    <label className="flex items-center gap-2 cursor-pointer flex-shrink-0">
+                      <span className="text-xs font-semibold text-mid whitespace-nowrap">Includes cash</span>
+                      <button
+                        role="switch"
+                        aria-checked={programmeHasCash}
+                        onClick={() => setProgrammeHasCash(v => !v)}
+                        className={`relative inline-flex h-5 w-9 items-center transition-colors flex-shrink-0 ${programmeHasCash ? 'bg-forest' : 'bg-[#D1D5DB]'}`}
+                      >
+                        <span className={`inline-block h-3.5 w-3.5 bg-white shadow transform transition-transform ${programmeHasCash ? 'translate-x-4' : 'translate-x-1'}`} />
+                      </button>
+                    </label>
+                  )}
                 </div>
               )}
             </div>
