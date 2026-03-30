@@ -758,15 +758,16 @@ export default function LandingPage() {
             <h2 className="mt-3 font-serif text-4xl md:text-5xl leading-tight max-w-lg">Plans that respect your budget.</h2>
             <p className="mt-4 text-mid max-w-xl leading-relaxed">Start free. Upgrade to Live Search and tracking tools.</p>
           </motion.div>
-          <div className="grid md:grid-cols-3 gap-px bg-warm rounded-xl overflow-hidden">
+          <div className="grid md:grid-cols-3 gap-4">
             {plans.map((plan, i) => (
               <motion.div
                 key={plan.name}
                 {...fadeInView(i * 0.1)}
-                className={`relative p-8 flex flex-col ${plan.popular ? 'bg-[#1C1C2E] text-cream' : 'bg-cream'}`}
+                className={`relative p-8 flex flex-col rounded-xl border ${plan.popular ? 'bg-[#1C1C2E] text-cream border-[#1C1C2E]' : 'bg-white border-warm/80'}`}
+                style={{ boxShadow: '0 2px 16px rgba(26,46,43,0.06)' }}
               >
                 {plan.popular && (
-                  <span className="absolute top-4 right-4 bg-coral px-3 py-1 text-xs font-semibold text-white">Most Popular</span>
+                  <span className="absolute top-4 right-4 bg-coral rounded-full px-3 py-1 text-xs font-semibold text-white">Most Popular</span>
                 )}
                 <h3 className={`font-serif text-xl ${plan.popular ? 'text-cream' : ''}`}>{plan.name}</h3>
                 <div className="mt-4">
@@ -783,7 +784,7 @@ export default function LandingPage() {
                 </ul>
                 <Link
                   href="/auth/signup"
-                  className={`mt-8 block rounded-lg text-center py-3 text-sm font-semibold transition-colors ${plan.popular ? 'bg-coral text-white hover:bg-coral-light' : 'bg-[#1C1C2E] text-white hover:bg-[#1C1C2E]/90'}`}
+                  className={`mt-8 block rounded-lg text-center py-3 text-sm font-semibold transition-colors ${plan.popular ? 'bg-coral text-white hover:opacity-90' : 'bg-forest text-white hover:opacity-90'}`}
                 >
                   {plan.cta}
                 </Link>
