@@ -473,7 +473,7 @@ export default function ProfilePage() {
             <button
               onClick={handleAutoFill}
               disabled={autoFilling || !websiteUrl.trim()}
-              className="px-5 py-2.5 bg-coral text-white text-sm font-semibold rounded-lg flex items-center gap-2 hover:opacity-90 transition-colors disabled:opacity-50 whitespace-nowrap"
+              className="px-5 py-2.5 bg-coral text-white text-sm font-semibold flex items-center gap-2 hover:opacity-90 transition-colors disabled:opacity-50 whitespace-nowrap"
             >
               <Sparkles className="h-3.5 w-3.5" />
               {autoFilling ? 'Reading…' : 'Auto-fill'}
@@ -713,7 +713,7 @@ export default function ProfilePage() {
           <button
             onClick={handleSave}
             disabled={saving || !form.name.trim()}
-            className="px-5 py-2.5 bg-coral text-white text-sm font-semibold rounded-lg hover:opacity-90 transition-colors disabled:opacity-50"
+            className="px-5 py-2.5 bg-coral text-white text-sm font-semibold hover:opacity-90 transition-colors disabled:opacity-50"
           >
             {saving ? 'Saving…' : saveStatus === 'saved' ? '✓ Saved!' : 'Save Profile'}
           </button>
@@ -773,7 +773,7 @@ export default function ProfilePage() {
           <button
             onClick={handleAutoFill}
             disabled={autoFilling || !websiteUrl.trim()}
-            className="px-4 py-2 bg-coral text-white text-sm font-medium rounded-lg flex items-center gap-2 hover:opacity-90 transition-colors disabled:opacity-50 whitespace-nowrap"
+            className="px-4 py-2 bg-coral text-white text-sm font-medium flex items-center gap-2 hover:opacity-90 transition-colors disabled:opacity-50 whitespace-nowrap"
           >
             <Sparkles className="h-3.5 w-3.5" />
             {autoFilling ? 'Reading…' : 'Auto-fill'}
@@ -857,7 +857,7 @@ export default function ProfilePage() {
 
         {/* Social mission flags */}
         {form.legalStructure && SOFT_MATCH_STRUCTURES.includes(form.legalStructure as LegalStructure) && (
-          <div className="md:col-span-2 border border-gold/30 bg-gold/5 p-4 rounded-lg space-y-3">
+          <div className="md:col-span-2 border border-gold/30 bg-gold/5 p-4 space-y-3">
             <p className="text-xs font-semibold text-charcoal">
               Social mission flags — help us soft-match you to funders who accept &ldquo;social enterprises&rdquo;
             </p>
@@ -911,7 +911,7 @@ export default function ProfilePage() {
 
         {/* Individual practitioner toggle */}
         <div className="md:col-span-2">
-          <div className="flex items-center justify-between p-3 bg-warm border border-warm rounded-lg">
+          <div className="flex items-center justify-between p-3 bg-warm border border-warm">
             <div>
               <p className="text-sm text-charcoal font-medium">I am also an individual practitioner (e.g. artist, filmmaker, musician)</p>
               <p className="text-xs text-mid mt-0.5">Shows both organisational and individual grants — e.g. Arts Council DYCP, PRS Foundation</p>
@@ -942,7 +942,7 @@ export default function ProfilePage() {
                 type="button"
                 onClick={() => toggleImpactSector(s.value)}
                 disabled={atMax}
-                className={`flex items-center gap-2 px-3 py-2.5 border rounded-lg text-sm font-medium transition-all text-left ${
+                className={`flex items-center gap-2 px-3 py-2.5 border text-sm font-medium transition-all text-left ${
                   selected
                     ? 'border-charcoal bg-charcoal/10 text-charcoal'
                     : atMax
@@ -1100,7 +1100,7 @@ export default function ProfilePage() {
   function renderSection6() {
     return (
       <div>
-        <div className="flex items-center justify-between mb-4 p-4 bg-warm border border-warm rounded-lg">
+        <div className="flex items-center justify-between mb-4 p-4 bg-warm border border-warm">
           <div>
             <p className="font-display text-base font-bold text-charcoal">Grant match alerts</p>
             <p className="text-xs text-mid mt-0.5">

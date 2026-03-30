@@ -90,7 +90,7 @@
 
   /* Pipeline */
   .pipeline-card {
-    @apply bg-white p-3.5 mb-2.5 cursor-pointer
+    @apply bg-white p-3.5 mb-2.5 cursor-pointer rounded-xl
            transition-all duration-150 hover:-translate-y-px
            border border-warm/60;
     box-shadow: 0 1px 6px rgba(26,46,43,0.06);
@@ -100,7 +100,7 @@
     box-shadow: none;
   }
   .pipeline-col {
-    @apply bg-[#f5f2ed] p-3.5 min-h-[300px];
+    @apply bg-[#f5f2ed] p-3.5 min-h-[300px] rounded-xl;
   }
   .pipeline-col.drag-over {
     @apply outline-2 outline-dashed outline-coral bg-coral/5;

@@ -1,25 +1,27 @@
 import React from 'react'
-import RadioWaveIcon from '@/components/icons/RadioWaveIcon'
 
 interface LogoProps {
-  /** 'light' = for dark backgrounds (sidebar, auth dark panel)
-   *  'dark'  = for light backgrounds (nav, footer, auth mobile) */
+  /** 'light' = for dark backgrounds (sidebar)
+   *  'dark'  = for light backgrounds (nav, auth pages) */
   variant?: 'light' | 'dark'
   /** Overall size scale */
   size?: 'sm' | 'md' | 'lg'
+  /** Kept for backwards compat — no longer used */
+  showTagline?: boolean
 }
 
 export default function Logo({ variant = 'dark', size = 'md' }: LogoProps) {
-  const textSize = size === 'sm' ? 'text-[18px]' : size === 'lg' ? 'text-[26px]' : 'text-[22px]'
-  const iconSize = size === 'sm' ? 'w-6 h-6' : size === 'lg' ? 'w-9 h-9' : 'w-7 h-7'
-  const color = variant === 'light' ? 'text-white' : 'text-[#3A3A4A]'
+  const textSize = size === 'sm' ? 'text-2xl' : size === 'lg' ? 'text-4xl' : 'text-3xl'
+
+  // Light variant: white Grant + mint Tracker (on dark/forest backgrounds)
+  // Dark variant: forest Grant + charcoal Tracker (on light backgrounds)
+  const grantColor   = variant === 'light' ? '#ffffff' : '#1f5c52'
+  const trackerColor = variant === 'light' ? '#b8deda' : '#1a2e2b'
 
   return (
-    <span className={`inline-flex items-center gap-1.5 ${color}`}>
-      <RadioWaveIcon className={iconSize} />
-      <span className={`font-serif font-normal tracking-tight leading-none ${textSize}`}>
-        GrantTracker
-      </span>
+    <span className={`font-serif tracking-tight leading-none ${textSize}`}>
+      <span style={{ color: grantColor }} className="italic">Grant</span>
+      <span style={{ color: trackerColor }}>Tracker</span>
     </span>
   )
 }

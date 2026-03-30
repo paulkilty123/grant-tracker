@@ -4,9 +4,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
   RefreshCw, ExternalLink, Bell, BellOff, CheckCircle,
-  AlertTriangle, Plus, Trash2, Pause, Play, X, Sparkles,
+  AlertTriangle, Plus, Trash2, Pause, Play, X,
 } from 'lucide-react'
-import NextLink from 'next/link'
 
 const ADMIN_EMAIL = 'paulkilty1@gmail.com'
 
@@ -188,46 +187,30 @@ export default function WatchlistAdminPage() {
   )
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-8">
-      {/* Header + Tabs */}
-      <div className="mb-8">
-        <div className="flex items-start justify-between gap-4 mb-5">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Sparkles className="w-5 h-5" style={{ color: '#008080' }} />
-              <h1 className="text-2xl font-bold text-[#1C1C2E]">Funder Intelligence</h1>
-            </div>
-            <p className="text-sm text-[#6E6E80]">
-              Monitor funder listing pages — alerts when grant programmes are added or removed.
-            </p>
-          </div>
-          <div className="flex gap-2 flex-shrink-0">
-            <button
-              onClick={() => setShowAddForm(v => !v)}
-              className="flex items-center gap-1.5 px-3 py-2 text-sm font-bold text-white transition-opacity hover:opacity-80"
-              style={{ borderRadius: 9999, backgroundColor: '#008080' }}>
-              <Plus className="h-4 w-4" />Add funder
-            </button>
-            <button
-              onClick={runCheck}
-              disabled={running}
-              className="flex items-center gap-1.5 px-3 py-2 text-sm font-bold border transition-colors disabled:opacity-50"
-              style={{ borderRadius: 9999, borderColor: '#E8E8EC', color: '#6E6E80' }}>
-              <RefreshCw className={`h-4 w-4 ${running ? 'animate-spin' : ''}`} />
-              {running ? 'Checking…' : 'Run check now'}
-            </button>
-          </div>
+    <div className="max-w-6xl">
+      {/* ── Header ── */}
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h2 className="font-display text-2xl font-bold text-forest">Funder Watchlist</h2>
+          <p className="text-mid text-sm mt-1">
+            Weekly monitoring of funder listing pages — alerts when grant programmes are added or removed.
+          </p>
         </div>
-        <div className="flex gap-1 border-b border-[#E8E8EC]">
-          <NextLink href="/dashboard/admin/intelligence"
-            className="px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-[#6E6E80] hover:text-[#1C1C2E] transition-colors">
-            Enrichment
-          </NextLink>
-          <NextLink href="/dashboard/admin/watchlist"
-            className="px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors"
-            style={{ borderColor: '#008080', color: '#008080' }}>
-            Watchlist
-          </NextLink>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowAddForm(v => !v)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-forest text-white text-sm font-semibold hover:bg-forest/90 transition-colors"
+          >
+            <Plus className="h-4 w-4" />Add funder
+          </button>
+          <button
+            onClick={runCheck}
+            disabled={running}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-warm text-sm font-medium text-mid hover:border-forest hover:text-forest transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`h-4 w-4 ${running ? 'animate-spin' : ''}`} />
+            {running ? 'Checking…' : 'Run check now'}
+          </button>
         </div>
       </div>
 

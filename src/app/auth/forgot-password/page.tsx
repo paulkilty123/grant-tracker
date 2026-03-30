@@ -36,7 +36,7 @@ export default function ForgotPasswordPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-3 mb-4">
-            <Logo variant="dark" size="md" />
+            <Logo variant="dark" size="md" showTagline />
           </div>
           <p className="text-mid text-sm">Reset your password</p>
         </div>

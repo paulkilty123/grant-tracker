@@ -106,7 +106,7 @@ function PipelineCard({
       {item.application_progress != null && item.application_progress > 0 && (
         <div className="mt-2">
           <p className="text-[10px] text-light mb-0.5">{getWritingStage(item.application_progress).emoji} {getWritingStage(item.application_progress).label}</p>
-          <div className="h-1 bg-warm overflow-hidden">
+          <div className="h-1 bg-warm overflow-hidden rounded-full">
             <div
               className={cn('h-full transition-all', item.application_progress >= 83 ? 'bg-forest' : item.application_progress >= 50 ? 'bg-sage' : 'bg-amber-400')}
               style={{ width: `${item.application_progress}%` }}
@@ -203,7 +203,7 @@ function PipelineModal({
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-white w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-lg" style={{ boxShadow: '0 16px 64px rgba(26,46,43,0.18)' }} onClick={e => e.stopPropagation()}>
+      <div className="bg-white w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-xl" style={{ boxShadow: '0 16px 64px rgba(26,46,43,0.18)' }} onClick={e => e.stopPropagation()}>
         <div className="p-6 border-b border-warm flex justify-between items-start">
           <div>
             <h3 className="font-display text-lg font-bold text-charcoal">{item.grant_name}</h3>
@@ -303,7 +303,7 @@ function PipelineModal({
                   key={s.id}
                   onClick={() => { onMove(item.id, s.id); setLocalStage(s.id as PipelineStage) }}
                   className={cn(
-                    'py-2 px-2 border-2 text-xs font-medium transition-all text-center',
+                    'py-2 px-2 border-2 text-xs font-medium transition-all text-center rounded-lg',
                     localStage === s.id
                       ? 'border-coral bg-coral/10 text-coral font-semibold'
                       : 'border-warm text-mid hover:border-coral hover:text-coral'
@@ -328,7 +328,7 @@ function PipelineModal({
                     type="button"
                     onClick={() => setProgress(s.value)}
                     className={cn(
-                      'flex flex-col items-center gap-1 py-2 px-1 border-2 text-center transition-all',
+                      'flex flex-col items-center gap-1 py-2 px-1 border-2 text-center transition-all rounded-lg',
                       isActive
                         ? 'border-coral bg-coral/10'
                         : 'border-warm bg-white hover:border-coral/50 hover:bg-coral/5'
@@ -343,7 +343,7 @@ function PipelineModal({
               })}
             </div>
             {/* Progress bar */}
-            <div className="h-2 bg-warm overflow-hidden">
+            <div className="h-2 bg-warm overflow-hidden rounded-full">
               <div
                 className={cn(
                   'h-full transition-all duration-300',
@@ -584,8 +584,7 @@ function AddModal({
                 type="button"
                 onClick={handleAutofill}
                 disabled={autofilling || !urlInput.trim()}
-                className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-white rounded disabled:opacity-40 transition-colors whitespace-nowrap"
-                style={{ background: '#1a2e2b' }}
+                className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-white bg-forest rounded-lg disabled:opacity-40 hover:opacity-90 transition-colors whitespace-nowrap"
               >
                 {autofilling
                   ? <><Loader2 className="w-3.5 h-3.5 animate-spin" />Filling…</>
@@ -778,6 +777,19 @@ export default function PipelinePage() {
         </div>
       </div>
 
+      {/* Onboarding tip — shown when pipeline is empty */}
+      {items.length === 0 && (
+        <div className="mb-5 border border-forest/20 bg-forest/5 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold text-charcoal mb-1">Your pipeline tracks grants from discovery to decision</p>
+            <p className="text-xs text-mid leading-relaxed">Find a grant in the search, hit <strong>+ Pipeline</strong>, then drag cards between columns as you progress through each stage. Click any card to add notes, deadlines, and track your writing progress.</p>
+          </div>
+          <a href="/dashboard/search" className="flex-shrink-0 px-4 py-2 bg-forest text-white text-xs font-semibold hover:opacity-90 transition-colors whitespace-nowrap">
+            Find your first grant →
+          </a>
+        </div>
+      )}
+
       {/* Board */}
       <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 pb-4">
       <div className="grid grid-cols-5 gap-3.5 min-h-[60vh] min-w-[850px] md:min-w-0">
@@ -806,12 +818,15 @@ export default function PipelinePage() {
               >
                 <span className="flex items-center gap-1.5">{STAGE_ICONS[stage.id]}{stage.label}</span>
                 <span
-                  className="px-1.5 py-0.5 text-[10px] font-bold rounded"
+                  className="px-1.5 py-0.5 text-[10px] font-bold"
                   style={{ background: stageColour.badgeBg, color: stageColour.badgeText }}
                 >
                   {stageItems.length}
                 </span>
               </div>
+              {stageItems.length === 0 && (
+                <p className="text-[10px] text-light text-center py-4 leading-relaxed">Drag a grant here</p>
+              )}
               {stageItems.map(item => (
                 <div key={item.id} data-card-id={item.id}>
                   <PipelineCard
