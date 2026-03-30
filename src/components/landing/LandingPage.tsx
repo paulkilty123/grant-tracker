@@ -376,7 +376,7 @@ export default function LandingPage() {
               <Link href="/auth/signup" className="bg-coral text-white px-6 py-3 text-[15px] font-semibold rounded-lg hover:opacity-90 transition-colors">
                 Start for free
               </Link>
-              <a href="#how" className="border border-coral/50 text-coral px-6 py-3 text-[15px] font-semibold rounded-lg transition-colors hover:bg-coral/10">
+              <a href="#how" className="border border-forest/50 text-forest px-6 py-3 text-[15px] font-semibold rounded-lg transition-colors hover:bg-forest/10">
                 See how it works
               </a>
             </motion.div>
@@ -620,7 +620,7 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-px bg-warm rounded-xl overflow-hidden">
             {howSteps.map((step, i) => (
               <motion.div key={step.title} {...fadeInView(i * 0.08)} className="bg-cream p-8">
-                <span className={`font-serif text-coral ${step.featured ? 'text-6xl' : 'text-4xl'}`}>{step.num}</span>
+                <span className={`font-serif ${step.featured ? 'text-coral text-6xl' : 'text-forest text-4xl'}`}>{step.num}</span>
                 <h3 className={`mt-4 font-serif ${step.featured ? 'text-2xl md:text-3xl' : 'text-xl'}`}>{step.title}</h3>
                 <p className="mt-3 text-sm text-mid leading-relaxed">{step.desc}</p>
               </motion.div>
@@ -630,7 +630,7 @@ export default function LandingPage() {
       </section>
 
       {/* FUNDING TYPES */}
-      <section className="py-16 md:py-20 bg-[#1C1C2E]">
+      <section className="py-16 md:py-20 bg-forest">
         <div className="mx-auto max-w-5xl px-6">
           <motion.div {...fadeInView(0)} className="mb-16">
             <p className="text-sm font-semibold text-coral uppercase tracking-wider">Funding Types</p>
@@ -638,7 +638,7 @@ export default function LandingPage() {
           </motion.div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-white/10 rounded-xl overflow-hidden">
             {fundingTypes.map((t, i) => (
-              <motion.div key={t.title} {...fadeInView(i * 0.05)} className="bg-[#1C1C2E] p-8">
+              <motion.div key={t.title} {...fadeInView(i * 0.05)} className="bg-forest p-8">
                 <span className="text-xs font-semibold text-coral uppercase tracking-wider">{t.range}</span>
                 <h3 className="mt-3 font-serif text-xl text-cream">{t.title}</h3>
                 <p className="mt-3 text-sm text-cream/50 leading-relaxed">{t.desc}</p>
@@ -660,7 +660,7 @@ export default function LandingPage() {
               <ul className="mt-8 space-y-4">
                 {['Profile-based filtering — your structure, stage and sector shape every result', 'Live Search — finds matching funding across all seven types in real time', 'Match scores ranked by structure, sector, geography, stage and mission'].map((b, i) => (
                   <li key={i} className="flex items-start gap-3 text-sm text-charcoal">
-                    <span className="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-coral/10 text-coral text-xs font-bold shrink-0">✓</span>
+                    <span className="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-forest/10 text-forest text-xs font-bold shrink-0">✓</span>
                     <span className="leading-relaxed">{b}</span>
                   </li>
                 ))}
@@ -680,7 +680,7 @@ export default function LandingPage() {
               <ul className="mt-8 space-y-4">
                 {['Visual board with pipeline values at a glance', 'Per-card writing tracker from first draft to final submission', 'Notes, funder contacts, deadlines and grant URLs all on the card', 'Email alerts and urgency flags for grants closing within 14 days'].map((b, i) => (
                   <li key={i} className="flex items-start gap-3 text-sm text-charcoal">
-                    <span className="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-coral/10 text-coral text-xs font-bold shrink-0">✓</span>
+                    <span className="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-forest/10 text-forest text-xs font-bold shrink-0">✓</span>
                     <span className="leading-relaxed">{b}</span>
                   </li>
                 ))}
@@ -700,7 +700,7 @@ export default function LandingPage() {
               <ul className="mt-8 space-y-4">
                 {['Pipeline summary with total value and stage breakdown', 'Upcoming deadlines highlighted so nothing slips', 'Match quality score with tips to improve your profile', 'Recent activity feed tracking your latest actions'].map((b, i) => (
                   <li key={i} className="flex items-start gap-3 text-sm text-charcoal">
-                    <span className="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-coral/10 text-coral text-xs font-bold shrink-0">✓</span>
+                    <span className="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-forest/10 text-forest text-xs font-bold shrink-0">✓</span>
                     <span className="leading-relaxed">{b}</span>
                   </li>
                 ))}
@@ -761,7 +761,7 @@ export default function LandingPage() {
               <motion.div
                 key={plan.name}
                 {...fadeInView(i * 0.1)}
-                className={`relative p-8 flex flex-col rounded-xl ${plan.popular ? 'bg-[#1C1C2E] text-cream' : 'bg-cream border border-warm'}`}
+                className={`relative p-8 flex flex-col rounded-xl ${plan.popular ? 'bg-forest text-cream' : 'bg-cream border border-warm'}`}
                 style={{ boxShadow: plan.popular ? 'none' : '0 2px 12px rgba(26,46,43,0.06)' }}
               >
                 {plan.popular && (
@@ -782,7 +782,7 @@ export default function LandingPage() {
                 </ul>
                 <Link
                   href="/auth/signup"
-                  className={`mt-8 block rounded-lg text-center py-3 text-sm font-semibold transition-colors ${plan.popular ? 'bg-coral text-white hover:bg-coral-light' : 'bg-[#1C1C2E] text-white hover:bg-[#1C1C2E]/90'}`}
+                  className={`mt-8 block rounded-lg text-center py-3 text-sm font-semibold transition-colors ${plan.popular ? 'bg-coral text-white hover:opacity-90' : 'bg-forest text-white hover:opacity-90'}`}
                 >
                   {plan.cta}
                 </Link>
@@ -849,7 +849,7 @@ export default function LandingPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-16 md:py-20 bg-[#1C1C2E]">
+      <section className="py-16 md:py-20 bg-forest">
         <div className="mx-auto max-w-4xl px-6 text-center">
           <motion.div {...fadeInView(0)}>
             <h2 className="font-serif text-4xl text-cream md:text-6xl leading-tight">Find your funding. Free to start.</h2>
