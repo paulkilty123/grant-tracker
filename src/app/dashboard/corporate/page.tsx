@@ -57,50 +57,40 @@ function PartnerCard({
   const budgetStr = formatBudget(partner.annual_investment_estimate)
 
   return (
-    <div className={`bg-white border transition-all flex flex-col rounded-xl overflow-hidden ${
+    <div className={`bg-white border transition-all rounded-xl overflow-hidden ${
       expanded ? 'border-forest/40 shadow-md' : 'border-[#E8E8EC] hover:border-[#c8d5c2] hover:shadow-sm'
     }`}>
+      <div className="p-5 flex flex-col gap-3">
 
-      {/* ── Card header ── */}
-      <div className="p-5 pb-4 flex items-start gap-4 border-b border-[#F0EDE8]">
-        <div className="flex-shrink-0 w-12 h-12 bg-charcoal flex items-center justify-center text-white font-bold text-lg select-none rounded-lg">
-          {partner.company_name[0]?.toUpperCase() ?? '?'}
-        </div>
-
-        <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-charcoal text-base leading-snug">
-            {partner.company_name}
-          </h3>
-          {partner.programme_name && (
-            <p className="text-xs text-mid mt-0.5 leading-snug">{partner.programme_name}</p>
-          )}
-          {partner.industry_sector && (
-            <p className="text-[10px] text-mid/70 mt-0.5">{partner.industry_sector}</p>
-          )}
-        </div>
-
-        {showScore && score > 0 && (
-          <div className="flex-shrink-0 flex flex-col items-end gap-1">
-            <span
-              className="text-[9px] font-bold px-1.5 py-0.5 uppercase tracking-widest border whitespace-nowrap rounded-md"
-              style={{ color: band.fg, backgroundColor: band.bg, borderColor: band.border }}
-            >
-              {band.label}
-            </span>
-            <div className="leading-none">
-              <span className="text-2xl font-bold" style={{ color: band.fg }}>{score}</span>
-              <span className="text-xs text-mid">/100</span>
-            </div>
+        {/* ── Header row: avatar / name / score ── */}
+        <div className="flex items-start gap-3">
+          <div className="flex-shrink-0 w-10 h-10 bg-charcoal flex items-center justify-center text-white font-bold text-base select-none rounded-lg">
+            {partner.company_name[0]?.toUpperCase() ?? '?'}
           </div>
-        )}
-      </div>
-
-      {/* ── Body ── */}
-      <div className="p-5 flex-1 flex flex-col gap-3">
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-charcoal text-base leading-snug">{partner.company_name}</h3>
+            {partner.programme_name && (
+              <p className="text-xs text-mid leading-snug">{partner.programme_name}</p>
+            )}
+          </div>
+          {showScore && score > 0 && (
+            <div className="flex-shrink-0 flex flex-col items-end">
+              <span
+                className="text-[9px] font-bold px-1.5 py-0.5 uppercase tracking-widest border whitespace-nowrap rounded-md mb-0.5"
+                style={{ color: band.fg, backgroundColor: band.bg, borderColor: band.border }}
+              >
+                {band.label}
+              </span>
+              <span className="text-xl font-bold leading-none" style={{ color: band.fg }}>
+                {score}<span className="text-xs font-normal text-mid">/100</span>
+              </span>
+            </div>
+          )}
+        </div>
 
         {/* Match insight */}
         {showScore && score > 0 && (
-          <div className="flex items-start gap-2.5 px-3 py-2.5 bg-[#f5f9f7] border-l-2 border-forest rounded-lg">
+          <div className="flex items-start gap-2 px-3 py-2 bg-[#f5f9f7] border-l-2 border-forest rounded-lg">
             <Handshake className="h-3.5 w-3.5 text-forest flex-shrink-0 mt-0.5" />
             <p className="text-xs text-mid leading-relaxed">{reason}</p>
           </div>
@@ -111,64 +101,43 @@ function PartnerCard({
           <p className="text-sm text-mid leading-relaxed">
             {expanded
               ? partner.description
-              : partner.description.length > 140
-                ? `${partner.description.slice(0, 140).trimEnd()}…`
+              : partner.description.length > 160
+                ? `${partner.description.slice(0, 160).trimEnd()}…`
                 : partner.description}
           </p>
         )}
 
-        {/* Key stats row */}
-        <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
-          {amountStr && (
-            <div>
-              <p className="text-[9px] font-bold uppercase tracking-widest text-mid mb-0.5">Grant size</p>
-              <p className="text-sm font-bold text-charcoal">{amountStr}</p>
-            </div>
-          )}
-          {partner.application_route && (
-            <div>
-              <p className="text-[9px] font-bold uppercase tracking-widest text-mid mb-0.5">How to apply</p>
-              <p className="text-sm text-charcoal">
-                {APPLICATION_ROUTE_LABELS[partner.application_route] ?? partner.application_route}
-              </p>
-            </div>
-          )}
-          {partner.geographic_focus.length > 0 && (
-            <div>
-              <p className="text-[9px] font-bold uppercase tracking-widest text-mid mb-0.5">Geography</p>
-              <p className="text-sm text-charcoal flex items-center gap-1">
-                <MapPin className="h-3 w-3 text-mid flex-shrink-0" />
+        {/* Inline meta strip — only renders items that have data */}
+        {(amountStr || partner.application_route || partner.geographic_focus.length > 0) && (
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-mid">
+            {amountStr && (
+              <span><span className="font-bold text-charcoal">{amountStr}</span></span>
+            )}
+            {partner.application_route && (
+              <span>{APPLICATION_ROUTE_LABELS[partner.application_route] ?? partner.application_route}</span>
+            )}
+            {partner.geographic_focus.length > 0 && (
+              <span className="flex items-center gap-1">
+                <MapPin className="h-3 w-3 flex-shrink-0" />
                 {partner.geographic_focus.slice(0, 2).join(', ')}
-                {partner.geographic_focus.length > 2 && (
-                  <span className="text-mid text-xs">+{partner.geographic_focus.length - 2}</span>
-                )}
-              </p>
-            </div>
-          )}
-          {budgetStr && (
-            <div>
-              <p className="text-[9px] font-bold uppercase tracking-widest text-mid mb-0.5">Annual budget</p>
-              <p className="text-sm text-charcoal">{budgetStr}</p>
-            </div>
-          )}
-        </div>
+                {partner.geographic_focus.length > 2 && ` +${partner.geographic_focus.length - 2}`}
+              </span>
+            )}
+            {budgetStr && <span>{budgetStr}</span>}
+          </div>
+        )}
 
         {/* CSR themes */}
         {partner.csr_themes.length > 0 && (
-          <div>
-            <p className="text-[9px] font-bold uppercase tracking-widest text-mid mb-1.5">CSR priorities</p>
-            <div className="flex flex-wrap gap-1.5">
-              {(expanded ? partner.csr_themes : partner.csr_themes.slice(0, 4)).map(t => (
-                <span key={t} className="text-[10px] px-2 py-0.5 bg-sage/10 text-forest border border-sage/25 rounded-md capitalize">
-                  {t}
-                </span>
-              ))}
-              {!expanded && partner.csr_themes.length > 4 && (
-                <span className="text-[10px] px-2 py-0.5 text-mid rounded-md">
-                  +{partner.csr_themes.length - 4} more
-                </span>
-              )}
-            </div>
+          <div className="flex flex-wrap gap-1.5">
+            {(expanded ? partner.csr_themes : partner.csr_themes.slice(0, 5)).map(t => (
+              <span key={t} className="text-[10px] px-2 py-0.5 bg-sage/10 text-forest border border-sage/25 rounded-md capitalize">
+                {t}
+              </span>
+            ))}
+            {!expanded && partner.csr_themes.length > 5 && (
+              <span className="text-[10px] px-2 py-0.5 text-mid">+{partner.csr_themes.length - 5} more</span>
+            )}
           </div>
         )}
 
@@ -269,43 +238,37 @@ function PartnerCard({
             </div>
           </div>
         )}
-      </div>
 
-      {/* ── Footer ── */}
-      <div className="px-5 pb-4 flex items-center justify-between gap-3 mt-auto border-t border-[#F0EDE8] pt-3">
-        {/* Support type tags */}
-        <div className="flex flex-wrap gap-1.5 flex-1 min-w-0">
-          {partner.support_types.map(t => (
-            <span key={t} className="text-[9px] font-bold px-2 py-1 uppercase tracking-wider bg-[#f0ede8] text-charcoal border border-[#e4dfd8] rounded-md">
-              {SUPPORT_TYPE_LABELS[t] ?? t}
-            </span>
-          ))}
-        </div>
-
-        <div className="flex items-center gap-3 flex-shrink-0">
-          {(partner.programme_url || partner.website || partner.contact_url) && (
-            <a
-              href={partner.programme_url ?? partner.contact_url ?? partner.website ?? '#'}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs font-semibold text-coral hover:text-[#d45a30] transition-colors"
-            >
-              Learn more
-              <ExternalLink className="h-3 w-3" />
-            </a>
-          )}
-          <button
-            onClick={onToggle}
-            className="inline-flex items-center gap-1 text-xs font-semibold text-mid hover:text-charcoal transition-colors"
-          >
-            {expanded ? (
-              <><ChevronUp className="h-3.5 w-3.5" /> Less</>
-            ) : (
-              <><ChevronDown className="h-3.5 w-3.5" /> More</>
+        {/* Footer: support tags + actions */}
+        <div className="flex items-center justify-between gap-3 pt-1 border-t border-[#F0EDE8]">
+          <div className="flex flex-wrap gap-1.5">
+            {partner.support_types.map(t => (
+              <span key={t} className="text-[9px] font-bold px-2 py-0.5 uppercase tracking-wider bg-[#f0ede8] text-charcoal border border-[#e4dfd8] rounded-md">
+                {SUPPORT_TYPE_LABELS[t] ?? t}
+              </span>
+            ))}
+          </div>
+          <div className="flex items-center gap-3 flex-shrink-0">
+            {(partner.programme_url || partner.website || partner.contact_url) && (
+              <a
+                href={partner.programme_url ?? partner.contact_url ?? partner.website ?? '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-coral hover:text-[#d45a30] transition-colors"
+              >
+                Learn more <ExternalLink className="h-3 w-3" />
+              </a>
             )}
-          </button>
+            <button
+              onClick={onToggle}
+              className="inline-flex items-center gap-1 text-xs font-semibold text-mid hover:text-charcoal transition-colors"
+            >
+              {expanded ? <><ChevronUp className="h-3.5 w-3.5" />Less</> : <><ChevronDown className="h-3.5 w-3.5" />More</>}
+            </button>
+          </div>
         </div>
-      </div>
+
+      </div>{/* end p-5 */}
     </div>
   )
 }
