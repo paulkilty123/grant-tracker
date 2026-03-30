@@ -36,19 +36,16 @@
   /* Buttons */
   .btn-primary {
     @apply bg-coral text-white px-5 py-2.5 text-sm font-medium
-           hover:opacity-90 transition-colors duration-150 cursor-pointer border-none;
-    border-radius: 0;
+           hover:opacity-90 transition-colors duration-150 cursor-pointer border-none rounded-lg;
   }
   .btn-outline {
     @apply bg-transparent text-charcoal border border-warm px-5 py-2.5
            text-sm font-medium hover:border-charcoal transition-colors
-           duration-150 cursor-pointer;
-    border-radius: 0;
+           duration-150 cursor-pointer rounded-lg;
   }
   .btn-gold {
-    @apply bg-coral text-white px-5 py-2.5 text-sm font-medium
-           hover:opacity-90 transition-all duration-150 cursor-pointer border-none;
-    border-radius: 0;
+    @apply bg-[#e8a030] text-white px-5 py-2.5 text-sm font-medium
+           hover:opacity-90 transition-all duration-150 cursor-pointer border-none rounded-lg;
   }
   .btn-sm {
     @apply px-3.5 py-1.5 text-xs;

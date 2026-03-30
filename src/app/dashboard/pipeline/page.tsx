@@ -748,7 +748,7 @@ export default function PipelinePage() {
     <div>
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-7">
         <div>
-          <h2 className="font-display text-2xl font-bold text-charcoal">Funding Pipeline</h2>
+          <h2 className="font-serif text-4xl font-bold text-charcoal leading-tight">Funding Pipeline</h2>
           <p className="text-mid text-sm mt-1">Drag cards between columns or click to edit · {items.length} opportunities tracked</p>
         </div>
         <div className="flex items-center gap-4">
@@ -797,11 +797,11 @@ export default function PipelinePage() {
           const stageItems = items.filter(i => i.stage === stage.id)
 
           const stageColour =
-            stage.id === 'identified'  ? { bg: '#f5f2ed', border: '#9ba8a6', text: '#6b7f7c', badgeBg: '#e8e4de', badgeText: '#6b7f7c' } :
-            stage.id === 'applying'    ? { bg: '#fff7ed', border: '#fb923c', text: '#ea580c', badgeBg: '#ffedd5', badgeText: '#c2410c' } :
-            stage.id === 'submitted'   ? { bg: '#fff3e0', border: '#f59e0b', text: '#b45309', badgeBg: '#fde68a', badgeText: '#92400e' } :
-            stage.id === 'won'         ? { bg: '#e6f0ed', border: '#1f5c52', text: '#1f5c52', badgeBg: '#c8e3dc', badgeText: '#1f5c52' } :
-                                         { bg: '#fdf0ee', border: '#f87171', text: '#ef4444', badgeBg: '#fee2e2', badgeText: '#dc2626' }
+            stage.id === 'identified'  ? { bg: '#faf7f2', border: '#c8bfb0', text: '#7a6e62', badgeBg: '#e8ddd0', badgeText: '#7a6e62' } :
+            stage.id === 'applying'    ? { bg: '#fff4f1', border: '#FF7043', text: '#c94020', badgeBg: '#ffddd6', badgeText: '#b03018' } :
+            stage.id === 'submitted'   ? { bg: '#fdf6ea', border: '#e8a030', text: '#9a6a10', badgeBg: '#f5dfa0', badgeText: '#7a5010' } :
+            stage.id === 'won'         ? { bg: '#eaf3f0', border: '#1f5c52', text: '#1f5c52', badgeBg: '#c0ddd6', badgeText: '#1f5c52' } :
+                                         { bg: '#fdf0ee', border: '#e05040', text: '#c03030', badgeBg: '#f8d0cc', badgeText: '#a02020' }
 
           return (
             <div
