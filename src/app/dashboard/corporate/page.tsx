@@ -174,82 +174,84 @@ function PartnerCard({
 
         {/* ── Expanded detail panel ── */}
         {expanded && (
-          <div className="mt-1 pt-4 border-t border-[#F0EDE8] flex flex-col gap-4">
+          <div className="mt-1 pt-4 border-t border-[#F0EDE8]">
+            <div className="grid sm:grid-cols-2 gap-x-8 gap-y-4">
 
-            {/* Example recipients */}
-            {partner.example_recipients && partner.example_recipients.length > 0 && (
-              <div>
-                <div className="flex items-center gap-1.5 mb-2">
-                  <Users className="h-3.5 w-3.5 text-mid" />
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-mid">Previous recipients</p>
+              {/* Example recipients */}
+              {partner.example_recipients && partner.example_recipients.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <Users className="h-3.5 w-3.5 text-mid" />
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-mid">Previous recipients</p>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {partner.example_recipients.map((r: string) => (
+                      <span key={r} className="text-[10px] px-2 py-0.5 bg-[#f5f2ed] text-charcoal border border-[#e4dfd8] rounded-md">
+                        {r}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {partner.example_recipients.map((r: string) => (
-                    <span key={r} className="text-[10px] px-2 py-0.5 bg-[#f5f2ed] text-charcoal border border-[#e4dfd8] rounded-md">
-                      {r}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
+              )}
 
-            {/* All impact sectors */}
-            {partner.impact_sectors && partner.impact_sectors.length > 0 && (
-              <div>
-                <div className="flex items-center gap-1.5 mb-2">
-                  <Tag className="h-3.5 w-3.5 text-mid" />
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-mid">Focus areas</p>
+              {/* All impact sectors */}
+              {partner.impact_sectors && partner.impact_sectors.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <Tag className="h-3.5 w-3.5 text-mid" />
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-mid">Focus areas</p>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {partner.impact_sectors.map((s: string) => (
+                      <span key={s} className="text-[10px] px-2 py-0.5 bg-[#f0ede8] text-charcoal border border-[#e4dfd8] rounded-md capitalize">
+                        {s}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {partner.impact_sectors.map((s: string) => (
-                    <span key={s} className="text-[10px] px-2 py-0.5 bg-[#f0ede8] text-charcoal border border-[#e4dfd8] rounded-md capitalize">
-                      {s}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
+              )}
 
-            {/* All geographies */}
-            {partner.geographic_focus.length > 2 && (
-              <div>
-                <div className="flex items-center gap-1.5 mb-2">
-                  <Globe className="h-3.5 w-3.5 text-mid" />
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-mid">All locations</p>
+              {/* Contact */}
+              {(partner.contact_role || partner.contact_url || partner.website) && (
+                <div>
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <Phone className="h-3.5 w-3.5 text-mid" />
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-mid">Contact</p>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    {partner.contact_role && (
+                      <p className="text-sm font-medium text-charcoal">{partner.contact_role}</p>
+                    )}
+                    {(partner.contact_url || partner.website) && (
+                      <a
+                        href={partner.contact_url ?? partner.website ?? '#'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-forest hover:text-sage flex items-center gap-1"
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                        {partner.contact_url ? 'Contact page' : 'Website'}
+                      </a>
+                    )}
+                  </div>
                 </div>
-                <p className="text-sm text-charcoal">{partner.geographic_focus.join(', ')}</p>
-              </div>
-            )}
+              )}
 
-            {/* Contact / approach */}
-            {(partner.contact_role || partner.contact_url || partner.website) && (
-              <div>
-                <div className="flex items-center gap-1.5 mb-2">
-                  <Phone className="h-3.5 w-3.5 text-mid" />
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-mid">Contact</p>
+              {/* All geographies (only if > 2) */}
+              {partner.geographic_focus.length > 2 && (
+                <div>
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <Globe className="h-3.5 w-3.5 text-mid" />
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-mid">All locations</p>
+                  </div>
+                  <p className="text-sm text-charcoal">{partner.geographic_focus.join(', ')}</p>
                 </div>
-                <div className="flex flex-col gap-1">
-                  {partner.contact_role && (
-                    <p className="text-sm text-charcoal">{partner.contact_role}</p>
-                  )}
-                  {(partner.contact_url || partner.website) && (
-                    <a
-                      href={partner.contact_url ?? partner.website ?? '#'}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-forest hover:text-sage flex items-center gap-1"
-                    >
-                      <ExternalLink className="h-3 w-3" />
-                      {partner.contact_url ? 'Contact page' : 'Website'}
-                    </a>
-                  )}
-                </div>
-              </div>
-            )}
+              )}
+            </div>
 
-            {/* How to approach tip */}
-            <div className="px-3 py-3 bg-gold/8 border border-gold/25 rounded-lg">
-              <div className="flex items-center gap-1.5 mb-1">
+            {/* How to approach — full width */}
+            <div className="mt-4 px-4 py-3 bg-amber-50/60 border border-amber-200/60 rounded-lg">
+              <div className="flex items-center gap-1.5 mb-1.5">
                 <Calendar className="h-3.5 w-3.5 text-gold flex-shrink-0" />
                 <p className="text-[9px] font-bold uppercase tracking-widest text-mid">How to approach</p>
               </div>
@@ -554,13 +556,14 @@ export default function CorporatePartnersPage() {
           ) : (
             <div className="grid gap-4 sm:grid-cols-2">
               {displayResults.map(r => (
-                <PartnerCard
-                  key={r.partner.id}
-                  result={r}
-                  showScore={showScore}
-                  expanded={expandedIds.has(r.partner.id)}
-                  onToggle={() => toggleExpanded(r.partner.id)}
-                />
+                <div key={r.partner.id} className={expandedIds.has(r.partner.id) ? 'sm:col-span-2' : ''}>
+                  <PartnerCard
+                    result={r}
+                    showScore={showScore}
+                    expanded={expandedIds.has(r.partner.id)}
+                    onToggle={() => toggleExpanded(r.partner.id)}
+                  />
+                </div>
               ))}
             </div>
           )}
