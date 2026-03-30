@@ -12,7 +12,7 @@ import {
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { PIPELINE_STAGES, formatDeadline, formatRange, cn } from '@/lib/utils'
 import type { PipelineItem, PipelineStage, Organisation } from '@/types'
-import { Search, Pencil, Send, Trophy, XCircle, Sparkles, Loader2, Link, ArrowRight } from 'lucide-react'
+import { Search, Pencil, Send, Trophy, XCircle, Sparkles, Loader2, Link, ArrowRight, Calendar, AlarmClock } from 'lucide-react'
 
 const STAGE_ICONS: Record<string, React.ReactNode> = {
   identified: <Search size={13} strokeWidth={2.5} />,
@@ -113,15 +113,19 @@ function PipelineCard({
       {/* Deadline + urgency */}
       {deadlineStr && (
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-[11px] text-mid">📅 {deadlineStr}</span>
+          <span className="flex items-center gap-1 text-[11px] text-mid">
+            <Calendar size={11} strokeWidth={2} className="text-light" />
+            {deadlineStr}
+          </span>
           {daysLeft !== null && daysLeft <= 10 && (
             <span className={cn(
-              'text-[9px] font-bold px-1.5 py-0.5 rounded-full',
-              daysLeft < 0  ? 'bg-red-100 text-red-600' :
-              daysLeft <= 3 ? 'bg-red-100 text-red-600' :
-              daysLeft <= 7 ? 'bg-amber-100 text-amber-600' :
-                              'bg-orange-50 text-orange-500'
+              'inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full',
+              daysLeft < 0  ? 'bg-red-500 text-white' :
+              daysLeft <= 3 ? 'bg-red-500 text-white' :
+              daysLeft <= 7 ? 'bg-amber-500 text-white' :
+                              'bg-orange-400 text-white'
             )}>
+              <AlarmClock size={9} strokeWidth={2.5} />
               {daysLeft < 0 ? 'Overdue' : daysLeft === 0 ? 'Today' : `${daysLeft}d left`}
             </span>
           )}
