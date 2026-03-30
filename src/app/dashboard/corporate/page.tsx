@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Building2, ExternalLink, MapPin, Handshake, ChevronRight } from 'lucide-react'
+import { useState, useEffect, useMemo } from 'react'
+import { Search, Building2, ExternalLink, MapPin, Handshake, SlidersHorizontal, User, CheckCircle2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import {
@@ -15,15 +15,16 @@ import type { Organisation } from '@/types'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function matchBand(score: number): { label: string; colour: string } {
-  if (score >= 70) return { label: 'Strong match',    colour: '#008080' }
-  if (score >= 50) return { label: 'Good match',      colour: '#2d8a7a' }
-  if (score >= 35) return { label: 'Possible match',  colour: '#e8a030' }
-  return             { label: 'Broad match',          colour: '#9ca3af' }
+function matchBand(score: number): { label: string; fg: string; bg: string; border: string } {
+  if (score >= 70) return { label: 'Strong match',   fg: '#1f5c52', bg: 'rgba(31,92,82,0.10)',  border: 'rgba(31,92,82,0.30)' }
+  if (score >= 50) return { label: 'Good match',     fg: '#2d8a7a', bg: 'rgba(45,138,122,0.10)', border: 'rgba(45,138,122,0.30)' }
+  if (score >= 35) return { label: 'Possible match', fg: '#b07a10', bg: 'rgba(232,160,48,0.12)', border: 'rgba(232,160,48,0.35)' }
+  return             { label: 'Broad match',         fg: '#6b7280', bg: 'rgba(107,114,128,0.08)', border: 'rgba(107,114,128,0.25)' }
 }
 
 function formatAmount(min: number | null, max: number | null): string | null {
   if (!min && !max) return null
+  if (max && max >= 1_000_000) return `Up to £${(max / 1_000_000).toFixed(1)}m`
   if (min && max && min !== max) return `£${(min / 1000).toFixed(0)}k–£${(max / 1000).toFixed(0)}k`
   if (max) return `Up to £${(max / 1000).toFixed(0)}k`
   if (min) return `From £${(min / 1000).toFixed(0)}k`
@@ -32,126 +33,163 @@ function formatAmount(min: number | null, max: number | null): string | null {
 
 // ── Partner card ──────────────────────────────────────────────────────────────
 
-function PartnerCard({ result }: { result: CorporateMatchResult }) {
+function PartnerCard({ result, showScore }: { result: CorporateMatchResult; showScore: boolean }) {
   const { partner, score, reason } = result
   const band = matchBand(score)
   const amountStr = formatAmount(partner.amount_min, partner.amount_max)
 
   return (
-    <div className="bg-white border border-[#E8E8EC] shadow-sm hover:shadow-md transition-shadow p-5">
-      {/* Header row */}
-      <div className="flex items-start gap-4 mb-4">
-        <div
-          className="flex-shrink-0 w-11 h-11 flex items-center justify-center bg-[#f5f2ed] border border-[#E8E8EC] text-charcoal font-bold text-base"
-          aria-hidden
-        >
+    <div className="bg-white border border-[#E8E8EC] hover:border-[#c8d5c2] hover:shadow-md transition-all flex flex-col">
+
+      {/* ── Card header ── */}
+      <div className="p-5 pb-4 flex items-start gap-4 border-b border-[#F0EDE8]">
+        {/* Avatar */}
+        <div className="flex-shrink-0 w-12 h-12 bg-charcoal flex items-center justify-center text-white font-bold text-lg select-none">
           {partner.company_name[0]?.toUpperCase() ?? '?'}
         </div>
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap mb-0.5">
-            <h3 className="font-semibold text-charcoal text-base leading-snug">
-              {partner.company_name}
-            </h3>
-            {/* Match badge */}
+          <h3 className="font-semibold text-charcoal text-lg leading-snug truncate">
+            {partner.company_name}
+          </h3>
+          <p className="text-xs text-mid mt-0.5 truncate">
+            {partner.programme_name ?? partner.industry_sector ?? ''}
+          </p>
+        </div>
+
+        {/* Match score — only shown when profile is on */}
+        {showScore && score > 0 && (
+          <div className="flex-shrink-0 flex flex-col items-end">
             <span
-              className="text-[9px] font-bold px-1.5 py-0.5 uppercase tracking-wide border whitespace-nowrap"
-              style={{ color: band.colour, borderColor: band.colour + '40', backgroundColor: band.colour + '12' }}
+              className="text-[9px] font-bold px-1.5 py-0.5 uppercase tracking-widest border mb-1 whitespace-nowrap"
+              style={{ color: band.fg, backgroundColor: band.bg, borderColor: band.border }}
             >
               {band.label}
             </span>
+            <div>
+              <span className="text-2xl font-bold leading-none" style={{ color: band.fg }}>{score}</span>
+              <span className="text-xs text-mid">/100</span>
+            </div>
           </div>
-          {partner.industry_sector && (
-            <p className="text-[11px] text-mid">{partner.industry_sector}</p>
+        )}
+      </div>
+
+      {/* ── Body ── */}
+      <div className="p-5 flex-1 flex flex-col gap-3">
+
+        {/* Match insight */}
+        {showScore && score > 0 && (
+          <div className="flex items-start gap-2.5 px-3 py-2.5 bg-[#f5f9f7] border-l-2 border-forest">
+            <Handshake className="h-3.5 w-3.5 text-forest flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-mid leading-relaxed">{reason}</p>
+          </div>
+        )}
+
+        {/* Description */}
+        {partner.description && (
+          <p className="text-sm text-mid leading-relaxed">
+            {partner.description.length > 160
+              ? `${partner.description.slice(0, 160).trimEnd()}…`
+              : partner.description}
+          </p>
+        )}
+
+        {/* Stats grid */}
+        <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
+          {amountStr && (
+            <div>
+              <p className="text-[9px] font-bold uppercase tracking-widest text-mid mb-0.5">Max Funding</p>
+              <p className="text-sm font-bold text-charcoal">{amountStr}</p>
+            </div>
+          )}
+          {partner.application_route && (
+            <div>
+              <p className="text-[9px] font-bold uppercase tracking-widest text-mid mb-0.5">Status</p>
+              <p className="text-sm font-semibold text-charcoal">
+                {APPLICATION_ROUTE_LABELS[partner.application_route] ?? partner.application_route}
+              </p>
+            </div>
+          )}
+          {partner.geographic_focus.length > 0 && (
+            <div>
+              <p className="text-[9px] font-bold uppercase tracking-widest text-mid mb-0.5">Location</p>
+              <p className="text-sm text-charcoal flex items-center gap-1">
+                <MapPin className="h-3 w-3 text-mid flex-shrink-0" />
+                {partner.geographic_focus.slice(0, 2).join(', ')}
+                {partner.geographic_focus.length > 2 && <span className="text-mid">+{partner.geographic_focus.length - 2}</span>}
+              </p>
+            </div>
+          )}
+          {partner.annual_investment_estimate && (
+            <div>
+              <p className="text-[9px] font-bold uppercase tracking-widest text-mid mb-0.5">Annual Budget</p>
+              <p className="text-sm font-semibold text-charcoal">
+                £{(partner.annual_investment_estimate / 1000).toFixed(0)}k
+              </p>
+            </div>
           )}
         </div>
-
-        {/* Match score circle */}
-        <div className="flex-shrink-0 text-right">
-          <span className="text-2xl font-bold" style={{ color: band.colour }}>{score}</span>
-          <span className="text-xs text-mid ml-0.5">/ 100</span>
-        </div>
       </div>
 
-      {/* Programme name */}
-      {partner.programme_name && (
-        <p className="text-sm font-medium text-charcoal mb-1">{partner.programme_name}</p>
-      )}
-
-      {/* Description */}
-      {partner.description && (
-        <p className="text-sm text-mid leading-relaxed mb-3">
-          {partner.description.length > 220
-            ? `${partner.description.slice(0, 220).trimEnd()}…`
-            : partner.description}
-        </p>
-      )}
-
-      {/* Match reason */}
-      <div className="flex items-start gap-2 mb-3 px-3 py-2.5 bg-[#f9f7f4] border-l-2 border-[#c8d5c2]">
-        <Handshake className="h-3.5 w-3.5 text-forest flex-shrink-0 mt-0.5" />
-        <p className="text-xs text-mid leading-relaxed">{reason}</p>
-      </div>
-
-      {/* Meta row */}
-      <div className="flex flex-wrap gap-3 text-xs text-mid mb-4">
-        {amountStr && (
-          <span className="flex items-center gap-1">
-            <span className="font-semibold text-charcoal">{amountStr}</span>
-          </span>
-        )}
-        {partner.geographic_focus.length > 0 && (
-          <span className="flex items-center gap-1">
-            <MapPin className="h-3 w-3" />
-            {partner.geographic_focus.slice(0, 2).join(', ')}
-            {partner.geographic_focus.length > 2 && ' +more'}
-          </span>
-        )}
-        {partner.application_route && (
-          <span className="flex items-center gap-1">
-            {APPLICATION_ROUTE_LABELS[partner.application_route] ?? partner.application_route}
-          </span>
-        )}
-      </div>
-
-      {/* Support type pills */}
-      {partner.support_types.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mb-4">
-          {partner.support_types.map(t => (
+      {/* ── Footer ── */}
+      <div className="px-5 pb-5 flex items-center justify-between gap-3 mt-auto">
+        {/* Support type tags */}
+        <div className="flex flex-wrap gap-1.5 flex-1 min-w-0">
+          {partner.support_types.slice(0, 3).map(t => (
             <span
               key={t}
-              className="text-[10px] font-semibold px-2 py-0.5 bg-[#f0ede8] text-charcoal border border-[#e8e3dd]"
+              className="text-[9px] font-bold px-2 py-1 uppercase tracking-wider bg-[#f0ede8] text-charcoal border border-[#e4dfd8]"
             >
               {SUPPORT_TYPE_LABELS[t] ?? t}
             </span>
           ))}
+          {partner.support_types.length > 3 && (
+            <span className="text-[9px] font-bold px-2 py-1 uppercase tracking-wider text-mid">
+              +{partner.support_types.length - 3}
+            </span>
+          )}
         </div>
-      )}
 
-      {/* CTA */}
-      {(partner.programme_url || partner.website || partner.contact_url) && (
-        <a
-          href={partner.programme_url ?? partner.contact_url ?? partner.website ?? '#'}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-forest hover:text-sage transition-colors"
-        >
-          Learn more
-          <ExternalLink className="h-3 w-3" />
-        </a>
-      )}
+        {(partner.programme_url || partner.website || partner.contact_url) && (
+          <a
+            href={partner.programme_url ?? partner.contact_url ?? partner.website ?? '#'}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-shrink-0 inline-flex items-center gap-1 text-xs font-semibold text-coral hover:text-[#d45a30] transition-colors"
+          >
+            Learn more
+            <ExternalLink className="h-3 w-3" />
+          </a>
+        )}
+      </div>
     </div>
   )
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
+const SUPPORT_FILTER_OPTIONS = [
+  { id: 'all',              label: 'All types' },
+  { id: 'cash_grant',       label: 'Cash grant' },
+  { id: 'accelerator',      label: 'Accelerator' },
+  { id: 'in_kind',          label: 'In-kind' },
+  { id: 'matched_giving',   label: 'Matched giving' },
+  { id: 'volunteering',     label: 'Volunteering' },
+  { id: 'pro_bono',         label: 'Pro bono' },
+  { id: 'sponsorship',      label: 'Sponsorship' },
+]
+
 export default function CorporatePartnersPage() {
-  const [org, setOrg]                 = useState<Organisation | null>(null)
-  const [partners, setPartners]       = useState<CorporatePartner[]>([])
-  const [results, setResults]         = useState<CorporateMatchResult[]>([])
-  const [loading, setLoading]         = useState(true)
-  const [supportFilter, setSupportFilter] = useState<string>('all')
+  const [org, setOrg]               = useState<Organisation | null>(null)
+  const [partners, setPartners]     = useState<CorporatePartner[]>([])
+  const [allResults, setAllResults] = useState<CorporateMatchResult[]>([])
+  const [loading, setLoading]       = useState(true)
+
+  // Filters
+  const [searchQuery, setSearchQuery]       = useState('')
+  const [supportFilter, setSupportFilter]   = useState('all')
+  const [profileMode, setProfileMode]       = useState(true)
+  const [filtersOpen, setFiltersOpen]       = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -175,10 +213,16 @@ export default function CorporatePartnersPage() {
       setPartners(fetchedPartners)
 
       if (fetchedOrg && fetchedPartners.length) {
-        setResults(computeCorporateMatches(fetchedPartners, fetchedOrg))
+        setAllResults(computeCorporateMatches(fetchedPartners, fetchedOrg))
       } else {
-        // No org profile — show all partners unranked
-        setResults(fetchedPartners.map(p => ({ partner: p, score: 0, reason: 'Complete your profile for a personalised match score.', matchedSectors: [] })))
+        setAllResults(
+          fetchedPartners.map(p => ({
+            partner: p,
+            score: 0,
+            reason: 'Complete your profile for a personalised match score.',
+            matchedSectors: [],
+          }))
+        )
       }
 
       setLoading(false)
@@ -186,97 +230,176 @@ export default function CorporatePartnersPage() {
     load()
   }, [])
 
-  // Collect all support types for filter pills
-  const allSupportTypes = Array.from(
-    new Set(partners.flatMap(p => p.support_types))
-  ).sort()
+  // Derived: filtered + sorted results
+  const displayResults = useMemo(() => {
+    let results = [...allResults]
 
-  const filteredResults = supportFilter === 'all'
-    ? results
-    : results.filter(r => r.partner.support_types.includes(supportFilter))
+    // Text search
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase()
+      results = results.filter(r =>
+        r.partner.company_name.toLowerCase().includes(q) ||
+        r.partner.programme_name?.toLowerCase().includes(q) ||
+        r.partner.description?.toLowerCase().includes(q) ||
+        r.partner.csr_themes.some(t => t.toLowerCase().includes(q))
+      )
+    }
+
+    // Support type filter
+    if (supportFilter !== 'all') {
+      results = results.filter(r => r.partner.support_types.includes(supportFilter))
+    }
+
+    // Sort: profile mode → by score desc; browse mode → alphabetical
+    if (profileMode && org) {
+      results.sort((a, b) => b.score - a.score)
+    } else {
+      results.sort((a, b) => a.partner.company_name.localeCompare(b.partner.company_name))
+    }
+
+    return results
+  }, [allResults, searchQuery, supportFilter, profileMode, org])
+
+  const showScore = profileMode && !!org
+
+  // Only show filter pills that actually have results
+  const activeSupportTypes = useMemo(() => {
+    const types = new Set(partners.flatMap(p => p.support_types))
+    return SUPPORT_FILTER_OPTIONS.filter(o => o.id === 'all' || types.has(o.id))
+  }, [partners])
 
   return (
     <div>
-      {/* Heading */}
-      <div className="mb-6">
+      {/* ── Page heading ── */}
+      <div className="mb-2">
         <h2 className="font-serif text-5xl font-bold text-charcoal leading-tight">Corporate Partners</h2>
-        <p className="mt-2 text-sm text-mid max-w-2xl">
-          Companies offering grants, in-kind support and partnership opportunities for charities and social enterprises.
-          These aren&apos;t grant applications — they&apos;re relationship-first partnerships. Approach them commercially.
-        </p>
       </div>
 
-      {/* Guidance banner */}
-      <div className="mb-6 border border-[#e8ddd0] bg-[#faf7f2] px-4 py-3 flex items-start gap-3">
-        <Building2 className="h-4 w-4 text-[#e8a030] flex-shrink-0 mt-0.5" />
-        <div>
-          <p className="text-sm font-semibold text-charcoal">How to approach corporate partnerships</p>
-          <p className="text-xs text-mid mt-0.5">
-            Lead with shared values, not a funding ask. Research their CSR priorities, connect on LinkedIn, and build a relationship before pitching. The best corporate partnerships are win-win — think about what you can offer them too.
-          </p>
+      {/* ── Search + filter card ── */}
+      <div className="bg-white border border-[#E8E8EC] shadow-warm mb-5">
+        <div className="p-5">
+          {/* Search row */}
+          <div className="flex gap-3 mb-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-mid pointer-events-none" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Search companies, programmes, CSR themes…"
+                className="w-full pl-9 pr-4 py-2.5 text-sm border border-[#E8E8EC] focus:border-forest focus:outline-none bg-[#FAFAF9] text-charcoal placeholder:text-[#9ca3af]"
+              />
+            </div>
+            <button
+              onClick={() => setFiltersOpen(v => !v)}
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border transition-colors ${filtersOpen ? 'bg-forest text-white border-forest' : 'bg-white text-mid border-[#E8E8EC] hover:border-forest hover:text-forest'}`}
+            >
+              <SlidersHorizontal className="h-4 w-4" />
+              Filters
+            </button>
+          </div>
+
+          {/* Profile toggle */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <button
+                role="switch"
+                aria-checked={profileMode}
+                onClick={() => setProfileMode(v => !v)}
+                className={`relative inline-flex h-5 w-9 flex-shrink-0 items-center transition-colors ${profileMode && org ? 'bg-forest' : 'bg-[#D1D5DB]'}`}
+                disabled={!org}
+              >
+                <span className={`inline-block h-3.5 w-3.5 bg-white shadow transform transition-transform ${profileMode && org ? 'translate-x-4' : 'translate-x-1'}`} />
+              </button>
+              <div className="flex items-center gap-1.5">
+                <User className="h-3.5 w-3.5 text-mid" />
+                <span className="text-xs font-semibold text-charcoal">Match to my profile</span>
+                {org ? (
+                  profileMode && (
+                    <span className="flex items-center gap-0.5 text-[10px] text-forest font-semibold">
+                      <CheckCircle2 className="h-3 w-3" />
+                      {org.name}
+                    </span>
+                  )
+                ) : (
+                  <a href="/dashboard/profile" className="text-[10px] text-coral font-semibold hover:underline">
+                    Complete your profile to enable
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Guidance banner — collapsed until filters open */}
+          {filtersOpen && (
+            <div className="mt-4 border-t border-[#F0EDE8] pt-4">
+              <div className="flex items-start gap-3 px-4 py-3 bg-[#faf7f2] border border-[#e8ddd0]">
+                <Building2 className="h-4 w-4 text-gold flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-xs font-semibold text-charcoal">How to approach corporate partnerships</p>
+                  <p className="text-xs text-mid mt-0.5 leading-relaxed">
+                    Lead with shared values, not a funding ask. Research their CSR priorities, connect on LinkedIn, and build a relationship before pitching. Think about what you can offer them too.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── Support type filter tabs ── */}
+        <div className="-mx-0 border-t border-[#E8E8EC]">
+          <div className="flex overflow-x-auto px-5">
+            {activeSupportTypes.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => setSupportFilter(opt.id)}
+                className={`flex-shrink-0 px-4 py-2.5 text-xs font-semibold whitespace-nowrap border-b-2 transition-colors ${
+                  supportFilter === opt.id
+                    ? 'border-coral text-coral'
+                    : 'border-transparent text-mid hover:text-charcoal'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
+      {/* ── Results ── */}
       {loading ? (
-        <div className="flex items-center justify-center py-20">
+        <div className="flex items-center justify-center py-24">
           <div className="h-8 w-8 animate-spin border-2 border-forest border-t-transparent" />
         </div>
       ) : (
         <>
-          {/* Support type filter */}
-          {allSupportTypes.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-5">
-              {['all', ...allSupportTypes].map(type => (
-                <button
-                  key={type}
-                  onClick={() => setSupportFilter(type)}
-                  className={`text-xs font-semibold px-3 py-1.5 border transition-colors ${
-                    supportFilter === type
-                      ? 'bg-forest text-white border-forest'
-                      : 'bg-white text-mid border-[#E8E8EC] hover:border-forest hover:text-forest'
-                  }`}
-                >
-                  {type === 'all' ? 'All types' : (SUPPORT_TYPE_LABELS[type] ?? type)}
-                </button>
-              ))}
-            </div>
-          )}
+          {/* Results header */}
+          <div className="mb-4 flex items-center justify-between">
+            <p className="text-sm text-mid">
+              <span className="font-serif text-3xl font-bold text-charcoal">{displayResults.length}</span>
+              <span className="text-base ml-2">
+                {showScore ? 'partners ranked for your mission' : 'corporate partners'}
+              </span>
+            </p>
+          </div>
 
-          {/* Results count */}
-          <p className="text-sm text-mid mb-4">
-            <span className="font-serif text-3xl font-bold text-charcoal">{filteredResults.length}</span>
-            <span className="text-base ml-2">
-              {org ? 'partners ranked for your mission' : 'corporate partners'}
-            </span>
-          </p>
-
-          {filteredResults.length === 0 ? (
-            <div className="text-center py-16 text-mid">
-              <Building2 className="h-10 w-10 mx-auto mb-3 opacity-30" />
-              <p className="text-sm">No partners match this filter.</p>
+          {displayResults.length === 0 ? (
+            <div className="text-center py-20 text-mid bg-white border border-[#E8E8EC]">
+              <Building2 className="h-10 w-10 mx-auto mb-3 opacity-20" />
+              <p className="text-sm font-semibold text-charcoal mb-1">No partners found</p>
+              <p className="text-xs text-mid">Try adjusting your search or filters.</p>
               <button
-                onClick={() => setSupportFilter('all')}
-                className="mt-2 text-xs text-forest underline"
+                onClick={() => { setSearchQuery(''); setSupportFilter('all') }}
+                className="mt-3 text-xs text-forest font-semibold hover:underline"
               >
-                Show all
+                Clear filters
               </button>
             </div>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2">
-              {filteredResults.map(r => (
-                <PartnerCard key={r.partner.id} result={r} />
+              {displayResults.map(r => (
+                <PartnerCard key={r.partner.id} result={r} showScore={showScore} />
               ))}
-            </div>
-          )}
-
-          {!org && (
-            <div className="mt-6 border border-dashed border-[#c8d5c2] px-4 py-4 text-center">
-              <p className="text-sm text-mid">
-                <a href="/dashboard/profile" className="text-forest font-semibold hover:underline">
-                  Complete your profile <ChevronRight className="inline h-3 w-3" />
-                </a>
-                {' '}to get a personalised match score for each partner.
-              </p>
             </div>
           )}
         </>
