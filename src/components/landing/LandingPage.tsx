@@ -376,7 +376,7 @@ export default function LandingPage() {
               <Link href="/auth/signup" className="bg-coral text-white px-6 py-3 text-[15px] font-semibold rounded-lg hover:opacity-90 transition-colors">
                 Start for free
               </Link>
-              <a href="#how" className="border border-forest/50 text-forest px-6 py-3 text-[15px] font-semibold rounded-lg transition-colors hover:bg-forest/10">
+              <a href="#how" className="bg-forest text-white px-6 py-3 text-[15px] font-semibold rounded-lg transition-colors hover:opacity-90">
                 See how it works
               </a>
             </motion.div>
