@@ -62,7 +62,7 @@ function PartnerCard({
     }`}>
       <div className="p-5 flex flex-col gap-3">
 
-        {/* ── Header row: avatar / name / score ── */}
+        {/* ── Header row: avatar / name / match insight ── */}
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0 w-10 h-10 bg-charcoal flex items-center justify-center text-white font-bold text-base select-none rounded-lg">
             {partner.company_name[0]?.toUpperCase() ?? '?'}
@@ -72,29 +72,15 @@ function PartnerCard({
             {partner.programme_name && (
               <p className="text-xs text-mid leading-snug">{partner.programme_name}</p>
             )}
+            {/* Match insight sits in the natural space to the right of the name */}
+            {showScore && score > 0 && (
+              <div className="flex items-start gap-1.5 mt-1.5">
+                <Handshake className="h-3 w-3 text-forest flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-mid leading-relaxed">{reason}</p>
+              </div>
+            )}
           </div>
-          {showScore && score > 0 && (
-            <div className="flex-shrink-0 flex flex-col items-end">
-              <span
-                className="text-[9px] font-bold px-1.5 py-0.5 uppercase tracking-widest border whitespace-nowrap rounded-md mb-0.5"
-                style={{ color: band.fg, backgroundColor: band.bg, borderColor: band.border }}
-              >
-                {band.label}
-              </span>
-              <span className="text-xl font-bold leading-none" style={{ color: band.fg }}>
-                {score}<span className="text-xs font-normal text-mid">/100</span>
-              </span>
-            </div>
-          )}
         </div>
-
-        {/* Match insight */}
-        {showScore && score > 0 && (
-          <div className="flex items-start gap-2 px-3 py-2 bg-[#f5f9f7] border-l-2 border-forest rounded-lg">
-            <Handshake className="h-3.5 w-3.5 text-forest flex-shrink-0 mt-0.5" />
-            <p className="text-xs text-mid leading-relaxed">{reason}</p>
-          </div>
-        )}
 
         {/* Description */}
         {partner.description && (
@@ -239,9 +225,9 @@ function PartnerCard({
           </div>
         )}
 
-        {/* Footer: support tags + actions */}
+        {/* Footer: support tags + score + actions */}
         <div className="flex items-center justify-between gap-3 pt-1 border-t border-[#F0EDE8]">
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-1.5 flex-1 min-w-0">
             {partner.support_types.map(t => (
               <span key={t} className="text-[9px] font-bold px-2 py-0.5 uppercase tracking-wider bg-[#f0ede8] text-charcoal border border-[#e4dfd8] rounded-md">
                 {SUPPORT_TYPE_LABELS[t] ?? t}
@@ -249,6 +235,20 @@ function PartnerCard({
             ))}
           </div>
           <div className="flex items-center gap-3 flex-shrink-0">
+            {/* Score sits at bottom right when profile mode on */}
+            {showScore && score > 0 && (
+              <div className="flex items-center gap-1.5">
+                <span
+                  className="text-[9px] font-bold px-1.5 py-0.5 uppercase tracking-widest border whitespace-nowrap rounded-md"
+                  style={{ color: band.fg, backgroundColor: band.bg, borderColor: band.border }}
+                >
+                  {band.label}
+                </span>
+                <span className="text-lg font-bold leading-none" style={{ color: band.fg }}>
+                  {score}<span className="text-[10px] font-normal text-mid">/100</span>
+                </span>
+              </div>
+            )}
             {(partner.programme_url || partner.website || partner.contact_url) && (
               <a
                 href={partner.programme_url ?? partner.contact_url ?? partner.website ?? '#'}
