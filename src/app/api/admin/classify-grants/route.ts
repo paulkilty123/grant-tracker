@@ -76,12 +76,12 @@ export async function POST(req: NextRequest) {
   // ── Count total remaining (for progress reporting) ───────────────────────────
   let totalRemaining = 0
   if (!force) {
-    // Count unclassified grants (impact_sectors is null)
+    // Count unclassified grants — both NULL and empty-array ({}) cases
     const { count } = await supabase
       .from('scraped_grants')
       .select('id', { count: 'exact', head: true })
       .eq('is_active', true)
-      .is('impact_sectors', null)
+      .or('impact_sectors.is.null,impact_sectors.eq.{}')
     totalRemaining = count ?? 0
   }
 
@@ -96,9 +96,9 @@ export async function POST(req: NextRequest) {
     // Force mode: paginate through ALL grants using offset
     query = query.range(offset, offset + limit - 1)
   } else {
-    // Normal mode: fetch first N unclassified grants (no offset needed —
-    // each batch classifies them, so the next fetch gets different ones)
-    query = query.is('impact_sectors', null).limit(limit)
+    // Normal mode: fetch first N unclassified grants.
+    // Catches both NULL and empty-array ({}) — both mean "not yet classified".
+    query = query.or('impact_sectors.is.null,impact_sectors.eq.{}').limit(limit)
   }
 
   const { data: grantsRaw, error } = await query

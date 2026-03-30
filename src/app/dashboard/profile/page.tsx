@@ -933,6 +933,19 @@ export default function ProfilePage() {
   function renderSection2() {
     return (
       <div>
+        {form.impactSectors.length < 2 && (
+          <div className="flex items-start gap-3 bg-gold/10 border border-gold/30 rounded-xl p-3.5 mb-4">
+            <svg className="h-4 w-4 text-gold flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            </svg>
+            <div>
+              <p className="text-xs font-semibold text-charcoal">Impact sectors improve your match quality</p>
+              <p className="text-xs text-mid mt-0.5">
+                Select at least 2 sectors that describe your work. Grants are scored partly based on how well their sectors align with yours — without this, your matches will be less precise.
+              </p>
+            </div>
+          </div>
+        )}
         <p className="text-xs text-mid mb-4">
           Choose 1 to 5 sectors. More specific = better matches.
           {form.impactSectors.length >= 5 && (

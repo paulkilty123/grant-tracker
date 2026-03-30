@@ -5,9 +5,13 @@ import { SupabaseClient } from '@supabase/supabase-js'
 
 // ── Taxonomy validation sets ───────────────────────────────────────────────────
 export const VALID_SECTORS = new Set([
+  // Original 12
   'creative', 'environment', 'health', 'education', 'tech',
   'housing', 'food', 'employment', 'community', 'justice',
   'financial', 'international',
+  // Extended to full 19-sector taxonomy (matching ImpactSector type)
+  'mental_health', 'disability', 'older_people', 'sport', 'heritage', 'women',
+  'young_people',
 ])
 
 export const VALID_FUNDING_TYPES = new Set([
@@ -61,20 +65,28 @@ OUTPUT FORMAT — return ONLY a JSON array, no markdown, no explanation:
 ]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-IMPACT SECTOR TAXONOMY — choose 1 to 4 that best describe this grant:
+IMPACT SECTOR TAXONOMY — choose 1 to 4 that best describe this grant.
+Use the most specific sector available — do NOT default to 'health' when 'mental_health' or 'disability' is more accurate.
 
-creative       arts, culture, heritage, music, film, media, creative industries
-environment    climate, biodiversity, energy, sustainability, nature, ecology
-health         physical health, mental health, wellbeing, disability, social care
-education      schools, learning, skills, training, early years, youth education
-tech           technology, digital, AI, data, open source, innovation, STEM
-housing        housing, homelessness, property, regeneration, rough sleeping
-food           food poverty, food banks, agriculture, nutrition, food waste
-employment     jobs, employment, livelihoods, enterprise, economic inclusion
-community      community development, civic, volunteering, neighbourhoods, local
+young_people   children, young people, youth, under-25s, schools, families, early years
+community      community development, civic engagement, volunteering, neighbourhoods, local groups
+health         physical health, GP services, hospitals, social care, general wellbeing
+mental_health  mental health, counselling, therapy, suicide prevention, wellbeing (psychological focus)
+housing        housing, homelessness, rough sleeping, property, regeneration
+education      schools, learning, skills, training, adult education, literacy, numeracy
+employment     jobs, employment, livelihoods, enterprise, economic inclusion, work
+disability     disability, accessibility, d/Deaf, neurodiversity, inclusive services
+older_people   older people, elderly, ageing, dementia, retirement, over-60s
+environment    climate, biodiversity, energy, sustainability, nature, conservation, ecology
+creative       arts, culture, music, film, media, theatre, dance, creative industries
+heritage       heritage, historic buildings, museums, archives, archaeology, conservation of history
+sport          sport, physical activity, grassroots sport, football, cricket, athletics, fitness
+women          women, gender equality, girls, female founders, domestic abuse, gender-based violence
 justice        social justice, human rights, equality, racial equity, criminal justice, asylum
+tech           technology, digital, AI, data, open source, innovation, STEM
 financial      financial inclusion, money advice, debt, poverty, benefits
-international  international development, global south, fair trade, migration, refugees
+food           food poverty, food banks, agriculture, nutrition, food waste, food growing
+international  international development, global south, fair trade, migration, refugees, overseas
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 FUNDING TYPE TAXONOMY — choose exactly one:
