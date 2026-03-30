@@ -12,7 +12,7 @@ interface LogoProps {
 export default function Logo({ variant = 'dark', size = 'md' }: LogoProps) {
   const textSize = size === 'sm' ? 'text-[24px]' : size === 'lg' ? 'text-[34px]' : 'text-[28px]'
   const iconSize = size === 'sm' ? 'w-8 h-8' : size === 'lg' ? 'w-11 h-11' : 'w-9 h-9'
-  const color = variant === 'light' ? 'text-white' : 'text-charcoal'
+  const color = variant === 'light' ? 'text-white' : 'text-[#3A3A4A]'
 
   return (
     <span className={`inline-flex items-center gap-1.5 ${color}`}>
