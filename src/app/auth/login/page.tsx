@@ -130,8 +130,7 @@ function LoginForm() {
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  className="form-input"
-                  className="rounded-lg"
+                  className="form-input rounded-lg"
                   placeholder="you@organisation.org"
                   autoComplete="email"
                   required
@@ -150,8 +149,7 @@ function LoginForm() {
                     type={showPw ? 'text' : 'password'}
                     value={password}
                     onChange={e => setPassword(e.target.value)}
-                    className="form-input pr-10"
-                    className="rounded-lg"
+                    className="form-input pr-10 rounded-lg"
                     placeholder="••••••••"
                     autoComplete="current-password"
                     required

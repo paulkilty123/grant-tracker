@@ -172,8 +172,7 @@ export default function SignupPage() {
                   type="text"
                   value={fullName}
                   onChange={e => setFullName(e.target.value)}
-                  className="form-input"
-                  className="rounded-lg"
+                  className="form-input rounded-lg"
                   placeholder="Jane Smith"
                   autoComplete="name"
                   required
@@ -186,8 +185,7 @@ export default function SignupPage() {
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  className="form-input"
-                  className="rounded-lg"
+                  className="form-input rounded-lg"
                   placeholder="you@organisation.org"
                   autoComplete="email"
                   required
@@ -201,8 +199,7 @@ export default function SignupPage() {
                     type={showPw ? 'text' : 'password'}
                     value={password}
                     onChange={e => setPassword(e.target.value)}
-                    className="form-input pr-14"
-                    className="rounded-lg"
+                    className="form-input pr-14 rounded-lg"
                     placeholder="At least 8 characters"
                     autoComplete="new-password"
                     minLength={8}
