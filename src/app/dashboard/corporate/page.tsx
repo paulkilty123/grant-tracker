@@ -62,39 +62,42 @@ function PartnerCard({
     }`}>
       <div className="p-5 flex flex-col gap-3">
 
-        {/* ── Header row: avatar / name+description / score ── */}
+        {/* ── Header row: avatar / name+description / score+insight ── */}
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0 w-10 h-10 bg-charcoal flex items-center justify-center text-white font-bold text-base select-none rounded-lg">
             {partner.company_name[0]?.toUpperCase() ?? '?'}
           </div>
+
+          {/* Left: name, programme, description */}
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-charcoal text-base leading-snug">{partner.company_name}</h3>
             {partner.programme_name && (
               <p className="text-xs text-mid leading-snug">{partner.programme_name}</p>
             )}
-            {showScore && score > 0 && (
-              <p className="text-xs text-mid mt-1 leading-relaxed">{reason}</p>
+            {partner.description && (
+              <p className="text-sm text-mid leading-relaxed mt-1.5">
+                {expanded
+                  ? partner.description
+                  : partner.description.length > 120
+                    ? `${partner.description.slice(0, 120).trimEnd()}…`
+                    : partner.description}
+              </p>
             )}
           </div>
-          {/* Score — top right, stacked label + number */}
+
+          {/* Right: score + match insight box */}
           {showScore && score > 0 && (
-            <div className="flex-shrink-0 text-right">
-              <p className="text-[9px] font-bold uppercase tracking-widest" style={{ color: band.fg }}>{band.label}</p>
-              <p className="text-2xl font-bold leading-tight" style={{ color: band.fg }}>{score}%</p>
+            <div className="flex-shrink-0 w-44">
+              <div className="text-right mb-2">
+                <p className="text-[9px] font-bold uppercase tracking-widest" style={{ color: band.fg }}>{band.label}</p>
+                <p className="text-2xl font-bold leading-tight" style={{ color: band.fg }}>{score}%</p>
+              </div>
+              <div className="px-2.5 py-2 bg-forest/5 border border-forest/20 rounded-lg">
+                <p className="text-[11px] text-forest/80 leading-snug">{reason}</p>
+              </div>
             </div>
           )}
         </div>
-
-        {/* Description */}
-        {partner.description && (
-          <p className="text-sm text-mid leading-relaxed">
-            {expanded
-              ? partner.description
-              : partner.description.length > 160
-                ? `${partner.description.slice(0, 160).trimEnd()}…`
-                : partner.description}
-          </p>
-        )}
 
         {/* Inline meta strip — only renders items that have data */}
         {(amountStr || partner.application_route || partner.geographic_focus.length > 0) && (
