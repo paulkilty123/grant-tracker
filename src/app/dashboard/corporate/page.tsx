@@ -62,26 +62,27 @@ function PartnerCard({
     }`}>
       <div className="p-5 flex flex-col gap-3">
 
-        {/* ── Header row: avatar / name + match insight ── */}
+        {/* ── Header row: avatar / name+description / score ── */}
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0 w-10 h-10 bg-charcoal flex items-center justify-center text-white font-bold text-base select-none rounded-lg">
             {partner.company_name[0]?.toUpperCase() ?? '?'}
           </div>
-          <div className="flex-1 min-w-0 flex items-center gap-2">
-            <div className="flex-shrink-0">
-              <h3 className="font-semibold text-charcoal text-base leading-snug">{partner.company_name}</h3>
-              {partner.programme_name && (
-                <p className="text-xs text-mid leading-snug">{partner.programme_name}</p>
-              )}
-            </div>
-            {/* Match insight — stretches across remaining white space, 1 line only */}
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-charcoal text-base leading-snug">{partner.company_name}</h3>
+            {partner.programme_name && (
+              <p className="text-xs text-mid leading-snug">{partner.programme_name}</p>
+            )}
             {showScore && score > 0 && (
-              <div className="flex-1 min-w-0 flex items-center gap-1.5 px-2.5 py-1.5 bg-forest/5 border border-forest/20 rounded-lg">
-                <Handshake className="h-3 w-3 text-forest flex-shrink-0" />
-                <p className="text-[11px] text-forest/80 leading-none truncate">{reason}</p>
-              </div>
+              <p className="text-xs text-mid mt-1 leading-relaxed">{reason}</p>
             )}
           </div>
+          {/* Score — top right, stacked label + number */}
+          {showScore && score > 0 && (
+            <div className="flex-shrink-0 text-right">
+              <p className="text-[9px] font-bold uppercase tracking-widest" style={{ color: band.fg }}>{band.label}</p>
+              <p className="text-2xl font-bold leading-tight" style={{ color: band.fg }}>{score}%</p>
+            </div>
+          )}
         </div>
 
         {/* Description */}
@@ -235,21 +236,8 @@ function PartnerCard({
                 {SUPPORT_TYPE_LABELS[t] ?? t}
               </span>
             ))}
-            {showScore && score > 0 && (
-              <span
-                className="text-[9px] font-bold px-2 py-0.5 uppercase tracking-widest border whitespace-nowrap rounded-md"
-                style={{ color: band.fg, backgroundColor: band.bg, borderColor: band.border }}
-              >
-                {band.label}
-              </span>
-            )}
           </div>
           <div className="flex items-center gap-3 flex-shrink-0">
-            {showScore && score > 0 && (
-              <span className="text-base font-bold leading-none" style={{ color: band.fg }}>
-                {score}%
-              </span>
-            )}
             {(partner.programme_url || partner.website || partner.contact_url) && (
               <a
                 href={partner.programme_url ?? partner.contact_url ?? partner.website ?? '#'}
