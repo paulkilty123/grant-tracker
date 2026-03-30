@@ -44,7 +44,7 @@
            duration-150 cursor-pointer rounded-lg;
   }
   .btn-gold {
-    @apply bg-[#e8a030] text-white px-5 py-2.5 text-sm font-medium
+    @apply bg-forest text-white px-5 py-2.5 text-sm font-medium
            hover:opacity-90 transition-all duration-150 cursor-pointer border-none rounded-lg;
   }
   .btn-sm {
