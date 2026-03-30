@@ -62,7 +62,7 @@ function PartnerCard({
     }`}>
       <div className="p-5 flex flex-col gap-3">
 
-        {/* ── Header row: avatar / name / match insight ── */}
+        {/* ── Header row: avatar / name / match insight box ── */}
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0 w-10 h-10 bg-charcoal flex items-center justify-center text-white font-bold text-base select-none rounded-lg">
             {partner.company_name[0]?.toUpperCase() ?? '?'}
@@ -72,14 +72,14 @@ function PartnerCard({
             {partner.programme_name && (
               <p className="text-xs text-mid leading-snug">{partner.programme_name}</p>
             )}
-            {/* Match insight sits in the natural space to the right of the name */}
-            {showScore && score > 0 && (
-              <div className="flex items-start gap-1.5 mt-1.5">
-                <Handshake className="h-3 w-3 text-forest flex-shrink-0 mt-0.5" />
-                <p className="text-xs text-mid leading-relaxed">{reason}</p>
-              </div>
-            )}
           </div>
+          {/* Match insight — highlighted box in the white space to the right of the name */}
+          {showScore && score > 0 && (
+            <div className="flex-shrink-0 max-w-[200px] flex items-start gap-1.5 px-2.5 py-2 bg-forest/5 border border-forest/20 rounded-lg">
+              <Handshake className="h-3 w-3 text-forest flex-shrink-0 mt-0.5" />
+              <p className="text-[11px] text-forest/80 leading-relaxed">{reason}</p>
+            </div>
+          )}
         </div>
 
         {/* Description */}
@@ -225,7 +225,22 @@ function PartnerCard({
           </div>
         )}
 
-        {/* Footer: support tags + score + actions */}
+        {/* Score row — above the footer line */}
+        {showScore && score > 0 && (
+          <div className="flex justify-end items-center gap-1.5">
+            <span
+              className="text-[9px] font-bold px-1.5 py-0.5 uppercase tracking-widest border whitespace-nowrap rounded-md"
+              style={{ color: band.fg, backgroundColor: band.bg, borderColor: band.border }}
+            >
+              {band.label}
+            </span>
+            <span className="text-lg font-bold leading-none" style={{ color: band.fg }}>
+              {score}<span className="text-[10px] font-normal text-mid">/100</span>
+            </span>
+          </div>
+        )}
+
+        {/* Footer: support tags + actions */}
         <div className="flex items-center justify-between gap-3 pt-1 border-t border-[#F0EDE8]">
           <div className="flex flex-wrap gap-1.5 flex-1 min-w-0">
             {partner.support_types.map(t => (
@@ -235,20 +250,6 @@ function PartnerCard({
             ))}
           </div>
           <div className="flex items-center gap-3 flex-shrink-0">
-            {/* Score sits at bottom right when profile mode on */}
-            {showScore && score > 0 && (
-              <div className="flex items-center gap-1.5">
-                <span
-                  className="text-[9px] font-bold px-1.5 py-0.5 uppercase tracking-widest border whitespace-nowrap rounded-md"
-                  style={{ color: band.fg, backgroundColor: band.bg, borderColor: band.border }}
-                >
-                  {band.label}
-                </span>
-                <span className="text-lg font-bold leading-none" style={{ color: band.fg }}>
-                  {score}<span className="text-[10px] font-normal text-mid">/100</span>
-                </span>
-              </div>
-            )}
             {(partner.programme_url || partner.website || partner.contact_url) && (
               <a
                 href={partner.programme_url ?? partner.contact_url ?? partner.website ?? '#'}
