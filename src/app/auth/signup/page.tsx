@@ -109,10 +109,10 @@ export default function SignupPage() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 overflow-hidden border border-warm/60" style={{ boxShadow: '0 8px 40px rgba(26,46,43,0.10)' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 overflow-hidden rounded-xl border border-warm/60" style={{ boxShadow: '0 8px 40px rgba(26,46,43,0.10)' }}>
 
           {/* ── Left: value props ── */}
-          <div className="bg-forest text-white p-10 hidden lg:flex flex-col justify-between">
+          <div className="bg-[#1C1C2E] text-white p-10 hidden lg:flex flex-col justify-between">
             <div>
               {/* Logo */}
               <a href="/" className="no-underline mb-2">
