@@ -773,7 +773,7 @@ export default function PipelinePage() {
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
         <div>
           <h2 className="font-serif text-4xl font-bold text-charcoal leading-tight">Funding Pipeline</h2>
           <p className="text-mid text-sm mt-1.5 max-w-md">Manage your active pursuits and funding lifecycles. Drag and drop to update status.</p>
