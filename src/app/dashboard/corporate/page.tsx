@@ -175,7 +175,7 @@ function PartnerCard({
         {/* ── Expanded detail panel ── */}
         {expanded && (
           <div className="mt-1 pt-4 border-t border-[#F0EDE8]">
-            <div className="grid sm:grid-cols-2 gap-x-8 gap-y-4">
+            <div className="grid sm:grid-cols-3 gap-x-8 gap-y-4">
 
               {/* Example recipients */}
               {partner.example_recipients && partner.example_recipients.length > 0 && (
@@ -554,16 +554,15 @@ export default function CorporatePartnersPage() {
               </button>
             </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="flex flex-col gap-4">
               {displayResults.map(r => (
-                <div key={r.partner.id} className={expandedIds.has(r.partner.id) ? 'sm:col-span-2' : ''}>
-                  <PartnerCard
-                    result={r}
-                    showScore={showScore}
-                    expanded={expandedIds.has(r.partner.id)}
-                    onToggle={() => toggleExpanded(r.partner.id)}
-                  />
-                </div>
+                <PartnerCard
+                  key={r.partner.id}
+                  result={r}
+                  showScore={showScore}
+                  expanded={expandedIds.has(r.partner.id)}
+                  onToggle={() => toggleExpanded(r.partner.id)}
+                />
               ))}
             </div>
           )}
