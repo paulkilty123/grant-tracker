@@ -1613,10 +1613,10 @@ export default function SearchPage() {
   const programmesCount = allGrants_raw.filter(g => PROGRAMME_TYPES.includes((g as GrantOpportunity & { fundingType?: FundingType }).fundingType ?? 'grant')).length
 
   const TYPE_TABS = [
-    { id: 'grant'      as const, label: 'Grants',      icon: <DollarSign size={14} strokeWidth={2} /> },
-    { id: 'programme'  as const, label: 'Programmes',  icon: <Rocket size={14} strokeWidth={2} /> },
-    { id: 'investment' as const, label: 'Investment',  icon: <TrendingUp size={14} strokeWidth={2} /> },
-    { id: 'in_kind'    as const, label: 'In-Kind',     icon: <Gift size={14} strokeWidth={2} /> },
+    { id: 'grant'      as const, label: 'Grants',      icon: <DollarSign size={17} strokeWidth={2} /> },
+    { id: 'programme'  as const, label: 'Programmes',  icon: <Rocket size={17} strokeWidth={2} /> },
+    { id: 'investment' as const, label: 'Investment',  icon: <TrendingUp size={17} strokeWidth={2} /> },
+    { id: 'in_kind'    as const, label: 'In-Kind',     icon: <Gift size={17} strokeWidth={2} /> },
   ]
 
   const TAB_DESCS: Record<string, string> = {
@@ -1976,12 +1976,12 @@ export default function SearchPage() {
           {/* ── Funding type tabs ── */}
           {activeView === 'matches' && (
             <div className="mt-5 -mx-5 border-t border-[#E8E8EC]">
-              <div className="flex overflow-x-auto">
+              <div className="flex">
                 {TYPE_TABS.map(tab => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold whitespace-nowrap border-b-2 transition-colors flex-shrink-0 ${
+                    className={`flex flex-1 items-center justify-center gap-2 py-3 text-sm font-semibold whitespace-nowrap border-b-2 transition-colors ${
                       activeTab === tab.id
                         ? 'border-coral text-coral'
                         : 'border-transparent text-mid hover:text-charcoal'
