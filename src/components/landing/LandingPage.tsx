@@ -301,11 +301,8 @@ export default function LandingPage() {
         className="fixed top-0 left-0 right-0 z-50 bg-cream/95 backdrop-blur-sm border-b border-warm/60"
       >
         <div className="flex w-full items-center justify-between px-5 md:px-8 py-4 md:py-5">
-          <a href="/" className="flex items-center gap-2.5 no-underline">
-            <div className="relative flex items-center justify-center bg-coral w-7 h-7 rounded-lg flex-shrink-0">
-              <div className="w-2.5 h-2.5 rounded-full border-2 border-white" />
-            </div>
-            <span className="font-serif text-[22px] text-charcoal">GrantTracker</span>
+          <a href="/" className="no-underline">
+            <span className="font-serif italic text-[24px] text-charcoal">GrantTracker</span>
           </a>
           {/* Desktop nav links */}
           <div className="hidden md:flex items-center gap-6 lg:gap-10">
@@ -867,11 +864,8 @@ export default function LandingPage() {
       {/* FOOTER */}
       <footer className="border-t border-warm py-12">
         <div className="mx-auto flex max-w-5xl flex-col items-center gap-8 px-6 md:flex-row md:justify-between">
-          <a href="/" className="flex items-center gap-2.5">
-            <div className="relative flex items-center justify-center bg-coral w-6 h-6 rounded-lg flex-shrink-0">
-              <div className="w-2 h-2 rounded-full border-2 border-white" />
-            </div>
-            <span className="font-serif text-lg text-charcoal">GrantTracker</span>
+          <a href="/" className="no-underline">
+            <span className="font-serif italic text-[20px] text-charcoal">GrantTracker</span>
           </a>
           <div className="flex gap-8 text-sm text-mid">
             <a href="#how" className="hover:text-charcoal transition-colors">How it works</a>

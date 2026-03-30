@@ -130,11 +130,8 @@ export default function Sidebar({ org, userEmail }: Props) {
     )} style={{ background: '#1C1C2E' }}>
       {/* Logo */}
       <div className="px-6 py-6 flex items-center justify-between border-b border-white/10">
-        <Link href="/dashboard" className="flex items-center gap-2.5 no-underline">
-          <div className="relative flex items-center justify-center bg-coral w-7 h-7 flex-shrink-0" style={{ borderRadius: '6px' }}>
-            <div className="w-2.5 h-2.5 rounded-full border-2 border-white" />
-          </div>
-          <span className="font-serif text-[18px] text-white">GrantTracker</span>
+        <Link href="/dashboard" className="no-underline">
+          <span className="font-serif italic text-[22px] text-white">GrantTracker</span>
         </Link>
         <button
           className="md:hidden text-white/50 hover:text-white"
