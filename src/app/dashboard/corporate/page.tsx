@@ -197,7 +197,7 @@ function PartnerCard({
           style={{ borderLeft: '3px solid #008080' }}>
           <Activity className="w-4 h-4 flex-shrink-0" style={{ color: '#26A69A' }} />
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#26A69A' }}>Match Insight</p>
+            <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: '#26A69A' }}>Match Insight</p>
             <p className="text-sm leading-relaxed text-charcoal">{reason}</p>
           </div>
           {/* Circular score — exact grant card SVG */}

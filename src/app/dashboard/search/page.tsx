@@ -576,7 +576,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
             style={{ borderLeft: '3px solid #008080' }}>
             <Activity className="w-4 h-4 flex-shrink-0" style={{ color: '#26A69A' }} />
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#26A69A' }}>Match Insight</p>
+              <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: '#26A69A' }}>Match Insight</p>
               <p className="text-sm leading-relaxed" style={{ color: '#333' }}>
                 {(() => {
                   const text = reason.replace(/<[^>]*>/g, '').trim()
