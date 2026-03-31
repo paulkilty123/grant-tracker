@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import {
   Search, Building2, ExternalLink, MapPin, Activity,
   ChevronDown, ChevronUp,
-  Users, Globe, Phone, Calendar, Tag,
+  Users, Globe, Phone, Calendar, Tag, Bookmark,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner } from '@/lib/organisations'
@@ -55,12 +55,15 @@ function formatBudget(n: number | null): string | null {
 // ── Partner card ──────────────────────────────────────────────────────────────
 
 function PartnerCard({
-  result, showScore, expanded, onToggle,
+  result, showScore, expanded, onToggle, isSaved, onSave, onUnsave,
 }: {
   result: CorporateMatchResult
   showScore: boolean
   expanded: boolean
   onToggle: () => void
+  isSaved: boolean
+  onSave: () => void
+  onUnsave: () => void
 }) {
   const { partner, score, reason } = result
   const band = matchBand(score)
@@ -162,7 +165,7 @@ function PartnerCard({
         </div>
 
         {/* Right: actions */}
-        <div className="flex flex-col p-5 pl-3 flex-shrink-0 w-[130px] items-end gap-2">
+        <div className="flex flex-col p-5 pl-3 flex-shrink-0 w-[130px] items-end gap-3">
           {(partner.programme_url || partner.website || partner.contact_url) && (
             <a
               href={partner.programme_url ?? partner.contact_url ?? partner.website ?? '#'}
@@ -173,6 +176,18 @@ function PartnerCard({
               Visit website →
             </a>
           )}
+          <button
+            onClick={() => isSaved ? onUnsave() : onSave()}
+            className={`w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold border transition-colors ${
+              isSaved
+                ? 'bg-[#FF7043]/10 text-[#FF7043] border-[#FF7043]/30'
+                : 'border-[#E8E8EC] text-gray-500 hover:border-[#FF7043] hover:text-[#FF7043]'
+            }`}
+            style={{ borderRadius: 9999 }}
+          >
+            <Bookmark className="w-3.5 h-3.5" fill={isSaved ? 'currentColor' : 'none'} />
+            {isSaved ? 'Saved' : 'Save'}
+          </button>
         </div>
       </div>
 
@@ -314,6 +329,23 @@ export default function CorporatePartnersPage() {
 
   const [searchQuery, setSearchQuery] = useState('')
   const [profileMode, setProfileMode] = useState(true)
+  const [activeView, setActiveView] = useState<'matches' | 'saved'>('matches')
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
+
+  // Load saved partners from localStorage
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('savedCorporatePartners')
+      if (stored) setSavedIds(new Set(JSON.parse(stored) as string[]))
+    } catch { /* ignore */ }
+  }, [])
+
+  // Persist saved partners to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('savedCorporatePartners', JSON.stringify(Array.from(savedIds)))
+    } catch { /* ignore */ }
+  }, [savedIds])
 
   useEffect(() => {
     async function load() {
@@ -384,6 +416,14 @@ export default function CorporatePartnersPage() {
       next.has(id) ? next.delete(id) : next.add(id)
       return next
     })
+  }
+
+  function handleSave(id: string) {
+    setSavedIds(prev => { const next = new Set(prev); next.add(id); return next })
+  }
+
+  function handleUnsave(id: string) {
+    setSavedIds(prev => { const next = new Set(prev); next.delete(id); return next })
   }
 
   return (
@@ -465,11 +505,59 @@ export default function CorporatePartnersPage() {
         </div>
       </div>
 
+      {/* ── My Matches / Saved tabs ── */}
+      <div className="flex items-center border-b border-[#E8E8EC] mb-5">
+        {(['matches', 'saved'] as const).map(v => (
+          <button
+            key={v}
+            onClick={() => setActiveView(v)}
+            className={`px-5 py-2 text-sm font-medium transition-colors flex items-center gap-1.5 ${
+              activeView === v
+                ? 'text-[#FF7043] border-b-2 border-[#FF7043]'
+                : 'border-b-2 border-transparent text-gray-500 hover:text-charcoal'
+            }`}
+          >
+            {v === 'matches' ? 'My Matches' : 'Saved'}
+            {v === 'saved' && savedIds.size > 0 && (
+              <span className="text-xs bg-[#FF7043] text-white px-1.5 py-0.5 ml-1" style={{ borderRadius: 9999 }}>
+                {savedIds.size}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
       {/* ── Results ── */}
       {loading ? (
         <div className="flex items-center justify-center py-24">
           <div className="h-8 w-8 animate-spin border-2 border-forest border-t-transparent rounded-full" />
         </div>
+      ) : activeView === 'saved' ? (
+        (() => {
+          const savedResults = allResults.filter(r => savedIds.has(r.partner.id))
+          return savedResults.length === 0 ? (
+            <div className="text-center py-20 text-mid bg-white border border-[#E8E8EC] rounded-xl">
+              <Bookmark className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+              <p className="text-sm font-semibold text-charcoal mb-1">No saved partners yet</p>
+              <p className="text-xs text-mid">Click Save on any partner card to add it here.</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4">
+              {savedResults.map(r => (
+                <PartnerCard
+                  key={r.partner.id}
+                  result={r}
+                  showScore={showScore}
+                  expanded={expandedIds.has(r.partner.id)}
+                  onToggle={() => toggleExpanded(r.partner.id)}
+                  isSaved={true}
+                  onSave={() => handleSave(r.partner.id)}
+                  onUnsave={() => handleUnsave(r.partner.id)}
+                />
+              ))}
+            </div>
+          )
+        })()
       ) : (
         <>
           <div className="mb-4 flex items-center justify-between">
@@ -510,6 +598,9 @@ export default function CorporatePartnersPage() {
                   showScore={showScore}
                   expanded={expandedIds.has(r.partner.id)}
                   onToggle={() => toggleExpanded(r.partner.id)}
+                  isSaved={savedIds.has(r.partner.id)}
+                  onSave={() => handleSave(r.partner.id)}
+                  onUnsave={() => handleUnsave(r.partner.id)}
                 />
               ))}
             </div>
