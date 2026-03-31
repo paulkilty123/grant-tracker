@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import {
   RefreshCw, ExternalLink, Pencil, Check, X,
   AlertTriangle, CheckCircle, Clock, Database, Trash2, Mail, Search,
-  ChevronDown, ChevronRight, Plus, Tag, Link, Sparkles,
+  ChevronDown, ChevronRight, Plus, Tag, Link, Sparkles, Brain,
 } from 'lucide-react'
 import { SEED_GRANTS } from '@/lib/grants'
 import { parseOpenDate } from '@/lib/parse-open-date'
@@ -24,6 +24,7 @@ type Grant = {
   source: string
   is_invite_only: boolean
   funder_type?: string
+  funder_brief?: Record<string, string | null> | null
 }
 
 type CategoryGrant = Grant & {
@@ -157,6 +158,9 @@ export default function UrlAdminPage() {
   const [populatingFromUrl, setPopulatingFromUrl]   = useState(false)
   const [populateMsg, setPopulateMsg]               = useState<string | null>(null)
 
+  // Funder intelligence enrichment (inline, from Grant Manager)
+  const [enrichingId, setEnrichingId] = useState<string | null>(null)
+
   // ── Auth check ───────────────────────────────────────────────────────────────
   useEffect(() => {
     createClient().auth.getUser().then(({ data }) => {
@@ -203,7 +207,7 @@ export default function UrlAdminPage() {
 
     let query = createClient()
       .from('scraped_grants')
-      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only')
+      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief')
       .eq('is_active', true)
       .order('url_last_checked', { ascending: true, nullsFirst: true })
       .limit(2000)
@@ -232,7 +236,7 @@ export default function UrlAdminPage() {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
     const { data } = await createClient()
       .from('scraped_grants')
-      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, first_seen_at')
+      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief, first_seen_at')
       .eq('is_active', true)
       .gte('first_seen_at', sevenDaysAgo)
       .order('first_seen_at', { ascending: false })
@@ -259,7 +263,7 @@ export default function UrlAdminPage() {
     if (filter !== 'review') return
     const { data } = await createClient()
       .from('scraped_grants')
-      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, description, funder_type')
+      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief, description, funder_type')
       .eq('is_active', false)
       .neq('url_status', 'dead')  // exclude grants that were explicitly hidden/rejected
       .order('last_seen_at', { ascending: false })
@@ -272,7 +276,7 @@ export default function UrlAdminPage() {
     if (filter !== 'suspicious') return
     const { data } = await createClient()
       .from('scraped_grants')
-      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, url_quality_score, url_quality_issues')
+      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief, url_quality_score, url_quality_issues')
       .eq('is_active', true)
       .not('url_quality_score', 'is', null)
       .lt('url_quality_score', 60)
@@ -1079,6 +1083,34 @@ export default function UrlAdminPage() {
     </div>
   )
 
+  // ── Funder intelligence enrichment (inline) ──────────────────────────────────
+  async function enrichGrantFromManager(grant: Grant) {
+    if (enrichingId) return
+    setEnrichingId(grant.id)
+    const controller = new AbortController()
+    const clientTimeout = setTimeout(() => controller.abort(), 50000)
+    try {
+      const res = await fetch('/api/admin/enrich-grant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ grantId: grant.id }),
+        signal: controller.signal,
+      })
+      clearTimeout(clientTimeout)
+      if (res.ok) {
+        const { brief } = await res.json()
+        const patch = (g: Grant) => g.id === grant.id ? { ...g, funder_brief: brief } : g
+        setGrants(prev => prev.map(patch))
+        setNewGrants(prev => prev.map(patch))
+        setReviewGrants(prev => prev.map(patch))
+        setSuspiciousGrants(prev => prev.map(g => g.id === grant.id ? { ...g, funder_brief: brief } : g))
+      }
+    } catch { /* silent — network or timeout */ } finally {
+      clearTimeout(clientTimeout)
+      setEnrichingId(null)
+    }
+  }
+
   // ── Reusable row actions (scraped grants only) ─────────────────────────────────
   function RowActions({ grant }: { grant: Grant }) {
     return confirmDeleteId === grant.id ? (
@@ -1093,6 +1125,22 @@ export default function UrlAdminPage() {
       </div>
     ) : (
       <div className="flex items-center justify-end gap-1.5">
+        {/* Funder intelligence enrichment — Brain icon, teal if enriched */}
+        <button
+          onClick={() => !grant.funder_brief && enrichGrantFromManager(grant)}
+          disabled={enrichingId === grant.id}
+          title={grant.funder_brief ? 'Funder brief enriched ✓' : 'Enrich with funder intelligence'}
+          className={`rounded-full border p-1.5 transition-colors disabled:opacity-40 ${
+            grant.funder_brief
+              ? 'border-[#008080]/30 bg-[#008080]/10 text-[#008080] cursor-default'
+              : 'border-warm text-mid hover:border-[#008080] hover:text-[#008080]'
+          }`}
+        >
+          {enrichingId === grant.id
+            ? <RefreshCw className="h-3 w-3 animate-spin" />
+            : <Brain className="h-3 w-3" />
+          }
+        </button>
         <button
           onClick={() => fetchGrantInfo(grant)}
           disabled={refreshingId === grant.id}
@@ -1101,7 +1149,7 @@ export default function UrlAdminPage() {
         >
           {refreshingId === grant.id
             ? <RefreshCw className="h-3 w-3 animate-spin" />
-            : <Sparkles className="h-3 w-3" />
+            : <Search className="h-3 w-3" />
           }
         </button>
         <button

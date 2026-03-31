@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Sparkles, ExternalLink, RefreshCw, CheckCircle, Clock, AlertTriangle, Zap, PlusCircle, X, BookOpen, Link, Search, Pencil, Check } from 'lucide-react'
+import { Sparkles, ExternalLink, RefreshCw, CheckCircle, Clock, AlertTriangle, Zap, PlusCircle, X, BookOpen, Link, Search, Pencil, Check, Brain } from 'lucide-react'
 import NextLink from 'next/link'
 
 type GrantRow = {
@@ -12,6 +12,8 @@ type GrantRow = {
   apply_url: string | null
   funder_brief: Record<string, string | null> | null
   last_seen_at: string | null
+  url_quality_score: number | null
+  url_quality_issues: string[] | null
 }
 
 type EnrichStatus = 'idle' | 'loading' | 'done' | 'error'
@@ -37,7 +39,7 @@ export default function FunderIntelligencePage() {
     setLoading(true)
     const { data } = await createClient()
       .from('scraped_grants')
-      .select('id, title, funder, apply_url, funder_brief, last_seen_at')
+      .select('id, title, funder, apply_url, funder_brief, last_seen_at, url_quality_score, url_quality_issues')
       .eq('is_active', true)
       .not('apply_url', 'is', null)
       .order('last_seen_at', { ascending: false })
@@ -332,6 +334,16 @@ export default function FunderIntelligencePage() {
                       </div>
                     )}
 
+                    {/* URL quality warning — links to Grant Manager to fix */}
+                    {grant.url_quality_score !== null && grant.url_quality_score < 60 && (
+                      <NextLink
+                        href="/dashboard/admin/urls"
+                        className="inline-flex items-center gap-1 mt-1 text-[10px] font-semibold text-amber-600 hover:text-amber-800 transition-colors"
+                        title="URL has quality issues — click to fix in Grant Manager">
+                        <AlertTriangle className="w-3 h-3 flex-shrink-0" />
+                        Suspicious URL · fix in Grant Manager
+                      </NextLink>
+                    )}
                     {enrichMsg[grant.id] && (
                       <p className="text-xs text-red-500 mt-1">{enrichMsg[grant.id]}</p>
                     )}
