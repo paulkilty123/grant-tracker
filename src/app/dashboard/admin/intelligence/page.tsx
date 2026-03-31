@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Sparkles, ExternalLink, RefreshCw, CheckCircle, Clock, AlertTriangle, Zap, PlusCircle, X, BookOpen, Link, Search } from 'lucide-react'
+import { Sparkles, ExternalLink, RefreshCw, CheckCircle, Clock, AlertTriangle, Zap, PlusCircle, X, BookOpen, Link, Search, Pencil, Check } from 'lucide-react'
 import NextLink from 'next/link'
 
 type GrantRow = {
@@ -27,6 +27,8 @@ export default function FunderIntelligencePage() {
   const [bulkRunning, setBulkRunning] = useState(false)
   const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number } | null>(null)
   const [search, setSearch] = useState('')
+  const [editingUrl, setEditingUrl] = useState<Record<string, string | null>>({}) // grantId → draft URL or null
+  const [savingUrl, setSavingUrl] = useState<Record<string, boolean>>({})
   // Multi-source state
   const [sourcesOpen, setSourcesOpen] = useState<Record<string, boolean>>({})
   const [sources, setSources] = useState<Record<string, Source[]>>({})
@@ -63,6 +65,20 @@ export default function FunderIntelligencePage() {
       updated.splice(idx, 1)
       return { ...s, [grantId]: updated }
     })
+  }
+
+  const saveUrl = async (grantId: string) => {
+    const newUrl = (editingUrl[grantId] ?? '').trim()
+    setSavingUrl(s => ({ ...s, [grantId]: true }))
+    const { error } = await createClient()
+      .from('scraped_grants')
+      .update({ apply_url: newUrl || null })
+      .eq('id', grantId)
+    setSavingUrl(s => ({ ...s, [grantId]: false }))
+    if (!error) {
+      setGrants(gs => gs.map(g => g.id === grantId ? { ...g, apply_url: newUrl || null } : g))
+      setEditingUrl(e => ({ ...e, [grantId]: null }))
+    }
   }
 
   const enrichSingle = async (grant: GrantRow): Promise<boolean> => {
@@ -262,6 +278,54 @@ export default function FunderIntelligencePage() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-[#1C1C2E] truncate">{grant.title}</p>
                     <p className="text-xs text-[#6E6E80]">{grant.funder}</p>
+
+                    {/* URL row — show/edit apply_url */}
+                    {editingUrl[grant.id] !== undefined && editingUrl[grant.id] !== null ? (
+                      <div className="flex items-center gap-1.5 mt-1.5">
+                        <input
+                          type="url"
+                          autoFocus
+                          value={editingUrl[grant.id] ?? ''}
+                          onChange={e => setEditingUrl(u => ({ ...u, [grant.id]: e.target.value }))}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') saveUrl(grant.id)
+                            if (e.key === 'Escape') setEditingUrl(u => ({ ...u, [grant.id]: null }))
+                          }}
+                          placeholder="https://…"
+                          className="flex-1 text-xs border border-[#008080] px-2 py-1 outline-none min-w-0"
+                          style={{ borderRadius: 6 }}
+                        />
+                        <button
+                          onClick={() => saveUrl(grant.id)}
+                          disabled={savingUrl[grant.id]}
+                          className="p-1 text-white flex-shrink-0 disabled:opacity-50"
+                          style={{ backgroundColor: '#008080', borderRadius: 6 }}
+                          title="Save URL">
+                          <Check className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => setEditingUrl(u => ({ ...u, [grant.id]: null }))}
+                          className="p-1 text-[#9E9EA8] hover:text-[#6E6E80] flex-shrink-0"
+                          style={{ borderRadius: 6 }}
+                          title="Cancel">
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1 mt-1">
+                        {grant.apply_url
+                          ? <span className="text-xs text-[#9E9EA8] truncate max-w-xs">{grant.apply_url}</span>
+                          : <span className="text-xs text-[#FF7043] italic">No URL set</span>
+                        }
+                        <button
+                          onClick={() => setEditingUrl(u => ({ ...u, [grant.id]: grant.apply_url ?? '' }))}
+                          className="p-0.5 text-[#9E9EA8] hover:text-[#008080] transition-colors flex-shrink-0"
+                          title="Edit URL">
+                          <Pencil className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+
                     {enrichMsg[grant.id] && (
                       <p className="text-xs text-red-500 mt-1">{enrichMsg[grant.id]}</p>
                     )}
