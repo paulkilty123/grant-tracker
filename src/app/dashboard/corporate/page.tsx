@@ -80,10 +80,22 @@ function PartnerCard({
             {partner.company_name[0]?.toUpperCase() ?? '?'}
           </div>
 
-          {/* Left: name, programme, description, meta, themes — all stacked */}
+          {/* Left: name+themes, programme, description, meta — all stacked */}
           <div className="flex-1 min-w-0 flex flex-col gap-2">
             <div>
-              <h3 className="font-semibold text-charcoal text-base leading-snug">{partner.company_name}</h3>
+              {/* Company name + CSR theme pills on the same line */}
+              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                <h3 className="font-semibold text-charcoal text-base leading-snug flex-shrink-0">{partner.company_name}</h3>
+                {(expanded ? partner.csr_themes : partner.csr_themes.slice(0, 4)).map(t => (
+                  <span key={t} className="text-[10px] font-medium px-2.5 py-0.5 rounded-full capitalize"
+                    style={{ background: 'rgba(45,138,122,0.15)', color: '#1a5c50', border: '1px solid rgba(45,138,122,0.40)' }}>
+                    {t}
+                  </span>
+                ))}
+                {!expanded && partner.csr_themes.length > 4 && (
+                  <span className="text-[10px] text-mid">+{partner.csr_themes.length - 4} more</span>
+                )}
+              </div>
               {partner.programme_name && (
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-mid mt-0.5">{partner.programme_name}</p>
               )}
@@ -102,10 +114,9 @@ function PartnerCard({
             {(amountStr || partner.application_route || partner.geographic_focus.length > 0 || budgetStr) && (
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-mid">
                 {amountStr && <span className="font-bold text-charcoal">{amountStr}</span>}
-                {partner.application_route === 'open_application'
-                  ? <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md" style={{ background: 'rgba(45,138,122,0.12)', color: '#1f5c52', border: '1px solid rgba(45,138,122,0.30)' }}>Open now</span>
-                  : partner.application_route && <span>{APPLICATION_ROUTE_LABELS[partner.application_route] ?? partner.application_route}</span>
-                }
+                {partner.application_route && (
+                  <span>{APPLICATION_ROUTE_LABELS[partner.application_route] ?? partner.application_route}</span>
+                )}
                 {partner.geographic_focus.length > 0 && (
                   <span className="flex items-center gap-1">
                     <MapPin className="h-3 w-3 flex-shrink-0" />
@@ -114,19 +125,6 @@ function PartnerCard({
                   </span>
                 )}
                 {budgetStr && <span>{budgetStr}</span>}
-              </div>
-            )}
-
-            {partner.csr_themes.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {(expanded ? partner.csr_themes : partner.csr_themes.slice(0, 5)).map(t => (
-                  <span key={t} className="text-[10px] px-2.5 py-0.5 bg-gray-100 text-charcoal border border-gray-200 rounded-full capitalize">
-                    {t}
-                  </span>
-                ))}
-                {!expanded && partner.csr_themes.length > 5 && (
-                  <span className="text-[10px] px-2 py-0.5 text-mid">+{partner.csr_themes.length - 5} more</span>
-                )}
               </div>
             )}
           </div>
@@ -247,8 +245,8 @@ function PartnerCard({
           </div>
         )}
 
-        {/* Footer: support tags + score + actions — all on one line */}
-        <div className="flex items-center justify-between gap-3 pt-1 border-t border-[#F0EDE8]">
+        {/* Footer: support tags + actions — indented to align with body copy */}
+        <div className="flex items-center justify-between gap-3 pt-1 border-t border-[#F0EDE8] pl-[60px]">
           <div className="flex flex-wrap items-center gap-1.5 flex-1 min-w-0">
             {partner.support_types.map(t => {
               const c = SUPPORT_TYPE_COLORS[t] ?? { bg: 'rgba(107,114,128,0.08)', text: '#374151', border: 'rgba(107,114,128,0.20)' }
