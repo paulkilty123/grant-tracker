@@ -428,71 +428,99 @@ export default function CorporatePartnersPage() {
 
   return (
     <div>
-      <div className="mb-2">
+      <div className="mb-3">
         <h2 className="font-serif text-5xl font-bold text-charcoal leading-tight">Corporate Partners</h2>
-        {org && (
-          <p className="flex items-center gap-1.5 text-sm text-mid mt-1">
-            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: '#008080' }} />
-            Matched for <strong className="text-charcoal ml-1">{org.name}</strong>
-            {org.primary_location && <><span className="mx-1">·</span>{org.primary_location}</>}
-          </p>
-        )}
       </div>
 
-      {/* ── Search bar (pill style matching Find Funding) ── */}
-      <div className="flex gap-3 items-center mb-4">
-        <div
-          className="flex-1 flex items-center bg-white border border-gray-200 rounded-full h-12 overflow-hidden"
-          style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}
-        >
-          {/* Search input */}
-          <div className="flex items-center flex-1 min-w-0 px-4">
-            <Search className="h-4 w-4 text-gray-400 flex-shrink-0 mr-2.5" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="flex-1 bg-transparent outline-none text-sm text-charcoal placeholder-gray-400 min-w-0"
-              placeholder="Search companies, programmes, CSR themes…"
-            />
-          </div>
-          {/* Divider */}
-          <div className="w-px h-6 bg-gray-200 flex-shrink-0" />
-          {/* Profile toggle */}
-          <button
-            onClick={() => setProfileMode(v => !v)}
-            disabled={!org}
-            className="flex items-center gap-2 px-4 h-full flex-shrink-0 whitespace-nowrap"
-            title={org ? (profileMode ? 'Turn off profile matching' : 'Match to your profile') : 'Complete your profile to enable'}
+      {/* ── Subtitle row: text left, tabs right (matching Find Funding) ── */}
+      <div className="flex items-center justify-between mb-3">
+        {/* Left: matched-for subtitle */}
+        <div className="flex items-center gap-2 text-sm text-mid">
+          {activeView === 'matches' && org && (
+            <>
+              <span className="w-2 h-2 flex-shrink-0 rounded-full" style={{ backgroundColor: '#008080' }} />
+              Matched for <strong className="text-charcoal ml-1">{org.name}</strong>
+              {org.primary_location && <span className="text-mid ml-1">· {org.primary_location}</span>}
+            </>
+          )}
+        </div>
+        {/* Right: My Matches / Saved pill tabs */}
+        <div className="flex items-center bg-white border border-warm/60 shadow-sm overflow-hidden flex-shrink-0" style={{ borderRadius: 9999 }}>
+          {(['matches', 'saved'] as const).map((v, i) => (
+            <div key={v} className="flex items-center">
+              {i > 0 && <div className="w-px h-5 bg-warm/80" />}
+              <button
+                onClick={() => setActiveView(v)}
+                className={`px-5 py-2 text-sm font-medium transition-colors flex items-center gap-1.5 ${
+                  activeView === v
+                    ? 'text-[#FF7043] border-b-2 border-[#FF7043]'
+                    : 'border-b-2 border-transparent text-gray-500 hover:text-charcoal'
+                }`}
+              >
+                {v === 'matches' ? 'My Matches' : 'Saved'}
+                {v === 'saved' && savedIds.size > 0 && (
+                  <span className="text-xs bg-[#FF7043] text-white px-1.5 py-0.5 ml-1" style={{ borderRadius: 9999 }}>
+                    {savedIds.size}
+                  </span>
+                )}
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Search bar — only in My Matches view ── */}
+      {activeView === 'matches' && (
+        <div className="flex gap-3 items-center mb-4">
+          <div
+            className="flex-1 flex items-center bg-white border border-gray-200 rounded-full h-12 overflow-hidden"
+            style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}
           >
-            <span
-              className="relative flex-shrink-0"
-              style={{
-                width: 40, height: 22,
-                backgroundColor: profileMode && org ? '#26A69A' : '#d1d5db',
-                borderRadius: 9999, display: 'inline-flex', alignItems: 'center',
-                transition: 'background-color 0.2s',
-              }}
+            <div className="flex items-center flex-1 min-w-0 px-4">
+              <Search className="h-4 w-4 text-gray-400 flex-shrink-0 mr-2.5" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="flex-1 bg-transparent outline-none text-sm text-charcoal placeholder-gray-400 min-w-0"
+                placeholder="Search companies, programmes, CSR themes…"
+              />
+            </div>
+            <div className="w-px h-6 bg-gray-200 flex-shrink-0" />
+            <button
+              onClick={() => setProfileMode(v => !v)}
+              disabled={!org}
+              className="flex items-center gap-2 px-4 h-full flex-shrink-0 whitespace-nowrap"
+              title={org ? (profileMode ? 'Turn off profile matching' : 'Match to your profile') : 'Complete your profile to enable'}
             >
               <span
-                className="absolute bg-white transition-transform duration-200"
-                style={{ width: 16, height: 16, borderRadius: 9999, top: 3, left: 3,
-                  transform: profileMode && org ? 'translateX(18px)' : 'translateX(0)' }}
-              />
-            </span>
-            <span className={`text-[11px] font-semibold uppercase tracking-wider ${profileMode && org ? 'text-gray-600' : 'text-gray-400'}`}>
-              Profile
-            </span>
+                className="relative flex-shrink-0"
+                style={{
+                  width: 40, height: 22,
+                  backgroundColor: profileMode && org ? '#26A69A' : '#d1d5db',
+                  borderRadius: 9999, display: 'inline-flex', alignItems: 'center',
+                  transition: 'background-color 0.2s',
+                }}
+              >
+                <span
+                  className="absolute bg-white transition-transform duration-200"
+                  style={{ width: 16, height: 16, borderRadius: 9999, top: 3, left: 3,
+                    transform: profileMode && org ? 'translateX(18px)' : 'translateX(0)' }}
+                />
+              </span>
+              <span className={`text-[11px] font-semibold uppercase tracking-wider ${profileMode && org ? 'text-gray-600' : 'text-gray-400'}`}>
+                Profile
+              </span>
+            </button>
+          </div>
+          <button
+            className="h-12 px-6 text-white text-sm font-semibold flex-shrink-0 flex items-center gap-2 rounded-full"
+            style={{ backgroundColor: '#008080' }}
+          >
+            <Search size={14} strokeWidth={2} /> Search
           </button>
         </div>
-        {/* Search button */}
-        <button
-          className="h-12 px-6 text-white text-sm font-semibold flex-shrink-0 flex items-center gap-2 rounded-full"
-          style={{ backgroundColor: '#008080' }}
-        >
-          <Search size={14} strokeWidth={2} /> Search
-        </button>
-      </div>
+      )}
 
       {/* How to approach corporate partners */}
       <div className="bg-white border border-[#E8E8EC] rounded-xl mb-5 flex overflow-hidden">
@@ -503,28 +531,6 @@ export default function CorporatePartnersPage() {
             Lead with shared values, not a funding ask. Research their CSR priorities thoroughly, and look for genuine alignment between your mission and their stated goals. A warm introduction via LinkedIn or mutual contacts is far more effective than a cold approach. Think about what you can offer them — impact stories, employee engagement, co-branding — not just what you need from them. Build the relationship before the pitch.
           </p>
         </div>
-      </div>
-
-      {/* ── My Matches / Saved tabs ── */}
-      <div className="flex items-center border-b border-[#E8E8EC] mb-5">
-        {(['matches', 'saved'] as const).map(v => (
-          <button
-            key={v}
-            onClick={() => setActiveView(v)}
-            className={`px-5 py-2 text-sm font-medium transition-colors flex items-center gap-1.5 ${
-              activeView === v
-                ? 'text-[#FF7043] border-b-2 border-[#FF7043]'
-                : 'border-b-2 border-transparent text-gray-500 hover:text-charcoal'
-            }`}
-          >
-            {v === 'matches' ? 'My Matches' : 'Saved'}
-            {v === 'saved' && savedIds.size > 0 && (
-              <span className="text-xs bg-[#FF7043] text-white px-1.5 py-0.5 ml-1" style={{ borderRadius: 9999 }}>
-                {savedIds.size}
-              </span>
-            )}
-          </button>
-        ))}
       </div>
 
       {/* ── Results ── */}
