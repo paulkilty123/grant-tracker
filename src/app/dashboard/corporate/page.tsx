@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import {
   Search, Building2, ExternalLink, MapPin, Handshake,
-  SlidersHorizontal, User, CheckCircle2, ChevronDown, ChevronUp,
+  ChevronDown, ChevronUp,
   Users, Globe, Phone, Calendar, Tag,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -288,7 +288,6 @@ export default function CorporatePartnersPage() {
   const [searchQuery, setSearchQuery]     = useState('')
   const [supportFilter, setSupportFilter] = useState('all')
   const [profileMode, setProfileMode]     = useState(true)
-  const [filtersOpen, setFiltersOpen]     = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -376,98 +375,77 @@ export default function CorporatePartnersPage() {
         <h2 className="font-serif text-5xl font-bold text-charcoal leading-tight">Corporate Partners</h2>
       </div>
 
-      {/* ── Search + filter card ── */}
-      <div className="bg-white border border-[#E8E8EC] shadow-warm mb-5 rounded-xl overflow-hidden">
-        <div className="p-5">
-          <div className="flex gap-3 mb-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-mid pointer-events-none" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Search companies, programmes, CSR themes…"
-                className="w-full pl-9 pr-4 py-2.5 text-sm border border-[#E8E8EC] focus:border-forest focus:outline-none bg-[#FAFAF9] text-charcoal placeholder:text-[#9ca3af] rounded-lg"
-              />
-            </div>
-            <button
-              onClick={() => setFiltersOpen(v => !v)}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border transition-colors rounded-lg ${
-                filtersOpen
-                  ? 'bg-forest text-white border-forest'
-                  : 'bg-white text-mid border-[#E8E8EC] hover:border-forest hover:text-forest'
-              }`}
-            >
-              <SlidersHorizontal className="h-4 w-4" />
-              Filters
-            </button>
+      {/* ── Search bar (pill style matching Find Funding) ── */}
+      <div className="flex gap-3 items-center mb-4">
+        <div
+          className="flex-1 flex items-center bg-white border border-gray-200 rounded-full h-12 overflow-hidden"
+          style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}
+        >
+          {/* Search input */}
+          <div className="flex items-center flex-1 min-w-0 px-4">
+            <Search className="h-4 w-4 text-gray-400 flex-shrink-0 mr-2.5" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="flex-1 bg-transparent outline-none text-sm text-charcoal placeholder-gray-400 min-w-0"
+              placeholder="Search companies, programmes, CSR themes…"
+            />
           </div>
-
+          {/* Divider */}
+          <div className="w-px h-6 bg-gray-200 flex-shrink-0" />
           {/* Profile toggle */}
-          <div className="flex items-center gap-2.5">
-            <button
-              role="switch"
-              aria-checked={profileMode}
-              onClick={() => setProfileMode(v => !v)}
-              className={`relative inline-flex h-5 w-9 flex-shrink-0 items-center transition-colors rounded-full ${
-                profileMode && org ? 'bg-forest' : 'bg-[#D1D5DB]'
-              }`}
-              disabled={!org}
+          <button
+            onClick={() => setProfileMode(v => !v)}
+            disabled={!org}
+            className="flex items-center gap-2 px-4 h-full flex-shrink-0 whitespace-nowrap"
+            title={org ? (profileMode ? 'Turn off profile matching' : 'Match to your profile') : 'Complete your profile to enable'}
+          >
+            <span
+              className="relative flex-shrink-0"
+              style={{
+                width: 40, height: 22,
+                backgroundColor: profileMode && org ? '#26A69A' : '#d1d5db',
+                borderRadius: 9999, display: 'inline-flex', alignItems: 'center',
+                transition: 'background-color 0.2s',
+              }}
             >
-              <span className={`inline-block h-3.5 w-3.5 bg-white shadow transform transition-transform rounded-full ${
-                profileMode && org ? 'translate-x-4' : 'translate-x-1'
-              }`} />
-            </button>
-            <div className="flex items-center gap-1.5">
-              <User className="h-3.5 w-3.5 text-mid" />
-              <span className="text-xs font-semibold text-charcoal">Match to my profile</span>
-              {org ? (
-                profileMode && (
-                  <span className="flex items-center gap-0.5 text-[10px] text-forest font-semibold">
-                    <CheckCircle2 className="h-3 w-3" />
-                    {org.name}
-                  </span>
-                )
-              ) : (
-                <a href="/dashboard/profile" className="text-[10px] text-coral font-semibold hover:underline">
-                  Complete your profile to enable
-                </a>
-              )}
-            </div>
-          </div>
-
-          {filtersOpen && (
-            <div className="mt-4 border-t border-[#F0EDE8] pt-4">
-              <div className="flex items-start gap-3 px-4 py-3 bg-[#faf7f2] border border-[#e8ddd0] rounded-xl">
-                <Building2 className="h-4 w-4 text-gold flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-xs font-semibold text-charcoal">How to approach corporate partnerships</p>
-                  <p className="text-xs text-mid mt-0.5 leading-relaxed">
-                    Lead with shared values, not a funding ask. Research their CSR priorities, connect on LinkedIn, and build a relationship before pitching. Think about what you can offer them too.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
+              <span
+                className="absolute bg-white transition-transform duration-200"
+                style={{ width: 16, height: 16, borderRadius: 9999, top: 3, left: 3,
+                  transform: profileMode && org ? 'translateX(18px)' : 'translateX(0)' }}
+              />
+            </span>
+            <span className={`text-[11px] font-semibold uppercase tracking-wider ${profileMode && org ? 'text-gray-600' : 'text-gray-400'}`}>
+              Profile
+            </span>
+          </button>
         </div>
+        {/* Search button */}
+        <button
+          className="h-12 px-6 text-white text-sm font-semibold flex-shrink-0 flex items-center gap-2 rounded-full"
+          style={{ backgroundColor: '#008080' }}
+        >
+          <Search size={14} strokeWidth={2} /> Search
+        </button>
+      </div>
 
-        {/* Support type filter tabs */}
-        <div className="border-t border-[#E8E8EC]">
-          <div className="flex overflow-x-auto px-5">
-            {activeSupportTypes.map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => setSupportFilter(opt.id)}
-                className={`flex-shrink-0 px-4 py-2.5 text-xs font-semibold whitespace-nowrap border-b-2 transition-colors ${
-                  supportFilter === opt.id
-                    ? 'border-coral text-coral'
-                    : 'border-transparent text-mid hover:text-charcoal'
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
+      {/* Support type filter tabs */}
+      <div className="bg-white border border-[#E8E8EC] rounded-xl overflow-hidden mb-5">
+        <div className="flex overflow-x-auto px-2">
+          {activeSupportTypes.map(opt => (
+            <button
+              key={opt.id}
+              onClick={() => setSupportFilter(opt.id)}
+              className={`flex-shrink-0 px-4 py-2.5 text-xs font-semibold whitespace-nowrap border-b-2 transition-colors ${
+                supportFilter === opt.id
+                  ? 'border-coral text-coral'
+                  : 'border-transparent text-mid hover:text-charcoal'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
         </div>
       </div>
 
