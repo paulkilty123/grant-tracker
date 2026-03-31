@@ -62,26 +62,59 @@ function PartnerCard({
     }`}>
       <div className="p-5 flex flex-col gap-3">
 
-        {/* ── Header row: avatar / name+description / score+insight ── */}
+        {/* ── Main body: avatar / left-content / right-score ── */}
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0 w-10 h-10 bg-charcoal flex items-center justify-center text-white font-bold text-base select-none rounded-lg">
             {partner.company_name[0]?.toUpperCase() ?? '?'}
           </div>
 
-          {/* Left: name, programme, description */}
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-charcoal text-base leading-snug">{partner.company_name}</h3>
-            {partner.programme_name && (
-              <p className="text-xs text-mid leading-snug">{partner.programme_name}</p>
-            )}
+          {/* Left: name, programme, description, meta, themes — all stacked */}
+          <div className="flex-1 min-w-0 flex flex-col gap-2">
+            <div>
+              <h3 className="font-semibold text-charcoal text-base leading-snug">{partner.company_name}</h3>
+              {partner.programme_name && (
+                <p className="text-xs text-mid leading-snug">{partner.programme_name}</p>
+              )}
+            </div>
+
             {partner.description && (
-              <p className="text-sm text-mid leading-relaxed mt-1.5">
+              <p className="text-sm text-mid leading-relaxed">
                 {expanded
                   ? partner.description
                   : partner.description.length > 120
                     ? `${partner.description.slice(0, 120).trimEnd()}…`
                     : partner.description}
               </p>
+            )}
+
+            {(amountStr || partner.application_route || partner.geographic_focus.length > 0 || budgetStr) && (
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-mid">
+                {amountStr && <span><span className="font-bold text-charcoal">{amountStr}</span></span>}
+                {partner.application_route && (
+                  <span>{APPLICATION_ROUTE_LABELS[partner.application_route] ?? partner.application_route}</span>
+                )}
+                {partner.geographic_focus.length > 0 && (
+                  <span className="flex items-center gap-1">
+                    <MapPin className="h-3 w-3 flex-shrink-0" />
+                    {partner.geographic_focus.slice(0, 2).join(', ')}
+                    {partner.geographic_focus.length > 2 && ` +${partner.geographic_focus.length - 2}`}
+                  </span>
+                )}
+                {budgetStr && <span>{budgetStr}</span>}
+              </div>
+            )}
+
+            {partner.csr_themes.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {(expanded ? partner.csr_themes : partner.csr_themes.slice(0, 5)).map(t => (
+                  <span key={t} className="text-[10px] px-2 py-0.5 bg-sage/10 text-forest border border-sage/25 rounded-md capitalize">
+                    {t}
+                  </span>
+                ))}
+                {!expanded && partner.csr_themes.length > 5 && (
+                  <span className="text-[10px] px-2 py-0.5 text-mid">+{partner.csr_themes.length - 5} more</span>
+                )}
+              </div>
             )}
           </div>
 
@@ -98,40 +131,6 @@ function PartnerCard({
             </div>
           )}
         </div>
-
-        {/* Inline meta strip — only renders items that have data */}
-        {(amountStr || partner.application_route || partner.geographic_focus.length > 0) && (
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-mid">
-            {amountStr && (
-              <span><span className="font-bold text-charcoal">{amountStr}</span></span>
-            )}
-            {partner.application_route && (
-              <span>{APPLICATION_ROUTE_LABELS[partner.application_route] ?? partner.application_route}</span>
-            )}
-            {partner.geographic_focus.length > 0 && (
-              <span className="flex items-center gap-1">
-                <MapPin className="h-3 w-3 flex-shrink-0" />
-                {partner.geographic_focus.slice(0, 2).join(', ')}
-                {partner.geographic_focus.length > 2 && ` +${partner.geographic_focus.length - 2}`}
-              </span>
-            )}
-            {budgetStr && <span>{budgetStr}</span>}
-          </div>
-        )}
-
-        {/* CSR themes */}
-        {partner.csr_themes.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {(expanded ? partner.csr_themes : partner.csr_themes.slice(0, 5)).map(t => (
-              <span key={t} className="text-[10px] px-2 py-0.5 bg-sage/10 text-forest border border-sage/25 rounded-md capitalize">
-                {t}
-              </span>
-            ))}
-            {!expanded && partner.csr_themes.length > 5 && (
-              <span className="text-[10px] px-2 py-0.5 text-mid">+{partner.csr_themes.length - 5} more</span>
-            )}
-          </div>
-        )}
 
         {/* ── Expanded detail panel ── */}
         {expanded && (
