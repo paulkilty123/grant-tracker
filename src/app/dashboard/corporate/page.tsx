@@ -526,7 +526,7 @@ export default function CorporatePartnersPage() {
       <div className="bg-white border border-[#E8E8EC] rounded-xl mb-5 flex overflow-hidden">
         <div className="w-1 flex-shrink-0 bg-forest" />
         <div className="px-5 py-4">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-forest mb-1.5">Corporate Partners — how this differs from Find Funding</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-forest mb-2">Corporate Partners — how this differs from Find Funding</p>
           <p className="text-sm text-mid leading-relaxed mb-2">
             <strong className="text-charcoal">Find Funding</strong> lists grants and programmes from trusts, foundations, and public bodies — organisations that exist to fund good causes. <strong className="text-charcoal">Corporate Partners</strong> is different: these are companies with CSR budgets, employee giving programmes, or community funds. The relationship is more like a partnership than a grant application.
           </p>
