@@ -390,6 +390,13 @@ export default function CorporatePartnersPage() {
     <div>
       <div className="mb-2">
         <h2 className="font-serif text-5xl font-bold text-charcoal leading-tight">Corporate Partners</h2>
+        {org && (
+          <p className="flex items-center gap-1.5 text-sm text-mid mt-1">
+            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: '#008080' }} />
+            Matched for <strong className="text-charcoal ml-1">{org.name}</strong>
+            {org.primary_location && <><span className="mx-1">·</span>{org.primary_location}</>}
+          </p>
+        )}
       </div>
 
       {/* ── Search bar (pill style matching Find Funding) ── */}

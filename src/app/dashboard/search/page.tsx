@@ -1684,8 +1684,8 @@ export default function SearchPage() {
           {activeView === 'matches' && org && (
             <>
               <span className="w-2 h-2 flex-shrink-0 rounded-full" style={{ backgroundColor: '#008080' }} />
-              Intelligent matches for <strong className="text-charcoal">{org.name ?? 'your organisation'}</strong>
-              {org.primary_location && <span className="text-mid">· {org.primary_location}, UK</span>}
+              Matched for <strong className="text-charcoal">{org.name ?? 'your organisation'}</strong>
+              {org.primary_location && <span className="text-mid">· {org.primary_location}</span>}
             </>
           )}
           {activeView === 'matches' && !org && (
