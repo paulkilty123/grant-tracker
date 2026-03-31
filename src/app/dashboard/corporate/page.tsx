@@ -526,9 +526,12 @@ export default function CorporatePartnersPage() {
       <div className="bg-white border border-[#E8E8EC] rounded-xl mb-5 flex overflow-hidden">
         <div className="w-1 flex-shrink-0 bg-forest" />
         <div className="px-5 py-4">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-forest mb-1.5">How to approach corporate partners</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-forest mb-1.5">Corporate Partners — how this differs from Find Funding</p>
+          <p className="text-sm text-mid leading-relaxed mb-2">
+            <strong className="text-charcoal">Find Funding</strong> lists grants and programmes from trusts, foundations, and public bodies — organisations that exist to fund good causes. <strong className="text-charcoal">Corporate Partners</strong> is different: these are companies with CSR budgets, employee giving programmes, or community funds. The relationship is more like a partnership than a grant application.
+          </p>
           <p className="text-sm text-mid leading-relaxed">
-            Lead with shared values, not a funding ask. Research their CSR priorities thoroughly, and look for genuine alignment between your mission and their stated goals. A warm introduction via LinkedIn or mutual contacts is far more effective than a cold approach. Think about what you can offer them — impact stories, employee engagement, co-branding — not just what you need from them. Build the relationship before the pitch.
+            Lead with shared values, not a funding ask. Research their CSR priorities thoroughly and look for genuine alignment with your mission. A warm introduction via LinkedIn or mutual contacts is far more effective than a cold approach. Think about what you can offer them — impact stories, employee volunteering opportunities, co-branding — not just what you need from them. Build the relationship before the pitch.
           </p>
         </div>
       </div>
