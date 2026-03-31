@@ -304,17 +304,6 @@ function PartnerCard({
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-const SUPPORT_FILTER_OPTIONS = [
-  { id: 'all',            label: 'All types'      },
-  { id: 'cash_grant',     label: 'Cash grant'     },
-  { id: 'accelerator',    label: 'Accelerator'    },
-  { id: 'in_kind',        label: 'In-kind'        },
-  { id: 'tech_product',   label: 'Free tech'      },
-  { id: 'matched_giving', label: 'Matched giving' },
-  { id: 'volunteering',   label: 'Volunteering'   },
-  { id: 'pro_bono',       label: 'Pro bono'       },
-  { id: 'sponsorship',    label: 'Sponsorship'    },
-]
 
 export default function CorporatePartnersPage() {
   const [org, setOrg]               = useState<Organisation | null>(null)
@@ -323,9 +312,8 @@ export default function CorporatePartnersPage() {
   const [loading, setLoading]       = useState(true)
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
 
-  const [searchQuery, setSearchQuery]     = useState('')
-  const [supportFilter, setSupportFilter] = useState('all')
-  const [profileMode, setProfileMode]     = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [profileMode, setProfileMode] = useState(true)
 
   useEffect(() => {
     async function load() {
@@ -379,10 +367,6 @@ export default function CorporatePartnersPage() {
       )
     }
 
-    if (supportFilter !== 'all') {
-      results = results.filter(r => r.partner.support_types.includes(supportFilter))
-    }
-
     if (profileMode && org) {
       results.sort((a, b) => b.score - a.score)
     } else {
@@ -390,14 +374,9 @@ export default function CorporatePartnersPage() {
     }
 
     return results
-  }, [allResults, searchQuery, supportFilter, profileMode, org])
+  }, [allResults, searchQuery, profileMode, org])
 
   const showScore = profileMode && !!org
-
-  const activeSupportTypes = useMemo(() => {
-    const types = new Set(partners.flatMap(p => p.support_types))
-    return SUPPORT_FILTER_OPTIONS.filter(o => o.id === 'all' || types.has(o.id))
-  }, [partners])
 
   function toggleExpanded(id: string) {
     setExpandedIds(prev => {
@@ -468,22 +447,14 @@ export default function CorporatePartnersPage() {
         </button>
       </div>
 
-      {/* Support type filter tabs */}
-      <div className="bg-white border border-[#E8E8EC] rounded-xl overflow-hidden mb-5">
-        <div className="flex overflow-x-auto px-2">
-          {activeSupportTypes.map(opt => (
-            <button
-              key={opt.id}
-              onClick={() => setSupportFilter(opt.id)}
-              className={`flex-shrink-0 px-4 py-2.5 text-xs font-semibold whitespace-nowrap border-b-2 transition-colors ${
-                supportFilter === opt.id
-                  ? 'border-coral text-coral'
-                  : 'border-transparent text-mid hover:text-charcoal'
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
+      {/* How to approach corporate partners */}
+      <div className="bg-white border border-[#E8E8EC] rounded-xl mb-5 flex overflow-hidden">
+        <div className="w-1 flex-shrink-0 bg-forest" />
+        <div className="px-5 py-4">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-forest mb-1.5">How to approach corporate partners</p>
+          <p className="text-sm text-mid leading-relaxed">
+            Lead with shared values, not a funding ask. Research their CSR priorities thoroughly, and look for genuine alignment between your mission and their stated goals. A warm introduction via LinkedIn or mutual contacts is far more effective than a cold approach. Think about what you can offer them — impact stories, employee engagement, co-branding — not just what you need from them. Build the relationship before the pitch.
+          </p>
         </div>
       </div>
 
@@ -517,7 +488,7 @@ export default function CorporatePartnersPage() {
               <p className="text-sm font-semibold text-charcoal mb-1">No partners found</p>
               <p className="text-xs text-mid">Try adjusting your search or filters.</p>
               <button
-                onClick={() => { setSearchQuery(''); setSupportFilter('all') }}
+                onClick={() => setSearchQuery('')}
                 className="mt-3 text-xs text-forest font-semibold hover:underline"
               >
                 Clear filters
