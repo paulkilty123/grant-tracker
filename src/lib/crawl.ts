@@ -1710,18 +1710,36 @@ async function upsertGrants(source: string, grants: ScrapedGrant[]): Promise<Cra
 
   const now = new Date().toISOString()
 
-  // ── 1. Update existing grants (preserve is_active — do not overwrite) ──────
-  const toUpdate = valid
-    .filter(g => existingIds.has(g.external_id))
-    .map(g => ({ ...g, last_seen_at: now, is_active: true }))
-    // NOTE: is_active is included but Supabase upsert on conflict will update it.
-    // To truly preserve is_active we use a separate update that excludes it:
+  // ── 1. Update existing grants (preserve is_active and manually-edited fields) ──
+  // amount_min, amount_max, deadline, next_open_date are preserved if already set —
+  // these can be edited by the admin in Grant Manager and must not be overwritten
+  // by the crawler's scraped values (which are often null for manually-added grants).
+  const toUpdate = valid.filter(g => existingIds.has(g.external_id))
   if (toUpdate.length > 0) {
-    // Update all fields except is_active using a raw update per-batch
-    const updateRows = toUpdate.map(({ ...g }) => {
+    // Fetch current values of the manually-editable fields so we can preserve them
+    const externalIds = toUpdate.map(g => g.external_id)
+    const { data: currentRows } = await supabase
+      .from('scraped_grants')
+      .select('external_id, amount_min, amount_max, deadline, next_open_date')
+      .in('external_id', externalIds)
+    const currentByExtId = new Map(
+      (currentRows ?? []).map((r: { external_id: string; amount_min: number | null; amount_max: number | null; deadline: string | null; next_open_date: string | null }) =>
+        [r.external_id, r]
+      )
+    )
+    const updateRows = toUpdate.map(g => {
+      const current = currentByExtId.get(g.external_id)
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { is_active: _drop, ...rest } = g as typeof g & { is_active: boolean }
-      return { ...rest, last_seen_at: now }
+      return {
+        ...rest,
+        last_seen_at: now,
+        // Preserve manually-set values: only use the crawled value if the DB currently has null
+        amount_min:    current?.amount_min  ?? rest.amount_min,
+        amount_max:    current?.amount_max  ?? rest.amount_max,
+        deadline:      current?.deadline    ?? rest.deadline,
+        next_open_date: current?.next_open_date ?? (rest as Record<string, unknown>).next_open_date ?? null,
+      }
     })
     for (let i = 0; i < updateRows.length; i += 50) {
       await supabase
