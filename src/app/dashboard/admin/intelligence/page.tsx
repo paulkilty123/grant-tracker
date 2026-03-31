@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Sparkles, ExternalLink, RefreshCw, CheckCircle, Clock, AlertTriangle, Zap, PlusCircle, X, BookOpen, Link } from 'lucide-react'
+import { Sparkles, ExternalLink, RefreshCw, CheckCircle, Clock, AlertTriangle, Zap, PlusCircle, X, BookOpen, Link, Search } from 'lucide-react'
 import NextLink from 'next/link'
 
 type GrantRow = {
@@ -26,6 +26,7 @@ export default function FunderIntelligencePage() {
   const [brief, setBrief] = useState<Record<string, Record<string, string | null>>>({})
   const [bulkRunning, setBulkRunning] = useState(false)
   const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number } | null>(null)
+  const [search, setSearch] = useState('')
   // Multi-source state
   const [sourcesOpen, setSourcesOpen] = useState<Record<string, boolean>>({})
   const [sources, setSources] = useState<Record<string, Source[]>>({})
@@ -112,11 +113,19 @@ export default function FunderIntelligencePage() {
     setBulkProgress(null)
   }
 
-  const filtered = grants.filter(g =>
-    filter === 'all' ? true :
-    filter === 'enriched' ? !!g.funder_brief :
-    !g.funder_brief
-  )
+  const searchLower = search.trim().toLowerCase()
+  const filtered = grants.filter(g => {
+    const matchesFilter =
+      filter === 'all' ? true :
+      filter === 'enriched' ? !!g.funder_brief :
+      !g.funder_brief
+    if (!matchesFilter) return false
+    if (!searchLower) return true
+    return (
+      g.title.toLowerCase().includes(searchLower) ||
+      (g.funder ?? '').toLowerCase().includes(searchLower)
+    )
+  })
 
   const enrichedCount = grants.filter(g => !!g.funder_brief).length
 
@@ -185,20 +194,40 @@ export default function FunderIntelligencePage() {
         </div>
       </div>
 
-      {/* Filter tabs */}
-      <div className="flex gap-2 mb-5">
-        {(['unenriched', 'enriched', 'all'] as const).map(f => (
-          <button key={f} onClick={() => setFilter(f)}
-            className="px-4 py-2 text-sm font-semibold border transition-colors"
-            style={{
-              borderRadius: 9999,
-              backgroundColor: filter === f ? '#008080' : 'white',
-              color: filter === f ? 'white' : '#6E6E80',
-              borderColor: filter === f ? '#008080' : '#E8E8EC',
-            }}>
-            {f === 'unenriched' ? 'Needs enrichment' : f === 'enriched' ? 'Enriched' : 'All'}
-          </button>
-        ))}
+      {/* Filter tabs + search */}
+      <div className="flex items-center gap-3 mb-5">
+        <div className="flex gap-2">
+          {(['unenriched', 'enriched', 'all'] as const).map(f => (
+            <button key={f} onClick={() => setFilter(f)}
+              className="px-4 py-2 text-sm font-semibold border transition-colors"
+              style={{
+                borderRadius: 9999,
+                backgroundColor: filter === f ? '#008080' : 'white',
+                color: filter === f ? 'white' : '#6E6E80',
+                borderColor: filter === f ? '#008080' : '#E8E8EC',
+              }}>
+              {f === 'unenriched' ? 'Needs enrichment' : f === 'enriched' ? 'Enriched' : 'All'}
+            </button>
+          ))}
+        </div>
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#9E9EA8] pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Search by grant title or funder…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full pl-8 pr-3 py-2 text-sm border border-[#E8E8EC] bg-white outline-none focus:border-[#008080] transition-colors"
+            style={{ borderRadius: 9999 }}
+          />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9E9EA8] hover:text-[#6E6E80] transition-colors">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
       </div>
 
       {loading ? (
@@ -404,7 +433,9 @@ export default function FunderIntelligencePage() {
           })}
           {filtered.length === 0 && (
             <div className="text-center py-16 text-[#6E6E80] text-sm">
-              {filter === 'enriched' ? 'No enriched grants yet — start enriching!' : 'All grants have been enriched 🎉'}
+              {searchLower
+                ? `No grants matching "${search}"`
+                : filter === 'enriched' ? 'No enriched grants yet — start enriching!' : 'All grants have been enriched 🎉'}
             </div>
           )}
         </div>
