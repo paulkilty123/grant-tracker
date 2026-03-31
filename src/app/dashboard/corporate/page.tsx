@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import {
-  Search, Building2, ExternalLink, MapPin, Lightbulb,
+  Search, Building2, ExternalLink, MapPin, Lightbulb, CheckCircle2,
   ChevronDown, ChevronUp,
   Users, Globe, Phone, Calendar, Tag,
 } from 'lucide-react'
@@ -69,7 +69,7 @@ function PartnerCard({
 
   return (
     <div className={`bg-white border transition-all rounded-xl overflow-hidden ${
-      expanded ? 'border-forest/40 shadow-md' : 'border-[#E8E8EC] hover:border-[#c8d5c2] hover:shadow-sm'
+      expanded ? 'border-forest/50 shadow-md' : 'border-[#E8E8EC] hover:border-[#c8d5c2] hover:shadow-sm'
     }`}>
       <div className="p-5 flex flex-col gap-3">
 
@@ -80,10 +80,9 @@ function PartnerCard({
             {partner.company_name[0]?.toUpperCase() ?? '?'}
           </div>
 
-          {/* Left: name+themes, programme, description, meta — all stacked */}
+          {/* Left: name+themes, programme, description, meta */}
           <div className="flex-1 min-w-0 flex flex-col gap-2">
             <div>
-              {/* Company name + CSR theme pills on the same line */}
               <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
                 <h3 className="font-semibold text-charcoal text-base leading-snug flex-shrink-0">{partner.company_name}</h3>
                 {(expanded ? partner.csr_themes : partner.csr_themes.slice(0, 4)).map(t => (
@@ -101,21 +100,22 @@ function PartnerCard({
               )}
             </div>
 
+            {/* Description — line-clamp when collapsed, full when expanded */}
             {partner.description && (
-              <p className="text-sm text-mid leading-relaxed">
-                {expanded
-                  ? partner.description
-                  : partner.description.length > 120
-                    ? `${partner.description.slice(0, 120).trimEnd()}…`
-                    : partner.description}
+              <p className={`text-sm text-mid leading-relaxed ${expanded ? '' : 'line-clamp-2'}`}>
+                {partner.description}
               </p>
             )}
 
+            {/* Meta strip */}
             {(amountStr || partner.application_route || partner.geographic_focus.length > 0 || budgetStr) && (
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-mid">
                 {amountStr && <span className="font-bold text-charcoal">{amountStr}</span>}
                 {partner.application_route && (
-                  <span>{APPLICATION_ROUTE_LABELS[partner.application_route] ?? partner.application_route}</span>
+                  <span className="flex items-center gap-1">
+                    <CheckCircle2 className="h-3 w-3 flex-shrink-0 text-sage" />
+                    {APPLICATION_ROUTE_LABELS[partner.application_route] ?? partner.application_route}
+                  </span>
                 )}
                 {partner.geographic_focus.length > 0 && (
                   <span className="flex items-center gap-1">
@@ -132,13 +132,13 @@ function PartnerCard({
           {/* Right: score pill + match insight box */}
           {showScore && score > 0 && (
             <div className="flex-shrink-0 w-44">
-              {/* Split pill: label | % */}
+              {/* Split pill — hairline divider */}
               <div className="flex items-stretch rounded-lg overflow-hidden border mb-2" style={{ borderColor: band.border, backgroundColor: band.bg }}>
                 <span className="text-[9px] font-bold uppercase tracking-widest px-3 py-2 flex items-center" style={{ color: band.fg }}>{band.label}</span>
-                <div className="w-px self-stretch" style={{ backgroundColor: band.border }} />
+                <div className="w-px self-stretch opacity-40" style={{ backgroundColor: band.fg }} />
                 <span className="text-xl font-bold px-3 py-2 flex items-center" style={{ color: band.fg }}>{score}%</span>
               </div>
-              {/* Insight box — left border accent */}
+              {/* Insight box */}
               <div className="border-l-4 border-forest bg-forest/[0.06] rounded-r-lg px-3 py-2.5 flex items-start gap-1.5">
                 <Lightbulb className="h-3.5 w-3.5 text-forest flex-shrink-0 mt-0.5" />
                 <p className="text-[11px] text-forest/90 leading-snug italic">{reason}</p>
@@ -147,21 +147,23 @@ function PartnerCard({
           )}
         </div>
 
-        {/* ── Expanded detail panel ── */}
+        {/* ── Expanded drawer — tinted background ── */}
         {expanded && (
-          <div className="mt-1 pt-4 border-t border-[#F0EDE8]">
-            <div className="grid sm:grid-cols-3 gap-x-8 gap-y-4">
+          <div className="-mx-5 px-5 pt-4 pb-1 mt-1 border-t border-[#E8EDE8]" style={{ background: '#f7faf8' }}>
 
-              {/* Example recipients */}
+            {/* 2-col left (recipients + focus areas) + 1-col right (contact) */}
+            <div className="grid grid-cols-3 gap-x-6 gap-y-4 mb-4">
+
+              {/* Previous recipients */}
               {partner.example_recipients && partner.example_recipients.length > 0 && (
                 <div>
                   <div className="flex items-center gap-1.5 mb-2">
-                    <Users className="h-3.5 w-3.5 text-mid" />
+                    <Users className="h-3.5 w-3.5 text-sage" />
                     <p className="text-[9px] font-bold uppercase tracking-widest text-mid">Previous recipients</p>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {partner.example_recipients.map((r: string) => (
-                      <span key={r} className="text-[10px] px-2 py-0.5 bg-[#f5f2ed] text-charcoal border border-[#e4dfd8] rounded-md">
+                      <span key={r} className="text-xs px-2.5 py-1 bg-white text-charcoal border border-[#dde8e5] rounded-lg">
                         {r}
                       </span>
                     ))}
@@ -169,16 +171,16 @@ function PartnerCard({
                 </div>
               )}
 
-              {/* All impact sectors */}
+              {/* Focus areas */}
               {partner.impact_sectors && partner.impact_sectors.length > 0 && (
                 <div>
                   <div className="flex items-center gap-1.5 mb-2">
-                    <Tag className="h-3.5 w-3.5 text-mid" />
+                    <Tag className="h-3.5 w-3.5 text-sage" />
                     <p className="text-[9px] font-bold uppercase tracking-widest text-mid">Focus areas</p>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {partner.impact_sectors.map((s: string) => (
-                      <span key={s} className="text-[10px] px-2 py-0.5 bg-[#f0ede8] text-charcoal border border-[#e4dfd8] rounded-md capitalize">
+                      <span key={s} className="text-xs px-2.5 py-1 bg-white text-charcoal border border-[#dde8e5] rounded-lg capitalize">
                         {s}
                       </span>
                     ))}
@@ -186,66 +188,60 @@ function PartnerCard({
                 </div>
               )}
 
-              {/* Contact */}
-              {(partner.contact_role || partner.contact_url || partner.website) && (
-                <div>
-                  <div className="flex items-center gap-1.5 mb-2">
-                    <Phone className="h-3.5 w-3.5 text-mid" />
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-mid">Contact</p>
-                  </div>
-                  <div className="flex flex-col gap-1">
+              {/* Contact + geography */}
+              <div className="flex flex-col gap-3">
+                {(partner.contact_role || partner.contact_url || partner.website) && (
+                  <div>
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <Phone className="h-3.5 w-3.5 text-sage" />
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-mid">Contact</p>
+                    </div>
                     {partner.contact_role && (
-                      <p className="text-sm font-medium text-charcoal">{partner.contact_role}</p>
+                      <p className="text-xs font-semibold text-charcoal mb-1">{partner.contact_role}</p>
                     )}
                     {(partner.contact_url || partner.website) && (
-                      <a
-                        href={partner.contact_url ?? partner.website ?? '#'}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-forest hover:text-sage flex items-center gap-1"
-                      >
+                      <a href={partner.contact_url ?? partner.website ?? '#'} target="_blank" rel="noopener noreferrer"
+                        className="text-xs text-forest hover:text-sage flex items-center gap-1 font-medium">
                         <ExternalLink className="h-3 w-3" />
                         {partner.contact_url ? 'Contact page' : 'Website'}
                       </a>
                     )}
                   </div>
-                </div>
-              )}
-
-              {/* All geographies (only if > 2) */}
-              {partner.geographic_focus.length > 2 && (
-                <div>
-                  <div className="flex items-center gap-1.5 mb-2">
-                    <Globe className="h-3.5 w-3.5 text-mid" />
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-mid">All locations</p>
+                )}
+                {partner.geographic_focus.length > 2 && (
+                  <div>
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <Globe className="h-3.5 w-3.5 text-sage" />
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-mid">All locations</p>
+                    </div>
+                    <p className="text-xs text-charcoal">{partner.geographic_focus.join(', ')}</p>
                   </div>
-                  <p className="text-sm text-charcoal">{partner.geographic_focus.join(', ')}</p>
-                </div>
-              )}
+                )}
+              </div>
             </div>
 
-            {/* How to approach — full width */}
-            <div className="mt-4 px-4 py-3 bg-amber-50/60 border border-amber-200/60 rounded-lg">
-              <div className="flex items-center gap-1.5 mb-1.5">
-                <Calendar className="h-3.5 w-3.5 text-gold flex-shrink-0" />
-                <p className="text-[9px] font-bold uppercase tracking-widest text-mid">How to approach</p>
+            {/* How to approach — forest teal left-border (consistent with insight box) */}
+            <div className="border-l-4 border-forest bg-forest/[0.06] rounded-r-lg px-4 py-3 mb-4 flex items-start gap-2">
+              <Calendar className="h-3.5 w-3.5 text-forest flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-[9px] font-bold uppercase tracking-widest text-forest/70 mb-1">How to approach</p>
+                <p className="text-xs text-forest/80 leading-relaxed">
+                  {partner.application_route === 'open_application'
+                    ? 'Applications are open — apply directly via their website. Read their guidelines carefully and address their stated priorities explicitly in your application.'
+                    : partner.application_route === 'invitation_only'
+                      ? 'Invitation only. Build a relationship first — connect with their CSR or community team on LinkedIn before making any approach.'
+                      : partner.application_route === 'relationship_based'
+                        ? 'Relationship-based. Do your research on their CSR goals, find a warm introduction if possible, and lead with shared values rather than a funding ask.'
+                        : partner.application_route === 'community_fund'
+                          ? 'Community-voted fund. Check their website for when voting opens and mobilise your supporters to vote for your project.'
+                          : 'Contact their CSR or community team directly. Lead with how your mission aligns with their stated priorities.'}
+                </p>
               </div>
-              <p className="text-xs text-mid leading-relaxed">
-                {partner.application_route === 'open_application'
-                  ? 'Applications are open — apply directly via their website. Read their guidelines carefully and address their stated priorities explicitly in your application.'
-                  : partner.application_route === 'invitation_only'
-                    ? 'Invitation only. Build a relationship first — connect with their CSR or community team on LinkedIn before making any approach.'
-                    : partner.application_route === 'relationship_based'
-                      ? 'Relationship-based. Do your research on their CSR goals, find a warm introduction if possible, and lead with shared values rather than a funding ask.'
-                      : partner.application_route === 'community_fund'
-                        ? 'Community-voted fund. Check their website for when voting opens and mobilise your supporters to vote for your project.'
-                        : 'Contact their CSR or community team directly. Lead with how your mission aligns with their stated priorities.'}
-              </p>
             </div>
           </div>
         )}
 
-        {/* Footer: support tags + actions — indented to align with body copy */}
+        {/* Footer: support tags + actions */}
         <div className="flex items-center justify-between gap-3 pt-1 border-t border-[#F0EDE8] pl-[60px]">
           <div className="flex flex-wrap items-center gap-1.5 flex-1 min-w-0">
             {partner.support_types.map(t => {
@@ -258,22 +254,22 @@ function PartnerCard({
               )
             })}
           </div>
-          <div className="flex items-center gap-3 flex-shrink-0">
+          <div className="flex items-center gap-2 flex-shrink-0">
             {(partner.programme_url || partner.website || partner.contact_url) && (
               <a
                 href={partner.programme_url ?? partner.contact_url ?? partner.website ?? '#'}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-xs font-semibold text-coral hover:text-[#d45a30] transition-colors"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-coral text-coral hover:bg-coral hover:text-white transition-colors"
               >
                 Learn more <ExternalLink className="h-3 w-3" />
               </a>
             )}
             <button
               onClick={onToggle}
-              className="inline-flex items-center gap-1 text-xs font-semibold text-mid hover:text-charcoal transition-colors"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-mid hover:text-charcoal transition-colors px-2 py-1.5"
             >
-              {expanded ? <><ChevronUp className="h-3.5 w-3.5" />Less</> : <><ChevronDown className="h-3.5 w-3.5" />More</>}
+              {expanded ? <><ChevronUp className="h-4 w-4" />Less</> : <><ChevronDown className="h-4 w-4" />More</>}
             </button>
           </div>
         </div>
