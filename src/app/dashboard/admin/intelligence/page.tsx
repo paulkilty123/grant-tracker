@@ -85,6 +85,8 @@ export default function FunderIntelligencePage() {
     setEnrichStatus(s => ({ ...s, [grant.id]: 'loading' }))
     setEnrichMsg(s => ({ ...s, [grant.id]: '' }))
     const grantSources = sources[grant.id] ?? []
+    const controller = new AbortController()
+    const clientTimeout = setTimeout(() => controller.abort(), 50000) // 50s client-side safety net
     try {
       const res = await fetch('/api/admin/enrich-grant', {
         method: 'POST',
@@ -93,7 +95,9 @@ export default function FunderIntelligencePage() {
           grantId: grant.id,
           additionalSources: grantSources.filter(s => s.text.trim().length > 50 || s.url.trim().length > 5),
         }),
+        signal: controller.signal,
       })
+      clearTimeout(clientTimeout)
       const json = await res.json()
       if (!res.ok) {
         setEnrichStatus(s => ({ ...s, [grant.id]: 'error' }))
@@ -106,9 +110,11 @@ export default function FunderIntelligencePage() {
         setSourcesOpen(o => ({ ...o, [grant.id]: false }))
         return true
       }
-    } catch {
+    } catch (err) {
+      clearTimeout(clientTimeout)
+      const isTimeout = err instanceof Error && err.name === 'AbortError'
       setEnrichStatus(s => ({ ...s, [grant.id]: 'error' }))
-      setEnrichMsg(s => ({ ...s, [grant.id]: 'Network error' }))
+      setEnrichMsg(s => ({ ...s, [grant.id]: isTimeout ? 'Request timed out — try pasting the page text via Sources' : 'Network error' }))
       return false
     }
   }

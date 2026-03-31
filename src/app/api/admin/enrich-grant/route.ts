@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import Anthropic from '@anthropic-ai/sdk'
 
+export const maxDuration = 45 // seconds — requires Vercel Pro
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -14,7 +16,7 @@ const anthropic = new Anthropic({
 // Fetch page text via a simple server-side request, strip HTML tags
 async function fetchPageText(url: string): Promise<string> {
   const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 15000)
+  const timeout = setTimeout(() => controller.abort(), 8000)
   try {
     const res = await fetch(url, {
       signal: controller.signal,
@@ -93,7 +95,10 @@ export async function POST(req: NextRequest) {
   }
 
   if (sections.length === 0) {
-    return NextResponse.json({ error: 'No usable content — provide a URL that can be fetched or paste the page text' }, { status: 422 })
+    const reason = grant.apply_url
+      ? 'Could not fetch the grant URL (it may be blocking automated requests or timing out). Try adding the page text via the Sources panel.'
+      : 'No URL set and no content provided. Add a URL or paste the page text via the Sources panel.'
+    return NextResponse.json({ error: reason }, { status: 422 })
   }
 
   const combinedContent = sections.join('\n\n')
