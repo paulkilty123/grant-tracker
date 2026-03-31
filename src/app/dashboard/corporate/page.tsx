@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import {
-  Search, Building2, ExternalLink, MapPin, Handshake,
+  Search, Building2, ExternalLink, MapPin, Lightbulb,
   ChevronDown, ChevronUp,
   Users, Globe, Phone, Calendar, Tag,
 } from 'lucide-react'
@@ -24,6 +24,17 @@ function matchBand(score: number): { label: string; fg: string; bg: string; bord
   if (score >= 50) return { label: 'Good match',     fg: '#2d8a7a', bg: 'rgba(45,138,122,0.10)',  border: 'rgba(45,138,122,0.30)'  }
   if (score >= 35) return { label: 'Possible match', fg: '#b07a10', bg: 'rgba(232,160,48,0.12)',  border: 'rgba(232,160,48,0.35)'  }
   return             { label: 'Broad match',         fg: '#6b7280', bg: 'rgba(107,114,128,0.08)', border: 'rgba(107,114,128,0.25)' }
+}
+
+const SUPPORT_TYPE_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  cash_grant:     { bg: 'rgba(232,160,48,0.12)',   text: '#92650a', border: 'rgba(232,160,48,0.35)'   },
+  in_kind:        { bg: 'rgba(220,80,60,0.10)',    text: '#b94030', border: 'rgba(220,80,60,0.30)'    },
+  volunteering:   { bg: 'rgba(59,130,246,0.10)',   text: '#1d4ed8', border: 'rgba(59,130,246,0.25)'   },
+  pro_bono:       { bg: 'rgba(107,114,128,0.10)',  text: '#374151', border: 'rgba(107,114,128,0.25)'  },
+  tech_product:   { bg: 'rgba(139,92,246,0.10)',   text: '#5b21b6', border: 'rgba(139,92,246,0.25)'   },
+  matched_giving: { bg: 'rgba(31,92,82,0.10)',     text: '#1f5c52', border: 'rgba(31,92,82,0.25)'     },
+  sponsorship:    { bg: 'rgba(232,160,48,0.10)',   text: '#92650a', border: 'rgba(232,160,48,0.25)'   },
+  accelerator:    { bg: 'rgba(45,138,122,0.10)',   text: '#2d8a7a', border: 'rgba(45,138,122,0.25)'   },
 }
 
 function formatAmount(min: number | null, max: number | null): string | null {
@@ -64,7 +75,8 @@ function PartnerCard({
 
         {/* ── Main body: avatar / left-content / right-score ── */}
         <div className="flex items-start gap-3">
-          <div className="flex-shrink-0 w-10 h-10 bg-charcoal flex items-center justify-center text-white font-bold text-base select-none rounded-lg">
+          {/* Avatar — forest teal */}
+          <div className="flex-shrink-0 w-12 h-12 bg-forest flex items-center justify-center text-white font-bold text-lg select-none rounded-xl">
             {partner.company_name[0]?.toUpperCase() ?? '?'}
           </div>
 
@@ -73,7 +85,7 @@ function PartnerCard({
             <div>
               <h3 className="font-semibold text-charcoal text-base leading-snug">{partner.company_name}</h3>
               {partner.programme_name && (
-                <p className="text-xs text-mid leading-snug">{partner.programme_name}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-mid mt-0.5">{partner.programme_name}</p>
               )}
             </div>
 
@@ -89,10 +101,11 @@ function PartnerCard({
 
             {(amountStr || partner.application_route || partner.geographic_focus.length > 0 || budgetStr) && (
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-mid">
-                {amountStr && <span><span className="font-bold text-charcoal">{amountStr}</span></span>}
-                {partner.application_route && (
-                  <span>{APPLICATION_ROUTE_LABELS[partner.application_route] ?? partner.application_route}</span>
-                )}
+                {amountStr && <span className="font-bold text-charcoal">{amountStr}</span>}
+                {partner.application_route === 'open_application'
+                  ? <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md" style={{ background: 'rgba(45,138,122,0.12)', color: '#1f5c52', border: '1px solid rgba(45,138,122,0.30)' }}>Open now</span>
+                  : partner.application_route && <span>{APPLICATION_ROUTE_LABELS[partner.application_route] ?? partner.application_route}</span>
+                }
                 {partner.geographic_focus.length > 0 && (
                   <span className="flex items-center gap-1">
                     <MapPin className="h-3 w-3 flex-shrink-0" />
@@ -107,7 +120,7 @@ function PartnerCard({
             {partner.csr_themes.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
                 {(expanded ? partner.csr_themes : partner.csr_themes.slice(0, 5)).map(t => (
-                  <span key={t} className="text-[10px] px-2 py-0.5 bg-sage/10 text-forest border border-sage/25 rounded-md capitalize">
+                  <span key={t} className="text-[10px] px-2.5 py-0.5 bg-gray-100 text-charcoal border border-gray-200 rounded-full capitalize">
                     {t}
                   </span>
                 ))}
@@ -118,15 +131,19 @@ function PartnerCard({
             )}
           </div>
 
-          {/* Right: score + match insight box */}
+          {/* Right: score pill + match insight box */}
           {showScore && score > 0 && (
             <div className="flex-shrink-0 w-44">
-              <div className="text-right mb-2">
-                <p className="text-[9px] font-bold uppercase tracking-widest" style={{ color: band.fg }}>{band.label}</p>
-                <p className="text-2xl font-bold leading-tight" style={{ color: band.fg }}>{score}%</p>
+              {/* Split pill: label | % */}
+              <div className="flex items-stretch rounded-lg overflow-hidden border mb-2" style={{ borderColor: band.border, backgroundColor: band.bg }}>
+                <span className="text-[9px] font-bold uppercase tracking-widest px-3 py-2 flex items-center" style={{ color: band.fg }}>{band.label}</span>
+                <div className="w-px self-stretch" style={{ backgroundColor: band.border }} />
+                <span className="text-xl font-bold px-3 py-2 flex items-center" style={{ color: band.fg }}>{score}%</span>
               </div>
-              <div className="px-2.5 py-2 bg-forest/5 border border-forest/20 rounded-lg">
-                <p className="text-[11px] text-forest/80 leading-snug">{reason}</p>
+              {/* Insight box — left border accent */}
+              <div className="border-l-4 border-forest bg-forest/[0.06] rounded-r-lg px-3 py-2.5 flex items-start gap-1.5">
+                <Lightbulb className="h-3.5 w-3.5 text-forest flex-shrink-0 mt-0.5" />
+                <p className="text-[11px] text-forest/90 leading-snug italic">{reason}</p>
               </div>
             </div>
           )}
@@ -233,11 +250,15 @@ function PartnerCard({
         {/* Footer: support tags + score + actions — all on one line */}
         <div className="flex items-center justify-between gap-3 pt-1 border-t border-[#F0EDE8]">
           <div className="flex flex-wrap items-center gap-1.5 flex-1 min-w-0">
-            {partner.support_types.map(t => (
-              <span key={t} className="text-[9px] font-bold px-2 py-0.5 uppercase tracking-wider bg-[#f0ede8] text-charcoal border border-[#e4dfd8] rounded-md">
-                {SUPPORT_TYPE_LABELS[t] ?? t}
-              </span>
-            ))}
+            {partner.support_types.map(t => {
+              const c = SUPPORT_TYPE_COLORS[t] ?? { bg: 'rgba(107,114,128,0.08)', text: '#374151', border: 'rgba(107,114,128,0.20)' }
+              return (
+                <span key={t} className="text-[9px] font-bold px-2.5 py-1 uppercase tracking-wider rounded-lg border"
+                  style={{ backgroundColor: c.bg, color: c.text, borderColor: c.border }}>
+                  {SUPPORT_TYPE_LABELS[t] ?? t}
+                </span>
+              )
+            })}
           </div>
           <div className="flex items-center gap-3 flex-shrink-0">
             {(partner.programme_url || partner.website || partner.contact_url) && (
