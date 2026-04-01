@@ -161,6 +161,12 @@ export default function UrlAdminPage() {
   // Funder intelligence enrichment (inline, from Grant Manager)
   const [enrichingId, setEnrichingId] = useState<string | null>(null)
 
+  // Bulk enrichment
+  const [bulkEnriching, setBulkEnriching]     = useState(false)
+  const [bulkEnrichDone, setBulkEnrichDone]   = useState(0)
+  const [bulkEnrichTotal, setBulkEnrichTotal] = useState(0)
+  const [bulkEnrichLog, setBulkEnrichLog]     = useState<string[]>([])
+
   // ── Auth check ───────────────────────────────────────────────────────────────
   useEffect(() => {
     createClient().auth.getUser().then(({ data }) => {
@@ -1111,6 +1117,66 @@ export default function UrlAdminPage() {
     }
   }
 
+  // ── Bulk enrichment ──────────────────────────────────────────────────────────
+  async function bulkEnrich() {
+    if (bulkEnriching) return
+    setBulkEnriching(true)
+    setBulkEnrichDone(0)
+    setBulkEnrichLog([])
+
+    // Fetch all active grants without a funder_brief
+    const supabase = createClient()
+    const { data: targets } = await supabase
+      .from('scraped_grants')
+      .select('id, title, funder, apply_url, url_status, funder_brief, source, url_last_checked, is_invite_only')
+      .eq('is_active', true)
+      .is('funder_brief', null)
+      .not('apply_url', 'is', null)
+
+    if (!targets || targets.length === 0) {
+      setBulkEnrichLog(['Nothing to enrich — all active grants already have a funder brief.'])
+      setBulkEnriching(false)
+      return
+    }
+
+    setBulkEnrichTotal(targets.length)
+
+    let done = 0
+    for (const grant of targets) {
+      try {
+        const controller = new AbortController()
+        const timeout = setTimeout(() => controller.abort(), 50000)
+        const res = await fetch('/api/admin/enrich-grant', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ grantId: grant.id }),
+          signal: controller.signal,
+        })
+        clearTimeout(timeout)
+        if (res.ok) {
+          const { brief } = await res.json()
+          const patch = (g: Grant) => g.id === grant.id ? { ...g, funder_brief: brief } : g
+          setGrants(prev => prev.map(patch))
+          setNewGrants(prev => prev.map(g => g.id === grant.id ? { ...g, funder_brief: brief } : g))
+          setReviewGrants(prev => prev.map(g => g.id === grant.id ? { ...g, funder_brief: brief } : g))
+          setSuspiciousGrants(prev => prev.map(g => g.id === grant.id ? { ...g, funder_brief: brief } : g))
+          setBulkEnrichLog(prev => [...prev, `✓ ${grant.funder ?? ''} — ${grant.title}`])
+        } else {
+          const body = await res.json().catch(() => ({}))
+          setBulkEnrichLog(prev => [...prev, `✗ ${grant.title}: ${body.error ?? res.status}`])
+        }
+      } catch {
+        setBulkEnrichLog(prev => [...prev, `✗ ${grant.title}: timeout or network error`])
+      }
+      done++
+      setBulkEnrichDone(done)
+      // Small delay between requests to avoid hammering external sites
+      await new Promise(r => setTimeout(r, 800))
+    }
+
+    setBulkEnriching(false)
+  }
+
   // ── Reusable row actions (scraped grants only) ─────────────────────────────────
   function RowActions({ grant }: { grant: Grant }) {
     return confirmDeleteId === grant.id ? (
@@ -1487,6 +1553,51 @@ export default function UrlAdminPage() {
           ))}
         </div>
       )}
+
+      {/* Bulk enrichment panel */}
+      <div className="mb-6 rounded-xl border border-warm bg-white p-4 shadow-warm">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium text-charcoal flex items-center gap-1.5">
+              <Brain className="h-4 w-4 text-[#008080]" />
+              Bulk funder intelligence enrichment
+            </p>
+            <p className="mt-0.5 text-xs text-mid">
+              {bulkEnriching
+                ? `Enriching ${bulkEnrichDone} / ${bulkEnrichTotal}…`
+                : bulkEnrichTotal > 0 && !bulkEnriching
+                  ? `Done — processed ${bulkEnrichTotal} grants`
+                  : 'Runs Claude on every active grant missing a funder brief'}
+            </p>
+          </div>
+          <button
+            onClick={bulkEnrich}
+            disabled={bulkEnriching}
+            className="flex items-center gap-2 rounded-lg bg-[#008080] px-4 py-2 text-sm font-medium text-white hover:bg-[#006666] disabled:opacity-50 transition-colors"
+          >
+            {bulkEnriching
+              ? <><RefreshCw className="h-3.5 w-3.5 animate-spin" /> Enriching…</>
+              : <><Brain className="h-3.5 w-3.5" /> Enrich all unenriched</>}
+          </button>
+        </div>
+        {bulkEnriching && bulkEnrichTotal > 0 && (
+          <div className="mt-3">
+            <div className="h-1.5 w-full rounded-full bg-warm overflow-hidden">
+              <div
+                className="h-full rounded-full bg-[#008080] transition-all duration-300"
+                style={{ width: `${Math.round((bulkEnrichDone / bulkEnrichTotal) * 100)}%` }}
+              />
+            </div>
+          </div>
+        )}
+        {bulkEnrichLog.length > 0 && (
+          <div className="mt-3 max-h-40 overflow-y-auto rounded-lg bg-warm/40 p-3">
+            {bulkEnrichLog.map((line, i) => (
+              <p key={i} className={`text-xs font-mono ${line.startsWith('✓') ? 'text-forest' : 'text-red-500'}`}>{line}</p>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Filter tabs + search */}
       <div className="mb-4 flex flex-wrap items-center gap-2">
