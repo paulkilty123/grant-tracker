@@ -1101,8 +1101,8 @@ export default function UrlAdminPage() {
         const { brief } = await res.json()
         const patch = (g: Grant) => g.id === grant.id ? { ...g, funder_brief: brief } : g
         setGrants(prev => prev.map(patch))
-        setNewGrants(prev => prev.map(patch))
-        setReviewGrants(prev => prev.map(patch))
+        setNewGrants(prev => prev.map(g => g.id === grant.id ? { ...g, funder_brief: brief } : g))
+        setReviewGrants(prev => prev.map(g => g.id === grant.id ? { ...g, funder_brief: brief } : g))
         setSuspiciousGrants(prev => prev.map(g => g.id === grant.id ? { ...g, funder_brief: brief } : g))
       }
     } catch { /* silent — network or timeout */ } finally {
