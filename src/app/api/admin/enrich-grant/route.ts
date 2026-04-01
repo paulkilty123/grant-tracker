@@ -13,14 +13,25 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY!,
 })
 
-// Fetch page text via a simple server-side request, strip HTML tags
+// Fetch page text with realistic browser headers, strip HTML tags
 async function fetchPageText(url: string): Promise<string> {
   const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 8000)
+  const timeout = setTimeout(() => controller.abort(), 10000)
   try {
     const res = await fetch(url, {
       signal: controller.signal,
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; GrantTracker/1.0)' },
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-GB,en;q=0.9',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'none',
+        'Upgrade-Insecure-Requests': '1',
+      },
     })
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const html = await res.text()
@@ -60,6 +71,7 @@ export async function POST(req: NextRequest) {
 
   // Build primary content block
   const sections: string[] = []
+  let fetchedFromUrl = false
 
   if (pastedContent && pastedContent.trim().length > 100) {
     sections.push(`Primary source (pasted):\n---\n${pastedContent.trim().slice(0, 10000)}\n---`)
@@ -68,9 +80,10 @@ export async function POST(req: NextRequest) {
       const fetched = await fetchPageText(grant.apply_url)
       if (fetched.length >= 200) {
         sections.push(`Primary source (${grant.apply_url}):\n---\n${fetched}\n---`)
+        fetchedFromUrl = true
       }
     } catch {
-      // Primary fetch failed — will rely on additional sources if provided
+      // Primary fetch failed — will try additional sources or fall back to knowledge-based
     }
   }
 
@@ -78,12 +91,12 @@ export async function POST(req: NextRequest) {
   if (additionalSources?.length) {
     for (const src of additionalSources) {
       const heading = src.label?.trim() ? `Additional source — ${src.label}` : 'Additional source'
-      // If a URL is provided and there's no pasted text, try fetching it
       if (src.url?.trim() && (!src.text || src.text.trim().length < 50)) {
         try {
           const fetched = await fetchPageText(src.url.trim())
           if (fetched.length >= 100) {
             sections.push(`${heading} (${src.url}):\n---\n${fetched}\n---`)
+            fetchedFromUrl = true
           }
         } catch {
           // URL fetch failed — skip this source
@@ -94,25 +107,36 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // If no scraped content, fall back to knowledge-based enrichment using existing grant data
   if (sections.length === 0) {
-    const reason = grant.apply_url
-      ? 'Could not fetch the grant URL (it may be blocking automated requests or timing out). Try adding the page text via the Sources panel.'
-      : 'No URL set and no content provided. Add a URL or paste the page text via the Sources panel.'
-    return NextResponse.json({ error: reason }, { status: 422 })
+    const knownInfo = [
+      grant.description ? `Description: ${grant.description}` : null,
+      grant.eligibility_criteria ? `Eligibility: ${grant.eligibility_criteria}` : null,
+      grant.apply_url ? `Apply URL: ${grant.apply_url}` : null,
+    ].filter(Boolean).join('\n')
+
+    if (knownInfo.length > 30) {
+      sections.push(`Known grant data (from database):\n---\n${knownInfo}\n---`)
+    }
   }
 
-  const combinedContent = sections.join('\n\n')
+  // If we have absolutely nothing, return an error
+  if (sections.length === 0 && !grant.funder) {
+    return NextResponse.json({ error: 'Not enough data to generate a brief. Add a URL or paste the page text.' }, { status: 422 })
+  }
 
-  // Ask Claude to extract a structured funder brief across all sources
-  const prompt = `You are analysing content from a grant funder's website for a UK charity/CIC grant tracker tool. You may have been given content from multiple pages — use all of it to fill in as many fields as possible.
+  const combinedContent = sections.length > 0 ? sections.join('\n\n') : ''
+  const sourceNote = fetchedFromUrl
+    ? 'Content was fetched live from the funder\'s website.'
+    : 'The funder\'s website could not be fetched — use your training knowledge about this UK funder to fill in as many fields as possible, and note any uncertainty.'
+
+  const prompt = `You are analysing a UK grant funder for a charity/CIC grant tracker tool. ${sourceNote}
 
 Grant title: ${grant.title}
 Funder: ${grant.funder}
-Existing description: ${grant.description ?? 'None'}
+${combinedContent ? `\n${combinedContent}` : ''}
 
-${combinedContent}
-
-Extract a structured "funder brief" as JSON. Be concise — each field should be 1–3 sentences max. Draw from whichever source contains the relevant information. If a field isn't covered in any source, use null.
+Extract a structured "funder brief" as JSON. Be concise — each field should be 1–3 sentences max. If a field is genuinely unknown, use null.
 
 Return ONLY valid JSON in this exact shape:
 {
@@ -120,11 +144,12 @@ Return ONLY valid JSON in this exact shape:
   "priorities": "Current funding priorities or themes they care about most",
   "strong_application": "What makes a strong or successful application to this funder",
   "exclusions": "What they explicitly will NOT fund or who cannot apply",
-  "typical_award": "Typical grant size or range based on this page",
+  "typical_award": "Typical grant size or range",
   "decision_timeline": "How long decisions take, when trustees meet, or application windows",
   "how_to_apply": "Key steps in the application process",
-  "funder_tips": "Any insider tips, preferences, or advice mentioned on the page",
-  "last_enriched": "${new Date().toISOString().split('T')[0]}"
+  "funder_tips": "Any insider tips, preferences, or advice for applicants",
+  "last_enriched": "${new Date().toISOString().split('T')[0]}",
+  "source": "${fetchedFromUrl ? 'live_fetch' : 'knowledge_fallback'}"
 }`
 
   let brief: Record<string, string | null>
@@ -138,7 +163,7 @@ Return ONLY valid JSON in this exact shape:
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     if (!jsonMatch) throw new Error('No JSON in response')
     brief = JSON.parse(jsonMatch[0])
-  } catch (e) {
+  } catch {
     return NextResponse.json({ error: 'Failed to generate summary' }, { status: 500 })
   }
 
