@@ -1271,10 +1271,8 @@ export default function SearchPage() {
   }
 
   // ── Grant pool ───────────────────────────────────────────────────────────
-  // Seeds are now promoted to scraped_grants so we use the DB as single source.
-  // Fall back to including SEED_GRANTS only if the DB returns very few results
-  // (e.g. during initial setup before promote-all-seeds has been run).
-  const allGrants = scrapedGrants.length > 50 ? scrapedGrants : [...SEED_GRANTS, ...scrapedGrants]
+  // DB is the single source of truth — all seed grants have been migrated.
+  const allGrants = scrapedGrants
 
   // Sector filter now uses the fixed 12-sector taxonomy (IMPACT_SECTOR_FILTERS)
   // rather than a dynamic list derived from free-text grant.sectors[]

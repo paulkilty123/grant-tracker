@@ -73,8 +73,8 @@ export async function getUnsentAlerts(
   const scrapedGrants: GrantOpportunity[] = (scraped ?? [])
     .map(row => normaliseScraped(row as Record<string, unknown>))
 
-  // Merge seed + scraped, score everything against org profile
-  const allGrants = [...SEED_GRANTS, ...scrapedGrants]
+  // DB is the single source of truth — seed grants have been migrated
+  const allGrants = scrapedGrants
   const candidates: AlertGrant[] = []
 
   for (const grant of allGrants) {
