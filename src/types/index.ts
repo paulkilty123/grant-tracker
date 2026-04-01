@@ -187,6 +187,8 @@ export interface GrantOpportunity {
   applicantType?: 'individual' | 'organisation' | 'both'
   applyUrl: string | null
   isInviteOnly: boolean
+  /** Human-readable location tag, e.g. "London", "Leeds", "Scotland", "UK" */
+  locationTag?: string | null
   /** Human-readable date when the grant next opens (e.g. "July 2026"). Null if open now or unknown. */
   nextOpenDate?: string | null
   /** ISO date (YYYY-MM-DD) when the grant next opens — used for "opens soon" display. */

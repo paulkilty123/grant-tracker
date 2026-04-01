@@ -440,6 +440,23 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
             {grant.isInviteOnly && (
               <span className="text-[10px] font-bold uppercase tracking-wider px-3 py-1 bg-purple-50 text-purple-700" style={{ borderRadius: 9999 }}>Invite Only</span>
             )}
+            {/* Location badge */}
+            {(() => {
+              const loc = grant.locationTag
+              const isUKWide = !loc || loc.toLowerCase() === 'uk' || loc.toLowerCase() === 'uk-wide'
+              const label = isUKWide ? 'UK-wide' : loc!
+              const bg   = isUKWide ? 'rgba(31,92,82,0.08)'  : 'rgba(232,160,48,0.15)'
+              const color = isUKWide ? '#1f5c52'              : '#7a4a00'
+              return (
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-3 py-1"
+                  style={{ borderRadius: 9999, backgroundColor: bg, color }}>
+                  <svg width="9" height="11" viewBox="0 0 9 11" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4.5 0C2.015 0 0 2.015 0 4.5c0 3.375 4.5 6.5 4.5 6.5S9 7.875 9 4.5C9 2.015 6.985 0 4.5 0zm0 6.125A1.625 1.625 0 1 1 4.5 2.875a1.625 1.625 0 0 1 0 3.25z"/>
+                  </svg>
+                  {label}
+                </span>
+              )
+            })()}
           </div>
 
           {/* Title */}
@@ -857,6 +874,7 @@ function normaliseScrapedGrant(row: Record<string, unknown>): EnrichedGrant {
     deadline:             row.deadline ? String(row.deadline) : null,
     isRolling:            Boolean(row.is_rolling),
     isLocal:              Boolean(row.is_local),
+    locationTag:          row.location_tag ? String(row.location_tag) : null,
     sectors:              Array.isArray(row.sectors)              ? (row.sectors as string[])              : [],
     eligibilityCriteria:  Array.isArray(row.eligibility_criteria) ? (row.eligibility_criteria as string[]) : [],
     applyUrl:             row.apply_url ? String(row.apply_url) : null,
