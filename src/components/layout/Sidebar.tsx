@@ -74,6 +74,7 @@ const ADMIN_NAV_GROUP = {
   items: [
     { href: '/dashboard/admin',                  label: 'Grant Health',        Icon: Activity      },
     { href: '/dashboard/admin/urls',             label: 'Grant Manager',       Icon: ClipboardList },
+    { href: '/dashboard/admin/corporate',        label: 'Partner Manager',     Icon: Building2     },
     { href: '/dashboard/admin/intelligence',     label: 'Funder Intelligence', Icon: Sparkles      },
   ],
 }

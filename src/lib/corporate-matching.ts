@@ -154,9 +154,7 @@ export function computeCorporateMatches(
   }
 
   return results
-    .filter(r => r.score >= 30)
     .sort((a, b) => b.score - a.score)
-    .slice(0, 25)
 }
 
 // ── Display helpers ───────────────────────────────────────────────────────────
