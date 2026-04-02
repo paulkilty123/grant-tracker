@@ -54,11 +54,16 @@ function formatBudget(n: number | null): string | null {
 }
 
 const CATEGORY_STYLES: Record<string, { label: string; bg: string; text: string; border: string }> = {
-  grant_programme:  { label: 'Grant Programme',   bg: 'rgba(232,160,48,0.12)',   text: '#92650a', border: 'rgba(232,160,48,0.40)' },
-  pro_bono:         { label: 'Pro Bono',           bg: 'rgba(59,130,246,0.10)',   text: '#1d4ed8', border: 'rgba(59,130,246,0.30)' },
-  tech_donation:    { label: 'Tech Donation',      bg: 'rgba(139,92,246,0.10)',   text: '#5b21b6', border: 'rgba(139,92,246,0.30)' },
-  social_investment:{ label: 'Social Investment',  bg: 'rgba(45,138,122,0.12)',   text: '#1f5c52', border: 'rgba(45,138,122,0.35)' },
-  corporate_csr:    { label: 'Corporate CSR',      bg: 'rgba(107,114,128,0.10)',  text: '#374151', border: 'rgba(107,114,128,0.25)' },
+  structured_programme:    { label: 'Open Programme',         bg: 'rgba(232,160,48,0.12)',  text: '#92650a', border: 'rgba(232,160,48,0.40)' },
+  relationship_giving:     { label: 'Relationship Giving',    bg: 'rgba(107,114,128,0.10)', text: '#374151', border: 'rgba(107,114,128,0.25)' },
+  non_cash_support:        { label: 'Non-Cash Support',       bg: 'rgba(59,130,246,0.10)',  text: '#1d4ed8', border: 'rgba(59,130,246,0.30)' },
+  innovation_commissioning:{ label: 'Innovation & Commissioning', bg: 'rgba(139,92,246,0.10)', text: '#5b21b6', border: 'rgba(139,92,246,0.30)' },
+  // Legacy — kept for graceful fallback during DB migration
+  grant_programme:  { label: 'Open Programme',   bg: 'rgba(232,160,48,0.12)',   text: '#92650a', border: 'rgba(232,160,48,0.40)' },
+  pro_bono:         { label: 'Non-Cash Support',  bg: 'rgba(59,130,246,0.10)',   text: '#1d4ed8', border: 'rgba(59,130,246,0.30)' },
+  tech_donation:    { label: 'Non-Cash Support',  bg: 'rgba(59,130,246,0.10)',   text: '#1d4ed8', border: 'rgba(59,130,246,0.30)' },
+  social_investment:{ label: 'Non-Cash Support',  bg: 'rgba(59,130,246,0.10)',   text: '#1d4ed8', border: 'rgba(59,130,246,0.30)' },
+  corporate_csr:    { label: 'Relationship Giving', bg: 'rgba(107,114,128,0.10)', text: '#374151', border: 'rgba(107,114,128,0.25)' },
 }
 
 // ── Partner card ──────────────────────────────────────────────────────────────
@@ -185,7 +190,17 @@ function PartnerCard({
           {(partner.programme_url || partner.website || partner.contact_url) && (() => {
             const cat = partner.partner_brief?.category
             const url = partner.programme_url ?? partner.contact_url ?? partner.website ?? '#'
-            const label = cat === 'grant_programme' ? 'Apply →'
+            const label = cat === 'structured_programme' ? 'Apply →'
+              : cat === 'relationship_giving' ? 'Explore →'
+              : cat === 'innovation_commissioning' ? 'Partner →'
+              : cat === 'non_cash_support' ? (() => {
+                  const types = partner.support_types ?? []
+                  return types.includes('tech_product') ? 'Get tools →'
+                    : types.includes('social_investment') ? 'Get funding →'
+                    : 'Get help →'
+                })()
+              // Legacy fallbacks
+              : cat === 'grant_programme' ? 'Apply →'
               : cat === 'pro_bono' ? 'Get help →'
               : cat === 'tech_donation' ? 'Get tools →'
               : cat === 'social_investment' ? 'Get funding →'
@@ -612,7 +627,7 @@ export default function CorporatePartnersPage() {
       {/* Category filter chips */}
       {activeView === 'matches' && (
         <div className="flex flex-wrap gap-2 mb-4">
-          {([null, 'grant_programme', 'pro_bono', 'tech_donation', 'social_investment', 'corporate_csr'] as const).map(cat => {
+          {([null, 'structured_programme', 'relationship_giving', 'non_cash_support', 'innovation_commissioning'] as const).map(cat => {
             const style = cat ? CATEGORY_STYLES[cat] : null
             const label = cat ? (style?.label ?? cat) : `All (${allResults.length})`
             const isActive = categoryFilter === cat
@@ -639,12 +654,12 @@ export default function CorporatePartnersPage() {
       <div className="bg-white border border-[#E8E8EC] rounded-xl mb-5 flex overflow-hidden">
         <div className="w-1 flex-shrink-0 bg-forest" />
         <div className="px-5 py-4">
-          <p className="text-xs font-bold uppercase tracking-widest text-forest mb-2">Corporate Partners — how this differs from Find Funding</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-forest mb-2">Four ways corporates support social impact</p>
           <p className="text-sm text-mid leading-relaxed mb-2">
-            <strong className="text-charcoal">Find Funding</strong> lists grants and programmes from trusts, foundations, and public bodies — organisations that exist to fund good causes. <strong className="text-charcoal">Corporate Partners</strong> is different: these are companies with CSR budgets, employee giving programmes, or community funds. The relationship is more like a partnership than a grant application.
+            <strong className="text-charcoal">Open Programmes</strong> have defined application processes — treat them like grants and apply directly. <strong className="text-charcoal">Relationship Giving</strong> is informal and undisclosed — these companies do fund, but only once a relationship exists. There are no open calls; the door opens through trust. <strong className="text-charcoal">Non-Cash Support</strong> covers pro bono services, free tools and social investment — the value isn't a cheque, it's expertise or capital.
           </p>
           <p className="text-sm text-mid leading-relaxed">
-            Lead with shared values, not a funding ask. Research their CSR priorities thoroughly and look for genuine alignment with your mission. A warm introduction via LinkedIn or mutual contacts is far more effective than a cold approach. Think about what you can offer them — impact stories, employee volunteering opportunities, co-branding — not just what you need from them. Build the relationship before the pitch.
+            <strong className="text-charcoal">Innovation & Commissioning</strong> is different from all of the above: these companies are actively seeking social enterprises or impact ventures that solve a specific problem for them. They may commission work, sponsor accelerator programmes, or co-invest. The pitch is "we solve your challenge" — not a funding ask. A warm introduction and a compelling evidence base open more doors than any application form.
           </p>
         </div>
       </div>
