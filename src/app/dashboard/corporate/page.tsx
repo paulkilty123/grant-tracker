@@ -14,6 +14,7 @@ import {
   APPLICATION_ROUTE_LABELS,
   type CorporatePartner,
   type CorporateMatchResult,
+  type PartnerBrief,
 } from '@/lib/corporate-matching'
 import type { Organisation } from '@/types'
 
@@ -52,6 +53,14 @@ function formatBudget(n: number | null): string | null {
   return `£${(n / 1000).toFixed(0)}k / year`
 }
 
+const CATEGORY_STYLES: Record<string, { label: string; bg: string; text: string; border: string }> = {
+  grant_programme:  { label: 'Grant Programme',   bg: 'rgba(232,160,48,0.12)',   text: '#92650a', border: 'rgba(232,160,48,0.40)' },
+  pro_bono:         { label: 'Pro Bono',           bg: 'rgba(59,130,246,0.10)',   text: '#1d4ed8', border: 'rgba(59,130,246,0.30)' },
+  tech_donation:    { label: 'Tech Donation',      bg: 'rgba(139,92,246,0.10)',   text: '#5b21b6', border: 'rgba(139,92,246,0.30)' },
+  social_investment:{ label: 'Social Investment',  bg: 'rgba(45,138,122,0.12)',   text: '#1f5c52', border: 'rgba(45,138,122,0.35)' },
+  corporate_csr:    { label: 'Corporate CSR',      bg: 'rgba(107,114,128,0.10)',  text: '#374151', border: 'rgba(107,114,128,0.25)' },
+}
+
 // ── Partner card ──────────────────────────────────────────────────────────────
 
 function PartnerCard({
@@ -88,20 +97,27 @@ function PartnerCard({
         {/* Centre: tags, title, description, stats */}
         <div className="flex-1 min-w-0 p-5">
 
-          {/* CSR theme tags */}
-          {partner.csr_themes.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mb-2">
-              {(expanded ? partner.csr_themes : partner.csr_themes.slice(0, 5)).map(t => (
-                <span key={t} className="text-[10px] font-semibold px-2.5 py-0.5 uppercase tracking-wide rounded-full"
-                  style={{ background: 'rgba(45,138,122,0.13)', color: '#1a5c50', border: '1px solid rgba(45,138,122,0.35)' }}>
-                  {t}
+          {/* Category badge + CSR theme tags */}
+          <div className="flex flex-wrap gap-1.5 mb-2 items-center">
+            {partner.partner_brief?.category && (() => {
+              const cat = CATEGORY_STYLES[partner.partner_brief!.category] ?? CATEGORY_STYLES.corporate_csr
+              return (
+                <span className="text-[10px] font-bold px-2.5 py-0.5 uppercase tracking-wide rounded-md border"
+                  style={{ background: cat.bg, color: cat.text, borderColor: cat.border }}>
+                  {cat.label}
                 </span>
-              ))}
-              {!expanded && partner.csr_themes.length > 5 && (
-                <span className="text-[10px] text-mid self-center">+{partner.csr_themes.length - 5}</span>
-              )}
-            </div>
-          )}
+              )
+            })()}
+            {(expanded ? partner.csr_themes : partner.csr_themes.slice(0, 4)).map(t => (
+              <span key={t} className="text-[10px] font-semibold px-2.5 py-0.5 uppercase tracking-wide rounded-full"
+                style={{ background: 'rgba(45,138,122,0.13)', color: '#1a5c50', border: '1px solid rgba(45,138,122,0.35)' }}>
+                {t}
+              </span>
+            ))}
+            {!expanded && partner.csr_themes.length > 4 && (
+              <span className="text-[10px] text-mid self-center">+{partner.csr_themes.length - 4}</span>
+            )}
+          </div>
 
           {/* Title — serif bold, matching grant card */}
           <h3 className="font-serif text-xl font-bold text-charcoal leading-snug mb-0.5">
@@ -166,16 +182,22 @@ function PartnerCard({
 
         {/* Right: actions */}
         <div className="flex flex-col p-5 pl-3 flex-shrink-0 w-[130px] items-end gap-3">
-          {(partner.programme_url || partner.website || partner.contact_url) && (
-            <a
-              href={partner.programme_url ?? partner.contact_url ?? partner.website ?? '#'}
-              target="_blank" rel="noopener noreferrer"
-              className="text-[11px] font-bold uppercase tracking-widest transition-colors hover:opacity-70"
-              style={{ color: '#FF7043' }}
-            >
-              Visit website →
-            </a>
-          )}
+          {(partner.programme_url || partner.website || partner.contact_url) && (() => {
+            const cat = partner.partner_brief?.category
+            const url = partner.programme_url ?? partner.contact_url ?? partner.website ?? '#'
+            const label = cat === 'grant_programme' ? 'Apply →'
+              : cat === 'pro_bono' ? 'Get help →'
+              : cat === 'tech_donation' ? 'Get tools →'
+              : cat === 'social_investment' ? 'Get funding →'
+              : 'Learn more →'
+            return (
+              <a href={url} target="_blank" rel="noopener noreferrer"
+                className="text-[11px] font-bold uppercase tracking-widest transition-colors hover:opacity-70"
+                style={{ color: '#FF7043' }}>
+                {label}
+              </a>
+            )
+          })()}
           <button
             onClick={() => isSaved ? onUnsave() : onSave()}
             className={`w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold border transition-colors ${
@@ -234,8 +256,88 @@ function PartnerCard({
       {/* ── Expanded panel ── */}
       {expanded && (
         <div className="px-6 pt-4 pb-5 border-t border-[#E8E8EC]" style={{ background: '#f7faf8' }}>
-          <div className="grid grid-cols-3 gap-x-6 gap-y-4 mb-4">
+          {/* Partner Intelligence (partner_brief) — shown when available */}
+          {partner.partner_brief && (partner.partner_brief.strategic_approach || partner.partner_brief.when_to_apply) && (
+            <div className="mb-4 space-y-3">
+              {/* Strategic approach — always show first, most valuable */}
+              {partner.partner_brief.strategic_approach && (
+                <div className="border-l-4 border-forest bg-forest/[0.06] rounded-r-lg px-4 py-3">
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-forest/70 mb-1">Strategic approach</p>
+                  <p className="text-xs text-forest/85 leading-relaxed">{partner.partner_brief.strategic_approach}</p>
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-3">
+                {partner.partner_brief.when_to_apply && (
+                  <div className="bg-white rounded-lg border border-[#e2ece9] px-3.5 py-2.5">
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-mid mb-1">When to apply</p>
+                    <p className="text-xs text-charcoal leading-relaxed">{partner.partner_brief.when_to_apply}</p>
+                  </div>
+                )}
+                {partner.partner_brief.how_competitive && (
+                  <div className="bg-white rounded-lg border border-[#e2ece9] px-3.5 py-2.5">
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-mid mb-1">How competitive</p>
+                    <p className="text-xs text-charcoal leading-relaxed">{partner.partner_brief.how_competitive}</p>
+                  </div>
+                )}
+                {partner.partner_brief.what_they_fund && (
+                  <div className="bg-white rounded-lg border border-[#e2ece9] px-3.5 py-2.5">
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-mid mb-1">What they fund</p>
+                    <p className="text-xs text-charcoal leading-relaxed">{partner.partner_brief.what_they_fund}</p>
+                  </div>
+                )}
+                {partner.partner_brief.what_they_dont_fund && (
+                  <div className="bg-white rounded-lg border border-[#e2ece9] px-3.5 py-2.5">
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-mid mb-1">What they don&apos;t fund</p>
+                    <p className="text-xs text-charcoal leading-relaxed">{partner.partner_brief.what_they_dont_fund}</p>
+                  </div>
+                )}
+                {partner.partner_brief.typical_timeline && (
+                  <div className="bg-white rounded-lg border border-[#e2ece9] px-3.5 py-2.5">
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-mid mb-1">Typical timeline</p>
+                    <p className="text-xs text-charcoal leading-relaxed">{partner.partner_brief.typical_timeline}</p>
+                  </div>
+                )}
+                {partner.partner_brief.key_facts && partner.partner_brief.key_facts.length > 0 && (
+                  <div className="bg-white rounded-lg border border-[#e2ece9] px-3.5 py-2.5">
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-mid mb-1.5">Key facts</p>
+                    <ul className="space-y-1">
+                      {partner.partner_brief.key_facts.map((f, i) => (
+                        <li key={i} className="text-xs text-charcoal flex items-start gap-1.5">
+                          <span className="text-forest mt-0.5 flex-shrink-0">•</span>{f}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
+          {/* Fallback: show generic approach text when no partner_brief */}
+          {(!partner.partner_brief?.strategic_approach && !partner.partner_brief?.when_to_apply) && (
+            <div className="border-l-4 border-forest bg-forest/[0.06] rounded-r-lg px-4 py-3 mb-4 flex items-start gap-2">
+              <Calendar className="h-3.5 w-3.5 text-forest flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-[9px] font-bold uppercase tracking-widest text-forest/70 mb-1">How to approach</p>
+                <p className="text-xs text-forest/80 leading-relaxed">
+                  {partner.application_route === 'open_application'
+                    ? 'Applications are open — apply directly via their website. Read their guidelines and address their stated priorities explicitly in your application.'
+                    : partner.application_route === 'invitation_only'
+                      ? 'Invitation only. Build a relationship first — connect with their CSR or community team on LinkedIn before making any approach.'
+                      : partner.application_route === 'relationship_based'
+                        ? 'Relationship-based. Do your research on their CSR goals, find a warm introduction if possible, and lead with shared values rather than a funding ask.'
+                        : partner.application_route === 'community_fund'
+                          ? 'Community-voted fund. Check their website for when voting opens and mobilise your supporters to vote for your project.'
+                          : partner.application_route === 'formal_programme'
+                            ? 'Structured programme with a formal application process. Check their website for open rounds — cycles are typically annual.'
+                            : 'Contact their CSR or community team directly. Lead with how your mission aligns with their stated priorities.'}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Recipients + Focus areas + Contact */}
+          <div className="grid grid-cols-3 gap-x-6 gap-y-4">
             {partner.example_recipients && partner.example_recipients.length > 0 && (
               <div>
                 <div className="flex items-center gap-1.5 mb-2">
@@ -249,7 +351,6 @@ function PartnerCard({
                 </div>
               </div>
             )}
-
             {partner.impact_sectors && partner.impact_sectors.length > 0 && (
               <div>
                 <div className="flex items-center gap-1.5 mb-2">
@@ -258,12 +359,11 @@ function PartnerCard({
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {partner.impact_sectors.map((s: string) => (
-                    <span key={s} className="text-xs px-2.5 py-1 bg-white text-charcoal border border-[#dde8e5] rounded-lg capitalize">{s}</span>
+                    <span key={s} className="text-xs px-2.5 py-1 bg-white text-charcoal border border-[#dde8e5] rounded-lg capitalize">{s.replace(/_/g, ' ')}</span>
                   ))}
                 </div>
               </div>
             )}
-
             <div className="flex flex-col gap-3">
               {(partner.contact_role || partner.contact_url || partner.website) && (
                 <div>
@@ -272,42 +372,24 @@ function PartnerCard({
                     <p className="text-[9px] font-bold uppercase tracking-widest text-mid">Contact</p>
                   </div>
                   {partner.contact_role && <p className="text-xs font-semibold text-charcoal mb-1">{partner.contact_role}</p>}
-                  {(partner.contact_url || partner.website) && (
-                    <a href={partner.contact_url ?? partner.website ?? '#'} target="_blank" rel="noopener noreferrer"
+                  {(partner.programme_url || partner.contact_url || partner.website) && (
+                    <a href={partner.programme_url ?? partner.contact_url ?? partner.website ?? '#'} target="_blank" rel="noopener noreferrer"
                       className="text-xs text-forest hover:text-sage flex items-center gap-1 font-medium">
-                      <ExternalLink className="h-3 w-3" />{partner.contact_url ? 'Contact page' : 'Website'}
+                      <ExternalLink className="h-3 w-3" />
+                      {partner.programme_url ? 'Programme page' : partner.contact_url ? 'Contact page' : 'Website'}
                     </a>
                   )}
                 </div>
               )}
-              {partner.geographic_focus.length > 2 && (
+              {partner.geographic_focus.length > 0 && (
                 <div>
                   <div className="flex items-center gap-1.5 mb-1">
                     <Globe className="h-3.5 w-3.5 text-sage" />
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-mid">All locations</p>
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-mid">Coverage</p>
                   </div>
                   <p className="text-xs text-charcoal">{partner.geographic_focus.join(', ')}</p>
                 </div>
               )}
-            </div>
-          </div>
-
-          {/* How to approach */}
-          <div className="border-l-4 border-forest bg-forest/[0.06] rounded-r-lg px-4 py-3 flex items-start gap-2">
-            <Calendar className="h-3.5 w-3.5 text-forest flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="text-[9px] font-bold uppercase tracking-widest text-forest/70 mb-1">How to approach</p>
-              <p className="text-xs text-forest/80 leading-relaxed">
-                {partner.application_route === 'open_application'
-                  ? 'Applications are open — apply directly via their website. Read their guidelines carefully and address their stated priorities explicitly in your application.'
-                  : partner.application_route === 'invitation_only'
-                    ? 'Invitation only. Build a relationship first — connect with their CSR or community team on LinkedIn before making any approach.'
-                    : partner.application_route === 'relationship_based'
-                      ? 'Relationship-based. Do your research on their CSR goals, find a warm introduction if possible, and lead with shared values rather than a funding ask.'
-                      : partner.application_route === 'community_fund'
-                        ? 'Community-voted fund. Check their website for when voting opens and mobilise your supporters to vote for your project.'
-                        : 'Contact their CSR or community team directly. Lead with how your mission aligns with their stated priorities.'}
-              </p>
             </div>
           </div>
         </div>
@@ -331,6 +413,7 @@ export default function CorporatePartnersPage() {
   const [profileMode, setProfileMode] = useState(true)
   const [activeView, setActiveView] = useState<'matches' | 'saved'>('matches')
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
+  const [categoryFilter, setCategoryFilter] = useState<string | null>(null)
 
   // Load saved partners from localStorage
   useEffect(() => {
@@ -389,6 +472,10 @@ export default function CorporatePartnersPage() {
   const displayResults = useMemo(() => {
     let results = [...allResults]
 
+    if (categoryFilter) {
+      results = results.filter(r => r.partner.partner_brief?.category === categoryFilter)
+    }
+
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase()
       results = results.filter(r =>
@@ -406,7 +493,7 @@ export default function CorporatePartnersPage() {
     }
 
     return results
-  }, [allResults, searchQuery, profileMode, org])
+  }, [allResults, searchQuery, profileMode, org, categoryFilter])
 
   const showScore = profileMode && !!org
 
@@ -519,6 +606,32 @@ export default function CorporatePartnersPage() {
           >
             <Search size={14} strokeWidth={2} /> Search
           </button>
+        </div>
+      )}
+
+      {/* Category filter chips */}
+      {activeView === 'matches' && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          {([null, 'grant_programme', 'pro_bono', 'tech_donation', 'social_investment', 'corporate_csr'] as const).map(cat => {
+            const style = cat ? CATEGORY_STYLES[cat] : null
+            const label = cat ? (style?.label ?? cat) : `All (${allResults.length})`
+            const isActive = categoryFilter === cat
+            return (
+              <button
+                key={cat ?? 'all'}
+                onClick={() => setCategoryFilter(cat)}
+                className="text-xs px-3.5 py-1.5 rounded-lg border font-semibold transition-colors"
+                style={isActive && style
+                  ? { background: style.bg, color: style.text, borderColor: style.border }
+                  : isActive
+                    ? { background: 'rgba(31,92,82,0.10)', color: '#1f5c52', borderColor: 'rgba(31,92,82,0.30)' }
+                    : { background: 'white', color: '#6b7280', borderColor: '#e5e7eb' }
+                }
+              >
+                {label}
+              </button>
+            )
+          })}
         </div>
       )}
 

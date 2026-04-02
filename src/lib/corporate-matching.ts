@@ -2,6 +2,17 @@ import type { Organisation, ImpactSector } from '@/types'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
+export interface PartnerBrief {
+  category: 'grant_programme' | 'pro_bono' | 'tech_donation' | 'social_investment' | 'corporate_csr'
+  when_to_apply?: string
+  how_competitive?: string
+  what_they_fund?: string
+  what_they_dont_fund?: string
+  strategic_approach?: string
+  typical_timeline?: string
+  key_facts?: string[]
+}
+
 export interface CorporatePartner {
   id: string
   company_name: string
@@ -23,6 +34,7 @@ export interface CorporatePartner {
   contact_role: string | null
   contact_url: string | null
   is_active: boolean
+  partner_brief: PartnerBrief | null
   created_at: string | null
 }
 
@@ -139,15 +151,52 @@ export function computeCorporateMatches(
 
     score = Math.min(100, score)
 
-    // ── Build reason ───────────────────────────────────────────────────────
+    // ── Build reason (specific + actionable) ──────────────────────────────
+    const category = partner.partner_brief?.category ?? 'corporate_csr'
+    const progName = partner.programme_name ?? partner.company_name
     let reason: string
+
     if (matched.length > 0) {
-      const sectorNames = matched.slice(0, 2).join(' and ')
-      reason = `Your work in ${sectorNames} aligns with their CSR priorities.`
+      const sectorLabel = matched[0].replace(/_/g, ' ')
+      const amountStr = partner.amount_max
+        ? ` (up to £${partner.amount_max >= 1_000_000 ? (partner.amount_max / 1_000_000).toFixed(1) + 'm' : (partner.amount_max / 1_000).toFixed(0) + 'k'})`
+        : partner.amount_min
+          ? ` (from £${(partner.amount_min / 1_000).toFixed(0)}k)`
+          : ''
+
+      if (category === 'grant_programme') {
+        const route = partner.application_route
+        const routeStr = route === 'open_application' ? 'open applications'
+          : route === 'community_fund' ? 'a community vote'
+          : route === 'formal_programme' ? 'a formal application process'
+          : 'an application process'
+        reason = `${progName} awards grants${amountStr} via ${routeStr}. Your work in ${sectorLabel} sits within their stated funding priorities.`
+      } else if (category === 'pro_bono') {
+        reason = `${progName} provides free professional support to organisations working on ${sectorLabel}. A strong fit — lead with your specific capacity need when approaching them.`
+      } else if (category === 'tech_donation') {
+        const supportStr = (partner.support_types ?? []).includes('tech_product') ? 'free or heavily discounted tools' : 'tech support'
+        reason = `${partner.company_name} offers ${supportStr} to charities and non-profits. Your ${sectorLabel} work makes you eligible — this is a quick win worth pursuing first.`
+      } else if (category === 'social_investment') {
+        reason = `${partner.company_name} provides social investment and loans to organisations like yours. If you need growth capital beyond grants, they understand the sector.`
+      } else {
+        reason = `${progName}'s CSR focus on ${sectorLabel} aligns with your work${amountStr}. ${partner.application_route === 'relationship_based' ? 'Build a relationship before making a formal approach.' : 'Check their website for current programme timelines.'}`
+      }
     } else if (themeHits > 0) {
-      reason = 'Their CSR themes match your focus areas.'
+      if (category === 'tech_donation') {
+        reason = `${partner.company_name} offers free tools to eligible charities — straightforward to access and immediately useful for your operations.`
+      } else if (category === 'pro_bono') {
+        reason = `${progName} may be able to provide free professional support. Check their eligibility criteria and current capacity.`
+      } else {
+        reason = `${progName}'s broader CSR themes have some overlap with your focus — worth reviewing their current programme priorities before approaching.`
+      }
     } else {
-      reason = 'Potential partnership based on your organisation type.'
+      if (category === 'tech_donation') {
+        reason = `${partner.company_name} offers free tech tools to registered charities — check your eligibility and apply directly.`
+      } else if (category === 'pro_bono') {
+        reason = `${progName} offers free professional services — review their eligibility criteria to see if your organisation qualifies.`
+      } else {
+        reason = `Limited direct sector overlap, but ${partner.company_name}'s programme may still be worth exploring if your work touches their CSR priorities.`
+      }
     }
 
     results.push({ partner, score, reason, matchedSectors })
@@ -158,6 +207,15 @@ export function computeCorporateMatches(
 }
 
 // ── Display helpers ───────────────────────────────────────────────────────────
+
+export const APPLICATION_ROUTE_LABELS: Record<string, string> = {
+  open_application:  'Open Application',
+  invitation_only:   'Invite Only',
+  relationship_based:'Relationship-Based',
+  community_fund:    'Community Vote',
+  formal_programme:  'Formal Programme',
+  unknown:           'Unknown',
+}
 
 export const SUPPORT_TYPE_LABELS: Record<string, string> = {
   cash_grant:       'Cash grant',
@@ -171,10 +229,3 @@ export const SUPPORT_TYPE_LABELS: Record<string, string> = {
   sponsorship:      'Sponsorship',
 }
 
-export const APPLICATION_ROUTE_LABELS: Record<string, string> = {
-  open_application:  'Open applications',
-  invitation_only:   'Invitation only',
-  relationship_based:'Approach directly',
-  formal_programme:  'Formal programme',
-  community_fund:    'Community vote',
-}
