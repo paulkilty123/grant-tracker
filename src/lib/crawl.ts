@@ -411,7 +411,18 @@ async function crawlGLA(): Promise<CrawlResult> {
   const URL    = 'https://www.london.gov.uk/programmes-strategies/search-funding'
 
   try {
-    const html  = await fetchHtml(URL)
+    // london.gov.uk returns 403 to generic bots — use a realistic browser UA
+    const glaRes = await fetch(URL, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-GB,en;q=0.9',
+        'Referer': 'https://www.google.com/',
+      },
+      signal: AbortSignal.timeout(20_000),
+    })
+    if (!glaRes.ok) throw new Error(`${URL} returned ${glaRes.status}`)
+    const html  = await glaRes.text()
     const root  = parseHTML(html)
     // Each grant card has class resource_teaser (among others)
     const cards = root.querySelectorAll('.resource_teaser')
@@ -1653,7 +1664,8 @@ function sanitiseGrant(g: ScrapedGrant): ScrapedGrant | null {
     try { new URL(url) } catch { return null }
 
     // Reject obviously truncated URLs — ends with common word-break chars
-    if (/[-/=?&_]$/.test(url)) return null
+    // Note: trailing slash is intentionally excluded — many valid grant URLs end with /
+    if (/[-=?&_]$/.test(url)) return null
 
     // Reject impossibly short URLs (e.g. "https://x.co" without a path is fine,
     // but "https://gov.uk/guidance/community-" is truncated)
