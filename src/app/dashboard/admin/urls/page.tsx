@@ -105,6 +105,9 @@ export default function UrlAdminPage() {
   const [editingId, setEditingId]   = useState<string | null>(null)
   const [editUrl, setEditUrl]       = useState('')
   const [saving, setSaving]         = useState(false)
+  const [editingTitleId, setEditingTitleId] = useState<string | null>(null)
+  const [editTitleValue, setEditTitleValue] = useState('')
+  const [savingTitle, setSavingTitle]       = useState(false)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [selectedIds, setSelectedIds]         = useState<Set<string>>(new Set())
   const [batchDeleting, setBatchDeleting]     = useState(false)
@@ -618,6 +621,21 @@ export default function UrlAdminPage() {
     setEditingId(null)
     setSaving(false)
     await loadStats()
+  }
+
+  // ── Save edited title ─────────────────────────────────────────────────────────
+  async function saveTitle(id: string) {
+    const val = editTitleValue.trim()
+    if (!val) return
+    setSavingTitle(true)
+    await updateGrant(id, { title: val })
+    setGrants(prev => prev.map(g => g.id === id ? { ...g, title: val } : g))
+    setCategoryGrants(prev => prev.map(g => g.id === id ? { ...g, title: val } : g))
+    setNewGrants(prev => prev.map(g => g.id === id ? { ...g, title: val } : g))
+    setReviewGrants(prev => prev.map(g => g.id === id ? { ...g, title: val } : g))
+    setSuspiciousGrants(prev => prev.map(g => g.id === id ? { ...g, title: val } : g))
+    setEditingTitleId(null)
+    setSavingTitle(false)
   }
 
   // ── Mark dead manually ────────────────────────────────────────────────────────
@@ -1717,7 +1735,39 @@ export default function UrlAdminPage() {
 
                               {/* Title + funder + source badge */}
                               <td className="px-5 py-3 max-w-[220px]">
-                                <p className="font-medium text-charcoal leading-snug line-clamp-2">{grant.title}</p>
+                                {editingTitleId === grant.id ? (
+                                  <div className="flex items-center gap-1 mb-0.5">
+                                    <input
+                                      autoFocus
+                                      type="text"
+                                      value={editTitleValue}
+                                      onChange={e => setEditTitleValue(e.target.value)}
+                                      onKeyDown={e => {
+                                        if (e.key === 'Enter') saveTitle(grant.id)
+                                        if (e.key === 'Escape') setEditingTitleId(null)
+                                      }}
+                                      className="flex-1 min-w-0 rounded-lg border border-sage px-2 py-1 text-xs font-medium focus:border-forest focus:outline-none"
+                                    />
+                                    <button onClick={() => saveTitle(grant.id)} disabled={savingTitle}
+                                      className="flex-shrink-0 rounded-full bg-forest p-1 text-white disabled:opacity-50">
+                                      <Check className="h-3 w-3" />
+                                    </button>
+                                    <button onClick={() => setEditingTitleId(null)}
+                                      className="flex-shrink-0 rounded-full border border-warm p-1 text-mid hover:text-charcoal">
+                                      <X className="h-3 w-3" />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-start gap-1 group">
+                                    <p className="font-medium text-charcoal leading-snug line-clamp-2 flex-1">{grant.title}</p>
+                                    <button
+                                      onClick={() => { setEditingTitleId(grant.id); setEditTitleValue(grant.title) }}
+                                      className="flex-shrink-0 mt-0.5 p-0.5 text-mid opacity-0 group-hover:opacity-100 hover:text-forest transition-all"
+                                      title="Edit title">
+                                      <Pencil className="h-3 w-3" />
+                                    </button>
+                                  </div>
+                                )}
                                 <p className="text-xs text-mid mt-0.5">{grant.funder ?? '—'}</p>
                                 <span className={`inline-block mt-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
                                   grant.is_seed
