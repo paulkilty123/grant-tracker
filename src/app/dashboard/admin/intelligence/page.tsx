@@ -31,6 +31,8 @@ export default function FunderIntelligencePage() {
   const [search, setSearch] = useState('')
   const [editingUrl, setEditingUrl] = useState<Record<string, string | null>>({}) // grantId → draft URL or null
   const [savingUrl, setSavingUrl] = useState<Record<string, boolean>>({})
+  const [editingTitle, setEditingTitle] = useState<Record<string, string | null>>({}) // grantId → draft title or null
+  const [savingTitle, setSavingTitle] = useState<Record<string, boolean>>({})
   // Multi-source state
   const [sourcesOpen, setSourcesOpen] = useState<Record<string, boolean>>({})
   const [sources, setSources] = useState<Record<string, Source[]>>({})
@@ -80,6 +82,21 @@ export default function FunderIntelligencePage() {
     if (!error) {
       setGrants(gs => gs.map(g => g.id === grantId ? { ...g, apply_url: newUrl || null } : g))
       setEditingUrl(e => ({ ...e, [grantId]: null }))
+    }
+  }
+
+  const saveTitle = async (grantId: string) => {
+    const newTitle = (editingTitle[grantId] ?? '').trim()
+    if (!newTitle) return
+    setSavingTitle(s => ({ ...s, [grantId]: true }))
+    const { error } = await createClient()
+      .from('scraped_grants')
+      .update({ title: newTitle })
+      .eq('id', grantId)
+    setSavingTitle(s => ({ ...s, [grantId]: false }))
+    if (!error) {
+      setGrants(gs => gs.map(g => g.id === grantId ? { ...g, title: newTitle } : g))
+      setEditingTitle(e => ({ ...e, [grantId]: null }))
     }
   }
 
@@ -288,7 +305,48 @@ export default function FunderIntelligencePage() {
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-[#1C1C2E] truncate">{grant.title}</p>
+                    {/* Title — editable */}
+                    {editingTitle[grant.id] !== undefined && editingTitle[grant.id] !== null ? (
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <input
+                          type="text"
+                          autoFocus
+                          value={editingTitle[grant.id] ?? ''}
+                          onChange={e => setEditingTitle(t => ({ ...t, [grant.id]: e.target.value }))}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') saveTitle(grant.id)
+                            if (e.key === 'Escape') setEditingTitle(t => ({ ...t, [grant.id]: null }))
+                          }}
+                          className="flex-1 text-sm font-semibold border border-[#008080] px-2 py-0.5 outline-none min-w-0"
+                          style={{ borderRadius: 6 }}
+                        />
+                        <button
+                          onClick={() => saveTitle(grant.id)}
+                          disabled={savingTitle[grant.id]}
+                          className="p-1 text-white flex-shrink-0 disabled:opacity-50"
+                          style={{ backgroundColor: '#008080', borderRadius: 6 }}
+                          title="Save title">
+                          <Check className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => setEditingTitle(t => ({ ...t, [grant.id]: null }))}
+                          className="p-1 text-[#9E9EA8] hover:text-[#6E6E80] flex-shrink-0"
+                          style={{ borderRadius: 6 }}
+                          title="Cancel">
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1 group">
+                        <p className="text-sm font-semibold text-[#1C1C2E] truncate">{grant.title}</p>
+                        <button
+                          onClick={() => setEditingTitle(t => ({ ...t, [grant.id]: grant.title }))}
+                          className="p-0.5 text-[#9E9EA8] hover:text-[#008080] transition-colors flex-shrink-0 opacity-0 group-hover:opacity-100"
+                          title="Edit title">
+                          <Pencil className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
                     <p className="text-xs text-[#6E6E80]">{grant.funder}</p>
 
                     {/* URL row — show/edit apply_url */}
