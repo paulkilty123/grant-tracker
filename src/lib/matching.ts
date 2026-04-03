@@ -391,6 +391,25 @@ export function computeMatchScore(
       }
     }
 
+    // ── Opposing beneficiary conflict ─────────────────────────────────────
+    // Grants for older people and grants for young people serve mutually
+    // exclusive audiences. Penalise when the grant targets one group and the
+    // org's profile exclusively targets the other.
+    const grantForOlder  = grantImpactSectors.includes('older_people')
+    const grantForYoung  = grantImpactSectors.includes('young_people')
+    const orgHasOlder    = orgImpactSectors.includes('older_people')
+    const orgHasYoung    = orgImpactSectors.includes('young_people')
+
+    if (grantForOlder && !orgHasOlder && orgHasYoung) {
+      themesScore = Math.min(themesScore, 8)
+      primaryDomainMismatch = true
+      reasons.push('Grant targets older people — check if relevant to your beneficiaries')
+    } else if (grantForYoung && !orgHasYoung && orgHasOlder) {
+      themesScore = Math.min(themesScore, 8)
+      primaryDomainMismatch = true
+      reasons.push('Grant targets young people — check if relevant to your beneficiaries')
+    }
+
     if (intersection.length > 0 && !primaryDomainMismatch) {
       reasons.push(`Sector match: ${intersection.join(', ')}`)
     }
