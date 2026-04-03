@@ -122,7 +122,11 @@ export default function FunderIntelligencePage() {
   }
 
   const enrichAll = async () => {
-    const unenriched = grants.filter(g => !g.funder_brief && enrichStatus[g.id] !== 'done')
+    // Skip grants that already have AI-enriched text fields (what_they_fund or priorities).
+    // Grants with only 360Giving award_history data (but no AI text) should still be enriched.
+    const hasAiContent = (fb: Record<string, unknown> | null) =>
+      fb && (fb.what_they_fund || fb.priorities || fb.focuses_on || fb.strong_application)
+    const unenriched = grants.filter(g => !hasAiContent(g.funder_brief as Record<string, unknown> | null) && enrichStatus[g.id] !== 'done')
     if (unenriched.length === 0) return
     setBulkRunning(true)
     setBulkProgress({ done: 0, total: unenriched.length })
