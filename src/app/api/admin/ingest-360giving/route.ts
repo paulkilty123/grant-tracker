@@ -144,7 +144,7 @@ async function fetchPublisherStats(): Promise<PublisherStats[]> {
     const prefix = entry.publisher?.prefix?.toLowerCase()
     if (!prefix) continue
     // Only process priority publishers
-    if (![...PRIORITY_PREFIXES].map(p => p.toLowerCase()).includes(prefix)) continue
+    if (!Array.from(PRIORITY_PREFIXES).map(p => p.toLowerCase()).includes(prefix)) continue
 
     const agg = entry.datagetter_aggregates
     const gbp = agg?.currencies?.GBP
