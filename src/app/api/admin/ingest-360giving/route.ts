@@ -1,34 +1,20 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /api/admin/ingest-360giving
 //
-// Fetches open grants data from the 360Giving registry and uses it to:
-//   1. Enrich funder_brief on existing grants with real award history
-//   2. Create new catalogue entries for funders not yet covered
+// Reads the 360Giving daily status feed (store.data.threesixtygiving.org/reports/daily_status.json)
+// which contains aggregate award stats (count, min/max/total amounts, years) for every
+// publisher dataset — no per-file downloading required.
 //
-// 360Giving publishes awarded-grant datasets from 200+ UK funders.
-// This is retrospective data (past awards), so we use it for:
-//   - Funder intelligence (typical award size, timing, sectors funded)
-//   - Discovering funders not yet in our catalogue
-//   - Validating and enriching existing grant descriptions
+// Uses this to:
+//   1. Enrich funder_brief on existing grants with real award history
+//   2. Create new inactive catalogue entries for funders not yet covered
 //
 // Auth: ADMIN_SECRET bearer token or authenticated admin session
 //
 // Body (JSON, all optional):
 //   {
 //     mode: 'enrich' | 'discover' | 'both'   // default 'both'
-//     funder_ids?: string[]                    // limit to specific 360G publisher IDs
-//     max_datasets?: number                    // cap datasets fetched (default 50)
 //     dry_run?: boolean                        // if true, return plan without writing
-//   }
-//
-// Returns:
-//   {
-//     datasets_fetched: number
-//     grants_analysed: number
-//     funders_enriched: number
-//     new_entries_created: number
-//     skipped: number
-//     errors: string[]
 //   }
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -37,7 +23,7 @@ import { createClient } from '@supabase/supabase-js'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
-export const maxDuration = 300
+export const maxDuration = 120
 
 const ADMIN_EMAIL = 'paulkilty1@gmail.com'
 
@@ -60,275 +46,173 @@ function adminClient() {
   )
 }
 
-// ── 360Giving types ───────────────────────────────────────────────────────────
-interface ThreeSixtyDataset {
-  title: string
+// ── 360Giving daily_status.json types ────────────────────────────────────────
+interface StatusEntry {
   identifier: string
-  publisher: { name: string; website?: string }
-  distribution: Array<{ downloadURL: string; mediaType: string }>
-  modified?: string
-}
-
-interface ThreeSixtyGrant {
-  id: string
-  title?: string
+  title: string
   description?: string
-  currency?: string
-  amountAwarded?: number
-  awardDate?: string
-  plannedDates?: Array<{ startDate?: string; endDate?: string; duration?: string }>
-  recipientOrganization?: Array<{ id?: string; name?: string; charityNumber?: string }>
-  fundingOrganization?: Array<{ id?: string; name?: string }>
-  grantProgramme?: Array<{ title?: string; code?: string }>
-  beneficiaryLocation?: Array<{ name?: string; geoCode?: string; countryCode?: string }>
+  issued?: string
+  modified?: string
+  publisher: {
+    name: string
+    prefix: string     // e.g. "360G-tnlcomfund" — this is our filter key
+    org_id?: string
+    website?: string
+    logo?: string
+  }
+  distribution: Array<{
+    downloadURL: string
+    accessURL?: string
+    title?: string
+  }>
+  datagetter_aggregates?: {
+    count: number
+    award_years?: Record<string, number>
+    currencies?: {
+      GBP?: {
+        count: number
+        min_amount: number
+        max_amount: number
+        total_amount: number
+      }
+    }
+  }
+  datagetter_metadata?: {
+    valid: boolean
+    file_type: string
+    acceptable_license: boolean
+  }
 }
 
-interface ProgrammeStats {
+// Per-publisher rolled-up stats
+interface PublisherStats {
   name: string
-  funder: string
-  grantCount: number
+  prefix: string
+  website?: string
+  totalGrants: number
   totalAwarded: number
   minAward: number
   maxAward: number
-  avgAward: number
-  medianAward: number
   years: number[]
-  locations: string[]
-  sectors: string[]
+  datasetCount: number
 }
 
-// ── High-value funders to prioritise (360Giving publisher IDs) ────────────────
-// These are the UK funders most relevant to charities, CICs and social enterprises
-const PRIORITY_PUBLISHERS = new Set([
-  'GB-CHC-1084839',   // The National Lottery Community Fund (TNLCF)
-  'GB-CHC-1163162',   // Arts Council England
-  'GB-CHC-1123126',   // The National Lottery Heritage Fund
-  'GB-CHC-1097370',   // Sport England
-  'GB-CHC-802052',    // BBC Children in Need
-  'GB-CHC-326568',    // Comic Relief
-  'GB-CHC-1117323',   // Paul Hamlyn Foundation
-  'GB-CHC-1099884',   // Esmée Fairbairn Foundation
-  'GB-CHC-1105580',   // Tudor Trust
-  'GB-CHC-1035726',   // Barrow Cadbury Trust
-  'GB-CHC-210551',    // Joseph Rowntree Charitable Trust
-  'GB-CHC-210436',    // Garfield Weston Foundation
-  'GB-CHC-1087139',   // Wellcome Trust
-  'GB-CHC-1108663',   // The Wolfson Foundation
-  'GB-CHC-306077',    // Lloyds Bank Foundation
-  'GB-CHC-1110113',   // Trust for London
-  'GB-CHC-268369',    // Clothworkers Foundation
-  'GB-CHC-1102927',   // Power to Change
-  'GB-CHC-213020',    // Rank Foundation
-  'GB-CHC-272100',    // Dulverton Trust
-  'GB-CHC-1060849',   // Lankelly Chase Foundation
-  'GB-CHC-299811',    // Tudor Trust (alt)
-  'GB-CHC-1155255',   // Foyle Foundation
-  'GB-CHC-1108048',   // Blagrave Trust
+// ── Priority publishers — 360G prefix format ──────────────────────────────────
+// Derived from store.data.threesixtygiving.org/reports/daily_status.json
+const PRIORITY_PREFIXES = new Set([
+  '360G-tnlcomfund',       // The National Lottery Community Fund
+  '360G-ACE',              // Arts Council England
+  '360G-NLHF',             // The National Lottery Heritage Fund
+  '360G-SE',               // Sport England
+  '360g-cin',              // BBC Children in Need (lowercase in feed)
+  '360G-CR',               // Comic Relief
+  '360G-phf',              // Paul Hamlyn Foundation
+  '360G-esmeefairbairn',   // Esmée Fairbairn Foundation
+  '360G-tudortrust',       // The Tudor Trust
+  '360G-barrowcadbury',    // Barrow Cadbury Trust
+  '360G-JRCT',             // Joseph Rowntree Charitable Trust
+  '360G-GWF',              // Garfield Weston Foundation
+  '360G-wellcome',         // The Wellcome Trust
+  '360G-wolfson',          // Wolfson Foundation
+  '360G-LBFEW',            // Lloyds Bank Foundation for England and Wales
+  '360G-trustforlondon',   // Trust for London
+  '360G-clothworkersfdn',  // The Clothworkers Foundation
+  '360G-ptc-gr',           // Power to Change Trust
+  '360G-RankFdn',          // Rank Foundation
+  '360G-dulverton',        // The Dulverton Trust
+  '360G-LankellyChase',    // Lankelly Chase Foundation
+  '360G-FoyleFdn',         // The Foyle Foundation
+  '360G-blagrave',         // The Blagrave Trust
 ])
 
-// ── Sector keyword → impact_sector mapping ────────────────────────────────────
-const KEYWORD_SECTOR_MAP: Array<[RegExp, string]> = [
-  [/youth|young people|children|schools|early years/i, 'young_people'],
-  [/mental health|wellbeing|counsell|therapy|suicide/i, 'mental_health'],
-  [/homelessness|homeless|rough sleep|housing|affordable home/i, 'housing'],
-  [/environment|climate|biodiversity|nature|sustainability|conservation/i, 'environment'],
-  [/arts|culture|creative|museum|theatre|dance|music|film/i, 'creative'],
-  [/heritage|historic|preservation|conservation/i, 'heritage'],
-  [/sport|physical activity|recreation|fitness/i, 'sport'],
-  [/education|school|learning|skills|training|literacy/i, 'education'],
-  [/employment|jobs|enterprise|employability|work/i, 'employment'],
-  [/health|medical|hospital|care|disability/i, 'health'],
-  [/disability|disabled|deaf|neurodiversity/i, 'disability'],
-  [/older people|elderly|dementia|ageing/i, 'older_people'],
-  [/women|gender|girls/i, 'women'],
-  [/justice|legal|rights|asylum|refugee/i, 'justice'],
-  [/technology|digital|tech|innovation/i, 'tech'],
-  [/financial|debt|poverty|money/i, 'financial'],
-  [/food|nutrition|hunger|food bank/i, 'food'],
-  [/international|global|overseas|africa|develop/i, 'international'],
-  [/community|neighbourhood|local|civic/i, 'community'],
-]
+// ── Fetch and aggregate the daily status feed ─────────────────────────────────
+async function fetchPublisherStats(): Promise<PublisherStats[]> {
+  const STATUS_URL = 'https://store.data.threesixtygiving.org/reports/daily_status.json'
 
-function inferSectors(text: string): string[] {
-  const sectors = new Set<string>()
-  for (const [pattern, sector] of KEYWORD_SECTOR_MAP) {
-    if (pattern.test(text)) sectors.add(sector)
-  }
-  return Array.from(sectors).slice(0, 4)
-}
-
-function median(nums: number[]): number {
-  if (nums.length === 0) return 0
-  const sorted = [...nums].sort((a, b) => a - b)
-  const mid = Math.floor(sorted.length / 2)
-  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2
-}
-
-// ── Fetch 360Giving registry ──────────────────────────────────────────────────
-// Tries multiple known endpoints in order. Collects errors for diagnosis.
-async function fetchRegistry(maxDatasets: number): Promise<ThreeSixtyDataset[]> {
-  const ENDPOINTS = [
-    // New flat-array data feed (registry moved here)
-    'https://data.threesixtygiving.org/data.json',
-    // Daily status JSON used by Insights / GrantNav
-    'https://store.data.threesixtygiving.org/reports/daily_status.json',
-    // New paginated REST API
-    'https://api.threesixtygiving.org/api/v1/datasets/?limit=200',
-    // New paginated REST API — publishers as alternative path
-    'https://api.threesixtygiving.org/api/v1/publishers/?limit=200',
-  ]
-
-  const attemptErrors: string[] = []
-
-  for (const endpoint of ENDPOINTS) {
-    try {
-      const res = await fetch(endpoint, {
-        headers: { 'Accept': 'application/json', 'User-Agent': 'GrantTracker/1.0' },
-        signal: AbortSignal.timeout(45_000),
-      })
-      if (!res.ok) {
-        attemptErrors.push(`${endpoint} → HTTP ${res.status}`)
-        continue
-      }
-
-      const body = await res.json() as
-        | ThreeSixtyDataset[]
-        | { results?: ThreeSixtyDataset[]; data?: ThreeSixtyDataset[]; datasets?: ThreeSixtyDataset[]; publishers?: ThreeSixtyDataset[]; next?: string }
-
-      // Handle flat-array response (data.json)
-      if (Array.isArray(body)) {
-        if (body.length > 0) return body.slice(0, maxDatasets)
-        attemptErrors.push(`${endpoint} → empty array`)
-        continue
-      }
-
-      // Handle daily_status.json — may wrap datasets under a key
-      const firstPage = body.results ?? body.data ?? body.datasets ?? body.publishers ?? []
-      if (firstPage.length === 0) {
-        attemptErrors.push(`${endpoint} → empty results (keys: ${Object.keys(body).join(', ')})`)
-        continue
-      }
-
-      // Collect paginated results
-      const datasets: ThreeSixtyDataset[] = [...firstPage]
-      let nextUrl: string = (body as { next?: string }).next ?? ''
-      while (nextUrl && datasets.length < maxDatasets) {
-        const pageRes = await fetch(nextUrl, {
-          headers: { 'Accept': 'application/json', 'User-Agent': 'GrantTracker/1.0' },
-          signal: AbortSignal.timeout(30_000),
-        })
-        if (!pageRes.ok) break
-        const pageBody = await pageRes.json() as { results?: ThreeSixtyDataset[]; next?: string }
-        datasets.push(...(pageBody.results ?? []))
-        nextUrl = pageBody.next ?? ''
-      }
-
-      return datasets.slice(0, maxDatasets)
-    } catch (err) {
-      attemptErrors.push(`${endpoint} → ${err instanceof Error ? err.message : String(err)}`)
-    }
-  }
-
-  throw new Error(`360Giving registry unreachable. Tried:\n${attemptErrors.join('\n')}`)
-}
-
-// ── Download and parse a 360Giving dataset ────────────────────────────────────
-async function fetchDatasetGrants(dataset: ThreeSixtyDataset): Promise<ThreeSixtyGrant[]> {
-  // Prefer JSON format
-  const jsonDist = dataset.distribution.find(d =>
-    d.mediaType === 'application/json' || d.downloadURL.endsWith('.json')
-  ) ?? dataset.distribution[0]
-
-  if (!jsonDist) return []
-
-  const res = await fetch(jsonDist.downloadURL, {
+  const res = await fetch(STATUS_URL, {
     headers: { 'Accept': 'application/json', 'User-Agent': 'GrantTracker/1.0' },
-    signal: AbortSignal.timeout(60_000),
+    signal: AbortSignal.timeout(45_000),
   })
-  if (!res.ok) throw new Error(`Dataset ${dataset.identifier} returned ${res.status}`)
+  if (!res.ok) throw new Error(`Status feed returned HTTP ${res.status}`)
 
-  const body = await res.json()
-  // 360Giving JSON can be either { grants: [...] } or a flat array
-  return Array.isArray(body) ? body : (body.grants ?? [])
-}
+  const entries = await res.json() as StatusEntry[]
 
-// ── Aggregate grants into programme-level stats ────────────────────────────────
-function aggregateProgrammes(grants: ThreeSixtyGrant[], publisherName: string): ProgrammeStats[] {
-  const map = new Map<string, { amounts: number[]; years: Set<number>; locations: Set<string>; text: string }>()
+  // Roll up all datasets per publisher
+  const map = new Map<string, PublisherStats>()
 
-  for (const g of grants) {
-    const funder = g.fundingOrganization?.[0]?.name ?? publisherName
-    const programme = g.grantProgramme?.[0]?.title ?? 'General Grants'
-    const key = `${funder}__${programme}`
+  for (const entry of entries) {
+    const prefix = entry.publisher?.prefix?.toLowerCase()
+    if (!prefix) continue
+    // Only process priority publishers
+    if (![...PRIORITY_PREFIXES].map(p => p.toLowerCase()).includes(prefix)) continue
 
-    if (!map.has(key)) {
-      map.set(key, { amounts: [], years: new Set(), locations: new Set(), text: '' })
+    const agg = entry.datagetter_aggregates
+    const gbp = agg?.currencies?.GBP
+    if (!agg || !gbp || gbp.count === 0) continue
+    if (entry.datagetter_metadata && !entry.datagetter_metadata.valid) continue
+
+    if (!map.has(prefix)) {
+      map.set(prefix, {
+        name: entry.publisher.name,
+        prefix: entry.publisher.prefix,
+        website: entry.publisher.website,
+        totalGrants: 0,
+        totalAwarded: 0,
+        minAward: Infinity,
+        maxAward: 0,
+        years: [],
+        datasetCount: 0,
+      })
     }
-    const entry = map.get(key)!
 
-    if (typeof g.amountAwarded === 'number' && g.amountAwarded > 0) {
-      entry.amounts.push(g.amountAwarded)
-    }
-    if (g.awardDate) {
-      const year = new Date(g.awardDate).getFullYear()
-      if (year > 2000) entry.years.add(year)
-    }
-    const loc = g.beneficiaryLocation?.[0]?.name
-    if (loc) entry.locations.add(loc)
+    const stats = map.get(prefix)!
+    stats.totalGrants += gbp.count
+    stats.totalAwarded += gbp.total_amount
+    stats.minAward = Math.min(stats.minAward, gbp.min_amount)
+    stats.maxAward = Math.max(stats.maxAward, gbp.max_amount)
+    stats.datasetCount++
 
-    // Accumulate text for sector inference
-    entry.text += ` ${g.title ?? ''} ${g.description ?? ''} ${programme}`
+    if (agg.award_years) {
+      for (const y of Object.keys(agg.award_years)) {
+        const yr = parseInt(y)
+        if (yr > 2000 && !stats.years.includes(yr)) stats.years.push(yr)
+      }
+    }
   }
 
-  const results: ProgrammeStats[] = []
-  for (const [key, entry] of Array.from(map.entries())) {
-    const [funder, name] = key.split('__')
-    const amounts = entry.amounts
-    if (amounts.length === 0) continue
-
-    results.push({
-      name,
-      funder,
-      grantCount: amounts.length,
-      totalAwarded: amounts.reduce((a: number, b: number) => a + b, 0),
-      minAward: Math.min(...amounts),
-      maxAward: Math.max(...amounts),
-      avgAward: Math.round(amounts.reduce((a: number, b: number) => a + b, 0) / amounts.length),
-      medianAward: Math.round(median(amounts)),
-      years: Array.from(entry.years).sort() as number[],
-      locations: Array.from(entry.locations).slice(0, 5) as string[],
-      sectors: inferSectors(entry.text),
-    })
+  // Finalise
+  const result: PublisherStats[] = []
+  for (const [, stats] of Array.from(map.entries())) {
+    if (stats.minAward === Infinity) stats.minAward = 0
+    stats.years.sort((a, b) => a - b)
+    result.push(stats)
   }
-
-  return results.sort((a, b) => b.grantCount - a.grantCount)
+  return result.sort((a, b) => b.totalGrants - a.totalGrants)
 }
 
-// ── Build funder_brief enrichment from programme stats ─────────────────────────
-function buildFunderBrief(stats: ProgrammeStats): Record<string, unknown> {
-  const yearRange = stats.years.length > 0
-    ? `${Math.min(...stats.years)}–${Math.max(...stats.years)}`
-    : 'recent years'
-  const avgK = (stats.avgAward / 1000).toFixed(0)
-  const medianK = (stats.medianAward / 1000).toFixed(0)
-  const maxK = (stats.maxAward / 1000).toFixed(0)
+// ── Build funder_brief from stats ─────────────────────────────────────────────
+function buildFunderBrief(stats: PublisherStats): Record<string, unknown> {
+  const avgAward = stats.totalGrants > 0 ? Math.round(stats.totalAwarded / stats.totalGrants) : 0
   const minK = (stats.minAward / 1000).toFixed(0)
+  const maxK = (stats.maxAward / 1000).toFixed(0)
+  const avgK = (avgAward / 1000).toFixed(0)
+  const yearRange = stats.years.length > 0
+    ? `${stats.years[0]}–${stats.years[stats.years.length - 1]}`
+    : 'recent years'
 
   return {
     source: '360giving',
     last_enriched: new Date().toISOString().split('T')[0],
     award_history: {
-      grant_count: stats.grantCount,
+      grant_count: stats.totalGrants,
       year_range: yearRange,
-      typical_award: `£${medianK}k (median), £${avgK}k (average)`,
+      typical_award: `£${avgK}k (average)`,
       award_range: `£${minK}k–£${maxK}k`,
       total_awarded: stats.totalAwarded,
-      common_locations: stats.locations,
+      dataset_count: stats.datasetCount,
     },
-    typical_award: `£${medianK}k–£${maxK}k (based on ${stats.grantCount} recent awards)`,
-    decision_timeline: stats.years.length > 0
-      ? `Active funder: ${stats.grantCount} grants awarded in ${yearRange}`
-      : null,
+    typical_award: `£${avgK}k average (£${minK}k–£${maxK}k range, based on ${stats.totalGrants.toLocaleString()} grants in ${yearRange})`,
+    decision_timeline: `Active funder: ${stats.totalGrants.toLocaleString()} grants recorded in ${yearRange}`,
   }
 }
 
@@ -338,148 +222,120 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
   }
 
-  let body: {
-    mode?: 'enrich' | 'discover' | 'both'
-    funder_ids?: string[]
-    max_datasets?: number
-    dry_run?: boolean
-  } = {}
+  let body: { mode?: 'enrich' | 'discover' | 'both'; dry_run?: boolean } = {}
   try { body = await req.json() } catch { /* no body */ }
 
   const mode = body.mode ?? 'both'
-  const maxDatasets = Math.min(body.max_datasets ?? 50, 200)
   const dryRun = body.dry_run ?? false
-  const priorityOnly = !body.funder_ids  // if no specific IDs, use priority list
 
   const supabase = adminClient()
   const errors: string[] = []
-  let datasetsProcessed = 0
   let grantsAnalysed = 0
   let fundersEnriched = 0
   let newEntriesCreated = 0
   let skipped = 0
 
   try {
-    // 1. Fetch registry
-    const allDatasets = await fetchRegistry(maxDatasets)
+    const publishers = await fetchPublisherStats()
+    grantsAnalysed = publishers.reduce((sum, p) => sum + p.totalGrants, 0)
 
-    // 2. Filter to relevant publishers
-    const datasets = allDatasets.filter(d => {
-      if (body.funder_ids?.length) return body.funder_ids.includes(d.identifier)
-      if (priorityOnly) return PRIORITY_PUBLISHERS.has(d.identifier)
-      return true
-    })
+    for (const pub of publishers) {
+      const brief = buildFunderBrief(pub)
+      const firstWord = pub.name.split(' ')[0]
 
-    // 3. Process each dataset
-    for (const dataset of datasets) {
-      try {
-        const grants = await fetchDatasetGrants(dataset)
-        if (grants.length === 0) { skipped++; continue }
+      // ── Enrich existing grants ─────────────────────────────────────────────
+      if (mode === 'enrich' || mode === 'both') {
+        try {
+          const { data: existing } = await supabase
+            .from('scraped_grants')
+            .select('id, funder_brief')
+            .ilike('funder', `%${firstWord}%`)
+            .eq('is_active', true)
+            .limit(20)
 
-        grantsAnalysed += grants.length
-        datasetsProcessed++
-
-        const programmes = aggregateProgrammes(grants, dataset.publisher.name)
-
-        for (const prog of programmes) {
-          if (prog.grantCount < 3) continue // Skip programmes with too few data points
-
-          // ── Mode: enrich existing grants ──────────────────────────────────
-          if (mode === 'enrich' || mode === 'both') {
-            const { data: existingGrants } = await supabase
-              .from('scraped_grants')
-              .select('id, funder_brief')
-              .ilike('funder', `%${prog.funder.split(' ')[0]}%`)
-              .eq('is_active', true)
-              .limit(10)
-
-            if (existingGrants && existingGrants.length > 0) {
-              const brief = buildFunderBrief(prog)
-              for (const grant of existingGrants) {
-                // Merge with existing brief (don't overwrite manually enriched fields)
-                const existing = (grant.funder_brief as Record<string, unknown>) ?? {}
-                const merged = {
-                  ...brief,
-                  ...existing,  // existing fields take precedence
-                  award_history: (brief as Record<string, unknown>).award_history,  // always update history
-                  last_enriched: brief.last_enriched,
-                }
-
-                if (!dryRun) {
-                  await supabase
-                    .from('scraped_grants')
-                    .update({ funder_brief: merged })
-                    .eq('id', grant.id)
-                }
-                fundersEnriched++
+          if (existing && existing.length > 0) {
+            for (const grant of existing) {
+              const merged = {
+                ...brief,
+                ...(grant.funder_brief as Record<string, unknown> ?? {}),
+                award_history: brief.award_history,
+                last_enriched: brief.last_enriched,
               }
-            }
-          }
-
-          // ── Mode: discover new funders ─────────────────────────────────────
-          if (mode === 'discover' || mode === 'both') {
-            // Check if we already have a grant entry for this funder + programme
-            const { count } = await supabase
-              .from('scraped_grants')
-              .select('id', { count: 'exact', head: true })
-              .ilike('funder', `%${prog.funder.split(' ')[0]}%`)
-              .ilike('title', `%${prog.name.substring(0, 20)}%`)
-
-            if ((count ?? 0) === 0) {
-              // Create a new placeholder entry
-              const maxK = (prog.maxAward / 1000).toFixed(0)
-              const minK = (prog.minAward / 1000).toFixed(0)
-              const yearRange = prog.years.length > 0
-                ? `${Math.min(...prog.years)}–${Math.max(...prog.years)}`
-                : 'recent years'
-
-              const newGrant = {
-                external_id: `360giving-${dataset.identifier}-${prog.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').substring(0, 40)}`,
-                source: '360giving',
-                title: prog.name,
-                funder: prog.funder,
-                funder_type: 'foundation' as string,
-                description: `${prog.funder} has awarded ${prog.grantCount} grants through "${prog.name}" in ${yearRange}, ranging from £${minK}k to £${maxK}k. This data is based on open 360Giving awards data. Visit the funder's website to check for currently open rounds.`,
-                amount_min: prog.minAward,
-                amount_max: prog.maxAward,
-                is_rolling: false,
-                is_local: false,
-                sectors: prog.sectors,
-                eligibility_criteria: [] as string[],
-                apply_url: dataset.publisher.website ?? null,
-                raw_data: { source_360giving: dataset.identifier, programme: prog.name } as Record<string, unknown>,
-                is_active: false,  // Start inactive — admin reviews before activating
-                url_status: 'ok',
-                is_invite_only: false,
-                funding_type: 'grant',
-                eligible_structures: [] as string[],
-                applicant_type: 'organisation',
-                impact_sectors: prog.sectors.length > 0 ? prog.sectors : ['community'],
-                location_tag: prog.locations[0] ?? 'UK',
-                funder_brief: buildFunderBrief(prog),
-              }
-
               if (!dryRun) {
-                const { error } = await supabase
+                await supabase
                   .from('scraped_grants')
-                  .upsert(newGrant, { onConflict: 'external_id' })
-                if (!error) newEntriesCreated++
-              } else {
-                newEntriesCreated++ // Count for dry run preview
+                  .update({ funder_brief: merged })
+                  .eq('id', grant.id)
               }
-            } else {
-              skipped++
+              fundersEnriched++
             }
           }
+        } catch (err) {
+          errors.push(`Enrich ${pub.name}: ${err instanceof Error ? err.message : String(err)}`)
         }
-      } catch (err) {
-        errors.push(`Dataset ${dataset.identifier} (${dataset.publisher.name}): ${err instanceof Error ? err.message : String(err)}`)
-        skipped++
+      }
+
+      // ── Discover new funders ───────────────────────────────────────────────
+      if (mode === 'discover' || mode === 'both') {
+        try {
+          const { count } = await supabase
+            .from('scraped_grants')
+            .select('id', { count: 'exact', head: true })
+            .ilike('funder', `%${firstWord}%`)
+
+          if ((count ?? 0) === 0) {
+            const avgAward = pub.totalGrants > 0 ? Math.round(pub.totalAwarded / pub.totalGrants) : 0
+            const minK = (pub.minAward / 1000).toFixed(0)
+            const maxK = (pub.maxAward / 1000).toFixed(0)
+            const yearRange = pub.years.length > 0
+              ? `${pub.years[0]}–${pub.years[pub.years.length - 1]}`
+              : 'recent years'
+
+            const newGrant = {
+              external_id: `360giving-${pub.prefix.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+              source: '360giving',
+              title: `${pub.name} — Grants Programme`,
+              funder: pub.name,
+              funder_type: 'foundation' as string,
+              description: `${pub.name} has awarded ${pub.totalGrants.toLocaleString()} grants in ${yearRange}, ranging from £${minK}k to £${maxK}k (average £${(avgAward / 1000).toFixed(0)}k). This data is sourced from 360Giving open awards data. Visit the funder's website to check for currently open rounds.`,
+              amount_min: pub.minAward,
+              amount_max: pub.maxAward,
+              is_rolling: false,
+              is_local: false,
+              sectors: [] as string[],
+              eligibility_criteria: [] as string[],
+              apply_url: pub.website ?? null,
+              is_active: false,
+              url_status: 'ok',
+              is_invite_only: false,
+              funding_type: 'grant',
+              eligible_structures: [] as string[],
+              applicant_type: 'organisation',
+              impact_sectors: ['community'] as string[],
+              location_tag: 'UK',
+              funder_brief: brief,
+            }
+
+            if (!dryRun) {
+              const { error } = await supabase
+                .from('scraped_grants')
+                .upsert(newGrant, { onConflict: 'external_id' })
+              if (!error) newEntriesCreated++
+              else errors.push(`Insert ${pub.name}: ${error.message}`)
+            } else {
+              newEntriesCreated++
+            }
+          } else {
+            skipped++
+          }
+        } catch (err) {
+          errors.push(`Discover ${pub.name}: ${err instanceof Error ? err.message : String(err)}`)
+        }
       }
     }
   } catch (err) {
     return NextResponse.json(
-      { error: `Registry fetch failed: ${err instanceof Error ? err.message : String(err)}` },
+      { error: `Feed fetch failed: ${err instanceof Error ? err.message : String(err)}` },
       { status: 500 }
     )
   }
@@ -487,7 +343,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     dry_run: dryRun,
     mode,
-    datasets_fetched: datasetsProcessed,
+    datasets_fetched: PRIORITY_PREFIXES.size,
     grants_analysed: grantsAnalysed,
     funders_enriched: fundersEnriched,
     new_entries_created: newEntriesCreated,
@@ -496,7 +352,7 @@ export async function POST(req: NextRequest) {
   })
 }
 
-// ── GET: return status / usage instructions ───────────────────────────────────
+// ── GET: status ───────────────────────────────────────────────────────────────
 export async function GET(req: NextRequest) {
   if (!await isAuthorised(req)) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
@@ -510,15 +366,9 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({
     status: 'ready',
-    description: 'Ingests 360Giving open awards data to enrich funder intelligence and discover new funders.',
+    description: 'Reads 360Giving daily status feed to enrich funder intelligence and discover new funders. No per-file downloading required.',
     existing_360giving_entries: count ?? 0,
-    usage: {
-      enrich: 'POST { mode: "enrich" } — updates funder_brief on existing grants with real award history',
-      discover: 'POST { mode: "discover" } — creates new inactive entries for funders not yet in catalogue',
-      both: 'POST { mode: "both" } — runs both (default)',
-      dry_run: 'POST { dry_run: true } — returns plan without writing to DB',
-      priority_funders: PRIORITY_PUBLISHERS.size,
-      note: 'Requires outbound network access to registry.threesixtygiving.org — works on Vercel, not in local sandbox.',
-    },
+    priority_publishers: PRIORITY_PREFIXES.size,
+    feed_url: 'https://store.data.threesixtygiving.org/reports/daily_status.json',
   })
 }
