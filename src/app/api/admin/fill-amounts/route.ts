@@ -39,8 +39,8 @@ function parseAmounts(text: string): { min?: number; max?: number } {
     .replace(/£(\d+(?:\.\d+)?)m\b/gi, (_, n) => `£${Math.round(parseFloat(n) * 1_000_000)}`)  // £1.5m → £1500000
     .replace(/£(\d+(?:\.\d+)?)k\b/gi, (_, n) => `£${Math.round(parseFloat(n) * 1_000)}`)      // £15k → £15000
 
-  // "£X to £Y" / "£X–£Y" / "£X - £Y"
-  const rangeMatch = t.match(/£(\d+)\s*(?:to|–|-)\s*£(\d+)/i)
+  // "£X to £Y" / "£X–£Y" / "£X - £Y" / "between £X and £Y"
+  const rangeMatch = t.match(/(?:between\s+)?£(\d+)\s*(?:to|–|-|and)\s*£(\d+)/i)
   if (rangeMatch) {
     const min = parseInt(rangeMatch[1])
     const max = parseInt(rangeMatch[2])
@@ -55,9 +55,9 @@ function parseAmounts(text: string): { min?: number; max?: number } {
   const minMatch = t.match(/(?:from|minimum|min|at least|over|starts? at|starting from)\s*£(\d+)/i)
   if (minMatch) return { min: parseInt(minMatch[1]) }
 
-  // Single "£X per grant" / "grants of £X" / "award of £X"
+  // Single "£X per grant/organisation/award"
   const singleMatch = t.match(/(?:grants? of|award of|grants? up to|each grant)\s*£(\d+)/i)
-    ?? t.match(/£(\d+)\s*(?:per grant|each|per award)/i)
+    ?? t.match(/£(\d+)\s*(?:per grant|per organisation|each|per award)/i)
   if (singleMatch) return { max: parseInt(singleMatch[1]) }
 
   return {}
