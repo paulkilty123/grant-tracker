@@ -165,35 +165,52 @@ function median(nums: number[]): number {
 }
 
 // ── Fetch 360Giving registry ──────────────────────────────────────────────────
-// Tries the data feed (flat array) first, falls back to the paginated API.
+// Tries multiple known endpoints in order. Collects errors for diagnosis.
 async function fetchRegistry(maxDatasets: number): Promise<ThreeSixtyDataset[]> {
   const ENDPOINTS = [
-    'https://data.threesixtygiving.org/data.json',                           // flat array feed
-    'https://api.threesixtygiving.org/api/v1/datasets/?limit=200&ordering=-modified', // paginated API
+    // New flat-array data feed (registry moved here)
+    'https://data.threesixtygiving.org/data.json',
+    // Daily status JSON used by Insights / GrantNav
+    'https://store.data.threesixtygiving.org/reports/daily_status.json',
+    // New paginated REST API
+    'https://api.threesixtygiving.org/api/v1/datasets/?limit=200',
+    // New paginated REST API — publishers as alternative path
+    'https://api.threesixtygiving.org/api/v1/publishers/?limit=200',
   ]
+
+  const attemptErrors: string[] = []
 
   for (const endpoint of ENDPOINTS) {
     try {
       const res = await fetch(endpoint, {
         headers: { 'Accept': 'application/json', 'User-Agent': 'GrantTracker/1.0' },
-        signal: AbortSignal.timeout(30_000),
+        signal: AbortSignal.timeout(45_000),
       })
-      if (!res.ok) continue
+      if (!res.ok) {
+        attemptErrors.push(`${endpoint} → HTTP ${res.status}`)
+        continue
+      }
 
       const body = await res.json() as
         | ThreeSixtyDataset[]
-        | { results?: ThreeSixtyDataset[]; data?: ThreeSixtyDataset[]; datasets?: ThreeSixtyDataset[]; next?: string }
+        | { results?: ThreeSixtyDataset[]; data?: ThreeSixtyDataset[]; datasets?: ThreeSixtyDataset[]; publishers?: ThreeSixtyDataset[]; next?: string }
 
       // Handle flat-array response (data.json)
       if (Array.isArray(body)) {
-        return body.slice(0, maxDatasets)
+        if (body.length > 0) return body.slice(0, maxDatasets)
+        attemptErrors.push(`${endpoint} → empty array`)
+        continue
       }
 
-      // Handle paginated API response — collect all pages
-      const datasets: ThreeSixtyDataset[] = []
-      const firstPage = body.results ?? body.data ?? body.datasets ?? []
-      datasets.push(...firstPage)
+      // Handle daily_status.json — may wrap datasets under a key
+      const firstPage = body.results ?? body.data ?? body.datasets ?? body.publishers ?? []
+      if (firstPage.length === 0) {
+        attemptErrors.push(`${endpoint} → empty results (keys: ${Object.keys(body).join(', ')})`)
+        continue
+      }
 
+      // Collect paginated results
+      const datasets: ThreeSixtyDataset[] = [...firstPage]
       let nextUrl: string = (body as { next?: string }).next ?? ''
       while (nextUrl && datasets.length < maxDatasets) {
         const pageRes = await fetch(nextUrl, {
@@ -206,11 +223,13 @@ async function fetchRegistry(maxDatasets: number): Promise<ThreeSixtyDataset[]> 
         nextUrl = pageBody.next ?? ''
       }
 
-      if (datasets.length > 0) return datasets.slice(0, maxDatasets)
-    } catch { /* try next endpoint */ }
+      return datasets.slice(0, maxDatasets)
+    } catch (err) {
+      attemptErrors.push(`${endpoint} → ${err instanceof Error ? err.message : String(err)}`)
+    }
   }
 
-  throw new Error('360Giving registry unreachable — all endpoints failed')
+  throw new Error(`360Giving registry unreachable. Tried:\n${attemptErrors.join('\n')}`)
 }
 
 // ── Download and parse a 360Giving dataset ────────────────────────────────────
