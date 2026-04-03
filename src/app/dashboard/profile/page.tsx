@@ -984,10 +984,11 @@ export default function ProfilePage() {
           <label className="block text-sm font-medium text-charcoal mb-1.5">Primary location</label>
           <input
             className="form-input"
-            placeholder="e.g. Southall, London Borough of Ealing"
+            placeholder="e.g. Southwark, London  or  Bristol, England"
             value={form.primaryLocation}
             onChange={set('primaryLocation')}
           />
+          <p className="text-xs text-light mt-1">For London orgs, include your borough first for precise matching — e.g. &ldquo;Hackney, London&rdquo; not just &ldquo;London&rdquo;</p>
         </div>
         <div>
           <label className="block text-sm font-medium text-charcoal mb-1.5">Geographic reach</label>
