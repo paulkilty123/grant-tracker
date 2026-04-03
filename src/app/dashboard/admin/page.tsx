@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import ThreeSixtyGivingPanel from './ThreeSixtyGivingPanel'
 
 // Human-readable labels for each source key
 const SOURCE_LABELS: Record<string, string> = {
@@ -304,6 +305,9 @@ export default async function AdminPage() {
           </table>
         </div>
       </div>
+
+      {/* 360Giving ingest panel */}
+      <ThreeSixtyGivingPanel />
 
       {/* Manual trigger hint */}
       <div className="mt-5 bg-forest/5 border border-forest/20 rounded-xl px-5 py-4">
