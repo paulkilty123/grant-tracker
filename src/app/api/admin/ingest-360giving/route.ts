@@ -231,7 +231,7 @@ function aggregateProgrammes(grants: ThreeSixtyGrant[], publisherName: string): 
   }
 
   const results: ProgrammeStats[] = []
-  for (const [key, entry] of map.entries()) {
+  for (const [key, entry] of Array.from(map.entries())) {
     const [funder, name] = key.split('__')
     const amounts = entry.amounts
     if (amounts.length === 0) continue
@@ -240,13 +240,13 @@ function aggregateProgrammes(grants: ThreeSixtyGrant[], publisherName: string): 
       name,
       funder,
       grantCount: amounts.length,
-      totalAwarded: amounts.reduce((a, b) => a + b, 0),
+      totalAwarded: amounts.reduce((a: number, b: number) => a + b, 0),
       minAward: Math.min(...amounts),
       maxAward: Math.max(...amounts),
-      avgAward: Math.round(amounts.reduce((a, b) => a + b, 0) / amounts.length),
+      avgAward: Math.round(amounts.reduce((a: number, b: number) => a + b, 0) / amounts.length),
       medianAward: Math.round(median(amounts)),
-      years: Array.from(entry.years).sort(),
-      locations: Array.from(entry.locations).slice(0, 5),
+      years: Array.from(entry.years).sort() as number[],
+      locations: Array.from(entry.locations).slice(0, 5) as string[],
       sectors: inferSectors(entry.text),
     })
   }
