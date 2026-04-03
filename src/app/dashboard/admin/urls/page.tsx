@@ -611,13 +611,15 @@ export default function UrlAdminPage() {
   // ── Save edited URL ──────────────────────────────────────────────────────────
   async function saveUrl(id: string) {
     setSaving(true)
-    await updateGrant(id, { apply_url: editUrl || null, url_status: 'unchecked', url_last_checked: null })
+    // Clear quality score when URL changes — old score no longer applies to new URL
+    await updateGrant(id, { apply_url: editUrl || null, url_status: 'unchecked', url_last_checked: null, url_quality_score: null, url_quality_issues: [] })
     const updateInList = (g: Grant) =>
       g.id === id ? { ...g, apply_url: editUrl || null, url_status: 'unchecked' as const, url_last_checked: null } : g
     setGrants(prev => prev.map(updateInList))
     setCategoryGrants(prev => prev.map(g =>
       g.id === id ? { ...g, apply_url: editUrl || null, url_status: 'unchecked' as const, url_last_checked: null } : g
     ))
+    setSuspiciousGrants(prev => prev.filter(g => g.id !== id))
     setEditingId(null)
     setSaving(false)
     await loadStats()
