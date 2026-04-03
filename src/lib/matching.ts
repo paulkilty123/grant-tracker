@@ -315,14 +315,16 @@ export function computeMatchScore(
         locationScore = 25
         reasons.push(`Local match for ${org.primary_location.split(',')[0]}`)
 
-        // Borough mismatch check: if we matched via region ("london") but NOT the
-        // org's specific city/borough, check whether the grant text names a specific
-        // borough. If it does, and that borough isn't the org's, the grant is likely
-        // restricted to that other area — revert to national base score.
-        if (!cityMatch && regionMatch) {
+        // Borough mismatch check: applies to ALL London orgs — whether matched via
+        // city ("london") or region. If the grant names a specific borough and the
+        // org's location is just "london" (no specific borough) or a different borough,
+        // revert to national base score. This prevents Bromley-only funds from scoring
+        // 25/25 against a generic "London" org profile.
+        if (city === 'london' || region.includes('london')) {
           const mentionedBoroughs = LONDON_BOROUGHS.filter(b => grantText.includes(b))
           if (mentionedBoroughs.length > 0) {
-            const orgBoroughMentioned = mentionedBoroughs.some(
+            // Only considered a match if org has a specific borough in their city field
+            const orgBoroughMentioned = city !== 'london' && mentionedBoroughs.some(
               b => b === city || b.includes(city) || city.includes(b)
             )
             if (!orgBoroughMentioned) {
@@ -651,10 +653,11 @@ export function computeMatchScore(
         }
       }
 
-      // Borough-level restriction: if the eligibility text names a specific London borough
-      // that is NOT the org's borough, the grant is likely area-restricted → penalise.
+      // Borough-level restriction: if ANY grant text (description or eligibility) names a
+      // specific London borough that is NOT the org's borough, penalise. Uses grantText
+      // (description + eligibility) so borough mentions in the description are caught too.
       if (orgRegion.includes('london') || city === 'london') {
-        const mentionedBoroughs = LONDON_BOROUGHS.filter(b => eligibilityText.includes(b))
+        const mentionedBoroughs = LONDON_BOROUGHS.filter(b => grantText.includes(b))
         if (mentionedBoroughs.length > 0) {
           const orgBoroughMentioned = mentionedBoroughs.some(
             b => b === city || b.includes(city) || city.includes(b)
