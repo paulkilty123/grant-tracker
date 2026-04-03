@@ -603,6 +603,23 @@ export function computeMatchScore(
       eligibilityScore = Math.min(15, eligibilityScore + 1)
     }
 
+    // Faith-building veto: if eligibility requires a church/place of worship,
+    // orgs with no faith sector should be strongly penalised.
+    const faithBuildingKeywords = [
+      'church building', 'place of worship', 'for worship', 'open for worship',
+      'mosque', 'synagogue', 'temple', 'gurdwara', 'chapel',
+    ]
+    const requiresFaithBuilding = faithBuildingKeywords.some(k => eligibilityText.includes(k))
+    if (requiresFaithBuilding) {
+      const orgHasFaith = (org.impact_sectors ?? []).includes('faith') ||
+        (org.themes ?? []).some((t: string) => ['faith', 'religion', 'church', 'worship'].some(f => t.includes(f)))
+      if (!orgHasFaith) {
+        eligibilityScore = Math.max(1, eligibilityScore - 10)
+        structureMismatch = true
+        reasons.push('Requires a faith building — check eligibility')
+      }
+    }
+
     if (org.primary_location) {
       const city    = org.primary_location.split(',')[0].trim().toLowerCase()
       const orgRegion = org.primary_location.split(',')[1]?.trim().toLowerCase() ?? ''
