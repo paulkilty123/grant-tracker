@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { DEFAULT_QUERIES } from '@/app/api/admin/discover-grants/route'
+import { DEFAULT_QUERIES } from '@/lib/discovery-queries'
 
 interface QueueStats {
   total: number

@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { createClient as createServerClient } from '@/lib/supabase/server'
+import { DEFAULT_QUERIES, DiscoveryFundingType as FundingType } from '@/lib/discovery-queries'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60 // One query per call, well within limits
@@ -34,8 +35,6 @@ function getAdminClient() {
   )
 }
 
-type FundingType = 'corporate' | 'social_investment' | 'programme'
-
 interface DiscoveredOpportunity {
   funder_name: string
   title: string
@@ -45,30 +44,6 @@ interface DiscoveredOpportunity {
   amount_range: string | null
   eligibility_snippet: string | null
   funding_type: string
-}
-
-export const DEFAULT_QUERIES: Record<FundingType, string[]> = {
-  corporate: [
-    'UK corporate foundation grants charities CICs 2025 2026 open applications',
-    'UK CSR programme funding social enterprises community organisations apply now',
-    'FTSE100 company community grants UK charities open applications',
-    'UK corporate social responsibility fund social enterprise apply 2026',
-    'UK business foundation grants community groups open round',
-  ],
-  social_investment: [
-    'UK social investment patient capital charities CICs apply 2025 2026',
-    'blended finance social enterprise UK loan equity hybrid funding open',
-    'community development finance institution CDFI loan UK social enterprise apply',
-    'UK social impact fund outcomes-based finance charity apply',
-    'impact investing UK charity CIC convertible loan grant blend open',
-  ],
-  programme: [
-    'UK accelerator incubator social enterprise charity cohort 2025 2026 apply',
-    'fellowship programme UK social entrepreneurs charity leaders open applications',
-    'capacity building programme UK charities CICs funding support 2026',
-    'UK social enterprise support programme mentoring funding apply now',
-    'charity incubator accelerator UK open applications cohort 2026',
-  ],
 }
 
 const SYSTEM_PROMPT = `You are a UK funding research specialist focused on discovering funding for charities, CICs, and social enterprises. Search the live web to find CURRENT and OPEN funding opportunities.
