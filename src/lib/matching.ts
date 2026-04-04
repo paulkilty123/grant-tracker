@@ -678,8 +678,9 @@ export function computeMatchScore(
     ]
     const requiresFaithBuilding = faithBuildingKeywords.some(k => eligibilityText.includes(k))
     if (requiresFaithBuilding) {
-      const orgHasFaith = (org.impact_sectors ?? []).includes('faith') ||
-        (org.themes ?? []).some((t: string) => ['faith', 'religion', 'church', 'worship'].some(f => t.includes(f)))
+      const orgHasFaith =
+        (org.themes ?? []).some((t: string) => ['faith', 'religion', 'church', 'worship'].some(f => t.includes(f))) ||
+        (org.mission ?? '').toLowerCase().match(/\b(church|faith|worship|mosque|synagogue|chapel)\b/) !== null
       if (!orgHasFaith) {
         eligibilityScore = Math.max(1, eligibilityScore - 10)
         structureMismatch = true
