@@ -583,13 +583,6 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
             <PlusCircle className="w-3.5 h-3.5" />
             Add to Pipeline
           </button>
-          <button
-            onClick={() => onDismiss(grant.id)}
-            className="w-full flex items-center justify-center gap-1.5 text-[11px] text-light hover:text-mid transition-colors pt-1"
-          >
-            <EyeOff className="w-3 h-3" />
-            Not for us
-          </button>
         </div>
 
       </div>
