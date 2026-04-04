@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import ThreeSixtyGivingPanel from './ThreeSixtyGivingPanel'
 import FillAmountsPanel from './FillAmountsPanel'
+import DiscoveryPanel from './DiscoveryPanel'
 
 // Human-readable labels for each source key
 const SOURCE_LABELS: Record<string, string> = {
@@ -306,6 +307,9 @@ export default async function AdminPage() {
           </table>
         </div>
       </div>
+
+      {/* Automated discovery pipeline */}
+      <DiscoveryPanel />
 
       {/* 360Giving ingest panel */}
       <ThreeSixtyGivingPanel />
