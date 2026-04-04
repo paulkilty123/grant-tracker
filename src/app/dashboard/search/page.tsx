@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Search, ChevronDown, Layers, DollarSign, Rocket, Building2, SlidersHorizontal, MapPin, GraduationCap, TrendingUp, GitMerge, Gift, Landmark, CalendarDays, RefreshCw, Bookmark, PlusCircle, Activity, Info, Target, Star, CheckCircle2, XCircle, Lightbulb, AlertTriangle, Sparkles, ExternalLink, ClipboardList } from 'lucide-react'
+import { Search, ChevronDown, Layers, DollarSign, Rocket, Building2, SlidersHorizontal, MapPin, GraduationCap, TrendingUp, GitMerge, Gift, Landmark, CalendarDays, RefreshCw, Bookmark, PlusCircle, Activity, Info, Target, Star, CheckCircle2, XCircle, Lightbulb, AlertTriangle, Sparkles, ExternalLink, ClipboardList, EyeOff, Eye } from 'lucide-react'
 import { SEED_GRANTS } from '@/lib/grants'
 import { formatRange } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -324,7 +324,7 @@ function StalenessBadge({ lastVerifiedAt }: { lastVerifiedAt?: string }) {
 }
 
 // ── Grant Card ───────────────────────────────────────────────────────────────
-function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline, onDismiss, onUndismiss, onLike, onDislike, onSave, onUnsave }: {
+function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline, onDismiss, onUndismiss, onLike, onDislike, onSave, onUnsave, showIfDismissed }: {
   item: DisplayGrant
   hasOrg: boolean
   hasSearch: boolean
@@ -337,6 +337,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
   onDislike: (grantId: string) => void
   onSave?: (grantId: string) => void
   onUnsave?: (grantId: string) => void
+  showIfDismissed?: boolean
 }) {
   const { grant, score, reason, isAiScore, breakdown } = item
   const [expanded, setExpanded] = useState(false)
@@ -357,11 +358,12 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
     /* else */         'profile'
 
   if (isDismissed) {
+    if (!showIfDismissed) return null
     return (
-      <div className="bg-warm/50 px-5 py-3 mb-2 border border-warm flex items-center justify-between opacity-60">
+      <div className="bg-warm/40 px-5 py-3 mb-2 rounded-lg border border-warm flex items-center justify-between opacity-60">
         <p className="text-sm text-mid line-through">{grant.title} — {grant.funder}</p>
-        <button onClick={() => onUndismiss(grant.id)} className="text-xs text-coral hover:underline ml-4 flex-shrink-0">
-          Undo dismiss
+        <button onClick={() => onUndismiss(grant.id)} className="text-xs text-sage hover:underline ml-4 flex-shrink-0">
+          Restore
         </button>
       </div>
     )
@@ -580,6 +582,13 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
           >
             <PlusCircle className="w-3.5 h-3.5" />
             Add to Pipeline
+          </button>
+          <button
+            onClick={() => onDismiss(grant.id)}
+            className="w-full flex items-center justify-center gap-1.5 text-[11px] text-light hover:text-mid transition-colors pt-1"
+          >
+            <EyeOff className="w-3 h-3" />
+            Not for us
           </button>
         </div>
 
@@ -2122,42 +2131,62 @@ export default function SearchPage() {
       )}
 
       {/* ── Matches view ── */}
-      {activeView === 'matches' && hasSearched && (displayGrants.length === 0 ? (
-        <div className="text-center py-16 text-light">
-          <p className="text-4xl mb-3">🔍</p>
-          <p className="mb-3">No grants found — try different keywords or clear the filters.</p>
-        </div>
-      ) : (
-        <>
-          {displayGrants.slice(0, visibleCount).map(item => (
-            <GrantCard
-              key={item.grant.id}
-              item={item}
-              hasOrg={!!org}
-              hasSearch={showMatchInfo}
-              org={org}
-              interactions={interactions.get(item.grant.id) ?? new Set()}
-              onAddToPipeline={handleAddToPipeline}
-              onDismiss={handleDismiss}
-              onUndismiss={handleUndismiss}
-              onLike={handleLike}
-              onDislike={handleDislike}
-              onSave={handleSave}
-              onUnsave={handleUnsave}
-            />
-          ))}
-          {visibleCount < displayGrants.length && (
-            <div className="text-center py-6">
-              <button
-                onClick={() => setVisibleCount(v => v + 30)}
-                className="btn-outline px-6 py-2.5 text-sm"
-              >
-                Show more ({displayGrants.length - visibleCount} remaining)
-              </button>
-            </div>
-          )}
-        </>
-      ))}
+      {activeView === 'matches' && hasSearched && (() => {
+        const dismissedCount = displayGrants.filter(item => interactions.get(item.grant.id)?.has('dismissed')).length
+        const visibleGrants  = showDismissed
+          ? displayGrants
+          : displayGrants.filter(item => !interactions.get(item.grant.id)?.has('dismissed'))
+        return visibleGrants.length === 0 && dismissedCount === 0 ? (
+          <div className="text-center py-16 text-light">
+            <p className="text-4xl mb-3">🔍</p>
+            <p className="mb-3">No grants found — try different keywords or clear the filters.</p>
+          </div>
+        ) : (
+          <>
+            {visibleGrants.slice(0, visibleCount).map(item => (
+              <GrantCard
+                key={item.grant.id}
+                item={item}
+                hasOrg={!!org}
+                hasSearch={showMatchInfo}
+                org={org}
+                interactions={interactions.get(item.grant.id) ?? new Set()}
+                onAddToPipeline={handleAddToPipeline}
+                onDismiss={handleDismiss}
+                onUndismiss={handleUndismiss}
+                onLike={handleLike}
+                onDislike={handleDislike}
+                onSave={handleSave}
+                onUnsave={handleUnsave}
+                showIfDismissed={showDismissed}
+              />
+            ))}
+            {visibleCount < visibleGrants.length && (
+              <div className="text-center py-6">
+                <button
+                  onClick={() => setVisibleCount(v => v + 30)}
+                  className="btn-outline px-6 py-2.5 text-sm"
+                >
+                  Show more ({visibleGrants.length - visibleCount} remaining)
+                </button>
+              </div>
+            )}
+            {dismissedCount > 0 && (
+              <div className="text-center py-4 border-t border-warm/50 mt-2">
+                <button
+                  onClick={() => setShowDismissed(v => !v)}
+                  className="inline-flex items-center gap-1.5 text-xs text-light hover:text-mid transition-colors"
+                >
+                  {showDismissed ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  {showDismissed
+                    ? `Hide ${dismissedCount} hidden grant${dismissedCount !== 1 ? 's' : ''}`
+                    : `${dismissedCount} hidden grant${dismissedCount !== 1 ? 's' : ''} — show`}
+                </button>
+              </div>
+            )}
+          </>
+        )
+      })()}
 
       {/* ── Saved view ── */}
       {activeView === 'saved' && (() => {
