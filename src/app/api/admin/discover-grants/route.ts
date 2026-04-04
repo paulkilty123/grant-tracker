@@ -1,18 +1,9 @@
-// Admin-only endpoint: discovers new funding opportunities using web search and
-// inserts them into the discovery_queue table for review before promotion.
+// Admin-only endpoint: discovers new funding opportunities using Gemini 2.0 Flash
+// with Google Search grounding, inserts results into discovery_queue for review.
 //
 // POST /api/admin/discover-grants
 // Body: { queries?: string[], fundingTypes?: ('corporate'|'social_investment'|'programme')[] }
 // Auth: ADMIN_SECRET bearer token or authenticated admin session
-//
-// ── GEMINI SWAP POINT ──────────────────────────────────────────────────────
-// Currently uses Claude Sonnet + web_search_20250305.
-// When GEMINI_API_KEY is available, swap runDiscoverySearch() to call:
-//   POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent
-// with { tools: [{ google_search: {} }] }
-// The response shape differs but the parsing + DB insert logic stays the same.
-// Search for "// GEMINI SWAP" comments below for the exact substitution points.
-// ──────────────────────────────────────────────────────────────────────────
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
@@ -22,11 +13,7 @@ export const dynamic = 'force-dynamic'
 export const maxDuration = 300 // 5 minutes for multiple search queries
 
 const ADMIN_EMAIL = 'paulkilty1@gmail.com'
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY!
-
-// ── GEMINI SWAP: replace ANTHROPIC_API_KEY usage with GEMINI_API_KEY ──────
-// const GEMINI_API_KEY = process.env.GEMINI_API_KEY!
-// ──────────────────────────────────────────────────────────────────────────
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY!
 
 async function isAuthorised(req: NextRequest): Promise<boolean> {
   const auth = req.headers.get('authorization') ?? ''
@@ -86,27 +73,6 @@ const DEFAULT_QUERIES: Record<FundingType, string[]> = {
   ],
 }
 
-// ── GEMINI SWAP: replace this entire function ──────────────────────────────
-// async function runDiscoverySearch(query: string, fundingType: FundingType): Promise<DiscoveredOpportunity[]> {
-//   const res = await fetch(
-//     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
-//     {
-//       method: 'POST',
-//       headers: { 'Content-Type': 'application/json' },
-//       body: JSON.stringify({
-//         contents: [{ parts: [{ text: buildUserPrompt(query, fundingType) }] }],
-//         tools: [{ google_search: {} }],
-//         system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
-//         generationConfig: { responseMimeType: 'application/json' },
-//       }),
-//     }
-//   )
-//   const data = await res.json()
-//   const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
-//   return parseResults(text)
-// }
-// ──────────────────────────────────────────────────────────────────────────
-
 const SYSTEM_PROMPT = `You are a UK funding research specialist focused on discovering funding for charities, CICs, and social enterprises. Search the live web to find CURRENT and OPEN funding opportunities.
 
 Focus on:
@@ -142,70 +108,52 @@ Find 8–12 distinct funding opportunities. For each one return:
   "deadline": "Application deadline or 'Rolling' or null if unknown",
   "amount_range": "e.g. £5,000–£50,000 or null if unknown",
   "eligibility_snippet": "Key eligibility requirements in 1–2 sentences",
-  "funding_type": "corporate_grant|corporate_programme|social_investment|accelerator|incubator|fellowship|capacity_building|loan|equity|blended_finance"
+  "funding_type": "corporate_grant|corporate_programme|social_investment|accelerator|incubator|fellowship|capacity_building|loan|equity|blended_finance",
+  "also_in_programmes": true or false
 }
 
 Return as JSON: { "results": [ ... ] }`
 }
 
 async function runDiscoverySearch(query: string, fundingType: FundingType): Promise<DiscoveredOpportunity[]> {
-  // GEMINI SWAP: replace this Claude + web_search call with the Gemini implementation above
-
-  let data: Record<string, unknown> | null = null
-
-  for (let attempt = 0; attempt < 3; attempt++) {
-    if (attempt > 0) {
-      const wait = 60_000 * attempt
-      console.log(`[discover-grants] Rate limited, retrying in ${wait / 1000}s...`)
-      await sleep(wait)
-    }
-
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+    {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'anthropic-beta': 'web-search-2025-03-05',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-5-20250929',
-        max_tokens: 8000,
-        tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 6 }],
-        system: SYSTEM_PROMPT,
-        messages: [{ role: 'user', content: buildUserPrompt(query, fundingType) }],
+        contents: [{ parts: [{ text: buildUserPrompt(query, fundingType) }] }],
+        tools: [{ google_search: {} }],
+        system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+        generationConfig: { temperature: 0.2 },
       }),
-    })
-
-    if (res.ok) {
-      data = await res.json() as Record<string, unknown>
-      break
+      signal: AbortSignal.timeout(60_000),
     }
+  )
 
+  if (!res.ok) {
     const err = await res.text()
-    if (res.status === 429 || err.includes('rate_limit')) {
-      console.error(`[discover-grants] Rate limited for "${query}" (attempt ${attempt + 1})`)
-      continue
-    }
-
-    console.error(`[discover-grants] Search failed for "${query}":`, err)
+    console.error(`[discover-grants] Gemini error for "${query}": ${res.status}`, err)
     return []
   }
 
-  if (!data) {
-    console.error(`[discover-grants] Exhausted retries for "${query}"`)
+  const data = await res.json() as {
+    candidates?: Array<{
+      content?: { parts?: Array<{ text?: string }> }
+    }>
+  }
+
+  const text = data.candidates?.[0]?.content?.parts
+    ?.filter(p => p.text)
+    .map(p => p.text)
+    .join('') ?? ''
+
+  if (!text) {
+    console.error(`[discover-grants] No text in Gemini response for "${query}"`)
     return []
   }
 
-  // Extract the last text block (Claude emits multiple blocks during web search)
-  const contentBlocks = data.content as Array<{ type: string; text?: string }> | undefined
-  const textBlock = contentBlocks?.filter(b => b.type === 'text').pop()
-  if (!textBlock?.text) {
-    console.error(`[discover-grants] No text block for "${query}"`)
-    return []
-  }
-
-  return parseResults(textBlock.text)
+  return parseResults(text)
 }
 
 function parseResults(text: string): DiscoveredOpportunity[] {
@@ -312,7 +260,7 @@ export async function POST(req: NextRequest) {
           amount_range: item.amount_range?.trim() ?? null,
           eligibility_snippet: item.eligibility_snippet?.trim() ?? null,
           funding_type: item.funding_type ?? fundingType,
-          source: 'claude_web_search', // GEMINI SWAP: change to 'gemini' when swapped
+          source: 'gemini',
           status: 'pending',
         }
 
