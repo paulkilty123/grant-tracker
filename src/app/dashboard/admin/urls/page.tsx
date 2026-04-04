@@ -42,6 +42,7 @@ type AddGrantForm = {
   title: string
   funder: string
   funder_type: string
+  funding_type: string
   apply_url: string
   description: string
   amount_min: string
@@ -83,8 +84,15 @@ const FUNDER_TYPE_OPTIONS = [
   { value: 'other',              label: 'Other' },
 ]
 
+const FUNDING_TYPE_OPTIONS = [
+  { value: 'grant',             label: 'Grant' },
+  { value: 'programme',         label: 'Programme' },
+  { value: 'social_investment', label: 'Social Investment' },
+  { value: 'in_kind',           label: 'In-Kind' },
+]
+
 const BLANK_FORM: AddGrantForm = {
-  title: '', funder: '', funder_type: 'trust_foundation', apply_url: '',
+  title: '', funder: '', funder_type: 'trust_foundation', funding_type: 'grant', apply_url: '',
   description: '', amount_min: '', amount_max: '', deadline: '',
   is_rolling: true, is_invite_only: false, next_open_date: '', sectors: '',
 }
@@ -813,6 +821,7 @@ export default function UrlAdminPage() {
           title:         d.title        ?? grant.title,
           funder:        d.funder       ?? (grant.funder ?? ''),
           funder_type:   d.funder_type  ?? (grant.funder_type ?? 'trust_foundation'),
+          funding_type:  d.funding_type ?? 'grant',
           apply_url:     discoveredUrl,
           description:   d.description  ?? '',
           amount_min:    d.amount_min   != null ? String(d.amount_min) : '',
@@ -940,6 +949,7 @@ export default function UrlAdminPage() {
       title:            form.title.trim(),
       funder:           form.funder.trim(),
       funder_type:      form.funder_type,
+      funding_type:     form.funding_type,
       apply_url:        savedUrl,
       description:      form.description.trim() || null,
       amount_min:       form.amount_min ? parseInt(form.amount_min, 10) : null,
@@ -1056,6 +1066,7 @@ export default function UrlAdminPage() {
         title:          addForm.title.trim(),
         funder:         addForm.funder.trim(),
         funder_type:    addForm.funder_type,
+        funding_type:   addForm.funding_type,
         apply_url:      addForm.apply_url.trim() || null,
         description:    addForm.description.trim() || null,
         amount_min:     addForm.amount_min ? parseInt(addForm.amount_min, 10) : null,
@@ -2358,6 +2369,16 @@ export default function UrlAdminPage() {
                 </div>
               </div>
 
+              {/* Funding Type */}
+              <div>
+                <label className="block text-xs font-semibold text-mid uppercase tracking-wider mb-1.5">Funding Type</label>
+                <select value={refreshModal.form.funding_type}
+                  onChange={e => setRefreshModal(m => m ? { ...m, form: { ...m.form, funding_type: e.target.value } } : m)}
+                  className="w-full rounded-xl border border-warm px-3 py-2.5 text-sm text-charcoal focus:border-forest focus:outline-none bg-white">
+                  {FUNDING_TYPE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              </div>
+
               {/* Amount */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -2570,6 +2591,20 @@ export default function UrlAdminPage() {
                     ))}
                   </select>
                 </div>
+              </div>
+
+              {/* Funding Type */}
+              <div>
+                <label className="block text-xs font-semibold text-mid uppercase tracking-wider mb-1.5">
+                  Funding Type
+                </label>
+                <select value={addForm.funding_type}
+                  onChange={e => setAddForm(f => ({ ...f, funding_type: e.target.value }))}
+                  className="w-full rounded-xl border border-warm px-3 py-2.5 text-sm text-charcoal focus:border-forest focus:outline-none bg-white">
+                  {FUNDING_TYPE_OPTIONS.map(o => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
               </div>
 
               {/* Apply URL */}
