@@ -110,6 +110,33 @@ const TITLE_DOMAIN_KEYWORDS: Array<{
 ]
 
 /**
+ * English regions and counties used to detect regional grant restrictions from
+ * grant titles even when is_local = false. E.g. "Fund (North)", "Yorkshire Grant".
+ * Maps keyword → canonical region label shown in warning messages.
+ */
+const REGIONAL_KEYWORDS: Record<string, string> = {
+  // Broad compass regions (bracket notation common in grant titles)
+  '(north)': 'North of England', '(south)': 'South of England',
+  '(east)': 'East of England',   '(west)': 'West of England',
+  // Named regions
+  'north east': 'North East England', 'north west': 'North West England',
+  'yorkshire': 'Yorkshire', 'east midlands': 'East Midlands',
+  'west midlands': 'West Midlands', 'east of england': 'East of England',
+  'south east': 'South East England', 'south west': 'South West England',
+  // Counties most likely to appear in grant titles
+  'cornwall': 'Cornwall', 'devon': 'Devon', 'somerset': 'Somerset',
+  'dorset': 'Dorset', 'kent': 'Kent', 'sussex': 'Sussex', 'surrey': 'Surrey',
+  'suffolk': 'Suffolk', 'norfolk': 'Norfolk', 'essex': 'Essex',
+  'oxfordshire': 'Oxfordshire', 'gloucestershire': 'Gloucestershire',
+  'shropshire': 'Shropshire', 'lancashire': 'Lancashire',
+  'cumbria': 'Cumbria', 'durham': 'Durham', 'northumberland': 'Northumberland',
+  'merseyside': 'Merseyside', 'greater manchester': 'Greater Manchester',
+  'tyne and wear': 'Tyne & Wear', 'cheshire': 'Cheshire',
+  // Devolved nations — already handled elsewhere but belt-and-braces
+  'scotland': 'Scotland', 'wales': 'Wales', 'northern ireland': 'Northern Ireland',
+}
+
+/**
  * London borough names used for borough-level geographic restriction detection.
  * When a grant text or eligibility criteria mentions one of these and it does NOT
  * match the org's city, the grant is likely restricted to that specific borough.
@@ -341,6 +368,27 @@ export function computeMatchScore(
         locationScore = 2
         locationMismatch = true
         reasons.push('Local grant — area may not match yours')
+      }
+    } else {
+      // ── Regional title detection for grants tagged as national ─────────────
+      // Many grants have regional scope but is_local = false and no location
+      // eligibility text. Catch them by scanning the grant title for regional
+      // keywords (e.g. "(North)", "Yorkshire", "South West").
+      const grantTitleLower = grant.title.toLowerCase()
+      const matchedRegion = Object.entries(REGIONAL_KEYWORDS).find(
+        ([keyword]) => grantTitleLower.includes(keyword)
+      )
+      if (matchedRegion) {
+        const [keyword, regionLabel] = matchedRegion
+        const orgLocation = [city, region, country].join(' ')
+        // Check if the org's location contains the detected region keyword
+        const orgInRegion = orgLocation.includes(keyword.replace(/[()]/g, '').trim()) ||
+          orgLocation.includes(regionLabel.toLowerCase())
+        if (!orgInRegion) {
+          locationScore = 2
+          locationMismatch = true
+          reasons.push(`Likely restricted to ${regionLabel} — check eligibility`)
+        }
       }
     }
   }
