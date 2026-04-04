@@ -1,8 +1,9 @@
-// Admin-only endpoint: discovers new funding opportunities using Gemini 2.0 Flash
+// Admin-only endpoint: discovers new funding opportunities using Gemini 2.5 Flash
 // with Google Search grounding, inserts results into discovery_queue for review.
 //
 // POST /api/admin/discover-grants
-// Body: { queries?: string[], fundingTypes?: ('corporate'|'social_investment'|'programme')[] }
+// Body: { query: string, fundingType: 'corporate'|'social_investment'|'programme' }
+// Runs ONE query per call — the UI orchestrates multiple calls to avoid Vercel timeouts.
 // Auth: ADMIN_SECRET bearer token or authenticated admin session
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -10,10 +11,10 @@ import { createClient } from '@supabase/supabase-js'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
-export const maxDuration = 300 // 5 minutes for multiple search queries
+export const maxDuration = 60 // One query per call, well within limits
 
 const ADMIN_EMAIL = 'paulkilty1@gmail.com'
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY!
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY
 
 async function isAuthorised(req: NextRequest): Promise<boolean> {
   const auth = req.headers.get('authorization') ?? ''
@@ -33,8 +34,6 @@ function getAdminClient() {
   )
 }
 
-function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)) }
-
 type FundingType = 'corporate' | 'social_investment' | 'programme'
 
 interface DiscoveredOpportunity {
@@ -48,28 +47,27 @@ interface DiscoveredOpportunity {
   funding_type: string
 }
 
-// Default queries per funding category
-const DEFAULT_QUERIES: Record<FundingType, string[]> = {
+export const DEFAULT_QUERIES: Record<FundingType, string[]> = {
   corporate: [
-    'UK corporate foundation grants for charities CICs 2025 2026',
-    'UK CSR programme funding social enterprises community organisations apply',
-    'corporate social investment UK charities open applications',
-    'FTSE100 company community grants UK charities apply now',
-    'UK business foundation grants arts culture social enterprise',
+    'UK corporate foundation grants charities CICs 2025 2026 open applications',
+    'UK CSR programme funding social enterprises community organisations apply now',
+    'FTSE100 company community grants UK charities open applications',
+    'UK corporate social responsibility fund social enterprise apply 2026',
+    'UK business foundation grants community groups open round',
   ],
   social_investment: [
     'UK social investment patient capital charities CICs apply 2025 2026',
-    'blended finance social enterprise UK loan equity hybrid funding',
-    'UK social impact bond outcomes fund apply charity',
-    'community development finance institution CDFI loan UK social enterprise',
+    'blended finance social enterprise UK loan equity hybrid funding open',
+    'community development finance institution CDFI loan UK social enterprise apply',
+    'UK social impact fund outcomes-based finance charity apply',
     'impact investing UK charity CIC convertible loan grant blend open',
   ],
   programme: [
     'UK accelerator incubator social enterprise charity cohort 2025 2026 apply',
     'fellowship programme UK social entrepreneurs charity leaders open applications',
-    'capacity building programme UK charities CICs funding support 2025',
-    'UK social enterprise support programme mentoring funding apply',
-    'charity incubator accelerator UK open applications cohort',
+    'capacity building programme UK charities CICs funding support 2026',
+    'UK social enterprise support programme mentoring funding apply now',
+    'charity incubator accelerator UK open applications cohort 2026',
   ],
 }
 
@@ -108,52 +106,10 @@ Find 8–12 distinct funding opportunities. For each one return:
   "deadline": "Application deadline or 'Rolling' or null if unknown",
   "amount_range": "e.g. £5,000–£50,000 or null if unknown",
   "eligibility_snippet": "Key eligibility requirements in 1–2 sentences",
-  "funding_type": "corporate_grant|corporate_programme|social_investment|accelerator|incubator|fellowship|capacity_building|loan|equity|blended_finance",
-  "also_in_programmes": true or false
+  "funding_type": "corporate_grant|corporate_programme|social_investment|accelerator|incubator|fellowship|capacity_building|loan|equity|blended_finance"
 }
 
 Return as JSON: { "results": [ ... ] }`
-}
-
-async function runDiscoverySearch(query: string, fundingType: FundingType): Promise<DiscoveredOpportunity[]> {
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: buildUserPrompt(query, fundingType) }] }],
-        tools: [{ google_search: {} }],
-        system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
-        generationConfig: { temperature: 0.2 },
-      }),
-      signal: AbortSignal.timeout(60_000),
-    }
-  )
-
-  if (!res.ok) {
-    const err = await res.text()
-    console.error(`[discover-grants] Gemini error for "${query}": ${res.status}`, err)
-    return []
-  }
-
-  const data = await res.json() as {
-    candidates?: Array<{
-      content?: { parts?: Array<{ text?: string }> }
-    }>
-  }
-
-  const text = data.candidates?.[0]?.content?.parts
-    ?.filter(p => p.text)
-    .map(p => p.text)
-    .join('') ?? ''
-
-  if (!text) {
-    console.error(`[discover-grants] No text in Gemini response for "${query}"`)
-    return []
-  }
-
-  return parseResults(text)
 }
 
 function parseResults(text: string): DiscoveredOpportunity[] {
@@ -167,121 +123,126 @@ function parseResults(text: string): DiscoveredOpportunity[] {
     const parsed = JSON.parse(raw) as { results?: DiscoveredOpportunity[] }
     return parsed.results ?? []
   } catch (e) {
-    console.error('[discover-grants] JSON parse failed:', e)
+    console.error('[discover-grants] JSON parse failed:', e, '\nRaw text (first 500):', text.slice(0, 500))
     return []
   }
 }
 
 export async function POST(req: NextRequest) {
-  if (!await isAuthorised(req)) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
-  }
-
-  const body = await req.json() as {
-    queries?: string[]
-    fundingTypes?: FundingType[]
-  }
-
-  const fundingTypes: FundingType[] = body.fundingTypes ?? ['corporate', 'social_investment', 'programme']
-  const db = getAdminClient()
-
-  // Collect existing URLs from scraped_grants to avoid duplicates
-  const { data: existingGrants } = await db
-    .from('scraped_grants')
-    .select('apply_url, title')
-    .limit(3000)
-  const existingUrls = new Set((existingGrants ?? []).map(g => (g.apply_url ?? '').toLowerCase().trim()))
-  const existingTitles = new Set((existingGrants ?? []).map(g => (g.title ?? '').toLowerCase().trim()))
-
-  // Also fetch already-queued URLs to avoid re-queuing
-  const { data: queuedItems } = await db
-    .from('discovery_queue')
-    .select('url, title')
-    .limit(2000)
-  for (const item of queuedItems ?? []) {
-    if (item.url) existingUrls.add(item.url.toLowerCase().trim())
-    if (item.title) existingTitles.add(item.title.toLowerCase().trim())
-  }
-
-  const summary: {
-    fundingType: string
-    query: string
-    found: number
-    queued: number
-    skipped: string[]
-  }[] = []
-
-  let totalQueued = 0
-  let queryIndex = 0
-
-  for (const fundingType of fundingTypes) {
-    const queries = body.queries ?? DEFAULT_QUERIES[fundingType]
-
-    for (const query of queries) {
-      // Rate-limit spacing between queries
-      if (queryIndex > 0) {
-        console.log(`[discover-grants] Waiting 65s before next query...`)
-        await sleep(65_000)
-      }
-      queryIndex++
-
-      console.log(`[discover-grants] Running: "${query}" (${fundingType})`)
-      const results = await runDiscoverySearch(query, fundingType)
-      const skipped: string[] = []
-      let queued = 0
-
-      for (const item of results) {
-        const titleLower = (item.title ?? '').toLowerCase().trim()
-        const urlLower = (item.url ?? '').toLowerCase().trim()
-
-        // Skip if no URL
-        if (!item.url) {
-          skipped.push(`${item.title} (no URL)`)
-          continue
-        }
-
-        // Skip duplicates by URL or title
-        if (existingUrls.has(urlLower)) {
-          skipped.push(`${item.title} (duplicate URL)`)
-          continue
-        }
-        if (existingTitles.has(titleLower)) {
-          skipped.push(`${item.title} (duplicate title)`)
-          continue
-        }
-
-        const row = {
-          query,
-          funder_name: (item.funder_name ?? '').trim() || 'Unknown',
-          title: (item.title ?? '').trim(),
-          url: item.url.trim(),
-          description: item.description?.trim() ?? null,
-          deadline: item.deadline?.trim() ?? null,
-          amount_range: item.amount_range?.trim() ?? null,
-          eligibility_snippet: item.eligibility_snippet?.trim() ?? null,
-          funding_type: item.funding_type ?? fundingType,
-          source: 'gemini',
-          status: 'pending',
-        }
-
-        const { error } = await db
-          .from('discovery_queue')
-          .insert(row)
-
-        if (error) {
-          skipped.push(`${item.title} (DB error: ${error.message})`)
-        } else {
-          queued++
-          totalQueued++
-          existingUrls.add(urlLower)
-          existingTitles.add(titleLower)
-        }
-      }
-
-      summary.push({ fundingType, query, found: results.length, queued, skipped })
-      console.log(`[discover-grants] "${query}": found ${results.length}, queued ${queued}`)
+  try {
+    if (!await isAuthorised(req)) {
+      return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
     }
-  }
 
-  return NextResponse.json({ ok: true, totalQueued, summary })
+    if (!GEMINI_API_KEY) {
+      return NextResponse.json({ error: 'GEMINI_API_KEY not configured' }, { status: 500 })
+    }
+
+    const body = await req.json() as { query?: string; fundingType?: FundingType }
+    const fundingType: FundingType = body.fundingType ?? 'corporate'
+
+    // Pick first unused default query if none supplied
+    const query = body.query ?? DEFAULT_QUERIES[fundingType][0]
+
+    console.log(`[discover-grants] Running: "${query}" (${fundingType})`)
+
+    // Call Gemini
+    const geminiRes = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: buildUserPrompt(query, fundingType) }] }],
+          tools: [{ google_search: {} }],
+          system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+          generationConfig: { temperature: 0.2 },
+        }),
+        signal: AbortSignal.timeout(45_000),
+      }
+    )
+
+    if (!geminiRes.ok) {
+      const errText = await geminiRes.text()
+      console.error(`[discover-grants] Gemini HTTP ${geminiRes.status}:`, errText.slice(0, 300))
+      return NextResponse.json({
+        error: `Gemini API error ${geminiRes.status}`,
+        detail: errText.slice(0, 200),
+      }, { status: 502 })
+    }
+
+    const geminiData = await geminiRes.json() as {
+      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>
+    }
+
+    const text = geminiData.candidates?.[0]?.content?.parts
+      ?.filter(p => p.text).map(p => p.text).join('') ?? ''
+
+    if (!text) {
+      return NextResponse.json({ error: 'Gemini returned no text', ok: false, queued: 0, skipped: [] })
+    }
+
+    const results = parseResults(text)
+
+    if (results.length === 0) {
+      return NextResponse.json({ ok: true, queued: 0, found: 0, skipped: [], query, fundingType })
+    }
+
+    // Deduplicate against scraped_grants and discovery_queue
+    const db = getAdminClient()
+    const { data: existingGrants } = await db.from('scraped_grants').select('apply_url, title').limit(3000)
+    const { data: queuedItems }    = await db.from('discovery_queue').select('url, title').limit(2000)
+
+    const existingUrls   = new Set([
+      ...(existingGrants ?? []).map(g => (g.apply_url ?? '').toLowerCase().trim()),
+      ...(queuedItems    ?? []).map(q => (q.url ?? '').toLowerCase().trim()),
+    ])
+    const existingTitles = new Set([
+      ...(existingGrants ?? []).map(g => (g.title ?? '').toLowerCase().trim()),
+      ...(queuedItems    ?? []).map(q => (q.title ?? '').toLowerCase().trim()),
+    ])
+
+    const skipped: string[] = []
+    let queued = 0
+
+    for (const item of results) {
+      const titleLower = (item.title ?? '').toLowerCase().trim()
+      const urlLower   = (item.url   ?? '').toLowerCase().trim()
+
+      if (!item.url)                       { skipped.push(`${item.title} (no URL)`);           continue }
+      if (existingUrls.has(urlLower))      { skipped.push(`${item.title} (duplicate URL)`);    continue }
+      if (existingTitles.has(titleLower))  { skipped.push(`${item.title} (duplicate title)`);  continue }
+
+      const { error } = await db.from('discovery_queue').insert({
+        query,
+        funder_name:         (item.funder_name ?? '').trim() || 'Unknown',
+        title:               (item.title ?? '').trim(),
+        url:                 item.url.trim(),
+        description:         item.description?.trim() ?? null,
+        deadline:            item.deadline?.trim() ?? null,
+        amount_range:        item.amount_range?.trim() ?? null,
+        eligibility_snippet: item.eligibility_snippet?.trim() ?? null,
+        funding_type:        item.funding_type ?? fundingType,
+        source:              'gemini',
+        status:              'pending',
+      })
+
+      if (error) {
+        skipped.push(`${item.title} (DB error: ${error.message})`)
+      } else {
+        queued++
+        existingUrls.add(urlLower)
+        existingTitles.add(titleLower)
+      }
+    }
+
+    console.log(`[discover-grants] "${query}": found ${results.length}, queued ${queued}`)
+    return NextResponse.json({ ok: true, queued, found: results.length, skipped, query, fundingType })
+
+  } catch (err) {
+    // Always return JSON — never let a crash return an HTML error page
+    const message = err instanceof Error ? err.message : String(err)
+    console.error('[discover-grants] Unhandled error:', message)
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
 }
