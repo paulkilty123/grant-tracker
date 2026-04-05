@@ -34,7 +34,7 @@ type CategoryGrant = Grant & {
 }
 
 type Stats = { total: number; withUrl: number; ok: number; dead: number; unchecked: number; noUrl: number; seedTotal?: number; newCount?: number; reviewCount?: number; suspiciousCount?: number }
-type Filter = 'dead' | 'unchecked' | 'no_url' | 'all' | 'seed' | 'new' | 'category' | 'review' | 'suspicious'
+type Filter = 'dead' | 'unchecked' | 'no_url' | 'all' | 'seed' | 'new' | 'category' | 'review' | 'suspicious' | 'url_issues'
 type SuspiciousGrant = Grant & { url_quality_score: number | null; url_quality_issues: string[] }
 type DeadSeedGrant = { id: string; title: string; funder: string; url: string }
 type NewGrant = Grant & { first_seen_at: string }
@@ -225,6 +225,19 @@ export default function UrlAdminPage() {
   // ── Load scraped grants (URL health views) ───────────────────────────────────
   const loadGrants = useCallback(async () => {
     if (filter === 'seed' || filter === 'new' || filter === 'category' || filter === 'review' || filter === 'suspicious') return
+    // url_issues = dead + unchecked + no_url combined
+    if (filter === 'url_issues') {
+      const { data, error } = await createClient()
+        .from('scraped_grants')
+        .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funding_type, funder_brief')
+        .eq('is_active', true)
+        .or('url_status.eq.dead,and(url_status.eq.unchecked,apply_url.not.is.null),apply_url.is.null')
+        .order('url_status', { ascending: true })
+        .limit(2000)
+      if (error) { setLoadError(`Query failed: ${error.message}`); setGrants([]); return }
+      setLoadError(null); setGrants((data ?? []) as Grant[])
+      return
+    }
 
     let query = createClient()
       .from('scraped_grants')
@@ -1642,15 +1655,11 @@ export default function UrlAdminPage() {
       {/* Filter tabs + search */}
       <div className="mb-4 flex flex-wrap items-center gap-2">
         {([
-          { key: 'review',    label: `Needs Review${stats?.reviewCount ? ` (${stats.reviewCount})` : ''}`, urgent: (stats?.reviewCount ?? 0) > 0 },
-          { key: 'category',  label: `By Category` },
-          { key: 'new',       label: `New this week${stats ? ` (${stats.newCount ?? 0})` : ''}` },
-          { key: 'dead',      label: `Dead links${stats ? ` (${stats.dead})` : ''}` },
-          { key: 'unchecked', label: `Unchecked${stats ? ` (${stats.unchecked})` : ''}` },
-          { key: 'no_url',    label: `No URL${stats ? ` (${stats.noUrl ?? 0})` : ''}` },
-          { key: 'suspicious', label: `Suspicious${stats?.suspiciousCount ? ` (${stats.suspiciousCount})` : ''}`, urgent: (stats?.suspiciousCount ?? 0) > 10 },
-          { key: 'all',       label: 'All grants' },
-          { key: 'seed',      label: `Seed grants (${SEED_GRANTS.length - promotedKeys.size > 0 ? `${SEED_GRANTS.length - Math.min(promotedKeys.size, SEED_GRANTS.length)} remaining` : 'all promoted'})` },
+          { key: 'review',     label: `Needs Review${stats?.reviewCount ? ` (${stats.reviewCount})` : ''}`, urgent: (stats?.reviewCount ?? 0) > 0 },
+          { key: 'all',        label: 'All grants' },
+          { key: 'new',        label: `New this week${stats ? ` (${stats.newCount ?? 0})` : ''}` },
+          { key: 'category',   label: 'By Category' },
+          { key: 'url_issues', label: `URL Issues${stats ? ` (${(stats.dead ?? 0) + (stats.unchecked ?? 0) + (stats.noUrl ?? 0)})` : ''}` },
         ] as const).map(tab => (
           <button key={tab.key}
             onClick={() => { setFilter(tab.key); setSearch(''); setCategorySearch(''); setFundingTypeTab('all') }}
