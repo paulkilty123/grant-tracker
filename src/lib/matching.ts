@@ -14,13 +14,21 @@ export interface MatchResult {
   breakdown: MatchBreakdown
 }
 
-// Map income bands to approximate midpoints
+// Map income bands to approximate midpoints.
+// Covers both the current granular bands and legacy coarse bands (kept for
+// backward compatibility with profiles saved before the band expansion).
 const INCOME_MIDPOINTS: Record<string, number> = {
-  'Under £10,000':         5_000,
-  '£10,000–£50,000':      30_000,
-  '£50,000–£100,000':     75_000,
-  '£100,000–£500,000':   300_000,
-  'Over £500,000':        750_000,
+  'Under £10,000':             5_000,
+  '£10,000–£50,000':          30_000,
+  '£50,000–£100,000':         75_000,
+  '£100,000–£250,000':       175_000,   // granular split
+  '£250,000–£500,000':       375_000,   // granular split
+  '£500,000–£1 million':     750_000,
+  '£1 million–£5 million': 2_500_000,
+  'Over £5 million':      10_000_000,
+  // Legacy bands — kept so old profiles still resolve correctly
+  '£100,000–£500,000':       300_000,
+  'Over £500,000':           750_000,
 }
 
 // Ordered income bands lowest→highest for cap comparison
@@ -842,6 +850,26 @@ export function computeMatchScore(
         reasons.push('Your income may exceed this grant\'s cap')
       } else {
         eligibilityScore = Math.min(15, eligibilityScore + 1)
+      }
+    }
+
+    // ── Trading history / account age check ──────────────────────────────
+    // Some grants require a minimum number of years operating or published accounts.
+    // If the org's years_operating is set and falls short, apply a soft penalty.
+    if (org.years_operating != null && eligibilityText.length > 20) {
+      const accountsMatch = eligibilityText.match(
+        /(?:minimum\s+)?(\d+)\s+(?:full\s+)?years?\s+(?:of\s+)?(?:published\s+)?accounts|(\d+)\s+years?\s+(?:trading|operating|established)/i
+      )
+      if (accountsMatch) {
+        const required = parseInt(accountsMatch[1] ?? accountsMatch[2])
+        if (!isNaN(required)) {
+          if (org.years_operating < required) {
+            eligibilityScore = Math.max(1, eligibilityScore - 5)
+            reasons.push(`May require ${required}+ years of accounts — check eligibility`)
+          } else {
+            eligibilityScore = Math.min(15, eligibilityScore + 1)
+          }
+        }
       }
     }
   }

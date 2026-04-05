@@ -28,9 +28,9 @@ const LEGAL_STRUCTURE_OPTIONS: { value: LegalStructure; label: string; hint?: st
 const ORG_STAGE_OPTIONS: { value: OrgStage; label: string; desc: string }[] = [
   { value: 'idea',        label: 'Idea Stage',    desc: 'Not yet trading or registered' },
   { value: 'pre_revenue', label: 'Pre-Revenue',   desc: 'Registered but no trading income yet' },
-  { value: 'early',       label: 'Early Stage',   desc: 'Up to 2 years trading or £50k income' },
-  { value: 'growth',      label: 'Growth',        desc: '2–5 years or £50k–£250k income' },
-  { value: 'established', label: 'Established',   desc: '5+ years or over £250k income' },
+  { value: 'early',       label: 'Early Stage',   desc: 'Under 3 years operating or under £100k income' },
+  { value: 'growth',      label: 'Growth',        desc: '3–10 years, building income and impact' },
+  { value: 'established', label: 'Established',   desc: 'Over 5 years — any size, from local charity to major institution' },
 ]
 
 const IMPACT_SECTOR_OPTIONS: { value: ImpactSector; label: string }[] = [
@@ -68,18 +68,23 @@ const INCOME_BANDS = [
   'Under £10,000',
   '£10,000–£50,000',
   '£50,000–£100,000',
-  '£100,000–£500,000',
-  'Over £500,000',
+  '£100,000–£250,000',
+  '£250,000–£500,000',
+  '£500,000–£1 million',
+  '£1 million–£5 million',
+  'Over £5 million',
 ]
 
 const FUNDER_TYPE_OPTIONS: { value: FunderType; label: string }[] = [
-  { value: 'trust_foundation',   label: 'Trusts & Foundations'    },
-  { value: 'lottery',            label: 'National Lottery'         },
-  { value: 'local_authority',    label: 'Local Authority'          },
-  { value: 'government',         label: 'Central Government'       },
-  { value: 'corporate',          label: 'Corporate / CSR'          },
-  { value: 'housing_association',label: 'Housing Associations'     },
-  { value: 'other',              label: 'Other'                    },
+  { value: 'trust_foundation',    label: 'Trusts & Foundations'         },
+  { value: 'community_foundation',label: 'Community Foundations'        },
+  { value: 'corporate_foundation',label: 'Corporate Foundations'        },
+  { value: 'lottery',             label: 'National Lottery'             },
+  { value: 'local_authority',     label: 'Local Authority'              },
+  { value: 'government',          label: 'Central Government'           },
+  { value: 'corporate',           label: 'Corporate / CSR'              },
+  { value: 'housing_association', label: 'Housing Associations'         },
+  { value: 'other',               label: 'Other'                        },
 ]
 
 /* ────────────────────────────────────────────
@@ -192,6 +197,8 @@ function completenessScore(form: FormState): { score: number; missing: string[] 
     { label: 'Mission statement',     filled: !!form.mission.trim() },
     { label: 'Areas of work',         filled: !!form.areasOfWork.trim() },
     { label: 'Years operating',       filled: !!form.yearsOperating },
+    // Grant size targets are the primary input for size matching — prompt users to fill these in
+    { label: 'Grant size range',      filled: !!form.maxGrantTarget },
   ]
   const filled = checks.filter(c => c.filled).length
   const missing = checks.filter(c => !c.filled).map(c => c.label)
@@ -898,6 +905,7 @@ export default function ProfilePage() {
               <option key={b} value={b}>{b}</option>
             ))}
           </select>
+          <p className="text-xs text-light mt-1">Used to check income caps on grants — select the most accurate band</p>
         </div>
         <div>
           <label className="block text-sm font-medium text-charcoal mb-1.5">Years operating</label>
@@ -992,12 +1000,10 @@ export default function ProfilePage() {
         </div>
         <div>
           <label className="block text-sm font-medium text-charcoal mb-1.5">Geographic reach</label>
-          <select className="form-select" value={form.geographicReach} onChange={set('geographicReach')}>
-            <option value="hyper_local">Hyper-local (single neighbourhood)</option>
-            <option value="local">Local (town / borough)</option>
-            <option value="regional">Regional (county / region)</option>
-            <option value="national">National (England / UK-wide)</option>
-          </select>
+          <div className="form-input bg-warm/50 text-mid text-sm cursor-default">
+            Based on your primary location — local &amp; national grants both shown
+          </div>
+          <p className="text-xs text-light mt-1">Local grants in your area score highest; national grants apply to all</p>
         </div>
         <div className="md:col-span-2">
           <label className="block text-sm font-medium text-charcoal mb-1.5">Priority themes</label>
@@ -1053,6 +1059,40 @@ export default function ProfilePage() {
   function renderSection5() {
     return (
       <div>
+        {/* Grant size targets — most impactful matching signal */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-charcoal mb-1">
+            Target grant size range
+          </label>
+          <p className="text-xs text-mid mb-3">
+            What size grants are you typically applying for? This is the most important field for size matching — grants outside your range will score lower.
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs text-mid mb-1">Minimum (£)</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="e.g. 5000"
+                value={form.minGrantTarget}
+                onChange={set('minGrantTarget')}
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-mid mb-1">Maximum (£)</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="e.g. 100000"
+                value={form.maxGrantTarget}
+                onChange={set('maxGrantTarget')}
+              />
+            </div>
+          </div>
+          <p className="text-xs text-light mt-2">Leave blank to see all grant sizes without size filtering</p>
+        </div>
+
+        <div className="border-t border-warm pt-5 mb-5">
         {/* Funding type preferences */}
         <div className="mb-5">
           <label className="block text-sm font-medium text-charcoal mb-1.5">
@@ -1110,6 +1150,7 @@ export default function ProfilePage() {
             })}
           </div>
           <p className="text-xs text-light mt-2">Leave blank to see all funder types</p>
+        </div>
         </div>
       </div>
     )
