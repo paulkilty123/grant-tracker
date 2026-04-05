@@ -65,7 +65,39 @@ export interface ScrapedGrant {
   eligibility_criteria: string[]
   apply_url:            string | null
   funding_type?:        string | null   // FundingType — omit to default to 'grant'
+  location_tag?:        string | null   // Structured geo tag — omit to trigger auto-derivation in sanitiseGrant()
   raw_data:             Record<string, unknown>
+}
+
+// ── Location tag derivation ───────────────────────────────────────────────────
+// Normalises a raw location string (from scraper card text, Open to: criteria,
+// or an imported 360Giving row) to the canonical form expected by the matching
+// engine's classifyLocationTag(): 'UK' | 'England' | 'Scotland' | 'Wales' |
+// 'Northern Ireland' | <regional label preserved verbatim> | null.
+//
+// Returning null means "caller could not determine geography" — the matching
+// engine treats this as unknown and falls back to legacy is_local heuristics.
+export function deriveLocationTag(raw: string | null | undefined): string | null {
+  if (!raw) return null
+  const s = raw.trim()
+  if (s.length === 0) return null
+
+  // UK-wide variants first — check substrings so "UK-wide", "United Kingdom",
+  // "UK wide", "All of the UK", "nationwide" all collapse to 'UK'.
+  if (/\b(uk[\s-]?wide|all of (the )?uk|united kingdom|nationwide|\bnational\b)\b/i.test(s)) return 'UK'
+  if (/^uk$/i.test(s)) return 'UK'
+
+  // Nations — match as whole words so "Scotland" wins but "New England" doesn't
+  // accidentally match "England". Order matters: check NI before "Ireland".
+  if (/\bnorthern ireland\b|^ni$/i.test(s)) return 'Northern Ireland'
+  if (/\bscotland\b|\bscottish\b/i.test(s))  return 'Scotland'
+  if (/\bwales\b|\bwelsh\b|\bcymru\b/i.test(s)) return 'Wales'
+  if (/\bengland\b|\benglish\b/i.test(s))    return 'England'
+
+  // Not a recognised nation → treat as a regional label. Preserve the original
+  // verbatim (e.g. "Tyne & Wear", "Greater Manchester") so the regional-match
+  // helpers in matching.ts can do their substring checks.
+  return s
 }
 
 export interface CrawlResult {
@@ -310,6 +342,7 @@ async function crawlTNLCF(): Promise<CrawlResult> {
         sectors:              [],
         eligibility_criteria: location ? [`Open to: ${location}`] : [],
         apply_url:            fullUrl,
+        location_tag:         deriveLocationTag(location),
         raw_data:             { title, location, amountStr, status } as Record<string, unknown>,
       })
     }
@@ -1698,7 +1731,50 @@ function sanitiseGrant(g: ScrapedGrant): ScrapedGrant | null {
   if (minAmt !== null && minAmt > MAX_PLAUSIBLE) minAmt = null
   if (maxAmt !== null && maxAmt > MAX_PLAUSIBLE) maxAmt = null
 
-  return { ...g, apply_url: g.apply_url?.trim() ?? null, amount_min: minAmt, amount_max: maxAmt }
+  // ── location_tag derivation (fallback) ──────────────────────────────────────
+  // If the scraper didn't set location_tag explicitly, try to infer it from the
+  // eligibility_criteria "Open to: <place>" entries. Historically several NLCF
+  // grants (and probably others) left location_tag as null/'UK' even when the
+  // eligibility clearly named a single nation — this caused Welsh/Scottish/NI
+  // grants to be surfaced to English orgs as if they were UK-wide.
+  //
+  // Rule: if eligibility names exactly ONE nation (or UK), use it. If it lists
+  // multiple nations we assume UK-wide. If there's no signal at all, leave the
+  // tag as-is so the matching engine's fallback heuristics can take over.
+  let locationTag: string | null | undefined = g.location_tag
+  if (locationTag == null) {
+    const openToEntries = g.eligibility_criteria
+      .map(e => e.match(/^\s*open to:\s*(.+?)\s*$/i)?.[1])
+      .filter((v): v is string => !!v)
+
+    if (openToEntries.length > 0) {
+      // Each "Open to:" line may itself list multiple nations separated by comma/&/and
+      const pieces = openToEntries
+        .flatMap(line => line.split(/,|&|\band\b/i))
+        .map(p => deriveLocationTag(p))
+        .filter((t): t is string => t !== null)
+
+      const unique = Array.from(new Set(pieces))
+      const nations = unique.filter(t => t === 'England' || t === 'Scotland' || t === 'Wales' || t === 'Northern Ireland')
+
+      if (unique.length === 1) {
+        locationTag = unique[0]
+      } else if (nations.length >= 2) {
+        locationTag = 'UK'
+      } else if (unique.length > 0) {
+        // Mixed regional + nation — keep the first non-UK value (best-effort)
+        locationTag = unique.find(t => t !== 'UK') ?? 'UK'
+      }
+    }
+  }
+
+  return {
+    ...g,
+    apply_url:    g.apply_url?.trim() ?? null,
+    amount_min:   minAmt,
+    amount_max:   maxAmt,
+    location_tag: locationTag ?? null,
+  }
 }
 
 // ── DB upsert ─────────────────────────────────────────────────────────────────
