@@ -212,6 +212,54 @@ const LONDON_BOROUGHS = [
 ]
 
 /**
+ * Classify the structured `location_tag` field set by the scraper.
+ * Returns:
+ *   'national'   — UK-wide / no geographic restriction
+ *   'england'    — England-only
+ *   'scotland'   — Scotland-only
+ *   'wales'      — Wales-only
+ *   'ni'         — Northern Ireland-only
+ *   'regional'   — specific region, county, city or borough
+ *   'unknown'    — null or unrecognised
+ *
+ * This is the primary geographic signal used by the location scorer.
+ * Takes precedence over the legacy is_local boolean (which is inconsistent
+ * in ~16% of the catalogue).
+ */
+function classifyLocationTag(tag: string | null | undefined): {
+  kind: 'national' | 'england' | 'scotland' | 'wales' | 'ni' | 'regional' | 'unknown'
+  label: string
+} {
+  if (!tag) return { kind: 'unknown', label: '' }
+  const t = tag.trim().toLowerCase()
+  if (t === '' || t === 'uk' || t === 'national' || t === 'united kingdom') {
+    return { kind: 'national', label: 'UK' }
+  }
+  if (t === 'england')                                         return { kind: 'england',  label: 'England' }
+  if (t === 'scotland')                                        return { kind: 'scotland', label: 'Scotland' }
+  if (t === 'wales')                                           return { kind: 'wales',    label: 'Wales' }
+  if (t === 'northern ireland' || t === 'ni')                  return { kind: 'ni',       label: 'Northern Ireland' }
+  if (t === 'international')                                   return { kind: 'national', label: 'International' }
+  return { kind: 'regional', label: tag.trim() }
+}
+
+/**
+ * Check whether an org's primary_location satisfies a regional location_tag.
+ * Substring match in either direction — handles both "London" ↔ "London, UK"
+ * and "Tyne & Wear" ↔ "Newcastle, Tyne & Wear".
+ */
+function orgMatchesRegionalTag(tagLabel: string, orgLocation: string): boolean {
+  const tagLower = tagLabel.toLowerCase().trim()
+  const orgLower = orgLocation.toLowerCase()
+  if (!tagLower || !orgLower) return false
+  // Direct substring match either way
+  if (orgLower.includes(tagLower) || tagLower.includes(orgLower.split(',')[0].trim())) return true
+  // Handle compound tags like "Tyne & Wear", "Coventry & Warwickshire" — split and match any part
+  const parts = tagLower.split(/\s*&\s*|\s+and\s+/).map(p => p.trim()).filter(p => p.length >= 3)
+  return parts.some(p => orgLower.includes(p))
+}
+
+/**
  * Parse a pound amount from text (handles £10k, £50,000, £100 000 etc.)
  * Returns the numeric value, or null if not parseable.
  */
@@ -386,69 +434,119 @@ export function computeMatchScore(
   ].join(' ').toLowerCase()
 
   // ── 1. Location (max 25) ───────────────────────────────────────────────
+  // Primary signal: the structured `location_tag` field set by the scraper
+  // (e.g. "UK", "Scotland", "London", "Tyne & Wear", "Somerset"). This is far
+  // more reliable than the legacy `is_local` boolean, which is inconsistent on
+  // ~16% of the catalogue. We fall back to is_local + title-regex scanning
+  // only when location_tag is missing or generic.
   let locationScore = 10 // base for national grants
   let locationMismatch = false
   if (org.primary_location) {
     const city    = org.primary_location.split(',')[0].trim().toLowerCase()
     const region  = org.primary_location.split(',')[1]?.trim().toLowerCase() ?? ''
     const country = org.primary_location.split(',').pop()?.trim().toLowerCase() ?? ''
+    const orgLocationFull = [city, region, country].filter(Boolean).join(' ')
+    const orgInScotland = orgLocationFull.includes('scotland')
+    const orgInWales    = orgLocationFull.includes('wales')
+    const orgInNI       = orgLocationFull.includes('northern ireland')
+    const orgInEngland  = !orgInScotland && !orgInWales && !orgInNI // default
 
-    if (grant.isLocal) {
-      const cityMatch    = !!(city   && grantText.includes(city))
-      const regionMatch  = !!(region && grantText.includes(region))
-      const countryMatch = !!(country && ['scotland', 'wales', 'northern ireland'].includes(country) && grantText.includes(country))
-      const locationMatch = cityMatch || regionMatch || countryMatch
+    const tagClass = classifyLocationTag(grant.locationTag)
 
-      if (locationMatch) {
+    if (tagClass.kind === 'national') {
+      // UK-wide grant — everyone gets the national base. No regional gymnastics.
+      locationScore = 10
+    } else if (tagClass.kind === 'england' || tagClass.kind === 'scotland' ||
+               tagClass.kind === 'wales'   || tagClass.kind === 'ni') {
+      // Nation-restricted grant. Match against the org's inferred country.
+      const nationOk =
+        (tagClass.kind === 'england'  && orgInEngland)  ||
+        (tagClass.kind === 'scotland' && orgInScotland) ||
+        (tagClass.kind === 'wales'    && orgInWales)    ||
+        (tagClass.kind === 'ni'       && orgInNI)
+      if (nationOk) {
+        locationScore = 22
+        reasons.push(`Eligible in ${tagClass.label}`)
+      } else {
+        locationScore = 2
+        locationMismatch = true
+        reasons.push(`Restricted to ${tagClass.label}`)
+      }
+    } else if (tagClass.kind === 'regional') {
+      // Specific region, county, city or borough.
+      const regionOk = orgMatchesRegionalTag(tagClass.label, orgLocationFull)
+      if (regionOk) {
         locationScore = 25
-        reasons.push(`Local match for ${org.primary_location.split(',')[0]}`)
+        reasons.push(`Local match for ${tagClass.label}`)
 
-        // Borough mismatch check: applies to ALL London orgs — whether matched via
-        // city ("london") or region. If the grant names a specific borough and the
-        // org's location is just "london" (no specific borough) or a different borough,
-        // revert to national base score. This prevents Bromley-only funds from scoring
-        // 25/25 against a generic "London" org profile.
-        if (city === 'london' || region.includes('london')) {
+        // Borough mismatch check: a "London" tag is still a borough-agnostic match,
+        // but if the grant description names a specific borough and the org's city
+        // isn't that borough, dial back to the national base.
+        if (tagClass.label.toLowerCase() === 'london' && (city === 'london' || region.includes('london'))) {
           const mentionedBoroughs = LONDON_BOROUGHS.filter(b => grantText.includes(b))
           if (mentionedBoroughs.length > 0) {
-            // Only considered a match if org has a specific borough in their city field
             const orgBoroughMentioned = city !== 'london' && mentionedBoroughs.some(
               b => b === city || b.includes(city) || city.includes(b)
             )
             if (!orgBoroughMentioned) {
-              locationScore = 10 // revert to national base — borough mismatch
+              locationScore = 10
               reasons.pop()
               reasons.push('London grant — check borough eligibility')
             }
           }
         }
       } else {
-        // Local grant but no location text match — likely for a different area.
-        // Use a floor of 2 (well below the 10 base for national grants) so these
-        // grants rank significantly lower than anything even partially relevant.
+        // Regional grant for a different area — strong penalty so it ranks
+        // well below national grants of any quality.
         locationScore = 2
         locationMismatch = true
-        reasons.push('Local grant — area may not match yours')
+        reasons.push(`Restricted to ${tagClass.label}`)
       }
     } else {
-      // ── Regional title detection for grants tagged as national ─────────────
-      // Many grants have regional scope but is_local = false and no location
-      // eligibility text. Catch them by scanning the grant title for regional
-      // keywords (e.g. "(North)", "Yorkshire", "South West").
-      const grantTitleLower = grant.title.toLowerCase()
-      const matchedRegion = Object.entries(REGIONAL_KEYWORDS).find(
-        ([keyword]) => grantTitleLower.includes(keyword)
-      )
-      if (matchedRegion) {
-        const [keyword, regionLabel] = matchedRegion
-        const orgLocation = [city, region, country].join(' ')
-        // Check if the org's location contains the detected region keyword
-        const orgInRegion = orgLocation.includes(keyword.replace(/[()]/g, '').trim()) ||
-          orgLocation.includes(regionLabel.toLowerCase())
-        if (!orgInRegion) {
+      // ── Fallback path: location_tag is null/unknown ──────────────────────
+      // Use the legacy is_local boolean + title-regex scanning, same as before.
+      if (grant.isLocal) {
+        const cityMatch    = !!(city   && grantText.includes(city))
+        const regionMatch  = !!(region && grantText.includes(region))
+        const countryMatch = !!(country && ['scotland', 'wales', 'northern ireland'].includes(country) && grantText.includes(country))
+        const locationMatch = cityMatch || regionMatch || countryMatch
+
+        if (locationMatch) {
+          locationScore = 25
+          reasons.push(`Local match for ${org.primary_location.split(',')[0]}`)
+          if (city === 'london' || region.includes('london')) {
+            const mentionedBoroughs = LONDON_BOROUGHS.filter(b => grantText.includes(b))
+            if (mentionedBoroughs.length > 0) {
+              const orgBoroughMentioned = city !== 'london' && mentionedBoroughs.some(
+                b => b === city || b.includes(city) || city.includes(b)
+              )
+              if (!orgBoroughMentioned) {
+                locationScore = 10
+                reasons.pop()
+                reasons.push('London grant — check borough eligibility')
+              }
+            }
+          }
+        } else {
           locationScore = 2
           locationMismatch = true
-          reasons.push(`Likely restricted to ${regionLabel} — check eligibility`)
+          reasons.push('Local grant — area may not match yours')
+        }
+      } else {
+        // Title regex scan — catches mis-flagged regional grants
+        const grantTitleLower = grant.title.toLowerCase()
+        const matchedRegion = Object.entries(REGIONAL_KEYWORDS).find(
+          ([keyword]) => grantTitleLower.includes(keyword)
+        )
+        if (matchedRegion) {
+          const [keyword, regionLabel] = matchedRegion
+          const orgInRegion = orgLocationFull.includes(keyword.replace(/[()]/g, '').trim()) ||
+            orgLocationFull.includes(regionLabel.toLowerCase())
+          if (!orgInRegion) {
+            locationScore = 2
+            locationMismatch = true
+            reasons.push(`Likely restricted to ${regionLabel} — check eligibility`)
+          }
         }
       }
     }

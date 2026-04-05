@@ -37,13 +37,18 @@ function normaliseScraped(row: Record<string, unknown>): GrantOpportunity {
     deadline:             row.deadline ? String(row.deadline) : null,
     isRolling:            Boolean(row.is_rolling),
     isLocal:              Boolean(row.is_local),
+    locationTag:          row.location_tag ? String(row.location_tag) : null,
     sectors:              Array.isArray(row.sectors)              ? (row.sectors as string[])              : [],
+    impactSectors:        Array.isArray(row.impact_sectors)       ? (row.impact_sectors as import('@/types').ImpactSector[]) : undefined,
     eligibilityCriteria:  Array.isArray(row.eligibility_criteria) ? (row.eligibility_criteria as string[]) : [],
+    eligibleStructures:   Array.isArray(row.eligible_structures)  ? (row.eligible_structures as import('@/types').LegalStructure[]) : undefined,
     applyUrl:             row.apply_url ? String(row.apply_url) : null,
     isInviteOnly:         Boolean(row.is_invite_only),
     nextOpenDate:         row.next_open_date ? String(row.next_open_date) : null,
+    fundingType:          (row.funding_type ? String(row.funding_type) : 'grant') as import('@/types').FundingType,
     source:               'scraped',
     dateAdded:            row.first_seen_at ? String(row.first_seen_at).split('T')[0] : undefined,
+    lastVerifiedAt:       row.last_seen_at  ? String(row.last_seen_at).split('T')[0]  : undefined,
   }
 }
 
