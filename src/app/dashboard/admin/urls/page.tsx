@@ -1025,6 +1025,7 @@ export default function UrlAdminPage() {
         title:          d.title        ?? prev.title,
         funder:         d.funder       ?? prev.funder,
         funder_type:    d.funder_type  ?? prev.funder_type,
+        funding_type:   d.funding_type ?? prev.funding_type,
         description:    d.description  ?? prev.description,
         amount_min:     d.amount_min != null ? String(d.amount_min) : prev.amount_min,
         amount_max:     d.amount_max != null ? String(d.amount_max) : prev.amount_max,
@@ -1037,7 +1038,10 @@ export default function UrlAdminPage() {
         next_open_date: d.next_open_date ?? prev.next_open_date,
         apply_url:      prev.apply_url || url,   // prefill URL if not already set
       }))
-      setFetchedFrom(url)
+      setFetchedFrom(json.fetchedFromPage
+        ? url
+        : `${url} (page blocked — filled from AI knowledge)`
+      )
     } catch (err) {
       setFetchError(err instanceof Error ? err.message : 'Unexpected error')
     } finally {

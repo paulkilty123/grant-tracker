@@ -45,39 +45,36 @@ export async function POST(req: NextRequest) {
 
   // ── Fetch the page ────────────────────────────────────────────────────────────
   let pageText = ''
+  let fetchedFromPage = true
   try {
     const res = await fetch(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; GrantTrackerBot/1.0)',
-        'Accept': 'text/html,application/xhtml+xml',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-GB,en;q=0.9',
       },
       signal: AbortSignal.timeout(10_000),
     })
     if (!res.ok) {
-      return NextResponse.json(
-        { error: `Page returned HTTP ${res.status} — check the URL and try again` },
-        { status: 422 }
-      )
+      // Don't hard-fail on 403/429/etc — fall back to Claude's knowledge
+      fetchedFromPage = false
+    } else {
+      const html = await res.text()
+      pageText = htmlToText(html)
     }
-    const html = await res.text()
-    pageText = htmlToText(html)
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err)
-    return NextResponse.json(
-      { error: `Could not fetch page: ${msg}` },
-      { status: 422 }
-    )
+  } catch {
+    // Network error — fall back to Claude's knowledge
+    fetchedFromPage = false
   }
 
-  if (!pageText || pageText.length < 100) {
-    return NextResponse.json(
-      { error: 'Page returned no readable content — it may require JavaScript to load' },
-      { status: 422 }
-    )
+  if (fetchedFromPage && pageText.length < 100) {
+    // Page loaded but had no useful content (JS-rendered etc.) — fall back too
+    fetchedFromPage = false
   }
 
   // ── Ask Claude to extract structured grant info ───────────────────────────────
-  const prompt = `You are a grant database assistant. Extract structured information about a grant funding opportunity from the following webpage content.
+  const prompt = fetchedFromPage
+    ? `You are a grant database assistant. Extract structured information about a grant funding opportunity from the following webpage content.
 
 Return a single JSON object (no markdown, no extra text) with exactly these fields:
 - title: string — the grant programme name (not the funder organisation name)
@@ -95,6 +92,23 @@ If a field cannot be determined from the page content, use null for amounts/dead
 
 Webpage content from ${url}:
 ${pageText}`
+    : `You are a grant database assistant. A user has provided this URL for a grant funding opportunity but the page could not be fetched (it may block automated access). Use your knowledge to fill in as much information as you can about this grant.
+
+URL: ${url}
+
+Return a single JSON object (no markdown, no extra text) with exactly these fields:
+- title: string — the grant programme name (not the funder organisation name)
+- funder: string — the name of the funding organisation
+- funder_type: one of: trust_foundation, corporate, government, lottery, housing_association, local_authority, competition, loan, crowdfund_match, other
+- description: string — 2-3 sentence plain English description of what the grant funds and who can apply
+- amount_min: number or null — minimum grant amount in GBP (integer, no currency symbol)
+- amount_max: number or null — maximum grant amount in GBP (integer, no currency symbol)
+- is_rolling: boolean — true if applications are accepted on a rolling basis, false if there is a fixed deadline
+- deadline: string or null — if is_rolling is false, the application deadline in YYYY-MM-DD format; otherwise null
+- sectors: array of strings — relevant topic tags from this list only: community, young people, poverty, health, arts, environment, social welfare, education, employment, mental health, culture, sport, disability, social change, heritage, older people, inequality, climate, financial inclusion, technology, housing, homelessness, food, women, human rights, digital skills, rural, innovation, criminal justice, advocacy, wellbeing
+- is_invite_only: boolean — true if the grant is invite-only or not open to unsolicited applications
+
+Use null for any fields you genuinely cannot determine. Do not invent figures — leave amount fields null if unknown.`
 
   const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -122,7 +136,7 @@ ${pageText}`
 
   try {
     const parsed = JSON.parse(cleaned)
-    return NextResponse.json({ ok: true, data: parsed })
+    return NextResponse.json({ ok: true, data: parsed, fetchedFromPage })
   } catch {
     return NextResponse.json(
       { error: 'AI returned unreadable data — try a different URL or fill in manually' },
