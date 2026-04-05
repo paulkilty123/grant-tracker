@@ -560,8 +560,8 @@ export function computeMatchScore(
   // This makes matching robust to taxonomy drift — old non-canonical tags
   // (e.g. 'digital', 'equality', 'poverty') match against canonical org tags
   // without requiring a data migration every time the taxonomy evolves.
-  const orgImpactSectors   = [...new Set((org.impact_sectors  ?? []).map(normalizeSector))]
-  const grantImpactSectors = [...new Set((grant.impactSectors ?? []).map(normalizeSector))]
+  const orgImpactSectors   = Array.from(new Set((org.impact_sectors  ?? []).map(normalizeSector)))
+  const grantImpactSectors = Array.from(new Set((grant.impactSectors ?? []).map(normalizeSector)))
 
   if (orgImpactSectors.length > 0 && grantImpactSectors.length > 0) {
     // ── Structured path: IDF-weighted bidirectional coverage ──────────────
