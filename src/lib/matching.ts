@@ -621,8 +621,75 @@ export function computeMatchScore(
       reasons.push('Grant targets young people — check if relevant to your beneficiaries')
     }
 
+    // ── Profile depth boost ─────────────────────────────────────────────
+    // When impact_sectors match, also check whether the org's free-text
+    // profile fields (themes, areas_of_work, beneficiaries, mission)
+    // reinforce those matched sectors.  An org with "sport" in sectors
+    // AND "Sport for employment programmes" in areas_of_work AND "sport
+    // and physical activity" in themes clearly has sport as a core focus —
+    // they should score higher than an org that just lists "sport" as one
+    // of six sectors with no supporting detail.
+    //
+    // For each matched sector, count how many profile fields textually
+    // reference it.  Average the depth across matched sectors and add up
+    // to +5 points (capped at 25).  This ensures themes/areas_of_work/
+    // beneficiaries always contribute to matching, not just as a fallback.
     if (intersection.length > 0 && !primaryDomainMismatch) {
-      reasons.push(`Sector match: ${intersection.join(', ')}`)
+      const profileTexts = [
+        ...(org.themes        ?? []).map(t => t.toLowerCase()),
+        ...(org.areas_of_work ?? []).map(a => a.toLowerCase()),
+        ...(org.beneficiaries ?? []).map(b => b.toLowerCase()),
+      ]
+      const missionLower = (org.mission ?? '').toLowerCase()
+
+      // Keyword stems that indicate a sector is present in free text.
+      // Uses the same sector name plus common related terms so "sport"
+      // catches "sport for employment", "sporting", etc.
+      const SECTOR_KEYWORDS: Record<string, string[]> = {
+        sport:         ['sport', 'athletic', 'fitness', 'physical activity', 'football', 'rugby', 'cricket', 'basketball', 'swimming'],
+        employment:    ['employ', 'job', 'work placement', 'career', 'labour', 'workforce', 'vocational', 'apprentice'],
+        young_people:  ['young', 'youth', 'adolescent', 'teenager', 'child', 'junior', 'neet'],
+        environment:   ['environment', 'climate', 'nature', 'biodiversity', 'conservation', 'green', 'sustainability', 'ecological'],
+        food:          ['food', 'hunger', 'nutrition', 'meal', 'feeding', 'nourish', 'food bank', 'food poverty'],
+        health:        ['health', 'wellbeing', 'medical', 'nhs', 'clinical', 'patient', 'wellness'],
+        mental_health: ['mental health', 'anxiety', 'depression', 'therapy', 'counselling', 'psychological', 'emotional wellbeing'],
+        education:     ['education', 'learning', 'school', 'training', 'literacy', 'numeracy', 'curriculum', 'teaching'],
+        community:     ['community', 'neighbourhood', 'civic', 'local people', 'resident', 'grassroots', 'place-based'],
+        housing:       ['housing', 'homelessness', 'shelter', 'rough sleep', 'tenancy', 'accommodation'],
+        creative:      ['creative', 'arts', 'culture', 'music', 'theatre', 'film', 'dance', 'performance', 'gallery'],
+        disability:    ['disability', 'disabled', 'accessibility', 'learning disability', 'sensory impairment', 'wheelchair'],
+        heritage:      ['heritage', 'museum', 'archive', 'historic', 'preservation', 'tradition', 'monument'],
+        financial:     ['financial', 'debt', 'benefit', 'money advice', 'credit union', 'poverty', 'economic inclusion'],
+        justice:       ['justice', 'offend', 'prison', 'rehabilitation', 'criminal', 'victim', 'legal aid', 'restorative'],
+        international: ['international', 'global', 'overseas', 'developing countr', 'humanitarian', 'refugee', 'migration'],
+        older_people:  ['older people', 'elderly', 'pensioner', 'ageing', 'dementia', 'later life', 'retirement'],
+        women:         ['women', 'girl', 'gender', 'maternal', 'domestic violence', 'female', 'misogyn'],
+        tech:          ['tech', 'digital', 'software', 'coding', 'data', 'cyber', 'internet', 'online inclusion'],
+      }
+
+      let totalDepth = 0
+      for (const sector of intersection) {
+        const keywords = SECTOR_KEYWORDS[sector] ?? [sector.replace(/_/g, ' ')]
+        let hits = 0
+        // Check each profile text entry for keyword matches
+        for (const text of profileTexts) {
+          if (keywords.some(kw => text.includes(kw))) hits++
+        }
+        // Also check mission statement
+        if (keywords.some(kw => missionLower.includes(kw))) hits++
+        // Normalise: 0 hits = 0, 1 hit = 0.3, 2 hits = 0.6, 3+ hits = 1.0
+        totalDepth += hits >= 3 ? 1.0 : hits >= 2 ? 0.6 : hits >= 1 ? 0.3 : 0
+      }
+
+      const avgDepth = intersection.length > 0 ? totalDepth / intersection.length : 0
+      const depthBoost = Math.round(avgDepth * 5) // up to +5 points
+      themesScore = Math.min(25, themesScore + depthBoost)
+
+      if (depthBoost >= 3) {
+        reasons.push(`Sector match: ${intersection.join(', ')} (strong profile alignment)`)
+      } else {
+        reasons.push(`Sector match: ${intersection.join(', ')}`)
+      }
     }
 
   } else {
