@@ -134,6 +134,32 @@ const REGIONAL_KEYWORDS: Record<string, string> = {
   'tyne and wear': 'Tyne & Wear', 'cheshire': 'Cheshire',
   // Devolved nations — already handled elsewhere but belt-and-braces
   'scotland': 'Scotland', 'wales': 'Wales', 'northern ireland': 'Northern Ireland',
+  // Scottish council areas & cities (so e.g. "South Lanarkshire Fund" gets penalised for non-Scottish orgs)
+  'south lanarkshire': 'South Lanarkshire', 'north lanarkshire': 'North Lanarkshire',
+  'east lanarkshire': 'East Lanarkshire', 'lanarkshire': 'Lanarkshire',
+  'highland': 'Highland', 'aberdeenshire': 'Aberdeenshire', 'aberdeen': 'Aberdeen',
+  'dundee': 'Dundee', 'fife': 'Fife', 'stirling': 'Stirling',
+  'perth': 'Perth & Kinross', 'argyll': 'Argyll & Bute', 'angus': 'Angus',
+  'renfrewshire': 'Renfrewshire', 'east renfrewshire': 'East Renfrewshire',
+  'east lothian': 'East Lothian', 'west lothian': 'West Lothian', 'midlothian': 'Midlothian',
+  'edinburgh': 'Edinburgh', 'glasgow': 'Glasgow', 'inverness': 'Inverness',
+  'clackmannanshire': 'Clackmannanshire', 'falkirk': 'Falkirk',
+  'dumfries': 'Dumfries & Galloway', 'galloway': 'Dumfries & Galloway',
+  'borders': 'Scottish Borders', 'scottish borders': 'Scottish Borders',
+  'orkney': 'Orkney', 'shetland': 'Shetland', 'western isles': 'Western Isles',
+  // Welsh council areas & cities
+  'gwynedd': 'Gwynedd', 'powys': 'Powys', 'ceredigion': 'Ceredigion',
+  'pembrokeshire': 'Pembrokeshire', 'carmarthenshire': 'Carmarthenshire',
+  'swansea': 'Swansea', 'cardiff': 'Cardiff', 'newport': 'Newport',
+  'wrexham': 'Wrexham', 'flintshire': 'Flintshire', 'denbighshire': 'Denbighshire',
+  'conwy': 'Conwy', 'anglesey': 'Anglesey', 'rhondda': 'Rhondda Cynon Taf',
+  'merthyr': 'Merthyr Tydfil', 'caerphilly': 'Caerphilly', 'blaenau': 'Blaenau Gwent',
+  'torfaen': 'Torfaen', 'bridgend': 'Bridgend', 'neath': 'Neath Port Talbot',
+  'vale of glamorgan': 'Vale of Glamorgan', 'monmouthshire': 'Monmouthshire',
+  // Northern Ireland areas
+  'belfast': 'Belfast', 'antrim': 'Antrim', 'armagh': 'Armagh',
+  'londonderry': 'Londonderry', 'derry': 'Derry', 'tyrone': 'Tyrone',
+  'fermanagh': 'Fermanagh', 'down': 'County Down',
 }
 
 /**
