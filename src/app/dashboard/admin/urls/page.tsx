@@ -145,6 +145,7 @@ export default function UrlAdminPage() {
 
   // Funding type sub-tab (visible when filter === 'all')
   const [fundingTypeTab, setFundingTypeTab] = useState<'all' | 'grant' | 'programme' | 'investment' | 'in_kind'>('all')
+  const [fundingTypeCounts, setFundingTypeCounts] = useState<Record<string, number>>({})
 
   // Add grant modal state
   const [showAddModal, setShowAddModal] = useState(false)
@@ -192,13 +193,21 @@ export default function UrlAdminPage() {
   // ── Load stats ───────────────────────────────────────────────────────────────
   const loadStats = useCallback(async () => {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-    const [{ data }, { count: newCount }, { count: reviewCount }, { count: suspiciousCount }] = await Promise.all([
+    const [{ data }, { count: newCount }, { count: reviewCount }, { count: suspiciousCount }, { data: ftData }] = await Promise.all([
       createClient().from('scraped_grants').select('url_status, apply_url').eq('is_active', true),
       createClient().from('scraped_grants').select('id', { count: 'exact', head: true }).eq('is_active', true).gte('first_seen_at', sevenDaysAgo),
       createClient().from('scraped_grants').select('id', { count: 'exact', head: true }).eq('is_active', false).neq('url_status', 'dead'),
       createClient().from('scraped_grants').select('id', { count: 'exact', head: true }).eq('is_active', true).not('url_quality_score', 'is', null).lt('url_quality_score', 60),
+      createClient().from('scraped_grants').select('funding_type').eq('is_active', true),
     ])
     if (!data) return
+    // Tally funding type counts from the raw rows
+    const ftCounts: Record<string, number> = {}
+    for (const row of (ftData ?? [])) {
+      const t = (row.funding_type as string) ?? 'grant'
+      ftCounts[t] = (ftCounts[t] ?? 0) + 1
+    }
+    setFundingTypeCounts(ftCounts)
     setStats({
       total:       data.length,
       withUrl:     data.filter(g => g.apply_url).length,
@@ -1680,11 +1689,11 @@ export default function UrlAdminPage() {
         {filter === 'all' && (
           <div className="w-full flex items-center gap-1.5 pt-1">
             {([
-              { key: 'all',         label: 'All types' },
-              { key: 'grant',       label: 'Grants' },
-              { key: 'programme',   label: 'Programmes' },
-              { key: 'investment',  label: 'Investment' },
-              { key: 'in_kind',     label: 'In-Kind' },
+              { key: 'all',        label: 'All types',   count: Object.values(fundingTypeCounts).reduce((a, b) => a + b, 0) },
+              { key: 'grant',      label: 'Grants',      count: fundingTypeCounts['grant'] ?? 0 },
+              { key: 'programme',  label: 'Programmes',  count: fundingTypeCounts['programme'] ?? 0 },
+              { key: 'investment', label: 'Investment',  count: fundingTypeCounts['investment'] ?? 0 },
+              { key: 'in_kind',    label: 'In-Kind',     count: fundingTypeCounts['in_kind'] ?? 0 },
             ] as const).map(t => (
               <button key={t.key}
                 onClick={() => { setFundingTypeTab(t.key); setSearch('') }}
@@ -1693,7 +1702,7 @@ export default function UrlAdminPage() {
                     ? 'bg-sage text-white'
                     : 'border border-warm bg-white text-mid hover:border-sage/50 hover:text-charcoal'
                 }`}>
-                {t.label}
+                {t.label}{t.count > 0 ? ` (${t.count})` : ''}
               </button>
             ))}
           </div>
