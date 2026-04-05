@@ -103,7 +103,9 @@ const TITLE_DOMAIN_KEYWORDS: Array<{
     orgTerms: ['international', 'overseas', 'global'],
   },
   {
-    words: ['food bank', 'food poverty', 'food growing', 'agriculture', 'horticulture'],
+    words: ['food bank', 'food poverty', 'food growing', 'food system', 'food security',
+            'food insecurity', 'food waste', 'food redistribution', 'surplus food',
+            'agriculture', 'horticulture'],
     sector: 'food',
     orgTerms: ['food', 'agriculture', 'farming'],
   },
