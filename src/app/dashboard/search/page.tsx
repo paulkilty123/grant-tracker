@@ -1622,11 +1622,14 @@ export default function SearchPage() {
   const grantsCount     = allGrants_raw.filter(g => GRANT_TYPES.includes((g as GrantOpportunity & { fundingType?: FundingType }).fundingType ?? 'grant')).length
   const programmesCount = allGrants_raw.filter(g => PROGRAMME_TYPES.includes((g as GrantOpportunity & { fundingType?: FundingType }).fundingType ?? 'grant')).length
 
+  const ftCount = (type: string) =>
+    allGrants_raw.filter(g => ((g as GrantOpportunity & { fundingType?: FundingType }).fundingType ?? 'grant') === type).length
+
   const TYPE_TABS = [
-    { id: 'grant'      as const, label: 'Grants',      icon: <DollarSign size={17} strokeWidth={2} /> },
-    { id: 'programme'  as const, label: 'Programmes',  icon: <Rocket size={17} strokeWidth={2} /> },
-    { id: 'investment' as const, label: 'Investment',  icon: <TrendingUp size={17} strokeWidth={2} /> },
-    { id: 'in_kind'    as const, label: 'In-Kind',     icon: <Gift size={17} strokeWidth={2} /> },
+    { id: 'grant'      as const, label: 'Grants',      icon: <DollarSign size={17} strokeWidth={2} />, count: ftCount('grant') },
+    { id: 'programme'  as const, label: 'Programmes',  icon: <Rocket size={17} strokeWidth={2} />,     count: ftCount('programme') },
+    { id: 'investment' as const, label: 'Investment',  icon: <TrendingUp size={17} strokeWidth={2} />, count: ftCount('investment') },
+    { id: 'in_kind'    as const, label: 'In-Kind',     icon: <Gift size={17} strokeWidth={2} />,       count: ftCount('in_kind') },
   ]
 
   const TAB_DESCS: Record<string, string> = {
@@ -1999,6 +2002,11 @@ export default function SearchPage() {
                   >
                     {tab.icon}
                     {tab.label}
+                    {tab.count > 0 && (
+                      <span className={`text-xs font-medium ${activeTab === tab.id ? 'text-coral/80' : 'text-light'}`}>
+                        {tab.count}
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
