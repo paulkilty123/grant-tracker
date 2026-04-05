@@ -31,15 +31,6 @@ const INCOME_MIDPOINTS: Record<string, number> = {
   'Over £500,000':           750_000,
 }
 
-// Ordered income bands lowest→highest for cap comparison
-const INCOME_BAND_ORDER = [
-  'Under £10,000',
-  '£10,000–£50,000',
-  '£50,000–£100,000',
-  '£100,000–£500,000',
-  'Over £500,000',
-] as const
-
 /**
  * Inverse-document-frequency weights per impact sector, derived from the live
  * grant catalogue (~413 grants, post-taxonomy-normalisation).
@@ -600,14 +591,19 @@ export function computeMatchScore(
   // Supplements the structured primaryDomainMismatch check above.
   const orgHasProfile = orgImpactSectors.length > 0 || (org.themes ?? []).length > 0
   if (orgHasProfile && !primaryDomainMismatch) {
-    const orgAllTerms = new Set([
-      ...orgImpactSectors,
-      ...(org.themes ?? []).map(t => t.toLowerCase()),
-    ])
+    const orgSectorSet = new Set(orgImpactSectors)
+    const orgThemeStrings = (org.themes ?? []).map(t => t.toLowerCase())
+    const orgMissionLower = (org.mission ?? '').toLowerCase()
     const titleLower = grant.title.toLowerCase()
     for (const { words, orgTerms } of TITLE_DOMAIN_KEYWORDS) {
       if (words.some(w => titleLower.includes(w))) {
-        const orgCovers = orgTerms.some(t => orgAllTerms.has(t))
+        // Substring match against themes/mission so multi-word themes like
+        // "food poverty" or "environmental education" still register as coverage.
+        const orgCovers = orgTerms.some(t =>
+          orgSectorSet.has(t) ||
+          orgThemeStrings.some(theme => theme.includes(t)) ||
+          orgMissionLower.includes(t)
+        )
         if (!orgCovers) {
           primaryDomainMismatch = true
           themesScore = Math.min(themesScore, 5)
@@ -711,10 +707,26 @@ export function computeMatchScore(
   }
 
   // ── 5. Eligibility / org type (max 15) ────────────────────────────────
+  // Prefer the modern legal_structure field; fall back to legacy org_type.
+  // CIO is a charity structure, so treat it as charity-like for scoring.
+  const isCharityLike =
+    org.legal_structure === 'registered_charity' ||
+    org.legal_structure === 'cio' ||
+    (org.legal_structure == null && org.org_type === 'registered_charity')
+  const isCICLike =
+    org.legal_structure === 'cic_guarantee' ||
+    org.legal_structure === 'cic_shares' ||
+    (org.legal_structure == null && org.org_type === 'cic')
+  const isSELike =
+    org.legal_structure === 'ltd_guarantee' ||
+    org.legal_structure === 'ltd_shares' ||
+    org.legal_structure === 'cooperative' ||
+    (org.legal_structure == null && org.org_type === 'social_enterprise')
+
   let eligibilityScore: number =
-    org.org_type === 'registered_charity' ? 12 :
-    org.org_type === 'cic'               ? 10 :
-    org.org_type === 'social_enterprise' ? 9  : 7
+    isCharityLike ? 12 :
+    isCICLike     ? 10 :
+    isSELike      ? 9  : 7
 
   let structureMismatch = false
   const eligibilityText = grant.eligibilityCriteria.join(' ').toLowerCase()
@@ -729,15 +741,15 @@ export function computeMatchScore(
     const isCICEligible     = cicKeywords.some(k => eligibilityText.includes(k))
     const isSEEligible      = seKeywords.some(k => eligibilityText.includes(k))
 
-    if (isCharityEligible && org.org_type === 'registered_charity') {
+    if (isCharityEligible && isCharityLike) {
       eligibilityScore = Math.min(15, eligibilityScore + 3)
       reasons.push('Eligible as a registered charity')
-    } else if (isCICEligible && org.org_type === 'cic') {
+    } else if (isCICEligible && isCICLike) {
       eligibilityScore = Math.min(15, eligibilityScore + 3)
       reasons.push('Eligible as a CIC')
-    } else if (isSEEligible && (org.org_type === 'social_enterprise' || org.org_type === 'cic')) {
+    } else if (isSEEligible && (isSELike || isCICLike)) {
       eligibilityScore = Math.min(15, eligibilityScore + 2)
-    } else if (isCharityEligible && org.org_type !== 'registered_charity') {
+    } else if (isCharityEligible && !isCharityLike) {
       // Hard penalty — "registered charity" requirement is a strong eligibility gate
       eligibilityScore = Math.max(1, eligibilityScore - 12)
       structureMismatch = true
