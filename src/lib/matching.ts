@@ -34,38 +34,72 @@ const INCOME_BAND_ORDER = [
 
 /**
  * Inverse-document-frequency weights per impact sector, derived from the live
- * grant catalogue (~300 grants).  Sectors that appear in fewer grants carry
- * more discriminative power — a match on "heritage" is far more meaningful
- * than a match on "community".
+ * grant catalogue (~413 grants, post-taxonomy-normalisation).
+ * Sectors that appear in fewer grants carry more discriminative power —
+ * a match on "heritage" is far more meaningful than a match on "community".
  *
  * Formula: normalised log(N / df) scaled to [0.2, 2.5].
  * Update these weights periodically as the catalogue grows.
  */
 const SECTOR_IDF: Record<string, number> = {
-  community:    0.2,   // 193 grants — nearly ubiquitous
-  young_people: 0.5,   // 117 grants
-  creative:     0.9,   //  64 grants
-  health:       0.9,   //  62 grants
-  education:    0.9,   //  61 grants
-  employment:   1.0,   //  53 grants
-  environment:  1.1,   //  43 grants
-  tech:         1.1,   //  40 grants
+  community:    0.2,   // 226 grants — nearly ubiquitous
+  young_people: 0.5,   //  94 grants
+  creative:     0.9,   //  54 grants
+  health:       0.9,   //  69 grants
+  education:    0.9,   //  65 grants
+  employment:   1.0,   //  71 grants
+  environment:  1.1,   //  64 grants
+  financial:    1.3,   //  39 grants
+  tech:         1.3,   //  30 grants
   justice:      1.3,   //  28 grants
-  mental_health: 1.4,  //  27 grants
-  financial:    1.4,   //  26 grants
-  disability:   1.5,   //  22 grants
-  older_people: 1.6,   //  19 grants
-  housing:      1.7,   //  16 grants
-  sport:        1.8,   //  14 grants
-  heritage:     2.0,   //   9 grants
-  international: 2.2,  //   7 grants
-  food:         2.3,   //   6 grants
-  women:        2.5,   //   4 grants
+  mental_health: 1.4,  //  25 grants
+  disability:   1.5,   //  25 grants
+  older_people: 1.6,   //  15 grants
+  housing:      1.7,   //  14 grants
+  sport:        1.8,   //  20 grants
+  heritage:     2.0,   //  17 grants
+  international: 2.5,  //   8 grants
+  food:         2.5,   //   8 grants
+  women:        2.5,   //   8 grants
 }
 
 /** IDF weight for a sector — falls back to 1.0 for unknown tags */
 function idfWeight(sector: string): number {
   return SECTOR_IDF[sector] ?? 1.0
+}
+
+/**
+ * Normalise a sector tag to its canonical form.
+ * Defensive layer: catches any non-canonical tags that may exist in grant or
+ * org data (e.g. scraped with old taxonomy, user-entered free text, etc.)
+ * so that matching works correctly regardless of how tags were originally stored.
+ */
+function normalizeSector(s: string): string {
+  const MAP: Record<string, string> = {
+    // Old taxonomy aliases
+    digital:                     'tech',
+    digital_inclusion:            'tech',
+    youth:                        'young_people',
+    children_families:            'young_people',
+    education_training:           'education',
+    community_development:        'community',
+    environment_conservation:     'environment',
+    health_wellbeing:             'health',
+    poverty:                      'financial',
+    poverty_financial_inclusion:  'financial',
+    financial_inclusion:          'financial',
+    homelessness_housing:         'housing',
+    housing_homelessness:         'housing',
+    social_enterprise_support:    'employment',
+    employment_enterprise:        'employment',
+    equality:                     'justice',
+    human_rights_equality:        'justice',
+    criminal_justice:             'justice',
+    arts_culture:                 'creative',
+    sport_recreation:             'sport',
+    research:                     'education',
+  }
+  return MAP[s] ?? s
 }
 
 /**
@@ -425,8 +459,12 @@ export function computeMatchScore(
   let themesScore = 0
   let primaryDomainMismatch = false
 
-  const orgImpactSectors  = org.impact_sectors  ?? []
-  const grantImpactSectors = grant.impactSectors ?? []
+  // Normalise both sector arrays to canonical form and deduplicate.
+  // This makes matching robust to taxonomy drift — old non-canonical tags
+  // (e.g. 'digital', 'equality', 'poverty') match against canonical org tags
+  // without requiring a data migration every time the taxonomy evolves.
+  const orgImpactSectors   = [...new Set((org.impact_sectors  ?? []).map(normalizeSector))]
+  const grantImpactSectors = [...new Set((grant.impactSectors ?? []).map(normalizeSector))]
 
   if (orgImpactSectors.length > 0 && grantImpactSectors.length > 0) {
     // ── Structured path: IDF-weighted bidirectional coverage ──────────────
@@ -603,9 +641,13 @@ export function computeMatchScore(
       grantSizeScore = 20
       reasons.push('Within your target grant size')
     } else if (grantMax < targetMin) {
+      // Grant ceiling is below org's minimum target — too small
       grantSizeScore = 3
     } else {
-      grantSizeScore = 8
+      // Grant floor exceeds org's maximum target — too large.
+      // Penalise proportionally: a 2x overshoot is very different from a 20x one.
+      const overshootRatio = targetMax > 0 ? grantMin / targetMax : 10
+      grantSizeScore = overshootRatio > 10 ? 3 : overshootRatio > 4 ? 5 : 8
     }
   } else if (org.annual_income_band && grantMax > 0) {
     const orgIncome = INCOME_MIDPOINTS[org.annual_income_band] ?? 50_000
