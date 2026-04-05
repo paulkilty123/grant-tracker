@@ -24,6 +24,7 @@ type Grant = {
   source: string
   is_invite_only: boolean
   funder_type?: string
+  funding_type?: string
   funder_brief?: Record<string, string | null> | null
 }
 
@@ -85,10 +86,10 @@ const FUNDER_TYPE_OPTIONS = [
 ]
 
 const FUNDING_TYPE_OPTIONS = [
-  { value: 'grant',             label: 'Grant' },
-  { value: 'programme',         label: 'Programme' },
-  { value: 'social_investment', label: 'Social Investment' },
-  { value: 'in_kind',           label: 'In-Kind' },
+  { value: 'grant',      label: 'Grant' },
+  { value: 'programme',  label: 'Programme' },
+  { value: 'investment', label: 'Investment' },
+  { value: 'in_kind',    label: 'In-Kind' },
 ]
 
 const BLANK_FORM: AddGrantForm = {
@@ -141,6 +142,9 @@ export default function UrlAdminPage() {
   const [classifying, setClassifying]           = useState(false)
   const [classifyProgress, setClassifyProgress] = useState<{ classified: number; total: number; failed: number } | null>(null)
   const [classifyResult, setClassifyResult]     = useState<{ classified: number; failed: number } | null>(null)
+
+  // Funding type sub-tab (visible when filter === 'all')
+  const [fundingTypeTab, setFundingTypeTab] = useState<'all' | 'grant' | 'programme' | 'investment' | 'in_kind'>('all')
 
   // Add grant modal state
   const [showAddModal, setShowAddModal] = useState(false)
@@ -224,7 +228,7 @@ export default function UrlAdminPage() {
 
     let query = createClient()
       .from('scraped_grants')
-      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief')
+      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funding_type, funder_brief')
       .eq('is_active', true)
       .order('url_last_checked', { ascending: true, nullsFirst: true })
       .limit(2000)
@@ -232,6 +236,7 @@ export default function UrlAdminPage() {
     if (filter === 'dead')      query = query.eq('url_status', 'dead')
     if (filter === 'unchecked') query = query.eq('url_status', 'unchecked').not('apply_url', 'is', null)
     if (filter === 'no_url')    query = query.is('apply_url', null)
+    if (filter === 'all' && fundingTypeTab !== 'all') query = query.eq('funding_type', fundingTypeTab)
 
     if (search.trim()) {
       query = query.or(`title.ilike.%${search.trim()}%,funder.ilike.%${search.trim()}%`)
@@ -246,7 +251,7 @@ export default function UrlAdminPage() {
     }
     setLoadError(null)
     setGrants((data ?? []) as Grant[])
-  }, [filter, search])
+  }, [filter, search, fundingTypeTab])
 
   // ── Load new grants (last 7 days) ────────────────────────────────────────────
   const loadNewGrants = useCallback(async () => {
@@ -1648,7 +1653,7 @@ export default function UrlAdminPage() {
           { key: 'seed',      label: `Seed grants (${SEED_GRANTS.length - promotedKeys.size > 0 ? `${SEED_GRANTS.length - Math.min(promotedKeys.size, SEED_GRANTS.length)} remaining` : 'all promoted'})` },
         ] as const).map(tab => (
           <button key={tab.key}
-            onClick={() => { setFilter(tab.key); setSearch(''); setCategorySearch('') }}
+            onClick={() => { setFilter(tab.key); setSearch(''); setCategorySearch(''); setFundingTypeTab('all') }}
             className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
               filter === tab.key
                 ? 'bg-forest text-white'
@@ -1661,6 +1666,29 @@ export default function UrlAdminPage() {
             {tab.label}
           </button>
         ))}
+
+        {/* Funding type sub-tabs — only shown in All Grants */}
+        {filter === 'all' && (
+          <div className="w-full flex items-center gap-1.5 pt-1">
+            {([
+              { key: 'all',         label: 'All types' },
+              { key: 'grant',       label: 'Grants' },
+              { key: 'programme',   label: 'Programmes' },
+              { key: 'investment',  label: 'Investment' },
+              { key: 'in_kind',     label: 'In-Kind' },
+            ] as const).map(t => (
+              <button key={t.key}
+                onClick={() => { setFundingTypeTab(t.key); setSearch('') }}
+                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                  fundingTypeTab === t.key
+                    ? 'bg-sage text-white'
+                    : 'border border-warm bg-white text-mid hover:border-sage/50 hover:text-charcoal'
+                }`}>
+                {t.label}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Search — hidden for category (uses its own) */}
         {filter !== 'category' && (
@@ -2234,7 +2262,17 @@ export default function UrlAdminPage() {
                           className="h-3.5 w-3.5 rounded accent-forest cursor-pointer" />
                       </td>
                       <td className="px-5 py-3 max-w-[220px]">
-                        <p className="font-medium text-charcoal leading-snug line-clamp-2">{grant.title}</p>
+                        <div className="flex items-start gap-1.5">
+                          <p className="font-medium text-charcoal leading-snug line-clamp-2 flex-1">{grant.title}</p>
+                          {grant.funding_type && grant.funding_type !== 'grant' && (
+                            <span className={`shrink-0 mt-0.5 rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+                              grant.funding_type === 'programme'  ? 'bg-emerald-50 text-emerald-700' :
+                              grant.funding_type === 'investment' ? 'bg-sky-50 text-sky-700' :
+                              grant.funding_type === 'in_kind'    ? 'bg-violet-50 text-violet-700' :
+                              'bg-warm text-mid'
+                            }`}>{grant.funding_type === 'in_kind' ? 'In-Kind' : grant.funding_type}</span>
+                          )}
+                        </div>
                         <p className="text-xs text-mid mt-0.5">{grant.funder ?? '—'}</p>
                       </td>
                       <td className="px-5 py-3 max-w-[300px]">
