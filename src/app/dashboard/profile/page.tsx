@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Sparkles, Globe, ArrowRight, ArrowLeft, ChevronRight, SkipForward, CheckCircle2, Zap } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner, createOrganisation, updateOrganisation } from '@/lib/organisations'
-import type { Organisation, OrgType, LegalStructure, OrgStage, ImpactSector, FunderType, FundingType } from '@/types'
+import type { Organisation, OrgType, LegalStructure, OrgStage, ImpactSector, FunderType, FundingType, BeneficiaryGroup } from '@/types'
 
 /* ────────────────────────────────────────────
    Option data
@@ -55,6 +55,27 @@ const IMPACT_SECTOR_OPTIONS: { value: ImpactSector; label: string }[] = [
   { value: 'international', label: 'International & Fair Trade' },
 ]
 
+const BENEFICIARY_OPTIONS: { value: BeneficiaryGroup; label: string }[] = [
+  { value: 'children',          label: 'Children (under 16)'            },
+  { value: 'young_people',      label: 'Young people (16-25)'          },
+  { value: 'older_people',      label: 'Older people (65+)'            },
+  { value: 'families',          label: 'Families & parents'             },
+  { value: 'women_girls',       label: 'Women & girls'                  },
+  { value: 'men_boys',          label: 'Men & boys'                     },
+  { value: 'lgbtq',             label: 'LGBTQ+ communities'             },
+  { value: 'ethnic_minorities', label: 'Ethnic minorities & BAME'       },
+  { value: 'refugees_migrants', label: 'Refugees & migrants'            },
+  { value: 'disabled_people',   label: 'Disabled people'                },
+  { value: 'mental_health',     label: 'People with mental health needs'},
+  { value: 'carers',            label: 'Carers & care leavers'          },
+  { value: 'veterans',          label: 'Veterans & armed forces'        },
+  { value: 'ex_offenders',      label: 'Ex-offenders'                   },
+  { value: 'homeless',          label: 'Homeless & rough sleepers'      },
+  { value: 'people_in_poverty', label: 'People in poverty'              },
+  { value: 'rural_communities', label: 'Rural & isolated communities'   },
+  { value: 'general_public',    label: 'General public (no specific group)' },
+]
+
 const FUNDING_TYPE_OPTIONS: { value: FundingType; label: string; desc: string }[] = [
   { value: 'grant',      label: 'Grants & Awards',    desc: 'Non-repayable cash: grants, bursaries, prizes, diversity funds' },
   { value: 'programme',  label: 'Programmes',         desc: 'Accelerators, fellowships, incubators & support programmes' },
@@ -102,6 +123,7 @@ interface FormState {
   articlesRestrictProfit: boolean
   alsoIndividualPractitioner: boolean
   impactSectors: ImpactSector[]
+  beneficiaryGroups: BeneficiaryGroup[]
   primaryLocation: string
   geographicReach: string
   themes: string
@@ -133,6 +155,7 @@ const EMPTY_FORM: FormState = {
   articlesRestrictProfit: false,
   alsoIndividualPractitioner: false,
   impactSectors: [],
+  beneficiaryGroups: [],
   primaryLocation: '',
   geographicReach: 'local',
   themes: '',
@@ -165,6 +188,7 @@ function orgToForm(org: Organisation): FormState {
     articlesRestrictProfit:     org.articles_restrict_profit ?? false,
     alsoIndividualPractitioner: org.also_individual_practitioner ?? false,
     impactSectors:              (org.impact_sectors ?? []) as ImpactSector[],
+    beneficiaryGroups:          (org.beneficiary_groups ?? []) as BeneficiaryGroup[],
     primaryLocation:            org.primary_location ?? '',
     geographicReach:            'local',
     themes:                     (org.themes ?? []).join(', '),
@@ -192,6 +216,7 @@ function completenessScore(form: FormState): { score: number; missing: string[] 
     { label: 'Legal structure',       filled: !!form.legalStructure },
     { label: 'Organisation stage',    filled: !!form.orgStage },
     { label: 'Impact sectors',        filled: form.impactSectors.length > 0 },
+    { label: 'Beneficiary groups',   filled: form.beneficiaryGroups.length > 0 },
     { label: 'Annual income',         filled: !!form.annualIncome },
     { label: 'Primary location',      filled: !!form.primaryLocation.trim() },
     { label: 'Mission statement',     filled: !!form.mission.trim() },
@@ -212,10 +237,11 @@ function completenessScore(form: FormState): { score: number; missing: string[] 
 const ONBOARDING_STEPS = [
   { id: 1, title: 'About Your Organisation',   short: 'Organisation' },
   { id: 2, title: 'Impact Sectors',            short: 'Sectors' },
-  { id: 3, title: 'Location & Focus',          short: 'Location' },
-  { id: 4, title: 'Mission Statement',         short: 'Mission' },
-  { id: 5, title: 'Grant Preferences',         short: 'Preferences' },
-  { id: 6, title: 'Email Alerts',              short: 'Alerts' },
+  { id: 3, title: 'Who You Serve',             short: 'Beneficiaries' },
+  { id: 4, title: 'Location & Focus',          short: 'Location' },
+  { id: 5, title: 'Mission Statement',         short: 'Mission' },
+  { id: 6, title: 'Grant Preferences',         short: 'Preferences' },
+  { id: 7, title: 'Email Alerts',              short: 'Alerts' },
 ]
 
 /* ────────────────────────────────────────────
@@ -337,6 +363,29 @@ export default function ProfilePage() {
     })
   }
 
+  function toggleBeneficiaryGroup(group: BeneficiaryGroup) {
+    setForm(prev => {
+      const current = prev.beneficiaryGroups
+      if (current.includes(group)) {
+        return { ...prev, beneficiaryGroups: current.filter(g => g !== group) }
+      }
+      if (current.length >= 5) return prev
+      return { ...prev, beneficiaryGroups: [...current, group] }
+    })
+  }
+
+  function moveBeneficiaryGroup(group: BeneficiaryGroup, direction: 'up' | 'down') {
+    setForm(prev => {
+      const arr = [...prev.beneficiaryGroups]
+      const idx = arr.indexOf(group)
+      if (idx < 0) return prev
+      const newIdx = direction === 'up' ? idx - 1 : idx + 1
+      if (newIdx < 0 || newIdx >= arr.length) return prev
+      ;[arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]]
+      return { ...prev, beneficiaryGroups: arr }
+    })
+  }
+
   /* ── Auto-fill ── */
 
   async function handleAutoFill() {
@@ -394,6 +443,7 @@ export default function ProfilePage() {
       articles_restrict_profit:     form.articlesRestrictProfit,
       also_individual_practitioner: form.alsoIndividualPractitioner,
       impact_sectors:               form.impactSectors,
+      beneficiary_groups:           form.beneficiaryGroups,
       annual_income_band:           form.annualIncome,
       primary_location:             form.primaryLocation.trim() || null,
       themes:                       form.themes.split(',').map(s => s.trim()).filter(Boolean),
@@ -668,20 +718,22 @@ export default function ProfilePage() {
         <p className="text-xs text-mid mb-5">
           {currentStep === 1 && 'The basics about your organisation — name, legal structure, and stage.'}
           {currentStep === 2 && 'Select 1 to 5 impact sectors that describe your work. This drives which funding pools you match against.'}
-          {currentStep === 3 && 'Where you\'re based and what your work focuses on.'}
-          {currentStep === 4 && 'A short description of what you do, who you serve, and the difference you make.'}
-          {currentStep === 5 && 'What kinds of funding are you looking for?'}
-          {currentStep === 6 && 'Get notified when new grants match your profile.'}
+          {currentStep === 3 && 'Who does your organisation primarily serve? Pick a primary beneficiary group and optional secondaries.'}
+          {currentStep === 4 && 'Where you\'re based and what your work focuses on.'}
+          {currentStep === 5 && 'A short description of what you do, who you serve, and the difference you make.'}
+          {currentStep === 6 && 'What kinds of funding are you looking for?'}
+          {currentStep === 7 && 'Get notified when new grants match your profile.'}
         </p>
 
         {/* Step content */}
         <div className="card mb-6">
           {currentStep === 1 && renderSection1()}
           {currentStep === 2 && renderSection2()}
-          {currentStep === 3 && renderSection3()}
-          {currentStep === 4 && renderSection4()}
-          {currentStep === 5 && renderSection5()}
-          {currentStep === 6 && renderSection6()}
+          {currentStep === 3 && renderBeneficiarySection()}
+          {currentStep === 4 && renderSection3()}
+          {currentStep === 5 && renderSection4()}
+          {currentStep === 6 && renderSection5()}
+          {currentStep === 7 && renderSection6()}
         </div>
 
         {/* Navigation */}
@@ -1057,6 +1109,98 @@ export default function ProfilePage() {
     )
   }
 
+  function renderBeneficiarySection() {
+    return (
+      <div>
+        <p className="text-xs text-mid mb-4">
+          Select up to 5 groups. The first group you pick is your <span className="font-semibold text-forest">primary</span> beneficiary — all others are equally weighted secondaries.
+          {form.beneficiaryGroups.length >= 5 && (
+            <span className="text-gold font-medium"> Maximum 5 groups reached.</span>
+          )}
+        </p>
+
+        {/* ── Selected beneficiaries with rank badges and reorder controls ── */}
+        {form.beneficiaryGroups.length > 0 && (
+          <div className="mb-4 space-y-1.5">
+            {form.beneficiaryGroups.map((grp, idx) => {
+              const opt = BENEFICIARY_OPTIONS.find(o => o.value === grp)
+              const label = opt?.label ?? grp
+              const isPrimary = idx === 0
+              return (
+                <div key={grp} className="flex items-center gap-2 px-3 py-2 border border-forest/30 bg-forest/5 rounded-lg">
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
+                    isPrimary ? 'bg-forest text-white' : 'bg-sage/40 text-charcoal'
+                  }`}>
+                    {isPrimary ? 'Primary' : 'Secondary'}
+                  </span>
+                  <span className="text-xs font-medium text-charcoal flex-1">{label}</span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => moveBeneficiaryGroup(grp, 'up')}
+                      disabled={idx === 0}
+                      className="p-0.5 text-mid hover:text-forest disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+                      title="Move up"
+                    >
+                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => moveBeneficiaryGroup(grp, 'down')}
+                      disabled={idx === form.beneficiaryGroups.length - 1}
+                      className="p-0.5 text-mid hover:text-forest disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+                      title="Move down"
+                    >
+                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => toggleBeneficiaryGroup(grp)}
+                      className="p-0.5 ml-1 text-mid hover:text-red-600 transition-colors"
+                      title="Remove"
+                    >
+                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* ── Beneficiary picker grid ── */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {BENEFICIARY_OPTIONS.map(o => {
+            const selected = form.beneficiaryGroups.includes(o.value)
+            const atMax = !selected && form.beneficiaryGroups.length >= 5
+            if (selected) return null
+            return (
+              <button
+                key={o.value}
+                type="button"
+                onClick={() => toggleBeneficiaryGroup(o.value)}
+                disabled={atMax}
+                className={`flex items-center gap-2 px-3 py-2.5 border text-sm font-medium transition-all text-left rounded-lg ${
+                  atMax
+                    ? 'border-warm text-mid opacity-40 cursor-not-allowed'
+                    : 'border-warm text-mid hover:border-forest hover:text-forest'
+                }`}
+              >
+                <span className="text-xs">{o.label}</span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
+
   function renderSection3() {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1297,39 +1441,49 @@ export default function ProfilePage() {
           {renderSection2()}
         </div>
 
-        {/* Section 3 */}
+        {/* Section 3 — Beneficiaries */}
         <div className="card">
-          <h3 className="font-serif text-base font-bold text-charcoal mb-4 flex items-center gap-2">
+          <h3 className="font-serif text-base font-bold text-charcoal mb-1 flex items-center gap-2">
             <span className="w-6 h-6 bg-charcoal/10 text-charcoal text-xs flex items-center justify-center font-bold rounded-full">3</span>
-            Location & Focus
+            Who You Serve
           </h3>
-          {renderSection3()}
+          <p className="text-xs text-mid mb-3 ml-8">Pick your primary beneficiary group first, then any secondary groups</p>
+          {renderBeneficiarySection()}
         </div>
 
         {/* Section 4 */}
         <div className="card">
-          <h3 className="font-serif text-base font-bold text-charcoal mb-1 flex items-center gap-2">
+          <h3 className="font-serif text-base font-bold text-charcoal mb-4 flex items-center gap-2">
             <span className="w-6 h-6 bg-charcoal/10 text-charcoal text-xs flex items-center justify-center font-bold rounded-full">4</span>
-            Mission Statement
+            Location & Focus
           </h3>
-          <p className="text-xs text-mid mb-3 ml-8">Used to find the most relevant grants for your work</p>
-          {renderSection4()}
+          {renderSection3()}
         </div>
 
         {/* Section 5 */}
         <div className="card">
           <h3 className="font-serif text-base font-bold text-charcoal mb-1 flex items-center gap-2">
             <span className="w-6 h-6 bg-charcoal/10 text-charcoal text-xs flex items-center justify-center font-bold rounded-full">5</span>
-            Grant Preferences
+            Mission Statement
           </h3>
-          <p className="text-xs text-mid mb-4 ml-8">Tell us what kinds of funding you&apos;re interested in — improves your match scores</p>
-          {renderSection5()}
+          <p className="text-xs text-mid mb-3 ml-8">Used to find the most relevant grants for your work</p>
+          {renderSection4()}
         </div>
 
         {/* Section 6 */}
         <div className="card">
           <h3 className="font-serif text-base font-bold text-charcoal mb-1 flex items-center gap-2">
             <span className="w-6 h-6 bg-charcoal/10 text-charcoal text-xs flex items-center justify-center font-bold rounded-full">6</span>
+            Grant Preferences
+          </h3>
+          <p className="text-xs text-mid mb-4 ml-8">Tell us what kinds of funding you&apos;re interested in — improves your match scores</p>
+          {renderSection5()}
+        </div>
+
+        {/* Section 7 */}
+        <div className="card">
+          <h3 className="font-serif text-base font-bold text-charcoal mb-1 flex items-center gap-2">
+            <span className="w-6 h-6 bg-charcoal/10 text-charcoal text-xs flex items-center justify-center font-bold rounded-full">7</span>
             Email Alerts
           </h3>
           <p className="text-xs text-mid mb-4 ml-8">Get notified by email when new grants match your organisation</p>
