@@ -68,6 +68,17 @@ function idfWeight(sector: string): number {
 }
 
 /**
+ * Rank weight for an org's impact sector based on its position in the array.
+ * The org profile stores sectors in priority order: [0] = primary, [1] = secondary, etc.
+ * Primary sectors dominate matching so grants aligned with the org's core mission
+ * rank much higher than grants matching only a peripheral sector.
+ */
+const RANK_WEIGHTS = [1.0, 0.6, 0.35, 0.15, 0.15] as const
+function rankWeight(index: number): number {
+  return index < RANK_WEIGHTS.length ? RANK_WEIGHTS[index] : 0.15
+}
+
+/**
  * Normalise a sector tag to its canonical form.
  * Defensive layer: catches any non-canonical tags that may exist in grant or
  * org data (e.g. scraped with old taxonomy, user-entered free text, etc.)
@@ -563,23 +574,34 @@ export function computeMatchScore(
   const orgImpactSectors   = Array.from(new Set((org.impact_sectors  ?? []).map(normalizeSector)))
   const grantImpactSectors = Array.from(new Set((grant.impactSectors ?? []).map(normalizeSector)))
 
+  // Build a rank-weight lookup for the org's sectors based on array position.
+  // Position 0 = primary sector (weight 1.0), position 1 = secondary (0.6), etc.
+  // This map is used in both the structured IDF path and the depth boost below.
+  const orgSectorRank = new Map<string, number>()
+  for (let i = 0; i < orgImpactSectors.length; i++) {
+    orgSectorRank.set(orgImpactSectors[i], rankWeight(i))
+  }
+
   if (orgImpactSectors.length > 0 && grantImpactSectors.length > 0) {
-    // ── Structured path: IDF-weighted bidirectional coverage ──────────────
+    // ── Structured path: rank-aware IDF-weighted bidirectional coverage ───
     const intersection = grantImpactSectors.filter(s => orgImpactSectors.includes(s))
     const hits = intersection.length
 
-    // IDF-weighted sums — rarer sectors count for more than ubiquitous ones
-    const weightedIntersection = intersection.reduce((s, sec) => s + idfWeight(sec), 0)
-    const weightedGrantTotal   = grantImpactSectors.reduce((s, sec) => s + idfWeight(sec), 0)
-    const weightedOrgTotal     = orgImpactSectors.reduce((s, sec) => s + idfWeight(sec), 0)
+    // Grant-side weights: pure IDF (grants aren't ranked by the user)
+    const weightedGrantTotal = grantImpactSectors.reduce((s, sec) => s + idfWeight(sec), 0)
 
-    // Bidirectional coverage:
-    //   grantCoverage — what fraction of the grant's weighted focus the org covers (primary signal)
-    //   orgCoverage   — what fraction of the org's weighted work the grant covers (secondary signal)
-    // Combining both rewards mutual specificity: a focused arts org matching an arts
-    // grant scores higher than a broad org matching on generic sectors only.
-    const grantCoverage = weightedGrantTotal > 0 ? weightedIntersection / weightedGrantTotal : 0
-    const orgCoverage   = weightedOrgTotal   > 0 ? weightedIntersection / weightedOrgTotal   : 0
+    // Org-side weights: IDF × rank weight — primary sectors dominate
+    const rankedOrgWeight = (sec: string) => idfWeight(sec) * (orgSectorRank.get(sec) ?? 0.15)
+    const weightedOrgTotal = orgImpactSectors.reduce((s, sec) => s + rankedOrgWeight(sec), 0)
+
+    // Intersection weights split by perspective:
+    //   grantCoverage uses pure IDF (what fraction of the grant does the org cover?)
+    //   orgCoverage uses ranked IDF (does the grant match what the org MOST cares about?)
+    const grantIntersection = intersection.reduce((s, sec) => s + idfWeight(sec), 0)
+    const orgIntersection   = intersection.reduce((s, sec) => s + rankedOrgWeight(sec), 0)
+
+    const grantCoverage = weightedGrantTotal > 0 ? grantIntersection / weightedGrantTotal : 0
+    const orgCoverage   = weightedOrgTotal   > 0 ? orgIntersection   / weightedOrgTotal   : 0
     const coverage      = 0.7 * grantCoverage + 0.3 * orgCoverage
 
     themesScore = hits > 0 ? Math.max(3, Math.round(coverage * 25)) : 3

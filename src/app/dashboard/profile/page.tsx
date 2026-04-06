@@ -325,6 +325,18 @@ export default function ProfilePage() {
     })
   }
 
+  function moveImpactSector(sector: ImpactSector, direction: 'up' | 'down') {
+    setForm(prev => {
+      const arr = [...prev.impactSectors]
+      const idx = arr.indexOf(sector)
+      if (idx < 0) return prev
+      const newIdx = direction === 'up' ? idx - 1 : idx + 1
+      if (newIdx < 0 || newIdx >= arr.length) return prev
+      ;[arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]]
+      return { ...prev, impactSectors: arr }
+    })
+  }
+
   /* ── Auto-fill ── */
 
   async function handleAutoFill() {
@@ -936,6 +948,12 @@ export default function ProfilePage() {
   }
 
   function renderSection2() {
+    const RANK_LABELS = ['Primary', 'Secondary', 'Tertiary'] as const
+    const RANK_COLORS = [
+      'bg-forest text-white',
+      'bg-sage/80 text-white',
+      'bg-sage/40 text-charcoal',
+    ]
     return (
       <div>
         {form.impactSectors.length < 2 && (
@@ -952,15 +970,72 @@ export default function ProfilePage() {
           </div>
         )}
         <p className="text-xs text-mid mb-4">
-          Choose 1 to 5 sectors. More specific = better matches.
+          Select up to 5 sectors in priority order. The first sector you pick is your <span className="font-semibold text-forest">primary</span> focus and carries the most weight in matching.
           {form.impactSectors.length >= 5 && (
             <span className="text-gold font-medium"> Maximum 5 sectors reached.</span>
           )}
         </p>
+
+        {/* ── Selected sectors with rank badges and reorder controls ── */}
+        {form.impactSectors.length > 0 && (
+          <div className="mb-4 space-y-1.5">
+            {form.impactSectors.map((sec, idx) => {
+              const opt = IMPACT_SECTOR_OPTIONS.find(o => o.value === sec)
+              const label = opt?.label ?? sec
+              const rankLabel = idx < 3 ? RANK_LABELS[idx] : `#${idx + 1}`
+              const rankColor = idx < 3 ? RANK_COLORS[idx] : 'bg-warm text-mid'
+              return (
+                <div key={sec} className="flex items-center gap-2 px-3 py-2 border border-forest/30 bg-forest/5 rounded-lg">
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${rankColor}`}>
+                    {rankLabel}
+                  </span>
+                  <span className="text-xs font-medium text-charcoal flex-1">{label}</span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => moveImpactSector(sec, 'up')}
+                      disabled={idx === 0}
+                      className="p-0.5 text-mid hover:text-forest disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+                      title="Move up"
+                    >
+                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => moveImpactSector(sec, 'down')}
+                      disabled={idx === form.impactSectors.length - 1}
+                      className="p-0.5 text-mid hover:text-forest disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+                      title="Move down"
+                    >
+                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => toggleImpactSector(sec)}
+                      className="p-0.5 ml-1 text-mid hover:text-red-600 transition-colors"
+                      title="Remove"
+                    >
+                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* ── Sector picker grid ── */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {IMPACT_SECTOR_OPTIONS.map(s => {
             const selected = form.impactSectors.includes(s.value)
             const atMax = !selected && form.impactSectors.length >= 5
+            if (selected) return null  // already shown in ranked list above
             return (
               <button
                 key={s.value}
@@ -968,15 +1043,12 @@ export default function ProfilePage() {
                 onClick={() => toggleImpactSector(s.value)}
                 disabled={atMax}
                 className={`flex items-center gap-2 px-3 py-2.5 border text-sm font-medium transition-all text-left rounded-lg ${
-                  selected
-                    ? 'border-forest bg-forest/10 text-forest'
-                    : atMax
-                      ? 'border-warm text-mid opacity-40 cursor-not-allowed'
-                      : 'border-warm text-mid hover:border-forest hover:text-forest'
+                  atMax
+                    ? 'border-warm text-mid opacity-40 cursor-not-allowed'
+                    : 'border-warm text-mid hover:border-forest hover:text-forest'
                 }`}
               >
                 <span className="text-xs">{s.label}</span>
-                {selected && <span className="ml-auto text-charcoal text-xs font-bold">✓</span>}
               </button>
             )
           })}
