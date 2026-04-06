@@ -24,6 +24,14 @@ export const VALID_STRUCTURES = new Set([
   'unincorporated', 'sole_trader', 'not_registered',
 ])
 
+export const VALID_BENEFICIARIES = new Set([
+  'children', 'young_people', 'older_people', 'families',
+  'women_girls', 'men_boys', 'lgbtq', 'ethnic_minorities',
+  'refugees_migrants', 'disabled_people', 'mental_health',
+  'carers', 'veterans', 'ex_offenders', 'homeless',
+  'people_in_poverty', 'rural_communities', 'general_public',
+])
+
 // ── Types ──────────────────────────────────────────────────────────────────────
 export interface GrantInput {
   id: string
@@ -37,6 +45,7 @@ export interface ClassificationResult {
   impact_sectors: string[]
   funding_type: string
   eligible_structures: string[]
+  target_beneficiaries: string[]
 }
 
 // ── Claude Haiku classification ────────────────────────────────────────────────
@@ -59,7 +68,8 @@ OUTPUT FORMAT — return ONLY a JSON array, no markdown, no explanation:
     "id": "<copy id field exactly>",
     "impact_sectors": ["<1 to 4 sector values>"],
     "funding_type": "<exactly one funding type value>",
-    "eligible_structures": ["<legal structure values, or empty array []>"]
+    "eligible_structures": ["<legal structure values, or empty array []>"],
+    "target_beneficiaries": ["<1 to 4 beneficiary group values>"]
   }
 ]
 
@@ -110,6 +120,29 @@ Common mappings:
 "any incorporated organisation"               → ["cic_guarantee","cic_shares","cio","registered_charity","ltd_guarantee","ltd_shares","llp","cooperative"]
 "individuals / sole traders / freelancers"    → ["sole_trader","unincorporated"]
 Not stated / open to all / "organisations"    → []
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TARGET BENEFICIARIES — who does this grant primarily serve? Choose 1 to 4.
+Use "general_public" ONLY if the grant genuinely has no specific beneficiary focus.
+
+children            children under 16, early years, nursery, primary school
+young_people        young people 16-25, youth, teenagers, young adults, NEETs
+older_people        older people 65+, elderly, ageing, dementia, later life
+families            families, parents, working families, family support
+women_girls         women, girls, female founders, domestic abuse, gender-based violence
+men_boys            men and boys, male mental health, men's sheds
+lgbtq               LGBTQ+, transgender, queer, sexual orientation
+ethnic_minorities   ethnic minorities, BAME, Black and minority ethnic, racial equity
+refugees_migrants   refugees, asylum seekers, migrants, displaced people
+disabled_people     disabled people, learning disabilities, d/Deaf, neurodiversity, accessibility
+mental_health       people with mental health needs, counselling users, suicide prevention
+carers              carers, care leavers, looked-after children, foster, kinship
+veterans            veterans, armed forces, ex-service personnel, military families
+ex_offenders        ex-offenders, people in the justice system, probation, reoffending
+homeless            homeless people, rough sleepers, housing first, temporary accommodation
+people_in_poverty   people in poverty, deprivation, low-income, food bank users, fuel poverty
+rural_communities   rural communities, isolated communities, village halls
+general_public      no specific group — open to all / general community benefit
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 GRANTS TO CLASSIFY:
@@ -163,7 +196,11 @@ export function validate(raw: ClassificationResult) {
     ? raw.eligible_structures.filter(s => VALID_STRUCTURES.has(s))
     : []
 
-  return { impact_sectors, funding_type, eligible_structures }
+  const target_beneficiaries = Array.isArray(raw.target_beneficiaries)
+    ? raw.target_beneficiaries.filter(b => VALID_BENEFICIARIES.has(b)).slice(0, 4)
+    : []
+
+  return { impact_sectors, funding_type, eligible_structures, target_beneficiaries }
 }
 
 // ── Classify up to `limit` unclassified active grants ─────────────────────────
@@ -210,6 +247,7 @@ export async function classifyUnclassified(
           const patch: Record<string, unknown> = {
             impact_sectors: r.impact_sectors,
             funding_type:   r.funding_type,
+            target_beneficiaries: r.target_beneficiaries.length > 0 ? r.target_beneficiaries : ['general_public'],
           }
           if (r.eligible_structures.length > 0) patch.eligible_structures = r.eligible_structures
           return supabase.from('scraped_grants').update(patch).eq('id', g.id)
