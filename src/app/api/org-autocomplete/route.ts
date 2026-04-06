@@ -64,7 +64,7 @@ Extract information and return ONLY a valid JSON object with these exact keys:
   "themes": ["high-level topic strings, e.g. mental health, domestic abuse, employment, community development"],
   "areasOfWork": ["specific programme/activity strings, e.g. English language classes, counselling, food bank, CV writing workshops"],
   "beneficiaries": ["specific beneficiary group strings, e.g. BAME women, young people aged 16–25, care leavers, refugees"],
-  "annualIncome": "best estimate — one of: Under £10,000 | £10,000–£50,000 | £50,000–£100,000 | £100,000–£500,000 | Over £500,000",
+  "annualIncome": "best estimate — MUST be exactly one of: Under £10,000 | £10,000–£50,000 | £50,000–£100,000 | £100,000–£250,000 | £250,000–£500,000 | £500,000–£1 million | £1 million–£5 million | Over £5 million",
   "impactSectors": ["1 to 5 values from the IMPACT SECTOR list below, in priority order — most important first"],
   "beneficiaryGroups": ["1 to 5 values from the BENEFICIARY GROUP list below — primary beneficiary first, then secondaries"]
 }

@@ -401,6 +401,11 @@ export default function ProfilePage() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data?.error ?? 'Auto-fill failed')
+      // Validate annual income against known bands
+      const validIncome = INCOME_BANDS.includes(data.annualIncome)
+        ? data.annualIncome
+        : null
+
       // Validate structured arrays against known taxonomy values
       const validSectors = new Set(IMPACT_SECTOR_OPTIONS.map(o => o.value))
       const validBeneficiaries = new Set(BENEFICIARY_OPTIONS.map(o => o.value))
@@ -416,7 +421,7 @@ export default function ProfilePage() {
         name:              data.name            || prev.name,
         charityNumber:     data.charityNumber   || prev.charityNumber,
         orgType:           data.orgType         || prev.orgType,
-        annualIncome:      data.annualIncome     || prev.annualIncome,
+        annualIncome:      validIncome            || prev.annualIncome,
         primaryLocation:   data.primaryLocation || prev.primaryLocation,
         themes:            Array.isArray(data.themes)        ? data.themes.join(', ')        : prev.themes,
         areasOfWork:       Array.isArray(data.areasOfWork)   ? data.areasOfWork.join(', ')   : prev.areasOfWork,
