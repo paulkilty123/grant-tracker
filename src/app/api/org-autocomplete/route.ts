@@ -64,13 +64,27 @@ Extract information and return ONLY a valid JSON object with these exact keys:
   "themes": ["high-level topic strings, e.g. mental health, domestic abuse, employment, community development"],
   "areasOfWork": ["specific programme/activity strings, e.g. English language classes, counselling, food bank, CV writing workshops"],
   "beneficiaries": ["specific beneficiary group strings, e.g. BAME women, young people aged 16–25, care leavers, refugees"],
-  "annualIncome": "best estimate — one of: Under £10,000 | £10,000–£50,000 | £50,000–£100,000 | £100,000–£500,000 | Over £500,000"
+  "annualIncome": "best estimate — one of: Under £10,000 | £10,000–£50,000 | £50,000–£100,000 | £100,000–£500,000 | Over £500,000",
+  "impactSectors": ["1 to 5 values from the IMPACT SECTOR list below, in priority order — most important first"],
+  "beneficiaryGroups": ["1 to 5 values from the BENEFICIARY GROUP list below — primary beneficiary first, then secondaries"]
 }
+
+IMPACT SECTOR VALUES (pick 1–5 in priority order):
+young_people, community, health, mental_health, housing, education, employment,
+disability, older_people, environment, creative, heritage, sport, women, justice,
+tech, financial, food, international
+
+BENEFICIARY GROUP VALUES (pick 1–5, primary first):
+children, young_people, older_people, families, women_girls, men_boys, lgbtq,
+ethnic_minorities, refugees_migrants, disabled_people, mental_health, carers,
+veterans, ex_offenders, homeless, people_in_poverty, rural_communities, general_public
 
 Rules:
 - themes = broad thematic areas (4–8 items)
 - areasOfWork = concrete activities and programmes they run (4–8 items)
 - beneficiaries = specific people they help (3–6 items)
+- impactSectors = use ONLY the exact values listed above, in priority order (most core first)
+- beneficiaryGroups = use ONLY the exact values listed above; put primary beneficiary first; use "general_public" only if genuinely no specific group
 - If you cannot determine something with reasonable confidence, use null for strings or [] for arrays
 - annualIncome: infer from staff size, scope of services, number of sites, or any financial figures mentioned
 - Return ONLY the JSON object — no markdown fences, no commentary`
@@ -84,7 +98,7 @@ Rules:
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 900,
+        max_tokens: 1200,
         messages: [{ role: 'user', content: prompt }],
       }),
     })

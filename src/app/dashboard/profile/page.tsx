@@ -401,17 +401,29 @@ export default function ProfilePage() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data?.error ?? 'Auto-fill failed')
+      // Validate structured arrays against known taxonomy values
+      const validSectors = new Set(IMPACT_SECTOR_OPTIONS.map(o => o.value))
+      const validBeneficiaries = new Set(BENEFICIARY_OPTIONS.map(o => o.value))
+      const newSectors = Array.isArray(data.impactSectors)
+        ? (data.impactSectors as string[]).filter(s => validSectors.has(s as ImpactSector)).slice(0, 5) as ImpactSector[]
+        : []
+      const newBeneficiaries = Array.isArray(data.beneficiaryGroups)
+        ? (data.beneficiaryGroups as string[]).filter(b => validBeneficiaries.has(b as BeneficiaryGroup)).slice(0, 5) as BeneficiaryGroup[]
+        : []
+
       setForm(prev => ({
         ...prev,
-        name:            data.name            || prev.name,
-        charityNumber:   data.charityNumber   || prev.charityNumber,
-        orgType:         data.orgType         || prev.orgType,
-        annualIncome:    data.annualIncome     || prev.annualIncome,
-        primaryLocation: data.primaryLocation || prev.primaryLocation,
-        themes:          Array.isArray(data.themes)        ? data.themes.join(', ')        : prev.themes,
-        areasOfWork:     Array.isArray(data.areasOfWork)   ? data.areasOfWork.join(', ')   : prev.areasOfWork,
-        beneficiaries:   Array.isArray(data.beneficiaries) ? data.beneficiaries.join(', ') : prev.beneficiaries,
-        mission:         data.mission         || prev.mission,
+        name:              data.name            || prev.name,
+        charityNumber:     data.charityNumber   || prev.charityNumber,
+        orgType:           data.orgType         || prev.orgType,
+        annualIncome:      data.annualIncome     || prev.annualIncome,
+        primaryLocation:   data.primaryLocation || prev.primaryLocation,
+        themes:            Array.isArray(data.themes)        ? data.themes.join(', ')        : prev.themes,
+        areasOfWork:       Array.isArray(data.areasOfWork)   ? data.areasOfWork.join(', ')   : prev.areasOfWork,
+        beneficiaries:     Array.isArray(data.beneficiaries) ? data.beneficiaries.join(', ') : prev.beneficiaries,
+        mission:           data.mission         || prev.mission,
+        impactSectors:     newSectors.length > 0     ? newSectors       : prev.impactSectors,
+        beneficiaryGroups: newBeneficiaries.length > 0 ? newBeneficiaries : prev.beneficiaryGroups,
       }))
       setAutoFillSuccess(true)
       // If in onboarding, move to review phase
