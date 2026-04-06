@@ -1,11 +1,12 @@
-import type { GrantOpportunity, Organisation, LegalStructure } from '@/types'
+import type { GrantOpportunity, Organisation, LegalStructure, BeneficiaryGroup } from '@/types'
 
 export interface MatchBreakdown {
-  location:    { score: number; max: number; label: string }
-  themes:      { score: number; max: number; label: string }
-  grantSize:   { score: number; max: number; label: string }
-  funderType:  { score: number; max: number; label: string }
-  eligibility: { score: number; max: number; label: string }
+  location:      { score: number; max: number; label: string }
+  themes:        { score: number; max: number; label: string }
+  beneficiaries: { score: number; max: number; label: string }
+  grantSize:     { score: number; max: number; label: string }
+  funderType:    { score: number; max: number; label: string }
+  eligibility:   { score: number; max: number; label: string }
 }
 
 export interface MatchResult {
@@ -450,7 +451,7 @@ export function computeMatchScore(
   // more reliable than the legacy `is_local` boolean, which is inconsistent on
   // ~16% of the catalogue. We fall back to is_local + title-regex scanning
   // only when location_tag is missing or generic.
-  let locationScore = 10 // base for national grants
+  let locationScore = 8 // base for national grants (max 20)
   let locationMismatch = false
   if (org.primary_location) {
     const city    = org.primary_location.split(',')[0].trim().toLowerCase()
@@ -466,7 +467,7 @@ export function computeMatchScore(
 
     if (tagClass.kind === 'national') {
       // UK-wide grant — everyone gets the national base. No regional gymnastics.
-      locationScore = 10
+      locationScore = 8
     } else if (tagClass.kind === 'england' || tagClass.kind === 'scotland' ||
                tagClass.kind === 'wales'   || tagClass.kind === 'ni') {
       // Nation-restricted grant. Match against the org's inferred country.
@@ -476,7 +477,7 @@ export function computeMatchScore(
         (tagClass.kind === 'wales'    && orgInWales)    ||
         (tagClass.kind === 'ni'       && orgInNI)
       if (nationOk) {
-        locationScore = 22
+        locationScore = 18
         reasons.push(`Eligible in ${tagClass.label}`)
       } else {
         locationScore = 2
@@ -487,7 +488,7 @@ export function computeMatchScore(
       // Specific region, county, city or borough.
       const regionOk = orgMatchesRegionalTag(tagClass.label, orgLocationFull)
       if (regionOk) {
-        locationScore = 25
+        locationScore = 20
         reasons.push(`Local match for ${tagClass.label}`)
 
         // Borough mismatch check: a "London" tag is still a borough-agnostic match,
@@ -500,7 +501,7 @@ export function computeMatchScore(
               b => b === city || b.includes(city) || city.includes(b)
             )
             if (!orgBoroughMentioned) {
-              locationScore = 10
+              locationScore = 8
               reasons.pop()
               reasons.push('London grant — check borough eligibility')
             }
@@ -523,7 +524,7 @@ export function computeMatchScore(
         const locationMatch = cityMatch || regionMatch || countryMatch
 
         if (locationMatch) {
-          locationScore = 25
+          locationScore = 20
           reasons.push(`Local match for ${org.primary_location.split(',')[0]}`)
           if (city === 'london' || region.includes('london')) {
             const mentionedBoroughs = LONDON_BOROUGHS.filter(b => grantText.includes(b))
@@ -532,7 +533,7 @@ export function computeMatchScore(
                 b => b === city || b.includes(city) || city.includes(b)
               )
               if (!orgBoroughMentioned) {
-                locationScore = 10
+                locationScore = 8
                 reasons.pop()
                 reasons.push('London grant — check borough eligibility')
               }
@@ -604,7 +605,7 @@ export function computeMatchScore(
     const orgCoverage   = weightedOrgTotal   > 0 ? orgIntersection   / weightedOrgTotal   : 0
     const coverage      = 0.7 * grantCoverage + 0.3 * orgCoverage
 
-    themesScore = hits > 0 ? Math.max(3, Math.round(coverage * 25)) : 3
+    themesScore = hits > 0 ? Math.max(3, Math.round(coverage * 20)) : 3
 
     // ── Primary domain mismatch check ─────────────────────────────────────
     // These sectors strongly characterise what a grant is fundamentally about.
@@ -705,7 +706,7 @@ export function computeMatchScore(
 
       const avgDepth = intersection.length > 0 ? totalDepth / intersection.length : 0
       const depthBoost = Math.round(avgDepth * 5) // up to +5 points
-      themesScore = Math.min(25, themesScore + depthBoost)
+      themesScore = Math.min(20, themesScore + depthBoost)
 
       if (depthBoost >= 3) {
         reasons.push(`Sector match: ${intersection.join(', ')} (strong profile alignment)`)
@@ -756,7 +757,7 @@ export function computeMatchScore(
       }
 
       const ratio = totalWeight > 0 ? weightedHits / totalWeight : 0
-      themesScore = Math.round(ratio * 25)
+      themesScore = Math.round(ratio * 20)
 
       if (ratio >= 0.4)       reasons.push('Strong theme match')
       else if (ratio >= 0.15) reasons.push('Partial theme match')
@@ -768,7 +769,7 @@ export function computeMatchScore(
     const sectorHits        = grantSectorsLower.filter(s =>
       orgThemesFlat.some(t => s.includes(t.split(' ')[0]) || t.includes(s.split(' ')[0]))
     ).length
-    themesScore = Math.min(25, themesScore + sectorHits * 4)
+    themesScore = Math.min(20, themesScore + sectorHits * 4)
   }
 
   // ── Title keyword veto ────────────────────────────────────────────────
@@ -816,11 +817,81 @@ export function computeMatchScore(
       if (boost > 0) boostedSector = true
     }
     const cappedDelta = Math.max(-5, Math.min(6, feedbackDelta))
-    themesScore = Math.max(0, Math.min(25, themesScore + cappedDelta))
+    themesScore = Math.max(0, Math.min(20, themesScore + cappedDelta))
     if (boostedSector && cappedDelta >= 3) reasons.push('Matches your liked grant types')
   }
 
-  // ── 3. Grant size fit (max 20) ─────────────────────────────────────────
+  // ── 3. Beneficiary match (max 10) ──────────────────────────────────────
+  // Structured beneficiary taxonomy: org has a primary (index 0, weight 1.0)
+  // plus equal-weight secondaries (0.7 each). Grant-side beneficiary tags
+  // have no rank — all treated equally.
+  let beneficiaryScore = 5 // neutral base when either side has no data
+  const orgBeneficiaries = (org.beneficiary_groups ?? []) as BeneficiaryGroup[]
+  const grantBeneficiaries = (grant.beneficiaryGroups ?? []) as BeneficiaryGroup[]
+
+  if (orgBeneficiaries.length > 0 && grantBeneficiaries.length > 0) {
+    // Check for opposing group conflicts (children vs older_people, etc.)
+    const conflictPairs: [BeneficiaryGroup, BeneficiaryGroup][] = [
+      ['children', 'older_people'],
+      ['young_people', 'older_people'],
+      ['women_girls', 'men_boys'],
+    ]
+    let hasConflict = false
+    for (const [a, b] of conflictPairs) {
+      const grantHasA = grantBeneficiaries.includes(a)
+      const grantHasB = grantBeneficiaries.includes(b)
+      const orgHasA   = orgBeneficiaries.includes(a)
+      const orgHasB   = orgBeneficiaries.includes(b)
+      // Conflict: grant targets group A exclusively, org only serves group B
+      if (grantHasA && !grantHasB && orgHasB && !orgHasA) { hasConflict = true; break }
+      if (grantHasB && !grantHasA && orgHasA && !orgHasB) { hasConflict = true; break }
+    }
+
+    if (hasConflict) {
+      beneficiaryScore = 1
+      reasons.push('Grant targets a different beneficiary group — check eligibility')
+    } else {
+      // general_public is a universal match — skip structured scoring
+      const grantIsGeneral = grantBeneficiaries.includes('general_public')
+      const orgIsGeneral   = orgBeneficiaries.includes('general_public')
+
+      if (grantIsGeneral || orgIsGeneral) {
+        beneficiaryScore = 5 // neutral — no bonus, no penalty
+      } else {
+        // Weighted intersection: primary org beneficiary = 1.0, secondaries = 0.7
+        const intersection = grantBeneficiaries.filter(b => orgBeneficiaries.includes(b))
+
+        if (intersection.length > 0) {
+          // Weight the intersection from the org's perspective
+          let weightedHits = 0
+          let weightedTotal = 0
+          for (let i = 0; i < orgBeneficiaries.length; i++) {
+            const w = i === 0 ? 1.0 : 0.7 // primary vs secondary
+            weightedTotal += w
+            if (grantBeneficiaries.includes(orgBeneficiaries[i])) {
+              weightedHits += w
+            }
+          }
+          const coverage = weightedTotal > 0 ? weightedHits / weightedTotal : 0
+          beneficiaryScore = Math.max(3, Math.round(coverage * 10))
+
+          // Check if the org's PRIMARY beneficiary matched
+          if (grantBeneficiaries.includes(orgBeneficiaries[0])) {
+            reasons.push(`Targets your primary beneficiary group`)
+          } else {
+            reasons.push(`Partial beneficiary match`)
+          }
+        } else {
+          // No intersection — different beneficiary groups
+          beneficiaryScore = 2
+          reasons.push('Different target beneficiary group')
+        }
+      }
+    }
+  }
+  // If either side has no data, score stays at neutral (5)
+
+  // ── 4. Grant size fit (max 20) ─────────────────────────────────────────
   let grantSizeScore = 10
   const grantMax = grant.amountMax ?? grant.amountMin ?? 0
   const grantMin = grant.amountMin ?? 0
@@ -851,7 +922,7 @@ export function computeMatchScore(
     if (grantSizeScore >= 18) reasons.push('Grant size suits your organisation')
   }
 
-  // ── 4. Funder type preference + funding type affinity (max 15) ────────
+  // ── 5. Funder type preference + funding type affinity (max 15) ────────
   let funderTypeScore = 8 // neutral base
 
   // Funder type preference (trust vs government vs lottery etc.)
@@ -893,7 +964,7 @@ export function computeMatchScore(
     }
   }
 
-  // ── 5. Eligibility / org type (max 15) ────────────────────────────────
+  // ── 6. Eligibility / org type (max 15) ────────────────────────────────
   // Prefer the modern legal_structure field; fall back to legacy org_type.
   // CIO is a charity structure, so treat it as charity-like for scoring.
   const isCharityLike =
@@ -1106,7 +1177,7 @@ export function computeMatchScore(
 
   // ── Total ──────────────────────────────────────────────────────────────
   let score = Math.min(100,
-    locationScore + themesScore + grantSizeScore + funderTypeScore + eligibilityScore
+    locationScore + themesScore + beneficiaryScore + grantSizeScore + funderTypeScore + eligibilityScore
   )
 
   // Freshness bonus — recently added or verified grants get a gentle tiebreaker boost
@@ -1169,11 +1240,12 @@ export function computeMatchScore(
     score,
     reason,
     breakdown: {
-      location:    { score: locationScore,    max: 25, label: 'Location' },
-      themes:      { score: themesScore,      max: 25, label: 'Themes & work' },
-      grantSize:   { score: grantSizeScore,   max: 20, label: 'Grant size' },
-      funderType:  { score: funderTypeScore,  max: 15, label: 'Funder type' },
-      eligibility: { score: eligibilityScore, max: 15, label: 'Eligibility' },
+      location:      { score: locationScore,      max: 20, label: 'Location' },
+      themes:        { score: themesScore,        max: 20, label: 'Themes & work' },
+      beneficiaries: { score: beneficiaryScore,   max: 10, label: 'Beneficiaries' },
+      grantSize:     { score: grantSizeScore,     max: 20, label: 'Grant size' },
+      funderType:    { score: funderTypeScore,    max: 15, label: 'Funder type' },
+      eligibility:   { score: eligibilityScore,   max: 15, label: 'Eligibility' },
     },
   }
 }

@@ -42,6 +42,7 @@ function normaliseScraped(row: Record<string, unknown>): GrantOpportunity {
     impactSectors:        Array.isArray(row.impact_sectors)       ? (row.impact_sectors as import('@/types').ImpactSector[]) : undefined,
     eligibilityCriteria:  Array.isArray(row.eligibility_criteria) ? (row.eligibility_criteria as string[]) : [],
     eligibleStructures:   Array.isArray(row.eligible_structures)  ? (row.eligible_structures as import('@/types').LegalStructure[]) : undefined,
+    beneficiaryGroups:    Array.isArray(row.target_beneficiaries) ? (row.target_beneficiaries as import('@/types').BeneficiaryGroup[]) : undefined,
     applyUrl:             row.apply_url ? String(row.apply_url) : null,
     isInviteOnly:         Boolean(row.is_invite_only),
     nextOpenDate:         row.next_open_date ? String(row.next_open_date) : null,

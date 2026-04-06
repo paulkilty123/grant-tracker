@@ -53,6 +53,27 @@ export type ImpactSector =
   | 'heritage'
   | 'sport'
 
+/** Structured beneficiary taxonomy — who the org/grant primarily serves */
+export type BeneficiaryGroup =
+  | 'children'           // Children (under 16)
+  | 'young_people'       // Young people (16-25)
+  | 'older_people'       // Older people (65+)
+  | 'families'           // Families & parents
+  | 'women_girls'        // Women & girls
+  | 'men_boys'           // Men & boys
+  | 'lgbtq'              // LGBTQ+ communities
+  | 'ethnic_minorities'  // Ethnic minorities & BAME communities
+  | 'refugees_migrants'  // Refugees, asylum seekers & migrants
+  | 'disabled_people'    // Disabled people
+  | 'mental_health'      // People with mental health needs
+  | 'carers'             // Carers & care leavers
+  | 'veterans'           // Veterans & armed forces community
+  | 'ex_offenders'       // Ex-offenders & people in the justice system
+  | 'homeless'           // Homeless people & rough sleepers
+  | 'people_in_poverty'  // People experiencing poverty
+  | 'rural_communities'  // Rural & isolated communities
+  | 'general_public'     // General public / no specific group
+
 /** Funding opportunity types — 4-category taxonomy */
 export type FundingType =
   | 'grant'        // non-repayable cash: grants, awards, prizes, diversity funds
@@ -111,6 +132,8 @@ export interface Organisation {
   primary_location: string | null
   areas_of_work: string[]
   beneficiaries: string[]
+  /** Structured beneficiary groups — primary (index 0) + secondaries */
+  beneficiary_groups: BeneficiaryGroup[]
   themes: string[]
   mission: string | null
   min_grant_target: number | null
@@ -180,6 +203,8 @@ export interface GrantOpportunity {
   sectors: string[]
   /** New 12-sector taxonomy tags */
   impactSectors?: ImpactSector[]
+  /** Structured beneficiary groups the grant targets */
+  beneficiaryGroups?: BeneficiaryGroup[]
   eligibilityCriteria: string[]
   /** Legal structures that are explicitly eligible */
   eligibleStructures?: LegalStructure[]
