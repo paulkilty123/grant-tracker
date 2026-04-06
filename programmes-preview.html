@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Programmes — Grant Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --forest:  #1f5c52;
+  --sage:    #2d8a7a;
+  --coral:   #E8725C;
+  --gold:    #e8a030;
+  --warm:    #e8ddd0;
+  --cream:   #faf7f2;
+  --charcoal:#1a2e2b;
+  --mid:     #5a7370;
+  --light:   #8fa8a5;
+  --sidebar: #121f2b;
+}
+
+body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  background: var(--cream);
+  color: var(--charcoal);
+  display: flex;
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: 240px;
+  background: var(--sidebar);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 50;
+}
+.sidebar-logo {
+  padding: 22px 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.logo-icon {
+  width: 28px; height: 28px;
+  background: var(--coral);
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+.logo-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+}
+.logo-text {
+  font-family: 'DM Serif Display', serif;
+  font-size: 17px;
+  color: #fff;
+  letter-spacing: -0.01em;
+}
+.nav-section-label {
+  padding: 16px 12px 4px 16px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.28);
+}
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.55);
+  cursor: pointer;
+  transition: all 0.12s;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  text-decoration: none;
+}
+.nav-link:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.85); }
+.nav-link.active { background: rgba(255,255,255,0.12); color: #fff; font-weight: 600; }
+.nav-icon { width: 16px; height: 16px; flex-shrink: 0; opacity: 0.8; }
+.nav-badge {
+  margin-left: auto;
+  background: var(--gold);
+  color: #fff;
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 999px;
+  letter-spacing: 0.03em;
+}
+.nav-flex { flex: 1; overflow-y: auto; padding: 6px 0; }
+.sidebar-bottom {
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding: 14px 16px;
+}
+.user-chip { display: flex; align-items: center; gap: 9px; }
+.user-avatar {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.18);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.user-name { font-size: 12.5px; font-weight: 500; color: #fff; }
+.user-email { font-size: 10px; color: rgba(255,255,255,0.35); }
+.profile-nudge {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.profile-nudge-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.profile-nudge-label { font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.06em; }
+.profile-nudge-pct { font-size: 11px; font-weight: 700; color: var(--gold); }
+.profile-bar { height: 3px; background: rgba(255,255,255,0.1); }
+.profile-bar-fill { height: 100%; background: var(--gold); width: 65%; }
+.profile-nudge-hint { font-size: 10px; color: rgba(255,255,255,0.3); margin-top: 5px; }
+
+/* ── MAIN ── */
+.main {
+  margin-left: 240px;
+  flex: 1;
+  display: flex;
+  min-height: 100vh;
+}
+.main-content { flex: 1; overflow: auto; }
+.inner { padding: 36px 32px; }
+
+/* ── PAGE HEADER ── */
+.page-header { margin-bottom: 22px; }
+.page-title-row { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
+.page-icon { color: var(--sage); }
+.page-title { font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--charcoal); line-height: 1.15; }
+.page-subtitle { font-size: 14px; color: var(--mid); line-height: 1.55; }
+
+/* ── CALLOUT ── */
+.callout {
+  background: #f0f9f7;
+  border: 1px solid rgba(45,138,122,0.22);
+  border-left: 3px solid var(--sage);
+  padding: 13px 16px;
+  margin-bottom: 22px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.callout-icon { color: var(--sage); flex-shrink: 0; margin-top: 1px; }
+.callout-head { font-size: 13px; font-weight: 600; color: var(--charcoal); margin-bottom: 2px; }
+.callout-body { font-size: 13px; color: #374151; line-height: 1.5; }
+
+/* ── FILTERS ── */
+.filters { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; align-items: center; }
+.search-wrap { position: relative; flex: 1; min-width: 180px; }
+.search-wrap input {
+  width: 100%;
+  padding: 8px 12px 8px 34px;
+  border: 1px solid var(--warm);
+  background: #fff;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--charcoal);
+  outline: none;
+  border-radius: 0;
+  transition: border-color 0.12s;
+}
+.search-wrap input:focus { border-color: var(--coral); }
+.search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--light); font-size: 15px; pointer-events: none; }
+.filter-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+.ftab {
+  padding: 7px 12px;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--warm);
+  background: #fff;
+  color: var(--mid);
+  font-family: inherit;
+  transition: all 0.12s;
+  border-radius: 0;
+}
+.ftab:hover { border-color: var(--charcoal); color: var(--charcoal); }
+.ftab.active { background: var(--charcoal); color: #fff; border-color: var(--charcoal); }
+.fselect {
+  padding: 7px 10px;
+  font-size: 12.5px;
+  border: 1px solid var(--warm);
+  background: #fff;
+  color: var(--charcoal);
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: 0;
+  outline: none;
+}
+.results-count { font-size: 12px; color: var(--light); margin-bottom: 14px; }
+
+/* ── PROGRAMME CARDS ── */
+.cards { display: flex; flex-direction: column; gap: 8px; }
+.prog-card {
+  background: #fff;
+  border: 1px solid rgba(232,221,208,0.8);
+  border-left: 3px solid transparent;
+  padding: 18px 20px;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-shadow: 0 2px 16px rgba(26,46,43,0.05);
+}
+.prog-card:hover { border-left-color: var(--sage); box-shadow: 0 4px 20px rgba(26,46,43,0.09); }
+.prog-card.active { border-left-color: var(--sage); box-shadow: 0 4px 20px rgba(26,46,43,0.09); }
+.prog-card-inner { display: flex; gap: 14px; align-items: flex-start; }
+.prog-card-icon {
+  width: 40px; height: 40px;
+  background: #f0faf8;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-size: 17px;
+}
+.prog-card-body { flex: 1; min-width: 0; }
+.prog-card-badges { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 5px; }
+
+/* Badges — all square */
+.badge {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border: 1px solid;
+  letter-spacing: 0.025em;
+  display: inline-block;
+}
+.badge-accelerator { background: #fff7ed; color: #c2410c; border-color: #fcd4a8; }
+.badge-fellowship  { background: #faf5ff; color: #7c3aed; border-color: #e4d5fc; }
+.badge-support     { background: #eef2ff; color: #4338ca; border-color: #c7d2fe; }
+.badge-award       { background: #fffbeb; color: #b45309; border-color: #fde68a; }
+.badge-rolling     { background: #f0fdf4; color: #15803d; border-color: #b5f0c8; }
+
+/* Stage badges */
+.stage { font-size: 10.5px; font-weight: 500; padding: 2px 7px; display: inline-block; }
+.stage-pre  { background: #fff1f2; color: #be123c; }
+.stage-early{ background: #fffbeb; color: #92400e; }
+.stage-trade{ background: #f0fdf4; color: #166534; }
+.stage-scale{ background: #eff6ff; color: #1e40af; }
+.stage-seed { background: #faf5ff; color: #6b21a8; }
+
+.prog-title { font-family: 'DM Serif Display', serif; font-size: 17px; color: var(--charcoal); margin: 0 0 2px; line-height: 1.25; }
+.prog-provider { font-size: 12.5px; color: var(--mid); margin: 0 0 7px; }
+.prog-tagline { font-size: 13.5px; color: #374151; margin: 0 0 11px; line-height: 1.5; }
+
+/* "What you get" pills */
+.pills { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 11px; }
+.pill {
+  font-size: 11.5px;
+  padding: 3px 9px;
+  background: var(--cream);
+  border: 1px solid var(--warm);
+  color: var(--charcoal);
+  display: flex; align-items: center; gap: 4px;
+}
+.pill-check { color: var(--sage); font-size: 11px; }
+
+/* Meta row */
+.meta { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--mid); }
+.meta span { display: flex; align-items: center; gap: 4px; }
+.meta .cohort { font-weight: 600; color: var(--charcoal); }
+.card-arrow { color: var(--warm); font-size: 18px; flex-shrink: 0; margin-top: 3px; }
+
+/* ── DETAIL PANEL ── */
+.detail {
+  width: 360px;
+  background: #fff;
+  border-left: 1px solid var(--warm);
+  display: none;
+  flex-direction: column;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: auto;
+}
+.detail.open { display: flex; flex-direction: column; }
+.detail-head {
+  position: sticky;
+  top: 0;
+  background: var(--cream);
+  border-bottom: 1px solid var(--warm);
+  padding: 13px 18px;
+  display: flex; align-items: center; justify-content: space-between;
+  z-index: 10;
+  flex-shrink: 0;
+}
+.detail-head-label { font-size: 10px; font-weight: 700; color: var(--light); letter-spacing: 0.06em; text-transform: uppercase; }
+.detail-close { background: none; border: none; cursor: pointer; color: var(--light); font-size: 18px; line-height: 1; padding: 2px 4px; transition: color 0.12s; }
+.detail-close:hover { color: var(--charcoal); }
+.detail-body { padding: 22px 20px; flex: 1; overflow: auto; }
+.detail-badge { font-size: 10.5px; font-weight: 700; padding: 3px 9px; border: 1px solid; display: inline-block; margin-bottom: 10px; }
+.detail-title { font-family: 'DM Serif Display', serif; font-size: 21px; color: var(--charcoal); margin: 0 0 3px; line-height: 1.2; }
+.detail-provider { font-size: 13px; color: var(--mid); margin: 0 0 18px; }
+
+/* Key facts 2x2 */
+.detail-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  background: var(--cream);
+  padding: 14px;
+  margin-bottom: 18px;
+}
+.dgrid-label { font-size: 10px; font-weight: 700; color: var(--light); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
+.dgrid-val { font-size: 12.5px; color: var(--charcoal); font-weight: 600; display: flex; align-items: center; gap: 4px; }
+
+/* Cohort callout */
+.cohort-box {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 11px 14px;
+  margin-bottom: 18px;
+  display: flex; gap: 9px; align-items: flex-start;
+}
+.cohort-icon { flex-shrink: 0; font-size: 15px; margin-top: 1px; }
+.cohort-label { font-size: 11px; font-weight: 700; color: #1e40af; margin-bottom: 2px; }
+.cohort-val { font-size: 13px; color: #1d4ed8; }
+
+/* Detail sections */
+.dsec { margin-bottom: 18px; padding-top: 15px; border-top: 1px solid #f3f4f6; }
+.dsec-label { font-size: 10px; font-weight: 700; color: var(--light); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+.dsec p { font-size: 13.5px; color: #374151; line-height: 1.55; margin-bottom: 8px; }
+.check-list { display: flex; flex-direction: column; gap: 7px; }
+.check-item { display: flex; gap: 8px; font-size: 13.5px; color: #374151; align-items: flex-start; }
+.check-icon { color: var(--sage); flex-shrink: 0; margin-top: 1px; font-size: 13px; }
+.dtags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.dtag-purple { font-size: 12px; padding: 3px 10px; background: #f5f3ff; color: #6d28d9; border: 1px solid #ddd6fe; }
+
+/* CTAs */
+.detail-ctas { padding-top: 15px; border-top: 1px solid #f3f4f6; display: flex; flex-direction: column; gap: 7px; }
+.btn-primary {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  background: var(--coral); color: #fff;
+  padding: 11px 16px;
+  font-size: 14px; font-weight: 600;
+  text-decoration: none; font-family: inherit;
+  cursor: pointer; border: none;
+  transition: opacity 0.15s;
+  border-radius: 0;
+}
+.btn-primary:hover { opacity: 0.9; }
+.btn-outline {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  background: transparent; color: var(--charcoal);
+  padding: 10px 16px;
+  font-size: 14px; font-weight: 600;
+  border: 1px solid var(--warm);
+  cursor: pointer; font-family: inherit;
+  transition: border-color 0.12s;
+  border-radius: 0;
+}
+.btn-outline:hover { border-color: var(--charcoal); }
+
+/* SVG icons (inline) */
+svg { display: inline-block; vertical-align: middle; }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon"><div class="logo-dot"></div></div>
+    <span class="logo-text">GrantTracker</span>
+  </div>
+
+  <div class="nav-flex">
+    <div style="padding:6px 0">
+      <a class="nav-link" href="#">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </a>
+    </div>
+
+    <div>
+      <p class="nav-section-label">Find Funding</p>
+      <a class="nav-link" href="#">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        Find Funding
+      </a>
+      <a class="nav-link active" href="#">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>
+        Programmes
+        <span class="nav-badge">NEW</span>
+      </a>
+    </div>
+
+    <div>
+      <p class="nav-section-label">Manage</p>
+      <a class="nav-link" href="#">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        Funding Pipeline
+      </a>
+      <a class="nav-link" href="#">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Deadlines
+      </a>
+    </div>
+
+    <div>
+      <p class="nav-section-label">Settings</p>
+      <a class="nav-link" href="#">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        My Profile
+        <span style="margin-left:auto;font-size:10px;font-weight:700;padding:1px 6px;border-radius:999px;background:rgba(232,160,48,0.18);color:#e8a030;border:1px solid rgba(232,160,48,0.3)">65%</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="sidebar-bottom">
+    <div class="profile-nudge">
+      <div class="profile-nudge-row">
+        <span class="profile-nudge-label">Profile</span>
+        <span class="profile-nudge-pct">65%</span>
+      </div>
+      <div class="profile-bar"><div class="profile-bar-fill"></div></div>
+      <p class="profile-nudge-hint">Better profile = better matches</p>
+    </div>
+    <div class="user-chip">
+      <div class="user-avatar">PK</div>
+      <div>
+        <div class="user-name">My Organisation</div>
+        <div class="user-email">paulkilty1@gmail.com</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main -->
+<div class="main">
+  <div class="main-content">
+    <div class="inner">
+
+      <!-- Header -->
+      <div class="page-header">
+        <div class="page-title-row">
+          <svg class="page-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>
+          <h1 class="page-title">Programmes &amp; Accelerators</h1>
+        </div>
+        <p class="page-subtitle">Not looking for a grant? Structured support, fellowships and accelerators — intensive programmes that grow organisations and people.</p>
+      </div>
+
+      <!-- Callout -->
+      <div class="callout">
+        <svg class="callout-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        <div>
+          <p class="callout-head">Programmes are different from grants</p>
+          <p class="callout-body">The value isn't always cash — it's mentorship, networks, credibility and structured learning. Many include a bursary alongside non-financial support. Ideal for organisations that need more than money.</p>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters">
+        <div class="search-wrap">
+          <span class="search-icon">⌕</span>
+          <input type="text" placeholder="Search programmes…" />
+        </div>
+        <div class="filter-tabs">
+          <button class="ftab active" onclick="setFilter(this,'All')">All</button>
+          <button class="ftab" onclick="setFilter(this,'Accelerator')">Accelerator</button>
+          <button class="ftab" onclick="setFilter(this,'Fellowship')">Fellowship</button>
+          <button class="ftab" onclick="setFilter(this,'Support')">Support</button>
+        </div>
+        <select class="fselect">
+          <option>All stages</option>
+          <option>Pre-start</option>
+          <option>Early stage</option>
+          <option>Trading</option>
+          <option>Scaling</option>
+        </select>
+      </div>
+
+      <p class="results-count">6 programmes found</p>
+
+      <!-- Cards -->
+      <div class="cards">
+
+        <!-- 1: SSE -->
+        <div class="prog-card" onclick="openDetail('sse', this)">
+          <div class="prog-card-inner">
+            <div class="prog-card-icon">🎓</div>
+            <div class="prog-card-body">
+              <div class="prog-card-badges">
+                <span class="badge badge-fellowship">Fellowship</span>
+                <span class="stage stage-trade">Trading</span>
+                <span class="stage stage-scale">Scaling</span>
+              </div>
+              <h3 class="prog-title">SSE Fellowship Programme</h3>
+              <p class="prog-provider">School for Social Entrepreneurs</p>
+              <p class="prog-tagline">Learning, bursary and peer network for social entrepreneurs ready to scale</p>
+              <div class="pills">
+                <span class="pill"><span class="pill-check">✓</span> £3,000–£5,000 bursary</span>
+                <span class="pill"><span class="pill-check">✓</span> 10-month programme</span>
+                <span class="pill"><span class="pill-check">✓</span> Expert mentors</span>
+                <span class="pill"><span class="pill-check">✓</span> Alumni network 5,000+</span>
+              </div>
+              <div class="meta">
+                <span>📍 UK-wide (regional cohorts)</span>
+                <span>⏱ 10 months</span>
+                <span>👥 25 per cohort</span>
+                <span class="cohort">📅 Applications open May 2026</span>
+              </div>
+            </div>
+            <span class="card-arrow">›</span>
+          </div>
+        </div>
+
+        <!-- 2: BGV -->
+        <div class="prog-card" onclick="openDetail('bgv', this)">
+          <div class="prog-card-inner">
+            <div class="prog-card-icon">🚀</div>
+            <div class="prog-card-body">
+              <div class="prog-card-badges">
+                <span class="badge badge-accelerator">Accelerator</span>
+                <span class="stage stage-early">Early stage</span>
+                <span class="stage stage-seed">Pre-seed</span>
+              </div>
+              <h3 class="prog-title">Bethnal Green Ventures</h3>
+              <p class="prog-provider">Bethnal Green Ventures</p>
+              <p class="prog-tagline">Europe's leading tech for good accelerator — seed investment and intense support</p>
+              <div class="pills">
+                <span class="pill"><span class="pill-check">✓</span> £20,000 investment</span>
+                <span class="pill"><span class="pill-check">✓</span> 3-month intensive</span>
+                <span class="pill"><span class="pill-check">✓</span> Investor network</span>
+                <span class="pill"><span class="pill-check">✓</span> Co-working space</span>
+              </div>
+              <div class="meta">
+                <span>📍 London</span>
+                <span>⏱ 3 months</span>
+                <span>👥 10 ventures</span>
+                <span class="cohort">📅 Cohort opens January 2027</span>
+              </div>
+            </div>
+            <span class="card-arrow">›</span>
+          </div>
+        </div>
+
+        <!-- 3: Hatch -->
+        <div class="prog-card" onclick="openDetail('hatch', this)">
+          <div class="prog-card-inner">
+            <div class="prog-card-icon">🌱</div>
+            <div class="prog-card-body">
+              <div class="prog-card-badges">
+                <span class="badge badge-support">Support Programme</span>
+                <span class="badge badge-rolling">Rolling intake</span>
+                <span class="stage stage-pre">Pre-start</span>
+                <span class="stage stage-early">Early stage</span>
+              </div>
+              <h3 class="prog-title">Hatch Enterprise Launchpad</h3>
+              <p class="prog-provider">Hatch Enterprise</p>
+              <p class="prog-tagline">Free business support and community for early-stage social enterprises</p>
+              <div class="pills">
+                <span class="pill"><span class="pill-check">✓</span> Free workshops</span>
+                <span class="pill"><span class="pill-check">✓</span> 1:1 coaching</span>
+                <span class="pill"><span class="pill-check">✓</span> Peer community</span>
+                <span class="pill"><span class="pill-check">✓</span> Resources library</span>
+              </div>
+              <div class="meta">
+                <span>📍 London + online</span>
+                <span>⏱ Ongoing</span>
+                <span class="cohort">📅 Rolling — join any time</span>
+              </div>
+            </div>
+            <span class="card-arrow">›</span>
+          </div>
+        </div>
+
+        <!-- 4: Zinc -->
+        <div class="prog-card" onclick="openDetail('zinc', this)">
+          <div class="prog-card-inner">
+            <div class="prog-card-icon">⚗️</div>
+            <div class="prog-card-body">
+              <div class="prog-card-badges">
+                <span class="badge badge-accelerator">Accelerator</span>
+                <span class="stage stage-pre">Pre-start</span>
+                <span class="stage stage-early">Early stage</span>
+              </div>
+              <h3 class="prog-title">Zinc VC Mission Cohort</h3>
+              <p class="prog-provider">Zinc VC</p>
+              <p class="prog-tagline">11-month venture-building programme for individuals ready to found a social venture</p>
+              <div class="pills">
+                <span class="pill"><span class="pill-check">✓</span> £25,000 stipend</span>
+                <span class="pill"><span class="pill-check">✓</span> 11-month intensive</span>
+                <span class="pill"><span class="pill-check">✓</span> Investment pathway</span>
+                <span class="pill"><span class="pill-check">✓</span> Team formation</span>
+              </div>
+              <div class="meta">
+                <span>📍 London</span>
+                <span>⏱ 11 months</span>
+                <span>👥 30 individuals</span>
+                <span class="cohort">📅 Cohort 7 opens September 2026</span>
+              </div>
+            </div>
+            <span class="card-arrow">›</span>
+          </div>
+        </div>
+
+        <!-- 5: UnLtd -->
+        <div class="prog-card" onclick="openDetail('unltd', this)">
+          <div class="prog-card-inner">
+            <div class="prog-card-icon">🏆</div>
+            <div class="prog-card-body">
+              <div class="prog-card-badges">
+                <span class="badge badge-award">Award</span>
+                <span class="stage stage-trade">Trading</span>
+                <span class="stage stage-scale">Scaling</span>
+              </div>
+              <h3 class="prog-title">UnLtd Development Award</h3>
+              <p class="prog-provider">UnLtd</p>
+              <p class="prog-tagline">Funding and support for established social entrepreneurs growing their impact</p>
+              <div class="pills">
+                <span class="pill"><span class="pill-check">✓</span> Up to £15,000</span>
+                <span class="pill"><span class="pill-check">✓</span> Business support</span>
+                <span class="pill"><span class="pill-check">✓</span> UnLtd network</span>
+                <span class="pill"><span class="pill-check">✓</span> Profile raising</span>
+              </div>
+              <div class="meta">
+                <span>📍 UK-wide</span>
+                <span>⏱ 12 months</span>
+                <span class="cohort">📅 Rolling — next window June 2026</span>
+              </div>
+            </div>
+            <span class="card-arrow">›</span>
+          </div>
+        </div>
+
+        <!-- 6: ChangemakerXchange -->
+        <div class="prog-card" onclick="openDetail('cmx', this)">
+          <div class="prog-card-inner">
+            <div class="prog-card-icon">🌍</div>
+            <div class="prog-card-body">
+              <div class="prog-card-badges">
+                <span class="badge badge-fellowship">Fellowship</span>
+                <span class="stage stage-early">Early stage</span>
+                <span class="stage stage-trade">Trading</span>
+              </div>
+              <h3 class="prog-title">ChangemakerXchange Fellowship</h3>
+              <p class="prog-provider">ChangemakerXchange / Ashoka</p>
+              <p class="prog-tagline">International network for young changemakers building cross-sector solutions</p>
+              <div class="pills">
+                <span class="pill"><span class="pill-check">✓</span> Travel bursary</span>
+                <span class="pill"><span class="pill-check">✓</span> Global summit access</span>
+                <span class="pill"><span class="pill-check">✓</span> Peer network</span>
+                <span class="pill"><span class="pill-check">✓</span> Ashoka mentorship</span>
+              </div>
+              <div class="meta">
+                <span>📍 International</span>
+                <span>⏱ 12 months</span>
+                <span>👥 50 fellows</span>
+                <span class="cohort">📅 Applications open October 2026</span>
+              </div>
+            </div>
+            <span class="card-arrow">›</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail panel -->
+  <div class="detail" id="detail-panel">
+    <div class="detail-head">
+      <span class="detail-head-label">Programme details</span>
+      <button class="detail-close" onclick="closeDetail()">✕</button>
+    </div>
+    <div class="detail-body" id="detail-body"></div>
+  </div>
+</div>
+
+<script>
+const DATA = {
+  sse: {
+    badge:'Fellowship', bc:'badge-fellowship',
+    title:'SSE Fellowship Programme', provider:'School for Social Entrepreneurs',
+    format:'Blended (in-person + online)', duration:'10 months', location:'UK-wide, regional cohorts', cohort:'25 per cohort',
+    next:'Applications open May 2026',
+    about:'A 10-month learning programme for social entrepreneurs who are trading and ready to grow. Combines peer cohort learning, matched mentors and a bursary to cover time and costs.',
+    gets:['£3,000–£5,000 bursary','10-month structured curriculum','Matched expert mentor','Alumni network of 5,000+'],
+    who:'Trading social enterprises or CICs looking to scale their impact. No prior business qualifications needed.',
+    stages:[['Trading','stage-trade'],['Scaling','stage-scale']],
+    sectors:['Social Enterprise','Leadership','Scaling'],
+  },
+  bgv: {
+    badge:'Accelerator', bc:'badge-accelerator',
+    title:'Bethnal Green Ventures', provider:'Bethnal Green Ventures',
+    format:'In-person', duration:'3 months', location:'London', cohort:'10 ventures',
+    next:'Cohort opens January 2027',
+    about:"Europe's most established tech for good accelerator. Invests in early-stage ventures using technology to tackle health, education, work and climate challenges.",
+    gets:['£20,000 seed investment','3-month intensive programme','Follow-on investor introductions','London co-working space'],
+    who:'Early-stage tech for good startups with a working prototype, pre-seed, typically 1–3 founders.',
+    stages:[['Early stage','stage-early'],['Pre-seed','stage-seed']],
+    sectors:['Technology','Social Impact','Climate','Health'],
+  },
+  hatch: {
+    badge:'Support Programme', bc:'badge-support',
+    title:'Hatch Enterprise Launchpad', provider:'Hatch Enterprise',
+    format:'Online + in-person', duration:'Ongoing', location:'London (+ online UK-wide)', cohort:'Open',
+    next:'Rolling intake — join at any point',
+    about:'A free, community-based support programme for social entrepreneurs at the very beginning of their journey. Practical workshops, 1:1 coaching and a warm peer community.',
+    gets:['Free workshops & training','1:1 business coaching','Supportive peer community','Online resources library'],
+    who:'Pre-start and very early-stage social entrepreneurs, CICs and community groups.',
+    stages:[['Pre-start','stage-pre'],['Early stage','stage-early']],
+    sectors:['Social Enterprise','Entrepreneurship'],
+  },
+  zinc: {
+    badge:'Accelerator', bc:'badge-accelerator',
+    title:'Zinc VC Mission Cohort', provider:'Zinc VC',
+    format:'In-person', duration:'11 months', location:'London', cohort:'30 individuals',
+    next:'Cohort 7 opens September 2026',
+    about:'An 11-month programme for individuals — not yet companies — who want to build ventures tackling health, work or economic inequality. Zinc provides the mission framing, team-forming support and a path to seed capital.',
+    gets:['£25,000 living stipend','11-month venture-building','Pathway to seed investment','Team formation facilitation'],
+    who:'Individuals with deep sector expertise who want to found a social venture. Not yet incorporated.',
+    stages:[['Pre-start','stage-pre'],['Early stage','stage-early']],
+    sectors:['Health','Employment','Education'],
+  },
+  unltd: {
+    badge:'Award', bc:'badge-award',
+    title:'UnLtd Development Award', provider:'UnLtd',
+    format:'Blended', duration:'12 months', location:'UK-wide', cohort:'Open',
+    next:'Rolling — next window June 2026',
+    about:"UnLtd's Development Award supports established social entrepreneurs who have proven their idea and are ready to grow. Combines grant funding with a tailored business support package.",
+    gets:['Up to £15,000 award','Business support package','UnLtd network access','Profile-raising opportunities'],
+    who:'Social ventures with 2+ years of operation and clear evidence of social impact.',
+    stages:[['Trading','stage-trade'],['Scaling','stage-scale']],
+    sectors:['Social Enterprise','Community','Innovation'],
+  },
+  cmx: {
+    badge:'Fellowship', bc:'badge-fellowship',
+    title:'ChangemakerXchange Fellowship', provider:'ChangemakerXchange / Ashoka',
+    format:'International residentials', duration:'12 months', location:'International', cohort:'50 fellows globally',
+    next:'Applications open October 2026',
+    about:'A global network and fellowship for young social entrepreneurs. Fellows attend international summits, build cross-sector collaborations and receive mentorship from senior Ashoka Fellows.',
+    gets:['Travel bursary covered','Global summit attendance','Peer learning network','Ashoka Fellow mentorship'],
+    who:'Young changemakers aged 18–35 with an active project or early-stage venture.',
+    stages:[['Early stage','stage-early'],['Trading','stage-trade']],
+    sectors:['Youth','Social Enterprise','International'],
+  },
+}
+
+function setFilter(el, val) {
+  document.querySelectorAll('.ftab').forEach(b => b.classList.remove('active'))
+  el.classList.add('active')
+}
+
+function openDetail(id, card) {
+  document.querySelectorAll('.prog-card').forEach(c => c.classList.remove('active'))
+  card.classList.add('active')
+  const d = DATA[id]
+  document.getElementById('detail-body').innerHTML = `
+    <span class="detail-badge badge ${d.bc}">${d.badge}</span>
+    <h2 class="detail-title">${d.title}</h2>
+    <p class="detail-provider">${d.provider}</p>
+    <div class="detail-grid">
+      <div><p class="dgrid-label">Format</p><p class="dgrid-val">🌐 ${d.format}</p></div>
+      <div><p class="dgrid-label">Duration</p><p class="dgrid-val">⏱ ${d.duration}</p></div>
+      <div><p class="dgrid-label">Location</p><p class="dgrid-val">📍 ${d.location}</p></div>
+      <div><p class="dgrid-label">Cohort size</p><p class="dgrid-val">👥 ${d.cohort}</p></div>
+    </div>
+    <div class="cohort-box">
+      <span class="cohort-icon">📅</span>
+      <div>
+        <p class="cohort-label">Next opportunity</p>
+        <p class="cohort-val">${d.next}</p>
+      </div>
+    </div>
+    <div class="dsec">
+      <p class="dsec-label">About this programme</p>
+      <p>${d.about}</p>
+    </div>
+    <div class="dsec">
+      <p class="dsec-label">What you get</p>
+      <div class="check-list">
+        ${d.gets.map(g => `<div class="check-item"><span class="check-icon">✓</span>${g}</div>`).join('')}
+      </div>
+    </div>
+    <div class="dsec">
+      <p class="dsec-label">Who it's for</p>
+      <p>${d.who}</p>
+      <div class="dtags">
+        ${d.stages.map(([l,c]) => `<span class="stage ${c}">${l}</span>`).join('')}
+      </div>
+    </div>
+    <div class="dsec">
+      <p class="dsec-label">Focus areas</p>
+      <div class="dtags">
+        ${d.sectors.map(s => `<span class="dtag-purple">${s}</span>`).join('')}
+      </div>
+    </div>
+    <div class="detail-ctas">
+      <a href="#" class="btn-primary">Find out more →</a>
+      <button class="btn-outline">+ Add to Pipeline</button>
+    </div>
+  `
+  document.getElementById('detail-panel').classList.add('open')
+}
+
+function closeDetail() {
+  document.getElementById('detail-panel').classList.remove('open')
+  document.querySelectorAll('.prog-card').forEach(c => c.classList.remove('active'))
+}
+</script>
+</body>
+</html>

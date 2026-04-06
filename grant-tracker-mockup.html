@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Grant Tracker — New Layout Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --forest:  #1f5c52;
+    --sage:    #2d8a7a;
+    --mint:    #b8deda;
+    --cream:   #faf7f2;
+    --warm:    #e8ddd0;
+    --gold:    #e8a030;
+    --coral:   #E8725C;
+    --charcoal:#1a2e2b;
+    --mid:     #5a7370;
+    --light:   #8fa8a5;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--charcoal);
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 240px;
+    flex-shrink: 0;
+    background: #121f2b;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    position: sticky;
+    top: 0;
+  }
+
+  .sidebar-logo {
+    padding: 24px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+  .sidebar-logo-icon {
+    width: 28px; height: 28px;
+    background: var(--coral);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .sidebar-logo-icon span {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    border: 2px solid white;
+    display: block;
+  }
+  .sidebar-logo-text h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    font-weight: 400;
+    color: white;
+    line-height: 1;
+  }
+  .sidebar-logo-text p {
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+    margin-top: 3px;
+  }
+
+  .nav-section { padding: 12px 12px 4px; }
+  .nav-label {
+    font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.12em;
+    color: rgba(255,255,255,0.35);
+    padding: 0 12px 6px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px;
+    font-size: 13px; font-weight: 500;
+    color: rgba(255,255,255,0.65);
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+    cursor: pointer;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.1); color: white; }
+  .nav-item.active { background: rgba(255,255,255,0.15); color: white; }
+  .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+  .nav-cta {
+    margin: 0 12px 12px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 10px;
+    background: var(--charcoal);
+    color: white;
+    font-size: 12px; font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .nav-profile-bar {
+    margin: 0 12px 12px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 12px;
+    cursor: pointer;
+  }
+  .profile-bar-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .profile-bar-top span:first-child { font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.1em; }
+  .profile-bar-top span:last-child { font-size: 11px; font-weight: 700; color: var(--gold); }
+  .profile-bar-track { height: 6px; background: rgba(255,255,255,0.1); overflow: hidden; }
+  .profile-bar-fill { height: 100%; background: var(--gold); width: 65%; }
+  .profile-bar-hint { font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 6px; }
+
+  .sidebar-flex { flex: 1; overflow-y: auto; }
+
+  .user-chip {
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding: 16px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .user-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    color: white; font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .user-info { flex: 1; min-width: 0; }
+  .user-name { font-size: 13px; font-weight: 600; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-email { font-size: 10px; color: rgba(255,255,255,0.4); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sign-out-btn {
+    background: none; border: none; cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; color: rgba(255,255,255,0.4);
+    font-family: 'DM Sans', sans-serif;
+    padding: 4px 0; margin-top: 8px;
+  }
+  .sign-out-btn:hover { color: rgba(255,255,255,0.8); }
+
+  /* ── MAIN ── */
+  .main { flex: 1; padding: 32px; }
+
+  /* ── HERO ── */
+  .hero { margin-bottom: 28px; }
+  .hero-label {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--coral);
+    margin-bottom: 16px;
+  }
+  .hero-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+  .hero-heading {
+    font-family: 'DM Serif Display', serif;
+    font-size: 30px; font-weight: 400;
+    color: var(--charcoal);
+    line-height: 1.25;
+    max-width: 440px;
+  }
+  .view-tabs {
+    display: flex; align-items: center;
+    background: white;
+    border: 1px solid var(--warm);
+    overflow: hidden;
+    flex-shrink: 0;
+    align-self: center;
+  }
+  .view-tab {
+    padding: 10px 20px;
+    font-size: 12px; font-weight: 600;
+    color: var(--mid);
+    cursor: pointer;
+    border: none; background: none;
+    font-family: 'DM Sans', sans-serif;
+    border-right: 1px solid var(--warm);
+    transition: background 0.15s, color 0.15s;
+  }
+  .view-tab:last-child { border-right: none; }
+  .view-tab.active { background: var(--charcoal); color: white; }
+  .view-tab:not(.active):hover { background: rgba(232,221,208,0.3); color: var(--charcoal); }
+  .live-tab {
+    display: flex; align-items: center; gap: 6px;
+    padding: 10px 20px;
+    font-size: 12px; font-weight: 600;
+    color: var(--mid);
+    opacity: 0.6;
+    border-left: 1px solid var(--warm);
+    cursor: default;
+  }
+  .live-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--coral);
+    display: inline-block;
+  }
+
+  /* ── FILTER BAR ── */
+  .filter-bar {
+    background: white;
+    border: 1px solid rgba(232,221,208,0.8);
+    box-shadow: 0 1px 3px rgba(26,46,43,0.06);
+    margin-bottom: 24px;
+    padding: 16px;
+  }
+  .org-context {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; color: var(--mid);
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .org-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--coral); flex-shrink: 0; }
+  .org-context strong { color: var(--charcoal); }
+  .org-context a { margin-left: auto; color: var(--coral); font-weight: 600; text-decoration: none; font-size: 12px; }
+
+  .filter-row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+  .filter-field { display: flex; flex-direction: column; gap: 6px; }
+  .filter-field.flex1 { flex: 1; min-width: 140px; }
+  .filter-field.w44 { width: 176px; }
+  .filter-field.w48 { width: 192px; }
+  .filter-label {
+    font-size: 9px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--light);
+  }
+  .filter-input {
+    height: 40px;
+    border: 1px solid var(--warm);
+    background: var(--cream);
+    padding: 0 12px 0 36px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--charcoal);
+    width: 100%;
+    outline: none;
+  }
+  .filter-input::placeholder { color: var(--light); }
+  .filter-input:focus { border-color: var(--sage); }
+  .filter-input-wrap { position: relative; }
+  .filter-input-wrap svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--light); }
+  .filter-select {
+    height: 40px;
+    border: 1px solid var(--warm);
+    background: var(--cream);
+    padding: 0 32px 0 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--charcoal);
+    width: 100%;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+  }
+  .filter-select:focus { border-color: var(--sage); }
+  .select-wrap { position: relative; }
+  .select-wrap svg { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: var(--light); pointer-events: none; }
+  .refine-btn {
+    height: 40px;
+    padding: 0 20px;
+    background: var(--charcoal);
+    color: white;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 600;
+    border: none; cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+    white-space: nowrap;
+    transition: opacity 0.15s;
+  }
+  .refine-btn:hover { opacity: 0.9; }
+
+  /* ── RESULTS HEADER ── */
+  .results-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .results-count-row { display: flex; align-items: center; gap: 12px; }
+  .count-badge {
+    display: inline-flex; align-items: center;
+    padding: 6px 12px;
+    background: var(--charcoal);
+    color: white;
+    font-size: 12px; font-weight: 700;
+  }
+  .results-label { font-size: 13px; color: var(--mid); }
+  .sort-row { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+  .sort-label { color: var(--mid); font-weight: 500; }
+  .sort-tabs { display: flex; border: 1px solid var(--warm); overflow: hidden; background: white; }
+  .sort-tab {
+    padding: 6px 12px;
+    font-size: 12px; font-weight: 500;
+    color: #6b7280;
+    background: white;
+    border: none; border-right: 1px solid var(--warm);
+    cursor: pointer; font-family: 'DM Sans', sans-serif;
+    transition: background 0.15s;
+  }
+  .sort-tab:last-child { border-right: none; }
+  .sort-tab.active { background: var(--charcoal); color: white; }
+
+  /* ── FUNDING TYPE TABS ── */
+  .type-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+  .type-tab {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 12px;
+    font-size: 11px; font-weight: 500;
+    border: 1px solid var(--warm);
+    background: white; color: var(--mid);
+    cursor: pointer; font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s;
+  }
+  .type-tab:hover { border-color: #ccc; color: var(--charcoal); }
+  .type-tab.active { background: var(--charcoal); color: white; border-color: var(--charcoal); }
+  .type-count { font-size: 10px; font-weight: 700; opacity: 0.6; }
+
+  /* ── GRANT CARD ── */
+  .grant-card {
+    background: white;
+    border: 1px solid rgba(232,221,208,0.8);
+    margin-bottom: 12px;
+    overflow: hidden;
+    border-left: 3px solid transparent;
+    box-shadow: 0 1px 3px rgba(26,46,43,0.04);
+    transition: box-shadow 0.2s, border-color 0.2s;
+    display: flex;
+  }
+  .grant-card:hover { box-shadow: 0 4px 16px rgba(26,46,43,0.1); border-left-color: var(--sage); }
+
+  /* Score circle column */
+  .score-col {
+    width: 108px; flex-shrink: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    border-right: 1px solid rgba(232,221,208,0.6);
+    background: rgba(250,247,242,0.4);
+    padding: 16px;
+    cursor: pointer;
+  }
+  .score-ring { position: relative; width: 64px; height: 64px; }
+  .score-ring svg { width: 64px; height: 64px; transform: rotate(-90deg); }
+  .score-center {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .score-pct { font-size: 14px; font-weight: 700; line-height: 1; }
+  .score-pct.high { color: var(--sage); }
+  .score-pct.med { color: var(--gold); }
+  .score-pct.low { color: var(--light); }
+  .score-label { font-size: 8px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid); margin-top: 6px; }
+
+  /* Content column */
+  .card-content { flex: 1; padding: 18px 20px; min-width: 0; cursor: pointer; }
+  .badge-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 8px; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px;
+    font-size: 10px; font-weight: 700;
+    border: 1px solid;
+  }
+  .badge-grant { background: rgba(16,185,129,0.08); color: #059669; border-color: rgba(16,185,129,0.2); }
+  .badge-recurring { background: rgba(59,130,246,0.08); color: #2563eb; border-color: rgba(59,130,246,0.2); }
+  .badge-deadline { background: rgba(232,221,208,0.6); color: var(--mid); border-color: var(--warm); font-weight: 500; }
+  .badge-rolling { background: rgba(232,221,208,0.6); color: var(--mid); border-color: var(--warm); font-weight: 500; }
+  .badge-new { background: #d1fae5; color: #065f46; border: none; }
+  .card-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px; font-weight: 400;
+    color: var(--charcoal);
+    line-height: 1.3;
+    margin-bottom: 2px;
+  }
+  .card-funder { font-size: 13px; color: var(--mid); margin-bottom: 10px; }
+  .card-desc { font-size: 13px; color: var(--mid); line-height: 1.6; margin-bottom: 14px; }
+  .card-match-reason {
+    font-size: 11px; color: rgba(26,46,43,0.55); font-style: italic;
+    line-height: 1.5; margin-bottom: 12px;
+    border-left: 2px solid rgba(232,114,92,0.4);
+    padding-left: 8px;
+  }
+  .card-data-row { display: flex; flex-wrap: wrap; gap: 24px; border-top: 1px solid rgba(232,221,208,0.5); padding-top: 12px; }
+  .card-data-field {}
+  .card-data-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--light); margin-bottom: 2px; }
+  .card-data-value { font-size: 13px; font-weight: 700; color: var(--charcoal); }
+  .card-data-value.italic { font-style: italic; font-weight: 400; color: var(--light); }
+
+  /* Action column */
+  .card-actions {
+    display: flex; flex-direction: column; gap: 8px;
+    padding: 16px;
+    border-left: 1px solid rgba(232,221,208,0.6);
+    justify-content: center;
+    align-items: stretch;
+    flex-shrink: 0;
+    width: 132px;
+  }
+  .btn-view {
+    padding: 8px 12px;
+    background: var(--coral);
+    color: white;
+    font-size: 12px; font-weight: 600;
+    border: none; cursor: pointer;
+    text-align: center;
+    font-family: 'DM Sans', sans-serif;
+    transition: opacity 0.15s;
+  }
+  .btn-view:hover { opacity: 0.9; }
+  .btn-save {
+    padding: 8px 12px;
+    background: rgba(250,247,242,0.5);
+    color: var(--mid);
+    font-size: 12px; font-weight: 500;
+    border: 1px solid var(--warm);
+    cursor: pointer; text-align: center;
+    font-family: 'DM Sans', sans-serif;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .btn-save:hover { border-color: var(--sage); color: var(--sage); }
+  .btn-pipeline {
+    padding: 8px 12px;
+    background: rgba(250,247,242,0.3);
+    color: var(--mid);
+    font-size: 12px; font-weight: 500;
+    border: 1px solid var(--warm);
+    cursor: pointer; text-align: center;
+    font-family: 'DM Sans', sans-serif;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .btn-pipeline:hover { border-color: var(--sage); color: var(--sage); }
+
+  /* When no score — span full left */
+  .no-score .card-content { padding-left: 20px; }
+
+  /* ── SVG ICONS ── */
+  svg { display: inline-block; vertical-align: middle; }
+</style>
+</head>
+<body>
+
+<!-- ── SIDEBAR ── -->
+<aside class="sidebar">
+  <a class="sidebar-logo">
+    <div class="sidebar-logo-icon"><span></span></div>
+    <div class="sidebar-logo-text">
+      <h1>GrantTracker</h1>
+      <p>Editorial Discovery</p>
+    </div>
+  </a>
+
+  <div class="sidebar-flex">
+    <!-- Top level -->
+    <div class="nav-section">
+      <a class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </a>
+    </div>
+
+    <!-- Find Funding -->
+    <div class="nav-section">
+      <p class="nav-label">Find Funding</p>
+      <a class="nav-item active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        Find Funding
+      </a>
+    </div>
+
+    <!-- Manage -->
+    <div class="nav-section">
+      <p class="nav-label">Manage</p>
+      <a class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        Funding Pipeline
+      </a>
+      <a class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        Deadlines
+      </a>
+    </div>
+
+    <!-- Settings -->
+    <div class="nav-section">
+      <p class="nav-label">Settings</p>
+      <a class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        My Profile
+        <span style="margin-left:auto;font-size:9px;font-weight:700;padding:2px 6px;background:rgba(232,160,48,0.2);color:var(--gold);border:1px solid rgba(232,160,48,0.3);">65%</span>
+      </a>
+    </div>
+
+    <!-- Analytics -->
+    <div class="nav-section">
+      <p class="nav-label">Analytics</p>
+      <a class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Source Health
+      </a>
+      <a class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+        Funder Watchlist
+      </a>
+    </div>
+  </div>
+
+  <!-- Profile nudge -->
+  <div class="nav-profile-bar">
+    <div class="profile-bar-top">
+      <span>Profile</span>
+      <span>65%</span>
+    </div>
+    <div class="profile-bar-track"><div class="profile-bar-fill"></div></div>
+    <p class="profile-bar-hint">Better profile = better matches</p>
+  </div>
+
+  <!-- New Grant Search CTA -->
+  <div style="padding:0 12px 12px;">
+    <a class="nav-cta">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      New Grant Search
+    </a>
+  </div>
+
+  <!-- How to use -->
+  <div style="padding:0 12px 8px;">
+    <a class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      How to use
+    </a>
+  </div>
+
+  <!-- User chip -->
+  <div class="user-chip">
+    <div class="user-avatar">PK</div>
+    <div class="user-info">
+      <div class="user-name">Arise CIC</div>
+      <div class="user-email">paulkilty1@gmail.com</div>
+    </div>
+  </div>
+  <div style="padding:0 16px 16px;">
+    <button class="sign-out-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Sign out
+    </button>
+  </div>
+</aside>
+
+<!-- ── MAIN ── -->
+<main class="main">
+
+  <!-- DISCOVERY HUB HERO -->
+  <div class="hero">
+    <p class="hero-label">Discovery Hub</p>
+    <div class="hero-row">
+      <h2 class="hero-heading">
+        Identify high-impact funding<br>
+        opportunities tailored to<br>
+        your mission.
+      </h2>
+      <div class="view-tabs">
+        <button class="view-tab active">My Matches</button>
+        <button class="view-tab">Search</button>
+        <div class="live-tab">
+          <span class="live-dot"></span>
+          Live Search
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HORIZONTAL FILTER BAR -->
+  <div class="filter-bar">
+    <div class="org-context">
+      <span class="org-dot"></span>
+      Ranked for <strong>Arise CIC</strong>
+      <span>· London</span>
+      <a href="#">Edit profile →</a>
+    </div>
+    <div class="filter-row">
+      <!-- Keywords -->
+      <div class="filter-field flex1">
+        <span class="filter-label">Keywords</span>
+        <div class="filter-input-wrap">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input class="filter-input" type="text" placeholder="Community project..." />
+        </div>
+      </div>
+      <!-- Location -->
+      <div class="filter-field w44">
+        <span class="filter-label">Location</span>
+        <div class="filter-input-wrap">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <input class="filter-input" type="text" placeholder="London, UK" value="London, UK" />
+        </div>
+      </div>
+      <!-- Focus Area -->
+      <div class="filter-field w48">
+        <span class="filter-label">Focus Area</span>
+        <div class="select-wrap">
+          <select class="filter-select">
+            <option>Housing &amp; Shelter</option>
+            <option>All focus areas</option>
+            <option>Education</option>
+            <option>Health &amp; Wellbeing</option>
+            <option>Arts &amp; Culture</option>
+            <option>Environment</option>
+          </select>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+      <!-- Funding Size -->
+      <div class="filter-field w48">
+        <span class="filter-label">Funding Size</span>
+        <div class="select-wrap">
+          <select class="filter-select">
+            <option>£10k – £250k</option>
+            <option>Any amount</option>
+            <option>Up to £10k</option>
+            <option>£10k – £50k</option>
+            <option>£50k – £500k</option>
+            <option>£100k – £1M</option>
+          </select>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+      <!-- Refine -->
+      <button class="refine-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+        Refine Results
+      </button>
+    </div>
+
+    <!-- Funding type tabs inside the filter bar -->
+    <div style="border-top: 1px solid var(--warm); margin-top: 14px; padding-top: 12px;">
+      <div class="type-tabs" style="margin-bottom: 0;">
+        <button class="type-tab active">All <span class="type-count">152</span></button>
+        <button class="type-tab">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+          Grants &amp; Awards <span class="type-count">108</span>
+        </button>
+        <button class="type-tab">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+          Social Investment <span class="type-count">18</span>
+        </button>
+        <button class="type-tab">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          Accelerators <span class="type-count">12</span>
+        </button>
+        <button class="type-tab">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+          Fellowships &amp; Support <span class="type-count">9</span>
+        </button>
+        <button class="type-tab">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          Corporate Partners <span class="type-count">5</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULTS HEADER -->
+  <div class="results-header">
+    <div class="results-count-row">
+      <span class="count-badge">152 Opportunities</span>
+      <span class="results-label">matched to your profile</span>
+    </div>
+    <div class="sort-row">
+      <span class="sort-label">Sort by:</span>
+      <div class="sort-tabs">
+        <button class="sort-tab active">Match to you</button>
+        <button class="sort-tab">Recently Added</button>
+        <button class="sort-tab">Closes Soon</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GRANT CARD 1 — 91% match -->
+  <div class="grant-card">
+    <!-- Score -->
+    <div class="score-col">
+      <div class="score-ring">
+        <svg viewBox="0 0 36 36">
+          <circle cx="18" cy="18" r="14" fill="none" stroke="#e8ddd0" stroke-width="3.5"/>
+          <circle cx="18" cy="18" r="14" fill="none" stroke="#2d8a7a" stroke-width="3.5"
+            stroke-dasharray="80.1 87.96" stroke-linecap="round"/>
+        </svg>
+        <div class="score-center"><span class="score-pct high">91%</span></div>
+      </div>
+      <span class="score-label">Match</span>
+    </div>
+    <!-- Content -->
+    <div class="card-content">
+      <div class="badge-row">
+        <span class="badge badge-grant">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+          Open Grant
+        </span>
+        <span class="badge badge-deadline">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Closes in 14 days
+        </span>
+      </div>
+      <h3 class="card-title">The Heritage &amp; Innovation Community Fund</h3>
+      <p class="card-funder">Heritage Lottery Fund</p>
+      <p class="card-desc">Supporting local heritage projects that integrate modern technology and sustainability. Focused on youth engagement and preserving urban history in East London.</p>
+      <p class="card-match-reason">Strong alignment with your community focus in East London and youth engagement programmes — your Housing &amp; Shelter theme is a direct match for this funder's priority areas.</p>
+      <div class="card-data-row">
+        <div class="card-data-field">
+          <p class="card-data-label">Funding Amount</p>
+          <p class="card-data-value">£5,000 — £250,000</p>
+        </div>
+        <div class="card-data-field">
+          <p class="card-data-label">Project Type</p>
+          <p class="card-data-value">Capital &amp; Revenue</p>
+        </div>
+        <div class="card-data-field">
+          <p class="card-data-label">Focus</p>
+          <p class="card-data-value">Community &amp; Culture</p>
+        </div>
+      </div>
+    </div>
+    <!-- Actions -->
+    <div class="card-actions">
+      <button class="btn-view">View Details</button>
+      <button class="btn-save">Save for Later</button>
+      <button class="btn-pipeline">+ Pipeline</button>
+    </div>
+  </div>
+
+  <!-- GRANT CARD 2 — 76% match -->
+  <div class="grant-card">
+    <div class="score-col">
+      <div class="score-ring">
+        <svg viewBox="0 0 36 36">
+          <circle cx="18" cy="18" r="14" fill="none" stroke="#e8ddd0" stroke-width="3.5"/>
+          <circle cx="18" cy="18" r="14" fill="none" stroke="#e8a030" stroke-width="3.5"
+            stroke-dasharray="66.8 87.96" stroke-linecap="round"/>
+        </svg>
+        <div class="score-center"><span class="score-pct med">76%</span></div>
+      </div>
+      <span class="score-label">Match</span>
+    </div>
+    <div class="card-content">
+      <div class="badge-row">
+        <span class="badge badge-recurring">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+          Recurring
+        </span>
+        <span class="badge badge-rolling">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          Rolling Deadline
+        </span>
+      </div>
+      <h3 class="card-title">Urban Health &amp; Vitality Initiative</h3>
+      <p class="card-funder">Wellcome Trust</p>
+      <p class="card-desc">Promoting physical activity and nutritional education in underserved residential areas. Ideal for non-profits operating in Greater Manchester.</p>
+      <div class="card-data-row">
+        <div class="card-data-field">
+          <p class="card-data-label">Funding Amount</p>
+          <p class="card-data-value">Up to £50,000</p>
+        </div>
+        <div class="card-data-field">
+          <p class="card-data-label">Project Type</p>
+          <p class="card-data-value">Project Specific</p>
+        </div>
+        <div class="card-data-field">
+          <p class="card-data-label">Focus</p>
+          <p class="card-data-value">Health &amp; Wellness</p>
+        </div>
+      </div>
+    </div>
+    <div class="card-actions">
+      <button class="btn-view">View Details</button>
+      <button class="btn-save">Save for Later</button>
+      <button class="btn-pipeline">+ Pipeline</button>
+    </div>
+  </div>
+
+  <!-- GRANT CARD 3 — 68% match -->
+  <div class="grant-card">
+    <div class="score-col">
+      <div class="score-ring">
+        <svg viewBox="0 0 36 36">
+          <circle cx="18" cy="18" r="14" fill="none" stroke="#e8ddd0" stroke-width="3.5"/>
+          <circle cx="18" cy="18" r="14" fill="none" stroke="#e8a030" stroke-width="3.5"
+            stroke-dasharray="59.8 87.96" stroke-linecap="round"/>
+        </svg>
+        <div class="score-center"><span class="score-pct med">68%</span></div>
+      </div>
+      <span class="score-label">Match</span>
+    </div>
+    <div class="card-content">
+      <div class="badge-row">
+        <span class="badge badge-grant">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+          Open Grant
+        </span>
+        <span class="badge badge-deadline">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Closes in 31 days
+        </span>
+        <span class="badge badge-new">New this week</span>
+      </div>
+      <h3 class="card-title">Safer Streets &amp; Community Resilience Fund</h3>
+      <p class="card-funder">London Community Foundation</p>
+      <p class="card-desc">Supporting grassroots organisations working to reduce crime and improve safety for residents in deprived urban neighbourhoods.</p>
+      <div class="card-data-row">
+        <div class="card-data-field">
+          <p class="card-data-label">Funding Amount</p>
+          <p class="card-data-value">£2,500 — £25,000</p>
+        </div>
+        <div class="card-data-field">
+          <p class="card-data-label">Project Type</p>
+          <p class="card-data-value">Capital &amp; Revenue</p>
+        </div>
+        <div class="card-data-field">
+          <p class="card-data-label">Focus</p>
+          <p class="card-data-value">Criminal Justice</p>
+        </div>
+      </div>
+    </div>
+    <div class="card-actions">
+      <button class="btn-view">View Details</button>
+      <button class="btn-save">Save for Later</button>
+      <button class="btn-pipeline">+ Pipeline</button>
+    </div>
+  </div>
+
+</main>
+
+</body>
+</html>
