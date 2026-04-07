@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getDeadlineAlerts, formatCurrency } from '@/lib/utils'
 import { PIPELINE_STAGES } from '@/lib/utils'
@@ -33,6 +34,11 @@ export default async function DashboardPage() {
   const { data: org } = user
     ? await supabase.from('organisations').select('*').eq('owner_id', user.id).maybeSingle()
     : { data: null }
+
+  // New users without an org profile → send them to set one up
+  if (user && !org) {
+    redirect('/dashboard/profile')
+  }
 
   const { data: rawItems } = org
     ? await supabase.from('pipeline_items').select('*').eq('org_id', org.id).order('created_at', { ascending: false })
