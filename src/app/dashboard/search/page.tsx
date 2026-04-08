@@ -841,9 +841,10 @@ const SIXTY_DAYS_AGO = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOStri
 const RECENT_GRANTS  = SEED_GRANTS.filter(g => g.dateAdded && g.dateAdded >= SIXTY_DAYS_AGO).slice(0, 12)
 
 const VALID_FUNDER_TYPES: FunderType[] = [
-  'trust_foundation', 'local_authority', 'housing_association',
-  'corporate', 'lottery', 'government', 'other',
-  'competition', 'loan', 'crowdfund_match',
+  'trust_foundation', 'community_foundation', 'corporate_foundation',
+  'local_authority', 'housing_association',
+  'corporate', 'lottery', 'government',
+  'competition', 'loan', 'crowdfund_match', 'other',
 ]
 
 // Extended type to carry funder-table metadata alongside grant fields

@@ -105,6 +105,9 @@ const FUNDER_TYPE_OPTIONS: { value: FunderType; label: string }[] = [
   { value: 'government',          label: 'Central Government'           },
   { value: 'corporate',           label: 'Corporate / CSR'              },
   { value: 'housing_association', label: 'Housing Associations'         },
+  { value: 'competition',         label: 'Competitions & Awards'        },
+  { value: 'loan',                label: 'Social Lending'               },
+  { value: 'crowdfund_match',     label: 'Matched Crowdfunding'         },
   { value: 'other',               label: 'Other'                        },
 ]
 

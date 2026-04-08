@@ -5,8 +5,10 @@ function adminClient() {
     return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 }
 const VALID_FUNDER_TYPES = [
-    'trust_foundation', 'local_authority', 'housing_association',
-    'corporate', 'lottery', 'government', 'other',
+    'trust_foundation', 'community_foundation', 'corporate_foundation',
+    'local_authority', 'housing_association',
+    'corporate', 'lottery', 'government',
+    'competition', 'loan', 'crowdfund_match', 'other',
 ];
 function normaliseScraped(row) {
     const rawType = String(row.funder_type ?? 'other');
