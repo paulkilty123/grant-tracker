@@ -12,6 +12,9 @@ import {
 // ── Funder-type label map ─────────────────────────────────────────────────────
 const FUNDER_LABELS: Record<string, string> = {
   trust_foundation:    'Trust & Foundation',
+  community_foundation:'Community Foundation',
+  corporate_foundation:'Corporate Foundation',
+  capacity_builder:    'Capacity Builder',
   local_authority:     'Local Authority',
   housing_association: 'Housing Association',
   corporate:           'Corporate',
@@ -24,6 +27,9 @@ const FUNDER_LABELS: Record<string, string> = {
 const TYPE_COLOURS: Record<string, string> = {
   lottery:             'bg-green-50 text-green-700',
   trust_foundation:    'bg-sage/10 text-forest',
+  community_foundation:'bg-sage/10 text-forest',
+  corporate_foundation:'bg-sage/10 text-forest',
+  capacity_builder:    'bg-emerald-50 text-emerald-700',
   foundation:          'bg-sage/10 text-forest',
   corporate:           'bg-amber-50 text-amber-700',
   local_authority:     'bg-purple-50 text-purple-700',

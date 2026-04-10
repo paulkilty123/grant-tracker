@@ -6,6 +6,7 @@ function adminClient() {
 }
 const VALID_FUNDER_TYPES = [
     'trust_foundation', 'community_foundation', 'corporate_foundation',
+    'capacity_builder',
     'local_authority', 'housing_association',
     'corporate', 'lottery', 'government',
     'competition', 'loan', 'crowdfund_match', 'other',

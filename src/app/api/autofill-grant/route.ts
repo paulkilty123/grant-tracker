@@ -46,7 +46,7 @@ ${pageText}
 Extract the following fields and return ONLY a valid JSON object with these exact keys:
 - grant_name: string — the name of the grant or funding programme
 - funder_name: string — the name of the organisation offering the funding
-- funder_type: one of: trust_foundation, community_foundation, corporate_foundation, local_authority, housing_association, corporate, lottery, government, competition, loan, crowdfund_match, other
+- funder_type: one of: trust_foundation, community_foundation, corporate_foundation, capacity_builder, local_authority, housing_association, corporate, lottery, government, competition, loan, crowdfund_match, other. Use "capacity_builder" for infrastructure charities delivering in-kind support (Pilotlight, Superhighways, Reach Volunteering etc.) — usually paired with funding_type=in_kind.
 - funding_type: one of: grant, programme, investment, in_kind, blended_finance. "grant"=cash award with no return; "programme"=accelerator/fellowship/cohort support; "investment"=loans/equity/social investment; "in_kind"=non-cash (pro bono services, software donations, volunteer matching, free workspace); "blended_finance"=mix of grant + investment. Do NOT default to "grant" — be decisive.
 - amount_min: number or null — minimum grant amount in GBP (digits only)
 - amount_max: number or null — maximum grant amount in GBP (digits only)

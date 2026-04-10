@@ -92,6 +92,7 @@ export type FunderType =
   | 'trust_foundation'
   | 'community_foundation'  // place-based community foundations (e.g. London CF, Foundation Scotland)
   | 'corporate_foundation'  // corporate-backed foundations (e.g. Lloyds Bank Foundation)
+  | 'capacity_builder'      // infrastructure charities delivering in-kind support (e.g. Pilotlight, Superhighways, CAST)
   | 'local_authority'
   | 'housing_association'
   | 'corporate'

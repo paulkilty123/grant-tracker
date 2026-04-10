@@ -211,7 +211,7 @@ async function callClaude(prompt: string, apiKey: string, maxTokens = 1000): Pro
 const EXTRACT_FIELDS = `Return a single JSON object (no markdown, no extra text) with exactly these fields:
 - title: string — the grant programme name (not the funder organisation name)
 - funder: string — the name of the funding organisation
-- funder_type: one of: trust_foundation, community_foundation, corporate_foundation, corporate, government, lottery, housing_association, local_authority, competition, loan, crowdfund_match, other
+- funder_type: one of: trust_foundation, community_foundation, corporate_foundation, capacity_builder, corporate, government, lottery, housing_association, local_authority, competition, loan, crowdfund_match, other. Use "capacity_builder" for infrastructure charities that deliver in-kind support rather than cash grants (e.g. Pilotlight, Superhighways, CAST, Reach Volunteering, Getting on Board, Catalyst, Cranfield Trust) — these are charities providing pro-bono consulting, training, digital help, or volunteer matching to other charities. Almost always paired with funding_type=in_kind.
 - funding_type: one of: grant, programme, investment, in_kind, blended_finance. Use this guidance:
   * "grant" = a cash award with no expectation of return (most trust/foundation/corporate/lottery grants)
   * "programme" = a structured support programme, accelerator, incubator, fellowship, or cohort-based capacity building (may include a small cash bursary, but the core offer is the support/training/mentoring)

@@ -59,6 +59,7 @@ type AddGrantForm = {
 
 const CATEGORY_META: Record<string, { label: string; colour: string; bg: string; border: string }> = {
   trust_foundation:  { label: 'Trusts & Foundations', colour: 'text-forest',    bg: 'bg-forest/5',    border: 'border-forest/20'    },
+  capacity_builder:  { label: 'Capacity Builders',    colour: 'text-emerald-700',bg: 'bg-emerald-50', border: 'border-emerald-200'  },
   corporate:         { label: 'Corporate',            colour: 'text-blue-600',  bg: 'bg-blue-50',     border: 'border-blue-200'     },
   government:        { label: 'Government',           colour: 'text-purple-600',bg: 'bg-purple-50',   border: 'border-purple-200'   },
   lottery:           { label: 'Lottery',              colour: 'text-amber-600', bg: 'bg-amber-50',    border: 'border-amber-200'    },
@@ -70,12 +71,13 @@ const CATEGORY_META: Record<string, { label: string; colour: string; bg: string;
   other:             { label: 'Other',                colour: 'text-mid',       bg: 'bg-warm/30',     border: 'border-warm'         },
 }
 
-const CATEGORY_ORDER = ['trust_foundation','corporate','government','lottery','housing_association','local_authority','competition','loan','crowdfund_match','other']
+const CATEGORY_ORDER = ['trust_foundation','capacity_builder','corporate','government','lottery','housing_association','local_authority','competition','loan','crowdfund_match','other']
 
 const FUNDER_TYPE_OPTIONS = [
   { value: 'trust_foundation',    label: 'Trust / Foundation' },
   { value: 'community_foundation',label: 'Community Foundation' },
   { value: 'corporate_foundation',label: 'Corporate Foundation' },
+  { value: 'capacity_builder',    label: 'Capacity Builder (in-kind)' },
   { value: 'corporate',           label: 'Corporate' },
   { value: 'government',          label: 'Government' },
   { value: 'lottery',             label: 'Lottery' },

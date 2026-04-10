@@ -104,6 +104,7 @@ const FUNDER_TYPES = [
   { id: 'local',             label: 'Local' },
   { id: 'lottery',           label: 'Lottery' },
   { id: 'trust_foundation',  label: 'Trust & Foundation' },
+  { id: 'capacity_builder',  label: 'Capacity Builder' },
   { id: 'corporate',         label: 'Corporate' },
   { id: 'local_authority',   label: 'Local Authority' },
   { id: 'government',        label: 'Government' },
@@ -411,6 +412,9 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
             {grant.funderType && grant.funderType !== 'other' && (() => {
               const FUNDER_PILL_LABELS: Record<string, string> = {
                 trust_foundation:  'Trust / Foundation',
+                community_foundation: 'Community Foundation',
+                corporate_foundation: 'Corporate Foundation',
+                capacity_builder:  'Capacity Builder',
                 local_authority:   'Local Authority',
                 housing_association: 'Housing Assoc.',
                 corporate:         'Corporate',
@@ -842,6 +846,7 @@ const RECENT_GRANTS  = SEED_GRANTS.filter(g => g.dateAdded && g.dateAdded >= SIX
 
 const VALID_FUNDER_TYPES: FunderType[] = [
   'trust_foundation', 'community_foundation', 'corporate_foundation',
+  'capacity_builder',
   'local_authority', 'housing_association',
   'corporate', 'lottery', 'government',
   'competition', 'loan', 'crowdfund_match', 'other',

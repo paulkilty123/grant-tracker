@@ -39,6 +39,9 @@ interface ScrapedGrant {
 
 const FUNDER_LABELS: Record<string, string> = {
   trust_foundation:    'Trust & Foundation',
+  community_foundation:'Community Foundation',
+  corporate_foundation:'Corporate Foundation',
+  capacity_builder:    'Capacity Builder',
   local_authority:     'Local Authority',
   housing_association: 'Housing Association',
   corporate:           'Corporate',

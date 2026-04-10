@@ -300,6 +300,7 @@ export default function WatchlistAdminPage() {
                 onChange={e => setAddForm(p => ({ ...p, funder_type: e.target.value }))}
               >
                 <option value="trust_foundation">Trust & Foundation</option>
+                <option value="capacity_builder">Capacity Builder</option>
                 <option value="lottery">Lottery</option>
                 <option value="corporate">Corporate</option>
                 <option value="government">Government</option>

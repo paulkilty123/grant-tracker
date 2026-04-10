@@ -71,7 +71,8 @@ const IMPACT_SECTORS = [
 ]
 
 const FUNDER_TYPES = [
-  'trust_foundation', 'corporate', 'government', 'lottery',
+  'trust_foundation', 'community_foundation', 'corporate_foundation',
+  'capacity_builder', 'corporate', 'government', 'lottery',
   'housing_association', 'local_authority', 'competition', 'loan',
   'crowdfund_match', 'other',
 ]
