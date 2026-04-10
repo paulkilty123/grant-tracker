@@ -93,7 +93,7 @@ Return a single JSON object (no markdown) with exactly these fields:
 - is_local: boolean — true only if clearly restricted to one UK region/city/borough
 - geo_scope: array of strings — geographic areas this covers, e.g. ["London", "UK-wide"] or ["South East England"]
 - eligible_structures: array of any of: charity, cic, social_enterprise, school, nhs, local_authority, university, individual, other
-- funding_type: one of: grant, programme, social_investment, loan, equity, blended_finance, in_kind, accelerator, fellowship, capacity_building, corporate_grant, corporate_programme
+- funding_type: one of: grant, programme, investment, in_kind, blended_finance. "grant"=cash award with no return; "programme"=accelerator/fellowship/cohort support/capacity building; "investment"=loans/equity/social investment expecting return; "in_kind"=non-cash (pro bono, software donations, volunteer matching, free workspace); "blended_finance"=mix of grant + investment. Be decisive — do NOT default to "grant" unless it's clearly a cash grant.
 - amount_min: integer in GBP or null
 - amount_max: integer in GBP or null
 - deadline: YYYY-MM-DD string or null

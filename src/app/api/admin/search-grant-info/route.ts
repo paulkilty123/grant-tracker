@@ -211,7 +211,14 @@ async function callClaude(prompt: string, apiKey: string, maxTokens = 1000): Pro
 const EXTRACT_FIELDS = `Return a single JSON object (no markdown, no extra text) with exactly these fields:
 - title: string — the grant programme name (not the funder organisation name)
 - funder: string — the name of the funding organisation
-- funder_type: one of: trust_foundation, corporate, government, lottery, housing_association, local_authority, competition, loan, crowdfund_match, other
+- funder_type: one of: trust_foundation, community_foundation, corporate_foundation, corporate, government, lottery, housing_association, local_authority, competition, loan, crowdfund_match, other
+- funding_type: one of: grant, programme, investment, in_kind, blended_finance. Use this guidance:
+  * "grant" = a cash award with no expectation of return (most trust/foundation/corporate/lottery grants)
+  * "programme" = a structured support programme, accelerator, incubator, fellowship, or cohort-based capacity building (may include a small cash bursary, but the core offer is the support/training/mentoring)
+  * "investment" = social investment — loans, equity, blended capital, or quasi-equity where the funder expects financial return or repayment
+  * "in_kind" = non-cash support: pro bono consulting, free/discounted software or hardware, donated workspace, volunteer matching, legal/accountancy/design services, training
+  * "blended_finance" = explicit mix of grant + investment/loan in the same product
+  Be decisive — do NOT default to "grant" unless it clearly is a cash grant. Volunteer matching platforms, pro bono services, and software donations are ALWAYS "in_kind". Accelerators and fellowships are ALWAYS "programme". Social lending is ALWAYS "investment".
 - description: string — 2-3 sentence plain English description of what the grant funds and who can apply
 - amount_min: number or null — minimum grant amount in GBP (integer, no currency symbol)
 - amount_max: number or null — maximum grant amount in GBP (integer, no currency symbol)
