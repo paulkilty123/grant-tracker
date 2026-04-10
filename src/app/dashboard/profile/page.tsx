@@ -100,7 +100,7 @@ const FUNDER_TYPE_OPTIONS: { value: FunderType; label: string }[] = [
   { value: 'trust_foundation',    label: 'Trusts & Foundations'         },
   { value: 'community_foundation',label: 'Community Foundations'        },
   { value: 'corporate_foundation',label: 'Corporate Foundations'        },
-  { value: 'capacity_builder',    label: 'Capacity Builders (in-kind)'  },
+  { value: 'capacity_builder',    label: 'Capacity Builders'            },
   { value: 'lottery',             label: 'National Lottery'             },
   { value: 'local_authority',     label: 'Local Authority'              },
   { value: 'government',          label: 'Central Government'           },

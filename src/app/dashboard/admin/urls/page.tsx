@@ -77,7 +77,7 @@ const FUNDER_TYPE_OPTIONS = [
   { value: 'trust_foundation',    label: 'Trust / Foundation' },
   { value: 'community_foundation',label: 'Community Foundation' },
   { value: 'corporate_foundation',label: 'Corporate Foundation' },
-  { value: 'capacity_builder',    label: 'Capacity Builder (in-kind)' },
+  { value: 'capacity_builder',    label: 'Capacity Builder' },
   { value: 'corporate',           label: 'Corporate' },
   { value: 'government',          label: 'Government' },
   { value: 'lottery',             label: 'Lottery' },
