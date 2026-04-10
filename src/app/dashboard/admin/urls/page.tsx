@@ -53,6 +53,8 @@ type AddGrantForm = {
   is_invite_only: boolean
   next_open_date: string
   sectors: string
+  location_tag: string
+  is_local: boolean
 }
 
 // ── Category label/colour map ──────────────────────────────────────────────────
@@ -100,6 +102,7 @@ const BLANK_FORM: AddGrantForm = {
   title: '', funder: '', funder_type: 'trust_foundation', funding_type: 'grant', apply_url: '',
   description: '', amount_min: '', amount_max: '', deadline: '',
   is_rolling: true, is_invite_only: false, next_open_date: '', sectors: '',
+  location_tag: '', is_local: false,
 }
 
 // ── Component ──────────────────────────────────────────────────────────────────
@@ -825,6 +828,13 @@ export default function UrlAdminPage() {
     setRefreshError(null)
     setPopulateMsg(null)
     try {
+      // Fetch location fields directly from DB (not exposed on Grant type)
+      const { data: locRow } = await createClient()
+        .from('scraped_grants')
+        .select('location_tag, is_local')
+        .eq('id', grant.id)
+        .single()
+
       const res = await fetch('/api/admin/search-grant-info', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -862,6 +872,8 @@ export default function UrlAdminPage() {
           sectors:       Array.isArray(d.sectors) && d.sectors.length > 0 ? d.sectors.join(', ') : '',
           is_invite_only: d.is_invite_only ?? grant.is_invite_only,
           next_open_date: d.next_open_date ?? '',
+          location_tag:  locRow?.location_tag ?? '',
+          is_local:      locRow?.is_local ?? false,
         },
       })
     } catch (err) {
@@ -991,6 +1003,8 @@ export default function UrlAdminPage() {
       is_invite_only:   form.is_invite_only,
       next_open_date:        form.next_open_date.trim() || null,
       next_open_date_parsed: parseOpenDate(form.next_open_date.trim() || null),
+      location_tag:     form.location_tag.trim() || null,
+      is_local:         form.is_local,
       // Sparkles confirmed this URL exists — mark it ok so it doesn't
       // sit in the Unchecked queue waiting for the next validation run
       url_status:       savedUrl ? 'ok' : null,
@@ -2485,6 +2499,23 @@ export default function UrlAdminPage() {
                     onChange={e => setRefreshModal(m => m ? { ...m, form: { ...m.form, deadline: e.target.value } } : m)}
                     className="mt-2 rounded-xl border border-warm px-3 py-2.5 text-sm text-charcoal focus:border-forest focus:outline-none" />
                 )}
+              </div>
+
+              {/* Location */}
+              <div>
+                <label className="block text-xs font-semibold text-mid uppercase tracking-wider mb-1.5">Location</label>
+                <input type="text" value={refreshModal.form.location_tag}
+                  onChange={e => setRefreshModal(m => m ? { ...m, form: { ...m.form, location_tag: e.target.value } } : m)}
+                  placeholder="e.g. UK, England, Scotland, North East England & Glasgow, London"
+                  className="w-full rounded-xl border border-warm px-3 py-2.5 text-sm text-charcoal placeholder:text-light focus:border-forest focus:outline-none" />
+                <label className="mt-2 flex items-center gap-3 cursor-pointer">
+                  <div className={`relative w-10 h-6 rounded-full transition-colors ${refreshModal.form.is_local ? 'bg-forest' : 'bg-warm'}`}
+                    onClick={() => setRefreshModal(m => m ? { ...m, form: { ...m.form, is_local: !m.form.is_local } } : m)}>
+                    <div className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-all ${refreshModal.form.is_local ? 'left-5' : 'left-1'}`} />
+                  </div>
+                  <span className="text-sm text-charcoal">Regional / local — restricted to a specific area (not UK-wide)</span>
+                </label>
+                <p className="mt-1 text-xs text-light">Leave blank and toggle off for UK-wide grants.</p>
               </div>
 
               {/* Sectors */}
