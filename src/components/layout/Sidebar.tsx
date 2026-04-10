@@ -50,7 +50,6 @@ const NAV_GROUPS = [
     label: 'Find Funding',
     items: [
       { href: '/dashboard/search',    label: 'Find Funding',        Icon: Search    },
-      { href: '/dashboard/corporate', label: 'Corporate Partners',  Icon: Building2 },
     ],
   },
   {
