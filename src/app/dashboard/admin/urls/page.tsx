@@ -73,16 +73,18 @@ const CATEGORY_META: Record<string, { label: string; colour: string; bg: string;
 const CATEGORY_ORDER = ['trust_foundation','corporate','government','lottery','housing_association','local_authority','competition','loan','crowdfund_match','other']
 
 const FUNDER_TYPE_OPTIONS = [
-  { value: 'trust_foundation',   label: 'Trust / Foundation' },
-  { value: 'corporate',          label: 'Corporate' },
-  { value: 'government',         label: 'Government' },
-  { value: 'lottery',            label: 'Lottery' },
-  { value: 'housing_association',label: 'Housing Association' },
-  { value: 'local_authority',    label: 'Local Authority' },
-  { value: 'competition',        label: 'Competition / Award' },
-  { value: 'loan',               label: 'Loan / Social Finance' },
-  { value: 'crowdfund_match',    label: 'Crowdfund Match' },
-  { value: 'other',              label: 'Other' },
+  { value: 'trust_foundation',    label: 'Trust / Foundation' },
+  { value: 'community_foundation',label: 'Community Foundation' },
+  { value: 'corporate_foundation',label: 'Corporate Foundation' },
+  { value: 'corporate',           label: 'Corporate' },
+  { value: 'government',          label: 'Government' },
+  { value: 'lottery',             label: 'Lottery' },
+  { value: 'housing_association', label: 'Housing Association' },
+  { value: 'local_authority',     label: 'Local Authority' },
+  { value: 'competition',         label: 'Competition / Award' },
+  { value: 'loan',                label: 'Loan / Social Finance' },
+  { value: 'crowdfund_match',     label: 'Crowdfund Match' },
+  { value: 'other',               label: 'Other' },
 ]
 
 const FUNDING_TYPE_OPTIONS = [
