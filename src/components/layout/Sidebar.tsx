@@ -55,7 +55,7 @@ const NAV_GROUPS = [
   {
     label: 'Manage',
     items: [
-      { href: '/dashboard/pipeline',  label: 'Funding Pipeline', Icon: FolderKanban },
+      { href: '/dashboard/pipeline',  label: 'Pipeline',         Icon: FolderKanban },
       { href: '/dashboard/deadlines', label: 'Deadlines',        Icon: CalendarClock },
     ],
   },
