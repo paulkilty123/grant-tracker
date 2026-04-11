@@ -81,6 +81,35 @@ export type FundingType =
   | 'investment'   // repayable finance: social investment, blended finance, loans
   | 'in_kind'      // non-cash: software credits, ad grants, workspace, pro bono
 
+/** Optional sub-classification of funding_type */
+export type FundingSubtype =
+  // grant sub-types
+  | 'unrestricted'
+  | 'restricted'
+  | 'capital'
+  | 'emergency'
+  | 'small_grant'
+  // programme sub-types
+  | 'accelerator'
+  | 'incubator'
+  | 'fellowship'
+  | 'cohort_grant'
+  | 'award'
+  // investment sub-types
+  | 'loan'
+  | 'social_investment'
+  | 'equity'
+  | 'quasi_equity'
+  | 'convertible'
+  | 'blended'
+  // in-kind sub-types
+  | 'pro_bono_legal'
+  | 'pro_bono_consulting'
+  | 'tech_product'
+  | 'volunteering'
+  | 'office_space'
+  | 'training'
+
 export type PipelineStage =
   | 'identified'
   | 'applying'
@@ -195,6 +224,8 @@ export interface GrantOpportunity {
   funderType: FunderType
   /** Broader funding type — grants, accelerators, social investment, etc. */
   fundingType?: FundingType
+  /** Optional sub-classification (e.g. loan/equity under investment) */
+  fundingSubtype?: FundingSubtype | null
   description: string
   amountMin: number
   amountMax: number

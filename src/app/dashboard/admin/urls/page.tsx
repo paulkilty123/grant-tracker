@@ -9,6 +9,8 @@ import {
 } from 'lucide-react'
 import { SEED_GRANTS } from '@/lib/grants'
 import { parseOpenDate } from '@/lib/parse-open-date'
+import { SUBTYPES_BY_FUNDING_TYPE, SUBTYPE_LABELS } from '@/lib/funding-subtypes'
+import type { FundingType } from '@/types'
 
 const ADMIN_EMAIL = 'paulkilty1@gmail.com'
 
@@ -44,6 +46,7 @@ type AddGrantForm = {
   funder: string
   funder_type: string
   funding_type: string
+  funding_subtype: string
   apply_url: string
   description: string
   amount_min: string
@@ -99,7 +102,7 @@ const FUNDING_TYPE_OPTIONS = [
 ]
 
 const BLANK_FORM: AddGrantForm = {
-  title: '', funder: '', funder_type: 'trust_foundation', funding_type: 'grant', apply_url: '',
+  title: '', funder: '', funder_type: 'trust_foundation', funding_type: 'grant', funding_subtype: '', apply_url: '',
   description: '', amount_min: '', amount_max: '', deadline: '',
   is_rolling: true, is_invite_only: false, next_open_date: '', sectors: '',
   location_tag: '', is_local: false,
@@ -828,10 +831,10 @@ export default function UrlAdminPage() {
     setRefreshError(null)
     setPopulateMsg(null)
     try {
-      // Fetch location fields directly from DB (not exposed on Grant type)
+      // Fetch location + subtype fields directly from DB (not exposed on Grant type)
       const { data: locRow } = await createClient()
         .from('scraped_grants')
-        .select('location_tag, is_local')
+        .select('location_tag, is_local, funding_subtype')
         .eq('id', grant.id)
         .single()
 
@@ -874,6 +877,7 @@ export default function UrlAdminPage() {
           next_open_date: d.next_open_date ?? '',
           location_tag:  locRow?.location_tag ?? '',
           is_local:      locRow?.is_local ?? false,
+          funding_subtype: locRow?.funding_subtype ?? '',
         },
       })
     } catch (err) {
@@ -993,6 +997,7 @@ export default function UrlAdminPage() {
       funder:           form.funder.trim(),
       funder_type:      form.funder_type,
       funding_type:     form.funding_type,
+      funding_subtype:  form.funding_subtype || null,
       apply_url:        savedUrl,
       description:      form.description.trim() || null,
       amount_min:       form.amount_min ? parseInt(form.amount_min, 10) : null,
@@ -2447,14 +2452,38 @@ export default function UrlAdminPage() {
                 </div>
               </div>
 
-              {/* Funding Type */}
-              <div>
-                <label className="block text-xs font-semibold text-mid uppercase tracking-wider mb-1.5">Funding Type</label>
-                <select value={refreshModal.form.funding_type}
-                  onChange={e => setRefreshModal(m => m ? { ...m, form: { ...m.form, funding_type: e.target.value } } : m)}
-                  className="w-full rounded-xl border border-warm px-3 py-2.5 text-sm text-charcoal focus:border-forest focus:outline-none bg-white">
-                  {FUNDING_TYPE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select>
+              {/* Funding Type + Subtype */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-mid uppercase tracking-wider mb-1.5">Funding Type</label>
+                  <select value={refreshModal.form.funding_type}
+                    onChange={e => {
+                      const newFt = e.target.value as FundingType
+                      setRefreshModal(m => {
+                        if (!m) return m
+                        // Reset subtype if it's no longer valid for the new funding type
+                        const validSubs = SUBTYPES_BY_FUNDING_TYPE[newFt] ?? []
+                        const keepSub = m.form.funding_subtype && validSubs.includes(m.form.funding_subtype as never)
+                          ? m.form.funding_subtype
+                          : ''
+                        return { ...m, form: { ...m.form, funding_type: newFt, funding_subtype: keepSub } }
+                      })
+                    }}
+                    className="w-full rounded-xl border border-warm px-3 py-2.5 text-sm text-charcoal focus:border-forest focus:outline-none bg-white">
+                    {FUNDING_TYPE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-mid uppercase tracking-wider mb-1.5">Subtype</label>
+                  <select value={refreshModal.form.funding_subtype}
+                    onChange={e => setRefreshModal(m => m ? { ...m, form: { ...m.form, funding_subtype: e.target.value } } : m)}
+                    className="w-full rounded-xl border border-warm px-3 py-2.5 text-sm text-charcoal focus:border-forest focus:outline-none bg-white">
+                    <option value="">— None —</option>
+                    {(SUBTYPES_BY_FUNDING_TYPE[refreshModal.form.funding_type as FundingType] ?? []).map(sub => (
+                      <option key={sub} value={sub}>{SUBTYPE_LABELS[sub]}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               {/* Amount */}

@@ -12,7 +12,8 @@ import { computeMatchScore, scoreColour } from '@/lib/matching'
 import type { FeedbackSignals, MatchBreakdown } from '@/lib/matching'
 import { getInteractions, recordInteraction, removeInteraction } from '@/lib/interactions'
 import { saveSearchHistory, getSearchHistory, deleteSearchHistory, getWeeklySearchCount } from '@/lib/searchHistory'
-import type { GrantOpportunity, Organisation, FunderType, FundingType, ImpactSector, LegalStructure } from '@/types'
+import type { GrantOpportunity, Organisation, FunderType, FundingType, FundingSubtype, ImpactSector, LegalStructure } from '@/types'
+import { SUBTYPE_LABELS } from '@/lib/funding-subtypes'
 import type { InteractionAction } from '@/lib/interactions'
 import type { SearchHistoryItem } from '@/lib/searchHistory'
 
@@ -534,10 +535,18 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
             <div>
               <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">Type</p>
               {ftStyle ? (
-                <span className="text-[11px] font-bold px-2.5 py-1 inline-block"
-                  style={{ borderRadius: 9999, backgroundColor: ftStyle.bg, color: ftStyle.color }}>
-                  {ftStyle.label}
-                </span>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-[11px] font-bold px-2.5 py-1 inline-block"
+                    style={{ borderRadius: 9999, backgroundColor: ftStyle.bg, color: ftStyle.color }}>
+                    {ftStyle.label}
+                  </span>
+                  {grant.fundingSubtype && SUBTYPE_LABELS[grant.fundingSubtype] && (
+                    <span className="text-[10px] font-semibold px-2 py-0.5 inline-block border"
+                      style={{ borderRadius: 9999, borderColor: ftStyle.color, color: ftStyle.color, backgroundColor: 'white' }}>
+                      {SUBTYPE_LABELS[grant.fundingSubtype]}
+                    </span>
+                  )}
+                </div>
               ) : (
                 <p className="text-sm font-semibold text-charcoal">—</p>
               )}
@@ -882,6 +891,7 @@ function normaliseScrapedGrant(row: Record<string, unknown>): EnrichedGrant {
     nextOpenDate:         row.next_open_date ? String(row.next_open_date) : null,
     nextOpenDateParsed:   row.next_open_date_parsed ? String(row.next_open_date_parsed) : null,
     fundingType:          (row.funding_type ? String(row.funding_type) : 'grant') as FundingType,
+    fundingSubtype:       row.funding_subtype ? String(row.funding_subtype) as FundingSubtype : null,
     impactSectors:        Array.isArray(row.impact_sectors)       ? (row.impact_sectors       as ImpactSector[])   : undefined,
     eligibleStructures:   Array.isArray(row.eligible_structures) ? (row.eligible_structures as LegalStructure[]) : undefined,
     beneficiaryGroups:    Array.isArray(row.target_beneficiaries) ? (row.target_beneficiaries as import('@/types').BeneficiaryGroup[]) : undefined,
