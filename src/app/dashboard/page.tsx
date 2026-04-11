@@ -2,8 +2,10 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getDeadlineAlerts, formatCurrency } from '@/lib/utils'
 import { PIPELINE_STAGES } from '@/lib/utils'
-import type { PipelineItem } from '@/types'
+import type { PipelineItem, Organisation } from '@/types'
 import { Award, TrendingUp, Users, Rocket, GraduationCap, Gift, ArrowRight, CalendarDays, AlarmClock, Clock } from 'lucide-react'
+import { computeMatchScore } from '@/lib/matching'
+import { normaliseScrapedGrant } from '@/lib/grants-normalise'
 
 function formatDeadlineDate(deadline: string | null): { month: string; day: string } | null {
   if (!deadline) return null
@@ -27,6 +29,31 @@ function grantIcon(title: string) {
   return Award
 }
 
+// Small string hash used to seed the daily shuffle. Deterministic so the same
+// (userId, date) pair always produces the same ordering — means the user sees
+// the same three cards all day and refreshes don't cause flicker.
+function hashSeed(str: string): number {
+  let h = 2166136261 >>> 0 // FNV-1a offset basis
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i)
+    h = Math.imul(h, 16777619) >>> 0
+  }
+  return h || 1
+}
+
+// Fisher–Yates shuffle seeded with a linear congruential generator. Pure
+// function: same input → same output. Never mutates the input array.
+function seededShuffle<T>(arr: T[], seed: number): T[] {
+  const out = arr.slice()
+  let s = seed
+  for (let i = out.length - 1; i > 0; i--) {
+    s = (Math.imul(s, 1103515245) + 12345) >>> 0
+    const j = s % (i + 1)
+    ;[out[i], out[j]] = [out[j], out[i]]
+  }
+  return out
+}
+
 export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -46,14 +73,67 @@ export default async function DashboardPage() {
 
   const items: PipelineItem[] = rawItems ?? []
 
-  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-  const { data: newGrants, count: newGrantsCount } = await supabase
-    .from('scraped_grants')
-    .select('id, title, funder, description, amount_min, amount_max, deadline, external_id, funding_type', { count: 'exact' })
-    .eq('is_active', true)
-    .gte('first_seen_at', sevenDaysAgo)
-    .order('first_seen_at', { ascending: false })
-    .limit(3)
+  // ── Matched Opportunities ────────────────────────────────────────────────
+  // Pull a pool of active, non-expired grants from the funder-joined view,
+  // score each against the user's org, keep the top 30, then deterministically
+  // shuffle using a (user × date) seed so a different slice of 3 surfaces each
+  // day. Refreshing the page on the same day shows the same three cards —
+  // stability matters more than novelty within a single session.
+  const today = new Date().toISOString().split('T')[0]
+  const typedOrg = org as Organisation | null
+  const matchedGrants: Array<{
+    id: string
+    title: string
+    funder: string
+    description: string
+    amountStr: string
+    searchHref: string
+  }> = []
+  if (typedOrg) {
+    const { data: grantRows } = await supabase
+      .from('grants_with_funder')
+      .select('*')
+      .eq('is_active', true)
+      .neq('url_status', 'dead')
+      .or(`is_rolling.eq.true,deadline.is.null,deadline.gte.${today}`)
+      .order('last_seen_at', { ascending: false })
+      .limit(500)
+
+    if (grantRows && grantRows.length > 0) {
+      const scored = grantRows
+        .map(row => {
+          const grant = normaliseScrapedGrant(row as Record<string, unknown>)
+          const match = computeMatchScore(grant, typedOrg)
+          return { grant, score: match.score }
+        })
+        .filter(x => x.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 30)
+
+      // Deterministic daily rotation seeded by (userId, YYYY-MM-DD). The top
+      // 30 is a stable universe — only the which-3-we-show changes day to day.
+      const seed   = hashSeed(`${user?.id ?? 'anon'}-${today}`)
+      const picked = seededShuffle(scored, seed).slice(0, 3)
+
+      for (const p of picked) {
+        const g = p.grant
+        const amountStr = g.amountMin || g.amountMax
+          ? (g.amountMin && g.amountMax && g.amountMin !== g.amountMax
+              ? `${formatCurrency(g.amountMin)} – ${formatCurrency(g.amountMax)}`
+              : formatCurrency(g.amountMax || g.amountMin || 0))
+          : 'Amount on application'
+        matchedGrants.push({
+          id: g.id,
+          title: g.title,
+          funder: g.funder,
+          description: g.description,
+          amountStr,
+          searchHref: `/dashboard/search?grant=${encodeURIComponent(g.id)}`,
+        })
+      }
+    }
+  }
+  const matchedCount = matchedGrants.length
 
   const active    = items.filter(i => !['won', 'declined'].includes(i.stage))
   const won       = items.filter(i => i.stage === 'won')
@@ -85,14 +165,20 @@ export default async function DashboardPage() {
   const alerts = getDeadlineAlerts(items).slice(0, 4)
   const urgentCount = alerts.filter(a => ['urgent','overdue'].includes(a.urgency)).length
 
-  // Derive full display name
+  // Derive first name only — surname is intentionally stripped so the greeting
+  // reads naturally ("Good morning, Paul" not "Good morning, Paul Kilty").
   const rawName: string =
     (user?.user_metadata?.full_name as string | undefined) ??
     (user?.user_metadata?.name as string | undefined) ??
     (user?.email ?? '')
-  const displayName = rawName.includes('@')
-    ? (() => { const p = rawName.split('@')[0].replace(/\d+$/, '').replace(/\./g, ' '); return p ? p.split(' ').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : 'there' })()
-    : (rawName.trim() || 'there')
+  const displayName = (() => {
+    const cleaned = rawName.includes('@')
+      ? rawName.split('@')[0].replace(/\d+$/, '').replace(/\./g, ' ')
+      : rawName.trim()
+    if (!cleaned) return 'there'
+    const first = cleaned.split(/\s+/)[0]
+    return first.charAt(0).toUpperCase() + first.slice(1)
+  })()
 
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
@@ -175,51 +261,46 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* New This Week */}
-      {(newGrantsCount ?? 0) > 0 && (
+      {/* Matched Opportunities — deterministic daily rotation over top 30 matches */}
+      {matchedCount > 0 && (
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-display text-xl font-bold text-charcoal">New This Week</h3>
+            <h3 className="font-display text-xl font-bold text-charcoal">Matched Opportunities</h3>
             <a href="/dashboard/search" className="text-xs font-semibold text-coral uppercase tracking-wider hover:underline">
               View All Opportunities →
             </a>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {(newGrants ?? []).map(g => {
-              const Icon = grantIcon(g.title ?? '')
-              const amountStr = g.amount_min || g.amount_max
-                ? (g.amount_min && g.amount_max && g.amount_min !== g.amount_max
-                    ? `${formatCurrency(g.amount_min)} – ${formatCurrency(g.amount_max)}`
-                    : formatCurrency(g.amount_max ?? g.amount_min ?? 0))
-                : 'Amount TBC'
+            {matchedGrants.map(g => {
+              const Icon = grantIcon(g.title)
               return (
                 <a key={g.id}
-                  href={`/dashboard/grants/${encodeURIComponent(g.external_id ?? g.id)}`}
+                  href={g.searchHref}
                   className="bg-white border border-warm/80 rounded-xl p-5 flex flex-col hover:border-sage/40 hover:-translate-y-0.5 transition-all group"
                   style={{ boxShadow: '0 2px 16px rgba(26,46,43,0.06)' }}>
-                  {/* Icon + NEW badge */}
+                  {/* Icon + Matched badge */}
                   <div className="flex items-start justify-between mb-4">
                     <div className="w-11 h-11 rounded-xl bg-coral/10 flex items-center justify-center flex-shrink-0">
                       <Icon className="w-5 h-5 text-coral" />
                     </div>
-                    <span className="text-[9px] font-bold text-forest bg-forest/10 px-2 py-0.5 rounded uppercase tracking-wide">New</span>
+                    <span className="text-[9px] font-bold text-forest bg-forest/10 px-2 py-0.5 rounded uppercase tracking-wide">Matched</span>
                   </div>
                   {/* Title + description */}
                   <h4 className="font-display text-base font-bold text-charcoal leading-snug mb-1.5 group-hover:text-forest transition-colors line-clamp-2">
                     {g.title}
                   </h4>
                   <p className="text-xs text-mid leading-relaxed line-clamp-2 mb-4 flex-1">
-                    {g.description ?? ''}
+                    {g.description}
                   </p>
                   {/* Amount + Funder */}
                   <div className="border-t border-warm pt-3 flex gap-6">
                     <div>
                       <p className="text-[9px] font-semibold text-mid uppercase tracking-wider mb-0.5">Amount</p>
-                      <p className="text-sm font-bold text-charcoal">{amountStr}</p>
+                      <p className="text-sm font-bold text-charcoal">{g.amountStr}</p>
                     </div>
                     <div className="min-w-0">
                       <p className="text-[9px] font-semibold text-mid uppercase tracking-wider mb-0.5">Funder</p>
-                      <p className="text-sm font-medium text-charcoal truncate">{g.funder ?? 'Unknown'}</p>
+                      <p className="text-sm font-medium text-charcoal truncate">{g.funder}</p>
                     </div>
                   </div>
                 </a>
@@ -250,14 +331,19 @@ export default async function DashboardPage() {
             </div>
           ) : (
             <>
-              {/* Tall proportional bar with rounded corners */}
+              {/* Pipeline bar — semi-proportional layout.
+                  Every non-zero stage gets a guaranteed base width (flex-basis)
+                  so its £ amount stays legible even when one stage dwarfs the
+                  others. Any extra space is distributed proportionally to each
+                  stage's value via flex-grow. Without this, a £960k Identified
+                  column squeezes everything else into "£…" placeholders. */}
               <a href="/dashboard/pipeline" className="flex rounded-2xl overflow-hidden mb-6 hover:opacity-95 transition-opacity" style={{ height: 140 }}>
                 {stageValues.map(s => {
                   const grow = totalValue > 0 ? (s.value > 0 ? s.value : 0) : 1
                   if (grow === 0) return null
                   return (
                     <div key={s.id} className="flex flex-col justify-center px-4"
-                      style={{ flexGrow: grow, flexBasis: 0, background: s.bg, minWidth: 0 }}>
+                      style={{ flexGrow: grow, flexShrink: 0, flexBasis: 110, background: s.bg, minWidth: 110 }}>
                       <span className="text-[10px] font-bold uppercase tracking-widest mb-2 truncate"
                         style={{ color: s.labelCol }}>
                         {s.label}
