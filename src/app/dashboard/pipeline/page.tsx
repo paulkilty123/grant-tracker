@@ -12,7 +12,7 @@ import {
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { PIPELINE_STAGES, formatDeadline, formatRange, cn } from '@/lib/utils'
 import type { PipelineItem, PipelineStage, Organisation } from '@/types'
-import { Search, Pencil, Send, Trophy, XCircle, Sparkles, Loader2, Link, ArrowRight, Calendar, AlarmClock, X as XIcon, Circle, FileText, PenLine, RefreshCw, Eye, CheckCircle2 } from 'lucide-react'
+import { Search, Pencil, Send, Trophy, XCircle, Sparkles, Loader2, Link, ArrowRight, Calendar, AlarmClock, X as XIcon, Circle, FileText, PenLine, RefreshCw, Eye, CheckCircle2, GripVertical } from 'lucide-react'
 
 const STAGE_ICONS: Record<string, React.ReactNode> = {
   identified: <Search size={13} strokeWidth={2.5} />,
@@ -88,10 +88,11 @@ function PipelineCard({
       onDragStart={e => onDragStart(e, item.id)}
       onDragEnd={onDragEnd}
       onClick={() => onClick(item)}
-      className="pipeline-card"
+      className="pipeline-card cursor-grab active:cursor-grabbing"
     >
-      {/* Top badges row */}
-      <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+      {/* Drag handle + badges row */}
+      <div className="flex items-start justify-between mb-2">
+        <div className="flex items-center gap-1.5 flex-wrap flex-1 min-w-0">
         {item.application_progress != null && item.application_progress > 0 && item.application_progress < 100 && (
           <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-[#fff4e6] text-[#c07010] uppercase tracking-wide">
             {getWritingStage(item.application_progress).label}
@@ -103,6 +104,8 @@ function PipelineCard({
         {item.is_urgent && (
           <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-red-50 text-red-500 uppercase tracking-wide">Urgent</span>
         )}
+        </div>
+        <GripVertical size={13} className="flex-shrink-0 text-warm/80 mt-0.5 ml-1" />
       </div>
 
       {/* Grant name */}
