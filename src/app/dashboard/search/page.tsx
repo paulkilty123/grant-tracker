@@ -859,6 +859,78 @@ const RECENT_GRANTS  = SEED_GRANTS.filter(g => g.dateAdded && g.dateAdded >= SIX
 const GRANT_TYPES: (FundingType | 'all')[]      = ['grant', 'investment', 'in_kind']
 const PROGRAMME_TYPES: (FundingType | 'all')[]  = ['programme']
 
+// ── Fuzzy text matching ────────────────────────────────────────────────────
+// Lightweight typo tolerance for the search box. Exact substring first
+// (fast path), then Levenshtein-distance-≤1 against individual words for
+// tokens of 4+ characters. Shorter tokens stay strict to avoid silly
+// collisions like "cat" fuzzy-matching "bat".
+
+/**
+ * True iff `a` and `b` differ by at most one edit, where an edit is
+ * insertion / deletion / substitution / adjacent transposition. The last
+ * case is handled specially because it's the most common real-world typo
+ * ("teh" → "the", "garfeild" → "garfield") and strict Levenshtein treats
+ * it as two edits.
+ */
+function withinOneEdit(a: string, b: string): boolean {
+  if (a === b) return true
+  const diff = a.length - b.length
+  if (Math.abs(diff) > 1) return false
+  // Same length: allow one substitution OR one adjacent transposition.
+  if (diff === 0) {
+    let mismatches = 0
+    let firstMismatch = -1
+    for (let i = 0; i < a.length; i++) {
+      if (a[i] !== b[i]) {
+        mismatches++
+        if (mismatches === 1) firstMismatch = i
+        if (mismatches > 2)    return false
+      }
+    }
+    if (mismatches <= 1) return true
+    // Exactly two mismatches — accept only if they're adjacent and swapped.
+    return mismatches === 2
+      && firstMismatch >= 0
+      && a[firstMismatch]     === b[firstMismatch + 1]
+      && a[firstMismatch + 1] === b[firstMismatch]
+  }
+  // Length differs by one: a single insertion or deletion.
+  const [shorter, longer] = a.length < b.length ? [a, b] : [b, a]
+  let i = 0, j = 0, foundDiff = false
+  while (i < shorter.length && j < longer.length) {
+    if (shorter[i] !== longer[j]) {
+      if (foundDiff) return false
+      foundDiff = true
+      j++ // skip one char in longer
+    } else {
+      i++; j++
+    }
+  }
+  return true
+}
+
+/** Splits a haystack into word tokens — any non-alphanum counts as a boundary. */
+function toWordTokens(text: string): string[] {
+  return text.split(/[^a-z0-9]+/).filter(Boolean)
+}
+
+/**
+ * Check whether a single query token appears in the haystack text.
+ * Exact substring match is the fast path; fuzzy (≤1 edit) is attempted
+ * only for tokens ≥4 chars, and only against words of similar length.
+ */
+function tokenMatches(token: string, text: string, wordsCache?: string[]): boolean {
+  if (text.includes(token)) return true
+  if (token.length < 4)    return false
+  const words = wordsCache ?? toWordTokens(text)
+  for (const w of words) {
+    const lenDiff = Math.abs(w.length - token.length)
+    if (lenDiff > 1) continue
+    if (withinOneEdit(token, w)) return true
+  }
+  return false
+}
+
 const VALID_FUNDER_TYPES: FunderType[] = [
   'trust_foundation', 'community_foundation', 'corporate_foundation',
   'capacity_builder',
@@ -921,8 +993,9 @@ export default function SearchPage() {
   const isWelcome       = searchParams.get('welcome') === '1'
   const [welcomeDismissed, setWelcomeDismissed] = useState(false)
 
-  const [query, setQuery]               = useState('')       // committed (drives filter)
+  const [query, setQuery]               = useState('')       // committed AI-search query (subtitle, session restore)
   const [inputValue, setInputValue]     = useState('')       // live input value (typing only)
+  const [filterQuery, setFilterQuery]   = useState('')       // debounced mirror of inputValue — drives local text filter
   const [activeType, setActiveType]     = useState('all')
   const [aiResults, setAiResults]       = useState<AIResult[] | null>(null)
   const [aiLoading, setAiLoading]       = useState(false)
@@ -1006,6 +1079,14 @@ export default function SearchPage() {
       sessionStorage.setItem('grantSearch', JSON.stringify({ query, aiResults, activeType, smartMatched, liveResults, liveSmartMatched, activeView }))
     } catch { /* ignore */ }
   }, [query, aiResults, activeType, smartMatched, liveResults, liveSmartMatched, activeView])
+
+  // Debounce inputValue → filterQuery so local text filtering kicks in
+  // ~150ms after the user stops typing. Fast enough to feel live, slow
+  // enough that we're not re-running the filter pipeline on every keystroke.
+  useEffect(() => {
+    const handle = setTimeout(() => setFilterQuery(inputValue.trim().toLowerCase()), 150)
+    return () => clearTimeout(handle)
+  }, [inputValue])
 
   useEffect(() => {
     async function loadOrg() {
@@ -1313,7 +1394,7 @@ export default function SearchPage() {
   // Reset visible count when search/filters change so the user starts from the top
   useEffect(() => {
     setVisibleCount(30)
-  }, [query, activeType, amountMin, amountMax, deadlineFilter, activeSectors, activeFundingType, categoryFilter, entryTypeFilter, freshnessFilter, showInviteOnly, aiResults, activeFunderCategory, activeGeoScope])
+  }, [query, filterQuery, activeType, amountMin, amountMax, deadlineFilter, activeSectors, activeFundingType, categoryFilter, entryTypeFilter, freshnessFilter, showInviteOnly, aiResults, activeFunderCategory, activeGeoScope])
 
   // ── Build display grants ─────────────────────────────────────────────────
   // Memoised: computeMatchScore is called once per grant in the catalogue
@@ -1327,6 +1408,10 @@ export default function SearchPage() {
     const maxAmt = amountMax ? Number(amountMax) : null
     const todayStr = new Date().toISOString().split('T')[0]
 
+    // Pre-split the search tokens once for the whole filter pass. ALL tokens
+    // must match (AND semantics) so "impact hub" requires both, not either.
+    const queryTokens = filterQuery ? filterQuery.split(/\s+/).filter(t => t.length > 0) : []
+
     const filtered = allGrants.filter(g => {
       // Always strip expired deadlines — never show grants whose closing date has passed
       if (!g.isRolling && g.deadline && g.deadline < todayStr) return false
@@ -1337,9 +1422,16 @@ export default function SearchPage() {
         activeType === 'recent'   ? (g.dateAdded != null && g.dateAdded >= SIXTY_DAYS_AGO) :
         activeType === 'scraped'  ? g.source === 'scraped' :
         g.funderType === activeType
-      // Text query only applies when there are AI results — in My Matches mode
-      // the search box triggers AI search, not local text filtering
-      const matchesQuery = true
+      // Local text filter with typo tolerance. Matches across title, funder,
+      // description and sectors. Empty query → no filtering.
+      let matchesQuery = true
+      if (queryTokens.length > 0) {
+        const haystack = `${g.title} ${g.funder} ${g.description} ${g.sectors.join(' ')}`.toLowerCase()
+        // Cache the word-tokenisation of the haystack so tokenMatches doesn't
+        // re-split it once per query token.
+        const haystackWords = toWordTokens(haystack)
+        matchesQuery = queryTokens.every(t => tokenMatches(t, haystack, haystackWords))
+      }
       const matchesAmount =
         (minAmt === null || (g.amountMax ?? 0) >= minAmt) &&
         (maxAmt === null || (g.amountMin ?? 0) <= maxAmt)
@@ -1457,9 +1549,11 @@ export default function SearchPage() {
       // When a query is active, tier results by how closely the query matches
       // the funder/title/description so that e.g. searching "Impact Hub" always
       // surfaces Impact Hub grants before grants that merely mention "impact" in
-      // their description.
-      if (query) {
-        const q = query.toLowerCase()
+      // their description. Uses filterQuery (local live-typed) or the committed
+      // AI query, whichever is non-empty.
+      const effectiveQuery = filterQuery || query.toLowerCase()
+      if (effectiveQuery) {
+        const q = effectiveQuery
         const queryTier = (g: GrantOpportunity) => {
           if (g.funder.toLowerCase() === q)              return 4  // exact funder match
           if (g.funder.toLowerCase().includes(q))        return 3  // partial funder match
@@ -1498,6 +1592,7 @@ export default function SearchPage() {
     interactions,
     aiResults,
     query,
+    filterQuery,
     sortBy,
     activeType,
     amountMin,
@@ -2100,6 +2195,8 @@ export default function SearchPage() {
                 <><strong className="text-coral">✦ {displayGrants.length}</strong> grants matched for <strong className="text-charcoal">{org?.name}</strong></>
               ) : aiResults ? (
                 <><strong className="text-coral">✦ {displayGrants.length}</strong> results for &ldquo;{query}&rdquo;</>
+              ) : filterQuery ? (
+                <><strong className="font-serif text-3xl font-bold text-charcoal">{displayGrants.length} grants</strong><span className="text-base text-mid ml-2">matching &ldquo;{filterQuery}&rdquo;</span></>
               ) : (
                 <><strong className="font-serif text-3xl font-bold text-charcoal">{displayGrants.length} grants</strong><span className="text-base text-mid ml-2">ranked for your mission</span></>
               )}
@@ -2190,7 +2287,19 @@ export default function SearchPage() {
         return visibleGrants.length === 0 && dismissedCount === 0 ? (
           <div className="text-center py-16 text-light">
             <p className="text-4xl mb-3">🔍</p>
-            <p className="mb-3">No grants found — try different keywords or clear the filters.</p>
+            {filterQuery ? (
+              <>
+                <p className="mb-3">No grants matched &ldquo;<strong className="text-charcoal">{filterQuery}</strong>&rdquo; in your current filters.</p>
+                <button
+                  onClick={() => { setInputValue(''); setFilterQuery('') }}
+                  className="px-4 py-2 text-xs font-semibold text-forest border border-forest/30 hover:bg-forest/5 rounded-full transition-colors"
+                >
+                  Clear search
+                </button>
+              </>
+            ) : (
+              <p className="mb-3">No grants found — try different keywords or clear the filters.</p>
+            )}
           </div>
         ) : (
           <>
