@@ -696,14 +696,9 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                   const cut = text.slice(0, chars)
                   return cut.slice(0, cut.lastIndexOf(' ')) + '…'
                 }
-                const clamp4: React.CSSProperties = {
-                  display: '-webkit-box', WebkitLineClamp: 4,
-                  WebkitBoxOrient: 'vertical', overflow: 'hidden',
-                }
-                const clamp3: React.CSSProperties = {
-                  display: '-webkit-box', WebkitLineClamp: 3,
-                  WebkitBoxOrient: 'vertical', overflow: 'hidden',
-                }
+                // No clamping — this is already the expanded view, show everything
+                const clamp4: React.CSSProperties = {}
+                const clamp3: React.CSSProperties = {}
                 const orgTerms = [...(org?.themes ?? []), ...(org?.areas_of_work ?? [])].slice(0, 3)
 
                 // Reusable section block: consistent label + body style throughout
