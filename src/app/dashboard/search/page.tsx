@@ -962,6 +962,11 @@ export default function SearchPage() {
   const [activeTab, setActiveTab]                 = useState<'grant' | 'programme' | 'investment' | 'in_kind'>('grant')
   const [programmeHasCash, setProgrammeHasCash]   = useState(false)
   const [activeView, setActiveView]               = useState<'matches' | 'saved'>('matches')
+  // Explicit profile filter toggle. Previously this was derived from
+  // activeSectors/locationFilter, which meant picking a sector inside the
+  // filter panel silently flipped it back on. Now the toggle only changes
+  // when the user clicks it directly (or when the org first loads).
+  const [profileFilterOn, setProfileFilterOn]     = useState(false)
 
   // ── Live search (web) state ───────────────────────────────────────────────
   const [searchMode, setSearchMode]               = useState<'database' | 'live'>('database')
@@ -1017,6 +1022,9 @@ export default function SearchPage() {
         // My Matches mode: always auto-apply profile and show results
         if (o.primary_location) setLocationFilter(o.primary_location)
         if (o.impact_sectors?.length) setActiveSectors(new Set(o.impact_sectors as ImpactSector[]))
+        // Mirror today's behaviour: if the org has profile data worth
+        // filtering on, start with the profile filter toggled on.
+        if (o.primary_location || o.impact_sectors?.length) setProfileFilterOn(true)
         setSearchModeToggle('profile')
         setProfileChipsApplied(true)
         setHasSearched(true)
@@ -1636,6 +1644,7 @@ export default function SearchPage() {
     setDeadlineFilter('all')
     setActiveSectors(new Set())
     setLocationFilter('')
+    setLocationInput('')
     setSortBy('match')
     setEntryTypeFilter('all')
     setFreshnessFilter('all')
@@ -1643,6 +1652,7 @@ export default function SearchPage() {
     setCategoryFilter('all')
     setActiveFunderCategory('all')
     setActiveGeoScope('all')
+    setProfileFilterOn(false)
   }
 
   function toggleGroup(label: string) {
@@ -1713,10 +1723,9 @@ export default function SearchPage() {
   const savedCount = Array.from(interactions.values()).filter(s => s.has('saved')).length
 
   // Match scores + reasons are only meaningful when the profile filter is active
-  // (sectors/location applied) OR when an AI search has produced scored results.
-  // When profile filter is off and no AI search is active, suppress them so the
-  // UI doesn't show match data that isn't actually filtering anything.
-  const profileFilterOn = activeSectors.size > 0 || !!locationFilter
+  // OR when an AI search has produced scored results. When profile filter is
+  // off and no AI search is active, suppress them so the UI doesn't show match
+  // data that isn't actually filtering anything.
   const showMatchInfo = !!org && (profileFilterOn || !!aiResults)
 
   return (
@@ -1845,10 +1854,12 @@ export default function SearchPage() {
                   <button
                     onClick={() => {
                       if (profileFilterOn) {
+                        setProfileFilterOn(false)
                         setActiveSectors(new Set())
                         setLocationFilter('')
                         setLocationInput('')
                       } else {
+                        setProfileFilterOn(true)
                         if (org.primary_location) { setLocationFilter(org.primary_location); setLocationInput(org.primary_location) }
                         if ((org.impact_sectors as string[] | undefined)?.length) setActiveSectors(new Set(org.impact_sectors as ImpactSector[]))
                       }
