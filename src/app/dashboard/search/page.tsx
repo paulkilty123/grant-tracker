@@ -2215,15 +2215,18 @@ export default function SearchPage() {
         <div className="mb-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-sm text-mid">
-              {aiResults && smartMatched ? (
-                <><strong className="text-coral">✦ {displayGrants.length}</strong> grants matched for <strong className="text-charcoal">{org?.name}</strong></>
-              ) : aiResults ? (
-                <><strong className="text-coral">✦ {displayGrants.length}</strong> results for &ldquo;{query}&rdquo;</>
-              ) : filterQuery ? (
-                <><strong className="font-serif text-3xl font-bold text-charcoal">{displayGrants.length} grants</strong><span className="text-base text-mid ml-2">matching &ldquo;{filterQuery}&rdquo;</span></>
-              ) : (
-                <><strong className="font-serif text-3xl font-bold text-charcoal">{displayGrants.length} grants</strong><span className="text-base text-mid ml-2">matched for you</span></>
-              )}
+              {(() => {
+                const tabNoun = activeTab === 'programme' ? 'programmes' : activeTab === 'investment' ? 'investments' : activeTab === 'in_kind' ? 'in-kind opportunities' : 'grants'
+                return aiResults && smartMatched ? (
+                  <><strong className="text-coral">✦ {displayGrants.length}</strong> {tabNoun} matched for <strong className="text-charcoal">{org?.name}</strong></>
+                ) : aiResults ? (
+                  <><strong className="text-coral">✦ {displayGrants.length}</strong> results for &ldquo;{query}&rdquo;</>
+                ) : filterQuery ? (
+                  <><strong className="font-serif text-3xl font-bold text-charcoal">{displayGrants.length} {tabNoun}</strong><span className="text-base text-mid ml-2">matching &ldquo;{filterQuery}&rdquo;</span></>
+                ) : (
+                  <><strong className="font-serif text-3xl font-bold text-charcoal">{displayGrants.length} {tabNoun}</strong><span className="text-base text-mid ml-2">matched for you</span></>
+                )
+              })()}
             </p>
             {!aiResults && (
               <div className="flex items-center border border-[#E8E8EC] overflow-hidden flex-shrink-0 rounded-lg">
