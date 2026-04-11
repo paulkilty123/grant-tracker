@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Search, ChevronDown, Layers, DollarSign, Rocket, Building2, SlidersHorizontal, MapPin, GraduationCap, TrendingUp, GitMerge, Gift, Landmark, CalendarDays, RefreshCw, Bookmark, PlusCircle, Activity, Info, Target, Star, CheckCircle2, XCircle, Lightbulb, AlertTriangle, Sparkles, ExternalLink, ClipboardList, EyeOff, Eye } from 'lucide-react'
 import { SEED_GRANTS } from '@/lib/grants'
@@ -853,6 +853,12 @@ function buildSmartQuery(org: Organisation): string {
 const SIXTY_DAYS_AGO = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
 const RECENT_GRANTS  = SEED_GRANTS.filter(g => g.dateAdded && g.dateAdded >= SIXTY_DAYS_AGO).slice(0, 12)
 
+// Category groupings for the top-level toggle (4-type taxonomy). Pulled to
+// module scope so their identity is stable across renders (otherwise they'd
+// be recreated each render and invalidate downstream memos).
+const GRANT_TYPES: (FundingType | 'all')[]      = ['grant', 'investment', 'in_kind']
+const PROGRAMME_TYPES: (FundingType | 'all')[]  = ['programme']
+
 const VALID_FUNDER_TYPES: FunderType[] = [
   'trust_foundation', 'community_foundation', 'corporate_foundation',
   'capacity_builder',
@@ -1296,17 +1302,19 @@ export default function SearchPage() {
     })
   }
 
-  // Category groupings for the top-level toggle (4-type taxonomy)
-  const GRANT_TYPES: (FundingType | 'all')[]      = ['grant', 'investment', 'in_kind']
-  const PROGRAMME_TYPES: (FundingType | 'all')[]  = ['programme']
-
   // Reset visible count when search/filters change so the user starts from the top
   useEffect(() => {
     setVisibleCount(30)
   }, [query, activeType, amountMin, amountMax, deadlineFilter, activeSectors, activeFundingType, categoryFilter, entryTypeFilter, freshnessFilter, showInviteOnly, aiResults, activeFunderCategory, activeGeoScope])
 
   // ── Build display grants ─────────────────────────────────────────────────
-  const displayGrants: DisplayGrant[] = (() => {
+  // Memoised: computeMatchScore is called once per grant in the catalogue
+  // (currently ~300 but targeting 1,500+), so recomputing on every render
+  // — which was happening when this was a plain IIFE — is genuinely
+  // expensive. The dependency array below lists everything the memo body
+  // reads; any input that changes what appears or how it's ranked must be
+  // included, otherwise the UI will go stale.
+  const displayGrants: DisplayGrant[] = useMemo(() => {
     const minAmt = amountMin ? Number(amountMin) : null
     const maxAmt = amountMax ? Number(amountMax) : null
     const todayStr = new Date().toISOString().split('T')[0]
@@ -1476,7 +1484,29 @@ export default function SearchPage() {
     }
 
     return withScores
-  })()
+  }, [
+    allGrants,
+    org,
+    interactions,
+    aiResults,
+    query,
+    sortBy,
+    activeType,
+    amountMin,
+    amountMax,
+    deadlineFilter,
+    activeSectors,
+    entryTypeFilter,
+    freshnessFilter,
+    showInviteOnly,
+    activeFundingType,
+    categoryFilter,
+    activeFunderCategory,
+    activeGeoScope,
+    locationFilter,
+    activeTab,
+    programmeHasCash,
+  ])
 
   async function runAISearch(searchQuery: string, isSmartMatch = false, includeOrgContext = false) {
     setAiLoading(true)
