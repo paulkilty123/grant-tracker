@@ -1204,13 +1204,16 @@ export function computeMatchScore(
     locationScore + themesScore + beneficiaryScore + grantSizeScore + funderTypeScore + eligibilityScore
   )
 
-  // Freshness bonus — recently added or verified grants get a gentle tiebreaker boost
-  // so fresh opportunities rise above stale grants with identical base scores.
+  // Freshness bonus — newly added grants get a gentle tiebreaker boost so fresh
+  // opportunities surface ahead of stale grants with identical base scores.
+  // Uses dateAdded only (NOT lastVerifiedAt) — we want "new to the catalogue",
+  // not "recently re-crawled", otherwise every live scraped grant gets the bonus
+  // uniformly and legacy seed grants are unfairly demoted.
+  // Kept small so it's a tiebreaker, not a ranking lever.
   // Applied BEFORE mismatch caps so it never inflates a structurally ineligible grant.
-  const freshnessDate = grant.lastVerifiedAt ?? grant.dateAdded
-  if (freshnessDate) {
-    const daysOld = Math.floor((Date.now() - new Date(freshnessDate).getTime()) / (1000 * 60 * 60 * 24))
-    const freshnessBonus = daysOld <= 7 ? 4 : daysOld <= 14 ? 2 : daysOld <= 30 ? 1 : 0
+  if (grant.dateAdded) {
+    const daysOld = Math.floor((Date.now() - new Date(grant.dateAdded).getTime()) / (1000 * 60 * 60 * 24))
+    const freshnessBonus = daysOld <= 3 ? 3 : daysOld <= 7 ? 2 : daysOld <= 14 ? 1 : 0
     score = Math.min(100, score + freshnessBonus)
   }
 
