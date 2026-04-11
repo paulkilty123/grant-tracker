@@ -801,7 +801,7 @@ export default function PipelinePage() {
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
         <div>
           <h2 className="font-serif text-4xl font-bold text-charcoal leading-tight">Funding Pipeline</h2>
-          <p className="text-mid text-sm mt-1.5 max-w-md">Manage your active pursuits and funding lifecycles. Drag and drop to update status.</p>
+          <p className="text-mid text-sm mt-1.5 max-w-md">Manage your active grant pursuits. Click any card to track progress, add notes and set deadlines.</p>
         </div>
         <div className="flex items-center gap-5 flex-shrink-0">
           {items.length > 0 && (() => {
