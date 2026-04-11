@@ -171,6 +171,8 @@ export interface Organisation {
   funder_type_preferences: FunderType[]
   /** Preferred funding types — explicit user preference set in profile */
   funding_type_preferences: FundingType[]
+  /** Preferred funding sub-types — e.g. ['unrestricted','small_grant']. */
+  funding_subtype_preferences: FundingSubtype[]
   // impact fields
   people_per_year: number | null
   volunteers: number | null

@@ -964,6 +964,30 @@ export function computeMatchScore(
     }
   }
 
+  // Funding sub-type affinity — mirror of the funding_type logic but finer-grained.
+  // This is the payoff for three sessions of sub-type classification work:
+  // users who say "I want unrestricted core funding" now get unrestricted grants
+  // ranked meaningfully higher than project-restricted ones.
+  const subPrefs = org.funding_subtype_preferences ?? []
+  if (grant.fundingSubtype && subPrefs.length > 0) {
+    if (subPrefs.includes(grant.fundingSubtype)) {
+      // Matches a preferred sub-type → strong boost and push toward the ceiling.
+      funderTypeScore = Math.min(15, funderTypeScore + 5)
+      // Unrestricted is the "holy grail" — give it an extra nudge in the reason
+      // so it surfaces clearly in the UI, but keep the numeric bonus capped.
+      if (grant.fundingSubtype === 'unrestricted') {
+        reasons.push('Unrestricted / core funding — matches your preference')
+      } else {
+        const subtypeLabel = grant.fundingSubtype.replace(/_/g, ' ')
+        reasons.push(`Matches your ${subtypeLabel} preference`)
+      }
+    } else {
+      // User set preferences but this sub-type isn't one — mild penalty.
+      // Keep lighter than the fundingType miss to avoid compounding.
+      funderTypeScore = Math.max(0, funderTypeScore - 2)
+    }
+  }
+
   // ── 6. Eligibility / org type (max 15) ────────────────────────────────
   // Prefer the modern legal_structure field; fall back to legacy org_type.
   // CIO is a charity structure, so treat it as charity-like for scoring.

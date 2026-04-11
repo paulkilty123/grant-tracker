@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import { Sparkles, Globe, ArrowRight, ArrowLeft, ChevronRight, SkipForward, CheckCircle2, Zap } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner, createOrganisation, updateOrganisation } from '@/lib/organisations'
-import type { Organisation, OrgType, LegalStructure, OrgStage, ImpactSector, FunderType, FundingType, BeneficiaryGroup } from '@/types'
+import type { Organisation, OrgType, LegalStructure, OrgStage, ImpactSector, FunderType, FundingType, FundingSubtype, BeneficiaryGroup } from '@/types'
+import { SUBTYPE_LABELS } from '@/lib/funding-subtypes'
 
 /* ────────────────────────────────────────────
    Option data
@@ -83,6 +84,60 @@ const FUNDING_TYPE_OPTIONS: { value: FundingType; label: string; desc: string }[
   { value: 'in_kind',    label: 'In-Kind Support',    desc: 'Non-cash: software credits, ad grants, workspace, pro bono' },
 ]
 
+/**
+ * Funding sub-type options grouped by parent type.
+ * `unrestricted` is starred because it's the "holy grail" for charities —
+ * flexible core funding that can be spent however the org needs.
+ */
+const FUNDING_SUBTYPE_GROUPS: { parent: FundingType; label: string; options: { value: FundingSubtype; hint?: string }[] }[] = [
+  {
+    parent: 'grant',
+    label: 'Grants & Awards',
+    options: [
+      { value: 'unrestricted', hint: 'Core funding — spend however you need ⭐' },
+      { value: 'restricted',   hint: 'Project-specific funding' },
+      { value: 'capital',      hint: 'Buildings, equipment, fit-out' },
+      { value: 'emergency',    hint: 'Crisis / hardship grants' },
+      { value: 'small_grant',  hint: 'Micro-grants, typically under £10k' },
+    ],
+  },
+  {
+    parent: 'programme',
+    label: 'Programmes',
+    options: [
+      { value: 'accelerator',  hint: '6–12 week cohort programmes' },
+      { value: 'incubator',    hint: 'Longer-term startup support' },
+      { value: 'fellowship',   hint: 'Individual leadership / sabbatical' },
+      { value: 'cohort_grant', hint: 'Peer cohort with cash attached' },
+      { value: 'award',        hint: 'Prizes & recognition' },
+    ],
+  },
+  {
+    parent: 'investment',
+    label: 'Social Investment',
+    options: [
+      { value: 'loan',              hint: 'Traditional repayable loan' },
+      { value: 'social_investment', hint: 'Mission-aligned repayable finance' },
+      { value: 'equity',            hint: 'Share of your company' },
+      { value: 'quasi_equity',      hint: 'Revenue-share / participation' },
+      { value: 'convertible',       hint: 'Debt that can convert to equity' },
+      { value: 'blended',           hint: 'Mix of grant + repayable' },
+    ],
+  },
+  {
+    parent: 'in_kind',
+    label: 'In-Kind Support',
+    options: [
+      { value: 'pro_bono_legal',      hint: 'Free legal support' },
+      { value: 'pro_bono_consulting', hint: 'Free strategy / ops consulting' },
+      { value: 'tech_product',        hint: 'Software credits, Google Ad Grants etc.' },
+      { value: 'volunteering',        hint: 'Skilled volunteers' },
+      { value: 'office_space',        hint: 'Free / subsidised workspace' },
+      { value: 'training',            hint: 'Courses, masterclasses, workshops' },
+    ],
+  },
+]
+
 const SOFT_MATCH_STRUCTURES: LegalStructure[] = ['ltd_guarantee', 'ltd_shares', 'llp', 'sole_trader', 'unincorporated']
 
 const INCOME_BANDS = [
@@ -142,6 +197,7 @@ interface FormState {
   maxGrantTarget: string
   funderTypePreferences: FunderType[]
   fundingTypePreferences: FundingType[]
+  fundingSubtypePreferences: FundingSubtype[]
   mission: string
   alertsEnabled: boolean
   alertFrequency: string
@@ -174,6 +230,7 @@ const EMPTY_FORM: FormState = {
   maxGrantTarget: '',
   funderTypePreferences: [],
   fundingTypePreferences: [],
+  fundingSubtypePreferences: [],
   mission: '',
   alertsEnabled: false,
   alertFrequency: 'weekly',
@@ -207,6 +264,7 @@ function orgToForm(org: Organisation): FormState {
     maxGrantTarget:             org.max_grant_target != null ? String(org.max_grant_target) : '',
     funderTypePreferences:      org.funder_type_preferences ?? [],
     fundingTypePreferences:     (org.funding_type_preferences ?? []) as FundingType[],
+    fundingSubtypePreferences:  (org.funding_subtype_preferences ?? []) as FundingSubtype[],
     mission:                    org.mission ?? '',
     alertsEnabled:              (org as Organisation & { alerts_enabled?: boolean }).alerts_enabled ?? false,
     alertFrequency:             (org as Organisation & { alert_frequency?: string }).alert_frequency ?? 'weekly',
@@ -347,6 +405,15 @@ export default function ProfilePage() {
     }))
   }
 
+  function toggleFundingSubtype(subtype: FundingSubtype) {
+    setForm(prev => ({
+      ...prev,
+      fundingSubtypePreferences: prev.fundingSubtypePreferences.includes(subtype)
+        ? prev.fundingSubtypePreferences.filter(s => s !== subtype)
+        : [...prev.fundingSubtypePreferences, subtype],
+    }))
+  }
+
   function toggleImpactSector(sector: ImpactSector) {
     setForm(prev => {
       const current = prev.impactSectors
@@ -484,6 +551,7 @@ export default function ProfilePage() {
       max_grant_target:             form.maxGrantTarget ? parseInt(form.maxGrantTarget.replace(/,/g, '')) : null,
       funder_type_preferences:      form.funderTypePreferences,
       funding_type_preferences:     form.fundingTypePreferences,
+      funding_subtype_preferences:  form.fundingSubtypePreferences,
       owner_id:                     userId,
       alerts_enabled:               form.alertsEnabled,
       alert_frequency:              form.alertFrequency,
@@ -1381,6 +1449,50 @@ export default function ProfilePage() {
             })}
           </div>
           <p className="text-xs text-light mt-2">Leave blank to see all funding types</p>
+        </div>
+
+        {/* Funding sub-type preferences */}
+        <div className="mb-5">
+          <label className="block text-sm font-medium text-charcoal mb-1">
+            Funding specifics I prefer
+            <span className="text-light font-normal ml-1">(optional — boosts matching)</span>
+          </label>
+          <p className="text-xs text-light mb-3">
+            Narrow down what kind of funding matters most. Picking <span className="font-semibold text-forest">Unrestricted</span> is the single biggest lever if you need flexible core funding.
+          </p>
+          <div className="space-y-3">
+            {FUNDING_SUBTYPE_GROUPS
+              .filter(g => form.fundingTypePreferences.length === 0 || form.fundingTypePreferences.includes(g.parent))
+              .map(group => (
+                <div key={group.parent}>
+                  <div className="text-xs font-semibold text-mid uppercase tracking-wide mb-1.5">{group.label}</div>
+                  <div className="flex flex-wrap gap-2">
+                    {group.options.map(opt => {
+                      const selected = form.fundingSubtypePreferences.includes(opt.value)
+                      const isStar = opt.value === 'unrestricted'
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => toggleFundingSubtype(opt.value)}
+                          title={opt.hint}
+                          className={`px-3 py-1.5 border text-xs font-medium transition-all rounded-full ${
+                            selected
+                              ? isStar
+                                ? 'border-gold bg-gold/15 text-charcoal'
+                                : 'border-forest bg-forest/10 text-forest'
+                              : 'border-warm text-mid hover:border-forest hover:text-forest'
+                          }`}
+                        >
+                          {SUBTYPE_LABELS[opt.value]}
+                          {selected && <span className="ml-1 font-bold">✓</span>}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
+          </div>
         </div>
 
         {/* Funder type preferences */}
