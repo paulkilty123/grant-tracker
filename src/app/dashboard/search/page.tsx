@@ -2219,7 +2219,7 @@ export default function SearchPage() {
                 ) : filterQuery ? (
                   <><strong className="font-serif text-3xl font-bold text-charcoal">{displayGrants.length} {tabNoun}</strong><span className="text-base text-mid ml-2">matching &ldquo;{filterQuery}&rdquo;</span></>
                 ) : (
-                  <><strong className="font-serif text-3xl font-bold text-charcoal">{displayGrants.length} {tabNoun}</strong><span className="text-base text-mid ml-2">matched for you</span></>
+                  <><strong className="font-serif text-3xl font-bold text-charcoal">{displayGrants.length} {tabNoun}</strong>{profileFilterOn && <span className="text-base text-mid ml-2">matched for you</span>}</>
                 )
               })()}
             </p>
