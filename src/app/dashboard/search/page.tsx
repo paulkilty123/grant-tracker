@@ -268,9 +268,34 @@ interface DisplayGrant {
   breakdown?: MatchBreakdown
 }
 
+// ── Score colour gradient ─────────────────────────────────────────────────────
+// Returns a hex colour that smoothly interpolates:
+//   0 → coral (#e05c3a)  →  44 → gold (#e8a030)  →  70 → sage (#2d8a7a)  →  100 → forest (#1f5c52)
+// Used for the badge text so the dot + percentage visually signal match quality
+// without hard bucket jumps. The breakdown bars still use Tailwind classes via
+// the existing scoreColour() function (no change needed there).
+function scoreHex(score: number): string {
+  const s = Math.max(0, Math.min(100, score))
+  const lerp = (a: number, b: number, t: number) => a + (b - a) * t
+  const hex   = (n: number) => Math.round(n).toString(16).padStart(2, '0')
+  let r: number, g: number, b: number
+  if (s <= 44) {
+    const t = s / 44
+    r = lerp(0xe0, 0xe8, t); g = lerp(0x5c, 0xa0, t); b = lerp(0x3a, 0x30, t)
+  } else if (s <= 70) {
+    const t = (s - 44) / 26
+    r = lerp(0xe8, 0x2d, t); g = lerp(0xa0, 0x8a, t); b = lerp(0x30, 0x7a, t)
+  } else {
+    const t = (s - 70) / 30
+    r = lerp(0x2d, 0x1f, t); g = lerp(0x8a, 0x5c, t); b = lerp(0x7a, 0x52, t)
+  }
+  return `#${hex(r)}${hex(g)}${hex(b)}`
+}
+
 // ── Match Score Badge (with breakdown tooltip) ────────────────────────────────
 function MatchBadge({ score, isAi, breakdown }: { score: number; isAi: boolean; breakdown?: MatchBreakdown }) {
-  const { bg, text } = scoreColour(score)
+  const colour = scoreHex(score)
+  const { bar } = scoreColour(score)  // keep Tailwind bar class for breakdown bars
   const [open, setOpen] = useState(false)
 
   return (
@@ -281,9 +306,9 @@ function MatchBadge({ score, isAi, breakdown }: { score: number; isAi: boolean; 
         className="flex items-center gap-1.5 cursor-pointer hover:opacity-70 transition-opacity"
         title="Click to see score breakdown"
       >
-        <span className={`text-sm ${text}`}>{isAi ? '✦' : '●'}</span>
-        <span className={`text-sm font-bold ${text}`}>{score}% match</span>
-        {breakdown && <span className={`text-xs opacity-40 ${text}`}>▾</span>}
+        <span className="text-sm" style={{ color: colour }}>{isAi ? '✦' : '●'}</span>
+        <span className="text-sm font-bold" style={{ color: colour }}>{score}% match</span>
+        {breakdown && <span className="text-xs opacity-40" style={{ color: colour }}>▾</span>}
       </button>
 
       {open && breakdown && (
@@ -294,7 +319,7 @@ function MatchBadge({ score, isAi, breakdown }: { score: number; isAi: boolean; 
           <p className="text-xs font-semibold text-charcoal mb-2">Score breakdown</p>
           {Object.values(breakdown).map(dim => {
             const pct = Math.round((dim.score / dim.max) * 100)
-            const { bar } = scoreColour(pct)
+            const dimColour = scoreHex(pct)
             return (
               <div key={dim.label} className="mb-1.5">
                 <div className="flex justify-between text-xs text-mid mb-0.5">
@@ -302,7 +327,7 @@ function MatchBadge({ score, isAi, breakdown }: { score: number; isAi: boolean; 
                   <span className="font-medium text-charcoal">{dim.score}/{dim.max}</span>
                 </div>
                 <div className="h-1.5 bg-stone-100 overflow-hidden">
-                  <div className={`h-full ${bar}`} style={{ width: `${pct}%` }} />
+                  <div className="h-full" style={{ width: `${pct}%`, backgroundColor: dimColour }} />
                 </div>
               </div>
             )
@@ -475,8 +500,16 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
 
           {/* Description */}
           <p className="text-sm leading-relaxed mb-6" style={{ color: '#777' }}>
-            {grant.description.length > 180
-              ? `${grant.description.slice(0, 180).trimEnd()}…`
+            {grant.description.length > 180 && !expanded
+              ? <>
+                  {grant.description.slice(0, 180).trimEnd()}…{' '}
+                  <button
+                    onClick={e => { e.stopPropagation(); setExpanded(true) }}
+                    className="text-sage font-medium hover:underline whitespace-nowrap"
+                  >
+                    Show more
+                  </button>
+                </>
               : grant.description}
           </p>
 
@@ -530,7 +563,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
               })()}
             </div>
             <div>
-              <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">Beneficiary</p>
+              <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">Who&apos;s eligible</p>
               <p className="text-sm font-semibold text-charcoal">{structureLabels.length > 0 ? structureLabels.join(', ') : '—'}</p>
             </div>
             <div>
@@ -1089,6 +1122,22 @@ export default function SearchPage() {
     loadOrg()
   }, [])
 
+  // When the page opens with ?grant=<id> from a dashboard Matched Opportunities
+  // card, the clicked grant might be a programme / investment / in-kind type,
+  // but activeTab defaults to 'grant'. That means the tab-level filter hides the
+  // pinned grant before the lift-to-top logic can surface it. Snap activeTab to
+  // the pinned grant's funding type as soon as scraped data is loaded so users
+  // always land on a tab where the card is visible.
+  useEffect(() => {
+    if (!pinnedGrantId || scrapedGrants.length === 0) return
+    const pinned = scrapedGrants.find(g => g.id === pinnedGrantId)
+    if (!pinned) return
+    const ft = pinned.fundingType
+    if (ft === 'grant' || ft === 'programme' || ft === 'investment' || ft === 'in_kind') {
+      setActiveTab(ft)
+    }
+  }, [pinnedGrantId, scrapedGrants])
+
   // ── Live search handler ───────────────────────────────────────────────────
   async function runLiveSearch(searchQuery: string, isSmartMatch = false) {
     if (!searchQuery.trim() && liveSelectedSectors.length === 0 && !locationFilter.trim()) return
@@ -1368,6 +1417,15 @@ export default function SearchPage() {
     const filtered = allGrants.filter(g => {
       // Always strip expired deadlines — never show grants whose closing date has passed
       if (!g.isRolling && g.deadline && g.deadline < todayStr) return false
+
+      // Pinned-from-dashboard escape hatch. When the page was opened with
+      // ?grant=<id>, that grant MUST survive the filter gate regardless of
+      // which tab / funding type / sector / location is currently selected
+      // — otherwise the lift-to-top logic below has nothing to lift. Without
+      // this, clicking a "Matched Opportunities" card for a programme or
+      // investment grant lands on the search page with the default "Grants"
+      // tab active and the grant invisibly filtered out.
+      if (pinnedGrantId && g.id === pinnedGrantId) return true
 
       const matchesType =
         activeType === 'all'      ? true :
@@ -1821,7 +1879,7 @@ export default function SearchPage() {
           {activeView === 'matches' && !org && (
             <div className="text-xs border border-amber-200 bg-amber-50 px-3 py-2">
               <a href="/dashboard/profile" className="font-semibold text-amber-700 underline">Set up your profile</a>
-              <span className="text-amber-800"> to see grants ranked for your organisation.</span>
+              <span className="text-amber-800"> to see grants matched for your organisation.</span>
             </div>
           )}
         </div>
@@ -2164,7 +2222,7 @@ export default function SearchPage() {
               ) : filterQuery ? (
                 <><strong className="font-serif text-3xl font-bold text-charcoal">{displayGrants.length} grants</strong><span className="text-base text-mid ml-2">matching &ldquo;{filterQuery}&rdquo;</span></>
               ) : (
-                <><strong className="font-serif text-3xl font-bold text-charcoal">{displayGrants.length} grants</strong><span className="text-base text-mid ml-2">ranked for your mission</span></>
+                <><strong className="font-serif text-3xl font-bold text-charcoal">{displayGrants.length} grants</strong><span className="text-base text-mid ml-2">matched for you</span></>
               )}
             </p>
             {!aiResults && (

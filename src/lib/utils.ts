@@ -18,7 +18,7 @@ export function formatCurrency(amount: number): string {
 }
 
 export function formatRange(min: number | null, max: number | null): string {
-  if (!min && !max) return 'Amount TBC'
+  if (!min && !max) return 'Amount on application'
   if (!min)  return `Up to ${formatCurrency(max!)}`
   if (!max)  return `From ${formatCurrency(min)}`
   if (min === max) return formatCurrency(min)
