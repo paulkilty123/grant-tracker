@@ -1015,7 +1015,7 @@ export default function SearchPage() {
   const [profileFiltersOpen, setProfileFiltersOpen] = useState(false)
   const [activeTab, setActiveTab]                 = useState<'grant' | 'programme' | 'investment' | 'in_kind'>('grant')
   const [programmeHasCash, setProgrammeHasCash]   = useState(false)
-  const [activeView, setActiveView]               = useState<'matches' | 'saved'>('matches')
+  const [activeView, setActiveView]               = useState<'matches' | 'saved' | 'latest'>('matches')
   // Explicit profile filter toggle. Previously this was derived from
   // activeSectors/locationFilter, which meant picking a sector inside the
   // filter panel silently flipped it back on. Now the toggle only changes
@@ -1880,15 +1880,15 @@ export default function SearchPage() {
         </div>
         {/* Right: tabs always visible */}
         <div className="flex items-center gap-0 bg-white border border-warm/60 shadow-sm overflow-hidden flex-shrink-0" style={{ borderRadius: 9999 }}>
-          {(['matches', 'saved'] as const).map((v, i) => (
+          {(['matches', 'saved', 'latest'] as const).map((v, i) => (
             <>
-              {i > 0 && <div key="sep" className="w-px h-5 bg-warm/80" />}
+              {i > 0 && <div key={`sep-${v}`} className="w-px h-5 bg-warm/80" />}
               <button
                 key={v}
                 onClick={() => setActiveView(v)}
                 className={`px-5 py-2 text-sm font-medium transition-colors flex items-center gap-1.5 ${activeView === v ? 'text-coral border-b-2 border-coral' : 'border-b-2 border-transparent text-gray-500 hover:text-charcoal'}`}
               >
-                {v === 'matches' ? 'My Matches' : 'Saved'}
+                {v === 'matches' ? 'My Matches' : v === 'saved' ? 'Saved' : 'Latest'}
                 {v === 'saved' && savedCount > 0 && (
                   <span className="text-xs bg-coral text-white px-1.5 py-0.5 ml-1" style={{ borderRadius: 9999 }}>{savedCount}</span>
                 )}
@@ -2406,6 +2406,56 @@ export default function SearchPage() {
                   className="btn-outline px-6 py-2.5 text-sm"
                 >
                   Show more ({savedGrants.length - visibleCount} remaining)
+                </button>
+              </div>
+            )}
+          </>
+        )
+      })()}
+
+      {/* ── Latest tab: chronological feed, no profile filter ── */}
+      {activeView === 'latest' && (() => {
+        const latestGrants: DisplayGrant[] = [...allGrants]
+          .filter(g => !!g.dateAdded)
+          .sort((a, b) => (b.dateAdded ?? '').localeCompare(a.dateAdded ?? ''))
+          .concat(allGrants.filter(g => !g.dateAdded))
+          .map(g => ({ grant: g, score: 0, reason: '', isAiScore: false, breakdown: undefined }))
+        return latestGrants.length === 0 ? (
+          <div className="text-center py-16 text-light">
+            <CalendarDays className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+            <p className="font-medium text-charcoal">No grants loaded yet</p>
+          </div>
+        ) : (
+          <>
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <p className="font-serif text-3xl font-bold text-charcoal">{latestGrants.length} opportunities</p>
+                <p className="text-sm text-mid mt-0.5">Sorted by date added — newest first. Not filtered by your profile.</p>
+              </div>
+            </div>
+            {latestGrants.slice(0, visibleCount).map(item => (
+              <GrantCard
+                key={item.grant.id}
+                item={item}
+                hasOrg={!!org}
+                hasSearch={false}
+                interactions={interactions.get(item.grant.id) ?? new Set()}
+                onAddToPipeline={handleAddToPipeline}
+                onDismiss={handleDismiss}
+                onUndismiss={handleUndismiss}
+                onLike={handleLike}
+                onDislike={handleDislike}
+                onSave={handleSave}
+                onUnsave={handleUnsave}
+              />
+            ))}
+            {visibleCount < latestGrants.length && (
+              <div className="text-center py-6">
+                <button
+                  onClick={() => setVisibleCount(v => v + 30)}
+                  className="btn-outline px-6 py-2.5 text-sm"
+                >
+                  Show more ({latestGrants.length - visibleCount} remaining)
                 </button>
               </div>
             )}
