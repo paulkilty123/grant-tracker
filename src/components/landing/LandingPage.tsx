@@ -772,9 +772,9 @@ export default function LandingPage() {
           {/* Who it's for */}
           <motion.div {...fadeInView(0.05)} className="mb-16">
             <h3 className="font-serif text-2xl font-bold text-charcoal mb-8">Who it&apos;s for</h3>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-warm rounded-xl overflow-hidden">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-warm/60 rounded-xl overflow-hidden">
               {audiences.map((v, i) => (
-                <motion.div key={v.title} {...fadeInView(i * 0.06)} className="bg-cream p-8">
+                <motion.div key={v.title} {...fadeInView(i * 0.06)} className="bg-white p-8">
                   <h4 className="font-serif text-xl mb-2">{v.title}</h4>
                   <p className="text-sm text-mid leading-relaxed">{v.desc}</p>
                 </motion.div>
