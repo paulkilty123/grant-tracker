@@ -711,44 +711,76 @@ export default function LandingPage() {
         </section>
       </div>
 
-      {/* ABOUT / WHO IT'S FOR */}
-      <section id="about" className="py-16 md:py-20 bg-cream">
-        <div className="mx-auto max-w-5xl px-6">
-
-          {/* Section label */}
+      {/* ABOUT — dark founder story */}
+      <section id="about" className="py-16 md:py-24 bg-[#1C1C2E]">
+        <div className="mx-auto max-w-3xl px-6">
           <motion.div {...fadeInView(0)} className="mb-10">
             <p className="text-sm font-semibold text-coral uppercase tracking-wider">About</p>
           </motion.div>
-
-          {/* Two-column: story left, values right — headings aligned at top */}
-          <div className="grid md:grid-cols-2 gap-12 mb-16 items-start">
-
-            {/* Left: heading + story */}
-            <motion.div {...fadeInView(0.05)}>
-              <h2 className="font-serif text-4xl md:text-5xl leading-tight mb-8">Built from the inside.</h2>
-              <blockquote className="border-l-2 border-forest pl-6 mb-6">
-                <p className="text-lg text-charcoal leading-relaxed font-serif italic mb-3">
-                  &ldquo;I&apos;ve worked in the social enterprise and charity sector for 20 years as a fundraiser
-                  and social entrepreneur, from co-founding a youth radio station to working at local
-                  charities and leading on fundraising at Impact Hub.
-                </p>
-                <p className="text-lg text-charcoal leading-relaxed font-serif italic">
-                  Throughout all of it, I was consistently frustrated by the same thing: a fragmented
-                  funding ecosystem that forced people like me to spend a disproportionate amount of
-                  time hunting opportunities rather than delivering impactful work.&rdquo;
-                </p>
-                <footer className="mt-4 text-base font-semibold text-mid not-italic">Paul Kilty, founder</footer>
-              </blockquote>
-              <p className="text-base text-mid leading-relaxed">
-                That frustration became Grant Tracker. Not just a smarter search, but a tool that
-                actually understands your organisation, your structure, your geography, your mission,
-                and brings the opportunities most likely to be worth your time to the top.
+          <motion.div {...fadeInView(0.05)}>
+            <h2 className="font-serif text-4xl md:text-5xl leading-tight text-cream mb-10">Built from the inside.</h2>
+            <blockquote className="border-l-2 border-sage pl-6 mb-8">
+              <p className="text-lg text-cream/80 leading-relaxed font-serif italic mb-4">
+                &ldquo;I&apos;ve worked in the social enterprise and charity sector for 20 years as a fundraiser
+                and social entrepreneur, from co-founding a youth radio station to working at local
+                charities and leading on fundraising at Impact Hub.
               </p>
-            </motion.div>
+              <p className="text-lg text-cream/80 leading-relaxed font-serif italic">
+                Throughout all of it, I was consistently frustrated by the same thing: a fragmented
+                funding ecosystem that forced people like me to spend a disproportionate amount of
+                time hunting opportunities rather than delivering impactful work.&rdquo;
+              </p>
+              <footer className="mt-5 text-base font-semibold text-cream/50 not-italic">Paul Kilty, founder</footer>
+            </blockquote>
+            <p className="text-base text-cream/70 leading-relaxed">
+              That frustration became Grant Tracker. Not just a smarter search, but a tool that
+              actually understands your organisation, your structure, your geography, your mission,
+              and brings the opportunities most likely to be worth your time to the top.
+            </p>
+          </motion.div>
+        </div>
+      </section>
 
-            {/* Right: Values — pushed down to align with bottom of heading */}
-            <motion.div {...fadeInView(0.1)} className="pt-6">
-              <h3 className="text-xl font-bold uppercase tracking-widest text-charcoal mb-8" style={{ fontFamily: 'var(--font-dm-sans, DM Sans, sans-serif)' }}>Our values</h3>
+      {/* ABOUT — why it exists, who it's for, values, AI */}
+      <section className="py-16 md:py-20 bg-cream">
+        <div className="mx-auto max-w-5xl px-6">
+
+          {/* Why it exists */}
+          <motion.div {...fadeInView(0)} className="mb-16 max-w-2xl">
+            <h3 className="font-serif text-2xl font-bold text-charcoal mb-5">Why it exists</h3>
+            <div className="space-y-4">
+              <p className="text-base leading-relaxed text-mid">
+                The UK has thousands of active funders. Finding the right ones, at the right moment,
+                with the right intelligence about how they make decisions, is effectively a full-time
+                job. Most charities, CICs and social enterprises can&apos;t afford that, and they
+                shouldn&apos;t have to.
+              </p>
+              <p className="text-base leading-relaxed text-mid">
+                Grant Tracker brings together a live catalogue of grants, programmes, investments and
+                in-kind support, matched to your profile and filtered for your eligibility. So instead
+                of searching, you can spend that time delivering.
+              </p>
+            </div>
+          </motion.div>
+
+          {/* Who it's for */}
+          <motion.div {...fadeInView(0.05)} className="mb-16">
+            <h3 className="font-serif text-2xl font-bold text-charcoal mb-8">Who it&apos;s for</h3>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-warm rounded-xl overflow-hidden">
+              {audiences.map((v, i) => (
+                <motion.div key={v.title} {...fadeInView(i * 0.06)} className="bg-cream p-8">
+                  <h4 className="font-serif text-xl mb-2">{v.title}</h4>
+                  <p className="text-sm text-mid leading-relaxed">{v.desc}</p>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Our values + Our approach to AI — side by side */}
+          <div className="grid md:grid-cols-2 gap-16 items-start">
+
+            <motion.div {...fadeInView(0.05)}>
+              <h3 className="font-serif text-2xl font-bold text-charcoal mb-6">Our values</h3>
               <div className="space-y-6">
                 {[
                   { label: 'Honest', body: "We don't inflate match scores or dress up poor-fit grants. If something isn't right for you, we'd rather tell you than waste your time." },
@@ -766,60 +798,28 @@ export default function LandingPage() {
               </div>
             </motion.div>
 
+            <motion.div {...fadeInView(0.1)}>
+              <h3 className="font-serif text-2xl font-bold text-charcoal mb-6">Our approach to AI</h3>
+              <div className="space-y-4">
+                <p className="text-base leading-relaxed text-mid">
+                  Funders are increasingly inundated with AI-generated applications, bland, generic,
+                  interchangeable. The last thing we want is to make that problem worse.
+                </p>
+                <p className="text-base leading-relaxed text-mid">
+                  Grant Tracker uses AI where it genuinely helps: matching your profile to the right
+                  opportunities, building intelligence about how funders make decisions, and cutting
+                  down the time you spend searching. The administrative work, not the creative work.
+                </p>
+                <p className="text-base leading-relaxed text-mid">
+                  When it comes to writing your application, your voice, your story and your evidence
+                  are what make a funder take notice. AI can play a supporting role, helping you refine
+                  your language, sharpen your argument, or sense-check your structure, but always in
+                  service of something authentically yours. Not instead of it.
+                </p>
+              </div>
+            </motion.div>
+
           </div>
-
-          {/* Why it exists */}
-          <motion.div {...fadeInView(0.1)} className="mb-16 max-w-2xl">
-            <h3 className="font-serif text-2xl font-bold text-charcoal mb-5">Why it exists</h3>
-            <div className="space-y-3">
-              <p className="text-base leading-relaxed text-mid">
-                The UK has thousands of active funders. Finding the right ones, at the right moment,
-                with the right intelligence about how they make decisions, is effectively a full-time
-                job. Most charities, CICs and social enterprises can&apos;t afford that, and they
-                shouldn&apos;t have to.
-              </p>
-              <p className="text-base leading-relaxed text-mid">
-                Grant Tracker brings together a live catalogue of grants, programmes, investments and
-                in-kind support, matched to your profile and filtered for your eligibility. So instead
-                of searching, you can spend that time delivering.
-              </p>
-            </div>
-          </motion.div>
-
-          {/* Who it's for */}
-          <motion.div {...fadeInView(0.1)} className="mb-16">
-            <h3 className="font-serif text-2xl font-bold text-charcoal mb-8">Who it&apos;s for</h3>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-warm rounded-xl overflow-hidden">
-              {audiences.map((v, i) => (
-                <motion.div key={v.title} {...fadeInView(i * 0.06)} className="bg-cream p-8">
-                  <h4 className="font-serif text-xl mb-2">{v.title}</h4>
-                  <p className="text-sm text-mid leading-relaxed">{v.desc}</p>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Our approach to AI */}
-          <motion.div {...fadeInView(0.15)}>
-            <h3 className="font-serif text-2xl font-bold text-charcoal mb-5">Our approach to AI</h3>
-            <div className="max-w-2xl space-y-3">
-              <p className="text-sm leading-relaxed text-mid">
-                Funders are increasingly inundated with AI-generated applications, bland, generic,
-                interchangeable. The last thing we want is to make that problem worse.
-              </p>
-              <p className="text-sm leading-relaxed text-mid">
-                Grant Tracker uses AI where it genuinely helps: matching your profile to the right
-                opportunities, building intelligence about how funders make decisions, and cutting
-                down the time you spend searching. The administrative work, not the creative work.
-              </p>
-              <p className="text-sm leading-relaxed text-mid">
-                When it comes to writing your application, your voice, your story and your evidence
-                are what make a funder take notice. AI can play a supporting role, helping you refine
-                your language, sharpen your argument, or sense-check your structure, but always in
-                service of something authentically yours. Not instead of it.
-              </p>
-            </div>
-          </motion.div>
 
         </div>
       </section>
