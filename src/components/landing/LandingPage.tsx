@@ -715,40 +715,40 @@ export default function LandingPage() {
       <section id="about" className="py-16 md:py-20 bg-cream">
         <div className="mx-auto max-w-5xl px-6">
 
-          {/* Section label + heading */}
-          <motion.div {...fadeInView(0)} className="mb-12">
-            <p className="text-sm font-semibold text-coral uppercase tracking-wider mb-3">About</p>
-            <h2 className="font-serif text-4xl md:text-5xl leading-tight">Built from the inside.</h2>
+          {/* Section label */}
+          <motion.div {...fadeInView(0)} className="mb-10">
+            <p className="text-sm font-semibold text-coral uppercase tracking-wider">About</p>
           </motion.div>
 
-          {/* Two-column: story left, values right */}
+          {/* Two-column: story left, values right — headings aligned at top */}
           <div className="grid md:grid-cols-2 gap-12 mb-16 items-start">
 
-            {/* Left: Our story */}
+            {/* Left: heading + story */}
             <motion.div {...fadeInView(0.05)}>
+              <h2 className="font-serif text-4xl md:text-5xl leading-tight mb-8">Built from the inside.</h2>
               <blockquote className="border-l-2 border-forest pl-6 mb-6">
-                <p className="text-base text-charcoal leading-relaxed font-serif italic mb-3">
+                <p className="text-lg text-charcoal leading-relaxed font-serif italic mb-3">
                   &ldquo;I&apos;ve worked in the social enterprise and charity sector for 20 years as a fundraiser
                   and social entrepreneur, from co-founding a youth radio station to working at local
                   charities and leading on fundraising at Impact Hub.
                 </p>
-                <p className="text-base text-charcoal leading-relaxed font-serif italic">
+                <p className="text-lg text-charcoal leading-relaxed font-serif italic">
                   Throughout all of it, I was consistently frustrated by the same thing: a fragmented
                   funding ecosystem that forced people like me to spend a disproportionate amount of
                   time hunting opportunities rather than delivering impactful work.&rdquo;
                 </p>
-                <footer className="mt-4 text-sm font-semibold text-mid not-italic">Paul Kilty, founder</footer>
+                <footer className="mt-4 text-base font-semibold text-mid not-italic">Paul Kilty, founder</footer>
               </blockquote>
-              <p className="text-sm text-mid leading-relaxed">
+              <p className="text-base text-mid leading-relaxed">
                 That frustration became Grant Tracker. Not just a smarter search, but a tool that
                 actually understands your organisation, your structure, your geography, your mission,
                 and brings the opportunities most likely to be worth your time to the top.
               </p>
             </motion.div>
 
-            {/* Right: Values */}
+            {/* Right: Values — heading aligns with "Built from the inside." */}
             <motion.div {...fadeInView(0.1)}>
-              <h3 className="font-serif text-xl font-bold text-charcoal mb-6">Our values</h3>
+              <h3 className="font-serif text-4xl md:text-5xl leading-tight mb-8">Our values</h3>
               <div className="space-y-6">
                 {[
                   { label: 'Honest', body: "We don't inflate match scores or dress up poor-fit grants. If something isn't right for you, we'd rather tell you than waste your time." },
@@ -758,8 +758,8 @@ export default function LandingPage() {
                   <motion.div key={v.label} {...fadeInView(i * 0.07)} className="flex gap-4">
                     <div className="w-1.5 h-1.5 rounded-full bg-forest mt-2 flex-shrink-0" />
                     <div>
-                      <p className="text-sm font-bold text-charcoal mb-1">{v.label}</p>
-                      <p className="text-sm leading-relaxed text-mid">{v.body}</p>
+                      <p className="text-base font-bold text-charcoal mb-1">{v.label}</p>
+                      <p className="text-base leading-relaxed text-mid">{v.body}</p>
                     </div>
                   </motion.div>
                 ))}
