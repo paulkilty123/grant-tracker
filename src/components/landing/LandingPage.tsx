@@ -346,12 +346,12 @@ export default function LandingPage() {
         className="relative overflow-hidden"
         style={{ minHeight: '100vh', background: '#faf7f2' }}
       >
-        <div className="relative z-10 mx-auto max-w-3xl px-6 flex flex-col items-center justify-center text-center" style={{ minHeight: '100vh', paddingTop: 'clamp(90px, 15vw, 120px)', paddingBottom: '80px' }}>
+        <div className="relative z-10 mx-auto max-w-5xl px-6 flex flex-col items-center justify-center text-center" style={{ minHeight: '100vh', paddingTop: 'clamp(90px, 15vw, 120px)', paddingBottom: '80px' }}>
 
             <motion.h1
               {...fadeUp(0)}
               className="font-serif leading-[1.05] text-charcoal mb-6"
-              style={{ fontSize: 'clamp(44px, 5vw, 72px)' }}
+              style={{ fontSize: 'clamp(56px, 8vw, 112px)' }}
             >
               <span className="block">Funding, matched</span>
               <span className="block">for you.</span>
@@ -360,7 +360,7 @@ export default function LandingPage() {
             <motion.p
               {...fadeUp(0.15)}
               className="text-mid leading-relaxed mb-10"
-              style={{ fontSize: '18px', lineHeight: 1.7, maxWidth: '480px' }}
+              style={{ fontSize: '20px', lineHeight: 1.7, maxWidth: '520px' }}
             >
               Discover grants, programmes, social investment and in-kind opportunities.
             </motion.p>
