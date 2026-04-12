@@ -739,16 +739,18 @@ export default function LandingPage() {
                 </p>
                 <footer className="mt-4 text-base font-semibold text-mid not-italic">Paul Kilty, founder</footer>
               </blockquote>
-              <p className="text-base text-mid leading-relaxed">
-                That frustration became Grant Tracker. Not just a smarter search, but a tool that
-                actually understands your organisation, your structure, your geography, your mission,
-                and brings the opportunities most likely to be worth your time to the top.
-              </p>
+              <div className="bg-white rounded-2xl px-8 py-7 text-center shadow-sm">
+                <p className="text-base text-charcoal leading-relaxed">
+                  That frustration became Grant Tracker. Not just a smarter search, but a tool that
+                  actually understands your organisation, your structure, your geography, your mission,
+                  and brings the opportunities most likely to be worth your time to the top.
+                </p>
+              </div>
             </motion.div>
 
             {/* Right: Values — heading aligns with "Built from the inside." */}
             <motion.div {...fadeInView(0.1)}>
-              <h3 className="font-serif text-4xl md:text-5xl leading-tight mb-8">Our values</h3>
+              <h3 className="text-xl font-bold uppercase tracking-widest text-charcoal mb-8" style={{ fontFamily: 'var(--font-dm-sans, DM Sans, sans-serif)' }}>Our values</h3>
               <div className="space-y-6">
                 {[
                   { label: 'Honest', body: "We don't inflate match scores or dress up poor-fit grants. If something isn't right for you, we'd rather tell you than waste your time." },
