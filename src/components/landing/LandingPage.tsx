@@ -802,13 +802,13 @@ export default function LandingPage() {
               <h3 className="font-serif text-2xl font-bold text-charcoal mb-6">Our approach to AI</h3>
               <div className="space-y-4">
                 <p className="text-base leading-relaxed text-mid">
-                  Funders are increasingly inundated with AI-generated applications, bland, generic,
-                  interchangeable. The last thing we want is to make that problem worse.
+                  Funders are increasingly inundated with AI-generated applications that are bland,
+                  generic and interchangeable. The last thing we want is to make that problem worse.
                 </p>
                 <p className="text-base leading-relaxed text-mid">
                   Grant Tracker uses AI where it genuinely helps: matching your profile to the right
                   opportunities, building intelligence about how funders make decisions, and cutting
-                  down the time you spend searching. The administrative work, not the creative work.
+                  down the time you spend searching. This is better for funders as well as applicants.
                 </p>
                 <p className="text-base leading-relaxed text-mid">
                   When it comes to writing your application, your voice, your story and your evidence
