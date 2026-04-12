@@ -591,20 +591,20 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
         </div>
 
         {/* ── Right: actions ── */}
-        <div className="flex flex-col justify-center gap-2.5 p-6 flex-shrink-0 w-[160px]">
+        <div className="flex flex-col justify-center gap-2.5 p-6 flex-shrink-0 w-[152px]">
           {grant.applyUrl && (
             <a href={grant.applyUrl} target="_blank" rel="noopener noreferrer"
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold bg-[#1f5c52] text-white rounded-lg hover:opacity-90 transition-opacity">
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold bg-[#2d8a7a] text-white rounded-full hover:opacity-90 transition-opacity">
               <ExternalLink className="w-3.5 h-3.5" />
-              Visit Website
+              Visit
             </a>
           )}
           <button
             onClick={() => isSaved ? onUnsave?.(grant.id) : onSave?.(grant.id)}
-            className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold border rounded-lg transition-colors ${
+            className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold border rounded-full transition-colors ${
               isSaved
-                ? 'bg-coral/10 text-coral border-coral/30'
-                : 'border-warm text-mid hover:border-coral hover:text-coral'
+                ? 'bg-[#2d8a7a] text-white border-[#2d8a7a]'
+                : 'border-[#2d8a7a] text-[#2d8a7a] hover:bg-[#2d8a7a] hover:text-white'
             }`}
           >
             <Bookmark className="w-3.5 h-3.5" fill={isSaved ? 'currentColor' : 'none'} />
@@ -612,7 +612,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
           </button>
           <button
             onClick={() => onAddToPipeline(grant)}
-            className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-semibold border border-[#2d8a7a]/30 text-[#2d8a7a] rounded-lg hover:bg-[#2d8a7a]/10 transition-colors"
+            className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-semibold border border-[#2d8a7a] text-[#2d8a7a] rounded-full hover:bg-[#2d8a7a] hover:text-white transition-colors"
           >
             <PlusCircle className="w-3.5 h-3.5" />
             + Pipeline
