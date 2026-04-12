@@ -353,8 +353,8 @@ export default function LandingPage() {
               className="font-serif leading-[1.05] text-charcoal mb-6"
               style={{ fontSize: 'clamp(44px, 5vw, 72px)' }}
             >
-              <span className="block">Funding</span>
-              <span className="block">matched for you.</span>
+              <span className="block">Funding, matched</span>
+              <span className="block">for you.</span>
             </motion.h1>
 
             <motion.p
