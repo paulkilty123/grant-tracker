@@ -742,7 +742,7 @@ export default function LandingPage() {
             </motion.div>
 
             {/* Right: Values — pushed down to align with bottom of heading */}
-            <motion.div {...fadeInView(0.1)} className="pt-16 md:pt-20">
+            <motion.div {...fadeInView(0.1)} className="pt-6">
               <h3 className="text-xl font-bold uppercase tracking-widest text-charcoal mb-8" style={{ fontFamily: 'var(--font-dm-sans, DM Sans, sans-serif)' }}>Our values</h3>
               <div className="space-y-6">
                 {[
