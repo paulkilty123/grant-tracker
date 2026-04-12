@@ -726,7 +726,7 @@ export default function LandingPage() {
             {/* Left: heading + story */}
             <motion.div {...fadeInView(0.05)}>
               <h2 className="font-serif text-4xl md:text-5xl leading-tight mb-8">Built from the inside.</h2>
-              <blockquote className="border-l-2 border-forest pl-6">
+              <blockquote className="border-l-2 border-forest pl-6 mb-6">
                 <p className="text-lg text-charcoal leading-relaxed font-serif italic mb-3">
                   &ldquo;I&apos;ve worked in the social enterprise and charity sector for 20 years as a fundraiser
                   and social entrepreneur, from co-founding a youth radio station to working at local
@@ -739,6 +739,11 @@ export default function LandingPage() {
                 </p>
                 <footer className="mt-4 text-base font-semibold text-mid not-italic">Paul Kilty, founder</footer>
               </blockquote>
+              <p className="text-base text-mid leading-relaxed">
+                That frustration became Grant Tracker. Not just a smarter search, but a tool that
+                actually understands your organisation, your structure, your geography, your mission,
+                and brings the opportunities most likely to be worth your time to the top.
+              </p>
             </motion.div>
 
             {/* Right: Values — pushed down to align with bottom of heading */}
@@ -762,17 +767,6 @@ export default function LandingPage() {
             </motion.div>
 
           </div>
-
-          {/* Full-width founding statement card */}
-          <motion.div {...fadeInView(0.12)} className="mb-16">
-            <div className="bg-white rounded-2xl px-6 py-7 text-center shadow-sm">
-              <p className="text-lg text-charcoal leading-relaxed">
-                Not just a smarter search, Grant Tracker actually understands your organisation,
-                your structure, your geography, your mission, and brings the opportunities most
-                likely to be worth your time to the top.
-              </p>
-            </div>
-          </motion.div>
 
           {/* Who it's for */}
           <motion.div {...fadeInView(0.1)} className="mb-16">
