@@ -64,7 +64,6 @@ const NAV_GROUPS = [
     items: [
       { href: '/dashboard/profile',  label: 'My Profile',   Icon: User },
       { href: '/dashboard/feedback', label: 'Feedback',     Icon: MessageSquare },
-      { href: '/dashboard/about',    label: 'About',        Icon: BookOpen      },
     ],
   },
 ]
