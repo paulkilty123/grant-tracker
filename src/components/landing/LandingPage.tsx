@@ -714,11 +714,11 @@ export default function LandingPage() {
       {/* ABOUT — dark founder story */}
       <section id="about" className="py-16 md:py-24 bg-[#1C1C2E]">
         <div className="mx-auto max-w-3xl px-6">
-          <motion.div {...fadeInView(0)} className="mb-10">
+          <motion.div {...fadeInView(0)} className="mb-16">
             <p className="text-sm font-semibold text-coral uppercase tracking-wider">About</p>
+            <h2 className="mt-3 font-serif text-4xl md:text-5xl leading-tight text-cream">Built from the inside.</h2>
           </motion.div>
           <motion.div {...fadeInView(0.05)}>
-            <h2 className="font-serif text-4xl md:text-5xl leading-tight text-cream mb-10">Built from the inside.</h2>
             <blockquote className="border-l-2 border-sage pl-6 mb-8">
               <p className="text-lg text-cream/80 leading-relaxed font-serif italic mb-4">
                 &ldquo;I&apos;ve worked in the social enterprise and charity sector for 20 years as a fundraiser
