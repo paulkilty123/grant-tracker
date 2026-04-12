@@ -746,22 +746,28 @@ export default function LandingPage() {
         <div className="mx-auto max-w-5xl px-6">
 
           {/* Why it exists */}
-          <motion.div {...fadeInView(0)} className="mb-16 max-w-2xl">
-            <h3 className="font-serif text-2xl font-bold text-charcoal mb-5">Why it exists</h3>
-            <div className="space-y-4">
-              <p className="text-base leading-relaxed text-mid">
-                The UK has thousands of active funders. Finding the right ones, at the right moment,
-                with the right intelligence about how they make decisions, is effectively a full-time
-                job. Most charities, CICs and social enterprises can&apos;t afford that, and they
-                shouldn&apos;t have to.
-              </p>
-              <p className="text-base leading-relaxed text-mid">
-                Grant Tracker brings together a live catalogue of grants, programmes, investments and
-                in-kind support, matched to your profile and filtered for your eligibility. So instead
-                of searching, you can spend that time delivering.
-              </p>
-            </div>
-          </motion.div>
+          <div className="grid md:grid-cols-2 gap-12 mb-16 items-center">
+            <motion.div {...fadeInView(0)}>
+              <h3 className="font-serif text-2xl font-bold text-charcoal mb-5">Why it exists</h3>
+              <div className="space-y-4">
+                <p className="text-base leading-relaxed text-mid">
+                  The UK has thousands of active funders. Finding the right ones, at the right moment,
+                  with the right intelligence about how they make decisions, is effectively a full-time
+                  job. Most charities, CICs and social enterprises can&apos;t afford that, and they
+                  shouldn&apos;t have to.
+                </p>
+                <p className="text-base leading-relaxed text-mid">
+                  Grant Tracker brings together a live catalogue of grants, programmes, investments and
+                  in-kind support, matched to your profile and filtered for your eligibility. So instead
+                  of searching, you can spend that time delivering.
+                </p>
+              </div>
+            </motion.div>
+            <motion.div {...fadeInView(0.1)} className="flex flex-col items-center justify-center text-center py-8">
+              <p className="font-serif text-7xl md:text-8xl leading-none text-forest">10,000<span className="text-gold">+</span></p>
+              <p className="mt-4 text-sm font-semibold text-mid uppercase tracking-wider max-w-[180px]">active grant-making organisations in the UK</p>
+            </motion.div>
+          </div>
 
           {/* Who it's for */}
           <motion.div {...fadeInView(0.05)} className="mb-16">
