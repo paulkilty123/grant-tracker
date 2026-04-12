@@ -591,36 +591,31 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
         </div>
 
         {/* ── Right: actions ── */}
-        <div className="flex flex-col p-6 flex-shrink-0 w-[160px]">
-          <div className="flex flex-col gap-3">
-            <button
-              onClick={() => isSaved ? onUnsave?.(grant.id) : onSave?.(grant.id)}
-              className={`w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold border transition-colors ${
-                isSaved
-                  ? 'bg-[#FF7043]/10 text-[#FF7043] border-[#FF7043]/30'
-                  : 'border-[#E8E8EC] text-charcoal hover:border-[#FF7043] hover:text-[#FF7043]'
-              }`}
-              style={{ borderRadius: 9999 }}
-            >
-              <Bookmark className="w-4 h-4" fill={isSaved ? 'currentColor' : 'none'} />
-              {isSaved ? 'Saved' : 'Save'}
-            </button>
-            {grant.applyUrl && (
-              <a href={grant.applyUrl} target="_blank" rel="noopener noreferrer"
-                className="text-center text-[11px] font-bold uppercase tracking-widest hover:underline transition-colors"
-                style={{ color: '#FF7043' }}>
-                Visit website →
-              </a>
-            )}
-          </div>
-          <div className="flex-1" />
+        <div className="flex flex-col justify-center gap-2.5 p-6 flex-shrink-0 w-[160px]">
+          {grant.applyUrl && (
+            <a href={grant.applyUrl} target="_blank" rel="noopener noreferrer"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold bg-[#1f5c52] text-white rounded-lg hover:opacity-90 transition-opacity">
+              <ExternalLink className="w-3.5 h-3.5" />
+              Visit Website
+            </a>
+          )}
+          <button
+            onClick={() => isSaved ? onUnsave?.(grant.id) : onSave?.(grant.id)}
+            className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold border rounded-lg transition-colors ${
+              isSaved
+                ? 'bg-coral/10 text-coral border-coral/30'
+                : 'border-warm text-mid hover:border-coral hover:text-coral'
+            }`}
+          >
+            <Bookmark className="w-3.5 h-3.5" fill={isSaved ? 'currentColor' : 'none'} />
+            {isSaved ? 'Saved' : 'Save'}
+          </button>
           <button
             onClick={() => onAddToPipeline(grant)}
-            className="w-full flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-widest transition-colors hover:opacity-70 pb-1"
-            style={{ color: '#26A69A' }}
+            className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-semibold border border-[#2d8a7a]/30 text-[#2d8a7a] rounded-lg hover:bg-[#2d8a7a]/10 transition-colors"
           >
             <PlusCircle className="w-3.5 h-3.5" />
-            Add to Pipeline
+            + Pipeline
           </button>
         </div>
 
