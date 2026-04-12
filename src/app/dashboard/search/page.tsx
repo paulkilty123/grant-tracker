@@ -245,7 +245,7 @@ function LiveGrantCard({ grant, onAddToPipeline }: {
             </a>
             <button onClick={() => onAddToPipeline(grant)}
               className="px-3 py-2 bg-coral text-white text-xs font-semibold w-full hover:bg-coral/90 transition-colors">
-              + Pipeline
+              Pipeline
             </button>
           </div>
         </div>
@@ -615,7 +615,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
             className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-semibold border border-[#2d8a7a] text-[#2d8a7a] rounded-full hover:bg-[#2d8a7a] hover:text-white transition-colors"
           >
             <PlusCircle className="w-3.5 h-3.5" />
-            + Pipeline
+            Pipeline
           </button>
         </div>
 
