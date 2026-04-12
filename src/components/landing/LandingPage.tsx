@@ -741,8 +741,8 @@ export default function LandingPage() {
               </blockquote>
             </motion.div>
 
-            {/* Right: Values — heading aligns with "Built from the inside." */}
-            <motion.div {...fadeInView(0.1)}>
+            {/* Right: Values — pushed down to align with bottom of heading */}
+            <motion.div {...fadeInView(0.1)} className="pt-16 md:pt-20">
               <h3 className="text-xl font-bold uppercase tracking-widest text-charcoal mb-8" style={{ fontFamily: 'var(--font-dm-sans, DM Sans, sans-serif)' }}>Our values</h3>
               <div className="space-y-6">
                 {[
@@ -765,11 +765,11 @@ export default function LandingPage() {
 
           {/* Full-width founding statement card */}
           <motion.div {...fadeInView(0.12)} className="mb-16">
-            <div className="bg-white rounded-2xl px-10 py-8 text-center shadow-sm">
-              <p className="text-lg text-charcoal leading-relaxed max-w-2xl mx-auto">
-                That frustration became Grant Tracker. Not just a smarter search, but a tool that
-                actually understands your organisation, your structure, your geography, your mission,
-                and brings the opportunities most likely to be worth your time to the top.
+            <div className="bg-white rounded-2xl px-6 py-7 text-center shadow-sm">
+              <p className="text-lg text-charcoal leading-relaxed">
+                Not just a smarter search, Grant Tracker actually understands your organisation,
+                your structure, your geography, your mission, and brings the opportunities most
+                likely to be worth your time to the top.
               </p>
             </div>
           </motion.div>
