@@ -6,14 +6,13 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Menu, X, Check, Search, Calendar, TrendingUp, Activity, Clock, Mail, MessageSquare, Bell, LayoutGrid, ArrowRight, Award } from 'lucide-react'
 import ContactForm from '@/components/ContactForm'
-import Logo from '@/components/Logo'
-
+import RadioWaveIcon from '@/components/icons/RadioWaveIcon'
 
 /* ─── helpers ─── */
 const fadeUp = (delay = 0) => ({
-  initial: { opacity: 1, y: 18 },
+  initial: { opacity: 0, y: 24 },
   animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.5, delay },
+  transition: { duration: 0.55, delay },
 })
 
 const fadeInView = (delay = 0) => ({
@@ -32,31 +31,35 @@ const navLinks = [
 ]
 
 const howSteps = [
-  { num: '01', title: 'Setup your profile', desc: 'List your impact, mission and target groups.' },
-  { num: '02', title: 'Search & match', desc: 'Discover opportunities matched to you.' },
-  { num: '03', title: 'Track opportunities', desc: 'Add to pipeline, get alerts and apply.' },
-  { num: '04', title: 'Submit & win', desc: 'Increase your win-rate with strongly aligned applications.', featured: true },
+  { num: '01', title: 'Set up your profile', desc: 'Tell us your legal structure, sector, stage, and location. Takes about 5 minutes.' },
+  { num: '02', title: 'Search funding', desc: 'Search naturally across grants, accelerators, social investment, and more in one place.' },
+  { num: '03', title: 'See your matches', desc: 'Results are ranked by how well they fit your profile — structure, sector, stage, and mission.' },
+  { num: '04', title: 'Add to pipeline', desc: 'Track each application from first contact to submission on a simple visual board.' },
+  { num: '05', title: 'Get alerts', desc: 'Weekly or instant email alerts when new funding matches your profile.' },
+  { num: '06', title: 'Win Funding', desc: 'Celebrate success and continue building impact with new opportunities.', featured: true },
 ]
 
 const fundingTypes = [
-  { title: 'Grants', range: '£300 – £500k+', desc: 'Trusts, foundations, National Lottery, Innovate UK, arts councils and government programmes.' },
-  { title: 'Programmes', range: 'Equity-free', desc: 'Accelerators, incubators, fellowships and structured programmes with mentoring, networks and workspace. Filter for those that include a cash award.' },
-  { title: 'Social Investment', range: '£20k – £3m', desc: 'Patient capital, loans and blended finance from Big Issue Invest, Charity Bank, Resonance and others.' },
-  { title: 'In-Kind Support', range: 'Resources & expertise', desc: 'Mentoring, training and workspace. Often overlooked, high value — especially at an early stage.' },
+  { title: 'Grants & Awards', range: '£300 – £500k+', desc: 'National Lottery, trusts, foundations, Innovate UK, arts councils, and government programmes.' },
+  { title: 'Accelerators & Programmes', range: 'Programme + grant', desc: 'Equity-free programmes with mentoring, workspace and networks. UnLtd, SSE, Foundervine and more.' },
+  { title: 'Diversity-Targeted Funds', range: '£5k – £250k', desc: 'Women in Innovation, Black Seed, Foundervine, and more. Zero overlap with general grant databases.' },
+  { title: 'Support Programmes', range: 'Capacity building', desc: 'Fellowships, mentoring, incubators and training — from Lloyds Bank Foundation to local CVS networks.' },
+  { title: 'Social Investment', range: '£20k – £3m', desc: 'Big Issue Invest, Charity Bank, Resonance — know who funds what before you reach out.' },
+  { title: 'Blended & Matched Funding', range: 'Selected programmes', desc: 'Part grant, part loan. SSE Match Trading and Power to Change — real listings, not theory.' },
 ]
 
 const audiences = [
-  { title: 'CICs', desc: 'Matched funding that understands your structure, not just charity-focused results.' },
-  { title: 'Charities & CIOs', desc: 'Trusts, foundations and government programmes matched to your cause, size and geography.' },
-  { title: 'Co-operatives & CBS', desc: 'Grants and community finance that fits your mutual structure.' },
-  { title: 'Social Enterprises', desc: 'Ltd company with a mission? Matched opportunities without needing CIC or charity status.' },
-  { title: 'Impact Founders', desc: 'Accelerators, grants and programmes matched to your stage, sector and team.' },
-  { title: 'Community Groups', desc: 'Local and national funding matched to your size, area and cause.' },
+  { title: 'CICs', desc: 'Grants, accelerators, and social investment matched to your structure — no more results built for charities.' },
+  { title: 'Charities & CIOs', desc: 'Go beyond trusts and foundations — pipeline tracking and alerts replace the spreadsheet.' },
+  { title: 'Co-operatives & CBS', desc: 'Community finance, blended funding, and grants that fit your mutual structure.' },
+  { title: 'Social Enterprises', desc: 'Ltd company with a mission? Soft matching finds opportunities even without CIC or charity status.' },
+  { title: 'Impact Founders', desc: 'Grants, accelerators, and diversity funds matched to your stage, sector, and team.' },
+  { title: 'Community Groups', desc: 'Local and national funding matched to your size, area, and cause.' },
 ]
 
 const stats = [
   { value: '500+', label: 'Funding and support opportunities' },
-  { value: '4', label: 'Funding types — grants, programmes, investment & more' },
+  { value: '6', label: 'Funding types — grants, programmes, investment & more' },
   { value: '12', label: 'Impact sectors covered' },
   { value: 'Free', label: 'To start with, upgrade anytime' },
 ]
@@ -96,17 +99,17 @@ const testimonials = [
 
 /* ─── Mockups ─── */
 const SearchMockup = () => (
-  <div className="bg-white border border-warm/80 rounded-xl p-5" style={{ boxShadow: '0 4px 24px rgba(26,46,43,0.08)' }}>
+  <div className="bg-white border border-warm/80 p-5" style={{ boxShadow: '0 4px 24px rgba(26,46,43,0.08)' }}>
     <div className="flex items-center gap-2 mb-4">
       <div className="w-7 h-7 rounded-full bg-warm flex items-center justify-center flex-shrink-0">
         <Search className="w-3.5 h-3.5 text-mid" />
       </div>
       <p className="text-[11px] font-bold text-charcoal uppercase tracking-wider">Search</p>
     </div>
-    <div className="flex items-center gap-2 bg-[#f5f2ed] rounded-full px-3 py-2.5 mb-4 border border-warm/40">
+    <div className="flex items-center gap-2 bg-[#f5f2ed] px-3 py-2.5 mb-4 border border-warm/40">
       <Search size={14} className="text-mid flex-shrink-0" />
       <span className="text-sm text-mid flex-1">Community garden project in South London</span>
-      <span className="bg-forest rounded-full px-3 py-1 text-xs font-medium text-white">Search</span>
+      <span className="bg-forest px-3 py-1 text-xs font-medium text-white">Search</span>
     </div>
     <div className="flex flex-col">
       {[
@@ -125,7 +128,7 @@ const SearchMockup = () => (
           <div className="flex items-center justify-between gap-3">
             <div className="flex gap-1.5 flex-wrap">
               {r.tags.map((tag) => (
-                <span key={tag} className="bg-[#f5f2ed] rounded-md px-2 py-0.5 text-[11px] text-mid">{tag}</span>
+                <span key={tag} className="bg-[#f5f2ed] px-2 py-0.5 text-[11px] text-mid">{tag}</span>
               ))}
             </div>
             <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -142,7 +145,7 @@ const SearchMockup = () => (
 )
 
 const PipelineMockup = () => (
-  <div className="bg-white border border-warm/80 rounded-xl p-5" style={{ boxShadow: '0 4px 24px rgba(26,46,43,0.08)' }}>
+  <div className="bg-white border border-warm/80 p-5" style={{ boxShadow: '0 4px 24px rgba(26,46,43,0.08)' }}>
     <div className="flex items-center gap-2 mb-3">
       <div className="w-7 h-7 rounded-full bg-coral/15 flex items-center justify-center flex-shrink-0">
         <ArrowRight className="w-3.5 h-3.5 text-coral" />
@@ -157,7 +160,7 @@ const PipelineMockup = () => (
           <div className="mb-2 text-center font-medium text-mid uppercase tracking-wider">{col.name}</div>
           <div className="space-y-2">
             {Array.from({ length: col.items }).map((_, i) => (
-              <div key={i} className="bg-[#f5f2ed] rounded-lg p-2.5">
+              <div key={i} className="bg-[#f5f2ed] p-2.5">
                 <div className="h-2 w-3/4 bg-charcoal/10" />
                 <div className="mt-1.5 h-1.5 w-1/2 bg-charcoal/5" />
               </div>
@@ -166,7 +169,7 @@ const PipelineMockup = () => (
         </div>
       ))}
     </div>
-    <div className="bg-[#f5f2ed] rounded-lg border border-warm/60 p-3.5">
+    <div className="bg-[#f5f2ed] border border-warm/60 p-3.5">
       <div className="flex items-center justify-between mb-2">
         <div>
           <p className="text-[10px] text-mid">Paul Hamlyn Foundation</p>
@@ -183,7 +186,7 @@ const PipelineMockup = () => (
 )
 
 const DashboardMockup = () => (
-  <div className="bg-white border border-warm/80 rounded-xl p-5" style={{ boxShadow: '0 4px 24px rgba(26,46,43,0.08)' }}>
+  <div className="bg-white border border-warm/80 p-5" style={{ boxShadow: '0 4px 24px rgba(26,46,43,0.08)' }}>
     <div className="flex items-center gap-2 mb-4">
       <div className="w-7 h-7 rounded-full bg-warm flex items-center justify-center flex-shrink-0">
         <LayoutGrid className="w-3.5 h-3.5 text-mid" />
@@ -197,7 +200,7 @@ const DashboardMockup = () => (
         { label: 'Active', value: '7', Icon: Activity, accent: false },
         { label: 'Due this week', value: '2', Icon: Clock, accent: false },
       ].map((s) => (
-        <div key={s.label} className={`rounded-lg p-3 ${s.accent ? 'bg-forest/8 border border-forest/20' : 'bg-[#f5f2ed]'}`} style={s.accent ? { background: 'rgba(45,107,74,0.08)' } : {}}>
+        <div key={s.label} className={`p-3 ${s.accent ? 'bg-forest/8 border border-forest/20' : 'bg-[#f5f2ed]'}`} style={s.accent ? { background: 'rgba(45,107,74,0.08)' } : {}}>
           <s.Icon size={14} className={`${s.accent ? 'text-forest' : 'text-mid'} mb-1.5`} />
           <p className={`text-lg font-bold leading-tight ${s.accent ? 'text-forest' : 'text-charcoal'}`}>{s.value}</p>
           <p className="text-[10px] text-mid mt-0.5">{s.label}</p>
@@ -206,7 +209,7 @@ const DashboardMockup = () => (
     </div>
     <div className="mb-4">
       <p className="text-[11px] font-medium text-mid uppercase tracking-wider mb-2">Pipeline breakdown</p>
-      <div className="flex h-2 w-full rounded-full overflow-hidden">
+      <div className="flex h-2 w-full overflow-hidden">
         <div className="bg-forest/30 w-[35%]" /><div className="bg-forest/60 w-[30%]" />
         <div className="bg-forest w-[20%]" /><div className="bg-coral/70 w-[15%]" />
       </div>
@@ -214,7 +217,7 @@ const DashboardMockup = () => (
         <span>Identified</span><span>Applying</span><span>Submitted</span><span>Awarded</span>
       </div>
     </div>
-    <div className="bg-[#f5f2ed] rounded-lg border border-warm/60 p-3.5">
+    <div className="bg-[#f5f2ed] border border-warm/60 p-3.5">
       <div className="flex items-center gap-1.5 mb-2.5">
         <Calendar size={12} className="text-mid" />
         <p className="text-[11px] font-bold text-charcoal uppercase tracking-wider">Upcoming deadlines</p>
@@ -298,8 +301,11 @@ export default function LandingPage() {
         className="fixed top-0 left-0 right-0 z-50 bg-cream/95 backdrop-blur-sm border-b border-warm/60"
       >
         <div className="flex w-full items-center justify-between px-5 md:px-8 py-4 md:py-5">
-          <a href="/" className="no-underline">
-            <Logo variant="dark" size="md" />
+          <a href="/" className="flex items-center gap-2.5 no-underline">
+            <div className="relative flex items-center justify-center bg-coral w-7 h-7 flex-shrink-0" style={{ borderRadius: '6px' }}>
+              <div className="w-2.5 h-2.5 rounded-full border-2 border-white" />
+            </div>
+            <span className="font-serif text-[22px] text-charcoal">GrantTracker</span>
           </a>
           {/* Desktop nav links */}
           <div className="hidden md:flex items-center gap-6 lg:gap-10">
@@ -310,11 +316,11 @@ export default function LandingPage() {
           {/* Desktop CTAs */}
           <div className="hidden md:flex items-center gap-3">
             <Link href="/auth/login" className="text-sm text-mid hover:text-charcoal transition-colors px-3 py-2">Sign in</Link>
-            <Link href="/auth/signup" className="bg-coral text-white px-5 py-2 text-sm font-medium rounded-lg hover:opacity-90 transition-colors">Get started free</Link>
+            <Link href="/auth/signup" className="bg-coral text-white px-5 py-2 text-sm font-medium hover:opacity-90 transition-colors" style={{ borderRadius: '0px' }}>Get started free</Link>
           </div>
           {/* Mobile: sign up + hamburger */}
           <div className="flex md:hidden items-center gap-3">
-            <Link href="/auth/signup" className="bg-coral text-white px-4 py-2 text-sm font-medium rounded-lg hover:opacity-90 transition-colors">Get started</Link>
+            <Link href="/auth/signup" className="bg-coral text-white px-4 py-2 text-sm font-medium hover:opacity-90 transition-colors" style={{ borderRadius: '0px' }}>Get started</Link>
             <button onClick={() => setMobileOpen(o => !o)} className="p-1 text-charcoal" aria-label="Toggle menu">
               {mobileOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
@@ -331,8 +337,8 @@ export default function LandingPage() {
                 <a key={link.label} href={link.href} className="text-sm text-mid" onClick={() => setMobileOpen(false)}>{link.label}</a>
               ))}
               <div className="flex flex-col gap-2 pt-2">
-                <Link href="/auth/login" onClick={() => setMobileOpen(false)} className="text-center text-sm text-mid py-2 border border-warm rounded-lg">Sign in</Link>
-                <Link href="/auth/signup" onClick={() => setMobileOpen(false)} className="bg-coral text-white text-center text-sm font-medium py-2 rounded-lg hover:opacity-90 transition-colors">Get started free</Link>
+                <Link href="/auth/login" onClick={() => setMobileOpen(false)} className="text-center text-sm text-mid py-2 border border-warm">Sign in</Link>
+                <Link href="/auth/signup" onClick={() => setMobileOpen(false)} className="bg-coral text-white rounded-xl text-center text-sm font-medium py-2 hover:opacity-90 transition-colors">Get started free</Link>
               </div>
             </div>
           </motion.div>
@@ -344,52 +350,47 @@ export default function LandingPage() {
         className="relative overflow-hidden"
         style={{ minHeight: '100vh', background: '#faf7f2' }}
       >
-        <div
-          className="relative z-10 mx-auto max-w-7xl px-6 md:px-10 grid lg:grid-cols-2 gap-12 items-center"
-          style={{ minHeight: '100vh', paddingTop: 'clamp(90px, 12vw, 120px)', paddingBottom: '80px' }}
-        >
 
-          {/* Left: copy */}
-          <div className="flex flex-col">
+        {/* Two-column layout */}
+        <div className="relative z-10 mx-auto max-w-7xl px-6 md:px-8 flex flex-col lg:flex-row items-center gap-12 lg:gap-16 lg:min-h-screen" style={{ paddingTop: 'clamp(90px, 15vw, 120px)', paddingBottom: '80px' }}>
+
+          {/* Left: text */}
+          <div className="flex-1 max-w-xl lg:pl-12">
             <motion.h1
               {...fadeUp(0)}
-              className="font-serif leading-[1.0] text-charcoal mb-6"
-              style={{ fontSize: 'clamp(52px, 6.5vw, 96px)' }}
+              className="font-serif leading-[1.05] text-charcoal mb-6"
+              style={{ fontSize: 'clamp(44px, 5vw, 72px)' }}
             >
-              <span className="block">Funding,</span>
-              <span className="block" style={{ color: '#1f5c52' }}>matched</span>
-              <span className="block">for you.</span>
+              <span className="block">Fund your</span>
+              <span className="block">cause or</span>
+              <span className="block">venture.</span>
             </motion.h1>
 
             <motion.p
               {...fadeUp(0.15)}
               className="text-mid leading-relaxed mb-10"
-              style={{ fontSize: '18px', lineHeight: 1.7, maxWidth: '420px' }}
+              style={{ fontSize: '18px', lineHeight: 1.7, maxWidth: '480px' }}
             >
-              Discover grants, programmes, social investment and in-kind opportunities.
+              Find grants, accelerators, investment and support programmes — matched to you, managed in one place.
             </motion.p>
 
-            <motion.div {...fadeUp(0.3)} className="flex flex-wrap gap-3 mb-6">
-              <a href="#how" className="bg-[#1C1C2E] text-white px-6 py-3 text-[15px] font-semibold rounded-lg transition-colors hover:opacity-90">
-                How it works
-              </a>
-              <a href="#features" className="bg-coral text-white px-6 py-3 text-[15px] font-semibold rounded-lg hover:opacity-90 transition-colors">
-                Features
+            <motion.div {...fadeUp(0.3)} className="flex flex-wrap gap-3 mb-14">
+              <Link href="/auth/signup" className="bg-coral text-white px-6 py-3 text-[15px] font-semibold hover:opacity-90 transition-colors" style={{ borderRadius: '0px' }}>
+                Start for free
+              </Link>
+              <a href="#how" className="border border-coral/50 text-coral px-6 py-3 text-[15px] font-semibold transition-colors hover:bg-coral/10" style={{ borderRadius: '0px' }}>
+                See how it works
               </a>
             </motion.div>
 
-            <motion.p {...fadeUp(0.4)} className="text-xs text-mid flex items-center gap-2">
-              <span className="inline-block w-1.5 h-1.5 bg-forest rounded-full flex-shrink-0" />
-              Trusted by nonprofits, CICs and social enterprises across the UK
-            </motion.p>
           </div>
 
-          {/* Right: scattered cards */}
-          <div className="relative hidden lg:flex items-center justify-center" style={{ height: '580px' }}>
+          {/* Right: scattered feature cards — hidden on mobile, shown lg+ */}
+          <div className="hidden lg:block flex-1 w-full lg:max-w-[540px] flex-shrink-0 relative" style={{ height: '580px' }}>
 
             {/* Dashboard — back right */}
-            <motion.div {...fadeInView(0.1)} className="absolute" style={{ width: '240px', top: '20px', right: '0px', zIndex: 1 }}>
-              <div className="bg-white rounded-xl border border-warm/80 p-4" style={{ transform: 'rotate(7deg)', boxShadow: '0 4px 20px rgba(26,46,43,0.08)' }}>
+            <motion.div {...fadeUp(0.4)} className="absolute" style={{ width: '240px', top: '20px', right: '0px', zIndex: 1 }}>
+              <div className="bg-white rounded-none border border-warm/80 p-4" style={{ transform: 'rotate(7deg)', boxShadow: '0 4px 20px rgba(26,46,43,0.08)' }}>
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-7 h-7 rounded-full bg-warm flex items-center justify-center flex-shrink-0">
                     <LayoutGrid className="w-3.5 h-3.5 text-mid" />
@@ -397,11 +398,11 @@ export default function LandingPage() {
                   <p className="text-[11px] font-bold text-charcoal uppercase tracking-wider">Dashboard</p>
                 </div>
                 <div className="grid grid-cols-2 gap-2 mb-3">
-                  <div className="bg-[#f5f2ed] rounded-lg p-2.5">
+                  <div className="bg-[#f5f2ed] rounded-xl p-2.5">
                     <p className="text-[17px] font-bold text-charcoal leading-tight">42k</p>
                     <p className="text-[9px] text-mid uppercase tracking-wide font-medium">Won</p>
                   </div>
-                  <div className="bg-[#f5f2ed] rounded-lg p-2.5">
+                  <div className="bg-[#f5f2ed] rounded-xl p-2.5">
                     <p className="text-[17px] font-bold text-charcoal leading-tight">68%</p>
                     <p className="text-[9px] text-mid uppercase tracking-wide font-medium">Success</p>
                   </div>
@@ -416,8 +417,8 @@ export default function LandingPage() {
             </motion.div>
 
             {/* Pipeline — front left */}
-            <motion.div {...fadeInView(0.05)} className="absolute" style={{ width: '230px', top: '60px', left: '0px', zIndex: 3 }}>
-              <div className="bg-white rounded-xl border border-warm/80 p-4" style={{ transform: 'rotate(-8deg)', boxShadow: '0 8px 32px rgba(26,46,43,0.12)' }}>
+            <motion.div {...fadeUp(0.2)} className="absolute" style={{ width: '230px', top: '60px', left: '0px', zIndex: 3 }}>
+              <div className="bg-white rounded-none border border-warm/80 p-4" style={{ transform: 'rotate(-8deg)', boxShadow: '0 8px 32px rgba(26,46,43,0.12)' }}>
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-7 h-7 rounded-full bg-coral/15 flex items-center justify-center flex-shrink-0">
                     <ArrowRight className="w-3.5 h-3.5 text-coral" />
@@ -432,7 +433,7 @@ export default function LandingPage() {
                     { label: 'Applying',   dots: [true,  true] },
                     { label: 'Submitted',  dots: [false, false] },
                   ].map((stage) => (
-                    <div key={stage.label} className="flex items-center justify-between bg-[#f5f2ed] rounded-lg px-2.5 py-1.5">
+                    <div key={stage.label} className="flex items-center justify-between bg-[#f5f2ed] rounded-none px-2.5 py-1.5">
                       <div className="flex items-center gap-1.5">
                         <div className="w-3.5 h-3.5 rounded-full border border-mid/30 flex items-center justify-center flex-shrink-0">
                           <div className="w-1.5 h-1.5 rounded-full bg-mid/30" />
@@ -451,10 +452,10 @@ export default function LandingPage() {
             </motion.div>
 
             {/* Search — centre, largest, front */}
-            <motion.div {...fadeInView(0.08)} className="absolute" style={{ width: '300px', top: '100px', left: 'calc(50% - 150px)', zIndex: 5 }}>
-              <div className="bg-white rounded-xl border border-warm/80 p-5" style={{ transform: 'rotate(-1deg)', boxShadow: '0 14px 44px rgba(26,46,43,0.14)' }}>
+            <motion.div {...fadeUp(0.3)} className="absolute" style={{ width: '300px', top: '100px', left: 'calc(50% - 150px)', zIndex: 5 }}>
+              <div className="bg-white rounded-none border border-warm/80 p-5" style={{ transform: 'rotate(-1deg)', boxShadow: '0 14px 44px rgba(26,46,43,0.14)' }}>
                 <p className="text-[11px] font-bold text-charcoal uppercase tracking-wider mb-2.5">Search</p>
-                <div className="flex items-center gap-2 bg-[#f5f2ed] rounded-full px-3 py-2 mb-3 border border-warm/40">
+                <div className="flex items-center gap-2 bg-[#f5f2ed] rounded-none px-3 py-2 mb-3 border border-warm/40">
                   <Search className="w-3 h-3 text-mid flex-shrink-0" />
                   <span className="text-[11px] text-mid">community garden...</span>
                 </div>
@@ -482,8 +483,8 @@ export default function LandingPage() {
             </motion.div>
 
             {/* Awarded — bottom right */}
-            <motion.div {...fadeInView(0.12)} className="absolute" style={{ width: '220px', top: '340px', right: '0px', zIndex: 2 }}>
-              <div className="bg-white rounded-xl border border-warm/80 p-4" style={{ transform: 'rotate(4deg)', boxShadow: '0 8px 32px rgba(26,46,43,0.10)' }}>
+            <motion.div {...fadeUp(0.45)} className="absolute" style={{ width: '220px', top: '340px', right: '0px', zIndex: 2 }}>
+              <div className="bg-white rounded-none border border-warm/80 p-4" style={{ transform: 'rotate(4deg)', boxShadow: '0 8px 32px rgba(26,46,43,0.10)' }}>
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-7 h-7 rounded-full bg-forest/10 flex items-center justify-center flex-shrink-0">
                     <Award className="w-3.5 h-3.5 text-forest" />
@@ -492,16 +493,16 @@ export default function LandingPage() {
                 </div>
                 <p className="text-[13px] font-semibold text-charcoal leading-snug mb-1">London Community Foundation</p>
                 <p className="text-[11px] text-mid mb-3">Grow to Give — Community Growing</p>
-                <div className="flex items-center justify-between rounded-lg px-3 py-2" style={{ background: 'rgba(45,107,74,0.08)' }}>
+                <div className="flex items-center justify-between bg-forest/8 rounded-xl px-3 py-2" style={{ background: 'rgba(45,107,74,0.08)' }}>
                   <span className="text-[11px] text-mid">Grant awarded</span>
                   <span className="text-[15px] font-bold text-forest">£8,000</span>
                 </div>
               </div>
             </motion.div>
 
-            {/* Alerts — front bottom left */}
-            <motion.div {...fadeInView(0.1)} className="absolute" style={{ width: '250px', top: '320px', left: '10px', zIndex: 4 }}>
-              <div className="bg-white rounded-xl border border-warm/80 p-4" style={{ transform: 'rotate(-3deg)', boxShadow: '0 8px 32px rgba(26,46,43,0.12)' }}>
+            {/* Alerts — front bottom */}
+            <motion.div {...fadeUp(0.35)} className="absolute" style={{ width: '250px', top: '320px', left: '10px', zIndex: 4 }}>
+              <div className="bg-white rounded-none border border-warm/80 p-4" style={{ transform: 'rotate(-3deg)', boxShadow: '0 8px 32px rgba(26,46,43,0.12)' }}>
                 <div className="flex items-center gap-2 mb-3">
                   <div className="relative w-7 h-7 rounded-full bg-warm flex items-center justify-center flex-shrink-0">
                     <Bell className="w-3.5 h-3.5 text-mid" />
@@ -511,9 +512,9 @@ export default function LandingPage() {
                 </div>
                 <div className="flex flex-col">
                   {[
-                    { name: 'Youth Fund 2025',        org: 'Paul Hamlyn Foundation', days: '2d',  urgent: true  },
-                    { name: 'Green Spaces Grant',     org: 'National Lottery',       days: '8d',  urgent: false },
-                    { name: 'Digital Inclusion Fund', org: 'DCMS',                   days: '14d', urgent: false },
+                    { name: 'Youth Fund 2025',       org: 'Paul Hamlyn Foundation', days: '2d',  urgent: true  },
+                    { name: 'Green Spaces Grant',    org: 'National Lottery',       days: '8d',  urgent: false },
+                    { name: 'Digital Inclusion Fund',org: 'DCMS',                   days: '14d', urgent: false },
                   ].map((a, i) => (
                     <div key={a.name} className={`flex items-center justify-between gap-2 py-2 ${i < 2 ? 'border-b border-warm/40' : ''}`}>
                       <div>
@@ -531,182 +532,6 @@ export default function LandingPage() {
 
         </div>
       </section>
-
-      {/* FEATURES */}
-      <div id="features">
-        <section className="py-16 md:py-24 bg-white">
-          <div className="mx-auto max-w-6xl px-6">
-            <div className="grid lg:grid-cols-2 gap-16 items-center">
-
-              {/* Left: copy */}
-              <motion.div {...fadeInView(0)}>
-                <p className="text-sm font-semibold text-coral uppercase tracking-wider mb-3">Features</p>
-                <h2 className="font-serif text-3xl leading-tight md:text-4xl mb-4">From search to submission, in one place.</h2>
-                <p className="text-mid leading-relaxed mb-8">Find funding, track every application and never miss a deadline — all matched to your organisation&apos;s profile.</p>
-                <ul className="space-y-4">
-                  {[
-                    'Profile-based matching across grants, programmes, investment and in-kind support',
-                    'Live search ranked by structure, sector, geography and mission',
-                    'Pipeline tracking from first contact to submission',
-                    'Deadline alerts for grants closing within 14 days',
-                    'Dashboard summary of pipeline value and upcoming deadlines',
-                  ].map((b, i) => (
-                    <li key={i} className="flex items-start gap-3 text-sm text-charcoal">
-                      <span className="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-coral/10 text-coral text-xs font-bold shrink-0">✓</span>
-                      <span className="leading-relaxed">{b}</span>
-                    </li>
-                  ))}
-                </ul>
-              </motion.div>
-
-              {/* Right: scattered feature cards */}
-              <div className="relative hidden lg:block" style={{ height: '580px' }}>
-
-                {/* Dashboard — back right */}
-                <motion.div {...fadeInView(0.1)} className="absolute" style={{ width: '240px', top: '20px', right: '0px', zIndex: 1 }}>
-                  <div className="bg-white rounded-xl border border-warm/80 p-4" style={{ transform: 'rotate(7deg)', boxShadow: '0 4px 20px rgba(26,46,43,0.08)' }}>
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="w-7 h-7 rounded-full bg-warm flex items-center justify-center flex-shrink-0">
-                        <LayoutGrid className="w-3.5 h-3.5 text-mid" />
-                      </div>
-                      <p className="text-[11px] font-bold text-charcoal uppercase tracking-wider">Dashboard</p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 mb-3">
-                      <div className="bg-[#f5f2ed] rounded-lg p-2.5">
-                        <p className="text-[17px] font-bold text-charcoal leading-tight">42k</p>
-                        <p className="text-[9px] text-mid uppercase tracking-wide font-medium">Won</p>
-                      </div>
-                      <div className="bg-[#f5f2ed] rounded-lg p-2.5">
-                        <p className="text-[17px] font-bold text-charcoal leading-tight">68%</p>
-                        <p className="text-[9px] text-mid uppercase tracking-wide font-medium">Success</p>
-                      </div>
-                    </div>
-                    <p className="text-[9px] text-mid mb-2">Funding won — last 7 months</p>
-                    <div className="flex items-end gap-1" style={{ height: '40px' }}>
-                      {[40, 25, 55, 35, 70, 60, 85].map((h, i) => (
-                        <div key={i} className="flex-1 bg-coral/60 rounded-sm" style={{ height: `${h}%` }} />
-                      ))}
-                    </div>
-                  </div>
-                </motion.div>
-
-                {/* Pipeline — front left */}
-                <motion.div {...fadeInView(0.05)} className="absolute" style={{ width: '230px', top: '60px', left: '0px', zIndex: 3 }}>
-                  <div className="bg-white rounded-xl border border-warm/80 p-4" style={{ transform: 'rotate(-8deg)', boxShadow: '0 8px 32px rgba(26,46,43,0.12)' }}>
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-7 h-7 rounded-full bg-coral/15 flex items-center justify-center flex-shrink-0">
-                        <ArrowRight className="w-3.5 h-3.5 text-coral" />
-                      </div>
-                      <p className="text-[11px] font-bold text-coral uppercase tracking-wider">Pipeline</p>
-                    </div>
-                    <p className="font-serif text-[26px] font-bold text-charcoal leading-tight">£187,500</p>
-                    <p className="text-[11px] text-coral font-medium mb-3">7 active opportunities</p>
-                    <div className="flex flex-col gap-1.5">
-                      {[
-                        { label: 'Identified', dots: [false, false, false] },
-                        { label: 'Applying',   dots: [true,  true] },
-                        { label: 'Submitted',  dots: [false, false] },
-                      ].map((stage) => (
-                        <div key={stage.label} className="flex items-center justify-between bg-[#f5f2ed] rounded-lg px-2.5 py-1.5">
-                          <div className="flex items-center gap-1.5">
-                            <div className="w-3.5 h-3.5 rounded-full border border-mid/30 flex items-center justify-center flex-shrink-0">
-                              <div className="w-1.5 h-1.5 rounded-full bg-mid/30" />
-                            </div>
-                            <span className="text-[10px] text-charcoal">{stage.label}</span>
-                          </div>
-                          <div className="flex gap-1">
-                            {stage.dots.map((active, i) => (
-                              <div key={i} className={`w-2 h-2 rounded-full ${active ? 'bg-coral/70' : 'bg-mid/25'}`} />
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </motion.div>
-
-                {/* Search — centre, largest, front */}
-                <motion.div {...fadeInView(0.08)} className="absolute" style={{ width: '300px', top: '100px', left: 'calc(50% - 150px)', zIndex: 5 }}>
-                  <div className="bg-white rounded-xl border border-warm/80 p-5" style={{ transform: 'rotate(-1deg)', boxShadow: '0 14px 44px rgba(26,46,43,0.14)' }}>
-                    <p className="text-[11px] font-bold text-charcoal uppercase tracking-wider mb-2.5">Search</p>
-                    <div className="flex items-center gap-2 bg-[#f5f2ed] rounded-full px-3 py-2 mb-3 border border-warm/40">
-                      <Search className="w-3 h-3 text-mid flex-shrink-0" />
-                      <span className="text-[11px] text-mid">community garden...</span>
-                    </div>
-                    <div className="flex flex-col">
-                      {[
-                        { name: 'Community Growing Grants', amount: null,   pct: 94, color: 'bg-forest' },
-                        { name: 'Green Spaces Fund',        amount: '£10k', pct: 87, color: 'bg-forest/70' },
-                        { name: 'Urban Nature Programme',   amount: '£15k', pct: 79, color: 'bg-amber-400' },
-                      ].map((r, i) => (
-                        <div key={r.name} className={`flex items-center justify-between gap-2 py-2 ${i < 2 ? 'border-b border-warm/40' : ''}`}>
-                          <div>
-                            <p className="text-[11px] font-semibold text-charcoal leading-tight">{r.name}</p>
-                            {r.amount && <p className="text-[10px] text-mid">{r.amount}</p>}
-                          </div>
-                          <div className="flex items-center gap-1.5 flex-shrink-0">
-                            <div className="w-10 h-1.5 bg-warm rounded-full overflow-hidden">
-                              <div className={`h-full ${r.color} rounded-full`} style={{ width: `${r.pct}%` }} />
-                            </div>
-                            <span className="text-[10px] font-bold text-charcoal">{r.pct}%</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </motion.div>
-
-                {/* Awarded — bottom right */}
-                <motion.div {...fadeInView(0.12)} className="absolute" style={{ width: '220px', top: '340px', right: '0px', zIndex: 2 }}>
-                  <div className="bg-white rounded-xl border border-warm/80 p-4" style={{ transform: 'rotate(4deg)', boxShadow: '0 8px 32px rgba(26,46,43,0.10)' }}>
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="w-7 h-7 rounded-full bg-forest/10 flex items-center justify-center flex-shrink-0">
-                        <Award className="w-3.5 h-3.5 text-forest" />
-                      </div>
-                      <p className="text-[11px] font-bold text-forest uppercase tracking-wider">Awarded</p>
-                    </div>
-                    <p className="text-[13px] font-semibold text-charcoal leading-snug mb-1">London Community Foundation</p>
-                    <p className="text-[11px] text-mid mb-3">Grow to Give — Community Growing</p>
-                    <div className="flex items-center justify-between rounded-lg px-3 py-2" style={{ background: 'rgba(45,107,74,0.08)' }}>
-                      <span className="text-[11px] text-mid">Grant awarded</span>
-                      <span className="text-[15px] font-bold text-forest">£8,000</span>
-                    </div>
-                  </div>
-                </motion.div>
-
-                {/* Alerts — front bottom */}
-                <motion.div {...fadeInView(0.1)} className="absolute" style={{ width: '250px', top: '320px', left: '10px', zIndex: 4 }}>
-                  <div className="bg-white rounded-xl border border-warm/80 p-4" style={{ transform: 'rotate(-3deg)', boxShadow: '0 8px 32px rgba(26,46,43,0.12)' }}>
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="relative w-7 h-7 rounded-full bg-warm flex items-center justify-center flex-shrink-0">
-                        <Bell className="w-3.5 h-3.5 text-mid" />
-                        <div className="absolute top-0 right-0 w-2 h-2 rounded-full bg-red-400 border border-white" />
-                      </div>
-                      <p className="text-[11px] font-bold text-charcoal uppercase tracking-wider">Alerts</p>
-                    </div>
-                    <div className="flex flex-col">
-                      {[
-                        { name: 'Youth Fund 2025',        org: 'Paul Hamlyn Foundation', days: '2d',  urgent: true  },
-                        { name: 'Green Spaces Grant',     org: 'National Lottery',       days: '8d',  urgent: false },
-                        { name: 'Digital Inclusion Fund', org: 'DCMS',                   days: '14d', urgent: false },
-                      ].map((a, i) => (
-                        <div key={a.name} className={`flex items-center justify-between gap-2 py-2 ${i < 2 ? 'border-b border-warm/40' : ''}`}>
-                          <div>
-                            <p className="text-[11px] font-semibold text-charcoal leading-tight">{a.name}</p>
-                            <p className="text-[10px] text-mid">{a.org}</p>
-                          </div>
-                          <span className={`text-[10px] font-bold px-2 py-1 rounded-full flex-shrink-0 ${a.urgent ? 'bg-coral text-white' : 'bg-warm text-mid'}`}>{a.days}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </motion.div>
-
-              </div>
-            </div>
-          </div>
-        </section>
-      </div>
 
       {/* LIVE GRANT PREVIEW */}
       {previewGrants.length > 0 && (
@@ -772,8 +597,9 @@ export default function LandingPage() {
             <motion.div {...fadeInView(0.2)} className="text-center">
               <Link
                 href="/auth/signup"
-                className="inline-flex items-center gap-2 bg-forest text-white rounded-lg px-8 py-3.5 text-sm font-semibold hover:opacity-90 transition-colors"
-                             >
+                className="inline-flex items-center gap-2 bg-forest text-white px-8 py-3.5 text-sm font-semibold hover:opacity-90 transition-colors"
+                style={{ borderRadius: '0px' }}
+              >
                 Search all opportunities free <ArrowRight size={16} />
               </Link>
               <p className="text-xs text-mid mt-3">No credit card · Takes 2 minutes</p>
@@ -787,9 +613,9 @@ export default function LandingPage() {
         <div className="mx-auto max-w-5xl px-6">
           <motion.div {...fadeInView(0)} className="mb-16">
             <p className="text-sm font-semibold text-coral uppercase tracking-wider">How it works</p>
-            <h2 className="mt-3 font-serif text-4xl md:text-5xl leading-tight max-w-lg">Setup, search and track what matters.</h2>
+            <h2 className="mt-3 font-serif text-4xl md:text-5xl leading-tight max-w-lg">Set up once, search and track what matters.</h2>
           </motion.div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-px bg-warm rounded-xl overflow-hidden">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-px bg-warm">
             {howSteps.map((step, i) => (
               <motion.div key={step.title} {...fadeInView(i * 0.08)} className="bg-cream p-8">
                 <span className={`font-serif text-coral ${step.featured ? 'text-6xl' : 'text-4xl'}`}>{step.num}</span>
@@ -802,15 +628,15 @@ export default function LandingPage() {
       </section>
 
       {/* FUNDING TYPES */}
-      <section className="py-16 md:py-20 bg-[#1C1C2E]">
+      <section className="py-16 md:py-20 bg-[#121f2b]">
         <div className="mx-auto max-w-5xl px-6">
           <motion.div {...fadeInView(0)} className="mb-16">
             <p className="text-sm font-semibold text-coral uppercase tracking-wider">Funding Types</p>
             <h2 className="mt-3 font-serif text-4xl md:text-5xl leading-tight max-w-lg text-cream">Not just grants, the full picture.</h2>
           </motion.div>
-          <div className="grid sm:grid-cols-2 gap-px bg-white/10 rounded-xl overflow-hidden">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-white/10">
             {fundingTypes.map((t, i) => (
-              <motion.div key={t.title} {...fadeInView(i * 0.05)} className="bg-[#1C1C2E] p-8">
+              <motion.div key={t.title} {...fadeInView(i * 0.05)} className="bg-[#121f2b] p-8">
                 <span className="text-xs font-semibold text-coral uppercase tracking-wider">{t.range}</span>
                 <h3 className="mt-3 font-serif text-xl text-cream">{t.title}</h3>
                 <p className="mt-3 text-sm text-cream/50 leading-relaxed">{t.desc}</p>
@@ -820,121 +646,89 @@ export default function LandingPage() {
         </div>
       </section>
 
-
-      {/* ABOUT — dark founder story */}
-      <section id="about" className="py-16 md:py-24 bg-[#1C1C2E]">
-        <div className="mx-auto max-w-3xl px-6">
-          <motion.div {...fadeInView(0)} className="mb-16">
-            <p className="text-sm font-semibold text-coral uppercase tracking-wider">About</p>
-            <h2 className="mt-3 font-serif text-4xl md:text-5xl leading-tight text-cream">Built from the inside.</h2>
-          </motion.div>
-          <motion.div {...fadeInView(0.05)}>
-            <blockquote className="border-l-2 border-sage pl-6 mb-8">
-              <p className="text-lg text-cream/80 leading-relaxed font-serif italic mb-4">
-                &ldquo;I&apos;ve worked in the social enterprise and charity sector for 20 years as a fundraiser
-                and social entrepreneur, from co-founding a youth radio station to working at local
-                charities and leading on fundraising at Impact Hub.
-              </p>
-              <p className="text-lg text-cream/80 leading-relaxed font-serif italic">
-                Throughout all of it, I was consistently frustrated by the same thing: a fragmented
-                funding ecosystem that forced people like me to spend a disproportionate amount of
-                time hunting opportunities rather than delivering impactful work.&rdquo;
-              </p>
-              <footer className="mt-5 text-base font-semibold text-cream/50 not-italic">Paul Kilty, founder</footer>
-            </blockquote>
-            <p className="text-base text-cream/70 leading-relaxed">
-              Not just a smarter search, a tool built to understand your organisation and discover
-              the opportunities most worth your time.
-            </p>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ABOUT — why it exists, who it's for, values, AI */}
-      <section className="py-16 md:py-20 bg-cream">
-        <div className="mx-auto max-w-5xl px-6">
-
-          {/* Why it exists */}
-          <div className="grid md:grid-cols-2 gap-12 mb-16 items-center">
+      {/* FEATURE SECTIONS */}
+      <div id="features">
+        {/* Search & Match */}
+        <section className="py-16 md:py-20">
+          <div className="mx-auto grid max-w-5xl items-center gap-16 px-6 md:grid-cols-2">
             <motion.div {...fadeInView(0)}>
-              <h3 className="font-serif text-2xl font-bold text-charcoal mb-5">Why it exists</h3>
-              <div className="space-y-4">
-                <p className="text-base leading-relaxed text-mid">
-                  The UK has thousands of active funders, but finding the right ones is effectively
-                  a full-time job. Most charities, CICs and social enterprises can&apos;t afford
-                  that — and they shouldn&apos;t have to.
-                </p>
-                <p className="text-base leading-relaxed text-mid">
-                  Grant Tracker matches you to grants, programmes, investments and in-kind support
-                  so you can spend that time delivering.
-                </p>
-              </div>
-            </motion.div>
-            <motion.div {...fadeInView(0.1)} className="flex flex-col items-center justify-center text-center py-8">
-              <p className="font-serif text-7xl md:text-8xl leading-none text-forest">£8bn<span className="text-gold">+</span></p>
-              <p className="mt-4 text-sm font-semibold text-mid uppercase tracking-wider max-w-[180px]">awarded by UK trusts &amp; foundations annually</p>
-            </motion.div>
-          </div>
-
-          {/* Who it's for */}
-          <motion.div {...fadeInView(0.05)} className="mb-16">
-            <h3 className="font-serif text-2xl font-bold text-charcoal mb-8">Who it&apos;s for</h3>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-warm/60 rounded-xl overflow-hidden">
-              {audiences.map((v, i) => (
-                <motion.div key={v.title} {...fadeInView(i * 0.06)} className="bg-white p-8">
-                  <h4 className="font-serif text-xl mb-2">{v.title}</h4>
-                  <p className="text-sm text-mid leading-relaxed">{v.desc}</p>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Our values + Our approach to AI — side by side */}
-          <div className="grid md:grid-cols-2 gap-16 items-start">
-
-            <motion.div {...fadeInView(0.05)}>
-              <h3 className="font-serif text-2xl font-bold text-charcoal mb-6">Our values</h3>
-              <div className="space-y-6">
-                {[
-                  { label: 'Honest', body: "We don't inflate match scores or dress up poor-fit grants. If something isn't right for you, we'd rather tell you than waste your time." },
-                  { label: 'Practical', body: "Every feature exists because it makes the funding process easier. We don't add complexity for the sake of it." },
-                  { label: 'Accessible', body: "Good funding intelligence shouldn't only be available to organisations with big budgets. Grant Tracker is priced so that smaller charities and social enterprises can afford it." },
-                ].map((v, i) => (
-                  <motion.div key={v.label} {...fadeInView(i * 0.07)} className="flex gap-4">
-                    <div className="w-1.5 h-1.5 rounded-full bg-forest mt-2 flex-shrink-0" />
-                    <div>
-                      <p className="text-base font-bold text-charcoal mb-1">{v.label}</p>
-                      <p className="text-base leading-relaxed text-mid">{v.body}</p>
-                    </div>
-                  </motion.div>
+              <p className="text-sm font-semibold text-coral uppercase tracking-wider">Search & Match</p>
+              <h2 className="mt-3 font-serif text-3xl leading-tight md:text-4xl">Search everything, see only what fits.</h2>
+              <p className="mt-4 text-mid leading-relaxed">Tell us your structure and sector once. We filter out everything you're not eligible for before you even see results.</p>
+              <ul className="mt-8 space-y-4">
+                {['Profile-based filtering — your structure, stage and sector shape every result', 'Live Search — finds matching funding across all seven types in real time', 'Match scores ranked by structure, sector, geography, stage and mission'].map((b, i) => (
+                  <li key={i} className="flex items-start gap-3 text-sm text-charcoal">
+                    <span className="mt-0.5 flex h-5 w-5 items-center justify-center bg-coral/10 text-coral text-xs font-bold shrink-0">✓</span>
+                    <span className="leading-relaxed">{b}</span>
+                  </li>
                 ))}
-              </div>
+              </ul>
             </motion.div>
-
-            <motion.div {...fadeInView(0.1)}>
-              <h3 className="font-serif text-2xl font-bold text-charcoal mb-6">Our approach to AI</h3>
-              <div className="space-y-4">
-                <p className="text-base leading-relaxed text-mid">
-                  We recognise funders are increasingly inundated with AI-generated applications that
-                  are bland, generic and interchangeable. The last thing we want is to make that
-                  problem worse.
-                </p>
-                <p className="text-base leading-relaxed text-mid">
-                  We encourage that your voice, story and evidence is authentically communicated so
-                  funders take notice. Sure, AI can play a supporting role to refine your language,
-                  and sharpen your argument, but always in service of something genuinely yours.
-                  Not instead of it.
-                </p>
-                <p className="text-base leading-relaxed text-mid">
-                  Grant Tracker uses AI where it genuinely helps: matching your profile to the right
-                  opportunities, building intelligence about how funders make decisions, and cutting
-                  down the time you spend searching. This is better for funders and applicants.
-                </p>
-              </div>
-            </motion.div>
-
+            <motion.div {...fadeInView(0.15)}><SearchMockup /></motion.div>
           </div>
+        </section>
 
+        {/* Pipeline & Alerts */}
+        <section className="py-16 md:py-20 bg-warm/30">
+          <div className="mx-auto grid max-w-5xl items-center gap-16 px-6 md:grid-cols-2 md:[direction:rtl]">
+            <motion.div {...fadeInView(0)} className="md:[direction:ltr]">
+              <p className="text-sm font-semibold text-coral uppercase tracking-wider">Pipeline & Alerts</p>
+              <h2 className="mt-3 font-serif text-3xl leading-tight md:text-4xl">Track every application, never miss a deadline.</h2>
+              <p className="mt-4 text-mid leading-relaxed">A drag-and-drop board keeps every application visible, from first contact to submission.</p>
+              <ul className="mt-8 space-y-4">
+                {['Visual board with pipeline values at a glance', 'Per-card writing tracker from first draft to final submission', 'Notes, funder contacts, deadlines and grant URLs all on the card', 'Email alerts and urgency flags for grants closing within 14 days'].map((b, i) => (
+                  <li key={i} className="flex items-start gap-3 text-sm text-charcoal">
+                    <span className="mt-0.5 flex h-5 w-5 items-center justify-center bg-coral/10 text-coral text-xs font-bold shrink-0">✓</span>
+                    <span className="leading-relaxed">{b}</span>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+            <motion.div {...fadeInView(0.15)} className="md:[direction:ltr]"><PipelineMockup /></motion.div>
+          </div>
+        </section>
+
+        {/* Dashboard */}
+        <section className="py-16 md:py-20">
+          <div className="mx-auto grid max-w-5xl items-center gap-16 px-6 md:grid-cols-2">
+            <motion.div {...fadeInView(0)}>
+              <p className="text-sm font-semibold text-coral uppercase tracking-wider">Dashboard</p>
+              <h2 className="mt-3 font-serif text-3xl leading-tight md:text-4xl">Everything you need, at a glance.</h2>
+              <p className="mt-4 text-mid leading-relaxed">A single view that pulls together your pipeline, deadlines, match quality and activity — so you always know where you stand.</p>
+              <ul className="mt-8 space-y-4">
+                {['Pipeline summary with total value and stage breakdown', 'Upcoming deadlines highlighted so nothing slips', 'Match quality score with tips to improve your profile', 'Recent activity feed tracking your latest actions'].map((b, i) => (
+                  <li key={i} className="flex items-start gap-3 text-sm text-charcoal">
+                    <span className="mt-0.5 flex h-5 w-5 items-center justify-center bg-coral/10 text-coral text-xs font-bold shrink-0">✓</span>
+                    <span className="leading-relaxed">{b}</span>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+            <motion.div {...fadeInView(0.15)}><DashboardMockup /></motion.div>
+          </div>
+        </section>
+      </div>
+
+      {/* ABOUT / WHO IT'S FOR */}
+      <section id="about" className="py-16 md:py-20">
+        <div className="mx-auto max-w-5xl px-6">
+          <motion.div {...fadeInView(0)} className="mb-16">
+            <p className="text-sm font-semibold text-coral uppercase tracking-wider">Who it's for</p>
+            <h2 className="mt-3 font-serif text-4xl md:text-5xl leading-tight max-w-lg">Built for the people doing the work.</h2>
+          </motion.div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-warm">
+            {audiences.map((v, i) => (
+              <motion.div key={v.title} {...fadeInView(i * 0.06)} className="bg-cream p-8">
+                <h3 className="font-serif text-xl">{v.title}</h3>
+                <p className="mt-3 text-sm text-mid leading-relaxed">{v.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+          <motion.blockquote {...fadeInView(0)} className="mt-20 border-l-4 border-coral pl-8 py-2">
+            <p className="text-xl text-charcoal leading-relaxed font-serif italic max-w-2xl">
+              "Grant Tracker was born from first-hand frustration — hours lost to scattered spreadsheets and funding opportunities that slipped through the cracks. We built the tool we wished existed: one place to find, track and win grants."
+            </p>
+          </motion.blockquote>
         </div>
       </section>
 
@@ -960,16 +754,15 @@ export default function LandingPage() {
             <h2 className="mt-3 font-serif text-4xl md:text-5xl leading-tight max-w-lg">Plans that respect your budget.</h2>
             <p className="mt-4 text-mid max-w-xl leading-relaxed">Start free. Upgrade to Live Search and tracking tools.</p>
           </motion.div>
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid md:grid-cols-3 gap-px bg-warm">
             {plans.map((plan, i) => (
               <motion.div
                 key={plan.name}
                 {...fadeInView(i * 0.1)}
-                className={`relative p-8 flex flex-col rounded-xl ${plan.popular ? 'bg-[#1C1C2E] text-cream' : 'bg-cream border border-warm'}`}
-                style={{ boxShadow: plan.popular ? 'none' : '0 2px 12px rgba(26,46,43,0.06)' }}
+                className={`relative p-8 flex flex-col ${plan.popular ? 'bg-[#121f2b] text-cream' : 'bg-cream'}`}
               >
                 {plan.popular && (
-                  <span className="absolute top-4 right-4 bg-coral rounded-full px-3 py-1 text-xs font-semibold text-white">Most Popular</span>
+                  <span className="absolute top-4 right-4 bg-coral px-3 py-1 text-xs font-semibold text-white">Most Popular</span>
                 )}
                 <h3 className={`font-serif text-xl ${plan.popular ? 'text-cream' : ''}`}>{plan.name}</h3>
                 <div className="mt-4">
@@ -986,7 +779,7 @@ export default function LandingPage() {
                 </ul>
                 <Link
                   href="/auth/signup"
-                  className={`mt-8 block rounded-lg text-center py-3 text-sm font-semibold transition-colors ${plan.popular ? 'bg-coral text-white hover:opacity-90' : 'bg-[#1C1C2E] text-white hover:opacity-90'}`}
+                  className={`mt-8 block rounded-xl text-center py-3 text-sm font-semibold transition-colors ${plan.popular ? 'bg-coral text-white hover:bg-coral-light' : 'bg-[#121f2b] text-white hover:bg-[#121f2b]/90'}`}
                 >
                   {plan.cta}
                 </Link>
@@ -1003,12 +796,12 @@ export default function LandingPage() {
             <p className="text-sm font-semibold text-coral uppercase tracking-wider">Testimonials</p>
             <h2 className="mt-3 font-serif text-4xl md:text-5xl leading-tight">Loved by small organisations.</h2>
           </motion.div>
-          <div className="grid md:grid-cols-3 gap-px bg-warm rounded-xl overflow-hidden">
+          <div className="grid md:grid-cols-3 gap-px bg-warm">
             {testimonials.map((t, i) => (
               <motion.div key={t.name} {...fadeInView(i * 0.1)} className="bg-cream p-8">
                 <p className="text-sm text-charcoal leading-relaxed">"{t.quote}"</p>
                 <div className="mt-6 flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#1C1C2E] text-white font-semibold text-sm">{t.initials}</div>
+                  <div className="flex h-10 w-10 items-center justify-center bg-[#121f2b] text-white font-semibold text-sm">{t.initials}</div>
                   <div>
                     <p className="text-sm font-semibold text-charcoal">{t.name}</p>
                     <p className="text-xs text-mid">{t.role}</p>
@@ -1030,14 +823,14 @@ export default function LandingPage() {
               <p className="mt-4 text-mid leading-relaxed">Have a question, partnership idea, or just want to say hello? We'd love to hear from you.</p>
               <div className="mt-10 space-y-6">
                 <div className="flex items-center gap-4">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-coral/10 text-coral"><Mail size={18} /></div>
+                  <div className="flex h-11 w-11 items-center justify-center bg-coral/10 text-coral"><Mail size={18} /></div>
                   <div>
                     <p className="text-sm font-semibold">Email us</p>
                     <a href="mailto:hello@granttracker.co.uk" className="text-sm text-coral hover:underline">hello@granttracker.co.uk</a>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-coral/10 text-coral"><MessageSquare size={18} /></div>
+                  <div className="flex h-11 w-11 items-center justify-center bg-coral/10 text-coral"><MessageSquare size={18} /></div>
                   <div>
                     <p className="text-sm font-semibold">Response time</p>
                     <p className="text-sm text-mid">Usually within 24 hours</p>
@@ -1045,7 +838,7 @@ export default function LandingPage() {
                 </div>
               </div>
             </div>
-            <div className="border border-warm bg-white rounded-xl p-8">
+            <div className="border border-warm bg-white p-8">
               <ContactForm />
             </div>
           </motion.div>
@@ -1053,13 +846,13 @@ export default function LandingPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-16 md:py-20 bg-[#1C1C2E]">
+      <section className="py-16 md:py-20 bg-[#121f2b]">
         <div className="mx-auto max-w-4xl px-6 text-center">
           <motion.div {...fadeInView(0)}>
             <h2 className="font-serif text-4xl text-cream md:text-6xl leading-tight">Find your funding. Free to start.</h2>
             <p className="mx-auto mt-6 max-w-lg text-cream/60 leading-relaxed">Join CICs, charities, social enterprises and impact founders already discovering funding that actually fits.</p>
             <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-              <Link href="/auth/signup" className="bg-coral text-white rounded-lg px-10 py-3.5 text-base font-semibold hover:opacity-90 transition-colors">Start for free</Link>
+              <Link href="/auth/signup" className="bg-coral text-white rounded-xl px-10 py-3.5 text-base font-semibold hover:opacity-90 transition-colors">Start for free</Link>
             </div>
             <p className="mt-4 text-sm text-cream/40">No credit card required</p>
           </motion.div>
@@ -1069,8 +862,9 @@ export default function LandingPage() {
       {/* FOOTER */}
       <footer className="border-t border-warm py-12">
         <div className="mx-auto flex max-w-5xl flex-col items-center gap-8 px-6 md:flex-row md:justify-between">
-          <a href="/" className="no-underline">
-            <Logo variant="dark" size="sm" />
+          <a href="/" className="flex items-center gap-2">
+            <RadioWaveIcon className="h-6 w-6 text-coral" />
+            <span className="font-serif text-lg text-charcoal">Grant<span className="text-coral">Tracker</span></span>
           </a>
           <div className="flex gap-8 text-sm text-mid">
             <a href="#how" className="hover:text-charcoal transition-colors">How it works</a>
@@ -1079,7 +873,7 @@ export default function LandingPage() {
             <a href="#about" className="hover:text-charcoal transition-colors">About</a>
             <a href="#contact" className="hover:text-charcoal transition-colors">Contact</a>
           </div>
-          <p className="text-xs text-mid">© 2026 Grant Tracker</p>
+          <p className="text-xs text-mid">© 2025 Grant Tracker</p>
         </div>
       </footer>
 
