@@ -802,19 +802,20 @@ export default function LandingPage() {
               <h3 className="font-serif text-2xl font-bold text-charcoal mb-6">Our approach to AI</h3>
               <div className="space-y-4">
                 <p className="text-base leading-relaxed text-mid">
-                  Funders are increasingly inundated with AI-generated applications that are bland,
-                  generic and interchangeable. The last thing we want is to make that problem worse.
+                  We recognise funders are increasingly inundated with AI-generated applications that
+                  are bland, generic and interchangeable. The last thing we want is to make that
+                  problem worse.
+                </p>
+                <p className="text-base leading-relaxed text-mid">
+                  We encourage that your voice, story and evidence is authentically communicated so
+                  funders take notice. Sure, AI can play a supporting role to refine your language,
+                  and sharpen your argument, but always in service of something genuinely yours.
+                  Not instead of it.
                 </p>
                 <p className="text-base leading-relaxed text-mid">
                   Grant Tracker uses AI where it genuinely helps: matching your profile to the right
                   opportunities, building intelligence about how funders make decisions, and cutting
-                  down the time you spend searching. This is better for funders as well as applicants.
-                </p>
-                <p className="text-base leading-relaxed text-mid">
-                  When it comes to writing your application, your voice, your story and your evidence
-                  are what make a funder take notice. AI can play a supporting role, helping you refine
-                  your language, sharpen your argument, or sense-check your structure, but always in
-                  service of something authentically yours. Not instead of it.
+                  down the time you spend searching. This is better for funders and applicants.
                 </p>
               </div>
             </motion.div>
