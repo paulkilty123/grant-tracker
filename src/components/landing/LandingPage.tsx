@@ -764,8 +764,8 @@ export default function LandingPage() {
               </div>
             </motion.div>
             <motion.div {...fadeInView(0.1)} className="flex flex-col items-center justify-center text-center py-8">
-              <p className="font-serif text-7xl md:text-8xl leading-none text-forest">£<span className="text-gold">billions</span></p>
-              <p className="mt-4 text-sm font-semibold text-mid uppercase tracking-wider max-w-[180px]">available to UK charities and social enterprises every year</p>
+              <p className="font-serif text-7xl md:text-8xl leading-none text-forest">£8bn<span className="text-gold">+</span></p>
+              <p className="mt-4 text-sm font-semibold text-mid uppercase tracking-wider max-w-[180px]">awarded by UK trusts &amp; foundations annually</p>
             </motion.div>
           </div>
 
