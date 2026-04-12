@@ -32,12 +32,10 @@ const navLinks = [
 ]
 
 const howSteps = [
-  { num: '01', title: 'Set up your profile', desc: 'Tell us your legal structure, sector, stage, and location. Takes about 5 minutes.' },
-  { num: '02', title: 'Search funding', desc: 'Search naturally across grants, accelerators, social investment, and more in one place.' },
-  { num: '03', title: 'See your matches', desc: 'Results are ranked by how well they fit your profile — structure, sector, stage, and mission.' },
-  { num: '04', title: 'Add to pipeline', desc: 'Track each application from first contact to submission on a simple visual board.' },
-  { num: '05', title: 'Get alerts', desc: 'Weekly or instant email alerts when new funding matches your profile.' },
-  { num: '06', title: 'Submit & win', desc: 'Increase your win-rate with strongly aligned applications.', featured: true },
+  { num: '01', title: 'Setup your profile', desc: 'List your impact, mission and target groups.' },
+  { num: '02', title: 'Search & match', desc: 'Discover opportunities matched to you.' },
+  { num: '03', title: 'Track opportunities', desc: 'Add to pipeline, get alerts and apply.' },
+  { num: '04', title: 'Submit & win', desc: 'Increase your win-rate with strongly aligned applications.', featured: true },
 ]
 
 const fundingTypes = [
@@ -638,9 +636,9 @@ export default function LandingPage() {
         <div className="mx-auto max-w-5xl px-6">
           <motion.div {...fadeInView(0)} className="mb-16">
             <p className="text-sm font-semibold text-coral uppercase tracking-wider">How it works</p>
-            <h2 className="mt-3 font-serif text-4xl md:text-5xl leading-tight max-w-lg">Set up once, search and track what matters.</h2>
+            <h2 className="mt-3 font-serif text-4xl md:text-5xl leading-tight max-w-lg">Setup, search and track what matters.</h2>
           </motion.div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-px bg-warm rounded-xl overflow-hidden">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-px bg-warm rounded-xl overflow-hidden">
             {howSteps.map((step, i) => (
               <motion.div key={step.title} {...fadeInView(i * 0.08)} className="bg-cream p-8">
                 <span className={`font-serif text-coral ${step.featured ? 'text-6xl' : 'text-4xl'}`}>{step.num}</span>
