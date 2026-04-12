@@ -1797,7 +1797,7 @@ export default function SearchPage() {
     allGrants_raw.filter(g => ((g as GrantOpportunity & { fundingType?: FundingType }).fundingType ?? 'grant') === type).length
 
   const TYPE_TABS = [
-    { id: 'grant'      as const, label: 'Grants',      icon: <DollarSign size={17} strokeWidth={2} />, count: ftCount('grant') },
+    { id: 'grant'      as const, label: 'Grants',      icon: <span className="text-[15px] font-bold leading-none">£</span>, count: ftCount('grant') },
     { id: 'programme'  as const, label: 'Programmes',  icon: <Rocket size={17} strokeWidth={2} />,     count: ftCount('programme') },
     { id: 'investment' as const, label: 'Investment',  icon: <TrendingUp size={17} strokeWidth={2} />, count: ftCount('investment') },
     { id: 'in_kind'    as const, label: 'In-Kind',     icon: <Gift size={17} strokeWidth={2} />,       count: ftCount('in_kind') },
