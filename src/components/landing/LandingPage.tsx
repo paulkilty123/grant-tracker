@@ -768,6 +768,24 @@ export default function LandingPage() {
 
           </div>
 
+          {/* Why it exists */}
+          <motion.div {...fadeInView(0.1)} className="mb-16 max-w-2xl">
+            <h3 className="font-serif text-2xl font-bold text-charcoal mb-5">Why it exists</h3>
+            <div className="space-y-3">
+              <p className="text-base leading-relaxed text-mid">
+                The UK has thousands of active funders. Finding the right ones, at the right moment,
+                with the right intelligence about how they make decisions, is effectively a full-time
+                job. Most charities, CICs and social enterprises can&apos;t afford that, and they
+                shouldn&apos;t have to.
+              </p>
+              <p className="text-base leading-relaxed text-mid">
+                Grant Tracker brings together a live catalogue of grants, programmes, investments and
+                in-kind support, matched to your profile and filtered for your eligibility. So instead
+                of searching, you can spend that time delivering.
+              </p>
+            </div>
+          </motion.div>
+
           {/* Who it's for */}
           <motion.div {...fadeInView(0.1)} className="mb-16">
             <h3 className="font-serif text-2xl font-bold text-charcoal mb-8">Who it&apos;s for</h3>
