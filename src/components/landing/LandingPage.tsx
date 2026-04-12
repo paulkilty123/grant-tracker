@@ -344,26 +344,32 @@ export default function LandingPage() {
         className="relative overflow-hidden"
         style={{ minHeight: '100vh', background: '#faf7f2' }}
       >
-        <div className="relative z-10 mx-auto max-w-5xl px-6 flex flex-col items-center justify-center text-center" style={{ minHeight: '100vh', paddingTop: 'clamp(90px, 15vw, 120px)', paddingBottom: '80px' }}>
+        <div
+          className="relative z-10 mx-auto max-w-7xl px-6 md:px-10 grid lg:grid-cols-2 gap-12 items-center"
+          style={{ minHeight: '100vh', paddingTop: 'clamp(90px, 12vw, 120px)', paddingBottom: '80px' }}
+        >
 
+          {/* Left: copy */}
+          <div className="flex flex-col">
             <motion.h1
               {...fadeUp(0)}
-              className="font-serif leading-[1.05] text-charcoal mb-6"
-              style={{ fontSize: 'clamp(56px, 8vw, 112px)' }}
+              className="font-serif leading-[1.0] text-charcoal mb-6"
+              style={{ fontSize: 'clamp(52px, 6.5vw, 96px)' }}
             >
-              <span className="block">Funding, matched</span>
+              <span className="block">Funding,</span>
+              <span className="block" style={{ color: '#1f5c52' }}>matched</span>
               <span className="block">for you.</span>
             </motion.h1>
 
             <motion.p
               {...fadeUp(0.15)}
               className="text-mid leading-relaxed mb-10"
-              style={{ fontSize: '20px', lineHeight: 1.7, maxWidth: '520px' }}
+              style={{ fontSize: '18px', lineHeight: 1.7, maxWidth: '420px' }}
             >
               Discover grants, programmes, social investment and in-kind opportunities.
             </motion.p>
 
-            <motion.div {...fadeUp(0.3)} className="flex flex-wrap gap-3 justify-center mb-6">
+            <motion.div {...fadeUp(0.3)} className="flex flex-wrap gap-3 mb-6">
               <a href="#how" className="bg-[#1C1C2E] text-white px-6 py-3 text-[15px] font-semibold rounded-lg transition-colors hover:opacity-90">
                 How it works
               </a>
@@ -376,9 +382,154 @@ export default function LandingPage() {
               <span className="inline-block w-1.5 h-1.5 bg-forest rounded-full flex-shrink-0" />
               Trusted by nonprofits, CICs and social enterprises across the UK
             </motion.p>
+          </div>
+
+          {/* Right: scattered cards */}
+          <div className="relative hidden lg:flex items-center justify-center" style={{ height: '580px' }}>
+
+            {/* Dashboard — back right */}
+            <motion.div {...fadeInView(0.1)} className="absolute" style={{ width: '240px', top: '20px', right: '0px', zIndex: 1 }}>
+              <div className="bg-white rounded-xl border border-warm/80 p-4" style={{ transform: 'rotate(7deg)', boxShadow: '0 4px 20px rgba(26,46,43,0.08)' }}>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-7 h-7 rounded-full bg-warm flex items-center justify-center flex-shrink-0">
+                    <LayoutGrid className="w-3.5 h-3.5 text-mid" />
+                  </div>
+                  <p className="text-[11px] font-bold text-charcoal uppercase tracking-wider">Dashboard</p>
+                </div>
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  <div className="bg-[#f5f2ed] rounded-lg p-2.5">
+                    <p className="text-[17px] font-bold text-charcoal leading-tight">42k</p>
+                    <p className="text-[9px] text-mid uppercase tracking-wide font-medium">Won</p>
+                  </div>
+                  <div className="bg-[#f5f2ed] rounded-lg p-2.5">
+                    <p className="text-[17px] font-bold text-charcoal leading-tight">68%</p>
+                    <p className="text-[9px] text-mid uppercase tracking-wide font-medium">Success</p>
+                  </div>
+                </div>
+                <p className="text-[9px] text-mid mb-2">Funding won — last 7 months</p>
+                <div className="flex items-end gap-1" style={{ height: '40px' }}>
+                  {[40, 25, 55, 35, 70, 60, 85].map((h, i) => (
+                    <div key={i} className="flex-1 bg-coral/60 rounded-sm" style={{ height: `${h}%` }} />
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Pipeline — front left */}
+            <motion.div {...fadeInView(0.05)} className="absolute" style={{ width: '230px', top: '60px', left: '0px', zIndex: 3 }}>
+              <div className="bg-white rounded-xl border border-warm/80 p-4" style={{ transform: 'rotate(-8deg)', boxShadow: '0 8px 32px rgba(26,46,43,0.12)' }}>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-7 h-7 rounded-full bg-coral/15 flex items-center justify-center flex-shrink-0">
+                    <ArrowRight className="w-3.5 h-3.5 text-coral" />
+                  </div>
+                  <p className="text-[11px] font-bold text-coral uppercase tracking-wider">Pipeline</p>
+                </div>
+                <p className="font-serif text-[26px] font-bold text-charcoal leading-tight">£187,500</p>
+                <p className="text-[11px] text-coral font-medium mb-3">7 active opportunities</p>
+                <div className="flex flex-col gap-1.5">
+                  {[
+                    { label: 'Identified', dots: [false, false, false] },
+                    { label: 'Applying',   dots: [true,  true] },
+                    { label: 'Submitted',  dots: [false, false] },
+                  ].map((stage) => (
+                    <div key={stage.label} className="flex items-center justify-between bg-[#f5f2ed] rounded-lg px-2.5 py-1.5">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-3.5 h-3.5 rounded-full border border-mid/30 flex items-center justify-center flex-shrink-0">
+                          <div className="w-1.5 h-1.5 rounded-full bg-mid/30" />
+                        </div>
+                        <span className="text-[10px] text-charcoal">{stage.label}</span>
+                      </div>
+                      <div className="flex gap-1">
+                        {stage.dots.map((active, i) => (
+                          <div key={i} className={`w-2 h-2 rounded-full ${active ? 'bg-coral/70' : 'bg-mid/25'}`} />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Search — centre, largest, front */}
+            <motion.div {...fadeInView(0.08)} className="absolute" style={{ width: '300px', top: '100px', left: 'calc(50% - 150px)', zIndex: 5 }}>
+              <div className="bg-white rounded-xl border border-warm/80 p-5" style={{ transform: 'rotate(-1deg)', boxShadow: '0 14px 44px rgba(26,46,43,0.14)' }}>
+                <p className="text-[11px] font-bold text-charcoal uppercase tracking-wider mb-2.5">Search</p>
+                <div className="flex items-center gap-2 bg-[#f5f2ed] rounded-full px-3 py-2 mb-3 border border-warm/40">
+                  <Search className="w-3 h-3 text-mid flex-shrink-0" />
+                  <span className="text-[11px] text-mid">community garden...</span>
+                </div>
+                <div className="flex flex-col">
+                  {[
+                    { name: 'Community Growing Grants', amount: null,   pct: 94, color: 'bg-forest' },
+                    { name: 'Green Spaces Fund',        amount: '£10k', pct: 87, color: 'bg-forest/70' },
+                    { name: 'Urban Nature Programme',   amount: '£15k', pct: 79, color: 'bg-amber-400' },
+                  ].map((r, i) => (
+                    <div key={r.name} className={`flex items-center justify-between gap-2 py-2 ${i < 2 ? 'border-b border-warm/40' : ''}`}>
+                      <div>
+                        <p className="text-[11px] font-semibold text-charcoal leading-tight">{r.name}</p>
+                        {r.amount && <p className="text-[10px] text-mid">{r.amount}</p>}
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <div className="w-10 h-1.5 bg-warm rounded-full overflow-hidden">
+                          <div className={`h-full ${r.color} rounded-full`} style={{ width: `${r.pct}%` }} />
+                        </div>
+                        <span className="text-[10px] font-bold text-charcoal">{r.pct}%</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Awarded — bottom right */}
+            <motion.div {...fadeInView(0.12)} className="absolute" style={{ width: '220px', top: '340px', right: '0px', zIndex: 2 }}>
+              <div className="bg-white rounded-xl border border-warm/80 p-4" style={{ transform: 'rotate(4deg)', boxShadow: '0 8px 32px rgba(26,46,43,0.10)' }}>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-7 h-7 rounded-full bg-forest/10 flex items-center justify-center flex-shrink-0">
+                    <Award className="w-3.5 h-3.5 text-forest" />
+                  </div>
+                  <p className="text-[11px] font-bold text-forest uppercase tracking-wider">Awarded</p>
+                </div>
+                <p className="text-[13px] font-semibold text-charcoal leading-snug mb-1">London Community Foundation</p>
+                <p className="text-[11px] text-mid mb-3">Grow to Give — Community Growing</p>
+                <div className="flex items-center justify-between rounded-lg px-3 py-2" style={{ background: 'rgba(45,107,74,0.08)' }}>
+                  <span className="text-[11px] text-mid">Grant awarded</span>
+                  <span className="text-[15px] font-bold text-forest">£8,000</span>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Alerts — front bottom left */}
+            <motion.div {...fadeInView(0.1)} className="absolute" style={{ width: '250px', top: '320px', left: '10px', zIndex: 4 }}>
+              <div className="bg-white rounded-xl border border-warm/80 p-4" style={{ transform: 'rotate(-3deg)', boxShadow: '0 8px 32px rgba(26,46,43,0.12)' }}>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="relative w-7 h-7 rounded-full bg-warm flex items-center justify-center flex-shrink-0">
+                    <Bell className="w-3.5 h-3.5 text-mid" />
+                    <div className="absolute top-0 right-0 w-2 h-2 rounded-full bg-red-400 border border-white" />
+                  </div>
+                  <p className="text-[11px] font-bold text-charcoal uppercase tracking-wider">Alerts</p>
+                </div>
+                <div className="flex flex-col">
+                  {[
+                    { name: 'Youth Fund 2025',        org: 'Paul Hamlyn Foundation', days: '2d',  urgent: true  },
+                    { name: 'Green Spaces Grant',     org: 'National Lottery',       days: '8d',  urgent: false },
+                    { name: 'Digital Inclusion Fund', org: 'DCMS',                   days: '14d', urgent: false },
+                  ].map((a, i) => (
+                    <div key={a.name} className={`flex items-center justify-between gap-2 py-2 ${i < 2 ? 'border-b border-warm/40' : ''}`}>
+                      <div>
+                        <p className="text-[11px] font-semibold text-charcoal leading-tight">{a.name}</p>
+                        <p className="text-[10px] text-mid">{a.org}</p>
+                      </div>
+                      <span className={`text-[10px] font-bold px-2 py-1 rounded-full flex-shrink-0 ${a.urgent ? 'bg-coral text-white' : 'bg-warm text-mid'}`}>{a.days}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
 
           </div>
 
+        </div>
       </section>
 
       {/* FEATURES */}
