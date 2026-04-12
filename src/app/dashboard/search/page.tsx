@@ -672,7 +672,11 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
           style={{ color: '#6E6E80' }}
         >
           <ChevronDown className="w-3.5 h-3.5 transition-transform" style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }} />
-          {expanded ? 'Show less' : (grant as EnrichedGrant).funderBrief ? 'Funder Intelligence' : 'Eligibility & details'}
+          {expanded ? 'Show less' : (grant as EnrichedGrant).funderBrief ? (
+            grant.fundingType === 'investment' ? 'Investor Insights' :
+            grant.fundingType === 'in_kind'    ? 'Partner Insights'  :
+                                                 'Funder Insights'
+          ) : 'Eligibility & details'}
         </button>
       )}
 
