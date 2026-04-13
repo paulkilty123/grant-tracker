@@ -614,7 +614,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
           </button>
           <button
             onClick={() => isInPipeline ? onRemoveFromPipeline?.(grant) : onAddToPipeline(grant)}
-            className={`w-full flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-semibold border rounded-full transition-colors whitespace-nowrap ${isInPipeline ? 'bg-[#FDE8A3] text-[#4A3800] border-[#4A3800]' : 'border-[#4A3800] text-[#4A3800] bg-transparent hover:bg-[#FDE8A3]'}`}
+            className={`w-full flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-semibold border rounded-full transition-colors whitespace-nowrap ${isInPipeline ? 'bg-[#D9F99D] text-[#3F6212] border-[#4D7C0F]' : 'border-[#4D7C0F] text-[#4D7C0F] bg-transparent hover:bg-[#D9F99D]'}`}
           >
             <PlusCircle className="w-3.5 h-3.5" />
             {isInPipeline ? 'In Pipeline' : 'Pipeline'}
