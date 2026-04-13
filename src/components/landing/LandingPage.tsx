@@ -535,21 +535,69 @@ export default function LandingPage() {
       )}
 
       {/* HOW IT WORKS */}
-      <section id="how" className="py-16 md:py-20">
-        <div className="mx-auto max-w-5xl px-6">
-          <motion.div {...fadeInView(0)} className="mb-16">
-            <p className="text-sm font-semibold text-coral uppercase tracking-wider">How it works</p>
-            <h2 className="mt-3 font-serif text-4xl md:text-5xl leading-tight max-w-lg">Setup, search and track what matters.</h2>
+      <section id="how" className="py-20 md:py-28" style={{ background: '#F9F9F9' }}>
+        <div className="mx-auto max-w-7xl px-6 md:px-8">
+
+          {/* Header row */}
+          <motion.div {...fadeInView(0)} className="grid lg:grid-cols-2 gap-8 items-end mb-14">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest mb-5" style={{ color: '#84CC16' }}>Process</p>
+              <h2 className="font-bold leading-tight" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#1A1A1A' }}>
+                Setup, search and<br/>
+                <span style={{ color: '#84CC16' }}>track what matters</span>
+              </h2>
+            </div>
+            <div className="lg:pb-2">
+              <p className="text-[#525252] text-base leading-relaxed max-w-sm">
+                GrantTracker streamlines your funding journey from initial discovery to successful submission — matched to your organisation.
+              </p>
+            </div>
           </motion.div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-px bg-warm rounded-xl overflow-hidden">
-            {howSteps.map((step, i) => (
-              <motion.div key={step.title} {...fadeInView(i * 0.08)} className="bg-cream p-8">
-                <span className={`font-serif text-coral ${step.featured ? 'text-6xl' : 'text-4xl'}`}>{step.num}</span>
-                <h3 className={`mt-4 font-serif ${step.featured ? 'text-2xl md:text-3xl' : 'text-xl'}`}>{step.title}</h3>
-                <p className="mt-3 text-sm text-mid leading-relaxed">{step.desc}</p>
+
+          {/* Cards */}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              {
+                num: '01', title: 'Setup your profile',
+                desc: 'List your impact, mission and target groups.',
+                Icon: Users,
+                bg: '#E6F4FF', numColor: '#376478', titleColor: '#1A1A1A', textColor: '#525252', iconColor: '#376478',
+              },
+              {
+                num: '02', title: 'Search & match',
+                desc: 'Discover opportunities matched to you.',
+                Icon: Search,
+                bg: '#FFEBB6', numColor: '#6B5D34', titleColor: '#6B5D34', textColor: '#6B5D34', iconColor: '#6B5D34',
+              },
+              {
+                num: '03', title: 'Track opportunities',
+                desc: 'Add to pipeline, get deadline alerts and apply.',
+                Icon: TrendingUp,
+                bg: '#EEEEEE', numColor: '#9E9E9E', titleColor: '#1A1A1A', textColor: '#525252', iconColor: '#9E9E9E',
+              },
+              {
+                num: '04', title: 'Submit & win',
+                desc: 'Increase your win-rate with strongly aligned applications.',
+                Icon: Award,
+                bg: '#84CC16', numColor: '#BEF264', titleColor: '#ffffff', textColor: 'rgba(255,255,255,0.85)', iconColor: '#ffffff',
+              },
+            ].map((step, i) => (
+              <motion.div
+                key={step.title}
+                {...fadeInView(i * 0.08)}
+                className="rounded-3xl p-7 flex flex-col min-h-[260px]"
+                style={{ background: step.bg }}
+              >
+                <span className="text-4xl font-bold mb-6" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', color: step.numColor }}>{step.num}</span>
+                <h3 className="font-bold text-lg mb-3 leading-snug" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', color: step.titleColor }}>{step.title}</h3>
+                <p className="text-sm leading-relaxed flex-1" style={{ color: step.textColor }}>{step.desc}</p>
+                <div className="mt-6">
+                  <step.Icon className="w-6 h-6" style={{ color: step.iconColor }} />
+                </div>
               </motion.div>
             ))}
           </div>
+
         </div>
       </section>
 
