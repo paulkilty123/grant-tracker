@@ -360,7 +360,7 @@ export default function LandingPage() {
             <div className="flex items-center gap-3 bg-[#C8E9FB] text-[#4D7C98] px-5 py-3 rounded-full w-fit mb-10">
               <CheckCircle className="w-5 h-5 flex-shrink-0" />
               <p className="font-bold text-xs tracking-wide uppercase">
-                For: CICs, Charities, Social Enterprises and Community Groups across the UK.
+                Built for the UK social impact sector.
               </p>
             </div>
             {/* Headline */}
@@ -374,7 +374,7 @@ export default function LandingPage() {
             </h1>
             {/* Subtext */}
             <p className="text-[#525252] leading-relaxed font-medium text-lg max-w-lg mb-10">
-              Discover grants, programmes, social investment and in-kind opportunities.
+              Matched to your structure, sector and geography — across grants, programmes, social investment and in-kind support.
             </p>
             {/* CTAs */}
             <div className="flex flex-wrap gap-4">
