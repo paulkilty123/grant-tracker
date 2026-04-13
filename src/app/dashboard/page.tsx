@@ -225,39 +225,39 @@ export default async function DashboardPage() {
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        {/* Card 1 — Total Pipeline (forest bg) */}
-        <div className="p-5 rounded-xl text-white col-span-1" style={{ background: '#1A1A1A', boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}>
-          <p className="text-[10px] font-semibold uppercase tracking-wider mb-3 text-white/60">Total Pipeline</p>
-          <p className="text-3xl font-bold leading-none mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#84CC16', letterSpacing: '-0.02em' }}>
+    Card 1 — Total Pipeline (blue) */}
+        <div className="p-5 rounded-xl col-span-1" style={{ background: '#DBEAFE', boxShadow: '0 2px 16px rgba(59,130,246,0.10)' }}>
+          <p className="text-[10px] font-semibold uppercase tracking-wider mb-3" style={{ color: '#3B82F6' }}>Total Pipeline</p>
+          <p className="text-3xl font-bold leading-none mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#1E3A5F', letterSpacing: '-0.02em' }}>
             {formatCurrency(stats.totalPipelineValue)}
           </p>
-          <p className="text-xs text-white/60">{stats.activeCount} active opportunit{stats.activeCount !== 1 ? 'ies' : 'y'}</p>
+          <p className="text-xs" style={{ color: '#3B82F6' }}>{stats.activeCount} active opportunit{stats.activeCount \!== 1 ? 'ies' : 'y'}</p>
         </div>
 
-        {/* Card 2 — Won This Year */}
-        <div className="p-5 rounded-xl bg-white border border-warm/80" style={{ boxShadow: '0 2px 16px rgba(26,46,43,0.06)' }}>
-          <p className="text-[10px] font-semibold text-mid uppercase tracking-wider mb-3">Won This Year</p>
-          <p className="text-3xl font-bold text-charcoal leading-none mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.02em' }}>{formatCurrency(stats.totalWon)}</p>
-          <p className="text-xs text-mid">{stats.wonCount} grant{stats.wonCount !== 1 ? 's' : ''} secured</p>
+        {/* Card 2 — Won This Year (lime green) */}
+        <div className="p-5 rounded-xl" style={{ background: '#84CC16', boxShadow: '0 2px 16px rgba(132,204,22,0.25)' }}>
+          <p className="text-[10px] font-semibold uppercase tracking-wider mb-3" style={{ color: 'rgba(255,255,255,0.70)' }}>Won This Year</p>
+          <p className="text-3xl font-bold leading-none mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#ffffff', letterSpacing: '-0.02em' }}>{formatCurrency(stats.totalWon)}</p>
+          <p className="text-xs" style={{ color: 'rgba(255,255,255,0.70)' }}>{stats.wonCount} grant{stats.wonCount \!== 1 ? 's' : ''} secured</p>
         </div>
 
-        {/* Card 3 — Submitted */}
-        <div className="p-5 rounded-xl bg-white border border-warm/80" style={{ boxShadow: '0 2px 16px rgba(26,46,43,0.06)' }}>
-          <p className="text-[10px] font-semibold text-mid uppercase tracking-wider mb-3">Submitted</p>
-          <p className="text-3xl font-bold text-charcoal leading-none mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.02em' }}>{stats.submittedCount}</p>
-          <p className="text-xs text-mid">Application{stats.submittedCount !== 1 ? 's' : ''} awaiting decision</p>
+        {/* Card 3 — Submitted (amber) */}
+        <div className="p-5 rounded-xl" style={{ background: '#FEF3C7', boxShadow: '0 2px 16px rgba(245,158,11,0.12)' }}>
+          <p className="text-[10px] font-semibold uppercase tracking-wider mb-3" style={{ color: '#B45309' }}>Submitted</p>
+          <p className="text-3xl font-bold leading-none mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#78350F', letterSpacing: '-0.02em' }}>{stats.submittedCount}</p>
+          <p className="text-xs" style={{ color: '#B45309' }}>Application{stats.submittedCount \!== 1 ? 's' : ''} awaiting decision</p>
         </div>
 
-        {/* Card 4 — Urgent Deadlines */}
-        <div className="p-5 rounded-xl bg-white border border-warm/80" style={{ boxShadow: '0 2px 16px rgba(26,46,43,0.06)' }}>
-          <p className="text-[10px] font-semibold text-mid uppercase tracking-wider mb-3">Urgent Deadlines</p>
+        {/* Card 4 — Urgent Deadlines (grey) */}
+        <div className="p-5 rounded-xl" style={{ background: '#EBEBEB', boxShadow: '0 2px 16px rgba(0,0,0,0.06)' }}>
+          <p className="text-[10px] font-semibold uppercase tracking-wider mb-3" style={{ color: '#6B7280' }}>Urgent Deadlines</p>
           <div className="flex items-center gap-3 mb-2">
-            <p className="text-3xl font-bold leading-none" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.02em', color: urgentCount > 0 ? '#ea580c' : '#1A1A1A' }}>{urgentCount}</p>
-            <span className="flex items-center justify-center w-10 h-10 rounded-full" style={{ backgroundColor: '#fde8e4' }}>
-              <AlarmClock className="w-5 h-5" style={{ color: '#9b1c1c' }} />
+            <p className="text-3xl font-bold leading-none" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.02em', color: urgentCount > 0 ? '#ea580c' : '#374151' }}>{urgentCount}</p>
+            <span className="flex items-center justify-center w-10 h-10 rounded-full" style={{ backgroundColor: 'rgba(234,88,12,0.12)' }}>
+              <AlarmClock className="w-5 h-5" style={{ color: '#ea580c' }} />
             </span>
           </div>
-          <p className="text-xs text-mid">In the next 10 days</p>
+          <p className="text-xs" style={{ color: '#6B7280' }}>In the next 10 days</p>
         </div>
       </div>
 
