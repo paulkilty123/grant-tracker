@@ -5,18 +5,18 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Search, ArrowRight, Bell, Lock } from 'lucide-react'
-import Logo from '@/components/Logo'
+import RadioWaveIcon from '@/components/icons/RadioWaveIcon'
 
 const ERROR_MESSAGES: Record<string, string> = {
-  'Invalid login credentials': 'Incorrect email or password — please try again.',
+  'Invalid login credentials': 'Incorrect email or password \u2014 please try again.',
   'Email not confirmed': 'Please check your email and click the confirmation link first.',
-  'Too many requests': 'Too many attempts — please wait a few minutes and try again.',
+  'Too many requests': 'Too many attempts \u2014 please wait a few minutes and try again.',
 }
 
 const URL_ERROR_MESSAGES: Record<string, string> = {
-  'otp_expired':          'That confirmation link has expired. Please sign up again to receive a new one.',
-  'confirmation_failed':  'We couldn\'t confirm your email — the link may have already been used. Try signing in, or sign up again.',
-  'auth_error':           'Something went wrong with that link. Please try again.',
+  'otp_expired':         'That confirmation link has expired. Please sign up again to receive a new one.',
+  'confirmation_failed': "We couldn't confirm your email \u2014 the link may have already been used. Try signing in, or sign up again.",
+  'auth_error':          'Something went wrong with that link. Please try again.',
 }
 
 function friendlyError(msg: string): string {
@@ -32,9 +32,9 @@ function LoginForm() {
   const [showPw, setShowPw]     = useState(false)
   const [error, setError]       = useState<string | null>(null)
   const [loading, setLoading]   = useState(false)
-  const router = useRouter()
+  const router       = useRouter()
   const searchParams = useSearchParams()
-  const urlError = searchParams.get('error')
+  const urlError        = searchParams.get('error')
   const urlErrorMessage = urlError ? (URL_ERROR_MESSAGES[urlError] ?? URL_ERROR_MESSAGES['auth_error']) : null
 
   async function handleLogin(e: React.FormEvent) {
@@ -53,136 +53,108 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-cream flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: '#F9F9F9' }}>
       <div className="w-full max-w-4xl">
 
-        {/* Back to home */}
         <div className="mb-6">
-          <Link href="/" className="text-sm text-mid hover:text-charcoal transition-colors inline-flex items-center gap-1.5">
-            ← Back to home
+          <Link href="/" className="text-sm inline-flex items-center gap-1.5 hover:opacity-70 transition-opacity" style={{ color: '#525252', fontFamily: 'var(--font-space-grotesk)' }}>
+            &larr; Back to home
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 overflow-hidden rounded-xl border border-warm/60" style={{ boxShadow: '0 8px 40px rgba(26,46,43,0.10)' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 overflow-hidden rounded-3xl" style={{ boxShadow: '0 8px 48px rgba(0,0,0,0.10)' }}>
 
-          {/* ── Left: value props ── */}
-          <div className="bg-[#1C1C2E] text-white p-10 hidden lg:flex flex-col justify-between">
+          {/* Left panel */}
+          <div className="text-white p-10 hidden lg:flex flex-col justify-between" style={{ background: '#1A1A1A' }}>
             <div>
-              {/* Logo */}
-              <a href="/" className="no-underline mb-2">
-                <Logo variant="light" size="md" />
+              <a href="/" className="no-underline inline-flex items-center gap-2 mb-2">
+                <span style={{ color: '#84CC16' }}><RadioWaveIcon className="w-6 h-6" /></span>
+                <span className="font-bold text-xl" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#FFFFFF', letterSpacing: '-0.02em' }}>Grant<span style={{ color: '#84CC16' }}>Tracker</span></span>
               </a>
-              <p className="text-white/50 text-sm mb-10">Find grants, accelerators, investment and support programmes — matched to you, managed in one place.</p>
-
+              <p className="text-sm mb-10" style={{ color: '#888888' }}>Find grants, accelerators, investment and support programmes &mdash; matched to you, managed in one place.</p>
               <div className="space-y-6">
                 {[
-                  { Icon: Search,    title: 'Find funding that fits',     desc: 'Search grants, accelerators and social investment filtered to your structure, sector and stage.' },
-                  { Icon: ArrowRight, title: 'Track every application',   desc: 'A visual pipeline keeps every opportunity in view — from first contact to decision.' },
-                  { Icon: Bell,      title: 'Never miss a deadline',       desc: 'Instant or weekly alerts when new matches appear or deadlines are approaching.' },
+                  { Icon: Search,     title: 'Find funding that fits',    desc: 'Search grants, accelerators and social investment filtered to your structure, sector and stage.' },
+                  { Icon: ArrowRight, title: 'Track every application',   desc: 'A visual pipeline keeps every opportunity in view \u2014 from first contact to decision.' },
+                  { Icon: Bell,       title: 'Never miss a deadline',     desc: 'Instant or weekly alerts when new matches appear or deadlines are approaching.' },
                 ].map(({ Icon, title, desc }) => (
                   <div key={title} className="flex gap-3.5">
-                    <div className="w-8 h-8 rounded-full bg-white/8 flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: 'rgba(255,255,255,0.08)' }}>
-                      <Icon size={15} className="text-coral" />
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: 'rgba(132,204,22,0.12)' }}>
+                      <Icon size={16} style={{ color: '#84CC16' }} />
                     </div>
                     <div>
-                      <p className="font-semibold text-sm text-white">{title}</p>
-                      <p className="text-white/50 text-xs leading-relaxed mt-0.5">{desc}</p>
+                      <p className="font-semibold text-sm" style={{ color: '#FFFFFF', fontFamily: 'var(--font-space-grotesk)' }}>{title}</p>
+                      <p className="text-xs leading-relaxed mt-0.5" style={{ color: '#888888' }}>{desc}</p>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-
-            <div className="flex items-center gap-2 mt-10 pt-6 border-t border-white/10">
-              <Lock size={12} className="text-white/30" />
-              <p className="text-white/30 text-xs">Your data is never shared or sold</p>
+            <div className="flex items-center gap-2 mt-10 pt-6" style={{ borderTop: '1px solid #2A2A2A' }}>
+              <Lock size={12} style={{ color: '#555555' }} />
+              <p className="text-xs" style={{ color: '#555555' }}>Your data is never shared or sold</p>
             </div>
           </div>
 
-          {/* ── Right: form ── */}
+          {/* Right: form */}
           <div className="bg-white p-8 lg:p-10 flex flex-col justify-center">
-
-            {/* Mobile logo */}
             <div className="mb-8 lg:hidden flex justify-center">
-              <a href="/" className="no-underline">
-                <Logo variant="dark" size="md" />
+              <a href="/" className="no-underline inline-flex items-center gap-2">
+                <span style={{ color: '#84CC16' }}><RadioWaveIcon className="w-5 h-5" /></span>
+                <span className="font-bold text-lg" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#1A1A1A' }}>Grant<span style={{ color: '#84CC16' }}>Tracker</span></span>
               </a>
             </div>
-
-            <h1 className="font-serif text-[28px] leading-tight text-charcoal mb-1">Welcome back</h1>
-            <p className="text-mid text-sm mb-7">Sign in to your Grant Tracker account</p>
+            <h1 className="font-bold leading-tight mb-1" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 'clamp(22px, 3vw, 28px)', letterSpacing: '-0.02em', color: '#1A1A1A' }}>Welcome back</h1>
+            <p className="text-sm mb-7" style={{ color: '#888888' }}>Sign in to your Grant Tracker account</p>
 
             <form onSubmit={handleLogin} className="space-y-4">
               {urlErrorMessage && (
-                <div className="bg-amber-50 text-amber-700 text-sm px-4 py-3 border border-amber-200">
+                <div className="text-amber-700 text-sm px-4 py-3 rounded-xl border border-amber-200" style={{ background: '#FFFBEB' }}>
                   {urlErrorMessage}
                 </div>
               )}
               {error && (
-                <div className="bg-red-50 text-red-600 text-sm px-4 py-3 border border-red-100">
+                <div className="text-red-600 text-sm px-4 py-3 rounded-xl border border-red-100" style={{ background: '#FEF2F2' }}>
                   {error}
                 </div>
               )}
-
               <div>
-                <label className="block text-sm font-medium text-charcoal mb-1.5">Email</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  className="form-input rounded-lg"
-                  placeholder="you@organisation.org"
-                  autoComplete="email"
-                  required
-                />
+                <label className="block text-sm font-semibold mb-1.5" style={{ color: '#1A1A1A', fontFamily: 'var(--font-space-grotesk)' }}>Email</label>
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="form-input rounded-xl" placeholder="you@organisation.org" autoComplete="email" required />
               </div>
-
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-sm font-medium text-charcoal">Password</label>
-                  <Link href="/auth/forgot-password" className="text-xs text-coral hover:underline">
-                    Forgot password?
-                  </Link>
+                  <label className="block text-sm font-semibold" style={{ color: '#1A1A1A', fontFamily: 'var(--font-space-grotesk)' }}>Password</label>
+                  <Link href="/auth/forgot-password" className="text-xs hover:underline" style={{ color: '#84CC16' }}>Forgot password?</Link>
                 </div>
                 <div className="relative">
                   <input
                     type={showPw ? 'text' : 'password'}
                     value={password}
                     onChange={e => setPassword(e.target.value)}
-                    className="form-input pr-10 rounded-lg"
-                    placeholder="••••••••"
+                    className="form-input pr-10 rounded-xl"
+                    placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;"
                     autoComplete="current-password"
                     required
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPw(v => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-mid hover:text-charcoal text-xs"
-                    tabIndex={-1}
-                  >
+                  <button type="button" onClick={() => setShowPw(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs hover:opacity-70" style={{ color: '#888888' }} tabIndex={-1}>
                     {showPw ? 'Hide' : 'Show'}
                   </button>
                 </div>
               </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex justify-center items-center bg-coral text-white py-3 text-sm font-semibold hover:opacity-90 transition-colors mt-2 rounded-lg"
-              >
-                {loading ? 'Signing in…' : 'Sign in'}
+              <button type="submit" disabled={loading} className="w-full flex justify-center items-center rounded-full py-3.5 text-sm font-bold transition-opacity hover:opacity-80 mt-2" style={{ background: '#84CC16', color: '#1A1A1A', fontFamily: 'var(--font-space-grotesk)' }}>
+                {loading ? 'Signing in\u2026' : 'Sign in'}
               </button>
             </form>
 
-            <div className="mt-6 pt-6 border-t border-warm text-center">
-              <p className="text-sm text-mid">
+            <div className="mt-6 pt-6 text-center" style={{ borderTop: '1px solid #F0F0F0' }}>
+              <p className="text-sm" style={{ color: '#888888' }}>
                 Don&apos;t have an account?{' '}
-                <Link href="/auth/signup" className="text-coral font-medium hover:underline">
-                  Create one free
-                </Link>
+                <Link href="/auth/signup" className="font-semibold hover:underline" style={{ color: '#84CC16' }}>Create one free</Link>
               </p>
             </div>
           </div>
+
         </div>
       </div>
     </div>
