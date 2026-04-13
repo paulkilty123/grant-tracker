@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Menu, X, Check, Search, Calendar, TrendingUp, Activity, Clock, Mail, MessageSquare, Bell, LayoutGrid, ArrowRight, Award } from 'lucide-react'
+import { Menu, X, Check, Search, Calendar, TrendingUp, Activity, Clock, Mail, MessageSquare, Bell, LayoutGrid, ArrowRight, Award, CheckCircle, BadgeCheck, Users, Rocket } from 'lucide-react'
 import ContactForm from '@/components/ContactForm'
 import RadioWaveIcon from '@/components/icons/RadioWaveIcon'
 
@@ -294,30 +294,39 @@ export default function LandingPage() {
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="fixed top-0 left-0 right-0 z-50 bg-cream/95 backdrop-blur-sm border-b border-warm/60"
+        className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-slate-100"
       >
-        <div className="flex w-full items-center justify-between px-5 md:px-8 py-4 md:py-5">
-          <a href="/" className="flex items-center gap-2.5 no-underline">
-            <div className="relative flex items-center justify-center bg-coral w-7 h-7 flex-shrink-0" style={{ borderRadius: '6px' }}>
-              <div className="w-2.5 h-2.5 rounded-full border-2 border-white" />
-            </div>
-            <span className="font-serif text-[22px] text-charcoal">GrantTracker</span>
+        <div className="flex items-center justify-between px-6 md:px-8 py-5 max-w-7xl mx-auto">
+          {/* Logo */}
+          <a href="/" className="text-2xl font-bold text-[#1A1A1A] tracking-tight no-underline" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>
+            GrantTracker
           </a>
-          {/* Desktop nav links */}
-          <div className="hidden md:flex items-center gap-6 lg:gap-10">
-            {navLinks.map((link) => (
-              <a key={link.label} href={link.href} className="text-sm text-mid transition-colors hover:text-charcoal">{link.label}</a>
+          {/* Desktop nav */}
+          <nav className="hidden md:flex items-center gap-10">
+            {navLinks.map((link, i) => (
+              i === 0 ? (
+                <div key={link.label} className="relative flex flex-col items-center">
+                  <a href={link.href} className="text-[#1A1A1A] font-semibold text-base" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>{link.label}</a>
+                  <div className="absolute -bottom-2 w-full h-[3px] bg-[#84CC16] rounded-full" />
+                </div>
+              ) : (
+                <a key={link.label} href={link.href} className="text-[#525252] hover:text-[#1A1A1A] transition-colors font-medium text-base" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>{link.label}</a>
+              )
             ))}
-          </div>
+          </nav>
           {/* Desktop CTAs */}
-          <div className="hidden md:flex items-center gap-3">
-            <Link href="/auth/login" className="text-sm text-mid hover:text-charcoal transition-colors px-3 py-2">Sign in</Link>
-            <Link href="/auth/signup" className="bg-coral text-white px-5 py-2 text-sm font-medium hover:opacity-90 transition-colors" style={{ borderRadius: '0px' }}>Get started free</Link>
+          <div className="hidden md:flex items-center gap-8">
+            <Link href="/auth/login" className="text-[#1A1A1A] font-semibold text-base hover:opacity-80 transition-opacity no-underline" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>
+              Sign in
+            </Link>
+            <Link href="/auth/signup" className="bg-[#84CC16] text-[#1A1A1A] px-8 py-3 rounded-full font-bold text-base hover:opacity-90 transition-all no-underline">
+              Get Started
+            </Link>
           </div>
-          {/* Mobile: sign up + hamburger */}
+          {/* Mobile */}
           <div className="flex md:hidden items-center gap-3">
-            <Link href="/auth/signup" className="bg-coral text-white px-4 py-2 text-sm font-medium hover:opacity-90 transition-colors" style={{ borderRadius: '0px' }}>Get started</Link>
-            <button onClick={() => setMobileOpen(o => !o)} className="p-1 text-charcoal" aria-label="Toggle menu">
+            <Link href="/auth/signup" className="bg-[#84CC16] text-[#1A1A1A] px-4 py-2 rounded-full text-sm font-bold hover:opacity-90 transition-all no-underline">Get started</Link>
+            <button onClick={() => setMobileOpen(o => !o)} className="p-1 text-[#1A1A1A]" aria-label="Toggle menu">
               {mobileOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
           </div>
@@ -326,15 +335,15 @@ export default function LandingPage() {
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
-            className="border-t border-warm bg-cream px-6 pb-6 md:hidden"
+            className="border-t border-slate-100 bg-white px-6 pb-6 md:hidden"
           >
             <div className="flex flex-col gap-4 pt-4">
-              {navLinks.map((link) => (
-                <a key={link.label} href={link.href} className="text-sm text-mid" onClick={() => setMobileOpen(false)}>{link.label}</a>
+              {navLinks.map(link => (
+                <a key={link.label} href={link.href} className="text-sm text-[#525252]" onClick={() => setMobileOpen(false)}>{link.label}</a>
               ))}
               <div className="flex flex-col gap-2 pt-2">
-                <Link href="/auth/login" onClick={() => setMobileOpen(false)} className="text-center text-sm text-mid py-2 border border-warm">Sign in</Link>
-                <Link href="/auth/signup" onClick={() => setMobileOpen(false)} className="bg-coral text-white rounded-xl text-center text-sm font-medium py-2 hover:opacity-90 transition-colors">Get started free</Link>
+                <Link href="/auth/login" onClick={() => setMobileOpen(false)} className="text-center text-sm text-[#525252] py-2 border border-slate-200 rounded-full">Sign in</Link>
+                <Link href="/auth/signup" onClick={() => setMobileOpen(false)} className="bg-[#84CC16] text-[#1A1A1A] rounded-full text-center text-sm font-bold py-2 hover:opacity-90 transition-colors">Get started free</Link>
               </div>
             </div>
           </motion.div>
@@ -342,42 +351,116 @@ export default function LandingPage() {
       </motion.nav>
 
       {/* HERO */}
-      <section
-        className="relative overflow-hidden"
-        style={{ minHeight: '100vh', background: '#faf7f2' }}
-      >
-        <div className="relative z-10 mx-auto max-w-5xl px-6 flex flex-col items-center justify-center text-center" style={{ minHeight: '100vh', paddingTop: 'clamp(90px, 15vw, 120px)', paddingBottom: '80px' }}>
+      <section className="relative overflow-hidden" style={{ background: '#F9F9F9', minHeight: '100vh' }}>
+        <div className="relative z-10 mx-auto max-w-7xl px-6 md:px-8 grid lg:grid-cols-2 gap-16 lg:gap-12 items-start" style={{ paddingTop: 'clamp(100px, 14vw, 128px)', paddingBottom: '80px' }}>
 
-          <motion.h1
-            {...fadeUp(0)}
-            className="font-serif leading-[1.05] text-charcoal mb-6"
-            style={{ fontSize: 'clamp(56px, 8vw, 112px)' }}
-          >
-            <span className="block">Funding, matched</span>
-            <span className="block">for you.</span>
-          </motion.h1>
-
-          <motion.p
-            {...fadeUp(0.15)}
-            className="text-mid leading-relaxed mb-10"
-            style={{ fontSize: '20px', lineHeight: 1.7, maxWidth: '520px' }}
-          >
-            Discover grants, programmes, social investment and in-kind opportunities.
-          </motion.p>
-
-          <motion.div {...fadeUp(0.3)} className="flex flex-wrap gap-3 justify-center mb-6">
-            <a href="#how" className="bg-[#1C1C2E] text-white px-6 py-3 text-[15px] font-semibold rounded-lg transition-colors hover:opacity-90">
-              How it works
-            </a>
-            <a href="#features" className="bg-coral text-white px-6 py-3 text-[15px] font-semibold rounded-lg hover:opacity-90 transition-colors">
-              Features
-            </a>
+          {/* Left: text */}
+          <motion.div {...fadeUp(0)} className="flex flex-col justify-start">
+            {/* Audience badge */}
+            <div className="flex items-center gap-3 bg-[#C8E9FB] text-[#4D7C98] px-5 py-3 rounded-full w-fit mb-10">
+              <CheckCircle className="w-5 h-5 flex-shrink-0" />
+              <p className="font-bold text-xs tracking-wide uppercase">
+                For: CICs, Charities, Social Enterprises and Community Groups across the UK.
+              </p>
+            </div>
+            {/* Headline */}
+            <h1
+              className="font-bold leading-[1.05] text-[#1A1A1A] mb-10"
+              style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: 'clamp(64px, 9vw, 120px)', letterSpacing: '-0.04em' }}
+            >
+              Funding,<br/>
+              <span style={{ color: '#84CC16' }}>matched</span><br/>
+              for you.
+            </h1>
+            {/* Subtext */}
+            <p className="text-[#525252] leading-relaxed font-medium text-lg max-w-lg mb-10">
+              Empowering modern stewards with AI-driven discovery, tracking, and reporting. Discover grants, programmes, social investment and in-kind support matched to your organisation.
+            </p>
+            {/* CTAs */}
+            <div className="flex flex-wrap gap-4">
+              <Link
+                href="/auth/signup"
+                className="text-white px-9 py-4 rounded-full font-bold text-base hover:opacity-95 transition-all no-underline"
+                style={{ background: 'linear-gradient(180deg, #84CC16 0%, #4D7C0F 100%)', boxShadow: '0 10px 20px -5px rgba(132, 204, 22, 0.3)' }}
+              >
+                Get started free
+              </Link>
+              <a href="#how" className="bg-[#EAEAEA] text-[#1A1A1A] px-9 py-4 rounded-full font-bold text-base hover:bg-[#E0E0E0] transition-all">
+                How it works
+              </a>
+            </div>
           </motion.div>
 
-          <motion.p {...fadeUp(0.4)} className="text-xs text-mid flex items-center gap-2">
-            <span className="inline-block w-1.5 h-1.5 bg-forest rounded-full flex-shrink-0" />
-            Trusted by nonprofits, CICs and social enterprises across the UK
-          </motion.p>
+          {/* Right: UI card */}
+          <motion.div {...fadeUp(0.2)} className="relative lg:pl-8 flex items-start pt-4">
+            <div className="bg-white rounded-3xl p-8 w-full" style={{ boxShadow: '0 40px 100px -20px rgba(0,0,0,0.08)' }}>
+              {/* Card header */}
+              <div className="flex justify-between items-start mb-8">
+                <div>
+                  <h3 className="text-2xl font-bold text-[#1A1A1A] tracking-tight" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>Digital Inclusion Fund</h3>
+                  <p className="text-[#525252] font-medium mt-0.5 text-sm">Active Grant Application</p>
+                </div>
+                <div className="bg-[#BEF264] px-4 py-1.5 rounded-full flex items-center gap-1.5 flex-shrink-0">
+                  <span className="w-2 h-2 rounded-full bg-[#84CC16] animate-pulse" />
+                  <span className="text-[#1A1A1A] font-bold text-xs tracking-tight">Pipeline: Draft</span>
+                </div>
+              </div>
+              {/* Stats grid */}
+              <div className="grid grid-cols-2 gap-4 mb-5">
+                <div className="bg-[#F2F2F2] rounded-2xl p-5">
+                  <p className="text-[#525252] text-[11px] font-bold uppercase tracking-wider mb-1">Matching Score</p>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-5xl font-bold text-[#84CC16]" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>94%</span>
+                    <span className="text-[#525252] font-bold text-sm">Match</span>
+                  </div>
+                  <div className="mt-4">
+                    <div className="h-1.5 w-full bg-[#E2E2E2] rounded-full overflow-hidden">
+                      <div className="h-full bg-[#84CC16] rounded-full" style={{ width: '94%' }} />
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-[#525252] mt-3 font-semibold italic">Based on Youth Fund criteria</p>
+                </div>
+                <div className="bg-[#E6F4FF] rounded-2xl p-5">
+                  <p className="text-[#3C687D] text-[11px] font-bold uppercase tracking-wider mb-1">Requested Funding</p>
+                  <div className="flex items-baseline">
+                    <span className="text-4xl font-bold text-[#1A1A1A]" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>£25,000</span>
+                  </div>
+                  <div className="mt-6 flex items-center gap-1.5">
+                    <BadgeCheck className="w-4 h-4 text-[#376478]" />
+                    <span className="text-[11px] font-bold text-[#376478] uppercase tracking-tight">Verified Institutional Trust</span>
+                  </div>
+                </div>
+              </div>
+              {/* List rows */}
+              <div className="space-y-3">
+                {[
+                  { Icon: Users, label: 'Community Reach', sub: 'Social impact focus', iconBg: '#E6F4FF', iconColor: '#376478', tag: 'High Priority', tagStyle: { background: '#F5E1AD', color: '#52461F' } },
+                  { Icon: TrendingUp, label: 'Social Investment', sub: 'Sustainable growth model', iconBg: 'rgba(206,188,139,0.4)', iconColor: '#6B5D34', tag: 'High Priority', tagStyle: { background: '#F5E1AD', color: '#52461F' } },
+                  { Icon: Rocket, label: 'Incubation Programme', sub: 'Capacity building', iconBg: 'rgba(190,242,100,0.4)', iconColor: '#446900', tag: 'Phase 1', tagStyle: { color: '#84CC16', fontWeight: '800', letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: '11px' } },
+                ].map((row) => (
+                  <div key={row.label} className="flex items-center justify-between p-4 bg-[#F2F2F2] rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-full flex items-center justify-center w-12 h-12 flex-shrink-0" style={{ background: row.iconBg }}>
+                        <row.Icon className="w-5 h-5" style={{ color: row.iconColor }} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-[#1A1A1A]">{row.label}</p>
+                        <p className="text-xs text-[#525252]">{row.sub}</p>
+                      </div>
+                    </div>
+                    <span className="px-3 py-1 rounded-lg text-[10px] font-extrabold" style={row.tagStyle}>{row.tag}</span>
+                  </div>
+                ))}
+              </div>
+              {/* Apply button */}
+              <Link
+                href="/auth/signup"
+                className="w-full mt-7 py-5 bg-[#1A1A1A] text-white rounded-xl font-bold text-lg hover:bg-slate-800 transition-all flex items-center justify-center gap-3 group no-underline"
+              >
+                View &amp; apply <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+              </Link>
+            </div>
+          </motion.div>
 
         </div>
       </section>
