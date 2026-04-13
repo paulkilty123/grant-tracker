@@ -427,7 +427,7 @@ export default function LandingPage() {
                   </div>
                   <div className="mt-6 flex items-center gap-1.5">
                     <BadgeCheck className="w-4 h-4 text-[#376478]" />
-                    <span className="text-[11px] font-bold text-[#376478] uppercase tracking-tight">Verified Institutional Trust</span>
+                    <span className="text-[11px] font-bold text-[#376478] uppercase tracking-tight">Verified UK Funder</span>
                   </div>
                 </div>
               </div>
