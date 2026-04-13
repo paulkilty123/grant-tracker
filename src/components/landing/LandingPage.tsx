@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Menu, X, Check, Search, Calendar, TrendingUp, Activity, Clock, Mail, MessageSquare, Bell, LayoutGrid, ArrowRight, Award, CheckCircle, BadgeCheck, Users, Rocket } from 'lucide-react'
+import { Menu, X, Check, Search, Calendar, TrendingUp, Activity, Clock, Mail, MessageSquare, Bell, LayoutGrid, ArrowRight, Award, CheckCircle, BadgeCheck, Users, Rocket, Landmark, HeartHandshake } from 'lucide-react'
 import ContactForm from '@/components/ContactForm'
 import RadioWaveIcon from '@/components/icons/RadioWaveIcon'
 
@@ -602,21 +602,91 @@ export default function LandingPage() {
       </section>
 
       {/* FUNDING TYPES */}
-      <section className="py-16 md:py-20 bg-[#1C1C2E]">
-        <div className="mx-auto max-w-5xl px-6">
-          <motion.div {...fadeInView(0)} className="mb-16">
-            <p className="text-sm font-semibold text-coral uppercase tracking-wider">Funding Types</p>
-            <h2 className="mt-3 font-serif text-4xl md:text-5xl leading-tight max-w-lg text-cream">Not just grants, the full picture.</h2>
+      <section className="py-20 md:py-28" style={{ background: '#F8F9FA' }}>
+        <div className="mx-auto max-w-7xl px-6 md:px-8">
+
+          {/* Header */}
+          <motion.div {...fadeInView(0)} className="flex flex-col md:flex-row md:items-end justify-between gap-12 mb-16 md:mb-24">
+            <div className="max-w-3xl">
+              <span className="font-bold tracking-[0.25em] uppercase text-xs mb-6 block" style={{ color: '#446900' }}>Funding Types</span>
+              <h2 className="font-bold tracking-tight leading-[0.9]" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: 'clamp(40px, 6vw, 80px)', color: '#111827' }}>
+                Not just grants,<br/><span style={{ color: '#94CF35' }}>the full picture.</span>
+              </h2>
+            </div>
+            <div className="max-w-sm md:pb-2">
+              <p className="text-gray-600 text-lg leading-relaxed" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>
+                Not every organisation needs a grant. We surface the full funding landscape matched to your structure and stage.
+              </p>
+            </div>
           </motion.div>
-          <div className="grid sm:grid-cols-2 gap-px bg-white/10 rounded-xl overflow-hidden">
-            {fundingTypes.map((t, i) => (
-              <motion.div key={t.title} {...fadeInView(i * 0.05)} className="bg-[#1C1C2E] p-8">
-                <span className="text-xs font-semibold text-coral uppercase tracking-wider">{t.range}</span>
-                <h3 className="mt-3 font-serif text-xl text-cream">{t.title}</h3>
-                <p className="mt-3 text-sm text-cream/50 leading-relaxed">{t.desc}</p>
+
+          {/* 2x2 grid */}
+          <div className="grid md:grid-cols-2 gap-6 md:gap-8">
+            {[
+              {
+                badge: '£300 – £500k+', badgeColor: '#446900', badgeBg: 'rgba(148,207,53,0.15)',
+                title: 'Grants', titleColor: '#111827',
+                desc: 'Trusts, foundations, National Lottery, Innovate UK, arts councils and government programmes.',
+                Icon: Landmark, iconColor: '#446900',
+                decoBg: 'rgba(148,207,53,0.07)', decoPos: '-translate-y-16 translate-x-16',
+              },
+              {
+                badge: 'Equity-free', badgeColor: '#c2410c', badgeBg: 'rgba(251,146,60,0.15)',
+                title: 'Programmes', titleColor: '#111827',
+                desc: 'Accelerators, incubators, fellowships and structured programmes with mentoring, networks and workspace.',
+                Icon: Rocket, iconColor: '#ea580c',
+                decoBg: 'rgba(251,146,60,0.12)', decoPos: 'translate-y-8 translate-x-8',
+              },
+              {
+                badge: '£20k – £3m', badgeColor: '#1d4ed8', badgeBg: 'rgba(96,165,250,0.15)',
+                title: 'Social Investment', titleColor: '#111827',
+                desc: 'Patient capital, loans and blended finance from Big Issue Invest, Charity Bank, Resonance and others.',
+                Icon: TrendingUp, iconColor: '#2563eb',
+                decoBg: 'rgba(96,165,250,0.12)', decoPos: 'top-1/2 -right-4',
+              },
+              {
+                badge: 'Resources & expertise', badgeColor: '#7c3aed', badgeBg: 'rgba(167,139,250,0.15)',
+                title: 'In-Kind Support', titleColor: '#111827',
+                desc: 'Mentoring, training and workspace. Often overlooked, high value — especially at an early stage.',
+                Icon: HeartHandshake, iconColor: '#7c3aed',
+                decoBg: 'rgba(167,139,250,0.10)', decoPos: 'translate-y-4 -translate-x-4',
+              },
+            ].map((card, i) => (
+              <motion.div
+                key={card.title}
+                {...fadeInView(i * 0.07)}
+                className="relative overflow-hidden bg-white rounded-3xl p-10 md:p-14 group"
+                style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.05)' }}
+              >
+                {/* Decorative circle */}
+                <div
+                  className="absolute top-0 right-0 w-32 h-32 rounded-full pointer-events-none transition-transform duration-700 group-hover:scale-150"
+                  style={{ background: card.decoBg, transform: 'translate(2rem, -2rem)' }}
+                />
+                {/* Icon top-right */}
+                <div className="absolute top-10 right-10 opacity-25 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300 z-10">
+                  <card.Icon className="w-9 h-9" style={{ color: card.iconColor }} />
+                </div>
+                {/* Badge */}
+                <span
+                  className="inline-block px-4 py-1.5 rounded-full font-bold tracking-widest uppercase text-[10px] mb-8 relative z-10"
+                  style={{ color: card.badgeColor, background: card.badgeBg }}
+                >
+                  {card.badge}
+                </span>
+                {/* Title */}
+                <h3
+                  className="font-bold mb-5 relative z-10 transition-transform duration-300 group-hover:translate-x-1"
+                  style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: '2rem', color: card.titleColor }}
+                >
+                  {card.title}
+                </h3>
+                {/* Description */}
+                <p className="text-gray-500 text-base leading-relaxed max-w-md relative z-10">{card.desc}</p>
               </motion.div>
             ))}
           </div>
+
         </div>
       </section>
 
