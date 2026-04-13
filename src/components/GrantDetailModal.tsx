@@ -280,7 +280,7 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
                     {grant.is_local && (
                       <span
                         className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1"
-                        style={{ backgroundColor: 'rgba(16,185,129,0.12)', color: '#047857', borderRadius: 9999 }}
+                        style={{ backgroundColor: 'rgba(186,230,253,0.55)', color: '#1E3A5F', borderRadius: 9999 }}
                       >
                         <MapPin className="w-3 h-3" />Local
                       </span>

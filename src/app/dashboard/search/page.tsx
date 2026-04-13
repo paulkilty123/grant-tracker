@@ -478,8 +478,8 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
               const loc = grant.locationTag
               const isUKWide = !loc || loc.toLowerCase() === 'uk' || loc.toLowerCase() === 'uk-wide'
               const label = isUKWide ? 'UK-wide' : loc!
-              const bg   = isUKWide ? 'rgba(31,92,82,0.08)'  : 'rgba(232,160,48,0.15)'
-              const color = isUKWide ? '#1f5c52'              : '#7a4a00'
+              const bg   = isUKWide ? 'rgba(186,230,253,0.55)' : 'rgba(147,197,253,0.45)'
+              const color = isUKWide ? '#1E3A5F'               : '#1E3A5F'
               return (
                 <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-3 py-1"
                   style={{ borderRadius: 9999, backgroundColor: bg, color }}>
