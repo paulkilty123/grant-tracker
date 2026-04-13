@@ -352,7 +352,7 @@ function StalenessBadge({ lastVerifiedAt }: { lastVerifiedAt?: string }) {
 }
 
 // ── Grant Card ───────────────────────────────────────────────────────────────
-function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline, onDismiss, onUndismiss, onLike, onDislike, onSave, onUnsave, showIfDismissed }: {
+function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline, onDismiss, onUndismiss, onLike, onDislike, onSave, onUnsave, showIfDismissed, isInPipeline }: {
   item: DisplayGrant
   hasOrg: boolean
   hasSearch: boolean
@@ -366,6 +366,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
   onSave?: (grantId: string) => void
   onUnsave?: (grantId: string) => void
   showIfDismissed?: boolean
+  isInPipeline?: boolean
 }) {
   const { grant, score, reason, isAiScore, breakdown } = item
   const [expanded, setExpanded] = useState(false)
@@ -611,11 +612,11 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
             {isSaved ? 'Saved' : 'Save'}
           </button>
           <button
-            onClick={() => onAddToPipeline(grant)}
-            className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-semibold border border-[#F59E0B] text-[#78350F] rounded-full hover:bg-[#FEF3C7] transition-colors" style={{ backgroundColor: "#FEF3C7" }}
+            onClick={() => { if (!isInPipeline) onAddToPipeline(grant) }}
+            className={`w-full flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-semibold border rounded-full transition-colors ${isInPipeline ? 'bg-[#FEF3C7] text-[#78350F] border-[#F59E0B]' : 'border-[#F59E0B] text-[#78350F] bg-transparent hover:bg-[#FEF3C7]'}`}
           >
             <PlusCircle className="w-3.5 h-3.5" />
-            Pipeline
+            {isInPipeline ? 'In Pipeline' : 'Pipeline'}
           </button>
         </div>
 
@@ -1010,6 +1011,7 @@ export default function SearchPage() {
   const [searchModeToggle, setSearchModeToggle]   = useState<'profile' | 'browse'>('browse')
   const [profileChipsApplied, setProfileChipsApplied] = useState(false)
   const [pipelineNudge, setPipelineNudge]         = useState<{ name: string; url: string | null } | null>(null)
+  const [pipelinedIds, setPipelinedIds]           = useState<Set<string>>(new Set())
   const [hasSearched, setHasSearched]             = useState(false)
   const [profileFiltersOpen, setProfileFiltersOpen] = useState(false)
   const [activeTab, setActiveTab]                 = useState<'grant' | 'programme' | 'investment' | 'in_kind'>('grant')
@@ -1080,6 +1082,14 @@ export default function SearchPage() {
       if (o) {
         const ix = await getInteractions(o.id)
         setInteractions(ix)
+        // Load existing pipeline grant names to show button state
+        const { data: pipelineRows } = await supabase
+          .from('pipeline_items')
+          .select('grant_name')
+          .eq('org_id', o.id)
+        if (pipelineRows) {
+          setPipelinedIds(new Set(pipelineRows.map((r: { grant_name: string }) => r.grant_name)))
+        }
         // My Matches mode: always auto-apply profile and show results
         if (o.primary_location) setLocationFilter(o.primary_location)
         if (o.impact_sectors?.length) setActiveSectors(new Set(o.impact_sectors as ImpactSector[]))
@@ -1366,7 +1376,8 @@ export default function SearchPage() {
         outcome_notes:        null,
         created_by:           userId,
       })
-      setPipelineNudge({ name: grant.title, url: grant.applyUrl ?? null })
+      setPipelinedIds(prev => new Set(prev).add(grant.title))
+      showToast('Added to your pipeline')
     } catch {
       showToast('Failed to add — please try again')
     }
@@ -2333,6 +2344,7 @@ export default function SearchPage() {
                 org={org}
                 interactions={interactions.get(item.grant.id) ?? new Set()}
                 onAddToPipeline={handleAddToPipeline}
+                isInPipeline={pipelinedIds.has(item.grant.title)}
                 onDismiss={handleDismiss}
                 onUndismiss={handleUndismiss}
                 onLike={handleLike}
@@ -2390,6 +2402,7 @@ export default function SearchPage() {
                 hasSearch={false}
                 interactions={interactions.get(item.grant.id) ?? new Set()}
                 onAddToPipeline={handleAddToPipeline}
+                isInPipeline={pipelinedIds.has(item.grant.title)}
                 onDismiss={handleDismiss}
                 onUndismiss={handleUndismiss}
                 onLike={handleLike}
@@ -2440,6 +2453,7 @@ export default function SearchPage() {
                 hasSearch={false}
                 interactions={interactions.get(item.grant.id) ?? new Set()}
                 onAddToPipeline={handleAddToPipeline}
+                isInPipeline={pipelinedIds.has(item.grant.title)}
                 onDismiss={handleDismiss}
                 onUndismiss={handleUndismiss}
                 onLike={handleLike}
@@ -2465,32 +2479,6 @@ export default function SearchPage() {
       {toast && (
         <div className="fixed bottom-6 right-6 bg-charcoal text-white px-5 py-3.5 shadow-card-lg text-sm z-50">
           ✓ {toast}
-        </div>
-      )}
-
-      {/* Pipeline nudge modal */}
-      {pipelineNudge && (
-        <div className="fixed inset-0 bg-charcoal/40 z-50 flex items-end sm:items-center justify-center p-4">
-          <div className="bg-white border border-warm w-full max-w-sm p-6" style={{ boxShadow: '0 8px 40px rgba(26,46,43,0.18)' }}>
-            <p className="text-sm font-semibold text-charcoal mb-1">✓ Added to your pipeline</p>
-            <p className="text-xs text-mid mb-4 leading-relaxed">
-              <strong className="text-charcoal">{pipelineNudge.name}</strong> is now in <em>Identified</em>. Head to your pipeline to set a deadline and move it to <em>Applying</em>.
-            </p>
-            <div className="flex gap-2">
-              <a
-                href="/dashboard/pipeline"
-                className="flex-1 text-center px-3 py-2 text-xs font-bold hover:opacity-80 transition-colors rounded-full" style={{ background: '#1A1A1A', color: '#FFFFFF' }}
-              >
-                Go to pipeline →
-              </a>
-              <button
-                onClick={() => setPipelineNudge(null)}
-                className="flex-1 px-3 py-2 border border-warm text-xs text-mid hover:text-charcoal transition-colors"
-              >
-                Keep browsing
-              </button>
-            </div>
-          </div>
         </div>
       )}
 
