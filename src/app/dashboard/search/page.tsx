@@ -119,8 +119,8 @@ const FUNDER_TYPES = [
 const FUNDER_CATEGORIES = [
   { id: 'lottery',              label: '🎱 Lottery',               colour: 'bg-green-50 text-green-700 border-green-200' },
   { id: 'government',           label: '🏛️ Government',            colour: 'bg-red-50 text-red-700 border-red-200' },
-  { id: 'major_trust',          label: '🏦 Major Trust',           colour: 'bg-sage/10 text-forest border-sage/20' },
-  { id: 'community_foundation', label: '🌱 Community Foundation',  colour: 'bg-teal-50 text-teal-700 border-teal-200' },
+  { id: 'major_trust',          label: '🏦 Major Trust',           colour: 'bg-[#F4F9E8] text-[#4A7C10] border-[#C5E88A]' },
+  { id: 'community_foundation', label: '🌱 Community Foundation',  colour: 'bg-[#F4F9E8] text-[#4A7C10] border-[#C5E88A]' },
   { id: 'corporate',            label: '🏢 Corporate',             colour: 'bg-amber-50 text-amber-700 border-amber-200' },
   { id: 'social_investment',    label: '💰 Social Investment',     colour: 'bg-sky-50 text-sky-700 border-sky-200' },
   { id: 'crowdfunding',         label: '🤝 Crowdfunding',          colour: 'bg-pink-50 text-pink-700 border-pink-200' },
@@ -220,8 +220,8 @@ function LiveGrantCard({ grant, onAddToPipeline }: {
           {grant.notes && (
             <div className="border px-3.5 py-2.5 mb-3 flex items-start gap-2"
               style={{ backgroundColor: 'rgba(26,122,94,0.06)', borderColor: 'rgba(26,122,94,0.18)' }}>
-              <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-forest/70" strokeWidth={2} />
-              <p className="text-sm text-forest leading-snug">{grant.notes}</p>
+              <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: '#84CC16' }} strokeWidth={2} />
+              <p className="text-sm leading-snug" style={{ color: '#525252' }}>{grant.notes}</p>
             </div>
           )}
         </div>
@@ -627,9 +627,9 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
         return (
           <div className="flex items-center gap-4 px-6 py-4 border-t border-[#E8E8EC]"
             style={{ borderLeft: '3px solid #84CC16' }}>
-            <Activity className="w-4 h-4 flex-shrink-0" style={{ color: '#26A69A' }} />
+            <Activity className="w-4 h-4 flex-shrink-0" style={{ color: '#84CC16' }} />
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: '#26A69A' }}>Match Insight</p>
+              <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: '#84CC16' }}>Match Insight</p>
               <p className="text-sm leading-relaxed" style={{ color: '#333' }}>
                 {(() => {
                   const text = reason.replace(/<[^>]*>/g, '').trim()
@@ -645,7 +645,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
               <div className="flex-shrink-0 flex flex-col items-center gap-0.5 ml-2">
                 <svg width="68" height="68" viewBox="0 0 68 68">
                   <circle cx="34" cy="34" r="27" fill="none" stroke="#E8E8EC" strokeWidth="5" />
-                  <circle cx="34" cy="34" r="27" fill="none" stroke="#008080" strokeWidth="5"
+                  <circle cx="34" cy="34" r="27" fill="none" stroke="#84CC16" strokeWidth="5"
                     strokeLinecap="round"
                     strokeDasharray={`${(score / 100) * 169.6} 169.6`}
                     transform="rotate(-90 34 34)" />
@@ -654,7 +654,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                     {score}%
                   </text>
                   <text x="34" y="46" textAnchor="middle"
-                    style={{ fontSize: '8px', fill: '#26A69A', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: '600' }}>
+                    style={{ fontSize: '8px', fill: '#888888', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: '600' }}>
                     MATCH
                   </text>
                 </svg>
@@ -716,12 +716,12 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                 // Build top-row items so grid cols match actual count
                 const topItems = [
                   brief.what_they_fund && (
-                    <Section key="fund" icon={CheckCircle2} iconColor="#008080" label="What they fund">
+                    <Section key="fund" icon={CheckCircle2} iconColor="#84CC16" label="What they fund">
                       <p className="text-sm text-[#444] leading-relaxed" style={clamp4}>{brief.what_they_fund}</p>
                     </Section>
                   ),
                   brief.priorities && (
-                    <Section key="prio" icon={TrendingUp} iconColor="#FF7043" label="Current priorities">
+                    <Section key="prio" icon={TrendingUp} iconColor="#F59E0B" label="Current priorities">
                       <p className="text-sm text-[#444] leading-relaxed" style={clamp4}>{brief.priorities}</p>
                     </Section>
                   ),
@@ -796,7 +796,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                         {grant.applyUrl && (
                           <a href={grant.applyUrl} target="_blank" rel="noopener noreferrer"
                             className="flex-shrink-0 flex items-center gap-1.5 px-5 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-80"
-                            style={{ borderRadius: 9999, backgroundColor: '#FF7043' }}>
+                            style={{ borderRadius: 9999, backgroundColor: '#1A1A1A' }}>
                             Apply
                             <ExternalLink className="w-3.5 h-3.5" />
                           </a>
@@ -851,7 +851,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex-shrink-0 flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white transition-opacity hover:opacity-80"
-                      style={{ borderRadius: 9999, backgroundColor: '#FF7043' }}>
+                      style={{ borderRadius: 9999, backgroundColor: '#1A1A1A' }}>
                       Apply
                       <ExternalLink className="w-3 h-3" />
                     </a>
