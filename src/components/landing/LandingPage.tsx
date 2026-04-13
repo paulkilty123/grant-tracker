@@ -740,16 +740,16 @@ export default function LandingPage() {
                         <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(132,204,22,0.15)' }}>
                           <LayoutGrid className="w-3.5 h-3.5" style={{ color: '#84CC16' }} />
                         </div>
-                        <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#84CC16' }}>Dashboard</p>
+                        <p className="text-[11px] font-bold text-[#1A1A1A] uppercase tracking-wider">Dashboard</p>
                       </div>
                       <div className="grid grid-cols-2 gap-2 mb-3">
                         <div className="rounded-xl p-2.5" style={{ background: '#F2F2F2' }}>
                           <p className="text-[17px] font-bold text-[#1A1A1A] leading-tight">42k</p>
                           <p className="text-[9px] text-[#525252] uppercase tracking-wide font-medium">Won</p>
                         </div>
-                        <div className="rounded-xl p-2.5" style={{ background: '#F2F2F2' }}>
-                          <p className="text-[17px] font-bold text-[#1A1A1A] leading-tight">88%</p>
-                          <p className="text-[9px] text-[#525252] uppercase tracking-wide font-medium">Success</p>
+                        <div className="rounded-xl p-2.5" style={{ background: 'rgba(132,204,22,0.15)' }}>
+                          <p className="text-[17px] font-bold leading-tight" style={{ color: '#84CC16' }}>68%</p>
+                          <p className="text-[9px] uppercase tracking-wide font-medium" style={{ color: '#84CC16' }}>Success</p>
                         </div>
                       </div>
                       <p className="text-[9px] text-[#525252] mb-2">Funding won — last 7 months</p>
@@ -765,13 +765,13 @@ export default function LandingPage() {
                   <motion.div {...fadeInView(0.05)} className="absolute" style={{ width: '220px', top: '60px', left: '0px', zIndex: 3 }}>
                     <div className="bg-white rounded-2xl p-4" style={{ transform: 'rotate(-8deg)', boxShadow: '0 8px 32px rgba(0,0,0,0.10)' }}>
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(132,204,22,0.15)' }}>
-                          <ArrowRight className="w-3.5 h-3.5" style={{ color: '#84CC16' }} />
+                        <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(234,88,12,0.12)' }}>
+                          <ArrowRight className="w-3.5 h-3.5" style={{ color: '#ea580c' }} />
                         </div>
-                        <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#84CC16' }}>Pipeline</p>
+                        <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#ea580c' }}>Pipeline</p>
                       </div>
                       <p className="text-[26px] font-bold text-[#1A1A1A] leading-tight" style={{ fontFamily: 'var(--font-space-grotesk), sans-serif' }}>£187,500</p>
-                      <p className="text-[11px] font-medium mb-3" style={{ color: '#84CC16' }}>7 active opportunities</p>
+                      <p className="text-[11px] font-medium mb-3" style={{ color: '#ea580c' }}>7 active opportunities</p>
                       <div className="flex flex-col gap-1.5">
                         {['Identified', 'Applying', 'Submitted'].map((label) => (
                           <div key={label} className="flex items-center justify-between rounded-xl px-2.5 py-1.5" style={{ background: '#F2F2F2' }}>
@@ -786,24 +786,24 @@ export default function LandingPage() {
                   {/* Search — centre, largest, front */}
                   <motion.div {...fadeInView(0.08)} className="absolute" style={{ width: '290px', top: '110px', left: 'calc(50% - 145px)', zIndex: 5 }}>
                     <div className="bg-white rounded-2xl p-5" style={{ transform: 'rotate(-1deg)', boxShadow: '0 16px 48px rgba(0,0,0,0.12)' }}>
-                      <p className="text-[11px] font-bold text-[#1A1A1A] uppercase tracking-wider mb-2.5">Search</p>
+                      <p className="text-[11px] font-bold uppercase tracking-wider mb-2.5" style={{ color: '#2d8a7a' }}>Search</p>
                       <div className="flex items-center gap-2 rounded-full px-3 py-2 mb-3" style={{ background: '#F2F2F2' }}>
                         <Search className="w-3 h-3 text-[#525252] flex-shrink-0" />
                         <span className="text-[11px] text-[#525252]">community garden...</span>
                       </div>
                       <div className="flex flex-col">
                         {[
-                          { name: 'Community Growing Grants', pct: 94 },
-                          { name: 'Green Spaces Fund',        pct: 87 },
-                          { name: 'Urban Nature Programme',   pct: 79 },
+                          { name: 'Community Growing Grants', pct: 94, barColor: '#2d8a7a', pctColor: '#2d8a7a' },
+                          { name: 'Green Spaces Fund',        pct: 87, barColor: '#9E9E9E',  pctColor: '#9E9E9E' },
+                          { name: 'Urban Nature Programme',   pct: 79, barColor: '#f59e0b',  pctColor: '#f59e0b' },
                         ].map((r, i) => (
                           <div key={r.name} className={`flex items-center justify-between gap-2 py-2 ${i < 2 ? 'border-b border-[#F2F2F2]' : ''}`}>
                             <p className="text-[11px] font-semibold text-[#1A1A1A] leading-tight">{r.name}</p>
                             <div className="flex items-center gap-1.5 flex-shrink-0">
                               <div className="w-10 h-1.5 rounded-full overflow-hidden" style={{ background: '#EEEEEE' }}>
-                                <div className="h-full rounded-full" style={{ width: `${r.pct}%`, background: '#84CC16' }} />
+                                <div className="h-full rounded-full" style={{ width: `${r.pct}%`, background: r.barColor }} />
                               </div>
-                              <span className="text-[10px] font-bold text-[#1A1A1A]">{r.pct}%</span>
+                              <span className="text-[10px] font-bold" style={{ color: r.pctColor }}>{r.pct}%</span>
                             </div>
                           </div>
                         ))}
@@ -815,16 +815,16 @@ export default function LandingPage() {
                   <motion.div {...fadeInView(0.12)} className="absolute" style={{ width: '210px', top: '340px', right: '0px', zIndex: 2 }}>
                     <div className="bg-white rounded-2xl p-4" style={{ transform: 'rotate(4deg)', boxShadow: '0 8px 32px rgba(0,0,0,0.08)' }}>
                       <div className="flex items-center gap-2 mb-3">
-                        <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(132,204,22,0.15)' }}>
-                          <Award className="w-3.5 h-3.5" style={{ color: '#84CC16' }} />
+                        <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(45,138,122,0.12)' }}>
+                          <Award className="w-3.5 h-3.5" style={{ color: '#2d8a7a' }} />
                         </div>
-                        <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#84CC16' }}>Awarded</p>
+                        <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#2d8a7a' }}>Awarded</p>
                       </div>
                       <p className="text-[13px] font-semibold text-[#1A1A1A] leading-snug mb-1">London Community Foundation</p>
                       <p className="text-[11px] text-[#525252] mb-3">Grow to Give — Community Growing</p>
-                      <div className="flex items-center justify-between rounded-xl px-3 py-2" style={{ background: 'rgba(132,204,22,0.12)' }}>
+                      <div className="flex items-center justify-between rounded-xl px-3 py-2" style={{ background: 'rgba(45,138,122,0.10)' }}>
                         <span className="text-[11px] text-[#525252]">Grant awarded</span>
-                        <span className="text-[15px] font-bold" style={{ color: '#446900' }}>£8,000</span>
+                        <span className="text-[15px] font-bold" style={{ color: '#2d8a7a' }}>£8,000</span>
                       </div>
                     </div>
                   </motion.div>
