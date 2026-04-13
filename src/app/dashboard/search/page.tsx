@@ -6,7 +6,7 @@ import { Search, ChevronDown, Layers, DollarSign, Rocket, Building2, SlidersHori
 import { SEED_GRANTS } from '@/lib/grants'
 import { formatRange } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
-import { createPipelineItem } from '@/lib/pipeline'
+import { createPipelineItem, deletePipelineItem } from '@/lib/pipeline'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { computeMatchScore, scoreColour } from '@/lib/matching'
 import type { FeedbackSignals, MatchBreakdown } from '@/lib/matching'
@@ -352,13 +352,14 @@ function StalenessBadge({ lastVerifiedAt }: { lastVerifiedAt?: string }) {
 }
 
 // ── Grant Card ───────────────────────────────────────────────────────────────
-function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline, onDismiss, onUndismiss, onLike, onDislike, onSave, onUnsave, showIfDismissed, isInPipeline }: {
+function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline, onRemoveFromPipeline, onDismiss, onUndismiss, onLike, onDislike, onSave, onUnsave, showIfDismissed, isInPipeline }: {
   item: DisplayGrant
   hasOrg: boolean
   hasSearch: boolean
   interactions: Set<InteractionAction>
   org?: Organisation | null
   onAddToPipeline: (g: GrantOpportunity) => void
+  onRemoveFromPipeline?: (g: GrantOpportunity) => void
   onDismiss: (grantId: string) => void
   onUndismiss: (grantId: string) => void
   onLike: (grantId: string) => void
@@ -1011,7 +1012,7 @@ export default function SearchPage() {
   const [searchModeToggle, setSearchModeToggle]   = useState<'profile' | 'browse'>('browse')
   const [profileChipsApplied, setProfileChipsApplied] = useState(false)
   const [pipelineNudge, setPipelineNudge]         = useState<{ name: string; url: string | null } | null>(null)
-  const [pipelinedIds, setPipelinedIds]           = useState<Set<string>>(new Set())
+  const [pipelinedIds, setPipelinedIds]           = useState<Map<string, string>>(new Map())
   const [hasSearched, setHasSearched]             = useState(false)
   const [profileFiltersOpen, setProfileFiltersOpen] = useState(false)
   const [activeTab, setActiveTab]                 = useState<'grant' | 'programme' | 'investment' | 'in_kind'>('grant')
@@ -1085,10 +1086,10 @@ export default function SearchPage() {
         // Load existing pipeline grant names to show button state
         const { data: pipelineRows } = await supabase
           .from('pipeline_items')
-          .select('grant_name')
+          .select('id, grant_name')
           .eq('org_id', o.id)
         if (pipelineRows) {
-          setPipelinedIds(new Set(pipelineRows.map((r: { grant_name: string }) => r.grant_name)))
+          setPipelinedIds(new Map(pipelineRows.map((r: { id: string; grant_name: string }) => [r.grant_name, r.id])))
         }
         // My Matches mode: always auto-apply profile and show results
         if (o.primary_location) setLocationFilter(o.primary_location)
@@ -1356,7 +1357,7 @@ export default function SearchPage() {
   async function handleAddToPipeline(grant: GrantOpportunity) {
     if (!org) { showToast('Complete your profile first to track grants'); return }
     try {
-      await createPipelineItem({
+      const added = await createPipelineItem({
         org_id:               org.id,
         grant_name:           grant.title,
         funder_name:          grant.funder,
@@ -1376,10 +1377,22 @@ export default function SearchPage() {
         outcome_notes:        null,
         created_by:           userId,
       })
-      setPipelinedIds(prev => new Set(prev).add(grant.title))
+      setPipelinedIds(prev => new Map(prev).set(grant.title, added.id))
       showToast('Added to your pipeline')
     } catch {
       showToast('Failed to add — please try again')
+    }
+  }
+
+  async function handleRemoveFromPipeline(grant: GrantOpportunity) {
+    const itemId = pipelinedIds.get(grant.title)
+    if (!itemId) return
+    try {
+      await deletePipelineItem(itemId)
+      setPipelinedIds(prev => { const m = new Map(prev); m.delete(grant.title); return m })
+      showToast('Removed from pipeline')
+    } catch {
+      showToast('Failed to remove — please try again')
     }
   }
 
@@ -2345,6 +2358,7 @@ export default function SearchPage() {
                 interactions={interactions.get(item.grant.id) ?? new Set()}
                 onAddToPipeline={handleAddToPipeline}
                 isInPipeline={pipelinedIds.has(item.grant.title)}
+                onRemoveFromPipeline={handleRemoveFromPipeline}
                 onDismiss={handleDismiss}
                 onUndismiss={handleUndismiss}
                 onLike={handleLike}
@@ -2403,6 +2417,7 @@ export default function SearchPage() {
                 interactions={interactions.get(item.grant.id) ?? new Set()}
                 onAddToPipeline={handleAddToPipeline}
                 isInPipeline={pipelinedIds.has(item.grant.title)}
+                onRemoveFromPipeline={handleRemoveFromPipeline}
                 onDismiss={handleDismiss}
                 onUndismiss={handleUndismiss}
                 onLike={handleLike}
@@ -2454,6 +2469,7 @@ export default function SearchPage() {
                 interactions={interactions.get(item.grant.id) ?? new Set()}
                 onAddToPipeline={handleAddToPipeline}
                 isInPipeline={pipelinedIds.has(item.grant.title)}
+                onRemoveFromPipeline={handleRemoveFromPipeline}
                 onDismiss={handleDismiss}
                 onUndismiss={handleUndismiss}
                 onLike={handleLike}
