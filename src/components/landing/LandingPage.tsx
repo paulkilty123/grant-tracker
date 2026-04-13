@@ -602,7 +602,7 @@ export default function LandingPage() {
       </section>
 
       {/* FUNDING TYPES */}
-      <section className="py-20 md:py-28" style={{ background: '#F9F9F9' }}>
+      <section className="py-20 md:py-28 bg-white">
         <div className="mx-auto max-w-7xl px-6 md:px-8">
 
           {/* Header row — matches Process section */}
@@ -1010,7 +1010,7 @@ export default function LandingPage() {
       </section>
 
       {/* PRICING */}
-      <section id="pricing" className="py-20 md:py-28 bg-white">
+      <section id="pricing" className="py-20 md:py-28" style={{ background: "#F9F9F9" }}>
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid lg:grid-cols-2 gap-8 items-end mb-14">
             <motion.div {...fadeInView(0)}>
@@ -1063,7 +1063,7 @@ export default function LandingPage() {
       </section>
 
       {/* TESTIMONIALS */}
-      <section className="py-20 md:py-28" style={{ background: '#F9F9F9' }}>
+      <section className="py-20 md:py-28 bg-white">
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid lg:grid-cols-2 gap-8 items-end mb-14">
             <motion.div {...fadeInView(0)}>
@@ -1094,7 +1094,7 @@ export default function LandingPage() {
       </section>
 
       {/* CONTACT */}
-      <section id="contact" className="py-20 md:py-28 bg-white">
+      <section id="contact" className="py-20 md:py-28" style={{ background: "#F9F9F9" }}>
         <div className="mx-auto max-w-6xl px-6">
           <motion.div {...fadeInView(0)} className="grid lg:grid-cols-2 gap-16 items-start">
             <div>
