@@ -996,13 +996,13 @@ export default function LandingPage() {
       </section>
 
       {/* STATS */}
-      <section className="py-12 md:py-16 bg-coral">
-        <div className="mx-auto max-w-5xl px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-6">
+      <section className="py-16 md:py-20" style={{ background: '#1A1A1A' }}>
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
             {stats.map((s, i) => (
               <motion.div key={s.label} {...fadeInView(i * 0.1)} className="text-center">
-                <p className="font-serif text-4xl md:text-5xl text-white">{s.value}</p>
-                <p className="mt-2 text-sm text-white/70 leading-relaxed">{s.label}</p>
+                <p className="leading-none mb-3" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(40px, 5vw, 64px)', color: '#84CC16', letterSpacing: '-0.03em' }}>{s.value}</p>
+                <p className="text-sm leading-relaxed" style={{ color: '#888888' }}>{s.label}</p>
               </motion.div>
             ))}
           </div>
@@ -1010,39 +1010,49 @@ export default function LandingPage() {
       </section>
 
       {/* PRICING */}
-      <section id="pricing" className="py-16 md:py-20">
-        <div className="mx-auto max-w-5xl px-6">
-          <motion.div {...fadeInView(0)} className="mb-16">
-            <p className="text-sm font-semibold text-coral uppercase tracking-wider">Pricing</p>
-            <h2 className="mt-3 font-serif text-4xl md:text-5xl leading-tight max-w-lg">Plans that respect your budget.</h2>
-            <p className="mt-4 text-mid max-w-xl leading-relaxed">Start free. Upgrade to Live Search and tracking tools.</p>
-          </motion.div>
-          <div className="grid md:grid-cols-3 gap-px bg-warm">
+      <section id="pricing" className="py-20 md:py-28 bg-white">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="grid lg:grid-cols-2 gap-8 items-end mb-14">
+            <motion.div {...fadeInView(0)}>
+              <p className="text-sm font-semibold tracking-widest uppercase mb-4" style={{ color: '#84CC16', fontFamily: 'var(--font-space-grotesk)' }}>Pricing</p>
+              <h2 className="leading-tight" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#1A1A1A' }}>
+                Plans that respect <span style={{ color: '#84CC16' }}>your budget.</span>
+              </h2>
+            </motion.div>
+            <motion.div {...fadeInView(0.1)}>
+              <p className="text-base leading-relaxed" style={{ color: '#525252' }}>Start free. Upgrade to live search, match scoring and tracking tools whenever you're ready.</p>
+            </motion.div>
+          </div>
+          <div className="grid md:grid-cols-3 gap-4">
             {plans.map((plan, i) => (
               <motion.div
                 key={plan.name}
                 {...fadeInView(i * 0.1)}
-                className={`relative p-8 flex flex-col ${plan.popular ? 'bg-[#121f2b] text-cream' : 'bg-cream'}`}
+                className="relative rounded-3xl p-8 flex flex-col"
+                style={{ background: plan.popular ? '#1A1A1A' : '#F9F9F9' }}
               >
                 {plan.popular && (
-                  <span className="absolute top-4 right-4 bg-coral px-3 py-1 text-xs font-semibold text-white">Most Popular</span>
+                  <span className="absolute top-6 right-6 rounded-full px-3 py-1 text-xs font-semibold" style={{ background: '#84CC16', color: '#1A1A1A', fontFamily: 'var(--font-space-grotesk)' }}>Most popular</span>
                 )}
-                <h3 className={`font-serif text-xl ${plan.popular ? 'text-cream' : ''}`}>{plan.name}</h3>
-                <div className="mt-4">
-                  <span className={`font-serif text-4xl ${plan.popular ? 'text-cream' : 'text-charcoal'}`}>{plan.price}</span>
-                  <span className={`ml-2 text-sm ${plan.popular ? 'text-cream/60' : 'text-mid'}`}>{plan.period}</span>
+                <p className="text-sm font-semibold mb-4" style={{ color: plan.popular ? '#84CC16' : '#525252', fontFamily: 'var(--font-space-grotesk)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>{plan.name}</p>
+                <div className="mb-2">
+                  <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(40px, 5vw, 56px)', letterSpacing: '-0.03em', color: plan.popular ? '#FFFFFF' : '#1A1A1A' }}>{plan.price}</span>
                 </div>
-                <ul className="mt-8 space-y-3 flex-1">
+                <p className="text-sm mb-8" style={{ color: plan.popular ? '#888888' : '#888888' }}>{plan.period}</p>
+                <ul className="space-y-3 flex-1 mb-8">
                   {plan.features.map((f) => (
-                    <li key={f} className={`flex items-start gap-2 text-sm ${plan.popular ? 'text-cream/80' : 'text-charcoal'}`}>
-                      <Check className="h-4 w-4 mt-0.5 shrink-0 text-coral" />
+                    <li key={f} className="flex items-start gap-3 text-sm" style={{ color: plan.popular ? '#CCCCCC' : '#525252' }}>
+                      <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center" style={{ background: '#84CC16' }}>
+                        <Check className="w-2.5 h-2.5" style={{ color: '#1A1A1A' }} />
+                      </span>
                       <span>{f}</span>
                     </li>
                   ))}
                 </ul>
                 <Link
                   href="/auth/signup"
-                  className={`mt-8 block rounded-xl text-center py-3 text-sm font-semibold transition-colors ${plan.popular ? 'bg-coral text-white hover:bg-coral-light' : 'bg-[#121f2b] text-white hover:bg-[#121f2b]/90'}`}
+                  className="block rounded-full text-center py-3 text-sm font-semibold transition-opacity hover:opacity-80"
+                  style={{ background: plan.popular ? '#84CC16' : '#1A1A1A', color: plan.popular ? '#1A1A1A' : '#FFFFFF', fontFamily: 'var(--font-space-grotesk)' }}
                 >
                   {plan.cta}
                 </Link>
@@ -1053,21 +1063,28 @@ export default function LandingPage() {
       </section>
 
       {/* TESTIMONIALS */}
-      <section className="py-16 md:py-20 bg-warm/30">
-        <div className="mx-auto max-w-5xl px-6">
-          <motion.div {...fadeInView(0)} className="mb-16">
-            <p className="text-sm font-semibold text-coral uppercase tracking-wider">Testimonials</p>
-            <h2 className="mt-3 font-serif text-4xl md:text-5xl leading-tight">Loved by small organisations.</h2>
-          </motion.div>
-          <div className="grid md:grid-cols-3 gap-px bg-warm">
+      <section className="py-20 md:py-28" style={{ background: '#F9F9F9' }}>
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="grid lg:grid-cols-2 gap-8 items-end mb-14">
+            <motion.div {...fadeInView(0)}>
+              <p className="text-sm font-semibold tracking-widest uppercase mb-4" style={{ color: '#84CC16', fontFamily: 'var(--font-space-grotesk)' }}>Testimonials</p>
+              <h2 className="leading-tight" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#1A1A1A' }}>
+                Loved by <span style={{ color: '#84CC16' }}>small organisations.</span>
+              </h2>
+            </motion.div>
+            <motion.div {...fadeInView(0.1)}>
+              <p className="text-base leading-relaxed" style={{ color: '#525252' }}>Early users finding funding they never knew existed.</p>
+            </motion.div>
+          </div>
+          <div className="grid md:grid-cols-3 gap-4">
             {testimonials.map((t, i) => (
-              <motion.div key={t.name} {...fadeInView(i * 0.1)} className="bg-cream p-8">
-                <p className="text-sm text-charcoal leading-relaxed">"{t.quote}"</p>
-                <div className="mt-6 flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center bg-[#121f2b] text-white font-semibold text-sm">{t.initials}</div>
+              <motion.div key={t.name} {...fadeInView(i * 0.1)} className="rounded-3xl p-8 flex flex-col bg-white">
+                <p className="text-base leading-relaxed flex-1 mb-8" style={{ color: '#525252' }}>&ldquo;{t.quote}&rdquo;</p>
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 rounded-full items-center justify-center text-white font-semibold text-sm flex-shrink-0" style={{ background: '#1A1A1A', fontFamily: 'var(--font-space-grotesk)' }}>{t.initials}</div>
                   <div>
-                    <p className="text-sm font-semibold text-charcoal">{t.name}</p>
-                    <p className="text-xs text-mid">{t.role}</p>
+                    <p className="text-sm font-semibold" style={{ color: '#1A1A1A', fontFamily: 'var(--font-space-grotesk)' }}>{t.name}</p>
+                    <p className="text-xs" style={{ color: '#888888' }}>{t.role}</p>
                   </div>
                 </div>
               </motion.div>
@@ -1077,31 +1094,37 @@ export default function LandingPage() {
       </section>
 
       {/* CONTACT */}
-      <section id="contact" className="py-16 md:py-20">
-        <div className="mx-auto max-w-5xl px-6">
-          <motion.div {...fadeInView(0)} className="grid md:grid-cols-2 gap-16 items-start">
+      <section id="contact" className="py-20 md:py-28 bg-white">
+        <div className="mx-auto max-w-6xl px-6">
+          <motion.div {...fadeInView(0)} className="grid lg:grid-cols-2 gap-16 items-start">
             <div>
-              <p className="text-sm font-semibold text-coral uppercase tracking-wider">Contact</p>
-              <h2 className="mt-3 font-serif text-4xl md:text-5xl leading-tight">Get in touch.</h2>
-              <p className="mt-4 text-mid leading-relaxed">Have a question, partnership idea, or just want to say hello? We'd love to hear from you.</p>
-              <div className="mt-10 space-y-6">
+              <p className="text-sm font-semibold tracking-widest uppercase mb-4" style={{ color: '#84CC16', fontFamily: 'var(--font-space-grotesk)' }}>Contact</p>
+              <h2 className="mb-6 leading-tight" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#1A1A1A' }}>
+                Get in <span style={{ color: '#84CC16' }}>touch.</span>
+              </h2>
+              <p className="text-base leading-relaxed mb-10" style={{ color: '#525252' }}>Have a question, partnership idea, or just want to say hello? We&apos;d love to hear from you.</p>
+              <div className="space-y-6">
                 <div className="flex items-center gap-4">
-                  <div className="flex h-11 w-11 items-center justify-center bg-coral/10 text-coral"><Mail size={18} /></div>
+                  <div className="flex h-11 w-11 rounded-xl items-center justify-center flex-shrink-0" style={{ background: '#F4F9E8' }}>
+                    <Mail size={18} style={{ color: '#84CC16' }} />
+                  </div>
                   <div>
-                    <p className="text-sm font-semibold">Email us</p>
-                    <a href="mailto:hello@granttracker.co.uk" className="text-sm text-coral hover:underline">hello@granttracker.co.uk</a>
+                    <p className="text-sm font-semibold mb-0.5" style={{ color: '#1A1A1A', fontFamily: 'var(--font-space-grotesk)' }}>Email us</p>
+                    <a href="mailto:hello@granttracker.co.uk" className="text-sm hover:underline" style={{ color: '#84CC16' }}>hello@granttracker.co.uk</a>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
-                  <div className="flex h-11 w-11 items-center justify-center bg-coral/10 text-coral"><MessageSquare size={18} /></div>
+                  <div className="flex h-11 w-11 rounded-xl items-center justify-center flex-shrink-0" style={{ background: '#F4F9E8' }}>
+                    <MessageSquare size={18} style={{ color: '#84CC16' }} />
+                  </div>
                   <div>
-                    <p className="text-sm font-semibold">Response time</p>
-                    <p className="text-sm text-mid">Usually within 24 hours</p>
+                    <p className="text-sm font-semibold mb-0.5" style={{ color: '#1A1A1A', fontFamily: 'var(--font-space-grotesk)' }}>Response time</p>
+                    <p className="text-sm" style={{ color: '#525252' }}>Usually within 24 hours</p>
                   </div>
                 </div>
               </div>
             </div>
-            <div className="border border-warm bg-white p-8">
+            <div className="rounded-3xl p-8 md:p-10" style={{ background: '#F9F9F9' }}>
               <ContactForm />
             </div>
           </motion.div>
@@ -1109,34 +1132,44 @@ export default function LandingPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-16 md:py-20 bg-[#121f2b]">
-        <div className="mx-auto max-w-4xl px-6 text-center">
-          <motion.div {...fadeInView(0)}>
-            <h2 className="font-serif text-4xl text-cream md:text-6xl leading-tight">Find your funding. Free to start.</h2>
-            <p className="mx-auto mt-6 max-w-lg text-cream/60 leading-relaxed">Join CICs, charities, social enterprises and impact founders already discovering funding that actually fits.</p>
-            <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-              <Link href="/auth/signup" className="bg-coral text-white rounded-xl px-10 py-3.5 text-base font-semibold hover:opacity-90 transition-colors">Start for free</Link>
-            </div>
-            <p className="mt-4 text-sm text-cream/40">No credit card required</p>
+      <section className="py-20 md:py-28" style={{ background: '#1A1A1A' }}>
+        <div className="mx-auto max-w-6xl px-6">
+          <motion.div {...fadeInView(0)} className="rounded-3xl p-12 md:p-20 text-center" style={{ background: '#84CC16' }}>
+            <h2 className="mb-6 leading-[1.05]" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(36px, 5.5vw, 72px)', letterSpacing: '-0.03em', color: '#1A1A1A' }}>
+              Find your funding.<br />Free to start.
+            </h2>
+            <p className="mx-auto mb-10 max-w-lg text-base leading-relaxed" style={{ color: '#2A4A1A' }}>
+              Join CICs, charities, social enterprises and impact founders already discovering funding that actually fits.
+            </p>
+            <Link
+              href="/auth/signup"
+              className="inline-block rounded-full px-10 py-4 text-base font-semibold transition-opacity hover:opacity-80"
+              style={{ background: '#1A1A1A', color: '#FFFFFF', fontFamily: 'var(--font-space-grotesk)' }}
+            >
+              Start for free
+            </Link>
+            <p className="mt-5 text-sm" style={{ color: '#2A4A1A' }}>No credit card required</p>
           </motion.div>
         </div>
       </section>
 
       {/* FOOTER */}
-      <footer className="border-t border-warm py-12">
-        <div className="mx-auto flex max-w-5xl flex-col items-center gap-8 px-6 md:flex-row md:justify-between">
-          <a href="/" className="flex items-center gap-2">
-            <RadioWaveIcon className="h-6 w-6 text-coral" />
-            <span className="font-serif text-lg text-charcoal">Grant<span className="text-coral">Tracker</span></span>
-          </a>
-          <div className="flex gap-8 text-sm text-mid">
-            <a href="#how" className="hover:text-charcoal transition-colors">How it works</a>
-            <a href="#features" className="hover:text-charcoal transition-colors">Features</a>
-            <a href="#pricing" className="hover:text-charcoal transition-colors">Pricing</a>
-            <a href="#about" className="hover:text-charcoal transition-colors">About</a>
-            <a href="#contact" className="hover:text-charcoal transition-colors">Contact</a>
+      <footer className="py-10" style={{ background: '#1A1A1A', borderTop: '1px solid #2A2A2A' }}>
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="flex flex-col items-center gap-8 md:flex-row md:justify-between">
+            <a href="/" className="flex items-center gap-2">
+              <span style={{ color: '#84CC16' }}><RadioWaveIcon className="h-5 w-5" /></span>
+              <span className="text-lg font-bold" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#FFFFFF' }}>Grant<span style={{ color: '#84CC16' }}>Tracker</span></span>
+            </a>
+            <div className="flex flex-wrap justify-center gap-6 text-sm" style={{ color: '#888888' }}>
+              <a href="#how" className="hover:text-white transition-colors">How it works</a>
+              <a href="#features" className="hover:text-white transition-colors">Features</a>
+              <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
+              <a href="#about" className="hover:text-white transition-colors">About</a>
+              <a href="#contact" className="hover:text-white transition-colors">Contact</a>
+            </div>
+            <p className="text-xs" style={{ color: '#555555' }}>© 2026 Grant Tracker</p>
           </div>
-          <p className="text-xs text-mid">© 2025 Grant Tracker</p>
         </div>
       </footer>
 
