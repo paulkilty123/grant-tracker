@@ -612,7 +612,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
           </button>
           <button
             onClick={() => onAddToPipeline(grant)}
-            className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-semibold border border-[#1A1A1A] text-[#1A1A1A] rounded-full hover:bg-[#1A1A1A] hover:text-white transition-colors"
+            className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-semibold border border-[#F59E0B] text-[#78350F] rounded-full hover:bg-[#FEF3C7] transition-colors" style={{ backgroundColor: "#FEF3C7" }}
           >
             <PlusCircle className="w-3.5 h-3.5" />
             Pipeline
