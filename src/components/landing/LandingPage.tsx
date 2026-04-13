@@ -692,29 +692,39 @@ export default function LandingPage() {
 
       {/* FEATURES */}
       <div id="features">
-        <section className="py-16 md:py-24 bg-white">
-          <div className="mx-auto max-w-6xl px-6">
+        <section className="py-20 md:py-28" style={{ background: '#F9F9F9' }}>
+          <div className="mx-auto max-w-7xl px-6 md:px-8">
             <div className="grid lg:grid-cols-2 gap-16 items-center">
 
               {/* Left: copy */}
               <motion.div {...fadeInView(0)}>
-                <p className="text-sm font-semibold text-coral uppercase tracking-wider mb-3">Features</p>
-                <h2 className="font-serif text-3xl leading-tight md:text-4xl mb-4">From search to submission, in one place.</h2>
-                <p className="text-mid leading-relaxed mb-8">Find funding, track every application and never miss a deadline — all matched to your organisation&apos;s profile.</p>
-                <ul className="space-y-4">
+                <p className="text-xs font-bold uppercase tracking-widest mb-5" style={{ color: '#84CC16' }}>Features</p>
+                <h2 className="font-bold leading-tight mb-5" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#1A1A1A' }}>
+                  From search to<br/>submission,<br/><span style={{ color: '#84CC16' }}>in one place.</span>
+                </h2>
+                <p className="text-[#525252] text-base leading-relaxed mb-10 max-w-sm">Find funding, track every application and never miss a deadline — all matched to your organisation&apos;s profile.</p>
+                <ul className="space-y-5 mb-10">
                   {[
-                    'Profile-based matching across grants, programmes, investment and in-kind support',
-                    'Live search ranked by structure, sector, geography and mission',
-                    'Pipeline tracking from first contact to submission',
-                    'Deadline alerts for grants closing within 14 days',
-                    'Dashboard summary of pipeline value and upcoming deadlines',
-                  ].map((b, i) => (
-                    <li key={i} className="flex items-start gap-3 text-sm text-charcoal">
-                      <span className="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-coral/10 text-coral text-xs font-bold shrink-0">✓</span>
-                      <span className="leading-relaxed">{b}</span>
+                    { title: 'Intelligent Matching', desc: 'Profile-based matching across grants, programmes, investment and in-kind support.' },
+                    { title: 'Live Precision Search', desc: 'Live search ranked by structure, sector, geography and mission.' },
+                    { title: 'Pipeline Visibility', desc: 'Pipeline tracking from first contact to submission status.' },
+                    { title: 'Deadline Alerts', desc: 'Stay ahead with deadline alerts for grants closing within 14 days.' },
+                    { title: 'Impact Dashboard', desc: 'Full dashboard summary of pipeline value and upcoming deadlines.' },
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <span className="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full shrink-0" style={{ background: 'rgba(132,204,22,0.15)' }}>
+                        <Check className="w-3 h-3" style={{ color: '#84CC16' }} />
+                      </span>
+                      <span className="text-sm text-[#1A1A1A] leading-relaxed">
+                        <span className="font-bold">{item.title}</span>
+                        {' — '}{item.desc}
+                      </span>
                     </li>
                   ))}
                 </ul>
+                <a href="/auth/signup" className="inline-flex items-center gap-3 bg-[#1A1A1A] text-white px-7 py-4 rounded-full font-bold text-base hover:bg-slate-800 transition-all no-underline">
+                  Start Your First Track <ArrowRight className="w-4 h-4" />
+                </a>
               </motion.div>
 
               {/* Right: scattered feature cards */}
