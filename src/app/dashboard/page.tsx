@@ -231,21 +231,21 @@ export default async function DashboardPage() {
           <p className="text-3xl font-bold leading-none mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#1E3A5F', letterSpacing: '-0.02em' }}>
             {formatCurrency(stats.totalPipelineValue)}
           </p>
-          <p className="text-xs" style={{ color: '#3B82F6' }}>{stats.activeCount} active opportunit{stats.activeCount \!== 1 ? 'ies' : 'y'}</p>
+          <p className="text-xs" style={{ color: '#3B82F6' }}>{stats.activeCount} active opportunit{stats.activeCount !== 1 ? 'ies' : 'y'}</p>
         </div>
 
         {/* Card 2 — Won This Year (lime green) */}
         <div className="p-5 rounded-xl" style={{ background: '#84CC16', boxShadow: '0 2px 16px rgba(132,204,22,0.25)' }}>
           <p className="text-[10px] font-semibold uppercase tracking-wider mb-3" style={{ color: 'rgba(255,255,255,0.70)' }}>Won This Year</p>
           <p className="text-3xl font-bold leading-none mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#ffffff', letterSpacing: '-0.02em' }}>{formatCurrency(stats.totalWon)}</p>
-          <p className="text-xs" style={{ color: 'rgba(255,255,255,0.70)' }}>{stats.wonCount} grant{stats.wonCount \!== 1 ? 's' : ''} secured</p>
+          <p className="text-xs" style={{ color: 'rgba(255,255,255,0.70)' }}>{stats.wonCount} grant{stats.wonCount !== 1 ? 's' : ''} secured</p>
         </div>
 
         {/* Card 3 — Submitted (amber) */}
         <div className="p-5 rounded-xl" style={{ background: '#FEF3C7', boxShadow: '0 2px 16px rgba(245,158,11,0.12)' }}>
           <p className="text-[10px] font-semibold uppercase tracking-wider mb-3" style={{ color: '#B45309' }}>Submitted</p>
           <p className="text-3xl font-bold leading-none mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#78350F', letterSpacing: '-0.02em' }}>{stats.submittedCount}</p>
-          <p className="text-xs" style={{ color: '#B45309' }}>Application{stats.submittedCount \!== 1 ? 's' : ''} awaiting decision</p>
+          <p className="text-xs" style={{ color: '#B45309' }}>Application{stats.submittedCount !== 1 ? 's' : ''} awaiting decision</p>
         </div>
 
         {/* Card 4 — Urgent Deadlines (grey) */}
