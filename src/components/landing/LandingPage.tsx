@@ -1156,7 +1156,6 @@ export default function LandingPage() {
         <div className="mx-auto max-w-6xl px-6">
           <div className="flex flex-col items-center gap-8 md:flex-row md:justify-between">
             <a href="/" className="flex items-center gap-2">
-              <span style={{ color: '#84CC16' }}><RadioWaveIcon className="h-5 w-5" /></span>
               <span className="text-lg font-bold" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#FFFFFF' }}>Grant<span style={{ color: '#84CC16' }}>Tracker</span></span>
             </a>
             <div className="flex flex-wrap justify-center gap-6 text-sm" style={{ color: '#888888' }}>

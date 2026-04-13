@@ -117,7 +117,6 @@ export default function SignupPage() {
           <div className="text-white p-10 hidden lg:flex flex-col justify-between" style={{ background: '#1A1A1A' }}>
             <div>
               <a href="/" className="no-underline inline-flex items-center gap-2 mb-2">
-                <span style={{ color: '#84CC16' }}><RadioWaveIcon className="w-6 h-6" /></span>
                 <span className="font-bold text-xl" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#FFFFFF', letterSpacing: '-0.02em' }}>Grant<span style={{ color: '#84CC16' }}>Tracker</span></span>
               </a>
               <p className="text-sm mb-10" style={{ color: '#888888' }}>Find grants, accelerators, investment and support programmes &mdash; matched to you, managed in one place.</p>
@@ -149,7 +148,6 @@ export default function SignupPage() {
           <div className="bg-white p-8 lg:p-10 flex flex-col justify-center">
             <div className="mb-8 lg:hidden flex justify-center">
               <a href="/" className="no-underline inline-flex items-center gap-2">
-                <span style={{ color: '#84CC16' }}><RadioWaveIcon className="w-5 h-5" /></span>
                 <span className="font-bold text-lg" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#1A1A1A' }}>Grant<span style={{ color: '#84CC16' }}>Tracker</span></span>
               </a>
             </div>
