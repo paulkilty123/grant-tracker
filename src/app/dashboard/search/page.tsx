@@ -244,7 +244,7 @@ function LiveGrantCard({ grant, onAddToPipeline }: {
               Visit website →
             </a>
             <button onClick={() => onAddToPipeline(grant)}
-              className="px-3 py-2 text-xs font-bold w-full hover:opacity-80 transition-colors rounded-full" style={{ background: '#84CC16', color: '#1A1A1A' }}>
+              className="px-3 py-2 text-xs font-bold w-full hover:opacity-80 transition-colors rounded-full" style={{ background: '#1A1A1A', color: '#FFFFFF' }}>
               Pipeline
             </button>
           </div>
@@ -2479,7 +2479,7 @@ export default function SearchPage() {
             <div className="flex gap-2">
               <a
                 href="/dashboard/pipeline"
-                className="flex-1 text-center px-3 py-2 text-xs font-bold hover:opacity-80 transition-colors rounded-full" style={{ background: '#84CC16', color: '#1A1A1A' }}
+                className="flex-1 text-center px-3 py-2 text-xs font-bold hover:opacity-80 transition-colors rounded-full" style={{ background: '#1A1A1A', color: '#FFFFFF' }}
               >
                 Go to pipeline →
               </a>
