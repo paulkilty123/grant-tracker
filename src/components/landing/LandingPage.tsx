@@ -303,15 +303,8 @@ export default function LandingPage() {
           </a>
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-10">
-            {navLinks.map((link, i) => (
-              i === 0 ? (
-                <div key={link.label} className="relative flex flex-col items-center">
-                  <a href={link.href} className="text-[#1A1A1A] font-semibold text-base" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>{link.label}</a>
-                  <div className="absolute -bottom-2 w-full h-[3px] bg-[#84CC16] rounded-full" />
-                </div>
-              ) : (
-                <a key={link.label} href={link.href} className="text-[#525252] hover:text-[#1A1A1A] transition-colors font-medium text-base" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>{link.label}</a>
-              )
+            {navLinks.map((link) => (
+              <a key={link.label} href={link.href} className="text-[#525252] hover:text-[#1A1A1A] transition-colors font-medium text-base" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>{link.label}</a>
             ))}
           </nav>
           {/* Desktop CTAs */}
