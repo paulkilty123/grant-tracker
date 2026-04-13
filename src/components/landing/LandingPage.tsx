@@ -700,7 +700,7 @@ export default function LandingPage() {
               <motion.div {...fadeInView(0)}>
                 <p className="text-xs font-bold uppercase tracking-widest mb-5" style={{ color: '#84CC16' }}>Features</p>
                 <h2 className="font-bold leading-tight mb-5" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#1A1A1A' }}>
-                  From search to<br/>submission,<br/><span style={{ color: '#84CC16' }}>in one place.</span>
+                  Search &amp; track,<br/><span style={{ color: '#84CC16' }}>in one place.</span>
                 </h2>
                 <ul className="space-y-5 mb-10">
                   {[
