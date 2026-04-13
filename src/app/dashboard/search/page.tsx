@@ -670,7 +670,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
       {/* ── Expand toggle ── */}
       {(!!(grant as EnrichedGrant).funderBrief || grant.eligibilityCriteria?.length > 0 || (grant as EnrichedGrant).impactSectors?.length || grant.sectors?.length) && (
         <button
-          onClick={() => setExpanded(v => !v)}
+          onClick={() => setInsightsExpanded(v => !v)}
           className="w-full flex items-center justify-center gap-1.5 py-2.5 border-t border-[#E8E8EC] text-[11px] font-bold uppercase tracking-widest transition-colors hover:bg-[#F5F5F5]"
           style={{ color: '#6E6E80' }}
         >
