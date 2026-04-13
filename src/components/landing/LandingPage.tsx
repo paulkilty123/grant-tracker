@@ -702,7 +702,6 @@ export default function LandingPage() {
                 <h2 className="font-bold leading-tight mb-5" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#1A1A1A' }}>
                   From search to<br/>submission,<br/><span style={{ color: '#84CC16' }}>in one place.</span>
                 </h2>
-                <p className="text-[#525252] text-base leading-relaxed mb-10 max-w-sm">Find funding, track every application and never miss a deadline — all matched to your organisation&apos;s profile.</p>
                 <ul className="space-y-5 mb-10">
                   {[
                     { title: 'Intelligent Matching', desc: 'Profile-based matching across grants, programmes, investment and in-kind support.' },
@@ -727,149 +726,138 @@ export default function LandingPage() {
                 </a>
               </motion.div>
 
-              {/* Right: scattered feature cards */}
-              <div className="relative hidden lg:block" style={{ height: '580px' }}>
+              {/* Right: description + scattered feature cards */}
+              <div className="hidden lg:flex flex-col gap-0">
+                <p className="text-[#525252] text-base leading-relaxed mb-8 max-w-sm">
+                  Find funding, track every application and never miss a deadline — all matched to your organisation&apos;s profile.
+                </p>
+                <div className="relative" style={{ height: '560px' }}>
 
-                {/* Dashboard — back right */}
-                <motion.div {...fadeInView(0.1)} className="absolute" style={{ width: '240px', top: '20px', right: '0px', zIndex: 1 }}>
-                  <div className="bg-white rounded-xl border border-warm/80 p-4" style={{ transform: 'rotate(7deg)', boxShadow: '0 4px 20px rgba(26,46,43,0.08)' }}>
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="w-7 h-7 rounded-full bg-warm flex items-center justify-center flex-shrink-0">
-                        <LayoutGrid className="w-3.5 h-3.5 text-mid" />
+                  {/* Dashboard — back right */}
+                  <motion.div {...fadeInView(0.1)} className="absolute" style={{ width: '240px', top: '20px', right: '0px', zIndex: 1 }}>
+                    <div className="bg-white rounded-2xl p-4" style={{ transform: 'rotate(7deg)', boxShadow: '0 8px 32px rgba(0,0,0,0.08)' }}>
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(132,204,22,0.15)' }}>
+                          <LayoutGrid className="w-3.5 h-3.5" style={{ color: '#84CC16' }} />
+                        </div>
+                        <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#84CC16' }}>Dashboard</p>
                       </div>
-                      <p className="text-[11px] font-bold text-charcoal uppercase tracking-wider">Dashboard</p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 mb-3">
-                      <div className="bg-[#f5f2ed] rounded-lg p-2.5">
-                        <p className="text-[17px] font-bold text-charcoal leading-tight">42k</p>
-                        <p className="text-[9px] text-mid uppercase tracking-wide font-medium">Won</p>
+                      <div className="grid grid-cols-2 gap-2 mb-3">
+                        <div className="rounded-xl p-2.5" style={{ background: '#F2F2F2' }}>
+                          <p className="text-[17px] font-bold text-[#1A1A1A] leading-tight">42k</p>
+                          <p className="text-[9px] text-[#525252] uppercase tracking-wide font-medium">Won</p>
+                        </div>
+                        <div className="rounded-xl p-2.5" style={{ background: '#F2F2F2' }}>
+                          <p className="text-[17px] font-bold text-[#1A1A1A] leading-tight">88%</p>
+                          <p className="text-[9px] text-[#525252] uppercase tracking-wide font-medium">Success</p>
+                        </div>
                       </div>
-                      <div className="bg-[#f5f2ed] rounded-lg p-2.5">
-                        <p className="text-[17px] font-bold text-charcoal leading-tight">68%</p>
-                        <p className="text-[9px] text-mid uppercase tracking-wide font-medium">Success</p>
+                      <p className="text-[9px] text-[#525252] mb-2">Funding won — last 7 months</p>
+                      <div className="flex items-end gap-1" style={{ height: '40px' }}>
+                        {[40, 25, 55, 35, 70, 60, 85].map((h, i) => (
+                          <div key={i} className="flex-1 rounded-sm" style={{ height: `${h}%`, background: i === 6 ? '#84CC16' : 'rgba(132,204,22,0.35)' }} />
+                        ))}
                       </div>
                     </div>
-                    <p className="text-[9px] text-mid mb-2">Funding won — last 7 months</p>
-                    <div className="flex items-end gap-1" style={{ height: '40px' }}>
-                      {[40, 25, 55, 35, 70, 60, 85].map((h, i) => (
-                        <div key={i} className="flex-1 bg-coral/60 rounded-sm" style={{ height: `${h}%` }} />
-                      ))}
-                    </div>
-                  </div>
-                </motion.div>
+                  </motion.div>
 
-                {/* Pipeline — front left */}
-                <motion.div {...fadeInView(0.05)} className="absolute" style={{ width: '230px', top: '60px', left: '0px', zIndex: 3 }}>
-                  <div className="bg-white rounded-xl border border-warm/80 p-4" style={{ transform: 'rotate(-8deg)', boxShadow: '0 8px 32px rgba(26,46,43,0.12)' }}>
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-7 h-7 rounded-full bg-coral/15 flex items-center justify-center flex-shrink-0">
-                        <ArrowRight className="w-3.5 h-3.5 text-coral" />
+                  {/* Pipeline — front left */}
+                  <motion.div {...fadeInView(0.05)} className="absolute" style={{ width: '220px', top: '60px', left: '0px', zIndex: 3 }}>
+                    <div className="bg-white rounded-2xl p-4" style={{ transform: 'rotate(-8deg)', boxShadow: '0 8px 32px rgba(0,0,0,0.10)' }}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(132,204,22,0.15)' }}>
+                          <ArrowRight className="w-3.5 h-3.5" style={{ color: '#84CC16' }} />
+                        </div>
+                        <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#84CC16' }}>Pipeline</p>
                       </div>
-                      <p className="text-[11px] font-bold text-coral uppercase tracking-wider">Pipeline</p>
+                      <p className="text-[26px] font-bold text-[#1A1A1A] leading-tight" style={{ fontFamily: 'var(--font-space-grotesk), sans-serif' }}>£187,500</p>
+                      <p className="text-[11px] font-medium mb-3" style={{ color: '#84CC16' }}>7 active opportunities</p>
+                      <div className="flex flex-col gap-1.5">
+                        {['Identified', 'Applying', 'Submitted'].map((label) => (
+                          <div key={label} className="flex items-center justify-between rounded-xl px-2.5 py-1.5" style={{ background: '#F2F2F2' }}>
+                            <span className="text-[10px] text-[#1A1A1A]">{label}</span>
+                            <div className="w-2 h-2 rounded-full" style={{ background: label === 'Applying' ? '#84CC16' : '#D4D4D4' }} />
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <p className="font-serif text-[26px] font-bold text-charcoal leading-tight">£187,500</p>
-                    <p className="text-[11px] text-coral font-medium mb-3">7 active opportunities</p>
-                    <div className="flex flex-col gap-1.5">
-                      {[
-                        { label: 'Identified', dots: [false, false, false] },
-                        { label: 'Applying',   dots: [true,  true] },
-                        { label: 'Submitted',  dots: [false, false] },
-                      ].map((stage) => (
-                        <div key={stage.label} className="flex items-center justify-between bg-[#f5f2ed] rounded-lg px-2.5 py-1.5">
-                          <div className="flex items-center gap-1.5">
-                            <div className="w-3.5 h-3.5 rounded-full border border-mid/30 flex items-center justify-center flex-shrink-0">
-                              <div className="w-1.5 h-1.5 rounded-full bg-mid/30" />
+                  </motion.div>
+
+                  {/* Search — centre, largest, front */}
+                  <motion.div {...fadeInView(0.08)} className="absolute" style={{ width: '290px', top: '110px', left: 'calc(50% - 145px)', zIndex: 5 }}>
+                    <div className="bg-white rounded-2xl p-5" style={{ transform: 'rotate(-1deg)', boxShadow: '0 16px 48px rgba(0,0,0,0.12)' }}>
+                      <p className="text-[11px] font-bold text-[#1A1A1A] uppercase tracking-wider mb-2.5">Search</p>
+                      <div className="flex items-center gap-2 rounded-full px-3 py-2 mb-3" style={{ background: '#F2F2F2' }}>
+                        <Search className="w-3 h-3 text-[#525252] flex-shrink-0" />
+                        <span className="text-[11px] text-[#525252]">community garden...</span>
+                      </div>
+                      <div className="flex flex-col">
+                        {[
+                          { name: 'Community Growing Grants', pct: 94 },
+                          { name: 'Green Spaces Fund',        pct: 87 },
+                          { name: 'Urban Nature Programme',   pct: 79 },
+                        ].map((r, i) => (
+                          <div key={r.name} className={`flex items-center justify-between gap-2 py-2 ${i < 2 ? 'border-b border-[#F2F2F2]' : ''}`}>
+                            <p className="text-[11px] font-semibold text-[#1A1A1A] leading-tight">{r.name}</p>
+                            <div className="flex items-center gap-1.5 flex-shrink-0">
+                              <div className="w-10 h-1.5 rounded-full overflow-hidden" style={{ background: '#EEEEEE' }}>
+                                <div className="h-full rounded-full" style={{ width: `${r.pct}%`, background: '#84CC16' }} />
+                              </div>
+                              <span className="text-[10px] font-bold text-[#1A1A1A]">{r.pct}%</span>
                             </div>
-                            <span className="text-[10px] text-charcoal">{stage.label}</span>
                           </div>
-                          <div className="flex gap-1">
-                            {stage.dots.map((active, i) => (
-                              <div key={i} className={`w-2 h-2 rounded-full ${active ? 'bg-coral/70' : 'bg-mid/25'}`} />
-                            ))}
-                          </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
+                  </motion.div>
 
-                {/* Search — centre, largest, front */}
-                <motion.div {...fadeInView(0.08)} className="absolute" style={{ width: '300px', top: '100px', left: 'calc(50% - 150px)', zIndex: 5 }}>
-                  <div className="bg-white rounded-xl border border-warm/80 p-5" style={{ transform: 'rotate(-1deg)', boxShadow: '0 14px 44px rgba(26,46,43,0.14)' }}>
-                    <p className="text-[11px] font-bold text-charcoal uppercase tracking-wider mb-2.5">Search</p>
-                    <div className="flex items-center gap-2 bg-[#f5f2ed] rounded-full px-3 py-2 mb-3 border border-warm/40">
-                      <Search className="w-3 h-3 text-mid flex-shrink-0" />
-                      <span className="text-[11px] text-mid">community garden...</span>
+                  {/* Awarded — bottom right */}
+                  <motion.div {...fadeInView(0.12)} className="absolute" style={{ width: '210px', top: '340px', right: '0px', zIndex: 2 }}>
+                    <div className="bg-white rounded-2xl p-4" style={{ transform: 'rotate(4deg)', boxShadow: '0 8px 32px rgba(0,0,0,0.08)' }}>
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(132,204,22,0.15)' }}>
+                          <Award className="w-3.5 h-3.5" style={{ color: '#84CC16' }} />
+                        </div>
+                        <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#84CC16' }}>Awarded</p>
+                      </div>
+                      <p className="text-[13px] font-semibold text-[#1A1A1A] leading-snug mb-1">London Community Foundation</p>
+                      <p className="text-[11px] text-[#525252] mb-3">Grow to Give — Community Growing</p>
+                      <div className="flex items-center justify-between rounded-xl px-3 py-2" style={{ background: 'rgba(132,204,22,0.12)' }}>
+                        <span className="text-[11px] text-[#525252]">Grant awarded</span>
+                        <span className="text-[15px] font-bold" style={{ color: '#446900' }}>£8,000</span>
+                      </div>
                     </div>
-                    <div className="flex flex-col">
-                      {[
-                        { name: 'Community Growing Grants', amount: null,   pct: 94, color: 'bg-forest' },
-                        { name: 'Green Spaces Fund',        amount: '£10k', pct: 87, color: 'bg-forest/70' },
-                        { name: 'Urban Nature Programme',   amount: '£15k', pct: 79, color: 'bg-amber-400' },
-                      ].map((r, i) => (
-                        <div key={r.name} className={`flex items-center justify-between gap-2 py-2 ${i < 2 ? 'border-b border-warm/40' : ''}`}>
-                          <div>
-                            <p className="text-[11px] font-semibold text-charcoal leading-tight">{r.name}</p>
-                            {r.amount && <p className="text-[10px] text-mid">{r.amount}</p>}
-                          </div>
-                          <div className="flex items-center gap-1.5 flex-shrink-0">
-                            <div className="w-10 h-1.5 bg-warm rounded-full overflow-hidden">
-                              <div className={`h-full ${r.color} rounded-full`} style={{ width: `${r.pct}%` }} />
+                  </motion.div>
+
+                  {/* Alerts — front bottom left */}
+                  <motion.div {...fadeInView(0.1)} className="absolute" style={{ width: '240px', top: '330px', left: '10px', zIndex: 4 }}>
+                    <div className="bg-white rounded-2xl p-4" style={{ transform: 'rotate(-3deg)', boxShadow: '0 8px 32px rgba(0,0,0,0.10)' }}>
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="relative w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: '#F2F2F2' }}>
+                          <Bell className="w-3.5 h-3.5 text-[#525252]" />
+                          <div className="absolute top-0 right-0 w-2 h-2 rounded-full bg-red-400 border border-white" />
+                        </div>
+                        <p className="text-[11px] font-bold text-[#1A1A1A] uppercase tracking-wider">Alerts</p>
+                      </div>
+                      <div className="flex flex-col">
+                        {[
+                          { name: 'Youth Fund 2025',        org: 'Paul Hamlyn Foundation', days: '2d',  urgent: true  },
+                          { name: 'Green Spaces Grant',     org: 'National Lottery',       days: '8d',  urgent: false },
+                          { name: 'Digital Inclusion Fund', org: 'DCMS',                   days: '14d', urgent: false },
+                        ].map((a, i) => (
+                          <div key={a.name} className={`flex items-center justify-between gap-2 py-2 ${i < 2 ? 'border-b border-[#F2F2F2]' : ''}`}>
+                            <div>
+                              <p className="text-[11px] font-semibold text-[#1A1A1A] leading-tight">{a.name}</p>
+                              <p className="text-[10px] text-[#525252]">{a.org}</p>
                             </div>
-                            <span className="text-[10px] font-bold text-charcoal">{r.pct}%</span>
+                            <span className="text-[10px] font-bold px-2 py-1 rounded-full flex-shrink-0" style={a.urgent ? { background: '#BEF264', color: '#1A1A1A' } : { background: '#F2F2F2', color: '#525252' }}>{a.days}</span>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </motion.div>
-
-                {/* Awarded — bottom right */}
-                <motion.div {...fadeInView(0.12)} className="absolute" style={{ width: '220px', top: '340px', right: '0px', zIndex: 2 }}>
-                  <div className="bg-white rounded-xl border border-warm/80 p-4" style={{ transform: 'rotate(4deg)', boxShadow: '0 8px 32px rgba(26,46,43,0.10)' }}>
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="w-7 h-7 rounded-full bg-forest/10 flex items-center justify-center flex-shrink-0">
-                        <Award className="w-3.5 h-3.5 text-forest" />
+                        ))}
                       </div>
-                      <p className="text-[11px] font-bold text-forest uppercase tracking-wider">Awarded</p>
                     </div>
-                    <p className="text-[13px] font-semibold text-charcoal leading-snug mb-1">London Community Foundation</p>
-                    <p className="text-[11px] text-mid mb-3">Grow to Give — Community Growing</p>
-                    <div className="flex items-center justify-between rounded-lg px-3 py-2" style={{ background: 'rgba(45,107,74,0.08)' }}>
-                      <span className="text-[11px] text-mid">Grant awarded</span>
-                      <span className="text-[15px] font-bold text-forest">£8,000</span>
-                    </div>
-                  </div>
-                </motion.div>
+                  </motion.div>
 
-                {/* Alerts — front bottom left */}
-                <motion.div {...fadeInView(0.1)} className="absolute" style={{ width: '250px', top: '320px', left: '10px', zIndex: 4 }}>
-                  <div className="bg-white rounded-xl border border-warm/80 p-4" style={{ transform: 'rotate(-3deg)', boxShadow: '0 8px 32px rgba(26,46,43,0.12)' }}>
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="relative w-7 h-7 rounded-full bg-warm flex items-center justify-center flex-shrink-0">
-                        <Bell className="w-3.5 h-3.5 text-mid" />
-                        <div className="absolute top-0 right-0 w-2 h-2 rounded-full bg-red-400 border border-white" />
-                      </div>
-                      <p className="text-[11px] font-bold text-charcoal uppercase tracking-wider">Alerts</p>
-                    </div>
-                    <div className="flex flex-col">
-                      {[
-                        { name: 'Youth Fund 2025',        org: 'Paul Hamlyn Foundation', days: '2d',  urgent: true  },
-                        { name: 'Green Spaces Grant',     org: 'National Lottery',       days: '8d',  urgent: false },
-                        { name: 'Digital Inclusion Fund', org: 'DCMS',                   days: '14d', urgent: false },
-                      ].map((a, i) => (
-                        <div key={a.name} className={`flex items-center justify-between gap-2 py-2 ${i < 2 ? 'border-b border-warm/40' : ''}`}>
-                          <div>
-                            <p className="text-[11px] font-semibold text-charcoal leading-tight">{a.name}</p>
-                            <p className="text-[10px] text-mid">{a.org}</p>
-                          </div>
-                          <span className={`text-[10px] font-bold px-2 py-1 rounded-full flex-shrink-0 ${a.urgent ? 'bg-coral text-white' : 'bg-warm text-mid'}`}>{a.days}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </motion.div>
-
+                </div>
               </div>
             </div>
           </div>
