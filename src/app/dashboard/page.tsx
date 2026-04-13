@@ -242,7 +242,7 @@ export default async function DashboardPage() {
         </div>
 
         {/* Card 3 — Submitted (amber) */}
-        <div className="p-5 rounded-xl" style={{ background: '#FEF9C3', boxShadow: '0 2px 16px rgba(245,158,11,0.10)' }}>
+        <div className="p-5 rounded-xl" style={{ background: '#FDE8A3', boxShadow: '0 2px 16px rgba(245,158,11,0.12)' }}>
           <p className="text-[10px] font-semibold uppercase tracking-wider mb-3" style={{ color: '#5C4A00' }}>Submitted</p>
           <p className="text-3xl font-bold leading-none mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#4A3800', letterSpacing: '-0.02em' }}>{stats.submittedCount}</p>
           <p className="text-xs" style={{ color: '#5C4A00' }}>Application{stats.submittedCount !== 1 ? 's' : ''} awaiting decision</p>
