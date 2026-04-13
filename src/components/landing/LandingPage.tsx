@@ -366,7 +366,7 @@ export default function LandingPage() {
             {/* Headline */}
             <h1
               className="font-bold leading-[1.05] text-[#1A1A1A] mb-10"
-              style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: 'clamp(64px, 9vw, 120px)', letterSpacing: '-0.04em' }}
+              style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: 'clamp(48px, 6.5vw, 88px)', letterSpacing: '-0.04em' }}
             >
               Funding,<br/>
               <span style={{ color: '#84CC16' }}>matched</span><br/>
@@ -374,7 +374,7 @@ export default function LandingPage() {
             </h1>
             {/* Subtext */}
             <p className="text-[#525252] leading-relaxed font-medium text-lg max-w-lg mb-10">
-              Empowering modern stewards with AI-driven discovery, tracking, and reporting. Discover grants, programmes, social investment and in-kind support matched to your organisation.
+              Discover grants, programmes, social investment and in-kind opportunities.
             </p>
             {/* CTAs */}
             <div className="flex flex-wrap gap-4">
