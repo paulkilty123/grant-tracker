@@ -602,19 +602,19 @@ export default function LandingPage() {
       </section>
 
       {/* FUNDING TYPES */}
-      <section className="py-16 md:py-20" style={{ background: '#F8F9FA' }}>
+      <section className="py-20 md:py-28" style={{ background: '#F9F9F9' }}>
         <div className="mx-auto max-w-7xl px-6 md:px-8">
 
-          {/* Header */}
-          <motion.div {...fadeInView(0)} className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-10 md:mb-14">
-            <div className="max-w-3xl">
-              <span className="font-bold tracking-[0.25em] uppercase text-xs mb-6 block" style={{ color: '#446900' }}>Funding Types</span>
-              <h2 className="font-bold tracking-tight leading-[0.9]" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: 'clamp(32px, 4.5vw, 56px)', color: '#111827' }}>
-                Not just grants,<br/><span style={{ color: '#94CF35' }}>the full picture.</span>
+          {/* Header row — matches Process section */}
+          <motion.div {...fadeInView(0)} className="grid lg:grid-cols-2 gap-8 items-end mb-14">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest mb-5" style={{ color: '#84CC16' }}>Funding Types</p>
+              <h2 className="font-bold leading-tight" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#1A1A1A' }}>
+                Not just grants,<br/><span style={{ color: '#84CC16' }}>the full picture.</span>
               </h2>
             </div>
-            <div className="max-w-sm md:pb-2">
-              <p className="text-gray-600 text-sm leading-relaxed">
+            <div className="lg:pb-2">
+              <p className="text-[#525252] text-base leading-relaxed max-w-sm">
                 Not every organisation needs a grant. We surface the full funding landscape matched to your structure and stage.
               </p>
             </div>
