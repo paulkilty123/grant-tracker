@@ -6,8 +6,6 @@ import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Organisation } from '@/types'
 import { cn } from '@/lib/utils'
-import RadioWaveIcon from '@/components/icons/RadioWaveIcon'
-import Logo from '@/components/Logo'
 import {
   LayoutDashboard,
   Search,
@@ -49,21 +47,21 @@ const NAV_GROUPS = [
   {
     label: 'Find Funding',
     items: [
-      { href: '/dashboard/search',    label: 'Find Funding',        Icon: Search    },
+      { href: '/dashboard/search',    label: 'Find Funding',  Icon: Search    },
     ],
   },
   {
     label: 'Manage',
     items: [
-      { href: '/dashboard/pipeline',  label: 'Pipeline',         Icon: FolderKanban },
-      { href: '/dashboard/deadlines', label: 'Deadlines',        Icon: CalendarClock },
+      { href: '/dashboard/pipeline',  label: 'Pipeline',   Icon: FolderKanban },
+      { href: '/dashboard/deadlines', label: 'Deadlines',  Icon: CalendarClock },
     ],
   },
   {
     label: 'Settings',
     items: [
-      { href: '/dashboard/profile',  label: 'My Profile',   Icon: User },
-      { href: '/dashboard/feedback', label: 'Feedback',     Icon: MessageSquare },
+      { href: '/dashboard/profile',  label: 'My Profile', Icon: User },
+      { href: '/dashboard/feedback', label: 'Feedback',   Icon: MessageSquare },
     ],
   },
 ]
@@ -71,20 +69,20 @@ const NAV_GROUPS = [
 const ADMIN_NAV_GROUP = {
   label: 'Admin',
   items: [
-    { href: '/dashboard/admin',                  label: 'Grant Health',        Icon: Activity      },
-    { href: '/dashboard/admin/urls',             label: 'Grant Manager',       Icon: ClipboardList },
-    { href: '/dashboard/admin/corporate',        label: 'Partner Manager',     Icon: Building2     },
-    { href: '/dashboard/admin/intelligence',     label: 'Funder Intelligence', Icon: Sparkles      },
+    { href: '/dashboard/admin',              label: 'Grant Health',        Icon: Activity      },
+    { href: '/dashboard/admin/urls',         label: 'Grant Manager',       Icon: ClipboardList },
+    { href: '/dashboard/admin/corporate',    label: 'Partner Manager',     Icon: Building2     },
+    { href: '/dashboard/admin/intelligence', label: 'Funder Intelligence', Icon: Sparkles      },
   ],
 }
 
 export default function Sidebar({ org, userEmail }: Props) {
-  const pathname = usePathname()
-  const router = useRouter()
+  const pathname    = usePathname()
+  const router      = useRouter()
   const [mobileOpen, setMobileOpen] = useState(false)
 
-  const profileScore = matchProfileScore(org)
-  const showProfileDot = org !== null && profileScore < 80
+  const profileScore    = matchProfileScore(org)
+  const showProfileDot  = org !== null && profileScore < 80
 
   async function handleSignOut() {
     const supabase = createClient()
@@ -97,21 +95,25 @@ export default function Sidebar({ org, userEmail }: Props) {
     : userEmail.slice(0, 2).toUpperCase()
 
   const navLink = (href: string, label: string, Icon: React.ElementType, showDot?: boolean, score?: number) => {
-    const isActive = pathname === href || (href !== '/dashboard' && pathname.startsWith(href))
-      || (href === '/dashboard/admin/intelligence' && pathname.startsWith('/dashboard/admin/watchlist'))
+    const isActive =
+      pathname === href ||
+      (href !== '/dashboard' && pathname.startsWith(href)) ||
+      (href === '/dashboard/admin/intelligence' && pathname.startsWith('/dashboard/admin/watchlist'))
+
     return (
       <Link
         key={href}
         href={href}
         onClick={() => setMobileOpen(false)}
         className={cn(
-          'flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-colors',
+          'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all',
           isActive
-            ? 'bg-white/15 text-white'
-            : 'text-white/65 hover:bg-white/10 hover:text-white'
+            ? 'text-[#84CC16]'
+            : 'text-white/50 hover:text-white hover:bg-white/6'
         )}
+        style={isActive ? { background: 'rgba(132,204,22,0.10)' } : {}}
       >
-        <Icon className="h-4 w-4 flex-shrink-0" />
+        <Icon className="h-4 w-4 flex-shrink-0" style={isActive ? { color: '#84CC16' } : {}} />
         <span className="flex-1">{label}</span>
         {showDot && !isActive && (
           <span
@@ -126,20 +128,22 @@ export default function Sidebar({ org, userEmail }: Props) {
   }
 
   const sidebarContent = (
-    <aside className={cn(
-      'fixed left-0 top-0 bottom-0 w-60 flex flex-col z-50 transition-transform duration-300',
-      'md:translate-x-0',
-      mobileOpen ? 'translate-x-0' : '-translate-x-full'
-    )} style={{ background: '#1C1C2E' }}>
+    <aside
+      className={cn(
+        'fixed left-0 top-0 bottom-0 w-60 flex flex-col z-50 transition-transform duration-300',
+        'md:translate-x-0',
+        mobileOpen ? 'translate-x-0' : '-translate-x-full'
+      )}
+      style={{ background: '#1A1A1A' }}
+    >
       {/* Logo */}
-      <div className="px-6 py-6 flex items-center justify-between border-b border-white/10">
+      <div className="px-5 py-5 flex items-center justify-between" style={{ borderBottom: '1px solid #2A2A2A' }}>
         <Link href="/dashboard" className="no-underline">
-          <Logo variant="light" size="md" />
+          <span className="font-bold text-lg" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#FFFFFF', letterSpacing: '-0.02em' }}>
+            Grant<span style={{ color: '#84CC16' }}>Tracker</span>
+          </span>
         </Link>
-        <button
-          className="md:hidden text-white/50 hover:text-white"
-          onClick={() => setMobileOpen(false)}
-        >
+        <button className="md:hidden text-white/40 hover:text-white" onClick={() => setMobileOpen(false)}>
           <X className="h-5 w-5" />
         </button>
       </div>
@@ -150,10 +154,10 @@ export default function Sidebar({ org, userEmail }: Props) {
       </div>
 
       {/* Nav groups */}
-      <nav className="flex-1 px-3 py-3 space-y-4 overflow-y-auto">
+      <nav className="flex-1 px-3 py-3 space-y-5 overflow-y-auto">
         {[...NAV_GROUPS, ...(userEmail === ADMIN_EMAIL ? [ADMIN_NAV_GROUP] : [])].map(group => (
           <div key={group.label}>
-            <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-widest text-white/35">
+            <p className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.25)' }}>
               {group.label}
             </p>
             {group.items.map(item => navLink(
@@ -167,25 +171,27 @@ export default function Sidebar({ org, userEmail }: Props) {
         ))}
       </nav>
 
-      {/* How to use — pinned above user chip */}
+      {/* How to use */}
       <div className="px-3 pb-2">
         {navLink('/dashboard/instructions', 'How to use', BookOpen)}
       </div>
 
       {/* User chip */}
-      <div className="border-t border-white/10 px-4 py-4">
+      <div className="px-4 py-4" style={{ borderTop: '1px solid #2A2A2A' }}>
         <div className="flex items-center gap-2.5 mb-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-white text-xs font-bold flex-shrink-0">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold flex-shrink-0"
+            style={{ background: 'rgba(132,204,22,0.15)', color: '#84CC16', fontFamily: 'var(--font-space-grotesk)' }}>
             {initials}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-white">{org?.name ?? 'Account'}</p>
-            <p className="truncate text-[10px] text-white/40">{userEmail}</p>
+            <p className="truncate text-sm font-medium text-white" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{org?.name ?? 'Account'}</p>
+            <p className="truncate text-[10px]" style={{ color: 'rgba(255,255,255,0.35)' }}>{userEmail}</p>
           </div>
         </div>
         <button
           onClick={handleSignOut}
-          className="flex items-center gap-2 text-xs text-white/40 hover:text-white/80 transition-colors"
+          className="flex items-center gap-2 text-xs transition-colors hover:text-white/80"
+          style={{ color: 'rgba(255,255,255,0.35)' }}
         >
           <LogOut className="h-3.5 w-3.5" />
           Sign out
@@ -201,10 +207,11 @@ export default function Sidebar({ org, userEmail }: Props) {
         onClick={() => setMobileOpen(true)}
         className={cn(
           'fixed top-4 left-4 z-40 md:hidden',
-          'w-10 h-10 flex items-center justify-center shadow-lg bg-[#1C1C2E] rounded-md',
+          'w-10 h-10 flex items-center justify-center shadow-lg rounded-xl',
           'transition-opacity duration-200',
           mobileOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'
         )}
+        style={{ background: '#1A1A1A' }}
         aria-label="Open menu"
       >
         <Menu className="h-5 w-5 text-white" />
@@ -212,10 +219,7 @@ export default function Sidebar({ org, userEmail }: Props) {
 
       {/* Mobile overlay */}
       {mobileOpen && (
-        <div
-          className="fixed inset-0 bg-black/40 z-40 md:hidden"
-          onClick={() => setMobileOpen(false)}
-        />
+        <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setMobileOpen(false)} />
       )}
 
       {sidebarContent}

@@ -141,11 +141,11 @@ export default async function DashboardPage() {
 
   // Stage pipeline values
   const stageData = [
-    { id: 'identified', label: 'Identified', sublabel: 'Leads',    bg: '#B2DFDB', labelCol: '#008080', valCol: '#008080', dot: '#80CBC4' },
-    { id: 'applying',   label: 'Applying',   sublabel: 'Active',   bg: '#80CBC4', labelCol: '#00695C', valCol: '#00695C', dot: '#80CBC4' },
-    { id: 'submitted',  label: 'Submitted',  sublabel: 'Pending',  bg: '#26A69A', labelCol: '#fff',    valCol: '#E0F2F1', dot: '#26A69A' },
-    { id: 'won',        label: 'Won',        sublabel: 'Wins',     bg: '#008080', labelCol: '#fff',    valCol: '#fff',    dot: '#008080' },
-    { id: 'declined',   label: 'Declined',   sublabel: 'Archived', bg: '#E8E8EC', labelCol: '#6E6E80', valCol: '#3D3D4E', dot: '#bbb'    },
+    { id: 'identified', label: 'Identified', sublabel: 'Leads',    bg: '#F4F9E8', labelCol: '#4A7C10', valCol: '#2A5000', dot: '#84CC16' },
+    { id: 'applying',   label: 'Applying',   sublabel: 'Active',   bg: '#E8F5E9', labelCol: '#2E7D32', valCol: '#1B5E20', dot: '#66BB6A' },
+    { id: 'submitted',  label: 'Submitted',  sublabel: 'Pending',  bg: '#E3F2FD', labelCol: '#1565C0', valCol: '#0D47A1', dot: '#42A5F5' },
+    { id: 'won',        label: 'Won',        sublabel: 'Wins',     bg: '#1A1A1A', labelCol: '#84CC16', valCol: '#FFFFFF', dot: '#84CC16' },
+    { id: 'declined',   label: 'Declined',   sublabel: 'Archived', bg: '#F5F5F5', labelCol: '#6E6E80', valCol: '#3D3D4E', dot: '#CCCCCC' },
   ]
   const stageValues = stageData.map(s => ({
     ...s,
@@ -193,13 +193,13 @@ export default async function DashboardPage() {
             <p className="text-sm font-semibold text-amber-800">Complete your profile to unlock matched grants</p>
             <p className="text-xs text-amber-700 mt-0.5">Takes about 3 minutes — tells us your sector, location and legal structure.</p>
           </div>
-          <a href="/dashboard/profile" className="flex-shrink-0 px-4 py-2 bg-amber-600 text-white text-xs font-semibold rounded-lg hover:opacity-90 transition-colors whitespace-nowrap">Set up profile →</a>
+          <a href="/dashboard/profile" className="flex-shrink-0 px-4 py-2 text-xs font-semibold rounded-full hover:opacity-90 transition-colors whitespace-nowrap" style={{ background: '#1A1A1A', color: '#FFFFFF', fontFamily: 'var(--font-space-grotesk)' }}>Set up profile →</a>
         </div>
       )}
 
       {/* Greeting */}
       <div className="mb-7">
-        <h2 className="font-display text-3xl font-bold text-charcoal mb-1.5">
+        <h2 className="text-3xl font-bold text-charcoal mb-1.5" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.02em' }}>
           {greeting}, {displayName}
         </h2>
         <div className="flex items-center flex-wrap gap-2 text-sm text-mid">
@@ -212,7 +212,7 @@ export default async function DashboardPage() {
                 <>
                   <span className="text-warm">•</span>
                   <a href="/dashboard/deadlines"
-                    className="text-coral text-xs font-bold uppercase tracking-wider hover:underline">
+                    className="text-xs font-bold uppercase tracking-wider hover:underline" style={{ color: '#84CC16' }}>
                     Action Required
                   </a>
                 </>
@@ -226,9 +226,9 @@ export default async function DashboardPage() {
       {/* Stat cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {/* Card 1 — Total Pipeline (forest bg) */}
-        <div className="p-5 rounded-xl text-white col-span-1" style={{ background: '#008080', boxShadow: '0 4px 20px rgba(0,128,128,0.25)' }}>
+        <div className="p-5 rounded-xl text-white col-span-1" style={{ background: '#1A1A1A', boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}>
           <p className="text-[10px] font-semibold uppercase tracking-wider mb-3 text-white/60">Total Pipeline</p>
-          <p className="font-serif text-3xl font-bold text-white leading-none mb-2">
+          <p className="text-3xl font-bold leading-none mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#84CC16', letterSpacing: '-0.02em' }}>
             {formatCurrency(stats.totalPipelineValue)}
           </p>
           <p className="text-xs text-white/60">{stats.activeCount} active opportunit{stats.activeCount !== 1 ? 'ies' : 'y'}</p>
@@ -237,14 +237,14 @@ export default async function DashboardPage() {
         {/* Card 2 — Won This Year */}
         <div className="p-5 rounded-xl bg-white border border-warm/80" style={{ boxShadow: '0 2px 16px rgba(26,46,43,0.06)' }}>
           <p className="text-[10px] font-semibold text-mid uppercase tracking-wider mb-3">Won This Year</p>
-          <p className="font-serif text-3xl text-charcoal leading-none mb-2">{formatCurrency(stats.totalWon)}</p>
+          <p className="text-3xl font-bold text-charcoal leading-none mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.02em' }}>{formatCurrency(stats.totalWon)}</p>
           <p className="text-xs text-mid">{stats.wonCount} grant{stats.wonCount !== 1 ? 's' : ''} secured</p>
         </div>
 
         {/* Card 3 — Submitted */}
         <div className="p-5 rounded-xl bg-white border border-warm/80" style={{ boxShadow: '0 2px 16px rgba(26,46,43,0.06)' }}>
           <p className="text-[10px] font-semibold text-mid uppercase tracking-wider mb-3">Submitted</p>
-          <p className="font-serif text-3xl text-charcoal leading-none mb-2">{stats.submittedCount}</p>
+          <p className="text-3xl font-bold text-charcoal leading-none mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.02em' }}>{stats.submittedCount}</p>
           <p className="text-xs text-mid">Application{stats.submittedCount !== 1 ? 's' : ''} awaiting decision</p>
         </div>
 
@@ -252,7 +252,7 @@ export default async function DashboardPage() {
         <div className="p-5 rounded-xl bg-white border border-warm/80" style={{ boxShadow: '0 2px 16px rgba(26,46,43,0.06)' }}>
           <p className="text-[10px] font-semibold text-mid uppercase tracking-wider mb-3">Urgent Deadlines</p>
           <div className="flex items-center gap-3 mb-2">
-            <p className={`font-serif text-3xl leading-none ${urgentCount > 0 ? 'text-coral' : 'text-charcoal'}`}>{urgentCount}</p>
+            <p className="text-3xl font-bold leading-none" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.02em', color: urgentCount > 0 ? '#ea580c' : '#1A1A1A' }}>{urgentCount}</p>
             <span className="flex items-center justify-center w-10 h-10 rounded-full" style={{ backgroundColor: '#fde8e4' }}>
               <AlarmClock className="w-5 h-5" style={{ color: '#9b1c1c' }} />
             </span>
@@ -265,8 +265,8 @@ export default async function DashboardPage() {
       {matchedCount > 0 && (
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-display text-xl font-bold text-charcoal">Matched Opportunities</h3>
-            <a href="/dashboard/search" className="text-xs font-semibold text-coral uppercase tracking-wider hover:underline">
+            <h3 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Matched Opportunities</h3>
+            <a href="/dashboard/search" className="text-xs font-semibold uppercase tracking-wider hover:underline" style={{ color: "#84CC16" }}>
               View All Opportunities →
             </a>
           </div>
@@ -280,13 +280,13 @@ export default async function DashboardPage() {
                   style={{ boxShadow: '0 2px 16px rgba(26,46,43,0.06)' }}>
                   {/* Icon + Matched badge */}
                   <div className="flex items-start justify-between mb-4">
-                    <div className="w-11 h-11 rounded-xl bg-coral/10 flex items-center justify-center flex-shrink-0">
-                      <Icon className="w-5 h-5 text-coral" />
+                    <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(132,204,22,0.12)' }}>
+                      <Icon className="w-5 h-5" style={{ color: '#84CC16' }} />
                     </div>
-                    <span className="text-[9px] font-bold text-forest bg-forest/10 px-2 py-0.5 rounded uppercase tracking-wide">Matched</span>
+                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide" style={{ background: 'rgba(132,204,22,0.15)', color: '#4A7C10' }}>Matched</span>
                   </div>
                   {/* Title + description */}
-                  <h4 className="font-display text-base font-bold text-charcoal leading-snug mb-1.5 group-hover:text-forest transition-colors line-clamp-2">
+                  <h4 className="text-base font-bold text-charcoal leading-snug mb-1.5 transition-colors line-clamp-2" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
                     {g.title}
                   </h4>
                   <p className="text-xs text-mid leading-relaxed line-clamp-2 mb-4 flex-1">
@@ -316,8 +316,8 @@ export default async function DashboardPage() {
         {/* Pipeline Overview */}
         <div className="md:col-span-2 card">
           <div className="flex items-center justify-between mb-5">
-            <h3 className="font-display text-xl font-bold text-charcoal">Pipeline Overview</h3>
-            <a href="/dashboard/pipeline" className="text-xs font-semibold text-coral uppercase tracking-wider hover:underline">View Pipeline →</a>
+            <h3 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Pipeline Overview</h3>
+            <a href="/dashboard/pipeline" className="text-xs font-semibold uppercase tracking-wider hover:underline" style={{ color: '#84CC16' }}>View Pipeline →</a>
           </div>
 
           {items.length === 0 ? (
@@ -325,7 +325,7 @@ export default async function DashboardPage() {
               <p className="text-2xl mb-3">🔍</p>
               <p className="text-sm font-medium text-charcoal mb-1">No grants tracked yet</p>
               <p className="text-xs mb-4">Find a grant and hit <strong>+ Pipeline</strong> to start tracking.</p>
-              <a href="/dashboard/search" className="inline-flex items-center gap-1.5 px-4 py-2 bg-forest text-white text-xs font-semibold rounded-lg hover:opacity-90 transition-colors">
+              <a href="/dashboard/search" className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-full hover:opacity-90 transition-colors" style={{ background: '#84CC16', color: '#1A1A1A', fontFamily: 'var(--font-space-grotesk)' }}>
                 Find your first grant →
               </a>
             </div>
@@ -373,7 +373,7 @@ export default async function DashboardPage() {
         {/* Deadlines */}
         <div className="card">
           <div className="flex items-center justify-between mb-5">
-            <h3 className="font-display text-xl font-bold text-charcoal">Deadlines</h3>
+            <h3 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Deadlines</h3>
             <CalendarDays className="w-4 h-4 text-mid" />
           </div>
 
@@ -387,7 +387,7 @@ export default async function DashboardPage() {
               {alerts.map(alert => {
                 const dateObj = formatDeadlineDate(alert.item.deadline)
                 const urgencyBadge =
-                  alert.urgency === 'overdue' ? { label: 'Overdue',  cls: 'bg-coral text-white' } :
+                  alert.urgency === 'overdue' ? { label: 'Overdue',  cls: 'bg-red-500 text-white' } :
                   alert.urgency === 'urgent'  ? { label: 'Tomorrow', cls: 'bg-gold/20 text-gold font-bold' } :
                   alert.urgency === 'soon'    ? { label: `In ${alert.daysUntil}d`, cls: 'bg-forest/10 text-forest' } :
                                                 { label: `${alert.daysUntil}d`,    cls: 'bg-forest/10 text-forest' }
@@ -425,7 +425,7 @@ export default async function DashboardPage() {
 
           <div className="mt-4">
             <a href="/dashboard/deadlines"
-              className="flex items-center justify-center gap-1.5 w-full py-2 text-xs font-semibold text-mid uppercase tracking-wider rounded-lg border border-warm hover:border-charcoal/30 transition-colors">
+              className="flex items-center justify-center gap-1.5 w-full py-2 text-xs font-semibold uppercase tracking-wider rounded-full border transition-colors" style={{ color: '#525252', borderColor: '#E0E0E0', fontFamily: 'var(--font-space-grotesk)' }}>
               Calendar View
               <ArrowRight className="w-3 h-3" />
             </a>

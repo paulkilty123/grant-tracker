@@ -27,49 +27,53 @@ export default function TopBar({ userEmail, orgName }: Props) {
 
   return (
     <div className="flex items-center gap-3">
-      {/* Feedback link */}
       <Link
         href="/dashboard/feedback"
-        className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 hover:text-gray-600 transition-colors no-underline"
+        className="text-[11px] font-semibold uppercase tracking-wider transition-colors no-underline"
+        style={{ color: '#888888', fontFamily: 'var(--font-space-grotesk)', letterSpacing: '0.08em' }}
       >
         Feedback
       </Link>
 
-      {/* Edit Profile button */}
       <Link
         href="/dashboard/profile"
-        className="text-[11px] font-semibold uppercase tracking-wider text-charcoal border border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-colors no-underline px-4 py-1.5 rounded-full"
-        style={{ letterSpacing: '0.07em' }}
+        className="text-[11px] font-semibold uppercase tracking-wider transition-colors no-underline px-4 py-1.5 rounded-full"
+        style={{
+          color: '#1A1A1A',
+          border: '1px solid #E0E0E0',
+          fontFamily: 'var(--font-space-grotesk)',
+          letterSpacing: '0.07em',
+        }}
       >
         Edit Profile
       </Link>
 
-      {/* Account avatar with hover dropdown */}
       <div
         className="relative"
         onMouseEnter={() => setMenuOpen(true)}
         onMouseLeave={() => setMenuOpen(false)}
       >
         <button
-          className="flex items-center justify-center w-8 h-8 rounded-full bg-[#008080] text-white text-xs font-bold hover:opacity-90 transition-opacity"
+          className="flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold hover:opacity-90 transition-opacity"
+          style={{ background: '#84CC16', color: '#1A1A1A', fontFamily: 'var(--font-space-grotesk)' }}
           aria-label="Account"
         >
           {initials}
         </button>
 
-        {/* Dropdown */}
         {menuOpen && (
           <div
-            className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-1"
-            style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.10)' }}
+            className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl border py-1"
+            style={{ borderColor: '#EEEEEE', boxShadow: '0 4px 24px rgba(0,0,0,0.10)' }}
           >
-            <div className="px-3 py-2 border-b border-gray-100">
-              <p className="text-xs font-semibold text-charcoal truncate">{orgName ?? 'Account'}</p>
-              <p className="text-[10px] text-gray-400 truncate">{userEmail}</p>
+            <div className="px-3 py-2" style={{ borderBottom: '1px solid #F0F0F0' }}>
+              <p className="text-xs font-semibold truncate" style={{ color: '#1A1A1A', fontFamily: 'var(--font-space-grotesk)' }}>{orgName ?? 'Account'}</p>
+              <p className="text-[10px] truncate" style={{ color: '#888888' }}>{userEmail}</p>
             </div>
             <button
               onClick={handleSignOut}
-              className="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition-colors"
+              className="w-full flex items-center gap-2 px-3 py-2 text-xs transition-colors hover:bg-gray-50"
+              style={{ color: '#525252' }}
             >
               <LogOut className="w-3.5 h-3.5" />
               Sign out
