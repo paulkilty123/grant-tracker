@@ -225,7 +225,7 @@ export default async function DashboardPage() {
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-    Card 1 — Total Pipeline (blue) */}
+        {/* Card 1 — Total Pipeline (blue) */}
         <div className="p-5 rounded-xl col-span-1" style={{ background: '#DBEAFE', boxShadow: '0 2px 16px rgba(59,130,246,0.10)' }}>
           <p className="text-[10px] font-semibold uppercase tracking-wider mb-3" style={{ color: '#3B82F6' }}>Total Pipeline</p>
           <p className="text-3xl font-bold leading-none mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#1E3A5F', letterSpacing: '-0.02em' }}>
