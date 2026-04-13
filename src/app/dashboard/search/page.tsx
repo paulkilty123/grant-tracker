@@ -1889,7 +1889,7 @@ export default function SearchPage() {
               >
                 {v === 'matches' ? 'My Matches' : v === 'saved' ? 'Saved' : 'Latest'}
                 {v === 'saved' && savedCount > 0 && (
-                  <span className="text-xs px-1.5 py-0.5 ml-1 font-bold" style={{ borderRadius: 9999, background: '#84CC16', color: '#1A1A1A' }}>{savedCount}</span>
+                  <span className="text-xs px-1.5 py-0.5 ml-1 font-bold" style={{ borderRadius: 9999, background: '#BAE6FD', color: '#1E3A5F' }}>{savedCount}</span>
                 )}
               </button>
             </>
