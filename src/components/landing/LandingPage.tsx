@@ -602,26 +602,26 @@ export default function LandingPage() {
       </section>
 
       {/* FUNDING TYPES */}
-      <section className="py-20 md:py-28" style={{ background: '#F8F9FA' }}>
+      <section className="py-16 md:py-20" style={{ background: '#F8F9FA' }}>
         <div className="mx-auto max-w-7xl px-6 md:px-8">
 
           {/* Header */}
-          <motion.div {...fadeInView(0)} className="flex flex-col md:flex-row md:items-end justify-between gap-12 mb-16 md:mb-24">
+          <motion.div {...fadeInView(0)} className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-10 md:mb-14">
             <div className="max-w-3xl">
               <span className="font-bold tracking-[0.25em] uppercase text-xs mb-6 block" style={{ color: '#446900' }}>Funding Types</span>
-              <h2 className="font-bold tracking-tight leading-[0.9]" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: 'clamp(40px, 6vw, 80px)', color: '#111827' }}>
+              <h2 className="font-bold tracking-tight leading-[0.9]" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: 'clamp(32px, 4.5vw, 56px)', color: '#111827' }}>
                 Not just grants,<br/><span style={{ color: '#94CF35' }}>the full picture.</span>
               </h2>
             </div>
             <div className="max-w-sm md:pb-2">
-              <p className="text-gray-600 text-lg leading-relaxed" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>
+              <p className="text-gray-600 text-sm leading-relaxed">
                 Not every organisation needs a grant. We surface the full funding landscape matched to your structure and stage.
               </p>
             </div>
           </motion.div>
 
           {/* 2x2 grid */}
-          <div className="grid md:grid-cols-2 gap-6 md:gap-8">
+          <div className="grid md:grid-cols-2 gap-4">
             {[
               {
                 badge: '£300 – £500k+', badgeColor: '#446900', badgeBg: 'rgba(148,207,53,0.15)',
@@ -655,7 +655,7 @@ export default function LandingPage() {
               <motion.div
                 key={card.title}
                 {...fadeInView(i * 0.07)}
-                className="relative overflow-hidden bg-white rounded-3xl p-10 md:p-14 group"
+                className="relative overflow-hidden bg-white rounded-3xl p-7 md:p-9 group"
                 style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.05)' }}
               >
                 {/* Decorative circle */}
@@ -664,25 +664,25 @@ export default function LandingPage() {
                   style={{ background: card.decoBg, transform: 'translate(2rem, -2rem)' }}
                 />
                 {/* Icon top-right */}
-                <div className="absolute top-10 right-10 opacity-25 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300 z-10">
-                  <card.Icon className="w-9 h-9" style={{ color: card.iconColor }} />
+                <div className="absolute top-6 right-6 opacity-25 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300 z-10">
+                  <card.Icon className="w-6 h-6" style={{ color: card.iconColor }} />
                 </div>
                 {/* Badge */}
                 <span
-                  className="inline-block px-4 py-1.5 rounded-full font-bold tracking-widest uppercase text-[10px] mb-8 relative z-10"
+                  className="inline-block px-3 py-1 rounded-full font-bold tracking-widest uppercase text-[10px] mb-5 relative z-10"
                   style={{ color: card.badgeColor, background: card.badgeBg }}
                 >
                   {card.badge}
                 </span>
                 {/* Title */}
                 <h3
-                  className="font-bold mb-5 relative z-10 transition-transform duration-300 group-hover:translate-x-1"
-                  style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: '2rem', color: card.titleColor }}
+                  className="font-bold mb-3 relative z-10 transition-transform duration-300 group-hover:translate-x-1"
+                  style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: '1.375rem', color: card.titleColor }}
                 >
                   {card.title}
                 </h3>
                 {/* Description */}
-                <p className="text-gray-500 text-base leading-relaxed max-w-md relative z-10">{card.desc}</p>
+                <p className="text-gray-500 text-sm leading-relaxed max-w-md relative z-10">{card.desc}</p>
               </motion.div>
             ))}
           </div>
