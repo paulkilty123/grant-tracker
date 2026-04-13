@@ -227,11 +227,11 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {/* Card 1 — Total Pipeline (blue) */}
         <div className="p-5 rounded-xl col-span-1" style={{ background: '#BAE6FD', boxShadow: '0 2px 16px rgba(56,189,248,0.18)' }}>
-          <p className="text-[10px] font-semibold uppercase tracking-wider mb-3" style={{ color: '#3B82F6' }}>Total Pipeline</p>
+          <p className="text-[10px] font-semibold uppercase tracking-wider mb-3" style={{ color: '#1E3A5F', opacity: 0.6 }}>Total Pipeline</p>
           <p className="text-3xl font-bold leading-none mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#1E3A5F', letterSpacing: '-0.02em' }}>
             {formatCurrency(stats.totalPipelineValue)}
           </p>
-          <p className="text-xs" style={{ color: '#3B82F6' }}>{stats.activeCount} active opportunit{stats.activeCount !== 1 ? 'ies' : 'y'}</p>
+          <p className="text-xs" style={{ color: '#1E3A5F', opacity: 0.6 }}>{stats.activeCount} active opportunit{stats.activeCount !== 1 ? 'ies' : 'y'}</p>
         </div>
 
         {/* Card 2 — Won This Year (lime green) */}
