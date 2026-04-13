@@ -702,7 +702,7 @@ export default function LandingPage() {
                 <h2 className="font-bold leading-tight mb-5" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#1A1A1A' }}>
                   Search &amp; track,<br/><span style={{ color: '#84CC16' }}>in one place.</span>
                 </h2>
-                <ul className="space-y-5 mb-10">
+                <ul className="space-y-6 mb-10">
                   {[
                     { title: 'Intelligent Matching', desc: 'Profile-based matching across grants, programmes, investment and in-kind support.' },
                     { title: 'Live Precision Search', desc: 'Live search ranked by structure, sector, geography and mission.' },
@@ -710,14 +710,14 @@ export default function LandingPage() {
                     { title: 'Deadline Alerts', desc: 'Stay ahead with deadline alerts for grants closing within 14 days.' },
                     { title: 'Impact Dashboard', desc: 'Full dashboard summary of pipeline value and upcoming deadlines.' },
                   ].map((item, i) => (
-                    <li key={i} className="flex items-start gap-3">
-                      <span className="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full shrink-0" style={{ background: 'rgba(132,204,22,0.15)' }}>
-                        <Check className="w-3 h-3" style={{ color: '#84CC16' }} />
+                    <li key={i} className="flex items-start gap-4">
+                      <span className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full" style={{ background: 'rgba(132,204,22,0.18)' }}>
+                        <Check className="w-4 h-4" style={{ color: '#84CC16' }} />
                       </span>
-                      <span className="text-sm text-[#1A1A1A] leading-relaxed">
-                        <span className="font-bold">{item.title}</span>
-                        {' — '}{item.desc}
-                      </span>
+                      <div className="pt-1">
+                        <p className="font-bold text-[#1A1A1A] text-base leading-snug mb-1">{item.title}</p>
+                        <p className="text-sm text-[#525252] leading-relaxed">{item.desc}</p>
+                      </div>
                     </li>
                   ))}
                 </ul>
