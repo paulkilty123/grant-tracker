@@ -728,9 +728,6 @@ export default function LandingPage() {
 
               {/* Right: description + scattered feature cards */}
               <div className="hidden lg:flex flex-col gap-0">
-                <p className="text-[#525252] text-base leading-relaxed mb-8 max-w-sm">
-                  Find funding, track every application and never miss a deadline — all matched to your organisation&apos;s profile.
-                </p>
                 <div className="relative" style={{ height: '560px' }}>
 
                   {/* Dashboard — back right */}
