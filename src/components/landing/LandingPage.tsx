@@ -861,119 +861,136 @@ export default function LandingPage() {
         </section>
       </div>
 
-      {/* ABOUT — dark founder story */}
-      <section id="about" className="py-16 md:py-24 bg-[#1C1C2E]">
-        <div className="mx-auto max-w-3xl px-6">
-          <motion.div {...fadeInView(0)} className="mb-16">
-            <p className="text-sm font-semibold text-coral uppercase tracking-wider">About</p>
-            <h2 className="mt-3 font-serif text-4xl md:text-5xl leading-tight text-cream">Built from the inside.</h2>
-          </motion.div>
-          <motion.div {...fadeInView(0.05)}>
-            <blockquote className="border-l-2 border-sage pl-6 mb-8">
-              <p className="text-lg text-cream/80 leading-relaxed font-serif italic mb-4">
-                &ldquo;I&apos;ve worked in the social enterprise and charity sector for 20 years as a fundraiser
-                and social entrepreneur, from co-founding a youth radio station to working at local
-                charities and leading on fundraising at Impact Hub.
-              </p>
-              <p className="text-lg text-cream/80 leading-relaxed font-serif italic">
-                Throughout all of it, I was consistently frustrated by the same thing: a fragmented
-                funding ecosystem that forced people like me to spend a disproportionate amount of
-                time hunting opportunities rather than delivering impactful work.&rdquo;
-              </p>
-              <footer className="mt-5 text-base font-semibold text-cream/50 not-italic">Paul Kilty, founder</footer>
-            </blockquote>
-            <p className="text-base text-cream/70 leading-relaxed">
-              Not just a smarter search, a tool built to understand your organisation and discover
-              the opportunities most worth your time.
-            </p>
-          </motion.div>
-        </div>
-      </section>
+      {/* ABOUT — Block 1: Founder story */}
+      <section id="about" className="py-20 md:py-28 bg-white">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="grid lg:grid-cols-2 gap-16 items-start">
 
-      {/* ABOUT — why it exists, who it's for, values, AI */}
-      <section className="py-16 md:py-20 bg-cream">
-        <div className="mx-auto max-w-5xl px-6">
-
-          {/* Why it exists */}
-          <div className="grid md:grid-cols-2 gap-12 mb-16 items-center">
+            {/* Left: label + heading + quote */}
             <motion.div {...fadeInView(0)}>
-              <h3 className="font-serif text-2xl font-bold text-charcoal mb-5">Why it exists</h3>
-              <div className="space-y-4">
-                <p className="text-base leading-relaxed text-mid">
+              <p className="text-sm font-semibold tracking-widest uppercase mb-4" style={{ color: '#84CC16', fontFamily: 'var(--font-space-grotesk)' }}>About</p>
+              <h2 className="mb-10 leading-[1.05]" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(36px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#1A1A1A' }}>
+                Built from<br /><span style={{ color: '#84CC16' }}>the inside.</span>
+              </h2>
+              <blockquote className="mb-6">
+                <p className="text-lg leading-relaxed italic mb-4" style={{ color: '#525252', fontFamily: 'var(--font-dm-serif)' }}>
+                  &ldquo;I&apos;ve worked in the social enterprise and charity sector for 20 years as a fundraiser
+                  and social entrepreneur, from co-founding a youth radio station to working at local
+                  charities and leading on fundraising at Impact Hub.
+                </p>
+                <p className="text-lg leading-relaxed italic" style={{ color: '#525252', fontFamily: 'var(--font-dm-serif)' }}>
+                  Throughout all of it, I was consistently frustrated by the same thing: a fragmented
+                  funding ecosystem that forced people like me to spend a disproportionate amount of
+                  time hunting opportunities rather than delivering impactful work.&rdquo;
+                </p>
+              </blockquote>
+              <p className="text-sm font-semibold" style={{ color: '#1A1A1A', fontFamily: 'var(--font-space-grotesk)' }}>Paul Kilty, founder</p>
+            </motion.div>
+
+            {/* Right: £8bn stat card + why it exists */}
+            <motion.div {...fadeInView(0.1)} className="flex flex-col gap-6">
+              <div className="rounded-3xl p-10 text-center" style={{ background: '#F4F9E8' }}>
+                <p className="leading-none mb-3" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(56px, 8vw, 96px)', color: '#84CC16', letterSpacing: '-0.04em' }}>£8bn<span style={{ color: '#1A1A1A' }}>+</span></p>
+                <p className="text-sm font-semibold uppercase tracking-widest" style={{ color: '#525252', fontFamily: 'var(--font-space-grotesk)' }}>awarded by UK trusts &amp; foundations annually</p>
+              </div>
+              <div className="rounded-3xl p-8" style={{ background: '#F9F9F9' }}>
+                <p className="text-base font-semibold mb-3" style={{ color: '#1A1A1A', fontFamily: 'var(--font-space-grotesk)' }}>Why it exists</p>
+                <p className="text-base leading-relaxed mb-3" style={{ color: '#525252' }}>
                   The UK has thousands of active funders, but finding the right ones is effectively
                   a full-time job. Most charities, CICs and social enterprises can&apos;t afford
                   that — and they shouldn&apos;t have to.
                 </p>
-                <p className="text-base leading-relaxed text-mid">
+                <p className="text-base leading-relaxed" style={{ color: '#525252' }}>
                   Grant Tracker matches you to grants, programmes, investments and in-kind support
                   so you can spend that time delivering.
                 </p>
               </div>
             </motion.div>
-            <motion.div {...fadeInView(0.1)} className="flex flex-col items-center justify-center text-center py-8">
-              <p className="font-serif text-7xl md:text-8xl leading-none text-forest">£8bn<span className="text-gold">+</span></p>
-              <p className="mt-4 text-sm font-semibold text-mid uppercase tracking-wider max-w-[180px]">awarded by UK trusts &amp; foundations annually</p>
+
+          </div>
+        </div>
+      </section>
+
+      {/* ABOUT — Block 2: Who it's for */}
+      <section className="py-20 md:py-28" style={{ background: '#F9F9F9' }}>
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="grid lg:grid-cols-2 gap-8 items-end mb-14">
+            <motion.div {...fadeInView(0)}>
+              <p className="text-sm font-semibold tracking-widest uppercase mb-4" style={{ color: '#84CC16', fontFamily: 'var(--font-space-grotesk)' }}>Who it&apos;s for</p>
+              <h2 className="leading-tight" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#1A1A1A' }}>
+                Built for <span style={{ color: '#84CC16' }}>every structure.</span>
+              </h2>
+            </motion.div>
+            <motion.div {...fadeInView(0.1)}>
+              <p className="text-base leading-relaxed" style={{ color: '#525252' }}>
+                From grassroots CICs to established charities — if you deliver social impact, Grant Tracker is built for you.
+              </p>
+            </motion.div>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {audiences.map((v, i) => (
+              <motion.div key={v.title} {...fadeInView(i * 0.06)} className="rounded-xl p-7 bg-white">
+                <h4 className="mb-2 font-semibold" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: '1.1rem', color: '#1A1A1A' }}>{v.title}</h4>
+                <p className="text-sm leading-relaxed" style={{ color: '#525252' }}>{v.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ABOUT — Block 3: Values + AI */}
+      <section className="py-20 md:py-28 bg-white">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="grid lg:grid-cols-2 gap-8 items-end mb-14">
+            <motion.div {...fadeInView(0)}>
+              <p className="text-sm font-semibold tracking-widest uppercase mb-4" style={{ color: '#84CC16', fontFamily: 'var(--font-space-grotesk)' }}>Values</p>
+              <h2 className="leading-tight" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#1A1A1A' }}>
+                How we <span style={{ color: '#84CC16' }}>work.</span>
+              </h2>
+            </motion.div>
+            <motion.div {...fadeInView(0.1)}>
+              <p className="text-base leading-relaxed" style={{ color: '#525252' }}>
+                A few principles that shape every decision we make.
+              </p>
             </motion.div>
           </div>
 
-          {/* Who it's for */}
-          <motion.div {...fadeInView(0.05)} className="mb-16">
-            <h3 className="font-serif text-2xl font-bold text-charcoal mb-8">Who it&apos;s for</h3>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-warm/60 rounded-xl overflow-hidden">
-              {audiences.map((v, i) => (
-                <motion.div key={v.title} {...fadeInView(i * 0.06)} className="bg-white p-8">
-                  <h4 className="font-serif text-xl mb-2">{v.title}</h4>
-                  <p className="text-sm text-mid leading-relaxed">{v.desc}</p>
-                </motion.div>
-              ))}
+          {/* Three value cards */}
+          <div className="grid md:grid-cols-3 gap-4 mb-4">
+            {[
+              { label: 'Honest', body: "We don't inflate match scores or dress up poor-fit grants. If something isn't right for you, we'd rather tell you than waste your time.", bg: '#E6F4FF' },
+              { label: 'Practical', body: "Every feature exists because it makes the funding process easier. We don't add complexity for the sake of it.", bg: '#FFEBB6' },
+              { label: 'Accessible', body: "Good funding intelligence shouldn't only be available to organisations with big budgets. Grant Tracker is priced so smaller organisations can afford it.", bg: '#F4F9E8' },
+            ].map((v, i) => (
+              <motion.div key={v.label} {...fadeInView(i * 0.08)} className="rounded-3xl p-8 flex flex-col" style={{ background: v.bg }}>
+                <p className="text-4xl font-bold mb-4" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#1A1A1A', letterSpacing: '-0.02em' }}>{v.label}</p>
+                <p className="text-base leading-relaxed flex-1" style={{ color: '#525252' }}>{v.body}</p>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* AI approach — full-width card */}
+          <motion.div {...fadeInView(0.1)} className="rounded-3xl p-10 md:p-12" style={{ background: '#F9F9F9' }}>
+            <div className="grid lg:grid-cols-2 gap-8 items-start">
+              <div>
+                <p className="text-sm font-semibold tracking-widest uppercase mb-3" style={{ color: '#84CC16', fontFamily: 'var(--font-space-grotesk)' }}>Our approach to AI</p>
+                <p className="text-2xl font-bold leading-snug" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#1A1A1A', letterSpacing: '-0.02em' }}>
+                  Your voice. Your story.<br />Your evidence.
+                </p>
+              </div>
+              <div className="space-y-4">
+                <p className="text-base leading-relaxed" style={{ color: '#525252' }}>
+                  Funders are increasingly inundated with AI-generated applications that are bland, generic and interchangeable.
+                  We don&apos;t want to make that problem worse.
+                </p>
+                <p className="text-base leading-relaxed" style={{ color: '#525252' }}>
+                  Grant Tracker uses AI where it genuinely helps: matching your profile to the right opportunities,
+                  building intelligence about how funders make decisions, and cutting the time you spend searching.
+                  Always in service of something genuinely yours — not instead of it.
+                </p>
+              </div>
             </div>
           </motion.div>
-
-          {/* Our values + Our approach to AI — side by side */}
-          <div className="grid md:grid-cols-2 gap-16 items-start">
-
-            <motion.div {...fadeInView(0.05)}>
-              <h3 className="font-serif text-2xl font-bold text-charcoal mb-6">Our values</h3>
-              <div className="space-y-6">
-                {[
-                  { label: 'Honest', body: "We don't inflate match scores or dress up poor-fit grants. If something isn't right for you, we'd rather tell you than waste your time." },
-                  { label: 'Practical', body: "Every feature exists because it makes the funding process easier. We don't add complexity for the sake of it." },
-                  { label: 'Accessible', body: "Good funding intelligence shouldn't only be available to organisations with big budgets. Grant Tracker is priced so that smaller charities and social enterprises can afford it." },
-                ].map((v, i) => (
-                  <motion.div key={v.label} {...fadeInView(i * 0.07)} className="flex gap-4">
-                    <div className="w-1.5 h-1.5 rounded-full bg-forest mt-2 flex-shrink-0" />
-                    <div>
-                      <p className="text-base font-bold text-charcoal mb-1">{v.label}</p>
-                      <p className="text-base leading-relaxed text-mid">{v.body}</p>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-
-            <motion.div {...fadeInView(0.1)}>
-              <h3 className="font-serif text-2xl font-bold text-charcoal mb-6">Our approach to AI</h3>
-              <div className="space-y-4">
-                <p className="text-base leading-relaxed text-mid">
-                  We recognise funders are increasingly inundated with AI-generated applications that
-                  are bland, generic and interchangeable. The last thing we want is to make that
-                  problem worse.
-                </p>
-                <p className="text-base leading-relaxed text-mid">
-                  We encourage that your voice, story and evidence is authentically communicated so
-                  funders take notice. Sure, AI can play a supporting role to refine your language,
-                  and sharpen your argument, but always in service of something genuinely yours.
-                  Not instead of it.
-                </p>
-                <p className="text-base leading-relaxed text-mid">
-                  Grant Tracker uses AI where it genuinely helps: matching your profile to the right
-                  opportunities, building intelligence about how funders make decisions, and cutting
-                  down the time you spend searching. This is better for funders and applicants.
-                </p>
-              </div>
-            </motion.div>
-
-          </div>
 
         </div>
       </section>
