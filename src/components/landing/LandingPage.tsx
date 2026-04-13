@@ -722,7 +722,7 @@ export default function LandingPage() {
                   ))}
                 </ul>
                 <a href="/auth/signup" className="inline-flex items-center gap-3 bg-[#1A1A1A] text-white px-7 py-4 rounded-full font-bold text-base hover:bg-slate-800 transition-all no-underline">
-                  Start Your First Track <ArrowRight className="w-4 h-4" />
+                  Start now <ArrowRight className="w-4 h-4" />
                 </a>
               </motion.div>
 
