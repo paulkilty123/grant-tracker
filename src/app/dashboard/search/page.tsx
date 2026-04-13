@@ -603,7 +603,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
             onClick={() => isSaved ? onUnsave?.(grant.id) : onSave?.(grant.id)}
             className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold border rounded-full transition-colors ${
               isSaved
-                ? 'bg-[#1A1A1A] text-white border-[#1A1A1A]'
+                ? 'bg-[#6B7280] text-white border-[#6B7280]'
                 : 'border-[#1A1A1A] text-[#1A1A1A] hover:bg-[#1A1A1A] hover:text-white'
             }`}
           >
