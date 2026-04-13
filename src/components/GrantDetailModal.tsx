@@ -59,7 +59,7 @@ interface FTBadge {
 }
 
 const FUNDING_TYPE_BADGES: Record<string, FTBadge> = {
-  grant:             { Icon: Award,         label: 'Grant',                   bg: 'rgba(0,128,128,0.12)',   color: '#008080' },
+  grant:             { Icon: Award,         label: 'Grant',                   bg: 'rgba(132,204,22,0.12)',  color: '#4D7C0F' },
   accelerator:       { Icon: Rocket,        label: 'Incubator / Accelerator', bg: 'rgba(255,112,67,0.12)', color: '#D84315' },
   support_programme: { Icon: GraduationCap, label: 'Fellowship / Support',    bg: 'rgba(139,92,246,0.12)', color: '#6D28D9' },
   programme:         { Icon: GraduationCap, label: 'Support Programme',       bg: 'rgba(139,92,246,0.12)', color: '#6D28D9' },
@@ -67,7 +67,7 @@ const FUNDING_TYPE_BADGES: Record<string, FTBadge> = {
   loan:              { Icon: TrendingUp,    label: 'Loan',                    bg: 'rgba(255,183,77,0.20)', color: '#A06000' },
   equity:            { Icon: TrendingUp,    label: 'Equity',                  bg: 'rgba(255,183,77,0.20)', color: '#A06000' },
   diversity_fund:    { Icon: Users,         label: 'Diversity Fund',          bg: 'rgba(236,72,153,0.12)', color: '#9D174D' },
-  blended_finance:   { Icon: GitMerge,      label: 'Blended Finance',         bg: 'rgba(0,128,128,0.12)',  color: '#008080' },
+  blended_finance:   { Icon: GitMerge,      label: 'Blended Finance',         bg: 'rgba(132,204,22,0.12)', color: '#4D7C0F' },
   in_kind:           { Icon: Gift,          label: 'In-Kind & Pro Bono',      bg: 'rgba(99,102,241,0.12)', color: '#4338CA' },
   'in-kind':         { Icon: Gift,          label: 'In-Kind & Pro Bono',      bg: 'rgba(99,102,241,0.12)', color: '#4338CA' },
   'tax-relief':      { Icon: Landmark,      label: 'Tax Relief',              bg: 'rgba(110,110,128,0.10)',color: '#6E6E80' },
@@ -251,7 +251,7 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
                   <div className="flex items-center gap-3 mb-3">
                     <div
                       className="w-9 h-9 flex items-center justify-center font-bold text-sm flex-shrink-0"
-                      style={{ backgroundColor: 'rgba(0,128,128,0.10)', color: '#008080', border: '1px solid rgba(0,128,128,0.20)', borderRadius: 8 }}
+                      style={{ backgroundColor: 'rgba(132,204,22,0.12)', color: '#4D7C0F', border: '1px solid rgba(132,204,22,0.25)', borderRadius: 8 }}
                     >
                       {String(grant.funder ?? '?')[0].toUpperCase()}
                     </div>
@@ -307,7 +307,7 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
                   <div className="px-5 py-4">
                     <p className="text-[10px] font-bold text-[#6E6E80] uppercase tracking-wider mb-1">Deadline</p>
                     {grant.is_rolling ? (
-                      <p className="text-sm font-semibold flex items-center gap-1.5 mt-0.5" style={{ color: '#008080' }}>
+                      <p className="text-sm font-semibold flex items-center gap-1.5 mt-0.5" style={{ color: '#4D7C0F' }}>
                         <RefreshCw className="w-3.5 h-3.5" />Always open
                       </p>
                     ) : grant.deadline ? (
@@ -331,7 +331,7 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center justify-center gap-2 px-4 py-3 text-white text-sm font-semibold hover:opacity-90 transition-opacity"
-                    style={{ backgroundColor: '#FF7043', borderRadius: 9999 }}
+                    style={{ backgroundColor: '#1A1A1A', borderRadius: 9999 }}
                   >
                     <ExternalLink className="w-4 h-4" />
                     Visit Website
@@ -340,7 +340,7 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
                 {onAddToPipeline && (
                   <button
                     onClick={handleAddToPipeline}
-                    className="flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold border border-[#E8E8EC] bg-white hover:border-[#008080] hover:text-[#008080] transition-colors text-[#1C1C2E]"
+                    className="flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold border border-[#1A1A1A] bg-white hover:bg-[#1A1A1A] hover:text-white transition-colors text-[#1C1C2E]"
                     style={{ borderRadius: 9999 }}
                   >
                     <PlusCircle className="w-4 h-4" />
@@ -365,7 +365,7 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
                     <ul className="space-y-2.5">
                       {eligibility.map((c, i) => (
                         <li key={i} className="flex gap-2.5 text-sm text-[#444]">
-                          <span className="flex-shrink-0 font-bold mt-0.5" style={{ color: '#008080' }}>✓</span>
+                          <span className="flex-shrink-0 font-bold mt-0.5" style={{ color: '#84CC16' }}>✓</span>
                           <span className="leading-snug">{c}</span>
                         </li>
                       ))}
@@ -377,7 +377,7 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
                 {structures.length > 0 && (
                   <div className="bg-white border border-[#E8E8EC] px-5 py-4" style={{ borderRadius: 16 }}>
                     <p className="text-[10px] font-bold text-[#6E6E80] uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
-                      <CheckCircle className="w-3.5 h-3.5" style={{ color: '#008080' }} />
+                      <CheckCircle className="w-3.5 h-3.5" style={{ color: '#84CC16' }} />
                       Eligible organisation types
                     </p>
                     <div className="flex flex-wrap gap-1.5 mb-2">
@@ -385,7 +385,7 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
                         <span
                           key={s}
                           className="text-[11px] font-semibold px-2.5 py-1"
-                          style={{ backgroundColor: 'rgba(0,128,128,0.10)', color: '#008080', borderRadius: 9999 }}
+                          style={{ backgroundColor: 'rgba(132,204,22,0.10)', color: '#4D7C0F', borderRadius: 9999 }}
                         >
                           {STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
                         </span>
