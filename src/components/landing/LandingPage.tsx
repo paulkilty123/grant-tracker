@@ -452,13 +452,7 @@ export default function LandingPage() {
                   </div>
                 ))}
               </div>
-              {/* Apply button */}
-              <Link
-                href="/auth/signup"
-                className="w-full mt-7 py-5 bg-[#1A1A1A] text-white rounded-xl font-bold text-lg hover:bg-slate-800 transition-all flex items-center justify-center gap-3 group no-underline"
-              >
-                View &amp; apply <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-              </Link>
+
             </div>
           </motion.div>
 
