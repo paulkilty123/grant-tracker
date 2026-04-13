@@ -685,7 +685,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
         const brief = (grant as EnrichedGrant).funderBrief
 
         return (
-          <div className="border-t border-[#E8E8EC]" style={{ backgroundColor: '#FAF8F5' }}>
+          <div className="border-t border-[#E8E8EC]" style={{ backgroundColor: '#F5F5F7' }}>
             {brief ? (
               /* ── Funder Intelligence brief ── */
               (() => {
@@ -707,7 +707,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                   <div className={className} style={style}>
                     <div className="flex items-center gap-1.5 mb-2">
                       <Icon className="w-3 h-3 flex-shrink-0" style={{ color: iconColor }} />
-                      <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#3D3D4E' }}>{label}</p>
+                      <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#1A1A1A' }}>{label}</p>
                     </div>
                     {children}
                   </div>
@@ -727,8 +727,8 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                   ),
                   brief.exclusions && (
                     <Section key="excl" icon={AlertTriangle} iconColor="#B45309" label="Exclusions"
-                      className="px-3 py-3" style={{ backgroundColor: 'rgba(255,183,77,0.15)', borderRadius: 8 } as React.CSSProperties}>
-                      <p className="text-sm leading-relaxed" style={{ ...clamp4, color: '#5C3D00' }}>{brief.exclusions}</p>
+                      className="px-3 py-3" style={{ backgroundColor: 'rgba(245,158,11,0.08)', borderRadius: 8, border: '1px solid rgba(245,158,11,0.18)' } as React.CSSProperties}>
+                      <p className="text-sm leading-relaxed" style={{ ...clamp4, color: '#78350F' }}>{brief.exclusions}</p>
                     </Section>
                   ),
                 ].filter(Boolean)
@@ -787,7 +787,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                             <>
                               <div className="flex items-center gap-1.5 mb-1.5">
                                 <ClipboardList className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#6E6E80' }} />
-                                <p className="text-sm font-semibold text-[#1A1A1A]">How to apply</p>
+                                <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#1A1A1A' }}>How to apply</p>
                               </div>
                               <p className="text-sm text-[#444] leading-relaxed">{brief.how_to_apply}</p>
                             </>
@@ -2182,7 +2182,7 @@ export default function SearchPage() {
                 ))}
               </div>
               {TAB_DESCS[activeTab] && (
-                <div className="mx-5 mb-1 mt-3 px-4 py-3 bg-[#FAF8F5] rounded-lg flex items-start justify-between gap-4">
+                <div className="mx-5 mb-1 mt-3 px-4 py-3 bg-[#F5F5F7] rounded-lg flex items-start justify-between gap-4">
                   <p className="text-sm text-[#444] leading-relaxed">{TAB_DESCS[activeTab]}</p>
                   {activeTab === 'programme' && (
                     <label className="flex items-center gap-2 cursor-pointer flex-shrink-0">
@@ -2225,7 +2225,7 @@ export default function SearchPage() {
             {!aiResults && (
               <div className="flex items-center border border-[#E8E8EC] overflow-hidden flex-shrink-0 rounded-lg">
                 {/* Sort By label */}
-                <span className="px-3 py-2 text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider border-r border-[#E8E8EC] bg-[#FAF8F5] whitespace-nowrap">
+                <span className="px-3 py-2 text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider border-r border-[#E8E8EC] bg-[#F5F5F7] whitespace-nowrap">
                   Sort By
                 </span>
                 {([
