@@ -370,7 +370,8 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
   isInPipeline?: boolean
 }) {
   const { grant, score, reason, isAiScore, breakdown } = item
-  const [expanded, setExpanded] = useState(false)
+  const [descExpanded, setDescExpanded] = useState(false)
+  const [insightsExpanded, setInsightsExpanded] = useState(false)
   const isDismissed  = interactions.has('dismissed')
   const isLiked      = interactions.has('liked')
   const isDisliked   = interactions.has('disliked')
@@ -502,11 +503,11 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
 
           {/* Description */}
           <p className="text-sm leading-relaxed mb-6" style={{ color: '#777' }}>
-            {grant.description.length > 180 && !expanded
+            {grant.description.length > 180 && !descExpanded
               ? <>
                   {grant.description.slice(0, 180).trimEnd()}…{' '}
                   <button
-                    onClick={e => { e.stopPropagation(); setExpanded(true) }}
+                    onClick={e => { e.stopPropagation(); setDescExpanded(true) }}
                     className="font-medium hover:underline whitespace-nowrap" style={{ color: '#84CC16' }}
                   >
                     Show more
@@ -673,8 +674,8 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
           className="w-full flex items-center justify-center gap-1.5 py-2.5 border-t border-[#E8E8EC] text-[11px] font-bold uppercase tracking-widest transition-colors hover:bg-[#F5F5F5]"
           style={{ color: '#6E6E80' }}
         >
-          <ChevronDown className="w-3.5 h-3.5 transition-transform" style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }} />
-          {expanded ? 'Show less' : (grant as EnrichedGrant).funderBrief ? (
+          <ChevronDown className="w-3.5 h-3.5 transition-transform" style={{ transform: insightsExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+          {insightsExpanded ? 'Show less' : (grant as EnrichedGrant).funderBrief ? (
             grant.fundingType === 'investment' ? 'Investor Insights' :
             grant.fundingType === 'in_kind'    ? 'Partner Insights'  :
                                                  'Funder Insights'
@@ -683,7 +684,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
       )}
 
       {/* ── Expanded details panel ── */}
-      {expanded && (() => {
+      {insightsExpanded && (() => {
         const brief = (grant as EnrichedGrant).funderBrief
 
         return (
