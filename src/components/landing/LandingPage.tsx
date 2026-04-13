@@ -874,9 +874,7 @@ export default function LandingPage() {
               </h2>
               <blockquote className="mb-6">
                 <p className="text-lg leading-relaxed italic mb-4" style={{ color: '#525252', fontFamily: 'var(--font-dm-serif)' }}>
-                  &ldquo;I&apos;ve worked in the social enterprise and charity sector for 20 years as a fundraiser
-                  and social entrepreneur, from co-founding a youth radio station to working at local
-                  charities and leading on fundraising at Impact Hub.
+                  &ldquo;I&apos;ve spent 20 years in the social enterprise and charity sector &mdash; co-founding a youth music organisation, leading development strategy at local charities, and driving fundraising across a global co-working network.
                 </p>
                 <p className="text-lg leading-relaxed italic" style={{ color: '#525252', fontFamily: 'var(--font-dm-serif)' }}>
                   Throughout all of it, I was consistently frustrated by the same thing: a fragmented
