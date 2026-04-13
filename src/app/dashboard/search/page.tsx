@@ -603,8 +603,8 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
             onClick={() => isSaved ? onUnsave?.(grant.id) : onSave?.(grant.id)}
             className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold border rounded-full transition-colors ${
               isSaved
-                ? 'bg-[#6B7280] text-white border-[#6B7280]'
-                : 'border-[#1A1A1A] text-[#1A1A1A] hover:bg-[#1A1A1A] hover:text-white'
+                ? 'bg-[#BAE6FD] text-[#1E3A5F] border-[#7DD3FC]'
+                : 'border-[#7DD3FC] text-[#1E3A5F] hover:bg-[#BAE6FD]'
             }`}
           >
             <Bookmark className="w-3.5 h-3.5" fill={isSaved ? 'currentColor' : 'none'} />
