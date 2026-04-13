@@ -613,7 +613,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
           </button>
           <button
             onClick={() => { if (!isInPipeline) onAddToPipeline(grant) }}
-            className={`w-full flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-semibold border rounded-full transition-colors ${isInPipeline ? 'bg-[#FEF3C7] text-[#78350F] border-[#F59E0B]' : 'border-[#F59E0B] text-[#78350F] bg-transparent hover:bg-[#FEF3C7]'}`}
+            className={`w-full flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-semibold border rounded-full transition-colors whitespace-nowrap ${isInPipeline ? 'bg-[#FEF3C7] text-[#78350F] border-[#F59E0B]' : 'border-[#F59E0B] text-[#78350F] bg-transparent hover:bg-[#FEF3C7]'}`}
           >
             <PlusCircle className="w-3.5 h-3.5" />
             {isInPipeline ? 'In Pipeline' : 'Pipeline'}
@@ -1360,7 +1360,7 @@ export default function SearchPage() {
         org_id:               org.id,
         grant_name:           grant.title,
         funder_name:          grant.funder,
-        funder_type:          grant.funderType,
+        funder_type:          (['trust_foundation','local_authority','housing_association','corporate','lottery','government','other'].includes(grant.funderType ?? '') ? grant.funderType as 'trust_foundation'|'local_authority'|'housing_association'|'corporate'|'lottery'|'government'|'other' : 'other'),
         amount_min:           grant.amountMin ?? null,
         amount_max:           grant.amountMax ?? null,
         amount_requested:     grant.amountMax ?? null,
