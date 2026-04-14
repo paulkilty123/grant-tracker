@@ -28,11 +28,11 @@ function DeadlineCard({ alert, onStageChange, onDeadlineChange, featured = false
 
   return (
     <div
-      className={featured ? 'p-8 rounded-[2.5rem]' : 'p-6 rounded-[2rem] mb-4'}
+      className={featured ? 'p-5 rounded-[2rem]' : 'p-4 rounded-[1.5rem] mb-3'}
       style={{ backgroundColor: cardBg }}
     >
       {/* Top row */}
-      <div className={'flex items-start justify-between gap-4 ' + (featured ? 'mb-6' : 'mb-3')}>
+      <div className={'flex items-start justify-between gap-4 ' + (featured ? 'mb-3' : 'mb-2')}>
         <div className="flex items-center gap-2 flex-wrap">
           <span
             className="text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest text-white"
@@ -47,7 +47,7 @@ function DeadlineCard({ alert, onStageChange, onDeadlineChange, featured = false
           )}
         </div>
         {amountStr && (
-          <p className={'font-black shrink-0 ' + (featured ? 'text-2xl' : 'text-lg')} style={{ fontFamily: 'var(--font-space-grotesk)', color: labelCol }}>
+          <p className={'font-black shrink-0 ' + (featured ? 'text-lg' : 'text-base')} style={{ fontFamily: 'var(--font-space-grotesk)', color: labelCol }}>
             {amountStr}
           </p>
         )}
@@ -55,17 +55,17 @@ function DeadlineCard({ alert, onStageChange, onDeadlineChange, featured = false
 
       {/* Grant name */}
       <h3
-        className={'font-bold leading-tight mb-1 ' + (featured ? 'text-2xl mb-3' : 'text-base mb-1')}
+        className={'font-bold leading-tight ' + (featured ? 'text-lg mb-1' : 'text-sm mb-0.5')}
         style={{ fontFamily: 'var(--font-space-grotesk)', color: '#1b1b1b' }}
       >
         {alert.item.grant_name}
       </h3>
-      <p className={'mb-3 ' + (featured ? 'text-sm' : 'text-xs')} style={{ color: 'rgba(0,0,0,0.5)' }}>
+      <p className={'mb-2 ' + (featured ? 'text-xs' : 'text-xs')} style={{ color: 'rgba(0,0,0,0.5)' }}>
         {alert.item.funder_name}
       </p>
 
       {/* Deadline + edit */}
-      <div className="flex items-center gap-3 mb-4 flex-wrap">
+      <div className="flex items-center gap-3 mb-3 flex-wrap">
         <div className="flex items-center gap-1.5">
           <Calendar size={12} strokeWidth={2} style={{ color: labelCol }} />
           <span className="text-sm font-semibold" style={{ color: labelCol }}>
@@ -86,7 +86,7 @@ function DeadlineCard({ alert, onStageChange, onDeadlineChange, featured = false
 
       {/* Progress bar */}
       {alert.item.application_progress != null && alert.item.application_progress > 0 && (
-        <div className="mb-5">
+        <div className="mb-3">
           <div className="flex justify-between items-center mb-2">
             <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'rgba(0,0,0,0.4)' }}>Writing progress</span>
             <span className="text-xs font-black" style={{ color: labelCol }}>{alert.item.application_progress}%</span>
@@ -105,7 +105,7 @@ function DeadlineCard({ alert, onStageChange, onDeadlineChange, featured = false
         {alert.item.stage === 'applying' && (
           <button
             onClick={() => onStageChange(alert.item.id, 'submitted')}
-            className="inline-flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-full bg-black/10 hover:bg-black/20 transition-colors"
+            className="inline-flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-full bg-black/10 hover:bg-black/20 transition-colors"
             style={{ color: 'rgba(0,0,0,0.65)' }}
           >
             <Send size={11} strokeWidth={2.5} /> Mark submitted
@@ -114,7 +114,7 @@ function DeadlineCard({ alert, onStageChange, onDeadlineChange, featured = false
         {alert.item.stage === 'submitted' && (
           <button
             onClick={() => onStageChange(alert.item.id, 'won')}
-            className="inline-flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-full bg-black/10 hover:bg-black/20 transition-colors"
+            className="inline-flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-full bg-black/10 hover:bg-black/20 transition-colors"
             style={{ color: 'rgba(0,0,0,0.65)' }}
           >
             Mark won
@@ -125,7 +125,7 @@ function DeadlineCard({ alert, onStageChange, onDeadlineChange, featured = false
             href={alert.item.grant_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-full bg-black/10 hover:bg-black/20 transition-colors"
+            className="inline-flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-full bg-black/10 hover:bg-black/20 transition-colors"
             style={{ color: 'rgba(0,0,0,0.65)' }}
           >
             <ExternalLink size={11} strokeWidth={2.5} /> Visit grant
