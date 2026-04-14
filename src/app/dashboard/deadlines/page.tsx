@@ -34,12 +34,12 @@ const URGENCY_CONFIG = {
   soon: {
     label: 'Coming up',
     icon: CalendarClock,
-    accent: 'text-mid',
-    border: 'border-l-warm',
-    badgeBg: 'bg-warm',
-    badgeText: 'text-mid',
-    statAccent: 'text-mid',
-    statBorder: 'border-l-4 border-l-warm',
+    accent: 'text-[#1E3A5F]',
+    border: 'border-l-[#7DD3FC]',
+    badgeBg: 'bg-[#BAE6FD]',
+    badgeText: 'text-[#1E3A5F]',
+    statAccent: 'text-[#1E3A5F]',
+    statBorder: 'border-l-4 border-l-[#7DD3FC]',
   },
   ok: {
     label: 'On track',
@@ -54,12 +54,12 @@ const URGENCY_CONFIG = {
   rolling: {
     label: 'Rolling',
     icon: CalendarCheck,
-    accent: 'text-mid',
-    border: 'border-l-warm',
-    badgeBg: 'bg-warm',
-    badgeText: 'text-mid',
-    statAccent: 'text-mid',
-    statBorder: 'border-l-4 border-l-warm',
+    accent: 'text-[#6E6E80]',
+    border: 'border-l-[#E8E8EC]',
+    badgeBg: 'bg-[#F5F5F7]',
+    badgeText: 'text-[#6E6E80]',
+    statAccent: 'text-[#6E6E80]',
+    statBorder: 'border-l-4 border-l-[#E8E8EC]',
   },
 }
 
