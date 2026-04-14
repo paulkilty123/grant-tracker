@@ -213,6 +213,10 @@ export default function DeadlinesPage() {
 
   return (
     <div style={{ fontFamily: 'Plus Jakarta Sans, var(--font-dm-sans), sans-serif' }}>
+      {/* Deploy test — remove after confirming */}
+      <div style={{ background: '#84CC16', color: '#1b1b1b', padding: '12px 20px', borderRadius: '1rem', marginBottom: '16px', fontWeight: 700, fontSize: '14px' }}>
+        Updated: compact cards + inline deadline setter
+      </div>
 
       <header className="mb-10">
         <div className="flex items-start justify-between gap-4 mb-4">
