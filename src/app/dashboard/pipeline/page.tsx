@@ -61,12 +61,14 @@ function PipelineCard({
   onDragStart,
   onDragEnd,
   onClick,
+  onDelete,
 }: {
   item: PipelineItem
   stage: typeof PIPELINE_STAGES[number]
   onDragStart: (e: React.DragEvent, id: string) => void
   onDragEnd: (e: React.DragEvent) => void
   onClick: (item: PipelineItem) => void
+  onDelete: (id: string) => void
 }) {
   const amountStr = formatRange(item.amount_min, item.amount_max ?? item.amount_requested)
   const deadlineStr = formatDeadline(item.deadline)
@@ -105,7 +107,16 @@ function PipelineCard({
           <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-red-50 text-red-500 uppercase tracking-wide">Urgent</span>
         )}
         </div>
-        <GripVertical size={13} className="flex-shrink-0 text-warm/80 mt-0.5 ml-1" />
+        <div className="flex items-center gap-1 flex-shrink-0 ml-1">
+          <GripVertical size={13} className="text-warm/80 mt-0.5" />
+          <button
+            onClick={e => { e.stopPropagation(); onDelete(item.id) }}
+            className="p-0.5 rounded-full text-[#9E9EA8] hover:text-red-400 hover:bg-red-50 transition-colors"
+            title="Remove from pipeline"
+          >
+            <XIcon size={12} strokeWidth={2.5} />
+          </button>
+        </div>
       </div>
 
       {/* Grant name */}
@@ -874,6 +885,7 @@ export default function PipelinePage() {
                     onDragStart={onDragStart}
                     onDragEnd={onDragEnd}
                     onClick={setSelectedItem}
+                    onDelete={handleDelete}
                   />
                 </div>
               ))}
