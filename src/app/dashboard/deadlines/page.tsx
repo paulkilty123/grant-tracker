@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { AlertTriangle, CalendarClock, CalendarCheck, ExternalLink, ArrowRight, Calendar, AlarmClock, ChevronDown, ChevronUp, Send, Clock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { getDeadlineAlerts, formatDeadline, formatRange, PIPELINE_STAGES } from '@/lib/utils'
-import { updatePipelineStage } from '@/lib/pipeline'
+import { updatePipelineStage, updatePipelineItem } from '@/lib/pipeline'
 import type { DeadlineAlert, PipelineItem, PipelineStage } from '@/types'
 
 const ACTIVE_STAGES = ['identified', 'applying', 'submitted']
@@ -132,6 +132,8 @@ export default function DeadlinesPage() {
   const [error, setError] = useState<string | null>(null)
   const [okExpanded, setOkExpanded] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
+  const [deadlineInputs, setDeadlineInputs] = useState<Record<string, string>>({})
+  const [savingDeadline, setSavingDeadline] = useState<string | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -159,6 +161,15 @@ export default function DeadlinesPage() {
   function showToast(msg: string) {
     setToast(msg)
     setTimeout(() => setToast(null), 3000)
+  }
+
+  async function handleSetDeadline(id: string, deadline: string) {
+    if (!deadline) return
+    setSavingDeadline(id)
+    await updatePipelineItem(id, { deadline })
+    setNoDeadlineItems(prev => prev.filter(i => i.id !== id))
+    showToast('Deadline set!')
+    setSavingDeadline(null)
   }
 
   async function handleStageChange(id: string, stage: PipelineStage) {
@@ -223,7 +234,7 @@ export default function DeadlinesPage() {
         )}
       </header>
 
-      {/* ── Empty state ── */}
+      {/* ── Fully empty state ── */}
       {alerts.length === 0 && noDeadlineItems.length === 0 && (
         <div className="bg-white p-16 rounded-[2rem] text-center">
           <Calendar className="h-12 w-12 mx-auto mb-5" style={{ color: '#9E9EA8' }} strokeWidth={1.5} />
@@ -234,6 +245,73 @@ export default function DeadlinesPage() {
           <a href="/dashboard/search" className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-white text-sm font-bold hover:opacity-80 transition-colors" style={{ background: '#1b1b1b' }}>
             Find Funding <ArrowRight className="h-4 w-4" />
           </a>
+        </div>
+      )}
+
+      {/* ── No alerts but grants exist without deadlines ── */}
+      {alerts.length === 0 && noDeadlineItems.length > 0 && (
+        <div>
+          {/* Why it matters */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+            {[
+              { icon: AlarmClock, title: 'Never miss a window', body: 'Deadline alerts surface 10 days before each closing date so you always have time to submit.', bg: '#FDE8A3', col: '#4A3800' },
+              { icon: AlertTriangle, title: 'Spot what's at risk', body: 'The "at risk" total shows how much funding could slip — a clear signal of where to focus effort.', bg: '#BAE6FD', col: '#1E3A5F' },
+              { icon: CalendarCheck, title: 'Track writing progress', body: 'Log your application progress on each grant so you know exactly where every submission stands.', bg: '#D9F99D', col: '#4D7C0F' },
+            ].map(({ icon: Icon, title, body, bg, col }) => (
+              <div key={title} className="p-6 rounded-[2rem]" style={{ backgroundColor: bg }}>
+                <Icon size={20} className="mb-3" style={{ color: col }} />
+                <h4 className="font-bold text-sm mb-1" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#1b1b1b' }}>{title}</h4>
+                <p className="text-xs leading-relaxed" style={{ color: 'rgba(0,0,0,0.55)' }}>{body}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Set deadlines inline */}
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="text-xl font-bold text-[#1b1b1b]" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+              Set deadlines for your pipeline grants
+            </h3>
+            <span className="text-xs font-semibold px-3 py-1 rounded-full" style={{ background: '#FDE8A3', color: '#4A3800' }}>
+              {noDeadlineItems.length} to do
+            </span>
+          </div>
+          <div className="space-y-3">
+            {noDeadlineItems.map(item => {
+              const amountStr = formatRange(item.amount_min, item.amount_max ?? item.amount_requested)
+              const stage = PIPELINE_STAGES.find(s => s.id === item.stage)
+              const val = deadlineInputs[item.id] ?? ''
+              const saving = savingDeadline === item.id
+              return (
+                <div key={item.id} className="bg-white p-5 rounded-[1.5rem] flex items-center gap-4">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-[#1b1b1b] truncate" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{item.grant_name}</p>
+                    <div className="flex items-center gap-3 mt-0.5">
+                      <p className="text-sm truncate" style={{ color: '#6E6E80' }}>{item.funder_name}</p>
+                      {amountStr && <span className="text-sm font-bold" style={{ color: '#84CC16' }}>{amountStr}</span>}
+                      {stage && <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: '#9E9EA8' }}>{stage.label}</span>}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <input
+                      type="date"
+                      value={val}
+                      onChange={e => setDeadlineInputs(prev => ({ ...prev, [item.id]: e.target.value }))}
+                      className="text-sm border border-[#E8E8EC] rounded-xl px-3 py-2 outline-none focus:border-[#84CC16] transition-colors"
+                      style={{ color: '#1b1b1b' }}
+                    />
+                    <button
+                      onClick={() => handleSetDeadline(item.id, val)}
+                      disabled={!val || saving}
+                      className="px-4 py-2 rounded-xl text-sm font-bold text-white transition-colors disabled:opacity-40"
+                      style={{ background: '#1b1b1b' }}
+                    >
+                      {saving ? 'Saving…' : 'Set'}
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </div>
       )}
 
