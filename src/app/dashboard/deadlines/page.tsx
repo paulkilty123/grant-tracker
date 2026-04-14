@@ -37,7 +37,7 @@ function DeadlineCard({ alert, onStageChange, featured = false }: {
             className="text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest text-white"
             style={{ backgroundColor: badgeBg }}
           >
-            {isOverdue ? 'Overdue' : isUrgent ? \`${alert.daysUntil}d left\` : alert.urgency === 'soon' ? 'Coming up' : 'On track'}
+            {isOverdue ? 'Overdue' : isUrgent ? `${alert.daysUntil}d left` : alert.urgency === 'soon' ? 'Coming up' : 'On track'}
           </span>
           {stage && (
             <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'rgba(0,0,0,0.4)' }}>
@@ -81,7 +81,7 @@ function DeadlineCard({ alert, onStageChange, featured = false }: {
           <div className="h-2 rounded-full bg-black/10 overflow-hidden">
             <div
               className="h-full rounded-full transition-all"
-              style={{ width: \`${alert.item.application_progress}%\`, backgroundColor: labelCol }}
+              style={{ width: `${alert.item.application_progress}%`, backgroundColor: labelCol }}
             />
           </div>
         </div>
@@ -164,7 +164,7 @@ export default function DeadlinesPage() {
   async function handleStageChange(id: string, stage: PipelineStage) {
     setAlerts(prev => prev.map(a => a.item.id === id ? { ...a, item: { ...a.item, stage } } : a))
     await updatePipelineStage(id, stage)
-    showToast(\`Moved to \${PIPELINE_STAGES.find(s => s.id === stage)?.label}\`)
+    showToast(`Moved to \${PIPELINE_STAGES.find(s => s.id === stage)?.label}`)
   }
 
   const overdue        = alerts.filter(a => a.urgency === 'overdue')
@@ -176,7 +176,7 @@ export default function DeadlinesPage() {
   const restAttention  = needsAttention.slice(1)
 
   const atRisk = needsAttention.reduce((s, a) => s + (a.item.amount_max ?? a.item.amount_requested ?? 0), 0)
-  const fmt = (n: number) => n >= 1000000 ? \`£\${(n/1000000).toFixed(1)}m\` : n >= 1000 ? \`£\${(n/1000).toFixed(n % 1000 === 0 ? 0 : 1)}k\` : \`£\${n.toLocaleString()}\`
+  const fmt = (n: number) => n >= 1000000 ? `£\${(n/1000000).toFixed(1)}m` : n >= 1000 ? `£\${(n/1000).toFixed(n % 1000 === 0 ? 0 : 1)}k` : `£\${n.toLocaleString()}`
 
   if (loading) return <div className="flex items-center justify-center h-64 text-[#6E6E80] text-sm">Loading deadlines…</div>
   if (error)   return <div className="p-8 text-center"><p className="text-red-500 font-medium">{error}</p></div>
