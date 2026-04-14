@@ -135,28 +135,27 @@ export default function DeadlinesPage() {
   const [deadlineInputs, setDeadlineInputs] = useState<Record<string, string>>({})
   const [savingDeadline, setSavingDeadline] = useState<string | null>(null)
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const supabase = createClient()
-        const { data: { user }, error: userErr } = await supabase.auth.getUser()
-        if (userErr || !user) { setLoading(false); return }
-        const { data: org } = await supabase.from('organisations').select('id').eq('owner_id', user.id).maybeSingle()
-        if (!org) { setLoading(false); return }
-        const { data: items, error: itemsErr } = await supabase
-          .from('pipeline_items').select('*').eq('org_id', org.id).order('deadline', { ascending: true })
-        if (itemsErr) { setError(itemsErr.message); return }
-        const allItems: PipelineItem[] = items ?? []
-        setAlerts(getDeadlineAlerts(allItems))
-        setNoDeadlineItems(allItems.filter(i => ACTIVE_STAGES.includes(i.stage) && !i.deadline))
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load')
-      } finally {
-        setLoading(false)
-      }
+  async function loadData() {
+    try {
+      const supabase = createClient()
+      const { data: { user }, error: userErr } = await supabase.auth.getUser()
+      if (userErr || \!user) { setLoading(false); return }
+      const { data: org } = await supabase.from('organisations').select('id').eq('owner_id', user.id).maybeSingle()
+      if (\!org) { setLoading(false); return }
+      const { data: items, error: itemsErr } = await supabase
+        .from('pipeline_items').select('*').eq('org_id', org.id).order('deadline', { ascending: true })
+      if (itemsErr) { setError(itemsErr.message); return }
+      const allItems: PipelineItem[] = items ?? []
+      setAlerts(getDeadlineAlerts(allItems))
+      setNoDeadlineItems(allItems.filter(i => ACTIVE_STAGES.includes(i.stage) && \!i.deadline))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load')
+    } finally {
+      setLoading(false)
     }
-    load()
-  }, [])
+  }
+
+  useEffect(() => { loadData() }, [])
 
   function showToast(msg: string) {
     setToast(msg)
@@ -167,9 +166,9 @@ export default function DeadlinesPage() {
     if (!deadline) return
     setSavingDeadline(id)
     await updatePipelineItem(id, { deadline })
-    setNoDeadlineItems(prev => prev.filter(i => i.id !== id))
     showToast('Deadline set!')
     setSavingDeadline(null)
+    await loadData()
   }
 
   async function handleStageChange(id: string, stage: PipelineStage) {
