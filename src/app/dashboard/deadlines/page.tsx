@@ -320,15 +320,18 @@ export default function DeadlinesPage() {
 
       {alerts.length > 0 && (
         <>
-          {/* ── Bento grid: Hero + Stat stack ── */}
+          {/* ── Bento grid: Hero + rest left, Stat stack right ── */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-10">
 
-            {/* Hero card — most urgent item */}
-            {heroAlert && (
-              <div className="lg:col-span-8">
+            {/* Left column: hero + rest of needs attention */}
+            <div className="lg:col-span-8 flex flex-col gap-4">
+              {heroAlert && (
                 <DeadlineCard alert={heroAlert} onStageChange={handleStageChange} onDeadlineChange={handleDeadlineChange} featured />
-              </div>
-            )}
+              )}
+              {restAttention.map(a => (
+                <DeadlineCard key={a.item.id} alert={a} onStageChange={handleStageChange} onDeadlineChange={handleDeadlineChange} />
+              ))}
+            </div>
 
             {/* Stat stack */}
             <div className="lg:col-span-4 flex flex-col gap-4">
@@ -345,28 +348,18 @@ export default function DeadlinesPage() {
                 >
                   <div>
                     <p className="text-sm font-bold mb-1" style={{ color: 'rgba(0,0,0,0.45)' }}>{s.label}</p>
-                    <p className="text-6xl font-black leading-none" style={{ fontFamily: 'var(--font-space-grotesk)', color: s.col }}>
+                    <p className="text-4xl font-black leading-none" style={{ fontFamily: 'var(--font-space-grotesk)', color: s.col }}>
                       {s.count > 0 ? String(s.count).padStart(2, '0') : '–'}
                     </p>
                   </div>
-                  {s.label === 'Overdue'   && <AlertTriangle  size={36} style={{ color: s.col, opacity: 0.3 }} />}
-                  {s.label === 'This Week' && <AlarmClock      size={36} style={{ color: s.col, opacity: 0.3 }} />}
-                  {s.label === 'Coming Up' && <CalendarClock  size={36} style={{ color: s.col, opacity: 0.3 }} />}
-                  {s.label === 'On Track'  && <CalendarCheck  size={36} style={{ color: s.col, opacity: 0.3 }} />}
+                  {s.label === 'Overdue'   && <AlertTriangle  size={28} style={{ color: s.col, opacity: 0.3 }} />}
+                  {s.label === 'This Week' && <AlarmClock      size={28} style={{ color: s.col, opacity: 0.3 }} />}
+                  {s.label === 'Coming Up' && <CalendarClock  size={28} style={{ color: s.col, opacity: 0.3 }} />}
+                  {s.label === 'On Track'  && <CalendarCheck  size={28} style={{ color: s.col, opacity: 0.3 }} />}
                 </div>
               ))}
             </div>
           </div>
-
-          {/* ── Rest of Needs Attention ── */}
-          {restAttention.length > 0 && (
-            <section className="mb-8">
-              <h3 className="text-xl font-bold text-[#1b1b1b] mb-4" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-                Also needs attention
-              </h3>
-              {restAttention.map(a => <DeadlineCard key={a.item.id} alert={a} onStageChange={handleStageChange} onDeadlineChange={handleDeadlineChange} />)}
-            </section>
-          )}
 
           {/* ── Coming Up ── */}
           {soon.length > 0 && !heroAlert?.urgency?.match(/overdue|urgent/) && restAttention.length === 0 ? null : soon.length > 0 && (
@@ -398,6 +391,57 @@ export default function DeadlinesPage() {
             </section>
           )}
         </>
+      )}
+
+      {/* ── Pipeline grants without deadlines (always show) ── */}
+      {alerts.length > 0 && noDeadlineItems.length > 0 && (
+        <section className="mb-8">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="text-xl font-bold text-[#1b1b1b]" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+              Set deadlines
+            </h3>
+            <span className="text-xs font-semibold px-3 py-1 rounded-full" style={{ background: '#FDE8A3', color: '#4A3800' }}>
+              {noDeadlineItems.length} to do
+            </span>
+          </div>
+          <div className="space-y-3">
+            {noDeadlineItems.map(item => {
+              const amountStr = formatRange(item.amount_min, item.amount_max ?? item.amount_requested)
+              const stage = PIPELINE_STAGES.find(s => s.id === item.stage)
+              const val = deadlineInputs[item.id] ?? ''
+              const saving = savingDeadline === item.id
+              return (
+                <div key={item.id} className="bg-white p-5 rounded-[1.5rem] flex items-center gap-4">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-[#1b1b1b] truncate" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{item.grant_name}</p>
+                    <div className="flex items-center gap-3 mt-0.5">
+                      <p className="text-sm truncate" style={{ color: '#6E6E80' }}>{item.funder_name}</p>
+                      {amountStr && <span className="text-sm font-bold" style={{ color: '#84CC16' }}>{amountStr}</span>}
+                      {stage && <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: '#9E9EA8' }}>{stage.label}</span>}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <input
+                      type="date"
+                      value={val}
+                      onChange={e => setDeadlineInputs(prev => ({ ...prev, [item.id]: e.target.value }))}
+                      className="text-sm border border-[#E8E8EC] rounded-xl px-3 py-2 outline-none focus:border-[#84CC16] transition-colors"
+                      style={{ color: '#1b1b1b' }}
+                    />
+                    <button
+                      onClick={() => handleSetDeadline(item.id, val)}
+                      disabled={!val || saving}
+                      className="px-4 py-2 rounded-xl text-sm font-bold text-white transition-colors disabled:opacity-40"
+                      style={{ background: '#1b1b1b' }}
+                    >
+                      {saving ? '...' : 'Set'}
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </section>
       )}
 
       {toast && (
