@@ -278,9 +278,6 @@ export default function DeadlinesPage() {
       )}
 
       {alerts.length > 0 && (
-        <div style={{ background: '#1A1A1A', color: '#84CC16', padding: '8px 16px', borderRadius: '8px', fontSize: '12px', fontWeight: 700, marginBottom: '12px' }}>
-          Deploy confirmed — badge/pill/card fixes active
-        </div>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
           {/* Left: all grants in one consistent list */}
