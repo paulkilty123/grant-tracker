@@ -78,7 +78,7 @@ function DeadlineCard({ alert, onStageChange, onDeadlineChange, featured = false
             defaultValue={alert.item.deadline ?? ''}
             onChange={e => onDeadlineChange(alert.item.id, e.target.value)}
             className="text-xs border-0 rounded-lg px-2 py-1 outline-none focus:ring-1 transition-all"
-            style={{ background: 'rgba(0,0,0,0.08)', color: labelCol, focusRingColor: labelCol }}
+            style={{ background: "rgba(0,0,0,0.08)", color: labelCol }}
             title="Change deadline"
           />
         )}
