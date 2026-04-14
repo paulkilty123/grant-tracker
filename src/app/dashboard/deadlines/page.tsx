@@ -102,7 +102,7 @@ function DeadlineCard({ alert, onStageChange, onDeadlineChange }: {
 }
 
 
-// ── Main Page ─────────────────────────────────────────────────────────────────
+// ── Main Page ─ ─────────────────────────────────────────────────────────────────
 
 export default function DeadlinesPage() {
   const [alerts, setAlerts] = useState<DeadlineAlert[]>([])
