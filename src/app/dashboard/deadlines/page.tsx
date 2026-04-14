@@ -11,130 +11,96 @@ const ACTIVE_STAGES = ['identified', 'applying', 'submitted']
 
 // ── Deadline Card ─────────────────────────────────────────────────────────────
 
-function DeadlineCard({ alert, onStageChange, onDeadlineChange, featured = false }: {
+function DeadlineCard({ alert, onStageChange, onDeadlineChange }: {
   alert: DeadlineAlert
   onStageChange: (id: string, stage: PipelineStage) => void
   onDeadlineChange?: (id: string, deadline: string) => void
-  featured?: boolean
 }) {
   const stage = PIPELINE_STAGES.find(s => s.id === alert.item.stage)
   const amountStr = formatRange(alert.item.amount_min, alert.item.amount_max ?? alert.item.amount_requested)
   const isOverdue = alert.urgency === 'overdue'
   const isUrgent  = alert.urgency === 'urgent'
 
-  const cardBg   = isOverdue ? '#ffdad6' : isUrgent ? '#FDE8A3' : alert.urgency === 'soon' ? '#BAE6FD' : '#D9F99D'
-  const labelCol = isOverdue ? '#93000a' : isUrgent ? '#4A3800' : alert.urgency === 'soon' ? '#1E3A5F' : '#4D7C0F'
-  const badgeBg  = isOverdue ? '#ba1a1a' : isUrgent ? '#B45309' : alert.urgency === 'soon' ? '#1E3A5F' : '#4D7C0F'
+  const borderCol = isOverdue ? '#f87171' : isUrgent ? '#F59E0B' : alert.urgency === 'soon' ? '#7DD3FC' : '#84CC16'
+  const badgeBg   = isOverdue ? '#ba1a1a' : isUrgent ? '#B45309' : alert.urgency === 'soon' ? '#1E3A5F' : '#4D7C0F'
+  const dayLabel  = isOverdue ? 'Overdue' : isUrgent ? `${alert.daysUntil}d left` : alert.urgency === 'soon' ? 'Coming up' : 'On track'
 
   return (
     <div
-      className={featured ? 'p-5 rounded-[2rem]' : 'p-4 rounded-[1.5rem] mb-3'}
-      style={{ backgroundColor: cardBg }}
+      className="bg-white rounded-xl p-4 flex gap-4 items-start"
+      style={{ borderLeft: `3px solid ${borderCol}`, boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}
     >
-      {/* Top row */}
-      <div className={'flex items-start justify-between gap-4 ' + (featured ? 'mb-3' : 'mb-2')}>
-        <div className="flex items-center gap-2 flex-wrap">
-          <span
-            className="text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest text-white"
-            style={{ backgroundColor: badgeBg }}
-          >
-            {isOverdue ? 'Overdue' : isUrgent ? `${alert.daysUntil}d left` : alert.urgency === 'soon' ? 'Coming up' : 'On track'}
+      <div className="flex-1 min-w-0">
+        {/* Badge row */}
+        <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+          <span className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest text-white" style={{ backgroundColor: badgeBg }}>
+            {dayLabel}
           </span>
-          {stage && (
-            <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'rgba(0,0,0,0.4)' }}>
-              {stage.label}
-            </span>
+          {stage && <span className="text-[10px] text-[#9E9EA8] font-medium uppercase tracking-widest">{stage.label}</span>}
+        </div>
+        {/* Grant name */}
+        <p className="text-sm font-bold text-[#1A1A1A] leading-snug mb-0.5" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+          {alert.item.grant_name}
+        </p>
+        <p className="text-xs text-[#6E6E80] mb-2">{alert.item.funder_name}</p>
+        {/* Deadline */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1 text-xs font-semibold text-[#6E6E80]">
+            <Calendar size={11} strokeWidth={2} />
+            {formatDeadline(alert.item.deadline)}
+          </div>
+          {onDeadlineChange && (
+            <input
+              type="date"
+              defaultValue={alert.item.deadline ?? ''}
+              onChange={e => onDeadlineChange(alert.item.id, e.target.value)}
+              className="text-xs border border-[#E8E8EC] rounded-lg px-2 py-0.5 outline-none focus:border-[#84CC16] transition-colors"
+              style={{ color: '#1A1A1A' }}
+            />
           )}
         </div>
-        {amountStr && (
-          <p className={'font-black shrink-0 ' + (featured ? 'text-lg' : 'text-base')} style={{ fontFamily: 'var(--font-space-grotesk)', color: labelCol }}>
-            {amountStr}
-          </p>
-        )}
-      </div>
-
-      {/* Grant name */}
-      <h3
-        className={'font-bold leading-tight ' + (featured ? 'text-lg mb-1' : 'text-sm mb-0.5')}
-        style={{ fontFamily: 'var(--font-space-grotesk)', color: '#1b1b1b' }}
-      >
-        {alert.item.grant_name}
-      </h3>
-      <p className={'mb-2 ' + (featured ? 'text-xs' : 'text-xs')} style={{ color: 'rgba(0,0,0,0.5)' }}>
-        {alert.item.funder_name}
-      </p>
-
-      {/* Deadline + edit */}
-      <div className="flex items-center gap-3 mb-3 flex-wrap">
-        <div className="flex items-center gap-1.5">
-          <Calendar size={12} strokeWidth={2} style={{ color: labelCol }} />
-          <span className="text-sm font-semibold" style={{ color: labelCol }}>
-            {formatDeadline(alert.item.deadline)}
-          </span>
-        </div>
-        {onDeadlineChange && (
-          <input
-            type="date"
-            defaultValue={alert.item.deadline ?? ''}
-            onChange={e => onDeadlineChange(alert.item.id, e.target.value)}
-            className="text-xs border-0 rounded-lg px-2 py-1 outline-none focus:ring-1 transition-all"
-            style={{ background: "rgba(0,0,0,0.08)", color: labelCol }}
-            title="Change deadline"
-          />
-        )}
-      </div>
-
-      {/* Progress bar */}
-      {alert.item.application_progress != null && alert.item.application_progress > 0 && (
-        <div className="mb-3">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'rgba(0,0,0,0.4)' }}>Writing progress</span>
-            <span className="text-xs font-black" style={{ color: labelCol }}>{alert.item.application_progress}%</span>
+        {/* Progress bar */}
+        {alert.item.application_progress != null && alert.item.application_progress > 0 && (
+          <div className="mt-2.5">
+            <div className="flex justify-between mb-1">
+              <span className="text-[9px] font-semibold uppercase tracking-widest text-[#9E9EA8]">Writing progress</span>
+              <span className="text-[9px] font-bold text-[#6E6E80]">{alert.item.application_progress}%</span>
+            </div>
+            <div className="h-1 bg-[#E8E8EC] rounded-full overflow-hidden">
+              <div className="h-full rounded-full bg-[#84CC16]" style={{ width: `${alert.item.application_progress}%` }} />
+            </div>
           </div>
-          <div className="h-2 rounded-full bg-black/10 overflow-hidden">
-            <div
-              className="h-full rounded-full transition-all"
-              style={{ width: `${alert.item.application_progress}%`, backgroundColor: labelCol }}
-            />
-          </div>
+        )}
+        {/* Quick actions */}
+        <div className="flex items-center gap-2 flex-wrap mt-2.5">
+          {alert.item.stage === 'applying' && (
+            <button onClick={() => onStageChange(alert.item.id, 'submitted')}
+              className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full border border-[#E8E8EC] text-[#6E6E80] hover:border-[#1A1A1A] hover:text-[#1A1A1A] transition-colors">
+              <Send size={10} strokeWidth={2} /> Mark submitted
+            </button>
+          )}
+          {alert.item.stage === 'submitted' && (
+            <button onClick={() => onStageChange(alert.item.id, 'won')}
+              className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full border border-[#E8E8EC] text-[#6E6E80] hover:border-[#1A1A1A] hover:text-[#1A1A1A] transition-colors">
+              Mark won
+            </button>
+          )}
+          {alert.item.grant_url && (
+            <a href={alert.item.grant_url} target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full border border-[#E8E8EC] text-[#6E6E80] hover:border-[#1A1A1A] hover:text-[#1A1A1A] transition-colors">
+              <ExternalLink size={10} strokeWidth={2} /> Visit grant
+            </a>
+          )}
         </div>
+      </div>
+      {/* Amount — right side */}
+      {amountStr && (
+        <p className="text-base font-bold text-[#84CC16] shrink-0" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{amountStr}</p>
       )}
-
-      {/* Quick actions */}
-      <div className="flex items-center gap-2 flex-wrap">
-        {alert.item.stage === 'applying' && (
-          <button
-            onClick={() => onStageChange(alert.item.id, 'submitted')}
-            className="inline-flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-full bg-black/10 hover:bg-black/20 transition-colors"
-            style={{ color: 'rgba(0,0,0,0.65)' }}
-          >
-            <Send size={11} strokeWidth={2.5} /> Mark submitted
-          </button>
-        )}
-        {alert.item.stage === 'submitted' && (
-          <button
-            onClick={() => onStageChange(alert.item.id, 'won')}
-            className="inline-flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-full bg-black/10 hover:bg-black/20 transition-colors"
-            style={{ color: 'rgba(0,0,0,0.65)' }}
-          >
-            Mark won
-          </button>
-        )}
-        {alert.item.grant_url && (
-          <a
-            href={alert.item.grant_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-full bg-black/10 hover:bg-black/20 transition-colors"
-            style={{ color: 'rgba(0,0,0,0.65)' }}
-          >
-            <ExternalLink size={11} strokeWidth={2.5} /> Visit grant
-          </a>
-        )}
-      </div>
     </div>
   )
 }
+
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
@@ -334,11 +300,10 @@ export default function DeadlinesPage() {
             {/* Coming Up */}
             {soon.length > 0 && (
               <>
-                <p className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2 mt-3 mb-1" style={{ color: '#1E3A5F' }}>
-                  <CalendarClock size={10} />
-                  Coming Up
-                  <span className="font-semibold normal-case tracking-normal" style={{ color: 'rgba(0,0,0,0.4)' }}>{soon.length} {soon.length === 1 ? 'grant' : 'grants'}</span>
-                </p>
+                <div className="flex items-center gap-3 mt-5 mb-3">
+                  <h3 className="text-base font-bold text-[#1A1A1A]" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Coming Up</h3>
+                  <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full" style={{ background: '#BAE6FD', color: '#1E3A5F' }}>{soon.length}</span>
+                </div>
                 {soon.map(a => <DeadlineCard key={a.item.id} alert={a} onStageChange={handleStageChange} onDeadlineChange={handleDeadlineChange} />)}
               </>
             )}
@@ -359,11 +324,10 @@ export default function DeadlinesPage() {
             {/* Set Deadlines */}
             {noDeadlineItems.length > 0 && (
               <>
-                <p className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2 mt-3 mb-1" style={{ color: 'rgba(0,0,0,0.4)' }}>
-                  <Calendar size={10} />
-                  Set Deadlines
-                  <span className="font-semibold normal-case tracking-normal">{noDeadlineItems.length} to do</span>
-                </p>
+                <div className="flex items-center gap-3 mt-5 mb-3">
+                  <h3 className="text-base font-bold text-[#1A1A1A]" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Set Deadlines</h3>
+                  <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full" style={{ background: '#FDE8A3', color: '#4A3800' }}>{noDeadlineItems.length} to do</span>
+                </div>
                 {noDeadlineItems.map(item => {
                   const amountStr = formatRange(item.amount_min, item.amount_max ?? item.amount_requested)
                   const stage = PIPELINE_STAGES.find(s => s.id === item.stage)
