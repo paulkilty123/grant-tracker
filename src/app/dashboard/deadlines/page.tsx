@@ -195,22 +195,6 @@ export default function DeadlinesPage() {
   return (
     <div style={{ fontFamily: 'Plus Jakarta Sans, var(--font-dm-sans), sans-serif' }}>
 
-      {/* ── No deadline warning banner ── */}
-      {noDeadlineItems.length > 0 && (
-        <div className="flex items-center justify-between gap-4 px-5 py-4 rounded-[1.5rem] mb-6" style={{ background: '#FDE8A3' }}>
-          <div className="flex items-center gap-2.5">
-            <AlarmClock className="w-4 h-4 shrink-0" style={{ color: '#4A3800' }} />
-            <p className="text-sm font-bold" style={{ color: '#4A3800' }}>
-              {noDeadlineItems.length} grant{noDeadlineItems.length !== 1 ? 's' : ''} in your pipeline {noDeadlineItems.length !== 1 ? 'have' : 'has'} no deadline set
-            </p>
-          </div>
-          <a href="/dashboard/pipeline" className="shrink-0 flex items-center gap-1 text-xs font-black uppercase tracking-wider" style={{ color: '#4A3800' }}>
-            Set now <ArrowRight size={12} />
-          </a>
-        </div>
-      )}
-
-      {/* ── Header ── */}
       <header className="mb-10">
         <div className="flex items-start justify-between gap-4 mb-4">
           <h1 className="text-5xl font-bold tracking-tight text-[#1b1b1b]" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.03em' }}>
