@@ -44,8 +44,8 @@
            duration-150 cursor-pointer rounded-lg;
   }
   .btn-gold {
-    @apply bg-forest text-white px-5 py-2.5 text-sm font-medium
-           hover:opacity-90 transition-all duration-150 cursor-pointer border-none rounded-lg;
+    @apply bg-[#1A1A1A] text-white px-5 py-2.5 text-sm font-medium
+           hover:opacity-80 transition-all duration-150 cursor-pointer border-none rounded-lg;
   }
   .btn-sm {
     @apply px-3.5 py-1.5 text-xs;
@@ -54,16 +54,16 @@
   /* Form inputs */
   .form-input {
     @apply w-full px-3.5 py-2.5 border border-warm text-sm text-charcoal
-           outline-none focus:border-forest transition-colors font-sans bg-white rounded-lg;
+           outline-none focus:border-[#84CC16] transition-colors font-sans bg-white rounded-lg;
   }
   .form-textarea {
     @apply w-full px-3.5 py-2.5 border border-warm text-sm text-charcoal
-           outline-none focus:border-forest transition-colors font-sans bg-white
+           outline-none focus:border-[#84CC16] transition-colors font-sans bg-white
            resize-y min-h-[80px] rounded-lg;
   }
   .form-select {
     @apply w-full px-3.5 py-2.5 border border-warm text-sm text-charcoal
-           outline-none focus:border-forest transition-colors font-sans bg-white cursor-pointer rounded-lg;
+           outline-none focus:border-[#84CC16] transition-colors font-sans bg-white cursor-pointer rounded-lg;
   }
 
   /* Nav */
@@ -95,10 +95,10 @@
   }
   .pipeline-col {
     @apply p-3.5 min-h-[300px] rounded-xl border border-warm/40;
-    background: #faf7f2;
+    background: #F5F5F7;
   }
   .pipeline-col.drag-over {
-    @apply outline-2 outline-dashed outline-coral bg-coral/5;
+    @apply outline-2 outline-dashed outline-[#84CC16] bg-[#84CC16]/5;
   }
 
   /* Tags */

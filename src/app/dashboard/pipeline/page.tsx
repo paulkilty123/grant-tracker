@@ -99,7 +99,7 @@ function PipelineCard({
           </span>
         )}
         {item.application_progress === 100 && (
-          <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-forest/10 text-forest uppercase tracking-wide">Final</span>
+          <span className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide" style={{ background: "rgba(132,204,22,0.15)", color: "#4D7C0F" }}>Final</span>
         )}
         {item.is_urgent && (
           <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-red-50 text-red-500 uppercase tracking-wide">Urgent</span>
@@ -109,7 +109,7 @@ function PipelineCard({
       </div>
 
       {/* Grant name */}
-      <p className="font-serif text-[15px] font-bold text-charcoal leading-snug mb-1">{item.grant_name}</p>
+      <p className="text-[15px] font-bold text-charcoal leading-snug mb-1" style={{ fontFamily: "var(--font-space-grotesk)" }}>{item.grant_name}</p>
 
       {/* Funder name */}
       <p className="text-xs text-mid mb-2">{item.funder_name}</p>
@@ -117,7 +117,7 @@ function PipelineCard({
       {/* Amount */}
       {amountStr && (
         <p className={cn('text-base font-bold mb-1',
-          isDeclined ? 'text-red-400' : 'text-forest'
+          isDeclined ? 'text-red-400' : 'text-[#84CC16]'
         )}>
           {amountStr}{isWon ? ' ✓' : isDeclined ? ' ✗' : ''}
         </p>
@@ -150,7 +150,7 @@ function PipelineCard({
         <div className="mt-2.5">
           <div className="h-1 bg-warm overflow-hidden rounded-full">
             <div
-              className={cn('h-full transition-all', item.application_progress >= 83 ? 'bg-forest' : item.application_progress >= 50 ? 'bg-sage' : 'bg-amber-400')}
+              className={cn('h-full transition-all', item.application_progress >= 83 ? 'bg-[#84CC16]' : item.application_progress >= 50 ? 'bg-[#A3E635]' : 'bg-[#FDE8A3]')}
               style={{ width: `${item.application_progress}%` }}
             />
           </div>
@@ -169,7 +169,7 @@ function PipelineCard({
           target="_blank"
           rel="noopener noreferrer"
           onClick={e => e.stopPropagation()}
-          className="inline-block mt-1.5 text-[10px] text-forest/70 hover:text-forest underline underline-offset-2 transition-colors"
+          className="inline-block mt-1.5 text-[10px] text-[#4D7C0F] hover:text-[#84CC16] underline underline-offset-2 transition-colors"
         >
           Apply →
         </a>
@@ -248,9 +248,9 @@ function PipelineModal({
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="bg-white w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-xl" style={{ boxShadow: '0 16px 64px rgba(26,46,43,0.18)' }} onClick={e => e.stopPropagation()}>
-        <div className="px-6 py-5 border-b border-warm flex justify-between items-start" style={{ background: '#faf7f2' }}>
+        <div className="px-6 py-5 border-b border-[#E8E8EC] flex justify-between items-start" style={{ background: '#F5F5F7' }}>
           <div>
-            <h3 className="font-serif text-xl font-bold text-charcoal leading-snug">{item.grant_name}</h3>
+            <h3 className="text-xl font-bold text-charcoal leading-snug" style={{ fontFamily: "var(--font-space-grotesk)" }}>{item.grant_name}</h3>
             <p className="text-sm text-mid mt-0.5">{item.funder_name}</p>
           </div>
           <button onClick={onClose} className="text-light hover:text-charcoal transition-colors mt-0.5 flex-shrink-0">
@@ -330,12 +330,12 @@ function PipelineModal({
             </div>
           )}
           {!isApplyingOrLater && (amountMin || amountMax) && (
-            <p className="text-xl font-bold text-forest -mt-2">
+            <p className="text-xl font-bold -mt-2" style={{ color: "#84CC16" }}>
               {formatRange(amountMin ? Number(amountMin) : null, amountMax ? Number(amountMax) : null)}
             </p>
           )}
           {isApplyingOrLater && amountRequested && (
-            <p className="text-xl font-bold text-forest -mt-2">
+            <p className="text-xl font-bold -mt-2" style={{ color: "#84CC16" }}>
               £{Number(amountRequested).toLocaleString('en-GB')} requested
             </p>
           )}
@@ -351,8 +351,8 @@ function PipelineModal({
                   className={cn(
                     'py-2 px-2 border-2 text-xs font-medium transition-all text-center rounded-lg',
                     localStage === s.id
-                      ? 'border-coral bg-coral/10 text-coral font-semibold'
-                      : 'border-warm text-mid hover:border-coral hover:text-coral'
+                      ? 'border-[#1A1A1A] bg-[#1A1A1A]/8 text-[#1A1A1A] font-semibold'
+                      : 'border-[#E8E8EC] text-[#6E6E80] hover:border-[#1A1A1A] hover:text-[#1A1A1A]'
                   )}
                 >
                   <span className="flex items-center justify-center gap-1.5">
@@ -379,14 +379,14 @@ function PipelineModal({
                     className={cn(
                       'flex flex-col items-center gap-1 py-2 px-1 border-2 text-center transition-all rounded-lg',
                       isActive
-                        ? 'border-coral bg-coral/10'
-                        : 'border-warm bg-white hover:border-coral/50 hover:bg-coral/5'
+                        ? 'border-[#84CC16] bg-[#84CC16]/10'
+                        : 'border-[#E8E8EC] bg-white hover:border-[#84CC16]/50 hover:bg-[#84CC16]/5'
                     )}
                   >
-                    <span className={cn(isActive ? 'text-coral' : 'text-mid')}>
+                    <span className={cn(isActive ? "text-[#84CC16]" : "text-[#6E6E80]")}>
                       {WRITING_STAGE_ICONS[s.value]}
                     </span>
-                    <span className={cn('text-[10px] font-semibold leading-tight', isActive ? 'text-forest' : 'text-mid')}>
+                    <span className={cn('text-[10px] font-semibold leading-tight', isActive ? 'text-[#4D7C0F]' : 'text-[#6E6E80]')}>
                       {s.label}
                     </span>
                   </button>
@@ -398,9 +398,9 @@ function PipelineModal({
               <div
                 className={cn(
                   'h-full transition-all duration-300',
-                  progress >= 83 ? 'bg-forest' :
-                  progress >= 50 ? 'bg-sage' :
-                  progress > 0   ? 'bg-amber-400' : 'bg-warm'
+                  progress >= 83 ? 'bg-[#84CC16]' :
+                  progress >= 50 ? 'bg-[#A3E635]' :
+                  progress > 0   ? 'bg-[#FDE8A3]' : 'bg-[#E8E8EC]'
                 )}
                 style={{ width: `${progress}%` }}
               />
@@ -581,9 +581,9 @@ function AddModal({
       >
         {/* Header */}
         <div className="px-6 py-5 border-b border-warm flex justify-between items-start flex-shrink-0"
-             style={{ background: '#faf7f2' }}>
+             style={{ background: '#F5F5F7' }}>
           <div>
-            <h3 className="font-display text-lg font-bold text-charcoal">Add Opportunity</h3>
+            <h3 className="text-lg font-bold text-charcoal" style={{ fontFamily: "var(--font-space-grotesk)" }}>Add Opportunity</h3>
             <p className="text-sm text-mid mt-0.5">Track a funding opportunity in your pipeline</p>
           </div>
           <button onClick={onClose} className="text-light hover:text-mid text-xl leading-none mt-0.5">✕</button>
@@ -592,12 +592,12 @@ function AddModal({
         <div className="overflow-y-auto flex-1">
           {/* Tip: add from funding list */}
           <div className="mx-6 mt-5 flex items-start gap-3 px-4 py-3 rounded-lg border border-sage/30 bg-sage/5">
-            <Sparkles className="w-4 h-4 text-forest flex-shrink-0 mt-0.5" strokeWidth={2} />
-            <div className="text-sm text-forest leading-relaxed">
+            <Sparkles className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: "#84CC16" }} strokeWidth={2} />
+            <div className="text-sm text-[#1A1A1A] leading-relaxed">
               The fastest way to add a grant is directly from the{' '}
               <a
                 href="/dashboard/search"
-                className="underline underline-offset-2 font-semibold hover:text-forest/70 inline-flex items-center gap-0.5"
+                className="underline underline-offset-2 font-semibold inline-flex items-center gap-0.5" style={{ color: "#84CC16" }}
               >
                 funding search <ArrowRight className="w-3 h-3" />
               </a>
@@ -621,7 +621,7 @@ function AddModal({
               Auto-fill from URL
             </label>
             <div className="flex gap-2">
-              <div className="flex-1 flex items-center gap-2 border border-warm rounded px-3 bg-white focus-within:border-forest transition-colors">
+              <div className="flex-1 flex items-center gap-2 border border-[#E8E8EC] rounded px-3 bg-white focus-within:border-[#84CC16] transition-colors">
                 <Link className="w-3.5 h-3.5 text-light flex-shrink-0" />
                 <input
                   type="url"
@@ -636,7 +636,7 @@ function AddModal({
                 type="button"
                 onClick={handleAutofill}
                 disabled={autofilling || !urlInput.trim()}
-                className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-white bg-forest rounded-lg disabled:opacity-40 hover:opacity-90 transition-colors whitespace-nowrap"
+                className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-white rounded-lg disabled:opacity-40 hover:opacity-80 transition-colors whitespace-nowrap" style={{ background: "#1A1A1A" }}
               >
                 {autofilling
                   ? <><Loader2 className="w-3.5 h-3.5 animate-spin" />Filling…</>
@@ -648,7 +648,7 @@ function AddModal({
               <p className="text-xs text-red-500 mt-1.5">{autofillError}</p>
             )}
             {autofillDone && (
-              <p className="text-xs text-forest mt-1.5 font-medium">✓ Fields filled — please review and adjust if needed</p>
+              <p className="text-xs mt-1.5 font-medium" style={{ color: "#4D7C0F" }}>✓ Fields filled — please review and adjust if needed</p>
             )}
           </div>
 
@@ -800,7 +800,7 @@ export default function PipelinePage() {
     <div>
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
         <div>
-          <h2 className="font-serif text-4xl font-bold text-charcoal leading-tight">Funding Pipeline</h2>
+          <h2 className="text-4xl font-bold text-charcoal leading-tight" style={{ fontFamily: "var(--font-space-grotesk)", letterSpacing: "-0.02em" }}>Funding Pipeline</h2>
           <p className="text-mid text-sm mt-1.5 max-w-md">Manage your active grant pursuits. Click any card to track progress, add notes and set deadlines.</p>
         </div>
         <div className="flex items-center gap-5 flex-shrink-0">
@@ -817,13 +817,13 @@ export default function PipelinePage() {
             return total > 0 ? (
               <div className="text-right">
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-light">Total Pipeline</p>
-                <p className="text-2xl font-bold text-forest leading-tight">{fmt(total)}</p>
+                <p className="text-2xl font-bold leading-tight" style={{ color: "#84CC16" }}>{fmt(total)}</p>
               </div>
             ) : null
           })()}
           <button
             onClick={() => setShowAdd(true)}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-forest/30 text-forest text-sm font-medium bg-white hover:bg-forest/5 transition-colors whitespace-nowrap"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-[#1A1A1A] text-[#1A1A1A] text-sm font-semibold bg-white hover:bg-[#1A1A1A] hover:text-white transition-colors whitespace-nowrap"
           >
             ＋ Add Opportunity
           </button>
@@ -832,12 +832,12 @@ export default function PipelinePage() {
 
       {/* Onboarding tip — shown when pipeline is empty */}
       {items.length === 0 && (
-        <div className="mb-5 border border-forest/20 bg-forest/5 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="mb-5 border border-[#E8E8EC] bg-[#F5F5F7] p-5 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <p className="text-sm font-semibold text-charcoal mb-1">Your pipeline tracks grants from discovery to decision</p>
             <p className="text-xs text-mid leading-relaxed">Find a grant in the search, hit <strong>+ Pipeline</strong>, then drag cards between columns as you progress through each stage. Click any card to add notes, deadlines, and track your writing progress.</p>
           </div>
-          <a href="/dashboard/search" className="flex-shrink-0 px-4 py-2 bg-forest text-white text-xs font-semibold hover:opacity-90 transition-colors whitespace-nowrap">
+          <a href="/dashboard/search" className="flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold hover:opacity-80 transition-colors whitespace-nowrap" style={{ background: "#1A1A1A", color: "#fff" }}>
             Find your first grant →
           </a>
         </div>
@@ -858,7 +858,7 @@ export default function PipelinePage() {
               onDrop={e => onColDrop(e, stage.id as PipelineStage)}
             >
               <div className="flex items-center justify-between mb-3 pb-2.5 border-b border-warm/60">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-light flex items-center gap-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#6E6E80] flex items-center gap-1.5">
                   {STAGE_ICONS[stage.id]}{stage.label}
                 </span>
                 <span className="text-[10px] font-bold text-mid">{stageItems.length}</span>
@@ -880,7 +880,7 @@ export default function PipelinePage() {
 
               <button
                 onClick={() => setShowAdd(true)}
-                className="w-full py-3 border-2 border-dashed border-warm text-sm text-light hover:border-coral hover:text-coral transition-colors mt-1"
+                className="w-full py-3 border-2 border-dashed border-[#E8E8EC] text-sm text-[#9E9EA8] hover:border-[#84CC16] hover:text-[#4D7C0F] transition-colors mt-1 rounded-xl"
               >
                 + Add
               </button>
