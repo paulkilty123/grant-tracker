@@ -11,9 +11,10 @@ const ACTIVE_STAGES = ['identified', 'applying', 'submitted']
 
 // ── Deadline Card ─────────────────────────────────────────────────────────────
 
-function DeadlineCard({ alert, onStageChange, featured = false }: {
+function DeadlineCard({ alert, onStageChange, onDeadlineChange, featured = false }: {
   alert: DeadlineAlert
   onStageChange: (id: string, stage: PipelineStage) => void
+  onDeadlineChange?: (id: string, deadline: string) => void
   featured?: boolean
 }) {
   const stage = PIPELINE_STAGES.find(s => s.id === alert.item.stage)
@@ -27,7 +28,7 @@ function DeadlineCard({ alert, onStageChange, featured = false }: {
 
   return (
     <div
-      className={featured ? 'p-8 rounded-[2.5rem] h-full' : 'p-6 rounded-[2rem] mb-4'}
+      className={featured ? 'p-8 rounded-[2.5rem]' : 'p-6 rounded-[2rem] mb-4'}
       style={{ backgroundColor: cardBg }}
     >
       {/* Top row */}
@@ -63,12 +64,24 @@ function DeadlineCard({ alert, onStageChange, featured = false }: {
         {alert.item.funder_name}
       </p>
 
-      {/* Deadline */}
-      <div className="flex items-center gap-1.5 mb-4">
-        <Calendar size={12} strokeWidth={2} style={{ color: labelCol }} />
-        <span className="text-sm font-semibold" style={{ color: labelCol }}>
-          {formatDeadline(alert.item.deadline)}
-        </span>
+      {/* Deadline + edit */}
+      <div className="flex items-center gap-3 mb-4 flex-wrap">
+        <div className="flex items-center gap-1.5">
+          <Calendar size={12} strokeWidth={2} style={{ color: labelCol }} />
+          <span className="text-sm font-semibold" style={{ color: labelCol }}>
+            {formatDeadline(alert.item.deadline)}
+          </span>
+        </div>
+        {onDeadlineChange && (
+          <input
+            type="date"
+            defaultValue={alert.item.deadline ?? ''}
+            onChange={e => onDeadlineChange(alert.item.id, e.target.value)}
+            className="text-xs border-0 rounded-lg px-2 py-1 outline-none focus:ring-1 transition-all"
+            style={{ background: 'rgba(0,0,0,0.08)', color: labelCol, focusRingColor: labelCol }}
+            title="Change deadline"
+          />
+        )}
       </div>
 
       {/* Progress bar */}
@@ -139,15 +152,15 @@ export default function DeadlinesPage() {
     try {
       const supabase = createClient()
       const { data: { user }, error: userErr } = await supabase.auth.getUser()
-      if (userErr || \!user) { setLoading(false); return }
+      if (userErr || !user) { setLoading(false); return }
       const { data: org } = await supabase.from('organisations').select('id').eq('owner_id', user.id).maybeSingle()
-      if (\!org) { setLoading(false); return }
+      if (!org) { setLoading(false); return }
       const { data: items, error: itemsErr } = await supabase
         .from('pipeline_items').select('*').eq('org_id', org.id).order('deadline', { ascending: true })
       if (itemsErr) { setError(itemsErr.message); return }
       const allItems: PipelineItem[] = items ?? []
       setAlerts(getDeadlineAlerts(allItems))
-      setNoDeadlineItems(allItems.filter(i => ACTIVE_STAGES.includes(i.stage) && \!i.deadline))
+      setNoDeadlineItems(allItems.filter(i => ACTIVE_STAGES.includes(i.stage) && !i.deadline))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load')
     } finally {
@@ -171,6 +184,13 @@ export default function DeadlinesPage() {
     await loadData()
   }
 
+  async function handleDeadlineChange(id: string, deadline: string) {
+    if (!deadline) return
+    await updatePipelineItem(id, { deadline })
+    showToast('Deadline updated')
+    await loadData()
+  }
+
   async function handleStageChange(id: string, stage: PipelineStage) {
     setAlerts(prev => prev.map(a => a.item.id === id ? { ...a, item: { ...a.item, stage } } : a))
     await updatePipelineStage(id, stage)
@@ -186,7 +206,7 @@ export default function DeadlinesPage() {
   const restAttention  = needsAttention.slice(1)
 
   const atRisk = needsAttention.reduce((s, a) => s + (a.item.amount_max ?? a.item.amount_requested ?? 0), 0)
-  const fmt = (n: number) => n >= 1000000 ? `£\${(n/1000000).toFixed(1)}m` : n >= 1000 ? `£\${(n/1000).toFixed(n % 1000 === 0 ? 0 : 1)}k` : `£\${n.toLocaleString()}`
+  const fmt = (n: number) => n >= 1000000 ? `£${(n/1000000).toFixed(1)}m` : n >= 1000 ? `£${(n/1000).toFixed(n % 1000 === 0 ? 0 : 1)}k` : `£${n.toLocaleString()}`
 
   if (loading) return <div className="flex items-center justify-center h-64 text-[#6E6E80] text-sm">Loading deadlines…</div>
   if (error)   return <div className="p-8 text-center"><p className="text-red-500 font-medium">{error}</p></div>
@@ -306,7 +326,7 @@ export default function DeadlinesPage() {
             {/* Hero card — most urgent item */}
             {heroAlert && (
               <div className="lg:col-span-8">
-                <DeadlineCard alert={heroAlert} onStageChange={handleStageChange} featured />
+                <DeadlineCard alert={heroAlert} onStageChange={handleStageChange} onDeadlineChange={handleDeadlineChange} featured />
               </div>
             )}
 
@@ -320,13 +340,13 @@ export default function DeadlinesPage() {
               ].map(s => (
                 <div
                   key={s.label}
-                  className="flex items-center justify-between px-7 py-5 rounded-[2rem] flex-1 hover:scale-[1.02] transition-transform"
+                  className="flex items-center justify-between px-7 py-5 rounded-[2rem] hover:scale-[1.02] transition-transform"
                   style={{ backgroundColor: s.bg }}
                 >
                   <div>
                     <p className="text-sm font-bold mb-1" style={{ color: 'rgba(0,0,0,0.45)' }}>{s.label}</p>
                     <p className="text-6xl font-black leading-none" style={{ fontFamily: 'var(--font-space-grotesk)', color: s.col }}>
-                      {String(s.count).padStart(2, '0')}
+                      {s.count > 0 ? String(s.count).padStart(2, '0') : '–'}
                     </p>
                   </div>
                   {s.label === 'Overdue'   && <AlertTriangle  size={36} style={{ color: s.col, opacity: 0.3 }} />}
@@ -344,7 +364,7 @@ export default function DeadlinesPage() {
               <h3 className="text-xl font-bold text-[#1b1b1b] mb-4" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
                 Also needs attention
               </h3>
-              {restAttention.map(a => <DeadlineCard key={a.item.id} alert={a} onStageChange={handleStageChange} />)}
+              {restAttention.map(a => <DeadlineCard key={a.item.id} alert={a} onStageChange={handleStageChange} onDeadlineChange={handleDeadlineChange} />)}
             </section>
           )}
 
