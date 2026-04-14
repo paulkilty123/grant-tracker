@@ -131,7 +131,7 @@ function DeadlineCard({ alert, onStageChange }: {
       </div>
 
       {/* Progress bar */}
-      {alert.item.application_progress \!= null && alert.item.application_progress > 0 && (
+      {alert.item.application_progress != null && alert.item.application_progress > 0 && (
         <div className="mt-3 pt-3 border-t border-black/10">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'rgba(0,0,0,0.4)' }}>Writing progress</span>
@@ -165,15 +165,15 @@ export default function DeadlinesPage() {
       try {
         const supabase = createClient()
         const { data: { user }, error: userErr } = await supabase.auth.getUser()
-        if (userErr || \!user) { setLoading(false); return }
+        if (userErr || !user) { setLoading(false); return }
         const { data: org } = await supabase.from('organisations').select('id').eq('owner_id', user.id).maybeSingle()
-        if (\!org) { setLoading(false); return }
+        if (!org) { setLoading(false); return }
         const { data: items, error: itemsErr } = await supabase
           .from('pipeline_items').select('*').eq('org_id', org.id).order('deadline', { ascending: true })
         if (itemsErr) { setError(itemsErr.message); return }
         const allItems: PipelineItem[] = items ?? []
         setAlerts(getDeadlineAlerts(allItems))
-        setNoDeadlineItems(allItems.filter(i => ACTIVE_STAGES.includes(i.stage) && \!i.deadline))
+        setNoDeadlineItems(allItems.filter(i => ACTIVE_STAGES.includes(i.stage) && !i.deadline))
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load')
       } finally {
@@ -230,7 +230,7 @@ export default function DeadlinesPage() {
           <div className="flex items-center gap-2.5">
             <AlarmClock className="w-4 h-4 flex-shrink-0" style={{ color: '#4A3800' }} />
             <p className="text-sm font-semibold" style={{ color: '#4A3800' }}>
-              {noDeadlineItems.length} grant{noDeadlineItems.length \!== 1 ? 's' : ''} in your pipeline {noDeadlineItems.length \!== 1 ? 'have' : 'has'} no deadline set — add dates to track them here
+              {noDeadlineItems.length} grant{noDeadlineItems.length !== 1 ? 's' : ''} in your pipeline {noDeadlineItems.length !== 1 ? 'have' : 'has'} no deadline set — add dates to track them here
             </p>
           </div>
           <a href="/dashboard/pipeline" className="flex-shrink-0 flex items-center gap-1 text-xs font-bold whitespace-nowrap" style={{ color: '#4A3800' }}>
@@ -245,7 +245,7 @@ export default function DeadlinesPage() {
           <h2 className="text-4xl font-bold text-[#1A1A1A] leading-tight" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.02em' }}>Deadlines</h2>
           <p className="text-sm mt-1.5" style={{ color: '#6E6E80' }}>
             {alerts.length > 0
-              ? `${needsAttention.length} need${needsAttention.length \!== 1 ? '' : 's'} attention · ${alerts.length} tracked total`
+              ? `${needsAttention.length} need${needsAttention.length !== 1 ? '' : 's'} attention · ${alerts.length} tracked total`
               : 'Never miss an application window'}
           </p>
         </div>
@@ -316,7 +316,7 @@ export default function DeadlinesPage() {
           {ok.length > 0 && (
             <section className="mb-8">
               <button
-                onClick={() => setOkExpanded(v => \!v)}
+                onClick={() => setOkExpanded(v => !v)}
                 className="flex items-center gap-2 mb-4 group"
               >
                 <CalendarCheck className="h-4 w-4 text-[#84CC16]" />
@@ -328,9 +328,9 @@ export default function DeadlinesPage() {
                 }
               </button>
               {okExpanded && ok.map(a => <DeadlineCard key={a.item.id} alert={a} onStageChange={handleStageChange} />)}
-              {\!okExpanded && (
+              {!okExpanded && (
                 <p className="text-xs" style={{ color: '#6E6E80' }}>
-                  {ok.length} grant{ok.length \!== 1 ? 's' : ''} with plenty of time — click to expand
+                  {ok.length} grant{ok.length !== 1 ? 's' : ''} with plenty of time — click to expand
                 </p>
               )}
             </section>
