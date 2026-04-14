@@ -21,8 +21,8 @@ function DeadlineCard({ alert, onStageChange, onDeadlineChange }: {
   const isOverdue = alert.urgency === 'overdue'
   const isUrgent  = alert.urgency === 'urgent'
 
-  const borderCol = isOverdue ? '#f87171' : isUrgent ? '#F59E0B' : alert.urgency === 'soon' ? '#7DD3FC' : '#84CC16'
-  const badgeBg   = isOverdue ? '#ba1a1a' : isUrgent ? '#B45309' : alert.urgency === 'soon' ? '#1E3A5F' : '#4D7C0F'
+  const isCritical = isOverdue || (isUrgent && (alert.daysUntil ?? 99) <= 3)
+  const badgeBg   = isCritical ? '#DC2626' : isUrgent ? '#B45309' : alert.urgency === 'soon' ? '#1E3A5F' : '#4D7C0F'
   const dayLabel  = isOverdue ? 'Overdue' : isUrgent ? `${alert.daysUntil}d left` : alert.urgency === 'soon' ? 'Coming up' : 'On track'
 
   return (
@@ -54,7 +54,7 @@ function DeadlineCard({ alert, onStageChange, onDeadlineChange }: {
               type="date"
               defaultValue={alert.item.deadline ?? ''}
               onChange={e => onDeadlineChange(alert.item.id, e.target.value)}
-              className="text-xs border border-[#E8E8EC] rounded-lg px-2 py-0.5 outline-none focus:border-[#84CC16] transition-colors"
+              className="text-xs border border-[#E8E8EC] rounded-lg px-2.5 py-1 outline-none focus:border-[#84CC16] transition-colors bg-[#F5F5F7]"
               style={{ color: '#1A1A1A' }}
             />
           )}
@@ -287,8 +287,8 @@ export default function DeadlinesPage() {
             {needsAttention.length > 0 && (
               <div className="flex items-center gap-3 mb-3">
                 <h3 className="text-base font-bold text-[#1A1A1A]" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Needs Attention</h3>
-                <span className="text-xs font-semibold text-red-700 bg-red-50 px-2.5 py-0.5 rounded-full">
-                  {needsAttention.length} grant{needsAttention.length !== 1 ? 's' : ''}{atRisk > 0 && <> &middot; {fmt(atRisk)} at risk</>}
+                <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full" style={{ background: '#ffdad6', color: '#93000a' }}>
+                  {needsAttention.length} grant{needsAttention.length !== 1 ? 's' : ''}{atRisk > 0 && <> · {fmt(atRisk)} at risk</>}
                 </span>
               </div>
             )}
@@ -333,7 +333,7 @@ export default function DeadlinesPage() {
                   const val = deadlineInputs[item.id] ?? ''
                   const saving = savingDeadline === item.id
                   return (
-                    <div key={item.id} className="bg-white p-4 rounded-[1.5rem] flex items-center gap-4">
+                    <div key={item.id} className="bg-white rounded-xl p-4 flex items-center gap-4 border border-[#E8E8EC]" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-[#1b1b1b] truncate" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{item.grant_name}</p>
                         <div className="flex items-center gap-2 mt-0.5">
