@@ -1,156 +1,129 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { AlertTriangle, CalendarClock, CalendarCheck, ExternalLink, ArrowRight, Calendar, AlarmClock, ChevronDown, ChevronUp, Send } from 'lucide-react'
+import { AlertTriangle, CalendarClock, CalendarCheck, ExternalLink, ArrowRight, Calendar, AlarmClock, ChevronDown, ChevronUp, Send, Clock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { getDeadlineAlerts, formatDeadline, formatRange, PIPELINE_STAGES } from '@/lib/utils'
-import { updatePipelineStage, updatePipelineItem } from '@/lib/pipeline'
+import { updatePipelineStage } from '@/lib/pipeline'
 import type { DeadlineAlert, PipelineItem, PipelineStage } from '@/types'
-
-const URGENCY_CONFIG = {
-  overdue: {
-    label: 'Overdue', icon: AlertTriangle,
-    accent: 'text-red-700', border: 'border-[#FECACA]', cardBg: '#FEE2E2',
-    badgeBg: 'bg-red-500', badgeText: 'text-white',
-    statAccent: 'text-red-700', statBg: '#FEE2E2', statBorder: 'border-[#FECACA]',
-  },
-  urgent: {
-    label: 'This week', icon: AlarmClock,
-    accent: 'text-[#4A3800]', border: 'border-[#F59E0B]/30', cardBg: '#FDE8A3',
-    badgeBg: 'bg-amber-500', badgeText: 'text-white',
-    statAccent: 'text-[#4A3800]', statBg: '#FDE8A3', statBorder: 'border-[#F59E0B]/30',
-  },
-  soon: {
-    label: 'Coming up', icon: CalendarClock,
-    accent: 'text-[#1E3A5F]', border: 'border-[#7DD3FC]/40', cardBg: '#BAE6FD',
-    badgeBg: 'bg-[#BAE6FD]', badgeText: 'text-[#1E3A5F]',
-    statAccent: 'text-[#1E3A5F]', statBg: '#BAE6FD', statBorder: 'border-[#7DD3FC]/40',
-  },
-  ok: {
-    label: 'On track', icon: CalendarCheck,
-    accent: 'text-[#4D7C0F]', border: 'border-[#84CC16]/30', cardBg: '#D9F99D',
-    badgeBg: 'bg-[#D9F99D]', badgeText: 'text-[#4D7C0F]',
-    statAccent: 'text-[#4D7C0F]', statBg: '#D9F99D', statBorder: 'border-[#84CC16]/30',
-  },
-  rolling: {
-    label: 'Rolling', icon: CalendarCheck,
-    accent: 'text-[#6E6E80]', border: 'border-[#E8E8EC]', cardBg: '#F5F5F7',
-    badgeBg: 'bg-[#F5F5F7]', badgeText: 'text-[#6E6E80]',
-    statAccent: 'text-[#6E6E80]', statBg: '#F5F5F7', statBorder: 'border-[#E8E8EC]',
-  },
-}
 
 const ACTIVE_STAGES = ['identified', 'applying', 'submitted']
 
-function DeadlineCard({ alert, onStageChange }: {
+// ── Deadline Card ─────────────────────────────────────────────────────────────
+
+function DeadlineCard({ alert, onStageChange, featured = false }: {
   alert: DeadlineAlert
   onStageChange: (id: string, stage: PipelineStage) => void
+  featured?: boolean
 }) {
-  const cfg = URGENCY_CONFIG[alert.urgency]
   const stage = PIPELINE_STAGES.find(s => s.id === alert.item.stage)
   const amountStr = formatRange(alert.item.amount_min, alert.item.amount_max ?? alert.item.amount_requested)
-  const isOverdueOrUrgent = alert.urgency === 'overdue' || alert.urgency === 'urgent'
+  const isOverdue = alert.urgency === 'overdue'
+  const isUrgent  = alert.urgency === 'urgent'
+
+  const cardBg   = isOverdue ? '#ffdad6' : isUrgent ? '#FDE8A3' : alert.urgency === 'soon' ? '#BAE6FD' : '#D9F99D'
+  const labelCol = isOverdue ? '#93000a' : isUrgent ? '#4A3800' : alert.urgency === 'soon' ? '#1E3A5F' : '#4D7C0F'
+  const badgeBg  = isOverdue ? '#ba1a1a' : isUrgent ? '#B45309' : alert.urgency === 'soon' ? '#1E3A5F' : '#4D7C0F'
 
   return (
     <div
-      className={`border rounded-xl p-5 mb-3 ${cfg.border}`}
-      style={{ backgroundColor: cfg.cardBg, boxShadow: '0 2px 12px rgba(26,46,43,0.06)' }}
+      className={featured ? 'p-8 rounded-[2.5rem] h-full' : 'p-6 rounded-[2rem] mb-4'}
+      style={{ backgroundColor: cardBg }}
     >
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1 min-w-0">
-          {/* Badges */}
-          <div className="flex items-center gap-2 mb-2.5 flex-wrap">
-            <span className={`inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full ${cfg.badgeBg} ${cfg.badgeText} uppercase tracking-wide`}>
-              {isOverdueOrUrgent && <AlarmClock size={9} strokeWidth={2.5} />}
-              {alert.urgency === 'overdue' ? 'Overdue' : `${alert.daysUntil}d left`}
+      {/* Top row */}
+      <div className={'flex items-start justify-between gap-4 ' + (featured ? 'mb-6' : 'mb-3')}>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span
+            className="text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest text-white"
+            style={{ backgroundColor: badgeBg }}
+          >
+            {isOverdue ? 'Overdue' : isUrgent ? \`${alert.daysUntil}d left\` : alert.urgency === 'soon' ? 'Coming up' : 'On track'}
+          </span>
+          {stage && (
+            <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'rgba(0,0,0,0.4)' }}>
+              {stage.label}
             </span>
-            {stage && (
-              <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'rgba(0,0,0,0.4)' }}>{stage.label}</span>
-            )}
-          </div>
-
-          {/* Grant name */}
-          <h3 className="text-base font-bold text-[#1A1A1A] leading-snug mb-0.5" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-            {alert.item.grant_name}
-          </h3>
-          <p className="text-sm mb-2" style={{ color: 'rgba(0,0,0,0.5)' }}>{alert.item.funder_name}</p>
-
-          {/* Notes */}
-          {alert.item.notes && (
-            <p className="text-xs line-clamp-2 mb-2" style={{ color: 'rgba(0,0,0,0.45)' }}>{alert.item.notes}</p>
           )}
-
-          {/* Quick actions */}
-          <div className="flex items-center gap-2 flex-wrap mt-1">
-            {alert.item.stage === 'applying' && (
-              <button
-                onClick={() => onStageChange(alert.item.id, 'submitted')}
-                className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-black/10 hover:bg-black/20 transition-colors"
-                style={{ color: 'rgba(0,0,0,0.65)' }}
-              >
-                <Send size={10} strokeWidth={2.5} />
-                Mark submitted
-              </button>
-            )}
-            {alert.item.stage === 'submitted' && (
-              <button
-                onClick={() => onStageChange(alert.item.id, 'won')}
-                className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-black/10 hover:bg-black/20 transition-colors"
-                style={{ color: 'rgba(0,0,0,0.65)' }}
-              >
-                Mark won
-              </button>
-            )}
-            {alert.item.grant_url && (
-              <a
-                href={alert.item.grant_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-black/10 hover:bg-black/20 transition-colors"
-                style={{ color: 'rgba(0,0,0,0.65)' }}
-              >
-                <ExternalLink size={10} strokeWidth={2.5} />
-                Visit grant
-              </a>
-            )}
-          </div>
         </div>
+        {amountStr && (
+          <p className={'font-black shrink-0 ' + (featured ? 'text-2xl' : 'text-lg')} style={{ fontFamily: 'var(--font-space-grotesk)', color: labelCol }}>
+            {amountStr}
+          </p>
+        )}
+      </div>
 
-        {/* Right: amount + deadline */}
-        <div className="flex flex-col items-end gap-2 flex-shrink-0 text-right">
-          {amountStr && (
-            <p className="text-lg font-bold" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#1A1A1A' }}>
-              {amountStr}
-            </p>
-          )}
-          <div className={`flex items-center gap-1 text-sm font-semibold ${cfg.accent}`}>
-            <Calendar size={12} strokeWidth={2} />
-            {formatDeadline(alert.item.deadline)}
-          </div>
-        </div>
+      {/* Grant name */}
+      <h3
+        className={'font-bold leading-tight mb-1 ' + (featured ? 'text-2xl mb-3' : 'text-base mb-1')}
+        style={{ fontFamily: 'var(--font-space-grotesk)', color: '#1b1b1b' }}
+      >
+        {alert.item.grant_name}
+      </h3>
+      <p className={'mb-3 ' + (featured ? 'text-sm' : 'text-xs')} style={{ color: 'rgba(0,0,0,0.5)' }}>
+        {alert.item.funder_name}
+      </p>
+
+      {/* Deadline */}
+      <div className="flex items-center gap-1.5 mb-4">
+        <Calendar size={12} strokeWidth={2} style={{ color: labelCol }} />
+        <span className="text-sm font-semibold" style={{ color: labelCol }}>
+          {formatDeadline(alert.item.deadline)}
+        </span>
       </div>
 
       {/* Progress bar */}
       {alert.item.application_progress != null && alert.item.application_progress > 0 && (
-        <div className="mt-3 pt-3 border-t border-black/10">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'rgba(0,0,0,0.4)' }}>Writing progress</span>
-            <span className="text-xs font-bold" style={{ color: 'rgba(0,0,0,0.6)' }}>{alert.item.application_progress}%</span>
+        <div className="mb-5">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'rgba(0,0,0,0.4)' }}>Writing progress</span>
+            <span className="text-xs font-black" style={{ color: labelCol }}>{alert.item.application_progress}%</span>
           </div>
-          <div className="h-1.5 bg-black/10 overflow-hidden rounded-full">
+          <div className="h-2 rounded-full bg-black/10 overflow-hidden">
             <div
-              className="h-full transition-all rounded-full"
-              style={{
-                width: `${alert.item.application_progress}%`,
-                backgroundColor: alert.item.application_progress >= 75 ? '#84CC16' : '#A3E635'
-              }}
+              className="h-full rounded-full transition-all"
+              style={{ width: \`${alert.item.application_progress}%\`, backgroundColor: labelCol }}
             />
           </div>
         </div>
       )}
+
+      {/* Quick actions */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {alert.item.stage === 'applying' && (
+          <button
+            onClick={() => onStageChange(alert.item.id, 'submitted')}
+            className="inline-flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-full bg-black/10 hover:bg-black/20 transition-colors"
+            style={{ color: 'rgba(0,0,0,0.65)' }}
+          >
+            <Send size={11} strokeWidth={2.5} /> Mark submitted
+          </button>
+        )}
+        {alert.item.stage === 'submitted' && (
+          <button
+            onClick={() => onStageChange(alert.item.id, 'won')}
+            className="inline-flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-full bg-black/10 hover:bg-black/20 transition-colors"
+            style={{ color: 'rgba(0,0,0,0.65)' }}
+          >
+            Mark won
+          </button>
+        )}
+        {alert.item.grant_url && (
+          <a
+            href={alert.item.grant_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-full bg-black/10 hover:bg-black/20 transition-colors"
+            style={{ color: 'rgba(0,0,0,0.65)' }}
+          >
+            <ExternalLink size={11} strokeWidth={2.5} /> Visit grant
+          </a>
+        )}
+      </div>
     </div>
   )
 }
+
+// ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function DeadlinesPage() {
   const [alerts, setAlerts] = useState<DeadlineAlert[]>([])
@@ -189,88 +162,76 @@ export default function DeadlinesPage() {
   }
 
   async function handleStageChange(id: string, stage: PipelineStage) {
-    setAlerts(prev => prev.map(a =>
-      a.item.id === id ? { ...a, item: { ...a.item, stage } } : a
-    ))
+    setAlerts(prev => prev.map(a => a.item.id === id ? { ...a, item: { ...a.item, stage } } : a))
     await updatePipelineStage(id, stage)
-    showToast(`Moved to ${PIPELINE_STAGES.find(s => s.id === stage)?.label}`)
+    showToast(\`Moved to \${PIPELINE_STAGES.find(s => s.id === stage)?.label}\`)
   }
 
-  const overdue  = alerts.filter(a => a.urgency === 'overdue')
-  const urgent   = alerts.filter(a => a.urgency === 'urgent')
-  const soon     = alerts.filter(a => a.urgency === 'soon')
-  const ok       = alerts.filter(a => a.urgency === 'ok')
+  const overdue        = alerts.filter(a => a.urgency === 'overdue')
+  const urgent         = alerts.filter(a => a.urgency === 'urgent')
+  const soon           = alerts.filter(a => a.urgency === 'soon')
+  const ok             = alerts.filter(a => a.urgency === 'ok')
   const needsAttention = [...overdue, ...urgent]
+  const heroAlert      = needsAttention[0] ?? soon[0] ?? ok[0] ?? null
+  const restAttention  = needsAttention.slice(1)
 
-  // Value at risk: sum of overdue + urgent amounts
-  const atRisk = needsAttention.reduce((sum, a) =>
-    sum + (a.item.amount_max ?? a.item.amount_requested ?? 0), 0
-  )
-  const fmtAmount = (n: number) =>
-    n >= 1000000 ? `£${(n / 1000000).toFixed(1)}m`
-    : n >= 1000  ? `£${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}k`
-    : `£${n.toLocaleString()}`
+  const atRisk = needsAttention.reduce((s, a) => s + (a.item.amount_max ?? a.item.amount_requested ?? 0), 0)
+  const fmt = (n: number) => n >= 1000000 ? \`£\${(n/1000000).toFixed(1)}m\` : n >= 1000 ? \`£\${(n/1000).toFixed(n % 1000 === 0 ? 0 : 1)}k\` : \`£\${n.toLocaleString()}\`
 
-  if (loading) return (
-    <div className="flex items-center justify-center h-64 text-[#6E6E80] text-sm">Loading deadlines…</div>
-  )
-
-  if (error) return (
-    <div className="bg-white border border-[#E8E8EC] rounded-xl p-8 text-center">
-      <p className="text-red-500 font-medium mb-2">Something went wrong</p>
-      <p className="text-sm text-[#6E6E80]">{error}</p>
-    </div>
-  )
+  if (loading) return <div className="flex items-center justify-center h-64 text-[#6E6E80] text-sm">Loading deadlines…</div>
+  if (error)   return <div className="p-8 text-center"><p className="text-red-500 font-medium">{error}</p></div>
 
   return (
-    <div>
+    <div style={{ fontFamily: 'Plus Jakarta Sans, var(--font-dm-sans), sans-serif' }}>
+
       {/* ── No deadline warning banner ── */}
       {noDeadlineItems.length > 0 && (
-        <div className="flex items-center justify-between gap-4 px-5 py-3.5 rounded-xl mb-6 border border-[#F59E0B]/30" style={{ background: '#FDE8A3' }}>
+        <div className="flex items-center justify-between gap-4 px-5 py-4 rounded-[1.5rem] mb-6" style={{ background: '#FDE8A3' }}>
           <div className="flex items-center gap-2.5">
-            <AlarmClock className="w-4 h-4 flex-shrink-0" style={{ color: '#4A3800' }} />
-            <p className="text-sm font-semibold" style={{ color: '#4A3800' }}>
-              {noDeadlineItems.length} grant{noDeadlineItems.length !== 1 ? 's' : ''} in your pipeline {noDeadlineItems.length !== 1 ? 'have' : 'has'} no deadline set — add dates to track them here
+            <AlarmClock className="w-4 h-4 shrink-0" style={{ color: '#4A3800' }} />
+            <p className="text-sm font-bold" style={{ color: '#4A3800' }}>
+              {noDeadlineItems.length} grant{noDeadlineItems.length !== 1 ? 's' : ''} in your pipeline {noDeadlineItems.length !== 1 ? 'have' : 'has'} no deadline set
             </p>
           </div>
-          <a href="/dashboard/pipeline" className="flex-shrink-0 flex items-center gap-1 text-xs font-bold whitespace-nowrap" style={{ color: '#4A3800' }}>
-            Set deadlines <ArrowRight size={12} />
+          <a href="/dashboard/pipeline" className="shrink-0 flex items-center gap-1 text-xs font-black uppercase tracking-wider" style={{ color: '#4A3800' }}>
+            Set now <ArrowRight size={12} />
           </a>
         </div>
       )}
 
       {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
-        <div>
-          <h2 className="text-4xl font-bold text-[#1A1A1A] leading-tight" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.02em' }}>Deadlines</h2>
-          <p className="text-sm mt-1.5" style={{ color: '#6E6E80' }}>
-            {alerts.length > 0
-              ? `${needsAttention.length} need${needsAttention.length !== 1 ? '' : 's'} attention · ${alerts.length} tracked total`
-              : 'Never miss an application window'}
-          </p>
-        </div>
-        <div className="flex items-center gap-5 flex-shrink-0">
-          {atRisk > 0 && (
-            <div className="text-right">
-              <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: '#6E6E80' }}>At risk</p>
-              <p className="text-2xl font-bold" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#DC2626' }}>{fmtAmount(atRisk)}</p>
-            </div>
-          )}
-          <a href="/dashboard/pipeline" className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-[#1A1A1A] text-[#1A1A1A] text-sm font-semibold bg-white hover:bg-[#1A1A1A] hover:text-white transition-colors whitespace-nowrap">
+      <header className="mb-10">
+        <div className="flex items-start justify-between gap-4 mb-4">
+          <h1 className="text-5xl font-bold tracking-tight text-[#1b1b1b]" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.03em' }}>
+            Deadlines
+          </h1>
+          <a
+            href="/dashboard/pipeline"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-[#1b1b1b] text-[#1b1b1b] text-sm font-bold bg-white hover:bg-[#1b1b1b] hover:text-white transition-colors whitespace-nowrap mt-1"
+          >
             Manage Pipeline <ArrowRight className="h-3.5 w-3.5" />
           </a>
         </div>
-      </div>
+        {needsAttention.length > 0 && (
+          <div className="inline-flex items-center gap-2 px-5 py-3 rounded-[1rem]" style={{ background: '#ffdad6' }}>
+            <AlertTriangle size={16} style={{ color: '#93000a' }} />
+            <span className="font-bold text-sm" style={{ color: '#93000a' }}>
+              Needs Attention: {needsAttention.length} {needsAttention.length === 1 ? 'grant requires' : 'grants require'} action
+              {atRisk > 0 && <span className="ml-2 font-black">· {fmt(atRisk)} at risk</span>}
+            </span>
+          </div>
+        )}
+      </header>
 
       {/* ── Empty state ── */}
       {alerts.length === 0 && noDeadlineItems.length === 0 && (
-        <div className="bg-white border border-[#E8E8EC] rounded-xl p-16 text-center">
-          <Calendar className="h-10 w-10 mx-auto mb-4" style={{ color: '#9E9EA8' }} strokeWidth={1.5} />
-          <h3 className="text-xl font-bold text-[#1A1A1A] mb-2" style={{ fontFamily: 'var(--font-space-grotesk)' }}>No deadlines to track yet</h3>
-          <p className="text-sm mb-6 max-w-md mx-auto" style={{ color: '#6E6E80' }}>
-            Add grants to your pipeline from Search, then set deadline dates to see them tracked here.
+        <div className="bg-white p-16 rounded-[2rem] text-center">
+          <Calendar className="h-12 w-12 mx-auto mb-5" style={{ color: '#9E9EA8' }} strokeWidth={1.5} />
+          <h3 className="text-2xl font-bold text-[#1b1b1b] mb-2" style={{ fontFamily: 'var(--font-space-grotesk)' }}>No deadlines yet</h3>
+          <p className="text-sm mb-6 max-w-sm mx-auto" style={{ color: '#6E6E80' }}>
+            Add grants to your pipeline and set deadline dates to track them here.
           </p>
-          <a href="/dashboard/search" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-white text-sm font-semibold hover:opacity-80 transition-colors" style={{ background: '#1A1A1A' }}>
+          <a href="/dashboard/search" className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-white text-sm font-bold hover:opacity-80 transition-colors" style={{ background: '#1b1b1b' }}>
             Find Funding <ArrowRight className="h-4 w-4" />
           </a>
         </div>
@@ -278,37 +239,61 @@ export default function DeadlinesPage() {
 
       {alerts.length > 0 && (
         <>
-          {/* ── Needs Attention (overdue + urgent combined) ── */}
-          {needsAttention.length > 0 && (
-            <section className="mb-8">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-red-500" />
-                  <h3 className="text-lg font-bold text-[#1A1A1A]" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Needs Attention</h3>
-                </div>
-                <span className="text-[9px] font-bold text-white bg-red-500 px-2 py-0.5 rounded-full uppercase tracking-wide">{needsAttention.length}</span>
-                <div className="flex items-center gap-2 ml-2">
-                  {overdue.length > 0 && (
-                    <span className="text-[10px] font-semibold text-red-600 bg-red-50 px-2 py-0.5 rounded-full border border-red-100">{overdue.length} overdue</span>
-                  )}
-                  {urgent.length > 0 && (
-                    <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">{urgent.length} this week</span>
-                  )}
-                </div>
+          {/* ── Bento grid: Hero + Stat stack ── */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-10">
+
+            {/* Hero card — most urgent item */}
+            {heroAlert && (
+              <div className="lg:col-span-8">
+                <DeadlineCard alert={heroAlert} onStageChange={handleStageChange} featured />
               </div>
-              {needsAttention.map(a => <DeadlineCard key={a.item.id} alert={a} onStageChange={handleStageChange} />)}
+            )}
+
+            {/* Stat stack */}
+            <div className="lg:col-span-4 flex flex-col gap-4">
+              {[
+                { label: 'Overdue',   count: overdue.length, bg: '#ffdad6', col: '#93000a' },
+                { label: 'This Week', count: urgent.length,  bg: '#FDE8A3', col: '#4A3800' },
+                { label: 'Coming Up', count: soon.length,    bg: '#BAE6FD', col: '#1E3A5F' },
+                { label: 'On Track',  count: ok.length,      bg: '#D9F99D', col: '#4D7C0F' },
+              ].map(s => (
+                <div
+                  key={s.label}
+                  className="flex items-center justify-between px-7 py-5 rounded-[2rem] flex-1 hover:scale-[1.02] transition-transform"
+                  style={{ backgroundColor: s.bg }}
+                >
+                  <div>
+                    <p className="text-sm font-bold mb-1" style={{ color: 'rgba(0,0,0,0.45)' }}>{s.label}</p>
+                    <p className="text-6xl font-black leading-none" style={{ fontFamily: 'var(--font-space-grotesk)', color: s.col }}>
+                      {String(s.count).padStart(2, '0')}
+                    </p>
+                  </div>
+                  {s.label === 'Overdue'   && <AlertTriangle  size={36} style={{ color: s.col, opacity: 0.3 }} />}
+                  {s.label === 'This Week' && <AlarmClock      size={36} style={{ color: s.col, opacity: 0.3 }} />}
+                  {s.label === 'Coming Up' && <CalendarClock  size={36} style={{ color: s.col, opacity: 0.3 }} />}
+                  {s.label === 'On Track'  && <CalendarCheck  size={36} style={{ color: s.col, opacity: 0.3 }} />}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Rest of Needs Attention ── */}
+          {restAttention.length > 0 && (
+            <section className="mb-8">
+              <h3 className="text-xl font-bold text-[#1b1b1b] mb-4" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+                Also needs attention
+              </h3>
+              {restAttention.map(a => <DeadlineCard key={a.item.id} alert={a} onStageChange={handleStageChange} />)}
             </section>
           )}
 
           {/* ── Coming Up ── */}
-          {soon.length > 0 && (
+          {soon.length > 0 && !heroAlert?.urgency?.match(/overdue|urgent/) && restAttention.length === 0 ? null : soon.length > 0 && (
             <section className="mb-8">
-              <div className="flex items-center gap-2 mb-4">
-                <CalendarClock className="h-4 w-4 text-[#1E3A5F]" />
-                <h3 className="text-lg font-bold text-[#1A1A1A]" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Coming Up</h3>
-                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide" style={{ background: '#BAE6FD', color: '#1E3A5F' }}>{soon.length}</span>
-              </div>
-              {soon.map(a => <DeadlineCard key={a.item.id} alert={a} onStageChange={handleStageChange} />)}
+              <h3 className="text-xl font-bold text-[#1b1b1b] mb-4" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+                Coming Up
+              </h3>
+              {soon.filter(a => a !== heroAlert).map(a => <DeadlineCard key={a.item.id} alert={a} onStageChange={handleStageChange} />)}
             </section>
           )}
 
@@ -317,45 +302,25 @@ export default function DeadlinesPage() {
             <section className="mb-8">
               <button
                 onClick={() => setOkExpanded(v => !v)}
-                className="flex items-center gap-2 mb-4 group"
+                className="flex items-center gap-3 mb-4 group"
               >
-                <CalendarCheck className="h-4 w-4 text-[#84CC16]" />
-                <h3 className="text-lg font-bold text-[#1A1A1A] group-hover:text-[#4D7C0F] transition-colors" style={{ fontFamily: 'var(--font-space-grotesk)' }}>On Track</h3>
-                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide" style={{ background: '#D9F99D', color: '#4D7C0F' }}>{ok.length}</span>
-                {okExpanded
-                  ? <ChevronUp size={14} className="text-[#6E6E80] ml-1" />
-                  : <ChevronDown size={14} className="text-[#6E6E80] ml-1" />
-                }
+                <h3 className="text-xl font-bold text-[#1b1b1b] group-hover:text-[#4D7C0F] transition-colors" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+                  On Track
+                </h3>
+                <span className="text-xs font-black px-3 py-1 rounded-full" style={{ background: '#D9F99D', color: '#4D7C0F' }}>{ok.length}</span>
+                {okExpanded ? <ChevronUp size={16} className="text-[#6E6E80]" /> : <ChevronDown size={16} className="text-[#6E6E80]" />}
               </button>
-              {okExpanded && ok.map(a => <DeadlineCard key={a.item.id} alert={a} onStageChange={handleStageChange} />)}
-              {!okExpanded && (
-                <p className="text-xs" style={{ color: '#6E6E80' }}>
-                  {ok.length} grant{ok.length !== 1 ? 's' : ''} with plenty of time — click to expand
-                </p>
-              )}
+              {okExpanded
+                ? ok.filter(a => a !== heroAlert).map(a => <DeadlineCard key={a.item.id} alert={a} onStageChange={handleStageChange} />)
+                : <p className="text-sm" style={{ color: '#6E6E80' }}>{ok.length} grant{ok.length !== 1 ? 's' : ''} with plenty of time — click to expand</p>
+              }
             </section>
           )}
-
-          {/* ── Summary strip ── */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4 pt-6 border-t border-[#E8E8EC]">
-            {[
-              { label: 'Overdue',   count: overdue.length, cfg: URGENCY_CONFIG.overdue },
-              { label: 'This Week', count: urgent.length,  cfg: URGENCY_CONFIG.urgent  },
-              { label: 'Coming Up', count: soon.length,    cfg: URGENCY_CONFIG.soon    },
-              { label: 'On Track',  count: ok.length,      cfg: URGENCY_CONFIG.ok      },
-            ].map(s => (
-              <div key={s.label} className={`border rounded-xl p-4 ${s.cfg.statBorder}`} style={{ backgroundColor: s.cfg.statBg }}>
-                <p className="text-[10px] font-semibold uppercase tracking-widest mb-1" style={{ color: 'rgba(0,0,0,0.4)' }}>{s.label}</p>
-                <p className={`text-2xl font-bold ${s.cfg.statAccent}`} style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.02em' }}>{s.count}</p>
-              </div>
-            ))}
-          </div>
         </>
       )}
 
-      {/* Toast */}
       {toast && (
-        <div className="fixed bottom-6 right-6 bg-[#1A1A1A] text-white px-5 py-3.5 rounded-xl shadow-lg text-sm z-50">
+        <div className="fixed bottom-6 right-6 bg-[#1b1b1b] text-white px-5 py-3.5 rounded-2xl shadow-lg text-sm z-50">
           ✓ {toast}
         </div>
       )}
