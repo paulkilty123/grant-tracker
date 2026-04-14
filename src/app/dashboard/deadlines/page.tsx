@@ -227,15 +227,7 @@ export default function DeadlinesPage() {
             Manage Pipeline <ArrowRight className="h-3.5 w-3.5" />
           </a>
         </div>
-        {needsAttention.length > 0 && (
-          <div className="inline-flex items-center gap-2 px-5 py-3 rounded-[1rem]" style={{ background: '#ffdad6' }}>
-            <AlertTriangle size={16} style={{ color: '#93000a' }} />
-            <span className="font-bold text-sm" style={{ color: '#93000a' }}>
-              Needs Attention: {needsAttention.length} {needsAttention.length === 1 ? 'grant requires' : 'grants require'} action
-              {atRisk > 0 && <span className="ml-2 font-black">· {fmt(atRisk)} at risk</span>}
-            </span>
-          </div>
-        )}
+
       </header>
 
       {/* ── Fully empty state ── */}
@@ -321,44 +313,81 @@ export default function DeadlinesPage() {
 
       {alerts.length > 0 && (
         <>
-          {/* ── Bento grid: Hero + rest left, Stat stack right ── */}
+          {/* ── Main grid: cards left (7) + stats+deadlines right (5) ── */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-10">
 
-            {/* Left column: hero + rest of needs attention */}
-            <div className="lg:col-span-8 flex flex-col gap-4">
-              {heroAlert && (
-                <DeadlineCard alert={heroAlert} onStageChange={handleStageChange} onDeadlineChange={handleDeadlineChange} featured />
+            {/* Left: needs attention cards */}
+            <div className="lg:col-span-7 flex flex-col gap-3">
+              {needsAttention.length > 0 && (
+                <p className="text-[10px] font-black uppercase tracking-widest mb-1 flex items-center gap-2" style={{ color: '#93000a' }}>
+                  <AlertTriangle size={11} />
+                  Needs Attention
+                  <span style={{ color: 'rgba(0,0,0,0.35)', fontWeight: 600 }}>
+                    {needsAttention.length} {needsAttention.length === 1 ? 'grant' : 'grants'}{atRisk > 0 ? ` · ${fmt(atRisk)} at risk` : ''}
+                  </span>
+                </p>
               )}
-              {restAttention.map(a => (
-                <DeadlineCard key={a.item.id} alert={a} onStageChange={handleStageChange} onDeadlineChange={handleDeadlineChange} />
+              {needsAttention.map(a => (
+                <DeadlineCard key={a.item.id} alert={a} onStageChange={handleStageChange} onDeadlineChange={handleDeadlineChange} featured={a === heroAlert} />
               ))}
             </div>
 
-            {/* Stat stack */}
-            <div className="lg:col-span-4 flex flex-col gap-4">
-              {[
-                { label: 'Overdue',   count: overdue.length, bg: '#ffdad6', col: '#93000a' },
-                { label: 'This Week', count: urgent.length,  bg: '#FDE8A3', col: '#4A3800' },
-                { label: 'Coming Up', count: soon.length,    bg: '#BAE6FD', col: '#1E3A5F' },
-                { label: 'On Track',  count: ok.length,      bg: '#D9F99D', col: '#4D7C0F' },
-              ].map(s => (
-                <div
-                  key={s.label}
-                  className="flex items-center justify-between px-7 py-5 rounded-[2rem] hover:scale-[1.02] transition-transform"
-                  style={{ backgroundColor: s.bg }}
-                >
-                  <div>
-                    <p className="text-sm font-bold mb-1" style={{ color: 'rgba(0,0,0,0.45)' }}>{s.label}</p>
-                    <p className="text-4xl font-black leading-none" style={{ fontFamily: 'var(--font-space-grotesk)', color: s.col }}>
+            {/* Right: stat grid + set deadlines */}
+            <div className="lg:col-span-5 flex flex-col gap-4">
+              {/* 2x2 stat grid */}
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { label: 'Overdue',   count: overdue.length, bg: '#ffdad6', col: '#93000a' },
+                  { label: 'This Week', count: urgent.length,  bg: '#FDE8A3', col: '#4A3800' },
+                  { label: 'Coming Up', count: soon.length,    bg: '#BAE6FD', col: '#1E3A5F' },
+                  { label: 'On Track',  count: ok.length,      bg: '#D9F99D', col: '#4D7C0F' },
+                ].map(s => (
+                  <div key={s.label} className="px-5 py-4 rounded-[1.5rem]" style={{ backgroundColor: s.bg }}>
+                    <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(0,0,0,0.4)' }}>{s.label}</p>
+                    <p className="text-3xl font-black leading-none" style={{ fontFamily: 'var(--font-space-grotesk)', color: s.col }}>
                       {s.count > 0 ? String(s.count).padStart(2, '0') : '–'}
                     </p>
                   </div>
-                  {s.label === 'Overdue'   && <AlertTriangle  size={28} style={{ color: s.col, opacity: 0.3 }} />}
-                  {s.label === 'This Week' && <AlarmClock      size={28} style={{ color: s.col, opacity: 0.3 }} />}
-                  {s.label === 'Coming Up' && <CalendarClock  size={28} style={{ color: s.col, opacity: 0.3 }} />}
-                  {s.label === 'On Track'  && <CalendarCheck  size={28} style={{ color: s.col, opacity: 0.3 }} />}
+                ))}
+              </div>
+
+              {/* Set deadlines list — inline below stats */}
+              {noDeadlineItems.length > 0 && (
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest mb-3" style={{ color: 'rgba(0,0,0,0.4)' }}>
+                    Set Deadlines
+                    <span className="ml-2 font-semibold">{noDeadlineItems.length} to do</span>
+                  </p>
+                  <div className="space-y-2">
+                    {noDeadlineItems.map(item => {
+                      const val = deadlineInputs[item.id] ?? ''
+                      const saving = savingDeadline === item.id
+                      return (
+                        <div key={item.id} className="bg-white p-3.5 rounded-[1.25rem]">
+                          <p className="text-sm font-bold text-[#1b1b1b] truncate mb-2" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{item.grant_name}</p>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="date"
+                              value={val}
+                              onChange={e => setDeadlineInputs(prev => ({ ...prev, [item.id]: e.target.value }))}
+                              className="flex-1 text-xs border border-[#E8E8EC] rounded-lg px-2.5 py-1.5 outline-none focus:border-[#84CC16] transition-colors"
+                              style={{ color: '#1b1b1b' }}
+                            />
+                            <button
+                              onClick={() => handleSetDeadline(item.id, val)}
+                              disabled={!val || saving}
+                              className="px-3 py-1.5 rounded-lg text-xs font-bold text-white transition-colors disabled:opacity-40"
+                              style={{ background: '#1b1b1b' }}
+                            >
+                              {saving ? '...' : 'Set'}
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
@@ -394,56 +423,6 @@ export default function DeadlinesPage() {
         </>
       )}
 
-      {/* ── Pipeline grants without deadlines (always show) ── */}
-      {alerts.length > 0 && noDeadlineItems.length > 0 && (
-        <section className="mb-8">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-xl font-bold text-[#1b1b1b]" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-              Set deadlines
-            </h3>
-            <span className="text-xs font-semibold px-3 py-1 rounded-full" style={{ background: '#FDE8A3', color: '#4A3800' }}>
-              {noDeadlineItems.length} to do
-            </span>
-          </div>
-          <div className="space-y-3">
-            {noDeadlineItems.map(item => {
-              const amountStr = formatRange(item.amount_min, item.amount_max ?? item.amount_requested)
-              const stage = PIPELINE_STAGES.find(s => s.id === item.stage)
-              const val = deadlineInputs[item.id] ?? ''
-              const saving = savingDeadline === item.id
-              return (
-                <div key={item.id} className="bg-white p-5 rounded-[1.5rem] flex items-center gap-4">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-[#1b1b1b] truncate" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{item.grant_name}</p>
-                    <div className="flex items-center gap-3 mt-0.5">
-                      <p className="text-sm truncate" style={{ color: '#6E6E80' }}>{item.funder_name}</p>
-                      {amountStr && <span className="text-sm font-bold" style={{ color: '#84CC16' }}>{amountStr}</span>}
-                      {stage && <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: '#9E9EA8' }}>{stage.label}</span>}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <input
-                      type="date"
-                      value={val}
-                      onChange={e => setDeadlineInputs(prev => ({ ...prev, [item.id]: e.target.value }))}
-                      className="text-sm border border-[#E8E8EC] rounded-xl px-3 py-2 outline-none focus:border-[#84CC16] transition-colors"
-                      style={{ color: '#1b1b1b' }}
-                    />
-                    <button
-                      onClick={() => handleSetDeadline(item.id, val)}
-                      disabled={!val || saving}
-                      className="px-4 py-2 rounded-xl text-sm font-bold text-white transition-colors disabled:opacity-40"
-                      style={{ background: '#1b1b1b' }}
-                    >
-                      {saving ? '...' : 'Set'}
-                    </button>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </section>
-      )}
 
       {toast && (
         <div className="fixed bottom-6 right-6 bg-[#1b1b1b] text-white px-5 py-3.5 rounded-2xl shadow-lg text-sm z-50">
