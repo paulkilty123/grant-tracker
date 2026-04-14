@@ -254,9 +254,9 @@ export default function DeadlinesPage() {
           {/* Why it matters */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
             {[
-              { icon: AlarmClock, title: 'Never miss a window', body: 'Deadline alerts surface 10 days before each closing date so you always have time to submit.', bg: '#FDE8A3', col: '#4A3800' },
+              { icon: AlarmClock, title: "Never miss a window", body: "Deadline alerts surface 10 days before each closing date so you always have time to submit.", bg: "#FDE8A3", col: "#4A3800" },
               { icon: AlertTriangle, title: 'Spot what's at risk', body: 'The "at risk" total shows how much funding could slip — a clear signal of where to focus effort.', bg: '#BAE6FD', col: '#1E3A5F' },
-              { icon: CalendarCheck, title: 'Track writing progress', body: 'Log your application progress on each grant so you know exactly where every submission stands.', bg: '#D9F99D', col: '#4D7C0F' },
+              { icon: CalendarCheck, title: "Track writing progress", body: "Log your application progress on each grant so you know exactly where every submission stands.", bg: "#D9F99D", col: "#4D7C0F" },
             ].map(({ icon: Icon, title, body, bg, col }) => (
               <div key={title} className="p-6 rounded-[2rem]" style={{ backgroundColor: bg }}>
                 <Icon size={20} className="mb-3" style={{ color: col }} />
