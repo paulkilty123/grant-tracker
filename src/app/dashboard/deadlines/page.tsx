@@ -14,7 +14,7 @@ const ACTIVE_STAGES = ['identified', 'applying', 'submitted']
 function DeadlineCard({ alert, onStageChange, onDeadlineChange }: {
   alert: DeadlineAlert
   onStageChange: (id: string, stage: PipelineStage) => void
-  onDeadlineChange?: (id: string, deadline: string) => voi
+  onDeadlineChange?: (id: string, deadline: string) => void
 }) {
   const stage = PIPELINE_STAGES.find(s => s.id === alert.item.stage)
   const amountStr = formatRange(alert.item.amount_min, alert.item.amount_max ?? alert.item.amount_requested)
