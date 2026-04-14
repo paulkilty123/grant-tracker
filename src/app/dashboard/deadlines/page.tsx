@@ -14,8 +14,9 @@ const URGENCY_CONFIG = {
   overdue: {
     label: 'Overdue',
     icon: AlertTriangle,
-    accent: 'text-red-500',
-    border: 'border-l-red-400',
+    accent: 'text-[#991B1B]',
+    border: 'border-[#FECACA]',
+    cardBg: '#FEE2E2',
     badgeBg: 'bg-red-500',
     badgeText: 'text-white',
     statAccent: 'text-red-500',
@@ -24,8 +25,9 @@ const URGENCY_CONFIG = {
   urgent: {
     label: 'This week',
     icon: AlarmClock,
-    accent: 'text-amber-600',
-    border: 'border-l-amber-400',
+    accent: 'text-[#4A3800]',
+    border: 'border-[#F59E0B]/30',
+    cardBg: '#FDE8A3',
     badgeBg: 'bg-amber-500',
     badgeText: 'text-white',
     statAccent: 'text-amber-600',
@@ -35,7 +37,8 @@ const URGENCY_CONFIG = {
     label: 'Coming up',
     icon: CalendarClock,
     accent: 'text-[#1E3A5F]',
-    border: 'border-l-[#7DD3FC]',
+    border: 'border-[#7DD3FC]/40',
+    cardBg: '#BAE6FD',
     badgeBg: 'bg-[#BAE6FD]',
     badgeText: 'text-[#1E3A5F]',
     statAccent: 'text-[#1E3A5F]',
@@ -45,7 +48,8 @@ const URGENCY_CONFIG = {
     label: 'On track',
     icon: CalendarCheck,
     accent: 'text-[#4D7C0F]',
-    border: 'border-l-[#84CC16]',
+    border: 'border-[#84CC16]/30',
+    cardBg: '#D9F99D',
     badgeBg: 'bg-[#D9F99D]',
     badgeText: 'text-[#4D7C0F]',
     statAccent: 'text-[#4D7C0F]',
@@ -55,7 +59,8 @@ const URGENCY_CONFIG = {
     label: 'Rolling',
     icon: CalendarCheck,
     accent: 'text-[#6E6E80]',
-    border: 'border-l-[#E8E8EC]',
+    border: 'border-[#E8E8EC]',
+    cardBg: '#F5F5F7',
     badgeBg: 'bg-[#F5F5F7]',
     badgeText: 'text-[#6E6E80]',
     statAccent: 'text-[#6E6E80]',
@@ -77,8 +82,8 @@ function DeadlineCard({ alert }: { alert: DeadlineAlert }) {
 
   return (
     <div
-      className={`bg-white border border-warm/60 rounded-xl p-5 mb-3 border-l-4 ${cfg.border}`}
-      style={{ boxShadow: '0 2px 12px rgba(26,46,43,0.07)' }}
+      className={`border rounded-xl p-5 mb-3 ${cfg.border}`}
+      style={{ backgroundColor: cfg.cardBg, boxShadow: '0 2px 12px rgba(26,46,43,0.06)' }}
     >
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
@@ -132,7 +137,7 @@ function DeadlineCard({ alert }: { alert: DeadlineAlert }) {
             <span className="text-[10px] font-semibold text-light uppercase tracking-widest">Writing progress</span>
             <span className="text-xs font-bold text-charcoal">{alert.item.application_progress}%</span>
           </div>
-          <div className="h-1.5 bg-warm overflow-hidden rounded-full">
+          <div className="h-1.5 bg-black/10 overflow-hidden rounded-full">
             <div
               className={`h-full transition-all rounded-full ${
                 alert.item.application_progress >= 75 ? 'bg-[#84CC16]' : 'bg-[#A3E635]'
