@@ -14,12 +14,12 @@ const URGENCY_CONFIG = {
   overdue: {
     label: 'Overdue',
     icon: AlertTriangle,
-    accent: 'text-coral',
-    border: 'border-l-coral',
+    accent: 'text-red-500',
+    border: 'border-l-red-400',
     badgeBg: 'bg-red-500',
     badgeText: 'text-white',
-    statAccent: 'text-coral',
-    statBorder: 'border-l-4 border-l-coral',
+    statAccent: 'text-red-500',
+    statBorder: 'border-l-4 border-l-red-400',
   },
   urgent: {
     label: 'This week',
@@ -44,12 +44,12 @@ const URGENCY_CONFIG = {
   ok: {
     label: 'On track',
     icon: CalendarCheck,
-    accent: 'text-forest',
-    border: 'border-l-forest',
-    badgeBg: 'bg-forest/10',
-    badgeText: 'text-forest',
-    statAccent: 'text-forest',
-    statBorder: 'border-l-4 border-l-forest',
+    accent: 'text-[#4D7C0F]',
+    border: 'border-l-[#84CC16]',
+    badgeBg: 'bg-[#D9F99D]',
+    badgeText: 'text-[#4D7C0F]',
+    statAccent: 'text-[#4D7C0F]',
+    statBorder: 'border-l-4 border-l-[#84CC16]',
   },
   rolling: {
     label: 'Rolling',
@@ -93,7 +93,7 @@ function DeadlineCard({ alert }: { alert: DeadlineAlert }) {
             )}
           </div>
           {/* Grant name */}
-          <h3 className="font-serif text-base font-bold text-charcoal leading-snug">
+          <h3 className="text-base font-bold text-charcoal leading-snug" style={{ fontFamily: "var(--font-space-grotesk)" }}>
             {alert.item.grant_name}
           </h3>
           <p className="text-sm text-mid mt-0.5">{alert.item.funder_name}</p>
@@ -105,7 +105,7 @@ function DeadlineCard({ alert }: { alert: DeadlineAlert }) {
         {/* Right column: amount + date + link */}
         <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
           {amountStr && (
-            <p className="font-serif text-lg font-bold text-forest">{amountStr}</p>
+            <p className="text-lg font-bold" style={{ fontFamily: "var(--font-space-grotesk)", color: "#84CC16" }}>{amountStr}</p>
           )}
           <p className={`flex items-center gap-1 text-sm font-semibold ${cfg.accent}`}>
             <Calendar size={12} strokeWidth={2} />
@@ -116,7 +116,7 @@ function DeadlineCard({ alert }: { alert: DeadlineAlert }) {
               href={alert.item.grant_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 text-xs font-medium text-forest/70 hover:text-forest transition-colors mt-0.5"
+              className="flex items-center gap-1 text-xs font-medium transition-colors mt-0.5" style={{ color: "#4D7C0F" }}
             >
               <ExternalLink className="h-3 w-3" />
               Visit
@@ -135,7 +135,7 @@ function DeadlineCard({ alert }: { alert: DeadlineAlert }) {
           <div className="h-1.5 bg-warm overflow-hidden rounded-full">
             <div
               className={`h-full transition-all rounded-full ${
-                alert.item.application_progress >= 75 ? 'bg-forest' : 'bg-sage'
+                alert.item.application_progress >= 75 ? 'bg-[#84CC16]' : 'bg-[#A3E635]'
               }`}
               style={{ width: `${alert.item.application_progress}%` }}
             />
@@ -205,7 +205,7 @@ export default function DeadlinesPage() {
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
         <div>
-          <h2 className="font-serif text-4xl font-bold text-charcoal leading-tight">Deadlines</h2>
+          <h2 className="text-4xl font-bold text-charcoal leading-tight" style={{ fontFamily: "var(--font-space-grotesk)", letterSpacing: "-0.02em" }}>Deadlines</h2>
           <p className="text-mid text-sm mt-1.5">
             {totalTracked > 0
               ? `${overdue.length + urgent.length} need${overdue.length + urgent.length !== 1 ? '' : 's'} attention · ${totalTracked} tracked total`
@@ -215,7 +215,7 @@ export default function DeadlinesPage() {
         </div>
         <a
           href="/dashboard/pipeline"
-          className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-forest/30 text-forest text-sm font-medium bg-white hover:bg-forest/5 transition-colors whitespace-nowrap self-start sm:self-auto"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-[#1A1A1A] text-[#1A1A1A] text-sm font-semibold bg-white hover:bg-[#1A1A1A] hover:text-white transition-colors whitespace-nowrap self-start sm:self-auto"
         >
           Manage Pipeline
           <ArrowRight className="h-3.5 w-3.5" />
@@ -228,17 +228,17 @@ export default function DeadlinesPage() {
         </div>
       ) : error ? (
         <div className="bg-white border border-warm/60 rounded-xl p-8 text-center" style={{ boxShadow: '0 2px 12px rgba(26,46,43,0.07)' }}>
-          <p className="text-coral font-medium mb-2">Something went wrong</p>
+          <p className="text-red-500 font-medium mb-2">Something went wrong</p>
           <p className="text-sm text-mid">{error}</p>
         </div>
       ) : alerts.length === 0 && noDeadlineItems.length === 0 ? (
         <div className="bg-white border border-warm/60 rounded-xl p-16 text-center" style={{ boxShadow: '0 2px 12px rgba(26,46,43,0.07)' }}>
           <Calendar className="h-10 w-10 text-light mx-auto mb-4" strokeWidth={1.5} />
-          <h3 className="font-serif text-xl font-bold text-charcoal mb-2">No deadlines to track yet</h3>
+          <h3 className="text-xl font-bold text-charcoal mb-2" style={{ fontFamily: "var(--font-space-grotesk)" }}>No deadlines to track yet</h3>
           <p className="text-mid text-sm mb-6 max-w-md mx-auto">
             Add grants to your pipeline from Search, then set deadline dates to see them tracked here.
           </p>
-          <a href="/dashboard/search" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-forest text-white text-sm font-medium hover:opacity-90 transition-colors">
+          <a href="/dashboard/search" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-white text-sm font-semibold hover:opacity-80 transition-colors" style={{ background: "#1A1A1A" }}>
             Find Funding
             <ArrowRight className="h-4 w-4" />
           </a>
@@ -259,7 +259,7 @@ export default function DeadlinesPage() {
                 style={{ boxShadow: '0 2px 12px rgba(26,46,43,0.07)' }}
               >
                 <p className="text-[10px] font-semibold text-light uppercase tracking-widest mb-2">{s.label}</p>
-                <p className={`font-serif text-3xl font-bold ${s.cfg.statAccent}`}>{s.count}</p>
+                <p className={`text-3xl font-bold ${s.cfg.statAccent}`} style={{ fontFamily: "var(--font-space-grotesk)", letterSpacing: "-0.02em" }}>{s.count}</p>
                 <p className="text-xs text-mid mt-1.5">
                   {s.count === 1 ? 'deadline' : 'deadlines'}
                 </p>
@@ -271,8 +271,8 @@ export default function DeadlinesPage() {
           {overdue.length > 0 && (
             <section className="mb-7">
               <div className="flex items-center gap-2 mb-4">
-                <AlertTriangle className="h-4 w-4 text-coral" />
-                <h3 className="font-serif text-lg font-bold text-coral">Overdue</h3>
+                <AlertTriangle className="h-4 w-4 text-red-500" />
+                <h3 className="text-lg font-bold text-red-500" style={{ fontFamily: "var(--font-space-grotesk)" }}>Overdue</h3>
                 <span className="text-[9px] font-bold text-white bg-red-500 px-2 py-0.5 rounded-full uppercase tracking-wide">
                   {overdue.length}
                 </span>
@@ -286,7 +286,7 @@ export default function DeadlinesPage() {
             <section className="mb-7">
               <div className="flex items-center gap-2 mb-4">
                 <AlarmClock className="h-4 w-4 text-amber-500" />
-                <h3 className="font-serif text-lg font-bold text-charcoal">Due within 10 days</h3>
+                <h3 className="text-lg font-bold text-charcoal" style={{ fontFamily: "var(--font-space-grotesk)" }}>Due within 10 days</h3>
                 <span className="text-[9px] font-bold text-white bg-amber-500 px-2 py-0.5 rounded-full uppercase tracking-wide">
                   {urgent.length}
                 </span>
@@ -300,7 +300,7 @@ export default function DeadlinesPage() {
             <section className="mb-7">
               <div className="flex items-center gap-2 mb-4">
                 <CalendarClock className="h-4 w-4 text-mid" />
-                <h3 className="font-serif text-lg font-bold text-charcoal">Coming up</h3>
+                <h3 className="text-lg font-bold text-charcoal" style={{ fontFamily: "var(--font-space-grotesk)" }}>Coming up</h3>
                 <span className="text-[9px] font-bold text-mid bg-warm px-2 py-0.5 rounded-full uppercase tracking-wide">
                   {soon.length}
                 </span>
@@ -313,9 +313,9 @@ export default function DeadlinesPage() {
           {ok.length > 0 && (
             <section className="mb-7">
               <div className="flex items-center gap-2 mb-4">
-                <CalendarCheck className="h-4 w-4 text-forest" />
-                <h3 className="font-serif text-lg font-bold text-charcoal">On track</h3>
-                <span className="text-[9px] font-bold text-forest bg-forest/10 px-2 py-0.5 rounded-full uppercase tracking-wide">
+                <CalendarCheck className="h-4 w-4 text-[#84CC16]" />
+                <h3 className="text-lg font-bold text-charcoal" style={{ fontFamily: "var(--font-space-grotesk)" }}>On track</h3>
+                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide" style={{ color: "#4D7C0F", background: "#D9F99D" }}>
                   {ok.length}
                 </span>
               </div>
@@ -327,7 +327,7 @@ export default function DeadlinesPage() {
           {noDeadlineItems.length > 0 && (
             <section className="mb-7">
               <div className="flex items-center gap-2 mb-1">
-                <h3 className="font-serif text-lg font-bold text-charcoal">No deadline set</h3>
+                <h3 className="text-lg font-bold text-charcoal" style={{ fontFamily: "var(--font-space-grotesk)" }}>No deadline set</h3>
                 <span className="text-[9px] font-bold text-mid bg-warm px-2 py-0.5 rounded-full uppercase tracking-wide">
                   {noDeadlineItems.length}
                 </span>
@@ -342,19 +342,19 @@ export default function DeadlinesPage() {
                   <a
                     key={item.id}
                     href="/dashboard/pipeline"
-                    className="bg-white border border-warm/60 rounded-xl p-4 mb-2 flex items-center justify-between gap-4 hover:bg-[#faf7f2] transition-colors"
+                    className="bg-white border border-[#E8E8EC] rounded-xl p-4 mb-2 flex items-center justify-between gap-4 hover:bg-[#F5F5F7] transition-colors"
                     style={{ boxShadow: '0 1px 8px rgba(26,46,43,0.05)' }}
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="font-serif text-sm font-bold text-charcoal truncate">{item.grant_name}</p>
+                      <p className="text-sm font-bold text-charcoal truncate" style={{ fontFamily: "var(--font-space-grotesk)" }}>{item.grant_name}</p>
                       <p className="text-xs text-mid mt-0.5">{item.funder_name}</p>
                     </div>
                     <div className="flex items-center gap-3 flex-shrink-0">
-                      {amountStr && <p className="font-serif text-sm font-bold text-forest">{amountStr}</p>}
+                      {amountStr && <p className="text-sm font-bold" style={{ fontFamily: "var(--font-space-grotesk)", color: "#84CC16" }}>{amountStr}</p>}
                       {stage && (
                         <span className="text-[10px] font-medium text-mid uppercase tracking-widest">{stage.label}</span>
                       )}
-                      <span className="flex items-center gap-1 text-xs font-medium text-forest whitespace-nowrap">
+                      <span className="flex items-center gap-1 text-xs font-medium whitespace-nowrap" style={{ color: "#4D7C0F" }}>
                         Set deadline
                         <ArrowRight className="h-3 w-3" />
                       </span>
