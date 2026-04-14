@@ -19,8 +19,9 @@ const URGENCY_CONFIG = {
     cardBg: '#FEE2E2',
     badgeBg: 'bg-red-500',
     badgeText: 'text-white',
-    statAccent: 'text-red-500',
-    statBorder: 'border-l-4 border-l-red-400',
+    statAccent: 'text-red-700',
+    statBg: '#FEE2E2',
+    statBorder: 'border-[#FECACA]',
   },
   urgent: {
     label: 'This week',
@@ -30,8 +31,9 @@ const URGENCY_CONFIG = {
     cardBg: '#FDE8A3',
     badgeBg: 'bg-amber-500',
     badgeText: 'text-white',
-    statAccent: 'text-amber-600',
-    statBorder: 'border-l-4 border-l-amber-400',
+    statAccent: 'text-[#4A3800]',
+    statBg: '#FDE8A3',
+    statBorder: 'border-[#F59E0B]/30',
   },
   soon: {
     label: 'Coming up',
@@ -42,7 +44,8 @@ const URGENCY_CONFIG = {
     badgeBg: 'bg-[#BAE6FD]',
     badgeText: 'text-[#1E3A5F]',
     statAccent: 'text-[#1E3A5F]',
-    statBorder: 'border-l-4 border-l-[#7DD3FC]',
+    statBg: '#BAE6FD',
+    statBorder: 'border-[#7DD3FC]/40',
   },
   ok: {
     label: 'On track',
@@ -53,7 +56,8 @@ const URGENCY_CONFIG = {
     badgeBg: 'bg-[#D9F99D]',
     badgeText: 'text-[#4D7C0F]',
     statAccent: 'text-[#4D7C0F]',
-    statBorder: 'border-l-4 border-l-[#84CC16]',
+    statBg: '#D9F99D',
+    statBorder: 'border-[#84CC16]/30',
   },
   rolling: {
     label: 'Rolling',
@@ -64,7 +68,8 @@ const URGENCY_CONFIG = {
     badgeBg: 'bg-[#F5F5F7]',
     badgeText: 'text-[#6E6E80]',
     statAccent: 'text-[#6E6E80]',
-    statBorder: 'border-l-4 border-l-[#E8E8EC]',
+    statBg: '#F5F5F7',
+    statBorder: 'border-[#E8E8EC]',
   },
 }
 
@@ -260,12 +265,12 @@ export default function DeadlinesPage() {
             ].map(s => (
               <div
                 key={s.label}
-                className={`bg-white border border-warm/60 rounded-xl p-5 ${s.cfg.statBorder}`}
-                style={{ boxShadow: '0 2px 12px rgba(26,46,43,0.07)' }}
+                className={`border rounded-xl p-5 ${s.cfg.statBorder}`}
+                style={{ backgroundColor: s.cfg.statBg, boxShadow: '0 2px 12px rgba(26,46,43,0.06)' }}
               >
-                <p className="text-[10px] font-semibold text-light uppercase tracking-widest mb-2">{s.label}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-widest mb-2" style={{ color: "rgba(0,0,0,0.45)" }}>{s.label}</p>
                 <p className={`text-3xl font-bold ${s.cfg.statAccent}`} style={{ fontFamily: "var(--font-space-grotesk)", letterSpacing: "-0.02em" }}>{s.count}</p>
-                <p className="text-xs text-mid mt-1.5">
+                <p className="text-xs mt-1.5" style={{ color: "rgba(0,0,0,0.45)" }}>
                   {s.count === 1 ? 'deadline' : 'deadlines'}
                 </p>
               </div>
