@@ -312,116 +312,119 @@ export default function DeadlinesPage() {
       )}
 
       {alerts.length > 0 && (
-        <>
-          {/* ── Main grid: cards left (7) + stats+deadlines right (5) ── */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-            {/* Left: needs attention cards */}
-            <div className="lg:col-span-7 flex flex-col gap-3">
-              {needsAttention.length > 0 && (
-                <p className="text-[10px] font-black uppercase tracking-widest mb-1 flex items-center gap-2" style={{ color: '#93000a' }}>
-                  <AlertTriangle size={11} />
-                  Needs Attention
-                  <span style={{ color: 'rgba(0,0,0,0.35)', fontWeight: 600 }}>
-                    {needsAttention.length} {needsAttention.length === 1 ? 'grant' : 'grants'}{atRisk > 0 ? ` · ${fmt(atRisk)} at risk` : ''}
-                  </span>
+          {/* Left: all grants in one consistent list */}
+          <div className="lg:col-span-8 flex flex-col gap-3">
+
+            {/* Needs Attention */}
+            {needsAttention.length > 0 && (
+              <p className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2 mb-1" style={{ color: '#93000a' }}>
+                <AlertTriangle size={10} />
+                Needs Attention
+                <span className="font-semibold normal-case tracking-normal" style={{ color: 'rgba(0,0,0,0.4)' }}>
+                  {needsAttention.length} {needsAttention.length === 1 ? 'grant' : 'grants'}{atRisk > 0 ? ` · \${fmt(atRisk)} at risk` : ''}
+                </span>
+              </p>
+            )}
+            {needsAttention.map(a => (
+              <DeadlineCard key={a.item.id} alert={a} onStageChange={handleStageChange} onDeadlineChange={handleDeadlineChange} />
+            ))}
+
+            {/* Coming Up */}
+            {soon.length > 0 && (
+              <>
+                <p className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2 mt-3 mb-1" style={{ color: '#1E3A5F' }}>
+                  <CalendarClock size={10} />
+                  Coming Up
+                  <span className="font-semibold normal-case tracking-normal" style={{ color: 'rgba(0,0,0,0.4)' }}>{soon.length} {soon.length === 1 ? 'grant' : 'grants'}</span>
                 </p>
-              )}
-              {needsAttention.map(a => (
-                <DeadlineCard key={a.item.id} alert={a} onStageChange={handleStageChange} onDeadlineChange={handleDeadlineChange} featured={a === heroAlert} />
-              ))}
-            </div>
+                {soon.map(a => <DeadlineCard key={a.item.id} alert={a} onStageChange={handleStageChange} onDeadlineChange={handleDeadlineChange} />)}
+              </>
+            )}
 
-            {/* Right: stat grid + set deadlines */}
-            <div className="lg:col-span-5 flex flex-col gap-4">
-              {/* 2x2 stat grid */}
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { label: 'Overdue',   count: overdue.length, bg: '#ffdad6', col: '#93000a' },
-                  { label: 'This Week', count: urgent.length,  bg: '#FDE8A3', col: '#4A3800' },
-                  { label: 'Coming Up', count: soon.length,    bg: '#BAE6FD', col: '#1E3A5F' },
-                  { label: 'On Track',  count: ok.length,      bg: '#D9F99D', col: '#4D7C0F' },
-                ].map(s => (
-                  <div key={s.label} className="px-5 py-4 rounded-[1.5rem]" style={{ backgroundColor: s.bg }}>
-                    <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(0,0,0,0.4)' }}>{s.label}</p>
-                    <p className="text-3xl font-black leading-none" style={{ fontFamily: 'var(--font-space-grotesk)', color: s.col }}>
-                      {s.count > 0 ? String(s.count).padStart(2, '0') : '–'}
-                    </p>
-                  </div>
-                ))}
-              </div>
+            {/* On Track */}
+            {ok.length > 0 && (
+              <>
+                <button onClick={() => setOkExpanded(v => !v)} className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2 mt-3 mb-1">
+                  <CalendarCheck size={10} style={{ color: '#4D7C0F' }} />
+                  <span style={{ color: '#4D7C0F' }}>On Track</span>
+                  <span className="font-semibold normal-case tracking-normal" style={{ color: 'rgba(0,0,0,0.4)' }}>{ok.length} {ok.length === 1 ? 'grant' : 'grants'}</span>
+                  {okExpanded ? <ChevronUp size={10} style={{ color: '#6E6E80' }} /> : <ChevronDown size={10} style={{ color: '#6E6E80' }} />}
+                </button>
+                {okExpanded && ok.map(a => <DeadlineCard key={a.item.id} alert={a} onStageChange={handleStageChange} onDeadlineChange={handleDeadlineChange} />)}
+              </>
+            )}
 
-              {/* Set deadlines list — inline below stats */}
-              {noDeadlineItems.length > 0 && (
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest mb-3" style={{ color: 'rgba(0,0,0,0.4)' }}>
-                    Set Deadlines
-                    <span className="ml-2 font-semibold">{noDeadlineItems.length} to do</span>
-                  </p>
-                  <div className="space-y-2">
-                    {noDeadlineItems.map(item => {
-                      const val = deadlineInputs[item.id] ?? ''
-                      const saving = savingDeadline === item.id
-                      return (
-                        <div key={item.id} className="bg-white p-3.5 rounded-[1.25rem]">
-                          <p className="text-sm font-bold text-[#1b1b1b] truncate mb-2" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{item.grant_name}</p>
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="date"
-                              value={val}
-                              onChange={e => setDeadlineInputs(prev => ({ ...prev, [item.id]: e.target.value }))}
-                              className="flex-1 text-xs border border-[#E8E8EC] rounded-lg px-2.5 py-1.5 outline-none focus:border-[#84CC16] transition-colors"
-                              style={{ color: '#1b1b1b' }}
-                            />
-                            <button
-                              onClick={() => handleSetDeadline(item.id, val)}
-                              disabled={!val || saving}
-                              className="px-3 py-1.5 rounded-lg text-xs font-bold text-white transition-colors disabled:opacity-40"
-                              style={{ background: '#1b1b1b' }}
-                            >
-                              {saving ? '...' : 'Set'}
-                            </button>
-                          </div>
+            {/* Set Deadlines */}
+            {noDeadlineItems.length > 0 && (
+              <>
+                <p className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2 mt-3 mb-1" style={{ color: 'rgba(0,0,0,0.4)' }}>
+                  <Calendar size={10} />
+                  Set Deadlines
+                  <span className="font-semibold normal-case tracking-normal">{noDeadlineItems.length} to do</span>
+                </p>
+                {noDeadlineItems.map(item => {
+                  const amountStr = formatRange(item.amount_min, item.amount_max ?? item.amount_requested)
+                  const stage = PIPELINE_STAGES.find(s => s.id === item.stage)
+                  const val = deadlineInputs[item.id] ?? ''
+                  const saving = savingDeadline === item.id
+                  return (
+                    <div key={item.id} className="bg-white p-4 rounded-[1.5rem] flex items-center gap-4">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-[#1b1b1b] truncate" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{item.grant_name}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <p className="text-xs truncate" style={{ color: '#6E6E80' }}>{item.funder_name}</p>
+                          {amountStr && <span className="text-xs font-bold" style={{ color: '#84CC16' }}>{amountStr}</span>}
+                          {stage && <span className="text-[10px] uppercase tracking-widest font-semibold" style={{ color: '#9E9EA8' }}>{stage.label}</span>}
                         </div>
-                      )
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <input
+                          type="date"
+                          value={val}
+                          onChange={e => setDeadlineInputs(prev => ({ ...prev, [item.id]: e.target.value }))}
+                          className="text-xs border border-[#E8E8EC] rounded-xl px-3 py-1.5 outline-none focus:border-[#84CC16] transition-colors"
+                          style={{ color: '#1b1b1b' }}
+                        />
+                        <button
+                          onClick={() => handleSetDeadline(item.id, val)}
+                          disabled={!val || saving}
+                          className="px-3 py-1.5 rounded-xl text-xs font-bold text-white disabled:opacity-40"
+                          style={{ background: '#1b1b1b' }}
+                        >
+                          {saving ? '...' : 'Set'}
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </>
+            )}
           </div>
 
-          {/* ── Coming Up ── */}
-          {soon.length > 0 && !heroAlert?.urgency?.match(/overdue|urgent/) && restAttention.length === 0 ? null : soon.length > 0 && (
-            <section className="mb-8">
-              <h3 className="text-xl font-bold text-[#1b1b1b] mb-4" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-                Coming Up
-              </h3>
-              {soon.filter(a => a !== heroAlert).map(a => <DeadlineCard key={a.item.id} alert={a} onStageChange={handleStageChange} />)}
-            </section>
-          )}
-
-          {/* ── On Track (collapsible) ── */}
-          {ok.length > 0 && (
-            <section className="mb-8">
-              <button
-                onClick={() => setOkExpanded(v => !v)}
-                className="flex items-center gap-3 mb-4 group"
-              >
-                <h3 className="text-xl font-bold text-[#1b1b1b] group-hover:text-[#4D7C0F] transition-colors" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-                  On Track
-                </h3>
-                <span className="text-xs font-black px-3 py-1 rounded-full" style={{ background: '#D9F99D', color: '#4D7C0F' }}>{ok.length}</span>
-                {okExpanded ? <ChevronUp size={16} className="text-[#6E6E80]" /> : <ChevronDown size={16} className="text-[#6E6E80]" />}
-              </button>
-              {okExpanded
-                ? ok.filter(a => a !== heroAlert).map(a => <DeadlineCard key={a.item.id} alert={a} onStageChange={handleStageChange} />)
-                : <p className="text-sm" style={{ color: '#6E6E80' }}>{ok.length} grant{ok.length !== 1 ? 's' : ''} with plenty of time — click to expand</p>
-              }
-            </section>
-          )}
-        </>
+          {/* Right: 4 stat cards vertical */}
+          <div className="lg:col-span-4 flex flex-col gap-3">
+            {[
+              { label: 'Overdue',   count: overdue.length, bg: '#ffdad6', col: '#93000a', Icon: AlertTriangle },
+              { label: 'This Week', count: urgent.length,  bg: '#FDE8A3', col: '#4A3800', Icon: AlarmClock },
+              { label: 'Coming Up', count: soon.length,    bg: '#BAE6FD', col: '#1E3A5F', Icon: CalendarClock },
+              { label: 'On Track',  count: ok.length,      bg: '#D9F99D', col: '#4D7C0F', Icon: CalendarCheck },
+            ].map(({ label, count, bg, col, Icon }) => (
+              <div key={label} className="flex items-center justify-between px-6 py-5 rounded-[1.5rem]" style={{ backgroundColor: bg }}>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(0,0,0,0.4)' }}>{label}</p>
+                  <p className="text-4xl font-black leading-none" style={{ fontFamily: 'var(--font-space-grotesk)', color: col }}>
+                    {count > 0 ? String(count).padStart(2, '0') : '–'}
+                  </p>
+                </div>
+                <Icon size={32} style={{ color: col, opacity: 0.2 }} />
+              </div>
+            ))}
+          </div>
+        </div>
       )}
+
 
 
       {toast && (
