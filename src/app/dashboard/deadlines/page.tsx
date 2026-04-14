@@ -27,8 +27,8 @@ function DeadlineCard({ alert, onStageChange, onDeadlineChange }: {
 
   return (
     <div
-      className="bg-white rounded-xl p-4 flex gap-4 items-start"
-      style={{ borderLeft: `3px solid ${borderCol}`, boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}
+      className="bg-white rounded-xl p-4 flex gap-4 items-start border border-[#E8E8EC]"
+      style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}
     >
       <div className="flex-1 min-w-0">
         {/* Badge row */}
@@ -285,13 +285,12 @@ export default function DeadlinesPage() {
 
             {/* Needs Attention */}
             {needsAttention.length > 0 && (
-              <p className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2 mb-1" style={{ color: '#93000a' }}>
-                <AlertTriangle size={10} />
-                Needs Attention
-                <span className="font-semibold normal-case tracking-normal" style={{ color: 'rgba(0,0,0,0.4)' }}>
-                  {needsAttention.length} {needsAttention.length === 1 ? 'grant' : 'grants'}{atRisk > 0 ? ` · \${fmt(atRisk)} at risk` : ''}
+              <div className="flex items-center gap-3 mb-3">
+                <h3 className="text-base font-bold text-[#1A1A1A]" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Needs Attention</h3>
+                <span className="text-xs font-semibold text-red-700 bg-red-50 px-2.5 py-0.5 rounded-full">
+                  {needsAttention.length} grant{needsAttention.length !== 1 ? 's' : ''}{atRisk > 0 && <> &middot; {fmt(atRisk)} at risk</>}
                 </span>
-              </p>
+              </div>
             )}
             {needsAttention.map(a => (
               <DeadlineCard key={a.item.id} alert={a} onStageChange={handleStageChange} onDeadlineChange={handleDeadlineChange} />
@@ -370,10 +369,9 @@ export default function DeadlinesPage() {
           {/* Right: 4 stat cards vertical */}
           <div className="lg:col-span-4 flex flex-col gap-3">
             {[
-              { label: 'Overdue',   count: overdue.length, bg: '#ffdad6', col: '#93000a', Icon: AlertTriangle },
-              { label: 'This Week', count: urgent.length,  bg: '#FDE8A3', col: '#4A3800', Icon: AlarmClock },
-              { label: 'Coming Up', count: soon.length,    bg: '#BAE6FD', col: '#1E3A5F', Icon: CalendarClock },
-              { label: 'On Track',  count: ok.length,      bg: '#D9F99D', col: '#4D7C0F', Icon: CalendarCheck },
+              { label: 'This Week',       count: urgent.length,          bg: '#FDE8A3', col: '#4A3800', Icon: AlarmClock },
+              { label: 'Coming Up',       count: soon.length,            bg: '#BAE6FD', col: '#1E3A5F', Icon: CalendarClock },
+              { label: 'No Deadline Set', count: noDeadlineItems.length, bg: '#EBEBEB', col: '#374151', Icon: Calendar },
             ].map(({ label, count, bg, col, Icon }) => (
               <div key={label} className="flex items-center justify-between px-6 py-5 rounded-[1.5rem]" style={{ backgroundColor: bg }}>
                 <div>
