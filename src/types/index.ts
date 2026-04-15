@@ -155,6 +155,8 @@ export interface Organisation {
   also_individual_practitioner: boolean
   /** 1–3 impact sectors from the 12-sector taxonomy */
   impact_sectors: ImpactSector[]
+  /** Sub-sector specialisation tags — finer-grained than impact_sectors (e.g. "music", "theatre") */
+  niche_tags: string[]
   /** Org stage for matching programme eligibility */
   org_stage: OrgStage | null
   // ── Existing fields ───────────────────────────────────────────────────────
@@ -237,6 +239,8 @@ export interface GrantOpportunity {
   sectors: string[]
   /** New 12-sector taxonomy tags */
   impactSectors?: ImpactSector[]
+  /** Sub-sector specialism tags set by the classifier (e.g. "music", "theatre", "dance") */
+  nicheTags?: string[]
   /** Structured beneficiary groups the grant targets */
   beneficiaryGroups?: BeneficiaryGroup[]
   eligibilityCriteria: string[]

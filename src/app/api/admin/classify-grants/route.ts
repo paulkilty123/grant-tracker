@@ -66,7 +66,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   if (!await isAuthorised(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const body = await req.json().catch(() => ({})) as { offset?: number; limit?: number; force?: boolean }
+  const body = await req.json().catch(() => ({})) as { offset?: number; limit?: number; force?: boolean; nicheOnly?: boolean }
   const offset = body.offset ?? 0
   const limit  = body.limit  ?? 20  // 20 grants = 1 Claude call
   const force  = body.force  ?? false
@@ -95,6 +95,9 @@ export async function POST(req: NextRequest) {
   if (force) {
     // Force mode: paginate through ALL grants using offset
     query = query.range(offset, offset + limit - 1)
+  } else if (body.nicheOnly) {
+    // Niche-only mode: re-classify grants that have sectors but are missing niche_tags
+    query = query.or('niche_tags.is.null,niche_tags.eq.{}').not('impact_sectors', 'is', null).limit(limit)
   } else {
     // Normal mode: fetch first N unclassified grants.
     // Catches both NULL and empty-array ({}) — both mean "not yet classified".
@@ -131,9 +134,13 @@ export async function POST(req: NextRequest) {
           const patch: Record<string, unknown> = {
             impact_sectors: r.impact_sectors,
             funding_type:   r.funding_type,
+            niche_tags:     r.niche_tags,
           }
           if (r.eligible_structures.length > 0) {
             patch.eligible_structures = r.eligible_structures
+          }
+          if (r.target_beneficiaries.length > 0) {
+            patch.target_beneficiaries = r.target_beneficiaries
           }
           return supabase
             .from('scraped_grants')

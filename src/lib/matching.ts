@@ -772,7 +772,36 @@ export function computeMatchScore(
     themesScore = Math.min(20, themesScore + sectorHits * 4)
   }
 
-  // ── Title keyword veto ────────────────────────────────────────────────
+
+  // ── Niche tag sub-sector bonus (max +8) ───────────────────────────────
+  // When both the grant and the org carry niche_tags (e.g. "music", "theatre"),
+  // a matching tag is a strong signal that this is a highly specific fit.
+  // Only fires when sectors already overlap (primaryDomainMismatch = false),
+  // so we're always rewarding specificity within a valid sector match.
+  // If the org has no niche_tags set yet we silently skip — no penalty.
+  const grantNicheTags = (grant.nicheTags ?? []).map(t => t.toLowerCase())
+  const orgNicheTags   = (org.niche_tags   ?? []).map(t => t.toLowerCase())
+
+  if (!primaryDomainMismatch && grantNicheTags.length > 0 && orgNicheTags.length > 0) {
+    const nicheIntersection = grantNicheTags.filter(t => orgNicheTags.includes(t))
+    if (nicheIntersection.length > 0) {
+      // Bonus scales with how specific the grant is: a grant tagged with 2 niche
+      // tags and you match 1 is weaker than a single-tag grant you perfectly match.
+      const nichematch = nicheIntersection.length / Math.max(grantNicheTags.length, 1)
+      const nicheBonus = Math.round(nichematch * 8)
+      themesScore = Math.min(25, themesScore + nicheBonus)
+      if (nicheBonus >= 4) reasons.push(`Specialist ${nicheIntersection[0].replace(/_/g, ' ')} focus`)
+    } else {
+      // Grant has a clear specialism the org doesn't share — gentle nudge down
+      // (max -3) so the org still sees it, but it ranks lower than a specialist org.
+      // Only applies when the org HAS niche tags (meaning it's a specialist org
+      // in a different niche, not an org that simply hasn't filled in sub-sectors).
+      const nichemiss = Math.min(3, grantNicheTags.length)
+      themesScore = Math.max(0, themesScore - nichemiss)
+    }
+  }
+
+    // ── Title keyword veto ────────────────────────────────────────────────
   // Grant titles are very high-confidence domain signals — catches mismatches
   // even when impact_sectors is absent or sparsely tagged.  Only fires when
   // the org has some sector/theme data (can't veto a completely blank profile).

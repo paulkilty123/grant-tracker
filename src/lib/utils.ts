@@ -11,7 +11,7 @@ export function cn(...inputs: ClassValue[]) {
 
 // ── Currency formatting ───────────────────────
 
-export function formatCurrency(amount: number): string  {
+export function formatCurrency(amount: number): string {
   if (amount >= 1_000_000) return `£${(amount / 1_000_000).toFixed(1)}m`
   if (amount >= 1_000)     return `£${(amount / 1_000).toFixed(0)}k`
   return `£${amount.toLocaleString()}`
@@ -39,7 +39,7 @@ export function getDeadlineUrgency(
 ): 'overdue' | 'urgent' | 'soon' | 'ok' | 'rolling' {
   if (daysUntil === null)  return 'rolling'
   if (daysUntil < 0)       return 'overdue'
-  if (daysUntil <= 7)     return 'urgent'
+  if (daysUntil <= 10)     return 'urgent'
   if (daysUntil <= 21)     return 'soon'
   return 'ok'
 }

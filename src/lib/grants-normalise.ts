@@ -64,5 +64,6 @@ export function normaliseScrapedGrant(row: Record<string, unknown>): EnrichedGra
     funderCategory:       row.funder_category ? String(row.funder_category) : undefined,
     geoScope:             Array.isArray(row.geographic_scope) ? (row.geographic_scope as string[]) : undefined,
     funderBrief:          row.funder_brief && typeof row.funder_brief === 'object' ? (row.funder_brief as Record<string, string | null>) : null,
+    nicheTags:            Array.isArray(row.niche_tags) ? (row.niche_tags as string[]) : [],
   }
 }

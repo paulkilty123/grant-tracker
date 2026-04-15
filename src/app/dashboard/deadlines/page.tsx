@@ -9,7 +9,7 @@ import type { DeadlineAlert, PipelineItem, PipelineStage } from '@/types'
 
 const ACTIVE_STAGES = ['identified', 'applying', 'submitted']
 
-// ── Deadline Card ────────────────────────────────────────────────────────────
+// ── Deadline Card ─────────────────────────────────────────────────────────────
 
 function DeadlineCard({ alert, onStageChange, onDeadlineChange }: {
   alert: DeadlineAlert
@@ -287,7 +287,7 @@ export default function DeadlinesPage() {
             {needsAttention.length > 0 && (
               <div className="flex items-center gap-3 mb-3">
                 <h3 className="text-base font-bold text-[#1A1A1A]" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Needs Attention</h3>
-                <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full" style={{ background: '#FDE8A3', color: '#4A3800' }}>
+                <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full" style={{ background: '#ffdad6', color: '#93000a' }}>
                   {needsAttention.length} grant{needsAttention.length !== 1 ? 's' : ''}{atRisk > 0 && <> · {fmt(atRisk)} at risk</>}
                 </span>
               </div>
@@ -325,7 +325,7 @@ export default function DeadlinesPage() {
               <>
                 <div className="flex items-center gap-3 mt-5 mb-3">
                   <h3 className="text-base font-bold text-[#1A1A1A]" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Set Deadlines</h3>
-                  <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full" style={{ background: '#D9F99D', color: '#4D7C0F' }}>{noDeadlineItems.length} to do</span>
+                  <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full" style={{ background: '#FDE8A3', color: '#4A3800' }}>{noDeadlineItems.length} to do</span>
                 </div>
                 {noDeadlineItems.map(item => {
                   const amountStr = formatRange(item.amount_min, item.amount_max ?? item.amount_requested)
@@ -367,11 +367,11 @@ export default function DeadlinesPage() {
           </div>
 
           {/* Right: 4 stat cards vertical */}
-          <div className="lg:col-span-4 flex flex-col gap-3 lg:pt-10">
+          <div className="lg:col-span-4 flex flex-col gap-3">
             {[
               { label: 'This Week',       count: urgent.length,          bg: '#FDE8A3', col: '#4A3800', Icon: AlarmClock },
               { label: 'Coming Up',       count: soon.length,            bg: '#BAE6FD', col: '#1E3A5F', Icon: CalendarClock },
-              { label: 'No Deadline Set', count: noDeadlineItems.length, bg: '#D9F99D', col: '#4D7C0F', Icon: Calendar },
+              { label: 'No Deadline Set', count: noDeadlineItems.length, bg: '#EBEBEB', col: '#374151', Icon: Calendar },
             ].map(({ label, count, bg, col, Icon }) => (
               <div key={label} className="flex items-center justify-between px-6 py-5 rounded-[1.5rem]" style={{ backgroundColor: bg }}>
                 <div>

@@ -56,6 +56,54 @@ const IMPACT_SECTOR_OPTIONS: { value: ImpactSector; label: string }[] = [
   { value: 'international', label: 'International & Fair Trade' },
 ]
 
+// Sub-sector tags available for each broad sector that has meaningful sub-divisions
+const NICHE_TAGS_BY_SECTOR: Partial<Record<ImpactSector, { value: string; label: string }[]>> = {
+  creative: [
+    { value: 'music',           label: 'Music' },
+    { value: 'theatre',         label: 'Theatre & Drama' },
+    { value: 'dance',           label: 'Dance' },
+    { value: 'visual_arts',     label: 'Visual Arts' },
+    { value: 'film_media',      label: 'Film & Media' },
+    { value: 'literature',      label: 'Literature & Writing' },
+    { value: 'crafts',          label: 'Crafts & Making' },
+    { value: 'circus_street',   label: 'Circus & Street Arts' },
+  ],
+  sport: [
+    { value: 'football',        label: 'Football' },
+    { value: 'cricket',         label: 'Cricket' },
+    { value: 'rugby',           label: 'Rugby' },
+    { value: 'basketball',      label: 'Basketball' },
+    { value: 'swimming',        label: 'Swimming' },
+    { value: 'athletics',       label: 'Athletics' },
+    { value: 'tennis',          label: 'Tennis' },
+    { value: 'cycling',         label: 'Cycling' },
+    { value: 'martial_arts',    label: 'Martial Arts & Boxing' },
+    { value: 'disability_sport',label: 'Disability Sport' },
+    { value: 'women_in_sport',  label: 'Women in Sport' },
+  ],
+  heritage: [
+    { value: 'built_heritage',      label: 'Historic Buildings' },
+    { value: 'industrial_heritage', label: 'Industrial Heritage' },
+    { value: 'natural_heritage',    label: 'Natural Heritage' },
+    { value: 'museums_archives',    label: 'Museums & Archives' },
+  ],
+  environment: [
+    { value: 'climate',         label: 'Climate & Net Zero' },
+    { value: 'biodiversity',    label: 'Biodiversity & Wildlife' },
+    { value: 'urban_greening',  label: 'Urban Greening' },
+    { value: 'marine',          label: 'Marine & Coastal' },
+    { value: 'energy',          label: 'Renewable Energy' },
+  ],
+  education: [
+    { value: 'early_years',         label: 'Early Years' },
+    { value: 'stem',                label: 'STEM' },
+    { value: 'literacy_numeracy',   label: 'Literacy & Numeracy' },
+    { value: 'higher_education',    label: 'Higher Education' },
+    { value: 'vocational',          label: 'Vocational & Apprenticeships' },
+  ],
+}
+
+
 const BENEFICIARY_OPTIONS: { value: BeneficiaryGroup; label: string }[] = [
   { value: 'children',          label: 'Children (under 16)'            },
   { value: 'young_people',      label: 'Young people (16-25)'          },
@@ -198,6 +246,7 @@ interface FormState {
   funderTypePreferences: FunderType[]
   fundingTypePreferences: FundingType[]
   fundingSubtypePreferences: FundingSubtype[]
+  nicheTags: string[]
   mission: string
   alertsEnabled: boolean
   alertFrequency: string
@@ -231,6 +280,7 @@ const EMPTY_FORM: FormState = {
   funderTypePreferences: [],
   fundingTypePreferences: [],
   fundingSubtypePreferences: [],
+  nicheTags: [],
   mission: '',
   alertsEnabled: false,
   alertFrequency: 'weekly',
@@ -265,6 +315,7 @@ function orgToForm(org: Organisation): FormState {
     funderTypePreferences:      org.funder_type_preferences ?? [],
     fundingTypePreferences:     (org.funding_type_preferences ?? []) as FundingType[],
     fundingSubtypePreferences:  (org.funding_subtype_preferences ?? []) as FundingSubtype[],
+    nicheTags:                  org.niche_tags ?? [],
     mission:                    org.mission ?? '',
     alertsEnabled:              (org as Organisation & { alerts_enabled?: boolean }).alerts_enabled ?? false,
     alertFrequency:             (org as Organisation & { alert_frequency?: string }).alert_frequency ?? 'weekly',
@@ -425,7 +476,18 @@ export default function ProfilePage() {
     })
   }
 
-  function moveImpactSector(sector: ImpactSector, direction: 'up' | 'down') {
+
+  function toggleNicheTag(tag: string) {
+    setForm(prev => {
+      const current = prev.nicheTags
+      if (current.includes(tag)) {
+        return { ...prev, nicheTags: current.filter(t => t !== tag) }
+      }
+      return { ...prev, nicheTags: [...current, tag] }
+    })
+  }
+
+    function moveImpactSector(sector: ImpactSector, direction: 'up' | 'down') {
     setForm(prev => {
       const arr = [...prev.impactSectors]
       const idx = arr.indexOf(sector)
@@ -552,6 +614,7 @@ export default function ProfilePage() {
       funder_type_preferences:      form.funderTypePreferences,
       funding_type_preferences:     form.fundingTypePreferences,
       funding_subtype_preferences:  form.fundingSubtypePreferences,
+      niche_tags:                   form.nicheTags,
       owner_id:                     userId,
       alerts_enabled:               form.alertsEnabled,
       alert_frequency:              form.alertFrequency,
@@ -1217,6 +1280,49 @@ export default function ProfilePage() {
             )
           })}
         </div>
+
+        {/* ── Niche / sub-sector picker (only for sectors with sub-divisions) ── */}
+        {(() => {
+          const nicheSectors = form.impactSectors.filter(s => NICHE_TAGS_BY_SECTOR[s])
+          if (nicheSectors.length === 0) return null
+          return (
+            <div className="mt-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="h-px flex-1 bg-warm" />
+                <p className="text-[11px] font-semibold text-mid uppercase tracking-wide">Specialise further <span className="font-normal normal-case">(optional — improves match precision)</span></p>
+                <div className="h-px flex-1 bg-warm" />
+              </div>
+              {nicheSectors.map(sector => {
+                const opts = NICHE_TAGS_BY_SECTOR[sector]!
+                const sectorLabel = IMPACT_SECTOR_OPTIONS.find(o => o.value === sector)?.label ?? sector
+                return (
+                  <div key={sector}>
+                    <p className="text-xs text-mid mb-1.5">Within <span className="font-medium text-charcoal">{sectorLabel}</span>, your focus is:</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {opts.map(opt => {
+                        const selected = form.nicheTags.includes(opt.value)
+                        return (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => toggleNicheTag(opt.value)}
+                            className={`px-2.5 py-1 text-xs font-medium rounded-lg border transition-all ${
+                              selected
+                                ? 'bg-forest text-cream border-forest'
+                                : 'bg-white text-mid border-warm hover:border-forest hover:text-forest'
+                            }`}
+                          >
+                            {selected && <span className="mr-1">✓</span>}{opt.label}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )
+        })()}
       </div>
     )
   }

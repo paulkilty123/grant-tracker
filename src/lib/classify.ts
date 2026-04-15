@@ -46,6 +46,7 @@ export interface ClassificationResult {
   funding_type: string
   eligible_structures: string[]
   target_beneficiaries: string[]
+  niche_tags: string[]
 }
 
 // ── Claude Haiku classification ────────────────────────────────────────────────
@@ -69,7 +70,8 @@ OUTPUT FORMAT — return ONLY a JSON array, no markdown, no explanation:
     "impact_sectors": ["<1 to 4 sector values>"],
     "funding_type": "<exactly one funding type value>",
     "eligible_structures": ["<legal structure values, or empty array []>"],
-    "target_beneficiaries": ["<1 to 4 beneficiary group values>"]
+    "target_beneficiaries": ["<1 to 4 beneficiary group values>"],
+    "niche_tags": ["<0 to 4 sub-sector specialism tags, or empty array []>"]
   }
 ]
 
@@ -120,6 +122,56 @@ Common mappings:
 "any incorporated organisation"               → ["cic_guarantee","cic_shares","cio","registered_charity","ltd_guarantee","ltd_shares","llp","cooperative"]
 "individuals / sole traders / freelancers"    → ["sole_trader","unincorporated"]
 Not stated / open to all / "organisations"    → []
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+NICHE TAGS — optional sub-sector specialism within the broad impact sector.
+Return [] if the grant has no clear specialism, or is genuinely open across a whole sector.
+Only assign tags when the grant title or description clearly indicates a specific sub-focus.
+
+For "creative" grants:
+music               music education, orchestras, bands, music therapy, music making, songwriting
+theatre             theatre, drama, performing arts (stage), musicals, playwriting
+dance               dance, ballet, contemporary dance, dance therapy, choreography
+visual_arts         visual arts, painting, sculpture, illustration, printmaking, ceramics
+film_media          film, cinema, screen, TV, radio, podcast, animation, photography
+literature          books, writing, poetry, storytelling, reading, publishing, libraries
+crafts              crafts, textiles, making, blacksmithing, ceramics (craft focus)
+circus_street       circus, street arts, outdoor arts, puppetry, magic
+
+For "sport" grants:
+football            football, soccer
+cricket             cricket
+rugby               rugby union, rugby league
+basketball          basketball
+swimming            swimming, aquatics, water polo
+athletics           athletics, running, track and field
+tennis              tennis, padel
+cycling             cycling, mountain biking
+martial_arts        martial arts, boxing, judo, karate
+disability_sport    disability sport, parasport, wheelchair sport, boccia, goalball
+women_in_sport      women in sport, girls in sport, female participation
+
+For "heritage" grants:
+built_heritage      historic buildings, listed buildings, churches, castles, archaeology
+industrial_heritage industrial heritage, mills, canals, railways, mining
+natural_heritage    natural heritage, landscape, woodland heritage, ancient trees
+museums_archives    museums, archives, libraries, collections, oral history
+
+For "environment" grants:
+climate             climate change, net zero, carbon reduction, emissions
+biodiversity        biodiversity, wildlife, species recovery, pollinator, rewilding
+urban_greening      urban greening, parks, community gardens, green spaces
+marine              marine, ocean, coastal, rivers, water quality, fisheries
+energy              renewable energy, solar, wind, energy efficiency
+
+For "education" grants:
+early_years         early years, nursery, childcare, under-5s
+stem                STEM, science, maths, engineering, coding in schools
+literacy_numeracy   literacy, numeracy, reading, writing skills
+higher_education    higher education, university, graduates, postgraduate
+vocational          vocational, apprenticeships, trade skills, T-levels
+
+Return ONLY tags from the lists above, exactly as written. Return [] if none apply clearly.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 TARGET BENEFICIARIES — who does this grant primarily serve? Choose 1 to 4.
@@ -200,7 +252,11 @@ export function validate(raw: ClassificationResult) {
     ? raw.target_beneficiaries.filter(b => VALID_BENEFICIARIES.has(b)).slice(0, 4)
     : []
 
-  return { impact_sectors, funding_type, eligible_structures, target_beneficiaries }
+  const niche_tags = Array.isArray((raw as ClassificationResult).niche_tags)
+    ? ((raw as ClassificationResult).niche_tags as string[]).slice(0, 4)
+    : []
+
+  return { impact_sectors, funding_type, eligible_structures, target_beneficiaries, niche_tags }
 }
 
 // ── Classify up to `limit` unclassified active grants ─────────────────────────
@@ -250,6 +306,7 @@ export async function classifyUnclassified(
             target_beneficiaries: r.target_beneficiaries.length > 0 ? r.target_beneficiaries : ['general_public'],
           }
           if (r.eligible_structures.length > 0) patch.eligible_structures = r.eligible_structures
+          if (r.niche_tags.length > 0) patch.niche_tags = r.niche_tags
           return supabase.from('scraped_grants').update(patch).eq('id', g.id)
         })
 
