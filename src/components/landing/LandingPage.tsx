@@ -936,32 +936,42 @@ export default function LandingPage() {
               </p>
             </motion.div>
           </div>
-          <div className="grid sm:grid-cols-2 gap-4">
+          <div className="divide-y divide-[#EBEBEB]">
             {audiences.map((card, i) => (
               <motion.div
                 key={card.title}
-                {...fadeInView(i * 0.07)}
-                className="relative overflow-hidden bg-white rounded-3xl p-7 md:p-9 group"
-                style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.05)' }}
+                {...fadeInView(i * 0.08)}
+                className={`flex items-start gap-6 md:gap-10 py-10 md:py-12 ${i % 2 === 1 ? 'pl-8 md:pl-20 lg:pl-32' : ''}`}
               >
-                {/* Decorative circle */}
-                <div
-                  className="absolute top-0 right-0 w-32 h-32 rounded-full pointer-events-none transition-transform duration-700 group-hover:scale-150"
-                  style={{ background: card.decoBg, transform: 'translate(2rem, -2rem)' }}
-                />
-                {/* Icon top-right */}
-                <div className="absolute top-6 right-6 opacity-20 group-hover:opacity-80 group-hover:scale-110 transition-all duration-300 z-10">
-                  <card.Icon className="w-6 h-6" style={{ color: card.iconColor }} />
-                </div>
-                {/* Title */}
-                <h3
-                  className="font-bold mb-3 relative z-10 transition-transform duration-300 group-hover:translate-x-1"
-                  style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: '1.2rem', color: '#111827' }}
+                {/* Large muted number */}
+                <span
+                  className="flex-shrink-0 font-bold leading-none select-none hidden sm:block"
+                  style={{
+                    fontFamily: 'var(--font-space-grotesk)',
+                    fontSize: 'clamp(72px, 8vw, 108px)',
+                    color: '#EBEBEB',
+                    letterSpacing: '-0.04em',
+                    lineHeight: 1,
+                    marginTop: '-0.1em',
+                  }}
                 >
-                  {card.title}
-                </h3>
-                {/* Description */}
-                <p className="text-gray-500 text-sm leading-relaxed max-w-md relative z-10">{card.desc}</p>
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                {/* Content */}
+                <div className="pt-1 flex-1 max-w-xl">
+                  <div className="flex items-center gap-2.5 mb-3">
+                    <card.Icon className="w-4 h-4 flex-shrink-0" style={{ color: card.iconColor }} />
+                    <h3
+                      className="font-bold"
+                      style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: '1.2rem', color: '#1A1A1A' }}
+                    >
+                      {card.title}
+                    </h3>
+                  </div>
+                  <p className="text-sm leading-relaxed" style={{ color: '#525252' }}>
+                    {card.desc}
+                  </p>
+                </div>
               </motion.div>
             ))}
           </div>
