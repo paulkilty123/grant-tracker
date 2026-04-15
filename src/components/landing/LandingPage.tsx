@@ -936,7 +936,7 @@ export default function LandingPage() {
               </p>
             </motion.div>
           </div>
-          <div className="grid sm:grid-cols-2 gap-x-6 divide-y divide-[#EBEBEB] sm:divide-y-0">
+          <div className="grid sm:grid-cols-2 gap-x-6">
             {audiences.map((card, i) => (
               <motion.div
                 key={card.title}
@@ -945,8 +945,6 @@ export default function LandingPage() {
                 style={{
                   paddingRight: i % 2 === 0 ? '1.5rem' : undefined,
                   paddingLeft:  i % 2 === 1 ? '1.5rem' : undefined,
-                  borderRight:  i % 2 === 0 ? '1px solid #EBEBEB' : undefined,
-                  borderBottom: i < 2       ? '1px solid #EBEBEB' : undefined,
                 }}
               >
                 {/* Number — left column */}
