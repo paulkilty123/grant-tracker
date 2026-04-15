@@ -582,12 +582,14 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
               <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">Who&apos;s eligible</p>
               <div className="flex items-center gap-1.5 flex-wrap">
                 <p className="text-sm font-semibold text-charcoal">{structureLabels.length > 0 ? structureLabels.join(', ') : '—'}</p>
-                {hasOrg && structureLabels.length > 0 && eligibilityStatus === 'eligible' && (
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md" style={{ backgroundColor: '#dcfce7', color: '#166534' }}>✓ You qualify</span>
-                )}
-                {hasOrg && structureLabels.length > 0 && eligibilityStatus === 'ineligible' && (
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md" style={{ backgroundColor: '#fee2e2', color: '#991b1b' }}>✕ Not eligible</span>
-                )}
+                {hasOrg && org?.legal_structure && structureLabels.length > 0 && (() => {
+                  const eligible = grant.eligibleStructures as LegalStructure[] | undefined
+                  if (!eligible || eligible.length === 0) return null
+                  const qualifies = eligible.includes(org.legal_structure as LegalStructure)
+                  return qualifies
+                    ? <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md" style={{ backgroundColor: '#dcfce7', color: '#166534' }}>✓ You qualify</span>
+                    : <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md" style={{ backgroundColor: '#fee2e2', color: '#991b1b' }}>✕ Not eligible</span>
+                })()}
               </div>
             </div>
             <div>
