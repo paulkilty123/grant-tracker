@@ -1206,14 +1206,14 @@ export function computeMatchScore(
   // ── eligible_structures hard gate ────────────────────────────────────
   // When a grant has explicit structure requirements, override the soft
   // text-based eligibility with a hard structured check.
-  if (grant.eligibleStructures && grant.eligibleStructures.length > 0) {
-    const orgStructures = orgStructuresToCheck(org)
+  if (grant.eligibleStructures && grant.eligibleStructures.length > 0 && org.legal_structure) {
+    // Only use explicit legal_structure — org_type fallback is too broad for a hard gate
 
-    if (orgStructures.length > 0) {
+    {
       // Normalize both sides before comparing — bridges vocabulary mismatches
       // between the DB's scraped values ('cic', 'charity', 'coop') and the
       // code's LegalStructure enum ('cic_guarantee', 'registered_charity', 'cooperative')
-      const orgTokens   = new Set(orgStructures.flatMap(s => normalizeStructureTokens(s)))
+      const orgTokens   = new Set(normalizeStructureTokens(org.legal_structure))
       const grantTokens = grant.eligibleStructures!.flatMap(s => normalizeStructureTokens(s))
       const isEligible  = grantTokens.some(t => orgTokens.has(t))
 
@@ -1221,7 +1221,7 @@ export function computeMatchScore(
         // Confirmed eligible — structured data overrides any earlier text-based mismatch flag
         structureMismatch = false
         eligibilityScore = Math.min(15, eligibilityScore + 3)
-        const label = structureLabel(org.legal_structure ?? orgStructures[0])
+        const label = structureLabel(org.legal_structure)
         reasons.push(`Eligible as a ${label}`)
       } else {
         // Hard ineligibility — significant penalty
@@ -1231,7 +1231,7 @@ export function computeMatchScore(
         reasons.push('Check eligibility — legal structure may not qualify')
       }
     }
-    // If orgStructures is empty (no legal structure data) we can't gate — leave score as-is
+    // Hard gate skipped when no legal_structure set — handled by condition above
   }
 
   // ── Total ──────────────────────────────────────────────────────────────
