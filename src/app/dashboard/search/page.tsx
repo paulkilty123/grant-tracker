@@ -652,42 +652,49 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
             {/* ── Match Insight (white, part of card body) ── */}
       {hasOrg && hasSearch && reason && (() => {
         const brief = (grant as EnrichedGrant).funderBrief
-        // Score quality label
-        const scoreLabel = score >= 80 ? 'Strong match' : score >= 65 ? 'Good match' : score >= 45 ? 'Partial match' : 'Low match'
-        const scoreColourHex = score >= 80 ? '#1f5c52' : score >= 65 ? '#2d8a7a' : score >= 45 ? '#e8a030' : '#dc2626'
-        const pos = positiveReasons ?? []
-        const warns = warnReasons ?? []
+        const scoreLabel    = score >= 80 ? 'Strong match' : score >= 65 ? 'Good match' : score >= 45 ? 'Partial match' : 'Low match'
+        // High matches use lime green (user preferred), lower scores shift to amber/red
+        const scoreColourHex = score >= 80 ? '#84CC16' : score >= 65 ? '#2d8a7a' : score >= 45 ? '#e8a030' : '#dc2626'
+
+        // Derive positives/warnings — use structured arrays if available,
+        // otherwise parse the reason string (robust fallback)
+        const WARN_RE = /check|may |likely|not match|exceed|borough|restricted/i
+        const rawPos   = (positiveReasons && positiveReasons.length > 0)
+          ? positiveReasons
+          : reason.split(/[.,](?=\s[A-Z])|\.\s+/).map(s => s.trim()).filter(s => s && !WARN_RE.test(s))
+        const rawWarns = (warnReasons && warnReasons.length > 0)
+          ? warnReasons
+          : reason.split(/[.,](?=\s[A-Z])|\.\s+/).map(s => s.trim()).filter(s => s && WARN_RE.test(s))
 
         return (
-          <div className="flex items-start gap-4 px-6 py-4 border-t border-[#E8E8EC]"
+          <div className="flex items-center gap-5 px-6 py-4 border-t border-[#E8E8EC]"
             style={{ borderLeft: `3px solid ${scoreColourHex}` }}>
             {/* ── Text content ── */}
-            <div className="flex-1 min-w-0 space-y-1.5">
-              {pos.length > 0 && (
-                <div className="flex flex-wrap gap-x-3 gap-y-1">
-                  {pos.map((r, i) => (
-                    <span key={i} className="text-xs flex items-center gap-1" style={{ color: '#1f5c52' }}>
-                      <span className="font-bold">✓</span> {r}
+            <div className="flex-1 min-w-0 space-y-2">
+              {rawPos.length > 0 && (
+                <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+                  {rawPos.map((r, i) => (
+                    <span key={i} className="text-sm flex items-start gap-1.5" style={{ color: '#1a1a1a' }}>
+                      <span className="font-bold flex-shrink-0 mt-0.5" style={{ color: scoreColourHex }}>✓</span>
+                      <span>{r}</span>
                     </span>
                   ))}
                 </div>
               )}
-              {warns.length > 0 && (
-                <div className="flex flex-wrap gap-x-3 gap-y-1">
-                  {warns.map((r, i) => (
-                    <span key={i} className="text-xs flex items-center gap-1" style={{ color: '#92400e' }}>
-                      <span className="font-bold">⚠</span> {r}
+              {rawWarns.length > 0 && (
+                <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+                  {rawWarns.map((r, i) => (
+                    <span key={i} className="text-sm flex items-start gap-1.5" style={{ color: '#92400e' }}>
+                      <span className="font-bold flex-shrink-0 mt-0.5">⚠</span>
+                      <span>{r}</span>
                     </span>
                   ))}
                 </div>
-              )}
-              {pos.length === 0 && warns.length === 0 && reason && (
-                <p className="text-xs" style={{ color: '#555' }}>{reason}</p>
               )}
             </div>
             {/* ── Score ring ── */}
             {score > 0 && (
-              <div className="flex-shrink-0 flex flex-col items-center gap-0.5 ml-2">
+              <div className="flex-shrink-0 flex flex-col items-center gap-1">
                 <svg width="64" height="64" viewBox="0 0 64 64">
                   <circle cx="32" cy="32" r="25" fill="none" stroke="#E8E8EC" strokeWidth="5" />
                   <circle cx="32" cy="32" r="25" fill="none" stroke={scoreColourHex} strokeWidth="5"
