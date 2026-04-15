@@ -907,7 +907,7 @@ export default function LandingPage() {
       </div>
 
       {/* ABOUT — Block 1: Founder story */}
-      <section id="about" className="py-20 md:py-28 bg-white">
+      <section id="about" className="py-20 md:py-28" style={{ background: '#F9F9F9' }}>
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid lg:grid-cols-2 gap-16 items-start">
 
@@ -933,7 +933,7 @@ export default function LandingPage() {
                 <p className="leading-none mb-3" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(56px, 8vw, 96px)', color: '#84CC16', letterSpacing: '-0.04em' }}>£8bn<span style={{ color: '#1A1A1A' }}>+</span></p>
                 <p className="text-sm font-semibold uppercase tracking-widest" style={{ color: '#525252', fontFamily: 'var(--font-space-grotesk)' }}>awarded by UK trusts &amp; foundations annually</p>
               </div>
-              <div className="rounded-3xl p-8" style={{ background: '#F9F9F9' }}>
+              <div className="rounded-3xl p-8 bg-white" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
                 <p className="text-base font-semibold mb-3" style={{ color: '#1A1A1A', fontFamily: 'var(--font-space-grotesk)' }}>Why it exists</p>
                 <p className="text-base leading-relaxed mb-3" style={{ color: '#525252' }}>
                   The UK has thousands of active funders, but finding the right ones is effectively
@@ -1039,7 +1039,7 @@ export default function LandingPage() {
           </div>
 
           {/* AI approach — full-width card */}
-          <motion.div {...fadeInView(0.1)} className="rounded-3xl p-10 md:p-12" style={{ background: '#F9F9F9' }}>
+          <motion.div {...fadeInView(0.1)} className="rounded-3xl p-10 md:p-12 bg-white" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
             <div className="grid lg:grid-cols-2 gap-8 items-start">
               <div>
                 <p className="text-sm font-semibold tracking-widest uppercase mb-3" style={{ color: '#84CC16', fontFamily: 'var(--font-space-grotesk)' }}>Our approach to AI</p>
