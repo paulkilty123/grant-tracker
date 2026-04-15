@@ -294,6 +294,24 @@ const SECTOR_LABELS: Record<string, string> = {
 /* ─── page ─── */
 export default function LandingPage() {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [activeSection, setActiveSection] = useState<string>('')
+
+  useEffect(() => {
+    const sectionIds = ['how', 'features', 'about', 'pricing', 'contact']
+    const observers: IntersectionObserver[] = []
+    sectionIds.forEach(id => {
+      const el = document.getElementById(id)
+      if (!el) return
+      const obs = new IntersectionObserver(
+        ([entry]) => { if (entry.isIntersecting) setActiveSection(id) },
+        { rootMargin: '-40% 0px -55% 0px' }
+      )
+      obs.observe(el)
+      observers.push(obs)
+    })
+    return () => observers.forEach(o => o.disconnect())
+  }, [])
+
   const [previewGrants, setPreviewGrants] = useState<PublicGrant[]>([])
 
   // Preview section hidden — uncomment to re-enable
@@ -321,9 +339,25 @@ export default function LandingPage() {
           </a>
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-10">
-            {navLinks.map((link) => (
-              <a key={link.label} href={link.href} className="text-[#525252] hover:text-[#1A1A1A] transition-colors font-medium text-base" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>{link.label}</a>
-            ))}
+            {navLinks.map((link) => {
+              const sectionId = link.href.replace('#', '')
+              const isActive = activeSection === sectionId
+              return (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  className="font-medium text-base transition-colors pb-1"
+                  style={{
+                    fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif',
+                    color: isActive ? '#1A1A1A' : '#525252',
+                    borderBottom: isActive ? '2px solid #84CC16' : '2px solid transparent',
+                    transition: 'color 0.2s, border-color 0.2s',
+                  }}
+                >
+                  {link.label}
+                </a>
+              )
+            })}
           </nav>
           {/* Desktop CTAs */}
           <div className="hidden md:flex items-center gap-8">
