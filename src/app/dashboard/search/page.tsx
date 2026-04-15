@@ -277,6 +277,8 @@ interface DisplayGrant {
   breakdown?: MatchBreakdown
   eligibilityStatus?: import('@/lib/matching').EligibilityStatus
   eligibilityReason?: string | null
+  positiveReasons?: string[]
+  warnReasons?: string[]
 }
 
 // ── Score colour gradient ─────────────────────────────────────────────────────
@@ -380,7 +382,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
   showIfDismissed?: boolean
   isInPipeline?: boolean
 }) {
-  const { grant, score, reason, isAiScore, breakdown, eligibilityStatus, eligibilityReason } = item
+  const { grant, score, reason, isAiScore, breakdown, eligibilityStatus, eligibilityReason, positiveReasons, warnReasons } = item
   const [descExpanded, setDescExpanded] = useState(false)
   const [insightsExpanded, setInsightsExpanded] = useState(false)
   const isDismissed  = interactions.has('dismissed')
@@ -650,40 +652,58 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
             {/* ── Match Insight (white, part of card body) ── */}
       {hasOrg && hasSearch && reason && (() => {
         const brief = (grant as EnrichedGrant).funderBrief
+        // Score quality label
+        const scoreLabel = score >= 80 ? 'Strong match' : score >= 65 ? 'Good match' : score >= 45 ? 'Partial match' : 'Low match'
+        const scoreColourHex = score >= 80 ? '#1f5c52' : score >= 65 ? '#2d8a7a' : score >= 45 ? '#e8a030' : '#dc2626'
+        const pos = positiveReasons ?? []
+        const warns = warnReasons ?? []
+
         return (
-          <div className="flex items-center gap-4 px-6 py-4 border-t border-[#E8E8EC]"
-            style={{ borderLeft: '3px solid #84CC16' }}>
-            <Activity className="w-4 h-4 flex-shrink-0" style={{ color: '#84CC16' }} />
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: '#84CC16' }}>Match Insight</p>
-              <p className="text-sm leading-relaxed" style={{ color: '#333' }}>
-                {(() => {
-                  const text = reason.replace(/<[^>]*>/g, '').trim()
-                  const dotIdx = text.indexOf('.')
-                  if (dotIdx > 0 && dotIdx < 60) {
-                    return <><strong>{text.slice(0, dotIdx + 1)}</strong>{text.slice(dotIdx + 1)}</>
-                  }
-                  return text
-                })()}
-              </p>
+          <div className="flex items-start gap-4 px-6 py-4 border-t border-[#E8E8EC]"
+            style={{ borderLeft: `3px solid ${scoreColourHex}` }}>
+            {/* ── Text content ── */}
+            <div className="flex-1 min-w-0 space-y-1.5">
+              {pos.length > 0 && (
+                <div className="flex flex-wrap gap-x-3 gap-y-1">
+                  {pos.map((r, i) => (
+                    <span key={i} className="text-xs flex items-center gap-1" style={{ color: '#1f5c52' }}>
+                      <span className="font-bold">✓</span> {r}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {warns.length > 0 && (
+                <div className="flex flex-wrap gap-x-3 gap-y-1">
+                  {warns.map((r, i) => (
+                    <span key={i} className="text-xs flex items-center gap-1" style={{ color: '#92400e' }}>
+                      <span className="font-bold">⚠</span> {r}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {pos.length === 0 && warns.length === 0 && reason && (
+                <p className="text-xs" style={{ color: '#555' }}>{reason}</p>
+              )}
             </div>
+            {/* ── Score ring ── */}
             {score > 0 && (
               <div className="flex-shrink-0 flex flex-col items-center gap-0.5 ml-2">
-                <svg width="68" height="68" viewBox="0 0 68 68">
-                  <circle cx="34" cy="34" r="27" fill="none" stroke="#E8E8EC" strokeWidth="5" />
-                  <circle cx="34" cy="34" r="27" fill="none" stroke="#84CC16" strokeWidth="5"
+                <svg width="64" height="64" viewBox="0 0 64 64">
+                  <circle cx="32" cy="32" r="25" fill="none" stroke="#E8E8EC" strokeWidth="5" />
+                  <circle cx="32" cy="32" r="25" fill="none" stroke={scoreColourHex} strokeWidth="5"
                     strokeLinecap="round"
-                    strokeDasharray={`${(score / 100) * 169.6} 169.6`}
-                    transform="rotate(-90 34 34)" />
-                  <text x="34" y="31" textAnchor="middle" dominantBaseline="middle"
-                    style={{ fontSize: '13px', fontWeight: '700', fill: '#84CC16', fontFamily: 'inherit' }}>
+                    strokeDasharray={`${(score / 100) * 157.1} 157.1`}
+                    transform="rotate(-90 32 32)" />
+                  <text x="32" y="29" textAnchor="middle" dominantBaseline="middle"
+                    style={{ fontSize: '12px', fontWeight: '700', fill: scoreColourHex, fontFamily: 'inherit' }}>
                     {score}%
                   </text>
-                  <text x="34" y="46" textAnchor="middle"
-                    style={{ fontSize: '8px', fill: '#888888', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: '600' }}>
+                  <text x="32" y="43" textAnchor="middle"
+                    style={{ fontSize: '7px', fill: '#888', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: '600' }}>
                     MATCH
                   </text>
                 </svg>
+                <span className="text-[9px] font-semibold uppercase tracking-wide" style={{ color: scoreColourHex }}>{scoreLabel}</span>
               </div>
             )}
           </div>
@@ -1587,7 +1607,7 @@ export default function SearchPage() {
         let score = match.score
         if (grantInteractions.has('liked'))    score = Math.min(100, score + 12)
         if (grantInteractions.has('disliked')) score = Math.max(0,   score - 20)
-        return { grant, score, reason: match.reason, isAiScore: false, breakdown: match.breakdown, eligibilityStatus: match.eligibilityStatus, eligibilityReason: match.eligibilityReason }
+        return { grant, score, reason: match.reason, isAiScore: false, breakdown: match.breakdown, eligibilityStatus: match.eligibilityStatus, eligibilityReason: match.eligibilityReason, positiveReasons: match.positiveReasons, warnReasons: match.warnReasons }
       }
       return { grant, score: 0, reason: '', isAiScore: false }
     })

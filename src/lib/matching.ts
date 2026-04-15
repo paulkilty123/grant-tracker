@@ -16,7 +16,9 @@ export interface MatchResult {
   reason:            string
   breakdown:         MatchBreakdown
   eligibilityStatus: EligibilityStatus
-  eligibilityReason: string | null   // plain-English explanation, shown in Shield badge
+  eligibilityReason: string | null
+  positiveReasons:   string[]
+  warnReasons:       string[]
 }
 
 // Map income bands to approximate midpoints.
@@ -345,6 +347,35 @@ function phraseHitRatio(term: string, text: string): number {
  * 'registered_charity', 'cooperative').  Both sides are expanded then compared
  * via intersection, so 'cic_guarantee' ↔ 'cic' correctly resolves to eligible.
  */
+
+/** Human-readable label for an impact sector value */
+function sectorDisplayLabel(s: string): string {
+  const MAP: Record<string, string> = {
+    community:        'Community',
+    young_people:     'Young People',
+    health:           'Health',
+    mental_health:    'Mental Health',
+    education:        'Education',
+    employment:       'Employment',
+    creative:         'Arts & Culture',
+    environment:      'Environment',
+    housing:          'Housing',
+    food:             'Food',
+    sport:            'Sport',
+    heritage:         'Heritage',
+    disability:       'Disability',
+    older_people:     'Older People',
+    women:            'Women & Gender',
+    justice:          'Justice & Rights',
+    tech:             'Technology',
+    financial:        'Financial Inclusion',
+    international:    'International',
+    social_economy:   'Social Economy',
+    social_innovation:'Social Innovation',
+  }
+  return MAP[s] ?? s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+}
+
 function normalizeStructureTokens(s: string): string[] {
   const sl = s.toLowerCase().trim()
   switch (sl) {
@@ -715,9 +746,9 @@ export function computeMatchScore(
       themesScore = Math.min(20, themesScore + depthBoost)
 
       if (depthBoost >= 3) {
-        reasons.push(`Sector match: ${intersection.join(', ')} (strong profile alignment)`)
+        reasons.push(`Sector match: ${intersection.map(sectorDisplayLabel).join(', ')} (strong profile alignment)`)
       } else {
-        reasons.push(`Sector match: ${intersection.join(', ')}`)
+        reasons.push(`Sector match: ${intersection.map(sectorDisplayLabel).join(', ')}`)
       }
     }
 
@@ -1340,6 +1371,8 @@ export function computeMatchScore(
     reason,
     eligibilityStatus,
     eligibilityReason,
+    positiveReasons: positives,
+    warnReasons:     warns,
     breakdown: {
       location:      { score: locationScore,      max: 20, label: 'Location' },
       themes:        { score: themesScore,        max: 20, label: 'Themes & work' },
