@@ -513,7 +513,7 @@ export function computeMatchScore(
         (tagClass.kind === 'ni'       && orgInNI)
       if (nationOk) {
         locationScore = 18
-        reasons.push(`Eligible in ${tagClass.label}`)
+        reasons.push(`${tagClass.label} — open to ${org.primary_location ? org.primary_location.split(',')[0].trim() : 'your area'}`)
       } else {
         locationScore = 2
         locationMismatch = true
@@ -524,7 +524,7 @@ export function computeMatchScore(
       const regionOk = orgMatchesRegionalTag(tagClass.label, orgLocationFull)
       if (regionOk) {
         locationScore = 20
-        reasons.push(`Local match for ${tagClass.label}`)
+        reasons.push(`Local to ${tagClass.label} — good fit for ${org.name}`)
 
         // Borough mismatch check: a "London" tag is still a borough-agnostic match,
         // but if the grant description names a specific borough and the org's city
@@ -560,7 +560,7 @@ export function computeMatchScore(
 
         if (locationMatch) {
           locationScore = 20
-          reasons.push(`Local match for ${org.primary_location.split(',')[0]}`)
+          reasons.push(`Local to ${org.primary_location.split(',')[0].trim()} — matches ${org.name}'s area`)
           if (city === 'london' || region.includes('london')) {
             const mentionedBoroughs = LONDON_BOROUGHS.filter(b => grantText.includes(b))
             if (mentionedBoroughs.length > 0) {
@@ -746,9 +746,9 @@ export function computeMatchScore(
       themesScore = Math.min(20, themesScore + depthBoost)
 
       if (depthBoost >= 3) {
-        reasons.push(`Sector match: ${intersection.map(sectorDisplayLabel).join(', ')} (strong profile alignment)`)
+        reasons.push(`${intersection.map(sectorDisplayLabel).join(' & ')} — strong match for ${org.name}'s focus`)
       } else {
-        reasons.push(`Sector match: ${intersection.map(sectorDisplayLabel).join(', ')}`)
+        reasons.push(`${intersection.map(sectorDisplayLabel).join(' & ')} aligns with ${org.name}'s work`)
       }
     }
 
@@ -827,7 +827,7 @@ export function computeMatchScore(
       const nichematch = nicheIntersection.length / Math.max(grantNicheTags.length, 1)
       const nicheBonus = Math.round(nichematch * 8)
       themesScore = Math.min(25, themesScore + nicheBonus)
-      if (nicheBonus >= 4) reasons.push(`Specialist ${nicheIntersection[0].replace(/_/g, ' ')} focus`)
+      if (nicheBonus >= 4) reasons.push(`Specialist ${nicheIntersection[0].replace(/_/g, ' ')} focus — matches ${org.name}'s specialism`)
     } else {
       // Grant has a clear specialism the org doesn't share — gentle nudge down
       // (max -3) so the org still sees it, but it ranks lower than a specialist org.
@@ -943,9 +943,9 @@ export function computeMatchScore(
 
           // Check if the org's PRIMARY beneficiary matched
           if (grantBeneficiaries.includes(orgBeneficiaries[0])) {
-            reasons.push(`Targets your primary beneficiary group`)
+            reasons.push(`Targets ${org.name}'s primary beneficiaries`)
           } else {
-            reasons.push(`Partial beneficiary match`)
+            reasons.push(`Partial beneficiary match for ${org.name}`)
           }
         } else {
           // No intersection — different beneficiary groups
@@ -967,7 +967,10 @@ export function computeMatchScore(
     const targetMax = org.max_grant_target ?? Infinity
     if (grantMax >= targetMin && grantMin <= targetMax) {
       grantSizeScore = 20
-      reasons.push('Within your target grant size')
+      const grantRangeStr = grantMin > 0 && grantMax > 0 && grantMin !== grantMax
+        ? `£${grantMin >= 1000 ? (grantMin/1000).toFixed(0)+'k' : grantMin}–£${grantMax >= 1000000 ? (grantMax/1000000).toFixed(1)+'m' : grantMax >= 1000 ? (grantMax/1000).toFixed(0)+'k' : grantMax}`
+        : grantMax > 0 ? `up to £${grantMax >= 1000000 ? (grantMax/1000000).toFixed(1)+'m' : grantMax >= 1000 ? (grantMax/1000).toFixed(0)+'k' : grantMax}` : 'this grant'
+      reasons.push(`${grantRangeStr} fits ${org.name}'s target size`)
     } else if (grantMax < targetMin) {
       // Grant ceiling is below org's minimum target — too small
       grantSizeScore = 3
@@ -985,7 +988,7 @@ export function computeMatchScore(
     else if (ratio > 1.2 && ratio <= 3.0)    grantSizeScore = 8
     else if (ratio > 3.0)                    grantSizeScore = 3
     else                                     grantSizeScore = 15
-    if (grantSizeScore >= 18) reasons.push('Grant size suits your organisation')
+    if (grantSizeScore >= 18) reasons.push(`Grant size suits ${org.name}`)
   }
 
   // ── 5. Funder type preference + funding type affinity (max 15) ────────
@@ -995,7 +998,7 @@ export function computeMatchScore(
   if (org.funder_type_preferences?.length) {
     if (org.funder_type_preferences.includes(grant.funderType)) {
       funderTypeScore = 15
-      reasons.push('Preferred funder type')
+      reasons.push(`${grant.funderType.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())} — preferred funder type`)
     } else {
       funderTypeScore = 3
     }
@@ -1010,7 +1013,7 @@ export function computeMatchScore(
       // ── Explicit preference (Phase 3): use what the user told us ──────────
       if (prefs.includes(ft)) {
         funderTypeScore = Math.min(15, funderTypeScore + 4)
-        reasons.push('Matches your funding type preference')
+        reasons.push(`${ft.charAt(0).toUpperCase()+ft.slice(1)} funding matches your preference`)
       } else {
         // Explicitly not preferred — mild penalty
         funderTypeScore = Math.max(0, funderTypeScore - 3)
@@ -1022,10 +1025,10 @@ export function computeMatchScore(
 
       if (isEarly && ft === 'programme') {
         funderTypeScore = Math.min(15, funderTypeScore + 3)
-        reasons.push('Programme suits your stage')
+        reasons.push(`Programme funding suits ${org.name}'s stage`)
       } else if (isGrowth && ft === 'investment') {
         funderTypeScore = Math.min(15, funderTypeScore + 2)
-        reasons.push('Investment suits growth stage')
+        reasons.push(`Social investment suits ${org.name}'s growth stage`)
       }
     }
   }
@@ -1042,7 +1045,7 @@ export function computeMatchScore(
       // Unrestricted is the "holy grail" — give it an extra nudge in the reason
       // so it surfaces clearly in the UI, but keep the numeric bonus capped.
       if (grant.fundingSubtype === 'unrestricted') {
-        reasons.push('Unrestricted / core funding — matches your preference')
+        reasons.push(`Unrestricted core funding — exactly what ${org.name} is looking for`)
       } else {
         const subtypeLabel = grant.fundingSubtype.replace(/_/g, ' ')
         reasons.push(`Matches your ${subtypeLabel} preference`)
@@ -1091,17 +1094,17 @@ export function computeMatchScore(
 
     if (isCharityEligible && isCharityLike) {
       eligibilityScore = Math.min(15, eligibilityScore + 3)
-      reasons.push('Eligible as a registered charity')
+      reasons.push(`${org.name} qualifies as a registered charity`)
     } else if (isCICEligible && isCICLike) {
       eligibilityScore = Math.min(15, eligibilityScore + 3)
-      reasons.push('Eligible as a CIC')
+      reasons.push(`${org.name} qualifies as a CIC`)
     } else if (isSEEligible && (isSELike || isCICLike)) {
       eligibilityScore = Math.min(15, eligibilityScore + 2)
     } else if (isCharityEligible && !isCharityLike) {
       // Hard penalty — "registered charity" requirement is a strong eligibility gate
       eligibilityScore = Math.max(1, eligibilityScore - 12)
       structureMismatch = true
-      reasons.push('Check eligibility — may require registered charity status')
+      reasons.push(`May require registered charity status — verify ${org.name}'s eligibility`)
     }
 
     if (vcseKeywords.some(k => eligibilityText.includes(k))) {
@@ -1207,7 +1210,7 @@ export function computeMatchScore(
     if (incomeCap !== null && org.annual_income_band) {
       if (!orgIncomeWithinCap(org.annual_income_band, incomeCap)) {
         eligibilityScore = Math.max(1, eligibilityScore - 6)
-        reasons.push('Your income may exceed this grant\'s cap')
+        reasons.push(`${org.name}'s income may exceed this grant's cap`)
       } else {
         eligibilityScore = Math.min(15, eligibilityScore + 1)
       }
@@ -1253,13 +1256,13 @@ export function computeMatchScore(
         structureMismatch = false
         eligibilityScore = Math.min(15, eligibilityScore + 3)
         const label = structureLabel(org.legal_structure)
-        reasons.push(`Eligible as a ${label}`)
+        reasons.push(`${org.name} (${label}) is listed as eligible`)
       } else {
         // Hard ineligibility — significant penalty
         // Leave a floor of 1 so it still appears (with low score) rather than disappearing
         eligibilityScore = Math.max(1, Math.min(eligibilityScore, 4))
         structureMismatch = true
-        reasons.push('Check eligibility — legal structure may not qualify')
+        reasons.push(`${org.name}'s structure may not qualify — check before applying`)
       }
     }
     // Hard gate skipped when no legal_structure set — handled by condition above
