@@ -941,14 +941,14 @@ export default function LandingPage() {
               <motion.div
                 key={card.title}
                 {...fadeInView(i * 0.08)}
-                className={`relative py-10 md:py-12 ${i < 2 ? 'sm:border-b sm:border-[#EBEBEB]' : ''} ${i % 2 === 0 ? 'sm:pr-8 sm:border-r sm:border-[#EBEBEB]' : 'sm:pl-8'}`}
+                className={`relative py-6 md:py-8 ${i < 2 ? 'sm:border-b sm:border-[#EBEBEB]' : ''} ${i % 2 === 0 ? 'sm:pr-8 sm:border-r sm:border-[#EBEBEB]' : 'sm:pl-8'}`}
               >
                 {/* Large faded coloured number */}
                 <span
-                  className="block font-bold leading-none select-none mb-4"
+                  className="block font-bold leading-none select-none mb-3"
                   style={{
                     fontFamily: 'var(--font-space-grotesk)',
-                    fontSize: 'clamp(56px, 7vw, 88px)',
+                    fontSize: 'clamp(40px, 5vw, 64px)',
                     color: card.numberColor,
                     letterSpacing: '-0.05em',
                     lineHeight: 1,
