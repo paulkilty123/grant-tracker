@@ -941,12 +941,13 @@ export default function LandingPage() {
               <motion.div
                 key={card.title}
                 {...fadeInView(i * 0.08)}
-                className={`flex items-start gap-5 py-7 ${
-                  i === 0 ? 'sm:pr-6 sm:border-r sm:border-b sm:border-[#EBEBEB]' :
-                  i === 1 ? 'sm:pl-6 sm:border-b sm:border-[#EBEBEB]' :
-                  i === 2 ? 'sm:pr-6 sm:border-r sm:border-[#EBEBEB]' :
-                            'sm:pl-6'
-                }`}
+                className="flex items-start gap-5 py-7"
+                style={{
+                  paddingRight: i % 2 === 0 ? '1.5rem' : undefined,
+                  paddingLeft:  i % 2 === 1 ? '1.5rem' : undefined,
+                  borderRight:  i % 2 === 0 ? '1px solid #EBEBEB' : undefined,
+                  borderBottom: i < 2       ? '1px solid #EBEBEB' : undefined,
+                }}
               >
                 {/* Number — left column */}
                 <span
