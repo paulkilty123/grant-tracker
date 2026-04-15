@@ -580,7 +580,7 @@ export default function LandingPage() {
       )}
 
       {/* HOW IT WORKS */}
-      <section id="how" className="py-20 md:py-28" style={{ background: '#F9F9F9' }}>
+      <section id="how" className="py-20 md:py-28 bg-white">
         <div className="mx-auto max-w-7xl px-6 md:px-8">
 
           {/* Header row */}
@@ -647,7 +647,7 @@ export default function LandingPage() {
       </section>
 
       {/* FUNDING TYPES */}
-      <section className="py-20 md:py-28 bg-white">
+      <section className="py-20 md:py-28" style={{ background: '#F9F9F9' }}>
         <div className="mx-auto max-w-7xl px-6 md:px-8">
 
           {/* Header row — matches Process section */}
@@ -737,7 +737,7 @@ export default function LandingPage() {
 
       {/* FEATURES */}
       <div id="features">
-        <section className="py-20 md:py-28" style={{ background: '#F9F9F9' }}>
+        <section className="py-20 md:py-28 bg-white">
           <div className="mx-auto max-w-7xl px-6 md:px-8">
             <div className="grid lg:grid-cols-2 gap-16 items-center">
 
@@ -952,7 +952,7 @@ export default function LandingPage() {
       </section>
 
       {/* ABOUT — Block 2: Who it's for */}
-      <section className="py-20 md:py-28" style={{ background: '#F9F9F9' }}>
+      <section className="py-20 md:py-28 bg-white">
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid lg:grid-cols-2 gap-8 items-end mb-14">
             <motion.div {...fadeInView(0)}>
@@ -1008,7 +1008,7 @@ export default function LandingPage() {
       </section>
 
       {/* ABOUT — Block 3: Values + AI */}
-      <section className="py-20 md:py-28 bg-white">
+      <section className="py-20 md:py-28" style={{ background: '#F9F9F9' }}>
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid lg:grid-cols-2 gap-8 items-end mb-14">
             <motion.div {...fadeInView(0)}>
