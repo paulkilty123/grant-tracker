@@ -936,19 +936,19 @@ export default function LandingPage() {
               </p>
             </motion.div>
           </div>
-          <div className="grid sm:grid-cols-2 gap-x-8 gap-y-0 divide-y divide-[#EBEBEB] sm:divide-y-0">
+          <div className="grid sm:grid-cols-2 gap-x-6 divide-y divide-[#EBEBEB] sm:divide-y-0">
             {audiences.map((card, i) => (
               <motion.div
                 key={card.title}
                 {...fadeInView(i * 0.08)}
-                className={`relative py-6 md:py-8 ${i < 2 ? 'sm:border-b sm:border-[#EBEBEB]' : ''} ${i % 2 === 0 ? 'sm:pr-8 sm:border-r sm:border-[#EBEBEB]' : 'sm:pl-8'}`}
+                className={`flex items-start gap-5 py-7 ${i < 2 ? 'sm:border-b sm:border-[#EBEBEB]' : ''} ${i % 2 === 0 ? 'sm:pr-6 sm:border-r sm:border-[#EBEBEB]' : 'sm:pl-6'}`}
               >
-                {/* Large faded coloured number */}
+                {/* Number — left column */}
                 <span
-                  className="block font-bold leading-none select-none mb-3"
+                  className="flex-shrink-0 font-bold leading-none select-none w-14 text-right"
                   style={{
                     fontFamily: 'var(--font-space-grotesk)',
-                    fontSize: 'clamp(40px, 5vw, 64px)',
+                    fontSize: 'clamp(36px, 4vw, 52px)',
                     color: card.numberColor,
                     letterSpacing: '-0.05em',
                     lineHeight: 1,
@@ -956,20 +956,16 @@ export default function LandingPage() {
                 >
                   {String(i + 1).padStart(2, '0')}
                 </span>
-                {/* Icon + title */}
-                <div className="flex items-center gap-2.5 mb-3">
-                  <card.Icon className="w-4 h-4 flex-shrink-0" style={{ color: card.iconColor }} />
-                  <h3
-                    className="font-bold"
-                    style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: '1.15rem', color: '#1A1A1A' }}
-                  >
-                    {card.title}
-                  </h3>
+                {/* Content — right column */}
+                <div className="flex-1 pt-0.5">
+                  <div className="flex items-center gap-2 mb-2">
+                    <card.Icon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: card.iconColor }} />
+                    <h3 className="font-bold" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: '1.05rem', color: '#1A1A1A' }}>
+                      {card.title}
+                    </h3>
+                  </div>
+                  <p className="text-sm leading-relaxed" style={{ color: '#525252' }}>{card.desc}</p>
                 </div>
-                {/* Description */}
-                <p className="text-sm leading-relaxed" style={{ color: '#525252' }}>
-                  {card.desc}
-                </p>
               </motion.div>
             ))}
           </div>
