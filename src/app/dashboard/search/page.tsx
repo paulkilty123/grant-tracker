@@ -646,11 +646,11 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
           </p>
         </div>
       )}
-      {hasOrg && eligibilityStatus === 'eligible' && (
+      {hasOrg && eligibilityStatus === 'eligible' && grant.eligibleStructures && grant.eligibleStructures.length > 0 && (
         <div className="flex items-center gap-2 px-6 py-2 border-t bg-emerald-50 border-emerald-100">
           <span className="text-sm">✅</span>
           <p className="text-xs text-emerald-700">
-            {eligibilityReason ?? 'Your structure appears eligible for this grant.'}
+            {eligibilityReason ?? 'Your structure is explicitly listed as eligible.'}
           </p>
         </div>
       )}
@@ -2063,7 +2063,7 @@ export default function SearchPage() {
                     </span>
                   </button>
                 )}
-                {org?.legal_structure && (
+                {!!org && (
                   <>
                     <div className="w-px h-6 bg-gray-200 flex-shrink-0" />
                     <button
