@@ -11,7 +11,7 @@ export const VALID_SECTORS = new Set([
   'financial', 'international',
   // Extended to full 19-sector taxonomy (matching ImpactSector type)
   'mental_health', 'disability', 'older_people', 'sport', 'heritage', 'women',
-  'young_people',
+  'young_people', 'social_economy', 'social_innovation',
 ])
 
 export const VALID_FUNDING_TYPES = new Set([
@@ -92,6 +92,8 @@ environment    climate, biodiversity, energy, sustainability, nature, conservati
 creative       arts, culture, music, film, media, theatre, dance, creative industries
 heritage       heritage, historic buildings, museums, archives, archaeology, conservation of history
 sport          sport, physical activity, grassroots sport, football, cricket, athletics, fitness
+social_economy worker co-ops, community ownership, democratic enterprise, mutual structures, community benefit societies, community shares
+social_innovation tech-for-good, systems change, social R&D, innovation with social purpose, new social models, social venture studios
 women          women, gender equality, girls, female founders, domestic abuse, gender-based violence
 justice        social justice, human rights, equality, racial equity, criminal justice, asylum
 tech           technology, digital, AI, data, open source, innovation, STEM
@@ -116,12 +118,16 @@ Valid values: cic_guarantee, cic_shares, cio, registered_charity,
               unincorporated, sole_trader, not_registered
 
 Common mappings:
-"registered charities only / charities only"  → ["registered_charity", "cio"]
-"CICs / Community Interest Companies"         → ["cic_guarantee", "cic_shares"]
-"social enterprises (broad)"                  → ["cic_guarantee","cic_shares","cio","registered_charity","ltd_guarantee","ltd_shares","cooperative"]
-"any incorporated organisation"               → ["cic_guarantee","cic_shares","cio","registered_charity","ltd_guarantee","ltd_shares","llp","cooperative"]
-"individuals / sole traders / freelancers"    → ["sole_trader","unincorporated"]
-Not stated / open to all / "organisations"    → []
+"registered charities only / charities only"         → ["registered_charity", "cio"]
+"CICs / Community Interest Companies"                → ["cic_guarantee", "cic_shares"]
+"social enterprises (broad / open to CICs and Ltds)" → ["cic_guarantee","cic_shares","ltd_guarantee","ltd_shares","cooperative"]
+"any incorporated organisation"                      → ["cic_guarantee","cic_shares","cio","registered_charity","ltd_guarantee","ltd_shares","llp","cooperative"]
+"charities and social enterprises"                   → ["registered_charity","cio","cic_guarantee","cic_shares","ltd_guarantee","ltd_shares","cooperative"]
+"Ltd companies / limited companies"                  → ["ltd_guarantee","ltd_shares"]
+"co-operatives / community benefit societies / CBS"  → ["cooperative"]
+"Innovate UK / UKRI / SBRI / R&D grants"            → ["ltd_guarantee","ltd_shares","cic_guarantee","cic_shares","cooperative","registered_charity","cio"]
+"individuals / sole traders / freelancers"           → ["sole_trader","unincorporated"]
+"open to all / organisations / no restriction stated" → []
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 NICHE TAGS — optional sub-sector specialism within the broad impact sector.
@@ -156,6 +162,17 @@ built_heritage      historic buildings, listed buildings, churches, castles, arc
 industrial_heritage industrial heritage, mills, canals, railways, mining
 natural_heritage    natural heritage, landscape, woodland heritage, ancient trees
 museums_archives    museums, archives, libraries, collections, oral history
+
+For "social_economy" grants:
+worker_cooperative   employee-owned, worker-controlled, worker co-op
+community_shares     community share offers, co-operative capital raises
+social_franchise     replicable social enterprise models, franchise for good
+community_ownership  community buyouts, asset transfers, community-owned assets
+
+For "social_innovation" grants:
+tech_for_good        technology with explicit social or environmental mission
+impact_measurement   social value measurement, theory of change, SROI
+systems_change       advocacy combined with enterprise, structural change models
 
 For "environment" grants:
 climate             climate change, net zero, carbon reduction, emissions

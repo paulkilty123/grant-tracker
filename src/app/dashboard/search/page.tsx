@@ -266,6 +266,8 @@ interface DisplayGrant {
   reason: string
   isAiScore: boolean
   breakdown?: MatchBreakdown
+  eligibilityStatus?: import('@/lib/matching').EligibilityStatus
+  eligibilityReason?: string | null
 }
 
 // ── Score colour gradient ─────────────────────────────────────────────────────
@@ -369,7 +371,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
   showIfDismissed?: boolean
   isInPipeline?: boolean
 }) {
-  const { grant, score, reason, isAiScore, breakdown } = item
+  const { grant, score, reason, isAiScore, breakdown, eligibilityStatus, eligibilityReason } = item
   const [descExpanded, setDescExpanded] = useState(false)
   const [insightsExpanded, setInsightsExpanded] = useState(false)
   const isDismissed  = interactions.has('dismissed')
@@ -624,7 +626,36 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
 
       </div>
 
-      {/* ── Match Insight (white, part of card body) ── */}
+      {/* ── Ineligibility Shield badge ── */}
+      {hasOrg && eligibilityStatus && (eligibilityStatus === 'ineligible' || eligibilityStatus === 'check_required') && (
+        <div className={`flex items-start gap-2.5 px-6 py-3 border-t ${
+          eligibilityStatus === 'ineligible'
+            ? 'bg-red-50 border-red-100'
+            : 'bg-amber-50 border-amber-100'
+        }`}>
+          <span className="text-base flex-shrink-0 mt-0.5">
+            {eligibilityStatus === 'ineligible' ? '❌' : '⚠️'}
+          </span>
+          <p className={`text-xs leading-relaxed ${
+            eligibilityStatus === 'ineligible' ? 'text-red-700' : 'text-amber-700'
+          }`}>
+            {eligibilityReason ?? (eligibilityStatus === 'ineligible'
+              ? 'Your legal structure may not be eligible for this grant.'
+              : 'Eligibility requirements are unclear — verify before applying.'
+            )}
+          </p>
+        </div>
+      )}
+      {hasOrg && eligibilityStatus === 'eligible' && (
+        <div className="flex items-center gap-2 px-6 py-2 border-t bg-emerald-50 border-emerald-100">
+          <span className="text-sm">✅</span>
+          <p className="text-xs text-emerald-700">
+            {eligibilityReason ?? 'Your structure appears eligible for this grant.'}
+          </p>
+        </div>
+      )}
+
+            {/* ── Match Insight (white, part of card body) ── */}
       {hasOrg && hasSearch && reason && (() => {
         const brief = (grant as EnrichedGrant).funderBrief
         return (
@@ -1024,6 +1055,7 @@ export default function SearchPage() {
   // filter panel silently flipped it back on. Now the toggle only changes
   // when the user clicks it directly (or when the org first loads).
   const [profileFilterOn, setProfileFilterOn]     = useState(false)
+  const [showOnlyEligible, setShowOnlyEligible]   = useState(true)
 
   // ── Live search (web) state ───────────────────────────────────────────────
   const [searchMode, setSearchMode]               = useState<'database' | 'live'>('database')
@@ -1563,7 +1595,7 @@ export default function SearchPage() {
         let score = match.score
         if (grantInteractions.has('liked'))    score = Math.min(100, score + 12)
         if (grantInteractions.has('disliked')) score = Math.max(0,   score - 20)
-        return { grant, score, reason: match.reason, isAiScore: false, breakdown: match.breakdown }
+        return { grant, score, reason: match.reason, isAiScore: false, breakdown: match.breakdown, eligibilityStatus: match.eligibilityStatus, eligibilityReason: match.eligibilityReason }
       }
       return { grant, score: 0, reason: '', isAiScore: false }
     })
@@ -1616,6 +1648,15 @@ export default function SearchPage() {
     }
 
     // If the page was opened with ?grant=<id>, lift that grant to the top
+    // ── Eligible-only filter ───────────────────────────────────────────
+    // Only active when org has a known legal structure (otherwise we'd hide
+    // grants we can't actually evaluate). Hides hard-ineligible grants.
+    if (showOnlyEligible && org?.legal_structure) {
+      withScores.splice(0, withScores.length,
+        ...withScores.filter(d => d.eligibilityStatus !== 'ineligible')
+      )
+    }
+
     // so users coming from the dashboard Matched Opportunities cards land
     // on it immediately. Falls through silently if the id isn't in the list
     // (e.g. grant has since been filtered out).
@@ -1652,6 +1693,7 @@ export default function SearchPage() {
     activeTab,
     programmeHasCash,
     pinnedGrantId,
+    showOnlyEligible,
   ])
 
   async function runAISearch(searchQuery: string, isSmartMatch = false, includeOrgContext = false) {
@@ -2020,6 +2062,31 @@ export default function SearchPage() {
                       Profile
                     </span>
                   </button>
+                )}
+                {org?.legal_structure && (
+                  <>
+                    <div className="w-px h-6 bg-gray-200 flex-shrink-0" />
+                    <button
+                      onClick={() => setShowOnlyEligible(v => !v)}
+                      className="flex items-center gap-2 px-4 h-full flex-shrink-0 whitespace-nowrap"
+                      title={showOnlyEligible ? 'Show all grants including ineligible' : 'Hide grants you cannot apply for'}
+                    >
+                      <span className="relative flex-shrink-0" style={{
+                        width: 40, height: 22,
+                        backgroundColor: showOnlyEligible ? '#1f5c52' : '#d1d5db',
+                        borderRadius: 9999, display: 'inline-flex', alignItems: 'center',
+                        transition: 'background-color 0.2s',
+                      }}>
+                        <span className="absolute bg-white transition-transform duration-200" style={{
+                          width: 16, height: 16, borderRadius: 9999, top: 3, left: 3,
+                          transform: showOnlyEligible ? 'translateX(18px)' : 'translateX(0)',
+                        }} />
+                      </span>
+                      <span className={`text-[11px] font-semibold uppercase tracking-wider ${showOnlyEligible ? 'text-gray-600' : 'text-gray-400'}`}>
+                        Eligible only
+                      </span>
+                    </button>
+                  </>
                 )}
               </div>
               {/* Search button — outside the pill */}

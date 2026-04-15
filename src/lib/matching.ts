@@ -9,10 +9,14 @@ export interface MatchBreakdown {
   eligibility:   { score: number; max: number; label: string }
 }
 
+export type EligibilityStatus = 'eligible' | 'likely_eligible' | 'check_required' | 'ineligible'
+
 export interface MatchResult {
-  score:     number
-  reason:    string
-  breakdown: MatchBreakdown
+  score:             number
+  reason:            string
+  breakdown:         MatchBreakdown
+  eligibilityStatus: EligibilityStatus
+  eligibilityReason: string | null   // plain-English explanation, shown in Shield badge
 }
 
 // Map income bands to approximate midpoints.
@@ -688,6 +692,8 @@ export function computeMatchScore(
         older_people:  ['older people', 'elderly', 'pensioner', 'ageing', 'dementia', 'later life', 'retirement'],
         women:         ['women', 'girl', 'gender', 'maternal', 'domestic violence', 'female', 'misogyn'],
         tech:          ['tech', 'digital', 'software', 'coding', 'data', 'cyber', 'internet', 'online inclusion'],
+        social_economy:    ['co-op', 'cooperative', 'worker-owned', 'community shares', 'mutual', 'community benefit', 'community ownership', 'democratic enterprise'],
+        social_innovation: ['systems change', 'tech for good', 'social innovation', 'impact measurement', 'social r&d', 'new model', 'social venture'],
       }
 
       let totalDepth = 0
@@ -1292,9 +1298,48 @@ export function computeMatchScore(
     reason = parts.join(' ') || reasons[0] + '.'
   }
 
+  // ── Ineligibility Shield — compute explicit eligibility status ───────
+  // Priority order: hard structure gate > text-based mismatch > soft checks
+  let eligibilityStatus: EligibilityStatus
+  let eligibilityReason: string | null = null
+
+  if (structureMismatch && grant.eligibleStructures && grant.eligibleStructures.length > 0) {
+    // Hard gate: grant has explicit structure list and org is not in it
+    const orgStructure = org.legal_structure
+    const orgLabel = orgStructure ? structureLabel(orgStructure) : 'your structure'
+    const allowedLabels = grant.eligibleStructures
+      .map(s => structureLabel(s))
+      .filter((v, i, a) => a.indexOf(v) === i)  // dedupe
+      .slice(0, 3)
+      .join(', ')
+    eligibilityStatus = 'ineligible'
+    eligibilityReason = `Requires ${allowedLabels}. As a ${orgLabel}, you are not eligible to apply.`
+  } else if (structureMismatch) {
+    // Text-based mismatch (charity-only language detected but no structured list)
+    const orgLabel = org.legal_structure ? structureLabel(org.legal_structure) : 'your structure'
+    eligibilityStatus = 'ineligible'
+    eligibilityReason = `This funder appears to require registered charity status. As a ${orgLabel}, check carefully before applying.`
+  } else if (grant.eligibleStructures && grant.eligibleStructures.length > 0 && !structureMismatch) {
+    // Structured list exists and org passed — explicitly eligible
+    const orgLabel = org.legal_structure ? structureLabel(org.legal_structure) : 'your organisation'
+    eligibilityStatus = 'eligible'
+    eligibilityReason = `Your structure (${orgLabel}) is listed as eligible.`
+  } else if (eligibilityScore >= 12) {
+    eligibilityStatus = 'eligible'
+    eligibilityReason = null
+  } else if (eligibilityScore >= 8) {
+    eligibilityStatus = 'likely_eligible'
+    eligibilityReason = null
+  } else {
+    eligibilityStatus = 'check_required'
+    eligibilityReason = 'Eligibility requirements are unclear — verify before applying.'
+  }
+
   return {
     score,
     reason,
+    eligibilityStatus,
+    eligibilityReason,
     breakdown: {
       location:      { score: locationScore,      max: 20, label: 'Location' },
       themes:        { score: themesScore,        max: 20, label: 'Themes & work' },

@@ -52,6 +52,8 @@ export type ImpactSector =
   | 'older_people'
   | 'heritage'
   | 'sport'
+  | 'social_economy'    // Worker co-ops, community ownership, mutual structures
+  | 'social_innovation' // Tech-for-good, systems change, R&D with social purpose
 
 /** Structured beneficiary taxonomy — who the org/grant primarily serves */
 export type BeneficiaryGroup =
@@ -157,6 +159,10 @@ export interface Organisation {
   impact_sectors: ImpactSector[]
   /** Sub-sector specialisation tags — finer-grained than impact_sectors (e.g. "music", "theatre") */
   niche_tags: string[]
+  /** Does the org have a formal asset lock? (CIC guarantee = yes, CIC shares = partial, Ltd = no) */
+  has_asset_lock: boolean | null
+  /** Years the org has been actively trading */
+  years_trading: number | null
   /** Org stage for matching programme eligibility */
   org_stage: OrgStage | null
   // ── Existing fields ───────────────────────────────────────────────────────

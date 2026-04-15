@@ -53,7 +53,9 @@ const IMPACT_SECTOR_OPTIONS: { value: ImpactSector; label: string }[] = [
   { value: 'tech',          label: 'Tech for Good'              },
   { value: 'financial',     label: 'Financial Inclusion'        },
   { value: 'food',          label: 'Food & Agriculture'         },
-  { value: 'international', label: 'International & Fair Trade' },
+  { value: 'international',    label: 'International & Fair Trade'  },
+  { value: 'social_economy',    label: 'Social Economy & Co-ops'      },
+  { value: 'social_innovation', label: 'Social Innovation & Systems Change' },
 ]
 
 // Sub-sector tags available for each broad sector that has meaningful sub-divisions
@@ -93,6 +95,17 @@ const NICHE_TAGS_BY_SECTOR: Partial<Record<ImpactSector, { value: string; label:
     { value: 'urban_greening',  label: 'Urban Greening' },
     { value: 'marine',          label: 'Marine & Coastal' },
     { value: 'energy',          label: 'Renewable Energy' },
+  ],
+  social_economy: [
+    { value: 'worker_cooperative',  label: 'Worker Co-operative' },
+    { value: 'community_shares',    label: 'Community Shares' },
+    { value: 'social_franchise',    label: 'Social Franchise' },
+    { value: 'community_ownership', label: 'Community Ownership' },
+  ],
+  social_innovation: [
+    { value: 'tech_for_good',       label: 'Tech for Good' },
+    { value: 'impact_measurement',  label: 'Impact Measurement' },
+    { value: 'systems_change',      label: 'Systems Change' },
   ],
   education: [
     { value: 'early_years',         label: 'Early Years' },
@@ -247,6 +260,8 @@ interface FormState {
   fundingTypePreferences: FundingType[]
   fundingSubtypePreferences: FundingSubtype[]
   nicheTags: string[]
+  hasAssetLock: boolean | null
+  yearsTrading: string
   mission: string
   alertsEnabled: boolean
   alertFrequency: string
@@ -281,6 +296,8 @@ const EMPTY_FORM: FormState = {
   fundingTypePreferences: [],
   fundingSubtypePreferences: [],
   nicheTags: [],
+  hasAssetLock: null,
+  yearsTrading: '',
   mission: '',
   alertsEnabled: false,
   alertFrequency: 'weekly',
@@ -316,6 +333,8 @@ function orgToForm(org: Organisation): FormState {
     fundingTypePreferences:     (org.funding_type_preferences ?? []) as FundingType[],
     fundingSubtypePreferences:  (org.funding_subtype_preferences ?? []) as FundingSubtype[],
     nicheTags:                  org.niche_tags ?? [],
+    hasAssetLock:               org.has_asset_lock ?? null,
+    yearsTrading:               org.years_trading != null ? String(org.years_trading) : '',
     mission:                    org.mission ?? '',
     alertsEnabled:              (org as Organisation & { alerts_enabled?: boolean }).alerts_enabled ?? false,
     alertFrequency:             (org as Organisation & { alert_frequency?: string }).alert_frequency ?? 'weekly',
@@ -615,6 +634,8 @@ export default function ProfilePage() {
       funding_type_preferences:     form.fundingTypePreferences,
       funding_subtype_preferences:  form.fundingSubtypePreferences,
       niche_tags:                   form.nicheTags,
+      has_asset_lock:               form.hasAssetLock,
+      years_trading:                form.yearsTrading ? parseInt(form.yearsTrading) : null,
       owner_id:                     userId,
       alerts_enabled:               form.alertsEnabled,
       alert_frequency:              form.alertFrequency,
@@ -1128,7 +1149,46 @@ export default function ProfilePage() {
           </div>
         )}
 
-        <div>
+
+        {/* Commercial social enterprise fields — CIC shares and Ltd structures */}
+        {form.legalStructure && ['cic_shares', 'ltd_guarantee', 'ltd_shares', 'cooperative'].includes(form.legalStructure) && (
+          <div className="md:col-span-2 border border-forest/20 bg-forest/5 p-4 rounded-xl space-y-4">
+            <p className="text-xs font-semibold text-forest">Commercial structure details — helps match social investment & innovation funding</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-charcoal mb-1.5">Years trading</label>
+                <input
+                  type="number"
+                  className="form-input"
+                  placeholder="e.g. 3"
+                  min="0"
+                  value={form.yearsTrading}
+                  onChange={e => setForm(prev => ({ ...prev, yearsTrading: e.target.value }))}
+                />
+                <p className="text-xs text-light mt-1">Some funds require minimum trading history (e.g. 2+ years)</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-charcoal mb-1.5">Asset lock</label>
+                <div className="flex gap-3 mt-2">
+                  {[{ val: true, label: 'Yes — full asset lock' }, { val: false, label: 'No asset lock' }].map(opt => (
+                    <button key={String(opt.val)} type="button"
+                      onClick={() => setForm(prev => ({ ...prev, hasAssetLock: opt.val }))}
+                      className={`flex-1 py-2 px-3 text-xs font-medium border rounded-lg transition-all ${
+                        form.hasAssetLock === opt.val
+                          ? 'bg-forest text-cream border-forest'
+                          : 'bg-white text-mid border-warm hover:border-forest hover:text-forest'
+                      }`}>
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-light mt-1">CIC guarantee = yes; CIC shares / Ltd = typically no</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+                <div>
           <label className="block text-sm font-medium text-charcoal mb-1.5">Charity / CIC / Company number <span className="text-light font-normal">(if applicable)</span></label>
           <input
             className="form-input"

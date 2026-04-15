@@ -82,7 +82,9 @@ const SECTOR_MAP: Record<ImpactSector, string[]> = {
   tech:          ['technology', 'digital', 'tech', 'innovation', 'digital inclusion', 'AI'],
   financial:     ['financial inclusion', 'financial wellbeing', 'debt', 'poverty'],
   food:          ['food', 'food poverty', 'nutrition', 'food bank'],
-  international: ['international', 'global', 'international development'],
+  international:     ['international', 'global', 'international development'],
+  social_economy:    ['co-operative', 'cooperative', 'community ownership', 'worker-owned', 'mutual', 'social economy'],
+  social_innovation: ['social innovation', 'systems change', 'tech for good', 'impact', 'social venture'],
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
