@@ -569,7 +569,17 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
             </div>
             <div>
               <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">Who&apos;s eligible</p>
-              <p className="text-sm font-semibold text-charcoal">{structureLabels.length > 0 ? structureLabels.join(', ') : '—'}</p>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <p className="text-sm font-semibold text-charcoal">{structureLabels.length > 0 ? structureLabels.join(', ') : '—'}</p>
+                {hasOrg && org?.legal_structure && structureLabels.length > 0 && (() => {
+                  const eligible = grant.eligibleStructures as LegalStructure[] | undefined
+                  if (!eligible || eligible.length === 0) return null
+                  const qualifies = eligible.includes(org.legal_structure as LegalStructure)
+                  return qualifies
+                    ? <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md" style={{ backgroundColor: '#dcfce7', color: '#166534' }}>✓ You qualify</span>
+                    : <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md" style={{ backgroundColor: '#fee2e2', color: '#991b1b' }}>✕ Not eligible</span>
+                })()}
+              </div>
             </div>
             <div>
               <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">Type</p>
@@ -626,31 +636,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
 
       </div>
 
-      {/* ── Ineligibility Shield — computed directly from org + grant data ── */}
-      {hasOrg && org?.legal_structure && grant.eligibleStructures && grant.eligibleStructures.length > 0 && (() => {
-        const orgStruct = org.legal_structure as LegalStructure
-        const isEligible = (grant.eligibleStructures as LegalStructure[]).includes(orgStruct)
-        const orgLabel = STRUCTURE_LABELS[orgStruct] ?? orgStruct.replace(/_/g, ' ')
-        const allowedLabels = Array.from(new Set(
-          (grant.eligibleStructures as LegalStructure[]).slice(0, 3).map(s => STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' '))
-        )).join(', ')
-        if (isEligible) return (
-          <div className="flex items-center gap-2 px-6 py-2 border-t border-emerald-100" style={{ backgroundColor: '#f0fdf4' }}>
-            <span className="text-sm">✅</span>
-            <p className="text-xs" style={{ color: '#166534' }}>
-              Your structure ({orgLabel}) is explicitly listed as eligible for this grant.
-            </p>
-          </div>
-        )
-        return (
-          <div className="flex items-start gap-2.5 px-6 py-3 border-t border-red-100" style={{ backgroundColor: '#fef2f2' }}>
-            <span className="text-base flex-shrink-0 mt-0.5">❌</span>
-            <p className="text-xs leading-relaxed" style={{ color: '#991b1b' }}>
-              Requires {allowedLabels}. As a {orgLabel}, you are not eligible to apply.
-            </p>
-          </div>
-        )
-      })()}
+
 
             {/* ── Match Insight (white, part of card body) ── */}
       {hasOrg && hasSearch && reason && (() => {
