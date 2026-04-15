@@ -2000,13 +2000,13 @@ export default function SearchPage() {
                 <button
                   onClick={() => setFiltersOpen(o => !o)}
                   className={`flex items-center gap-1.5 px-4 h-full text-sm font-medium transition-colors flex-shrink-0 ${
-                    filtersOpen || activeFilterCount > 0 ? 'text-charcoal' : 'text-gray-500 hover:text-charcoal'
+                    filtersOpen || activeFilterCount > 0 ? 'text-[#1f5c52] font-semibold' : 'text-gray-500 hover:text-charcoal'
                   }`}
                 >
                   <SlidersHorizontal size={14} strokeWidth={2} />
                   Filters
                   {activeFilterCount > 0 && (
-                    <span className="text-xs bg-charcoal text-white px-1.5 py-0.5 rounded-full leading-none">{activeFilterCount}</span>
+                    <span className="text-xs text-white px-1.5 py-0.5 rounded-full leading-none" style={{ backgroundColor: '#1f5c52' }}>{activeFilterCount}</span>
                   )}
                   <ChevronDown size={12} strokeWidth={2} className={`transition-transform duration-200 ${filtersOpen ? 'rotate-180' : ''}`} />
                 </button>
@@ -2101,7 +2101,7 @@ export default function SearchPage() {
 
           {/* ── Collapsible filters panel ── */}
           {filtersOpen && (
-          <div className="mt-4 pt-4 border-t border-warm space-y-4">
+          <div className="mt-4 pt-4 border-t border-[#E8E8EC] space-y-4">
 
             {/* Row 1: Funding type + Funder source */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -2113,8 +2113,8 @@ export default function SearchPage() {
                       title={t.desc}
                       className={`px-3 py-1.5 border text-xs font-medium transition-all rounded-md ${
                         activeFundingType === t.id
-                          ? 'bg-charcoal border-charcoal text-white'
-                          : 'border-warm text-mid hover:border-[#84CC16] hover:text-[#4A7C10]'
+                          ? 'border-[#1f5c52] bg-[#1f5c52] text-white'
+                          : 'border-warm text-mid hover:border-[#1f5c52] hover:text-[#1f5c52]'
                       }`}>
                       {t.label}
                     </button>
@@ -2131,8 +2131,8 @@ export default function SearchPage() {
                       <button key={t.id} onClick={() => setActiveType(t.id)}
                         className={`px-3 py-1.5 border text-xs font-medium transition-all rounded-md ${
                           activeType === t.id
-                            ? 'bg-charcoal border-charcoal text-white'
-                            : 'border-warm text-mid hover:border-[#84CC16] hover:text-[#4A7C10]'
+                            ? 'border-[#1f5c52] bg-[#1f5c52] text-white'
+                            : 'border-warm text-mid hover:border-[#1f5c52] hover:text-[#1f5c52]'
                         }`}>
                         {t.label}
                       </button>
@@ -2151,8 +2151,8 @@ export default function SearchPage() {
                     onClick={() => setActiveGeoScope('all')}
                     className={`px-3 py-1.5 border text-xs font-medium transition-all rounded-md ${
                       activeGeoScope === 'all'
-                        ? 'bg-charcoal border-charcoal text-white'
-                        : 'border-warm text-mid hover:border-[#84CC16] hover:text-[#4A7C10]'
+                        ? 'border-[#1f5c52] bg-[#1f5c52] text-white'
+                        : 'border-warm text-mid hover:border-[#1f5c52] hover:text-[#1f5c52]'
                     }`}
                   >
                     Anywhere
@@ -2163,8 +2163,8 @@ export default function SearchPage() {
                       onClick={() => setActiveGeoScope(activeGeoScope === scope.id ? 'all' : scope.id)}
                       className={`px-3 py-1.5 border text-xs font-medium transition-all rounded-md ${
                         activeGeoScope === scope.id
-                          ? 'bg-charcoal border-charcoal text-white'
-                          : 'border-warm text-mid hover:border-[#84CC16] hover:text-[#4A7C10]'
+                          ? 'border-[#1f5c52] bg-[#1f5c52] text-white'
+                          : 'border-warm text-mid hover:border-[#1f5c52] hover:text-[#1f5c52]'
                       }`}
                     >
                       {scope.label}
@@ -2191,8 +2191,8 @@ export default function SearchPage() {
                     <button key={v} onClick={() => setDeadlineFilter(v)}
                       className={`px-3 py-1.5 border text-xs font-medium transition-all rounded-md ${
                         deadlineFilter === v
-                          ? 'bg-charcoal border-charcoal text-white'
-                          : 'border-warm text-mid hover:border-[#84CC16] hover:text-[#4A7C10]'
+                          ? 'border-[#1f5c52] bg-[#1f5c52] text-white'
+                          : 'border-warm text-mid hover:border-[#1f5c52] hover:text-[#1f5c52]'
                       }`}>
                       {v === 'all' ? 'Any' : v === 'rolling' ? 'Rolling' : 'Has deadline'}
                     </button>
@@ -2211,8 +2211,8 @@ export default function SearchPage() {
                     <button key={s.id} onClick={() => toggleSector(s.id)}
                       className={`px-3 py-1.5 border text-xs font-medium transition-all rounded-md ${
                         isActive
-                          ? 'bg-charcoal border-charcoal text-white'
-                          : 'border-warm text-mid hover:border-[#84CC16] hover:text-[#4A7C10]'
+                          ? 'border-[#1f5c52] bg-[#1f5c52] text-white'
+                          : 'border-warm text-mid hover:border-[#1f5c52] hover:text-[#1f5c52]'
                       }`}>
                       {s.label}
                     </button>
@@ -2225,7 +2225,7 @@ export default function SearchPage() {
             {activeFilterCount > 0 && (
               <button
                 onClick={resetAllFilters}
-                className="text-xs font-semibold text-red-500 hover:text-red-700 border border-red-200 hover:border-red-400 px-3 py-1.5 transition-all rounded-md"
+                className="text-xs font-semibold text-mid hover:text-charcoal border border-warm hover:border-charcoal px-3 py-1.5 transition-all rounded-md"
               >
                 ✕ Reset all filters
               </button>
