@@ -884,14 +884,12 @@ export default function LandingPage() {
                 Built from<br /><span style={{ color: '#84CC16' }}>the inside.</span>
               </h2>
               <blockquote className="mb-6">
-                <p className="text-lg leading-relaxed italic mb-4" style={{ color: '#525252', fontFamily: 'var(--font-dm-serif)' }}>
-                  &ldquo;I&apos;ve spent 20 years in the social enterprise and charity sector &mdash; co-founding a youth music organisation, leading development strategy at local charities, and driving fundraising across a global co-working network.
+                <span className="block leading-none mb-2 select-none" style={{ fontSize: '5rem', color: '#84CC16', fontFamily: 'var(--font-space-grotesk)', lineHeight: 1, marginBottom: '-0.5rem' }}>&ldquo;</span>
+                <p className="text-lg leading-relaxed mb-4" style={{ color: '#525252', fontFamily: 'var(--font-dm-serif)' }}>I&apos;ve spent 20 years in the social enterprise and charity sector, co-founding a youth music organisation, leading development strategy at local charities, and driving fundraising across a global co-working network.
                 </p>
-                <p className="text-lg leading-relaxed italic" style={{ color: '#525252', fontFamily: 'var(--font-dm-serif)' }}>
-                  Throughout all of it, I was consistently frustrated by the same thing: a fragmented
-                  funding ecosystem that forced people like me to spend a disproportionate amount of
-                  time hunting opportunities rather than delivering impactful work.&rdquo;
+                <p className="text-lg leading-relaxed" style={{ color: '#525252', fontFamily: 'var(--font-dm-serif)' }}>Throughout all of it, I was consistently frustrated by the same thing: a fragmented funding ecosystem that forced people like me to spend a disproportionate amount of time hunting opportunities rather than delivering impactful work.
                 </p>
+                <span className="block leading-none text-right select-none" style={{ fontSize: '5rem', color: '#84CC16', fontFamily: 'var(--font-space-grotesk)', lineHeight: 1, marginTop: '-1rem' }}>&rdquo;</span>
               </blockquote>
               <p className="text-sm font-semibold" style={{ color: '#1A1A1A', fontFamily: 'var(--font-space-grotesk)' }}>Paul Kilty, founder</p>
             </motion.div>
