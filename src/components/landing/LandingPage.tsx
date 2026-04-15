@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Menu, X, Check, Search, Calendar, TrendingUp, Activity, Clock, Mail, MessageSquare, Bell, LayoutGrid, ArrowRight, Award, CheckCircle, BadgeCheck, Users, Rocket, Landmark, HeartHandshake } from 'lucide-react'
+import { Menu, X, Check, Search, Calendar, TrendingUp, Activity, Clock, Mail, MessageSquare, Bell, LayoutGrid, ArrowRight, Award, CheckCircle, BadgeCheck, Users, Rocket, Landmark, HeartHandshake, Building2, Shield, TreePine, Lightbulb } from 'lucide-react'
 import ContactForm from '@/components/ContactForm'
 import RadioWaveIcon from '@/components/icons/RadioWaveIcon'
 
@@ -45,12 +45,30 @@ const fundingTypes = [
 ]
 
 const audiences = [
-  { title: 'CICs', desc: 'Matched funding that understands your structure, not just charity-focused results.' },
-  { title: 'Charities & CIOs', desc: 'Trusts, foundations and government programmes matched to your cause, size and geography.' },
-  { title: 'Co-operatives & CBS', desc: 'Grants and community finance that fits your mutual structure.' },
-  { title: 'Social Enterprises', desc: 'Ltd company with a mission? Matched opportunities without needing CIC or charity status.' },
-  { title: 'Impact Founders', desc: 'Accelerators, grants and programmes matched to your stage, sector and team.' },
-  { title: 'Community Groups', desc: 'Local and national funding matched to your size, area and cause.' },
+  {
+    title: 'CICs & Social Enterprises',
+    desc: "Most funding databases were built with registered charities in mind. If you're a CIC or trading social enterprise, Grant Tracker matches funding to your legal structure and filters out grants you're not eligible to apply for.",
+    Icon: Shield, iconColor: '#2d8a7a', badgeBg: 'rgba(45,138,122,0.10)', badgeColor: '#1f5c52',
+    decoBg: 'rgba(45,138,122,0.07)',
+  },
+  {
+    title: 'Charities & CIOs',
+    desc: "Trusts, foundations, lottery and government programmes matched to your cause, size and geography. Results are filtered to what your organisation can actually apply for.",
+    Icon: Landmark, iconColor: '#446900', badgeBg: 'rgba(148,207,53,0.15)', badgeColor: '#446900',
+    decoBg: 'rgba(148,207,53,0.07)',
+  },
+  {
+    title: 'Co-operatives & Community Groups',
+    desc: "Whether you're worker-led, community-owned or unincorporated, funding is matched to how your organisation is set up, not just what you do.",
+    Icon: TreePine, iconColor: '#c2410c', badgeBg: 'rgba(251,146,60,0.12)', badgeColor: '#c2410c',
+    decoBg: 'rgba(251,146,60,0.07)',
+  },
+  {
+    title: 'Impact Founders',
+    desc: "Early-stage, pre-revenue or working as an individual. Accelerators, fellowships and awards matched to your sector, stage and team.",
+    Icon: Lightbulb, iconColor: '#7c3aed', badgeBg: 'rgba(167,139,250,0.15)', badgeColor: '#7c3aed',
+    decoBg: 'rgba(167,139,250,0.08)',
+  },
 ]
 
 const stats = [
@@ -909,20 +927,41 @@ export default function LandingPage() {
             <motion.div {...fadeInView(0)}>
               <p className="text-sm font-semibold tracking-widest uppercase mb-4" style={{ color: '#84CC16', fontFamily: 'var(--font-space-grotesk)' }}>Who it&apos;s for</p>
               <h2 className="leading-tight" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#1A1A1A' }}>
-                Built for <span style={{ color: '#84CC16' }}>every structure.</span>
+                Funding matched to<br/><span style={{ color: '#84CC16' }}>your structure.</span>
               </h2>
             </motion.div>
             <motion.div {...fadeInView(0.1)}>
               <p className="text-base leading-relaxed" style={{ color: '#525252' }}>
-                From grassroots CICs to established charities — if you deliver social impact, Grant Tracker is built for you.
+                Whether you're a CIC, impact founder, grassroots charity or community group, find funding you can actually apply for.
               </p>
             </motion.div>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {audiences.map((v, i) => (
-              <motion.div key={v.title} {...fadeInView(i * 0.06)} className="rounded-xl p-7 bg-white">
-                <h4 className="mb-2 font-semibold" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: '1.1rem', color: '#1A1A1A' }}>{v.title}</h4>
-                <p className="text-sm leading-relaxed" style={{ color: '#525252' }}>{v.desc}</p>
+          <div className="grid sm:grid-cols-2 gap-4">
+            {audiences.map((card, i) => (
+              <motion.div
+                key={card.title}
+                {...fadeInView(i * 0.07)}
+                className="relative overflow-hidden bg-white rounded-3xl p-7 md:p-9 group"
+                style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.05)' }}
+              >
+                {/* Decorative circle */}
+                <div
+                  className="absolute top-0 right-0 w-32 h-32 rounded-full pointer-events-none transition-transform duration-700 group-hover:scale-150"
+                  style={{ background: card.decoBg, transform: 'translate(2rem, -2rem)' }}
+                />
+                {/* Icon top-right */}
+                <div className="absolute top-6 right-6 opacity-20 group-hover:opacity-80 group-hover:scale-110 transition-all duration-300 z-10">
+                  <card.Icon className="w-6 h-6" style={{ color: card.iconColor }} />
+                </div>
+                {/* Title */}
+                <h3
+                  className="font-bold mb-3 relative z-10 transition-transform duration-300 group-hover:translate-x-1"
+                  style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: '1.2rem', color: '#111827' }}
+                >
+                  {card.title}
+                </h3>
+                {/* Description */}
+                <p className="text-gray-500 text-sm leading-relaxed max-w-md relative z-10">{card.desc}</p>
               </motion.div>
             ))}
           </div>
