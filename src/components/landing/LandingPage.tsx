@@ -48,25 +48,25 @@ const audiences = [
   {
     title: 'CICs & Social Enterprises',
     desc: "Most funding databases were built with registered charities in mind. If you're a CIC or trading social enterprise, Grant Tracker matches funding to your legal structure and filters out grants you're not eligible to apply for.",
-    Icon: Shield, iconColor: '#2d8a7a', badgeBg: 'rgba(45,138,122,0.10)', badgeColor: '#1f5c52',
+    Icon: Shield, iconColor: '#2d8a7a', numberColor: 'rgba(45,138,122,0.18)', badgeBg: 'rgba(45,138,122,0.10)', badgeColor: '#1f5c52',
     decoBg: 'rgba(45,138,122,0.07)',
   },
   {
     title: 'Charities & CIOs',
     desc: "Trusts, foundations, lottery and government programmes matched to your cause, size and geography. Results are filtered to what your organisation can actually apply for.",
-    Icon: Landmark, iconColor: '#446900', badgeBg: 'rgba(148,207,53,0.15)', badgeColor: '#446900',
+    Icon: Landmark, iconColor: '#446900', numberColor: 'rgba(132,204,22,0.22)', badgeBg: 'rgba(148,207,53,0.15)', badgeColor: '#446900',
     decoBg: 'rgba(148,207,53,0.07)',
   },
   {
     title: 'Co-operatives & Community Groups',
     desc: "Whether you're worker-led, community-owned or unincorporated, funding is matched to how your organisation is set up, not just what you do.",
-    Icon: TreePine, iconColor: '#c2410c', badgeBg: 'rgba(251,146,60,0.12)', badgeColor: '#c2410c',
+    Icon: TreePine, iconColor: '#c2410c', numberColor: 'rgba(194,65,12,0.18)', badgeBg: 'rgba(251,146,60,0.12)', badgeColor: '#c2410c',
     decoBg: 'rgba(251,146,60,0.07)',
   },
   {
     title: 'Impact Founders',
     desc: "Early-stage, pre-revenue or working as an individual. Accelerators, fellowships and awards matched to your sector, stage and team.",
-    Icon: Lightbulb, iconColor: '#7c3aed', badgeBg: 'rgba(167,139,250,0.15)', badgeColor: '#7c3aed',
+    Icon: Lightbulb, iconColor: '#7c3aed', numberColor: 'rgba(124,58,237,0.18)', badgeBg: 'rgba(167,139,250,0.15)', badgeColor: '#7c3aed',
     decoBg: 'rgba(167,139,250,0.08)',
   },
 ]
@@ -936,42 +936,40 @@ export default function LandingPage() {
               </p>
             </motion.div>
           </div>
-          <div className="divide-y divide-[#EBEBEB]">
+          <div className="grid sm:grid-cols-2 gap-x-8 gap-y-0 divide-y divide-[#EBEBEB] sm:divide-y-0">
             {audiences.map((card, i) => (
               <motion.div
                 key={card.title}
                 {...fadeInView(i * 0.08)}
-                className={`flex items-start gap-6 md:gap-10 py-10 md:py-12 ${i % 2 === 1 ? 'pl-8 md:pl-20 lg:pl-32' : ''}`}
+                className={`relative py-10 md:py-12 ${i < 2 ? 'sm:border-b sm:border-[#EBEBEB]' : ''} ${i % 2 === 0 ? 'sm:pr-8 sm:border-r sm:border-[#EBEBEB]' : 'sm:pl-8'}`}
               >
-                {/* Large muted number */}
+                {/* Large faded coloured number */}
                 <span
-                  className="flex-shrink-0 font-bold leading-none select-none hidden sm:block"
+                  className="block font-bold leading-none select-none mb-4"
                   style={{
                     fontFamily: 'var(--font-space-grotesk)',
-                    fontSize: 'clamp(72px, 8vw, 108px)',
-                    color: '#EBEBEB',
-                    letterSpacing: '-0.04em',
+                    fontSize: 'clamp(56px, 7vw, 88px)',
+                    color: card.numberColor,
+                    letterSpacing: '-0.05em',
                     lineHeight: 1,
-                    marginTop: '-0.1em',
                   }}
                 >
                   {String(i + 1).padStart(2, '0')}
                 </span>
-                {/* Content */}
-                <div className="pt-1 flex-1 max-w-xl">
-                  <div className="flex items-center gap-2.5 mb-3">
-                    <card.Icon className="w-4 h-4 flex-shrink-0" style={{ color: card.iconColor }} />
-                    <h3
-                      className="font-bold"
-                      style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: '1.2rem', color: '#1A1A1A' }}
-                    >
-                      {card.title}
-                    </h3>
-                  </div>
-                  <p className="text-sm leading-relaxed" style={{ color: '#525252' }}>
-                    {card.desc}
-                  </p>
+                {/* Icon + title */}
+                <div className="flex items-center gap-2.5 mb-3">
+                  <card.Icon className="w-4 h-4 flex-shrink-0" style={{ color: card.iconColor }} />
+                  <h3
+                    className="font-bold"
+                    style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: '1.15rem', color: '#1A1A1A' }}
+                  >
+                    {card.title}
+                  </h3>
                 </div>
+                {/* Description */}
+                <p className="text-sm leading-relaxed" style={{ color: '#525252' }}>
+                  {card.desc}
+                </p>
               </motion.div>
             ))}
           </div>
