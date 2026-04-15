@@ -920,7 +920,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ABOUT — Block 2: Who it's for */}
+      {/* ABOUT — Block 2: Who it's for — v2 */
       <section className="py-20 md:py-28" style={{ background: '#F9F9F9' }}>
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid lg:grid-cols-2 gap-8 items-end mb-14">
