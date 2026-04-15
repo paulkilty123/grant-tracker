@@ -883,8 +883,8 @@ export default function LandingPage() {
               <h2 className="mb-10 leading-[1.05]" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(36px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#1A1A1A' }}>
                 Built from<br /><span style={{ color: '#84CC16' }}>the inside.</span>
               </h2>
-              <blockquote className="mb-6">
-                <span className="block leading-none mb-2 select-none" style={{ fontSize: '5rem', color: '#84CC16', fontFamily: 'var(--font-space-grotesk)', lineHeight: 1, marginBottom: '-0.5rem' }}>&ldquo;</span>
+              <blockquote className="mb-2">
+                <span className="block leading-none mb-2 select-none" style={{ fontSize: '5rem', color: '#84CC16', fontFamily: 'var(--font-space-grotesk)', lineHeight: 1, marginBottom: '-2rem' }}>&ldquo;</span>
                 <p className="text-lg leading-relaxed mb-4" style={{ color: '#525252', fontFamily: 'var(--font-dm-serif)' }}>I&apos;ve spent 20 years in the social enterprise and charity sector, co-founding a youth music organisation, leading development strategy at local charities, and driving fundraising across a global co-working network.
                 </p>
                 <p className="text-lg leading-relaxed" style={{ color: '#525252', fontFamily: 'var(--font-dm-serif)' }}>Throughout all of it, I was consistently frustrated by the same thing: a fragmented funding ecosystem that forced people like me to spend a disproportionate amount of time hunting opportunities rather than delivering impactful work.
