@@ -819,6 +819,7 @@ export default function UrlAdminPage() {
     setCategoryGrants(prev => prev.map(g =>
       g.id === id ? { ...g, apply_url: editUrl || null, url_status: 'unchecked' as const, url_last_checked: null } : g
     ))
+    setReviewGrants(prev => prev.map(updateInList))
     setSuspiciousGrants(prev => prev.filter(g => g.id !== id))
     setEditingId(null)
     setSaving(false)
