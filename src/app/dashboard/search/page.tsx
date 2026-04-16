@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Search, ChevronDown, Layers, DollarSign, Rocket, Building2, SlidersHorizontal, MapPin, GraduationCap, TrendingUp, GitMerge, Gift, Landmark, CalendarDays, RefreshCw, Bookmark, PlusCircle, Activity, Info, Target, Star, CheckCircle2, XCircle, Lightbulb, AlertTriangle, Sparkles, ExternalLink, ClipboardList, EyeOff, Eye } from 'lucide-react'
+import { Search, ChevronDown, Layers, DollarSign, Rocket, Building2, SlidersHorizontal, MapPin, Users, GraduationCap, TrendingUp, GitMerge, Gift, Landmark, CalendarDays, RefreshCw, Bookmark, PlusCircle, Activity, Info, Target, Star, CheckCircle2, XCircle, Lightbulb, AlertTriangle, Sparkles, ExternalLink, ClipboardList, EyeOff, Eye } from 'lucide-react'
 import { SEED_GRANTS } from '@/lib/grants'
 import { formatRange } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -771,6 +771,16 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                   brief.what_they_fund && (
                     <Section key="fund" icon={CheckCircle2} iconColor="#84CC16" label="What they fund">
                       <p className="text-sm text-[#444] leading-relaxed" style={clamp4}>{brief.what_they_fund}</p>
+                    </Section>
+                  ),
+                  brief.who_can_apply && (
+                    <Section key="who" icon={Users} iconColor="#2d8a7a" label="Who can apply">
+                      <p className="text-sm text-[#444] leading-relaxed" style={clamp4}>{brief.who_can_apply}</p>
+                    </Section>
+                  ),
+                  brief.geographic_focus && (
+                    <Section key="geo" icon={MapPin} iconColor="#2d8a7a" label="Geographic focus">
+                      <p className="text-sm text-[#444] leading-relaxed" style={clamp4}>{brief.geographic_focus}</p>
                     </Section>
                   ),
                   brief.priorities && (

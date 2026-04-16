@@ -142,6 +142,8 @@ Extract a structured "funder brief" as JSON. Be concise — each field should be
 Return ONLY valid JSON in this exact shape:
 {
   "what_they_fund": "What kinds of projects, causes, or organisations they support",
+  "who_can_apply": "Eligible legal structures and organisation types — e.g. registered charities only, CICs welcome, social enterprises, unincorporated groups, individuals. Include any income caps or stage restrictions.",
+  "geographic_focus": "Geographic coverage — UK-wide, England only, specific regions, counties or cities. Be specific if restricted.",
   "priorities": "Current funding priorities or themes they care about most",
   "strong_application": "What makes a strong or successful application to this funder",
   "exclusions": "What they explicitly will NOT fund or who cannot apply",

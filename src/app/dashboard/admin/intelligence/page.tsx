@@ -234,6 +234,8 @@ export default function FunderIntelligencePage() {
 
   const BRIEF_LABELS: Record<string, string> = {
     what_they_fund:     'What they fund',
+    who_can_apply:      'Who can apply',
+    geographic_focus:   'Geographic focus',
     priorities:         'Priorities',
     strong_application: 'Strong application',
     exclusions:         'Exclusions',
