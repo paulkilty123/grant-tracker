@@ -176,10 +176,19 @@ Return ONLY valid JSON in this exact shape:
     return NextResponse.json({ error: 'Failed to generate summary' }, { status: 500 })
   }
 
-  // Save to Supabase
+  // Save brief + persist any additional sources so bulk re-enrich can reuse them
+  const updatePayload: Record<string, unknown> = { funder_brief: brief }
+  if (additionalSources && additionalSources.length > 0) {
+    // Only persist sources that have meaningful content (url or pasted text)
+    const sourcesToSave = additionalSources.filter(s =>
+      (s.url ?? '').trim().length > 5 || (s.text ?? '').trim().length > 50
+    )
+    if (sourcesToSave.length > 0) updatePayload.grant_sources = sourcesToSave
+  }
+
   const { error: updateError } = await supabase
     .from('scraped_grants')
-    .update({ funder_brief: brief })
+    .update(updatePayload)
     .eq('id', grantId)
 
   if (updateError) return NextResponse.json({ error: 'Failed to save brief' }, { status: 500 })

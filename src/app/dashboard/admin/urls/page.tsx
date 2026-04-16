@@ -30,6 +30,7 @@ type Grant = {
   funder_type?: string
   funding_type?: string
   funder_brief?: Record<string, string | null> | null
+  grant_sources?: Array<{ label: string; url?: string; text?: string }> | null
 }
 
 type CategoryGrant = Grant & {
@@ -120,7 +121,7 @@ function SavedForLaterTab() {
   useEffect(() => {
     createClient()
       .from('scraped_grants')
-      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief, description, funder_type, funding_type')
+      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief, grant_sources, description, funder_type, funding_type')
       .eq('is_active', false)
       .eq('saved_for_later', true)
       .order('title')
@@ -348,7 +349,7 @@ export default function UrlAdminPage() {
     if (filter === 'url_issues') {
       const { data, error } = await createClient()
         .from('scraped_grants')
-        .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funding_type, funder_brief')
+        .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funding_type, funder_brief, grant_sources')
         .eq('is_active', true)
         .or('url_status.eq.dead,and(url_status.eq.unchecked,apply_url.not.is.null),apply_url.is.null')
         .order('url_status', { ascending: true })
@@ -360,7 +361,7 @@ export default function UrlAdminPage() {
 
     let query = createClient()
       .from('scraped_grants')
-      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funding_type, funder_brief')
+      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funding_type, funder_brief, grant_sources')
       .eq('is_active', true)
       .order('url_last_checked', { ascending: true, nullsFirst: true })
       .limit(2000)
@@ -390,7 +391,7 @@ export default function UrlAdminPage() {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
     const { data } = await createClient()
       .from('scraped_grants')
-      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief, first_seen_at')
+      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief, grant_sources, first_seen_at')
       .eq('is_active', true)
       .gte('first_seen_at', sevenDaysAgo)
       .order('first_seen_at', { ascending: false })
@@ -417,12 +418,27 @@ export default function UrlAdminPage() {
     if (filter !== 'review') return
     const { data } = await createClient()
       .from('scraped_grants')
-      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief, description, funder_type, funding_type')
+      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief, grant_sources, description, funder_type, funding_type')
       .eq('is_active', false)
       .neq('url_status', 'dead').not('saved_for_later', 'is', 'true')  // exclude hidden and saved-for-later
       .order('last_seen_at', { ascending: false })
       .limit(500)
-    setReviewGrants((data ?? []) as Grant[])
+    const grants = (data ?? []) as Grant[]
+    setReviewGrants(grants)
+    // Pre-populate sources panel from any previously saved grant_sources
+    setReviewSources(prev => {
+      const next = { ...prev }
+      for (const g of grants) {
+        if (g.grant_sources && g.grant_sources.length > 0 && \!next[g.id]) {
+          next[g.id] = g.grant_sources.map(s => ({
+            label: s.label ?? '',
+            url: s.url ?? '',
+            text: s.text ?? '',
+          }))
+        }
+      }
+      return next
+    })
   }, [filter])
 
   // ── Load suspicious grants (low quality score) ───────────────────────────────
@@ -430,7 +446,7 @@ export default function UrlAdminPage() {
     if (filter !== 'suspicious') return
     const { data } = await createClient()
       .from('scraped_grants')
-      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief, url_quality_score, url_quality_issues')
+      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief, grant_sources, url_quality_score, url_quality_issues')
       .eq('is_active', true)
       .not('url_quality_score', 'is', null)
       .lt('url_quality_score', 60)
@@ -1643,7 +1659,7 @@ export default function UrlAdminPage() {
     const supabase = createClient()
     const { data: targets } = await supabase
       .from('scraped_grants')
-      .select('id, title, funder, apply_url, url_status, funder_brief, source, url_last_checked, is_invite_only')
+      .select('id, title, funder, apply_url, url_status, funder_brief, grant_sources, source, url_last_checked, is_invite_only')
       .eq('is_active', true)
       .is('funder_brief', null)
       .not('apply_url', 'is', null)
@@ -1664,7 +1680,13 @@ export default function UrlAdminPage() {
         const res = await fetch('/api/admin/enrich-grant', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ grantId: grant.id }),
+          body: JSON.stringify({
+            grantId: grant.id,
+            // Pass saved sources so bulk re-enrich benefits from previously added context
+            ...(grant.grant_sources && grant.grant_sources.length > 0
+              ? { additionalSources: grant.grant_sources }
+              : {}),
+          }),
           signal: controller.signal,
         })
         clearTimeout(timeout)
