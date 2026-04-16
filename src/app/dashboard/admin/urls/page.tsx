@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import {
   RefreshCw, ExternalLink, Pencil, Check, X,
   AlertTriangle, CheckCircle, Clock, Database, Trash2, Mail, Search,
-  ChevronDown, ChevronRight, Plus, Tag, Link, Sparkles, Brain,
+  ChevronDown, ChevronRight, Plus, Tag, Link, Sparkles, Brain, BookOpen, PlusCircle,
 } from 'lucide-react'
 import { SEED_GRANTS } from '@/lib/grants'
 import { parseOpenDate } from '@/lib/parse-open-date'
@@ -232,6 +232,8 @@ export default function UrlAdminPage() {
   const [expandedReviewId, setExpandedReviewId] = useState<string | null>(null)
   const [reviewEdits, setReviewEdits]           = useState<Record<string, Record<string, string | boolean | number | null>>>({})
   const [reviewPublishing, setReviewPublishing] = useState<Record<string, boolean>>({})
+  const [reviewSources, setReviewSources]       = useState<Record<string, {label:string;url:string;text:string}[]>>({})
+  const [reviewSourcesOpen, setReviewSourcesOpen] = useState<Record<string, boolean>>({})
   const [approvingAll, setApprovingAll]       = useState(false)
 
   // Category view state
@@ -476,6 +478,16 @@ export default function UrlAdminPage() {
   function setReviewField(id: string, field: string, value: string | boolean | number | null) {
     setReviewEdits(s => ({ ...s, [id]: { ...(s[id] ?? {}), [field]: value } }))
   }
+  function addReviewSource(id: string) {
+    setReviewSources(s => ({ ...s, [id]: [...(s[id] ?? []), { label: '', url: '', text: '' }] }))
+  }
+  function updateReviewSource(id: string, idx: number, field: 'label'|'url'|'text', value: string) {
+    setReviewSources(s => { const a = [...(s[id] ?? [])]; a[idx] = { ...a[idx], [field]: value }; return { ...s, [id]: a } })
+  }
+  function removeReviewSource(id: string, idx: number) {
+    setReviewSources(s => { const a = [...(s[id] ?? [])]; a.splice(idx,1); return { ...s, [id]: a } })
+  }
+
   async function publishReviewGrant(grant: Grant) {
     setReviewPublishing(s => ({ ...s, [grant.id]: true }))
     // Save any edits first
@@ -1323,6 +1335,29 @@ export default function UrlAdminPage() {
         setSuspiciousGrants(prev => prev.map(g => g.id === grant.id ? { ...g, funder_brief: brief } : g))
       }
     } catch { /* silent — network or timeout */ } finally {
+      clearTimeout(clientTimeout)
+      setEnrichingId(null)
+    }
+  }
+
+  async function enrichGrantFromManagerWithSources(grant: Grant, sources: {label:string;url:string;text:string}[]) {
+    if (enrichingId) return
+    setEnrichingId(grant.id)
+    const controller = new AbortController()
+    const clientTimeout = setTimeout(() => controller.abort(), 50000)
+    try {
+      const res = await fetch('/api/admin/enrich-grant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ grantId: grant.id, additionalSources: sources.filter(s => s.text.trim().length > 50 || s.url.trim().length > 5) }),
+        signal: controller.signal,
+      })
+      clearTimeout(clientTimeout)
+      if (res.ok) {
+        const { brief } = await res.json()
+        setReviewGrants(prev => prev.map(g => g.id === grant.id ? { ...g, funder_brief: brief } : g))
+      }
+    } catch { /* silent */ } finally {
       clearTimeout(clientTimeout)
       setEnrichingId(null)
     }
@@ -2347,7 +2382,38 @@ export default function UrlAdminPage() {
                                 <Sparkles className="w-3 h-3" />{enrichingId === grant.id ? 'Enriching…' : grant.funder_brief ? 'Re-enrich' : 'Enrich'}
                               </button>
                               {grant.funder_brief && <span className="text-xs text-sage font-medium">✓ Enriched</span>}
+                              <button onClick={() => setReviewSourcesOpen(o => ({ ...o, [grant.id]: !o[grant.id] }))}
+                                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold border rounded-full transition-colors"
+                                style={{ borderColor: reviewSourcesOpen[grant.id] ? '#1f5c52' : '#E8E8EC', color: reviewSourcesOpen[grant.id] ? '#1f5c52' : '#6b7280', backgroundColor: reviewSourcesOpen[grant.id] ? 'rgba(31,92,82,0.08)' : 'white' }}>
+                                <BookOpen className="w-3 h-3" />
+                                {(reviewSources[grant.id]?.length ?? 0) > 0 ? `${reviewSources[grant.id].length} source${reviewSources[grant.id].length > 1 ? 's' : ''}` : 'Sources'}
+                              </button>
                             </div>
+                            {reviewSourcesOpen[grant.id] && (
+                              <div className="mt-2 p-3 rounded-lg border border-[#E8E8EC] bg-[#faf8f5] space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <p className="text-xs font-semibold text-charcoal">Additional sources</p>
+                                  <button onClick={() => addReviewSource(grant.id)}
+                                    className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-white rounded-full" style={{ backgroundColor: '#1f5c52' }}>
+                                    <PlusCircle className="w-3 h-3" />Add source
+                                  </button>
+                                </div>
+                                {(reviewSources[grant.id] ?? []).length === 0 && <p className="text-xs text-light italic">Add a URL or paste content to improve enrichment quality.</p>}
+                                {(reviewSources[grant.id] ?? []).map((src, idx) => (
+                                  <div key={idx} className="bg-white border border-[#E8E8EC] p-2 rounded-lg space-y-1.5">
+                                    <div className="flex items-center gap-2">
+                                      <input type="text" placeholder="Label (optional)" value={src.label} onChange={e=>updateReviewSource(grant.id,idx,'label',e.target.value)}
+                                        className="flex-1 text-xs border border-[#E8E8EC] rounded px-2 py-1 outline-none focus:border-forest" />
+                                      <button onClick={()=>removeReviewSource(grant.id,idx)} className="text-light hover:text-red-400 transition-colors"><X className="w-3 h-3" /></button>
+                                    </div>
+                                    <input type="url" placeholder="URL (fetched automatically)" value={src.url} onChange={e=>updateReviewSource(grant.id,idx,'url',e.target.value)}
+                                      className="w-full text-xs border border-[#E8E8EC] rounded px-2 py-1 outline-none focus:border-forest" />
+                                    <textarea placeholder="Or paste content directly…" value={src.text} onChange={e=>updateReviewSource(grant.id,idx,'text',e.target.value)} rows={2}
+                                      className="w-full text-xs border border-[#E8E8EC] rounded px-2 py-1 outline-none focus:border-forest resize-none" />
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                             {/* Funder brief preview */}
                             {grant.funder_brief && (() => {
                               const brief = grant.funder_brief as Record<string, string | null>
