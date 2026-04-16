@@ -1504,6 +1504,12 @@ export default function UrlAdminPage() {
 
 
 
+  function detectAll(grant: Grant) {
+    detectEligibility(grant)
+    detectLocation(grant)
+    if (grant.funder_brief) populateFromBrief(grant)
+  }
+
   const IMPACT_SECTOR_OPTIONS = [
     { value: 'community', label: 'Community' }, { value: 'young_people', label: 'Young People' },
     { value: 'health', label: 'Health' }, { value: 'mental_health', label: 'Mental Health' },
@@ -2549,7 +2555,13 @@ export default function UrlAdminPage() {
                       <tr>
                         <td colSpan={5} className="px-0 pb-2">
                           <div className="mx-3 mb-1 rounded-xl border border-forest/20 bg-[#f0fdf9] p-4">
-                            <p className="text-[10px] font-semibold uppercase tracking-wider text-forest mb-3">Review &amp; edit before publishing</p>
+                            <div className="flex items-center justify-between mb-3">
+                              <p className="text-[10px] font-semibold uppercase tracking-wider text-forest">Review &amp; edit before publishing</p>
+                              <button onClick={() => detectAll(grant)}
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-full text-white transition-colors" style={{ backgroundColor: '#1f5c52' }}>
+                                <Sparkles className="w-3 h-3" /> Detect all
+                              </button>
+                            </div>
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs mb-3">
                               <div><label className="text-mid block mb-0.5">Funder type</label>
                                 <select value={String(getReviewVal(grant.id,'funder_type',grant.funder_type??'') )} onChange={e=>setReviewField(grant.id,'funder_type',e.target.value)} className="form-select text-xs py-1 w-full">
