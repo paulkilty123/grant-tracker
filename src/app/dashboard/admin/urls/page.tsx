@@ -1340,6 +1340,56 @@ export default function UrlAdminPage() {
     }
   }
 
+
+  function populateFromBrief(grant: Grant) {
+    const brief = grant.funder_brief as Record<string, string | null> | null
+    if (!brief) return
+    const awardText   = (brief.typical_award    ?? '').toLowerCase()
+    const timelineText = (brief.decision_timeline ?? '').toLowerCase()
+    const updates: Record<string, string | boolean | number | null> = {}
+
+    // ── Extract amounts ───────────────────────────────────────────────────────
+    // Matches: £10,000 | £10k | £1m | up to £50,000 | $50,000
+    const amountRe = /[£$][\d,]+(?:\.?\d+)?(?:\s*[km](?:illion)?)?/gi
+    const amountMatches = awardText.match(amountRe) ?? []
+    const parseAmt = (s: string): number | null => {
+      const clean = s.replace(/[£$,]/g, '').trim()
+      const m = clean.match(/([\d.]+)\s*([km])?/)
+      if (!m) return null
+      let val = parseFloat(m[1])
+      if (m[2] === 'k') val *= 1_000
+      if (m[2] === 'm') val *= 1_000_000
+      return isNaN(val) ? null : Math.round(val)
+    }
+    const amounts = amountMatches.map(parseAmt).filter((v): v is number => v !== null)
+    if (amounts.length === 1) {
+      if (!getReviewVal(grant.id,'amount_max',null)) updates.amount_max = amounts[0]
+    } else if (amounts.length >= 2) {
+      const sorted = [...amounts].sort((a,b) => a - b)
+      if (!getReviewVal(grant.id,'amount_min',null)) updates.amount_min = sorted[0]
+      if (!getReviewVal(grant.id,'amount_max',null)) updates.amount_max = sorted[sorted.length-1]
+    }
+
+    // ── Extract deadline ──────────────────────────────────────────────────────
+    // Look for "close X", "deadline X", "closes X" patterns with dates
+    if (!getReviewVal(grant.id,'deadline',null)) {
+      const months: Record<string,string> = { jan:'01',feb:'02',mar:'03',apr:'04',may:'05',jun:'06',jul:'07',aug:'08',sep:'09',oct:'10',nov:'11',dec:'12' }
+      const closeRe = /(?:clos(?:e|es|ing)|deadline|apply by|applications? (?:close|due))[^.]*?(\d{1,2})\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+(\d{4})/i
+      const m = timelineText.match(closeRe)
+      if (m) {
+        const day = m[1].padStart(2,'0')
+        const mon = months[m[2].toLowerCase().slice(0,3)] ?? '01'
+        const yr  = m[3]
+        updates.deadline = `${yr}-${mon}-${day}`
+        updates.is_rolling = false
+      }
+    }
+
+    if (Object.keys(updates).length > 0) {
+      setReviewEdits(s => ({ ...s, [grant.id]: { ...(s[grant.id] ?? {}), ...updates } }))
+    }
+  }
+
   async function enrichGrantFromManagerWithSources(grant: Grant, sources: {label:string;url:string;text:string}[]) {
     if (enrichingId) return
     setEnrichingId(grant.id)
@@ -2381,7 +2431,15 @@ export default function UrlAdminPage() {
                                 className="flex items-center gap-1.5 rounded-full border border-forest/40 px-3 py-1.5 text-xs font-semibold text-forest hover:bg-forest/10 transition-colors disabled:opacity-40">
                                 <Sparkles className="w-3 h-3" />{enrichingId === grant.id ? 'Enriching…' : grant.funder_brief ? 'Re-enrich' : 'Enrich'}
                               </button>
-                              {grant.funder_brief && <span className="text-xs text-sage font-medium">✓ Enriched</span>}
+                              {grant.funder_brief && (
+                                <>
+                                  <span className="text-xs text-sage font-medium">✓ Enriched</span>
+                                  <button onClick={() => populateFromBrief(grant)}
+                                    className="text-xs font-semibold text-amber-600 hover:text-amber-700 underline underline-offset-2 transition-colors">
+                                    Populate fields
+                                  </button>
+                                </>
+                              )}
                               <button onClick={() => setReviewSourcesOpen(o => ({ ...o, [grant.id]: !o[grant.id] }))}
                                 className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold border rounded-full transition-colors"
                                 style={{ borderColor: reviewSourcesOpen[grant.id] ? '#1f5c52' : '#E8E8EC', color: reviewSourcesOpen[grant.id] ? '#1f5c52' : '#6b7280', backgroundColor: reviewSourcesOpen[grant.id] ? 'rgba(31,92,82,0.08)' : 'white' }}>
