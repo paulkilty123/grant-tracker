@@ -2715,9 +2715,15 @@ export default function UrlAdminPage() {
                             {grant.funder_brief && (() => {
                               const brief = grant.funder_brief as Record<string, string | null>
                               const LABELS: Record<string, string> = {
-                                what_they_fund: 'What they fund', priorities: 'Priorities',
-                                strong_application: 'Strong application', exclusions: 'Exclusions',
-                                typical_award: 'Typical award', decision_timeline: 'Decision timeline',
+                                what_they_fund: 'What they fund',
+                                who_can_apply: 'Who can apply',
+                                geographic_focus: 'Geographic focus',
+                                priorities: 'Priorities',
+                                strong_application: 'Strong application',
+                                exclusions: 'Exclusions',
+                                typical_award: 'Typical award',
+                                decision_timeline: 'Decision timeline',
+                                funder_tips: 'Tips',
                               }
                               const entries = Object.entries(LABELS)
                                 .filter(([k]) => brief[k])
