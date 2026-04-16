@@ -1250,8 +1250,17 @@ export function computeMatchScore(
   }
 
   // ── Total ──────────────────────────────────────────────────────────────
+  // Reweighted: themes (35) + beneficiaries (20) dominate; location (15),
+  // eligibility (12), funder type (8), grant size (10 neutral) round out to 100.
+  // Raw dimension scores are scaled to their new maxes before summing.
+  const wLocation     = Math.round(locationScore     * 15 / 20)  // 20 → 15
+  const wThemes       = Math.round(themesScore       * 35 / 25)  // 25 → 35
+  const wBeneficiary  = Math.round(beneficiaryScore  * 20 / 10)  // 10 → 20
+  const wFunderType   = Math.round(funderTypeScore   *  8 / 15)  // 15 → 8
+  const wEligibility  = Math.round(eligibilityScore  * 12 / 15)  // 15 → 12
+
   let score = Math.min(100,
-    locationScore + themesScore + beneficiaryScore + grantSizeScore + funderTypeScore + eligibilityScore
+    wLocation + wThemes + wBeneficiary + grantSizeScore + wFunderType + wEligibility
   )
 
   // Freshness bonus — newly added grants get a gentle tiebreaker boost so fresh
@@ -1358,12 +1367,12 @@ export function computeMatchScore(
     positiveReasons: positives,
     warnReasons:     warns,
     breakdown: {
-      location:      { score: locationScore,      max: 20, label: 'Location' },
-      themes:        { score: themesScore,        max: 25, label: 'Themes & work' },
-      beneficiaries: { score: beneficiaryScore,   max: 10, label: 'Beneficiaries' },
-      grantSize:     { score: grantSizeScore,     max: 20, label: 'Grant size' },
-      funderType:    { score: funderTypeScore,    max: 15, label: 'Funder type' },
-      eligibility:   { score: eligibilityScore,   max: 15, label: 'Eligibility' },
+      location:      { score: wLocation,     max: 15, label: 'Location' },
+      themes:        { score: wThemes,       max: 35, label: 'Themes & work' },
+      beneficiaries: { score: wBeneficiary,  max: 20, label: 'Beneficiaries' },
+      grantSize:     { score: grantSizeScore, max: 10, label: 'Grant size' },
+      funderType:    { score: wFunderType,   max: 8,  label: 'Funder type' },
+      eligibility:   { score: wEligibility,  max: 12, label: 'Eligibility' },
     },
   }
 }
