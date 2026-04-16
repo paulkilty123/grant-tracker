@@ -99,7 +99,8 @@ export async function POST(req: NextRequest) {
             fetchedFromUrl = true
           }
         } catch {
-          // URL fetch failed — skip this source
+          // URL fetch failed — add a note so Claude knows the URL was inaccessible
+          sections.push(`${heading} (${src.url}):\n---\nURL could not be fetched automatically (may require login or block bots). If you have access, paste the page content directly into the Sources text box.\n---`)
         }
       } else if (src.text && src.text.trim().length > 50) {
         sections.push(`${heading}:\n---\n${src.text.trim().slice(0, 8000)}\n---`)
