@@ -1389,15 +1389,22 @@ export default function UrlAdminPage() {
     }
 
     // ── Extract deadline ──────────────────────────────────────────────────────
-    // Look for "close X", "deadline X", "closes X" patterns with dates
+    // Handles ordinal suffixes (1st, 2nd, 3rd, 4th etc.) + bare date fallback
+    // (safe to use bare dates since this field is specifically about the decision timeline)
     if (!getReviewVal(grant.id,'deadline',null)) {
       const months: Record<string,string> = { jan:'01',feb:'02',mar:'03',apr:'04',may:'05',jun:'06',jul:'07',aug:'08',sep:'09',oct:'10',nov:'11',dec:'12' }
-      // Try DD Month YYYY (European)
-      const closeReEU = /(?:clos(?:e|es|ing)|deadline|apply by|applications? (?:close|due))[^.]*?(\d{1,2})\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+(\d{4})/i
-      // Try Month DD YYYY (US/programme style: "July 29, 2026")
-      const closeReUS = /(?:clos(?:e|es|ing)|deadline|apply by|applications? (?:close|due))[^.]*?(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+(\d{1,2}),?\s*(\d{4})/i
-      const mEU = timelineText.match(closeReEU)
-      const mUS = timelineText.match(closeReUS)
+      // Keyword + DD Month YYYY (with optional ordinal suffix: 1st, 2nd, 3rd, 4th...)
+      const closeReEU = /(?:clos(?:e|es|ing)|deadline|apply by|applications? (?:close|due)|open(?:s|ing)?)[^.]*?(\d{1,2})(?:st|nd|rd|th)?\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+(\d{4})/i
+      // Keyword + Month DD YYYY (US style, with optional ordinal suffix)
+      const closeReUS = /(?:clos(?:e|es|ing)|deadline|apply by|applications? (?:close|due)|open(?:s|ing)?)[^.]*?(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+(\d{1,2})(?:st|nd|rd|th)?,?\s*(\d{4})/i
+      // Fallback: bare DD Month YYYY anywhere in timeline (safe since field is specifically about deadlines)
+      const bareReEU  = /(\d{1,2})(?:st|nd|rd|th)?\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+(\d{4})/i
+      // Fallback: bare Month DD YYYY
+      const bareReUS  = /(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+(\d{1,2})(?:st|nd|rd|th)?,?\s*(\d{4})/i
+      const mEU  = timelineText.match(closeReEU)
+      const mUS  = timelineText.match(closeReUS)
+      const mbEU = (!mEU && !mUS) ? timelineText.match(bareReEU) : null
+      const mbUS = (!mEU && !mUS && !mbEU) ? timelineText.match(bareReUS) : null
       if (mEU) {
         const day = mEU[1].padStart(2,'0')
         const mon = months[mEU[2].toLowerCase().slice(0,3)] ?? '01'
@@ -1408,9 +1415,18 @@ export default function UrlAdminPage() {
         const day = mUS[2].padStart(2,'0')
         updates.deadline = `${mUS[3]}-${mon}-${day}`
         updates.is_rolling = false
+      } else if (mbEU) {
+        const day = mbEU[1].padStart(2,'0')
+        const mon = months[mbEU[2].toLowerCase().slice(0,3)] ?? '01'
+        updates.deadline = `${mbEU[3]}-${mon}-${day}`
+        updates.is_rolling = false
+      } else if (mbUS) {
+        const mon = months[mbUS[1].toLowerCase().slice(0,3)] ?? '01'
+        const day = mbUS[2].padStart(2,'0')
+        updates.deadline = `${mbUS[3]}-${mon}-${day}`
+        updates.is_rolling = false
       }
     }
-
     if (Object.keys(updates).length > 0) {
       setReviewEdits(s => ({ ...s, [grant.id]: { ...(s[grant.id] ?? {}), ...updates } }))
     }
