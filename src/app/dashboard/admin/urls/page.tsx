@@ -1,4 +1,5 @@
 'use client'
+import React from 'react'
 import { useRouter } from 'next/navigation'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
@@ -228,6 +229,9 @@ export default function UrlAdminPage() {
   const [newGrants, setNewGrants]             = useState<NewGrant[]>([])
   const [newSources, setNewSources]           = useState<Set<string>>(new Set())
   const [reviewGrants, setReviewGrants]       = useState<Grant[]>([])
+  const [expandedReviewId, setExpandedReviewId] = useState<string | null>(null)
+  const [reviewEdits, setReviewEdits]           = useState<Record<string, Record<string, string | boolean | number | null>>>({})
+  const [reviewPublishing, setReviewPublishing] = useState<Record<string, boolean>>({})
   const [approvingAll, setApprovingAll]       = useState(false)
 
   // Category view state
@@ -454,15 +458,43 @@ export default function UrlAdminPage() {
   }
 
   // ── Approve a single review grant ─────────────────────────────────────────────
-  async function approveGrant(id: string, redirectToIntelligence = false) {
+  async function approveGrant(id: string) {
     await fetch('/api/admin/update-grant', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, fields: { url_status: 'reviewing' } }),
+      body: JSON.stringify({ id, fields: { is_active: true } }),
     })
     setReviewGrants(prev => prev.filter(g => g.id !== id))
     await loadStats()
-    if (redirectToIntelligence) window.open(`/dashboard/admin/intelligence?highlight=${id}`, '_blank')
+
+  }
+
+
+  function getReviewVal(id: string, field: string, fallback: string | boolean | number | null) {
+    return reviewEdits[id]?.[field] !== undefined ? reviewEdits[id][field] : fallback
+  }
+  function setReviewField(id: string, field: string, value: string | boolean | number | null) {
+    setReviewEdits(s => ({ ...s, [id]: { ...(s[id] ?? {}), [field]: value } }))
+  }
+  async function publishReviewGrant(grant: Grant) {
+    setReviewPublishing(s => ({ ...s, [grant.id]: true }))
+    // Save any edits first
+    const edits = reviewEdits[grant.id] ?? {}
+    if (Object.keys(edits).length > 0) {
+      const fields: Record<string, unknown> = {}
+      if (edits.funder_type  !== undefined) fields.funder_type  = edits.funder_type
+      if (edits.funding_type !== undefined) fields.funding_type = edits.funding_type
+      if (edits.amount_min   !== undefined) fields.amount_min   = edits.amount_min ? parseInt(String(edits.amount_min).replace(/[^0-9]/g,'')) : null
+      if (edits.amount_max   !== undefined) fields.amount_max   = edits.amount_max ? parseInt(String(edits.amount_max).replace(/[^0-9]/g,'')) : null
+      if (edits.deadline     !== undefined) fields.deadline     = edits.deadline || null
+      if (edits.is_rolling   !== undefined) fields.is_rolling   = edits.is_rolling
+      if (edits.location_tag !== undefined) fields.location_tag = edits.location_tag || null
+      await createClient().from('scraped_grants').update(fields).eq('id', grant.id)
+    }
+    // Activate
+    await approveGrant(grant.id)
+    setReviewPublishing(s => ({ ...s, [grant.id]: false }))
+    setExpandedReviewId(null)
   }
 
   // ── Load category grants (all grants, grouped by funder type) ────────────────
@@ -2058,7 +2090,7 @@ export default function UrlAdminPage() {
                   </thead>
                   <tbody className="divide-y divide-warm/60">
                     {filtered.map(grant => (
-                      <tr key={grant.id} className={`hover:bg-cream/50 transition-colors ${selectedIds.has(grant.id) ? 'bg-red-50' : ''}`}>
+                      <tr className={`hover:bg-cream/50 transition-colors ${selectedIds.has(grant.id) ? 'bg-red-50' : ''}`}>
                         <td className="px-3 py-3 w-8">
                           <input type="checkbox" checked={selectedIds.has(grant.id)} onChange={() => toggleSelect(grant.id)}
                             className="h-3.5 w-3.5 rounded accent-forest cursor-pointer" />
@@ -2215,7 +2247,8 @@ export default function UrlAdminPage() {
                 </thead>
                 <tbody className="divide-y divide-warm/60">
                   {reviewGrants.map(grant => (
-                    <tr key={grant.id} className={`hover:bg-cream/50 transition-colors ${selectedIds.has(grant.id) ? 'bg-red-50' : ''}`}>
+                    <React.Fragment key={grant.id}>
+                    <tr className={`hover:bg-cream/50 transition-colors ${selectedIds.has(grant.id) ? 'bg-red-50' : ''}`}>
                       <td className="px-3 py-3 w-8">
                         <input type="checkbox" checked={selectedIds.has(grant.id)} onChange={() => toggleSelect(grant.id)}
                           className="h-3.5 w-3.5 rounded accent-forest cursor-pointer" />
@@ -2263,9 +2296,9 @@ export default function UrlAdminPage() {
                             className="rounded-full border border-warm p-1.5 text-mid hover:border-forest hover:text-forest transition-colors">
                             <Pencil className="h-3 w-3" />
                           </button>
-                          <button onClick={() => approveGrant(grant.id, true)}
-                            className="rounded-full bg-forest/10 px-3 py-1 text-xs font-semibold text-forest hover:bg-forest hover:text-white transition-colors flex items-center gap-1">
-                            Approve &amp; Enrich
+                          <button onClick={() => setExpandedReviewId(id => id === grant.id ? null : grant.id)}
+                            className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${expandedReviewId === grant.id ? 'bg-forest text-white' : 'bg-forest/10 text-forest hover:bg-forest hover:text-white'}`}>
+                            {expandedReviewId === grant.id ? 'Close' : 'Review'}
                           </button>
                           <button onClick={async () => {
                             await createClient().from('scraped_grants').update({ url_status: 'saved' }).eq('id', grant.id)
@@ -2281,6 +2314,51 @@ export default function UrlAdminPage() {
                         </div>
                       </td>
                     </tr>
+                    {expandedReviewId === grant.id && (
+                      <tr>
+                        <td colSpan={5} className="px-0 pb-2">
+                          <div className="mx-3 mb-1 rounded-xl border border-forest/20 bg-[#f0fdf9] p-4">
+                            <p className="text-[10px] font-semibold uppercase tracking-wider text-forest mb-3">Review &amp; edit before publishing</p>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs mb-3">
+                              <div><label className="text-mid block mb-0.5">Funder type</label>
+                                <select value={String(getReviewVal(grant.id,'funder_type',grant.funder_type??'') )} onChange={e=>setReviewField(grant.id,'funder_type',e.target.value)} className="form-select text-xs py-1 w-full">
+                                  {['trust_foundation','community_foundation','corporate_foundation','local_authority','corporate','lottery','government','capacity_builder','competition','loan','other'].map(v=><option key={v} value={v}>{v.replace(/_/g,' ').replace(/\w/g,c=>c.toUpperCase())}</option>)}
+                                </select></div>
+                              <div><label className="text-mid block mb-0.5">Funding type</label>
+                                <select value={String(getReviewVal(grant.id,'funding_type',(grant as Grant & {funding_type?:string}).funding_type??'grant'))} onChange={e=>setReviewField(grant.id,'funding_type',e.target.value)} className="form-select text-xs py-1 w-full">
+                                  {['grant','programme','investment','in_kind'].map(v=><option key={v} value={v}>{v.replace(/_/g,' ').replace(/\w/g,c=>c.toUpperCase())}</option>)}
+                                </select></div>
+                              <div><label className="text-mid block mb-0.5">Location tag</label>
+                                <input type="text" value={String(getReviewVal(grant.id,'location_tag',(grant as Grant & {location_tag?:string}).location_tag??''))} onChange={e=>setReviewField(grant.id,'location_tag',e.target.value)} className="form-input text-xs py-1 w-full" placeholder="e.g. UK, London, Sussex" /></div>
+                              <div><label className="text-mid block mb-0.5">Amount min (£)</label>
+                                <input type="number" value={String(getReviewVal(grant.id,'amount_min',(grant as Grant & {amount_min?:number}).amount_min??''))} onChange={e=>setReviewField(grant.id,'amount_min',e.target.value)} className="form-input text-xs py-1 w-full" placeholder="e.g. 5000" /></div>
+                              <div><label className="text-mid block mb-0.5">Amount max (£)</label>
+                                <input type="number" value={String(getReviewVal(grant.id,'amount_max',(grant as Grant & {amount_max?:number}).amount_max??''))} onChange={e=>setReviewField(grant.id,'amount_max',e.target.value)} className="form-input text-xs py-1 w-full" placeholder="e.g. 50000" /></div>
+                              <div><label className="text-mid block mb-0.5">Deadline</label>
+                                <input type="text" value={String(getReviewVal(grant.id,'deadline',(grant as Grant & {deadline?:string}).deadline??''))} onChange={e=>setReviewField(grant.id,'deadline',e.target.value)} disabled={Boolean(getReviewVal(grant.id,'is_rolling',false))} className="form-input text-xs py-1 w-full" placeholder="YYYY-MM-DD" /></div>
+                            </div>
+                            <div className="flex items-center gap-2 mb-3">
+                              <input type="checkbox" id={`rolling-${grant.id}`} checked={Boolean(getReviewVal(grant.id,'is_rolling',false))} onChange={e=>setReviewField(grant.id,'is_rolling',e.target.checked)} className="h-3.5 w-3.5 accent-forest" />
+                              <label htmlFor={`rolling-${grant.id}`} className="text-xs text-mid cursor-pointer">Rolling deadline</label>
+                            </div>
+                            <div className="flex items-center gap-3 pt-3 border-t border-forest/10">
+                              <button onClick={() => enrichGrantFromManager(grant)} disabled={!!enrichingId}
+                                className="flex items-center gap-1.5 rounded-full border border-forest/40 px-3 py-1.5 text-xs font-semibold text-forest hover:bg-forest/10 transition-colors disabled:opacity-40">
+                                <Sparkles className="w-3 h-3" />{enrichingId === grant.id ? 'Enriching…' : grant.funder_brief ? 'Re-enrich' : 'Enrich'}
+                              </button>
+                              {grant.funder_brief && <span className="text-xs text-sage font-medium">✓ Enriched</span>}
+                              <div className="flex-1" />
+                              <button onClick={() => setExpandedReviewId(null)} className="rounded-full border border-warm px-3 py-1.5 text-xs font-semibold text-mid hover:border-charcoal transition-colors">Cancel</button>
+                              <button onClick={() => publishReviewGrant(grant)} disabled={reviewPublishing[grant.id]}
+                                className="rounded-full bg-forest px-4 py-1.5 text-xs font-semibold text-white hover:bg-sage transition-colors disabled:opacity-40">
+                                {reviewPublishing[grant.id] ? 'Publishing…' : '✓ Confirm & Publish'}
+                              </button>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>
@@ -2423,7 +2501,7 @@ export default function UrlAdminPage() {
                 </thead>
                 <tbody className="divide-y divide-warm/60">
                   {grants.map(grant => (
-                    <tr key={grant.id} className={`hover:bg-cream/50 transition-colors ${selectedIds.has(grant.id) ? 'bg-red-50' : ''}`}>
+                    <tr className={`hover:bg-cream/50 transition-colors ${selectedIds.has(grant.id) ? 'bg-red-50' : ''}`}>
                       <td className="px-3 py-3 w-8">
                         <input type="checkbox" checked={selectedIds.has(grant.id)} onChange={() => toggleSelect(grant.id)}
                           className="h-3.5 w-3.5 rounded accent-forest cursor-pointer" />
