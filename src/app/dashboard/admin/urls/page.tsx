@@ -1417,6 +1417,15 @@ export default function UrlAdminPage() {
       [/\bsheffield\b/, 'Sheffield'],
       [/\bnottingham\b/, 'Nottingham'],
       [/\bbrighton\b|\bsussex\b/, 'Sussex'],
+      [/\bstockport\b|\bbolton\b|\boldham\b|\bwigan\b|\bsalford\b|\btrafford\b|\bbury\b/, 'Greater Manchester'],
+      [/\bcoventry\b/, 'Coventry'],
+      [/\bexeter\b/, 'Exeter'],
+      [/\bbradford\b|\bhuddersfield\b|\bwakefield\b/, 'Yorkshire'],
+      [/\bplymouth\b/, 'South West England'],
+      [/\bnorwich\b/, 'East of England'],
+      [/\bportsmouth\b|\bsouthampton\b/, 'South East England'],
+      [/\bleicester\b/, 'Midlands'],
+      [/\bwolverhampton\b|\bwalsall\b|\bsandwell\b/, 'West Midlands'],
       [/\bedinburgh\b|\bglasgow\b/, 'Scotland'],
       [/\bcardiff\b|\bswansea\b/, 'Wales'],
       [/\bnorth east\b|\btyne\b|\bwear\b|\bnorthumberland\b/, 'North East England'],
@@ -2572,13 +2581,13 @@ export default function UrlAdminPage() {
                                   {['grant','programme','investment','in_kind'].map(v=><option key={v} value={v}>{v.replace(/_/g,' ').replace(/\w/g,c=>c.toUpperCase())}</option>)}
                                 </select></div>
                               <div><label className="text-mid block mb-0.5">Location tag</label>
-                                <input type="text" value={String(getReviewVal(grant.id,'location_tag',(grant as Grant & {location_tag?:string}).location_tag??''))} onChange={e=>setReviewField(grant.id,'location_tag',e.target.value)} className="form-input text-xs py-1 w-full" placeholder="e.g. UK, London, Sussex" /></div>
+                                <input type="text" value={String(getReviewVal(grant.id,'location_tag',(grant as Grant & {location_tag?:string|null}).location_tag ?? ''))} onChange={e=>setReviewField(grant.id,'location_tag',e.target.value)} className="form-input text-xs py-1 w-full" placeholder="e.g. UK, London, Sussex" /></div>
                               <div><label className="text-mid block mb-0.5">Amount min (£)</label>
-                                <input type="number" value={String(getReviewVal(grant.id,'amount_min',(grant as Grant & {amount_min?:number}).amount_min??''))} onChange={e=>setReviewField(grant.id,'amount_min',e.target.value)} className="form-input text-xs py-1 w-full" placeholder="e.g. 5000" /></div>
+                                <input type="number" value={String(getReviewVal(grant.id,'amount_min',(grant as Grant & {amount_min?:number|null}).amount_min ?? ''))} onChange={e=>setReviewField(grant.id,'amount_min',e.target.value)} className="form-input text-xs py-1 w-full" placeholder="e.g. 5000" /></div>
                               <div><label className="text-mid block mb-0.5">Amount max (£)</label>
-                                <input type="number" value={String(getReviewVal(grant.id,'amount_max',(grant as Grant & {amount_max?:number}).amount_max??''))} onChange={e=>setReviewField(grant.id,'amount_max',e.target.value)} className="form-input text-xs py-1 w-full" placeholder="e.g. 50000" /></div>
+                                <input type="number" value={String(getReviewVal(grant.id,'amount_max',(grant as Grant & {amount_max?:number|null}).amount_max ?? ''))} onChange={e=>setReviewField(grant.id,'amount_max',e.target.value)} className="form-input text-xs py-1 w-full" placeholder="e.g. 50000" /></div>
                               <div><label className="text-mid block mb-0.5">Deadline</label>
-                                <input type="text" value={String(getReviewVal(grant.id,'deadline',(grant as Grant & {deadline?:string}).deadline??''))} onChange={e=>setReviewField(grant.id,'deadline',e.target.value)} disabled={Boolean(getReviewVal(grant.id,'is_rolling',false))} className="form-input text-xs py-1 w-full" placeholder="YYYY-MM-DD" /></div>
+                                <input type="text" value={String(getReviewVal(grant.id,'deadline',(grant as Grant & {deadline?:string|null}).deadline ?? ''))} onChange={e=>setReviewField(grant.id,'deadline',e.target.value)} disabled={Boolean(getReviewVal(grant.id,'is_rolling',false))} className="form-input text-xs py-1 w-full" placeholder="YYYY-MM-DD" /></div>
                             </div>
                             <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mb-3">
                               <div className="flex items-center gap-2">
