@@ -67,6 +67,8 @@ const SECTOR_IDF: Record<string, number> = {
   international: 2.5,  //   8 grants
   food:         2.5,   //   8 grants
   women:        2.5,   //   8 grants
+  social_economy:    2.2,   // new sector — very few grants, high discriminative power
+  social_innovation: 2.0,   // new sector — very few grants, high discriminative power
 }
 
 /** IDF weight for a sector — falls back to 1.0 for unknown tags */
@@ -486,7 +488,7 @@ export function computeMatchScore(
   // more reliable than the legacy `is_local` boolean, which is inconsistent on
   // ~16% of the catalogue. We fall back to is_local + title-regex scanning
   // only when location_tag is missing or generic.
-  let locationScore = 8 // base for national grants (max 20)
+  let locationScore = 12 // base for national/unknown grants (max 20)
   let locationMismatch = false
   if (org.primary_location) {
     const city    = org.primary_location.split(',')[0].trim().toLowerCase()
@@ -501,8 +503,8 @@ export function computeMatchScore(
     const tagClass = classifyLocationTag(grant.locationTag)
 
     if (tagClass.kind === 'national') {
-      // UK-wide grant — everyone gets the national base. No regional gymnastics.
-      locationScore = 8
+      // UK-wide grant — open to all, give a modest positive signal
+      locationScore = 12
     } else if (tagClass.kind === 'england' || tagClass.kind === 'scotland' ||
                tagClass.kind === 'wales'   || tagClass.kind === 'ni') {
       // Nation-restricted grant. Match against the org's inferred country.
@@ -833,7 +835,7 @@ export function computeMatchScore(
       // (max -3) so the org still sees it, but it ranks lower than a specialist org.
       // Only applies when the org HAS niche tags (meaning it's a specialist org
       // in a different niche, not an org that simply hasn't filled in sub-sectors).
-      const nichemiss = Math.min(3, grantNicheTags.length)
+      const nichemiss = Math.min(5, grantNicheTags.length * 2)  // stronger niche penalty when grant is specialist
       themesScore = Math.max(0, themesScore - nichemiss)
     }
   }
@@ -883,7 +885,7 @@ export function computeMatchScore(
       if (boost > 0) boostedSector = true
     }
     const cappedDelta = Math.max(-5, Math.min(6, feedbackDelta))
-    themesScore = Math.max(0, Math.min(20, themesScore + cappedDelta))
+    themesScore = Math.max(0, Math.min(25, themesScore + cappedDelta))
     if (boostedSector && cappedDelta >= 3) reasons.push('Matches your liked grant types')
   }
 
@@ -1003,7 +1005,7 @@ export function computeMatchScore(
       funderTypeScore = 15
       reasons.push(`${grant.funderType.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())} — preferred funder type`)
     } else {
-      funderTypeScore = 3
+      funderTypeScore = 5  // non-preferred but not catastrophic
     }
   }
 
@@ -1381,7 +1383,7 @@ export function computeMatchScore(
     warnReasons:     warns,
     breakdown: {
       location:      { score: locationScore,      max: 20, label: 'Location' },
-      themes:        { score: themesScore,        max: 20, label: 'Themes & work' },
+      themes:        { score: themesScore,        max: 25, label: 'Themes & work' },
       beneficiaries: { score: beneficiaryScore,   max: 10, label: 'Beneficiaries' },
       grantSize:     { score: grantSizeScore,     max: 20, label: 'Grant size' },
       funderType:    { score: funderTypeScore,    max: 15, label: 'Funder type' },
