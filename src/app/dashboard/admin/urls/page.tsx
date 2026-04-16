@@ -429,7 +429,7 @@ export default function UrlAdminPage() {
     setReviewSources(prev => {
       const next = { ...prev }
       for (const g of grants) {
-        if (g.grant_sources && g.grant_sources.length > 0 && \!next[g.id]) {
+        if (g.grant_sources && g.grant_sources.length > 0 && !next[g.id]) {
           next[g.id] = g.grant_sources.map(s => ({
             label: s.label ?? '',
             url: s.url ?? '',
@@ -1655,16 +1655,19 @@ export default function UrlAdminPage() {
     setBulkEnrichDone(0)
     setBulkEnrichLog([])
 
-    // Fetch active grants missing who_can_apply (new field) or with no brief at all
+    // Fetch all active grants then filter client-side for missing who_can_apply
+    // (JSONB field filtering inside PostgREST .or() is unreliable for nested keys)
     const supabase = createClient()
-    const { data: targets } = await supabase
+    const { data: rawData } = await supabase
       .from('scraped_grants')
       .select('id, title, funder, apply_url, url_status, funder_brief, grant_sources, source, url_last_checked, is_invite_only')
       .eq('is_active', true)
-      .or('funder_brief.is.null,funder_brief->>who_can_apply.is.null')
       .not('apply_url', 'is', null)
+    const targets = (rawData ?? []).filter(g =>
+      !g.funder_brief || !(g.funder_brief as Record<string, unknown>).who_can_apply
+    )
 
-    if (!targets || targets.length === 0) {
+    if (targets.length === 0) {
       setBulkEnrichLog(['Nothing to enrich — all active grants already have up-to-date briefs.'])
       setBulkEnriching(false)
       return
