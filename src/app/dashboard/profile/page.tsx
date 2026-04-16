@@ -94,7 +94,8 @@ const NICHE_TAGS_BY_SECTOR: Partial<Record<ImpactSector, { value: string; label:
     { value: 'biodiversity',    label: 'Biodiversity & Wildlife' },
     { value: 'urban_greening',  label: 'Urban Greening' },
     { value: 'marine',          label: 'Marine & Coastal' },
-    { value: 'energy',          label: 'Renewable Energy' },
+    { value: 'energy',             label: 'Renewable Energy' },
+    { value: 'circular_economy',   label: 'Circular Economy & Zero Waste' },
   ],
   social_economy: [
     { value: 'worker_cooperative',  label: 'Worker Co-operative' },
@@ -113,6 +114,7 @@ const NICHE_TAGS_BY_SECTOR: Partial<Record<ImpactSector, { value: string; label:
     { value: 'literacy_numeracy',   label: 'Literacy & Numeracy' },
     { value: 'higher_education',    label: 'Higher Education' },
     { value: 'vocational',          label: 'Vocational & Apprenticeships' },
+    { value: 'digital_literacy',    label: 'Digital Literacy' },
   ],
 }
 

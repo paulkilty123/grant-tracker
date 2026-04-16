@@ -180,6 +180,7 @@ biodiversity        biodiversity, wildlife, species recovery, pollinator, rewild
 urban_greening      urban greening, parks, community gardens, green spaces
 marine              marine, ocean, coastal, rivers, water quality, fisheries
 energy              renewable energy, solar, wind, energy efficiency
+circular_economy    repair cafes, reuse, zero waste, circular economy, upcycling, waste reduction enterprises
 
 For "education" grants:
 early_years         early years, nursery, childcare, under-5s
@@ -187,6 +188,7 @@ stem                STEM, science, maths, engineering, coding in schools
 literacy_numeracy   literacy, numeracy, reading, writing skills
 higher_education    higher education, university, graduates, postgraduate
 vocational          vocational, apprenticeships, trade skills, T-levels
+digital_literacy    digital skills, online inclusion, basic digital, internet access, digital poverty
 
 Return ONLY tags from the lists above, exactly as written. Return [] if none apply clearly.
 
