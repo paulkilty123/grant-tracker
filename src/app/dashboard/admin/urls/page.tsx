@@ -180,15 +180,15 @@ function SavedForLaterTab() {
                 </td>
                 <td className="px-5 py-3 text-right">
                   <div className="flex items-center justify-end gap-2 flex-wrap">
-                    <button onClick={async () => { await createClient().from('scraped_grants').update({ saved_for_later: false }).eq('id', grant.id); setGrants(prev => prev.filter(g => g.id !== grant.id)) }}
+                    <button onClick={async () => { await fetch('/api/admin/update-grant', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: grant.id, fields: { saved_for_later: false } }) }); setGrants(prev => prev.filter(g => g.id !== grant.id)) }}
                       className="rounded-full border border-warm px-3 py-1 text-xs font-semibold text-mid hover:border-forest hover:text-forest transition-colors whitespace-nowrap">
                       Back to review
                     </button>
-                    <button onClick={async () => { await createClient().from('scraped_grants').update({ is_active: true, url_status: 'ok', saved_for_later: false }).eq('id', grant.id); setGrants(prev => prev.filter(g => g.id !== grant.id)) }}
+                    <button onClick={async () => { await fetch('/api/admin/update-grant', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: grant.id, fields: { is_active: true, url_status: 'ok', saved_for_later: false } }) }); setGrants(prev => prev.filter(g => g.id !== grant.id)) }}
                       className="rounded-full bg-forest/10 px-3 py-1 text-xs font-semibold text-forest hover:bg-forest hover:text-white transition-colors">
                       Approve
                     </button>
-                    <button onClick={async () => { await createClient().from('scraped_grants').update({ url_status: 'dead', saved_for_later: false }).eq('id', grant.id); setGrants(prev => prev.filter(g => g.id !== grant.id)) }}
+                    <button onClick={async () => { await fetch('/api/admin/update-grant', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: grant.id, fields: { url_status: 'dead', saved_for_later: false } }) }); setGrants(prev => prev.filter(g => g.id !== grant.id)) }}
                       className="rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-500 hover:bg-red-500 hover:text-white transition-colors">
                       Remove
                     </button>
@@ -2433,7 +2433,7 @@ export default function UrlAdminPage() {
                             {expandedReviewId === grant.id ? 'Close' : 'Review'}
                           </button>
                           <button onClick={async () => {
-                            await createClient().from('scraped_grants').update({ saved_for_later: true }).eq('id', grant.id)
+                            await fetch('/api/admin/update-grant', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: grant.id, fields: { saved_for_later: true } }) })
                             setReviewGrants(prev => prev.filter(g => g.id !== grant.id))
                           }}
                             className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-600 hover:bg-amber-500 hover:text-white transition-colors">
