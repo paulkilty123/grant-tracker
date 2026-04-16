@@ -97,7 +97,7 @@ export default function Sidebar({ org, userEmail }: Props) {
   const navLink = (href: string, label: string, Icon: React.ElementType, showDot?: boolean, score?: number) => {
     const isActive =
       pathname === href ||
-      (href !== '/dashboard' && pathname.startsWith(href)) ||
+      (href !== '/dashboard' && href !== '/dashboard/admin' && pathname.startsWith(href)) ||
       (href === '/dashboard/admin/intelligence' && pathname.startsWith('/dashboard/admin/watchlist'))
 
     return (
