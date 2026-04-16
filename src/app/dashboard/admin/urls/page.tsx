@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import {
   RefreshCw, ExternalLink, Pencil, Check, X,
   AlertTriangle, CheckCircle, Clock, Database, Trash2, Mail, Search,
-  ChevronDown, ChevronRight, Plus, Tag, Link, Sparkles, Brain, BookOpen, PlusCircle,
+  ChevronDown, ChevronRight, Plus, Tag, Link, Sparkles, Brain, BookOpen, PlusCircle, MapPin,
 } from 'lucide-react'
 import { SEED_GRANTS } from '@/lib/grants'
 import { parseOpenDate } from '@/lib/parse-open-date'
@@ -1390,6 +1390,53 @@ export default function UrlAdminPage() {
     }
   }
 
+
+  function detectLocation(grant: Grant) {
+    const text = [
+      grant.title,
+      (grant as Grant & { description?: string }).description ?? '',
+      grant.apply_url ?? '',
+    ].join(' ').toLowerCase()
+
+    // UK nations — check first (most specific)
+    if (/\bscotland\b|\bscottish\b/.test(text)) { setReviewField(grant.id, 'location_tag', 'Scotland'); return }
+    if (/\bwales\b|\bwelsh\b|\bcymru\b/.test(text)) { setReviewField(grant.id, 'location_tag', 'Wales'); return }
+    if (/\bnorthern ireland\b/.test(text)) { setReviewField(grant.id, 'location_tag', 'Northern Ireland'); return }
+    if (/\bengland\b|\benglish\b/.test(text) && !/uk|united kingdom/.test(text)) { setReviewField(grant.id, 'location_tag', 'England'); return }
+
+    // Major UK cities / regions
+    const REGIONS: [RegExp, string][] = [
+      [/\blondon\b/, 'London'],
+      [/\bmanchester\b/, 'Manchester'],
+      [/\bbirmingham\b/, 'Birmingham'],
+      [/\bbristol\b/, 'Bristol'],
+      [/\bleeds\b/, 'Leeds'],
+      [/\bliverpool\b/, 'Liverpool'],
+      [/\bnewcastle\b/, 'Newcastle'],
+      [/\bsheffield\b/, 'Sheffield'],
+      [/\bnottingham\b/, 'Nottingham'],
+      [/\bbrighton\b|\bsussex\b/, 'Sussex'],
+      [/\bedinburgh\b|\bglasgow\b/, 'Scotland'],
+      [/\bcardiff\b|\bswansea\b/, 'Wales'],
+      [/\bnorth east\b|\btyne\b|\bwear\b|\bnorthumberland\b/, 'North East England'],
+      [/\bnorth west\b|\blancashire\b|\bcheshire\b/, 'North West England'],
+      [/\byorkshire\b/, 'Yorkshire'],
+      [/\bmidlands\b|\bwest midlands\b|\beast midlands\b/, 'Midlands'],
+      [/\bsouth east\b|\bkent\b|\bsurrey\b|\bessex\b|\boxfordshire\b/, 'South East England'],
+      [/\bsouth west\b|\bcornwall\b|\bdevon\b|\bsomerset\b/, 'South West England'],
+    ]
+    for (const [re, label] of REGIONS) {
+      if (re.test(text)) { setReviewField(grant.id, 'location_tag', label); return }
+    }
+
+    // UK-wide signals
+    if (/\buk\b|\bunited kingdom\b|\buk-wide\b|\buk wide\b|\bnational\b/.test(text)) {
+      setReviewField(grant.id, 'location_tag', 'UK'); return
+    }
+
+    // Couldn't detect — leave blank
+  }
+
   async function enrichGrantFromManagerWithSources(grant: Grant, sources: {label:string;url:string;text:string}[]) {
     if (enrichingId) return
     setEnrichingId(grant.id)
@@ -2422,9 +2469,19 @@ export default function UrlAdminPage() {
                               <div><label className="text-mid block mb-0.5">Deadline</label>
                                 <input type="text" value={String(getReviewVal(grant.id,'deadline',(grant as Grant & {deadline?:string}).deadline??''))} onChange={e=>setReviewField(grant.id,'deadline',e.target.value)} disabled={Boolean(getReviewVal(grant.id,'is_rolling',false))} className="form-input text-xs py-1 w-full" placeholder="YYYY-MM-DD" /></div>
                             </div>
-                            <div className="flex items-center gap-2 mb-3">
-                              <input type="checkbox" id={`rolling-${grant.id}`} checked={Boolean(getReviewVal(grant.id,'is_rolling',false))} onChange={e=>setReviewField(grant.id,'is_rolling',e.target.checked)} className="h-3.5 w-3.5 accent-forest" />
-                              <label htmlFor={`rolling-${grant.id}`} className="text-xs text-mid cursor-pointer">Rolling deadline</label>
+                            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mb-3">
+                              <div className="flex items-center gap-2">
+                                <input type="checkbox" id={`rolling-${grant.id}`} checked={Boolean(getReviewVal(grant.id,'is_rolling',false))} onChange={e=>setReviewField(grant.id,'is_rolling',e.target.checked)} className="h-3.5 w-3.5 accent-forest" />
+                                <label htmlFor={`rolling-${grant.id}`} className="text-xs text-mid cursor-pointer">Rolling deadline</label>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <input type="checkbox" id={`invite-${grant.id}`} checked={Boolean(getReviewVal(grant.id,'is_invite_only',grant.is_invite_only))} onChange={e=>setReviewField(grant.id,'is_invite_only',e.target.checked)} className="h-3.5 w-3.5 accent-forest" />
+                                <label htmlFor={`invite-${grant.id}`} className="text-xs text-mid cursor-pointer">Invite only</label>
+                              </div>
+                              <button onClick={() => detectLocation(grant)}
+                                className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full border border-forest/30 text-forest hover:bg-forest/10 transition-colors">
+                                <MapPin className="w-3 h-3" /> Detect location
+                              </button>
                             </div>
                             <div className="flex items-center gap-3 pt-3 border-t border-forest/10">
                               <button onClick={() => enrichGrantFromManager(grant)} disabled={!!enrichingId}
