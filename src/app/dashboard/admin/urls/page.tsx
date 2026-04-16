@@ -305,7 +305,7 @@ export default function UrlAdminPage() {
     const [{ data }, { count: newCount }, { count: reviewCount }, { count: suspiciousCount }, { data: ftData }] = await Promise.all([
       createClient().from('scraped_grants').select('url_status, apply_url').eq('is_active', true),
       createClient().from('scraped_grants').select('id', { count: 'exact', head: true }).eq('is_active', true).gte('first_seen_at', sevenDaysAgo),
-      createClient().from('scraped_grants').select('id', { count: 'exact', head: true }).eq('is_active', false).not('url_status', 'in', '("dead","saved")'),
+      createClient().from('scraped_grants').select('id', { count: 'exact', head: true }).eq('is_active', false).neq('url_status', 'dead').neq('url_status', 'saved'),
       createClient().from('scraped_grants').select('id', { count: 'exact', head: true }).eq('is_active', true).not('url_quality_score', 'is', null).lt('url_quality_score', 60),
       createClient().from('scraped_grants').select('funding_type').eq('is_active', true),
     ])
@@ -418,7 +418,7 @@ export default function UrlAdminPage() {
       .from('scraped_grants')
       .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief, description, funder_type, funding_type')
       .eq('is_active', false)
-      .not('url_status', 'in', '("dead","saved")')  // exclude hidden and saved-for-later
+      .neq('url_status', 'dead').neq('url_status', 'saved')  // exclude hidden and saved-for-later
       .order('last_seen_at', { ascending: false })
       .limit(500)
     setReviewGrants((data ?? []) as Grant[])
