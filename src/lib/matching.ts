@@ -162,6 +162,13 @@ const TITLE_DOMAIN_KEYWORDS: Array<{
     sector: 'food',
     orgTerms: ['food', 'agriculture', 'farming'],
   },
+  {
+    words: ['deep tech', 'quantum', 'ai accelerator', 'machine learning grant',
+            'innovate uk', 'knowledge transfer partnership', 'r&d tax', 'edge growth',
+            'net zero innovation', 'defence innovation', 'catapult'],
+    sector: 'tech',
+    orgTerms: ['tech', 'technology', 'digital', 'innovation', 'software'],
+  },
 ]
 
 /**
@@ -651,7 +658,7 @@ export function computeMatchScore(
     // young_people) produce high coverage — e.g. football grants for a theatre.
     const PRIMARY_DOMAINS = [
       'sport', 'environment', 'heritage', 'international',
-      'food', 'animal_welfare', 'faith',
+      'food', 'animal_welfare', 'faith', 'tech',
     ]
     const grantPrimaryDomains = grantImpactSectors.filter(s => PRIMARY_DOMAINS.includes(s))
     if (grantPrimaryDomains.length > 0) {
