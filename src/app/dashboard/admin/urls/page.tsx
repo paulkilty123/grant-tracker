@@ -232,6 +232,7 @@ export default function UrlAdminPage() {
   const [expandedReviewId, setExpandedReviewId] = useState<string | null>(null)
   const [reviewEdits, setReviewEdits]           = useState<Record<string, Record<string, string | boolean | number | null>>>({})
   const [reviewPublishing, setReviewPublishing] = useState<Record<string, boolean>>({})
+  const [reviewEnrichError, setReviewEnrichError] = useState<Record<string, string>>({})
   const [reviewSources, setReviewSources]       = useState<Record<string, {label:string;url:string;text:string}[]>>({})
   const [reviewSourcesOpen, setReviewSourcesOpen] = useState<Record<string, boolean>>({})
   const [approvingAll, setApprovingAll]       = useState(false)
@@ -1520,21 +1521,28 @@ export default function UrlAdminPage() {
   async function enrichGrantFromManagerWithSources(grant: Grant, sources: {label:string;url:string;text:string}[]) {
     if (enrichingId) return
     setEnrichingId(grant.id)
+    setReviewEnrichError(e => ({ ...e, [grant.id]: '' }))
     const controller = new AbortController()
-    const clientTimeout = setTimeout(() => controller.abort(), 50000)
+    const clientTimeout = setTimeout(() => controller.abort(), 55000)
     try {
+      const filteredSources = sources.filter(s => s.text.trim().length > 50 || s.url.trim().length > 5)
       const res = await fetch('/api/admin/enrich-grant', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ grantId: grant.id, additionalSources: sources.filter(s => s.text.trim().length > 50 || s.url.trim().length > 5) }),
+        body: JSON.stringify({ grantId: grant.id, additionalSources: filteredSources }),
         signal: controller.signal,
       })
       clearTimeout(clientTimeout)
-      if (res.ok) {
-        const { brief } = await res.json()
-        setReviewGrants(prev => prev.map(g => g.id === grant.id ? { ...g, funder_brief: brief } : g))
+      const json = await res.json()
+      if (res.ok && json.brief) {
+        setReviewGrants(prev => prev.map(g => g.id === grant.id ? { ...g, funder_brief: json.brief } : g))
+      } else {
+        setReviewEnrichError(e => ({ ...e, [grant.id]: json.error ?? `Error ${res.status}` }))
       }
-    } catch { /* silent */ } finally {
+    } catch (err) {
+      const msg = err instanceof Error && err.name === 'AbortError' ? 'Timed out — try pasting the page content directly' : 'Network error'
+      setReviewEnrichError(e => ({ ...e, [grant.id]: msg }))
+    } finally {
       clearTimeout(clientTimeout)
       setEnrichingId(null)
     }
@@ -2602,6 +2610,9 @@ export default function UrlAdminPage() {
                                   </button>
                                 </>
                               )}
+                              {reviewEnrichError[grant.id] && (
+                                <span className="text-xs text-red-500">{reviewEnrichError[grant.id]}</span>
+                              )}
                               <button onClick={() => setReviewSourcesOpen(o => ({ ...o, [grant.id]: !o[grant.id] }))}
                                 className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold border rounded-full transition-colors"
                                 style={{ borderColor: reviewSourcesOpen[grant.id] ? '#1f5c52' : '#E8E8EC', color: reviewSourcesOpen[grant.id] ? '#1f5c52' : '#6b7280', backgroundColor: reviewSourcesOpen[grant.id] ? 'rgba(31,92,82,0.08)' : 'white' }}>
@@ -2613,10 +2624,18 @@ export default function UrlAdminPage() {
                               <div className="mt-2 p-3 rounded-lg border border-[#E8E8EC] bg-[#faf8f5] space-y-2">
                                 <div className="flex items-center justify-between">
                                   <p className="text-xs font-semibold text-charcoal">Additional sources</p>
-                                  <button onClick={() => addReviewSource(grant.id)}
-                                    className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-white rounded-full" style={{ backgroundColor: '#1f5c52' }}>
-                                    <PlusCircle className="w-3 h-3" />Add source
-                                  </button>
+                                  <div className="flex items-center gap-2">
+                                    <button onClick={() => addReviewSource(grant.id)}
+                                      className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-white rounded-full" style={{ backgroundColor: '#1f5c52' }}>
+                                      <PlusCircle className="w-3 h-3" />Add source
+                                    </button>
+                                    {(reviewSources[grant.id]?.length ?? 0) > 0 && (
+                                      <button onClick={() => enrichGrantFromManagerWithSources(grant, reviewSources[grant.id] ?? [])} disabled={!!enrichingId}
+                                        className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-white rounded-full disabled:opacity-40" style={{ backgroundColor: '#84CC16', color: '#1A1A1A' }}>
+                                        <Sparkles className="w-3 h-3" />{enrichingId === grant.id ? 'Enriching…' : 'Enrich with sources'}
+                                      </button>
+                                    )}
+                                  </div>
                                 </div>
                                 {(reviewSources[grant.id] ?? []).length === 0 && <p className="text-xs text-light italic">Add a URL or paste content to improve enrichment quality.</p>}
                                 {(reviewSources[grant.id] ?? []).map((src, idx) => (
