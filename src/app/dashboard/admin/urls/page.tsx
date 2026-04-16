@@ -458,7 +458,7 @@ export default function UrlAdminPage() {
     await fetch('/api/admin/update-grant', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, fields: { is_active: true } }),
+      body: JSON.stringify({ id, fields: { url_status: 'reviewing' } }),
     })
     setReviewGrants(prev => prev.filter(g => g.id !== id))
     await loadStats()

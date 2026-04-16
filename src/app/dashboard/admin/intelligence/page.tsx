@@ -56,7 +56,7 @@ export default function FunderIntelligencePage() {
     const { data } = await createClient()
       .from('scraped_grants')
       .select('id, title, funder, funder_type, funding_type, apply_url, funder_brief, last_seen_at, url_quality_score, url_quality_issues, amount_min, amount_max, deadline, is_rolling, location_tag, impact_sectors, eligible_structures')
-      .eq('is_active', true)
+      .or('is_active.eq.true,url_status.eq.reviewing')
       .not('apply_url', 'is', null)
       .order('last_seen_at', { ascending: false })
     setGrants((data as GrantRow[]) ?? [])
@@ -178,6 +178,43 @@ export default function FunderIntelligencePage() {
       setTimeout(() => highlightRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300)
     }
   }, [highlightId, loading])
+
+  const [editState, setEditState] = useState<Record<string, Record<string, string | boolean | number | null>>>({})
+  const [editSaving, setEditSaving] = useState<Record<string, boolean>>({})
+  const [publishSaving, setPublishSaving] = useState<Record<string, boolean>>({})
+
+  function getEditVal(grantId: string, field: string, fallback: string | boolean | number | null) {
+    return editState[grantId]?.[field] !== undefined ? editState[grantId][field] : fallback
+  }
+  function setEditField(grantId: string, field: string, value: string | boolean | number | null) {
+    setEditState(s => ({ ...s, [grantId]: { ...(s[grantId] ?? {}), [field]: value } }))
+  }
+  async function saveEdits(grant: GrantRow) {
+    const edits = editState[grant.id] ?? {}
+    if (Object.keys(edits).length === 0) return
+    setEditSaving(s => ({ ...s, [grant.id]: true }))
+    const fields: Record<string, unknown> = {}
+    if (edits.funder_type    !== undefined) fields.funder_type    = edits.funder_type
+    if (edits.funding_type   !== undefined) fields.funding_type   = edits.funding_type
+    if (edits.amount_min     !== undefined) fields.amount_min     = edits.amount_min ? parseInt(String(edits.amount_min).replace(/[^0-9]/g,'')) : null
+    if (edits.amount_max     !== undefined) fields.amount_max     = edits.amount_max ? parseInt(String(edits.amount_max).replace(/[^0-9]/g,'')) : null
+    if (edits.deadline       !== undefined) fields.deadline       = edits.deadline || null
+    if (edits.is_rolling     !== undefined) fields.is_rolling     = edits.is_rolling
+    if (edits.location_tag   !== undefined) fields.location_tag   = edits.location_tag || null
+    await createClient().from('scraped_grants').update(fields).eq('id', grant.id)
+    setGrants(gs => gs.map(g => g.id === grant.id ? { ...g, ...fields } as GrantRow : g))
+    setEditState(s => ({ ...s, [grant.id]: {} }))
+    setEditSaving(s => ({ ...s, [grant.id]: false }))
+  }
+  async function publishGrant(grant: GrantRow) {
+    await saveEdits(grant)
+    setPublishSaving(s => ({ ...s, [grant.id]: true }))
+    await createClient().from('scraped_grants').update({ is_active: true, url_status: 'ok' }).eq('id', grant.id)
+    setGrants(gs => gs.map(g => g.id === grant.id ? { ...g, is_active: true, url_status: 'ok' } as unknown as GrantRow : g))
+    setPublishSaving(s => ({ ...s, [grant.id]: false }))
+    // Dismiss highlight by clearing URL param
+    window.history.replaceState({}, '', '/dashboard/admin/intelligence')
+  }
 
   const searchLower = search.trim().toLowerCase()
   const filtered = grants.filter(g => {
@@ -324,16 +361,60 @@ export default function FunderIntelligencePage() {
                 {isHighlighted && (
                   <div className="px-4 py-3 border-b border-[#E8E8EC] bg-[#fafafa]">
                     <p className="text-[10px] font-semibold uppercase tracking-wider text-[#9ca3af] mb-2">Grant details — verify before enriching</p>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-6 gap-y-2 text-xs">
-                      <div><span className="text-[#9ca3af] block">Funder type</span><span className="font-medium text-charcoal">{grant.funder_type?.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()) ?? '—'}</span></div>
-                      <div><span className="text-[#9ca3af] block">Funding type</span><span className="font-medium text-charcoal">{grant.funding_type?.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()) ?? '—'}</span></div>
-                      <div><span className="text-[#9ca3af] block">Amount</span><span className="font-medium text-charcoal">{grant.amount_min || grant.amount_max ? `£${grant.amount_min ? (grant.amount_min >= 1000 ? (grant.amount_min/1000).toFixed(0)+'k' : grant.amount_min) : '?'} – £${grant.amount_max ? (grant.amount_max >= 1000000 ? (grant.amount_max/1000000).toFixed(1)+'m' : grant.amount_max >= 1000 ? (grant.amount_max/1000).toFixed(0)+'k' : grant.amount_max) : '?'}` : '—'}</span></div>
-                      <div><span className="text-[#9ca3af] block">Deadline</span><span className="font-medium text-charcoal">{grant.is_rolling ? 'Rolling' : grant.deadline ?? '—'}</span></div>
-                      <div><span className="text-[#9ca3af] block">Location</span><span className="font-medium text-charcoal">{grant.location_tag ?? '—'}</span></div>
-                      <div><span className="text-[#9ca3af] block">Sectors</span><span className="font-medium text-charcoal">{grant.impact_sectors?.slice(0,3).map(s=>s.replace(/_/g,' ')).join(', ') ?? '—'}</span></div>
-                      <div className="col-span-2"><span className="text-[#9ca3af] block">Eligible structures</span><span className="font-medium text-charcoal">{grant.eligible_structures?.slice(0,4).map(s=>s.replace(/_/g,' ')).join(', ') ?? '—'}</span></div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+                      {/* Funder type */}
+                      <div><label className="text-[#9ca3af] block mb-0.5">Funder type</label>
+                        <select value={String(getEditVal(grant.id,'funder_type',grant.funder_type) ?? '')} onChange={e=>setEditField(grant.id,'funder_type',e.target.value)}
+                          className="form-select text-xs py-1 w-full">
+                          {['trust_foundation','community_foundation','corporate_foundation','local_authority','corporate','lottery','government','capacity_builder','competition','loan','other'].map(v=><option key={v} value={v}>{v.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())}</option>)}
+                        </select></div>
+                      {/* Funding type */}
+                      <div><label className="text-[#9ca3af] block mb-0.5">Funding type</label>
+                        <select value={String(getEditVal(grant.id,'funding_type',grant.funding_type) ?? 'grant')} onChange={e=>setEditField(grant.id,'funding_type',e.target.value)}
+                          className="form-select text-xs py-1 w-full">
+                          {['grant','programme','investment','in_kind'].map(v=><option key={v} value={v}>{v.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())}</option>)}
+                        </select></div>
+                      {/* Amount min */}
+                      <div><label className="text-[#9ca3af] block mb-0.5">Amount min (£)</label>
+                        <input type="number" value={String(getEditVal(grant.id,'amount_min',grant.amount_min) ?? '')} onChange={e=>setEditField(grant.id,'amount_min',e.target.value)}
+                          className="form-input text-xs py-1 w-full" placeholder="e.g. 5000" /></div>
+                      {/* Amount max */}
+                      <div><label className="text-[#9ca3af] block mb-0.5">Amount max (£)</label>
+                        <input type="number" value={String(getEditVal(grant.id,'amount_max',grant.amount_max) ?? '')} onChange={e=>setEditField(grant.id,'amount_max',e.target.value)}
+                          className="form-input text-xs py-1 w-full" placeholder="e.g. 50000" /></div>
+                      {/* Deadline */}
+                      <div><label className="text-[#9ca3af] block mb-0.5">Deadline</label>
+                        <input type="text" value={String(getEditVal(grant.id,'deadline',grant.deadline) ?? '')} onChange={e=>setEditField(grant.id,'deadline',e.target.value)}
+                          disabled={Boolean(getEditVal(grant.id,'is_rolling',grant.is_rolling))}
+                          className="form-input text-xs py-1 w-full" placeholder="YYYY-MM-DD" /></div>
+                      {/* Location */}
+                      <div><label className="text-[#9ca3af] block mb-0.5">Location tag</label>
+                        <input type="text" value={String(getEditVal(grant.id,'location_tag',grant.location_tag) ?? '')} onChange={e=>setEditField(grant.id,'location_tag',e.target.value)}
+                          className="form-input text-xs py-1 w-full" placeholder="e.g. UK, London, Sussex" /></div>
                     </div>
-                    {grant.apply_url && <a href={grant.apply_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 mt-2 text-xs text-forest underline"><ExternalLink className="w-3 h-3" />Visit funder page to verify</a>}
+                    {/* Rolling toggle */}
+                    <div className="flex items-center gap-2 mt-2">
+                      <input type="checkbox" id={`rolling-${grant.id}`} checked={Boolean(getEditVal(grant.id,'is_rolling',grant.is_rolling))} onChange={e=>setEditField(grant.id,'is_rolling',e.target.checked)} className="h-3.5 w-3.5 accent-forest" />
+                      <label htmlFor={`rolling-${grant.id}`} className="text-xs text-mid cursor-pointer">Rolling deadline (no fixed close date)</label>
+                    </div>
+                    {/* Read-only fields */}
+                    <div className="mt-2 text-xs text-mid">
+                      <span className="mr-4"><span className="text-[#9ca3af]">Sectors: </span>{grant.impact_sectors?.slice(0,3).map(s=>s.replace(/_/g,' ')).join(', ') ?? '—'}</span>
+                      <span><span className="text-[#9ca3af]">Eligible: </span>{grant.eligible_structures?.slice(0,3).map(s=>s.replace(/_/g,' ')).join(', ') ?? '—'}</span>
+                    </div>
+                    {/* Actions */}
+                    <div className="flex items-center gap-3 mt-3 pt-3 border-t border-[#E8E8EC]">
+                      {grant.apply_url && <a href={grant.apply_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-forest underline"><ExternalLink className="w-3 h-3" />Verify on funder site</a>}
+                      <div className="flex-1" />
+                      <button onClick={()=>saveEdits(grant)} disabled={editSaving[grant.id] || Object.keys(editState[grant.id]??{}).length===0}
+                        className="rounded-full border border-forest px-3 py-1 text-xs font-semibold text-forest hover:bg-forest hover:text-white transition-colors disabled:opacity-40">
+                        {editSaving[grant.id] ? 'Saving…' : 'Save changes'}
+                      </button>
+                      <button onClick={()=>publishGrant(grant)} disabled={publishSaving[grant.id]}
+                        className="rounded-full bg-forest px-4 py-1 text-xs font-semibold text-white hover:bg-sage transition-colors disabled:opacity-40 flex items-center gap-1">
+                        {publishSaving[grant.id] ? 'Publishing…' : '✓ Confirm & publish'}
+                      </button>
+                    </div>
                   </div>
                 )}
                 {/* Grant row */}
