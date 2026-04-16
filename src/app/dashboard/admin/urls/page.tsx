@@ -36,7 +36,7 @@ type CategoryGrant = Grant & {
 }
 
 type Stats = { total: number; withUrl: number; ok: number; dead: number; unchecked: number; noUrl: number; seedTotal?: number; newCount?: number; reviewCount?: number; suspiciousCount?: number }
-type Filter = 'dead' | 'unchecked' | 'no_url' | 'all' | 'seed' | 'new' | 'category' | 'review' | 'suspicious' | 'url_issues'
+type Filter = 'dead' | 'unchecked' | 'no_url' | 'all' | 'seed' | 'new' | 'category' | 'review' | 'suspicious' | 'url_issues' | 'saved'
 type SuspiciousGrant = Grant & { url_quality_score: number | null; url_quality_issues: string[] }
 type DeadSeedGrant = { id: string; title: string; funder: string; url: string }
 type NewGrant = Grant & { first_seen_at: string }
@@ -109,6 +109,97 @@ const BLANK_FORM: AddGrantForm = {
 }
 
 // ── Component ──────────────────────────────────────────────────────────────────
+
+
+function SavedForLaterTab() {
+  const [grants, setGrants] = useState<(Grant & { description?: string; funding_type?: string })[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    createClient()
+      .from('scraped_grants')
+      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief, description, funder_type, funding_type')
+      .eq('is_active', false)
+      .eq('url_status', 'saved')
+      .order('title')
+      .then(({ data }) => { setGrants((data ?? []) as (Grant & { description?: string; funding_type?: string })[]); setLoading(false) })
+  }, [])
+
+  const FT_STYLE: Record<string, { bg: string; color: string; label: string }> = {
+    grant:      { bg: 'rgba(132,204,22,0.15)', color: '#446900', label: 'Grant' },
+    programme:  { bg: 'rgba(251,146,60,0.15)', color: '#c2410c', label: 'Programme' },
+    investment: { bg: 'rgba(96,165,250,0.15)', color: '#1d4ed8', label: 'Investment' },
+    in_kind:    { bg: 'rgba(167,139,250,0.15)', color: '#7c3aed', label: 'In-Kind' },
+  }
+
+  if (loading) return <div className="py-12 text-center text-sm text-mid">Loading…</div>
+  if (grants.length === 0) return (
+    <div className="py-16 text-center">
+      <p className="text-mid text-sm">Nothing saved for later yet.</p>
+      <p className="text-xs text-light mt-1">Use "Save for later" in the Needs Review tab to add entries here.</p>
+    </div>
+  )
+
+  return (
+    <div className="overflow-x-auto">
+      <p className="text-xs text-mid px-5 py-3 bg-amber-50 border-b border-amber-100">
+        <strong>{grants.length} saved</strong> — funders or opportunities to revisit when they open a new round.
+      </p>
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b border-warm bg-warm/30 text-left text-xs font-semibold text-mid uppercase tracking-wider">
+            <th className="px-5 py-3">Grant / Funder</th>
+            <th className="px-5 py-3">Description</th>
+            <th className="px-5 py-3">URL</th>
+            <th className="px-5 py-3 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-warm/60">
+          {grants.map(grant => {
+            const ft = grant.funding_type
+            const ftStyle = ft ? (FT_STYLE[ft] ?? { bg: '#f3f4f6', color: '#6b7280', label: ft }) : null
+            return (
+              <tr key={grant.id} className="hover:bg-cream/50 transition-colors">
+                <td className="px-5 py-3 max-w-[200px]">
+                  <p className="font-medium text-charcoal leading-snug line-clamp-2">{grant.title}</p>
+                  <p className="text-xs text-mid mt-0.5">{grant.funder}</p>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    <span className="rounded-full bg-warm px-2 py-0.5 text-[10px] text-mid">{grant.source}</span>
+                    {ftStyle && <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold" style={{ backgroundColor: ftStyle.bg, color: ftStyle.color }}>{ftStyle.label}</span>}
+                  </div>
+                </td>
+                <td className="px-5 py-3 max-w-[280px]">
+                  <p className="text-xs text-mid line-clamp-3">{grant.description ?? ''}</p>
+                </td>
+                <td className="px-5 py-3 max-w-[200px]">
+                  {grant.apply_url
+                    ? <a href={grant.apply_url} target="_blank" rel="noopener noreferrer" className="text-xs text-forest underline break-all line-clamp-2">{grant.apply_url}</a>
+                    : <span className="text-xs italic text-light">No URL</span>}
+                </td>
+                <td className="px-5 py-3 text-right">
+                  <div className="flex items-center justify-end gap-2 flex-wrap">
+                    <button onClick={async () => { await createClient().from('scraped_grants').update({ url_status: 'unchecked' }).eq('id', grant.id); setGrants(prev => prev.filter(g => g.id !== grant.id)) }}
+                      className="rounded-full border border-warm px-3 py-1 text-xs font-semibold text-mid hover:border-forest hover:text-forest transition-colors whitespace-nowrap">
+                      Back to review
+                    </button>
+                    <button onClick={async () => { await createClient().from('scraped_grants').update({ is_active: true, url_status: 'ok' }).eq('id', grant.id); setGrants(prev => prev.filter(g => g.id !== grant.id)) }}
+                      className="rounded-full bg-forest/10 px-3 py-1 text-xs font-semibold text-forest hover:bg-forest hover:text-white transition-colors">
+                      Approve
+                    </button>
+                    <button onClick={async () => { await createClient().from('scraped_grants').update({ url_status: 'dead' }).eq('id', grant.id); setGrants(prev => prev.filter(g => g.id !== grant.id)) }}
+                      className="rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-500 hover:bg-red-500 hover:text-white transition-colors">
+                      Remove
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
+  )
+}
 
 export default function UrlAdminPage() {
   const [authorised, setAuthorised] = useState<boolean | null>(null)
@@ -1688,6 +1779,7 @@ export default function UrlAdminPage() {
       <div className="mb-4 flex flex-wrap items-center gap-2">
         {([
           { key: 'review',     label: `Needs Review${stats?.reviewCount ? ` (${stats.reviewCount})` : ''}`, urgent: (stats?.reviewCount ?? 0) > 0 },
+          { key: 'saved',      label: 'Saved for Later', urgent: false },
           { key: 'all',        label: 'All grants' },
           { key: 'new',        label: `New this week${stats ? ` (${stats.newCount ?? 0})` : ''}` },
           { key: 'category',   label: 'By Category' },
@@ -2072,6 +2164,10 @@ export default function UrlAdminPage() {
       )}
 
       {/* ── Review queue ──────────────────────────────────────────────────────── */}
+      {filter === 'saved' && (
+        <SavedForLaterTab />
+      )}
+
       {filter === 'review' && (
         <div className="rounded-xl border border-warm bg-white overflow-hidden shadow-card">
           {/* Header with bulk actions */}
@@ -2167,6 +2263,13 @@ export default function UrlAdminPage() {
                           <button onClick={() => approveGrant(grant.id)}
                             className="rounded-full bg-forest/10 px-3 py-1 text-xs font-semibold text-forest hover:bg-forest hover:text-white transition-colors">
                             Approve
+                          </button>
+                          <button onClick={async () => {
+                            await createClient().from('scraped_grants').update({ url_status: 'saved' }).eq('id', grant.id)
+                            setReviewGrants(prev => prev.filter(g => g.id !== grant.id))
+                          }}
+                            className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-600 hover:bg-amber-500 hover:text-white transition-colors">
+                            Save for later
                           </button>
                           <button onClick={() => removeGrant(grant.id)}
                             className="rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-500 hover:bg-red-500 hover:text-white transition-colors">
