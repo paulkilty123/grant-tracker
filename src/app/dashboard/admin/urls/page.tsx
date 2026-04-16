@@ -462,7 +462,7 @@ export default function UrlAdminPage() {
     })
     setReviewGrants(prev => prev.filter(g => g.id !== id))
     await loadStats()
-    if (redirectToIntelligence) router.push(`/dashboard/admin/intelligence?highlight=${id}`)
+    if (redirectToIntelligence) window.open(`/dashboard/admin/intelligence?highlight=${id}`, '_blank')
   }
 
   // ── Load category grants (all grants, grouped by funder type) ────────────────

@@ -10,11 +10,20 @@ type GrantRow = {
   id: string
   title: string
   funder: string | null
+  funder_type: string | null
+  funding_type: string | null
   apply_url: string | null
   funder_brief: Record<string, string | null> | null
   last_seen_at: string | null
   url_quality_score: number | null
   url_quality_issues: string[] | null
+  amount_min: number | null
+  amount_max: number | null
+  deadline: string | null
+  is_rolling: boolean | null
+  location_tag: string | null
+  impact_sectors: string[] | null
+  eligible_structures: string[] | null
 }
 
 type EnrichStatus = 'idle' | 'loading' | 'done' | 'error'
@@ -46,7 +55,7 @@ export default function FunderIntelligencePage() {
     setLoading(true)
     const { data } = await createClient()
       .from('scraped_grants')
-      .select('id, title, funder, apply_url, funder_brief, last_seen_at, url_quality_score, url_quality_issues')
+      .select('id, title, funder, funder_type, funding_type, apply_url, funder_brief, last_seen_at, url_quality_score, url_quality_issues, amount_min, amount_max, deadline, is_rolling, location_tag, impact_sectors, eligible_structures')
       .eq('is_active', true)
       .not('apply_url', 'is', null)
       .order('last_seen_at', { ascending: false })
@@ -309,7 +318,22 @@ export default function FunderIntelligencePage() {
               >
                 {isHighlighted && (
                   <div className="flex items-center gap-2 px-4 py-2 text-xs font-semibold" style={{ background: '#f0fdfa', color: '#008080', borderBottom: '1px solid #ccfbf1' }}>
-                    <Sparkles className="w-3.5 h-3.5" /> Just approved — enrich this grant before it goes live to users
+                    <Sparkles className="w-3.5 h-3.5" /> Just approved — verify the details below then enrich
+                  </div>
+                )}
+                {isHighlighted && (
+                  <div className="px-4 py-3 border-b border-[#E8E8EC] bg-[#fafafa]">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-[#9ca3af] mb-2">Grant details — verify before enriching</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-6 gap-y-2 text-xs">
+                      <div><span className="text-[#9ca3af] block">Funder type</span><span className="font-medium text-charcoal">{grant.funder_type?.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()) ?? '—'}</span></div>
+                      <div><span className="text-[#9ca3af] block">Funding type</span><span className="font-medium text-charcoal">{grant.funding_type?.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()) ?? '—'}</span></div>
+                      <div><span className="text-[#9ca3af] block">Amount</span><span className="font-medium text-charcoal">{grant.amount_min || grant.amount_max ? `£${grant.amount_min ? (grant.amount_min >= 1000 ? (grant.amount_min/1000).toFixed(0)+'k' : grant.amount_min) : '?'} – £${grant.amount_max ? (grant.amount_max >= 1000000 ? (grant.amount_max/1000000).toFixed(1)+'m' : grant.amount_max >= 1000 ? (grant.amount_max/1000).toFixed(0)+'k' : grant.amount_max) : '?'}` : '—'}</span></div>
+                      <div><span className="text-[#9ca3af] block">Deadline</span><span className="font-medium text-charcoal">{grant.is_rolling ? 'Rolling' : grant.deadline ?? '—'}</span></div>
+                      <div><span className="text-[#9ca3af] block">Location</span><span className="font-medium text-charcoal">{grant.location_tag ?? '—'}</span></div>
+                      <div><span className="text-[#9ca3af] block">Sectors</span><span className="font-medium text-charcoal">{grant.impact_sectors?.slice(0,3).map(s=>s.replace(/_/g,' ')).join(', ') ?? '—'}</span></div>
+                      <div className="col-span-2"><span className="text-[#9ca3af] block">Eligible structures</span><span className="font-medium text-charcoal">{grant.eligible_structures?.slice(0,4).map(s=>s.replace(/_/g,' ')).join(', ') ?? '—'}</span></div>
+                    </div>
+                    {grant.apply_url && <a href={grant.apply_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 mt-2 text-xs text-forest underline"><ExternalLink className="w-3 h-3" />Visit funder page to verify</a>}
                   </div>
                 )}
                 {/* Grant row */}
