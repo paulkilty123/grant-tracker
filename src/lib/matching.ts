@@ -971,6 +971,9 @@ export function computeMatchScore(
         ? `£${grantMin >= 1000 ? (grantMin/1000).toFixed(0)+'k' : grantMin}–£${grantMax >= 1000000 ? (grantMax/1000000).toFixed(1)+'m' : grantMax >= 1000 ? (grantMax/1000).toFixed(0)+'k' : grantMax}`
         : grantMax > 0 ? `up to £${grantMax >= 1000000 ? (grantMax/1000000).toFixed(1)+'m' : grantMax >= 1000 ? (grantMax/1000).toFixed(0)+'k' : grantMax}` : 'this grant'
       reasons.push(`${grantRangeStr} fits ${org.name}'s target size`)
+    } else if (grantMax === 0 && grantMin === 0) {
+      // No amount data — can't evaluate size, give neutral score
+      grantSizeScore = 10
     } else if (grantMax < targetMin) {
       // Grant ceiling is below org's minimum target — too small
       grantSizeScore = 3
