@@ -1434,7 +1434,10 @@ export default function UrlAdminPage() {
 
 
   function detectLocation(grant: Grant) {
+    const brief = grant.funder_brief as Record<string, string | null> | null
+    // Prefer geographic_focus from brief (most accurate), then fall back to raw text fields
     const text = [
+      brief?.geographic_focus ?? '',
       grant.title,
       (grant as Grant & { description?: string }).description ?? '',
       grant.apply_url ?? '',
@@ -1506,7 +1509,7 @@ export default function UrlAdminPage() {
    function detectEligibility(grant: Grant) {
     // Use funder brief first (most reliable), fall back to description
     const brief = grant.funder_brief as Record<string, string | null> | null
-    const primaryText = [brief?.what_they_fund, brief?.priorities, brief?.exclusions]
+    const primaryText = [brief?.what_they_fund, brief?.who_can_apply, brief?.priorities, brief?.exclusions]
       .filter(Boolean).join(' ').toLowerCase()
     const fallbackText = [
       (grant as Grant & { description?: string }).description ?? '',
