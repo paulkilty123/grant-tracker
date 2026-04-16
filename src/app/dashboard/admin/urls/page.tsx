@@ -317,7 +317,7 @@ export default function UrlAdminPage() {
     if (filter !== 'review') return
     const { data } = await createClient()
       .from('scraped_grants')
-      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief, description, funder_type')
+      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief, description, funder_type, funding_type')
       .eq('is_active', false)
       .neq('url_status', 'dead')  // exclude grants that were explicitly hidden/rejected
       .order('last_seen_at', { ascending: false })
@@ -2125,6 +2125,26 @@ export default function UrlAdminPage() {
                         <p className="font-medium text-charcoal leading-snug line-clamp-2">{grant.title}</p>
                         <p className="text-xs text-mid mt-0.5">{grant.funder}</p>
                         <span className="inline-block mt-1 rounded-full bg-warm px-2 py-0.5 text-[10px] text-mid">{grant.source}</span>
+                        {(grant as Grant & { funding_type?: string }).funding_type && (() => {
+                          const ft = (grant as Grant & { funding_type?: string }).funding_type!
+                          const FT_STYLE: Record<string, { bg: string; color: string; label: string }> = {
+                            grant:      { bg: 'rgba(132,204,22,0.15)', color: '#446900', label: 'Grant' },
+                            programme:  { bg: 'rgba(251,146,60,0.15)', color: '#c2410c', label: 'Programme' },
+                            investment: { bg: 'rgba(96,165,250,0.15)', color: '#1d4ed8', label: 'Investment' },
+                            in_kind:    { bg: 'rgba(167,139,250,0.15)', color: '#7c3aed', label: 'In-Kind' },
+                          }
+                          const s = FT_STYLE[ft] ?? { bg: '#f3f4f6', color: '#6b7280', label: ft }
+                          return <span className="inline-block ml-1 mt-1 rounded-full px-2 py-0.5 text-[10px] font-semibold" style={{ backgroundColor: s.bg, color: s.color }}>{s.label}</span>
+                        })()}
+                        {grant.funder_type && grant.funder_type !== 'other' && (() => {
+                          const FT_LABELS: Record<string, string> = {
+                            trust_foundation: 'Trust', community_foundation: 'Community Fdn',
+                            corporate: 'Corporate', lottery: 'Lottery', government: 'Government',
+                            local_authority: 'Local Auth', capacity_builder: 'Capacity Bldr',
+                          }
+                          const label = FT_LABELS[grant.funder_type] ?? grant.funder_type
+                          return <span className="inline-block ml-1 mt-1 rounded-full bg-[#f0f9ff] px-2 py-0.5 text-[10px] font-semibold text-[#0369a1]">{label}</span>
+                        })()}
                       </td>
                       <td className="px-5 py-3 max-w-[280px]">
                         <p className="text-xs text-mid line-clamp-3">
