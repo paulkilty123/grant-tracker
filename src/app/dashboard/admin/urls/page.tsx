@@ -1539,7 +1539,7 @@ export default function UrlAdminPage() {
       if (!structs.includes('unincorporated')) structs.push('unincorporated')
     }
     // CICs — only when explicitly named
-    if (/\bcic\b|community interest company/.test(text)) {
+    if (/\bcics?\b|community interest compan/.test(text)) {
       structs.push('cic_guarantee', 'cic_shares')
     }
     // Social enterprises — handle singular and plural
