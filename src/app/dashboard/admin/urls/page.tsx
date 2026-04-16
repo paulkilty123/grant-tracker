@@ -1,4 +1,5 @@
 'use client'
+import { useRouter } from 'next/navigation'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -202,6 +203,7 @@ function SavedForLaterTab() {
 }
 
 export default function UrlAdminPage() {
+  const router = useRouter()
   const [authorised, setAuthorised] = useState<boolean | null>(null)
   const [stats, setStats]           = useState<Stats | null>(null)
   const [grants, setGrants]         = useState<Grant[]>([])
@@ -452,7 +454,7 @@ export default function UrlAdminPage() {
   }
 
   // ── Approve a single review grant ─────────────────────────────────────────────
-  async function approveGrant(id: string) {
+  async function approveGrant(id: string, redirectToIntelligence = false) {
     await fetch('/api/admin/update-grant', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -460,6 +462,7 @@ export default function UrlAdminPage() {
     })
     setReviewGrants(prev => prev.filter(g => g.id !== id))
     await loadStats()
+    if (redirectToIntelligence) router.push(`/dashboard/admin/intelligence?highlight=${id}`)
   }
 
   // ── Load category grants (all grants, grouped by funder type) ────────────────
@@ -2260,9 +2263,9 @@ export default function UrlAdminPage() {
                             className="rounded-full border border-warm p-1.5 text-mid hover:border-forest hover:text-forest transition-colors">
                             <Pencil className="h-3 w-3" />
                           </button>
-                          <button onClick={() => approveGrant(grant.id)}
-                            className="rounded-full bg-forest/10 px-3 py-1 text-xs font-semibold text-forest hover:bg-forest hover:text-white transition-colors">
-                            Approve
+                          <button onClick={() => approveGrant(grant.id, true)}
+                            className="rounded-full bg-forest/10 px-3 py-1 text-xs font-semibold text-forest hover:bg-forest hover:text-white transition-colors flex items-center gap-1">
+                            Approve &amp; Enrich
                           </button>
                           <button onClick={async () => {
                             await createClient().from('scraped_grants').update({ url_status: 'saved' }).eq('id', grant.id)

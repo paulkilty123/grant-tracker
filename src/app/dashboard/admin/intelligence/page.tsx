@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Sparkles, ExternalLink, RefreshCw, CheckCircle, Clock, AlertTriangle, Zap, PlusCircle, X, BookOpen, Link, Search, Pencil, Check, Brain } from 'lucide-react'
 import NextLink from 'next/link'
@@ -20,9 +21,13 @@ type EnrichStatus = 'idle' | 'loading' | 'done' | 'error'
 type Source = { label: string; url: string; text: string }
 
 export default function FunderIntelligencePage() {
+  const searchParams = useSearchParams()
+  const highlightId = searchParams.get('highlight')
+  const highlightRef = useRef<HTMLDivElement | null>(null)
+
   const [grants, setGrants] = useState<GrantRow[]>([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<'all' | 'enriched' | 'unenriched'>('unenriched')
+  const [filter, setFilter] = useState<'all' | 'enriched' | 'unenriched'>(highlightId ? 'all' : 'unenriched')
   const [enrichStatus, setEnrichStatus] = useState<Record<string, EnrichStatus>>({})
   const [enrichMsg, setEnrichMsg] = useState<Record<string, string>>({})
   const [brief, setBrief] = useState<Record<string, Record<string, string | null>>>({})
@@ -158,6 +163,13 @@ export default function FunderIntelligencePage() {
     setBulkProgress(null)
   }
 
+  // Scroll to highlighted grant when loaded from needs review approval
+  useEffect(() => {
+    if (highlightId && !loading && highlightRef.current) {
+      setTimeout(() => highlightRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300)
+    }
+  }, [highlightId, loading])
+
   const searchLower = search.trim().toLowerCase()
   const filtered = grants.filter(g => {
     const matchesFilter =
@@ -287,8 +299,19 @@ export default function FunderIntelligencePage() {
             const isSourcesOpen = sourcesOpen[grant.id] ?? false
             const hasFilledSources = grantSources.some(s => s.text.trim().length > 50 || s.url.trim().length > 5)
 
+            const isHighlighted = grant.id === highlightId
             return (
-              <div key={grant.id} className="bg-white border border-[#E8E8EC] overflow-hidden" style={{ borderRadius: 12 }}>
+              <div
+                key={grant.id}
+                ref={isHighlighted ? highlightRef : null}
+                className="bg-white border overflow-hidden transition-all"
+                style={{ borderRadius: 12, borderColor: isHighlighted ? '#008080' : '#E8E8EC', boxShadow: isHighlighted ? '0 0 0 3px rgba(0,128,128,0.15)' : undefined }}
+              >
+                {isHighlighted && (
+                  <div className="flex items-center gap-2 px-4 py-2 text-xs font-semibold" style={{ background: '#f0fdfa', color: '#008080', borderBottom: '1px solid #ccfbf1' }}>
+                    <Sparkles className="w-3.5 h-3.5" /> Just approved — enrich this grant before it goes live to users
+                  </div>
+                )}
                 {/* Grant row */}
                 <div className="flex items-start gap-4 p-4">
                   {/* Status icon */}
