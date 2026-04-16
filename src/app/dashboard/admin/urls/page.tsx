@@ -1458,6 +1458,7 @@ export default function UrlAdminPage() {
 
 
   const STRUCTURE_OPTIONS = [
+    { value: 'social_enterprise_broad', label: 'Social Enterprise (broad catch-all)' },
     { value: 'registered_charity', label: 'Registered Charity' },
     { value: 'cio',                label: 'CIO' },
     { value: 'cic_guarantee',      label: 'CIC (Guarantee)' },
@@ -1494,8 +1495,8 @@ export default function UrlAdminPage() {
     if (/\bcic\b|community interest company/.test(text)) {
       structs.push('cic_guarantee', 'cic_shares')
     }
-    // Social enterprises — explicitly named
-    if (/\bsocial enterprise\b/.test(text)) {
+    // Social enterprises — handle singular and plural
+    if (/\bsocial enterprise(s)?\b/.test(text)) {
       if (!structs.includes('cic_guarantee')) structs.push('cic_guarantee', 'cic_shares')
       structs.push('ltd_guarantee', 'ltd_shares', 'cooperative')
     }
