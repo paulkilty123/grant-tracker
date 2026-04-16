@@ -2347,6 +2347,32 @@ export default function UrlAdminPage() {
                                 <Sparkles className="w-3 h-3" />{enrichingId === grant.id ? 'Enriching…' : grant.funder_brief ? 'Re-enrich' : 'Enrich'}
                               </button>
                               {grant.funder_brief && <span className="text-xs text-sage font-medium">✓ Enriched</span>}
+                            </div>
+                            {/* Funder brief preview */}
+                            {grant.funder_brief && (() => {
+                              const brief = grant.funder_brief as Record<string, string | null>
+                              const LABELS: Record<string, string> = {
+                                what_they_fund: 'What they fund', priorities: 'Priorities',
+                                strong_application: 'Strong application', exclusions: 'Exclusions',
+                                typical_award: 'Typical award', decision_timeline: 'Decision timeline',
+                              }
+                              const entries = Object.entries(LABELS)
+                                .filter(([k]) => brief[k])
+                                .map(([k, label]) => ({ label, value: brief[k]! }))
+                              if (entries.length === 0) return null
+                              return (
+                                <div className="mt-3 pt-3 border-t border-forest/10 space-y-2">
+                                  <p className="text-[10px] font-semibold uppercase tracking-wider text-forest">Funder intelligence</p>
+                                  {entries.map(({ label, value }) => (
+                                    <div key={label}>
+                                      <p className="text-[10px] font-semibold text-mid uppercase tracking-wide">{label}</p>
+                                      <p className="text-xs text-charcoal leading-relaxed">{value}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              )
+                            })()}
+                            <div className="flex items-center gap-3 pt-3 border-t border-forest/10">
                               <div className="flex-1" />
                               <button onClick={() => setExpandedReviewId(null)} className="rounded-full border border-warm px-3 py-1.5 text-xs font-semibold text-mid hover:border-charcoal transition-colors">Cancel</button>
                               <button onClick={() => publishReviewGrant(grant)} disabled={reviewPublishing[grant.id]}
