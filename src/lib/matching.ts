@@ -966,44 +966,13 @@ export function computeMatchScore(
   }
   // If either side has no data, score stays at neutral (5)
 
-  // ── 4. Grant size fit (max 20) ─────────────────────────────────────────
-  let grantSizeScore = 10
-  const grantMax = grant.amountMax ?? grant.amountMin ?? 0
-  const grantMin = grant.amountMin ?? 0
+// ── 4. Grant size (informational only — always neutral) ──────
+  // Grant size is not used as a ranking signal: orgs typically want the
+  // largest grant available, so penalising large grants distorts relevance.
+  // Amounts still appear in the UI breakdown for reference only.
+  const grantSizeScore = 10
 
-  if (org.min_grant_target || org.max_grant_target) {
-    const targetMin = org.min_grant_target ?? 0
-    const targetMax = org.max_grant_target ?? Infinity
-    if (grantMax >= targetMin && grantMin <= targetMax) {
-      grantSizeScore = 20
-      const grantRangeStr = grantMin > 0 && grantMax > 0 && grantMin !== grantMax
-        ? `£${grantMin >= 1000 ? (grantMin/1000).toFixed(0)+'k' : grantMin}–£${grantMax >= 1000000 ? (grantMax/1000000).toFixed(1)+'m' : grantMax >= 1000 ? (grantMax/1000).toFixed(0)+'k' : grantMax}`
-        : grantMax > 0 ? `up to £${grantMax >= 1000000 ? (grantMax/1000000).toFixed(1)+'m' : grantMax >= 1000 ? (grantMax/1000).toFixed(0)+'k' : grantMax}` : 'this grant'
-      reasons.push(`${grantRangeStr} fits ${org.name}'s target size`)
-    } else if (grantMax === 0 && grantMin === 0) {
-      // No amount data — can't evaluate size, give neutral score
-      grantSizeScore = 10
-    } else if (grantMax < targetMin) {
-      // Grant ceiling is below org's minimum target — too small
-      grantSizeScore = 3
-    } else {
-      // Grant floor exceeds org's maximum target — too large.
-      // Penalise proportionally: a 2x overshoot is very different from a 20x one.
-      const overshootRatio = targetMax > 0 ? grantMin / targetMax : 10
-      grantSizeScore = overshootRatio > 10 ? 3 : overshootRatio > 4 ? 5 : 8
-    }
-  } else if (org.annual_income_band && grantMax > 0) {
-    const orgIncome = INCOME_MIDPOINTS[org.annual_income_band] ?? 50_000
-    const ratio = grantMax / orgIncome
-    if (ratio >= 0.05 && ratio <= 0.6)       grantSizeScore = 20
-    else if (ratio > 0.6 && ratio <= 1.2)    grantSizeScore = 14
-    else if (ratio > 1.2 && ratio <= 3.0)    grantSizeScore = 8
-    else if (ratio > 3.0)                    grantSizeScore = 3
-    else                                     grantSizeScore = 15
-    if (grantSizeScore >= 18) reasons.push(`Grant size suits ${org.name}`)
-  }
-
-  // ── 5. Funder type preference + funding type affinity (max 15) ────────
+    // ── 5. Funder type preference + funding type affinity (max 15) ────────
   let funderTypeScore = 8 // neutral base
 
   // Funder type preference (trust vs government vs lottery etc.)
