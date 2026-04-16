@@ -1655,17 +1655,17 @@ export default function UrlAdminPage() {
     setBulkEnrichDone(0)
     setBulkEnrichLog([])
 
-    // Fetch all active grants without a funder_brief
+    // Fetch active grants missing who_can_apply (new field) or with no brief at all
     const supabase = createClient()
     const { data: targets } = await supabase
       .from('scraped_grants')
       .select('id, title, funder, apply_url, url_status, funder_brief, grant_sources, source, url_last_checked, is_invite_only')
       .eq('is_active', true)
-      .is('funder_brief', null)
+      .or('funder_brief.is.null,funder_brief->>who_can_apply.is.null')
       .not('apply_url', 'is', null)
 
     if (!targets || targets.length === 0) {
-      setBulkEnrichLog(['Nothing to enrich — all active grants already have a funder brief.'])
+      setBulkEnrichLog(['Nothing to enrich — all active grants already have up-to-date briefs.'])
       setBulkEnriching(false)
       return
     }
