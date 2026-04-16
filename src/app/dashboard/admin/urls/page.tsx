@@ -1411,9 +1411,9 @@ export default function UrlAdminPage() {
     if (!getReviewVal(grant.id,'deadline',null)) {
       const months: Record<string,string> = { jan:'01',feb:'02',mar:'03',apr:'04',may:'05',jun:'06',jul:'07',aug:'08',sep:'09',oct:'10',nov:'11',dec:'12' }
       // Keyword + DD Month YYYY (with optional ordinal suffix: 1st, 2nd, 3rd, 4th...)
-      const closeReEU = /(?:clos(?:e|es|ing)|deadline|apply by|applications? (?:close|due)|open(?:s|ing)?)[^.]*?(\d{1,2})(?:st|nd|rd|th)?\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+(\d{4})/i
+      const closeReEU = /(?:clos(?:e|es|ing)|deadline|apply by|applications? (?:close|due))[^.]*?(\d{1,2})(?:st|nd|rd|th)?\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+(\d{4})/i
       // Keyword + Month DD YYYY (US style, with optional ordinal suffix)
-      const closeReUS = /(?:clos(?:e|es|ing)|deadline|apply by|applications? (?:close|due)|open(?:s|ing)?)[^.]*?(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+(\d{1,2})(?:st|nd|rd|th)?,?\s*(\d{4})/i
+      const closeReUS = /(?:clos(?:e|es|ing)|deadline|apply by|applications? (?:close|due))[^.]*?(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+(\d{1,2})(?:st|nd|rd|th)?,?\s*(\d{4})/i
       // Fallback: bare DD Month YYYY anywhere in timeline (safe since field is specifically about deadlines)
       const bareReEU  = /(\d{1,2})(?:st|nd|rd|th)?\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+(\d{4})/i
       // Fallback: bare Month DD YYYY
@@ -1444,7 +1444,7 @@ export default function UrlAdminPage() {
         updates.is_rolling = false
       } else {
         // Month YYYY only (no day) — e.g. "Current deadline September 2026"
-        const moYrKeyword = /(?:clos(?:e|es|ing)|deadline|apply by|applications? (?:close|due)|open(?:s|ing)?)[^.]*?(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+(\d{4})/i
+        const moYrKeyword = /(?:clos(?:e|es|ing)|deadline|apply by|applications? (?:close|due))[^.]*?(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+(\d{4})/i
         const moYrBare    = /(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+(\d{4})/i
         const mMY = timelineText.match(moYrKeyword) ?? timelineText.match(moYrBare)
         if (mMY) {
