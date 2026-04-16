@@ -122,7 +122,7 @@ function SavedForLaterTab() {
       .from('scraped_grants')
       .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief, description, funder_type, funding_type')
       .eq('is_active', false)
-      .eq('url_status', 'saved')
+      .eq('saved_for_later', true)
       .order('title')
       .then(({ data }) => { setGrants((data ?? []) as (Grant & { description?: string; funding_type?: string })[]); setLoading(false) })
   }, [])
@@ -180,15 +180,15 @@ function SavedForLaterTab() {
                 </td>
                 <td className="px-5 py-3 text-right">
                   <div className="flex items-center justify-end gap-2 flex-wrap">
-                    <button onClick={async () => { await createClient().from('scraped_grants').update({ url_status: 'unchecked' }).eq('id', grant.id); setGrants(prev => prev.filter(g => g.id !== grant.id)) }}
+                    <button onClick={async () => { await createClient().from('scraped_grants').update({ saved_for_later: false }).eq('id', grant.id); setGrants(prev => prev.filter(g => g.id !== grant.id)) }}
                       className="rounded-full border border-warm px-3 py-1 text-xs font-semibold text-mid hover:border-forest hover:text-forest transition-colors whitespace-nowrap">
                       Back to review
                     </button>
-                    <button onClick={async () => { await createClient().from('scraped_grants').update({ is_active: true, url_status: 'ok' }).eq('id', grant.id); setGrants(prev => prev.filter(g => g.id !== grant.id)) }}
+                    <button onClick={async () => { await createClient().from('scraped_grants').update({ is_active: true, url_status: 'ok', saved_for_later: false }).eq('id', grant.id); setGrants(prev => prev.filter(g => g.id !== grant.id)) }}
                       className="rounded-full bg-forest/10 px-3 py-1 text-xs font-semibold text-forest hover:bg-forest hover:text-white transition-colors">
                       Approve
                     </button>
-                    <button onClick={async () => { await createClient().from('scraped_grants').update({ url_status: 'dead' }).eq('id', grant.id); setGrants(prev => prev.filter(g => g.id !== grant.id)) }}
+                    <button onClick={async () => { await createClient().from('scraped_grants').update({ url_status: 'dead', saved_for_later: false }).eq('id', grant.id); setGrants(prev => prev.filter(g => g.id !== grant.id)) }}
                       className="rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-500 hover:bg-red-500 hover:text-white transition-colors">
                       Remove
                     </button>
@@ -305,7 +305,7 @@ export default function UrlAdminPage() {
     const [{ data }, { count: newCount }, { count: reviewCount }, { count: suspiciousCount }, { data: ftData }] = await Promise.all([
       createClient().from('scraped_grants').select('url_status, apply_url').eq('is_active', true),
       createClient().from('scraped_grants').select('id', { count: 'exact', head: true }).eq('is_active', true).gte('first_seen_at', sevenDaysAgo),
-      createClient().from('scraped_grants').select('id', { count: 'exact', head: true }).eq('is_active', false).neq('url_status', 'dead').neq('url_status', 'saved'),
+      createClient().from('scraped_grants').select('id', { count: 'exact', head: true }).eq('is_active', false).neq('url_status', 'dead').not('saved_for_later', 'is', 'true'),
       createClient().from('scraped_grants').select('id', { count: 'exact', head: true }).eq('is_active', true).not('url_quality_score', 'is', null).lt('url_quality_score', 60),
       createClient().from('scraped_grants').select('funding_type').eq('is_active', true),
     ])
@@ -418,7 +418,7 @@ export default function UrlAdminPage() {
       .from('scraped_grants')
       .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief, description, funder_type, funding_type')
       .eq('is_active', false)
-      .neq('url_status', 'dead').neq('url_status', 'saved')  // exclude hidden and saved-for-later
+      .neq('url_status', 'dead').not('saved_for_later', 'is', 'true')  // exclude hidden and saved-for-later
       .order('last_seen_at', { ascending: false })
       .limit(500)
     setReviewGrants((data ?? []) as Grant[])
@@ -2433,7 +2433,7 @@ export default function UrlAdminPage() {
                             {expandedReviewId === grant.id ? 'Close' : 'Review'}
                           </button>
                           <button onClick={async () => {
-                            await createClient().from('scraped_grants').update({ url_status: 'saved' }).eq('id', grant.id)
+                            await createClient().from('scraped_grants').update({ saved_for_later: true }).eq('id', grant.id)
                             setReviewGrants(prev => prev.filter(g => g.id !== grant.id))
                           }}
                             className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-600 hover:bg-amber-500 hover:text-white transition-colors">
