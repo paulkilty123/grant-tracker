@@ -131,18 +131,24 @@ export async function POST(req: NextRequest) {
     ? 'Content was fetched live from the funder\'s website.'
     : 'The funder\'s website could not be fetched — use your training knowledge about this UK funder to fill in as many fields as possible, and note any uncertainty.'
 
-  const prompt = `You are analysing a UK grant funder for a charity/CIC grant tracker tool. ${sourceNote}
+  const prompt = `You are writing a funder intelligence brief for a UK charity/CIC grant tracker. ${sourceNote}
 
 Grant title: ${grant.title}
 Funder: ${grant.funder}
 ${combinedContent ? `\n${combinedContent}` : ''}
 
-Extract a structured "funder brief" as JSON. Be concise — each field should be 1–3 sentences max. If a field is genuinely unknown, use null.
+Write a structured "funder brief" as JSON. Rules:
+- Write directly for a grant-seeker — practical, plain English, no jargon
+- NEVER reference "the source", "the website", "the page", or your own uncertainty in field values
+- Each field should be 1–3 sentences max
+- If information is not explicitly stated, make a reasonable inference from context (e.g. if a funder supports "charities and community groups", infer the likely structures). Do not explain the inference — just state the conclusion naturally
+- If a field is genuinely impossible to infer, use null — do not write placeholder text explaining what is unknown
+- Avoid phrases like "not specified", "unclear from", "the source does not", "information not available"
 
 Return ONLY valid JSON in this exact shape:
 {
   "what_they_fund": "What kinds of projects, causes, or organisations they support",
-  "who_can_apply": "Eligible legal structures and organisation types — e.g. registered charities only, CICs welcome, social enterprises, unincorporated groups, individuals. Include any income caps or stage restrictions.",
+  "who_can_apply": "Who is eligible — legal structures, organisation types, any income caps or stage restrictions. Write as direct guidance: e.g. 'Open to registered charities, CICs and community groups. No minimum income requirement stated.'",
   "geographic_focus": "Geographic coverage — UK-wide, England only, specific regions, counties or cities. Be specific if restricted.",
   "priorities": "Current funding priorities or themes they care about most",
   "strong_application": "What makes a strong or successful application to this funder",
