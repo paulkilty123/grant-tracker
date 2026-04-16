@@ -1437,6 +1437,60 @@ export default function UrlAdminPage() {
     // Couldn't detect — leave blank
   }
 
+
+  const STRUCTURE_OPTIONS = [
+    { value: 'registered_charity', label: 'Registered Charity' },
+    { value: 'cio',                label: 'CIO' },
+    { value: 'cic_guarantee',      label: 'CIC (Guarantee)' },
+    { value: 'cic_shares',         label: 'CIC (Shares)' },
+    { value: 'ltd_guarantee',      label: 'Ltd by Guarantee' },
+    { value: 'ltd_shares',         label: 'Ltd by Shares' },
+    { value: 'cooperative',        label: 'Co-operative / CBS' },
+    { value: 'unincorporated',     label: 'Unincorporated' },
+    { value: 'sole_trader',        label: 'Sole Trader / Individual' },
+    { value: 'llp',                label: 'LLP' },
+  ]
+
+  function detectEligibility(grant: Grant) {
+    const text = [
+      grant.title,
+      (grant as Grant & { description?: string }).description ?? '',
+      ...(Object.values((grant.funder_brief as Record<string,string|null> | null) ?? {}).filter(Boolean) as string[]),
+    ].join(' ').toLowerCase()
+
+    const structs: string[] = []
+    if (/registered charit|charities only|charity only|charitable organi/.test(text)) {
+      structs.push('registered_charity', 'cio')
+    }
+    if (/\bcic\b|community interest company/.test(text)) {
+      structs.push('cic_guarantee', 'cic_shares')
+    }
+    if (/social enterprise|not.for.profit|not for profit|mission.driven/.test(text)) {
+      if (!structs.includes('cic_guarantee')) structs.push('cic_guarantee', 'cic_shares')
+      structs.push('ltd_guarantee', 'ltd_shares', 'cooperative')
+    }
+    if (/co.operative|community benefit society|\bcbs\b/.test(text)) {
+      if (!structs.includes('cooperative')) structs.push('cooperative')
+    }
+    if (/unincorporated|community group|informal group/.test(text)) {
+      structs.push('unincorporated')
+    }
+    if (/ltd company|limited company|ltd by shares|trading company/.test(text)) {
+      if (!structs.includes('ltd_shares')) structs.push('ltd_shares', 'ltd_guarantee')
+    }
+    if (/individual|sole trader|freelance|practitioner/.test(text)) {
+      structs.push('sole_trader')
+    }
+    // If open to all / no restriction mentioned
+    if (structs.length === 0 && /open to all|any organi|any registered|all organi/.test(text)) {
+      structs.push('registered_charity', 'cio', 'cic_guarantee', 'cic_shares', 'ltd_guarantee', 'ltd_shares', 'cooperative', 'unincorporated')
+    }
+    if (structs.length > 0) {
+      const unique = Array.from(new Set(structs))
+      setReviewField(grant.id, 'eligible_structures', JSON.stringify(unique))
+    }
+  }
+
   async function enrichGrantFromManagerWithSources(grant: Grant, sources: {label:string;url:string;text:string}[]) {
     if (enrichingId) return
     setEnrichingId(grant.id)
