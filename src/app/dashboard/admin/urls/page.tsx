@@ -1452,45 +1452,56 @@ export default function UrlAdminPage() {
     { value: 'llp',                label: 'LLP' },
   ]
 
-  function detectEligibility(grant: Grant) {
-    const text = [
-      grant.title,
+   function detectEligibility(grant: Grant) {
+    // Use funder brief first (most reliable), fall back to description
+    const brief = grant.funder_brief as Record<string, string | null> | null
+    const primaryText = [brief?.what_they_fund, brief?.priorities, brief?.exclusions]
+      .filter(Boolean).join(' ').toLowerCase()
+    const fallbackText = [
       (grant as Grant & { description?: string }).description ?? '',
-      ...(Object.values((grant.funder_brief as Record<string,string|null> | null) ?? {}).filter(Boolean) as string[]),
+      grant.title ?? '',
     ].join(' ').toLowerCase()
+    const text = primaryText.length > 30 ? primaryText : fallbackText
 
     const structs: string[] = []
-    if (/registered charit|charities only|charity only|charitable organi/.test(text)) {
+    // Charities — most common, check first
+    if (/\bcharit(y|ies|able)\b|registered charit|charities only|charity only/.test(text)) {
       structs.push('registered_charity', 'cio')
     }
+    // Community groups / voluntary sector = unincorporated, NOT CIC
+    if (/community group|voluntary group|voluntary organi|vcse|informal group/.test(text)) {
+      if (!structs.includes('unincorporated')) structs.push('unincorporated')
+    }
+    // CICs — only when explicitly named
     if (/\bcic\b|community interest company/.test(text)) {
       structs.push('cic_guarantee', 'cic_shares')
     }
-    if (/social enterprise|not.for.profit|not for profit|mission.driven/.test(text)) {
+    // Social enterprises — explicitly named
+    if (/\bsocial enterprise\b/.test(text)) {
       if (!structs.includes('cic_guarantee')) structs.push('cic_guarantee', 'cic_shares')
       structs.push('ltd_guarantee', 'ltd_shares', 'cooperative')
     }
+    // Co-operatives
     if (/co.operative|community benefit society|\bcbs\b/.test(text)) {
       if (!structs.includes('cooperative')) structs.push('cooperative')
     }
-    if (/unincorporated|community group|informal group/.test(text)) {
-      structs.push('unincorporated')
-    }
+    // Ltd companies — only when explicit
     if (/ltd company|limited company|ltd by shares|trading company/.test(text)) {
       if (!structs.includes('ltd_shares')) structs.push('ltd_shares', 'ltd_guarantee')
     }
-    if (/individual|sole trader|freelance|practitioner/.test(text)) {
+    // Individuals
+    if (/\bindividual\b|sole trader|freelance|\bpractitioner\b/.test(text)) {
       structs.push('sole_trader')
     }
-    // If open to all / no restriction mentioned
+    // Open to all
     if (structs.length === 0 && /open to all|any organi|any registered|all organi/.test(text)) {
       structs.push('registered_charity', 'cio', 'cic_guarantee', 'cic_shares', 'ltd_guarantee', 'ltd_shares', 'cooperative', 'unincorporated')
     }
     if (structs.length > 0) {
-      const unique = Array.from(new Set(structs))
-      setReviewField(grant.id, 'eligible_structures', JSON.stringify(unique))
+      setReviewField(grant.id, 'eligible_structures', JSON.stringify(Array.from(new Set(structs))))
     }
   }
+
 
 
   const IMPACT_SECTOR_OPTIONS = [
