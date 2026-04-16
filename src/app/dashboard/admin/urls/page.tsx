@@ -2563,6 +2563,31 @@ export default function UrlAdminPage() {
                                 <MapPin className="w-3 h-3" /> Detect location
                               </button>
                             </div>
+
+                            {/* Eligibility — who can apply */}
+                            <div className="mt-3 pt-3 border-t border-forest/10">
+                              <div className="flex items-center justify-between mb-2">
+                                <p className="text-[10px] font-semibold uppercase tracking-wider text-forest">Eligible structures</p>
+                                <button onClick={() => detectEligibility(grant)}
+                                  className="flex items-center gap-1 text-xs font-semibold text-forest hover:text-sage transition-colors">
+                                  <Sparkles className="w-3 h-3" /> Detect
+                                </button>
+                              </div>
+                              {(() => {
+                                const current: string[] = (() => { const v = getReviewVal(grant.id,'eligible_structures',null); if(v){try{return JSON.parse(String(v))}catch{return[]}} return (grant as Grant & {eligible_structures?:string[]}).eligible_structures??[] })()
+                                return (
+                                  <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+                                    {STRUCTURE_OPTIONS.map(opt => (
+                                      <label key={opt.value} className="flex items-center gap-1.5 cursor-pointer">
+                                        <input type="checkbox" checked={current.includes(opt.value)} className="h-3.5 w-3.5 accent-forest"
+                                          onChange={e => { const next = e.target.checked ? [...current.filter(s=>s!==opt.value),opt.value] : current.filter(s=>s!==opt.value); setReviewField(grant.id,'eligible_structures',JSON.stringify(next)) }} />
+                                        <span className="text-xs text-mid">{opt.label}</span>
+                                      </label>
+                                    ))}
+                                  </div>
+                                )
+                              })()}
+                            </div>
                             <div className="flex items-center gap-3 pt-3 border-t border-forest/10">
                               <button onClick={() => enrichGrantFromManager(grant)} disabled={!!enrichingId}
                                 className="flex items-center gap-1.5 rounded-full border border-forest/40 px-3 py-1.5 text-xs font-semibold text-forest hover:bg-forest/10 transition-colors disabled:opacity-40">
