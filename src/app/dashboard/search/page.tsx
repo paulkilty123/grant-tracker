@@ -1074,7 +1074,6 @@ export default function SearchPage() {
   // filter panel silently flipped it back on. Now the toggle only changes
   // when the user clicks it directly (or when the org first loads).
   const [profileFilterOn, setProfileFilterOn]     = useState(false)
-  const [showOnlyEligible, setShowOnlyEligible]   = useState(true)
 
   // ── Live search (web) state ───────────────────────────────────────────────
   const [searchMode, setSearchMode]               = useState<'database' | 'live'>('database')
@@ -1667,16 +1666,16 @@ export default function SearchPage() {
     }
 
     // If the page was opened with ?grant=<id>, lift that grant to the top
-    // ── Eligible-only filter ───────────────────────────────────────────
-    // Only active when org has a known legal structure (otherwise we'd hide
-    // grants we can't actually evaluate). Hides hard-ineligible grants.
-    if (showOnlyEligible && org?.legal_structure) {
+    if (profileFilterOn && org?.legal_structure) {
       withScores.splice(0, withScores.length,
-        ...withScores.filter(d => d.eligibilityStatus !== 'ineligible')
-      )
+        ...withScores.filter(d => {
+          const eligible = d.grant.eligibleStructures
+          if (eligible && eligible.length > 0) {
+            return eligible.includes(org.legal_structure as LegalStructure)
+          }
+          return true
+        }))
     }
-
-    // so users coming from the dashboard Matched Opportunities cards land
     // on it immediately. Falls through silently if the id isn't in the list
     // (e.g. grant has since been filtered out).
     if (pinnedGrantId) {
@@ -1712,7 +1711,6 @@ export default function SearchPage() {
     activeTab,
     programmeHasCash,
     pinnedGrantId,
-    showOnlyEligible,
   ])
 
   async function runAISearch(searchQuery: string, isSmartMatch = false, includeOrgContext = false) {
@@ -2081,31 +2079,6 @@ export default function SearchPage() {
                       Profile
                     </span>
                   </button>
-                )}
-                {!!org && (
-                  <>
-                    <div className="w-px h-6 bg-gray-200 flex-shrink-0" />
-                    <button
-                      onClick={() => setShowOnlyEligible(v => !v)}
-                      className="flex items-center gap-2 px-4 h-full flex-shrink-0 whitespace-nowrap"
-                      title={showOnlyEligible ? 'Show all grants including ineligible' : 'Hide grants you cannot apply for'}
-                    >
-                      <span className="relative flex-shrink-0" style={{
-                        width: 40, height: 22,
-                        backgroundColor: showOnlyEligible ? '#1f5c52' : '#d1d5db',
-                        borderRadius: 9999, display: 'inline-flex', alignItems: 'center',
-                        transition: 'background-color 0.2s',
-                      }}>
-                        <span className="absolute bg-white transition-transform duration-200" style={{
-                          width: 16, height: 16, borderRadius: 9999, top: 3, left: 3,
-                          transform: showOnlyEligible ? 'translateX(18px)' : 'translateX(0)',
-                        }} />
-                      </span>
-                      <span className={`text-[11px] font-semibold uppercase tracking-wider ${showOnlyEligible ? 'text-gray-600' : 'text-gray-400'}`}>
-                        Eligible only
-                      </span>
-                    </button>
-                  </>
                 )}
               </div>
               {/* Search button — outside the pill */}
