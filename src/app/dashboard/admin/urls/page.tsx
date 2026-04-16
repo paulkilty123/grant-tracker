@@ -1491,6 +1491,32 @@ export default function UrlAdminPage() {
     }
   }
 
+
+  const IMPACT_SECTOR_OPTIONS = [
+    { value: 'community', label: 'Community' }, { value: 'young_people', label: 'Young People' },
+    { value: 'health', label: 'Health' }, { value: 'mental_health', label: 'Mental Health' },
+    { value: 'education', label: 'Education' }, { value: 'employment', label: 'Employment' },
+    { value: 'creative', label: 'Arts & Culture' }, { value: 'environment', label: 'Environment' },
+    { value: 'housing', label: 'Housing' }, { value: 'food', label: 'Food' },
+    { value: 'sport', label: 'Sport' }, { value: 'heritage', label: 'Heritage' },
+    { value: 'disability', label: 'Disability' }, { value: 'older_people', label: 'Older People' },
+    { value: 'women', label: 'Women & Gender' }, { value: 'justice', label: 'Justice & Rights' },
+    { value: 'tech', label: 'Technology' }, { value: 'financial', label: 'Financial Inclusion' },
+    { value: 'international', label: 'International' },
+    { value: 'social_economy', label: 'Social Economy' }, { value: 'social_innovation', label: 'Social Innovation' },
+  ]
+  const BENEFICIARY_OPTIONS = [
+    { value: 'children', label: 'Children (under 16)' }, { value: 'young_people', label: 'Young People (16-25)' },
+    { value: 'older_people', label: 'Older People (65+)' }, { value: 'families', label: 'Families' },
+    { value: 'women_girls', label: 'Women & Girls' }, { value: 'men_boys', label: 'Men & Boys' },
+    { value: 'lgbtq', label: 'LGBTQ+' }, { value: 'ethnic_minorities', label: 'Ethnic Minorities' },
+    { value: 'refugees_migrants', label: 'Refugees & Migrants' }, { value: 'disabled_people', label: 'Disabled People' },
+    { value: 'mental_health', label: 'Mental Health' }, { value: 'homeless', label: 'Homeless People' },
+    { value: 'veterans', label: 'Veterans' }, { value: 'ex_offenders', label: 'Ex-Offenders' },
+    { value: 'people_in_poverty', label: 'People in Poverty' }, { value: 'rural_communities', label: 'Rural Communities' },
+    { value: 'general_public', label: 'General Public' },
+  ]
+
   async function enrichGrantFromManagerWithSources(grant: Grant, sources: {label:string;url:string;text:string}[]) {
     if (enrichingId) return
     setEnrichingId(grant.id)
