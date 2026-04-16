@@ -1425,6 +1425,18 @@ export default function UrlAdminPage() {
         const day = mbUS[2].padStart(2,'0')
         updates.deadline = `${mbUS[3]}-${mon}-${day}`
         updates.is_rolling = false
+      } else {
+        // Month YYYY only (no day) — e.g. "Current deadline September 2026"
+        const moYrKeyword = /(?:clos(?:e|es|ing)|deadline|apply by|applications? (?:close|due)|open(?:s|ing)?)[^.]*?(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+(\d{4})/i
+        const moYrBare    = /(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+(\d{4})/i
+        const mMY = timelineText.match(moYrKeyword) ?? timelineText.match(moYrBare)
+        if (mMY) {
+          const mon = months[mMY[1].toLowerCase().slice(0,3)] ?? '01'
+          const yr  = mMY[2]
+          const lastDay = new Date(parseInt(yr), parseInt(mon), 0).getDate()
+          updates.deadline = `${yr}-${mon}-${String(lastDay).padStart(2,'0')}`
+          updates.is_rolling = false
+        }
       }
     }
     if (Object.keys(updates).length > 0) {
