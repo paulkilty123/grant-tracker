@@ -1351,7 +1351,7 @@ export default function UrlAdminPage() {
 
     // ── Extract amounts ───────────────────────────────────────────────────────
     // Matches: £10,000 | £10k | £1m | up to £50,000 | $50,000
-    const amountRe = /[£$][\d,]+(?:\.?\d+)?(?:\s*[km](?:illion)?)?/gi
+    const amountRe = /[£$][\d,]+(?:\.?\d+)?(?:\s*[km](?:illion)?)?/g
     const amountMatches = awardText.match(amountRe) ?? []
     const parseAmt = (s: string): number | null => {
       const clean = s.replace(/[£$,]/g, '').trim()
@@ -1360,7 +1360,8 @@ export default function UrlAdminPage() {
       let val = parseFloat(m[1])
       if (m[2] === 'k') val *= 1_000
       if (m[2] === 'm') val *= 1_000_000
-      return isNaN(val) ? null : Math.round(val)
+      if (isNaN(val) || val > 50_000_000) return null  // sanity cap
+      return Math.round(val)
     }
     const amounts = amountMatches.map(parseAmt).filter((v): v is number => v !== null)
     if (amounts.length === 1) {
@@ -1375,13 +1376,21 @@ export default function UrlAdminPage() {
     // Look for "close X", "deadline X", "closes X" patterns with dates
     if (!getReviewVal(grant.id,'deadline',null)) {
       const months: Record<string,string> = { jan:'01',feb:'02',mar:'03',apr:'04',may:'05',jun:'06',jul:'07',aug:'08',sep:'09',oct:'10',nov:'11',dec:'12' }
-      const closeRe = /(?:clos(?:e|es|ing)|deadline|apply by|applications? (?:close|due))[^.]*?(\d{1,2})\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+(\d{4})/i
-      const m = timelineText.match(closeRe)
-      if (m) {
-        const day = m[1].padStart(2,'0')
-        const mon = months[m[2].toLowerCase().slice(0,3)] ?? '01'
-        const yr  = m[3]
-        updates.deadline = `${yr}-${mon}-${day}`
+      // Try DD Month YYYY (European)
+      const closeReEU = /(?:clos(?:e|es|ing)|deadline|apply by|applications? (?:close|due))[^.]*?(\d{1,2})\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+(\d{4})/i
+      // Try Month DD YYYY (US/programme style: "July 29, 2026")
+      const closeReUS = /(?:clos(?:e|es|ing)|deadline|apply by|applications? (?:close|due))[^.]*?(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+(\d{1,2}),?\s*(\d{4})/i
+      const mEU = timelineText.match(closeReEU)
+      const mUS = timelineText.match(closeReUS)
+      if (mEU) {
+        const day = mEU[1].padStart(2,'0')
+        const mon = months[mEU[2].toLowerCase().slice(0,3)] ?? '01'
+        updates.deadline = `${mEU[3]}-${mon}-${day}`
+        updates.is_rolling = false
+      } else if (mUS) {
+        const mon = months[mUS[1].toLowerCase().slice(0,3)] ?? '01'
+        const day = mUS[2].padStart(2,'0')
+        updates.deadline = `${mUS[3]}-${mon}-${day}`
         updates.is_rolling = false
       }
     }
