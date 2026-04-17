@@ -31,6 +31,13 @@ type Grant = {
   funding_type?: string
   funder_brief?: Record<string, string | null> | null
   grant_sources?: Array<{ label: string; url?: string; text?: string }> | null
+  description?: string | null
+  location_tag?: string | null
+  amount_min?: number | null
+  amount_max?: number | null
+  deadline?: string | null
+  is_rolling?: boolean
+  eligible_structures?: string[] | null
 }
 
 type CategoryGrant = Grant & {
@@ -349,7 +356,7 @@ export default function UrlAdminPage() {
     if (filter === 'url_issues') {
       const { data, error } = await createClient()
         .from('scraped_grants')
-        .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funding_type, funder_brief, grant_sources')
+        .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funding_type, funder_type, funder_brief, grant_sources, description, location_tag, amount_min, amount_max, deadline, is_rolling, eligible_structures')
         .eq('is_active', true)
         .or('url_status.eq.dead,and(url_status.eq.unchecked,apply_url.not.is.null),apply_url.is.null')
         .order('url_status', { ascending: true })
@@ -361,7 +368,7 @@ export default function UrlAdminPage() {
 
     let query = createClient()
       .from('scraped_grants')
-      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funding_type, funder_brief, grant_sources')
+      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funding_type, funder_type, funder_brief, grant_sources, description, location_tag, amount_min, amount_max, deadline, is_rolling, eligible_structures')
       .eq('is_active', true)
       .order('url_last_checked', { ascending: true, nullsFirst: true })
       .limit(2000)
@@ -503,6 +510,42 @@ export default function UrlAdminPage() {
   }
   function removeReviewSource(id: string, idx: number) {
     setReviewSources(s => { const a = [...(s[id] ?? [])]; a.splice(idx,1); return { ...s, [id]: a } })
+  }
+
+  // Save edits for an already-approved grant (no approval flip)
+  async function saveGrantEdits(grant: Grant) {
+    const edits = reviewEdits[grant.id] ?? {}
+    if (Object.keys(edits).length === 0) { setExpandedReviewId(null); return }
+    setReviewPublishing(s => ({ ...s, [grant.id]: true }))
+    const fields: Record<string, unknown> = {}
+    if (edits.funder_type  !== undefined) fields.funder_type  = edits.funder_type
+    if (edits.funding_type !== undefined) fields.funding_type = edits.funding_type
+    if (edits.amount_min   !== undefined) fields.amount_min   = edits.amount_min ? parseInt(String(edits.amount_min).replace(/[^0-9]/g,'')) : null
+    if (edits.amount_max   !== undefined) fields.amount_max   = edits.amount_max ? parseInt(String(edits.amount_max).replace(/[^0-9]/g,'')) : null
+    if (edits.deadline     !== undefined) fields.deadline     = edits.deadline || null
+    if (edits.is_rolling   !== undefined) fields.is_rolling   = edits.is_rolling
+    if (edits.location_tag !== undefined) fields.location_tag = edits.location_tag || null
+    if (edits.is_invite_only !== undefined) fields.is_invite_only = edits.is_invite_only
+    if (edits.description  !== undefined) fields.description  = edits.description || null
+    if (edits.eligible_structures !== undefined) {
+      try {
+        let structs: string[] = JSON.parse(String(edits.eligible_structures))
+        if (structs.includes('social_enterprise_broad')) {
+          structs = structs.filter(s => s !== 'social_enterprise_broad')
+          const se = ['cic_guarantee','cic_shares','ltd_guarantee','ltd_shares','cooperative']
+          se.forEach(s => { if (!structs.includes(s)) structs.push(s) })
+        }
+        fields.eligible_structures = structs
+      } catch { /* ignore */ }
+    }
+    if (Object.keys(fields).length > 0) {
+      await createClient().from('scraped_grants').update(fields).eq('id', grant.id)
+      // Reflect edits in local state so the UI shows the new values after saving
+      setGrants(prev => prev.map(g => g.id === grant.id ? { ...g, ...fields } as Grant : g))
+      setReviewEdits(s => { const n = { ...s }; delete n[grant.id]; return n })
+    }
+    setReviewPublishing(s => ({ ...s, [grant.id]: false }))
+    setExpandedReviewId(null)
   }
 
   async function publishReviewGrant(grant: Grant) {
@@ -1865,6 +1908,17 @@ export default function UrlAdminPage() {
         >
           <Pencil className="h-3 w-3" />
         </button>
+        <button
+          onClick={() => setExpandedReviewId(id => id === grant.id ? null : grant.id)}
+          title="Review & edit fields (location, amounts, eligibility…)"
+          className={`rounded-full border p-1.5 transition-colors ${
+            expandedReviewId === grant.id
+              ? 'border-forest bg-forest/10 text-forest'
+              : 'border-warm text-mid hover:border-forest hover:text-forest'
+          }`}
+        >
+          <Sparkles className="h-3 w-3" />
+        </button>
         {grant.url_status !== 'ok' && (
           <button onClick={() => markOk(grant.id)} title="Approve — mark URL as ok"
             className="rounded-full border border-warm p-1.5 text-mid hover:border-sage hover:text-sage transition-colors">
@@ -2009,6 +2063,182 @@ export default function UrlAdminPage() {
       <span className="inline-flex items-center gap-1 rounded-full bg-gold/10 px-2 py-0.5 text-[10px] font-semibold text-gold">
         <Clock className="h-2.5 w-2.5" /> unchecked
       </span>
+    )
+  }
+
+  // Shared Review & Edit panel — used in Needs Review tab AND inline on approved grants
+  function renderReviewPanel(grant: Grant, mode: 'review' | 'approved') {
+    return (
+      <div className="mx-3 mb-1 rounded-xl border border-forest/20 bg-[#f0fdf9] p-4">
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-forest">
+            {mode === 'review' ? 'Review & edit before publishing' : 'Review & edit fields'}
+          </p>
+          <button onClick={() => detectAll(grant)}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-full text-white transition-colors" style={{ backgroundColor: '#1f5c52' }}>
+            <Sparkles className="w-3 h-3" /> Detect all
+          </button>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs mb-3">
+          <div><label className="text-mid block mb-0.5">Funder type</label>
+            <select value={String(getReviewVal(grant.id,'funder_type',grant.funder_type??'') )} onChange={e=>setReviewField(grant.id,'funder_type',e.target.value)} className="form-select text-xs py-1 w-full">
+              {['trust_foundation','community_foundation','corporate_foundation','local_authority','corporate','lottery','government','capacity_builder','competition','loan','other'].map(v=><option key={v} value={v}>{v.replace(/_/g,' ').replace(/\w/g,c=>c.toUpperCase())}</option>)}
+            </select></div>
+          <div><label className="text-mid block mb-0.5">Funding type</label>
+            <select value={String(getReviewVal(grant.id,'funding_type',grant.funding_type??'grant'))} onChange={e=>setReviewField(grant.id,'funding_type',e.target.value)} className="form-select text-xs py-1 w-full">
+              {['grant','programme','investment','in_kind'].map(v=><option key={v} value={v}>{v.replace(/_/g,' ').replace(/\w/g,c=>c.toUpperCase())}</option>)}
+            </select></div>
+          <div><label className="text-mid block mb-0.5">Location tag</label>
+            <input type="text" value={String(getReviewVal(grant.id,'location_tag',grant.location_tag ?? ''))} onChange={e=>setReviewField(grant.id,'location_tag',e.target.value)} className="form-input text-xs py-1 w-full" placeholder="e.g. UK, London, Sussex" /></div>
+          <div><label className="text-mid block mb-0.5">Amount min (£)</label>
+            <input type="number" value={String(getReviewVal(grant.id,'amount_min',grant.amount_min ?? ''))} onChange={e=>setReviewField(grant.id,'amount_min',e.target.value)} className="form-input text-xs py-1 w-full" placeholder="e.g. 5000" /></div>
+          <div><label className="text-mid block mb-0.5">Amount max (£)</label>
+            <input type="number" value={String(getReviewVal(grant.id,'amount_max',grant.amount_max ?? ''))} onChange={e=>setReviewField(grant.id,'amount_max',e.target.value)} className="form-input text-xs py-1 w-full" placeholder="e.g. 50000" /></div>
+          <div><label className="text-mid block mb-0.5">Deadline</label>
+            <input type="text" value={String(getReviewVal(grant.id,'deadline',grant.deadline ?? ''))} onChange={e=>setReviewField(grant.id,'deadline',e.target.value)} disabled={Boolean(getReviewVal(grant.id,'is_rolling',grant.is_rolling ?? false))} className="form-input text-xs py-1 w-full" placeholder="YYYY-MM-DD" /></div>
+        </div>
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mb-3">
+          <div className="flex items-center gap-2">
+            <input type="checkbox" id={`rolling-${mode}-${grant.id}`} checked={Boolean(getReviewVal(grant.id,'is_rolling',grant.is_rolling ?? false))} onChange={e=>setReviewField(grant.id,'is_rolling',e.target.checked)} className="h-3.5 w-3.5 accent-forest" />
+            <label htmlFor={`rolling-${mode}-${grant.id}`} className="text-xs text-mid cursor-pointer">Rolling deadline</label>
+          </div>
+          <div className="flex items-center gap-2">
+            <input type="checkbox" id={`invite-${mode}-${grant.id}`} checked={Boolean(getReviewVal(grant.id,'is_invite_only',grant.is_invite_only))} onChange={e=>setReviewField(grant.id,'is_invite_only',e.target.checked)} className="h-3.5 w-3.5 accent-forest" />
+            <label htmlFor={`invite-${mode}-${grant.id}`} className="text-xs text-mid cursor-pointer">Invite only</label>
+          </div>
+          <button onClick={() => detectLocation(grant)}
+            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full border border-forest/30 text-forest hover:bg-forest/10 transition-colors">
+            <MapPin className="w-3 h-3" /> Detect location
+          </button>
+        </div>
+
+        {/* Eligibility — who can apply */}
+        <div className="mt-3 pt-3 border-t border-forest/10">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-forest">Eligible structures</p>
+            <button onClick={() => detectEligibility(grant)}
+              className="flex items-center gap-1 text-xs font-semibold text-forest hover:text-sage transition-colors">
+              <Sparkles className="w-3 h-3" /> Detect
+            </button>
+          </div>
+          {(() => {
+            const current: string[] = (() => { const v = getReviewVal(grant.id,'eligible_structures',null); if(v){try{return JSON.parse(String(v))}catch{return[]}} return grant.eligible_structures??[] })()
+            return (
+              <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+                {STRUCTURE_OPTIONS.map(opt => (
+                  <label key={opt.value} className="flex items-center gap-1.5 cursor-pointer">
+                    <input type="checkbox" checked={current.includes(opt.value)} className="h-3.5 w-3.5 accent-forest"
+                      onChange={e => { const next = e.target.checked ? [...current.filter(s=>s!==opt.value),opt.value] : current.filter(s=>s!==opt.value); setReviewField(grant.id,'eligible_structures',JSON.stringify(next)) }} />
+                    <span className="text-xs text-mid">{opt.label}</span>
+                  </label>
+                ))}
+              </div>
+            )
+          })()}
+        </div>
+        <div className="flex items-center gap-3 pt-3 border-t border-forest/10">
+          <button onClick={() => enrichGrantFromManager(grant)} disabled={!!enrichingId}
+            className="flex items-center gap-1.5 rounded-full border border-forest/40 px-3 py-1.5 text-xs font-semibold text-forest hover:bg-forest/10 transition-colors disabled:opacity-40">
+            <Sparkles className="w-3 h-3" />{enrichingId === grant.id ? 'Enriching…' : grant.funder_brief ? 'Re-enrich' : 'Enrich'}
+          </button>
+          {grant.funder_brief && (
+            <>
+              <span className="text-xs text-sage font-medium">✓ Enriched</span>
+              <button onClick={() => populateFromBrief(grant)}
+                className="text-xs font-semibold text-amber-600 hover:text-amber-700 underline underline-offset-2 transition-colors">
+                Populate fields
+              </button>
+            </>
+          )}
+          {reviewEnrichError[grant.id] && (
+            <span className="text-xs text-red-500">{reviewEnrichError[grant.id]}</span>
+          )}
+          <button onClick={() => setReviewSourcesOpen(o => ({ ...o, [grant.id]: !o[grant.id] }))}
+            className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold border rounded-full transition-colors"
+            style={{ borderColor: reviewSourcesOpen[grant.id] ? '#1f5c52' : '#E8E8EC', color: reviewSourcesOpen[grant.id] ? '#1f5c52' : '#6b7280', backgroundColor: reviewSourcesOpen[grant.id] ? 'rgba(31,92,82,0.08)' : 'white' }}>
+            <BookOpen className="w-3 h-3" />
+            {(reviewSources[grant.id]?.length ?? 0) > 0 ? `${reviewSources[grant.id].length} source${reviewSources[grant.id].length > 1 ? 's' : ''}` : 'Sources'}
+          </button>
+        </div>
+        {reviewSourcesOpen[grant.id] && (
+          <div className="mt-2 p-3 rounded-lg border border-[#E8E8EC] bg-[#faf8f5] space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold text-charcoal">Additional sources</p>
+              <div className="flex items-center gap-2">
+                <button onClick={() => addReviewSource(grant.id)}
+                  className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-white rounded-full" style={{ backgroundColor: '#1f5c52' }}>
+                  <PlusCircle className="w-3 h-3" />Add source
+                </button>
+                {(reviewSources[grant.id]?.length ?? 0) > 0 && (
+                  <button onClick={() => enrichGrantFromManagerWithSources(grant, reviewSources[grant.id] ?? [])} disabled={!!enrichingId}
+                    className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-white rounded-full disabled:opacity-40" style={{ backgroundColor: '#84CC16', color: '#1A1A1A' }}>
+                    <Sparkles className="w-3 h-3" />{enrichingId === grant.id ? 'Enriching…' : 'Enrich with sources'}
+                  </button>
+                )}
+              </div>
+            </div>
+            {(reviewSources[grant.id] ?? []).length === 0 && <p className="text-xs text-light italic">Add a URL or paste content to improve enrichment quality.</p>}
+            {(reviewSources[grant.id] ?? []).map((src, idx) => (
+              <div key={idx} className="bg-white border border-[#E8E8EC] p-2 rounded-lg space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <input type="text" placeholder="Label (optional)" value={src.label} onChange={e=>updateReviewSource(grant.id,idx,'label',e.target.value)}
+                    className="flex-1 text-xs border border-[#E8E8EC] rounded px-2 py-1 outline-none focus:border-forest" />
+                  <button onClick={()=>removeReviewSource(grant.id,idx)} className="text-light hover:text-red-400 transition-colors"><X className="w-3 h-3" /></button>
+                </div>
+                <input type="url" placeholder="URL (fetched automatically)" value={src.url} onChange={e=>updateReviewSource(grant.id,idx,'url',e.target.value)}
+                  className="w-full text-xs border border-[#E8E8EC] rounded px-2 py-1 outline-none focus:border-forest" />
+                <textarea placeholder="Or paste content directly…" value={src.text} onChange={e=>updateReviewSource(grant.id,idx,'text',e.target.value)} rows={2}
+                  className="w-full text-xs border border-[#E8E8EC] rounded px-2 py-1 outline-none focus:border-forest resize-none" />
+              </div>
+            ))}
+          </div>
+        )}
+        {/* Funder brief preview */}
+        {grant.funder_brief && (() => {
+          const brief = grant.funder_brief as Record<string, string | null>
+          const LABELS: Record<string, string> = {
+            what_they_fund: 'What they fund',
+            who_can_apply: 'Who can apply',
+            geographic_focus: 'Geographic focus',
+            priorities: 'Priorities',
+            strong_application: 'Strong application',
+            exclusions: 'Exclusions',
+            typical_award: 'Typical award',
+            decision_timeline: 'Decision timeline',
+            funder_tips: 'Tips',
+          }
+          const entries = Object.entries(LABELS)
+            .filter(([k]) => brief[k])
+            .map(([k, label]) => ({ label, value: brief[k]! }))
+          if (entries.length === 0) return null
+          return (
+            <div className="mt-3 pt-3 border-t border-forest/10 space-y-2">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-forest">Funder intelligence</p>
+              {entries.map(({ label, value }) => (
+                <div key={label}>
+                  <p className="text-[10px] font-semibold text-mid uppercase tracking-wide">{label}</p>
+                  <p className="text-xs text-charcoal leading-relaxed">{value}</p>
+                </div>
+              ))}
+            </div>
+          )
+        })()}
+        <div className="flex items-center gap-3 pt-3 border-t border-forest/10">
+          <div className="flex-1" />
+          <button onClick={() => { setReviewEdits(s => { const n = { ...s }; delete n[grant.id]; return n }); setExpandedReviewId(null) }} className="rounded-full border border-warm px-3 py-1.5 text-xs font-semibold text-mid hover:border-charcoal transition-colors">Cancel</button>
+          {mode === 'review' ? (
+            <button onClick={() => publishReviewGrant(grant)} disabled={reviewPublishing[grant.id]}
+              className="rounded-full bg-forest px-4 py-1.5 text-xs font-semibold text-white hover:bg-sage transition-colors disabled:opacity-40">
+              {reviewPublishing[grant.id] ? 'Publishing…' : '✓ Confirm & Publish'}
+            </button>
+          ) : (
+            <button onClick={() => saveGrantEdits(grant)} disabled={reviewPublishing[grant.id]}
+              className="rounded-full bg-forest px-4 py-1.5 text-xs font-semibold text-white hover:bg-sage transition-colors disabled:opacity-40">
+              {reviewPublishing[grant.id] ? 'Saving…' : '✓ Save changes'}
+            </button>
+          )}
+        </div>
+      </div>
     )
   }
 
@@ -2361,8 +2591,8 @@ export default function UrlAdminPage() {
                         </thead>
                         <tbody className="divide-y divide-warm/60">
                           {grants.map(grant => (
-                            <tr key={`${grant.is_seed ? 'seed' : 'db'}-${grant.id}`}
-                              className="hover:bg-cream/50 transition-colors">
+                            <React.Fragment key={`${grant.is_seed ? 'seed' : 'db'}-${grant.id}`}>
+                            <tr className="hover:bg-cream/50 transition-colors">
 
                               {/* Title + funder + source badge */}
                               <td className="px-5 py-3 max-w-[220px]">
@@ -2438,6 +2668,14 @@ export default function UrlAdminPage() {
                                 )}
                               </td>
                             </tr>
+                            {!grant.is_seed && expandedReviewId === grant.id && (
+                              <tr>
+                                <td colSpan={5} className="px-0 pb-2">
+                                  {renderReviewPanel(grant, 'approved')}
+                                </td>
+                              </tr>
+                            )}
+                            </React.Fragment>
                           ))}
                         </tbody>
                       </table>
@@ -2735,167 +2973,7 @@ export default function UrlAdminPage() {
                     {expandedReviewId === grant.id && (
                       <tr>
                         <td colSpan={5} className="px-0 pb-2">
-                          <div className="mx-3 mb-1 rounded-xl border border-forest/20 bg-[#f0fdf9] p-4">
-                            <div className="flex items-center justify-between mb-3">
-                              <p className="text-[10px] font-semibold uppercase tracking-wider text-forest">Review &amp; edit before publishing</p>
-                              <button onClick={() => detectAll(grant)}
-                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-full text-white transition-colors" style={{ backgroundColor: '#1f5c52' }}>
-                                <Sparkles className="w-3 h-3" /> Detect all
-                              </button>
-                            </div>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs mb-3">
-                              <div><label className="text-mid block mb-0.5">Funder type</label>
-                                <select value={String(getReviewVal(grant.id,'funder_type',grant.funder_type??'') )} onChange={e=>setReviewField(grant.id,'funder_type',e.target.value)} className="form-select text-xs py-1 w-full">
-                                  {['trust_foundation','community_foundation','corporate_foundation','local_authority','corporate','lottery','government','capacity_builder','competition','loan','other'].map(v=><option key={v} value={v}>{v.replace(/_/g,' ').replace(/\w/g,c=>c.toUpperCase())}</option>)}
-                                </select></div>
-                              <div><label className="text-mid block mb-0.5">Funding type</label>
-                                <select value={String(getReviewVal(grant.id,'funding_type',(grant as Grant & {funding_type?:string}).funding_type??'grant'))} onChange={e=>setReviewField(grant.id,'funding_type',e.target.value)} className="form-select text-xs py-1 w-full">
-                                  {['grant','programme','investment','in_kind'].map(v=><option key={v} value={v}>{v.replace(/_/g,' ').replace(/\w/g,c=>c.toUpperCase())}</option>)}
-                                </select></div>
-                              <div><label className="text-mid block mb-0.5">Location tag</label>
-                                <input type="text" value={String(getReviewVal(grant.id,'location_tag',(grant as Grant & {location_tag?:string|null}).location_tag ?? ''))} onChange={e=>setReviewField(grant.id,'location_tag',e.target.value)} className="form-input text-xs py-1 w-full" placeholder="e.g. UK, London, Sussex" /></div>
-                              <div><label className="text-mid block mb-0.5">Amount min (£)</label>
-                                <input type="number" value={String(getReviewVal(grant.id,'amount_min',(grant as Grant & {amount_min?:number|null}).amount_min ?? ''))} onChange={e=>setReviewField(grant.id,'amount_min',e.target.value)} className="form-input text-xs py-1 w-full" placeholder="e.g. 5000" /></div>
-                              <div><label className="text-mid block mb-0.5">Amount max (£)</label>
-                                <input type="number" value={String(getReviewVal(grant.id,'amount_max',(grant as Grant & {amount_max?:number|null}).amount_max ?? ''))} onChange={e=>setReviewField(grant.id,'amount_max',e.target.value)} className="form-input text-xs py-1 w-full" placeholder="e.g. 50000" /></div>
-                              <div><label className="text-mid block mb-0.5">Deadline</label>
-                                <input type="text" value={String(getReviewVal(grant.id,'deadline',(grant as Grant & {deadline?:string|null}).deadline ?? ''))} onChange={e=>setReviewField(grant.id,'deadline',e.target.value)} disabled={Boolean(getReviewVal(grant.id,'is_rolling',false))} className="form-input text-xs py-1 w-full" placeholder="YYYY-MM-DD" /></div>
-                            </div>
-                            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mb-3">
-                              <div className="flex items-center gap-2">
-                                <input type="checkbox" id={`rolling-${grant.id}`} checked={Boolean(getReviewVal(grant.id,'is_rolling',false))} onChange={e=>setReviewField(grant.id,'is_rolling',e.target.checked)} className="h-3.5 w-3.5 accent-forest" />
-                                <label htmlFor={`rolling-${grant.id}`} className="text-xs text-mid cursor-pointer">Rolling deadline</label>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <input type="checkbox" id={`invite-${grant.id}`} checked={Boolean(getReviewVal(grant.id,'is_invite_only',grant.is_invite_only))} onChange={e=>setReviewField(grant.id,'is_invite_only',e.target.checked)} className="h-3.5 w-3.5 accent-forest" />
-                                <label htmlFor={`invite-${grant.id}`} className="text-xs text-mid cursor-pointer">Invite only</label>
-                              </div>
-                              <button onClick={() => detectLocation(grant)}
-                                className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full border border-forest/30 text-forest hover:bg-forest/10 transition-colors">
-                                <MapPin className="w-3 h-3" /> Detect location
-                              </button>
-                            </div>
-
-                            {/* Eligibility — who can apply */}
-                            <div className="mt-3 pt-3 border-t border-forest/10">
-                              <div className="flex items-center justify-between mb-2">
-                                <p className="text-[10px] font-semibold uppercase tracking-wider text-forest">Eligible structures</p>
-                                <button onClick={() => detectEligibility(grant)}
-                                  className="flex items-center gap-1 text-xs font-semibold text-forest hover:text-sage transition-colors">
-                                  <Sparkles className="w-3 h-3" /> Detect
-                                </button>
-                              </div>
-                              {(() => {
-                                const current: string[] = (() => { const v = getReviewVal(grant.id,'eligible_structures',null); if(v){try{return JSON.parse(String(v))}catch{return[]}} return (grant as Grant & {eligible_structures?:string[]}).eligible_structures??[] })()
-                                return (
-                                  <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-                                    {STRUCTURE_OPTIONS.map(opt => (
-                                      <label key={opt.value} className="flex items-center gap-1.5 cursor-pointer">
-                                        <input type="checkbox" checked={current.includes(opt.value)} className="h-3.5 w-3.5 accent-forest"
-                                          onChange={e => { const next = e.target.checked ? [...current.filter(s=>s!==opt.value),opt.value] : current.filter(s=>s!==opt.value); setReviewField(grant.id,'eligible_structures',JSON.stringify(next)) }} />
-                                        <span className="text-xs text-mid">{opt.label}</span>
-                                      </label>
-                                    ))}
-                                  </div>
-                                )
-                              })()}
-                            </div>
-                            <div className="flex items-center gap-3 pt-3 border-t border-forest/10">
-                              <button onClick={() => enrichGrantFromManager(grant)} disabled={!!enrichingId}
-                                className="flex items-center gap-1.5 rounded-full border border-forest/40 px-3 py-1.5 text-xs font-semibold text-forest hover:bg-forest/10 transition-colors disabled:opacity-40">
-                                <Sparkles className="w-3 h-3" />{enrichingId === grant.id ? 'Enriching…' : grant.funder_brief ? 'Re-enrich' : 'Enrich'}
-                              </button>
-                              {grant.funder_brief && (
-                                <>
-                                  <span className="text-xs text-sage font-medium">✓ Enriched</span>
-                                  <button onClick={() => populateFromBrief(grant)}
-                                    className="text-xs font-semibold text-amber-600 hover:text-amber-700 underline underline-offset-2 transition-colors">
-                                    Populate fields
-                                  </button>
-                                </>
-                              )}
-                              {reviewEnrichError[grant.id] && (
-                                <span className="text-xs text-red-500">{reviewEnrichError[grant.id]}</span>
-                              )}
-                              <button onClick={() => setReviewSourcesOpen(o => ({ ...o, [grant.id]: !o[grant.id] }))}
-                                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold border rounded-full transition-colors"
-                                style={{ borderColor: reviewSourcesOpen[grant.id] ? '#1f5c52' : '#E8E8EC', color: reviewSourcesOpen[grant.id] ? '#1f5c52' : '#6b7280', backgroundColor: reviewSourcesOpen[grant.id] ? 'rgba(31,92,82,0.08)' : 'white' }}>
-                                <BookOpen className="w-3 h-3" />
-                                {(reviewSources[grant.id]?.length ?? 0) > 0 ? `${reviewSources[grant.id].length} source${reviewSources[grant.id].length > 1 ? 's' : ''}` : 'Sources'}
-                              </button>
-                            </div>
-                            {reviewSourcesOpen[grant.id] && (
-                              <div className="mt-2 p-3 rounded-lg border border-[#E8E8EC] bg-[#faf8f5] space-y-2">
-                                <div className="flex items-center justify-between">
-                                  <p className="text-xs font-semibold text-charcoal">Additional sources</p>
-                                  <div className="flex items-center gap-2">
-                                    <button onClick={() => addReviewSource(grant.id)}
-                                      className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-white rounded-full" style={{ backgroundColor: '#1f5c52' }}>
-                                      <PlusCircle className="w-3 h-3" />Add source
-                                    </button>
-                                    {(reviewSources[grant.id]?.length ?? 0) > 0 && (
-                                      <button onClick={() => enrichGrantFromManagerWithSources(grant, reviewSources[grant.id] ?? [])} disabled={!!enrichingId}
-                                        className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-white rounded-full disabled:opacity-40" style={{ backgroundColor: '#84CC16', color: '#1A1A1A' }}>
-                                        <Sparkles className="w-3 h-3" />{enrichingId === grant.id ? 'Enriching…' : 'Enrich with sources'}
-                                      </button>
-                                    )}
-                                  </div>
-                                </div>
-                                {(reviewSources[grant.id] ?? []).length === 0 && <p className="text-xs text-light italic">Add a URL or paste content to improve enrichment quality.</p>}
-                                {(reviewSources[grant.id] ?? []).map((src, idx) => (
-                                  <div key={idx} className="bg-white border border-[#E8E8EC] p-2 rounded-lg space-y-1.5">
-                                    <div className="flex items-center gap-2">
-                                      <input type="text" placeholder="Label (optional)" value={src.label} onChange={e=>updateReviewSource(grant.id,idx,'label',e.target.value)}
-                                        className="flex-1 text-xs border border-[#E8E8EC] rounded px-2 py-1 outline-none focus:border-forest" />
-                                      <button onClick={()=>removeReviewSource(grant.id,idx)} className="text-light hover:text-red-400 transition-colors"><X className="w-3 h-3" /></button>
-                                    </div>
-                                    <input type="url" placeholder="URL (fetched automatically)" value={src.url} onChange={e=>updateReviewSource(grant.id,idx,'url',e.target.value)}
-                                      className="w-full text-xs border border-[#E8E8EC] rounded px-2 py-1 outline-none focus:border-forest" />
-                                    <textarea placeholder="Or paste content directly…" value={src.text} onChange={e=>updateReviewSource(grant.id,idx,'text',e.target.value)} rows={2}
-                                      className="w-full text-xs border border-[#E8E8EC] rounded px-2 py-1 outline-none focus:border-forest resize-none" />
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                            {/* Funder brief preview */}
-                            {grant.funder_brief && (() => {
-                              const brief = grant.funder_brief as Record<string, string | null>
-                              const LABELS: Record<string, string> = {
-                                what_they_fund: 'What they fund',
-                                who_can_apply: 'Who can apply',
-                                geographic_focus: 'Geographic focus',
-                                priorities: 'Priorities',
-                                strong_application: 'Strong application',
-                                exclusions: 'Exclusions',
-                                typical_award: 'Typical award',
-                                decision_timeline: 'Decision timeline',
-                                funder_tips: 'Tips',
-                              }
-                              const entries = Object.entries(LABELS)
-                                .filter(([k]) => brief[k])
-                                .map(([k, label]) => ({ label, value: brief[k]! }))
-                              if (entries.length === 0) return null
-                              return (
-                                <div className="mt-3 pt-3 border-t border-forest/10 space-y-2">
-                                  <p className="text-[10px] font-semibold uppercase tracking-wider text-forest">Funder intelligence</p>
-                                  {entries.map(({ label, value }) => (
-                                    <div key={label}>
-                                      <p className="text-[10px] font-semibold text-mid uppercase tracking-wide">{label}</p>
-                                      <p className="text-xs text-charcoal leading-relaxed">{value}</p>
-                                    </div>
-                                  ))}
-                                </div>
-                              )
-                            })()}
-                            <div className="flex items-center gap-3 pt-3 border-t border-forest/10">
-                              <div className="flex-1" />
-                              <button onClick={() => setExpandedReviewId(null)} className="rounded-full border border-warm px-3 py-1.5 text-xs font-semibold text-mid hover:border-charcoal transition-colors">Cancel</button>
-                              <button onClick={() => publishReviewGrant(grant)} disabled={reviewPublishing[grant.id]}
-                                className="rounded-full bg-forest px-4 py-1.5 text-xs font-semibold text-white hover:bg-sage transition-colors disabled:opacity-40">
-                                {reviewPublishing[grant.id] ? 'Publishing…' : '✓ Confirm & Publish'}
-                              </button>
-                            </div>
-                          </div>
+                          {renderReviewPanel(grant, 'review')}
                         </td>
                       </tr>
                     )}
