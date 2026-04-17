@@ -1499,6 +1499,48 @@ export default function UrlAdminPage() {
     if (/\bnorthern ireland\b/.test(text)) { setReviewField(grant.id, 'location_tag', 'Northern Ireland'); return }
     if (/\bengland\b|\benglish\b/.test(text) && !/uk|united kingdom/.test(text)) { setReviewField(grant.id, 'location_tag', 'England'); return }
 
+    // London boroughs — check BEFORE generic 'London' so a Camden-specific
+    // grant tags as 'Camden', not 'London'. Match whole words / borough phrases
+    // ("London Borough of Camden", "in Camden", "Camden residents only" etc).
+    const LONDON_BOROUGHS: [RegExp, string][] = [
+      [/\bbarking\s*(?:&|and)\s*dagenham\b|\bbarking\b|\bdagenham\b/, 'Barking & Dagenham'],
+      [/\bbarnet\b/, 'Barnet'],
+      [/\bbexley\b/, 'Bexley'],
+      [/\bbrent\b/, 'Brent'],
+      [/\bbromley\b/, 'Bromley'],
+      [/\bcamden\b/, 'Camden'],
+      [/\bcroydon\b/, 'Croydon'],
+      [/\bealing\b/, 'Ealing'],
+      [/\benfield\b/, 'Enfield'],
+      [/\bgreenwich\b/, 'Greenwich'],
+      [/\bhackney\b/, 'Hackney'],
+      [/\bhammersmith\s*(?:&|and)\s*fulham\b|\bhammersmith\b|\bfulham\b/, 'Hammersmith & Fulham'],
+      [/\bharingey\b/, 'Haringey'],
+      [/\bharrow\b/, 'Harrow'],
+      [/\bhavering\b/, 'Havering'],
+      [/\bhillingdon\b/, 'Hillingdon'],
+      [/\bhounslow\b/, 'Hounslow'],
+      [/\bislington\b/, 'Islington'],
+      [/\bkensington\s*(?:&|and)\s*chelsea\b|\brbkc\b|\bkensington\b|\bchelsea\b/, 'Kensington & Chelsea'],
+      [/\bkingston\s+upon\s+thames\b|\bkingston\b/, 'Kingston upon Thames'],
+      [/\blambeth\b/, 'Lambeth'],
+      [/\blewisham\b/, 'Lewisham'],
+      [/\bmerton\b/, 'Merton'],
+      [/\bnewham\b/, 'Newham'],
+      [/\bredbridge\b/, 'Redbridge'],
+      [/\brichmond\s+upon\s+thames\b|\brichmond\b/, 'Richmond upon Thames'],
+      [/\bsouthwark\b/, 'Southwark'],
+      [/\bsutton\b/, 'Sutton'],
+      [/\btower\s+hamlets\b/, 'Tower Hamlets'],
+      [/\bwaltham\s+forest\b/, 'Waltham Forest'],
+      [/\bwandsworth\b/, 'Wandsworth'],
+      [/\bwestminster\b/, 'Westminster'],
+      [/\bcity\s+of\s+london\b/, 'City of London'],
+    ]
+    for (const [re, label] of LONDON_BOROUGHS) {
+      if (re.test(text)) { setReviewField(grant.id, 'location_tag', label); return }
+    }
+
     // Major UK cities / regions
     const REGIONS: [RegExp, string][] = [
       [/\blondon\b/, 'London'],
