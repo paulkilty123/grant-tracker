@@ -1493,6 +1493,9 @@ export default function UrlAdminPage() {
       grant.apply_url ?? '',
     ].join(' ').toLowerCase()
 
+    // eslint-disable-next-line no-console
+    console.log('[detectLocation] v3-boroughs', { id: grant.id, title: grant.title, text: text.slice(0, 400), hasBrief: !!brief, geographicFocus: brief?.geographic_focus })
+
     // UK nations — check first (most specific)
     if (/\bscotland\b|\bscottish\b/.test(text)) { setReviewField(grant.id, 'location_tag', 'Scotland'); return }
     if (/\bwales\b|\bwelsh\b|\bcymru\b/.test(text)) { setReviewField(grant.id, 'location_tag', 'Wales'); return }
@@ -1538,7 +1541,11 @@ export default function UrlAdminPage() {
       [/\bcity\s+of\s+london\b/, 'City of London'],
     ]
     for (const [re, label] of LONDON_BOROUGHS) {
-      if (re.test(text)) { setReviewField(grant.id, 'location_tag', label); return }
+      if (re.test(text)) {
+        // eslint-disable-next-line no-console
+        console.log('[detectLocation] matched borough', label, 're:', re.toString())
+        setReviewField(grant.id, 'location_tag', label); return
+      }
     }
 
     // Major UK cities / regions
@@ -1572,7 +1579,11 @@ export default function UrlAdminPage() {
       [/\bsouth west\b|\bcornwall\b|\bdevon\b|\bsomerset\b/, 'South West England'],
     ]
     for (const [re, label] of REGIONS) {
-      if (re.test(text)) { setReviewField(grant.id, 'location_tag', label); return }
+      if (re.test(text)) {
+        // eslint-disable-next-line no-console
+        console.log('[detectLocation] matched region', label, 're:', re.toString())
+        setReviewField(grant.id, 'location_tag', label); return
+      }
     }
 
     // UK-wide signals
