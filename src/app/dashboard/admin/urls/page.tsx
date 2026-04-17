@@ -1410,6 +1410,25 @@ export default function UrlAdminPage() {
     // (safe to use bare dates since this field is specifically about the decision timeline)
     if (!getReviewVal(grant.id,'deadline',null)) {
       const months: Record<string,string> = { jan:'01',feb:'02',mar:'03',apr:'04',may:'05',jun:'06',jul:'07',aug:'08',sep:'09',oct:'10',nov:'11',dec:'12' }
+
+      // Multi-round list: e.g. '2026 deadlines are: 27 February, 1 May, 6 July...'
+      // Grabs the LAST date (keeps grant visible through all rounds) + sets is_rolling.
+      const deadlineListRe = /(\d{4})\s+deadlines?\s*(?:are|for)?[^:]*:\s*([\d\w\s,]+)/i
+      const mList = timelineText.match(deadlineListRe)
+      if (mList) {
+        const yr = mList[1]
+        const listPart = mList[2]
+        const dateEntries = [...listPart.matchAll(/(\d{1,2})(?:st|nd|rd|th)?\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*/gi)]
+        if (dateEntries.length > 0) {
+          const last = dateEntries[dateEntries.length - 1]
+          const day = last[1].padStart(2,'0')
+          const mon = months[last[2].toLowerCase().slice(0,3)] ?? '01'
+          updates.deadline = `${yr}-${mon}-${day}`
+          updates.is_rolling = true
+        }
+      }
+
+      if (!updates.deadline) {
       // Keyword + DD Month YYYY (with optional ordinal suffix: 1st, 2nd, 3rd, 4th...)
       const closeReEU = /(?:clos(?:e|es|ing)|deadline|apply by|applications? (?:close|due))[^.]*?(\d{1,2})(?:st|nd|rd|th)?\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+(\d{4})/i
       // Keyword + Month DD YYYY (US style, with optional ordinal suffix)
@@ -1454,6 +1473,7 @@ export default function UrlAdminPage() {
           updates.deadline = `${yr}-${mon}-${String(lastDay).padStart(2,'0')}`
           updates.is_rolling = false
         }
+      }
       }
     }
     if (Object.keys(updates).length > 0) {
