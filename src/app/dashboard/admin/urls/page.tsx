@@ -1494,7 +1494,7 @@ export default function UrlAdminPage() {
     ].join(' ').toLowerCase()
 
     // eslint-disable-next-line no-console
-    console.log('[detectLocation] v3-boroughs', { id: grant.id, title: grant.title, text: text.slice(0, 400), hasBrief: !!brief, geographicFocus: brief?.geographic_focus })
+    console.warn('[detectLocation] v3-boroughs', { id: grant.id, title: grant.title, text: text.slice(0, 400), hasBrief: !!brief, geographicFocus: brief?.geographic_focus })
 
     // UK nations — check first (most specific)
     if (/\bscotland\b|\bscottish\b/.test(text)) { setReviewField(grant.id, 'location_tag', 'Scotland'); return }
@@ -1543,7 +1543,7 @@ export default function UrlAdminPage() {
     for (const [re, label] of LONDON_BOROUGHS) {
       if (re.test(text)) {
         // eslint-disable-next-line no-console
-        console.log('[detectLocation] matched borough', label, 're:', re.toString())
+        console.warn('[detectLocation] matched borough', label, 're:', re.toString())
         setReviewField(grant.id, 'location_tag', label); return
       }
     }
@@ -1581,7 +1581,7 @@ export default function UrlAdminPage() {
     for (const [re, label] of REGIONS) {
       if (re.test(text)) {
         // eslint-disable-next-line no-console
-        console.log('[detectLocation] matched region', label, 're:', re.toString())
+        console.warn('[detectLocation] matched region', label, 're:', re.toString())
         setReviewField(grant.id, 'location_tag', label); return
       }
     }
