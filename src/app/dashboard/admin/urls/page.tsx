@@ -893,19 +893,20 @@ export default function UrlAdminPage() {
   }
 
   // ── Soft delete ───────────────────────────────────────────────────────────────
-  async function removeGrant(id: string) {
-    // For review grants (already is_active: false), set url_status to 'dead'
-    // so they don't reappear in the review queue next time
-    if (filter === 'review') {
-      await updateGrant(id, { url_status: 'dead' })
-      setReviewGrants(prev => prev.filter(g => g.id !== id))
+  // mode 'dead'   → url_status='dead' + is_active=false → permanent hide (won't resurface in Needs Review)
+  // mode 'review' → is_active=false only → moves grant to Needs Review for re-triage
+  // Review-tab 'Hide' always implies 'dead' so the row doesn't come back next load.
+  async function removeGrant(id: string, mode: 'dead' | 'review' = 'dead') {
+    if (filter === 'review' || mode === 'dead') {
+      await updateGrant(id, { url_status: 'dead', is_active: false })
     } else {
       await updateGrant(id, { is_active: false })
-      setGrants(prev => prev.filter(g => g.id !== id))
-      setNewGrants(prev => prev.filter(g => g.id !== id))
-      setCategoryGrants(prev => prev.filter(g => g.id !== id))
-      setSuspiciousGrants(prev => prev.filter(g => g.id !== id))
     }
+    setReviewGrants(prev => prev.filter(g => g.id !== id))
+    setGrants(prev => prev.filter(g => g.id !== id))
+    setNewGrants(prev => prev.filter(g => g.id !== id))
+    setCategoryGrants(prev => prev.filter(g => g.id !== id))
+    setSuspiciousGrants(prev => prev.filter(g => g.id !== id))
     setConfirmDeleteId(null)
     await loadStats()
   }
@@ -1742,10 +1743,16 @@ export default function UrlAdminPage() {
     return confirmDeleteId === grant.id ? (
       <div className="flex items-center justify-end gap-1.5">
         <span className="text-xs text-red-500 font-medium mr-1">Remove?</span>
-        <button onClick={() => removeGrant(grant.id)} className="rounded-full bg-red-500 p-1.5 text-white hover:bg-red-600 transition-colors">
-          <Check className="h-3 w-3" />
+        <button onClick={() => removeGrant(grant.id, 'dead')} title="Remove completely (permanent)"
+          className="rounded-full bg-red-500 p-1.5 text-white hover:bg-red-600 transition-colors">
+          <Trash2 className="h-3 w-3" />
         </button>
-        <button onClick={() => setConfirmDeleteId(null)} className="rounded-full border border-warm p-1.5 text-mid hover:border-forest hover:text-forest transition-colors">
+        <button onClick={() => removeGrant(grant.id, 'review')} title="Send back to Needs Review"
+          className="rounded-full bg-amber-500 p-1.5 text-white hover:bg-amber-600 transition-colors">
+          <Clock className="h-3 w-3" />
+        </button>
+        <button onClick={() => setConfirmDeleteId(null)} title="Cancel"
+          className="rounded-full border border-warm p-1.5 text-mid hover:border-forest hover:text-forest transition-colors">
           <X className="h-3 w-3" />
         </button>
       </div>
@@ -2899,10 +2906,16 @@ export default function UrlAdminPage() {
                       {confirmDeleteId === grant.id ? (
                         <div className="flex items-center justify-end gap-1.5">
                           <span className="text-xs text-red-500 font-medium mr-1">Remove?</span>
-                          <button onClick={() => removeGrant(grant.id)} className="rounded-full bg-red-500 p-1.5 text-white hover:bg-red-600 transition-colors">
-                            <Check className="h-3 w-3" />
+                          <button onClick={() => removeGrant(grant.id, 'dead')} title="Remove completely (permanent)"
+                            className="rounded-full bg-red-500 p-1.5 text-white hover:bg-red-600 transition-colors">
+                            <Trash2 className="h-3 w-3" />
                           </button>
-                          <button onClick={() => setConfirmDeleteId(null)} className="rounded-full border border-warm p-1.5 text-mid hover:border-forest hover:text-forest transition-colors">
+                          <button onClick={() => removeGrant(grant.id, 'review')} title="Send back to Needs Review"
+                            className="rounded-full bg-amber-500 p-1.5 text-white hover:bg-amber-600 transition-colors">
+                            <Clock className="h-3 w-3" />
+                          </button>
+                          <button onClick={() => setConfirmDeleteId(null)} title="Cancel"
+                            className="rounded-full border border-warm p-1.5 text-mid hover:border-forest hover:text-forest transition-colors">
                             <X className="h-3 w-3" />
                           </button>
                         </div>
