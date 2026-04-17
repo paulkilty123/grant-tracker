@@ -3122,6 +3122,7 @@ export default function UrlAdminPage() {
                 </thead>
                 <tbody className="divide-y divide-warm/60">
                   {grants.map(grant => (
+                    <React.Fragment key={grant.id}>
                     <tr className={`hover:bg-cream/50 transition-colors ${selectedIds.has(grant.id) ? 'bg-red-50' : ''}`}>
                       <td className="px-3 py-3 w-8">
                         <input type="checkbox" checked={selectedIds.has(grant.id)} onChange={() => toggleSelect(grant.id)}
@@ -3156,6 +3157,14 @@ export default function UrlAdminPage() {
                         <RowActions grant={grant} />
                       </td>
                     </tr>
+                    {expandedReviewId === grant.id && (
+                      <tr>
+                        <td colSpan={6} className="px-0 pb-2">
+                          {renderReviewPanel(grant, 'approved')}
+                        </td>
+                      </tr>
+                    )}
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>
