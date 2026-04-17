@@ -593,7 +593,7 @@ export default function UrlAdminPage() {
     const [{ data, error }, { data: allData }] = await Promise.all([
       createClient()
         .from('scraped_grants')
-        .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_type')
+        .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_type, funding_type, funder_brief, grant_sources, description, location_tag, amount_min, amount_max, deadline, is_rolling, eligible_structures')
         .eq('is_active', true)
         .order('funder', { ascending: true, nullsFirst: false })
         .limit(5000),
@@ -1911,13 +1911,9 @@ export default function UrlAdminPage() {
         <button
           onClick={() => setExpandedReviewId(id => id === grant.id ? null : grant.id)}
           title="Review & edit fields (location, amounts, eligibility…)"
-          className={`rounded-full border p-1.5 transition-colors ${
-            expandedReviewId === grant.id
-              ? 'border-forest bg-forest/10 text-forest'
-              : 'border-warm text-mid hover:border-forest hover:text-forest'
-          }`}
+          className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${expandedReviewId === grant.id ? 'bg-forest text-white' : 'bg-forest/10 text-forest hover:bg-forest hover:text-white'}`}
         >
-          <Sparkles className="h-3 w-3" />
+          {expandedReviewId === grant.id ? 'Close' : 'Review'}
         </button>
         {grant.url_status !== 'ok' && (
           <button onClick={() => markOk(grant.id)} title="Approve — mark URL as ok"
