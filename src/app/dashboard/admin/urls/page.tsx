@@ -1609,13 +1609,17 @@ export default function UrlAdminPage() {
     ].join(' ').toLowerCase()
     const text = primaryText.length > 30 ? primaryText : fallbackText
 
+    // Detect phrases that mean "no formal structure required" — these should
+    // not flip the charity flag on via the raw "registered charity" match below.
+    const openToAnyone = /no (?:requirement|need)\s+to\s+be\s+(?:a\s+)?(?:registered\s+)?(?:charity|formal|incorporated|organisation|organi[sz]ation|company)|not\s+required\s+to\s+be\s+(?:a\s+)?(?:registered\s+)?(?:charity|formal|incorporated|organisation|organi[sz]ation|company)|don'?t\s+(?:have\s+to\s+|need\s+to\s+)?be\s+(?:a\s+)?(?:registered\s+)?(?:charity|formal|organisation|organi[sz]ation)|any(?:one|\s+type\s+of|\s+kind\s+of)|individuals?\s+(?:and|or)\s+(?:informal|community|groups|organisations)|informal\s+groups?\s+can\s+apply/.test(text)
+
     const structs: string[] = []
-    // Charities — most common, check first
-    if (/\bcharit(y|ies|able)\b|registered charit|charities only|charity only/.test(text)) {
+    // Charities — most common, check first (but suppress if 'no requirement to be a registered charity')
+    if (/\bcharit(y|ies|able)\b|registered charit|charities only|charity only/.test(text) && !openToAnyone) {
       structs.push('registered_charity', 'cio')
     }
     // Community groups / voluntary sector = unincorporated, NOT CIC
-    if (/community group|voluntary group|voluntary organi|vcse|informal group/.test(text)) {
+    if (/community group|voluntary group|voluntary organi|vcse|informal group|resident.led group/.test(text)) {
       if (!structs.includes('unincorporated')) structs.push('unincorporated')
     }
     // CICs — only when explicitly named
@@ -1635,11 +1639,16 @@ export default function UrlAdminPage() {
     if (/ltd company|limited company|ltd by shares|trading company/.test(text)) {
       if (!structs.includes('ltd_shares')) structs.push('ltd_shares', 'ltd_guarantee')
     }
-    // Individuals
-    if (/\bindividual\b|sole trader|freelance|\bpractitioner\b/.test(text)) {
+    // Individuals (singular OR plural)
+    if (/\bindividuals?\b|sole trader|freelance|\bpractitioner\b/.test(text)) {
       structs.push('sole_trader')
     }
-    // Open to all
+    // 'No requirement to be a registered charity / formal organisation' →
+    // ticks the open set (charity, CIO, SE variants, unincorporated, sole_trader)
+    if (openToAnyone) {
+      structs.push('registered_charity', 'cio', 'cic_guarantee', 'cic_shares', 'ltd_guarantee', 'ltd_shares', 'cooperative', 'unincorporated', 'sole_trader')
+    }
+    // Open to all (existing fallback)
     if (structs.length === 0 && /open to all|any organi|any registered|all organi/.test(text)) {
       structs.push('registered_charity', 'cio', 'cic_guarantee', 'cic_shares', 'ltd_guarantee', 'ltd_shares', 'cooperative', 'unincorporated')
     }
