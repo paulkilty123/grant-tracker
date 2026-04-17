@@ -1419,7 +1419,7 @@ export default function UrlAdminPage() {
       if (mList) {
         const yr = mList[1]
         const listPart = mList[2]
-        const dateEntries = [...listPart.matchAll(/(\d{1,2})(?:st|nd|rd|th)?\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*/gi)]
+        const dateEntries = Array.from(listPart.matchAll(/(\d{1,2})(?:st|nd|rd|th)?\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*/gi))
         if (dateEntries.length > 0) {
           const last = dateEntries[dateEntries.length - 1]
           const day = last[1].padStart(2,'0')
