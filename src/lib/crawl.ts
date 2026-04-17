@@ -172,6 +172,61 @@ async function withDescriptions(grants: ScrapedGrant[], concurrency = 3): Promis
   return out
 }
 
+// ── Closed-grant detection ────────────────────────────────────────────────────
+// Used by scrapers that pull from sitemaps/listings that mix open+closed grants
+// (notably London CF's sitemap, where closed funds share the same URL namespace
+// as live ones). Mirrors the patterns in src/lib/url-validator.ts.
+const GRANT_CLOSED_PATTERNS: RegExp[] = [
+  /this\s+(grant|fund|programme|scheme|award)\s+(is\s+)?(now\s+)?closed/i,
+  /applications?\s+(are|is)?\s*(now\s+)?(closed|no longer)/i,
+  /no\s+longer\s+(accepting|taking|open\s+to|available)/i,
+  /this\s+(grant|fund|opportunity|programme)\s+has\s+(closed|ended)/i,
+  /funding\s+round\s*(has\s+)?(expired|closed|ended)/i,
+  /programme\s+has\s+(ended|closed|been\s+discontinued)/i,
+  /this\s+funding\s+(is|has)\s+(no\s+longer|been\s+closed|closed)/i,
+  /deadline\s+has\s+passed/i,
+  /grant\s+(has\s+been|was)\s+(closed|withdrawn|discontinued)/i,
+]
+
+function isClosedGrantPage(html: string): boolean {
+  // Only check the first 30KB — closed markers are usually near the top.
+  const snippet = html.slice(0, 30_000)
+  return GRANT_CLOSED_PATTERNS.some(p => p.test(snippet))
+}
+
+// Fetches a grant page and returns both a description and an open/closed flag.
+// Used by scrapers that want to filter closed grants without double-fetching.
+// Returns null on any network/parse error (caller should skip the grant).
+async function fetchGrantPageInfo(url: string): Promise<{ description: string; isClosed: boolean } | null> {
+  try {
+    const html = await fetchHtml(url)
+    const isClosed = isClosedGrantPage(html)
+    const root = parseHTML(html)
+    const SELECTORS = [
+      '.entry-content',
+      '.post-content',
+      '.elementor-widget-text-editor',
+      'article .content',
+      '.grant-description',
+      'main',
+    ]
+    let description = ''
+    for (const sel of SELECTORS) {
+      const el = root.querySelector(sel)
+      if (!el) continue
+      const paras = el.querySelectorAll('p')
+        .map(p => p.text.trim())
+        .filter(t => t.length > 40)
+      if (paras.length > 0) { description = paras.slice(0, 2).join(' ').slice(0, 600); break }
+      const text = el.text.replace(/\s+/g, ' ').trim()
+      if (text.length > 40) { description = text.slice(0, 600); break }
+    }
+    return { description, isClosed }
+  } catch {
+    return null
+  }
+}
+
 // ── Source toggle ─────────────────────────────────────────────────────────────
 // Set DISABLED_SOURCES env var to a comma-separated list of source IDs to skip.
 // e.g. DISABLED_SOURCES=lincolnshire_cf,kent_cf
@@ -1023,57 +1078,169 @@ async function crawlFoundationScotland(): Promise<CrawlResult> {
 
 // ── Source 15: London Community Foundation ────────────────────────────────────
 // The available-grants page is JS-rendered, so uses the grants section sitemap
-// (sitemaps-1-section-grants-1-sitemap.xml) as the data source.
-// Derives grant title from the URL slug (same pattern as CF Wales).
+// (sitemaps-1-section-grants-1-sitemap.xml) as the data source. The sitemap
+// contains BOTH open and closed grants, so we fetch each page and skip any
+// that match closed-grant markers (uses fetchGrantPageInfo).
+// Title is derived from the URL slug (same pattern as CF Wales).
 async function crawlLondonCF(): Promise<CrawlResult> {
   const SOURCE  = 'london_cf'
   const BASE    = 'https://londoncf.org.uk'
   const SITEMAP = `${BASE}/sitemaps-1-section-grants-1-sitemap.xml`
+  const CONCURRENCY = 3
 
   try {
-    const xml    = await fetchHtml(SITEMAP)
-    const grants: ScrapedGrant[] = []
+    const xml = await fetchHtml(SITEMAP)
 
+    // Extract candidate grant URLs from <loc> tags
+    const urls: string[] = []
     const locRe = /<loc>([^<]+)<\/loc>/g
     let match: RegExpExecArray | null
     while ((match = locRe.exec(xml)) !== null) {
       const url = match[1].trim()
       if (!url.includes('/grants/') || url.endsWith('/grants/') || url.endsWith('/grants')) continue
-
-      const slug  = url.split('/').filter(Boolean).pop() ?? ''
-      const title = slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
-
-      grants.push({
-        external_id:          `london_cf_${slug}`,
-        source:               SOURCE,
-        title,
-        funder:               'London Community Foundation',
-        funder_type:          'community_foundation',
-        description:          '',
-        amount_min:           null,
-        amount_max:           null,
-        deadline:             null,
-        is_rolling:           true,
-        is_local:             true,
-        sectors:              ['community', 'social welfare'],
-        eligibility_criteria: ['London based organisations'],
-        apply_url:            url,
-        raw_data:             { slug, url } as Record<string, unknown>,
-      })
+      urls.push(url)
     }
 
-    const enriched = await withDescriptions(grants)
-    return await upsertGrants(SOURCE, enriched)
+    // Fetch each page in small batches; keep only open grants
+    const grants: ScrapedGrant[] = []
+    for (let i = 0; i < urls.length; i += CONCURRENCY) {
+      const batch = urls.slice(i, i + CONCURRENCY)
+      const infos = await Promise.all(batch.map(u => fetchGrantPageInfo(u)))
+      for (let j = 0; j < batch.length; j++) {
+        const info = infos[j]
+        if (!info) continue                      // fetch/parse failed
+        if (info.isClosed) continue              // skip closed grants
+
+        const url   = batch[j]
+        const slug  = url.split('/').filter(Boolean).pop() ?? ''
+        const title = slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+
+        grants.push({
+          external_id:          `london_cf_${slug}`,
+          source:               SOURCE,
+          title,
+          funder:               'London Community Foundation',
+          funder_type:          'community_foundation',
+          description:          info.description,
+          amount_min:           null,
+          amount_max:           null,
+          deadline:             null,
+          is_rolling:           true,
+          is_local:             true,
+          sectors:              ['community', 'social welfare'],
+          eligibility_criteria: ['London based organisations'],
+          apply_url:            url,
+          raw_data:             { slug, url } as Record<string, unknown>,
+        })
+      }
+    }
+
+    return await upsertGrants(SOURCE, grants)
   } catch (err) {
     return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
   }
 }
 
 // ── Source 16: Sussex Community Foundation ────────────────────────────────────
-// Scrapes two pages:
-//   - /grants/how-to-apply/additional-grants/ — named fund sections (h2 headings)
-//   - /grants/how-to-apply/main-grants/       — one entry for the main programme
-// Funds don't have individual page URLs; apply_url points to the listing page.
+// Scrapes two listing pages (funds don't have individual URLs):
+//   - /grants/how-to-apply/main-grants/       → one entry for the Main Grants
+//     programme (~£1k–£10k, ~100 named funds rolled into one application;
+//     apply via a single EOI + main application form).
+//   - /grants/how-to-apply/additional-grants/ → named fund sections (h2/h3
+//     headings). Separate funds applied to individually.
+// Both apply_urls point to the listing page (no detail URLs exist).
+async function crawlSussexCF(): Promise<CrawlResult> {
+  const SOURCE = 'sussex_cf'
+  const BASE   = 'https://sussexcommunityfoundation.org'
+  const MAIN   = `${BASE}/grants/how-to-apply/main-grants/`
+  const ADD    = `${BASE}/grants/how-to-apply/additional-grants/`
+
+  try {
+    // Confirm the listing pages are reachable before emitting entries
+    const [mainHtml, addHtml] = await Promise.all([
+      fetchHtml(MAIN),
+      fetchHtml(ADD).catch(() => ''),       // additional-grants is best-effort
+    ])
+
+    const grants: ScrapedGrant[] = []
+
+    // ── Main Grants (umbrella programme) ──
+    grants.push({
+      external_id:          'sussex_cf_main_grants',
+      source:               SOURCE,
+      title:                'Sussex Community Foundation — Main Grants',
+      funder:               'Sussex Community Foundation',
+      funder_type:          'community_foundation',
+      description:          isClosedGrantPage(mainHtml)
+        ? 'Sussex Community Foundation\u2019s Main Grants programme funds voluntary and community organisations across East and West Sussex and Brighton & Hove. Awards of £1,000–£10,000 via an annual application cycle. Check the site for the current round deadline.'
+        : 'Sussex Community Foundation\u2019s Main Grants programme funds voluntary and community organisations across East and West Sussex and Brighton & Hove. Awards of £1,000–£10,000. Applicants complete a short Expression of Interest, then Sussex CF matches them to the most suitable underlying funds (100+ in total) and invites a full application.',
+      amount_min:           1000,
+      amount_max:           10000,
+      deadline:             null,
+      is_rolling:           false,
+      is_local:             true,
+      sectors:              ['community', 'social welfare'],
+      eligibility_criteria: [
+        'Voluntary or community organisation based/working in East Sussex, West Sussex or Brighton & Hove',
+        'Annual income of £2 million or less',
+        'At least three unrelated trustees/directors',
+      ],
+      apply_url:            MAIN,
+      raw_data:             { page: 'main-grants' } as Record<string, unknown>,
+    })
+
+    // ── Additional Grants (named funds, parse h2/h3 headings) ──
+    if (addHtml) {
+      try {
+        const root = parseHTML(addHtml)
+        const GENERIC_HEADINGS = new Set([
+          'additional grants', 'how to apply', 'grants', 'contact us', 'eligibility',
+          'further information', 'useful links', 'related pages', 'sign up',
+        ])
+        const seen = new Set<string>()
+        for (const el of [...root.querySelectorAll('h2'), ...root.querySelectorAll('h3')]) {
+          const text = el.text.replace(/\s+/g, ' ').trim()
+          if (!text) continue
+          const lower = text.toLowerCase()
+          if (lower.length < 6 || lower.length > 120) continue
+          if (GENERIC_HEADINGS.has(lower)) continue
+          // Heuristic: named funds typically contain "Fund", "Trust", "Foundation" or "Grant"
+          if (!/fund|trust|foundation|grant|award|programme|bursary/i.test(lower)) continue
+          if (seen.has(lower)) continue
+          seen.add(lower)
+
+          const slug = lower.replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80)
+          grants.push({
+            external_id:          `sussex_cf_${slug}`,
+            source:               SOURCE,
+            title:                `Sussex Community Foundation — ${text}`,
+            funder:               'Sussex Community Foundation',
+            funder_type:          'community_foundation',
+            description:          `${text} is one of the additional grant programmes distributed by Sussex Community Foundation alongside the main grants cycle. Administered for East Sussex, West Sussex and Brighton & Hove applicants. Check the Additional Grants page for current opening windows and guidelines.`,
+            amount_min:           null,
+            amount_max:           null,
+            deadline:             null,
+            is_rolling:           false,
+            is_local:             true,
+            sectors:              ['community', 'social welfare'],
+            eligibility_criteria: [
+              'Voluntary or community organisation based/working in East Sussex, West Sussex or Brighton & Hove',
+            ],
+            apply_url:            ADD,
+            raw_data:             { page: 'additional-grants', heading: text } as Record<string, unknown>,
+          })
+        }
+      } catch {
+        // swallow — we still have the Main Grants entry
+      }
+    }
+
+    return await upsertGrants(SOURCE, grants)
+  } catch (err) {
+    return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
+  }
+}
+
 // ── Source 17: Community Foundation for Surrey ────────────────────────────────
 // Scrapes cfsurrey.org.uk/apply — programme names are in h2 headings on the page.
 // Filters to actual grant programme headings (Main Grants Programme, Other Grant
@@ -3844,7 +4011,7 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
   const [
     govUK, tnlcf, ukri, gla, ace,
     sportEngland, heritageFund, foreverMcr, twoRidings, cfWales,
- cfNI, heartOfEngland, foundationScotland, londonCF,
+ cfNI, heartOfEngland, foundationScotland, londonCF, sussexCF,
     asdaFoundation, avivaFoundation, nationwideFoundation,
     tyneWearCF,
  bbcCiN,
@@ -3895,6 +4062,7 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
     run('heart_of_england_cf',     crawlHeartOfEnglandCF),
     run('foundation_scotland',     crawlFoundationScotland),
     run('london_cf',               crawlLondonCF),
+    run('sussex_cf',               crawlSussexCF),
     run('asda_foundation',         crawlAsdaFoundation),
     run('aviva_foundation',        crawlAvivaFoundation),
     run('nationwide_foundation',   crawlNationwideFoundation),
@@ -4002,6 +4170,7 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
     heartOfEngland.status         === 'fulfilled' ? heartOfEngland.value         : fallback('heart_of_england_cf'),
     foundationScotland.status     === 'fulfilled' ? foundationScotland.value     : fallback('foundation_scotland'),
     londonCF.status               === 'fulfilled' ? londonCF.value               : fallback('london_cf'),
+    sussexCF.status               === 'fulfilled' ? sussexCF.value               : fallback('sussex_cf'),
     asdaFoundation.status         === 'fulfilled' ? asdaFoundation.value         : fallback('asda_foundation'),
     avivaFoundation.status        === 'fulfilled' ? avivaFoundation.value        : fallback('aviva_foundation'),
     nationwideFoundation.status   === 'fulfilled' ? nationwideFoundation.value   : fallback('nationwide_foundation'),
