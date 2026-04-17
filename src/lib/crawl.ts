@@ -3923,6 +3923,7 @@ const BATCH_1_SOURCES = [
   'gov_uk', 'tnlcf', 'ukri', 'gla', 'arts_council',
   'sport_england', 'heritage_fund', 'forever_manchester', 'two_ridings_cf', 'cf_wales',
   'quartet_cf', 'cf_ni', 'heart_of_england_cf', 'foundation_scotland', 'london_cf',
+  'sussex_cf',
 ] as const
 
 const BATCH_2_SOURCES = [
