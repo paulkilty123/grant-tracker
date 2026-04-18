@@ -48,26 +48,26 @@ const audiences = [
   {
     title: 'CICs & Social Enterprises',
     desc: "Most funding databases were built with registered charities in mind. If you're a CIC or trading social enterprise, Grant Tracker matches funding to your legal structure and filters out grants you're not eligible to apply for.",
-    Icon: Shield, iconColor: '#2d8a7a', numberColor: 'rgba(45,138,122,0.18)', badgeBg: 'rgba(45,138,122,0.10)', badgeColor: '#1f5c52',
-    decoBg: 'rgba(45,138,122,0.07)',
+    Icon: Shield, iconColor: '#639922', numberColor: 'rgba(99,153,34,0.18)', badgeBg: 'rgba(99,153,34,0.10)', badgeColor: '#173404',
+    decoBg: 'rgba(99,153,34,0.07)',
   },
   {
     title: 'Charities & CIOs',
     desc: "Trusts, foundations, lottery and government programmes matched to your cause, size and geography. Results are filtered to what your organisation can actually apply for.",
-    Icon: Landmark, iconColor: '#446900', numberColor: 'rgba(132,204,22,0.22)', badgeBg: 'rgba(148,207,53,0.15)', badgeColor: '#446900',
+    Icon: Landmark, iconColor: '#639922', numberColor: 'rgba(132,204,22,0.22)', badgeBg: 'rgba(148,207,53,0.15)', badgeColor: '#639922',
     decoBg: 'rgba(148,207,53,0.07)',
   },
   {
     title: 'Co-operatives & Community Groups',
     desc: "Whether you're worker-led, community-owned or unincorporated, funding is matched to how your organisation is set up, not just what you do.",
-    Icon: TreePine, iconColor: '#c2410c', numberColor: 'rgba(194,65,12,0.18)', badgeBg: 'rgba(251,146,60,0.12)', badgeColor: '#c2410c',
+    Icon: TreePine, iconColor: '#993C1D', numberColor: 'rgba(194,65,12,0.18)', badgeBg: 'rgba(251,146,60,0.12)', badgeColor: '#993C1D',
     decoBg: 'rgba(251,146,60,0.07)',
   },
   {
     title: 'Impact Founders',
     desc: "Early-stage, pre-revenue or working as an individual. Accelerators, fellowships and awards matched to your sector, stage and team.",
-    Icon: Lightbulb, iconColor: '#7c3aed', numberColor: 'rgba(124,58,237,0.18)', badgeBg: 'rgba(167,139,250,0.15)', badgeColor: '#7c3aed',
-    decoBg: 'rgba(167,139,250,0.08)',
+    Icon: Lightbulb, iconColor: '#BA7517', numberColor: 'rgba(186,117,23,0.18)', badgeBg: 'rgba(250,199,117,0.15)', badgeColor: '#BA7517',
+    decoBg: 'rgba(250,199,117,0.08)',
   },
 ]
 
@@ -120,7 +120,7 @@ const SearchMockup = () => (
       </div>
       <p className="text-[11px] font-bold text-charcoal uppercase tracking-wider">Search</p>
     </div>
-    <div className="flex items-center gap-2 bg-[#f5f2ed] px-3 py-2.5 mb-4 border border-warm/40">
+    <div className="flex items-center gap-2 bg-[#F5F1E8] px-3 py-2.5 mb-4 border border-warm/40">
       <Search size={14} className="text-mid flex-shrink-0" />
       <span className="text-sm text-mid flex-1">Community garden project in South London</span>
       <span className="bg-forest px-3 py-1 text-xs font-medium text-white">Search</span>
@@ -142,7 +142,7 @@ const SearchMockup = () => (
           <div className="flex items-center justify-between gap-3">
             <div className="flex gap-1.5 flex-wrap">
               {r.tags.map((tag) => (
-                <span key={tag} className="bg-[#f5f2ed] px-2 py-0.5 text-[11px] text-mid">{tag}</span>
+                <span key={tag} className="bg-[#F5F1E8] px-2 py-0.5 text-[11px] text-mid">{tag}</span>
               ))}
             </div>
             <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -174,7 +174,7 @@ const PipelineMockup = () => (
           <div className="mb-2 text-center font-medium text-mid uppercase tracking-wider">{col.name}</div>
           <div className="space-y-2">
             {Array.from({ length: col.items }).map((_, i) => (
-              <div key={i} className="bg-[#f5f2ed] p-2.5">
+              <div key={i} className="bg-[#F5F1E8] p-2.5">
                 <div className="h-2 w-3/4 bg-charcoal/10" />
                 <div className="mt-1.5 h-1.5 w-1/2 bg-charcoal/5" />
               </div>
@@ -183,7 +183,7 @@ const PipelineMockup = () => (
         </div>
       ))}
     </div>
-    <div className="bg-[#f5f2ed] border border-warm/60 p-3.5">
+    <div className="bg-[#F5F1E8] border border-warm/60 p-3.5">
       <div className="flex items-center justify-between mb-2">
         <div>
           <p className="text-[10px] text-mid">Paul Hamlyn Foundation</p>
@@ -214,7 +214,7 @@ const DashboardMockup = () => (
         { label: 'Active', value: '7', Icon: Activity, accent: false },
         { label: 'Due this week', value: '2', Icon: Clock, accent: false },
       ].map((s) => (
-        <div key={s.label} className={`p-3 ${s.accent ? 'bg-forest/8 border border-forest/20' : 'bg-[#f5f2ed]'}`} style={s.accent ? { background: 'rgba(45,107,74,0.08)' } : {}}>
+        <div key={s.label} className={`p-3 ${s.accent ? 'bg-forest/8 border border-forest/20' : 'bg-[#F5F1E8]'}`} style={s.accent ? { background: 'rgba(45,107,74,0.08)' } : {}}>
           <s.Icon size={14} className={`${s.accent ? 'text-forest' : 'text-mid'} mb-1.5`} />
           <p className={`text-lg font-bold leading-tight ${s.accent ? 'text-forest' : 'text-charcoal'}`}>{s.value}</p>
           <p className="text-[10px] text-mid mt-0.5">{s.label}</p>
@@ -231,7 +231,7 @@ const DashboardMockup = () => (
         <span>Identified</span><span>Applying</span><span>Submitted</span><span>Awarded</span>
       </div>
     </div>
-    <div className="bg-[#f5f2ed] border border-warm/60 p-3.5">
+    <div className="bg-[#F5F1E8] border border-warm/60 p-3.5">
       <div className="flex items-center gap-1.5 mb-2.5">
         <Calendar size={12} className="text-mid" />
         <p className="text-[11px] font-bold text-charcoal uppercase tracking-wider">Upcoming deadlines</p>
@@ -334,7 +334,7 @@ export default function LandingPage() {
       >
         <div className="flex items-center justify-between px-6 md:px-8 py-5 max-w-7xl mx-auto">
           {/* Logo */}
-          <a href="/" className="text-2xl font-bold text-[#1A1A1A] tracking-tight no-underline" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>
+          <a href="/" className="text-2xl font-bold text-[#2C2C2A] tracking-tight no-underline" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>
             GrantTracker
           </a>
           {/* Desktop nav */}
@@ -349,8 +349,8 @@ export default function LandingPage() {
                   className="font-medium text-base transition-colors pb-1"
                   style={{
                     fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif',
-                    color: isActive ? '#1A1A1A' : '#525252',
-                    borderBottom: isActive ? '2px solid #84CC16' : '2px solid transparent',
+                    color: isActive ? '#2C2C2A' : '#5F5E5A',
+                    borderBottom: isActive ? '2px solid #8ECB3C' : '2px solid transparent',
                     transition: 'color 0.2s, border-color 0.2s',
                   }}
                 >
@@ -361,17 +361,17 @@ export default function LandingPage() {
           </nav>
           {/* Desktop CTAs */}
           <div className="hidden md:flex items-center gap-8">
-            <Link href="/auth/login" className="text-[#1A1A1A] font-semibold text-base hover:opacity-80 transition-opacity no-underline" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>
+            <Link href="/auth/login" className="text-[#2C2C2A] font-semibold text-base hover:opacity-80 transition-opacity no-underline" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>
               Sign in
             </Link>
-            <Link href="/auth/signup" className="bg-[#84CC16] text-[#1A1A1A] px-8 py-3 rounded-full font-bold text-base hover:opacity-90 transition-all no-underline">
+            <Link href="/auth/signup" className="bg-[#8ECB3C] text-[#2C2C2A] px-8 py-3 rounded-full font-bold text-base hover:opacity-90 transition-all no-underline">
               Get Started
             </Link>
           </div>
           {/* Mobile */}
           <div className="flex md:hidden items-center gap-3">
-            <Link href="/auth/signup" className="bg-[#84CC16] text-[#1A1A1A] px-4 py-2 rounded-full text-sm font-bold hover:opacity-90 transition-all no-underline">Get started</Link>
-            <button onClick={() => setMobileOpen(o => !o)} className="p-1 text-[#1A1A1A]" aria-label="Toggle menu">
+            <Link href="/auth/signup" className="bg-[#8ECB3C] text-[#2C2C2A] px-4 py-2 rounded-full text-sm font-bold hover:opacity-90 transition-all no-underline">Get started</Link>
+            <button onClick={() => setMobileOpen(o => !o)} className="p-1 text-[#2C2C2A]" aria-label="Toggle menu">
               {mobileOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
           </div>
@@ -384,11 +384,11 @@ export default function LandingPage() {
           >
             <div className="flex flex-col gap-4 pt-4">
               {navLinks.map(link => (
-                <a key={link.label} href={link.href} className="text-sm text-[#525252]" onClick={() => setMobileOpen(false)}>{link.label}</a>
+                <a key={link.label} href={link.href} className="text-sm text-[#5F5E5A]" onClick={() => setMobileOpen(false)}>{link.label}</a>
               ))}
               <div className="flex flex-col gap-2 pt-2">
-                <Link href="/auth/login" onClick={() => setMobileOpen(false)} className="text-center text-sm text-[#525252] py-2 border border-slate-200 rounded-full">Sign in</Link>
-                <Link href="/auth/signup" onClick={() => setMobileOpen(false)} className="bg-[#84CC16] text-[#1A1A1A] rounded-full text-center text-sm font-bold py-2 hover:opacity-90 transition-colors">Get started free</Link>
+                <Link href="/auth/login" onClick={() => setMobileOpen(false)} className="text-center text-sm text-[#5F5E5A] py-2 border border-slate-200 rounded-full">Sign in</Link>
+                <Link href="/auth/signup" onClick={() => setMobileOpen(false)} className="bg-[#8ECB3C] text-[#2C2C2A] rounded-full text-center text-sm font-bold py-2 hover:opacity-90 transition-colors">Get started free</Link>
               </div>
             </div>
           </motion.div>
@@ -396,13 +396,13 @@ export default function LandingPage() {
       </motion.nav>
 
       {/* HERO */}
-      <section className="relative overflow-hidden" style={{ background: '#F9F9F9', minHeight: '100vh' }}>
+      <section className="relative overflow-hidden" style={{ background: '#FAFAF7', minHeight: '100vh' }}>
         <div className="relative z-10 mx-auto max-w-7xl px-6 md:px-8 grid lg:grid-cols-2 gap-16 lg:gap-12 items-start" style={{ paddingTop: 'clamp(100px, 14vw, 128px)', paddingBottom: '80px' }}>
 
           {/* Left: text */}
           <motion.div {...fadeUp(0)} className="flex flex-col justify-start">
             {/* Audience badge */}
-            <div className="flex items-center gap-3 bg-[#C8E9FB] text-[#4D7C98] px-5 py-3 rounded-full w-fit mb-10">
+            <div className="flex items-center gap-3 bg-[#E6F1FB] text-[#0C447C] px-5 py-3 rounded-full w-fit mb-10">
               <CheckCircle className="w-5 h-5 flex-shrink-0" />
               <p className="font-bold text-xs tracking-wide uppercase">
                 Built for the UK social impact sector.
@@ -410,15 +410,15 @@ export default function LandingPage() {
             </div>
             {/* Headline */}
             <h1
-              className="font-bold leading-[1.05] text-[#1A1A1A] mb-10"
+              className="font-bold leading-[1.05] text-[#2C2C2A] mb-10"
               style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: 'clamp(48px, 6.5vw, 88px)', letterSpacing: '-0.04em' }}
             >
               Funding,<br/>
-              <span style={{ color: '#84CC16' }}>matched</span><br/>
+              <span style={{ color: '#8ECB3C' }}>matched</span><br/>
               for you.
             </h1>
             {/* Subtext */}
-            <p className="text-[#525252] leading-relaxed font-medium text-lg max-w-lg mb-10">
+            <p className="text-[#5F5E5A] leading-relaxed font-medium text-lg max-w-lg mb-10">
               Matched to your structure, sector and geography — across grants, programmes, social investment and in-kind support.
             </p>
             {/* CTAs */}
@@ -426,11 +426,11 @@ export default function LandingPage() {
               <Link
                 href="/auth/signup"
                 className="text-white px-9 py-4 rounded-full font-bold text-base hover:opacity-95 transition-all no-underline"
-                style={{ background: 'linear-gradient(180deg, #84CC16 0%, #4D7C0F 100%)', boxShadow: '0 10px 20px -5px rgba(132, 204, 22, 0.3)' }}
+                style={{ background: 'linear-gradient(180deg, #8ECB3C 0%, #639922 100%)', boxShadow: '0 10px 20px -5px rgba(132, 204, 22, 0.3)' }}
               >
                 Get started free
               </Link>
-              <a href="#how" className="bg-[#EAEAEA] text-[#1A1A1A] px-9 py-4 rounded-full font-bold text-base hover:bg-[#E0E0E0] transition-all">
+              <a href="#how" className="bg-[#F1F0EA] text-[#2C2C2A] px-9 py-4 rounded-full font-bold text-base hover:bg-[#E4E2DA] transition-all">
                 How it works
               </a>
             </div>
@@ -442,55 +442,55 @@ export default function LandingPage() {
               {/* Card header */}
               <div className="flex justify-between items-start mb-8">
                 <div>
-                  <h3 className="text-2xl font-bold text-[#1A1A1A] tracking-tight" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>Digital Inclusion Fund</h3>
-                  <p className="text-[#525252] font-medium mt-0.5 text-sm">Active Grant Application</p>
+                  <h3 className="text-2xl font-bold text-[#2C2C2A] tracking-tight" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>Digital Inclusion Fund</h3>
+                  <p className="text-[#5F5E5A] font-medium mt-0.5 text-sm">Active Grant Application</p>
                 </div>
-                <div className="bg-[#BEF264] px-4 py-1.5 rounded-full flex items-center gap-1.5 flex-shrink-0">
-                  <span className="w-2 h-2 rounded-full bg-[#84CC16] animate-pulse" />
-                  <span className="text-[#1A1A1A] font-bold text-xs tracking-tight">Pipeline: Draft</span>
+                <div className="bg-[#C0DD97] px-4 py-1.5 rounded-full flex items-center gap-1.5 flex-shrink-0">
+                  <span className="w-2 h-2 rounded-full bg-[#8ECB3C] animate-pulse" />
+                  <span className="text-[#2C2C2A] font-bold text-xs tracking-tight">Pipeline: Draft</span>
                 </div>
               </div>
               {/* Stats grid */}
               <div className="grid grid-cols-2 gap-4 mb-5">
-                <div className="bg-[#F2F2F2] rounded-2xl p-5">
-                  <p className="text-[#525252] text-[11px] font-bold uppercase tracking-wider mb-1">Matching Score</p>
+                <div className="bg-[#F1F0EA] rounded-2xl p-5">
+                  <p className="text-[#5F5E5A] text-[11px] font-bold uppercase tracking-wider mb-1">Matching Score</p>
                   <div className="flex items-baseline gap-1.5">
-                    <span className="text-5xl font-bold text-[#84CC16]" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>94%</span>
-                    <span className="text-[#525252] font-bold text-sm">Match</span>
+                    <span className="text-5xl font-bold text-[#8ECB3C]" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>94%</span>
+                    <span className="text-[#5F5E5A] font-bold text-sm">Match</span>
                   </div>
                   <div className="mt-4">
-                    <div className="h-1.5 w-full bg-[#E2E2E2] rounded-full overflow-hidden">
-                      <div className="h-full bg-[#84CC16] rounded-full" style={{ width: '94%' }} />
+                    <div className="h-1.5 w-full bg-[#E4E2DA] rounded-full overflow-hidden">
+                      <div className="h-full bg-[#8ECB3C] rounded-full" style={{ width: '94%' }} />
                     </div>
                   </div>
-                  <p className="text-[11px] text-[#525252] mt-3 font-semibold italic">Based on Youth Fund criteria</p>
+                  <p className="text-[11px] text-[#5F5E5A] mt-3 font-semibold italic">Based on Youth Fund criteria</p>
                 </div>
-                <div className="bg-[#E6F4FF] rounded-2xl p-5">
-                  <p className="text-[#3C687D] text-[11px] font-bold uppercase tracking-wider mb-1">Requested Funding</p>
+                <div className="bg-[#E6F1FB] rounded-2xl p-5">
+                  <p className="text-[#0C447C] text-[11px] font-bold uppercase tracking-wider mb-1">Requested Funding</p>
                   <div className="flex items-baseline">
-                    <span className="text-4xl font-bold text-[#1A1A1A]" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>£25,000</span>
+                    <span className="text-4xl font-bold text-[#2C2C2A]" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>£25,000</span>
                   </div>
                   <div className="mt-6 flex items-center gap-1.5">
-                    <BadgeCheck className="w-4 h-4 text-[#376478]" />
-                    <span className="text-[11px] font-bold text-[#376478] uppercase tracking-tight">Verified UK Funder</span>
+                    <BadgeCheck className="w-4 h-4 text-[#0C447C]" />
+                    <span className="text-[11px] font-bold text-[#0C447C] uppercase tracking-tight">Verified UK Funder</span>
                   </div>
                 </div>
               </div>
               {/* List rows */}
               <div className="space-y-3">
                 {[
-                  { Icon: Users, label: 'Community Reach', sub: 'Social impact focus', iconBg: '#E6F4FF', iconColor: '#376478', tag: 'High Priority', tagStyle: { background: '#F5E1AD', color: '#52461F' } },
-                  { Icon: TrendingUp, label: 'Social Investment', sub: 'Sustainable growth model', iconBg: 'rgba(206,188,139,0.4)', iconColor: '#6B5D34', tag: 'High Priority', tagStyle: { background: '#F5E1AD', color: '#52461F' } },
-                  { Icon: Rocket, label: 'Incubation Programme', sub: 'Capacity building', iconBg: 'rgba(190,242,100,0.4)', iconColor: '#446900', tag: 'Phase 1', tagStyle: { color: '#84CC16', fontWeight: '800', letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: '11px' } },
+                  { Icon: Users, label: 'Community Reach', sub: 'Social impact focus', iconBg: '#E6F1FB', iconColor: '#0C447C', tag: 'High Priority', tagStyle: { background: '#FAC775', color: '#412402' } },
+                  { Icon: TrendingUp, label: 'Social Investment', sub: 'Sustainable growth model', iconBg: 'rgba(206,188,139,0.4)', iconColor: '#854F0B', tag: 'High Priority', tagStyle: { background: '#FAC775', color: '#412402' } },
+                  { Icon: Rocket, label: 'Incubation Programme', sub: 'Capacity building', iconBg: 'rgba(190,242,100,0.4)', iconColor: '#639922', tag: 'Phase 1', tagStyle: { color: '#8ECB3C', fontWeight: '800', letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: '11px' } },
                 ].map((row) => (
-                  <div key={row.label} className="flex items-center justify-between p-4 bg-[#F2F2F2] rounded-xl">
+                  <div key={row.label} className="flex items-center justify-between p-4 bg-[#F1F0EA] rounded-xl">
                     <div className="flex items-center gap-3">
                       <div className="rounded-full flex items-center justify-center w-12 h-12 flex-shrink-0" style={{ background: row.iconBg }}>
                         <row.Icon className="w-5 h-5" style={{ color: row.iconColor }} />
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-[#1A1A1A]">{row.label}</p>
-                        <p className="text-xs text-[#525252]">{row.sub}</p>
+                        <p className="text-sm font-bold text-[#2C2C2A]">{row.label}</p>
+                        <p className="text-xs text-[#5F5E5A]">{row.sub}</p>
                       </div>
                     </div>
                     <span className="px-3 py-1 rounded-lg text-[10px] font-extrabold" style={row.tagStyle}>{row.tag}</span>
@@ -535,7 +535,7 @@ export default function LandingPage() {
                   {grant.impact_sectors && grant.impact_sectors.length > 0 && (
                     <div className="flex flex-wrap gap-1 mb-3">
                       {grant.impact_sectors.slice(0, 3).map(s => (
-                        <span key={s} className="text-[10px] px-2 py-0.5 font-medium" style={{ background: '#ede9fe', color: '#5b21b6' }}>
+                        <span key={s} className="text-[10px] px-2 py-0.5 font-medium" style={{ background: '#FAEEDA', color: '#854F0B' }}>
                           {SECTOR_LABELS[s] ?? s}
                         </span>
                       ))}
@@ -586,14 +586,14 @@ export default function LandingPage() {
           {/* Header row */}
           <motion.div {...fadeInView(0)} className="grid lg:grid-cols-2 gap-8 items-end mb-14">
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest mb-5" style={{ color: '#84CC16' }}>Process</p>
-              <h2 className="font-bold leading-tight" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#1A1A1A' }}>
+              <p className="text-xs font-bold uppercase tracking-widest mb-5" style={{ color: '#8ECB3C' }}>Process</p>
+              <h2 className="font-bold leading-tight" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#2C2C2A' }}>
                 Setup, search and<br/>
-                <span style={{ color: '#84CC16' }}>track what matters</span>
+                <span style={{ color: '#8ECB3C' }}>track what matters</span>
               </h2>
             </div>
             <div className="lg:pb-2">
-              <p className="text-[#525252] text-base leading-relaxed max-w-sm">
+              <p className="text-[#5F5E5A] text-base leading-relaxed max-w-sm">
                 GrantTracker streamlines your funding journey from initial discovery to successful submission — matched to your organisation.
               </p>
             </div>
@@ -606,25 +606,25 @@ export default function LandingPage() {
                 num: '01', title: 'Setup your profile',
                 desc: 'List your impact, mission and target groups.',
                 Icon: Users,
-                bg: '#E6F4FF', numColor: '#376478', titleColor: '#1A1A1A', textColor: '#525252', iconColor: '#376478',
+                bg: '#E6F1FB', numColor: '#0C447C', titleColor: '#2C2C2A', textColor: '#5F5E5A', iconColor: '#0C447C',
               },
               {
                 num: '02', title: 'Search & match',
                 desc: 'Discover opportunities matched to you.',
                 Icon: Search,
-                bg: '#FFEBB6', numColor: '#6B5D34', titleColor: '#6B5D34', textColor: '#6B5D34', iconColor: '#6B5D34',
+                bg: '#FAEEDA', numColor: '#854F0B', titleColor: '#854F0B', textColor: '#854F0B', iconColor: '#854F0B',
               },
               {
                 num: '03', title: 'Track opportunities',
                 desc: 'Add to pipeline, get deadline alerts and apply.',
                 Icon: TrendingUp,
-                bg: '#EEEEEE', numColor: '#9E9E9E', titleColor: '#1A1A1A', textColor: '#525252', iconColor: '#9E9E9E',
+                bg: '#E8E0D1', numColor: '#8A8986', titleColor: '#2C2C2A', textColor: '#5F5E5A', iconColor: '#8A8986',
               },
               {
                 num: '04', title: 'Submit & win',
                 desc: 'Increase your win-rate with strongly aligned applications.',
                 Icon: Award,
-                bg: '#84CC16', numColor: '#BEF264', titleColor: '#ffffff', textColor: 'rgba(255,255,255,0.85)', iconColor: '#ffffff',
+                bg: '#8ECB3C', numColor: '#C0DD97', titleColor: '#ffffff', textColor: 'rgba(255,255,255,0.85)', iconColor: '#ffffff',
               },
             ].map((step, i) => (
               <motion.div
@@ -647,19 +647,19 @@ export default function LandingPage() {
       </section>
 
       {/* FUNDING TYPES */}
-      <section className="py-20 md:py-28" style={{ background: '#F9F9F9' }}>
+      <section className="py-20 md:py-28" style={{ background: '#FAFAF7' }}>
         <div className="mx-auto max-w-7xl px-6 md:px-8">
 
           {/* Header row — matches Process section */}
           <motion.div {...fadeInView(0)} className="grid lg:grid-cols-2 gap-8 items-end mb-14">
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest mb-5" style={{ color: '#84CC16' }}>Funding Types</p>
-              <h2 className="font-bold leading-tight" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#1A1A1A' }}>
-                Not just grants,<br/><span style={{ color: '#84CC16' }}>the full picture.</span>
+              <p className="text-xs font-bold uppercase tracking-widest mb-5" style={{ color: '#8ECB3C' }}>Funding Types</p>
+              <h2 className="font-bold leading-tight" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#2C2C2A' }}>
+                Not just grants,<br/><span style={{ color: '#8ECB3C' }}>the full picture.</span>
               </h2>
             </div>
             <div className="lg:pb-2">
-              <p className="text-[#525252] text-base leading-relaxed max-w-sm">
+              <p className="text-[#5F5E5A] text-base leading-relaxed max-w-sm">
                 Not every organisation needs a grant. We surface the full funding landscape matched to your structure and stage.
               </p>
             </div>
@@ -669,32 +669,32 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-2 gap-4">
             {[
               {
-                badge: '£300 – £500k+', badgeColor: '#446900', badgeBg: 'rgba(148,207,53,0.15)',
-                title: 'Grants', titleColor: '#111827',
+                badge: '£300 – £500k+', badgeColor: '#639922', badgeBg: 'rgba(148,207,53,0.15)',
+                title: 'Grants', titleColor: '#2C2C2A',
                 desc: 'Trusts, foundations, National Lottery, Innovate UK, arts councils and government programmes.',
-                Icon: Landmark, iconColor: '#446900',
+                Icon: Landmark, iconColor: '#639922',
                 decoBg: 'rgba(148,207,53,0.07)', decoPos: '-translate-y-16 translate-x-16',
               },
               {
-                badge: 'Equity-free', badgeColor: '#c2410c', badgeBg: 'rgba(251,146,60,0.15)',
-                title: 'Programmes', titleColor: '#111827',
+                badge: 'Equity-free', badgeColor: '#993C1D', badgeBg: 'rgba(251,146,60,0.15)',
+                title: 'Programmes', titleColor: '#2C2C2A',
                 desc: 'Accelerators, incubators, fellowships and structured programmes with mentoring, networks and workspace.',
-                Icon: Rocket, iconColor: '#ea580c',
+                Icon: Rocket, iconColor: '#D85A30',
                 decoBg: 'rgba(251,146,60,0.12)', decoPos: 'translate-y-8 translate-x-8',
               },
               {
-                badge: '£20k – £3m', badgeColor: '#1d4ed8', badgeBg: 'rgba(96,165,250,0.15)',
-                title: 'Social Investment', titleColor: '#111827',
+                badge: '£20k – £3m', badgeColor: '#0C447C', badgeBg: 'rgba(181,212,244,0.15)',
+                title: 'Social Investment', titleColor: '#2C2C2A',
                 desc: 'Patient capital, loans and blended finance from Big Issue Invest, Charity Bank, Resonance and others.',
-                Icon: TrendingUp, iconColor: '#2563eb',
-                decoBg: 'rgba(96,165,250,0.12)', decoPos: 'top-1/2 -right-4',
+                Icon: TrendingUp, iconColor: '#378ADD',
+                decoBg: 'rgba(181,212,244,0.12)', decoPos: 'top-1/2 -right-4',
               },
               {
-                badge: 'Resources & expertise', badgeColor: '#7c3aed', badgeBg: 'rgba(167,139,250,0.15)',
-                title: 'In-Kind Support', titleColor: '#111827',
+                badge: 'Resources & expertise', badgeColor: '#BA7517', badgeBg: 'rgba(250,199,117,0.15)',
+                title: 'In-Kind Support', titleColor: '#2C2C2A',
                 desc: 'Mentoring, training and workspace. Often overlooked, high value — especially at an early stage.',
-                Icon: HeartHandshake, iconColor: '#7c3aed',
-                decoBg: 'rgba(167,139,250,0.10)', decoPos: 'translate-y-4 -translate-x-4',
+                Icon: HeartHandshake, iconColor: '#BA7517',
+                decoBg: 'rgba(250,199,117,0.10)', decoPos: 'translate-y-4 -translate-x-4',
               },
             ].map((card, i) => (
               <motion.div
@@ -743,9 +743,9 @@ export default function LandingPage() {
 
               {/* Left: copy */}
               <motion.div {...fadeInView(0)}>
-                <p className="text-xs font-bold uppercase tracking-widest mb-5" style={{ color: '#84CC16' }}>Features</p>
-                <h2 className="font-bold leading-tight mb-5" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#1A1A1A' }}>
-                  Search &amp; track,<br/><span style={{ color: '#84CC16' }}>in one place.</span>
+                <p className="text-xs font-bold uppercase tracking-widest mb-5" style={{ color: '#8ECB3C' }}>Features</p>
+                <h2 className="font-bold leading-tight mb-5" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#2C2C2A' }}>
+                  Search &amp; track,<br/><span style={{ color: '#8ECB3C' }}>in one place.</span>
                 </h2>
                 <ul className="space-y-6 mb-10">
                   {[
@@ -757,16 +757,16 @@ export default function LandingPage() {
                   ].map((item, i) => (
                     <li key={i} className="flex items-start gap-4">
                       <span className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full" style={{ background: 'rgba(132,204,22,0.18)' }}>
-                        <Check className="w-4 h-4" style={{ color: '#84CC16' }} />
+                        <Check className="w-4 h-4" style={{ color: '#8ECB3C' }} />
                       </span>
                       <div className="pt-1">
-                        <p className="font-bold text-[#1A1A1A] text-base leading-snug mb-1">{item.title}</p>
-                        <p className="text-sm text-[#525252] leading-relaxed">{item.desc}</p>
+                        <p className="font-bold text-[#2C2C2A] text-base leading-snug mb-1">{item.title}</p>
+                        <p className="text-sm text-[#5F5E5A] leading-relaxed">{item.desc}</p>
                       </div>
                     </li>
                   ))}
                 </ul>
-                <a href="/auth/signup" className="inline-flex items-center gap-3 bg-[#1A1A1A] text-white px-7 py-4 rounded-full font-bold text-base hover:bg-slate-800 transition-all no-underline">
+                <a href="/auth/signup" className="inline-flex items-center gap-3 bg-[#2C2C2A] text-white px-7 py-4 rounded-full font-bold text-base hover:bg-slate-800 transition-all no-underline">
                   Start now <ArrowRight className="w-4 h-4" />
                 </a>
               </motion.div>
@@ -780,24 +780,24 @@ export default function LandingPage() {
                     <div className="bg-white rounded-2xl p-4" style={{ transform: 'rotate(7deg)', boxShadow: '0 8px 32px rgba(0,0,0,0.08)' }}>
                       <div className="flex items-center gap-2 mb-3">
                         <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(132,204,22,0.15)' }}>
-                          <LayoutGrid className="w-3.5 h-3.5" style={{ color: '#84CC16' }} />
+                          <LayoutGrid className="w-3.5 h-3.5" style={{ color: '#8ECB3C' }} />
                         </div>
-                        <p className="text-[11px] font-bold text-[#1A1A1A] uppercase tracking-wider">Dashboard</p>
+                        <p className="text-[11px] font-bold text-[#2C2C2A] uppercase tracking-wider">Dashboard</p>
                       </div>
                       <div className="grid grid-cols-2 gap-2 mb-3">
-                        <div className="rounded-xl p-2.5" style={{ background: '#F2F2F2' }}>
-                          <p className="text-[17px] font-bold text-[#1A1A1A] leading-tight">42k</p>
-                          <p className="text-[9px] text-[#525252] uppercase tracking-wide font-medium">Won</p>
+                        <div className="rounded-xl p-2.5" style={{ background: '#F1F0EA' }}>
+                          <p className="text-[17px] font-bold text-[#2C2C2A] leading-tight">42k</p>
+                          <p className="text-[9px] text-[#5F5E5A] uppercase tracking-wide font-medium">Won</p>
                         </div>
                         <div className="rounded-xl p-2.5" style={{ background: 'rgba(132,204,22,0.15)' }}>
-                          <p className="text-[17px] font-bold leading-tight" style={{ color: '#84CC16' }}>68%</p>
-                          <p className="text-[9px] uppercase tracking-wide font-medium" style={{ color: '#84CC16' }}>Success</p>
+                          <p className="text-[17px] font-bold leading-tight" style={{ color: '#8ECB3C' }}>68%</p>
+                          <p className="text-[9px] uppercase tracking-wide font-medium" style={{ color: '#8ECB3C' }}>Success</p>
                         </div>
                       </div>
-                      <p className="text-[9px] text-[#525252] mb-2">Funding won — last 7 months</p>
+                      <p className="text-[9px] text-[#5F5E5A] mb-2">Funding won — last 7 months</p>
                       <div className="flex items-end gap-1" style={{ height: '40px' }}>
                         {[40, 25, 55, 35, 70, 60, 85].map((h, i) => (
-                          <div key={i} className="flex-1 rounded-sm" style={{ height: `${h}%`, background: i === 6 ? '#84CC16' : 'rgba(132,204,22,0.35)' }} />
+                          <div key={i} className="flex-1 rounded-sm" style={{ height: `${h}%`, background: i === 6 ? '#8ECB3C' : 'rgba(132,204,22,0.35)' }} />
                         ))}
                       </div>
                     </div>
@@ -808,17 +808,17 @@ export default function LandingPage() {
                     <div className="bg-white rounded-2xl p-4" style={{ transform: 'rotate(-8deg)', boxShadow: '0 8px 32px rgba(0,0,0,0.10)' }}>
                       <div className="flex items-center gap-2 mb-2">
                         <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(234,88,12,0.12)' }}>
-                          <ArrowRight className="w-3.5 h-3.5" style={{ color: '#ea580c' }} />
+                          <ArrowRight className="w-3.5 h-3.5" style={{ color: '#D85A30' }} />
                         </div>
-                        <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#ea580c' }}>Pipeline</p>
+                        <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#D85A30' }}>Pipeline</p>
                       </div>
-                      <p className="text-[26px] font-bold text-[#1A1A1A] leading-tight" style={{ fontFamily: 'var(--font-space-grotesk), sans-serif' }}>£187,500</p>
-                      <p className="text-[11px] font-medium mb-3" style={{ color: '#ea580c' }}>7 active opportunities</p>
+                      <p className="text-[26px] font-bold text-[#2C2C2A] leading-tight" style={{ fontFamily: 'var(--font-space-grotesk), sans-serif' }}>£187,500</p>
+                      <p className="text-[11px] font-medium mb-3" style={{ color: '#D85A30' }}>7 active opportunities</p>
                       <div className="flex flex-col gap-1.5">
                         {['Identified', 'Applying', 'Submitted'].map((label) => (
-                          <div key={label} className="flex items-center justify-between rounded-xl px-2.5 py-1.5" style={{ background: '#F2F2F2' }}>
-                            <span className="text-[10px] text-[#1A1A1A]">{label}</span>
-                            <div className="w-2 h-2 rounded-full" style={{ background: label === 'Applying' ? '#84CC16' : '#D4D4D4' }} />
+                          <div key={label} className="flex items-center justify-between rounded-xl px-2.5 py-1.5" style={{ background: '#F1F0EA' }}>
+                            <span className="text-[10px] text-[#2C2C2A]">{label}</span>
+                            <div className="w-2 h-2 rounded-full" style={{ background: label === 'Applying' ? '#8ECB3C' : '#E4E2DA' }} />
                           </div>
                         ))}
                       </div>
@@ -828,21 +828,21 @@ export default function LandingPage() {
                   {/* Search — centre, largest, front */}
                   <motion.div {...fadeInView(0.08)} className="absolute" style={{ width: '290px', top: '110px', left: 'calc(50% - 145px)', zIndex: 5 }}>
                     <div className="bg-white rounded-2xl p-5" style={{ transform: 'rotate(-1deg)', boxShadow: '0 16px 48px rgba(0,0,0,0.12)' }}>
-                      <p className="text-[11px] font-bold uppercase tracking-wider mb-2.5" style={{ color: '#2d8a7a' }}>Search</p>
-                      <div className="flex items-center gap-2 rounded-full px-3 py-2 mb-3" style={{ background: '#F2F2F2' }}>
-                        <Search className="w-3 h-3 text-[#525252] flex-shrink-0" />
-                        <span className="text-[11px] text-[#525252]">community garden...</span>
+                      <p className="text-[11px] font-bold uppercase tracking-wider mb-2.5" style={{ color: '#639922' }}>Search</p>
+                      <div className="flex items-center gap-2 rounded-full px-3 py-2 mb-3" style={{ background: '#F1F0EA' }}>
+                        <Search className="w-3 h-3 text-[#5F5E5A] flex-shrink-0" />
+                        <span className="text-[11px] text-[#5F5E5A]">community garden...</span>
                       </div>
                       <div className="flex flex-col">
                         {[
-                          { name: 'Community Growing Grants', pct: 94, barColor: '#2d8a7a', pctColor: '#2d8a7a' },
-                          { name: 'Green Spaces Fund',        pct: 87, barColor: '#9E9E9E',  pctColor: '#9E9E9E' },
-                          { name: 'Urban Nature Programme',   pct: 79, barColor: '#f59e0b',  pctColor: '#f59e0b' },
+                          { name: 'Community Growing Grants', pct: 94, barColor: '#639922', pctColor: '#639922' },
+                          { name: 'Green Spaces Fund',        pct: 87, barColor: '#8A8986',  pctColor: '#8A8986' },
+                          { name: 'Urban Nature Programme',   pct: 79, barColor: '#BA7517',  pctColor: '#BA7517' },
                         ].map((r, i) => (
-                          <div key={r.name} className={`flex items-center justify-between gap-2 py-2 ${i < 2 ? 'border-b border-[#F2F2F2]' : ''}`}>
-                            <p className="text-[11px] font-semibold text-[#1A1A1A] leading-tight">{r.name}</p>
+                          <div key={r.name} className={`flex items-center justify-between gap-2 py-2 ${i < 2 ? 'border-b border-[#F1F0EA]' : ''}`}>
+                            <p className="text-[11px] font-semibold text-[#2C2C2A] leading-tight">{r.name}</p>
                             <div className="flex items-center gap-1.5 flex-shrink-0">
-                              <div className="w-10 h-1.5 rounded-full overflow-hidden" style={{ background: '#EEEEEE' }}>
+                              <div className="w-10 h-1.5 rounded-full overflow-hidden" style={{ background: '#E8E0D1' }}>
                                 <div className="h-full rounded-full" style={{ width: `${r.pct}%`, background: r.barColor }} />
                               </div>
                               <span className="text-[10px] font-bold" style={{ color: r.pctColor }}>{r.pct}%</span>
@@ -857,16 +857,16 @@ export default function LandingPage() {
                   <motion.div {...fadeInView(0.12)} className="absolute" style={{ width: '210px', top: '340px', right: '0px', zIndex: 2 }}>
                     <div className="bg-white rounded-2xl p-4" style={{ transform: 'rotate(4deg)', boxShadow: '0 8px 32px rgba(0,0,0,0.08)' }}>
                       <div className="flex items-center gap-2 mb-3">
-                        <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(45,138,122,0.12)' }}>
-                          <Award className="w-3.5 h-3.5" style={{ color: '#2d8a7a' }} />
+                        <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(99,153,34,0.12)' }}>
+                          <Award className="w-3.5 h-3.5" style={{ color: '#639922' }} />
                         </div>
-                        <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#2d8a7a' }}>Awarded</p>
+                        <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#639922' }}>Awarded</p>
                       </div>
-                      <p className="text-[13px] font-semibold text-[#1A1A1A] leading-snug mb-1">London Community Foundation</p>
-                      <p className="text-[11px] text-[#525252] mb-3">Grow to Give — Community Growing</p>
-                      <div className="flex items-center justify-between rounded-xl px-3 py-2" style={{ background: 'rgba(45,138,122,0.10)' }}>
-                        <span className="text-[11px] text-[#525252]">Grant awarded</span>
-                        <span className="text-[15px] font-bold" style={{ color: '#2d8a7a' }}>£8,000</span>
+                      <p className="text-[13px] font-semibold text-[#2C2C2A] leading-snug mb-1">London Community Foundation</p>
+                      <p className="text-[11px] text-[#5F5E5A] mb-3">Grow to Give — Community Growing</p>
+                      <div className="flex items-center justify-between rounded-xl px-3 py-2" style={{ background: 'rgba(99,153,34,0.10)' }}>
+                        <span className="text-[11px] text-[#5F5E5A]">Grant awarded</span>
+                        <span className="text-[15px] font-bold" style={{ color: '#639922' }}>£8,000</span>
                       </div>
                     </div>
                   </motion.div>
@@ -875,11 +875,11 @@ export default function LandingPage() {
                   <motion.div {...fadeInView(0.1)} className="absolute" style={{ width: '240px', top: '330px', left: '10px', zIndex: 4 }}>
                     <div className="bg-white rounded-2xl p-4" style={{ transform: 'rotate(-3deg)', boxShadow: '0 8px 32px rgba(0,0,0,0.10)' }}>
                       <div className="flex items-center gap-2 mb-3">
-                        <div className="relative w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: '#F2F2F2' }}>
-                          <Bell className="w-3.5 h-3.5 text-[#525252]" />
+                        <div className="relative w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: '#F1F0EA' }}>
+                          <Bell className="w-3.5 h-3.5 text-[#5F5E5A]" />
                           <div className="absolute top-0 right-0 w-2 h-2 rounded-full bg-red-400 border border-white" />
                         </div>
-                        <p className="text-[11px] font-bold text-[#1A1A1A] uppercase tracking-wider">Alerts</p>
+                        <p className="text-[11px] font-bold text-[#2C2C2A] uppercase tracking-wider">Alerts</p>
                       </div>
                       <div className="flex flex-col">
                         {[
@@ -887,12 +887,12 @@ export default function LandingPage() {
                           { name: 'Green Spaces Grant',     org: 'National Lottery',       days: '8d',  urgent: false },
                           { name: 'Digital Inclusion Fund', org: 'DCMS',                   days: '14d', urgent: false },
                         ].map((a, i) => (
-                          <div key={a.name} className={`flex items-center justify-between gap-2 py-2 ${i < 2 ? 'border-b border-[#F2F2F2]' : ''}`}>
+                          <div key={a.name} className={`flex items-center justify-between gap-2 py-2 ${i < 2 ? 'border-b border-[#F1F0EA]' : ''}`}>
                             <div>
-                              <p className="text-[11px] font-semibold text-[#1A1A1A] leading-tight">{a.name}</p>
-                              <p className="text-[10px] text-[#525252]">{a.org}</p>
+                              <p className="text-[11px] font-semibold text-[#2C2C2A] leading-tight">{a.name}</p>
+                              <p className="text-[10px] text-[#5F5E5A]">{a.org}</p>
                             </div>
-                            <span className="text-[10px] font-bold px-2 py-1 rounded-full flex-shrink-0" style={a.urgent ? { background: '#BEF264', color: '#1A1A1A' } : { background: '#F2F2F2', color: '#525252' }}>{a.days}</span>
+                            <span className="text-[10px] font-bold px-2 py-1 rounded-full flex-shrink-0" style={a.urgent ? { background: '#C0DD97', color: '#2C2C2A' } : { background: '#F1F0EA', color: '#5F5E5A' }}>{a.days}</span>
                           </div>
                         ))}
                       </div>
@@ -907,40 +907,40 @@ export default function LandingPage() {
       </div>
 
       {/* ABOUT — Block 1: Founder story */}
-      <section id="about" className="py-20 md:py-28" style={{ background: '#F9F9F9' }}>
+      <section id="about" className="py-20 md:py-28" style={{ background: '#FAFAF7' }}>
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid lg:grid-cols-2 gap-16 items-start">
 
             {/* Left: label + heading + quote */}
             <motion.div {...fadeInView(0)}>
-              <p className="text-sm font-semibold tracking-widest uppercase mb-4" style={{ color: '#84CC16', fontFamily: 'var(--font-space-grotesk)' }}>About</p>
-              <h2 className="mb-10 leading-[1.05]" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(36px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#1A1A1A' }}>
-                Built from<br /><span style={{ color: '#84CC16' }}>the inside.</span>
+              <p className="text-sm font-semibold tracking-widest uppercase mb-4" style={{ color: '#8ECB3C', fontFamily: 'var(--font-space-grotesk)' }}>About</p>
+              <h2 className="mb-10 leading-[1.05]" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(36px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#2C2C2A' }}>
+                Built from<br /><span style={{ color: '#8ECB3C' }}>the inside.</span>
               </h2>
               <blockquote className="mb-0">
-                <span className="block leading-none mb-2 select-none" style={{ fontSize: '5rem', color: '#84CC16', fontFamily: 'var(--font-dm-serif)', lineHeight: 1, marginBottom: '-2rem' }}>&ldquo;</span>
-                <p className="text-lg leading-relaxed mb-4" style={{ color: '#525252', fontFamily: 'var(--font-dm-serif)' }}>I&apos;ve spent 20 years in the social enterprise and charity sector, co-founding a youth music organisation, leading development strategy at local charities, and driving fundraising across a global co-working network.
+                <span className="block leading-none mb-2 select-none" style={{ fontSize: '5rem', color: '#8ECB3C', fontFamily: 'var(--font-dm-serif)', lineHeight: 1, marginBottom: '-2rem' }}>&ldquo;</span>
+                <p className="text-lg leading-relaxed mb-4" style={{ color: '#5F5E5A', fontFamily: 'var(--font-dm-serif)' }}>I&apos;ve spent 20 years in the social enterprise and charity sector, co-founding a youth music organisation, leading development strategy at local charities, and driving fundraising across a global co-working network.
                 </p>
-                <p className="text-lg leading-relaxed" style={{ color: '#525252', fontFamily: 'var(--font-dm-serif)' }}>Throughout all of it, I was consistently frustrated by the same thing: a fragmented funding ecosystem that forced people like me to spend a disproportionate amount of time hunting opportunities rather than delivering impactful work.<span style={{ fontSize: '5rem', color: '#84CC16', fontFamily: 'var(--font-dm-serif)', lineHeight: 0, verticalAlign: '-0.5em', marginLeft: '0.1em' }}>&rdquo;</span>
+                <p className="text-lg leading-relaxed" style={{ color: '#5F5E5A', fontFamily: 'var(--font-dm-serif)' }}>Throughout all of it, I was consistently frustrated by the same thing: a fragmented funding ecosystem that forced people like me to spend a disproportionate amount of time hunting opportunities rather than delivering impactful work.<span style={{ fontSize: '5rem', color: '#8ECB3C', fontFamily: 'var(--font-dm-serif)', lineHeight: 0, verticalAlign: '-0.5em', marginLeft: '0.1em' }}>&rdquo;</span>
                 </p>
               </blockquote>
-              <p className="text-sm font-semibold" style={{ color: '#1A1A1A', fontFamily: 'var(--font-space-grotesk)', marginTop: '1rem' }}>Paul Kilty, founder</p>
+              <p className="text-sm font-semibold" style={{ color: '#2C2C2A', fontFamily: 'var(--font-space-grotesk)', marginTop: '1rem' }}>Paul Kilty, founder</p>
             </motion.div>
 
             {/* Right: £8bn stat card + why it exists */}
             <motion.div {...fadeInView(0.1)} className="flex flex-col gap-6">
-              <div className="rounded-3xl p-10 text-center" style={{ background: '#F4F9E8' }}>
-                <p className="leading-none mb-3" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(56px, 8vw, 96px)', color: '#84CC16', letterSpacing: '-0.04em' }}>£8bn<span style={{ color: '#1A1A1A' }}>+</span></p>
-                <p className="text-sm font-semibold uppercase tracking-widest" style={{ color: '#525252', fontFamily: 'var(--font-space-grotesk)' }}>awarded by UK trusts &amp; foundations annually</p>
+              <div className="rounded-3xl p-10 text-center" style={{ background: '#F1F7E4' }}>
+                <p className="leading-none mb-3" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(56px, 8vw, 96px)', color: '#8ECB3C', letterSpacing: '-0.04em' }}>£8bn<span style={{ color: '#2C2C2A' }}>+</span></p>
+                <p className="text-sm font-semibold uppercase tracking-widest" style={{ color: '#5F5E5A', fontFamily: 'var(--font-space-grotesk)' }}>awarded by UK trusts &amp; foundations annually</p>
               </div>
               <div className="rounded-3xl p-8 bg-white" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
-                <p className="text-base font-semibold mb-3" style={{ color: '#1A1A1A', fontFamily: 'var(--font-space-grotesk)' }}>Why it exists</p>
-                <p className="text-base leading-relaxed mb-3" style={{ color: '#525252' }}>
+                <p className="text-base font-semibold mb-3" style={{ color: '#2C2C2A', fontFamily: 'var(--font-space-grotesk)' }}>Why it exists</p>
+                <p className="text-base leading-relaxed mb-3" style={{ color: '#5F5E5A' }}>
                   The UK has thousands of active funders, but finding the right ones is effectively
                   a full-time job. Most charities, CICs and social enterprises can&apos;t afford
                   that — and they shouldn&apos;t have to.
                 </p>
-                <p className="text-base leading-relaxed" style={{ color: '#525252' }}>
+                <p className="text-base leading-relaxed" style={{ color: '#5F5E5A' }}>
                   Grant Tracker matches you to grants, programmes, investments and in-kind support
                   so you can spend that time delivering.
                 </p>
@@ -956,13 +956,13 @@ export default function LandingPage() {
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid lg:grid-cols-2 gap-8 items-end mb-14">
             <motion.div {...fadeInView(0)}>
-              <p className="text-sm font-semibold tracking-widest uppercase mb-4" style={{ color: '#84CC16', fontFamily: 'var(--font-space-grotesk)' }}>Who it&apos;s for</p>
-              <h2 className="leading-tight" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#1A1A1A' }}>
-                Funding matched to<br/><span style={{ color: '#84CC16' }}>your structure.</span>
+              <p className="text-sm font-semibold tracking-widest uppercase mb-4" style={{ color: '#8ECB3C', fontFamily: 'var(--font-space-grotesk)' }}>Who it&apos;s for</p>
+              <h2 className="leading-tight" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#2C2C2A' }}>
+                Funding matched to<br/><span style={{ color: '#8ECB3C' }}>your structure.</span>
               </h2>
             </motion.div>
             <motion.div {...fadeInView(0.1)}>
-              <p className="text-base leading-relaxed" style={{ color: '#525252' }}>
+              <p className="text-base leading-relaxed" style={{ color: '#5F5E5A' }}>
                 Whether you're a CIC, impact founder, grassroots charity or community group, find funding you can actually apply for.
               </p>
             </motion.div>
@@ -995,11 +995,11 @@ export default function LandingPage() {
                 <div className="flex-1 pt-0.5">
                   <div className="flex items-center gap-2 mb-2">
                     <card.Icon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: card.iconColor }} />
-                    <h3 className="font-bold" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: '1.05rem', color: '#1A1A1A' }}>
+                    <h3 className="font-bold" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: '1.05rem', color: '#2C2C2A' }}>
                       {card.title}
                     </h3>
                   </div>
-                  <p className="text-sm leading-relaxed" style={{ color: '#525252' }}>{card.desc}</p>
+                  <p className="text-sm leading-relaxed" style={{ color: '#5F5E5A' }}>{card.desc}</p>
                 </div>
               </motion.div>
             ))}
@@ -1008,17 +1008,17 @@ export default function LandingPage() {
       </section>
 
       {/* ABOUT — Block 3: Values + AI */}
-      <section className="py-20 md:py-28" style={{ background: '#F9F9F9' }}>
+      <section className="py-20 md:py-28" style={{ background: '#FAFAF7' }}>
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid lg:grid-cols-2 gap-8 items-end mb-14">
             <motion.div {...fadeInView(0)}>
-              <p className="text-sm font-semibold tracking-widest uppercase mb-4" style={{ color: '#84CC16', fontFamily: 'var(--font-space-grotesk)' }}>Values</p>
-              <h2 className="leading-tight" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#1A1A1A' }}>
-                How we <span style={{ color: '#84CC16' }}>work.</span>
+              <p className="text-sm font-semibold tracking-widest uppercase mb-4" style={{ color: '#8ECB3C', fontFamily: 'var(--font-space-grotesk)' }}>Values</p>
+              <h2 className="leading-tight" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#2C2C2A' }}>
+                How we <span style={{ color: '#8ECB3C' }}>work.</span>
               </h2>
             </motion.div>
             <motion.div {...fadeInView(0.1)}>
-              <p className="text-base leading-relaxed" style={{ color: '#525252' }}>
+              <p className="text-base leading-relaxed" style={{ color: '#5F5E5A' }}>
                 A few principles that shape every decision we make.
               </p>
             </motion.div>
@@ -1027,13 +1027,13 @@ export default function LandingPage() {
           {/* Three value cards */}
           <div className="grid md:grid-cols-3 gap-4 mb-4">
             {[
-              { label: 'Honest', body: "We don't inflate match scores or dress up poor-fit grants. If something isn't right for you, we'd rather tell you than waste your time.", bg: '#E6F4FF' },
-              { label: 'Practical', body: "Every feature exists because it makes the funding process easier. We don't add complexity for the sake of it.", bg: '#FFEBB6' },
-              { label: 'Accessible', body: "Good funding intelligence shouldn't only be available to organisations with big budgets. Grant Tracker is priced so smaller organisations can afford it.", bg: '#F4F9E8' },
+              { label: 'Honest', body: "We don't inflate match scores or dress up poor-fit grants. If something isn't right for you, we'd rather tell you than waste your time.", bg: '#E6F1FB' },
+              { label: 'Practical', body: "Every feature exists because it makes the funding process easier. We don't add complexity for the sake of it.", bg: '#FAEEDA' },
+              { label: 'Accessible', body: "Good funding intelligence shouldn't only be available to organisations with big budgets. Grant Tracker is priced so smaller organisations can afford it.", bg: '#F1F7E4' },
             ].map((v, i) => (
               <motion.div key={v.label} {...fadeInView(i * 0.08)} className="rounded-3xl p-8 flex flex-col" style={{ background: v.bg }}>
-                <p className="text-4xl font-bold mb-4" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#1A1A1A', letterSpacing: '-0.02em' }}>{v.label}</p>
-                <p className="text-base leading-relaxed flex-1" style={{ color: '#525252' }}>{v.body}</p>
+                <p className="text-4xl font-bold mb-4" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#2C2C2A', letterSpacing: '-0.02em' }}>{v.label}</p>
+                <p className="text-base leading-relaxed flex-1" style={{ color: '#5F5E5A' }}>{v.body}</p>
               </motion.div>
             ))}
           </div>
@@ -1042,17 +1042,17 @@ export default function LandingPage() {
           <motion.div {...fadeInView(0.1)} className="rounded-3xl p-10 md:p-12 bg-white" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
             <div className="grid lg:grid-cols-2 gap-8 items-start">
               <div>
-                <p className="text-sm font-semibold tracking-widest uppercase mb-3" style={{ color: '#84CC16', fontFamily: 'var(--font-space-grotesk)' }}>Our approach to AI</p>
-                <p className="text-2xl font-bold leading-snug" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#1A1A1A', letterSpacing: '-0.02em' }}>
+                <p className="text-sm font-semibold tracking-widest uppercase mb-3" style={{ color: '#8ECB3C', fontFamily: 'var(--font-space-grotesk)' }}>Our approach to AI</p>
+                <p className="text-2xl font-bold leading-snug" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#2C2C2A', letterSpacing: '-0.02em' }}>
                   Your voice. Your story.<br />Your evidence.
                 </p>
               </div>
               <div className="space-y-4">
-                <p className="text-base leading-relaxed" style={{ color: '#525252' }}>
+                <p className="text-base leading-relaxed" style={{ color: '#5F5E5A' }}>
                   Funders are increasingly inundated with AI-generated applications that are bland, generic and interchangeable.
                   We don&apos;t want to make that problem worse.
                 </p>
-                <p className="text-base leading-relaxed" style={{ color: '#525252' }}>
+                <p className="text-base leading-relaxed" style={{ color: '#5F5E5A' }}>
                   Grant Tracker uses AI where it genuinely helps: matching your profile to the right opportunities,
                   building intelligence about how funders make decisions, and cutting the time you spend searching.
                   Always in service of something genuinely yours — not instead of it.
@@ -1065,13 +1065,13 @@ export default function LandingPage() {
       </section>
 
       {/* STATS */}
-      <section className="py-16 md:py-20" style={{ background: '#1A1A1A' }}>
+      <section className="py-16 md:py-20" style={{ background: '#2C2C2A' }}>
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
             {stats.map((s, i) => (
               <motion.div key={s.label} {...fadeInView(i * 0.1)} className="text-center">
-                <p className="leading-none mb-3" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(40px, 5vw, 64px)', color: '#84CC16', letterSpacing: '-0.03em' }}>{s.value}</p>
-                <p className="text-sm leading-relaxed" style={{ color: '#888888' }}>{s.label}</p>
+                <p className="leading-none mb-3" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(40px, 5vw, 64px)', color: '#8ECB3C', letterSpacing: '-0.03em' }}>{s.value}</p>
+                <p className="text-sm leading-relaxed" style={{ color: '#8A8986' }}>{s.label}</p>
               </motion.div>
             ))}
           </div>
@@ -1079,17 +1079,17 @@ export default function LandingPage() {
       </section>
 
       {/* PRICING */}
-      <section id="pricing" className="py-20 md:py-28" style={{ background: "#F9F9F9" }}>
+      <section id="pricing" className="py-20 md:py-28" style={{ background: "#FAFAF7" }}>
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid lg:grid-cols-2 gap-8 items-end mb-14">
             <motion.div {...fadeInView(0)}>
-              <p className="text-sm font-semibold tracking-widest uppercase mb-4" style={{ color: '#84CC16', fontFamily: 'var(--font-space-grotesk)' }}>Pricing</p>
-              <h2 className="leading-tight" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#1A1A1A' }}>
-                Plans that respect <span style={{ color: '#84CC16' }}>your budget.</span>
+              <p className="text-sm font-semibold tracking-widest uppercase mb-4" style={{ color: '#8ECB3C', fontFamily: 'var(--font-space-grotesk)' }}>Pricing</p>
+              <h2 className="leading-tight" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#2C2C2A' }}>
+                Plans that respect <span style={{ color: '#8ECB3C' }}>your budget.</span>
               </h2>
             </motion.div>
             <motion.div {...fadeInView(0.1)}>
-              <p className="text-base leading-relaxed" style={{ color: '#525252' }}>Start free. Upgrade to live search, match scoring and tracking tools whenever you're ready.</p>
+              <p className="text-base leading-relaxed" style={{ color: '#5F5E5A' }}>Start free. Upgrade to live search, match scoring and tracking tools whenever you're ready.</p>
             </motion.div>
           </div>
           <div className="grid md:grid-cols-3 gap-4">
@@ -1098,21 +1098,21 @@ export default function LandingPage() {
                 key={plan.name}
                 {...fadeInView(i * 0.1)}
                 className="relative rounded-3xl p-8 flex flex-col"
-                style={{ background: plan.popular ? '#1A1A1A' : '#F9F9F9' }}
+                style={{ background: plan.popular ? '#2C2C2A' : '#FAFAF7' }}
               >
                 {plan.popular && (
-                  <span className="absolute top-6 right-6 rounded-full px-3 py-1 text-xs font-semibold" style={{ background: '#84CC16', color: '#1A1A1A', fontFamily: 'var(--font-space-grotesk)' }}>Most popular</span>
+                  <span className="absolute top-6 right-6 rounded-full px-3 py-1 text-xs font-semibold" style={{ background: '#8ECB3C', color: '#2C2C2A', fontFamily: 'var(--font-space-grotesk)' }}>Most popular</span>
                 )}
-                <p className="text-sm font-semibold mb-4" style={{ color: plan.popular ? '#84CC16' : '#525252', fontFamily: 'var(--font-space-grotesk)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>{plan.name}</p>
+                <p className="text-sm font-semibold mb-4" style={{ color: plan.popular ? '#8ECB3C' : '#5F5E5A', fontFamily: 'var(--font-space-grotesk)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>{plan.name}</p>
                 <div className="mb-2">
-                  <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(40px, 5vw, 56px)', letterSpacing: '-0.03em', color: plan.popular ? '#FFFFFF' : '#1A1A1A' }}>{plan.price}</span>
+                  <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(40px, 5vw, 56px)', letterSpacing: '-0.03em', color: plan.popular ? '#FFFFFF' : '#2C2C2A' }}>{plan.price}</span>
                 </div>
-                <p className="text-sm mb-8" style={{ color: plan.popular ? '#888888' : '#888888' }}>{plan.period}</p>
+                <p className="text-sm mb-8" style={{ color: plan.popular ? '#8A8986' : '#8A8986' }}>{plan.period}</p>
                 <ul className="space-y-3 flex-1 mb-8">
                   {plan.features.map((f) => (
-                    <li key={f} className="flex items-start gap-3 text-sm" style={{ color: plan.popular ? '#CCCCCC' : '#525252' }}>
-                      <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center" style={{ background: '#84CC16' }}>
-                        <Check className="w-2.5 h-2.5" style={{ color: '#1A1A1A' }} />
+                    <li key={f} className="flex items-start gap-3 text-sm" style={{ color: plan.popular ? '#E4E2DA' : '#5F5E5A' }}>
+                      <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center" style={{ background: '#8ECB3C' }}>
+                        <Check className="w-2.5 h-2.5" style={{ color: '#2C2C2A' }} />
                       </span>
                       <span>{f}</span>
                     </li>
@@ -1121,7 +1121,7 @@ export default function LandingPage() {
                 <Link
                   href="/auth/signup"
                   className="block rounded-full text-center py-3 text-sm font-semibold transition-opacity hover:opacity-80"
-                  style={{ background: plan.popular ? '#84CC16' : '#1A1A1A', color: plan.popular ? '#1A1A1A' : '#FFFFFF', fontFamily: 'var(--font-space-grotesk)' }}
+                  style={{ background: plan.popular ? '#8ECB3C' : '#2C2C2A', color: plan.popular ? '#2C2C2A' : '#FFFFFF', fontFamily: 'var(--font-space-grotesk)' }}
                 >
                   {plan.cta}
                 </Link>
@@ -1136,24 +1136,24 @@ export default function LandingPage() {
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid lg:grid-cols-2 gap-8 items-end mb-14">
             <motion.div {...fadeInView(0)}>
-              <p className="text-sm font-semibold tracking-widest uppercase mb-4" style={{ color: '#84CC16', fontFamily: 'var(--font-space-grotesk)' }}>Testimonials</p>
-              <h2 className="leading-tight" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#1A1A1A' }}>
-                Loved by <span style={{ color: '#84CC16' }}>small organisations.</span>
+              <p className="text-sm font-semibold tracking-widest uppercase mb-4" style={{ color: '#8ECB3C', fontFamily: 'var(--font-space-grotesk)' }}>Testimonials</p>
+              <h2 className="leading-tight" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#2C2C2A' }}>
+                Loved by <span style={{ color: '#8ECB3C' }}>small organisations.</span>
               </h2>
             </motion.div>
             <motion.div {...fadeInView(0.1)}>
-              <p className="text-base leading-relaxed" style={{ color: '#525252' }}>Early users finding funding they never knew existed.</p>
+              <p className="text-base leading-relaxed" style={{ color: '#5F5E5A' }}>Early users finding funding they never knew existed.</p>
             </motion.div>
           </div>
           <div className="grid md:grid-cols-3 gap-4">
             {testimonials.map((t, i) => (
               <motion.div key={t.name} {...fadeInView(i * 0.1)} className="rounded-3xl p-8 flex flex-col bg-white">
-                <p className="text-base leading-relaxed flex-1 mb-8" style={{ color: '#525252' }}>&ldquo;{t.quote}&rdquo;</p>
+                <p className="text-base leading-relaxed flex-1 mb-8" style={{ color: '#5F5E5A' }}>&ldquo;{t.quote}&rdquo;</p>
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 rounded-full items-center justify-center text-white font-semibold text-sm flex-shrink-0" style={{ background: '#1A1A1A', fontFamily: 'var(--font-space-grotesk)' }}>{t.initials}</div>
+                  <div className="flex h-10 w-10 rounded-full items-center justify-center text-white font-semibold text-sm flex-shrink-0" style={{ background: '#2C2C2A', fontFamily: 'var(--font-space-grotesk)' }}>{t.initials}</div>
                   <div>
-                    <p className="text-sm font-semibold" style={{ color: '#1A1A1A', fontFamily: 'var(--font-space-grotesk)' }}>{t.name}</p>
-                    <p className="text-xs" style={{ color: '#888888' }}>{t.role}</p>
+                    <p className="text-sm font-semibold" style={{ color: '#2C2C2A', fontFamily: 'var(--font-space-grotesk)' }}>{t.name}</p>
+                    <p className="text-xs" style={{ color: '#8A8986' }}>{t.role}</p>
                   </div>
                 </div>
               </motion.div>
@@ -1163,37 +1163,37 @@ export default function LandingPage() {
       </section>
 
       {/* CONTACT */}
-      <section id="contact" className="py-20 md:py-28" style={{ background: "#F9F9F9" }}>
+      <section id="contact" className="py-20 md:py-28" style={{ background: "#FAFAF7" }}>
         <div className="mx-auto max-w-6xl px-6">
           <motion.div {...fadeInView(0)} className="grid lg:grid-cols-2 gap-16 items-start">
             <div>
-              <p className="text-sm font-semibold tracking-widest uppercase mb-4" style={{ color: '#84CC16', fontFamily: 'var(--font-space-grotesk)' }}>Contact</p>
-              <h2 className="mb-6 leading-tight" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#1A1A1A' }}>
-                Get in <span style={{ color: '#84CC16' }}>touch.</span>
+              <p className="text-sm font-semibold tracking-widest uppercase mb-4" style={{ color: '#8ECB3C', fontFamily: 'var(--font-space-grotesk)' }}>Contact</p>
+              <h2 className="mb-6 leading-tight" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#2C2C2A' }}>
+                Get in <span style={{ color: '#8ECB3C' }}>touch.</span>
               </h2>
-              <p className="text-base leading-relaxed mb-10" style={{ color: '#525252' }}>Have a question, partnership idea, or just want to say hello? We&apos;d love to hear from you.</p>
+              <p className="text-base leading-relaxed mb-10" style={{ color: '#5F5E5A' }}>Have a question, partnership idea, or just want to say hello? We&apos;d love to hear from you.</p>
               <div className="space-y-6">
                 <div className="flex items-center gap-4">
-                  <div className="flex h-11 w-11 rounded-xl items-center justify-center flex-shrink-0" style={{ background: '#F4F9E8' }}>
-                    <Mail size={18} style={{ color: '#84CC16' }} />
+                  <div className="flex h-11 w-11 rounded-xl items-center justify-center flex-shrink-0" style={{ background: '#F1F7E4' }}>
+                    <Mail size={18} style={{ color: '#8ECB3C' }} />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold mb-0.5" style={{ color: '#1A1A1A', fontFamily: 'var(--font-space-grotesk)' }}>Email us</p>
-                    <a href="mailto:hello@granttracker.co.uk" className="text-sm hover:underline" style={{ color: '#84CC16' }}>hello@granttracker.co.uk</a>
+                    <p className="text-sm font-semibold mb-0.5" style={{ color: '#2C2C2A', fontFamily: 'var(--font-space-grotesk)' }}>Email us</p>
+                    <a href="mailto:hello@granttracker.co.uk" className="text-sm hover:underline" style={{ color: '#8ECB3C' }}>hello@granttracker.co.uk</a>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
-                  <div className="flex h-11 w-11 rounded-xl items-center justify-center flex-shrink-0" style={{ background: '#F4F9E8' }}>
-                    <MessageSquare size={18} style={{ color: '#84CC16' }} />
+                  <div className="flex h-11 w-11 rounded-xl items-center justify-center flex-shrink-0" style={{ background: '#F1F7E4' }}>
+                    <MessageSquare size={18} style={{ color: '#8ECB3C' }} />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold mb-0.5" style={{ color: '#1A1A1A', fontFamily: 'var(--font-space-grotesk)' }}>Response time</p>
-                    <p className="text-sm" style={{ color: '#525252' }}>Usually within 24 hours</p>
+                    <p className="text-sm font-semibold mb-0.5" style={{ color: '#2C2C2A', fontFamily: 'var(--font-space-grotesk)' }}>Response time</p>
+                    <p className="text-sm" style={{ color: '#5F5E5A' }}>Usually within 24 hours</p>
                   </div>
                 </div>
               </div>
             </div>
-            <div className="rounded-3xl p-8 md:p-10" style={{ background: '#F9F9F9' }}>
+            <div className="rounded-3xl p-8 md:p-10" style={{ background: '#FAFAF7' }}>
               <ContactForm />
             </div>
           </motion.div>
@@ -1201,42 +1201,42 @@ export default function LandingPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-20 md:py-28" style={{ background: '#1A1A1A' }}>
+      <section className="py-20 md:py-28" style={{ background: '#2C2C2A' }}>
         <div className="mx-auto max-w-6xl px-6">
-          <motion.div {...fadeInView(0)} className="rounded-3xl p-12 md:p-20 text-center" style={{ background: '#84CC16' }}>
-            <h2 className="mb-6 leading-[1.05]" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(36px, 5.5vw, 72px)', letterSpacing: '-0.03em', color: '#1A1A1A' }}>
+          <motion.div {...fadeInView(0)} className="rounded-3xl p-12 md:p-20 text-center" style={{ background: '#8ECB3C' }}>
+            <h2 className="mb-6 leading-[1.05]" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(36px, 5.5vw, 72px)', letterSpacing: '-0.03em', color: '#2C2C2A' }}>
               Find your funding.<br />Free to start.
             </h2>
-            <p className="mx-auto mb-10 max-w-lg text-base leading-relaxed" style={{ color: '#2A4A1A' }}>
+            <p className="mx-auto mb-10 max-w-lg text-base leading-relaxed" style={{ color: '#173404' }}>
               Join CICs, charities, social enterprises and impact founders already discovering funding that actually fits.
             </p>
             <Link
               href="/auth/signup"
               className="inline-block rounded-full px-10 py-4 text-base font-semibold transition-opacity hover:opacity-80"
-              style={{ background: '#1A1A1A', color: '#FFFFFF', fontFamily: 'var(--font-space-grotesk)' }}
+              style={{ background: '#2C2C2A', color: '#FFFFFF', fontFamily: 'var(--font-space-grotesk)' }}
             >
               Start for free
             </Link>
-            <p className="mt-5 text-sm" style={{ color: '#2A4A1A' }}>No credit card required</p>
+            <p className="mt-5 text-sm" style={{ color: '#173404' }}>No credit card required</p>
           </motion.div>
         </div>
       </section>
 
       {/* FOOTER */}
-      <footer className="py-10" style={{ background: '#1A1A1A', borderTop: '1px solid #2A2A2A' }}>
+      <footer className="py-10" style={{ background: '#2C2C2A', borderTop: '1px solid #2C2C2A' }}>
         <div className="mx-auto max-w-6xl px-6">
           <div className="flex flex-col items-center gap-8 md:flex-row md:justify-between">
             <a href="/" className="flex items-center gap-2">
-              <span className="text-lg font-bold" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#FFFFFF' }}>Grant<span style={{ color: '#84CC16' }}>Tracker</span></span>
+              <span className="text-lg font-bold" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#FFFFFF' }}>Grant<span style={{ color: '#8ECB3C' }}>Tracker</span></span>
             </a>
-            <div className="flex flex-wrap justify-center gap-6 text-sm" style={{ color: '#888888' }}>
+            <div className="flex flex-wrap justify-center gap-6 text-sm" style={{ color: '#8A8986' }}>
               <a href="#how" className="hover:text-white transition-colors">How it works</a>
               <a href="#features" className="hover:text-white transition-colors">Features</a>
               <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
               <a href="#about" className="hover:text-white transition-colors">About</a>
               <a href="#contact" className="hover:text-white transition-colors">Contact</a>
             </div>
-            <p className="text-xs" style={{ color: '#555555' }}>© 2026 Grant Tracker</p>
+            <p className="text-xs" style={{ color: '#5F5E5A' }}>© 2026 Grant Tracker</p>
           </div>
         </div>
       </footer>
