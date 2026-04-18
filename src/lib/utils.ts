@@ -74,26 +74,33 @@ export function getDeadlineAlerts(items: PipelineItem[]): DeadlineAlert[] {
 
 // ── Pipeline stage config ─────────────────────
 
+/**
+ * Pipeline stages — April 2026 spec tonal ladder:
+ * cream -> pale-green -> mid-pale-green -> saturated green -> coral.
+ * Emotional gradient from neutral (identified) through progress
+ * (applying/submitted) to success (won), with coral as the warm break
+ * for declined. Coral is the only red-family colour the system allows.
+ */
 export const PIPELINE_STAGES = [
-  { id: 'identified',  label: 'Identified',  emoji: '🔎', colour: 'blue' },
-  { id: 'applying',    label: 'Applying',    emoji: '✏️', colour: 'purple' },
-  { id: 'submitted',   label: 'Submitted',   emoji: '📬', colour: 'sage' },
-  { id: 'won',         label: 'Won',         emoji: '🏆', colour: 'forest' },
-  { id: 'declined',    label: 'Declined',    emoji: '✗',  colour: 'red' },
+  { id: 'identified',  label: 'Identified',  emoji: '🔎', colour: 'cream'        },
+  { id: 'applying',    label: 'Applying',    emoji: '✏️', colour: 'green-pale-2' },
+  { id: 'submitted',   label: 'Submitted',   emoji: '📬', colour: 'green-pale-3' },
+  { id: 'won',         label: 'Won',         emoji: '🏆', colour: 'green-mid'    },
+  { id: 'declined',    label: 'Declined',    emoji: '✗',  colour: 'coral'        },
 ] as const
 
 export const STAGE_COLOURS: Record<PipelineStage, string> = {
-  identified:  'border-blue-400 text-blue-600',
-  applying:    'border-purple-400 text-purple-600',
-  submitted:   'border-sage text-sage',
-  won:         'border-forest text-forest',
-  declined:    'border-red-400 text-red-600',
+  identified: 'border-[rgba(0,0,0,0.10)] text-[#5F5E5A]',
+  applying:   'border-green-mid text-green-text-deep',
+  submitted:  'border-green-pale-3 text-green-deep',
+  won:        'border-green-mid text-green-deep',
+  declined:   'border-coral-mid text-coral-deep',
 }
 
 export const STAGE_BG: Record<PipelineStage, string> = {
-  identified:  'bg-blue-50',
-  applying:    'bg-purple-50',
-  submitted:   'bg-green-50',
-  won:         'bg-emerald-50',
-  declined:    'bg-red-50',
+  identified: 'bg-cream-1',
+  applying:   'bg-green-pale-2',
+  submitted:  'bg-green-pale-3',
+  won:        'bg-green-mid',
+  declined:   'bg-coral-pale',
 }

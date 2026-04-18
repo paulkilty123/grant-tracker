@@ -141,11 +141,11 @@ export default async function DashboardPage() {
 
   // Stage pipeline values
   const stageData = [
-    { id: 'identified', label: 'Identified', sublabel: 'Leads',    bg: '#F4F9E8', labelCol: '#4A7C10', valCol: '#2A5000', dot: '#84CC16' },
-    { id: 'applying',   label: 'Applying',   sublabel: 'Active',   bg: '#E8F5E9', labelCol: '#2E7D32', valCol: '#1B5E20', dot: '#66BB6A' },
-    { id: 'submitted',  label: 'Submitted',  sublabel: 'Pending',  bg: '#E3F2FD', labelCol: '#1565C0', valCol: '#0D47A1', dot: '#42A5F5' },
-    { id: 'won',        label: 'Won',        sublabel: 'Wins',     bg: '#1A1A1A', labelCol: '#84CC16', valCol: '#FFFFFF', dot: '#84CC16' },
-    { id: 'declined',   label: 'Declined',   sublabel: 'Archived', bg: '#F5F5F5', labelCol: '#6E6E80', valCol: '#3D3D4E', dot: '#CCCCCC' },
+    { id: 'identified', label: 'Identified', sublabel: 'Leads',    bg: '#EAF3DE', labelCol: '#639922', valCol: '#173404', dot: '#8ECB3C' },
+    { id: 'applying',   label: 'Applying',   sublabel: 'Active',   bg: '#F1F7E4', labelCol: '#639922', valCol: '#173404', dot: '#C0DD97' },
+    { id: 'submitted',  label: 'Submitted',  sublabel: 'Pending',  bg: '#E6F1FB', labelCol: '#0C447C', valCol: '#042C53', dot: '#378ADD' },
+    { id: 'won',        label: 'Won',        sublabel: 'Wins',     bg: '#2C2C2A', labelCol: '#8ECB3C', valCol: '#FFFFFF', dot: '#8ECB3C' },
+    { id: 'declined',   label: 'Declined',   sublabel: 'Archived', bg: '#FAFAF7', labelCol: '#5F5E5A', valCol: '#2C2C2A', dot: '#E4E2DA' },
   ]
   const stageValues = stageData.map(s => ({
     ...s,
@@ -188,12 +188,12 @@ export default async function DashboardPage() {
     <div>
       {/* Setup banner */}
       {profileIncomplete && (
-        <div className="mb-6 border border-amber-200 bg-amber-50 p-4 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="mb-6 border border-amber-mid bg-amber-pale p-4 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <p className="text-sm font-semibold text-amber-800">Complete your profile to unlock matched grants</p>
-            <p className="text-xs text-amber-700 mt-0.5">Takes about 3 minutes — tells us your sector, location and legal structure.</p>
+            <p className="text-sm font-semibold text-amber-deepest">Complete your profile to unlock matched grants</p>
+            <p className="text-xs text-amber-deep mt-0.5">Takes about 3 minutes — tells us your sector, location and legal structure.</p>
           </div>
-          <a href="/dashboard/profile" className="flex-shrink-0 px-4 py-2 text-xs font-semibold rounded-full hover:opacity-90 transition-colors whitespace-nowrap" style={{ background: '#1A1A1A', color: '#FFFFFF', fontFamily: 'var(--font-space-grotesk)' }}>Set up profile →</a>
+          <a href="/dashboard/profile" className="flex-shrink-0 px-4 py-2 text-xs font-semibold rounded-full hover:opacity-90 transition-colors whitespace-nowrap" style={{ background: '#2C2C2A', color: '#FFFFFF', fontFamily: 'var(--font-space-grotesk)' }}>Set up profile →</a>
         </div>
       )}
 
@@ -212,7 +212,7 @@ export default async function DashboardPage() {
                 <>
                   <span className="text-warm">•</span>
                   <a href="/dashboard/deadlines"
-                    className="text-xs font-bold uppercase tracking-wider hover:underline" style={{ color: '#84CC16' }}>
+                    className="text-xs font-bold uppercase tracking-wider hover:underline" style={{ color: '#8ECB3C' }}>
                     Action Required
                   </a>
                 </>
@@ -226,38 +226,38 @@ export default async function DashboardPage() {
       {/* Stat cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {/* Card 1 — Total Pipeline (blue) */}
-        <div className="p-5 rounded-xl col-span-1" style={{ background: '#BAE6FD', boxShadow: '0 2px 16px rgba(56,189,248,0.18)' }}>
-          <p className="text-[10px] font-semibold uppercase tracking-wider mb-3" style={{ color: '#1E3A5F', opacity: 0.6 }}>Total Pipeline</p>
-          <p className="text-3xl font-bold leading-none mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#1E3A5F', letterSpacing: '-0.02em' }}>
+        <div className="p-5 rounded-xl col-span-1" style={{ background: '#B5D4F4', boxShadow: '0 2px 16px rgba(56,189,248,0.18)' }}>
+          <p className="text-[10px] font-semibold uppercase tracking-wider mb-3" style={{ color: '#0C447C', opacity: 0.6 }}>Total Pipeline</p>
+          <p className="text-3xl font-bold leading-none mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#0C447C', letterSpacing: '-0.02em' }}>
             {formatCurrency(stats.totalPipelineValue)}
           </p>
-          <p className="text-xs" style={{ color: '#1E3A5F', opacity: 0.6 }}>{stats.activeCount} active opportunit{stats.activeCount !== 1 ? 'ies' : 'y'}</p>
+          <p className="text-xs" style={{ color: '#0C447C', opacity: 0.6 }}>{stats.activeCount} active opportunit{stats.activeCount !== 1 ? 'ies' : 'y'}</p>
         </div>
 
         {/* Card 2 — Won This Year (lime green) */}
-        <div className="p-5 rounded-xl" style={{ background: '#84CC16', boxShadow: '0 2px 16px rgba(132,204,22,0.25)' }}>
+        <div className="p-5 rounded-xl" style={{ background: '#8ECB3C', boxShadow: '0 2px 16px rgba(132,204,22,0.25)' }}>
           <p className="text-[10px] font-semibold uppercase tracking-wider mb-3" style={{ color: 'rgba(255,255,255,0.70)' }}>Won This Year</p>
           <p className="text-3xl font-bold leading-none mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#ffffff', letterSpacing: '-0.02em' }}>{formatCurrency(stats.totalWon)}</p>
           <p className="text-xs" style={{ color: 'rgba(255,255,255,0.70)' }}>{stats.wonCount} grant{stats.wonCount !== 1 ? 's' : ''} secured</p>
         </div>
 
         {/* Card 3 — Submitted (amber) */}
-        <div className="p-5 rounded-xl" style={{ background: '#FDE8A3', boxShadow: '0 2px 16px rgba(245,158,11,0.12)' }}>
-          <p className="text-[10px] font-semibold uppercase tracking-wider mb-3" style={{ color: '#5C4A00' }}>Submitted</p>
-          <p className="text-3xl font-bold leading-none mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#4A3800', letterSpacing: '-0.02em' }}>{stats.submittedCount}</p>
-          <p className="text-xs" style={{ color: '#5C4A00' }}>Application{stats.submittedCount !== 1 ? 's' : ''} awaiting decision</p>
+        <div className="p-5 rounded-xl" style={{ background: '#FAC775', boxShadow: '0 2px 16px rgba(245,158,11,0.12)' }}>
+          <p className="text-[10px] font-semibold uppercase tracking-wider mb-3" style={{ color: '#854F0B' }}>Submitted</p>
+          <p className="text-3xl font-bold leading-none mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#412402', letterSpacing: '-0.02em' }}>{stats.submittedCount}</p>
+          <p className="text-xs" style={{ color: '#854F0B' }}>Application{stats.submittedCount !== 1 ? 's' : ''} awaiting decision</p>
         </div>
 
         {/* Card 4 — Urgent Deadlines (grey) */}
-        <div className="p-5 rounded-xl" style={{ background: '#EBEBEB', boxShadow: '0 2px 16px rgba(0,0,0,0.06)' }}>
-          <p className="text-[10px] font-semibold uppercase tracking-wider mb-3" style={{ color: '#6B7280' }}>Urgent Deadlines</p>
+        <div className="p-5 rounded-xl" style={{ background: '#E8E0D1', boxShadow: '0 2px 16px rgba(0,0,0,0.06)' }}>
+          <p className="text-[10px] font-semibold uppercase tracking-wider mb-3" style={{ color: '#5F5E5A' }}>Urgent Deadlines</p>
           <div className="flex items-center gap-3 mb-2">
-            <p className="text-3xl font-bold leading-none" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.02em', color: urgentCount > 0 ? '#ea580c' : '#374151' }}>{urgentCount}</p>
+            <p className="text-3xl font-bold leading-none" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.02em', color: urgentCount > 0 ? '#D85A30' : '#5F5E5A' }}>{urgentCount}</p>
             <span className="flex items-center justify-center w-10 h-10 rounded-full" style={{ backgroundColor: 'rgba(234,88,12,0.12)' }}>
-              <AlarmClock className="w-5 h-5" style={{ color: '#ea580c' }} />
+              <AlarmClock className="w-5 h-5" style={{ color: '#D85A30' }} />
             </span>
           </div>
-          <p className="text-xs" style={{ color: '#6B7280' }}>In the next 10 days</p>
+          <p className="text-xs" style={{ color: '#5F5E5A' }}>In the next 10 days</p>
         </div>
       </div>
 
@@ -266,7 +266,7 @@ export default async function DashboardPage() {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Matched Opportunities</h3>
-            <a href="/dashboard/search" className="text-xs font-semibold uppercase tracking-wider hover:underline" style={{ color: "#84CC16" }}>
+            <a href="/dashboard/search" className="text-xs font-semibold uppercase tracking-wider hover:underline" style={{ color: "#8ECB3C" }}>
               View All Opportunities →
             </a>
           </div>
@@ -281,9 +281,9 @@ export default async function DashboardPage() {
                   {/* Icon + Matched badge */}
                   <div className="flex items-start justify-between mb-4">
                     <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(132,204,22,0.12)' }}>
-                      <Icon className="w-5 h-5" style={{ color: '#84CC16' }} />
+                      <Icon className="w-5 h-5" style={{ color: '#8ECB3C' }} />
                     </div>
-                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide" style={{ background: 'rgba(132,204,22,0.15)', color: '#4A7C10' }}>Matched</span>
+                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide" style={{ background: 'rgba(132,204,22,0.15)', color: '#639922' }}>Matched</span>
                   </div>
                   {/* Title + description */}
                   <h4 className="text-base font-bold text-charcoal leading-snug mb-1.5 transition-colors line-clamp-2" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
@@ -317,7 +317,7 @@ export default async function DashboardPage() {
         <div className="md:col-span-2 card">
           <div className="flex items-center justify-between mb-5">
             <h3 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Pipeline Overview</h3>
-            <a href="/dashboard/pipeline" className="text-xs font-semibold uppercase tracking-wider hover:underline" style={{ color: '#84CC16' }}>View Pipeline →</a>
+            <a href="/dashboard/pipeline" className="text-xs font-semibold uppercase tracking-wider hover:underline" style={{ color: '#8ECB3C' }}>View Pipeline →</a>
           </div>
 
           {items.length === 0 ? (
@@ -325,7 +325,7 @@ export default async function DashboardPage() {
               <p className="text-2xl mb-3">🔍</p>
               <p className="text-sm font-medium text-charcoal mb-1">No grants tracked yet</p>
               <p className="text-xs mb-4">Find a grant and hit <strong>+ Pipeline</strong> to start tracking.</p>
-              <a href="/dashboard/search" className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-full hover:opacity-90 transition-colors" style={{ background: '#84CC16', color: '#1A1A1A', fontFamily: 'var(--font-space-grotesk)' }}>
+              <a href="/dashboard/search" className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-full hover:opacity-90 transition-colors" style={{ background: '#8ECB3C', color: '#2C2C2A', fontFamily: 'var(--font-space-grotesk)' }}>
                 Find your first grant →
               </a>
             </div>
@@ -387,7 +387,7 @@ export default async function DashboardPage() {
               {alerts.map(alert => {
                 const dateObj = formatDeadlineDate(alert.item.deadline)
                 const urgencyBadge =
-                  alert.urgency === 'overdue' ? { label: 'Overdue',  cls: 'bg-red-500 text-white' } :
+                  alert.urgency === 'overdue' ? { label: 'Overdue',  cls: 'bg-coral-saturated text-white' } :
                   alert.urgency === 'urgent'  ? { label: 'Tomorrow', cls: 'bg-gold/20 text-gold font-bold' } :
                   alert.urgency === 'soon'    ? { label: `In ${alert.daysUntil}d`, cls: 'bg-forest/10 text-forest' } :
                                                 { label: `${alert.daysUntil}d`,    cls: 'bg-forest/10 text-forest' }
@@ -397,7 +397,7 @@ export default async function DashboardPage() {
 
                 return (
                   <a key={alert.item.id} href="/dashboard/deadlines"
-                    className="flex items-center gap-3 py-2.5 border-b border-warm last:border-0 hover:bg-[#FAF8F5] -mx-2 px-2 rounded transition-colors">
+                    className="flex items-center gap-3 py-2.5 border-b border-warm last:border-0 hover:bg-[#FAFAF7] -mx-2 px-2 rounded transition-colors">
                     {/* Date column */}
                     {dateObj ? (
                       <div className="flex flex-col items-center flex-shrink-0 w-9 text-center">
@@ -425,7 +425,7 @@ export default async function DashboardPage() {
 
           <div className="mt-4">
             <a href="/dashboard/deadlines"
-              className="flex items-center justify-center gap-1.5 w-full py-2 text-xs font-semibold uppercase tracking-wider rounded-full border transition-colors" style={{ color: '#525252', borderColor: '#E0E0E0', fontFamily: 'var(--font-space-grotesk)' }}>
+              className="flex items-center justify-center gap-1.5 w-full py-2 text-xs font-semibold uppercase tracking-wider rounded-full border transition-colors" style={{ color: '#5F5E5A', borderColor: '#E4E2DA', fontFamily: 'var(--font-space-grotesk)' }}>
               Calendar View
               <ArrowRight className="w-3 h-3" />
             </a>
