@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Search, ArrowRight, Bell, Lock } from 'lucide-react'
+import { isOnboardingComplete, computePostLoginPath } from '@/lib/onboarding'
 import RadioWaveIcon from '@/components/icons/RadioWaveIcon'
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -42,11 +43,28 @@ function LoginForm() {
     setLoading(true)
     setError(null)
     const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { data: signIn, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
       setError(friendlyError(error.message))
       setLoading(false)
-    } else {
+      return
+    }
+    try {
+      const userId = signIn?.user?.id
+      if (!userId) { router.push('/dashboard'); router.refresh(); return }
+      const { data: org } = await supabase.from('organisations').select('*').eq('owner_id', userId).maybeSingle()
+      let pipelineCount = 0
+      if (org?.id) {
+        const { count } = await supabase.from('pipeline_items').select('id', { count: 'exact', head: true }).eq('org_id', org.id)
+        pipelineCount = count ?? 0
+      }
+      const dest = computePostLoginPath({
+        onboardingComplete: isOnboardingComplete(org),
+        hasPipelineActivity: pipelineCount > 0,
+      })
+      router.push(dest)
+      router.refresh()
+    } catch {
       router.push('/dashboard')
       router.refresh()
     }
