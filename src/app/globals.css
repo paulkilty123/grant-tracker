@@ -2,14 +2,85 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   GRANT TRACKER — DESIGN TOKENS (April 2026 overhaul)
+   Primary ref: grant-tracker-design-spec.md + component library
+   ============================================================ */
+
 @layer base {
   :root {
-    --forest: #008080;
-    --sage:   #26A69A;
-    --mint:   #B2DFDB;
-    --cream:  #FAF8F5;
-    --warm:   #E8E8EC;
-    --gold:   #FFB74D;
+    /* Text colours (semantic) */
+    --color-text-primary:   #2C2C2A;
+    --color-text-secondary: #5F5E5A;
+    --color-text-tertiary:  #8A8986;
+
+    /* Greens (primary brand) */
+    --green-lime:       #8ECB3C;
+    --green-mid:        #639922;
+    --green-deep:       #173404;
+    --green-pale-1:     #F1F7E4;
+    --green-pale-2:     #EAF3DE;
+    --green-pale-3:     #C0DD97;
+    --green-pale-hover: #FAFCF5;
+    --green-text-deep:  #3B6D11;
+    --green-text-nav:   #97C459;
+    --green-active:     #27500A;
+
+    /* Cream / neutral surfaces */
+    --cream-1:         #F5F1E8;
+    --bg-page:         #FAFAF7;
+    --bg-pill-neutral: #F1F0EA;
+    --toggle-off:      #D9D6CB;
+
+    /* Coral */
+    --coral-pale:      #FAECE7;
+    --coral-mid:       #F5C4B3;
+    --coral-saturated: #D85A30;
+    --coral-deep:      #993C1D;
+    --coral-deepest:   #4A1B0C;
+
+    /* Blue */
+    --blue-pale:       #E6F1FB;
+    --blue-mid:        #B5D4F4;
+    --blue-saturated:  #378ADD;
+    --blue-deep:       #0C447C;
+    --blue-deepest:    #042C53;
+
+    /* Amber */
+    --amber-pale:      #FAEEDA;
+    --amber-mid:       #FAC775;
+    --amber-saturated: #BA7517;
+    --amber-deep:      #854F0B;
+    --amber-deepest:   #412402;
+
+    /* Borders */
+    --border-light:  rgba(0, 0, 0, 0.06);
+    --border-med:    rgba(0, 0, 0, 0.08);
+    --border-input:  rgba(0, 0, 0, 0.14);
+    --border-subtle: rgba(0, 0, 0, 0.10);
+
+    /* Radii */
+    --radius-input: 10px;
+    --radius-card:  14px;
+    --radius-modal: 16px;
+    --radius-pill:  999px;
+    --radius-badge: 8px;
+
+    /* Shadows */
+    --shadow-segment-active: 0 1px 2px rgba(0, 0, 0, 0.06);
+    --shadow-modal:          0 24px 60px rgba(0, 0, 0, 0.18);
+    --shadow-sticky-footer:  0 -2px 10px rgba(0, 0, 0, 0.03);
+
+    /* Modal backdrop — ALWAYS deep forest green at 40%, never black */
+    --backdrop-modal: rgba(23, 52, 4, 0.4);
+
+    /* Legacy aliases (point at new tokens) */
+    --forest: var(--green-deep);
+    --sage:   var(--green-mid);
+    --mint:   var(--green-pale-3);
+    --cream:  var(--bg-page);
+    --warm:   #E8E0D1;
+    --gold:   var(--amber-saturated);
   }
 
   html {
@@ -17,97 +88,413 @@
   }
 
   body {
-    background-color: #FAF8F5;
-    color: #1C1C2E;
+    background-color: var(--bg-page);
+    color: var(--color-text-primary);
+    font-family: var(--font-dm-sans), system-ui, sans-serif;
   }
 
-  h1, h2, h3 {
-    font-family: var(--font-dm-serif), serif;
+  /* Headings default to Space Grotesk per spec. DM Serif is reserved for
+     two specific decorative spots and must be applied explicitly via
+     `font-serif` in those components. */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-space-grotesk), var(--font-dm-sans), system-ui, sans-serif;
+    font-weight: 500;
+    letter-spacing: -0.02em;
   }
 }
 
+/* ============================================================
+   COMPONENT PRIMITIVES
+   ============================================================ */
+
 @layer components {
-  /* Cards */
+  /* ─── Cards ────────────────────────────────────────────── */
   .card {
-    @apply bg-white border border-warm/80 p-6 rounded-xl;
-    box-shadow: 0 2px 12px rgba(26,46,43,0.07);
+    background: #fff;
+    border: 0.5px solid var(--border-med);
+    border-radius: var(--radius-card);
+    padding: 24px;
   }
 
-  /* Buttons */
+  .surface-cream {
+    background: var(--cream-1);
+    border-radius: var(--radius-card);
+  }
+
+  /* ─── Buttons ──────────────────────────────────────────── */
+  .btn {
+    @apply font-sans inline-flex items-center gap-2 whitespace-nowrap
+           text-sm font-medium cursor-pointer transition-colors duration-150;
+    padding: 11px 22px;
+    border-radius: var(--radius-pill);
+    border: none;
+  }
+  .btn svg { width: 14px; height: 14px; }
+
+  /* Primary — lime, for hero CTAs and conversion moments */
   .btn-primary {
-    @apply bg-coral text-white px-5 py-2.5 text-sm font-medium
-           hover:opacity-90 transition-colors duration-150 cursor-pointer border-none rounded-lg;
+    background: var(--green-lime);
+    color: var(--green-deep);
   }
+  .btn-primary:hover { background: #7BB82F; }
+
+  /* Utility — deep forest, for repetitive step transitions */
+  .btn-utility {
+    background: var(--green-deep);
+    color: var(--green-pale-1);
+  }
+  .btn-utility:hover { background: #0F2703; }
+
+  /* Secondary — outlined neutral */
+  .btn-secondary,
   .btn-outline {
-    @apply bg-transparent text-charcoal border border-warm px-5 py-2.5
-           text-sm font-medium hover:border-charcoal transition-colors
-           duration-150 cursor-pointer rounded-lg;
+    background: transparent;
+    color: var(--color-text-primary);
+    border: 0.5px solid var(--border-input);
   }
-  .btn-gold {
-    @apply bg-[#1A1A1A] text-white px-5 py-2.5 text-sm font-medium
-           hover:opacity-80 transition-all duration-150 cursor-pointer border-none rounded-lg;
-  }
-  .btn-sm {
-    @apply px-3.5 py-1.5 text-xs;
+  .btn-secondary:hover,
+  .btn-outline:hover {
+    background: var(--bg-page);
+    border-color: var(--color-text-secondary);
   }
 
-  /* Form inputs */
-  .form-input {
-    @apply w-full px-3.5 py-2.5 border border-warm text-sm text-charcoal
-           outline-none focus:border-[#84CC16] transition-colors font-sans bg-white rounded-lg;
+  /* Tertiary — faint outlined (lowest emphasis) */
+  .btn-tertiary {
+    background: transparent;
+    color: var(--color-text-secondary);
+    border: 0.5px solid var(--border-subtle);
+    font-size: 13px;
+    padding: 9px 16px;
+  }
+  .btn-tertiary:hover {
+    background: var(--bg-page);
+    color: var(--color-text-primary);
+  }
+
+  /* Small variant */
+  .btn-sm {
+    font-size: 12px;
+    padding: 7px 14px;
+  }
+  .btn-sm svg { width: 12px; height: 12px; }
+
+  /* Danger — used in danger zone sections only */
+  .btn-danger {
+    background: transparent;
+    color: var(--coral-deep);
+    border: 0.5px solid rgba(153, 60, 29, 0.3);
+    font-size: 12px;
+    padding: 8px 16px;
+  }
+  .btn-danger:hover { background: var(--coral-pale); }
+
+  /* Text-only green link */
+  .btn-link {
+    background: transparent;
+    border: none;
+    padding: 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--green-mid);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    text-decoration: underline;
+    text-decoration-color: rgba(99, 153, 34, 0.3);
+    text-underline-offset: 3px;
+  }
+  .btn-link:hover { text-decoration-color: var(--green-mid); }
+
+  /* Legacy — remapped so existing call-sites render in the new system.
+     Prefer .btn-primary / .btn-utility going forward. */
+  .btn-gold {
+    background: var(--green-deep);
+    color: var(--green-pale-1);
+    padding: 11px 22px;
+    border-radius: var(--radius-pill);
+    border: none;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-gold:hover { background: #0F2703; }
+
+  /* ─── Form fields ──────────────────────────────────────── */
+  .form-input,
+  .form-select,
+  .form-textarea {
+    width: 100%;
+    padding: 11px 14px;
+    border: 0.5px solid var(--border-input);
+    border-radius: var(--radius-input);
+    background: #fff;
+    color: var(--color-text-primary);
+    font-size: 14px;
+    font-family: var(--font-dm-sans), system-ui, sans-serif;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .form-input:focus,
+  .form-select:focus,
+  .form-textarea:focus {
+    border-color: var(--green-mid);
+  }
+  .form-input::placeholder,
+  .form-textarea::placeholder {
+    color: var(--color-text-tertiary);
   }
   .form-textarea {
-    @apply w-full px-3.5 py-2.5 border border-warm text-sm text-charcoal
-           outline-none focus:border-[#84CC16] transition-colors font-sans bg-white
-           resize-y min-h-[80px] rounded-lg;
+    padding: 12px 14px;
+    resize: vertical;
+    min-height: 100px;
+    line-height: 1.5;
   }
   .form-select {
-    @apply w-full px-3.5 py-2.5 border border-warm text-sm text-charcoal
-           outline-none focus:border-[#84CC16] transition-colors font-sans bg-white cursor-pointer rounded-lg;
+    cursor: pointer;
+  }
+  .form-input.prefilled {
+    background: var(--green-pale-hover);
+    border-color: rgba(57, 109, 17, 0.25);
   }
 
-  /* Nav */
+  /* ─── Nav (sidebar) ────────────────────────────────────── */
   .nav-item {
-    @apply flex items-center gap-2.5 px-3 py-2.5 text-white/65 text-sm
-           cursor-pointer transition-all duration-150 hover:bg-white/10 hover:text-white;
-    border-radius: 0;
+    @apply flex items-center gap-2.5 px-3 py-2.5 text-sm cursor-pointer transition-all duration-150;
+    color: var(--green-text-nav);
+    border-radius: var(--radius-input);
+  }
+  .nav-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--green-pale-1);
   }
   .nav-item.active {
-    @apply bg-white/15 text-white font-medium;
+    background: var(--green-active);
+    color: var(--green-pale-1);
+    font-weight: 500;
   }
+  .nav-item.active svg { color: var(--green-lime); }
 
-  /* Stat cards */
+  /* ─── Stat cards ───────────────────────────────────────── */
   .stat-card {
-    @apply bg-white p-5 border border-warm/80;
-    box-shadow: 0 2px 16px rgba(26,46,43,0.06);
+    background: #fff;
+    padding: 20px;
+    border: 0.5px solid var(--border-med);
+    border-radius: var(--radius-card);
   }
 
-  /* Pipeline */
+  /* ─── Pipeline stage ladder ─────────────────────────────── */
   .pipeline-card {
-    @apply bg-white p-4 mb-3 cursor-pointer rounded-xl
-           transition-all duration-150 hover:-translate-y-0.5
-           border border-warm/50;
-    box-shadow: 0 2px 12px rgba(26,46,43,0.07);
+    @apply bg-white p-4 mb-3 cursor-pointer transition-all duration-150;
+    border: 0.5px solid var(--border-med);
+    border-radius: var(--radius-card);
+  }
+  .pipeline-card:hover {
+    border-color: var(--border-input);
+    transform: translateY(-1px);
   }
   .pipeline-card.dragging {
     @apply opacity-40 scale-95;
     box-shadow: none;
   }
+
   .pipeline-col {
-    @apply p-3.5 min-h-[300px] rounded-xl border border-warm/40;
-    background: #F5F5F7;
+    padding: 14px;
+    min-height: 300px;
+    border-radius: var(--radius-card);
   }
+  .pipeline-col-identified { background: var(--cream-1); }
+  .pipeline-col-applying   { background: var(--green-pale-2); }
+  .pipeline-col-submitted  { background: var(--green-pale-3); }
+  .pipeline-col-won        { background: var(--green-mid); }
+  .pipeline-col-declined   { background: var(--coral-pale); }
+
   .pipeline-col.drag-over {
-    @apply outline-2 outline-dashed outline-[#84CC16] bg-[#84CC16]/5;
+    outline: 2px dashed var(--green-lime);
+    outline-offset: -4px;
   }
 
-  /* Tags */
+  /* ─── Tags / pills ─────────────────────────────────────── */
   .tag {
-    @apply px-2.5 py-0.5 rounded-full text-xs font-medium;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: var(--radius-pill);
+  }
+  .tag svg { width: 10px; height: 10px; }
+
+  .tag-green { background: var(--green-pale-1); color: var(--green-text-deep); }
+  .tag-coral { background: var(--coral-pale);  color: var(--coral-deep); }
+  .tag-blue  { background: var(--blue-pale);   color: var(--blue-deep); }
+  .tag-amber { background: var(--amber-pale);  color: var(--amber-deep); }
+  .tag-sector   { background: var(--cream-1);         color: var(--color-text-secondary); }
+  .tag-location { background: var(--bg-pill-neutral); color: var(--color-text-secondary); }
+
+  .cohort-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 7px 13px;
+    border-radius: var(--radius-pill);
+    background: var(--green-pale-1);
+    color: var(--green-text-deep);
+  }
+  .cohort-pill::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green-lime);
+  }
+
+  /* ─── Segmented controls ───────────────────────────────── */
+  .segmented {
+    display: inline-flex;
+    background: var(--bg-pill-neutral);
+    border-radius: var(--radius-pill);
+    padding: 3px;
+    gap: 2px;
+  }
+  .segmented button {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 7px 14px;
+    border-radius: var(--radius-pill);
+    border: none;
+    background: transparent;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .segmented button.active {
+    background: #fff;
+    color: var(--color-text-primary);
+    box-shadow: var(--shadow-segment-active);
+  }
+
+  /* ─── Toggles ──────────────────────────────────────────── */
+  .toggle {
+    position: relative;
+    width: 44px;
+    height: 24px;
+    border-radius: var(--radius-pill);
+    background: var(--toggle-off);
+    cursor: pointer;
+    transition: background 0.15s;
+    display: inline-block;
+  }
+  .toggle.on { background: var(--green-mid); }
+  .toggle-thumb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    transition: left 0.15s;
+  }
+  .toggle.on .toggle-thumb { left: 23px; }
+
+  /* ─── Icon badges ──────────────────────────────────────── */
+  .icon-badge {
+    border-radius: var(--radius-badge);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .icon-badge-sm { width: 24px; height: 24px; }
+  .icon-badge-md { width: 32px; height: 32px; }
+  .icon-badge-lg { width: 44px; height: 44px; border-radius: 12px; }
+  .icon-badge-green        { background: var(--green-pale-1); color: var(--green-text-deep); }
+  .icon-badge-coral        { background: var(--coral-pale);   color: var(--coral-deep); }
+  .icon-badge-blue         { background: var(--blue-pale);    color: var(--blue-deep); }
+  .icon-badge-amber        { background: var(--amber-pale);   color: var(--amber-deep); }
+  .icon-badge-cream        { background: var(--cream-1);      color: var(--color-text-secondary); }
+  .icon-badge-filled-green { background: var(--green-pale-3); color: var(--green-deep); }
+
+  /* ─── Match bar ────────────────────────────────────────── */
+  .match-panel {
+    background: var(--green-pale-1);
+    padding: 14px 22px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 20px;
+    align-items: center;
+    border-top: 0.5px solid rgba(57, 109, 17, 0.15);
+  }
+  .match-score-pct {
+    font-family: var(--font-space-grotesk), system-ui, sans-serif;
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--green-deep);
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .match-bar-track {
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(57, 109, 17, 0.15);
+    margin-top: 8px;
+    overflow: hidden;
+  }
+  .match-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--green-lime);
+  }
+  .match-label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--green-text-deep);
+    margin-top: 6px;
+  }
+
+  /* ─── Modal ────────────────────────────────────────────── */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: var(--backdrop-modal);
+    z-index: 40;
+  }
+  .modal-surface {
+    background: #fff;
+    border-radius: var(--radius-modal);
+    box-shadow: var(--shadow-modal);
+    max-width: 640px;
+  }
+
+  /* ─── Sticky footer (settings pages) ───────────────────── */
+  .sticky-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border-top: 0.5px solid var(--border-med);
+    box-shadow: var(--shadow-sticky-footer);
+    padding: 14px 32px;
+    z-index: 30;
   }
 }
 
-/* Loading dots animation */
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+
 @keyframes dot-bounce {
   0%, 80%, 100% { transform: translateY(0);   opacity: 0.4; }
   40%           { transform: translateY(-4px); opacity: 1;   }
@@ -120,18 +507,27 @@
   background: currentColor;
   animation: dot-bounce 1.2s infinite ease-in-out both;
 }
-.dot-bounce > span:nth-child(1) { animation-delay: 0s;    }
-.dot-bounce > span:nth-child(2) { animation-delay: 0.2s;  }
-.dot-bounce > span:nth-child(3) { animation-delay: 0.4s;  }
+.dot-bounce > span:nth-child(1) { animation-delay: 0s;   }
+.dot-bounce > span:nth-child(2) { animation-delay: 0.2s; }
+.dot-bounce > span:nth-child(3) { animation-delay: 0.4s; }
 
-/* Utilities */
+/* ============================================================
+   UTILITIES
+   ============================================================ */
+
 @layer utilities {
   .text-gradient-warm {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, #008080, #FFB74D);
+    background-image: linear-gradient(135deg, var(--green-deep), var(--green-lime));
   }
 
   .font-display {
-    font-family: var(--font-dm-serif), serif;
+    font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  }
+
+  /* Rare: DM Serif Display. Only allowed on (1) onboarding welcome headline
+     and (2) marketing About-page testimonial quote. */
+  .font-serif-display {
+    font-family: var(--font-dm-serif), Georgia, serif;
   }
 }
