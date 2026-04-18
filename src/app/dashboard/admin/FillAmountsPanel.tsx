@@ -70,7 +70,7 @@ export default function FillAmountsPanel() {
       </button>
 
       {error && (
-        <div className="mt-4 bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">
+        <div className="mt-4 bg-coral-pale border border-coral-mid rounded-lg px-4 py-3 text-sm text-coral-deep">
           <strong>Error:</strong> {error}
         </div>
       )}

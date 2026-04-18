@@ -76,13 +76,13 @@ const CATEGORY_META: Record<string, { label: string; colour: string; bg: string;
   trust_foundation:  { label: 'Trusts & Foundations', colour: 'text-forest',    bg: 'bg-forest/5',    border: 'border-forest/20'    },
   capacity_builder:  { label: 'Capacity Builders',    colour: 'text-emerald-700',bg: 'bg-emerald-50', border: 'border-emerald-200'  },
   corporate:         { label: 'Corporate',            colour: 'text-blue-600',  bg: 'bg-blue-50',     border: 'border-blue-200'     },
-  government:        { label: 'Government',           colour: 'text-purple-600',bg: 'bg-purple-50',   border: 'border-purple-200'   },
+  government:        { label: 'Government',           colour: 'text-amber-deep',bg: 'bg-amber-pale',   border: 'border-amber-mid'   },
   lottery:           { label: 'Lottery',              colour: 'text-amber-600', bg: 'bg-amber-50',    border: 'border-amber-200'    },
   housing_association:{ label: 'Housing Associations',colour: 'text-teal-600',  bg: 'bg-teal-50',     border: 'border-teal-200'     },
   local_authority:   { label: 'Local Authorities',   colour: 'text-orange-600',bg: 'bg-orange-50',   border: 'border-orange-200'   },
-  competition:       { label: 'Competitions & Awards',colour: 'text-pink-600',  bg: 'bg-pink-50',     border: 'border-pink-200'     },
-  loan:              { label: 'Loans & Social Finance',colour:'text-indigo-600',bg: 'bg-indigo-50',   border: 'border-indigo-200'   },
-  crowdfund_match:   { label: 'Crowdfund Match',      colour: 'text-rose-600',  bg: 'bg-rose-50',     border: 'border-rose-200'     },
+  competition:       { label: 'Competitions & Awards',colour: 'text-coral-deep',  bg: 'bg-coral-pale',     border: 'border-coral-mid'     },
+  loan:              { label: 'Loans & Social Finance',colour:'text-blue-deep',bg: 'bg-blue-pale',   border: 'border-blue-mid'   },
+  crowdfund_match:   { label: 'Crowdfund Match',      colour: 'text-amber-deep',  bg: 'bg-amber-pale',     border: 'border-amber-mid'     },
   other:             { label: 'Other',                colour: 'text-mid',       bg: 'bg-warm/30',     border: 'border-warm'         },
 }
 
@@ -136,10 +136,10 @@ function SavedForLaterTab() {
   }, [])
 
   const FT_STYLE: Record<string, { bg: string; color: string; label: string }> = {
-    grant:      { bg: 'rgba(132,204,22,0.15)', color: '#446900', label: 'Grant' },
-    programme:  { bg: 'rgba(251,146,60,0.15)', color: '#c2410c', label: 'Programme' },
-    investment: { bg: 'rgba(96,165,250,0.15)', color: '#1d4ed8', label: 'Investment' },
-    in_kind:    { bg: 'rgba(167,139,250,0.15)', color: '#7c3aed', label: 'In-Kind' },
+    grant:      { bg: 'rgba(132,204,22,0.15)', color: '#639922', label: 'Grant' },
+    programme:  { bg: 'rgba(251,146,60,0.15)', color: '#993C1D', label: 'Programme' },
+    investment: { bg: 'rgba(96,165,250,0.15)', color: '#0C447C', label: 'Investment' },
+    in_kind:    { bg: 'rgba(167,139,250,0.15)', color: '#BA7517', label: 'In-Kind' },
   }
 
   if (loading) return <div className="py-12 text-center text-sm text-mid">Loading…</div>
@@ -167,7 +167,7 @@ function SavedForLaterTab() {
         <tbody className="divide-y divide-warm/60">
           {grants.map(grant => {
             const ft = grant.funding_type
-            const ftStyle = ft ? (FT_STYLE[ft] ?? { bg: '#f3f4f6', color: '#6b7280', label: ft }) : null
+            const ftStyle = ft ? (FT_STYLE[ft] ?? { bg: '#f3f4f6', color: '#5F5E5A', label: ft }) : null
             return (
               <tr key={grant.id} className="hover:bg-cream/50 transition-colors">
                 <td className="px-5 py-3 max-w-[200px]">
@@ -197,7 +197,7 @@ function SavedForLaterTab() {
                       Approve
                     </button>
                     <button onClick={async () => { await fetch('/api/admin/update-grant', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: grant.id, fields: { url_status: 'dead', saved_for_later: false } }) }); setGrants(prev => prev.filter(g => g.id !== grant.id)) }}
-                      className="rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-500 hover:bg-red-500 hover:text-white transition-colors">
+                      className="rounded-full bg-coral-pale px-3 py-1 text-xs font-semibold text-coral-saturated hover:bg-coral-pale0 hover:text-white transition-colors">
                       Remove
                     </button>
                   </div>
@@ -1847,9 +1847,9 @@ export default function UrlAdminPage() {
   function RowActions({ grant }: { grant: Grant }) {
     return confirmDeleteId === grant.id ? (
       <div className="flex items-center justify-end gap-1.5">
-        <span className="text-xs text-red-500 font-medium mr-1">Remove?</span>
+        <span className="text-xs text-coral-saturated font-medium mr-1">Remove?</span>
         <button onClick={() => removeGrant(grant.id, 'dead')} title="Remove completely (permanent)"
-          className="rounded-full bg-red-500 p-1.5 text-white hover:bg-red-600 transition-colors">
+          className="rounded-full bg-coral-pale0 p-1.5 text-white hover:bg-coral-deep transition-colors">
           <Trash2 className="h-3 w-3" />
         </button>
         <button onClick={() => removeGrant(grant.id, 'review')} title="Send back to Needs Review"
@@ -1895,8 +1895,8 @@ export default function UrlAdminPage() {
           title={grant.is_invite_only ? 'Mark as open application' : 'Mark as invite-only'}
           className={`rounded-full border p-1.5 transition-colors ${
             grant.is_invite_only
-              ? 'border-purple-300 bg-purple-50 text-purple-600 hover:bg-purple-100'
-              : 'border-warm text-mid hover:border-purple-300 hover:text-purple-600'
+              ? 'border-amber-mid bg-amber-pale text-amber-deep hover:bg-amber-pale'
+              : 'border-warm text-mid hover:border-amber-mid hover:text-amber-deep'
           }`}
         >
           <Mail className="h-3 w-3" />
@@ -1923,12 +1923,12 @@ export default function UrlAdminPage() {
         )}
         {grant.url_status !== 'dead' && (
           <button onClick={() => markDead(grant.id)} title="Flag as dead manually"
-            className="rounded-full border border-warm p-1.5 text-mid hover:border-red-300 hover:text-red-500 transition-colors">
+            className="rounded-full border border-warm p-1.5 text-mid hover:border-coral-mid hover:text-coral-saturated transition-colors">
             <X className="h-3 w-3" />
           </button>
         )}
         <button onClick={() => setConfirmDeleteId(grant.id)} title="Remove from database"
-          className="rounded-full border border-warm p-1.5 text-mid hover:border-red-300 hover:text-red-500 transition-colors">
+          className="rounded-full border border-warm p-1.5 text-mid hover:border-coral-mid hover:text-coral-saturated transition-colors">
           <Trash2 className="h-3 w-3" />
         </button>
       </div>
@@ -1971,8 +1971,8 @@ export default function UrlAdminPage() {
           title={grant.is_invite_only ? 'Mark as open application' : 'Mark as invite-only'}
           className={`rounded-full border p-1.5 transition-colors ${
             grant.is_invite_only
-              ? 'border-purple-300 bg-purple-50 text-purple-600 hover:bg-purple-100'
-              : 'border-warm text-mid hover:border-purple-300 hover:text-purple-600'
+              ? 'border-amber-mid bg-amber-pale text-amber-deep hover:bg-amber-pale'
+              : 'border-warm text-mid hover:border-amber-mid hover:text-amber-deep'
           }`}
         >
           <Mail className="h-3 w-3" />
@@ -1990,14 +1990,14 @@ export default function UrlAdminPage() {
         <button
           onClick={() => handleSeedAction(grant, newId => markDead(newId))}
           title="Flag as dead manually"
-          className="rounded-full border border-warm p-1.5 text-mid hover:border-red-300 hover:text-red-500 transition-colors"
+          className="rounded-full border border-warm p-1.5 text-mid hover:border-coral-mid hover:text-coral-saturated transition-colors"
         >
           <X className="h-3 w-3" />
         </button>
         <button
           onClick={() => handleSeedAction(grant, newId => setConfirmDeleteId(newId))}
           title="Remove from database"
-          className="rounded-full border border-warm p-1.5 text-mid hover:border-red-300 hover:text-red-500 transition-colors"
+          className="rounded-full border border-warm p-1.5 text-mid hover:border-coral-mid hover:text-coral-saturated transition-colors"
         >
           <Trash2 className="h-3 w-3" />
         </button>
@@ -2051,7 +2051,7 @@ export default function UrlAdminPage() {
       </span>
     )
     if (status === 'dead') return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-500">
+      <span className="inline-flex items-center gap-1 rounded-full bg-coral-pale px-2 py-0.5 text-[10px] font-semibold text-coral-saturated">
         <AlertTriangle className="h-2.5 w-2.5" /> dead
       </span>
     )
@@ -2071,7 +2071,7 @@ export default function UrlAdminPage() {
             {mode === 'review' ? 'Review & edit before publishing' : 'Review & edit fields'}
           </p>
           <button onClick={() => detectAll(grant)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-full text-white transition-colors" style={{ backgroundColor: '#1f5c52' }}>
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-full text-white transition-colors" style={{ backgroundColor: '#173404' }}>
             <Sparkles className="w-3 h-3" /> Detect all
           </button>
         </div>
@@ -2147,27 +2147,27 @@ export default function UrlAdminPage() {
             </>
           )}
           {reviewEnrichError[grant.id] && (
-            <span className="text-xs text-red-500">{reviewEnrichError[grant.id]}</span>
+            <span className="text-xs text-coral-saturated">{reviewEnrichError[grant.id]}</span>
           )}
           <button onClick={() => setReviewSourcesOpen(o => ({ ...o, [grant.id]: !o[grant.id] }))}
             className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold border rounded-full transition-colors"
-            style={{ borderColor: reviewSourcesOpen[grant.id] ? '#1f5c52' : '#E8E8EC', color: reviewSourcesOpen[grant.id] ? '#1f5c52' : '#6b7280', backgroundColor: reviewSourcesOpen[grant.id] ? 'rgba(31,92,82,0.08)' : 'white' }}>
+            style={{ borderColor: reviewSourcesOpen[grant.id] ? '#173404' : '#E8E0D1', color: reviewSourcesOpen[grant.id] ? '#173404' : '#5F5E5A', backgroundColor: reviewSourcesOpen[grant.id] ? 'rgba(31,92,82,0.08)' : 'white' }}>
             <BookOpen className="w-3 h-3" />
             {(reviewSources[grant.id]?.length ?? 0) > 0 ? `${reviewSources[grant.id].length} source${reviewSources[grant.id].length > 1 ? 's' : ''}` : 'Sources'}
           </button>
         </div>
         {reviewSourcesOpen[grant.id] && (
-          <div className="mt-2 p-3 rounded-lg border border-[#E8E8EC] bg-[#faf8f5] space-y-2">
+          <div className="mt-2 p-3 rounded-lg border border-[#E8E0D1] bg-[#faf8f5] space-y-2">
             <div className="flex items-center justify-between">
               <p className="text-xs font-semibold text-charcoal">Additional sources</p>
               <div className="flex items-center gap-2">
                 <button onClick={() => addReviewSource(grant.id)}
-                  className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-white rounded-full" style={{ backgroundColor: '#1f5c52' }}>
+                  className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-white rounded-full" style={{ backgroundColor: '#173404' }}>
                   <PlusCircle className="w-3 h-3" />Add source
                 </button>
                 {(reviewSources[grant.id]?.length ?? 0) > 0 && (
                   <button onClick={() => enrichGrantFromManagerWithSources(grant, reviewSources[grant.id] ?? [])} disabled={!!enrichingId}
-                    className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-white rounded-full disabled:opacity-40" style={{ backgroundColor: '#84CC16', color: '#1A1A1A' }}>
+                    className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-white rounded-full disabled:opacity-40" style={{ backgroundColor: '#8ECB3C', color: '#2C2C2A' }}>
                     <Sparkles className="w-3 h-3" />{enrichingId === grant.id ? 'Enriching…' : 'Enrich with sources'}
                   </button>
                 )}
@@ -2175,16 +2175,16 @@ export default function UrlAdminPage() {
             </div>
             {(reviewSources[grant.id] ?? []).length === 0 && <p className="text-xs text-light italic">Add a URL or paste content to improve enrichment quality.</p>}
             {(reviewSources[grant.id] ?? []).map((src, idx) => (
-              <div key={idx} className="bg-white border border-[#E8E8EC] p-2 rounded-lg space-y-1.5">
+              <div key={idx} className="bg-white border border-[#E8E0D1] p-2 rounded-lg space-y-1.5">
                 <div className="flex items-center gap-2">
                   <input type="text" placeholder="Label (optional)" value={src.label} onChange={e=>updateReviewSource(grant.id,idx,'label',e.target.value)}
-                    className="flex-1 text-xs border border-[#E8E8EC] rounded px-2 py-1 outline-none focus:border-forest" />
-                  <button onClick={()=>removeReviewSource(grant.id,idx)} className="text-light hover:text-red-400 transition-colors"><X className="w-3 h-3" /></button>
+                    className="flex-1 text-xs border border-[#E8E0D1] rounded px-2 py-1 outline-none focus:border-forest" />
+                  <button onClick={()=>removeReviewSource(grant.id,idx)} className="text-light hover:text-coral-saturated transition-colors"><X className="w-3 h-3" /></button>
                 </div>
                 <input type="url" placeholder="URL (fetched automatically)" value={src.url} onChange={e=>updateReviewSource(grant.id,idx,'url',e.target.value)}
-                  className="w-full text-xs border border-[#E8E8EC] rounded px-2 py-1 outline-none focus:border-forest" />
+                  className="w-full text-xs border border-[#E8E0D1] rounded px-2 py-1 outline-none focus:border-forest" />
                 <textarea placeholder="Or paste content directly…" value={src.text} onChange={e=>updateReviewSource(grant.id,idx,'text',e.target.value)} rows={2}
-                  className="w-full text-xs border border-[#E8E8EC] rounded px-2 py-1 outline-none focus:border-forest resize-none" />
+                  className="w-full text-xs border border-[#E8E0D1] rounded px-2 py-1 outline-none focus:border-forest resize-none" />
               </div>
             ))}
           </div>
@@ -2357,20 +2357,20 @@ export default function UrlAdminPage() {
             {runResult.deadSeedGrants.length === 0 && ' · all seed grant links ok'}
           </div>
           {runResult.deadSeedGrants.length > 0 && (
-            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm">
-              <p className="font-semibold text-red-700 mb-2">
-                ⚠ {runResult.deadSeedGrants.length} seed grant{runResult.deadSeedGrants.length !== 1 ? 's' : ''} with dead links — update URLs in <code className="text-xs bg-red-100 px-1 py-0.5 rounded">src/lib/grants.ts</code>
+            <div className="rounded-xl border border-coral-mid bg-coral-pale px-4 py-3 text-sm">
+              <p className="font-semibold text-coral-deep mb-2">
+                ⚠ {runResult.deadSeedGrants.length} seed grant{runResult.deadSeedGrants.length !== 1 ? 's' : ''} with dead links — update URLs in <code className="text-xs bg-coral-pale px-1 py-0.5 rounded">src/lib/grants.ts</code>
               </p>
               <ul className="space-y-1">
                 {runResult.deadSeedGrants.map(g => (
                   <li key={g.id} className="flex items-start gap-2">
-                    <span className="text-red-400 mt-0.5 flex-shrink-0">•</span>
+                    <span className="text-coral-saturated mt-0.5 flex-shrink-0">•</span>
                     <div className="min-w-0">
-                      <span className="text-red-800 font-medium">{g.title}</span>
-                      <span className="text-red-500 mx-1">·</span>
-                      <span className="text-red-600 text-xs">{g.funder}</span>
+                      <span className="text-coral-deepest font-medium">{g.title}</span>
+                      <span className="text-coral-saturated mx-1">·</span>
+                      <span className="text-coral-saturated text-xs">{g.funder}</span>
                       <a href={g.url} target="_blank" rel="noopener noreferrer"
-                        className="ml-2 text-xs text-red-400 hover:text-red-600 underline truncate">
+                        className="ml-2 text-xs text-coral-saturated hover:text-coral-saturated underline truncate">
                         {g.url}
                       </a>
                     </div>
@@ -2383,7 +2383,7 @@ export default function UrlAdminPage() {
       )}
 
       {promoteResult && (
-        <div className={`mb-6 rounded-xl border px-4 py-3 text-sm ${promoteResult.message.startsWith('Error') ? 'border-red-200 bg-red-50 text-red-700' : 'border-sage/20 bg-sage/10 text-forest'}`}>
+        <div className={`mb-6 rounded-xl border px-4 py-3 text-sm ${promoteResult.message.startsWith('Error') ? 'border-coral-mid bg-coral-pale text-coral-deep' : 'border-sage/20 bg-sage/10 text-forest'}`}>
           {promoteResult.message.startsWith('Error') ? '✗' : '✓'} {promoteResult.message}
           {!promoteResult.message.startsWith('Error') && promoteResult.inserted > 0 && (
             <span className="ml-2 text-mid">Run URL validation now to check their links.</span>
@@ -2397,7 +2397,7 @@ export default function UrlAdminPage() {
           {[
             { label: 'Total grants',   value: stats.total,         Icon: Database,      colour: 'text-charcoal', bg: 'bg-white',   border: 'border-warm'    },
             { label: 'Links verified', value: stats.ok,            Icon: CheckCircle,   colour: 'text-sage',     bg: 'bg-sage/5',  border: 'border-sage/20' },
-            { label: 'Dead links',     value: stats.dead,          Icon: AlertTriangle, colour: 'text-red-500',  bg: 'bg-red-50',  border: 'border-red-200' },
+            { label: 'Dead links',     value: stats.dead,          Icon: AlertTriangle, colour: 'text-coral-saturated',  bg: 'bg-coral-pale',  border: 'border-coral-mid' },
             { label: 'New this week',  value: stats.newCount ?? 0, Icon: Clock,         colour: 'text-gold',     bg: 'bg-gold/5',  border: 'border-gold/20' },
           ].map(s => (
             <div key={s.label} className={`rounded-2xl border ${s.border} ${s.bg} p-5 shadow-warm`}>
@@ -2448,7 +2448,7 @@ export default function UrlAdminPage() {
         {bulkEnrichLog.length > 0 && (
           <div className="mt-3 max-h-40 overflow-y-auto rounded-lg bg-warm/40 p-3">
             {bulkEnrichLog.map((line, i) => (
-              <p key={i} className={`text-xs font-mono ${line.startsWith('✓') ? 'text-forest' : 'text-red-500'}`}>{line}</p>
+              <p key={i} className={`text-xs font-mono ${line.startsWith('✓') ? 'text-forest' : 'text-coral-saturated'}`}>{line}</p>
             ))}
           </div>
         )}
@@ -2515,7 +2515,7 @@ export default function UrlAdminPage() {
 
       {/* Query error */}
       {loadError && (
-        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-xl border border-coral-mid bg-coral-pale px-4 py-3 text-sm text-coral-deep">
           <strong>Database error:</strong> {loadError}
         </div>
       )}
@@ -2557,7 +2557,7 @@ export default function UrlAdminPage() {
                       {grants.length}
                     </span>
                     {deadCount > 0 && (
-                      <span className="rounded-full bg-red-50 border border-red-200 px-2.5 py-0.5 text-xs font-semibold text-red-500">
+                      <span className="rounded-full bg-coral-pale border border-coral-mid px-2.5 py-0.5 text-xs font-semibold text-coral-saturated">
                         {deadCount} dead
                       </span>
                     )}
@@ -2691,17 +2691,17 @@ export default function UrlAdminPage() {
 
       {/* ── Batch actions bar ────────────────────────────────────────────────── */}
       {selectedIds.size > 0 && (
-        <div className="sticky top-4 z-20 flex items-center justify-between rounded-xl border border-red-200 bg-red-50 px-5 py-3 shadow-lg">
-          <p className="text-sm font-semibold text-red-700">
+        <div className="sticky top-4 z-20 flex items-center justify-between rounded-xl border border-coral-mid bg-coral-pale px-5 py-3 shadow-lg">
+          <p className="text-sm font-semibold text-coral-deep">
             {selectedIds.size} grant{selectedIds.size !== 1 ? 's' : ''} selected
           </p>
           <div className="flex items-center gap-3">
             <button onClick={() => setSelectedIds(new Set())}
-              className="text-xs text-red-400 hover:text-red-600 transition-colors">
+              className="text-xs text-coral-saturated hover:text-coral-saturated transition-colors">
               Clear
             </button>
             <button onClick={batchDelete} disabled={batchDeleting}
-              className="rounded-full bg-red-500 px-4 py-1.5 text-xs font-semibold text-white hover:bg-red-600 transition-colors disabled:opacity-50">
+              className="rounded-full bg-coral-pale0 px-4 py-1.5 text-xs font-semibold text-white hover:bg-coral-deep transition-colors disabled:opacity-50">
               {batchDeleting ? 'Hiding…' : `Hide ${selectedIds.size} selected`}
             </button>
           </div>
@@ -2742,7 +2742,7 @@ export default function UrlAdminPage() {
                   </thead>
                   <tbody className="divide-y divide-warm/60">
                     {filtered.map(grant => (
-                      <tr className={`hover:bg-cream/50 transition-colors ${selectedIds.has(grant.id) ? 'bg-red-50' : ''}`}>
+                      <tr className={`hover:bg-cream/50 transition-colors ${selectedIds.has(grant.id) ? 'bg-coral-pale' : ''}`}>
                         <td className="px-3 py-3 w-8">
                           <input type="checkbox" checked={selectedIds.has(grant.id)} onChange={() => toggleSelect(grant.id)}
                             className="h-3.5 w-3.5 rounded accent-forest cursor-pointer" />
@@ -2900,7 +2900,7 @@ export default function UrlAdminPage() {
                 <tbody className="divide-y divide-warm/60">
                   {reviewGrants.map(grant => (
                     <React.Fragment key={grant.id}>
-                    <tr className={`hover:bg-cream/50 transition-colors ${selectedIds.has(grant.id) ? 'bg-red-50' : ''}`}>
+                    <tr className={`hover:bg-cream/50 transition-colors ${selectedIds.has(grant.id) ? 'bg-coral-pale' : ''}`}>
                       <td className="px-3 py-3 w-8">
                         <input type="checkbox" checked={selectedIds.has(grant.id)} onChange={() => toggleSelect(grant.id)}
                           className="h-3.5 w-3.5 rounded accent-forest cursor-pointer" />
@@ -2912,12 +2912,12 @@ export default function UrlAdminPage() {
                         {(grant as Grant & { funding_type?: string }).funding_type && (() => {
                           const ft = (grant as Grant & { funding_type?: string }).funding_type!
                           const FT_STYLE: Record<string, { bg: string; color: string; label: string }> = {
-                            grant:      { bg: 'rgba(132,204,22,0.15)', color: '#446900', label: 'Grant' },
-                            programme:  { bg: 'rgba(251,146,60,0.15)', color: '#c2410c', label: 'Programme' },
-                            investment: { bg: 'rgba(96,165,250,0.15)', color: '#1d4ed8', label: 'Investment' },
-                            in_kind:    { bg: 'rgba(167,139,250,0.15)', color: '#7c3aed', label: 'In-Kind' },
+                            grant:      { bg: 'rgba(132,204,22,0.15)', color: '#639922', label: 'Grant' },
+                            programme:  { bg: 'rgba(251,146,60,0.15)', color: '#993C1D', label: 'Programme' },
+                            investment: { bg: 'rgba(96,165,250,0.15)', color: '#0C447C', label: 'Investment' },
+                            in_kind:    { bg: 'rgba(167,139,250,0.15)', color: '#BA7517', label: 'In-Kind' },
                           }
-                          const s = FT_STYLE[ft] ?? { bg: '#f3f4f6', color: '#6b7280', label: ft }
+                          const s = FT_STYLE[ft] ?? { bg: '#f3f4f6', color: '#5F5E5A', label: ft }
                           return <span className="inline-block ml-1 mt-1 rounded-full px-2 py-0.5 text-[10px] font-semibold" style={{ backgroundColor: s.bg, color: s.color }}>{s.label}</span>
                         })()}
                         {grant.funder_type && grant.funder_type !== 'other' && (() => {
@@ -2960,7 +2960,7 @@ export default function UrlAdminPage() {
                             Save for later
                           </button>
                           <button onClick={() => removeGrant(grant.id)}
-                            className="rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-500 hover:bg-red-500 hover:text-white transition-colors">
+                            className="rounded-full bg-coral-pale px-3 py-1 text-xs font-semibold text-coral-saturated hover:bg-coral-pale0 hover:text-white transition-colors">
                             Hide
                           </button>
                         </div>
@@ -3022,7 +3022,7 @@ export default function UrlAdminPage() {
                     </td>
                     <td className="px-5 py-3 text-center">
                       <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-bold ${
-                        (grant.url_quality_score ?? 0) < 30 ? 'bg-red-100 text-red-700'
+                        (grant.url_quality_score ?? 0) < 30 ? 'bg-coral-pale text-coral-deep'
                         : (grant.url_quality_score ?? 0) < 60 ? 'bg-amber-100 text-amber-700'
                         : 'bg-green-100 text-green-700'
                       }`}>
@@ -3041,9 +3041,9 @@ export default function UrlAdminPage() {
                     <td className="px-5 py-3 text-right">
                       {confirmDeleteId === grant.id ? (
                         <div className="flex items-center justify-end gap-1.5">
-                          <span className="text-xs text-red-500 font-medium mr-1">Remove?</span>
+                          <span className="text-xs text-coral-saturated font-medium mr-1">Remove?</span>
                           <button onClick={() => removeGrant(grant.id, 'dead')} title="Remove completely (permanent)"
-                            className="rounded-full bg-red-500 p-1.5 text-white hover:bg-red-600 transition-colors">
+                            className="rounded-full bg-coral-pale0 p-1.5 text-white hover:bg-coral-deep transition-colors">
                             <Trash2 className="h-3 w-3" />
                           </button>
                           <button onClick={() => removeGrant(grant.id, 'review')} title="Send back to Needs Review"
@@ -3070,11 +3070,11 @@ export default function UrlAdminPage() {
                             <Check className="h-3 w-3" />
                           </button>
                           <button onClick={() => markDead(grant.id)} title="Flag as dead"
-                            className="rounded-full border border-warm p-1.5 text-mid hover:border-red-300 hover:text-red-500 transition-colors">
+                            className="rounded-full border border-warm p-1.5 text-mid hover:border-coral-mid hover:text-coral-saturated transition-colors">
                             <X className="h-3 w-3" />
                           </button>
                           <button onClick={() => setConfirmDeleteId(grant.id)} title="Remove from database"
-                            className="rounded-full border border-warm p-1.5 text-mid hover:border-red-300 hover:text-red-500 transition-colors">
+                            className="rounded-full border border-warm p-1.5 text-mid hover:border-coral-mid hover:text-coral-saturated transition-colors">
                             <Trash2 className="h-3 w-3" />
                           </button>
                         </div>
@@ -3123,7 +3123,7 @@ export default function UrlAdminPage() {
                 <tbody className="divide-y divide-warm/60">
                   {grants.map(grant => (
                     <React.Fragment key={grant.id}>
-                    <tr className={`hover:bg-cream/50 transition-colors ${selectedIds.has(grant.id) ? 'bg-red-50' : ''}`}>
+                    <tr className={`hover:bg-cream/50 transition-colors ${selectedIds.has(grant.id) ? 'bg-coral-pale' : ''}`}>
                       <td className="px-3 py-3 w-8">
                         <input type="checkbox" checked={selectedIds.has(grant.id)} onChange={() => toggleSelect(grant.id)}
                           className="h-3.5 w-3.5 rounded accent-forest cursor-pointer" />
@@ -3203,13 +3203,13 @@ export default function UrlAdminPage() {
                     <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">Better URL found ✓</span>
                   )}
                   {refreshModal.urlWasDead && !refreshModal.urlImproved && (
-                    <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">Old URL was dead</span>
+                    <span className="rounded-full bg-coral-pale px-2 py-0.5 text-xs font-medium text-coral-deep">Old URL was dead</span>
                   )}
                 </div>
                 <p className="text-xs text-mid mt-0.5 truncate max-w-[420px]">
                   {refreshModal.grantUrl
                     ? <>AI-extracted from <a href={refreshModal.grantUrl} target="_blank" rel="noopener noreferrer" className="text-forest hover:underline">{refreshModal.grantUrl}</a></>
-                    : <span className="text-red-500">No URL found — please enter one manually below</span>
+                    : <span className="text-coral-saturated">No URL found — please enter one manually below</span>
                   }
                 </p>
               </div>
@@ -3225,7 +3225,7 @@ export default function UrlAdminPage() {
               </div>
 
               {refreshError && (
-                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{refreshError}</div>
+                <div className="rounded-xl border border-coral-mid bg-coral-pale px-4 py-3 text-sm text-coral-deep">{refreshError}</div>
               )}
 
               {/* Apply URL */}
@@ -3412,7 +3412,7 @@ export default function UrlAdminPage() {
 
               {/* Invite-only */}
               <label className="flex items-center gap-3 cursor-pointer">
-                <div className={`relative w-10 h-6 rounded-full transition-colors ${refreshModal.form.is_invite_only ? 'bg-purple-500' : 'bg-warm'}`}
+                <div className={`relative w-10 h-6 rounded-full transition-colors ${refreshModal.form.is_invite_only ? 'bg-amber-pale0' : 'bg-warm'}`}
                   onClick={() => setRefreshModal(m => m ? { ...m, form: { ...m.form, is_invite_only: !m.form.is_invite_only } } : m)}>
                   <div className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-all ${refreshModal.form.is_invite_only ? 'left-5' : 'left-1'}`} />
                 </div>
@@ -3488,7 +3488,7 @@ export default function UrlAdminPage() {
                   </button>
                 </div>
                 {fetchError && (
-                  <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                  <div className="flex items-start gap-2 rounded-lg border border-coral-mid bg-coral-pale px-3 py-2 text-xs text-coral-deep">
                     <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
                     <span>{fetchError}</span>
                   </div>
@@ -3510,7 +3510,7 @@ export default function UrlAdminPage() {
 
               {/* Error banner */}
               {addError && (
-                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                <div className="rounded-xl border border-coral-mid bg-coral-pale px-4 py-3 text-sm text-coral-deep">
                   {addError}
                 </div>
               )}
@@ -3518,7 +3518,7 @@ export default function UrlAdminPage() {
               {/* Title */}
               <div>
                 <label className="block text-xs font-semibold text-mid uppercase tracking-wider mb-1.5">
-                  Grant Title <span className="text-red-400">*</span>
+                  Grant Title <span className="text-coral-saturated">*</span>
                 </label>
                 <input type="text" value={addForm.title}
                   onChange={e => setAddForm(f => ({ ...f, title: e.target.value }))}
@@ -3530,7 +3530,7 @@ export default function UrlAdminPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-mid uppercase tracking-wider mb-1.5">
-                    Funder Name <span className="text-red-400">*</span>
+                    Funder Name <span className="text-coral-saturated">*</span>
                   </label>
                   <input type="text" value={addForm.funder}
                     onChange={e => setAddForm(f => ({ ...f, funder: e.target.value }))}
@@ -3663,7 +3663,7 @@ export default function UrlAdminPage() {
 
               {/* Invite-only toggle */}
               <label className="flex items-center gap-3 cursor-pointer">
-                <div className={`relative w-10 h-6 rounded-full transition-colors ${addForm.is_invite_only ? 'bg-purple-500' : 'bg-warm'}`}
+                <div className={`relative w-10 h-6 rounded-full transition-colors ${addForm.is_invite_only ? 'bg-amber-pale0' : 'bg-warm'}`}
                   onClick={() => setAddForm(f => ({ ...f, is_invite_only: !f.is_invite_only }))}>
                   <div className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-all ${addForm.is_invite_only ? 'left-5' : 'left-1'}`} />
                 </div>

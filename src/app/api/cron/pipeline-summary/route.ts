@@ -99,11 +99,11 @@ function buildSummaryHtml(orgName: string, items: PipelineRow[]): string {
         return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f0ebe4;">
           <div>
             <p style="margin:0;font-size:14px;font-weight:600;color:#1a3c2e;">${item.grant_name}</p>
-            <p style="margin:2px 0 0;font-size:12px;color:#6b6b6b;">${item.funder_name}${item.is_urgent ? ' · <span style="color:#dc2626;">⚠ Urgent</span>' : ''}</p>
+            <p style="margin:2px 0 0;font-size:12px;color:#6b6b6b;">${item.funder_name}${item.is_urgent ? ' · <span style="color:#D85A30;">⚠ Urgent</span>' : ''}</p>
           </div>
           <div style="text-align:right;flex-shrink:0;margin-left:16px;">
             ${amount ? `<p style="margin:0;font-size:13px;font-weight:700;color:#c9963a;">${amount}</p>` : ''}
-            ${deadlineStr ? `<p style="margin:2px 0 0;font-size:11px;color:${deadline !== null && deadline <= 7 ? '#dc2626' : '#6b6b6b'};">${deadlineStr}</p>` : ''}
+            ${deadlineStr ? `<p style="margin:2px 0 0;font-size:11px;color:${deadline !== null && deadline <= 7 ? '#D85A30' : '#6b6b6b'};">${deadlineStr}</p>` : ''}
           </div>
         </div>`
       }).join('')}
@@ -115,7 +115,7 @@ function buildSummaryHtml(orgName: string, items: PipelineRow[]): string {
         📅 Deadlines in the next 30 days
       </p>
       ${upcoming.map(item => {
-        const urgentColour = item.days <= 7 ? '#dc2626' : '#c9963a'
+        const urgentColour = item.days <= 7 ? '#D85A30' : '#c9963a'
         return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #fde9ba;">
           <div>
             <span style="font-size:13px;font-weight:600;color:#1a3c2e;">${item.grant_name}</span>

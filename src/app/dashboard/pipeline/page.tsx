@@ -39,7 +39,7 @@ const WRITING_STAGES = [
   { label: 'Not started', value: 0,   emoji: '○',  colour: 'text-light' },
   { label: 'Research',    value: 17,  emoji: '🔍', colour: 'text-sage' },
   { label: 'Outline',     value: 33,  emoji: '📝', colour: 'text-amber-500' },
-  { label: 'First draft', value: 50,  emoji: '✏️', colour: 'text-purple-500' },
+  { label: 'First draft', value: 50,  emoji: '✏️', colour: 'text-amber-saturated' },
   { label: 'Revising',    value: 67,  emoji: '🔄', colour: 'text-orange-500' },
   { label: 'Review',      value: 83,  emoji: '👀', colour: 'text-sage' },
   { label: 'Final',       value: 100, emoji: '✅', colour: 'text-forest' },
@@ -104,14 +104,14 @@ function PipelineCard({
           <span className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide" style={{ background: "rgba(132,204,22,0.15)", color: "#639922" }}>Final</span>
         )}
         {item.is_urgent && (
-          <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-red-50 text-red-500 uppercase tracking-wide">Urgent</span>
+          <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-coral-pale text-coral-saturated uppercase tracking-wide">Urgent</span>
         )}
         </div>
         <div className="flex items-center gap-1 flex-shrink-0 ml-1">
           <GripVertical size={13} className="text-warm/80 mt-0.5" />
           <button
             onClick={e => { e.stopPropagation(); onDelete(item.id) }}
-            className="p-0.5 rounded-full text-[#8A8986] hover:text-red-400 hover:bg-red-50 transition-colors"
+            className="p-0.5 rounded-full text-[#8A8986] hover:text-coral-saturated hover:bg-coral-pale transition-colors"
             title="Remove from pipeline"
           >
             <XIcon size={12} strokeWidth={2.5} />
@@ -128,7 +128,7 @@ function PipelineCard({
       {/* Amount */}
       {amountStr && (
         <p className={cn('text-base font-bold mb-1',
-          isDeclined ? 'text-red-400' : 'text-[#8ECB3C]'
+          isDeclined ? 'text-coral-saturated' : 'text-[#8ECB3C]'
         )}>
           {amountStr}{isWon ? ' ✓' : isDeclined ? ' ✗' : ''}
         </p>
@@ -144,8 +144,8 @@ function PipelineCard({
           {daysLeft !== null && daysLeft <= 10 && (
             <span className={cn(
               'inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full',
-              daysLeft < 0  ? 'bg-red-500 text-white' :
-              daysLeft <= 3 ? 'bg-red-500 text-white' :
+              daysLeft < 0  ? 'bg-coral-pale0 text-white' :
+              daysLeft <= 3 ? 'bg-coral-pale0 text-white' :
               daysLeft <= 7 ? 'bg-amber-500 text-white' :
                               'bg-orange-400 text-white'
             )}>
@@ -479,7 +479,7 @@ function PipelineModal({
         <div className="p-6 pt-0 flex justify-between items-center">
           <button
             onClick={() => { if (confirm('Delete this opportunity?')) { onDelete(item.id); onClose() } }}
-            className="text-red-400 hover:text-red-600 text-sm transition-colors"
+            className="text-coral-saturated hover:text-coral-saturated text-sm transition-colors"
           >
             Delete
           </button>
@@ -656,7 +656,7 @@ function AddModal({
               </button>
             </div>
             {autofillError && (
-              <p className="text-xs text-red-500 mt-1.5">{autofillError}</p>
+              <p className="text-xs text-coral-saturated mt-1.5">{autofillError}</p>
             )}
             {autofillDone && (
               <p className="text-xs mt-1.5 font-medium" style={{ color: "#639922" }}>✓ Fields filled — please review and adjust if needed</p>

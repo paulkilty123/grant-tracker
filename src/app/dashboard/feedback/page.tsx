@@ -24,7 +24,7 @@ const TYPES: {
     activeBg: 'bg-forest/8',
     activeText: 'text-forest',
     activeBorder: 'border-forest',
-    iconColour: '#1f5c52',
+    iconColour: '#173404',
   },
   {
     id: 'bug',
@@ -104,7 +104,7 @@ export default function FeedbackPage() {
             >
               <Icon
                 size={20}
-                style={{ color: isActive ? t.iconColour : '#9ca3af' }}
+                style={{ color: isActive ? t.iconColour : '#8A8986' }}
               />
               <span className="text-xs font-semibold leading-tight">{t.label}</span>
             </button>
@@ -147,7 +147,7 @@ export default function FeedbackPage() {
                 className="form-input w-full resize-none text-sm rounded-lg"
               />
               {status === 'error' && (
-                <p className="text-xs text-red-500 mt-2">
+                <p className="text-xs text-coral-saturated mt-2">
                   Something went wrong — please try again or email us at{' '}
                   <a href="mailto:hello@granttracker.co.uk" className="underline">hello@granttracker.co.uk</a>
                 </p>

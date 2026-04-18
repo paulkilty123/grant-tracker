@@ -258,7 +258,7 @@ export default function MatchBriefingPage() {
                     </span>
                   )}
                   {item.deadline && (
-                    <span className={cn('text-[11px]', item.is_urgent ? 'text-red-500 font-semibold' : 'text-mid')}>
+                    <span className={cn('text-[11px]', item.is_urgent ? 'text-coral-saturated font-semibold' : 'text-mid')}>
                       {item.is_urgent && '⚠ '}{formatDeadline(item.deadline)}
                     </span>
                   )}
@@ -359,7 +359,7 @@ export default function MatchBriefingPage() {
                         'text-[10px] font-semibold rounded px-2 py-0.5 flex-shrink-0 border',
                         c.match === 'strong'  ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/30' :
                         c.match === 'partial' ? 'bg-amber-500/10  text-amber-700  border-amber-500/30'  :
-                                                'bg-red-500/10    text-red-700    border-red-500/30'
+                                                'bg-coral-pale    text-coral-deep    border-coral-saturated/30'
                       )}>
                         {c.match === 'strong' ? '● Strong' : c.match === 'partial' ? '◐ Partial' : '○ Gap'}
                       </span>

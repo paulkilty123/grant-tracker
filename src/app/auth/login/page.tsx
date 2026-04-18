@@ -53,11 +53,11 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: '#F9F9F9' }}>
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: '#FAFAF7' }}>
       <div className="w-full max-w-4xl">
 
         <div className="mb-6">
-          <Link href="/" className="text-sm inline-flex items-center gap-1.5 hover:opacity-70 transition-opacity" style={{ color: '#525252', fontFamily: 'var(--font-space-grotesk)' }}>
+          <Link href="/" className="text-sm inline-flex items-center gap-1.5 hover:opacity-70 transition-opacity" style={{ color: '#5F5E5A', fontFamily: 'var(--font-space-grotesk)' }}>
             &larr; Back to home
           </Link>
         </div>
@@ -65,12 +65,12 @@ function LoginForm() {
         <div className="grid grid-cols-1 lg:grid-cols-2 overflow-hidden rounded-3xl" style={{ boxShadow: '0 8px 48px rgba(0,0,0,0.10)' }}>
 
           {/* Left panel */}
-          <div className="text-white p-10 hidden lg:flex flex-col justify-between" style={{ background: '#1A1A1A' }}>
+          <div className="text-white p-10 hidden lg:flex flex-col justify-between" style={{ background: '#2C2C2A' }}>
             <div>
               <a href="/" className="no-underline inline-flex items-center gap-2 mb-2">
-                <span className="font-bold text-xl" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#FFFFFF', letterSpacing: '-0.02em' }}>Grant<span style={{ color: '#84CC16' }}>Tracker</span></span>
+                <span className="font-bold text-xl" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#FFFFFF', letterSpacing: '-0.02em' }}>Grant<span style={{ color: '#8ECB3C' }}>Tracker</span></span>
               </a>
-              <p className="text-sm mb-10" style={{ color: '#888888' }}>Find grants, accelerators, investment and support programmes &mdash; matched to you, managed in one place.</p>
+              <p className="text-sm mb-10" style={{ color: '#8A8986' }}>Find grants, accelerators, investment and support programmes &mdash; matched to you, managed in one place.</p>
               <div className="space-y-6">
                 {[
                   { Icon: Search,     title: 'Find funding that fits',    desc: 'Search grants, accelerators and social investment filtered to your structure, sector and stage.' },
@@ -79,19 +79,19 @@ function LoginForm() {
                 ].map(({ Icon, title, desc }) => (
                   <div key={title} className="flex gap-3.5">
                     <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: 'rgba(132,204,22,0.12)' }}>
-                      <Icon size={16} style={{ color: '#84CC16' }} />
+                      <Icon size={16} style={{ color: '#8ECB3C' }} />
                     </div>
                     <div>
                       <p className="font-semibold text-sm" style={{ color: '#FFFFFF', fontFamily: 'var(--font-space-grotesk)' }}>{title}</p>
-                      <p className="text-xs leading-relaxed mt-0.5" style={{ color: '#888888' }}>{desc}</p>
+                      <p className="text-xs leading-relaxed mt-0.5" style={{ color: '#8A8986' }}>{desc}</p>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-            <div className="flex items-center gap-2 mt-10 pt-6" style={{ borderTop: '1px solid #2A2A2A' }}>
-              <Lock size={12} style={{ color: '#555555' }} />
-              <p className="text-xs" style={{ color: '#555555' }}>Your data is never shared or sold</p>
+            <div className="flex items-center gap-2 mt-10 pt-6" style={{ borderTop: '1px solid #2C2C2A' }}>
+              <Lock size={12} style={{ color: '#5F5E5A' }} />
+              <p className="text-xs" style={{ color: '#5F5E5A' }}>Your data is never shared or sold</p>
             </div>
           </div>
 
@@ -99,11 +99,11 @@ function LoginForm() {
           <div className="bg-white p-8 lg:p-10 flex flex-col justify-center">
             <div className="mb-8 lg:hidden flex justify-center">
               <a href="/" className="no-underline inline-flex items-center gap-2">
-                <span className="font-bold text-lg" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#1A1A1A' }}>Grant<span style={{ color: '#84CC16' }}>Tracker</span></span>
+                <span className="font-bold text-lg" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#2C2C2A' }}>Grant<span style={{ color: '#8ECB3C' }}>Tracker</span></span>
               </a>
             </div>
-            <h1 className="font-bold leading-tight mb-1" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 'clamp(22px, 3vw, 28px)', letterSpacing: '-0.02em', color: '#1A1A1A' }}>Welcome back</h1>
-            <p className="text-sm mb-7" style={{ color: '#888888' }}>Sign in to your Grant Tracker account</p>
+            <h1 className="font-bold leading-tight mb-1" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 'clamp(22px, 3vw, 28px)', letterSpacing: '-0.02em', color: '#2C2C2A' }}>Welcome back</h1>
+            <p className="text-sm mb-7" style={{ color: '#8A8986' }}>Sign in to your Grant Tracker account</p>
 
             <form onSubmit={handleLogin} className="space-y-4">
               {urlErrorMessage && (
@@ -112,18 +112,18 @@ function LoginForm() {
                 </div>
               )}
               {error && (
-                <div className="text-red-600 text-sm px-4 py-3 rounded-xl border border-red-100" style={{ background: '#FEF2F2' }}>
+                <div className="text-coral-saturated text-sm px-4 py-3 rounded-xl border border-coral-mid" style={{ background: '#FAECE7' }}>
                   {error}
                 </div>
               )}
               <div>
-                <label className="block text-sm font-semibold mb-1.5" style={{ color: '#1A1A1A', fontFamily: 'var(--font-space-grotesk)' }}>Email</label>
+                <label className="block text-sm font-semibold mb-1.5" style={{ color: '#2C2C2A', fontFamily: 'var(--font-space-grotesk)' }}>Email</label>
                 <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="form-input rounded-xl" placeholder="you@organisation.org" autoComplete="email" required />
               </div>
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-sm font-semibold" style={{ color: '#1A1A1A', fontFamily: 'var(--font-space-grotesk)' }}>Password</label>
-                  <Link href="/auth/forgot-password" className="text-xs hover:underline" style={{ color: '#84CC16' }}>Forgot password?</Link>
+                  <label className="block text-sm font-semibold" style={{ color: '#2C2C2A', fontFamily: 'var(--font-space-grotesk)' }}>Password</label>
+                  <Link href="/auth/forgot-password" className="text-xs hover:underline" style={{ color: '#8ECB3C' }}>Forgot password?</Link>
                 </div>
                 <div className="relative">
                   <input
@@ -135,20 +135,20 @@ function LoginForm() {
                     autoComplete="current-password"
                     required
                   />
-                  <button type="button" onClick={() => setShowPw(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs hover:opacity-70" style={{ color: '#888888' }} tabIndex={-1}>
+                  <button type="button" onClick={() => setShowPw(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs hover:opacity-70" style={{ color: '#8A8986' }} tabIndex={-1}>
                     {showPw ? 'Hide' : 'Show'}
                   </button>
                 </div>
               </div>
-              <button type="submit" disabled={loading} className="w-full flex justify-center items-center rounded-full py-3.5 text-sm font-bold transition-opacity hover:opacity-80 mt-2" style={{ background: '#84CC16', color: '#1A1A1A', fontFamily: 'var(--font-space-grotesk)' }}>
+              <button type="submit" disabled={loading} className="w-full flex justify-center items-center rounded-full py-3.5 text-sm font-bold transition-opacity hover:opacity-80 mt-2" style={{ background: '#8ECB3C', color: '#2C2C2A', fontFamily: 'var(--font-space-grotesk)' }}>
                 {loading ? 'Signing in\u2026' : 'Sign in'}
               </button>
             </form>
 
             <div className="mt-6 pt-6 text-center" style={{ borderTop: '1px solid #F0F0F0' }}>
-              <p className="text-sm" style={{ color: '#888888' }}>
+              <p className="text-sm" style={{ color: '#8A8986' }}>
                 Don&apos;t have an account?{' '}
-                <Link href="/auth/signup" className="font-semibold hover:underline" style={{ color: '#84CC16' }}>Create one free</Link>
+                <Link href="/auth/signup" className="font-semibold hover:underline" style={{ color: '#8ECB3C' }}>Create one free</Link>
               </p>
             </div>
           </div>

@@ -877,7 +877,7 @@ export default function LandingPage() {
                       <div className="flex items-center gap-2 mb-3">
                         <div className="relative w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: '#F1F0EA' }}>
                           <Bell className="w-3.5 h-3.5 text-[#5F5E5A]" />
-                          <div className="absolute top-0 right-0 w-2 h-2 rounded-full bg-red-400 border border-white" />
+                          <div className="absolute top-0 right-0 w-2 h-2 rounded-full bg-coral-saturated border border-white" />
                         </div>
                         <p className="text-[11px] font-bold text-[#2C2C2A] uppercase tracking-wider">Alerts</p>
                       </div>

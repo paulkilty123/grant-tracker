@@ -72,7 +72,7 @@ function buildReminderHtml(orgName: string, items: ReminderItem[]): string {
             </div>
           </div>
           <div style="text-align:right;flex-shrink:0;">
-            <p style="margin:0;font-size:20px;font-weight:800;color:${item.days === 7 ? '#dc2626' : '#c9963a'};">
+            <p style="margin:0;font-size:20px;font-weight:800;color:${item.days === 7 ? '#D85A30' : '#c9963a'};">
               ${item.days} days
             </p>
             <p style="margin:2px 0 0;font-size:11px;color:#6b6b6b;">
@@ -111,7 +111,7 @@ function buildReminderHtml(orgName: string, items: ReminderItem[]): string {
 
       <!-- Body -->
       <div style="background:#ffffff;border-radius:16px;padding:24px 28px;margin-bottom:24px;border:1px solid #e8ddd0;">
-        ${section('⚠️ Due in 7 days — action needed', '#dc2626', urgentItems)}
+        ${section('⚠️ Due in 7 days — action needed', '#D85A30', urgentItems)}
         ${section('📅 Due in 14 days — heads up', '#c9963a', warningItems)}
       </div>
 

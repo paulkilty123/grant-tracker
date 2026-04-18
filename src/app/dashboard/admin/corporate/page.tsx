@@ -282,7 +282,7 @@ function EditModal({
         {/* Body */}
         <div className="px-6 py-5 space-y-4 max-h-[76vh] overflow-y-auto">
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-2.5 text-sm text-red-700">{error}</div>
+            <div className="bg-coral-pale border border-coral-mid rounded-lg px-4 py-2.5 text-sm text-coral-deep">{error}</div>
           )}
 
           {/* Core fields */}

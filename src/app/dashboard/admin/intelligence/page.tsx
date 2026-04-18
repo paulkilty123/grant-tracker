@@ -255,7 +255,7 @@ export default function FunderIntelligencePage() {
               <Sparkles className="w-5 h-5" style={{ color: '#008080' }} />
               <h1 className="text-2xl font-bold text-[#1C1C2E]">Funder Intelligence</h1>
             </div>
-            <p className="text-sm text-[#6E6E80]">
+            <p className="text-sm text-[#5F5E5A]">
               Enrich grants with AI-generated summaries. Add extra source pages to fill in any gaps.
             </p>
           </div>
@@ -270,14 +270,14 @@ export default function FunderIntelligencePage() {
               : 'Enrich All'}
           </button>
         </div>
-        <div className="flex gap-1 border-b border-[#E8E8EC]">
+        <div className="flex gap-1 border-b border-[#E8E0D1]">
           <NextLink href="/dashboard/admin/intelligence"
             className="px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors"
             style={{ borderColor: '#008080', color: '#008080' }}>
             Enrichment
           </NextLink>
           <NextLink href="/dashboard/admin/watchlist"
-            className="px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-[#6E6E80] hover:text-[#1C1C2E] transition-colors">
+            className="px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-[#5F5E5A] hover:text-[#1C1C2E] transition-colors">
             Watchlist
           </NextLink>
         </div>
@@ -285,16 +285,16 @@ export default function FunderIntelligencePage() {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-white border border-[#E8E8EC] p-4" style={{ borderRadius: 12 }}>
-          <p className="text-[10px] font-bold text-[#6E6E80] uppercase tracking-wider mb-1">Total with URL</p>
+        <div className="bg-white border border-[#E8E0D1] p-4" style={{ borderRadius: 12 }}>
+          <p className="text-[10px] font-bold text-[#5F5E5A] uppercase tracking-wider mb-1">Total with URL</p>
           <p className="text-2xl font-bold text-[#1C1C2E]">{grants.length}</p>
         </div>
-        <div className="bg-white border border-[#E8E8EC] p-4" style={{ borderRadius: 12 }}>
-          <p className="text-[10px] font-bold text-[#6E6E80] uppercase tracking-wider mb-1">Enriched</p>
+        <div className="bg-white border border-[#E8E0D1] p-4" style={{ borderRadius: 12 }}>
+          <p className="text-[10px] font-bold text-[#5F5E5A] uppercase tracking-wider mb-1">Enriched</p>
           <p className="text-2xl font-bold" style={{ color: '#008080' }}>{enrichedCount}</p>
         </div>
-        <div className="bg-white border border-[#E8E8EC] p-4" style={{ borderRadius: 12 }}>
-          <p className="text-[10px] font-bold text-[#6E6E80] uppercase tracking-wider mb-1">Needs enrichment</p>
+        <div className="bg-white border border-[#E8E0D1] p-4" style={{ borderRadius: 12 }}>
+          <p className="text-[10px] font-bold text-[#5F5E5A] uppercase tracking-wider mb-1">Needs enrichment</p>
           <p className="text-2xl font-bold" style={{ color: '#FF7043' }}>{grants.length - enrichedCount}</p>
         </div>
       </div>
@@ -308,27 +308,27 @@ export default function FunderIntelligencePage() {
               style={{
                 borderRadius: 9999,
                 backgroundColor: filter === f ? '#008080' : 'white',
-                color: filter === f ? 'white' : '#6E6E80',
-                borderColor: filter === f ? '#008080' : '#E8E8EC',
+                color: filter === f ? 'white' : '#5F5E5A',
+                borderColor: filter === f ? '#008080' : '#E8E0D1',
               }}>
               {f === 'unenriched' ? 'Needs enrichment' : f === 'enriched' ? 'Enriched' : 'All'}
             </button>
           ))}
         </div>
         <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#9E9EA8] pointer-events-none" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#8A8986] pointer-events-none" />
           <input
             type="text"
             placeholder="Search by grant title or funder…"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-8 pr-3 py-2 text-sm border border-[#E8E8EC] bg-white outline-none focus:border-[#008080] transition-colors"
+            className="w-full pl-8 pr-3 py-2 text-sm border border-[#E8E0D1] bg-white outline-none focus:border-[#008080] transition-colors"
             style={{ borderRadius: 9999 }}
           />
           {search && (
             <button
               onClick={() => setSearch('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9E9EA8] hover:text-[#6E6E80] transition-colors">
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8A8986] hover:text-[#5F5E5A] transition-colors">
               <X className="w-3.5 h-3.5" />
             </button>
           )}
@@ -336,7 +336,7 @@ export default function FunderIntelligencePage() {
       </div>
 
       {loading ? (
-        <div className="text-center py-16 text-[#6E6E80]">Loading grants…</div>
+        <div className="text-center py-16 text-[#5F5E5A]">Loading grants…</div>
       ) : (
         <div className="space-y-3">
           {filtered.map(grant => {
@@ -353,7 +353,7 @@ export default function FunderIntelligencePage() {
                 key={grant.id}
                 ref={isHighlighted ? highlightRef : null}
                 className="bg-white border overflow-hidden transition-all"
-                style={{ borderRadius: 12, borderColor: isHighlighted ? '#008080' : '#E8E8EC', boxShadow: isHighlighted ? '0 0 0 3px rgba(0,128,128,0.15)' : undefined }}
+                style={{ borderRadius: 12, borderColor: isHighlighted ? '#008080' : '#E8E0D1', boxShadow: isHighlighted ? '0 0 0 3px rgba(0,128,128,0.15)' : undefined }}
               >
                 {isHighlighted && (
                   <div className="flex items-center gap-2 px-4 py-2 text-xs font-semibold" style={{ background: '#f0fdfa', color: '#008080', borderBottom: '1px solid #ccfbf1' }}>
@@ -361,36 +361,36 @@ export default function FunderIntelligencePage() {
                   </div>
                 )}
                 {isHighlighted && (
-                  <div className="px-4 py-3 border-b border-[#E8E8EC] bg-[#fafafa]">
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-[#9ca3af] mb-2">Grant details — verify before enriching</p>
+                  <div className="px-4 py-3 border-b border-[#E8E0D1] bg-[#fafafa]">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-[#8A8986] mb-2">Grant details — verify before enriching</p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
                       {/* Funder type */}
-                      <div><label className="text-[#9ca3af] block mb-0.5">Funder type</label>
+                      <div><label className="text-[#8A8986] block mb-0.5">Funder type</label>
                         <select value={String(getEditVal(grant.id,'funder_type',grant.funder_type) ?? '')} onChange={e=>setEditField(grant.id,'funder_type',e.target.value)}
                           className="form-select text-xs py-1 w-full">
                           {['trust_foundation','community_foundation','corporate_foundation','local_authority','corporate','lottery','government','capacity_builder','competition','loan','other'].map(v=><option key={v} value={v}>{v.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())}</option>)}
                         </select></div>
                       {/* Funding type */}
-                      <div><label className="text-[#9ca3af] block mb-0.5">Funding type</label>
+                      <div><label className="text-[#8A8986] block mb-0.5">Funding type</label>
                         <select value={String(getEditVal(grant.id,'funding_type',grant.funding_type) ?? 'grant')} onChange={e=>setEditField(grant.id,'funding_type',e.target.value)}
                           className="form-select text-xs py-1 w-full">
                           {['grant','programme','investment','in_kind'].map(v=><option key={v} value={v}>{v.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())}</option>)}
                         </select></div>
                       {/* Amount min */}
-                      <div><label className="text-[#9ca3af] block mb-0.5">Amount min (£)</label>
+                      <div><label className="text-[#8A8986] block mb-0.5">Amount min (£)</label>
                         <input type="number" value={String(getEditVal(grant.id,'amount_min',grant.amount_min) ?? '')} onChange={e=>setEditField(grant.id,'amount_min',e.target.value)}
                           className="form-input text-xs py-1 w-full" placeholder="e.g. 5000" /></div>
                       {/* Amount max */}
-                      <div><label className="text-[#9ca3af] block mb-0.5">Amount max (£)</label>
+                      <div><label className="text-[#8A8986] block mb-0.5">Amount max (£)</label>
                         <input type="number" value={String(getEditVal(grant.id,'amount_max',grant.amount_max) ?? '')} onChange={e=>setEditField(grant.id,'amount_max',e.target.value)}
                           className="form-input text-xs py-1 w-full" placeholder="e.g. 50000" /></div>
                       {/* Deadline */}
-                      <div><label className="text-[#9ca3af] block mb-0.5">Deadline</label>
+                      <div><label className="text-[#8A8986] block mb-0.5">Deadline</label>
                         <input type="text" value={String(getEditVal(grant.id,'deadline',grant.deadline) ?? '')} onChange={e=>setEditField(grant.id,'deadline',e.target.value)}
                           disabled={Boolean(getEditVal(grant.id,'is_rolling',grant.is_rolling))}
                           className="form-input text-xs py-1 w-full" placeholder="YYYY-MM-DD" /></div>
                       {/* Location */}
-                      <div><label className="text-[#9ca3af] block mb-0.5">Location tag</label>
+                      <div><label className="text-[#8A8986] block mb-0.5">Location tag</label>
                         <input type="text" value={String(getEditVal(grant.id,'location_tag',grant.location_tag) ?? '')} onChange={e=>setEditField(grant.id,'location_tag',e.target.value)}
                           className="form-input text-xs py-1 w-full" placeholder="e.g. UK, London, Sussex" /></div>
                     </div>
@@ -401,11 +401,11 @@ export default function FunderIntelligencePage() {
                     </div>
                     {/* Read-only fields */}
                     <div className="mt-2 text-xs text-mid">
-                      <span className="mr-4"><span className="text-[#9ca3af]">Sectors: </span>{grant.impact_sectors?.slice(0,3).map(s=>s.replace(/_/g,' ')).join(', ') ?? '—'}</span>
-                      <span><span className="text-[#9ca3af]">Eligible: </span>{grant.eligible_structures?.slice(0,3).map(s=>s.replace(/_/g,' ')).join(', ') ?? '—'}</span>
+                      <span className="mr-4"><span className="text-[#8A8986]">Sectors: </span>{grant.impact_sectors?.slice(0,3).map(s=>s.replace(/_/g,' ')).join(', ') ?? '—'}</span>
+                      <span><span className="text-[#8A8986]">Eligible: </span>{grant.eligible_structures?.slice(0,3).map(s=>s.replace(/_/g,' ')).join(', ') ?? '—'}</span>
                     </div>
                     {/* Actions */}
-                    <div className="flex items-center gap-3 mt-3 pt-3 border-t border-[#E8E8EC]">
+                    <div className="flex items-center gap-3 mt-3 pt-3 border-t border-[#E8E0D1]">
                       {grant.apply_url && <a href={grant.apply_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-forest underline"><ExternalLink className="w-3 h-3" />Verify on funder site</a>}
                       <div className="flex-1" />
                       <button onClick={()=>saveEdits(grant)} disabled={editSaving[grant.id] || Object.keys(editState[grant.id]??{}).length===0}
@@ -426,10 +426,10 @@ export default function FunderIntelligencePage() {
                     {isEnriched
                       ? <CheckCircle className="w-4 h-4" style={{ color: '#008080' }} />
                       : status === 'loading'
-                        ? <RefreshCw className="w-4 h-4 animate-spin text-[#6E6E80]" />
+                        ? <RefreshCw className="w-4 h-4 animate-spin text-[#5F5E5A]" />
                         : status === 'error'
-                          ? <AlertTriangle className="w-4 h-4 text-red-500" />
-                          : <Clock className="w-4 h-4 text-[#9E9EA8]" />
+                          ? <AlertTriangle className="w-4 h-4 text-coral-saturated" />
+                          : <Clock className="w-4 h-4 text-[#8A8986]" />
                     }
                   </div>
 
@@ -460,7 +460,7 @@ export default function FunderIntelligencePage() {
                         </button>
                         <button
                           onClick={() => setEditingTitle(t => ({ ...t, [grant.id]: null }))}
-                          className="p-1 text-[#9E9EA8] hover:text-[#6E6E80] flex-shrink-0"
+                          className="p-1 text-[#8A8986] hover:text-[#5F5E5A] flex-shrink-0"
                           style={{ borderRadius: 6 }}
                           title="Cancel">
                           <X className="w-3.5 h-3.5" />
@@ -471,13 +471,13 @@ export default function FunderIntelligencePage() {
                         <p className="text-sm font-semibold text-[#1C1C2E] truncate">{grant.title}</p>
                         <button
                           onClick={() => setEditingTitle(t => ({ ...t, [grant.id]: grant.title }))}
-                          className="p-0.5 text-[#9E9EA8] hover:text-[#008080] transition-colors flex-shrink-0 opacity-0 group-hover:opacity-100"
+                          className="p-0.5 text-[#8A8986] hover:text-[#008080] transition-colors flex-shrink-0 opacity-0 group-hover:opacity-100"
                           title="Edit title">
                           <Pencil className="w-3 h-3" />
                         </button>
                       </div>
                     )}
-                    <p className="text-xs text-[#6E6E80]">{grant.funder}</p>
+                    <p className="text-xs text-[#5F5E5A]">{grant.funder}</p>
 
                     {/* URL row — show/edit apply_url */}
                     {editingUrl[grant.id] !== undefined && editingUrl[grant.id] !== null ? (
@@ -505,7 +505,7 @@ export default function FunderIntelligencePage() {
                         </button>
                         <button
                           onClick={() => setEditingUrl(u => ({ ...u, [grant.id]: null }))}
-                          className="p-1 text-[#9E9EA8] hover:text-[#6E6E80] flex-shrink-0"
+                          className="p-1 text-[#8A8986] hover:text-[#5F5E5A] flex-shrink-0"
                           style={{ borderRadius: 6 }}
                           title="Cancel">
                           <X className="w-3.5 h-3.5" />
@@ -514,12 +514,12 @@ export default function FunderIntelligencePage() {
                     ) : (
                       <div className="flex items-center gap-1 mt-1">
                         {grant.apply_url
-                          ? <span className="text-xs text-[#9E9EA8] truncate max-w-xs">{grant.apply_url}</span>
+                          ? <span className="text-xs text-[#8A8986] truncate max-w-xs">{grant.apply_url}</span>
                           : <span className="text-xs text-[#FF7043] italic">No URL set</span>
                         }
                         <button
                           onClick={() => setEditingUrl(u => ({ ...u, [grant.id]: grant.apply_url ?? '' }))}
-                          className="p-0.5 text-[#9E9EA8] hover:text-[#008080] transition-colors flex-shrink-0"
+                          className="p-0.5 text-[#8A8986] hover:text-[#008080] transition-colors flex-shrink-0"
                           title="Edit URL">
                           <Pencil className="w-3 h-3" />
                         </button>
@@ -537,7 +537,7 @@ export default function FunderIntelligencePage() {
                       </NextLink>
                     )}
                     {enrichMsg[grant.id] && (
-                      <p className="text-xs text-red-500 mt-1">{enrichMsg[grant.id]}</p>
+                      <p className="text-xs text-coral-saturated mt-1">{enrichMsg[grant.id]}</p>
                     )}
                     {isEnriched && (
                       <p className="text-xs mt-1" style={{ color: '#008080' }}>
@@ -551,7 +551,7 @@ export default function FunderIntelligencePage() {
                   <div className="flex items-center gap-2 flex-shrink-0">
                     {grant.apply_url && (
                       <a href={grant.apply_url} target="_blank" rel="noopener noreferrer"
-                        className="p-1.5 text-[#6E6E80] hover:text-[#1C1C2E] transition-colors"
+                        className="p-1.5 text-[#5F5E5A] hover:text-[#1C1C2E] transition-colors"
                         title="Open primary URL">
                         <ExternalLink className="w-4 h-4" />
                       </a>
@@ -562,8 +562,8 @@ export default function FunderIntelligencePage() {
                       className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold border transition-colors"
                       style={{
                         borderRadius: 9999,
-                        borderColor: isSourcesOpen ? '#008080' : '#E8E8EC',
-                        color: isSourcesOpen ? '#008080' : '#6E6E80',
+                        borderColor: isSourcesOpen ? '#008080' : '#E8E0D1',
+                        color: isSourcesOpen ? '#008080' : '#5F5E5A',
                         backgroundColor: isSourcesOpen ? 'rgba(0,128,128,0.08)' : 'white',
                       }}
                       title="Add extra source pages">
@@ -587,11 +587,11 @@ export default function FunderIntelligencePage() {
 
                 {/* Sources panel */}
                 {isSourcesOpen && (
-                  <div className="border-t border-[#E8E8EC] px-4 py-4 space-y-3" style={{ backgroundColor: '#FAF8F5' }}>
+                  <div className="border-t border-[#E8E0D1] px-4 py-4 space-y-3" style={{ backgroundColor: '#FAFAF7' }}>
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs font-bold text-[#1C1C2E]">Additional sources</p>
-                        <p className="text-[11px] text-[#6E6E80] mt-0.5">
+                        <p className="text-[11px] text-[#5F5E5A] mt-0.5">
                           Add extra pages to fill in any gaps. Provide a URL (fetched automatically) or paste the text directly. Claude combines all sources.
                         </p>
                       </div>
@@ -605,13 +605,13 @@ export default function FunderIntelligencePage() {
                     </div>
 
                     {grantSources.length === 0 && (
-                      <p className="text-xs text-[#9E9EA8] italic">
+                      <p className="text-xs text-[#8A8986] italic">
                         No extra sources yet. Click &quot;Add source&quot; to add a URL or paste content from another page.
                       </p>
                     )}
 
                     {grantSources.map((src, idx) => (
-                      <div key={idx} className="bg-white border border-[#E8E8EC] p-3 space-y-2" style={{ borderRadius: 8 }}>
+                      <div key={idx} className="bg-white border border-[#E8E0D1] p-3 space-y-2" style={{ borderRadius: 8 }}>
                         {/* Label + remove */}
                         <div className="flex items-center gap-2">
                           <input
@@ -619,29 +619,29 @@ export default function FunderIntelligencePage() {
                             placeholder="Label (optional) — e.g. How to apply, Guidelines, Criteria…"
                             value={src.label}
                             onChange={e => updateSource(grant.id, idx, 'label', e.target.value)}
-                            className="flex-1 text-xs border border-[#E8E8EC] px-2.5 py-1.5 outline-none focus:border-[#008080]"
+                            className="flex-1 text-xs border border-[#E8E0D1] px-2.5 py-1.5 outline-none focus:border-[#008080]"
                             style={{ borderRadius: 6, fontFamily: 'inherit' }}
                           />
                           <button
                             onClick={() => removeSource(grant.id, idx)}
-                            className="p-1 text-[#9E9EA8] hover:text-red-400 transition-colors flex-shrink-0">
+                            className="p-1 text-[#8A8986] hover:text-coral-saturated transition-colors flex-shrink-0">
                             <X className="w-3.5 h-3.5" />
                           </button>
                         </div>
                         {/* URL input */}
                         <div className="flex items-center gap-2">
-                          <Link className="w-3 h-3 flex-shrink-0 text-[#9E9EA8]" />
+                          <Link className="w-3 h-3 flex-shrink-0 text-[#8A8986]" />
                           <input
                             type="url"
                             placeholder="Page URL (optional) — fetched automatically during enrichment"
                             value={src.url}
                             onChange={e => updateSource(grant.id, idx, 'url', e.target.value)}
-                            className="flex-1 text-xs border border-[#E8E8EC] px-2.5 py-1.5 outline-none focus:border-[#008080]"
+                            className="flex-1 text-xs border border-[#E8E0D1] px-2.5 py-1.5 outline-none focus:border-[#008080]"
                             style={{ borderRadius: 6, fontFamily: 'inherit' }}
                           />
                           {src.url.trim().length > 0 && (
                             <a href={src.url} target="_blank" rel="noopener noreferrer"
-                              className="p-1 text-[#9E9EA8] hover:text-[#008080] transition-colors flex-shrink-0"
+                              className="p-1 text-[#8A8986] hover:text-[#008080] transition-colors flex-shrink-0"
                               title="Open URL">
                               <ExternalLink className="w-3 h-3" />
                             </a>
@@ -649,20 +649,20 @@ export default function FunderIntelligencePage() {
                         </div>
                         {/* Divider with "or paste below" label */}
                         <div className="flex items-center gap-2">
-                          <div className="flex-1 border-t border-[#E8E8EC]" />
-                          <span className="text-[10px] text-[#9E9EA8]">or paste text</span>
-                          <div className="flex-1 border-t border-[#E8E8EC]" />
+                          <div className="flex-1 border-t border-[#E8E0D1]" />
+                          <span className="text-[10px] text-[#8A8986]">or paste text</span>
+                          <div className="flex-1 border-t border-[#E8E0D1]" />
                         </div>
                         <textarea
                           rows={4}
                           placeholder="Select all text on the page (Cmd+A / Ctrl+A), copy and paste here…"
                           value={src.text}
                           onChange={e => updateSource(grant.id, idx, 'text', e.target.value)}
-                          className="w-full text-xs border border-[#E8E8EC] p-2.5 resize-y outline-none focus:border-[#008080]"
+                          className="w-full text-xs border border-[#E8E0D1] p-2.5 resize-y outline-none focus:border-[#008080]"
                           style={{ borderRadius: 6, fontFamily: 'inherit' }}
                         />
                         {src.text.trim().length > 0 && (
-                          <p className="text-[10px] text-[#9E9EA8]">{src.text.trim().length.toLocaleString()} characters</p>
+                          <p className="text-[10px] text-[#8A8986]">{src.text.trim().length.toLocaleString()} characters</p>
                         )}
                       </div>
                     ))}
@@ -684,18 +684,18 @@ export default function FunderIntelligencePage() {
 
                 {/* Brief preview */}
                 {existingBrief && !isSourcesOpen && (
-                  <div className="border-t border-[#E8E8EC] px-4 py-4 grid grid-cols-2 gap-x-6 gap-y-3" style={{ backgroundColor: '#FAF8F5' }}>
+                  <div className="border-t border-[#E8E0D1] px-4 py-4 grid grid-cols-2 gap-x-6 gap-y-3" style={{ backgroundColor: '#FAFAF7' }}>
                     {Object.entries(BRIEF_LABELS).map(([key, label]) => {
                       const val = existingBrief[key]
                       if (!val) return (
                         <div key={key} className="opacity-40">
-                          <p className="text-[10px] font-bold text-[#6E6E80] uppercase tracking-wider mb-0.5">{label}</p>
-                          <p className="text-xs text-[#9E9EA8] italic">Not found — add a source to fill this in</p>
+                          <p className="text-[10px] font-bold text-[#5F5E5A] uppercase tracking-wider mb-0.5">{label}</p>
+                          <p className="text-xs text-[#8A8986] italic">Not found — add a source to fill this in</p>
                         </div>
                       )
                       return (
                         <div key={key}>
-                          <p className="text-[10px] font-bold text-[#6E6E80] uppercase tracking-wider mb-0.5">{label}</p>
+                          <p className="text-[10px] font-bold text-[#5F5E5A] uppercase tracking-wider mb-0.5">{label}</p>
                           <p className="text-xs text-[#444] leading-relaxed">{val}</p>
                         </div>
                       )
@@ -706,7 +706,7 @@ export default function FunderIntelligencePage() {
             )
           })}
           {filtered.length === 0 && (
-            <div className="text-center py-16 text-[#6E6E80] text-sm">
+            <div className="text-center py-16 text-[#5F5E5A] text-sm">
               {searchLower
                 ? `No grants matching "${search}"`
                 : filter === 'enriched' ? 'No enriched grants yet — start enriching!' : 'All grants have been enriched 🎉'}

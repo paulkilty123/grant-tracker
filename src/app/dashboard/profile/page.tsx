@@ -676,7 +676,7 @@ export default function ProfilePage() {
   }
 
   const { score, missing } = completenessScore(form)
-  const scoreColor = score >= 80 ? 'bg-charcoal' : score >= 50 ? 'bg-gold' : 'bg-red-400'
+  const scoreColor = score >= 80 ? 'bg-charcoal' : score >= 50 ? 'bg-gold' : 'bg-coral-saturated'
   const scoreLabel = score >= 80 ? 'Strong profile' : score >= 50 ? 'Getting there' : 'Needs more detail'
 
   /* ════════════════════════════════════════════
@@ -733,7 +733,7 @@ export default function ProfilePage() {
             </button>
           </div>
           {autoFillError && (
-            <p className="text-xs text-red-500 mt-2">{autoFillError}</p>
+            <p className="text-xs text-coral-saturated mt-2">{autoFillError}</p>
           )}
           {autoFilling && (
             <div className="mt-3 flex items-center gap-2">
@@ -842,7 +842,7 @@ export default function ProfilePage() {
             Back
           </button>
           <div className="flex items-center gap-3">
-            {saveStatus === 'error' && <p className="text-xs text-red-500">Save failed</p>}
+            {saveStatus === 'error' && <p className="text-xs text-coral-saturated">Save failed</p>}
             {saveStatus === 'saved' && <p className="text-xs text-mid font-medium">Saved!</p>}
             <button
               onClick={handleSave}
@@ -963,7 +963,7 @@ export default function ProfilePage() {
         </div>
         <div className="flex items-center gap-3 flex-shrink-0">
           {saveStatus === 'error' && (
-            <p className="text-xs text-red-500">Save failed — please try again</p>
+            <p className="text-xs text-coral-saturated">Save failed — please try again</p>
           )}
           <button
             onClick={handleSave}
@@ -1055,7 +1055,7 @@ export default function ProfilePage() {
           <p className="text-xs text-charcoal mt-2 font-medium">Fields filled from your website — review below and save when ready.</p>
         )}
         {autoFillError && (
-          <p className="text-xs text-red-500 mt-2">{autoFillError}</p>
+          <p className="text-xs text-coral-saturated mt-2">{autoFillError}</p>
         )}
       </div>
 
@@ -1070,7 +1070,7 @@ export default function ProfilePage() {
           <span className="text-xs text-mid">{score}% complete</span>
         </div>
         <div className="flex items-center gap-3">
-          {saveStatus === 'error' && <p className="text-xs text-red-500">Save failed</p>}
+          {saveStatus === 'error' && <p className="text-xs text-coral-saturated">Save failed</p>}
           {saveStatus === 'saved' && <p className="text-xs text-mid font-medium">Saved!</p>}
           {hasUnsavedChanges && saveStatus === 'idle' && <p className="text-xs text-coral font-medium">Unsaved changes</p>}
           <button
@@ -1094,7 +1094,7 @@ export default function ProfilePage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="md:col-span-2">
           <label className="block text-sm font-medium text-charcoal mb-1.5">
-            Organisation or venture name <span className="text-red-400">*</span>
+            Organisation or venture name <span className="text-coral-saturated">*</span>
           </label>
           <input
             className="form-input"
@@ -1105,7 +1105,7 @@ export default function ProfilePage() {
         </div>
         <div>
           <label className="block text-sm font-medium text-charcoal mb-1.5">
-            Legal structure <span className="text-red-400">*</span>
+            Legal structure <span className="text-coral-saturated">*</span>
           </label>
           <select className="form-select" value={form.legalStructure}
             onChange={e => setForm(prev => ({ ...prev, legalStructure: e.target.value as LegalStructure }))}>
@@ -1305,7 +1305,7 @@ export default function ProfilePage() {
                     <button
                       type="button"
                       onClick={() => toggleImpactSector(sec)}
-                      className="p-0.5 ml-1 text-mid hover:text-red-600 transition-colors"
+                      className="p-0.5 ml-1 text-mid hover:text-coral-saturated transition-colors"
                       title="Remove"
                     >
                       <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -1440,7 +1440,7 @@ export default function ProfilePage() {
                     <button
                       type="button"
                       onClick={() => toggleBeneficiaryGroup(grp)}
-                      className="p-0.5 ml-1 text-mid hover:text-red-600 transition-colors"
+                      className="p-0.5 ml-1 text-mid hover:text-coral-saturated transition-colors"
                       title="Remove"
                     >
                       <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>

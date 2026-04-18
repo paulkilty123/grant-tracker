@@ -190,7 +190,7 @@ export default function DiscoveryPanel() {
             { label: 'Pending',    value: queueStats.pending,   colour: 'text-amber-700 bg-gold/10'  },
             { label: 'Processed',  value: queueStats.processed, colour: 'text-green-700 bg-green-50' },
             { label: 'Duplicates', value: queueStats.duplicate, colour: 'text-mid bg-warm/40'         },
-            { label: 'Rejected',   value: queueStats.rejected,  colour: 'text-red-600 bg-red-50'     },
+            { label: 'Rejected',   value: queueStats.rejected,  colour: 'text-coral-saturated bg-coral-pale'     },
           ].map(s => (
             <div key={s.label} className={`rounded-lg p-3 text-center ${s.colour}`}>
               <p className="text-xl font-bold">{s.value}</p>
@@ -268,17 +268,17 @@ export default function DiscoveryPanel() {
 
       {/* Global error */}
       {error && (
-        <div className="mt-4 bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">
+        <div className="mt-4 bg-coral-pale border border-coral-mid rounded-lg px-4 py-3 text-sm text-coral-deep">
           <strong>Error:</strong> {error}
         </div>
       )}
 
       {/* Per-query errors */}
       {queriesWithErrors.length > 0 && (
-        <div className="mt-4 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
-          <p className="text-sm font-semibold text-red-700 mb-2">{queriesWithErrors.length} queries failed</p>
+        <div className="mt-4 bg-coral-pale border border-coral-mid rounded-lg px-4 py-3">
+          <p className="text-sm font-semibold text-coral-deep mb-2">{queriesWithErrors.length} queries failed</p>
           {queriesWithErrors.map((r, i) => (
-            <p key={i} className="text-xs text-red-600 mt-0.5">{r.query}: {r.error}</p>
+            <p key={i} className="text-xs text-coral-saturated mt-0.5">{r.query}: {r.error}</p>
           ))}
         </div>
       )}
@@ -291,12 +291,12 @@ export default function DiscoveryPanel() {
           </div>
           <div className="space-y-2 max-h-64 overflow-y-auto">
             {queryResults.map((r, i) => (
-              <div key={i} className={`rounded-lg px-4 py-3 ${r.error ? 'bg-red-50 border border-red-100' : 'bg-warm/30'}`}>
+              <div key={i} className={`rounded-lg px-4 py-3 ${r.error ? 'bg-coral-pale border border-coral-mid' : 'bg-warm/30'}`}>
                 <div className="flex justify-between items-start">
                   <p className="text-xs text-charcoal font-medium truncate max-w-[65%]" title={r.query}>{r.query}</p>
                   <span className="text-xs text-mid ml-2 flex-shrink-0">
                     {r.error
-                      ? <span className="text-red-600">error</span>
+                      ? <span className="text-coral-saturated">error</span>
                       : <>found {r.found} · queued <strong className="text-forest">{r.queued}</strong></>
                     }
                   </span>
@@ -328,7 +328,7 @@ export default function DiscoveryPanel() {
                 <div key={i} className="flex items-center justify-between px-3 py-2">
                   <span className="text-xs text-charcoal truncate max-w-[70%]">{r.title}</span>
                   <span className={`text-[11px] font-semibold ml-2 flex-shrink-0 ${
-                    r.status === 'imported' ? 'text-green-600' : r.status === 'duplicate' ? 'text-mid' : 'text-red-500'
+                    r.status === 'imported' ? 'text-green-600' : r.status === 'duplicate' ? 'text-mid' : 'text-coral-saturated'
                   }`}>
                     {r.status === 'imported' ? '✓ imported' : r.status === 'duplicate' ? '≈ duplicate' : '✗ failed'}
                   </span>

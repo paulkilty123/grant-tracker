@@ -32,9 +32,9 @@ const TYPE_COLOURS: Record<string, string> = {
   capacity_builder:    'bg-emerald-50 text-emerald-700',
   foundation:          'bg-sage/10 text-forest',
   corporate:           'bg-amber-50 text-amber-700',
-  local_authority:     'bg-purple-50 text-purple-700',
+  local_authority:     'bg-amber-pale text-amber-deep',
   housing_association: 'bg-teal-50 text-teal-700',
-  government:          'bg-red-50 text-red-700',
+  government:          'bg-coral-pale text-coral-deep',
 }
 
 // ── Source display names ──────────────────────────────────────────────────────
@@ -94,15 +94,15 @@ export default async function GrantDetailPage({
   const FUNDING_TYPE_BADGES: Record<string, FTBadge> = {
     grant:              { Icon: Award,         label: 'Grant',             cls: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
     accelerator:        { Icon: Rocket,        label: 'Accelerator',       cls: 'bg-orange-50 text-orange-700 border border-orange-200' },
-    support_programme:  { Icon: GraduationCap, label: 'Support Programme', cls: 'bg-indigo-50 text-indigo-700 border border-indigo-200' },
-    programme:          { Icon: GraduationCap, label: 'Support Programme', cls: 'bg-indigo-50 text-indigo-700 border border-indigo-200' },
+    support_programme:  { Icon: GraduationCap, label: 'Support Programme', cls: 'bg-blue-pale text-blue-deep border border-blue-mid' },
+    programme:          { Icon: GraduationCap, label: 'Support Programme', cls: 'bg-blue-pale text-blue-deep border border-blue-mid' },
     social_investment:  { Icon: TrendingUp,    label: 'Social Investment', cls: 'bg-cyan-50 text-cyan-700 border border-cyan-200' },
     loan:               { Icon: TrendingUp,    label: 'Loan',              cls: 'bg-cyan-50 text-cyan-700 border border-cyan-200' },
     equity:             { Icon: TrendingUp,    label: 'Equity',            cls: 'bg-cyan-50 text-cyan-700 border border-cyan-200' },
     diversity_fund:     { Icon: Users,         label: 'Diversity Fund',    cls: 'bg-violet-50 text-violet-700 border border-violet-200' },
     blended_finance:    { Icon: GitMerge,      label: 'Blended Finance',   cls: 'bg-teal-50 text-teal-700 border border-teal-200' },
-    in_kind:            { Icon: Gift,          label: 'In-Kind Support',   cls: 'bg-rose-50 text-rose-700 border border-rose-200' },
-    'in-kind':          { Icon: Gift,          label: 'In-Kind Support',   cls: 'bg-rose-50 text-rose-700 border border-rose-200' },
+    in_kind:            { Icon: Gift,          label: 'In-Kind Support',   cls: 'bg-amber-pale text-amber-deep border border-amber-mid' },
+    'in-kind':          { Icon: Gift,          label: 'In-Kind Support',   cls: 'bg-amber-pale text-amber-deep border border-amber-mid' },
     'tax-relief':       { Icon: Landmark,      label: 'Tax Relief',        cls: 'bg-stone-100 text-stone-700 border border-stone-300' },
   }
   const rawFundingType = grant.funding_type ? String(grant.funding_type) : 'grant'
@@ -138,7 +138,7 @@ export default async function GrantDetailPage({
   // Deadline display
   const deadlinePassed = !grant.is_rolling && grant.deadline && new Date(grant.deadline) < new Date()
   const deadlineColour = grant.is_rolling ? 'text-sage'
-    : deadlinePassed ? 'text-red-600'
+    : deadlinePassed ? 'text-coral-saturated'
     : 'text-charcoal'
 
   return (
@@ -273,7 +273,7 @@ export default async function GrantDetailPage({
             <h2 className="text-xs font-semibold text-light uppercase tracking-wider mb-2.5">Sectors</h2>
             <div className="flex flex-wrap gap-2">
               {sectors.map(s => (
-                <span key={s} className="tag bg-purple-50 text-purple-700 capitalize">{s}</span>
+                <span key={s} className="tag bg-amber-pale text-amber-deep capitalize">{s}</span>
               ))}
             </div>
           </div>
@@ -309,7 +309,7 @@ export default async function GrantDetailPage({
       <p className="text-xs text-light text-center">
         Source: {sourceLabel(String(grant.source))} · Last checked: {lastSeen}
         {grant.is_active === false && (
-          <span className="ml-2 text-red-400 font-medium">· May be closed</span>
+          <span className="ml-2 text-coral-saturated font-medium">· May be closed</span>
         )}
       </p>
       <div className="text-center mt-2">

@@ -1382,5 +1382,5 @@ export function scoreColour(score: number): { bg: string; text: string; bar: str
   if (score >= 80) return { bg: 'bg-sage/15',  text: 'text-sage',  bar: 'bg-sage'  }
   if (score >= 65) return { bg: 'bg-gold/15',  text: 'text-gold',  bar: 'bg-gold'  }
   if (score >= 45) return { bg: 'bg-warm',     text: 'text-mid',   bar: 'bg-mid'   }
-  return               { bg: 'bg-red-50',   text: 'text-red-400', bar: 'bg-red-300' }
+  return               { bg: 'bg-coral-pale',   text: 'text-coral-saturated', bar: 'bg-coral-mid' }
 }

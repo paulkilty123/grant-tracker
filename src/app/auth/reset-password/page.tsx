@@ -95,7 +95,7 @@ function ResetPasswordContent() {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
-                <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-lg">{error}</div>
+                <div className="bg-coral-pale text-coral-saturated text-sm px-4 py-3 rounded-lg">{error}</div>
               )}
               <div>
                 <label className="block text-sm font-medium text-charcoal mb-1.5">New password</label>

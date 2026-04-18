@@ -96,7 +96,7 @@ interface SourceStat {
 
 function statusBadge(stat: SourceStat) {
   if (stat.activeGrants === 0) {
-    return { dot: 'bg-red-500', text: 'text-red-700', label: 'No grants' }
+    return { dot: 'bg-coral-pale0', text: 'text-coral-deep', label: 'No grants' }
   }
   if (!stat.lastSeen) {
     return { dot: 'bg-gray-400', text: 'text-gray-600', label: 'Unknown' }
@@ -104,7 +104,7 @@ function statusBadge(stat: SourceStat) {
   const hoursAgo = (Date.now() - new Date(stat.lastSeen).getTime()) / 3_600_000
   if (hoursAgo < 30) return { dot: 'bg-green-500', text: 'text-green-700', label: 'Healthy' }
   if (hoursAgo < 72) return { dot: 'bg-amber-500', text: 'text-amber-700', label: 'Stale' }
-  return { dot: 'bg-red-500', text: 'text-red-700', label: 'Outdated' }
+  return { dot: 'bg-coral-pale0', text: 'text-coral-deep', label: 'Outdated' }
 }
 
 function fmtDate(iso: string | null) {
@@ -219,7 +219,7 @@ export default async function AdminPage() {
           { label: 'Total sources',   value: stats.length,                      colour: 'text-forest' },
           { label: 'Active grants',   value: totalActive.toLocaleString(),       colour: 'text-gold'   },
           { label: '🟢 Healthy',      value: healthyCount,                       colour: 'text-green-700' },
-          { label: '🔴 Issues',       value: errorCount + staleCount,            colour: errorCount + staleCount > 0 ? 'text-red-700' : 'text-forest' },
+          { label: '🔴 Issues',       value: errorCount + staleCount,            colour: errorCount + staleCount > 0 ? 'text-coral-deep' : 'text-forest' },
         ].map(kpi => (
           <div key={kpi.label} className="bg-white rounded-xl p-5 shadow-card text-center">
             <p className={`font-display text-3xl font-bold ${kpi.colour}`}>{kpi.value}</p>
@@ -276,7 +276,7 @@ export default async function AdminPage() {
                       </div>
                     </td>
                     <td className="px-3 py-3 text-right">
-                      <span className={`font-bold ${stat.activeGrants > 0 ? 'text-charcoal' : 'text-red-500'}`}>
+                      <span className={`font-bold ${stat.activeGrants > 0 ? 'text-charcoal' : 'text-coral-saturated'}`}>
                         {stat.activeGrants}
                       </span>
                     </td>
@@ -295,7 +295,7 @@ export default async function AdminPage() {
                       </td>
                       <td className="px-4 py-3 text-xs max-w-xs">
                         {stat.lastError
-                          ? <span className="text-red-600 font-medium truncate block" title={stat.lastError}>⚠ {stat.lastError}</span>
+                          ? <span className="text-coral-saturated font-medium truncate block" title={stat.lastError}>⚠ {stat.lastError}</span>
                           : <span className="text-green-600">✓ OK</span>
                         }
                       </td>

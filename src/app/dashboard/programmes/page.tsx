@@ -39,16 +39,16 @@ type FilterTab = 'all' | 'accelerator' | 'support_programme' | 'in_kind'
 const TABS: { id: FilterTab; label: string; Icon: React.ComponentType<{ className?: string }>; cls: string }[] = [
   { id: 'all',               label: 'All',                  Icon: ChevronRight,  cls: 'bg-stone-100 text-stone-700' },
   { id: 'accelerator',       label: 'Accelerators',         Icon: Rocket,        cls: 'bg-orange-50 text-orange-700' },
-  { id: 'support_programme', label: 'Fellowships & Support', Icon: GraduationCap, cls: 'bg-indigo-50 text-indigo-700' },
-  { id: 'in_kind',           label: 'In-Kind & Pro Bono',   Icon: Gift,          cls: 'bg-rose-50 text-rose-700' },
+  { id: 'support_programme', label: 'Fellowships & Support', Icon: GraduationCap, cls: 'bg-blue-pale text-blue-deep' },
+  { id: 'in_kind',           label: 'In-Kind & Pro Bono',   Icon: Gift,          cls: 'bg-amber-pale text-amber-deep' },
 ]
 
 // ── Type badge config ─────────────────────────────────────────────────────────
 
 const TYPE_BADGE: Record<string, { Icon: React.ComponentType<{ className?: string }>; label: string; cls: string }> = {
   accelerator:       { Icon: Rocket,        label: 'Accelerator',        cls: 'bg-orange-50 text-orange-700 border border-orange-200' },
-  support_programme: { Icon: GraduationCap, label: 'Support Programme',  cls: 'bg-indigo-50 text-indigo-700 border border-indigo-200' },
-  in_kind:           { Icon: Gift,          label: 'In-Kind Support',    cls: 'bg-rose-50 text-rose-700 border border-rose-200' },
+  support_programme: { Icon: GraduationCap, label: 'Support Programme',  cls: 'bg-blue-pale text-blue-deep border border-blue-mid' },
+  in_kind:           { Icon: Gift,          label: 'In-Kind Support',    cls: 'bg-amber-pale text-amber-deep border border-amber-mid' },
 }
 
 const GEO_LABELS: Record<string, string> = {
@@ -78,7 +78,7 @@ function ProgrammeCard({ prog, onViewDetail, onAddToPipeline }: {
   // Deadline display
   let deadlineDisplay: { text: string; style: React.CSSProperties } | null = null
   if (prog.is_rolling) {
-    deadlineDisplay = { text: 'Always open', style: { color: '#2d8a7a' } }
+    deadlineDisplay = { text: 'Always open', style: { color: '#639922' } }
   } else if (prog.deadline) {
     const parts = prog.deadline.split('-').map(Number)
     if (parts.length === 3 && !parts.some(isNaN)) {
@@ -114,7 +114,7 @@ function ProgrammeCard({ prog, onViewDetail, onAddToPipeline }: {
         {/* Header row */}
         <div className="flex items-start gap-3 mb-3">
           {/* Funder avatar */}
-          <div className="h-10 w-10 bg-[#f5f2ed] flex items-center justify-center text-charcoal font-bold text-sm flex-shrink-0 border border-warm">
+          <div className="h-10 w-10 bg-[#F5F1E8] flex items-center justify-center text-charcoal font-bold text-sm flex-shrink-0 border border-warm">
             {initials}
           </div>
           <div className="flex-1 min-w-0">

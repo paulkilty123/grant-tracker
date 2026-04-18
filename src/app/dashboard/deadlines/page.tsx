@@ -22,12 +22,12 @@ function DeadlineCard({ alert, onStageChange, onDeadlineChange }: {
   const isUrgent  = alert.urgency === 'urgent'
 
   const isCritical = isOverdue || (isUrgent && (alert.daysUntil ?? 99) <= 3)
-  const badgeBg   = isCritical ? '#DC2626' : isUrgent ? '#B45309' : alert.urgency === 'soon' ? '#1E3A5F' : '#4D7C0F'
+  const badgeBg   = isCritical ? '#DC2626' : isUrgent ? '#854F0B' : alert.urgency === 'soon' ? '#0C447C' : '#639922'
   const dayLabel  = isOverdue ? 'Overdue' : isUrgent ? `${alert.daysUntil}d left` : alert.urgency === 'soon' ? 'Coming up' : 'On track'
 
   return (
     <div
-      className="bg-white rounded-xl p-4 flex gap-4 items-start border border-[#E8E8EC]"
+      className="bg-white rounded-xl p-4 flex gap-4 items-start border border-[#E8E0D1]"
       style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}
     >
       <div className="flex-1 min-w-0">
@@ -36,16 +36,16 @@ function DeadlineCard({ alert, onStageChange, onDeadlineChange }: {
           <span className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest text-white" style={{ backgroundColor: badgeBg }}>
             {dayLabel}
           </span>
-          {stage && <span className="text-[10px] text-[#9E9EA8] font-medium uppercase tracking-widest">{stage.label}</span>}
+          {stage && <span className="text-[10px] text-[#8A8986] font-medium uppercase tracking-widest">{stage.label}</span>}
         </div>
         {/* Grant name */}
-        <p className="text-sm font-bold text-[#1A1A1A] leading-snug mb-0.5" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+        <p className="text-sm font-bold text-[#2C2C2A] leading-snug mb-0.5" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
           {alert.item.grant_name}
         </p>
-        <p className="text-xs text-[#6E6E80] mb-2">{alert.item.funder_name}</p>
+        <p className="text-xs text-[#5F5E5A] mb-2">{alert.item.funder_name}</p>
         {/* Deadline */}
         <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex items-center gap-1 text-xs font-semibold text-[#6E6E80]">
+          <div className="flex items-center gap-1 text-xs font-semibold text-[#5F5E5A]">
             <Calendar size={11} strokeWidth={2} />
             {formatDeadline(alert.item.deadline)}
           </div>
@@ -54,8 +54,8 @@ function DeadlineCard({ alert, onStageChange, onDeadlineChange }: {
               type="date"
               defaultValue={alert.item.deadline ?? ''}
               onChange={e => onDeadlineChange(alert.item.id, e.target.value)}
-              className="text-xs border border-[#E8E8EC] rounded-lg px-2.5 py-1 outline-none focus:border-[#84CC16] transition-colors bg-[#F5F5F7]"
-              style={{ color: '#1A1A1A' }}
+              className="text-xs border border-[#E8E0D1] rounded-lg px-2.5 py-1 outline-none focus:border-[#8ECB3C] transition-colors bg-[#FAFAF7]"
+              style={{ color: '#2C2C2A' }}
             />
           )}
         </div>
@@ -63,11 +63,11 @@ function DeadlineCard({ alert, onStageChange, onDeadlineChange }: {
         {alert.item.application_progress != null && alert.item.application_progress > 0 && (
           <div className="mt-2.5">
             <div className="flex justify-between mb-1">
-              <span className="text-[9px] font-semibold uppercase tracking-widest text-[#9E9EA8]">Writing progress</span>
-              <span className="text-[9px] font-bold text-[#6E6E80]">{alert.item.application_progress}%</span>
+              <span className="text-[9px] font-semibold uppercase tracking-widest text-[#8A8986]">Writing progress</span>
+              <span className="text-[9px] font-bold text-[#5F5E5A]">{alert.item.application_progress}%</span>
             </div>
-            <div className="h-1 bg-[#E8E8EC] rounded-full overflow-hidden">
-              <div className="h-full rounded-full bg-[#84CC16]" style={{ width: `${alert.item.application_progress}%` }} />
+            <div className="h-1 bg-[#E8E0D1] rounded-full overflow-hidden">
+              <div className="h-full rounded-full bg-[#8ECB3C]" style={{ width: `${alert.item.application_progress}%` }} />
             </div>
           </div>
         )}
@@ -75,19 +75,19 @@ function DeadlineCard({ alert, onStageChange, onDeadlineChange }: {
         <div className="flex items-center gap-2 flex-wrap mt-2.5">
           {alert.item.stage === 'applying' && (
             <button onClick={() => onStageChange(alert.item.id, 'submitted')}
-              className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full border border-[#E8E8EC] text-[#6E6E80] hover:border-[#1A1A1A] hover:text-[#1A1A1A] transition-colors">
+              className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full border border-[#E8E0D1] text-[#5F5E5A] hover:border-[#2C2C2A] hover:text-[#2C2C2A] transition-colors">
               <Send size={10} strokeWidth={2} /> Mark submitted
             </button>
           )}
           {alert.item.stage === 'submitted' && (
             <button onClick={() => onStageChange(alert.item.id, 'won')}
-              className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full border border-[#E8E8EC] text-[#6E6E80] hover:border-[#1A1A1A] hover:text-[#1A1A1A] transition-colors">
+              className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full border border-[#E8E0D1] text-[#5F5E5A] hover:border-[#2C2C2A] hover:text-[#2C2C2A] transition-colors">
               Mark won
             </button>
           )}
           {alert.item.grant_url && (
             <a href={alert.item.grant_url} target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full border border-[#E8E8EC] text-[#6E6E80] hover:border-[#1A1A1A] hover:text-[#1A1A1A] transition-colors">
+              className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full border border-[#E8E0D1] text-[#5F5E5A] hover:border-[#2C2C2A] hover:text-[#2C2C2A] transition-colors">
               <ExternalLink size={10} strokeWidth={2} /> Visit grant
             </a>
           )}
@@ -95,7 +95,7 @@ function DeadlineCard({ alert, onStageChange, onDeadlineChange }: {
       </div>
       {/* Amount — right side */}
       {amountStr && (
-        <p className="text-base font-bold text-[#84CC16] shrink-0" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{amountStr}</p>
+        <p className="text-base font-bold text-[#8ECB3C] shrink-0" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{amountStr}</p>
       )}
     </div>
   )
@@ -174,8 +174,8 @@ export default function DeadlinesPage() {
   const atRisk = needsAttention.reduce((s, a) => s + (a.item.amount_max ?? a.item.amount_requested ?? 0), 0)
   const fmt = (n: number) => n >= 1000000 ? `£${(n/1000000).toFixed(1)}m` : n >= 1000 ? `£${(n/1000).toFixed(n % 1000 === 0 ? 0 : 1)}k` : `£${n.toLocaleString()}`
 
-  if (loading) return <div className="flex items-center justify-center h-64 text-[#6E6E80] text-sm">Loading deadlines…</div>
-  if (error)   return <div className="p-8 text-center"><p className="text-red-500 font-medium">{error}</p></div>
+  if (loading) return <div className="flex items-center justify-center h-64 text-[#5F5E5A] text-sm">Loading deadlines…</div>
+  if (error)   return <div className="p-8 text-center"><p className="text-coral-saturated font-medium">{error}</p></div>
 
   return (
     <div style={{ fontFamily: 'Plus Jakarta Sans, var(--font-dm-sans), sans-serif' }}>
@@ -199,9 +199,9 @@ export default function DeadlinesPage() {
       {/* ── Fully empty state ── */}
       {alerts.length === 0 && noDeadlineItems.length === 0 && (
         <div className="bg-white p-16 rounded-[2rem] text-center">
-          <Calendar className="h-12 w-12 mx-auto mb-5" style={{ color: '#9E9EA8' }} strokeWidth={1.5} />
+          <Calendar className="h-12 w-12 mx-auto mb-5" style={{ color: '#8A8986' }} strokeWidth={1.5} />
           <h3 className="text-2xl font-bold text-[#1b1b1b] mb-2" style={{ fontFamily: 'var(--font-space-grotesk)' }}>No deadlines yet</h3>
-          <p className="text-sm mb-6 max-w-sm mx-auto" style={{ color: '#6E6E80' }}>
+          <p className="text-sm mb-6 max-w-sm mx-auto" style={{ color: '#5F5E5A' }}>
             Add grants to your pipeline and set deadline dates to track them here.
           </p>
           <a href="/dashboard/search" className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-white text-sm font-bold hover:opacity-80 transition-colors" style={{ background: '#1b1b1b' }}>
@@ -216,9 +216,9 @@ export default function DeadlinesPage() {
           {/* Why it matters */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
             {[
-              { icon: AlarmClock, title: "Never miss a window", body: "Deadline alerts surface 10 days before each closing date so you always have time to submit.", bg: "#FDE8A3", col: "#4A3800" },
-              { icon: AlertTriangle, title: "Spot what's at risk", body: "The at-risk total shows how much funding could slip - a clear signal of where to focus effort.", bg: "#BAE6FD", col: "#1E3A5F" },
-              { icon: CalendarCheck, title: "Track writing progress", body: "Log your application progress on each grant so you know exactly where every submission stands.", bg: "#D9F99D", col: "#4D7C0F" },
+              { icon: AlarmClock, title: "Never miss a window", body: "Deadline alerts surface 10 days before each closing date so you always have time to submit.", bg: "#FAC775", col: "#412402" },
+              { icon: AlertTriangle, title: "Spot what's at risk", body: "The at-risk total shows how much funding could slip - a clear signal of where to focus effort.", bg: "#B5D4F4", col: "#0C447C" },
+              { icon: CalendarCheck, title: "Track writing progress", body: "Log your application progress on each grant so you know exactly where every submission stands.", bg: "#EAF3DE", col: "#639922" },
             ].map(({ icon: Icon, title, body, bg, col }) => (
               <div key={title} className="p-6 rounded-[2rem]" style={{ backgroundColor: bg }}>
                 <Icon size={20} className="mb-3" style={{ color: col }} />
@@ -233,7 +233,7 @@ export default function DeadlinesPage() {
             <h3 className="text-xl font-bold text-[#1b1b1b]" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
               Set deadlines for your pipeline grants
             </h3>
-            <span className="text-xs font-semibold px-3 py-1 rounded-full" style={{ background: '#FDE8A3', color: '#4A3800' }}>
+            <span className="text-xs font-semibold px-3 py-1 rounded-full" style={{ background: '#FAC775', color: '#412402' }}>
               {noDeadlineItems.length} to do
             </span>
           </div>
@@ -248,9 +248,9 @@ export default function DeadlinesPage() {
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-[#1b1b1b] truncate" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{item.grant_name}</p>
                     <div className="flex items-center gap-3 mt-0.5">
-                      <p className="text-sm truncate" style={{ color: '#6E6E80' }}>{item.funder_name}</p>
-                      {amountStr && <span className="text-sm font-bold" style={{ color: '#84CC16' }}>{amountStr}</span>}
-                      {stage && <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: '#9E9EA8' }}>{stage.label}</span>}
+                      <p className="text-sm truncate" style={{ color: '#5F5E5A' }}>{item.funder_name}</p>
+                      {amountStr && <span className="text-sm font-bold" style={{ color: '#8ECB3C' }}>{amountStr}</span>}
+                      {stage && <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: '#8A8986' }}>{stage.label}</span>}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
@@ -258,7 +258,7 @@ export default function DeadlinesPage() {
                       type="date"
                       value={val}
                       onChange={e => setDeadlineInputs(prev => ({ ...prev, [item.id]: e.target.value }))}
-                      className="text-sm border border-[#E8E8EC] rounded-xl px-3 py-2 outline-none focus:border-[#84CC16] transition-colors"
+                      className="text-sm border border-[#E8E0D1] rounded-xl px-3 py-2 outline-none focus:border-[#8ECB3C] transition-colors"
                       style={{ color: '#1b1b1b' }}
                     />
                     <button
@@ -286,7 +286,7 @@ export default function DeadlinesPage() {
             {/* Needs Attention */}
             {needsAttention.length > 0 && (
               <div className="flex items-center gap-3 mb-3">
-                <h3 className="text-base font-bold text-[#1A1A1A]" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Needs Attention</h3>
+                <h3 className="text-base font-bold text-[#2C2C2A]" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Needs Attention</h3>
                 <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full" style={{ background: '#ffdad6', color: '#93000a' }}>
                   {needsAttention.length} grant{needsAttention.length !== 1 ? 's' : ''}{atRisk > 0 && <> · {fmt(atRisk)} at risk</>}
                 </span>
@@ -300,8 +300,8 @@ export default function DeadlinesPage() {
             {soon.length > 0 && (
               <>
                 <div className="flex items-center gap-3 mt-5 mb-3">
-                  <h3 className="text-base font-bold text-[#1A1A1A]" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Coming Up</h3>
-                  <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full" style={{ background: '#BAE6FD', color: '#1E3A5F' }}>{soon.length}</span>
+                  <h3 className="text-base font-bold text-[#2C2C2A]" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Coming Up</h3>
+                  <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full" style={{ background: '#B5D4F4', color: '#0C447C' }}>{soon.length}</span>
                 </div>
                 {soon.map(a => <DeadlineCard key={a.item.id} alert={a} onStageChange={handleStageChange} onDeadlineChange={handleDeadlineChange} />)}
               </>
@@ -311,10 +311,10 @@ export default function DeadlinesPage() {
             {ok.length > 0 && (
               <>
                 <button onClick={() => setOkExpanded(v => !v)} className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2 mt-3 mb-1">
-                  <CalendarCheck size={10} style={{ color: '#4D7C0F' }} />
-                  <span style={{ color: '#4D7C0F' }}>On Track</span>
+                  <CalendarCheck size={10} style={{ color: '#639922' }} />
+                  <span style={{ color: '#639922' }}>On Track</span>
                   <span className="font-semibold normal-case tracking-normal" style={{ color: 'rgba(0,0,0,0.4)' }}>{ok.length} {ok.length === 1 ? 'grant' : 'grants'}</span>
-                  {okExpanded ? <ChevronUp size={10} style={{ color: '#6E6E80' }} /> : <ChevronDown size={10} style={{ color: '#6E6E80' }} />}
+                  {okExpanded ? <ChevronUp size={10} style={{ color: '#5F5E5A' }} /> : <ChevronDown size={10} style={{ color: '#5F5E5A' }} />}
                 </button>
                 {okExpanded && ok.map(a => <DeadlineCard key={a.item.id} alert={a} onStageChange={handleStageChange} onDeadlineChange={handleDeadlineChange} />)}
               </>
@@ -324,8 +324,8 @@ export default function DeadlinesPage() {
             {noDeadlineItems.length > 0 && (
               <>
                 <div className="flex items-center gap-3 mt-5 mb-3">
-                  <h3 className="text-base font-bold text-[#1A1A1A]" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Set Deadlines</h3>
-                  <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full" style={{ background: '#FDE8A3', color: '#4A3800' }}>{noDeadlineItems.length} to do</span>
+                  <h3 className="text-base font-bold text-[#2C2C2A]" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Set Deadlines</h3>
+                  <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full" style={{ background: '#FAC775', color: '#412402' }}>{noDeadlineItems.length} to do</span>
                 </div>
                 {noDeadlineItems.map(item => {
                   const amountStr = formatRange(item.amount_min, item.amount_max ?? item.amount_requested)
@@ -333,13 +333,13 @@ export default function DeadlinesPage() {
                   const val = deadlineInputs[item.id] ?? ''
                   const saving = savingDeadline === item.id
                   return (
-                    <div key={item.id} className="bg-white rounded-xl p-4 flex items-center gap-4 border border-[#E8E8EC]" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
+                    <div key={item.id} className="bg-white rounded-xl p-4 flex items-center gap-4 border border-[#E8E0D1]" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-[#1b1b1b] truncate" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{item.grant_name}</p>
                         <div className="flex items-center gap-2 mt-0.5">
-                          <p className="text-xs truncate" style={{ color: '#6E6E80' }}>{item.funder_name}</p>
-                          {amountStr && <span className="text-xs font-bold" style={{ color: '#84CC16' }}>{amountStr}</span>}
-                          {stage && <span className="text-[10px] uppercase tracking-widest font-semibold" style={{ color: '#9E9EA8' }}>{stage.label}</span>}
+                          <p className="text-xs truncate" style={{ color: '#5F5E5A' }}>{item.funder_name}</p>
+                          {amountStr && <span className="text-xs font-bold" style={{ color: '#8ECB3C' }}>{amountStr}</span>}
+                          {stage && <span className="text-[10px] uppercase tracking-widest font-semibold" style={{ color: '#8A8986' }}>{stage.label}</span>}
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
@@ -347,7 +347,7 @@ export default function DeadlinesPage() {
                           type="date"
                           value={val}
                           onChange={e => setDeadlineInputs(prev => ({ ...prev, [item.id]: e.target.value }))}
-                          className="text-xs border border-[#E8E8EC] rounded-xl px-3 py-1.5 outline-none focus:border-[#84CC16] transition-colors"
+                          className="text-xs border border-[#E8E0D1] rounded-xl px-3 py-1.5 outline-none focus:border-[#8ECB3C] transition-colors"
                           style={{ color: '#1b1b1b' }}
                         />
                         <button
@@ -369,9 +369,9 @@ export default function DeadlinesPage() {
           {/* Right: 4 stat cards vertical */}
           <div className="lg:col-span-4 flex flex-col gap-3">
             {[
-              { label: 'This Week',       count: urgent.length,          bg: '#FDE8A3', col: '#4A3800', Icon: AlarmClock },
-              { label: 'Coming Up',       count: soon.length,            bg: '#BAE6FD', col: '#1E3A5F', Icon: CalendarClock },
-              { label: 'No Deadline Set', count: noDeadlineItems.length, bg: '#EBEBEB', col: '#374151', Icon: Calendar },
+              { label: 'This Week',       count: urgent.length,          bg: '#FAC775', col: '#412402', Icon: AlarmClock },
+              { label: 'Coming Up',       count: soon.length,            bg: '#B5D4F4', col: '#0C447C', Icon: CalendarClock },
+              { label: 'No Deadline Set', count: noDeadlineItems.length, bg: '#E8E0D1', col: '#5F5E5A', Icon: Calendar },
             ].map(({ label, count, bg, col, Icon }) => (
               <div key={label} className="flex items-center justify-between px-6 py-5 rounded-[1.5rem]" style={{ backgroundColor: bg }}>
                 <div>

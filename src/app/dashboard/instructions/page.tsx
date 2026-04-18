@@ -194,7 +194,7 @@ export default function InstructionsPage() {
       </Section>
 
       {/* Deadlines */}
-      <Section icon={CalendarClock} colour="bg-red-50 text-red-500" title="Deadlines">
+      <Section icon={CalendarClock} colour="bg-coral-pale text-coral-saturated" title="Deadlines">
         <p>
           The <strong className="text-charcoal">Deadlines</strong> page gives you a time-sorted view of all upcoming grant deadlines across your pipeline. Grants are colour-coded by urgency so you can see at a glance what needs attention.
         </p>
