@@ -29,13 +29,13 @@ interface Props {
 }
 
 function matchProfileScore(org: Organisation | null): number {
-  if (\!org) return 0
+  if (!org) return 0
   const checks = [
     (org.themes?.length        ?? 0) > 0,
     (org.areas_of_work?.length ?? 0) > 0,
-    \!\!org.primary_location,
-    \!\!org.mission,
-    \!\!org.annual_income_band,
+    !!org.primary_location,
+    !!org.mission,
+    !!org.annual_income_band,
     (org.beneficiaries?.length ?? 0) > 0,
   ]
   return Math.round((checks.filter(Boolean).length / checks.length) * 100)
@@ -89,7 +89,7 @@ export default function Sidebar({ org, userEmail }: Props) {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const profileScore    = matchProfileScore(org)
-  const showProfileDot  = org \!== null && profileScore < 80
+  const showProfileDot  = org !== null && profileScore < 80
 
   async function handleSignOut() {
     const supabase = createClient()
@@ -110,7 +110,7 @@ export default function Sidebar({ org, userEmail }: Props) {
   ) => {
     const isActive =
       pathname === href ||
-      (href \!== '/dashboard' && href \!== '/dashboard/admin' && pathname.startsWith(href)) ||
+      (href !== '/dashboard' && href !== '/dashboard/admin' && pathname.startsWith(href)) ||
       (href === '/dashboard/admin/intelligence' && pathname.startsWith('/dashboard/admin/watchlist'))
 
     return (
@@ -125,14 +125,14 @@ export default function Sidebar({ org, userEmail }: Props) {
             ? 'text-green-pale-1 bg-green-active'
             : 'hover:bg-white/[0.04]',
         )}
-        style={\!isActive ? { color: '#97C459' } : undefined}
+        style={!isActive ? { color: '#97C459' } : undefined}
       >
         <Icon
           className="h-4 w-4 flex-shrink-0"
           style={{ color: isActive ? '#8ECB3C' : '#97C459' }}
         />
         <span className="flex-1">{label}</span>
-        {showDot && \!isActive && (
+        {showDot && !isActive && (
           <span
             className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full"
             style={{

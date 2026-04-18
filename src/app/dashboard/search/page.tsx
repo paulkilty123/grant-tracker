@@ -126,14 +126,14 @@ const FUNDER_TYPES = [
 
 // Funder categories from the funders table (our 8-category taxonomy)
 const FUNDER_CATEGORIES = [
-  { id: 'lottery',              label: '🎱 Lottery',               colour: 'bg-green-50 text-green-700 border-green-200' },
-  { id: 'government',           label: '🏛️ Government',            colour: 'bg-red-50 text-red-700 border-red-200' },
-  { id: 'major_trust',          label: '🏦 Major Trust',           colour: 'bg-[#F4F9E8] text-[#4A7C10] border-[#C5E88A]' },
-  { id: 'community_foundation', label: '🌱 Community Foundation',  colour: 'bg-[#F4F9E8] text-[#4A7C10] border-[#C5E88A]' },
-  { id: 'corporate',            label: '🏢 Corporate',             colour: 'bg-amber-50 text-amber-700 border-amber-200' },
+  { id: 'lottery',              label: '🎱 Lottery',               colour: 'bg-green-pale-1 text-green-text-deep border-green-pale-3' },
+  { id: 'government',           label: '🏛️ Government',            colour: 'bg-coral-pale text-coral-deep border-coral-mid' },
+  { id: 'major_trust',          label: '🏦 Major Trust',           colour: 'bg-[#F1F7E4] text-[#639922] border-[#C0DD97]' },
+  { id: 'community_foundation', label: '🌱 Community Foundation',  colour: 'bg-[#F1F7E4] text-[#639922] border-[#C0DD97]' },
+  { id: 'corporate',            label: '🏢 Corporate',             colour: 'bg-amber-pale text-amber-deep border-amber-mid' },
   { id: 'social_investment',    label: '💰 Social Investment',     colour: 'bg-sky-50 text-sky-700 border-sky-200' },
-  { id: 'crowdfunding',         label: '🤝 Crowdfunding',          colour: 'bg-pink-50 text-pink-700 border-pink-200' },
-  { id: 'sector_body',          label: '📋 Sector Body',           colour: 'bg-purple-50 text-purple-700 border-purple-200' },
+  { id: 'crowdfunding',         label: '🤝 Crowdfunding',          colour: 'bg-coral-pale text-coral-deep border-coral-mid' },
+  { id: 'sector_body',          label: '📋 Sector Body',           colour: 'bg-amber-pale text-amber-deep border-amber-mid' },
 ]
 
 // Geographic scope filter options
@@ -208,7 +208,7 @@ function LiveGrantCard({ grant, onAddToPipeline }: {
         {/* Left: main content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start gap-3 mb-2">
-            <div className="h-10 w-10 bg-[#f5f2ed] flex items-center justify-center text-charcoal font-bold text-sm flex-shrink-0 border border-warm">
+            <div className="h-10 w-10 bg-[#F5F1E8] flex items-center justify-center text-charcoal font-bold text-sm flex-shrink-0 border border-warm">
               {grant.funder[0]?.toUpperCase() ?? '?'}
             </div>
             <div className="flex-1 min-w-0">
@@ -228,9 +228,9 @@ function LiveGrantCard({ grant, onAddToPipeline }: {
 
           {grant.notes && (
             <div className="border px-3.5 py-2.5 mb-3 flex items-start gap-2"
-              style={{ backgroundColor: 'rgba(26,122,94,0.06)', borderColor: 'rgba(26,122,94,0.18)' }}>
-              <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: '#84CC16' }} strokeWidth={2} />
-              <p className="text-sm leading-snug" style={{ color: '#525252' }}>{grant.notes}</p>
+              style={{ backgroundColor: 'rgba(23,52,4,0.06)', borderColor: 'rgba(23,52,4,0.18)' }}>
+              <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: '#8ECB3C' }} strokeWidth={2} />
+              <p className="text-sm leading-snug" style={{ color: '#5F5E5A' }}>{grant.notes}</p>
             </div>
           )}
         </div>
@@ -249,11 +249,11 @@ function LiveGrantCard({ grant, onAddToPipeline }: {
           <div className="flex flex-col gap-1.5 w-full">
             <a href={grant.applyUrl} target="_blank" rel="noopener noreferrer"
               className="flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium transition-colors w-full"
-              style={{ background: '#1A1A1A', color: '#ffffff', border: '1px solid #1A1A1A' }}>
+              style={{ background: '#2C2C2A', color: '#ffffff', border: '1px solid #2C2C2A' }}>
               Visit website →
             </a>
             <button onClick={() => onAddToPipeline(grant)}
-              className="px-3 py-2 text-xs font-bold w-full hover:opacity-80 transition-colors rounded-full" style={{ background: '#1A1A1A', color: '#FFFFFF' }}>
+              className="px-3 py-2 text-xs font-bold w-full hover:opacity-80 transition-colors rounded-full" style={{ background: '#2C2C2A', color: '#FFFFFF' }}>
               Pipeline
             </button>
           </div>
@@ -283,7 +283,7 @@ interface DisplayGrant {
 
 // ── Score colour gradient ─────────────────────────────────────────────────────
 // Returns a hex colour that smoothly interpolates:
-//   0 → coral (#e05c3a)  →  44 → gold (#e8a030)  →  70 → sage (#2d8a7a)  →  100 → forest (#1f5c52)
+//   0 → coral (#D85A30)  →  44 → gold (#BA7517)  →  70 → sage (#639922)  →  100 → forest (#173404)
 // Used for the badge text so the dot + percentage visually signal match quality
 // without hard bucket jumps. The breakdown bars still use Tailwind classes via
 // the existing scoreColour() function (no change needed there).
@@ -360,8 +360,8 @@ function StalenessBadge({ lastVerifiedAt }: { lastVerifiedAt?: string }) {
 
   if (daysAgo <= 1)  return <span className="text-[10px] text-emerald-600 font-medium">✓ Verified today</span>
   if (daysAgo <= 7)  return <span className="text-[10px] text-emerald-500 font-medium">✓ Verified {daysAgo}d ago</span>
-  if (daysAgo <= 14) return <span className="text-[10px] text-amber-500 font-medium">Verified {daysAgo}d ago</span>
-  return <span className="text-[10px] text-amber-600 font-medium">⚠ Not verified in {daysAgo}d</span>
+  if (daysAgo <= 14) return <span className="text-[10px] text-amber-saturated font-medium">Verified {daysAgo}d ago</span>
+  return <span className="text-[10px] text-amber-saturated font-medium">⚠ Not verified in {daysAgo}d</span>
 }
 
 // ── Grant Card ───────────────────────────────────────────────────────────────
@@ -406,7 +406,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
     return (
       <div className="bg-warm/40 px-5 py-3 mb-2 rounded-lg border border-warm flex items-center justify-between opacity-60">
         <p className="text-sm text-mid line-through">{grant.title} — {grant.funder}</p>
-        <button onClick={() => onUndismiss(grant.id)} className="text-xs hover:underline ml-4 flex-shrink-0" style={{ color: '#84CC16' }}>
+        <button onClick={() => onUndismiss(grant.id)} className="text-xs hover:underline ml-4 flex-shrink-0" style={{ color: '#8ECB3C' }}>
           Restore
         </button>
       </div>
@@ -434,7 +434,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
     .slice(0, 3).map(s => STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()))
 
   return (
-    <div className="bg-white mb-3 border border-[#E8E8EC] hover:shadow-md transition-shadow rounded-xl overflow-hidden">
+    <div className="bg-white mb-3 border border-[#E8E0D1] hover:shadow-md transition-shadow rounded-xl overflow-hidden">
 
       {/* ── Top two-column section ── */}
       <div className="flex">
@@ -447,7 +447,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
             {/* Up to 3 sector pills */}
             {sectorLabels.slice(0, 3).map(label => (
               <span key={label} className="text-[10px] font-bold uppercase tracking-wider px-3 py-1"
-                style={{ borderRadius: 9999, backgroundColor: 'rgba(255,183,77,0.20)', color: '#8B5E00' }}>
+                style={{ borderRadius: 9999, backgroundColor: 'rgba(250,199,117,0.20)', color: '#854F0B' }}>
                 {label}
               </span>
             ))}
@@ -470,7 +470,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
               const label = FUNDER_PILL_LABELS[grant.funderType] ?? grant.funderType
               return (
                 <span className="text-[10px] font-bold uppercase tracking-wider px-3 py-1"
-                  style={{ borderRadius: 9999, backgroundColor: 'rgba(110,110,128,0.10)', color: '#6E6E80' }}>
+                  style={{ borderRadius: 9999, backgroundColor: 'rgba(110,110,128,0.10)', color: '#5F5E5A' }}>
                   {label}
                 </span>
               )
@@ -478,7 +478,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
             {/* Status badges */}
             {entryType === 'live' && daysLeft !== null && daysLeft >= 0 && (
               <span className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1 ${
-                daysLeft <= 7 ? 'bg-red-50 text-red-600' : 'bg-gray-100 text-gray-500'
+                daysLeft <= 7 ? 'bg-coral-pale text-coral-saturated' : 'bg-gray-100 text-gray-500'
               }`} style={{ borderRadius: 9999 }}>
                 {daysLeft === 0 ? 'Closes today' : `${daysLeft} days left`}
               </span>
@@ -487,15 +487,15 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
               <span className="text-[10px] font-bold uppercase tracking-wider px-3 py-1 bg-emerald-50 text-emerald-700" style={{ borderRadius: 9999 }}>New</span>
             )}
             {grant.isInviteOnly && (
-              <span className="text-[10px] font-bold uppercase tracking-wider px-3 py-1 bg-purple-50 text-purple-700" style={{ borderRadius: 9999 }}>Invite Only</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider px-3 py-1 bg-amber-pale text-amber-deep" style={{ borderRadius: 9999 }}>Invite Only</span>
             )}
             {/* Location badge */}
             {(() => {
               const loc = grant.locationTag
               const isUKWide = !loc || loc.toLowerCase() === 'uk' || loc.toLowerCase() === 'uk-wide'
               const label = isUKWide ? 'UK-wide' : loc!
-              const bg   = isUKWide ? 'rgba(186,230,253,0.55)' : 'rgba(147,197,253,0.45)'
-              const color = isUKWide ? '#1E3A5F'               : '#1E3A5F'
+              const bg   = isUKWide ? 'rgba(230,241,251,0.55)' : 'rgba(181,212,244,0.45)'
+              const color = isUKWide ? '#0C447C'               : '#0C447C'
               return (
                 <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-3 py-1"
                   style={{ borderRadius: 9999, backgroundColor: bg, color }}>
@@ -512,7 +512,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
           <h3 className="text-xl font-bold text-charcoal leading-snug mb-1" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.01em' }}>{grant.title}</h3>
 
           {/* Funder */}
-          <p className="text-sm font-semibold mb-4" style={{ color: '#525252' }}>{grant.funder}</p>
+          <p className="text-sm font-semibold mb-4" style={{ color: '#5F5E5A' }}>{grant.funder}</p>
 
           {/* Description */}
           <p className="text-sm leading-relaxed mb-6" style={{ color: '#777' }}>
@@ -521,7 +521,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                   {grant.description.slice(0, 180).trimEnd()}…{' '}
                   <button
                     onClick={e => { e.stopPropagation(); setDescExpanded(true) }}
-                    className="font-medium hover:underline whitespace-nowrap" style={{ color: '#84CC16' }}
+                    className="font-medium hover:underline whitespace-nowrap" style={{ color: '#8ECB3C' }}
                   >
                     Show more
                   </button>
@@ -532,17 +532,17 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
           {/* Metadata */}
           {(() => {
             const FUNDING_TYPE_STYLE: Record<string, { label: string; bg: string; color: string }> = {
-              grant:      { label: 'Grant',      bg: 'rgba(132,204,22,0.12)',  color: '#4A7C10' },
-              programme:  { label: 'Programme',  bg: 'rgba(16,185,129,0.13)',  color: '#047857' },
-              investment: { label: 'Investment', bg: 'rgba(255,112,67,0.12)',  color: '#D84315' },
-              in_kind:    { label: 'In-Kind',    bg: 'rgba(99,102,241,0.12)', color: '#4338CA' },
+              grant:      { label: 'Grant',      bg: 'rgba(142,203,60,0.12)',  color: '#639922' },
+              programme:  { label: 'Programme',  bg: 'rgba(99,153,34,0.13)',  color: '#173404' },
+              investment: { label: 'Investment', bg: 'rgba(216,90,48,0.12)',  color: '#993C1D' },
+              in_kind:    { label: 'In-Kind',    bg: 'rgba(55,138,221,0.12)', color: '#378ADD' },
             }
             const ftStyle = grant.fundingType ? FUNDING_TYPE_STYLE[grant.fundingType] : null
             return (
           <div className="flex gap-10">
             <div>
-              <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">Amount</p>
-              <p className="text-sm font-bold" style={{ color: '#84CC16' }}>{formatRange(grant.amountMin, grant.amountMax)}</p>
+              <p className="text-[10px] font-semibold text-[#8A8986] uppercase tracking-wider mb-1">Amount</p>
+              <p className="text-sm font-bold" style={{ color: '#8ECB3C' }}>{formatRange(grant.amountMin, grant.amountMax)}</p>
             </div>
             <div>
               {(() => {
@@ -555,14 +555,14 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                     .toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
                   return (
                     <>
-                      <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">Opens</p>
+                      <p className="text-[10px] font-semibold text-[#8A8986] uppercase tracking-wider mb-1">Opens</p>
                       <p className="text-sm font-semibold text-charcoal">{formatted}</p>
                     </>
                   )
                 }
                 return (
                   <>
-                    <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">Deadline</p>
+                    <p className="text-[10px] font-semibold text-[#8A8986] uppercase tracking-wider mb-1">Deadline</p>
                     <p className="text-sm font-semibold text-charcoal">
                       {grant.isRolling || !grant.deadline
                         ? 'Rolling'
@@ -579,7 +579,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
               })()}
             </div>
             <div>
-              <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">Who&apos;s eligible</p>
+              <p className="text-[10px] font-semibold text-[#8A8986] uppercase tracking-wider mb-1">Who&apos;s eligible</p>
               <div className="flex items-center gap-1.5 flex-wrap">
                 <p className="text-sm font-semibold text-charcoal">{structureLabels.length > 0 ? structureLabels.join(', ') : '—'}</p>
                 {hasOrg && org?.legal_structure && structureLabels.length > 0 && (() => {
@@ -587,13 +587,13 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                   if (!eligible || eligible.length === 0) return null
                   const qualifies = eligible.includes(org.legal_structure as LegalStructure)
                   return qualifies
-                    ? <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md" style={{ backgroundColor: '#dcfce7', color: '#166534' }}>✓ You qualify</span>
-                    : <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md" style={{ backgroundColor: '#fee2e2', color: '#991b1b' }}>✕ Not eligible</span>
+                    ? <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md" style={{ backgroundColor: '#F1F7E4', color: '#3B6D11' }}>✓ You qualify</span>
+                    : <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md" style={{ backgroundColor: '#FAECE7', color: '#4A1B0C' }}>✕ Not eligible</span>
                 })()}
               </div>
             </div>
             <div>
-              <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">Type</p>
+              <p className="text-[10px] font-semibold text-[#8A8986] uppercase tracking-wider mb-1">Type</p>
               {ftStyle ? (
                 <div className="flex flex-wrap items-center gap-1.5">
                   <span className="text-[11px] font-bold px-2.5 py-1 inline-block"
@@ -620,7 +620,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
         <div className="flex flex-col justify-center gap-2.5 p-6 flex-shrink-0 w-[152px]">
           {grant.applyUrl && (
             <a href={grant.applyUrl} target="_blank" rel="noopener noreferrer"
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold bg-[#1A1A1A] text-white rounded-full hover:opacity-80 transition-opacity">
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold bg-[#2C2C2A] text-white rounded-full hover:opacity-80 transition-opacity">
               <ExternalLink className="w-3.5 h-3.5" />
               Visit
             </a>
@@ -629,8 +629,8 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
             onClick={() => isSaved ? onUnsave?.(grant.id) : onSave?.(grant.id)}
             className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold border rounded-full transition-colors ${
               isSaved
-                ? 'bg-[#BAE6FD] text-[#1E3A5F] border-[#7DD3FC]'
-                : 'border-[#7DD3FC] text-[#1E3A5F] hover:bg-[#BAE6FD]'
+                ? 'bg-[#B5D4F4] text-[#0C447C] border-[#B5D4F4]'
+                : 'border-[#B5D4F4] text-[#0C447C] hover:bg-[#B5D4F4]'
             }`}
           >
             <Bookmark className="w-3.5 h-3.5" fill={isSaved ? 'currentColor' : 'none'} />
@@ -638,7 +638,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
           </button>
           <button
             onClick={() => isInPipeline ? onRemoveFromPipeline?.(grant) : onAddToPipeline(grant)}
-            className={`w-full flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-semibold border rounded-full transition-colors whitespace-nowrap ${isInPipeline ? 'bg-[#D9F99D] text-[#3F6212] border-[#4D7C0F]' : 'border-[#4D7C0F] text-[#4D7C0F] bg-transparent hover:bg-[#D9F99D]'}`}
+            className={`w-full flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-semibold border rounded-full transition-colors whitespace-nowrap ${isInPipeline ? 'bg-[#EAF3DE] text-[#3B6D11] border-[#639922]' : 'border-[#639922] text-[#639922] bg-transparent hover:bg-[#EAF3DE]'}`}
           >
             <PlusCircle className="w-3.5 h-3.5" />
             {isInPipeline ? 'In Pipeline' : 'Pipeline'}
@@ -654,7 +654,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
         const brief = (grant as EnrichedGrant).funderBrief
         const scoreLabel    = score >= 80 ? 'Strong match' : score >= 65 ? 'Good match' : score >= 45 ? 'Partial match' : 'Low match'
         // High matches use lime green (user preferred), lower scores shift to amber/red
-        const scoreColourHex = score >= 80 ? '#84CC16' : score >= 65 ? '#2d8a7a' : score >= 45 ? '#e8a030' : '#dc2626'
+        const scoreColourHex = score >= 80 ? '#8ECB3C' : score >= 65 ? '#639922' : score >= 45 ? '#BA7517' : '#D85A30'
 
         // Derive positives/warnings — use structured arrays if available,
         // otherwise parse the reason string (robust fallback)
@@ -667,14 +667,14 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
           : reason.split(/[.,](?=\s[A-Z])|\.\s+/).map(s => s.trim()).filter(s => s && WARN_RE.test(s))
 
         return (
-          <div className="flex items-center gap-5 px-6 py-4 border-t border-[#E8E8EC]"
+          <div className="flex items-center gap-5 px-6 py-4 border-t border-[#E8E0D1]"
             style={{ borderLeft: `3px solid ${scoreColourHex}` }}>
             {/* ── Text content ── */}
             <div className="flex-1 min-w-0 space-y-2">
               {rawPos.length > 0 && (
                 <div className="flex flex-wrap gap-x-4 gap-y-1.5">
                   {rawPos.map((r, i) => (
-                    <span key={i} className="text-sm flex items-start gap-1.5" style={{ color: '#1a1a1a' }}>
+                    <span key={i} className="text-sm flex items-start gap-1.5" style={{ color: '#2C2C2A' }}>
                       <span className="font-bold flex-shrink-0 mt-0.5" style={{ color: scoreColourHex }}>✓</span>
                       <span>{r}</span>
                     </span>
@@ -684,7 +684,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
               {rawWarns.length > 0 && (
                 <div className="flex flex-wrap gap-x-4 gap-y-1.5">
                   {rawWarns.map((r, i) => (
-                    <span key={i} className="text-sm flex items-start gap-1.5" style={{ color: '#92400e' }}>
+                    <span key={i} className="text-sm flex items-start gap-1.5" style={{ color: '#854F0B' }}>
                       <span className="font-bold flex-shrink-0 mt-0.5">⚠</span>
                       <span>{r}</span>
                     </span>
@@ -696,7 +696,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
             {score > 0 && (
               <div className="flex-shrink-0 flex flex-col items-center gap-1">
                 <svg width="64" height="64" viewBox="0 0 64 64">
-                  <circle cx="32" cy="32" r="25" fill="none" stroke="#E8E8EC" strokeWidth="5" />
+                  <circle cx="32" cy="32" r="25" fill="none" stroke="#E8E0D1" strokeWidth="5" />
                   <circle cx="32" cy="32" r="25" fill="none" stroke={scoreColourHex} strokeWidth="5"
                     strokeLinecap="round"
                     strokeDasharray={`${(score / 100) * 157.1} 157.1`}
@@ -721,8 +721,8 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
       {(!!(grant as EnrichedGrant).funderBrief || grant.eligibilityCriteria?.length > 0 || (grant as EnrichedGrant).impactSectors?.length || grant.sectors?.length) && (
         <button
           onClick={() => setInsightsExpanded(v => !v)}
-          className="w-full flex items-center justify-center gap-1.5 py-2.5 border-t border-[#E8E8EC] text-[11px] font-bold uppercase tracking-widest transition-colors hover:bg-[#F5F5F5]"
-          style={{ color: '#6E6E80' }}
+          className="w-full flex items-center justify-center gap-1.5 py-2.5 border-t border-[#E8E0D1] text-[11px] font-bold uppercase tracking-widest transition-colors hover:bg-[#FAFAF7]"
+          style={{ color: '#5F5E5A' }}
         >
           <ChevronDown className="w-3.5 h-3.5 transition-transform" style={{ transform: insightsExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }} />
           {insightsExpanded ? 'Show less' : (grant as EnrichedGrant).funderBrief ? (
@@ -738,7 +738,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
         const brief = (grant as EnrichedGrant).funderBrief
 
         return (
-          <div className="border-t border-[#E8E8EC]" style={{ backgroundColor: '#F5F5F7' }}>
+          <div className="border-t border-[#E8E0D1]" style={{ backgroundColor: '#FAFAF7' }}>
             {brief ? (
               /* ── Funder Intelligence brief ── */
               (() => {
@@ -760,7 +760,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                   <div className={className} style={style}>
                     <div className="flex items-center gap-1.5 mb-2">
                       <Icon className="w-3 h-3 flex-shrink-0" style={{ color: iconColor }} />
-                      <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#1A1A1A' }}>{label}</p>
+                      <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#2C2C2A' }}>{label}</p>
                     </div>
                     {children}
                   </div>
@@ -769,29 +769,29 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                 // Build top-row items so grid cols match actual count
                 const topItems = [
                   brief.what_they_fund && (
-                    <Section key="fund" icon={CheckCircle2} iconColor="#84CC16" label="What they fund">
+                    <Section key="fund" icon={CheckCircle2} iconColor="#8ECB3C" label="What they fund">
                       <p className="text-sm text-[#444] leading-relaxed" style={clamp4}>{brief.what_they_fund}</p>
                     </Section>
                   ),
                   brief.who_can_apply && (
-                    <Section key="who" icon={Users} iconColor="#2d8a7a" label="Who can apply">
+                    <Section key="who" icon={Users} iconColor="#639922" label="Who can apply">
                       <p className="text-sm text-[#444] leading-relaxed" style={clamp4}>{brief.who_can_apply}</p>
                     </Section>
                   ),
                   brief.geographic_focus && (
-                    <Section key="geo" icon={MapPin} iconColor="#2d8a7a" label="Geographic focus">
+                    <Section key="geo" icon={MapPin} iconColor="#639922" label="Geographic focus">
                       <p className="text-sm text-[#444] leading-relaxed" style={clamp4}>{brief.geographic_focus}</p>
                     </Section>
                   ),
                   brief.priorities && (
-                    <Section key="prio" icon={TrendingUp} iconColor="#F59E0B" label="Current priorities">
+                    <Section key="prio" icon={TrendingUp} iconColor="#BA7517" label="Current priorities">
                       <p className="text-sm text-[#444] leading-relaxed" style={clamp4}>{brief.priorities}</p>
                     </Section>
                   ),
                   brief.exclusions && (
-                    <Section key="excl" icon={AlertTriangle} iconColor="#B45309" label="Exclusions"
-                      className="px-3 py-3" style={{ backgroundColor: 'rgba(245,158,11,0.08)', borderRadius: 8, border: '1px solid rgba(245,158,11,0.18)' } as React.CSSProperties}>
-                      <p className="text-sm leading-relaxed" style={{ ...clamp4, color: '#78350F' }}>{brief.exclusions}</p>
+                    <Section key="excl" icon={AlertTriangle} iconColor="#854F0B" label="Exclusions"
+                      className="px-3 py-3" style={{ backgroundColor: 'rgba(186,117,23,0.08)', borderRadius: 8, border: '1px solid rgba(186,117,23,0.18)' } as React.CSSProperties}>
+                      <p className="text-sm leading-relaxed" style={{ ...clamp4, color: '#412402' }}>{brief.exclusions}</p>
                     </Section>
                   ),
                 ].filter(Boolean)
@@ -800,22 +800,22 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
 
                 const bottomItems = [
                   brief.strong_application && (
-                    <Section key="strong" icon={Star} iconColor="#6E6E80" label="Strong application">
+                    <Section key="strong" icon={Star} iconColor="#5F5E5A" label="Strong application">
                       <p className="text-sm text-[#444] leading-relaxed" style={clamp3}>{brief.strong_application}</p>
                     </Section>
                   ),
                   brief.typical_award && (
-                    <Section key="award" icon={DollarSign} iconColor="#6E6E80" label="Typical award">
+                    <Section key="award" icon={DollarSign} iconColor="#5F5E5A" label="Typical award">
                       <p className="text-sm text-[#444] leading-relaxed" style={clamp3}>{brief.typical_award}</p>
                     </Section>
                   ),
                   brief.decision_timeline && (
-                    <Section key="timeline" icon={CalendarDays} iconColor="#6E6E80" label="Decision timeline">
+                    <Section key="timeline" icon={CalendarDays} iconColor="#5F5E5A" label="Decision timeline">
                       <p className="text-sm text-[#444] leading-relaxed" style={clamp3}>{brief.decision_timeline}</p>
                     </Section>
                   ),
                   brief.funder_tips && (
-                    <Section key="tips" icon={Lightbulb} iconColor="#6E6E80" label="Insider tips">
+                    <Section key="tips" icon={Lightbulb} iconColor="#5F5E5A" label="Insider tips">
                       <p className="text-sm text-[#444] leading-relaxed" style={clamp3}>{brief.funder_tips}</p>
                     </Section>
                   ),
@@ -825,7 +825,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                   <div className="px-6 pt-5 pb-6 space-y-5">
 
                     {brief.last_enriched && (
-                      <p className="text-[10px] text-[#9E9EA8] text-right -mb-2">Updated {brief.last_enriched}</p>
+                      <p className="text-[10px] text-[#8A8986] text-right -mb-2">Updated {brief.last_enriched}</p>
                     )}
 
                     {/* Top row: What they fund | Priorities | Exclusions */}
@@ -837,20 +837,20 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
 
                     {/* Bottom row: 4 supporting fields in 2-col grid */}
                     {bottomItems.length > 0 && (
-                      <div className="grid grid-cols-2 gap-x-8 gap-y-5 pt-4 border-t border-[#E8E8EC]">
+                      <div className="grid grid-cols-2 gap-x-8 gap-y-5 pt-4 border-t border-[#E8E0D1]">
                         {bottomItems}
                       </div>
                     )}
 
                     {/* How to apply — full-width footer with Apply button */}
                     {(brief.how_to_apply || grant.applyUrl) && (
-                      <div className="flex items-start justify-between gap-6 pt-4 border-t border-[#E8E8EC]">
+                      <div className="flex items-start justify-between gap-6 pt-4 border-t border-[#E8E0D1]">
                         <div className="flex-1 min-w-0">
                           {brief.how_to_apply && (
                             <>
                               <div className="flex items-center gap-1.5 mb-1.5">
-                                <ClipboardList className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#6E6E80' }} />
-                                <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#1A1A1A' }}>How to apply</p>
+                                <ClipboardList className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#5F5E5A' }} />
+                                <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#2C2C2A' }}>How to apply</p>
                               </div>
                               <p className="text-sm text-[#444] leading-relaxed">{brief.how_to_apply}</p>
                             </>
@@ -859,7 +859,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                         {grant.applyUrl && (
                           <a href={grant.applyUrl} target="_blank" rel="noopener noreferrer"
                             className="flex-shrink-0 flex items-center gap-1.5 px-5 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-80"
-                            style={{ borderRadius: 9999, backgroundColor: '#1A1A1A' }}>
+                            style={{ borderRadius: 9999, backgroundColor: '#2C2C2A' }}>
                             Apply
                             <ExternalLink className="w-3.5 h-3.5" />
                           </a>
@@ -874,17 +874,17 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
               <div className="px-6 py-5 space-y-4">
                 {grant.description.length > 180 && (
                   <div>
-                    <p className="text-[10px] font-bold text-[#6E6E80] uppercase tracking-wider mb-2">Full description</p>
+                    <p className="text-[10px] font-bold text-[#5F5E5A] uppercase tracking-wider mb-2">Full description</p>
                     <p className="text-sm text-[#444] leading-relaxed">{grant.description}</p>
                   </div>
                 )}
                 {grant.eligibilityCriteria?.length > 0 && (
                   <div>
-                    <p className="text-[10px] font-bold text-[#6E6E80] uppercase tracking-wider mb-2.5">Eligibility criteria</p>
+                    <p className="text-[10px] font-bold text-[#5F5E5A] uppercase tracking-wider mb-2.5">Eligibility criteria</p>
                     <ul className="space-y-2">
                       {grant.eligibilityCriteria.map((c, i) => (
                         <li key={i} className="flex gap-2.5 text-sm text-[#444]">
-                          <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: '#84CC16' }} />
+                          <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: '#8ECB3C' }} />
                           <span className="leading-snug">{c}</span>
                         </li>
                       ))}
@@ -893,11 +893,11 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                 )}
                 {(grant as EnrichedGrant).eligibleStructures?.length ? (
                   <div>
-                    <p className="text-[10px] font-bold text-[#6E6E80] uppercase tracking-wider mb-2">Eligible organisations</p>
+                    <p className="text-[10px] font-bold text-[#5F5E5A] uppercase tracking-wider mb-2">Eligible organisations</p>
                     <div className="flex flex-wrap gap-1.5">
                       {((grant as EnrichedGrant).eligibleStructures ?? []).map(s => (
                         <span key={s} className="text-[11px] font-semibold px-2.5 py-1"
-                          style={{ backgroundColor: 'rgba(132,204,22,0.12)', color: '#4A7C10', borderRadius: 9999 }}>
+                          style={{ backgroundColor: 'rgba(142,203,60,0.12)', color: '#639922', borderRadius: 9999 }}>
                           {STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
                         </span>
                       ))}
@@ -905,7 +905,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                   </div>
                 ) : null}
                 <div className="flex items-center justify-between pt-1">
-                  <p className="text-xs text-[#9E9EA8]">
+                  <p className="text-xs text-[#8A8986]">
                     No funder intelligence yet — an admin can enrich this grant from the Funder Intelligence page.
                   </p>
                   {grant.applyUrl && (
@@ -914,7 +914,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex-shrink-0 flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white transition-opacity hover:opacity-80"
-                      style={{ borderRadius: 9999, backgroundColor: '#1A1A1A' }}>
+                      style={{ borderRadius: 9999, backgroundColor: '#2C2C2A' }}>
                       Apply
                       <ExternalLink className="w-3 h-3" />
                     </a>
@@ -1944,9 +1944,9 @@ export default function SearchPage() {
 
       {/* Welcome banner — shown after first profile save */}
       {isWelcome && !welcomeDismissed && (
-        <div className="mb-5 p-4 flex items-start justify-between gap-4 rounded-xl" style={{ border: '1px solid rgba(132,204,22,0.3)', background: 'rgba(132,204,22,0.06)' }}>
+        <div className="mb-5 p-4 flex items-start justify-between gap-4 rounded-xl" style={{ border: '1px solid rgba(142,203,60,0.3)', background: 'rgba(142,203,60,0.06)' }}>
           <div>
-            <p className="text-sm font-semibold" style={{ color: '#4A7C10' }}>🎉 Profile saved — here are your matches</p>
+            <p className="text-sm font-semibold" style={{ color: '#639922' }}>🎉 Profile saved — here are your matches</p>
             <p className="text-xs text-mid mt-0.5">Results are filtered to grants you&apos;re eligible for. Use &ldquo;Show all grants&rdquo; below to browse everything.</p>
           </div>
           <button onClick={() => setWelcomeDismissed(true)} className="text-mid hover:text-charcoal text-lg leading-none flex-shrink-0">×</button>
@@ -1959,15 +1959,15 @@ export default function SearchPage() {
         <div className="flex items-center gap-2 text-sm text-mid">
           {activeView === 'matches' && org && (
             <>
-              <span className="w-2 h-2 flex-shrink-0 rounded-full" style={{ backgroundColor: '#84CC16' }} />
+              <span className="w-2 h-2 flex-shrink-0 rounded-full" style={{ backgroundColor: '#8ECB3C' }} />
               Matched for <strong className="text-charcoal">{org.name ?? 'your organisation'}</strong>
               {org.primary_location && <span className="text-mid">· {org.primary_location}</span>}
             </>
           )}
           {activeView === 'matches' && !org && (
-            <div className="text-xs border border-amber-200 bg-amber-50 px-3 py-2">
-              <a href="/dashboard/profile" className="font-semibold text-amber-700 underline">Set up your profile</a>
-              <span className="text-amber-800"> to see grants matched for your organisation.</span>
+            <div className="text-xs border border-amber-mid bg-amber-pale px-3 py-2">
+              <a href="/dashboard/profile" className="font-semibold text-amber-deep underline">Set up your profile</a>
+              <span className="text-amber-deepest"> to see grants matched for your organisation.</span>
             </div>
           )}
         </div>
@@ -1979,11 +1979,11 @@ export default function SearchPage() {
               <button
                 key={v}
                 onClick={() => setActiveView(v)}
-                className={`px-5 py-2 text-sm font-medium transition-colors flex items-center gap-1.5 ${activeView === v ? 'border-b-2 border-[#84CC16] text-[#1A1A1A] font-bold' : 'border-b-2 border-transparent text-gray-500 hover:text-charcoal'}`}
+                className={`px-5 py-2 text-sm font-medium transition-colors flex items-center gap-1.5 ${activeView === v ? 'border-b-2 border-[#8ECB3C] text-[#2C2C2A] font-bold' : 'border-b-2 border-transparent text-gray-500 hover:text-charcoal'}`}
               >
                 {v === 'matches' ? 'My Matches' : v === 'saved' ? 'Saved' : 'Latest'}
                 {v === 'saved' && savedCount > 0 && (
-                  <span className="text-xs px-1.5 py-0.5 ml-1 font-bold" style={{ borderRadius: 9999, background: '#BAE6FD', color: '#1E3A5F' }}>{savedCount}</span>
+                  <span className="text-xs px-1.5 py-0.5 ml-1 font-bold" style={{ borderRadius: 9999, background: '#B5D4F4', color: '#0C447C' }}>{savedCount}</span>
                 )}
               </button>
             </>
@@ -2044,13 +2044,13 @@ export default function SearchPage() {
                 <button
                   onClick={() => setFiltersOpen(o => !o)}
                   className={`flex items-center gap-1.5 px-4 h-full text-sm font-medium transition-colors flex-shrink-0 ${
-                    filtersOpen || activeFilterCount > 0 ? 'text-[#1f5c52] font-semibold' : 'text-gray-500 hover:text-charcoal'
+                    filtersOpen || activeFilterCount > 0 ? 'text-[#173404] font-semibold' : 'text-gray-500 hover:text-charcoal'
                   }`}
                 >
                   <SlidersHorizontal size={14} strokeWidth={2} />
                   Filters
                   {activeFilterCount > 0 && (
-                    <span className="text-xs text-white px-1.5 py-0.5 rounded-full leading-none" style={{ backgroundColor: '#1f5c52' }}>{activeFilterCount}</span>
+                    <span className="text-xs text-white px-1.5 py-0.5 rounded-full leading-none" style={{ backgroundColor: '#173404' }}>{activeFilterCount}</span>
                   )}
                   <ChevronDown size={12} strokeWidth={2} className={`transition-transform duration-200 ${filtersOpen ? 'rotate-180' : ''}`} />
                 </button>
@@ -2076,7 +2076,7 @@ export default function SearchPage() {
                   >
                     <span className="relative flex-shrink-0" style={{
                       width: 40, height: 22,
-                      backgroundColor: profileFilterOn ? '#84CC16' : '#d1d5db',
+                      backgroundColor: profileFilterOn ? '#8ECB3C' : '#E4E2DA',
                       borderRadius: 9999, display: 'inline-flex', alignItems: 'center',
                       transition: 'background-color 0.2s',
                     }}>
@@ -2096,7 +2096,7 @@ export default function SearchPage() {
                 onClick={() => { setHasSearched(true); handleAISearch(inputValue) }}
                 disabled={!inputValue.trim() && !locationFilter.trim()}
                 className={`h-12 px-6 text-sm font-bold flex-shrink-0 transition-opacity disabled:opacity-40 flex items-center gap-2 rounded-full ${aiLoading ? 'pointer-events-none' : ''}`}
-                style={{ background: '#84CC16', color: '#1A1A1A' }}
+                style={{ background: '#8ECB3C', color: '#2C2C2A' }}
               >
                 {aiLoading
                   ? <><span className="dot-bounce flex gap-0.5"><span/><span/><span/></span> Searching…</>
@@ -2109,18 +2109,18 @@ export default function SearchPage() {
           {activeView === 'matches' && (aiResults || aiError) && (
             <div className="mt-2 flex items-center gap-2">
               {aiResults && (
-                <button onClick={() => { setAiResults(null); setSmartMatched(false); setQuery(''); setInputValue('') }} className="px-3 py-1 border border-warm text-xs font-medium text-mid hover:border-[#84CC16] hover:text-[#4A7C10] transition-all bg-white rounded-md">
+                <button onClick={() => { setAiResults(null); setSmartMatched(false); setQuery(''); setInputValue('') }} className="px-3 py-1 border border-warm text-xs font-medium text-mid hover:border-[#8ECB3C] hover:text-[#639922] transition-all bg-white rounded-md">
                   Clear results
                 </button>
               )}
-              {aiError && <p className="text-amber-600 text-xs">⚠ {aiError}</p>}
+              {aiError && <p className="text-amber-saturated text-xs">⚠ {aiError}</p>}
             </div>
           )}
 
 
           {/* ── Collapsible filters panel ── */}
           {filtersOpen && (
-          <div className="mt-4 pt-4 border-t border-[#E8E8EC] space-y-4">
+          <div className="mt-4 pt-4 border-t border-[#E8E0D1] space-y-4">
 
             {/* Row 1: Funding type + Funder source */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -2132,8 +2132,8 @@ export default function SearchPage() {
                       title={t.desc}
                       className={`px-3 py-1.5 border text-xs font-medium transition-all rounded-md ${
                         activeFundingType === t.id
-                          ? 'border-[#1f5c52] bg-[#1f5c52] text-white'
-                          : 'border-warm text-mid hover:border-[#1f5c52] hover:text-[#1f5c52]'
+                          ? 'border-[#173404] bg-[#173404] text-white'
+                          : 'border-warm text-mid hover:border-[#173404] hover:text-[#173404]'
                       }`}>
                       {t.label}
                     </button>
@@ -2150,8 +2150,8 @@ export default function SearchPage() {
                       <button key={t.id} onClick={() => setActiveType(t.id)}
                         className={`px-3 py-1.5 border text-xs font-medium transition-all rounded-md ${
                           activeType === t.id
-                            ? 'border-[#1f5c52] bg-[#1f5c52] text-white'
-                            : 'border-warm text-mid hover:border-[#1f5c52] hover:text-[#1f5c52]'
+                            ? 'border-[#173404] bg-[#173404] text-white'
+                            : 'border-warm text-mid hover:border-[#173404] hover:text-[#173404]'
                         }`}>
                         {t.label}
                       </button>
@@ -2170,8 +2170,8 @@ export default function SearchPage() {
                     onClick={() => setActiveGeoScope('all')}
                     className={`px-3 py-1.5 border text-xs font-medium transition-all rounded-md ${
                       activeGeoScope === 'all'
-                        ? 'border-[#1f5c52] bg-[#1f5c52] text-white'
-                        : 'border-warm text-mid hover:border-[#1f5c52] hover:text-[#1f5c52]'
+                        ? 'border-[#173404] bg-[#173404] text-white'
+                        : 'border-warm text-mid hover:border-[#173404] hover:text-[#173404]'
                     }`}
                   >
                     Anywhere
@@ -2182,8 +2182,8 @@ export default function SearchPage() {
                       onClick={() => setActiveGeoScope(activeGeoScope === scope.id ? 'all' : scope.id)}
                       className={`px-3 py-1.5 border text-xs font-medium transition-all rounded-md ${
                         activeGeoScope === scope.id
-                          ? 'border-[#1f5c52] bg-[#1f5c52] text-white'
-                          : 'border-warm text-mid hover:border-[#1f5c52] hover:text-[#1f5c52]'
+                          ? 'border-[#173404] bg-[#173404] text-white'
+                          : 'border-warm text-mid hover:border-[#173404] hover:text-[#173404]'
                       }`}
                     >
                       {scope.label}
@@ -2210,8 +2210,8 @@ export default function SearchPage() {
                     <button key={v} onClick={() => setDeadlineFilter(v)}
                       className={`px-3 py-1.5 border text-xs font-medium transition-all rounded-md ${
                         deadlineFilter === v
-                          ? 'border-[#1f5c52] bg-[#1f5c52] text-white'
-                          : 'border-warm text-mid hover:border-[#1f5c52] hover:text-[#1f5c52]'
+                          ? 'border-[#173404] bg-[#173404] text-white'
+                          : 'border-warm text-mid hover:border-[#173404] hover:text-[#173404]'
                       }`}>
                       {v === 'all' ? 'Any' : v === 'rolling' ? 'Rolling' : 'Has deadline'}
                     </button>
@@ -2230,8 +2230,8 @@ export default function SearchPage() {
                     <button key={s.id} onClick={() => toggleSector(s.id)}
                       className={`px-3 py-1.5 border text-xs font-medium transition-all rounded-md ${
                         isActive
-                          ? 'border-[#1f5c52] bg-[#1f5c52] text-white'
-                          : 'border-warm text-mid hover:border-[#1f5c52] hover:text-[#1f5c52]'
+                          ? 'border-[#173404] bg-[#173404] text-white'
+                          : 'border-warm text-mid hover:border-[#173404] hover:text-[#173404]'
                       }`}>
                       {s.label}
                     </button>
@@ -2253,7 +2253,7 @@ export default function SearchPage() {
         )}
           {/* ── Funding type tabs ── */}
           {activeView === 'matches' && (
-            <div className="mt-5 -mx-5 border-t border-[#E8E8EC]">
+            <div className="mt-5 -mx-5 border-t border-[#E8E0D1]">
               <div className="flex">
                 {TYPE_TABS.map(tab => (
                   <button
@@ -2261,14 +2261,14 @@ export default function SearchPage() {
                     onClick={() => setActiveTab(tab.id)}
                     className={`flex flex-1 items-center justify-center gap-2 py-3 text-sm font-semibold whitespace-nowrap border-b-2 transition-colors ${
                       activeTab === tab.id
-                        ? 'border-[#84CC16] text-[#1A1A1A] font-bold'
+                        ? 'border-[#8ECB3C] text-[#2C2C2A] font-bold'
                         : 'border-transparent text-mid hover:text-charcoal'
                     }`}
                   >
                     {tab.icon}
                     {tab.label}
                     {tab.count > 0 && (
-                      <span className={`text-xs font-medium ${activeTab === tab.id ? 'text-[#4A7C10]' : 'text-light'}`}>
+                      <span className={`text-xs font-medium ${activeTab === tab.id ? 'text-[#639922]' : 'text-light'}`}>
                         {tab.count}
                       </span>
                     )}
@@ -2276,7 +2276,7 @@ export default function SearchPage() {
                 ))}
               </div>
               {TAB_DESCS[activeTab] && (
-                <div className="mx-5 mb-1 mt-3 px-4 py-3 bg-[#F5F5F7] rounded-lg flex items-start justify-between gap-4">
+                <div className="mx-5 mb-1 mt-3 px-4 py-3 bg-[#FAFAF7] rounded-lg flex items-start justify-between gap-4">
                   <p className="text-sm text-[#444] leading-relaxed">{TAB_DESCS[activeTab]}</p>
                   {activeTab === 'programme' && (
                     <label className="flex items-center gap-2 cursor-pointer flex-shrink-0">
@@ -2285,7 +2285,7 @@ export default function SearchPage() {
                         role="switch"
                         aria-checked={programmeHasCash}
                         onClick={() => setProgrammeHasCash(v => !v)}
-                        className={`relative inline-flex h-5 w-9 items-center transition-colors flex-shrink-0 ${programmeHasCash ? 'bg-[#84CC16]' : 'bg-[#D1D5DB]'}`}
+                        className={`relative inline-flex h-5 w-9 items-center transition-colors flex-shrink-0 ${programmeHasCash ? 'bg-[#8ECB3C]' : 'bg-[#E4E2DA]'}`}
                       >
                         <span className={`inline-block h-3.5 w-3.5 bg-white shadow transform transition-transform ${programmeHasCash ? 'translate-x-4' : 'translate-x-1'}`} />
                       </button>
@@ -2306,9 +2306,9 @@ export default function SearchPage() {
               {(() => {
                 const tabNoun = activeTab === 'programme' ? 'programmes' : activeTab === 'investment' ? 'investments' : activeTab === 'in_kind' ? 'in-kind opportunities' : 'grants'
                 return aiResults && smartMatched ? (
-                  <><strong style={{ color: '#84CC16' }}>✦ {displayGrants.length}</strong> {tabNoun} matched for <strong className="text-charcoal">{org?.name}</strong></>
+                  <><strong style={{ color: '#8ECB3C' }}>✦ {displayGrants.length}</strong> {tabNoun} matched for <strong className="text-charcoal">{org?.name}</strong></>
                 ) : aiResults ? (
-                  <><strong style={{ color: '#84CC16' }}>✦ {displayGrants.length}</strong> results for &ldquo;{query}&rdquo;</>
+                  <><strong style={{ color: '#8ECB3C' }}>✦ {displayGrants.length}</strong> results for &ldquo;{query}&rdquo;</>
                 ) : filterQuery ? (
                   <><strong className="text-3xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{displayGrants.length} {tabNoun}</strong><span className="text-base text-mid ml-2">matching &ldquo;{filterQuery}&rdquo;</span></>
                 ) : (
@@ -2317,9 +2317,9 @@ export default function SearchPage() {
               })()}
             </p>
             {!aiResults && (
-              <div className="flex items-center border border-[#E8E8EC] overflow-hidden flex-shrink-0 rounded-lg">
+              <div className="flex items-center border border-[#E8E0D1] overflow-hidden flex-shrink-0 rounded-lg">
                 {/* Sort By label */}
-                <span className="px-3 py-2 text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider border-r border-[#E8E8EC] bg-[#F5F5F7] whitespace-nowrap">
+                <span className="px-3 py-2 text-[10px] font-semibold text-[#8A8986] uppercase tracking-wider border-r border-[#E8E0D1] bg-[#FAFAF7] whitespace-nowrap">
                   Sort By
                 </span>
                 {([
@@ -2330,10 +2330,10 @@ export default function SearchPage() {
                   <button
                     key={tab.id}
                     onClick={() => setSortBy(tab.id as 'match' | 'freshest' | 'deadline')}
-                    className={`px-4 py-2 text-xs font-medium transition-colors whitespace-nowrap${i > 0 ? ' border-l border-[#E8E8EC]' : ''}`}
+                    className={`px-4 py-2 text-xs font-medium transition-colors whitespace-nowrap${i > 0 ? ' border-l border-[#E8E0D1]' : ''}`}
                     style={sortBy === tab.id
-                      ? { backgroundColor: '#F4F9E8', color: '#4A7C10' }
-                      : { backgroundColor: '#fff', color: '#6b7280' }}
+                      ? { backgroundColor: '#F1F7E4', color: '#639922' }
+                      : { backgroundColor: '#fff', color: '#5F5E5A' }}
                   >{tab.label}</button>
                 ))}
               </div>
@@ -2344,21 +2344,21 @@ export default function SearchPage() {
 
       {/* ── Match quality banner ── */}
       {hasSearched && matchQuality && matchQuality.score < 80 && !bannerDismissed && (
-        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3.5 flex items-start gap-3">
+        <div className="mb-4 rounded-xl border border-amber-mid bg-amber-pale px-4 py-3.5 flex items-start gap-3">
           {/* Quality ring */}
           <div className="flex-shrink-0 mt-0.5">
             <div className="relative w-11 h-11">
               <svg viewBox="0 0 36 36" className="w-11 h-11 -rotate-90">
-                <circle cx="18" cy="18" r="14" fill="none" stroke="#fde68a" strokeWidth="4" />
+                <circle cx="18" cy="18" r="14" fill="none" stroke="#FAC775" strokeWidth="4" />
                 <circle
                   cx="18" cy="18" r="14" fill="none"
-                  stroke={matchQuality.score >= 60 ? '#f59e0b' : '#ef4444'}
+                  stroke={matchQuality.score >= 60 ? '#BA7517' : '#D85A30'}
                   strokeWidth="4"
                   strokeDasharray={`${(matchQuality.score / 100) * 88} 88`}
                   strokeLinecap="round"
                 />
               </svg>
-              <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-amber-700">
+              <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-amber-deep">
                 {matchQuality.score}%
               </span>
             </div>
@@ -2366,17 +2366,17 @@ export default function SearchPage() {
 
           {/* Text */}
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-amber-900 mb-0.5">
+            <p className="text-sm font-semibold text-amber-deepest mb-0.5">
               Your match quality is {matchQuality.score < 40 ? 'low' : matchQuality.score < 65 ? 'partial' : 'nearly there'}
             </p>
-            <p className="text-xs text-amber-800 leading-snug">
+            <p className="text-xs text-amber-deepest leading-snug">
               {matchQuality.missing.slice(0, 3).map(f => f.label).join(', ')}{' '}
               {matchQuality.missing.length > 3 ? `and ${matchQuality.missing.length - 3} more` : ''} missing from your profile.{' '}
               Complete it so Grant Tracker can find the grants most relevant to your work.
             </p>
             <a
               href="/dashboard/profile"
-              className="inline-block mt-2 text-xs font-semibold text-white bg-amber-500 hover:bg-amber-600 px-3 py-1.5 transition-colors"
+              className="inline-block mt-2 text-xs font-semibold text-white bg-amber-pale0 hover:bg-amber-deep px-3 py-1.5 transition-colors"
             >
               Complete profile →
             </a>
@@ -2385,7 +2385,7 @@ export default function SearchPage() {
           {/* Dismiss */}
           <button
             onClick={() => setBannerDismissed(true)}
-            className="flex-shrink-0 text-amber-400 hover:text-amber-600 text-lg leading-none mt-0.5"
+            className="flex-shrink-0 text-amber-mid hover:text-amber-saturated text-lg leading-none mt-0.5"
             title="Dismiss"
           >
             ✕
@@ -2407,7 +2407,7 @@ export default function SearchPage() {
                 <p className="mb-3">No grants matched &ldquo;<strong className="text-charcoal">{filterQuery}</strong>&rdquo; in your current filters.</p>
                 <button
                   onClick={() => { setInputValue(''); setFilterQuery('') }}
-                  className="px-4 py-2 text-xs font-semibold rounded-full transition-colors hover:opacity-80" style={{ color: '#4A7C10', border: '1px solid rgba(132,204,22,0.4)', background: 'rgba(132,204,22,0.06)' }}
+                  className="px-4 py-2 text-xs font-semibold rounded-full transition-colors hover:opacity-80" style={{ color: '#639922', border: '1px solid rgba(142,203,60,0.4)', background: 'rgba(142,203,60,0.06)' }}
                 >
                   Clear search
                 </button>
