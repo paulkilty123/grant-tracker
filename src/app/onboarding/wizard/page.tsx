@@ -513,6 +513,7 @@ export default function OnboardingWizardPage() {
         padding: '20px 24px 40px',
         minHeight: 620,
         width: '100%',
+        background: 'linear-gradient(180deg, #F4F9ED 0%, #fff 100%)',
       }}>
         {/* Top bar: step dots only, right-aligned */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: 60 }}>
@@ -529,17 +530,18 @@ export default function OnboardingWizardPage() {
           </div>
         </div>
 
-        {/* Centred hero content */}
+        {/* Hero content — upper-third anchor */}
         <div style={{
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'center',
+          justifyContent: 'flex-start',
           textAlign: 'center',
           maxWidth: 560,
           margin: '0 auto',
           width: '100%',
+          paddingTop: 140,
         }}>
           <StepEntry
             url={url}
@@ -1099,6 +1101,8 @@ function StepSectors({ impactSectors, beneficiaryGroups, toggleSector, makePrima
 }) {
   const [hoveredSector, setHoveredSector]         = useState<string | null>(null)
   const [hoveredBeneficiary, setHoveredBeneficiary] = useState<string | null>(null)
+  const sectorMax     = impactSectors.length >= 4
+  const beneficiaryMax = beneficiaryGroups.length >= 4
 
   return (
     <>
@@ -1117,14 +1121,16 @@ function StepSectors({ impactSectors, beneficiaryGroups, toggleSector, makePrima
           const idx         = impactSectors.indexOf(opt.value)
           const isPrimary   = idx === 0
           const isSecondary = idx > 0
+          const isUnselected = idx === -1
           const isHov       = hoveredSector === opt.value
+          const dimmed      = sectorMax && isUnselected
           return (
             <div key={opt.value} style={{ position: 'relative' }}>
               <button
                 onClick={() => toggleSector(opt.value)}
                 onMouseEnter={() => setHoveredSector(opt.value)}
                 onMouseLeave={() => setHoveredSector(null)}
-                style={chipStyle(isPrimary, isSecondary)}
+                style={{ ...chipStyle(isPrimary, isSecondary), opacity: dimmed ? 0.38 : 1, pointerEvents: dimmed ? 'none' : 'auto' }}
               >
                 {isPrimary && <Star size={10} style={{ marginRight: 4, flexShrink: 0 }} fill="currentColor" />}
                 {opt.label}
@@ -1157,14 +1163,16 @@ function StepSectors({ impactSectors, beneficiaryGroups, toggleSector, makePrima
           const idx         = beneficiaryGroups.indexOf(opt.value)
           const isPrimary   = idx === 0
           const isSecondary = idx > 0
+          const isUnselected = idx === -1
           const isHov       = hoveredBeneficiary === opt.value
+          const dimmed      = beneficiaryMax && isUnselected
           return (
             <div key={opt.value} style={{ position: 'relative' }}>
               <button
                 onClick={() => toggleBeneficiary(opt.value)}
                 onMouseEnter={() => setHoveredBeneficiary(opt.value)}
                 onMouseLeave={() => setHoveredBeneficiary(null)}
-                style={chipStyle(isPrimary, isSecondary)}
+                style={{ ...chipStyle(isPrimary, isSecondary), opacity: dimmed ? 0.38 : 1, pointerEvents: dimmed ? 'none' : 'auto' }}
               >
                 {isPrimary && <Star size={10} style={{ marginRight: 4, flexShrink: 0 }} fill="currentColor" />}
                 {opt.label}
@@ -1286,9 +1294,9 @@ function StepLocation({ state, update, toggleFundingType, saving, saveError, can
               <input
                 type="text"
                 inputMode="numeric"
-                value={state.minGrantTarget}
-                onChange={e => update('minGrantTarget', e.target.value.replace(/[^\d,]/g, ''))}
-                placeholder="5,000"
+                value={state.minGrantTarget ? Number(state.minGrantTarget.replace(/[^\d]/g, '') || '0').toLocaleString('en-GB') : ''}
+                onChange={e => update('minGrantTarget', e.target.value.replace(/[^\d]/g, ''))}
+                placeholder="10,000"
                 style={{ ...INPUT_STYLE, paddingLeft: 24 }}
               />
             </div>
@@ -1298,9 +1306,9 @@ function StepLocation({ state, update, toggleFundingType, saving, saveError, can
               <input
                 type="text"
                 inputMode="numeric"
-                value={state.maxGrantTarget}
-                onChange={e => update('maxGrantTarget', e.target.value.replace(/[^\d,]/g, ''))}
-                placeholder="50,000"
+                value={state.maxGrantTarget ? Number(state.maxGrantTarget.replace(/[^\d]/g, '') || '0').toLocaleString('en-GB') : ''}
+                onChange={e => update('maxGrantTarget', e.target.value.replace(/[^\d]/g, ''))}
+                placeholder="250,000"
                 style={{ ...INPUT_STYLE, paddingLeft: 24 }}
               />
             </div>
@@ -1319,8 +1327,8 @@ function StepLocation({ state, update, toggleFundingType, saving, saveError, can
                   style={{
                     padding: '12px 14px',
                     textAlign: 'left',
-                    background: active ? t.bg : '#fff',
-                    border: `${active ? '1.5px' : '0.5px'} solid ${active ? t.accent : 'rgba(0,0,0,0.14)'}`,
+                    background: active ? '#EAF3DE' : '#fff',
+                    border: `${active ? '1.5px' : '0.5px'} solid ${active ? '#8ECB3C' : 'rgba(0,0,0,0.14)'}`,
                     borderRadius: 12,
                     cursor: 'pointer',
                     transition: 'all 120ms',
@@ -1328,12 +1336,12 @@ function StepLocation({ state, update, toggleFundingType, saving, saveError, can
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
                     <div>
-                      <p style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13, fontWeight: 600, color: active ? t.fg : '#2C2C2A', margin: 0 }}>{t.label}</p>
-                      <p style={{ fontSize: 11, color: active ? t.fg : '#5F5E5A', opacity: active ? 0.8 : 1, margin: '2px 0 0', fontFamily: 'var(--font-dm-sans)' }}>{t.desc}</p>
+                      <p style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13, fontWeight: 600, color: active ? '#3B6D11' : '#2C2C2A', margin: 0 }}>{t.label}</p>
+                      <p style={{ fontSize: 11, color: active ? '#3B6D11' : '#5F5E5A', opacity: active ? 0.85 : 1, margin: '2px 0 0', fontFamily: 'var(--font-dm-sans)' }}>{t.desc}</p>
                     </div>
                     {active && (
-                      <div style={{ width: 18, height: 18, borderRadius: '50%', background: t.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <Check size={10} color="#fff" strokeWidth={3} />
+                      <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#8ECB3C', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <Check size={10} color="#173404" strokeWidth={3} />
                       </div>
                     )}
                   </div>
@@ -1508,11 +1516,10 @@ function BackButton({ onClick, inline }: { onClick: () => void; inline?: boolean
 function Field({ label, required, hint, children }: { label: string; required?: boolean; hint?: string; children: React.ReactNode }) {
   return (
     <div>
-      <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#2C2C2A', marginBottom: 6, fontFamily: 'var(--font-space-grotesk)' }}>
-        {label}
-        {required && <span style={{ color: '#D85A30', marginLeft: 2 }}> *</span>}
-        {hint && <span style={{ fontWeight: 400, color: '#8A8986', fontSize: 12, marginLeft: 6 }}>{hint}</span>}
+      <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#2C2C2A', marginBottom: hint ? 2 : 6, fontFamily: 'var(--font-space-grotesk)' }}>
+        {label}{required && <span style={{ color: '#D85A30', marginLeft: 2 }}>*</span>}
       </label>
+      {hint && <p style={{ fontSize: 12, color: '#8A8986', fontFamily: 'var(--font-dm-sans)', margin: '0 0 6px', fontWeight: 400 }}>{hint}</p>}
       {children}
     </div>
   )
@@ -1550,7 +1557,7 @@ function PickerSection({ label, hint, selected, style: extraStyle }: { label: st
       <span style={{ fontSize: 13, fontWeight: 500, color: '#2C2C2A', fontFamily: 'var(--font-space-grotesk)' }}>{label}</span>
       <span style={{ fontSize: 12, color: '#8A8986', marginLeft: 6, fontFamily: 'var(--font-dm-sans)' }}>· {hint}</span>
       {selected.length > 0 && selected.length >= 4 && (
-        <span style={{ fontSize: 11, color: '#BA7517', marginLeft: 8, fontFamily: 'var(--font-space-grotesk)' }}>Max reached</span>
+        <span style={{ fontSize: 11, color: '#8A8986', marginLeft: 8, fontFamily: 'var(--font-space-grotesk)' }}>Max reached</span>
       )}
     </div>
   )
@@ -1578,8 +1585,12 @@ function formatDeadline(dateStr: string): string {
 }
 
 function formatRange(min: number | null, max: number | null): string {
-  const fmt = (n: number) => n >= 1000 ? `£${Math.round(n/1000)}k` : `£${n}`
-  if (min && max) return `${fmt(min)}-${fmt(max)}`
+  const fmt = (n: number) => {
+    if (n >= 1_000_000) return `£${Math.round(n / 1_000_000)}m`
+    if (n >= 1000)      return `£${Math.round(n / 1000)}k`
+    return `£${n}`
+  }
+  if (min && max) return `${fmt(min)}–${fmt(max)}`
   if (min) return `From ${fmt(min)}`
   if (max) return `Up to ${fmt(max)}`
   return ''
@@ -1653,8 +1664,8 @@ const BTN_PRIMARY: React.CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
   gap: 8,
-  background: '#173404',
-  color: '#fff',
+  background: '#8ECB3C',
+  color: '#173404',
   transition: 'opacity 120ms',
 }
 
