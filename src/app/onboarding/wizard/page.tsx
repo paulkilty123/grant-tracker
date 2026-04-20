@@ -1128,7 +1128,7 @@ function ReviewField({ label, value, fieldState: fState, isConfirmed, isEditing,
           </div>
         ) : (
           <div style={{ fontSize: 14, color: value ? T.textPrimary : T.textTertiary, fontWeight: value ? 500 : 400, fontStyle: value ? 'normal' : 'italic', fontFamily: 'var(--font-dm-sans)' }}>
-            {value ?? 'We couldn't find this — add manually'}
+            {value ?? "We couldn't find this — add manually"}
           </div>
         )}
       </div>
