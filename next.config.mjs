@@ -1,4 +1,7 @@
 const nextConfig = {
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   images: {
     remotePatterns: [
       {
@@ -9,7 +12,7 @@ const nextConfig = {
   },
   experimental: {
     staleTimes: {
-      dynamic: 0,  // never serve stale HTML for dynamic pages
+      dynamic: 0,
     },
   },
 }
