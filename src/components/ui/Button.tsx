@@ -64,7 +64,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const sizeStyle    = SIZE_STYLES[size]
 
     // Primary hover: lime → green-mid, deep-forest text → white (matches HTML spec)
-    const hoverOverride = hovered && \!disabled && variant === 'primary'
+    const hoverOverride = hovered && !disabled && variant === 'primary'
       ? { background: GREEN_MID, color: '#fff' }
       : {}
 
