@@ -402,12 +402,12 @@ function PickerChip({
   const [hov, setHov] = useState(false)
   const isPrimary   = chipState === 'primary'
   const isSecondary = chipState === 'secondary'
-  const showHover   = hov && \!dimmed && chipState === 'unselected'
+  const showHover   = hov && !dimmed && chipState === 'unselected'
 
   return (
     <div style={{ position: 'relative' }}>
       <button
-        onClick={() => \!dimmed && onClick()}
+        onClick={() => !dimmed && onClick()}
         onMouseEnter={() => setHov(true)}
         onMouseLeave={() => setHov(false)}
         style={{
@@ -547,7 +547,7 @@ export default function OnboardingWizardPage() {
   useEffect(() => {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
-      if (\!user) { router.push('/auth/login'); return }
+      if (!user) { router.push('/auth/login'); return }
       setUserId(user.id)
       const org = await getOrganisationByOwner(user.id)
       if (org) {
@@ -562,8 +562,8 @@ export default function OnboardingWizardPage() {
           impactSectors:    (org.impact_sectors as ImpactSector[]) ?? [],
           beneficiaryGroups: (org.beneficiary_groups as BeneficiaryGroup[]) ?? [],
           // Store raw digits; fmtThousands() formats on display
-          minGrantTarget:   org.min_grant_target \!= null ? String(org.min_grant_target) : '',
-          maxGrantTarget:   org.max_grant_target \!= null ? String(org.max_grant_target) : '',
+          minGrantTarget:   org.min_grant_target != null ? String(org.min_grant_target) : '',
+          maxGrantTarget:   org.max_grant_target != null ? String(org.max_grant_target) : '',
           fundingTypes:     (org.funding_type_preferences as FundingType[])?.length
                               ? (org.funding_type_preferences as FundingType[])
                               : ['grant', 'programme', 'investment', 'in_kind'],
@@ -579,7 +579,7 @@ export default function OnboardingWizardPage() {
   }
 
   async function handleAutoFill() {
-    if (\!url.trim()) return
+    if (!url.trim()) return
     setFetching(true); setFetchError(null)
     try {
       const res  = await fetch('/api/org-autocomplete', {
@@ -588,7 +588,7 @@ export default function OnboardingWizardPage() {
         body: JSON.stringify({ url: url.trim() }),
       })
       const data = await res.json()
-      if (\!res.ok) throw new Error(data?.error ?? 'Auto-fill failed')
+      if (!res.ok) throw new Error(data?.error ?? 'Auto-fill failed')
       const conf = data._confidence ?? {}
 
       let derivedLegal: LegalStructure | '' = ''
@@ -641,7 +641,7 @@ export default function OnboardingWizardPage() {
   }
 
   function reviewCanContinue(): boolean {
-    if (\!extracted) return true
+    if (!extracted) return true
     return Object.entries(extracted.confidence)
       .filter(([, c]) => fieldConf(c) === 'uncertain')
       .map(([k]) => k)
@@ -649,7 +649,7 @@ export default function OnboardingWizardPage() {
   }
 
   function confirmField(field: string, value?: string) {
-    if (value \!== undefined) {
+    if (value !== undefined) {
       const key = field as keyof WizardState
       if (key in EMPTY_STATE) setState(prev => ({ ...prev, [key]: value }))
     }
@@ -662,28 +662,28 @@ export default function OnboardingWizardPage() {
       const cur = [...prev.impactSectors]
       const idx = cur.indexOf(s)
       if (idx === -1) { if (cur.length >= 4) return prev; return { ...prev, impactSectors: [...cur, s] } }
-      return { ...prev, impactSectors: cur.filter(x => x \!== s) }
+      return { ...prev, impactSectors: cur.filter(x => x !== s) }
     })
   }
   function makePrimarySector(s: ImpactSector) {
-    setState(prev => ({ ...prev, impactSectors: [s, ...prev.impactSectors.filter(x => x \!== s)] }))
+    setState(prev => ({ ...prev, impactSectors: [s, ...prev.impactSectors.filter(x => x !== s)] }))
   }
   function toggleBeneficiary(b: BeneficiaryGroup) {
     setState(prev => {
       const cur = [...prev.beneficiaryGroups]
       const idx = cur.indexOf(b)
       if (idx === -1) { if (cur.length >= 4) return prev; return { ...prev, beneficiaryGroups: [...cur, b] } }
-      return { ...prev, beneficiaryGroups: cur.filter(x => x \!== b) }
+      return { ...prev, beneficiaryGroups: cur.filter(x => x !== b) }
     })
   }
   function makePrimaryBeneficiary(b: BeneficiaryGroup) {
-    setState(prev => ({ ...prev, beneficiaryGroups: [b, ...prev.beneficiaryGroups.filter(x => x \!== b)] }))
+    setState(prev => ({ ...prev, beneficiaryGroups: [b, ...prev.beneficiaryGroups.filter(x => x !== b)] }))
   }
   function toggleFundingType(t: FundingType) {
     setState(prev => ({
       ...prev,
       fundingTypes: prev.fundingTypes.includes(t)
-        ? prev.fundingTypes.filter(x => x \!== t)
+        ? prev.fundingTypes.filter(x => x !== t)
         : [...prev.fundingTypes, t],
     }))
   }
@@ -747,9 +747,9 @@ export default function OnboardingWizardPage() {
             .or(`is_rolling.eq.true,deadline.is.null,deadline.gte.${today}`)
             .limit(1500)
 
-          if (\!scraped) return
+          if (!scraped) return
           const savedOrg = await getOrganisationByOwner(userId)
-          if (\!savedOrg) return
+          if (!savedOrg) return
 
           const scored = scraped
             .map(row => {
@@ -788,7 +788,7 @@ export default function OnboardingWizardPage() {
   }
 
   const sectorsValid  = state.impactSectors.length > 0 && state.beneficiaryGroups.length > 0
-  const locationValid = \!\!(state.name.trim() && state.legalStructure)
+  const locationValid = !!(state.name.trim() && state.legalStructure)
 
   if (loading) {
     return (
@@ -858,7 +858,7 @@ export default function OnboardingWizardPage() {
   const cardStep = STEP_DOT_POS[step]
 
   return (
-    <CardShell step={cardStep} showSkip={step \!== 'reveal'}>
+    <CardShell step={cardStep} showSkip={step !== 'reveal'}>
 
       {step === 'review' && extracted && (
         <StepReview
@@ -914,7 +914,7 @@ export default function OnboardingWizardPage() {
         <StepReveal
           matchCount={revealCount}
           topMatches={revealMatches}
-          hasMission={\!\!state.mission.trim()}
+          hasMission={!!state.mission.trim()}
           onExplore={() => router.push('/dashboard/search?welcome=1')}
           onAddMission={() => router.push('/dashboard/profile?section=mission')}
         />
@@ -951,12 +951,12 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual }: {
             type="url"
             value={url}
             onChange={e => setUrl(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && \!fetching && url.trim() && onAutoFill()}
+            onKeyDown={e => e.key === 'Enter' && !fetching && url.trim() && onAutoFill()}
             placeholder="https://yourorganisation.co.uk"
             style={{ ...INPUT_STYLE, fontSize: 15, padding: '14px 14px 14px 34px', boxSizing: 'border-box' }}
           />
         </div>
-        <Button variant="primary" size="lg" onClick={onAutoFill} disabled={fetching || \!url.trim()}>
+        <Button variant="primary" size="lg" onClick={onAutoFill} disabled={fetching || !url.trim()}>
           {fetching ? 'Reading…' : 'Auto-fill profile'}
         </Button>
       </div>
@@ -1050,7 +1050,7 @@ function StepReview({ extracted, confirmed, editingField, setEditingField, confi
 
       <div style={ACTIONS_STYLE}>
         <SkipAction onClick={onSkip}>I&rsquo;ll refine these later</SkipAction>
-        <Button variant="primary" onClick={onContinue} disabled={\!canContinue}>
+        <Button variant="primary" onClick={onContinue} disabled={!canContinue}>
           Continue <ArrowRight size={14} />
         </Button>
       </div>
@@ -1067,18 +1067,18 @@ function ReviewField({ label, value, fieldState: fState, isConfirmed, isEditing,
   const [draft, setDraft] = useState(value ?? '')
   useEffect(() => { setDraft(value ?? '') }, [value])
 
-  const effective = isConfirmed && fState \!== 'confident' ? 'confident' : fState
+  const effective = isConfirmed && fState !== 'confident' ? 'confident' : fState
 
   const bg = effective === 'confident' ? T.greenCream
            : effective === 'uncertain' ? T.amberBgSoft : T.pageBg
   const borderColor = effective === 'confident' ? 'rgba(99,153,34,0.2)'
                     : effective === 'uncertain' ? 'rgba(186,117,23,0.2)' : T.borderLight
-  const borderStyle = fState === 'missing' && \!isConfirmed ? 'dashed' : 'solid'
+  const borderStyle = fState === 'missing' && !isConfirmed ? 'dashed' : 'solid'
 
   const iconBg  = effective === 'confident' ? T.greenMid
                 : effective === 'uncertain' ? T.amberMid : 'transparent'
   const iconChar = effective === 'confident' ? '✓' : effective === 'uncertain' ? '?' : '+'
-  const iconColor = (fState === 'missing' && \!isConfirmed) ? T.textTertiary : '#fff'
+  const iconColor = (fState === 'missing' && !isConfirmed) ? T.textTertiary : '#fff'
 
   return (
     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '14px 16px', background: bg, borderRadius: 10, border: `0.5px ${borderStyle} ${borderColor}`, transition: 'background 120ms ease' }}>
@@ -1086,7 +1086,7 @@ function ReviewField({ label, value, fieldState: fState, isConfirmed, isEditing,
       <div style={{
         width: 20, height: 20, borderRadius: '50%', flexShrink: 0, marginTop: 1,
         background: iconBg,
-        border: fState === 'missing' && \!isConfirmed ? `1px dashed ${T.textTertiary}` : 'none',
+        border: fState === 'missing' && !isConfirmed ? `1px dashed ${T.textTertiary}` : 'none',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontSize: 12, color: iconColor, fontWeight: 600,
       }}>
@@ -1097,7 +1097,7 @@ function ReviewField({ label, value, fieldState: fState, isConfirmed, isEditing,
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 11, fontWeight: 500, color: T.textTertiary, textTransform: 'uppercase' as const, letterSpacing: '0.04em', marginBottom: 2, fontFamily: 'var(--font-space-grotesk)' }}>
           {label}
-          {fState === 'uncertain' && \!isConfirmed && <span style={{ marginLeft: 6, color: T.amberMid }}> · please confirm</span>}
+          {fState === 'uncertain' && !isConfirmed && <span style={{ marginLeft: 6, color: T.amberMid }}> · please confirm</span>}
         </div>
         {isEditing && type ? (
           <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 2 }}>
@@ -1134,9 +1134,9 @@ function ReviewField({ label, value, fieldState: fState, isConfirmed, isEditing,
       </div>
 
       {/* Edit / confirm actions */}
-      {\!isEditing && type && (
+      {!isEditing && type && (
         <div style={{ display: 'flex', gap: 4, flexShrink: 0, marginTop: 1 }}>
-          {fState === 'uncertain' && \!isConfirmed && (
+          {fState === 'uncertain' && !isConfirmed && (
             <button onClick={() => onConfirm()} style={{ fontSize: 11, color: T.amberMid, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-space-grotesk)', padding: '2px 8px', whiteSpace: 'nowrap' as const }}>
               Looks right ✓
             </button>
@@ -1159,7 +1159,7 @@ function StepManual({ state, update, onBack, onContinue }: {
   update: <K extends keyof WizardState>(k: K, v: WizardState[K]) => void
   onBack: () => void; onContinue: () => void
 }) {
-  const valid = \!\!(state.name.trim() && state.legalStructure)
+  const valid = !!(state.name.trim() && state.legalStructure)
   return (
     <>
       <BackLink onClick={onBack} />
@@ -1182,7 +1182,7 @@ function StepManual({ state, update, onBack, onContinue }: {
 
       <div style={ACTIONS_STYLE}>
         <SkipAction onClick={onBack}>← Back</SkipAction>
-        <Button variant="primary" onClick={onContinue} disabled={\!valid}>
+        <Button variant="primary" onClick={onContinue} disabled={!valid}>
           Continue <ArrowRight size={14} />
         </Button>
       </div>
@@ -1285,7 +1285,7 @@ function StepSectors({ impactSectors, beneficiaryGroups, toggleSector, makePrima
 
       <div style={ACTIONS_STYLE}>
         <BackLink onClick={onBack} />
-        <Button variant="primary" onClick={onContinue} disabled={\!canContinue}>
+        <Button variant="primary" onClick={onContinue} disabled={!canContinue}>
           Continue <ArrowRight size={14} />
         </Button>
       </div>
@@ -1313,12 +1313,12 @@ function StepLocation({ state, update, toggleFundingType, saving, saveError, can
       <div style={{ display: 'flex', flexDirection: 'column', gap: 18, marginBottom: 8 }}>
 
         {/* Only show name/structure if not already captured */}
-        {\!state.name.trim() && (
+        {!state.name.trim() && (
           <Field label="Organisation name" required>
             <input type="text" value={state.name} onChange={e => update('name', e.target.value)} placeholder="e.g. AudioActive" style={INPUT_STYLE} />
           </Field>
         )}
-        {\!state.legalStructure && (
+        {!state.legalStructure && (
           <Field label="Legal structure" required>
             <SelectInput value={state.legalStructure} onChange={v => update('legalStructure', v as LegalStructure | '')} options={LEGAL_STRUCTURE_OPTIONS} placeholder="Select your structure…" />
           </Field>
@@ -1379,7 +1379,7 @@ function StepLocation({ state, update, toggleFundingType, saving, saveError, can
 
       <div style={{ ...ACTIONS_STYLE, marginTop: 24 }}>
         <BackLink onClick={onBack} />
-        <Button variant="primary" onClick={onFinish} disabled={saving || \!canContinue}>
+        <Button variant="primary" onClick={onFinish} disabled={saving || !canContinue}>
           {saving ? 'Saving…' : <><span>Show me my matches</span> <ArrowRight size={14} /></>}
         </Button>
       </div>
@@ -1504,7 +1504,7 @@ function StepReveal({ matchCount, topMatches, hasMission, onExplore, onAddMissio
       )}
 
       {/* Nudge card — shown when mission is not set (from HTML spec) */}
-      {\!hasMission && (
+      {!hasMission && (
         <NudgeCard
           title="Add a mission statement to improve matching"
           subtitle="Takes 2 minutes, can unlock 10–15 more precise matches"
