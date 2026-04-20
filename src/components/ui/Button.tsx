@@ -1,12 +1,22 @@
-import { ButtonHTMLAttributes, forwardRef } from 'react'
+'use client'
+
+import { ButtonHTMLAttributes, forwardRef, useState } from 'react'
+
+/* ─────────────────────────────────────────────
+   Tokens — mirrors the :root block in the
+   onboarding HTML reference spec exactly.
+───────────────────────────────────────────── */
+const LIME       = '#8ECB3C'
+const GREEN_MID  = '#639922'
+const GREEN_DEEP = '#173404'
 
 const VARIANT_STYLES = {
   primary: {
-    background: '#8ECB3C',
-    color: '#173404',
+    background: LIME,
+    color: GREEN_DEEP,
     border: 'none',
     borderRadius: 10,
-    fontWeight: 600,
+    fontWeight: 500,
   },
   secondary: {
     background: '#fff',
@@ -26,7 +36,8 @@ const VARIANT_STYLES = {
 
 const SIZE_STYLES = {
   sm: { fontSize: 12, padding: '7px 14px' },
-  md: { fontSize: 13, padding: '9px 18px' },
+  md: { fontSize: 14, padding: '11px 20px' },
+  lg: { fontSize: 15, padding: '14px 24px' },
 } as const
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -35,34 +46,47 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 /**
- * Button — enforces the three-tier button system.
+ * Button — the single canonical button primitive.
  *
- * primary   lime fill  #8ECB3C / #173404  — single most important action per region
- * secondary white outline #fff / rgba(0,0,0,0.14) — supporting page-level actions
- * ghost     text only  #5F5E5A / transparent  — cancel, discard, text links
+ * primary   lime #8ECB3C / deep-forest #173404  — the one CTA per screen
+ *           hover: green-mid #639922 / #fff
+ * secondary white / rgba(0,0,0,0.14) border      — supporting actions
+ * ghost     transparent / #5F5E5A                — back, cancel, text links
  *
- * Deep forest (#173404) fill is retired as a button colour.
+ * Deep forest (#173404) fill is retired as a standalone button bg.
+ * Never use ad-hoc lime-400 / lime-500 Tailwind utilities — they won't match.
  */
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ variant = 'secondary', size = 'md', style, disabled, children, ...props }, ref) => {
+  ({ variant = 'secondary', size = 'md', style, disabled, onMouseEnter, onMouseLeave, children, ...props }, ref) => {
+    const [hovered, setHovered] = useState(false)
+
     const variantStyle = VARIANT_STYLES[variant]
     const sizeStyle    = SIZE_STYLES[size]
+
+    // Primary hover: lime → green-mid, deep-forest text → white (matches HTML spec)
+    const hoverOverride = hovered && \!disabled && variant === 'primary'
+      ? { background: GREEN_MID, color: '#fff' }
+      : {}
 
     return (
       <button
         ref={ref}
         disabled={disabled}
+        onMouseEnter={e => { setHovered(true); onMouseEnter?.(e) }}
+        onMouseLeave={e => { setHovered(false); onMouseLeave?.(e) }}
         style={{
           ...variantStyle,
           ...sizeStyle,
+          ...hoverOverride,
           fontFamily: 'var(--font-space-grotesk)',
           cursor: disabled ? 'not-allowed' : 'pointer',
           display: 'inline-flex',
           alignItems: 'center',
-          gap: 6,
+          justifyContent: 'center',
+          gap: 8,
           lineHeight: 1,
-          opacity: disabled ? 0.5 : 1,
-          transition: 'background 0.12s, opacity 0.12s',
+          opacity: disabled ? 0.45 : 1,
+          transition: 'background 120ms ease, color 120ms ease',
           ...style,
         }}
         {...props}

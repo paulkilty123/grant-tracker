@@ -3,32 +3,54 @@
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, ArrowRight, Check, Globe, Star, ChevronRight, Pencil, X } from 'lucide-react'
+import { ArrowLeft, ArrowRight, ChevronRight, Check, Globe, Pencil, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner, createOrganisation, updateOrganisation } from '@/lib/organisations'
 import { computeMatchScore } from '@/lib/matching'
 import { normaliseScrapedGrant } from '@/lib/grants-normalise'
 import type { LegalStructure, ImpactSector, BeneficiaryGroup, FundingType } from '@/types'
+import Button from '@/components/ui/Button'
+
+/* ═══════════════════════════════════════════════
+   Design tokens — 1:1 from reference HTML :root
+   ═══════════════════════════════════════════════ */
+
+const T = {
+  lime:          '#8ECB3C',
+  greenMid:      '#639922',
+  greenDeep:     '#173404',
+  greenTextDeep: '#3B6D11',
+  greenSoft:     '#97C459',
+  greenCream:    '#EAF3DE',
+  cream1:        '#F5F1E8',
+  creamHover:    '#EAE5D7',
+  pageBg:        '#FAFAF7',
+  amberMid:      '#BA7517',
+  amberBgSoft:   '#FDFBF5',
+  coralBg:       '#FAECE7',
+  coralText:     '#993C1D',
+  borderLight:   'rgba(0,0,0,0.06)',
+  borderMid:     'rgba(0,0,0,0.1)',
+  borderInput:   'rgba(0,0,0,0.14)',
+  textPrimary:   '#2C2C2A',
+  textSecondary: '#5F5E5A',
+  textTertiary:  '#8A8986',
+} as const
 
 /* ═══════════════════════════════════════════════
    Constants
    ═══════════════════════════════════════════════ */
 
 const INCOME_BANDS = [
-  'Under £10,000',
-  '£10,000-£50,000',
-  '£50,000-£100,000',
-  '£100,000-£250,000',
-  '£250,000-£500,000',
-  '£500,000-£1 million',
-  '£1 million-£5 million',
-  'Over £5 million',
+  'Under £10,000', '£10,000–£50,000', '£50,000–£100,000',
+  '£100,000–£250,000', '£250,000–£500,000', '£500,000–£1 million',
+  '£1 million–£5 million', 'Over £5 million',
 ]
 
 const GEOGRAPHIC_REACH_OPTIONS = [
-  { value: 'local',         label: 'Local only',             hint: 'One town, borough, or district' },
-  { value: 'regional',      label: 'Regional + national',    hint: 'County, region, or UK-wide' },
-  { value: 'national',      label: 'National only',          hint: 'UK-wide programmes' },
+  { value: 'local',         label: 'Local only',              hint: 'One town, borough, or district' },
+  { value: 'regional',      label: 'Regional + national',     hint: 'County, region, or UK-wide' },
+  { value: 'national',      label: 'National only',           hint: 'UK-wide programmes' },
   { value: 'international', label: 'UK-wide + international', hint: 'Includes overseas work' },
 ]
 
@@ -69,7 +91,7 @@ const IMPACT_SECTORS: { value: ImpactSector; label: string }[] = [
 
 const BENEFICIARY_GROUPS: { value: BeneficiaryGroup; label: string }[] = [
   { value: 'children',          label: 'Children (under 16)' },
-  { value: 'young_people',      label: 'Young people (16-25)' },
+  { value: 'young_people',      label: 'Young people (16–25)' },
   { value: 'older_people',      label: 'Older people (65+)' },
   { value: 'families',          label: 'Families & parents' },
   { value: 'women_girls',       label: 'Women & girls' },
@@ -87,12 +109,89 @@ const BENEFICIARY_GROUPS: { value: BeneficiaryGroup; label: string }[] = [
   { value: 'general_public',    label: 'General public' },
 ]
 
-const FUNDING_TYPES: { value: FundingType; label: string; desc: string; bg: string; fg: string; accent: string }[] = [
-  { value: 'grant',      label: 'Grants',             desc: 'Non-repayable cash',          bg: '#F1F8E4', fg: '#173404', accent: '#8ECB3C' },
-  { value: 'programme',  label: 'Programmes',         desc: 'Accelerators & support',      bg: '#FAECE7', fg: '#7A2A1A', accent: '#D85A30' },
-  { value: 'investment', label: 'Social investment',  desc: 'Loans & repayable finance',   bg: '#E6F1FB', fg: '#0C447C', accent: '#378ADD' },
-  { value: 'in_kind',    label: 'In-kind support',    desc: 'Software, space, pro bono',   bg: '#FDF3DC', fg: '#854F0B', accent: '#BA7517' },
+// Funding types: label + short desc only — NO per-type colours.
+// The chip uses the same neutral→selected style as sector chips.
+const FUNDING_TYPES: { value: FundingType; label: string; desc: string }[] = [
+  { value: 'grant',      label: 'Grants & awards',           desc: 'Non-repayable cash funding' },
+  { value: 'programme',  label: 'Programmes & accelerators', desc: 'Structured support + cash' },
+  { value: 'investment', label: 'Social investment',         desc: 'Loans & repayable finance' },
+  { value: 'in_kind',    label: 'In-kind support',           desc: 'Software, space, pro bono' },
 ]
+
+/* ═══════════════════════════════════════════════
+   Types
+   ═══════════════════════════════════════════════ */
+
+type WizardStep = 'entry' | 'review' | 'manual' | 'sectors' | 'location' | 'reveal'
+
+const STEP_DOT_POS: Record<WizardStep, number> = {
+  entry: 1, review: 2, manual: 2, sectors: 3, location: 4, reveal: 5,
+}
+
+type FieldConfidence = 'confident' | 'uncertain' | 'missing'
+
+function fieldConf(c: number | undefined | null): FieldConfidence {
+  if (c == null || c < 0.4) return 'missing'
+  if (c < 0.8)              return 'uncertain'
+  return 'confident'
+}
+
+interface ExtractedData {
+  url:               string
+  name:              string | null
+  legalStructure:    string | null
+  primaryLocation:   string | null
+  annualIncomeBand:  string | null
+  mission:           string | null
+  impactSectors:     ImpactSector[]
+  beneficiaryGroups: BeneficiaryGroup[]
+  confidence: {
+    name?:              number
+    legalStructure?:    number
+    primaryLocation?:   number
+    annualIncomeBand?:  number
+    mission?:           number
+    impactSectors?:     number
+    beneficiaryGroups?: number
+  }
+}
+
+interface RevealMatch {
+  id:         string
+  title:      string
+  funderName: string
+  score:      number
+  minAmount:  number | null
+  maxAmount:  number | null
+  isRolling:  boolean
+  deadline:   string | null
+}
+
+interface WizardState {
+  name:             string
+  legalStructure:   LegalStructure | ''
+  primaryLocation:  string
+  annualIncomeBand: string
+  geographicReach:  string
+  mission:          string
+  impactSectors:    ImpactSector[]
+  beneficiaryGroups: BeneficiaryGroup[]
+  minGrantTarget:   string   // raw digit string, formatted on display
+  maxGrantTarget:   string
+  fundingTypes:     FundingType[]
+}
+
+const EMPTY_STATE: WizardState = {
+  name: '', legalStructure: '', primaryLocation: '',
+  annualIncomeBand: '', geographicReach: '', mission: '',
+  impactSectors: [], beneficiaryGroups: [],
+  minGrantTarget: '', maxGrantTarget: '',
+  fundingTypes: ['grant', 'programme', 'investment', 'in_kind'],
+}
+
+/* ═══════════════════════════════════════════════
+   Helpers
+   ═══════════════════════════════════════════════ */
 
 function legalStructureToOrgType(s: LegalStructure | '') {
   if (s === 'cic_guarantee' || s === 'cic_shares') return 'cic'
@@ -102,76 +201,318 @@ function legalStructureToOrgType(s: LegalStructure | '') {
   return 'social_enterprise'
 }
 
+function formatDeadline(dateStr: string): string {
+  try {
+    const [y, m, d] = dateStr.split('-').map(Number)
+    return new Date(y, m - 1, d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+  } catch { return dateStr }
+}
+
+/** £20k not £20000k, £2m not £2000k */
+function formatAmount(min: number | null, max: number | null): string {
+  const fmt = (n: number) => {
+    if (n >= 1_000_000) return `£${Math.round(n / 1_000_000)}m`
+    if (n >= 1000)      return `£${Math.round(n / 1000)}k`
+    return `£${n}`
+  }
+  if (min && max) return `${fmt(min)}–${fmt(max)}`
+  if (min) return `From ${fmt(min)}`
+  if (max) return `Up to ${fmt(max)}`
+  return ''
+}
+
+/** Format a raw digit string with thousand separators for display */
+function fmtThousands(raw: string): string {
+  const n = raw.replace(/[^\d]/g, '')
+  return n ? Number(n).toLocaleString('en-GB') : ''
+}
+
 /* ═══════════════════════════════════════════════
-   Types
+   Shared UI primitives
    ═══════════════════════════════════════════════ */
 
-type WizardStep = 'entry' | 'review' | 'manual' | 'sectors' | 'location' | 'reveal'
-
-const STEP_DOT: Record<WizardStep, number> = {
-  entry: 1, review: 2, manual: 2, sectors: 3, location: 4, reveal: 5,
+const INPUT_STYLE: React.CSSProperties = {
+  width: '100%',
+  padding: '11px 14px',
+  border: `0.5px solid ${T.borderInput}`,
+  borderRadius: 10,
+  fontFamily: 'var(--font-dm-sans)',
+  fontSize: 14,
+  color: T.textPrimary,
+  background: '#fff',
+  outline: 'none',
+  boxSizing: 'border-box',
 }
 
-// Visual state for a review field based on confidence
-type FieldState = 'confident' | 'uncertain' | 'missing'
-
-function fieldState(confidence: number | undefined | null): FieldState {
-  if (confidence == null || confidence < 0.4) return 'missing'
-  if (confidence < 0.8) return 'uncertain'
-  return 'confident'
+const H1_STYLE: React.CSSProperties = {
+  fontFamily: 'var(--font-space-grotesk)',
+  fontWeight: 500,
+  fontSize: 28,
+  color: T.textPrimary,
+  margin: '0 0 8px',
+  lineHeight: 1.2,
+  letterSpacing: '-0.01em',
 }
 
-interface ExtractedData {
-  url: string
-  name:              string | null
-  legalStructure:    string | null
-  primaryLocation:   string | null
-  annualIncomeBand:  string | null
-  mission:           string | null
-  impactSectors:     ImpactSector[]
-  beneficiaryGroups: BeneficiaryGroup[]
-  confidence: {
-    name?:             number
-    legalStructure?:   number
-    primaryLocation?:  number
-    annualIncomeBand?: number
-    mission?:          number
-    impactSectors?:    number
-    beneficiaryGroups?: number
-  }
+const SUBTITLE_STYLE: React.CSSProperties = {
+  fontSize: 15,
+  color: T.textSecondary,
+  margin: '0 0 28px',
+  lineHeight: 1.5,
+  fontFamily: 'var(--font-dm-sans)',
 }
 
-interface RevealMatch {
-  id: string
-  title: string
-  funderName: string
-  score: number
-  minAmount: number | null
-  maxAmount: number | null
-  isRolling: boolean
-  deadline: string | null
+const ACTIONS_STYLE: React.CSSProperties = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  marginTop: 32,
+  paddingTop: 20,
+  borderTop: `0.5px solid ${T.borderLight}`,
 }
 
-interface WizardState {
-  name: string
-  legalStructure: LegalStructure | ''
-  primaryLocation: string
-  annualIncomeBand: string
-  geographicReach: string
-  mission: string
-  impactSectors: ImpactSector[]       // index 0 = primary
-  beneficiaryGroups: BeneficiaryGroup[] // index 0 = primary
-  minGrantTarget: string
-  maxGrantTarget: string
-  fundingTypes: FundingType[]
+function StepDots({ active, total = 5 }: { active: number; total?: number }) {
+  return (
+    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+      {Array.from({ length: total }, (_, i) => {
+        const pos = i + 1
+        return (
+          <div key={i} style={{
+            height: 6,
+            width: pos === active ? 18 : 6,
+            borderRadius: 999,
+            background: pos < active ? T.greenSoft : pos === active ? T.greenMid : 'rgba(0,0,0,0.1)',
+            transition: 'all 250ms ease',
+          }} />
+        )
+      })}
+    </div>
+  )
 }
 
-const EMPTY_STATE: WizardState = {
-  name: '', legalStructure: '', primaryLocation: '',
-  annualIncomeBand: '', geographicReach: '', mission: '',
-  impactSectors: [], beneficiaryGroups: [],
-  minGrantTarget: '', maxGrantTarget: '',
-  fundingTypes: ['grant', 'programme', 'investment', 'in_kind'],
+function BackLink({ onClick }: { onClick: () => void }) {
+  const [hov, setHov] = useState(false)
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: 4,
+        background: 'transparent', border: 'none', cursor: 'pointer',
+        color: hov ? T.textPrimary : T.textSecondary,
+        fontSize: 13, fontFamily: 'var(--font-space-grotesk)',
+        padding: '4px 8px 4px 0', marginBottom: 20,
+      }}
+    >
+      <ArrowLeft size={12} /> Back
+    </button>
+  )
+}
+
+function SkipAction({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+  const [hov, setHov] = useState(false)
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        fontSize: 13,
+        color: hov ? T.textPrimary : T.textSecondary,
+        background: 'transparent', border: 'none', cursor: 'pointer',
+        fontFamily: 'var(--font-space-grotesk)', padding: '8px 0',
+        textDecoration: hov ? 'underline' : 'none',
+      }}
+    >
+      {children}
+    </button>
+  )
+}
+
+/**
+ * Field wrapper — label, optional inline hint, children input, optional help text below.
+ * The hint and help are separate elements so the asterisk never wraps near a select arrow.
+ */
+function Field({
+  label, required, hint, help, children,
+}: {
+  label: string
+  required?: boolean
+  hint?: string      // short grey text on same line as label (e.g. "approximate band is fine")
+  help?: string      // block help text below the input
+  children: React.ReactNode
+}) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <label style={{ fontSize: 13, fontWeight: 500, color: T.textPrimary, fontFamily: 'var(--font-space-grotesk)' }}>
+        {label}
+        {required && <span style={{ color: T.coralText, marginLeft: 2 }}>*</span>}
+        {hint && <span style={{ fontWeight: 400, color: T.textTertiary, fontSize: 12, marginLeft: 6 }}>{hint}</span>}
+      </label>
+      {children}
+      {help && (
+        <p style={{ fontSize: 12, color: T.textTertiary, margin: 0, lineHeight: 1.4, fontFamily: 'var(--font-dm-sans)' }}>
+          {help}
+        </p>
+      )}
+    </div>
+  )
+}
+
+function SelectInput({
+  value, onChange, options, placeholder,
+}: {
+  value: string
+  onChange: (v: string) => void
+  options: { value: string; label: string }[]
+  placeholder: string
+}) {
+  return (
+    <select
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      style={{
+        ...INPUT_STYLE,
+        appearance: 'none' as const,
+        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235F5E5A' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: 'right 14px center',
+        paddingRight: 36,
+        color: value ? T.textPrimary : T.textTertiary,
+      }}
+    >
+      <option value="" disabled>{placeholder}</option>
+      {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+    </select>
+  )
+}
+
+/** Chip button — three states matching the HTML spec exactly */
+function PickerChip({
+  label, chipState, onClick, onMakePrimary, showMakePrimary, dimmed,
+}: {
+  label: string
+  chipState: 'unselected' | 'secondary' | 'primary'
+  onClick: () => void
+  onMakePrimary?: () => void
+  showMakePrimary?: boolean
+  dimmed?: boolean
+}) {
+  const [hov, setHov] = useState(false)
+  const isPrimary   = chipState === 'primary'
+  const isSecondary = chipState === 'secondary'
+  const showHover   = hov && \!dimmed && chipState === 'unselected'
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <button
+        onClick={() => \!dimmed && onClick()}
+        onMouseEnter={() => setHov(true)}
+        onMouseLeave={() => setHov(false)}
+        style={{
+          width: '100%',
+          padding: '9px 12px',
+          border: `0.5px solid ${isPrimary ? T.greenDeep : isSecondary ? T.greenMid : showHover ? T.greenMid : T.borderInput}`,
+          borderRadius: 8,
+          background: isPrimary ? T.greenDeep : isSecondary || showHover ? T.greenCream : '#fff',
+          color: isPrimary ? '#fff' : isSecondary || showHover ? T.greenTextDeep : T.textPrimary,
+          fontSize: 12,
+          fontWeight: isPrimary || isSecondary ? 500 : 400,
+          cursor: dimmed ? 'default' : 'pointer',
+          textAlign: 'center' as const,
+          fontFamily: 'var(--font-dm-sans)',
+          lineHeight: 1.3,
+          transition: 'all 120ms ease',
+          opacity: dimmed ? 0.38 : 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 4,
+        }}
+      >
+        {isPrimary && <span style={{ color: T.lime, fontSize: 11 }}>★</span>}
+        {label}
+      </button>
+      {showMakePrimary && hov && (
+        <button
+          onClick={e => { e.stopPropagation(); onMakePrimary?.() }}
+          onMouseEnter={() => setHov(true)}
+          onMouseLeave={() => setHov(false)}
+          title="Make primary"
+          style={{
+            position: 'absolute', top: -7, right: -7,
+            width: 18, height: 18, borderRadius: '50%',
+            background: T.greenDeep, color: T.lime,
+            border: 'none', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 1, fontSize: 10,
+          }}
+        >★</button>
+      )}
+    </div>
+  )
+}
+
+/** Card wrapper for steps 2–5 */
+function CardShell({
+  step, showSkip = true, children,
+}: {
+  step: number
+  showSkip?: boolean
+  children: React.ReactNode
+}) {
+  return (
+    <div className="flex-1 flex items-start justify-center px-4 py-8 md:py-12">
+      <div className="w-full max-w-[720px]">
+        <div style={{
+          background: '#fff',
+          border: `0.5px solid ${T.borderMid}`,
+          borderRadius: 16,
+          overflow: 'hidden',
+          boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
+        }}>
+          {/* Card header */}
+          <div style={{ padding: '20px 32px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 20, color: T.textPrimary, letterSpacing: '-0.02em' }}>
+              GrantTracker
+            </span>
+            <StepDots active={step} />
+          </div>
+          {/* Card body */}
+          <div style={{ padding: '28px 32px 32px' }}>
+            {children}
+          </div>
+        </div>
+        {showSkip && (
+          <div style={{ textAlign: 'center', marginTop: 4 }}>
+            <Link
+              href="/dashboard/search"
+              style={{ fontSize: 13, color: T.textTertiary, fontFamily: 'var(--font-space-grotesk)', padding: '12px 16px', display: 'inline-block', textDecoration: 'none' }}
+              onMouseEnter={e => (e.currentTarget.style.color = T.textSecondary)}
+              onMouseLeave={e => (e.currentTarget.style.color = T.textTertiary)}
+            >
+              Skip setup for now
+            </Link>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function LoadingDots() {
+  return (
+    <div style={{ display: 'flex', gap: 6, justifyContent: 'center', marginTop: 8 }}>
+      {[0, 1, 2].map(i => (
+        <div key={i} style={{
+          width: 7, height: 7, borderRadius: '50%', background: T.lime,
+          animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite`,
+        }} />
+      ))}
+      <style>{'@keyframes bounce{0%,80%,100%{transform:scale(0.7);opacity:0.5}40%{transform:scale(1.1);opacity:1}}'}</style>
+    </div>
+  )
 }
 
 /* ═══════════════════════════════════════════════
@@ -189,29 +530,24 @@ export default function OnboardingWizardPage() {
   const [orgId, setOrgId]         = useState<string | null>(null)
   const [loading, setLoading]     = useState(true)
 
-  // Entry step
-  const [url, setUrl]           = useState('')
-  const [fetching, setFetching] = useState(false)
+  const [url, setUrl]               = useState('')
+  const [fetching, setFetching]     = useState(false)
   const [fetchError, setFetchError] = useState<string | null>(null)
 
-  // Review step - track which uncertain fields have been confirmed
   const [confirmed, setConfirmed]       = useState<Set<string>>(new Set())
   const [editingField, setEditingField] = useState<string | null>(null)
 
-  // Location/save step
-  const [saving, setSaving]     = useState(false)
+  const [saving, setSaving]       = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
 
-  // Reveal
   const [revealMatches, setRevealMatches] = useState<RevealMatch[] | null>(null)
   const [revealCount, setRevealCount]     = useState<number | null>(null)
   const matchFetchRef = useRef<Promise<void> | null>(null)
 
-  // Load existing org on mount
   useEffect(() => {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { router.push('/auth/login'); return }
+      if (\!user) { router.push('/auth/login'); return }
       setUserId(user.id)
       const org = await getOrganisationByOwner(user.id)
       if (org) {
@@ -224,9 +560,10 @@ export default function OnboardingWizardPage() {
           geographicReach:  org.geographic_reach ?? '',
           mission:          org.mission ?? '',
           impactSectors:    (org.impact_sectors as ImpactSector[]) ?? [],
-          beneficiaryGroups:(org.beneficiary_groups as BeneficiaryGroup[]) ?? [],
-          minGrantTarget:   org.min_grant_target != null ? String(org.min_grant_target) : '',
-          maxGrantTarget:   org.max_grant_target != null ? String(org.max_grant_target) : '',
+          beneficiaryGroups: (org.beneficiary_groups as BeneficiaryGroup[]) ?? [],
+          // Store raw digits; fmtThousands() formats on display
+          minGrantTarget:   org.min_grant_target \!= null ? String(org.min_grant_target) : '',
+          maxGrantTarget:   org.max_grant_target \!= null ? String(org.max_grant_target) : '',
           fundingTypes:     (org.funding_type_preferences as FundingType[])?.length
                               ? (org.funding_type_preferences as FundingType[])
                               : ['grant', 'programme', 'investment', 'in_kind'],
@@ -237,16 +574,13 @@ export default function OnboardingWizardPage() {
     load()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  /* ── Handlers ──────────────────────────────── */
-
   function update<K extends keyof WizardState>(key: K, value: WizardState[K]) {
     setState(prev => ({ ...prev, [key]: value }))
   }
 
   async function handleAutoFill() {
-    if (!url.trim()) return
-    setFetching(true)
-    setFetchError(null)
+    if (\!url.trim()) return
+    setFetching(true); setFetchError(null)
     try {
       const res  = await fetch('/api/org-autocomplete', {
         method: 'POST',
@@ -254,16 +588,14 @@ export default function OnboardingWizardPage() {
         body: JSON.stringify({ url: url.trim() }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data?.error ?? 'Auto-fill failed')
-
+      if (\!res.ok) throw new Error(data?.error ?? 'Auto-fill failed')
       const conf = data._confidence ?? {}
 
-      // Derive legal_structure from orgType
       let derivedLegal: LegalStructure | '' = ''
-      if (data.orgType === 'registered_charity') derivedLegal = 'registered_charity'
-      else if (data.orgType === 'cic')           derivedLegal = 'cic_guarantee'
+      if (data.orgType === 'registered_charity')   derivedLegal = 'registered_charity'
+      else if (data.orgType === 'cic')              derivedLegal = 'cic_guarantee'
       else if (data.orgType === 'social_enterprise') derivedLegal = 'ltd_guarantee'
-      else if (data.orgType === 'community_group')   derivedLegal = 'unincorporated'
+      else if (data.orgType === 'community_group')  derivedLegal = 'unincorporated'
 
       const ext: ExtractedData = {
         url: url.trim(),
@@ -275,55 +607,49 @@ export default function OnboardingWizardPage() {
         impactSectors:     Array.isArray(data.impactSectors) ? data.impactSectors.slice(0, 5) : [],
         beneficiaryGroups: Array.isArray(data.beneficiaryGroups) ? data.beneficiaryGroups.slice(0, 5) : [],
         confidence: {
-          name:             conf.name,
-          legalStructure:   conf.orgType,  // confidence for the derived field
-          primaryLocation:  conf.primaryLocation,
-          annualIncomeBand: conf.annualIncome,
-          mission:          conf.mission,
-          impactSectors:    conf.impactSectors,
+          name:              conf.name,
+          legalStructure:    conf.orgType,
+          primaryLocation:   conf.primaryLocation,
+          annualIncomeBand:  conf.annualIncome,
+          mission:           conf.mission,
+          impactSectors:     conf.impactSectors,
           beneficiaryGroups: conf.beneficiaryGroups,
         },
       }
       setExtracted(ext)
-
-      // Pre-populate wizard state from extraction
       setState(prev => ({
         ...prev,
-        name:             ext.name ?? prev.name,
-        legalStructure:   (ext.legalStructure as LegalStructure) ?? prev.legalStructure,
-        primaryLocation:  ext.primaryLocation ?? prev.primaryLocation,
-        annualIncomeBand: ext.annualIncomeBand ?? prev.annualIncomeBand,
-        mission:          ext.mission ?? prev.mission,
-        impactSectors:    ext.impactSectors.length > 0 ? ext.impactSectors : prev.impactSectors,
+        name:              ext.name ?? prev.name,
+        legalStructure:    (ext.legalStructure as LegalStructure) ?? prev.legalStructure,
+        primaryLocation:   ext.primaryLocation ?? prev.primaryLocation,
+        annualIncomeBand:  ext.annualIncomeBand ?? prev.annualIncomeBand,
+        mission:           ext.mission ?? prev.mission,
+        impactSectors:     ext.impactSectors.length > 0 ? ext.impactSectors : prev.impactSectors,
         beneficiaryGroups: ext.beneficiaryGroups.length > 0 ? ext.beneficiaryGroups : prev.beneficiaryGroups,
       }))
-
-      // Auto-confirm all high-confidence fields
       const autoConfirmed = new Set<string>()
-      const fields: Array<keyof ExtractedData['confidence']> = [
-        'name','legalStructure','primaryLocation','annualIncomeBand','mission','impactSectors','beneficiaryGroups'
-      ]
-      fields.forEach(f => {
+      ;(Object.keys(conf) as Array<keyof ExtractedData['confidence']>).forEach(f => {
         if ((conf[f] ?? 0) >= 0.8) autoConfirmed.add(f)
       })
       setConfirmed(autoConfirmed)
       setStep('review')
     } catch (err) {
-      setFetchError(err instanceof Error ? err.message : 'Auto-fill failed - please try again')
+      setFetchError(err instanceof Error ? err.message : 'Auto-fill failed — please try again')
     } finally {
       setFetching(false)
     }
   }
 
-  function handleManualPath() {
-    setExtracted(null)
-    setStep('manual')
+  function reviewCanContinue(): boolean {
+    if (\!extracted) return true
+    return Object.entries(extracted.confidence)
+      .filter(([, c]) => fieldConf(c) === 'uncertain')
+      .map(([k]) => k)
+      .every(f => confirmed.has(f))
   }
 
-  // Called when user edits a review field value
   function confirmField(field: string, value?: string) {
-    if (value !== undefined) {
-      // Update the underlying wizard state
+    if (value \!== undefined) {
       const key = field as keyof WizardState
       if (key in EMPTY_STATE) setState(prev => ({ ...prev, [key]: value }))
     }
@@ -331,111 +657,86 @@ export default function OnboardingWizardPage() {
     setEditingField(null)
   }
 
-  // Are all uncertain review fields confirmed?
-  function reviewCanContinue(): boolean {
-    if (!extracted) return true
-    const uncertainFields = Object.entries(extracted.confidence)
-      .filter(([, c]) => fieldState(c) === 'uncertain')
-      .map(([k]) => k)
-    return uncertainFields.every(f => confirmed.has(f))
-  }
-
-  // Sector/beneficiary chip interactions
   function toggleSector(s: ImpactSector) {
     setState(prev => {
       const cur = [...prev.impactSectors]
       const idx = cur.indexOf(s)
-      if (idx === -1) {
-        if (cur.length >= 4) return prev
-        return { ...prev, impactSectors: [...cur, s] }
-      }
-      return { ...prev, impactSectors: cur.filter(x => x !== s) }
+      if (idx === -1) { if (cur.length >= 4) return prev; return { ...prev, impactSectors: [...cur, s] } }
+      return { ...prev, impactSectors: cur.filter(x => x \!== s) }
     })
   }
   function makePrimarySector(s: ImpactSector) {
-    setState(prev => ({ ...prev, impactSectors: [s, ...prev.impactSectors.filter(x => x !== s)] }))
+    setState(prev => ({ ...prev, impactSectors: [s, ...prev.impactSectors.filter(x => x \!== s)] }))
   }
-
   function toggleBeneficiary(b: BeneficiaryGroup) {
     setState(prev => {
       const cur = [...prev.beneficiaryGroups]
       const idx = cur.indexOf(b)
-      if (idx === -1) {
-        if (cur.length >= 4) return prev
-        return { ...prev, beneficiaryGroups: [...cur, b] }
-      }
-      return { ...prev, beneficiaryGroups: cur.filter(x => x !== b) }
+      if (idx === -1) { if (cur.length >= 4) return prev; return { ...prev, beneficiaryGroups: [...cur, b] } }
+      return { ...prev, beneficiaryGroups: cur.filter(x => x \!== b) }
     })
   }
   function makePrimaryBeneficiary(b: BeneficiaryGroup) {
-    setState(prev => ({ ...prev, beneficiaryGroups: [b, ...prev.beneficiaryGroups.filter(x => x !== b)] }))
+    setState(prev => ({ ...prev, beneficiaryGroups: [b, ...prev.beneficiaryGroups.filter(x => x \!== b)] }))
   }
-
   function toggleFundingType(t: FundingType) {
     setState(prev => ({
       ...prev,
       fundingTypes: prev.fundingTypes.includes(t)
-        ? prev.fundingTypes.filter(x => x !== t)
+        ? prev.fundingTypes.filter(x => x \!== t)
         : [...prev.fundingTypes, t],
     }))
   }
 
-  /* ── Save + reveal ─────────────────────────── */
-
   async function handleFinish() {
-    setSaving(true)
-    setSaveError(null)
+    setSaving(true); setSaveError(null)
     try {
       const today = new Date().toISOString().split('T')[0]
-
       const payload = {
-        name:                       state.name.trim() || 'My Organisation',
-        charity_number:             null,
-        cic_number:                 null,
-        org_type:                   legalStructureToOrgType(state.legalStructure) as 'cic' | 'registered_charity' | 'social_enterprise' | 'community_group' | 'other',
-        legal_structure:            state.legalStructure || null,
-        org_stage:                  null,
-        social_mission_declared:    false,
-        articles_restrict_profit:   false,
+        name:                         state.name.trim() || 'My Organisation',
+        charity_number:               null,
+        cic_number:                   null,
+        org_type:                     legalStructureToOrgType(state.legalStructure) as 'cic' | 'registered_charity' | 'social_enterprise' | 'community_group' | 'other',
+        legal_structure:              state.legalStructure || null,
+        org_stage:                    null,
+        social_mission_declared:      false,
+        articles_restrict_profit:     false,
         also_individual_practitioner: false,
-        impact_sectors:             state.impactSectors,
-        beneficiary_groups:         state.beneficiaryGroups,
-        annual_income_band:         state.annualIncomeBand || null,
-        primary_location:           state.primaryLocation.trim() || null,
-        geographic_reach:           state.geographicReach || null,
-        themes:                     [],
-        areas_of_work:              [],
-        beneficiaries:              [],
-        mission:                    state.mission.trim() || null,
-        years_operating:            null,
-        people_per_year:            null,
-        volunteers:                 null,
-        projects_running:           null,
-        key_outcomes:               [],
-        min_grant_target:           state.minGrantTarget ? parseInt(state.minGrantTarget.replace(/[^\d]/g, '')) : null,
-        max_grant_target:           state.maxGrantTarget ? parseInt(state.maxGrantTarget.replace(/[^\d]/g, '')) : null,
-        funder_type_preferences:    [],
-        funding_type_preferences:   state.fundingTypes,
-        funding_subtype_preferences: [],
-        niche_tags:                 [],
-        has_asset_lock:             null,
-        years_trading:              null,
-        owner_id:                   userId,
-        alerts_enabled:             true,
-        alert_frequency:            'weekly',
-        alert_min_score:            70,
+        impact_sectors:               state.impactSectors,
+        beneficiary_groups:           state.beneficiaryGroups,
+        annual_income_band:           state.annualIncomeBand || null,
+        primary_location:             state.primaryLocation.trim() || null,
+        geographic_reach:             state.geographicReach || null,
+        themes:                       [],
+        areas_of_work:                [],
+        beneficiaries:                [],
+        mission:                      state.mission.trim() || null,
+        years_operating:              null,
+        people_per_year:              null,
+        volunteers:                   null,
+        projects_running:             null,
+        key_outcomes:                 [],
+        min_grant_target:             state.minGrantTarget ? parseInt(state.minGrantTarget.replace(/[^\d]/g, '')) : null,
+        max_grant_target:             state.maxGrantTarget ? parseInt(state.maxGrantTarget.replace(/[^\d]/g, '')) : null,
+        funder_type_preferences:      [],
+        funding_type_preferences:     state.fundingTypes,
+        funding_subtype_preferences:  [],
+        niche_tags:                   [],
+        has_asset_lock:               null,
+        years_trading:                null,
+        owner_id:                     userId,
+        alerts_enabled:               true,
+        alert_frequency:              'weekly',
+        alert_min_score:              70,
       }
 
-      let savedOrgId = orgId
       if (orgId) {
         await updateOrganisation(orgId, payload)
       } else {
         const created = await createOrganisation(payload as Parameters<typeof createOrganisation>[0])
-        savedOrgId = created.id
         setOrgId(created.id)
       }
 
-      // Kick off parallel match fetch while we transition to reveal
       matchFetchRef.current = (async () => {
         try {
           const { data: scraped } = await supabase
@@ -446,15 +747,13 @@ export default function OnboardingWizardPage() {
             .or(`is_rolling.eq.true,deadline.is.null,deadline.gte.${today}`)
             .limit(1500)
 
-          if (!scraped) return
-
-          // Fetch full saved org to pass to matching engine
+          if (\!scraped) return
           const savedOrg = await getOrganisationByOwner(userId)
-          if (!savedOrg) return
+          if (\!savedOrg) return
 
           const scored = scraped
             .map(row => {
-              const grant = normaliseScrapedGrant(row as Record<string, unknown>)
+              const grant  = normaliseScrapedGrant(row as Record<string, unknown>)
               const result = computeMatchScore(grant, savedOrg)
               return { grant, score: result.score }
             })
@@ -475,7 +774,6 @@ export default function OnboardingWizardPage() {
             }))
           )
         } catch {
-          // non-fatal - reveal will show 0
           setRevealCount(0)
           setRevealMatches([])
         }
@@ -483,27 +781,24 @@ export default function OnboardingWizardPage() {
 
       setStep('reveal')
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : 'Failed to save. Please try again.')
+      setSaveError(err instanceof Error ? err.message : 'Failed to save — please try again.')
     } finally {
       setSaving(false)
     }
   }
 
-  /* ── Derived UI state ──────────────────────── */
-
-  const sectorsValid = state.impactSectors.length > 0 && state.beneficiaryGroups.length > 0
-  const locationValid = !!(state.name.trim() && state.legalStructure)
+  const sectorsValid  = state.impactSectors.length > 0 && state.beneficiaryGroups.length > 0
+  const locationValid = \!\!(state.name.trim() && state.legalStructure)
 
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <p style={{ color: '#8A8986', fontFamily: 'var(--font-space-grotesk)', fontSize: 14 }}>Loading…</p>
+        <p style={{ color: T.textTertiary, fontFamily: 'var(--font-space-grotesk)', fontSize: 14 }}>Loading…</p>
       </div>
     )
   }
 
-
-  // ── Full-page hero for Step 1 ──
+  /* ── Step 1: full-page hero — no card ── */
   if (step === 'entry') {
     return (
       <div style={{
@@ -513,24 +808,15 @@ export default function OnboardingWizardPage() {
         padding: '20px 24px 40px',
         minHeight: 620,
         width: '100%',
+        // Gradient per design spec (not in HTML .hero-page, but explicit in text requirements)
         background: 'linear-gradient(180deg, #F4F9ED 0%, #fff 100%)',
       }}>
-        {/* Top bar: step dots only, right-aligned */}
+        {/* Top-right step dots */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: 60 }}>
-          <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
-            {[1,2,3,4,5].map(i => (
-              <div key={i} style={{
-                height: 6,
-                width: i === 1 ? 18 : 6,
-                borderRadius: 999,
-                background: i === 1 ? '#639922' : 'rgba(0,0,0,0.1)',
-                transition: 'all 250ms ease',
-              }} />
-            ))}
-          </div>
+          <StepDots active={1} />
         </div>
 
-        {/* Hero content — upper-third anchor */}
+        {/* Hero content — upper-third anchor per text spec (HTML uses center) */}
         <div style={{
           flex: 1,
           display: 'flex',
@@ -541,7 +827,7 @@ export default function OnboardingWizardPage() {
           maxWidth: 560,
           margin: '0 auto',
           width: '100%',
-          paddingTop: 140,
+          paddingTop: 80,
         }}>
           <StepEntry
             url={url}
@@ -549,22 +835,17 @@ export default function OnboardingWizardPage() {
             fetching={fetching}
             error={fetchError}
             onAutoFill={handleAutoFill}
-            onManual={handleManualPath}
+            onManual={() => { setExtracted(null); setStep('manual') }}
           />
         </div>
 
-        {/* Skip link */}
+        {/* Bottom skip */}
         <div style={{ textAlign: 'center' }}>
           <Link
             href="/dashboard/search"
-            style={{
-              fontFamily: 'var(--font-space-grotesk)',
-              fontSize: 13,
-              color: '#8A8986',
-              textDecoration: 'none',
-            }}
-            onMouseEnter={e => (e.currentTarget.style.color = '#5F5E5A')}
-            onMouseLeave={e => (e.currentTarget.style.color = '#8A8986')}
+            style={{ fontSize: 13, color: T.textTertiary, fontFamily: 'var(--font-space-grotesk)', padding: '12px 16px', display: 'inline-block', textDecoration: 'none' }}
+            onMouseEnter={e => (e.currentTarget.style.color = T.textSecondary)}
+            onMouseLeave={e => (e.currentTarget.style.color = T.textTertiary)}
           >
             Skip setup for now
           </Link>
@@ -573,261 +854,149 @@ export default function OnboardingWizardPage() {
     )
   }
 
-  const dotPos = STEP_DOT[step]
+  /* ── Steps 2–5: card layout ── */
+  const cardStep = STEP_DOT_POS[step]
 
   return (
-    <div className="flex-1 flex items-start justify-center px-4 py-8 md:py-12">
-      <div className="w-full max-w-[600px]">
+    <CardShell step={cardStep} showSkip={step \!== 'reveal'}>
 
-        {/* ── Card ──────────────────────────── */}
-        <div style={{
-          background: '#fff',
-          border: '0.5px solid rgba(0,0,0,0.1)',
-          borderRadius: 16,
-          overflow: 'hidden',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-        }}>
-          {/* Card header */}
-          <div style={{
-            padding: '20px 32px 0',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}>
-            <span style={{
-              fontFamily: 'var(--font-space-grotesk)',
-              fontWeight: 700,
-              fontSize: 18,
-              color: '#2C2C2A',
-              letterSpacing: '-0.02em',
-            }}>
-              GrantTracker
-            </span>
-            {/* Step dots */}
-            <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
-              {[1,2,3,4,5].map(i => (
-                <div key={i} style={{
-                  height: 6,
-                  width: i === dotPos ? 18 : 6,
-                  borderRadius: 999,
-                  background: i < dotPos ? '#97C459' : i === dotPos ? '#639922' : 'rgba(0,0,0,0.1)',
-                  transition: 'all 250ms ease',
-                }} />
-              ))}
-            </div>
-          </div>
+      {step === 'review' && extracted && (
+        <StepReview
+          extracted={extracted}
+          confirmed={confirmed}
+          editingField={editingField}
+          setEditingField={setEditingField}
+          confirmField={confirmField}
+          canContinue={reviewCanContinue()}
+          onBack={() => setStep('entry')}
+          onSkip={() => setStep('sectors')}
+          onContinue={() => setStep('sectors')}
+        />
+      )}
 
-          {/* Card body */}
-          <div style={{ padding: '28px 32px 32px' }}>
+      {step === 'manual' && (
+        <StepManual
+          state={state}
+          update={update}
+          onBack={() => setStep('entry')}
+          onContinue={() => setStep('sectors')}
+        />
+      )}
 
-            {/* ══ STEP 1: ENTRY ══════════════ */}
+      {step === 'sectors' && (
+        <StepSectors
+          impactSectors={state.impactSectors}
+          beneficiaryGroups={state.beneficiaryGroups}
+          toggleSector={toggleSector}
+          makePrimarySector={makePrimarySector}
+          toggleBeneficiary={toggleBeneficiary}
+          makePrimaryBeneficiary={makePrimaryBeneficiary}
+          onBack={() => setStep(extracted ? 'review' : 'manual')}
+          onContinue={() => setStep('location')}
+          canContinue={sectorsValid}
+        />
+      )}
 
-            {/* ══ STEP 2A: REVIEW ═══════════ */}
-            {step === 'review' && extracted && (
-              <StepReview
-                extracted={extracted}
-                state={state}
-                confirmed={confirmed}
-                editingField={editingField}
-                setEditingField={setEditingField}
-                confirmField={confirmField}
-                canContinue={reviewCanContinue()}
-                onBack={() => setStep('entry')}
-                onSkip={() => setStep('sectors')}
-                onContinue={() => setStep('sectors')}
-              />
-            )}
+      {step === 'location' && (
+        <StepLocation
+          state={state}
+          update={update}
+          toggleFundingType={toggleFundingType}
+          saving={saving}
+          saveError={saveError}
+          canContinue={locationValid}
+          onBack={() => setStep('sectors')}
+          onFinish={handleFinish}
+        />
+      )}
 
-            {/* ══ STEP 2B: MANUAL ═══════════ */}
-            {step === 'manual' && (
-              <StepManual
-                state={state}
-                update={update}
-                onBack={() => setStep('entry')}
-                onContinue={() => setStep('sectors')}
-              />
-            )}
+      {step === 'reveal' && (
+        <StepReveal
+          matchCount={revealCount}
+          topMatches={revealMatches}
+          hasMission={\!\!state.mission.trim()}
+          onExplore={() => router.push('/dashboard/search?welcome=1')}
+          onAddMission={() => router.push('/dashboard/profile?section=mission')}
+        />
+      )}
 
-            {/* ══ STEP 3: SECTORS ═══════════ */}
-            {step === 'sectors' && (
-              <StepSectors
-                impactSectors={state.impactSectors}
-                beneficiaryGroups={state.beneficiaryGroups}
-                toggleSector={toggleSector}
-                makePrimarySector={makePrimarySector}
-                toggleBeneficiary={toggleBeneficiary}
-                makePrimaryBeneficiary={makePrimaryBeneficiary}
-                onBack={() => setStep(extracted ? 'review' : 'manual')}
-                onContinue={() => setStep('location')}
-                canContinue={sectorsValid}
-              />
-            )}
-
-            {/* ══ STEP 4: LOCATION ══════════ */}
-            {step === 'location' && (
-              <StepLocation
-                state={state}
-                update={update}
-                toggleFundingType={toggleFundingType}
-                saving={saving}
-                saveError={saveError}
-                canContinue={locationValid}
-                onBack={() => setStep('sectors')}
-                onFinish={handleFinish}
-              />
-            )}
-
-            {/* ══ STEP 5: REVEAL ════════════ */}
-            {step === 'reveal' && (
-              <StepReveal
-                matchCount={revealCount}
-                topMatches={revealMatches}
-                onExplore={() => router.push('/dashboard/search?welcome=1')}
-              />
-            )}
-
-          </div>
-        </div>
-
-        {/* Skip link - not shown on reveal */}
-        {step !== 'reveal' && (
-          <div className="text-center mt-5">
-            <Link
-              href="/dashboard/search"
-              style={{
-                fontFamily: 'var(--font-space-grotesk)',
-                fontSize: 13,
-                color: '#8A8986',
-                textDecoration: 'none',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.color = '#5F5E5A')}
-              onMouseLeave={e => (e.currentTarget.style.color = '#8A8986')}
-            >
-              Skip setup for now
-            </Link>
-          </div>
-        )}
-
-      </div>
-    </div>
+    </CardShell>
   )
 }
 
-function StepEntry({
-  url, setUrl, fetching, error, onAutoFill, onManual,
-}: {
-  url: string
-  setUrl: (v: string) => void
-  fetching: boolean
-  error: string | null
-  onAutoFill: () => void
-  onManual: () => void
-}) {
-  const [manualHover, setManualHover] = useState(false)
-  const isDisabled = fetching || !url.trim()
+/* ═══════════════════════════════════════════════
+   Step 1 — Entry (rendered inside hero page)
+   ═══════════════════════════════════════════════ */
 
+function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual }: {
+  url: string; setUrl: (v: string) => void
+  fetching: boolean; error: string | null
+  onAutoFill: () => void; onManual: () => void
+}) {
+  const [hov, setHov] = useState(false)
   return (
     <>
-      <h1 style={{
-        fontFamily: 'var(--font-space-grotesk)',
-        fontSize: 40,
-        fontWeight: 600,
-        letterSpacing: '-0.02em',
-        color: '#2C2C2A',
-        marginBottom: 12,
-        lineHeight: 1.15,
-      }}>
+      <h1 style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 40, fontWeight: 600, color: T.textPrimary, margin: '0 0 14px', lineHeight: 1.15, letterSpacing: '-0.02em' }}>
         Let&rsquo;s build your profile
       </h1>
-      <p style={{
-        fontFamily: 'var(--font-dm-sans)',
-        fontSize: 16,
-        color: '#5F5E5A',
-        marginBottom: 32,
-        lineHeight: 1.6,
-        maxWidth: 460,
-      }}>
+      <p style={{ fontSize: 16, color: T.textSecondary, lineHeight: 1.5, margin: '0 0 36px', maxWidth: 460, fontFamily: 'var(--font-dm-sans)' }}>
         Drop in your website and we&rsquo;ll do the heavy lifting. You can review and refine everything in the next step.
       </p>
 
+      {/* URL input + CTA */}
       <div style={{ display: 'flex', gap: 8, width: '100%', maxWidth: 520 }}>
         <div style={{ flex: 1, position: 'relative' }}>
-          <Globe
-            size={14}
-            style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#8A8986', pointerEvents: 'none' }}
-          />
+          <Globe size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: T.textTertiary, pointerEvents: 'none' }} />
           <input
             type="url"
             value={url}
             onChange={e => setUrl(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && !fetching && onAutoFill()}
-            placeholder="https://yourorganisation.org.uk"
-            style={{
-              ...INPUT_STYLE,
-              fontSize: 15,
-              padding: '13px 14px 13px 34px',
-              width: '100%',
-              boxSizing: 'border-box',
-            }}
+            onKeyDown={e => e.key === 'Enter' && \!fetching && url.trim() && onAutoFill()}
+            placeholder="https://yourorganisation.co.uk"
+            style={{ ...INPUT_STYLE, fontSize: 15, padding: '14px 14px 14px 34px', boxSizing: 'border-box' }}
           />
         </div>
-        <button
-          onClick={onAutoFill}
-          disabled={isDisabled}
-          style={{
-            ...BTN_PRIMARY,
-            background: '#8ECB3C',
-            color: '#173404',
-            padding: '13px 20px',
-            opacity: isDisabled ? 0.5 : 1,
-            cursor: isDisabled ? 'not-allowed' : 'pointer',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {fetching ? 'Reading...' : 'Auto-fill profile'}
-        </button>
+        <Button variant="primary" size="lg" onClick={onAutoFill} disabled={fetching || \!url.trim()}>
+          {fetching ? 'Reading…' : 'Auto-fill profile'}
+        </Button>
       </div>
 
-      {error && (
-        <p style={{ fontSize: 13, color: '#B03A1A', marginTop: 8 }}>{error}</p>
-      )}
+      {error && <p style={{ fontSize: 13, color: T.coralText, marginTop: 8 }}>{error}</p>}
 
-      <button
-        onClick={onManual}
-        onMouseEnter={() => setManualHover(true)}
-        onMouseLeave={() => setManualHover(false)}
-        style={{
-          background: 'transparent',
-          border: 'none',
-          fontFamily: 'var(--font-dm-sans)',
-          fontSize: 14,
-          color: '#5F5E5A',
-          cursor: 'pointer',
-          textDecoration: manualHover ? 'underline' : 'none',
-          textUnderlineOffset: 3,
-          marginTop: 20,
-        }}
-      >
-        No website? Fill in manually
-      </button>
+      {/* Manual alternative */}
+      <div style={{ paddingTop: 24 }}>
+        <button
+          onClick={onManual}
+          onMouseEnter={() => setHov(true)}
+          onMouseLeave={() => setHov(false)}
+          style={{
+            background: 'transparent', border: 'none', color: hov ? T.textPrimary : T.textSecondary,
+            fontFamily: 'var(--font-dm-sans)', fontSize: 13, cursor: 'pointer',
+            textDecoration: 'underline',
+            textDecorationColor: 'rgba(95,94,90,0.3)',
+            textUnderlineOffset: 3,
+            padding: '8px 12px',
+          }}
+        >
+          No website? Fill in manually
+        </button>
+      </div>
     </>
   )
 }
 
-function StepReview({
-  extracted, state, confirmed, editingField, setEditingField, confirmField,
-  canContinue, onBack, onSkip, onContinue,
-}: {
+/* ═══════════════════════════════════════════════
+   Step 2A — Review extracted data
+   ═══════════════════════════════════════════════ */
+
+function StepReview({ extracted, confirmed, editingField, setEditingField, confirmField, canContinue, onBack, onSkip, onContinue }: {
   extracted: ExtractedData
-  state: { name: string; legalStructure: string; primaryLocation: string; annualIncomeBand: string }
   confirmed: Set<string>
   editingField: string | null
   setEditingField: (f: string | null) => void
   confirmField: (field: string, value?: string) => void
   canContinue: boolean
-  onBack: () => void
-  onSkip: () => void
-  onContinue: () => void
+  onBack: () => void; onSkip: () => void; onContinue: () => void
 }) {
   const hostname = (() => {
     try { return new URL(extracted.url.startsWith('http') ? extracted.url : `https://${extracted.url}`).hostname }
@@ -836,139 +1005,100 @@ function StepReview({
 
   const fields: Array<{
     key: keyof typeof extracted.confidence
-    label: string
-    value: string | null
-    stateKey?: string
-    type?: 'text' | 'select'
+    label: string; value: string | null
+    stateKey?: string; type?: 'text' | 'select'
     options?: { value: string; label: string }[]
   }> = [
-    { key: 'name',             label: 'Organisation name',  value: extracted.name,           stateKey: 'name',            type: 'text' },
-    { key: 'legalStructure',   label: 'Legal structure',    value: LEGAL_STRUCTURE_OPTIONS.find(o => o.value === extracted.legalStructure)?.label ?? extracted.legalStructure, stateKey: 'legalStructure', type: 'select', options: LEGAL_STRUCTURE_OPTIONS },
-    { key: 'primaryLocation',  label: 'Primary location',   value: extracted.primaryLocation, stateKey: 'primaryLocation', type: 'text' },
-    { key: 'impactSectors',    label: 'Primary sector',     value: extracted.impactSectors.slice(0,2).map(s => IMPACT_SECTORS.find(o => o.value === s)?.label ?? s).join(' · ') || null },
-    { key: 'beneficiaryGroups',label: 'Who you serve',      value: extracted.beneficiaryGroups.slice(0,2).map(b => BENEFICIARY_GROUPS.find(o => o.value === b)?.label ?? b).join(' · ') || null },
-    { key: 'annualIncomeBand', label: 'Annual income',      value: extracted.annualIncomeBand, stateKey: 'annualIncomeBand', type: 'select', options: INCOME_BANDS.map(b => ({ value: b, label: b })) },
+    { key: 'name',              label: 'Organisation name', value: extracted.name,            stateKey: 'name',            type: 'text' },
+    { key: 'legalStructure',    label: 'Legal structure',   value: LEGAL_STRUCTURE_OPTIONS.find(o => o.value === extracted.legalStructure)?.label ?? extracted.legalStructure, stateKey: 'legalStructure', type: 'select', options: LEGAL_STRUCTURE_OPTIONS },
+    { key: 'primaryLocation',   label: 'Primary location',  value: extracted.primaryLocation,  stateKey: 'primaryLocation', type: 'text' },
+    { key: 'impactSectors',     label: 'Primary sector',    value: extracted.impactSectors.slice(0,2).map(s => IMPACT_SECTORS.find(o => o.value === s)?.label ?? s).join(' · ') || null },
+    { key: 'beneficiaryGroups', label: 'Who you serve',     value: extracted.beneficiaryGroups.slice(0,2).map(b => BENEFICIARY_GROUPS.find(o => o.value === b)?.label ?? b).join(' · ') || null },
+    { key: 'annualIncomeBand',  label: 'Annual income',     value: extracted.annualIncomeBand, stateKey: 'annualIncomeBand', type: 'select', options: INCOME_BANDS.map(b => ({ value: b, label: b })) },
   ]
-
   const foundCount = fields.filter(f => f.value).length
 
   return (
     <>
-      <BackButton onClick={onBack} />
+      <BackLink onClick={onBack} />
+      <h1 style={H1_STYLE}>Here&rsquo;s what we found</h1>
+      <p style={SUBTITLE_STYLE}>Review and tweak what&rsquo;s not quite right. We&rsquo;re confident about the green ones.</p>
 
-      <h1 style={H1}>Here&rsquo;s what we found</h1>
-      <p style={SUBTITLE}>Review and tweak what&rsquo;s not quite right. We&rsquo;re confident about the green ones.</p>
-
-      {/* Summary banner */}
-      <div style={{ background: '#F5F1E8', borderRadius: 10, padding: '12px 16px', marginBottom: 20, fontSize: 13, color: '#2C2C2A', fontFamily: 'var(--font-dm-sans)' }}>
-        <strong style={{ fontWeight: 500 }}>Found {foundCount} of {fields.length} fields</strong> from <span style={{ color: '#5F5E5A' }}>{hostname}</span>
-        {foundCount < fields.length && `. ${fields.length - foundCount} couldn't be inferred - you can add ${fields.length - foundCount === 1 ? 'it' : 'them'} in later steps.`}
+      {/* Extract summary */}
+      <div style={{ background: T.cream1, borderRadius: 10, padding: '14px 18px', marginBottom: 20, fontSize: 13, color: T.textPrimary, fontFamily: 'var(--font-dm-sans)', lineHeight: 1.5 }}>
+        <strong style={{ fontWeight: 500 }}>We found {foundCount} of {fields.length} fields</strong> from <span style={{ color: T.textSecondary }}>{hostname}</span>
+        {foundCount < fields.length && `. ${fields.length - foundCount} couldn't be inferred — you'll add ${fields.length - foundCount === 1 ? 'it' : 'them'} in a moment.`}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {fields.map(field => {
-          const confidence = extracted.confidence[field.key]
-          const state_val  = fieldState(confidence)
-          const isEditing  = editingField === field.key
-          const isConfirmed = confirmed.has(field.key)
-
-          return (
-            <ReviewField
-              key={field.key}
-              fieldKey={field.key}
-              label={field.label}
-              value={field.value}
-              fieldState={state_val}
-              isEditing={isEditing}
-              isConfirmed={isConfirmed}
-              type={field.type}
-              options={field.options}
-              onEdit={() => setEditingField(field.key)}
-              onConfirm={(val) => confirmField(field.key, val)}
-              onCancel={() => setEditingField(null)}
-            />
-          )
-        })}
+        {fields.map(field => (
+          <ReviewField
+            key={field.key}
+            label={field.label}
+            value={field.value}
+            fieldState={fieldConf(extracted.confidence[field.key])}
+            isConfirmed={confirmed.has(field.key)}
+            isEditing={editingField === field.key}
+            type={field.type}
+            options={field.options}
+            onEdit={() => setEditingField(field.key)}
+            onConfirm={val => confirmField(field.key, val)}
+            onCancel={() => setEditingField(null)}
+          />
+        ))}
       </div>
 
-      <div style={ACTIONS}>
-        <button onClick={onSkip} style={SKIP_BTN}>I&rsquo;ll refine these later</button>
-        <button
-          onClick={onContinue}
-          disabled={!canContinue}
-          style={{ ...BTN_PRIMARY, opacity: canContinue ? 1 : 0.45, cursor: canContinue ? 'pointer' : 'not-allowed' }}
-        >
+      <div style={ACTIONS_STYLE}>
+        <SkipAction onClick={onSkip}>I&rsquo;ll refine these later</SkipAction>
+        <Button variant="primary" onClick={onContinue} disabled={\!canContinue}>
           Continue <ArrowRight size={14} />
-        </button>
+        </Button>
       </div>
     </>
   )
 }
 
-function ReviewField({
-  fieldKey, label, value, fieldState: fState, isEditing, isConfirmed, type, options,
-  onEdit, onConfirm, onCancel,
-}: {
-  fieldKey: string
-  label: string
-  value: string | null
-  fieldState: FieldState
-  isEditing: boolean
-  isConfirmed: boolean
-  type?: 'text' | 'select'
-  options?: { value: string; label: string }[]
-  onEdit: () => void
-  onConfirm: (val?: string) => void
-  onCancel: () => void
+function ReviewField({ label, value, fieldState: fState, isConfirmed, isEditing, type, options, onEdit, onConfirm, onCancel }: {
+  label: string; value: string | null
+  fieldState: FieldConfidence; isConfirmed: boolean; isEditing: boolean
+  type?: 'text' | 'select'; options?: { value: string; label: string }[]
+  onEdit: () => void; onConfirm: (val?: string) => void; onCancel: () => void
 }) {
   const [draft, setDraft] = useState(value ?? '')
   useEffect(() => { setDraft(value ?? '') }, [value])
 
-  const bg = fState === 'confident' ? '#F4FBE8'
-           : fState === 'uncertain' ? '#FDFBF5'
-           : '#FAFAF7'
-  const borderColor = fState === 'confident' ? 'rgba(99,153,34,0.25)'
-                    : fState === 'uncertain' ? 'rgba(186,117,23,0.25)'
-                    : 'rgba(0,0,0,0.08)'
-  const borderStyle = fState === 'missing' ? 'dashed' : 'solid'
-  const iconBg = fState === 'confident' ? '#639922'
-               : fState === 'uncertain' ? '#BA7517'
-               : 'transparent'
-  const iconColor = fState === 'missing' ? '#8A8986' : '#fff'
-  const iconChar  = fState === 'confident' ? '✓'
-                  : fState === 'uncertain' ? '?'
-                  : '+'
+  const effective = isConfirmed && fState \!== 'confident' ? 'confident' : fState
+
+  const bg = effective === 'confident' ? T.greenCream
+           : effective === 'uncertain' ? T.amberBgSoft : T.pageBg
+  const borderColor = effective === 'confident' ? 'rgba(99,153,34,0.2)'
+                    : effective === 'uncertain' ? 'rgba(186,117,23,0.2)' : T.borderLight
+  const borderStyle = fState === 'missing' && \!isConfirmed ? 'dashed' : 'solid'
+
+  const iconBg  = effective === 'confident' ? T.greenMid
+                : effective === 'uncertain' ? T.amberMid : 'transparent'
+  const iconChar = effective === 'confident' ? '✓' : effective === 'uncertain' ? '?' : '+'
+  const iconColor = (fState === 'missing' && \!isConfirmed) ? T.textTertiary : '#fff'
 
   return (
-    <div style={{
-      display: 'flex', alignItems: 'flex-start', gap: 12,
-      padding: '12px 14px',
-      background: isConfirmed && fState !== 'confident' ? '#F4FBE8' : bg,
-      borderRadius: 10,
-      border: `0.5px ${borderStyle} ${isConfirmed && fState !== 'confident' ? 'rgba(99,153,34,0.25)' : borderColor}`,
-      transition: 'background 150ms, border-color 150ms',
-    }}>
-      {/* Icon */}
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '14px 16px', background: bg, borderRadius: 10, border: `0.5px ${borderStyle} ${borderColor}`, transition: 'background 120ms ease' }}>
+      {/* State icon */}
       <div style={{
         width: 20, height: 20, borderRadius: '50%', flexShrink: 0, marginTop: 1,
-        background: isConfirmed && fState !== 'confident' ? '#639922' : iconBg,
-        border: fState === 'missing' && !isConfirmed ? '1px dashed #8A8986' : 'none',
+        background: iconBg,
+        border: fState === 'missing' && \!isConfirmed ? `1px dashed ${T.textTertiary}` : 'none',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: 11, color: isConfirmed && fState !== 'confident' ? '#fff' : iconColor,
-        fontWeight: 600,
+        fontSize: 12, color: iconColor, fontWeight: 600,
       }}>
-        {isConfirmed && fState !== 'confident' ? '✓' : iconChar}
+        {iconChar}
       </div>
 
       {/* Content */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 10, fontWeight: 500, color: '#8A8986', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3, fontFamily: 'var(--font-space-grotesk)' }}>
+        <div style={{ fontSize: 11, fontWeight: 500, color: T.textTertiary, textTransform: 'uppercase' as const, letterSpacing: '0.04em', marginBottom: 2, fontFamily: 'var(--font-space-grotesk)' }}>
           {label}
-          {fState === 'uncertain' && !isConfirmed && (
-            <span style={{ marginLeft: 6, color: '#BA7517' }}>· please confirm</span>
-          )}
+          {fState === 'uncertain' && \!isConfirmed && <span style={{ marginLeft: 6, color: T.amberMid }}> · please confirm</span>}
         </div>
-
         {isEditing && type ? (
           <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 2 }}>
             {type === 'select' && options ? (
@@ -976,49 +1106,42 @@ function ReviewField({
                 value={draft}
                 onChange={e => setDraft(e.target.value)}
                 autoFocus
-                style={{ ...INPUT_STYLE, flex: 1, fontSize: 13, padding: '6px 10px' }}
+                style={{
+                  ...INPUT_STYLE, flex: 1, fontSize: 13, padding: '6px 32px 6px 10px',
+                  appearance: 'none' as const,
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235F5E5A' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
+                  backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center',
+                }}
               >
                 <option value="">Select…</option>
                 {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             ) : (
-              <input
-                type="text"
-                value={draft}
-                onChange={e => setDraft(e.target.value)}
-                autoFocus
-                style={{ ...INPUT_STYLE, flex: 1, fontSize: 13, padding: '6px 10px' }}
-              />
+              <input type="text" value={draft} onChange={e => setDraft(e.target.value)} autoFocus style={{ ...INPUT_STYLE, flex: 1, fontSize: 13, padding: '6px 10px' }} />
             )}
-            <button onClick={() => onConfirm(draft)} style={{ ...BTN_PRIMARY, padding: '6px 12px', fontSize: 12 }}>
-              <Check size={12} /> Save
-            </button>
-            <button onClick={onCancel} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#8A8986', padding: '4px' }}>
+            <Button variant="primary" size="sm" onClick={() => onConfirm(draft)}>
+              <Check size={11} /> Save
+            </Button>
+            <button onClick={onCancel} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: T.textTertiary, padding: '4px' }}>
               <X size={14} />
             </button>
           </div>
         ) : (
-          <div style={{ fontSize: 14, color: value ? '#2C2C2A' : '#8A8986', fontWeight: value ? 500 : 400, fontStyle: value ? 'normal' : 'italic', fontFamily: 'var(--font-dm-sans)' }}>
-            {value ?? 'Couldn\'t find this - add manually'}
+          <div style={{ fontSize: 14, color: value ? T.textPrimary : T.textTertiary, fontWeight: value ? 500 : 400, fontStyle: value ? 'normal' : 'italic', fontFamily: 'var(--font-dm-sans)' }}>
+            {value ?? 'We couldn't find this — add manually'}
           </div>
         )}
       </div>
 
-      {/* Actions - only for non-sector/beneficiary fields with type */}
-      {!isEditing && type && (
-        <div style={{ display: 'flex', gap: 6, flexShrink: 0, alignItems: 'flex-start', marginTop: 1 }}>
-          {fState === 'uncertain' && !isConfirmed && (
-            <button
-              onClick={() => onConfirm()}
-              style={{ fontSize: 11, color: '#BA7517', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-space-grotesk)', padding: '2px 6px', whiteSpace: 'nowrap' }}
-            >
+      {/* Edit / confirm actions */}
+      {\!isEditing && type && (
+        <div style={{ display: 'flex', gap: 4, flexShrink: 0, marginTop: 1 }}>
+          {fState === 'uncertain' && \!isConfirmed && (
+            <button onClick={() => onConfirm()} style={{ fontSize: 11, color: T.amberMid, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-space-grotesk)', padding: '2px 8px', whiteSpace: 'nowrap' as const }}>
               Looks right ✓
             </button>
           )}
-          <button
-            onClick={onEdit}
-            style={{ fontSize: 11, color: '#8A8986', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-space-grotesk)', padding: '2px 4px' }}
-          >
+          <button onClick={onEdit} style={{ fontSize: 11, color: T.textTertiary, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-space-grotesk)', padding: '2px 8px' }}>
             <Pencil size={11} />
           </button>
         </div>
@@ -1027,286 +1150,208 @@ function ReviewField({
   )
 }
 
-/* ── Manual step ── */
+/* ═══════════════════════════════════════════════
+   Step 2B — Manual entry
+   ═══════════════════════════════════════════════ */
 
 function StepManual({ state, update, onBack, onContinue }: {
   state: WizardState
   update: <K extends keyof WizardState>(k: K, v: WizardState[K]) => void
-  onBack: () => void
-  onContinue: () => void
+  onBack: () => void; onContinue: () => void
 }) {
-  const valid = !!(state.name.trim() && state.legalStructure)
+  const valid = \!\!(state.name.trim() && state.legalStructure)
   return (
     <>
-      <BackButton onClick={onBack} />
-      <h1 style={H1}>Tell us about your organisation</h1>
-      <p style={SUBTITLE}>We use this to check eligibility on the funders we match you with.</p>
+      <BackLink onClick={onBack} />
+      <h1 style={H1_STYLE}>Tell us about your organisation</h1>
+      <p style={SUBTITLE_STYLE}>We use this to check eligibility on the funders we match you with.</p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 18, marginBottom: 24 }}>
         <Field label="What are you called?" required>
-          <input
-            type="text"
-            value={state.name}
-            onChange={e => update('name', e.target.value)}
-            placeholder="e.g. AudioActive"
-            style={INPUT_STYLE}
-          />
+          <input type="text" value={state.name} onChange={e => update('name', e.target.value)} placeholder="e.g. AudioActive" style={INPUT_STYLE} />
         </Field>
 
-        <Field label="What kind of organisation are you?" required hint="Drives which funders you're eligible for">
-          <Select
-            value={state.legalStructure}
-            onChange={v => update('legalStructure', v as LegalStructure | '')}
-            options={LEGAL_STRUCTURE_OPTIONS}
-            placeholder="Select your legal structure…"
-          />
+        <Field label="What kind of organisation are you?" required help="Drives which funders you're eligible for.">
+          <SelectInput value={state.legalStructure} onChange={v => update('legalStructure', v as LegalStructure | '')} options={LEGAL_STRUCTURE_OPTIONS} placeholder="Select your legal structure…" />
         </Field>
 
-        <Field label="Annual income" hint="Approximate band is fine - many funders have income caps">
-          <Select
-            value={state.annualIncomeBand}
-            onChange={v => update('annualIncomeBand', v)}
-            options={INCOME_BANDS.map(b => ({ value: b, label: b }))}
-            placeholder="Select a band…"
-          />
+        <Field label="Annual income" hint="approximate band is fine" help="Many funders have income caps — we use this to filter those out.">
+          <SelectInput value={state.annualIncomeBand} onChange={v => update('annualIncomeBand', v)} options={INCOME_BANDS.map(b => ({ value: b, label: b }))} placeholder="Select a band…" />
         </Field>
       </div>
 
-      <div style={ACTIONS}>
-        <div />
-        <button
-          onClick={onContinue}
-          disabled={!valid}
-          style={{ ...BTN_PRIMARY, opacity: valid ? 1 : 0.45, cursor: valid ? 'pointer' : 'not-allowed' }}
-        >
+      <div style={ACTIONS_STYLE}>
+        <SkipAction onClick={onBack}>← Back</SkipAction>
+        <Button variant="primary" onClick={onContinue} disabled={\!valid}>
           Continue <ArrowRight size={14} />
-        </button>
+        </Button>
       </div>
     </>
   )
 }
 
-/* ── Sectors step ── */
+/* ═══════════════════════════════════════════════
+   Step 3 — Sector + beneficiary pickers
+   ═══════════════════════════════════════════════ */
 
 function StepSectors({ impactSectors, beneficiaryGroups, toggleSector, makePrimarySector, toggleBeneficiary, makePrimaryBeneficiary, onBack, onContinue, canContinue }: {
-  impactSectors: ImpactSector[]
-  beneficiaryGroups: BeneficiaryGroup[]
-  toggleSector: (s: ImpactSector) => void
-  makePrimarySector: (s: ImpactSector) => void
-  toggleBeneficiary: (b: BeneficiaryGroup) => void
-  makePrimaryBeneficiary: (b: BeneficiaryGroup) => void
-  onBack: () => void
-  onContinue: () => void
-  canContinue: boolean
+  impactSectors: ImpactSector[]; beneficiaryGroups: BeneficiaryGroup[]
+  toggleSector: (s: ImpactSector) => void; makePrimarySector: (s: ImpactSector) => void
+  toggleBeneficiary: (b: BeneficiaryGroup) => void; makePrimaryBeneficiary: (b: BeneficiaryGroup) => void
+  onBack: () => void; onContinue: () => void; canContinue: boolean
 }) {
-  const [hoveredSector, setHoveredSector]         = useState<string | null>(null)
-  const [hoveredBeneficiary, setHoveredBeneficiary] = useState<string | null>(null)
-  const sectorMax     = impactSectors.length >= 4
+  const sectorMax      = impactSectors.length >= 4
   const beneficiaryMax = beneficiaryGroups.length >= 4
+
+  function chipStateFor(arr: string[], val: string): 'unselected' | 'secondary' | 'primary' {
+    const idx = arr.indexOf(val)
+    if (idx === 0) return 'primary'
+    if (idx > 0)   return 'secondary'
+    return 'unselected'
+  }
 
   return (
     <>
-      <BackButton onClick={onBack} />
-      <h1 style={H1}>What do you focus on?</h1>
-      <p style={SUBTITLE}>Pick your primary focus first - that&rsquo;s what we&rsquo;ll weight most in matching.</p>
+      <BackLink onClick={onBack} />
+      <h1 style={H1_STYLE}>What do you focus on?</h1>
+      <p style={SUBTITLE_STYLE}>Pick your primary focus first — that&rsquo;s what we&rsquo;ll weight most in matching.</p>
 
-      {/* Sectors */}
-      <PickerSection
-        label="Your impact sector"
-        hint="Pick 1 primary + up to 3 secondary"
-        selected={impactSectors}
-      />
-      <div style={PICKER_GRID}>
+      {/* Impact sectors */}
+      <div style={{ marginBottom: 10 }}>
+        <span style={{ fontSize: 13, fontWeight: 500, color: T.textPrimary, fontFamily: 'var(--font-space-grotesk)' }}>Your impact sector</span>
+        <span style={{ fontSize: 13, color: T.textTertiary, marginLeft: 6, fontFamily: 'var(--font-dm-sans)' }}>· pick 1 primary + up to 3 others</span>
+        {sectorMax && <span style={{ fontSize: 11, color: T.textTertiary, marginLeft: 8, fontFamily: 'var(--font-space-grotesk)' }}>Max reached</span>}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 20 }}>
         {IMPACT_SECTORS.map(opt => {
-          const idx         = impactSectors.indexOf(opt.value)
-          const isPrimary   = idx === 0
-          const isSecondary = idx > 0
-          const isUnselected = idx === -1
-          const isHov       = hoveredSector === opt.value
-          const dimmed      = sectorMax && isUnselected
+          const cs = chipStateFor(impactSectors, opt.value)
           return (
-            <div key={opt.value} style={{ position: 'relative' }}>
-              <button
-                onClick={() => toggleSector(opt.value)}
-                onMouseEnter={() => setHoveredSector(opt.value)}
-                onMouseLeave={() => setHoveredSector(null)}
-                style={{ ...chipStyle(isPrimary, isSecondary), opacity: dimmed ? 0.38 : 1, pointerEvents: dimmed ? 'none' : 'auto' }}
-              >
-                {isPrimary && <Star size={10} style={{ marginRight: 4, flexShrink: 0 }} fill="currentColor" />}
-                {opt.label}
-              </button>
-              {isSecondary && isHov && (
-                <button
-                  onClick={e => { e.stopPropagation(); makePrimarySector(opt.value) }}
-                  onMouseEnter={() => setHoveredSector(opt.value)}
-                  onMouseLeave={() => setHoveredSector(null)}
-                  title="Make primary"
-                  style={MAKE_PRIMARY_BTN}
-                >
-                  <Star size={9} fill="currentColor" />
-                </button>
-              )}
-            </div>
+            <PickerChip
+              key={opt.value}
+              label={opt.label}
+              chipState={cs}
+              dimmed={sectorMax && cs === 'unselected'}
+              onClick={() => toggleSector(opt.value)}
+              showMakePrimary={cs === 'secondary'}
+              onMakePrimary={() => makePrimarySector(opt.value)}
+            />
           )
         })}
       </div>
 
       {/* Beneficiaries */}
-      <PickerSection
-        label="Who you serve"
-        hint="Pick 1 primary + up to 3 secondary"
-        selected={beneficiaryGroups}
-        style={{ marginTop: 8 }}
-      />
-      <div style={PICKER_GRID}>
+      <div style={{ marginBottom: 10, marginTop: 8 }}>
+        <span style={{ fontSize: 13, fontWeight: 500, color: T.textPrimary, fontFamily: 'var(--font-space-grotesk)' }}>Who you serve</span>
+        <span style={{ fontSize: 13, color: T.textTertiary, marginLeft: 6, fontFamily: 'var(--font-dm-sans)' }}>· pick 1 primary + up to 3 others</span>
+        {beneficiaryMax && <span style={{ fontSize: 11, color: T.textTertiary, marginLeft: 8, fontFamily: 'var(--font-space-grotesk)' }}>Max reached</span>}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 16 }}>
         {BENEFICIARY_GROUPS.map(opt => {
-          const idx         = beneficiaryGroups.indexOf(opt.value)
-          const isPrimary   = idx === 0
-          const isSecondary = idx > 0
-          const isUnselected = idx === -1
-          const isHov       = hoveredBeneficiary === opt.value
-          const dimmed      = beneficiaryMax && isUnselected
+          const cs = chipStateFor(beneficiaryGroups, opt.value)
           return (
-            <div key={opt.value} style={{ position: 'relative' }}>
-              <button
-                onClick={() => toggleBeneficiary(opt.value)}
-                onMouseEnter={() => setHoveredBeneficiary(opt.value)}
-                onMouseLeave={() => setHoveredBeneficiary(null)}
-                style={{ ...chipStyle(isPrimary, isSecondary), opacity: dimmed ? 0.38 : 1, pointerEvents: dimmed ? 'none' : 'auto' }}
-              >
-                {isPrimary && <Star size={10} style={{ marginRight: 4, flexShrink: 0 }} fill="currentColor" />}
-                {opt.label}
-              </button>
-              {isSecondary && isHov && (
-                <button
-                  onClick={e => { e.stopPropagation(); makePrimaryBeneficiary(opt.value) }}
-                  onMouseEnter={() => setHoveredBeneficiary(opt.value)}
-                  onMouseLeave={() => setHoveredBeneficiary(null)}
-                  title="Make primary"
-                  style={MAKE_PRIMARY_BTN}
-                >
-                  <Star size={9} fill="currentColor" />
-                </button>
-              )}
-            </div>
+            <PickerChip
+              key={opt.value}
+              label={opt.label}
+              chipState={cs}
+              dimmed={beneficiaryMax && cs === 'unselected'}
+              onClick={() => toggleBeneficiary(opt.value)}
+              showMakePrimary={cs === 'secondary'}
+              onMakePrimary={() => makePrimaryBeneficiary(opt.value)}
+            />
           )
         })}
       </div>
 
-      {/* Summary */}
+      {/* Selection summary */}
       {(impactSectors.length > 0 || beneficiaryGroups.length > 0) && (
-        <div style={{ background: '#FAFAF7', padding: '10px 14px', borderRadius: 10, marginBottom: 16, fontSize: 12, color: '#5F5E5A', fontFamily: 'var(--font-dm-sans)' }}>
+        <div style={{ background: T.pageBg, padding: '12px 14px', borderRadius: 10, marginBottom: 16, fontSize: 12, color: T.textSecondary, fontFamily: 'var(--font-dm-sans)' }}>
           {impactSectors.length > 0 && (
-            <span><strong style={{ color: '#2C2C2A', fontWeight: 500 }}>Sector:</strong> {IMPACT_SECTORS.find(o => o.value === impactSectors[0])?.label}{impactSectors.length > 1 ? ` + ${impactSectors.length - 1} more` : ''}</span>
+            <span>
+              <strong style={{ color: T.textPrimary, fontWeight: 500 }}>Sector:</strong>{'  '}
+              {IMPACT_SECTORS.find(o => o.value === impactSectors[0])?.label}
+              {impactSectors.length > 1 && ` + ${impactSectors.length - 1} more`}
+            </span>
           )}
           {impactSectors.length > 0 && beneficiaryGroups.length > 0 && <span style={{ margin: '0 8px', color: '#C9C5BC' }}>·</span>}
           {beneficiaryGroups.length > 0 && (
-            <span><strong style={{ color: '#2C2C2A', fontWeight: 500 }}>For:</strong> {BENEFICIARY_GROUPS.find(o => o.value === beneficiaryGroups[0])?.label}{beneficiaryGroups.length > 1 ? ` + ${beneficiaryGroups.length - 1} more` : ''}</span>
+            <span>
+              <strong style={{ color: T.textPrimary, fontWeight: 500 }}>For:</strong>{'  '}
+              {BENEFICIARY_GROUPS.find(o => o.value === beneficiaryGroups[0])?.label}
+              {beneficiaryGroups.length > 1 && ` + ${beneficiaryGroups.length - 1} more`}
+            </span>
           )}
         </div>
       )}
 
-      <div style={ACTIONS}>
-        <BackButton onClick={onBack} inline />
-        <button
-          onClick={onContinue}
-          disabled={!canContinue}
-          style={{ ...BTN_PRIMARY, opacity: canContinue ? 1 : 0.45, cursor: canContinue ? 'pointer' : 'not-allowed' }}
-        >
+      <div style={ACTIONS_STYLE}>
+        <BackLink onClick={onBack} />
+        <Button variant="primary" onClick={onContinue} disabled={\!canContinue}>
           Continue <ArrowRight size={14} />
-        </button>
+        </Button>
       </div>
     </>
   )
 }
 
-/* ── Location step ── */
+/* ═══════════════════════════════════════════════
+   Step 4 — Location, size, funding types
+   ═══════════════════════════════════════════════ */
 
 function StepLocation({ state, update, toggleFundingType, saving, saveError, canContinue, onBack, onFinish }: {
   state: WizardState
   update: <K extends keyof WizardState>(k: K, v: WizardState[K]) => void
   toggleFundingType: (t: FundingType) => void
-  saving: boolean
-  saveError: string | null
-  canContinue: boolean
-  onBack: () => void
-  onFinish: () => void
+  saving: boolean; saveError: string | null; canContinue: boolean
+  onBack: () => void; onFinish: () => void
 }) {
   return (
     <>
-      <BackButton onClick={onBack} />
-      <h1 style={H1}>Location and funding</h1>
-      <p style={SUBTITLE}>Last stretch. These help us filter out what isn&rsquo;t relevant to where and how you work.</p>
+      <BackLink onClick={onBack} />
+      <h1 style={H1_STYLE}>Location and funding</h1>
+      <p style={SUBTITLE_STYLE}>Last stretch. These help us filter out what isn&rsquo;t relevant to where and how you work.</p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 18, marginBottom: 8 }}>
 
-        {/* Name (if not set earlier) */}
-        {!state.name.trim() && (
+        {/* Only show name/structure if not already captured */}
+        {\!state.name.trim() && (
           <Field label="Organisation name" required>
-            <input
-              type="text"
-              value={state.name}
-              onChange={e => update('name', e.target.value)}
-              placeholder="e.g. AudioActive"
-              style={INPUT_STYLE}
-            />
+            <input type="text" value={state.name} onChange={e => update('name', e.target.value)} placeholder="e.g. AudioActive" style={INPUT_STYLE} />
           </Field>
         )}
-
-        {/* Legal structure (if not set earlier) */}
-        {!state.legalStructure && (
+        {\!state.legalStructure && (
           <Field label="Legal structure" required>
-            <Select
-              value={state.legalStructure}
-              onChange={v => update('legalStructure', v as LegalStructure | '')}
-              options={LEGAL_STRUCTURE_OPTIONS}
-              placeholder="Select your structure…"
-            />
+            <SelectInput value={state.legalStructure} onChange={v => update('legalStructure', v as LegalStructure | '')} options={LEGAL_STRUCTURE_OPTIONS} placeholder="Select your structure…" />
           </Field>
         )}
 
         {/* Location row */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <Field label="Where are you based?" hint="For London orgs, include borough">
-            <input
-              type="text"
-              value={state.primaryLocation}
-              onChange={e => update('primaryLocation', e.target.value)}
-              placeholder="e.g. Brighton, Sussex"
-              style={INPUT_STYLE}
-            />
+          <Field label="Where are you based?" help='For London orgs, include borough — e.g. "Hackney, London"'>
+            <input type="text" value={state.primaryLocation} onChange={e => update('primaryLocation', e.target.value)} placeholder="e.g. Brighton, Sussex" style={INPUT_STYLE} />
           </Field>
-          <Field label="Geographic reach">
-            <Select
-              value={state.geographicReach}
-              onChange={v => update('geographicReach', v)}
-              options={GEOGRAPHIC_REACH_OPTIONS}
-              placeholder="Select reach…"
-            />
+          <Field label="Geographic reach" help="We'll score local grants highest if you're place-based.">
+            <SelectInput value={state.geographicReach} onChange={v => update('geographicReach', v)} options={GEOGRAPHIC_REACH_OPTIONS} placeholder="Select reach…" />
           </Field>
         </div>
 
-        {/* Grant size */}
-        <Field label="Grant size range" hint="Optional - leave blank to see all">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ flex: 1, position: 'relative' }}>
-              <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#8A8986', fontSize: 14 }}>£</span>
+        {/* Grant size — thousand-separator formatting on display */}
+        <Field label="Grant size range" hint="optional — leave blank to see all" help="The most important field for size matching — grants outside this range will score lower.">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div style={{ position: 'relative' }}>
+              <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: T.textTertiary, fontSize: 14, pointerEvents: 'none' }}>£</span>
               <input
-                type="text"
-                inputMode="numeric"
-                value={state.minGrantTarget ? Number(state.minGrantTarget.replace(/[^\d]/g, '') || '0').toLocaleString('en-GB') : ''}
+                type="text" inputMode="numeric"
+                value={fmtThousands(state.minGrantTarget)}
                 onChange={e => update('minGrantTarget', e.target.value.replace(/[^\d]/g, ''))}
                 placeholder="10,000"
                 style={{ ...INPUT_STYLE, paddingLeft: 24 }}
               />
             </div>
-            <span style={{ color: '#8A8986', fontSize: 13, flexShrink: 0 }}>to</span>
-            <div style={{ flex: 1, position: 'relative' }}>
-              <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#8A8986', fontSize: 14 }}>£</span>
+            <div style={{ position: 'relative' }}>
+              <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: T.textTertiary, fontSize: 14, pointerEvents: 'none' }}>£</span>
               <input
-                type="text"
-                inputMode="numeric"
-                value={state.maxGrantTarget ? Number(state.maxGrantTarget.replace(/[^\d]/g, '') || '0').toLocaleString('en-GB') : ''}
+                type="text" inputMode="numeric"
+                value={fmtThousands(state.maxGrantTarget)}
                 onChange={e => update('maxGrantTarget', e.target.value.replace(/[^\d]/g, ''))}
                 placeholder="250,000"
                 style={{ ...INPUT_STYLE, paddingLeft: 24 }}
@@ -1315,82 +1360,77 @@ function StepLocation({ state, update, toggleFundingType, saving, saveError, can
           </div>
         </Field>
 
-        {/* Funding types */}
-        <Field label="Funding types you're open to" hint="You can adjust this per-search on the Find Funding page">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 4 }}>
+        {/* Funding types — neutral picker-chips, same style as sector chips */}
+        <Field label="Funding types you're open to" help="You can adjust this per-search later on the Find Funding page.">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginTop: 4 }}>
             {FUNDING_TYPES.map(t => {
               const active = state.fundingTypes.includes(t.value)
-              return (
-                <button
-                  key={t.value}
-                  onClick={() => toggleFundingType(t.value)}
-                  style={{
-                    padding: '12px 14px',
-                    textAlign: 'left',
-                    background: active ? '#EAF3DE' : '#fff',
-                    border: `${active ? '1.5px' : '0.5px'} solid ${active ? '#8ECB3C' : 'rgba(0,0,0,0.14)'}`,
-                    borderRadius: 12,
-                    cursor: 'pointer',
-                    transition: 'all 120ms',
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-                    <div>
-                      <p style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13, fontWeight: 600, color: active ? '#3B6D11' : '#2C2C2A', margin: 0 }}>{t.label}</p>
-                      <p style={{ fontSize: 11, color: active ? '#3B6D11' : '#5F5E5A', opacity: active ? 0.85 : 1, margin: '2px 0 0', fontFamily: 'var(--font-dm-sans)' }}>{t.desc}</p>
-                    </div>
-                    {active && (
-                      <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#8ECB3C', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <Check size={10} color="#173404" strokeWidth={3} />
-                      </div>
-                    )}
-                  </div>
-                </button>
-              )
+              return <FundingTypeChip key={t.value} label={t.label} desc={t.desc} active={active} onClick={() => toggleFundingType(t.value)} />
             })}
           </div>
         </Field>
       </div>
 
       {saveError && (
-        <div style={{ background: '#FAECE7', color: '#7A2A1A', padding: '10px 14px', borderRadius: 10, fontSize: 13, marginTop: 12, marginBottom: 4 }}>
+        <div style={{ background: T.coralBg, color: T.coralText, padding: '10px 14px', borderRadius: 10, fontSize: 13, marginTop: 8, marginBottom: 4, fontFamily: 'var(--font-dm-sans)' }}>
           {saveError}
         </div>
       )}
 
-      <div style={{ ...ACTIONS, marginTop: 24 }}>
-        <BackButton onClick={onBack} inline />
-        <button
-          onClick={onFinish}
-          disabled={saving || !canContinue}
-          style={{
-            ...BTN_PRIMARY,
-            background: '#8ECB3C',
-            color: '#173404',
-            opacity: (saving || !canContinue) ? 0.5 : 1,
-            cursor: (saving || !canContinue) ? 'not-allowed' : 'pointer',
-          }}
-        >
-          {saving ? 'Saving…' : 'Show me my matches'} {!saving && <ArrowRight size={14} />}
-        </button>
+      <div style={{ ...ACTIONS_STYLE, marginTop: 24 }}>
+        <BackLink onClick={onBack} />
+        <Button variant="primary" onClick={onFinish} disabled={saving || \!canContinue}>
+          {saving ? 'Saving…' : <><span>Show me my matches</span> <ArrowRight size={14} /></>}
+        </Button>
       </div>
     </>
   )
 }
 
-/* ── Reveal step ── */
+/** Funding type chip — neutral selector, same visual logic as PickerChip secondary state */
+function FundingTypeChip({ label, desc, active, onClick }: { label: string; desc: string; active: boolean; onClick: () => void }) {
+  const [hov, setHov] = useState(false)
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        padding: '10px 12px',
+        textAlign: 'left' as const,
+        background: active || hov ? T.greenCream : '#fff',
+        border: `${active ? '1.5px' : '0.5px'} solid ${active || hov ? T.greenMid : T.borderInput}`,
+        borderRadius: 8,
+        cursor: 'pointer',
+        transition: 'all 120ms ease',
+        display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8,
+      }}
+    >
+      <div>
+        <p style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 12, fontWeight: 500, color: active ? T.greenTextDeep : T.textPrimary, margin: 0 }}>{label}</p>
+        <p style={{ fontSize: 11, color: active ? T.greenTextDeep : T.textSecondary, margin: '2px 0 0', fontFamily: 'var(--font-dm-sans)', opacity: 0.85 }}>{desc}</p>
+      </div>
+      {active && (
+        <div style={{ width: 16, height: 16, borderRadius: '50%', background: T.lime, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+          <Check size={9} color={T.greenDeep} strokeWidth={3} />
+        </div>
+      )}
+    </button>
+  )
+}
 
-function StepReveal({ matchCount, topMatches, onExplore }: {
-  matchCount: number | null
-  topMatches: RevealMatch[] | null
-  onExplore: () => void
+/* ═══════════════════════════════════════════════
+   Step 5 — The reveal
+   ═══════════════════════════════════════════════ */
+
+function StepReveal({ matchCount, topMatches, hasMission, onExplore, onAddMission }: {
+  matchCount: number | null; topMatches: RevealMatch[] | null
+  hasMission: boolean; onExplore: () => void; onAddMission: () => void
 }) {
-  const loading = matchCount === null
-
-  if (loading) {
+  if (matchCount === null) {
     return (
       <div style={{ textAlign: 'center', padding: '32px 0' }}>
-        <div style={{ fontSize: 13, color: '#5F5E5A', fontFamily: 'var(--font-dm-sans)', marginBottom: 6 }}>Finding your matches…</div>
+        <div style={{ fontSize: 13, color: T.textSecondary, fontFamily: 'var(--font-dm-sans)', marginBottom: 8 }}>Finding your matches…</div>
         <LoadingDots />
       </div>
     )
@@ -1401,313 +1441,105 @@ function StepReveal({ matchCount, topMatches, onExplore }: {
       <>
         <div style={{ textAlign: 'center', padding: '24px 0 16px' }}>
           <div style={{ fontSize: 40, marginBottom: 12 }}>🌱</div>
-          <h1 style={{ ...H1, fontSize: 22 }}>Your profile is saved</h1>
-          <p style={{ ...SUBTITLE, marginBottom: 0 }}>
-            We&rsquo;ll email you when matching grants appear. In the meantime, you can browse the full catalogue.
+          <h1 style={{ ...H1_STYLE, fontSize: 22 }}>Your profile is saved</h1>
+          <p style={{ ...SUBTITLE_STYLE, marginBottom: 0 }}>
+            We&rsquo;ll email you when matching grants appear. In the meantime, browse the full catalogue.
           </p>
         </div>
-        <div style={{ ...ACTIONS, justifyContent: 'center', marginTop: 24 }}>
-          <button onClick={onExplore} style={{ ...BTN_PRIMARY, background: '#8ECB3C', color: '#173404', padding: '14px 28px', fontSize: 15 }}>
-            Browse all grants <ArrowRight size={15} />
-          </button>
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24 }}>
+          <Button variant="primary" size="lg" onClick={onExplore}>Browse all grants <ArrowRight size={15} /></Button>
         </div>
       </>
     )
   }
 
   const isFew = matchCount <= 5
-  const countLabel = isFew ? `Your ${matchCount} best-fit matches` : `${matchCount} grants match your profile`
+  const countLabel = isFew ? `Your ${matchCount} best-fit matches` : 'grants match your profile right now'
 
   return (
     <>
       {/* Hero number */}
-      <div style={{ textAlign: 'center', padding: '8px 0 24px' }}>
-        <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 60, fontWeight: 500, color: '#3B6D11', lineHeight: 1, marginBottom: 8 }}>
-          {isFew ? matchCount : matchCount}
+      <div style={{ textAlign: 'center', padding: '16px 0 8px', marginBottom: 24 }}>
+        <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 56, fontWeight: 500, color: T.greenTextDeep, lineHeight: 1, marginBottom: 8 }}>
+          {matchCount}
         </div>
-        <div style={{ fontSize: 14, color: '#5F5E5A', fontFamily: 'var(--font-dm-sans)' }}>{countLabel}</div>
+        <div style={{ fontSize: 14, color: T.textSecondary, fontFamily: 'var(--font-dm-sans)' }}>
+          {countLabel}
+        </div>
       </div>
 
-      {/* Top 3 */}
+      {/* Top 3 matches */}
       {topMatches && topMatches.length > 0 && (
         <>
-          <p style={{ fontSize: 13, fontWeight: 500, color: '#2C2C2A', fontFamily: 'var(--font-space-grotesk)', marginBottom: 10 }}>
+          <div style={{ fontSize: 13, fontWeight: 500, color: T.textPrimary, fontFamily: 'var(--font-space-grotesk)', marginBottom: 10 }}>
             Your top {Math.min(topMatches.length, 3)} matches
-          </p>
+          </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
             {topMatches.map(m => (
               <Link
                 key={m.id}
                 href={`/dashboard/grants/${m.id}`}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 12,
-                  padding: '12px 14px',
-                  background: '#FAFAF7',
-                  border: '0.5px solid rgba(0,0,0,0.06)',
-                  borderRadius: 10,
-                  textDecoration: 'none',
-                  transition: 'background 120ms',
-                }}
-                onMouseEnter={e => (e.currentTarget.style.background = '#F5F1E8')}
-                onMouseLeave={e => (e.currentTarget.style.background = '#FAFAF7')}
+                style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: T.pageBg, border: `0.5px solid ${T.borderLight}`, borderRadius: 10, textDecoration: 'none', cursor: 'pointer', transition: 'background 120ms ease' }}
+                onMouseEnter={e => (e.currentTarget.style.background = T.cream1)}
+                onMouseLeave={e => (e.currentTarget.style.background = T.pageBg)}
               >
-                {/* Score circle */}
-                <div style={{
-                  width: 44, height: 44, borderRadius: '50%',
-                  background: '#EAF3DE',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  flexShrink: 0,
-                }}>
-                  <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 13, fontWeight: 700, color: '#3B6D11' }}>
-                    {m.score}%
-                  </span>
+                <div style={{ width: 44, height: 44, borderRadius: '50%', background: T.greenCream, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 13, fontWeight: 600, color: T.greenTextDeep }}>{m.score}%</span>
                 </div>
-                {/* Content */}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 500, color: '#2C2C2A', marginBottom: 2, fontFamily: 'var(--font-space-grotesk)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: T.textPrimary, marginBottom: 2, fontFamily: 'var(--font-space-grotesk)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {m.title}
                   </div>
-                  <div style={{ fontSize: 12, color: '#5F5E5A', fontFamily: 'var(--font-dm-sans)' }}>
-                    {m.funderName}{m.isRolling ? ' · Rolling deadline' : m.deadline ? ` · Deadline ${formatDeadline(m.deadline)}` : ''}
-                    {(m.minAmount || m.maxAmount) && ` · ${formatRange(m.minAmount, m.maxAmount)}`}
+                  <div style={{ fontSize: 12, color: T.textSecondary, fontFamily: 'var(--font-dm-sans)' }}>
+                    {m.funderName}
+                    {m.isRolling ? ' · Rolling deadline' : m.deadline ? ` · Deadline ${formatDeadline(m.deadline)}` : ''}
+                    {(m.minAmount || m.maxAmount) && ` · ${formatAmount(m.minAmount, m.maxAmount)}`}
                   </div>
                 </div>
-                <ChevronRight size={14} style={{ color: '#C9C5BC', flexShrink: 0 }} />
+                <ChevronRight size={14} style={{ color: T.textTertiary, flexShrink: 0 }} />
               </Link>
             ))}
           </div>
         </>
       )}
 
-      <div style={{ ...ACTIONS, justifyContent: 'center' }}>
-        <button
-          onClick={onExplore}
-          style={{ ...BTN_PRIMARY, background: '#8ECB3C', color: '#173404', padding: '14px 28px', fontSize: 15 }}
-        >
+      {/* Nudge card — shown when mission is not set (from HTML spec) */}
+      {\!hasMission && (
+        <NudgeCard
+          title="Add a mission statement to improve matching"
+          subtitle="Takes 2 minutes, can unlock 10–15 more precise matches"
+          onAction={onAddMission}
+          actionLabel="Add now"
+        />
+      )}
+
+      {/* CTA */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24 }}>
+        <Button variant="primary" size="lg" onClick={onExplore}>
           Explore all {matchCount} matches <ArrowRight size={15} />
-        </button>
+        </Button>
       </div>
     </>
   )
 }
 
-/* ═══════════════════════════════════════════════
-   Shared primitives
-   ═══════════════════════════════════════════════ */
-
-function BackButton({ onClick, inline }: { onClick: () => void; inline?: boolean }) {
-  if (inline) {
-    return (
-      <button onClick={onClick} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'transparent', border: 'none', cursor: 'pointer', color: '#5F5E5A', fontSize: 13, fontFamily: 'var(--font-space-grotesk)' }}>
-        <ArrowLeft size={13} /> Back
+function NudgeCard({ title, subtitle, onAction, actionLabel }: { title: string; subtitle: string; onAction: () => void; actionLabel: string }) {
+  const [hov, setHov] = useState(false)
+  return (
+    <div style={{ marginBottom: 8, padding: '16px 18px', background: T.cream1, borderRadius: 10, borderLeft: `3px solid ${T.lime}`, display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+      <div style={{ flexShrink: 0, width: 24, height: 24, background: T.greenDeep, color: T.lime, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 600 }}>+</div>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 13, fontWeight: 500, color: T.textPrimary, marginBottom: 2, fontFamily: 'var(--font-space-grotesk)' }}>{title}</div>
+        <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.4, fontFamily: 'var(--font-dm-sans)' }}>{subtitle}</div>
+      </div>
+      <button
+        onClick={onAction}
+        onMouseEnter={() => setHov(true)}
+        onMouseLeave={() => setHov(false)}
+        style={{ background: hov ? '#fff' : 'transparent', border: `0.5px solid ${T.borderInput}`, padding: '6px 12px', borderRadius: 8, fontSize: 12, fontFamily: 'var(--font-space-grotesk)', color: T.textPrimary, cursor: 'pointer', alignSelf: 'center', fontWeight: 500, whiteSpace: 'nowrap' as const, transition: 'background 120ms ease' }}
+      >
+        {actionLabel}
       </button>
-    )
-  }
-  return (
-    <button
-      onClick={onClick}
-      style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'transparent', border: 'none', cursor: 'pointer', color: '#5F5E5A', fontSize: 13, marginBottom: 20, fontFamily: 'var(--font-space-grotesk)', padding: '4px 8px 4px 0' }}
-    >
-      <ArrowLeft size={13} /> Back
-    </button>
-  )
-}
-
-function Field({ label, required, hint, children }: { label: string; required?: boolean; hint?: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#2C2C2A', marginBottom: hint ? 2 : 6, fontFamily: 'var(--font-space-grotesk)' }}>
-        {label}{required && <span style={{ color: '#D85A30', marginLeft: 2 }}>*</span>}
-      </label>
-      {hint && <p style={{ fontSize: 12, color: '#8A8986', fontFamily: 'var(--font-dm-sans)', margin: '0 0 6px', fontWeight: 400 }}>{hint}</p>}
-      {children}
     </div>
   )
-}
-
-function Select({ value, onChange, options, placeholder }: {
-  value: string
-  onChange: (v: string) => void
-  options: { value: string; label: string }[]
-  placeholder: string
-}) {
-  return (
-    <select
-      value={value}
-      onChange={e => onChange(e.target.value)}
-      style={{
-        ...INPUT_STYLE,
-        appearance: 'none',
-        backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%238A8986' stroke-width='1.5'/%3E%3C/svg%3E\")",
-        backgroundRepeat: 'no-repeat',
-        backgroundPosition: 'right 14px center',
-        paddingRight: 36,
-        color: value ? '#2C2C2A' : '#8A8986',
-      }}
-    >
-      <option value="" disabled>{placeholder}</option>
-      {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-    </select>
-  )
-}
-
-function PickerSection({ label, hint, selected, style: extraStyle }: { label: string; hint: string; selected: unknown[]; style?: React.CSSProperties }) {
-  return (
-    <div style={{ marginBottom: 10, ...extraStyle }}>
-      <span style={{ fontSize: 13, fontWeight: 500, color: '#2C2C2A', fontFamily: 'var(--font-space-grotesk)' }}>{label}</span>
-      <span style={{ fontSize: 12, color: '#8A8986', marginLeft: 6, fontFamily: 'var(--font-dm-sans)' }}>· {hint}</span>
-      {selected.length > 0 && selected.length >= 4 && (
-        <span style={{ fontSize: 11, color: '#8A8986', marginLeft: 8, fontFamily: 'var(--font-space-grotesk)' }}>Max reached</span>
-      )}
-    </div>
-  )
-}
-
-function LoadingDots() {
-  return (
-    <div style={{ display: 'flex', gap: 6, justifyContent: 'center', marginTop: 8 }}>
-      {[0,1,2].map(i => (
-        <div key={i} style={{
-          width: 7, height: 7, borderRadius: '50%', background: '#8ECB3C',
-          animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite`,
-        }} />
-      ))}
-      <style>{`@keyframes bounce { 0%,80%,100%{transform:scale(0.7);opacity:0.5} 40%{transform:scale(1.1);opacity:1} }`}</style>
-    </div>
-  )
-}
-
-function formatDeadline(dateStr: string): string {
-  try {
-    const [y, m, d] = dateStr.split('-').map(Number)
-    return new Date(y, m - 1, d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-  } catch { return dateStr }
-}
-
-function formatRange(min: number | null, max: number | null): string {
-  const fmt = (n: number) => {
-    if (n >= 1_000_000) return `£${Math.round(n / 1_000_000)}m`
-    if (n >= 1000)      return `£${Math.round(n / 1000)}k`
-    return `£${n}`
-  }
-  if (min && max) return `${fmt(min)}–${fmt(max)}`
-  if (min) return `From ${fmt(min)}`
-  if (max) return `Up to ${fmt(max)}`
-  return ''
-}
-
-function chipStyle(isPrimary: boolean, isSecondary: boolean): React.CSSProperties {
-  return {
-    width: '100%',
-    padding: '9px 11px',
-    border: isPrimary
-      ? '1.5px solid #173404'
-      : isSecondary
-        ? '1.5px solid #8ECB3C'
-        : '0.5px solid rgba(0,0,0,0.14)',
-    borderRadius: 8,
-    background: isPrimary ? '#173404' : isSecondary ? '#EAF3DE' : '#fff',
-    color: isPrimary ? '#fff' : isSecondary ? '#3B6D11' : '#2C2C2A',
-    fontSize: 12,
-    fontWeight: isPrimary || isSecondary ? 500 : 400,
-    cursor: 'pointer',
-    textAlign: 'left',
-    transition: 'all 120ms',
-    display: 'flex',
-    alignItems: 'center',
-    fontFamily: 'var(--font-dm-sans)',
-    lineHeight: 1.3,
-  }
-}
-
-/* ── Style constants ── */
-
-const H1: React.CSSProperties = {
-  fontFamily: 'var(--font-space-grotesk)',
-  fontWeight: 500,
-  fontSize: 26,
-  color: '#2C2C2A',
-  margin: '0 0 8px',
-  lineHeight: 1.2,
-  letterSpacing: '-0.01em',
-}
-
-const SUBTITLE: React.CSSProperties = {
-  fontSize: 15,
-  color: '#5F5E5A',
-  margin: '0 0 24px',
-  lineHeight: 1.5,
-  fontFamily: 'var(--font-dm-sans)',
-}
-
-const INPUT_STYLE: React.CSSProperties = {
-  width: '100%',
-  padding: '11px 14px',
-  border: '0.5px solid rgba(0,0,0,0.14)',
-  borderRadius: 10,
-  fontFamily: 'var(--font-dm-sans)',
-  fontSize: 14,
-  color: '#2C2C2A',
-  background: '#fff',
-  outline: 'none',
-  boxSizing: 'border-box',
-}
-
-const BTN_PRIMARY: React.CSSProperties = {
-  fontFamily: 'var(--font-space-grotesk)',
-  fontSize: 14,
-  fontWeight: 500,
-  padding: '11px 20px',
-  borderRadius: 10,
-  cursor: 'pointer',
-  border: 'none',
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: 8,
-  background: '#8ECB3C',
-  color: '#173404',
-  transition: 'opacity 120ms',
-}
-
-const ACTIONS: React.CSSProperties = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  marginTop: 28,
-  paddingTop: 20,
-  borderTop: '0.5px solid rgba(0,0,0,0.06)',
-}
-
-const SKIP_BTN: React.CSSProperties = {
-  fontSize: 13,
-  color: '#5F5E5A',
-  background: 'transparent',
-  border: 'none',
-  cursor: 'pointer',
-  fontFamily: 'var(--font-space-grotesk)',
-  padding: '8px 0',
-}
-
-const PICKER_GRID: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(3, 1fr)',
-  gap: 6,
-  marginBottom: 16,
-}
-
-const MAKE_PRIMARY_BTN: React.CSSProperties = {
-  position: 'absolute',
-  top: -7,
-  right: -7,
-  width: 18,
-  height: 18,
-  borderRadius: '50%',
-  background: '#173404',
-  color: '#8ECB3C',
-  border: 'none',
-  cursor: 'pointer',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  zIndex: 1,
 }
