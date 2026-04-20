@@ -1,8 +1,8 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { getOrganisationByOwner } from '@/lib/organisations'
+import { isOnboardingComplete } from '@/lib/onboarding'
 import Sidebar from '@/components/layout/Sidebar'
-import TopBar from '@/components/layout/TopBar'
+import type { Organisation } from '@/types'
 
 export default async function AppLayout({
   children,
@@ -14,16 +14,24 @@ export default async function AppLayout({
 
   if (!user) redirect('/auth/login')
 
-  const org = await getOrganisationByOwner(user.id)
+  const { data: org } = await supabase
+    .from('organisations')
+    .select('*')
+    .eq('owner_id', user.id)
+    .maybeSingle<Organisation>()
+
+  if (!isOnboardingComplete(org)) redirect('/onboarding/welcome')
 
   return (
     <div className="flex min-h-screen">
       <Sidebar org={org} userEmail={user.email ?? ''} />
-      <main className="md:ml-60 flex-1 min-h-screen overflow-x-hidden flex flex-col" style={{ background: "#FAFAF7" }}>
-        <div className="flex justify-end items-center gap-3 px-4 py-4 pt-16 md:pt-4 md:px-16 flex-shrink-0">
-          <TopBar userEmail={user.email ?? ''} orgName={org?.name} />
+      <main
+        className="md:ml-60 flex-1 min-h-screen overflow-x-hidden flex flex-col"
+        style={{ background: '#FAFAF7' }}
+      >
+        <div className="flex-1 px-4 pt-16 pb-8 md:pt-8 md:px-16">
+          {children}
         </div>
-        <div className="flex-1 px-4 pb-8 md:px-16">{children}</div>
       </main>
     </div>
   )

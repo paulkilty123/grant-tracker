@@ -77,7 +77,7 @@ export default function OnboardingWelcomePage() {
 
         <div className="mt-10">
           <Link
-            href="/onboarding/start"
+            href="/onboarding/wizard"
             className="inline-flex items-center gap-2 px-6 py-3.5 text-sm font-bold transition-opacity hover:opacity-80"
             style={{
               fontFamily: 'var(--font-space-grotesk)',

@@ -19,7 +19,7 @@ export default async function OnboardingLayout({
             className="font-bold text-lg"
             style={{ fontFamily: 'var(--font-space-grotesk)', color: '#2C2C2A', letterSpacing: '-0.02em' }}
           >
-            Grant<span style={{ color: '#8ECB3C' }}>Tracker</span>
+            GrantTracker
           </span>
         </Link>
       </header>

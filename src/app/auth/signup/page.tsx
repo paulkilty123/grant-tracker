@@ -29,14 +29,14 @@ export default function SignupPage() {
       password,
       options: {
         data: { full_name: fullName },
-        emailRedirectTo: `${location.origin}/auth/callback?next=/dashboard/profile`,
+        emailRedirectTo: `${location.origin}/auth/callback?next=/onboarding/welcome`,
       },
     })
     if (error) {
       setError(error.message)
       setLoading(false)
     } else if (data.session) {
-      router.push('/dashboard/profile')
+      router.push('/onboarding/welcome')
     } else {
       setDone(true)
     }
@@ -49,7 +49,7 @@ export default function SignupPage() {
     await supabase.auth.resend({
       type: 'signup',
       email,
-      options: { emailRedirectTo: `${location.origin}/auth/callback?next=/dashboard/profile` },
+      options: { emailRedirectTo: `${location.origin}/auth/callback?next=/onboarding/welcome` },
     })
     setResending(false)
     setResent(true)

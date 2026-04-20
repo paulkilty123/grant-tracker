@@ -2,11 +2,11 @@ import type { Organisation } from '@/types'
 
 /**
  * An organisation has completed the minimum onboarding bar if:
- * - name, legal structure, primary location are present (step 1)
- * - mission, ≥1 impact sector, ≥1 beneficiary group are present (step 2)
+ * - name, legal structure, and primary location are present
+ * - ≥1 impact sector and ≥1 beneficiary group are present
  *
- * Step 3 fields (grant size, funding types, alerts) are not required to
- * pass the gate — funding types default to all 4, grant size is optional.
+ * Mission is no longer required -- it's captured from auto-fill where available
+ * and can be added later from the profile page.
  */
 export function isOnboardingComplete(org: Organisation | null): boolean {
   if (!org) return false
@@ -14,7 +14,6 @@ export function isOnboardingComplete(org: Organisation | null): boolean {
     org.name?.trim() &&
     org.legal_structure &&
     org.primary_location?.trim() &&
-    org.mission?.trim() &&
     (org.impact_sectors?.length ?? 0) > 0 &&
     (org.beneficiary_groups?.length ?? 0) > 0
   )
@@ -29,8 +28,19 @@ export function computePostLoginPath(opts: {
   return '/dashboard/search'
 }
 
-/** sessionStorage key for pre-fill data handed off from /onboarding/start to /onboarding/wizard */
-export const ONBOARDING_PREFILL_KEY = 'gt:onboarding:prefill:v1'
+/** sessionStorage key for pre-fill data handed off between onboarding steps */
+export const ONBOARDING_PREFILL_KEY = 'gt:onboarding:prefill:v2'
+
+/** Per-field confidence score from the auto-fill extraction (0.0-1.0) */
+export interface FieldConfidence {
+  name?: number
+  legalStructure?: number
+  primaryLocation?: number
+  annualIncomeBand?: number
+  mission?: number
+  impactSectors?: number
+  beneficiaryGroups?: number
+}
 
 export interface OnboardingPrefill {
   name?: string
@@ -38,12 +48,13 @@ export interface OnboardingPrefill {
   orgType?: string
   legalStructure?: string
   primaryLocation?: string
+  annualIncomeBand?: string
   mission?: string
   themes?: string[]
   areasOfWork?: string[]
   beneficiaries?: string[]
   impactSectors?: string[]
   beneficiaryGroups?: string[]
-  /** Which fields came from auto-fill — used to render the "Pre-filled" badge */
-  prefilledFields?: string[]
+  /** Confidence scores per extracted field -- drives visual states in review step */
+  confidence?: FieldConfidence
 }

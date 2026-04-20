@@ -85,24 +85,33 @@ const STRUCTURE_LABELS: Record<string, string> = {
   individual:                     'Individual',
 }
 
-// 12-sector taxonomy — aligned with Profile's Impact Sectors (single source of truth)
+// 12-sector taxonomy — used for the filter panel and matching
 const IMPACT_SECTOR_FILTERS: { id: ImpactSector; label: string }[] = [
-  { id: 'young_people',  label: 'Young People & Youth' },
-  { id: 'creative',      label: 'Arts & Creative Industries' },
-  { id: 'community',     label: 'Community Development' },
-  { id: 'education',     label: 'Education & Skills' },
-  { id: 'employment',    label: 'Employment & Livelihoods' },
-  { id: 'health',        label: 'Health & Wellbeing' },
-  { id: 'mental_health', label: 'Mental Health' },
-  { id: 'housing',       label: 'Housing & Homelessness' },
-  { id: 'environment',   label: 'Environment & Climate' },
-  { id: 'food',          label: 'Food & Agriculture' },
-  { id: 'tech',          label: 'Tech for Good' },
-  { id: 'justice',       label: 'Justice & Rights' },
+  { id: 'community',         label: 'Community' },
+  { id: 'young_people',      label: 'Young People' },
+  { id: 'health',            label: 'Health' },
+  { id: 'mental_health',     label: 'Mental Health' },
+  { id: 'education',         label: 'Education' },
+  { id: 'employment',        label: 'Employment' },
+  { id: 'creative',          label: 'Arts & Culture' },
+  { id: 'environment',       label: 'Environment' },
+  { id: 'housing',           label: 'Housing' },
+  { id: 'food',              label: 'Food' },
+  { id: 'sport',             label: 'Sport' },
+  { id: 'heritage',          label: 'Heritage' },
+  { id: 'disability',        label: 'Disability' },
+  { id: 'older_people',      label: 'Older People' },
+  { id: 'women',             label: 'Women & Gender' },
+  { id: 'justice',           label: 'Justice & Rights' },
+  { id: 'tech',              label: 'Technology' },
+  { id: 'financial',         label: 'Financial Inclusion' },
+  { id: 'international',     label: 'International' },
+  { id: 'social_economy',    label: 'Social Economy' },
+  { id: 'social_innovation', label: 'Social Innovation' },
 ]
 
 const FUNDER_TYPES = [
-  { id: 'all',               label: 'All' },
+  { id: 'all',               label: 'All sources' },
   { id: 'local',             label: 'Local' },
   { id: 'lottery',           label: 'Lottery' },
   { id: 'trust_foundation',  label: 'Trust & Foundation' },
@@ -356,7 +365,7 @@ function StalenessBadge({ lastVerifiedAt }: { lastVerifiedAt?: string }) {
 }
 
 // ── Grant Card ───────────────────────────────────────────────────────────────
-function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline, onRemoveFromPipeline, onDismiss, onUndismiss, onLike, onDislike, onSave, onUnsave, showIfDismissed, isInPipeline, pipelineStage }: {
+function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline, onRemoveFromPipeline, onDismiss, onUndismiss, onLike, onDislike, onSave, onUnsave, showIfDismissed, isInPipeline }: {
   item: DisplayGrant
   hasOrg: boolean
   hasSearch: boolean
@@ -372,13 +381,10 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
   onUnsave?: (grantId: string) => void
   showIfDismissed?: boolean
   isInPipeline?: boolean
-  pipelineStage?: string
 }) {
   const { grant, score, reason, isAiScore, breakdown, eligibilityStatus, eligibilityReason, positiveReasons, warnReasons } = item
   const [descExpanded, setDescExpanded] = useState(false)
   const [insightsExpanded, setInsightsExpanded] = useState(false)
-  const [whyExpanded, setWhyExpanded] = useState(false)
-  const [insightsHover, setInsightsHover] = useState(false)
   const isDismissed  = interactions.has('dismissed')
   const isLiked      = interactions.has('liked')
   const isDisliked   = interactions.has('disliked')
@@ -427,563 +433,490 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
   const structureLabels = ((grant as EnrichedGrant).eligibleStructures ?? [])
     .slice(0, 3).map(s => STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()))
 
-  // ── Sector pill colours ──
-  const SECTOR_PILL: Record<string, { bg: string; color: string }> = {
-    // keys match the 12-sector ImpactSector taxonomy IDs
-    environment:   { bg: '#EAF3DE', color: '#27500A' },  // pale green deep
-    community:     { bg: '#F1F7E4', color: '#3B6D11' },  // pale green lighter
-    young_people:  { bg: '#FAECE7', color: '#993C1D' },  // coral
-    justice:       { bg: '#FAECE7', color: '#993C1D' },  // coral
-    mental_health: { bg: '#E6F1FB', color: '#0C447C' },  // blue
-    health:        { bg: '#D3E8F7', color: '#093F72' },  // blue deep
-    tech:          { bg: '#E6F1FB', color: '#0C447C' },  // blue
-    creative:      { bg: '#FAEEDA', color: '#854F0B' },  // amber deep
-    food:          { bg: '#EAF3DE', color: '#27500A' },  // green (same as env)
-    education:     { bg: '#EEEDFE', color: '#3C3489' },  // purple
-    housing:       { bg: '#EEEDFE', color: '#3C3489' },  // purple
-    employment:    { bg: '#EEEDFE', color: '#3C3489' },  // purple
-  }
-
-  // ── Reason strings ──
-  const cleanReason = (s: string) => s.replace(/\b([a-z][a-z]*_[a-z][a-z_]*)\b/g,
-    w => w.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()))
-  const WARN_RE2 = /check|may |likely|not match|exceed|borough|restricted/i
-  const rawPos = (positiveReasons && positiveReasons.length > 0)
-    ? positiveReasons.map(cleanReason)
-    : reason ? reason.split(/[.,](?=\s[A-Z])|\. /).map(s => cleanReason(s.trim())).filter(s => s && !WARN_RE2.test(s)) : []
-  const rawWarns = (warnReasons && warnReasons.length > 0)
-    ? warnReasons.map(cleanReason)
-    : reason ? reason.split(/[.,](?=\s[A-Z])|\. /).map(s => cleanReason(s.trim())).filter(s => s && WARN_RE2.test(s)) : []
-
-  // Synthesise caveats from breakdown when none come from the matching engine
-  const allWarns = (() => {
-    if (rawWarns.length > 0 || score >= 80 || !breakdown) return rawWarns
-    const brief = (grant as EnrichedGrant).funderBrief
-    // Extract first usable sentence from a funder_brief field
-    const firstSentence = (text: string | null | undefined): string | null => {
-      if (!text) return null
-      const s = text.replace(/\s+/g, ' ').trim()
-      // Split on sentence boundary
-      const match = s.match(/^[^.!?]+[.!?]/)
-      const sentence = match ? match[0].trim() : s
-      // Reject if too long or starts awkwardly (year, "In 2025", "As of", etc.)
-      if (sentence.length > 140) return null
-      if (/^(In \d{4}|As of|From \d{4}|Since \d{4}|The \w+ was|We |Our )/i.test(sentence)) return null
-      return sentence
-    }
-    // Use optional chaining on every field — guards against stale localStorage shapes
-    const gaps: Array<{ gap: number; msg: string }> = [
-      { gap: (breakdown.themes?.max ?? 35)        - (breakdown.themes?.score ?? 0),
-        msg: (() => { const s = firstSentence(brief?.what_they_fund); return s ? 'Sector focus: ' + s : 'Sector alignment: thematic overlap with this funder priority areas is limited' })() },
-      { gap: (breakdown.beneficiaries?.max ?? 20) - (breakdown.beneficiaries?.score ?? 0),
-        msg: (() => { const s = firstSentence(brief?.current_priorities); return s ? 'Beneficiary focus: ' + s : 'Beneficiary group: target beneficiaries may not fully match yours' })() },
-      { gap: (breakdown.location?.max ?? 15)      - (breakdown.location?.score ?? 0),
-        msg: (() => { const s = firstSentence(brief?.geographic_focus); return s ? 'Geographic focus: ' + s : 'Geographic focus: limited overlap - check whether this funder covers your area' })() },
-      { gap: (breakdown.eligibility?.max ?? 12)   - (breakdown.eligibility?.score ?? 0),
-        msg: (() => { const s = firstSentence(brief?.who_can_apply); return s ? 'Eligibility: ' + s : 'Eligibility: some requirements may be unclear - review before applying' })() },
-    ].filter(d => d.gap > 0).sort((a, b) => b.gap - a.gap)
-    const limit = score < 60 ? 2 : 1
-    return gaps.slice(0, limit).map(d => d.msg)
-  })()
-
-  // ── Match tier ──
-  const tier       = score >= 80 ? 'Strong match' : score >= 60 ? 'Partial match' : 'Weak match'
-  const tierHue    = score >= 80 ? { ring: '#639922', title: '#3B6D11', panelBg: '#F4F9ED', border: '#639922', barBg: 'rgba(99,153,34,0.15)',    positive: '#639922', caveat: '#5A9080', caveatText: '#3E6357' }
-                   : score >= 60 ? { ring: '#5A9080', title: '#3E6357', panelBg: '#F0F5F3', border: '#5A9080', barBg: 'rgba(90,144,128,0.18)',    positive: '#639922', caveat: '#5A9080', caveatText: '#3E6357' }
-                   :               { ring: '#808580', title: '#5B605B', panelBg: '#F4F6F4', border: '#808580', barBg: 'rgba(128,133,128,0.2)',    positive: '#639922', caveat: '#808580', caveatText: '#5B605B' }
-  const moduleTitle = score >= 80 ? 'Why this strongly matches' : score >= 60 ? 'Why this partially matches' : 'Why this weakly matches'
-
-  // ── Funder type label ──
-  const FUNDER_TYPE_LBLS: Record<string, string> = {
-    trust_foundation:     'Trust / Foundation',
-    community_foundation: 'Community Foundation',
-    corporate_foundation: 'Corporate Foundation',
-    capacity_builder:     'Capacity Builder',
-    local_authority:      'Local Authority',
-    housing_association:  'Housing Assoc.',
-    corporate:            'Corporate',
-    lottery:              'Lottery',
-    government:           'Government',
-    competition:          'Competition',
-    loan:                 'Loan',
-    crowdfund_match:      'Crowd Match',
-  }
-  const funderTypeLbl = grant.funderType && grant.funderType != 'other'
-    ? (FUNDER_TYPE_LBLS[grant.funderType] ?? grant.funderType.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()))
-    : null
-
-  // ── Funding type pill ──
-  const FUNDING_TYPE_PILL: Record<string, { label: string; bg: string; color: string }> = {
-    grant:      { label: 'Grant',      bg: '#F1F7E4', color: '#3B6D11' },
-    programme:  { label: 'Programme',  bg: '#FAECE7', color: '#993C1D' },
-    investment: { label: 'Investment', bg: '#E6F1FB', color: '#0C447C' },
-    in_kind:    { label: 'In-Kind',    bg: '#FAEEDA', color: '#854F0B' },
-  }
-  const ftPill = grant.fundingType ? FUNDING_TYPE_PILL[grant.fundingType] ?? null : null
-
-  // ── Deadline display ──
-  const deadlineDisplay = grant.isRolling || !grant.deadline
-    ? 'Rolling'
-    : (() => {
-        const parts = grant.deadline!.split('-').map(Number)
-        if (parts.length != 3 || parts.some(isNaN)) return 'Rolling'
-        return new Date(parts[0], parts[1] - 1, parts[2])
-          .toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-      })()
-
-  // ── Qualify check ──
-  const qualifies = hasOrg && !!org?.legal_structure && (() => {
-    const eligible = grant.eligibleStructures as LegalStructure[] | undefined
-    if (!eligible || eligible.length === 0) return true // no restriction = all qualify
-    return eligible.includes(org!.legal_structure as LegalStructure)
-  })()
-
-  // ── Subtype label for meta Type cell ──
-  const subtypeLbl = grant.fundingSubtype && SUBTYPE_LABELS[grant.fundingSubtype]
-    ? SUBTYPE_LABELS[grant.fundingSubtype]
-    : ftPill?.label ?? null
-
-  // ── Insights strip aria-label ──
-  const stripAriaLabel = grant.fundingType === 'investment' ? 'About this impact investor'
-    : grant.fundingType === 'programme' ? 'About this programme provider'
-    : grant.fundingType === 'in_kind'   ? 'About this in-kind partner'
-    : 'About this funder'
-
-  const stripTitle = grant.fundingType === 'investment' ? 'About this impact investor'
-    : grant.fundingType === 'programme' ? 'About this programme provider'
-    : grant.fundingType === 'in_kind'   ? 'About this in-kind partner'
-    : 'About this funder'
-
-  // ── Sector pills (up to 3 + overflow) ──
-  const allSectors: string[] = (grant as EnrichedGrant).impactSectors?.length
-    ? (grant as EnrichedGrant).impactSectors!.map(s => s.toLowerCase())
-    : grant.sectors.map(s => s.toLowerCase())
-  const visibleSectors = allSectors.slice(0, 3)
-  const overflowCount  = allSectors.length - visibleSectors.length
-
   return (
-    <div className="bg-white mb-3 overflow-hidden" style={{ borderRadius: 14, border: '0.5px solid rgba(0,0,0,0.1)', boxShadow: '0 1px 3px rgba(23,52,4,0.04), 0 4px 12px rgba(23,52,4,0.04)', transition: 'box-shadow 0.15s ease, transform 0.15s ease' }} onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 2px 5px rgba(23,52,4,0.05), 0 8px 20px rgba(23,52,4,0.06)'; e.currentTarget.style.transform = 'translateY(-1px)' }} onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 1px 3px rgba(23,52,4,0.04), 0 4px 12px rgba(23,52,4,0.04)'; e.currentTarget.style.transform = 'translateY(0)' }}>
+    <div className="bg-white mb-3 border border-[#E8E0D1] hover:shadow-md transition-shadow rounded-xl overflow-hidden">
 
-      {/* ── Card body ── */}
-      <div style={{ padding: '18px 22px' }}>
+      {/* ── Top two-column section ── */}
+      <div className="flex">
 
-        {/* ── Upper: content-col + actions-col ── */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
+        {/* ── Content ── */}
+        <div className="flex-1 min-w-0 p-6">
 
-          {/* ── Content column ── */}
-          <div style={{ flex: 1, minWidth: 0 }}>
-
-            {/* Pill row: sectors + funder-type + location */}
-            <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-              {visibleSectors.map(s => {
-                const raw = IMPACT_SECTOR_FILTERS.find(f => f.id === s)?.label
-                  ?? s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
-                const lbl = raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase()
-                const ps = SECTOR_PILL[s] ?? { bg: '#F5F1E8', color: '#5F5E5A' }
-                return (
-                  <span key={s} style={{ fontSize: 10, padding: '3px 9px', borderRadius: 9999, fontWeight: 500, whiteSpace: 'nowrap', background: ps.bg, color: ps.color, fontFamily: 'var(--font-dm-sans)' }}>
-                    {lbl}
-                  </span>
-                )
-              })}
-              {overflowCount > 0 && (
-                <span style={{ fontSize: 10, padding: '3px 6px', borderRadius: 9999, fontWeight: 400, color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>+{overflowCount} more</span>
-              )}
-              {funderTypeLbl && (
-                <span style={{ fontSize: 10, padding: '3px 9px', borderRadius: 9999, fontWeight: 500, whiteSpace: 'nowrap', background: '#F5F1E8', color: '#5F5E5A', fontFamily: 'var(--font-dm-sans)' }}>
-                  {funderTypeLbl}
-                </span>
-              )}
-              {(() => {
-                const loc = grant.locationTag
-                const label = !loc || loc.toLowerCase() === 'uk' || loc.toLowerCase() === 'uk-wide' ? 'UK-wide' : loc
-                return (
-                  <span style={{ fontSize: 10, padding: '3px 9px 3px 7px', borderRadius: 9999, fontWeight: 500, whiteSpace: 'nowrap', background: '#F1F0EA', color: '#5F5E5A', fontFamily: 'var(--font-dm-sans)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                    {label}
-                  </span>
-                )
-              })()}
-            </div>
-
-            {/* Title + funder name (suppress funder when it duplicates the title) */}
-            {(() => {
-              const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '')
-              const tn = norm(grant.title)
-              const fn = norm(grant.funder)
-              const showFunder = fn.length > 0 && tn.indexOf(fn) === -1 && fn.indexOf(tn) === -1
+          {/* Badges row */}
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            {/* Up to 3 sector pills */}
+            {sectorLabels.slice(0, 3).map(label => (
+              <span key={label} className="text-[10px] font-bold uppercase tracking-wider px-3 py-1"
+                style={{ borderRadius: 9999, backgroundColor: 'rgba(250,199,117,0.20)', color: '#854F0B' }}>
+                {label}
+              </span>
+            ))}
+            {/* Funder type pill */}
+            {grant.funderType && grant.funderType !== 'other' && (() => {
+              const FUNDER_PILL_LABELS: Record<string, string> = {
+                trust_foundation:  'Trust / Foundation',
+                community_foundation: 'Community Foundation',
+                corporate_foundation: 'Corporate Foundation',
+                capacity_builder:  'Capacity Builder',
+                local_authority:   'Local Authority',
+                housing_association: 'Housing Assoc.',
+                corporate:         'Corporate',
+                lottery:           'Lottery',
+                government:        'Government',
+                competition:       'Competition',
+                loan:              'Loan',
+                crowdfund_match:   'Crowd Match',
+              }
+              const label = FUNDER_PILL_LABELS[grant.funderType] ?? grant.funderType
               return (
-                <>
-                  <h3 style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 17, fontWeight: 500, color: '#2C2C2A', margin: showFunder ? '0 0 2px' : '0 0 10px', lineHeight: 1.3 }}>{grant.title}</h3>
-                  {showFunder && <div style={{ fontSize: 12, color: '#5F5E5A', fontFamily: 'var(--font-dm-sans)', marginBottom: 10 }}>{grant.funder}</div>}
-                </>
+                <span className="text-[10px] font-bold uppercase tracking-wider px-3 py-1"
+                  style={{ borderRadius: 9999, backgroundColor: 'rgba(110,110,128,0.10)', color: '#5F5E5A' }}>
+                  {label}
+                </span>
               )
             })()}
+            {/* Status badges */}
+            {entryType === 'live' && daysLeft !== null && daysLeft >= 0 && (
+              <span className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1 ${
+                daysLeft <= 7 ? 'bg-coral-pale text-coral-saturated' : 'bg-gray-100 text-gray-500'
+              }`} style={{ borderRadius: 9999 }}>
+                {daysLeft === 0 ? 'Closes today' : `${daysLeft} days left`}
+              </span>
+            )}
+            {isNewThisWeek && (
+              <span className="text-[10px] font-bold uppercase tracking-wider px-3 py-1 bg-emerald-50 text-emerald-700" style={{ borderRadius: 9999 }}>New</span>
+            )}
+            {grant.isInviteOnly && (
+              <span className="text-[10px] font-bold uppercase tracking-wider px-3 py-1 bg-amber-pale text-amber-deep" style={{ borderRadius: 9999 }}>Invite Only</span>
+            )}
+            {/* Location badge */}
+            {(() => {
+              const loc = grant.locationTag
+              const isUKWide = !loc || loc.toLowerCase() === 'uk' || loc.toLowerCase() === 'uk-wide'
+              const label = isUKWide ? 'UK-wide' : loc!
+              const bg   = isUKWide ? 'rgba(230,241,251,0.55)' : 'rgba(181,212,244,0.45)'
+              const color = isUKWide ? '#0C447C'               : '#0C447C'
+              return (
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-3 py-1"
+                  style={{ borderRadius: 9999, backgroundColor: bg, color }}>
+                  <svg width="9" height="11" viewBox="0 0 9 11" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4.5 0C2.015 0 0 2.015 0 4.5c0 3.375 4.5 6.5 4.5 6.5S9 7.875 9 4.5C9 2.015 6.985 0 4.5 0zm0 6.125A1.625 1.625 0 1 1 4.5 2.875a1.625 1.625 0 0 1 0 3.25z"/>
+                  </svg>
+                  {label}
+                </span>
+              )
+            })()}
+          </div>
 
-            {/* Description */}
-            <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 12, color: grant.description ? '#5F5E5A' : '#8A8986', lineHeight: 1.5, margin: '0 0 14px', fontStyle: grant.description ? 'normal' : 'italic' }}>
-              {grant.description
-                ? (grant.description.length > 160 && !descExpanded
-                    ? <>
-                        {grant.description.slice(0, 160).trimEnd()}…{''}
-                        <button onClick={e => { e.stopPropagation(); setDescExpanded(true) }} style={{ background: 'none', border: 'none', padding: 0, fontSize: 12, color: '#3B6D11', fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Show more</button>
-                      </>
-                    : grant.description)
-                : <>Full details on the funder&apos;s website.{''}{grant.applyUrl && <a href={grant.applyUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#3B6D11', fontWeight: 500, textDecoration: 'none' }}>Visit site ↗</a>}</>
-              }
-            </p>
+          {/* Title */}
+          <h3 className="text-xl font-bold text-charcoal leading-snug mb-1" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.01em' }}>{grant.title}</h3>
 
-            {/* Meta grid: Amount / Deadline / Eligible / Type */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, paddingTop: 12, borderTop: '0.5px solid rgba(0,0,0,0.06)' }}>
-              <div>
-                <div style={{ fontSize: 10, color: '#8A8986', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3, fontFamily: 'var(--font-dm-sans)' }}>Amount</div>
-                <div style={{ fontSize: 13, color: '#3B6D11', fontWeight: 500, fontFamily: 'var(--font-dm-sans)' }}>{formatRange(grant.amountMin, grant.amountMax) || '—'}</div>
-              </div>
-              <div>
-                <div style={{ fontSize: 10, color: '#8A8986', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3, fontFamily: 'var(--font-dm-sans)' }}>Deadline</div>
-                <div style={{ fontSize: 13, color: '#2C2C2A', fontFamily: 'var(--font-dm-sans)' }}>{deadlineDisplay}</div>
-              </div>
-              <div>
-                <div style={{ fontSize: 10, color: '#8A8986', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3, fontFamily: 'var(--font-dm-sans)' }}>Eligible</div>
-                <div style={{ fontSize: 13, color: '#2C2C2A', fontFamily: 'var(--font-dm-sans)', display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
-                  <span>{structureLabels.length > 0 ? structureLabels.slice(0, 2).join(', ') : '—'}</span>
-                  {qualifies && <span style={{ color: '#639922', fontSize: 11 }}>✓</span>}
-                </div>
-              </div>
-              <div>
-                <div style={{ fontSize: 10, color: '#8A8986', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3, fontFamily: 'var(--font-dm-sans)' }}>Type</div>
-                {subtypeLbl ? (
-                  <span style={{ fontSize: 11, background: '#F1F7E4', color: '#3B6D11', padding: '2px 8px', borderRadius: 9999, fontWeight: 500, fontFamily: 'var(--font-dm-sans)', display: 'inline-block' }}>{subtypeLbl}</span>
-                ) : (
-                  <div style={{ fontSize: 13, color: '#2C2C2A', fontFamily: 'var(--font-dm-sans)' }}>—</div>
-                )}
-              </div>
-            </div>
+          {/* Funder */}
+          <p className="text-sm font-semibold mb-4" style={{ color: '#5F5E5A' }}>{grant.funder}</p>
 
-          </div>{/* end content-col */}
+          {/* Description */}
+          <p className="text-sm leading-relaxed mb-6" style={{ color: '#777' }}>
+            {grant.description.length > 180 && !descExpanded
+              ? <>
+                  {grant.description.slice(0, 180).trimEnd()}…{' '}
+                  <button
+                    onClick={e => { e.stopPropagation(); setDescExpanded(true) }}
+                    className="font-medium hover:underline whitespace-nowrap" style={{ color: '#8ECB3C' }}
+                  >
+                    Show more
+                  </button>
+                </>
+              : grant.description}
+          </p>
 
-          {/* ── Actions column (170px) ── */}
+          {/* Metadata */}
           {(() => {
-            const state: 'pipeline' | 'saved' | 'neutral' =
-              isInPipeline ? 'pipeline' : isSaved ? 'saved' : 'neutral'
-            const stageLabel = pipelineStage
-              ? pipelineStage.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())
-              : 'Identified'
+            const FUNDING_TYPE_STYLE: Record<string, { label: string; bg: string; color: string }> = {
+              grant:      { label: 'Grant',      bg: 'rgba(142,203,60,0.12)',  color: '#639922' },
+              programme:  { label: 'Programme',  bg: 'rgba(99,153,34,0.13)',  color: '#173404' },
+              investment: { label: 'Investment', bg: 'rgba(216,90,48,0.12)',  color: '#993C1D' },
+              in_kind:    { label: 'In-Kind',    bg: 'rgba(55,138,221,0.12)', color: '#378ADD' },
+            }
+            const ftStyle = grant.fundingType ? FUNDING_TYPE_STYLE[grant.fundingType] : null
             return (
-              <div style={{ width: 170, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 7 }}>
-
-                {/* In pipeline status pill */}
-                {state === 'pipeline' && (
-                  <div style={{ fontSize: 11, background: '#F1F7E4', color: '#3B6D11', padding: '5px 10px', borderRadius: 9999, fontWeight: 500, textAlign: 'center', fontFamily: 'var(--font-dm-sans)' }}>
-                    ✓ In pipeline · {stageLabel}
-                  </div>
-                )}
-
-                {/* Saved status pill */}
-                {state === 'saved' && (
-                  <div style={{ fontSize: 11, background: '#F5F1E8', color: '#5F5E5A', padding: '5px 10px', borderRadius: 9999, fontWeight: 500, textAlign: 'center', fontFamily: 'var(--font-dm-sans)' }}>
-                    Saved
-                  </div>
-                )}
-
-                {/* Add to pipeline (neutral + saved) */}
-                {state != 'pipeline' && (
-                  <button
-                    onClick={() => onAddToPipeline(grant)}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, borderRadius: 10, background: '#8ECB3C', color: '#173404', border: 'none', padding: '7px 14px', fontSize: 11, fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-dm-sans)', whiteSpace: 'nowrap' }}
-                  >
-                    + Add to pipeline
-                  </button>
-                )}
-
-                {/* Save (neutral only) */}
-                {state === 'neutral' && (
-                  <button
-                    onClick={() => onSave?.(grant.id)}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, borderRadius: 10, background: '#fff', color: '#2C2C2A', border: '0.5px solid rgba(0,0,0,0.14)', padding: '7px 14px', fontSize: 11, fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
-                  >
-                    Save
-                  </button>
-                )}
-
-                {/* Visit site */}
-                {grant.applyUrl && (
-                  <a href={grant.applyUrl} target="_blank" rel="noopener noreferrer"
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, borderRadius: 10, background: '#fff', color: '#2C2C2A', border: '0.5px solid rgba(0,0,0,0.14)', padding: '7px 14px', fontSize: 11, fontWeight: 500, fontFamily: 'var(--font-dm-sans)', textDecoration: 'none' }}
-                  >
-                    Visit site ↗
-                  </a>
-                )}
-
-                {/* Unsave */}
-                {state === 'saved' && (
-                  <button
-                    onClick={() => onUnsave?.(grant.id)}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 10, background: 'transparent', border: 'none', color: '#5F5E5A', padding: '7px 14px', fontSize: 11, fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
-                  >
-                    Unsave
-                  </button>
-                )}
-
-                {/* Remove from pipeline */}
-                {state === 'pipeline' && (
-                  <button
-                    onClick={() => onRemoveFromPipeline?.(grant)}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 10, background: '#fff', color: '#993C1D', border: '0.5px solid rgba(0,0,0,0.14)', padding: '7px 14px', fontSize: 11, fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
-                    onMouseEnter={e => { e.currentTarget.style.background = '#FAECE7' }}
-                    onMouseLeave={e => { e.currentTarget.style.background = '#fff' }}
-                  >
-                    Remove from pipeline
-                  </button>
-                )}
-
-              </div>
-            )
-          })()}
-
-        </div>{/* end card-upper */}
-
-        {/* ── Match module (always visible when match data exists) ── */}
-        {hasOrg && hasSearch && reason && (rawPos.length > 0 || allWarns.length > 0) && (
-          <div style={{ display: 'flex', gap: 14, marginTop: 14, padding: '12px 14px', background: tierHue.panelBg, borderRadius: 10, borderLeft: `3px solid ${tierHue.border}` }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6, color: tierHue.title, fontFamily: 'var(--font-space-grotesk)' }}>
-                {moduleTitle}
-              </div>
+          <div className="flex gap-10">
+            <div>
+              <p className="text-[10px] font-semibold text-[#8A8986] uppercase tracking-wider mb-1">Amount</p>
+              <p className="text-sm font-bold" style={{ color: '#8ECB3C' }}>{formatRange(grant.amountMin, grant.amountMax)}</p>
+            </div>
+            <div>
               {(() => {
-                const posLimit  = score >= 80 ? 3 : score >= 60 ? 3 : 2
-                const warnLimit = score >= 80 ? 1 : score >= 60 ? 3 : 4
-                const shownPos  = rawPos.slice(0, posLimit)
-                const shownWarn = allWarns.slice(0, warnLimit)
-                const isStrong  = score >= 80
+                const opensDate = grant.nextOpenDateParsed
+                const todayStr = new Date().toISOString().split('T')[0]
+                const notYetOpen = !grant.deadline && !grant.isRolling && opensDate && opensDate > todayStr
+                if (notYetOpen) {
+                  const parts = opensDate!.split('-').map(Number)
+                  const formatted = new Date(parts[0], parts[1] - 1, parts[2])
+                    .toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                  return (
+                    <>
+                      <p className="text-[10px] font-semibold text-[#8A8986] uppercase tracking-wider mb-1">Opens</p>
+                      <p className="text-sm font-semibold text-charcoal">{formatted}</p>
+                    </>
+                  )
+                }
                 return (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    {shownPos.map((r, i) => (
-                      <div key={i} style={{ fontSize: 12, color: '#2C2C2A', lineHeight: 1.5, display: 'flex', gap: 6, fontFamily: 'var(--font-dm-sans)' }}>
-                        <span style={{ color: tierHue.positive, flexShrink: 0 }}>✓</span>
-                        <span>{r}</span>
-                      </div>
-                    ))}
-                    {shownWarn.length > 0 && isStrong && (
-                      <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: tierHue.caveatText, marginTop: 6, marginBottom: 2, fontFamily: 'var(--font-space-grotesk)' }}>
-                        Why not higher
-                      </div>
-                    )}
-                    {shownWarn.map((r, i) => (
-                      <div key={`w${i}`} style={{ fontSize: 12, color: tierHue.caveatText, lineHeight: 1.5, display: 'flex', gap: 6, fontFamily: 'var(--font-dm-sans)' }}>
-                        <span style={{ color: '#BA7517', flexShrink: 0 }}>△</span>
-                        <span>{r}</span>
-                      </div>
-                    ))}
-                  </div>
+                  <>
+                    <p className="text-[10px] font-semibold text-[#8A8986] uppercase tracking-wider mb-1">Deadline</p>
+                    <p className="text-sm font-semibold text-charcoal">
+                      {grant.isRolling || !grant.deadline
+                        ? 'Rolling'
+                        : (() => {
+                            const parts = grant.deadline!.split('-').map(Number)
+                            if (parts.length !== 3 || parts.some(isNaN)) return 'Rolling'
+                            return new Date(parts[0], parts[1] - 1, parts[2])
+                              .toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+                          })()
+                      }
+                    </p>
+                  </>
                 )
               })()}
             </div>
-            <div style={{ width: 120, flexShrink: 0, textAlign: 'right' }}>
-              <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 22, fontWeight: 500, color: tierHue.title }}>{score}%</div>
-              <div style={{ height: 4, borderRadius: 2, overflow: 'hidden', marginTop: 4, background: tierHue.barBg }}>
-                <div style={{ height: '100%', borderRadius: 2, background: tierHue.ring, width: `${score}%` }} />
+            <div>
+              <p className="text-[10px] font-semibold text-[#8A8986] uppercase tracking-wider mb-1">Who&apos;s eligible</p>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <p className="text-sm font-semibold text-charcoal">{structureLabels.length > 0 ? structureLabels.join(', ') : '—'}</p>
+                {hasOrg && org?.legal_structure && structureLabels.length > 0 && (() => {
+                  const eligible = grant.eligibleStructures as LegalStructure[] | undefined
+                  if (!eligible || eligible.length === 0) return null
+                  const qualifies = eligible.includes(org.legal_structure as LegalStructure)
+                  return qualifies
+                    ? <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md" style={{ backgroundColor: '#F1F7E4', color: '#3B6D11' }}>✓ You qualify</span>
+                    : <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md" style={{ backgroundColor: '#FAECE7', color: '#4A1B0C' }}>✕ Not eligible</span>
+                })()}
               </div>
-              <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 4, color: tierHue.title, fontFamily: 'var(--font-space-grotesk)' }}>{tier}</div>
+            </div>
+            <div>
+              <p className="text-[10px] font-semibold text-[#8A8986] uppercase tracking-wider mb-1">Type</p>
+              {ftStyle ? (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-[11px] font-bold px-2.5 py-1 inline-block"
+                    style={{ borderRadius: 9999, backgroundColor: ftStyle.bg, color: ftStyle.color }}>
+                    {ftStyle.label}
+                  </span>
+                  {grant.fundingSubtype && SUBTYPE_LABELS[grant.fundingSubtype] && (
+                    <span className="text-[10px] font-semibold px-2 py-0.5 inline-block border"
+                      style={{ borderRadius: 9999, borderColor: ftStyle.color, color: ftStyle.color, backgroundColor: 'white' }}>
+                      {SUBTYPE_LABELS[grant.fundingSubtype]}
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <p className="text-sm font-semibold text-charcoal">—</p>
+              )}
             </div>
           </div>
-        )}
+            )
+          })()}
+        </div>
 
-      </div>{/* end card-body */}
+        {/* ── Right: actions ── */}
+        <div className="flex flex-col justify-center gap-2.5 p-6 flex-shrink-0 w-[152px]">
+          {grant.applyUrl && (
+            <a href={grant.applyUrl} target="_blank" rel="noopener noreferrer"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold bg-[#2C2C2A] text-white rounded-full hover:opacity-80 transition-opacity">
+              <ExternalLink className="w-3.5 h-3.5" />
+              Visit
+            </a>
+          )}
+          <button
+            onClick={() => isSaved ? onUnsave?.(grant.id) : onSave?.(grant.id)}
+            className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold border rounded-full transition-colors ${
+              isSaved
+                ? 'bg-[#B5D4F4] text-[#0C447C] border-[#B5D4F4]'
+                : 'border-[#B5D4F4] text-[#0C447C] hover:bg-[#B5D4F4]'
+            }`}
+          >
+            <Bookmark className="w-3.5 h-3.5" fill={isSaved ? 'currentColor' : 'none'} />
+            {isSaved ? 'Saved' : 'Save'}
+          </button>
+          <button
+            onClick={() => isInPipeline ? onRemoveFromPipeline?.(grant) : onAddToPipeline(grant)}
+            className={`w-full flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-semibold border rounded-full transition-colors whitespace-nowrap ${isInPipeline ? 'bg-[#EAF3DE] text-[#3B6D11] border-[#639922]' : 'border-[#639922] text-[#639922] bg-transparent hover:bg-[#EAF3DE]'}`}
+          >
+            <PlusCircle className="w-3.5 h-3.5" />
+            {isInPipeline ? 'In Pipeline' : 'Pipeline'}
+          </button>
+        </div>
 
-      {/* ── Funder insights strip ── */}
-      {!insightsExpanded && (!!(grant as EnrichedGrant).funderBrief || grant.eligibilityCriteria?.length > 0 || (grant as EnrichedGrant).impactSectors?.length || grant.sectors?.length) && (
+      </div>
+
+
+
+            {/* ── Match Insight (white, part of card body) ── */}
+      {hasOrg && hasSearch && reason && (() => {
+        const brief = (grant as EnrichedGrant).funderBrief
+        const scoreLabel    = score >= 80 ? 'Strong match' : score >= 65 ? 'Good match' : score >= 45 ? 'Partial match' : 'Low match'
+        // High matches use lime green (user preferred), lower scores shift to amber/red
+        const scoreColourHex = score >= 80 ? '#8ECB3C' : score >= 65 ? '#639922' : score >= 45 ? '#BA7517' : '#D85A30'
+
+        // Derive positives/warnings — use structured arrays if available,
+        // otherwise parse the reason string (robust fallback)
+        const WARN_RE = /check|may |likely|not match|exceed|borough|restricted/i
+        const rawPos   = (positiveReasons && positiveReasons.length > 0)
+          ? positiveReasons
+          : reason.split(/[.,](?=\s[A-Z])|\.\s+/).map(s => s.trim()).filter(s => s && !WARN_RE.test(s))
+        const rawWarns = (warnReasons && warnReasons.length > 0)
+          ? warnReasons
+          : reason.split(/[.,](?=\s[A-Z])|\.\s+/).map(s => s.trim()).filter(s => s && WARN_RE.test(s))
+
+        return (
+          <div className="flex items-center gap-5 px-6 py-4 border-t border-[#E8E0D1]"
+            style={{ borderLeft: `3px solid ${scoreColourHex}` }}>
+            {/* ── Text content ── */}
+            <div className="flex-1 min-w-0 space-y-2">
+              {rawPos.length > 0 && (
+                <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+                  {rawPos.map((r, i) => (
+                    <span key={i} className="text-sm flex items-start gap-1.5" style={{ color: '#2C2C2A' }}>
+                      <span className="font-bold flex-shrink-0 mt-0.5" style={{ color: scoreColourHex }}>✓</span>
+                      <span>{r}</span>
+                    </span>
+                  ))}
+                </div>
+              )}
+              {rawWarns.length > 0 && (
+                <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+                  {rawWarns.map((r, i) => (
+                    <span key={i} className="text-sm flex items-start gap-1.5" style={{ color: '#854F0B' }}>
+                      <span className="font-bold flex-shrink-0 mt-0.5">⚠</span>
+                      <span>{r}</span>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+            {/* ── Score ring ── */}
+            {score > 0 && (
+              <div className="flex-shrink-0 flex flex-col items-center gap-1">
+                <svg width="64" height="64" viewBox="0 0 64 64">
+                  <circle cx="32" cy="32" r="25" fill="none" stroke="#E8E0D1" strokeWidth="5" />
+                  <circle cx="32" cy="32" r="25" fill="none" stroke={scoreColourHex} strokeWidth="5"
+                    strokeLinecap="round"
+                    strokeDasharray={`${(score / 100) * 157.1} 157.1`}
+                    transform="rotate(-90 32 32)" />
+                  <text x="32" y="29" textAnchor="middle" dominantBaseline="middle"
+                    style={{ fontSize: '12px', fontWeight: '700', fill: scoreColourHex, fontFamily: 'inherit' }}>
+                    {score}%
+                  </text>
+                  <text x="32" y="43" textAnchor="middle"
+                    style={{ fontSize: '7px', fill: '#888', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: '600' }}>
+                    MATCH
+                  </text>
+                </svg>
+                <span className="text-[9px] font-semibold uppercase tracking-wide" style={{ color: scoreColourHex }}>{scoreLabel}</span>
+              </div>
+            )}
+          </div>
+        )
+      })()}
+
+      {/* ── Expand toggle ── */}
+      {(!!(grant as EnrichedGrant).funderBrief || grant.eligibilityCriteria?.length > 0 || (grant as EnrichedGrant).impactSectors?.length || grant.sectors?.length) && (
         <button
           onClick={() => setInsightsExpanded(v => !v)}
-          onMouseEnter={() => setInsightsHover(true)}
-          onMouseLeave={() => setInsightsHover(false)}
-          aria-label={stripAriaLabel}
-          style={{
-            width: '100%', display: 'flex', alignItems: 'center', gap: 12,
-            padding: '13px 20px 13px 17px',
-            background: insightsHover ? '#F1F7E4' : '#fff',
-            borderTop: '0.5px solid rgba(0,0,0,0.06)',
-            borderLeft: '3px solid #8ECB3C',
-            borderRight: 'none', borderBottom: 'none',
-            cursor: 'pointer', textAlign: 'left',
-            transition: 'background-color 160ms ease',
-          }}
+          className="w-full flex items-center justify-center gap-1.5 py-2.5 border-t border-[#E8E0D1] text-[11px] font-bold uppercase tracking-widest transition-colors hover:bg-[#FAFAF7]"
+          style={{ color: '#5F5E5A' }}
         >
-          <svg
-            style={{ color: insightsHover ? '#639922' : '#173404', flexShrink: 0, transition: 'color 160ms ease' }}
-            width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-          >
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/>
-            <line x1="16" y1="13" x2="8" y2="13"/>
-            <line x1="16" y1="17" x2="8" y2="17"/>
-          </svg>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 500, fontFamily: 'var(--font-dm-sans)', color: '#2C2C2A' }}>
-              {stripTitle}
-            </div>
-            <div style={{ fontSize: 11, fontFamily: 'var(--font-dm-sans)', marginTop: 1, color: '#5F5E5A' }}>
-              {(grant as EnrichedGrant).funderBrief ? 'What they fund, who qualifies, tips for applying' : 'Eligibility, who qualifies, and more'}
-            </div>
-          </div>
-          <svg
-            style={{ color: '#5F5E5A', flexShrink: 0 }}
-            width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-          >
-            <polyline points="9 18 15 12 9 6"/>
-          </svg>
+          <ChevronDown className="w-3.5 h-3.5 transition-transform" style={{ transform: insightsExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+          {insightsExpanded ? 'Show less' : (grant as EnrichedGrant).funderBrief ? (
+            grant.fundingType === 'investment' ? 'Investor Insights' :
+            grant.fundingType === 'in_kind'    ? 'Partner Insights'  :
+                                                 'Funder Insights'
+          ) : 'Eligibility & details'}
         </button>
       )}
 
       {/* ── Expanded details panel ── */}
       {insightsExpanded && (() => {
         const brief = (grant as EnrichedGrant).funderBrief
-        const typicalAwardText = brief
-          ? (brief.typical_award ?? ((grant.amountMin || grant.amountMax) ? formatRange(grant.amountMin, grant.amountMax) : null))
-          : null
-
-        const PAL = {
-          green: { bg: '#F1F7E4', stroke: '#3B6D11' },
-          coral: { bg: '#FAECE7', stroke: '#993C1D' },
-          amber: { bg: '#FAEEDA', stroke: '#854F0B' },
-        } as const
-
-        const Section = ({ icon: Icon, pal, label, text }: {
-          icon: React.ElementType
-          pal: keyof typeof PAL
-          label: string
-          text: string
-        }) => (
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-              <div style={{ width: 26, height: 26, borderRadius: 7, background: PAL[pal].bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <Icon style={{ width: 13, height: 13, color: PAL[pal].stroke }} />
-              </div>
-              <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 11, fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: '#2C2C2A', margin: 0 }}>{label}</p>
-            </div>
-            <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 13, lineHeight: 1.55, color: '#5F5E5A', margin: 0 }}>{text}</p>
-          </div>
-        )
 
         return (
-          <div style={{ background: '#fff', borderRadius: '0 0 14px 14px', overflow: 'hidden' }}>
+          <div className="border-t border-[#E8E0D1]" style={{ backgroundColor: '#FAFAF7' }}>
+            {brief ? (
+              /* ── Funder Intelligence brief ── */
+              (() => {
+                // Truncate to ~130 chars at a word boundary
+                const truncate = (text: string, chars = 130) => {
+                  if (text.length <= chars) return text
+                  const cut = text.slice(0, chars)
+                  return cut.slice(0, cut.lastIndexOf(' ')) + '…'
+                }
+                // No clamping — this is already the expanded view, show everything
+                const clamp4: React.CSSProperties = {}
+                const clamp3: React.CSSProperties = {}
+                const orgTerms = [...(org?.themes ?? []), ...(org?.areas_of_work ?? [])].slice(0, 3)
 
-            {/* fi-head — collapse link */}
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '12px 22px', background: '#F1F7E4', borderBottom: '0.5px dashed rgba(57,109,17,0.2)' }}>
-              <button
-                onClick={() => setInsightsExpanded(false)}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-dm-sans)', fontSize: 11, fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#3B6D11', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
-              >
-                <ChevronDown style={{ width: 12, height: 12, transform: 'rotate(180deg)' }} />
-                Hide insights
-              </button>
-            </div>
-
-            {brief ? (() => {
-              const DASH = '0.5px dashed rgba(0,0,0,0.08)'
-              const blocks: { Icon: React.ElementType; pal: keyof typeof PAL; label: string; text: string }[] = [
-                brief.what_they_fund     ? { Icon: CheckCircle2, pal: 'green' as const, label: 'What they fund',     text: brief.what_they_fund }    : null,
-                brief.who_can_apply      ? { Icon: Users,        pal: 'green' as const, label: 'Who can apply',      text: brief.who_can_apply }      : null,
-                brief.geographic_focus   ? { Icon: MapPin,       pal: 'amber' as const, label: 'Geographic focus',   text: brief.geographic_focus }   : null,
-                brief.priorities         ? { Icon: TrendingUp,   pal: 'coral' as const, label: 'Current priorities', text: brief.priorities }         : null,
-                brief.strong_application ? { Icon: Star,         pal: 'green' as const, label: 'Strong application', text: brief.strong_application } : null,
-                typicalAwardText         ? { Icon: DollarSign,   pal: 'green' as const, label: 'Typical award',      text: typicalAwardText }         : null,
-                brief.decision_timeline  ? { Icon: CalendarDays, pal: 'amber' as const, label: 'Decision timeline',  text: brief.decision_timeline }  : null,
-                brief.funder_tips        ? { Icon: Lightbulb,    pal: 'coral' as const, label: 'Insider tips',       text: brief.funder_tips }        : null,
-              ].filter((b): b is NonNullable<typeof b> => b !== null)
-
-              const lastRow = Math.floor((blocks.length - 1) / 2) * 2
-
-              return (
-                <>
-                  {/* 2-col grid — dashed separators */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', background: '#fff' }}>
-                    {blocks.map((b, i) => (
-                      <div key={i} style={{
-                        padding: '18px 22px',
-                        borderBottom: i >= lastRow ? 'none' : DASH,
-                        borderRight:  i % 2 === 0  ? DASH  : 'none',
-                      }}>
-                        <Section icon={b.Icon} pal={b.pal} label={b.label} text={b.text} />
-                      </div>
-                    ))}
+                // Reusable section block: consistent label + body style throughout
+                const Section = ({ icon: Icon, iconColor, label, children, className = '', style }: {
+                  icon: React.ElementType, iconColor: string, label: string, children: React.ReactNode, className?: string, style?: React.CSSProperties
+                }) => (
+                  <div className={className} style={style}>
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <Icon className="w-3 h-3 flex-shrink-0" style={{ color: iconColor }} />
+                      <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#2C2C2A' }}>{label}</p>
+                    </div>
+                    {children}
                   </div>
+                )
 
-                  {/* Exclusions callout — full-width amber */}
-                  {brief.exclusions && (
-                    <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', padding: '16px 22px', background: '#FAEEDA', borderTop: '0.5px solid rgba(186,117,23,0.2)' }}>
-                      <div style={{ width: 26, height: 26, borderRadius: 7, background: '#FAC775', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <AlertTriangle style={{ width: 13, height: 13, color: '#854F0B' }} />
-                      </div>
-                      <div>
-                        <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 11, fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#412402', margin: '0 0 4px' }}>Exclusions</p>
-                        <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 13, lineHeight: 1.55, color: '#854F0B', margin: 0 }}>{brief.exclusions}</p>
-                      </div>
-                    </div>
-                  )}
+                // Build top-row items so grid cols match actual count
+                const topItems = [
+                  brief.what_they_fund && (
+                    <Section key="fund" icon={CheckCircle2} iconColor="#8ECB3C" label="What they fund">
+                      <p className="text-sm text-[#444] leading-relaxed" style={clamp4}>{brief.what_they_fund}</p>
+                    </Section>
+                  ),
+                  brief.who_can_apply && (
+                    <Section key="who" icon={Users} iconColor="#639922" label="Who can apply">
+                      <p className="text-sm text-[#444] leading-relaxed" style={clamp4}>{brief.who_can_apply}</p>
+                    </Section>
+                  ),
+                  brief.geographic_focus && (
+                    <Section key="geo" icon={MapPin} iconColor="#639922" label="Geographic focus">
+                      <p className="text-sm text-[#444] leading-relaxed" style={clamp4}>{brief.geographic_focus}</p>
+                    </Section>
+                  ),
+                  brief.priorities && (
+                    <Section key="prio" icon={TrendingUp} iconColor="#BA7517" label="Current priorities">
+                      <p className="text-sm text-[#444] leading-relaxed" style={clamp4}>{brief.priorities}</p>
+                    </Section>
+                  ),
+                  brief.exclusions && (
+                    <Section key="excl" icon={AlertTriangle} iconColor="#854F0B" label="Exclusions"
+                      className="px-3 py-3" style={{ backgroundColor: 'rgba(186,117,23,0.08)', borderRadius: 8, border: '1px solid rgba(186,117,23,0.18)' } as React.CSSProperties}>
+                      <p className="text-sm leading-relaxed" style={{ ...clamp4, color: '#412402' }}>{brief.exclusions}</p>
+                    </Section>
+                  ),
+                ].filter(Boolean)
 
-                  {/* Apply CTA bar */}
-                  {grant.applyUrl && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, padding: '18px 22px', background: '#FAFAF7', borderTop: '0.5px solid rgba(0,0,0,0.06)' }}>
-                      <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 12, color: '#5F5E5A', margin: 0 }}>Ready to apply? Opens in a new tab.</p>
-                      <a
-                        href={grant.applyUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 10, background: '#8ECB3C', color: '#173404', fontSize: 13, fontWeight: 600, padding: '10px 18px', border: 'none', whiteSpace: 'nowrap', textDecoration: 'none', flexShrink: 0 }}
-                      >
-                        Apply at {grant.funder}
-                        <ExternalLink style={{ width: 12, height: 12 }} />
-                      </a>
-                    </div>
-                  )}
-                </>
-              )
-            })() : (
-              /* fallback: eligibility data */
-              <div style={{ padding: '20px 22px' }}>
+                const topCols = topItems.length === 3 ? 'grid-cols-3' : topItems.length === 2 ? 'grid-cols-2' : 'grid-cols-1'
+
+                const bottomItems = [
+                  brief.strong_application && (
+                    <Section key="strong" icon={Star} iconColor="#5F5E5A" label="Strong application">
+                      <p className="text-sm text-[#444] leading-relaxed" style={clamp3}>{brief.strong_application}</p>
+                    </Section>
+                  ),
+                  brief.typical_award && (
+                    <Section key="award" icon={DollarSign} iconColor="#5F5E5A" label="Typical award">
+                      <p className="text-sm text-[#444] leading-relaxed" style={clamp3}>{brief.typical_award}</p>
+                    </Section>
+                  ),
+                  brief.decision_timeline && (
+                    <Section key="timeline" icon={CalendarDays} iconColor="#5F5E5A" label="Decision timeline">
+                      <p className="text-sm text-[#444] leading-relaxed" style={clamp3}>{brief.decision_timeline}</p>
+                    </Section>
+                  ),
+                  brief.funder_tips && (
+                    <Section key="tips" icon={Lightbulb} iconColor="#5F5E5A" label="Insider tips">
+                      <p className="text-sm text-[#444] leading-relaxed" style={clamp3}>{brief.funder_tips}</p>
+                    </Section>
+                  ),
+                ].filter(Boolean)
+
+                return (
+                  <div className="px-6 pt-5 pb-6 space-y-5">
+
+                    {brief.last_enriched && (
+                      <p className="text-[10px] text-[#8A8986] text-right -mb-2">Updated {brief.last_enriched}</p>
+                    )}
+
+                    {/* Top row: What they fund | Priorities | Exclusions */}
+                    {topItems.length > 0 && (
+                      <div className={`grid ${topCols} gap-5 items-start pt-1`}>
+                        {topItems}
+                      </div>
+                    )}
+
+                    {/* Bottom row: 4 supporting fields in 2-col grid */}
+                    {bottomItems.length > 0 && (
+                      <div className="grid grid-cols-2 gap-x-8 gap-y-5 pt-4 border-t border-[#E8E0D1]">
+                        {bottomItems}
+                      </div>
+                    )}
+
+                    {/* How to apply — full-width footer with Apply button */}
+                    {(brief.how_to_apply || grant.applyUrl) && (
+                      <div className="flex items-start justify-between gap-6 pt-4 border-t border-[#E8E0D1]">
+                        <div className="flex-1 min-w-0">
+                          {brief.how_to_apply && (
+                            <>
+                              <div className="flex items-center gap-1.5 mb-1.5">
+                                <ClipboardList className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#5F5E5A' }} />
+                                <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#2C2C2A' }}>How to apply</p>
+                              </div>
+                              <p className="text-sm text-[#444] leading-relaxed">{brief.how_to_apply}</p>
+                            </>
+                          )}
+                        </div>
+                        {grant.applyUrl && (
+                          <a href={grant.applyUrl} target="_blank" rel="noopener noreferrer"
+                            className="flex-shrink-0 flex items-center gap-1.5 px-5 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-80"
+                            style={{ borderRadius: 9999, backgroundColor: '#2C2C2A' }}>
+                            Apply
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )
+              })()
+            ) : (
+              /* ── Fallback: structured eligibility data ── */
+              <div className="px-6 py-5 space-y-4">
                 {grant.description.length > 180 && (
-                  <div style={{ marginBottom: 16 }}>
-                    <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 10, fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#8A8986', margin: '0 0 8px' }}>Full description</p>
-                    <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 13, lineHeight: 1.55, color: '#5F5E5A', margin: 0 }}>{grant.description}</p>
+                  <div>
+                    <p className="text-[10px] font-bold text-[#5F5E5A] uppercase tracking-wider mb-2">Full description</p>
+                    <p className="text-sm text-[#444] leading-relaxed">{grant.description}</p>
                   </div>
                 )}
                 {grant.eligibilityCriteria?.length > 0 && (
-                  <div style={{ marginBottom: 16 }}>
-                    <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 10, fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#8A8986', margin: '0 0 10px' }}>Eligibility criteria</p>
-                    <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div>
+                    <p className="text-[10px] font-bold text-[#5F5E5A] uppercase tracking-wider mb-2.5">Eligibility criteria</p>
+                    <ul className="space-y-2">
                       {grant.eligibilityCriteria.map((c, i) => (
-                        <li key={i} style={{ display: 'flex', gap: 10, fontFamily: 'var(--font-dm-sans)', fontSize: 13, color: '#5F5E5A' }}>
-                          <CheckCircle2 style={{ width: 14, height: 14, flexShrink: 0, marginTop: 2, color: '#639922' }} />
-                          <span style={{ lineHeight: 1.45 }}>{c}</span>
+                        <li key={i} className="flex gap-2.5 text-sm text-[#444]">
+                          <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: '#8ECB3C' }} />
+                          <span className="leading-snug">{c}</span>
                         </li>
                       ))}
                     </ul>
                   </div>
                 )}
                 {(grant as EnrichedGrant).eligibleStructures?.length ? (
-                  <div style={{ marginBottom: 16 }}>
-                    <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 10, fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#8A8986', margin: '0 0 8px' }}>Eligible organisations</p>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  <div>
+                    <p className="text-[10px] font-bold text-[#5F5E5A] uppercase tracking-wider mb-2">Eligible organisations</p>
+                    <div className="flex flex-wrap gap-1.5">
                       {((grant as EnrichedGrant).eligibleStructures ?? []).map(s => (
-                        <span key={s} style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 11, fontWeight: 500, padding: '4px 10px', borderRadius: 9999, background: 'rgba(142,203,60,0.12)', color: '#639922' }}>
-                          {STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())}
+                        <span key={s} className="text-[11px] font-semibold px-2.5 py-1"
+                          style={{ backgroundColor: 'rgba(142,203,60,0.12)', color: '#639922', borderRadius: 9999 }}>
+                          {STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
                         </span>
                       ))}
                     </div>
                   </div>
                 ) : null}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 4 }}>
-                  <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 12, color: '#8A8986', margin: 0 }}>No funder intelligence yet.</p>
+                <div className="flex items-center justify-between pt-1">
+                  <p className="text-xs text-[#8A8986]">
+                    No funder intelligence yet — an admin can enrich this grant from the Funder Intelligence page.
+                  </p>
                   {grant.applyUrl && (
                     <a
                       href={grant.applyUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 10, background: '#8ECB3C', color: '#173404', fontSize: 13, fontWeight: 600, padding: '10px 18px', textDecoration: 'none', flexShrink: 0 }}
-                    >
+                      className="flex-shrink-0 flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white transition-opacity hover:opacity-80"
+                      style={{ borderRadius: 9999, backgroundColor: '#2C2C2A' }}>
                       Apply
-                      <ExternalLink style={{ width: 12, height: 12 }} />
+                      <ExternalLink className="w-3 h-3" />
                     </a>
                   )}
                 </div>
@@ -997,7 +930,6 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
     </div>
   )
 }
-
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function buildSmartQuery(org: Organisation): string {
@@ -1121,7 +1053,6 @@ export default function SearchPage() {
   const [interactions, setInteractions] = useState<Map<string, Set<InteractionAction>>>(new Map())
   const [showDismissed, setShowDismissed] = useState(false)
   const [scrapedGrants, setScrapedGrants] = useState<EnrichedGrant[]>([])
-  const [grantsLoaded, setGrantsLoaded]   = useState(false)
   const [amountMin, setAmountMin]         = useState('')
   const [amountMax, setAmountMax]         = useState('')
   const [deadlineFilter, setDeadlineFilter] = useState<'all' | 'rolling' | 'has_deadline'>('all')
@@ -1142,12 +1073,12 @@ export default function SearchPage() {
   const [searchModeToggle, setSearchModeToggle]   = useState<'profile' | 'browse'>('browse')
   const [profileChipsApplied, setProfileChipsApplied] = useState(false)
   const [pipelineNudge, setPipelineNudge]         = useState<{ name: string; url: string | null } | null>(null)
-  const [pipelinedIds, setPipelinedIds]           = useState<Map<string, { id: string; stage: string }>>(new Map())
+  const [pipelinedIds, setPipelinedIds]           = useState<Map<string, string>>(new Map())
   const [hasSearched, setHasSearched]             = useState(false)
   const [profileFiltersOpen, setProfileFiltersOpen] = useState(false)
   const [activeTab, setActiveTab]                 = useState<'grant' | 'programme' | 'investment' | 'in_kind'>('grant')
   const [programmeHasCash, setProgrammeHasCash]   = useState(false)
-  const [activeView, setActiveView]               = useState<'browse' | 'saved'>('browse')
+  const [activeView, setActiveView]               = useState<'matches' | 'saved' | 'latest'>('matches')
   // Explicit profile filter toggle. Previously this was derived from
   // activeSectors/locationFilter, which meant picking a sector inside the
   // filter panel silently flipped it back on. Now the toggle only changes
@@ -1182,10 +1113,7 @@ export default function SearchPage() {
         if (sm)  setSmartMatched(sm)
         if (lr)  setLiveResults(lr)
         if (lsm) setLiveSmartMatched(lsm)
-        if (av)  setActiveView(
-          av === 'matches' || av === 'latest' ? 'browse' :
-          av === 'saved' ? 'saved' : 'browse'
-        )
+        if (av)  setActiveView(av)
       }
     } catch { /* ignore */ }
   }, [])
@@ -1219,10 +1147,10 @@ export default function SearchPage() {
         // Load existing pipeline grant names to show button state
         const { data: pipelineRows } = await supabase
           .from('pipeline_items')
-          .select('id, grant_name, stage')
+          .select('id, grant_name')
           .eq('org_id', o.id)
         if (pipelineRows) {
-          setPipelinedIds(new Map(pipelineRows.map((r: { id: string; grant_name: string; stage: string }) => [r.grant_name, { id: r.id, stage: r.stage ?? 'identified' }])))
+          setPipelinedIds(new Map(pipelineRows.map((r: { id: string; grant_name: string }) => [r.grant_name, r.id])))
         }
         // My Matches mode: always auto-apply profile and show results
         if (o.primary_location) setLocationFilter(o.primary_location)
@@ -1247,7 +1175,6 @@ export default function SearchPage() {
       if (scraped) {
         setScrapedGrants(scraped.map(row => normaliseScrapedGrant(row as Record<string, unknown>)))
       }
-      setGrantsLoaded(true)
       // Load live search history + weekly usage count
       if (o) {
         const [history, weekCount] = await Promise.all([
@@ -1511,16 +1438,7 @@ export default function SearchPage() {
         outcome_notes:        null,
         created_by:           userId,
       })
-      setPipelinedIds(prev => new Map(prev).set(grant.title, { id: added.id, stage: 'identified' }))
-      // Automatically clear 'saved' when promoted to pipeline
-      if (interactions.get(grant.id)?.has('saved')) {
-        await removeInteraction(org.id, grant.id, 'saved')
-        setInteractions(prev => {
-          const next = new Map(prev)
-          next.get(grant.id)?.delete('saved')
-          return next
-        })
-      }
+      setPipelinedIds(prev => new Map(prev).set(grant.title, added.id))
       showToast('Added to your pipeline')
     } catch {
       showToast('Failed to add — please try again')
@@ -1528,8 +1446,7 @@ export default function SearchPage() {
   }
 
   async function handleRemoveFromPipeline(grant: GrantOpportunity) {
-    const entry = pipelinedIds.get(grant.title)
-    const itemId = entry?.id
+    const itemId = pipelinedIds.get(grant.title)
     if (!itemId) return
     try {
       await deletePipelineItem(itemId)
@@ -1911,7 +1828,7 @@ export default function SearchPage() {
   // Count active (non-default) filters for the badge
   const activeFilterCount = [
     activeType !== 'all',
-    // activeFundingType excluded — tabs are navigation, not filters
+    activeFundingType !== 'all',
     // categoryFilter is now a top-level tab, not counted as a hidden filter
     !!amountMin,
     !!amountMax,
@@ -1969,68 +1886,14 @@ export default function SearchPage() {
   const grantsCount     = allGrants_raw.filter(g => GRANT_TYPES.includes((g as GrantOpportunity & { fundingType?: FundingType }).fundingType ?? 'grant')).length
   const programmesCount = allGrants_raw.filter(g => PROGRAMME_TYPES.includes((g as GrantOpportunity & { fundingType?: FundingType }).fundingType ?? 'grant')).length
 
-  // Cross-tab counts: same filter as displayGrants but without the tab discriminator.
-  // This means each tab badge reflects the live filter state — sectors, location,
-  // eligibility, query — and tells the user "how many results would I see there?"
-  const crossTabCounts = useMemo(() => {
-    const todayStr = new Date().toISOString().split('T')[0]
-    const qTokens  = filterQuery ? filterQuery.split(/\s+/).filter(t => t.length > 0) : []
-    const minAmt   = amountMin ? Number(amountMin) : null
-    const maxAmt   = amountMax ? Number(amountMax) : null
-    const BROAD    = ['uk', 'uk-wide', 'england', 'nationwide', 'national', 'uk wide', 'all uk']
-    const counts: Record<string, number> = { grant: 0, programme: 0, investment: 0, in_kind: 0 }
-
-    allGrants.forEach(g => {
-      if (!g.isRolling && g.deadline && g.deadline < todayStr) return
-
-      const gType = (g as GrantOpportunity & { fundingType?: FundingType }).fundingType ?? 'grant'
-      if (!(gType in counts)) return
-
-      // Keyword query
-      if (qTokens.length > 0) {
-        const hay   = `${g.title} ${g.funder} ${g.description} ${g.sectors.join(' ')}`.toLowerCase()
-        const words = toWordTokens(hay)
-        if (!qTokens.every(t => tokenMatches(t, hay, words))) return
-      }
-
-      // Amount range
-      if (minAmt !== null && (g.amountMax ?? 0) < minAmt) return
-      if (maxAmt !== null && (g.amountMin ?? 0) > maxAmt) return
-
-      const ge = g as EnrichedGrant
-
-      // Sector filter
-      if (activeSectors.size > 0 && ge.impactSectors?.length) {
-        if (!ge.impactSectors.some(s => activeSectors.has(s))) return
-      }
-
-      // Location filter (broad scopes always pass)
-      if (locationFilter && ge.geoScope?.length) {
-        const loc = locationFilter.toLowerCase()
-        if (!ge.geoScope.some(s =>
-          BROAD.includes(s.toLowerCase()) ||
-          s.toLowerCase().includes(loc) ||
-          loc.includes(s.toLowerCase())
-        )) return
-      }
-
-      // Legal structure eligibility (when profile on)
-      if (profileFilterOn && org?.legal_structure) {
-        const eligible = (g as GrantOpportunity & { eligibleStructures?: LegalStructure[] }).eligibleStructures
-        if (eligible && eligible.length > 0 && !eligible.includes(org.legal_structure as LegalStructure)) return
-      }
-
-      counts[gType]++
-    })
-
-    return counts
-  }, [allGrants, filterQuery, amountMin, amountMax, activeSectors, locationFilter, profileFilterOn, org])
+  const ftCount = (type: string) =>
+    allGrants_raw.filter(g => ((g as GrantOpportunity & { fundingType?: FundingType }).fundingType ?? 'grant') === type).length
 
   const TYPE_TABS = [
-    { id: 'grant'      as const, label: 'Grants',      icon: <Landmark size={17} strokeWidth={2} />,  count: crossTabCounts.grant ?? 0 },
-    { id: 'programme'  as const, label: 'Programmes',  icon: <Rocket size={17} strokeWidth={2} />,     count: crossTabCounts.programme ?? 0 },
-    { id: 'investment' as const, label: 'Investment',  icon: <TrendingUp size={17} strokeWidth={2} />, count: crossTabCounts.investment ?? 0 },
-    { id: 'in_kind'    as const, label: 'In-Kind',     icon: <Gift size={17} strokeWidth={2} />,       count: crossTabCounts.in_kind ?? 0 },
+    { id: 'grant'      as const, label: 'Grants',      icon: <span className="text-[15px] font-bold leading-none">£</span>, count: ftCount('grant') },
+    { id: 'programme'  as const, label: 'Programmes',  icon: <Rocket size={17} strokeWidth={2} />,     count: ftCount('programme') },
+    { id: 'investment' as const, label: 'Investment',  icon: <TrendingUp size={17} strokeWidth={2} />, count: ftCount('investment') },
+    { id: 'in_kind'    as const, label: 'In-Kind',     icon: <Gift size={17} strokeWidth={2} />,       count: ftCount('in_kind') },
   ]
 
   const TAB_DESCS: Record<string, string> = {
@@ -2038,20 +1901,6 @@ export default function SearchPage() {
     programme:  'Structured support that may include cash: accelerators, fellowships, incubators, cohort programmes and capacity-building schemes.',
     investment: 'Repayable finance for social-purpose organisations — loans, patient capital, blended finance and community shares.',
     in_kind:    'Non-cash support: software credits, ad grants, free workspace, pro bono legal advice and expert services.',
-  }
-
-  const TAB_ACTIVE_STYLES: Record<string, { bg: string; border: string; text: string; count: string }> = {
-    grant:      { bg: '#F1F7E4', border: '#8ECB3C', text: '#173404', count: '#639922' },
-    programme:  { bg: '#FAECE7', border: '#993C1D', text: '#993C1D', count: '#993C1D' },
-    investment: { bg: '#E6F1FB', border: '#0C447C', text: '#0C447C', count: '#0C447C' },
-    in_kind:    { bg: '#FAEEDA', border: '#854F0B', text: '#854F0B', count: '#854F0B' },
-  }
-
-  const TAB_INACTIVE_STYLES: Record<string, { bg: string; iconColor: string; countColor: string }> = {
-    grant:      { bg: '#F7F9F4', iconColor: '#639922', countColor: '#639922' },
-    programme:  { bg: '#FDF6F4', iconColor: '#993C1D', countColor: '#993C1D' },
-    investment: { bg: '#F4F8FD', iconColor: '#0C447C', countColor: '#0C447C' },
-    in_kind:    { bg: '#FDF8F2', iconColor: '#854F0B', countColor: '#854F0B' },
   }
 
   const CATEGORY_TABS = [
@@ -2108,14 +1957,14 @@ export default function SearchPage() {
       <div className="flex items-center justify-between mb-3">
         {/* Left: subtitle (conditional) */}
         <div className="flex items-center gap-2 text-sm text-mid">
-          {activeView === 'browse' && org && (
+          {activeView === 'matches' && org && (
             <>
               <span className="w-2 h-2 flex-shrink-0 rounded-full" style={{ backgroundColor: '#8ECB3C' }} />
               Matched for <strong className="text-charcoal">{org.name ?? 'your organisation'}</strong>
               {org.primary_location && <span className="text-mid">· {org.primary_location}</span>}
             </>
           )}
-          {activeView === 'browse' && !org && (
+          {activeView === 'matches' && !org && (
             <div className="text-xs border border-amber-mid bg-amber-pale px-3 py-2">
               <a href="/dashboard/profile" className="font-semibold text-amber-deep underline">Set up your profile</a>
               <span className="text-amber-deepest"> to see grants matched for your organisation.</span>
@@ -2124,7 +1973,7 @@ export default function SearchPage() {
         </div>
         {/* Right: tabs always visible */}
         <div className="flex items-center gap-0 bg-white border border-warm/60 shadow-sm overflow-hidden flex-shrink-0" style={{ borderRadius: 9999 }}>
-          {(['browse', 'saved'] as const).map((v, i) => (
+          {(['matches', 'saved', 'latest'] as const).map((v, i) => (
             <>
               {i > 0 && <div key={`sep-${v}`} className="w-px h-5 bg-warm/80" />}
               <button
@@ -2132,9 +1981,9 @@ export default function SearchPage() {
                 onClick={() => setActiveView(v)}
                 className={`px-5 py-2 text-sm font-medium transition-colors flex items-center gap-1.5 ${activeView === v ? 'border-b-2 border-[#8ECB3C] text-[#2C2C2A] font-bold' : 'border-b-2 border-transparent text-gray-500 hover:text-charcoal'}`}
               >
-                {v === 'browse' ? 'Browse' : 'Saved'}
+                {v === 'matches' ? 'My Matches' : v === 'saved' ? 'Saved' : 'Latest'}
                 {v === 'saved' && savedCount > 0 && (
-                  <span className="text-xs px-1.5 py-0.5 ml-1 font-bold" style={{ borderRadius: 9999, background: '#F1F7E4', color: '#3B6D11' }}>{savedCount}</span>
+                  <span className="text-xs px-1.5 py-0.5 ml-1 font-bold" style={{ borderRadius: 9999, background: '#B5D4F4', color: '#0C447C' }}>{savedCount}</span>
                 )}
               </button>
             </>
@@ -2148,7 +1997,7 @@ export default function SearchPage() {
         <div className="p-5">
 
           {/* ── Unified search pill + Search button ── */}
-          {activeView === 'browse' && (
+          {activeView === 'matches' && (
             <div className="flex gap-3 items-center">
               {/* Single pill container */}
               <div className="flex-1 flex items-center bg-white border border-gray-200 rounded-full h-12 overflow-hidden"
@@ -2205,13 +2054,49 @@ export default function SearchPage() {
                   )}
                   <ChevronDown size={12} strokeWidth={2} className={`transition-transform duration-200 ${filtersOpen ? 'rotate-180' : ''}`} />
                 </button>
+                {/* Divider */}
+                <div className="w-px h-6 bg-gray-200 flex-shrink-0" />
+                {/* Profile toggle */}
+                {org && (
+                  <button
+                    onClick={() => {
+                      if (profileFilterOn) {
+                        setProfileFilterOn(false)
+                        setActiveSectors(new Set())
+                        setLocationFilter('')
+                        setLocationInput('')
+                      } else {
+                        setProfileFilterOn(true)
+                        if (org.primary_location) { setLocationFilter(org.primary_location); setLocationInput(org.primary_location) }
+                        if ((org.impact_sectors as string[] | undefined)?.length) setActiveSectors(new Set(org.impact_sectors as ImpactSector[]))
+                      }
+                    }}
+                    className="flex items-center gap-2 px-4 h-full flex-shrink-0 whitespace-nowrap"
+                    title={profileFilterOn ? 'Turn off profile filter' : 'Filter by your profile'}
+                  >
+                    <span className="relative flex-shrink-0" style={{
+                      width: 40, height: 22,
+                      backgroundColor: profileFilterOn ? '#8ECB3C' : '#E4E2DA',
+                      borderRadius: 9999, display: 'inline-flex', alignItems: 'center',
+                      transition: 'background-color 0.2s',
+                    }}>
+                      <span className="absolute bg-white transition-transform duration-200" style={{
+                        width: 16, height: 16, borderRadius: 9999, top: 3, left: 3,
+                        transform: profileFilterOn ? 'translateX(18px)' : 'translateX(0)',
+                      }} />
+                    </span>
+                    <span className={`text-[11px] font-semibold uppercase tracking-wider ${profileFilterOn ? 'text-gray-600' : 'text-gray-400'}`}>
+                      Profile
+                    </span>
+                  </button>
+                )}
               </div>
               {/* Search button — outside the pill */}
               <button
                 onClick={() => { setHasSearched(true); handleAISearch(inputValue) }}
                 disabled={!inputValue.trim() && !locationFilter.trim()}
-                className={`h-12 px-6 text-sm font-bold flex-shrink-0 transition-opacity disabled:opacity-40 flex items-center gap-2 rounded-full appearance-none ${aiLoading ? 'pointer-events-none' : ''}`}
-                style={{ background: '#8ECB3C', color: '#173404', borderRadius: 10 }}
+                className={`h-12 px-6 text-sm font-bold flex-shrink-0 transition-opacity disabled:opacity-40 flex items-center gap-2 rounded-full ${aiLoading ? 'pointer-events-none' : ''}`}
+                style={{ background: '#8ECB3C', color: '#2C2C2A' }}
               >
                 {aiLoading
                   ? <><span className="dot-bounce flex gap-0.5"><span/><span/><span/></span> Searching…</>
@@ -2221,7 +2106,7 @@ export default function SearchPage() {
           )}
 
           {/* ── Secondary row: clear results + error ── */}
-          {activeView === 'browse' && (aiResults || aiError) && (
+          {activeView === 'matches' && (aiResults || aiError) && (
             <div className="mt-2 flex items-center gap-2">
               {aiResults && (
                 <button onClick={() => { setAiResults(null); setSmartMatched(false); setQuery(''); setInputValue('') }} className="px-3 py-1 border border-warm text-xs font-medium text-mid hover:border-[#8ECB3C] hover:text-[#639922] transition-all bg-white rounded-md">
@@ -2237,41 +2122,42 @@ export default function SearchPage() {
           {filtersOpen && (
           <div className="mt-4 pt-4 border-t border-[#E8E0D1] space-y-4">
 
-            {/* Panel header */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <p className="text-sm font-bold text-charcoal">Refine your results</p>
-                {activeFilterCount > 0 && (
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: '#F1F7E4', color: '#3B6D11' }}>{activeFilterCount}</span>
-                )}
-                <span className="text-xs text-light">Results update as you go.</span>
-              </div>
-              <div className="flex items-center gap-3">
-                {activeFilterCount > 0 && (
-                  <button onClick={resetAllFilters} className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium transition-colors" style={{ borderRadius: 9999, color: '#5F5E5A', background: 'transparent' }} onMouseEnter={e => { e.currentTarget.style.color = '#993C1D'; e.currentTarget.style.background = '#FAECE7' }} onMouseLeave={e => { e.currentTarget.style.color = '#5F5E5A'; e.currentTarget.style.background = 'transparent' }}><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Reset all</button>
-                )}
-                <button onClick={() => setFiltersOpen(false)} className="px-3 py-1.5 text-xs font-bold rounded-md appearance-none" style={{ background: '#8ECB3C', color: '#173404' }}>Done</button>
-              </div>
-            </div>
-
-            {/* Row 1: Funder type only — Funding type removed, tabs handle that */}
-            <div>
-              <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Funder type</p>
-              <div className="flex gap-1.5 flex-wrap">
-                {(['all', 'local', 'lottery', 'trust_foundation', 'corporate', 'local_authority', 'government'] as const).map(id => {
-                  const t = FUNDER_TYPES.find(f => f.id === id)
-                  if (!t) return null
-                  return (
-                    <button key={t.id} onClick={() => setActiveType(t.id)}
+            {/* Row 1: Funding type + Funder source */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Funding type</p>
+                <div className="flex gap-1.5 flex-wrap">
+                  {visibleFundingTypes.map(t => (
+                    <button key={t.id} onClick={() => setActiveFundingType(t.id as FundingType | 'all')}
+                      title={t.desc}
                       className={`px-3 py-1.5 border text-xs font-medium transition-all rounded-md ${
-                        activeType === t.id
-                          ? 'border-[#173404] bg-[#173404] text-[#EAF3DE]'
+                        activeFundingType === t.id
+                          ? 'border-[#173404] bg-[#173404] text-white'
                           : 'border-warm text-mid hover:border-[#173404] hover:text-[#173404]'
                       }`}>
                       {t.label}
                     </button>
-                  )
-                })}
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-light uppercase tracking-wider mb-2">Funder type</p>
+                <div className="flex gap-1.5 flex-wrap">
+                  {(['all', 'local', 'lottery', 'trust_foundation', 'corporate', 'local_authority', 'government'] as const).map(id => {
+                    const t = FUNDER_TYPES.find(f => f.id === id)
+                    if (!t) return null
+                    return (
+                      <button key={t.id} onClick={() => setActiveType(t.id)}
+                        className={`px-3 py-1.5 border text-xs font-medium transition-all rounded-md ${
+                          activeType === t.id
+                            ? 'border-[#173404] bg-[#173404] text-white'
+                            : 'border-warm text-mid hover:border-[#173404] hover:text-[#173404]'
+                        }`}>
+                        {t.label}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
             </div>
 
@@ -2310,11 +2196,11 @@ export default function SearchPage() {
                 <div className="flex items-center gap-1.5">
                   <span className="text-xs text-light">£</span>
                   <input type="number" value={amountMin} onChange={e => setAmountMin(e.target.value)}
-                    className="form-input w-full text-xs py-1.5" placeholder="Min" min={0} style={{ border: '0.5px solid rgba(0,0,0,0.14)', borderRadius: 10, background: '#fff' }} />
+                    className="form-input w-full text-xs py-1.5" placeholder="Min" min={0} />
                   <span className="text-xs text-light">–</span>
                   <span className="text-xs text-light">£</span>
                   <input type="number" value={amountMax} onChange={e => setAmountMax(e.target.value)}
-                    className="form-input w-full text-xs py-1.5" placeholder="Max" min={0} style={{ border: '0.5px solid rgba(0,0,0,0.14)', borderRadius: 10, background: '#fff' }} />
+                    className="form-input w-full text-xs py-1.5" placeholder="Max" min={0} />
                 </div>
               </div>
               <div>
@@ -2344,7 +2230,7 @@ export default function SearchPage() {
                     <button key={s.id} onClick={() => toggleSector(s.id)}
                       className={`px-3 py-1.5 border text-xs font-medium transition-all rounded-md ${
                         isActive
-                          ? 'border-[#173404] bg-[#173404] text-[#EAF3DE]'
+                          ? 'border-[#173404] bg-[#173404] text-white'
                           : 'border-warm text-mid hover:border-[#173404] hover:text-[#173404]'
                       }`}>
                       {s.label}
@@ -2354,379 +2240,182 @@ export default function SearchPage() {
               </div>
             </div>
 
+            {/* Reset all */}
+            {activeFilterCount > 0 && (
+              <button
+                onClick={resetAllFilters}
+                className="text-xs font-semibold text-mid hover:text-charcoal border border-warm hover:border-charcoal px-3 py-1.5 transition-all rounded-md"
+              >
+                ✕ Reset all filters
+              </button>
+            )}
           </div>
         )}
+          {/* ── Funding type tabs ── */}
+          {activeView === 'matches' && (
+            <div className="mt-5 -mx-5 border-t border-[#E8E0D1]">
+              <div className="flex">
+                {TYPE_TABS.map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex flex-1 items-center justify-center gap-2 py-3 text-sm font-semibold whitespace-nowrap border-b-2 transition-colors ${
+                      activeTab === tab.id
+                        ? 'border-[#8ECB3C] text-[#2C2C2A] font-bold'
+                        : 'border-transparent text-mid hover:text-charcoal'
+                    }`}
+                  >
+                    {tab.icon}
+                    {tab.label}
+                    {tab.count > 0 && (
+                      <span className={`text-xs font-medium ${activeTab === tab.id ? 'text-[#639922]' : 'text-light'}`}>
+                        {tab.count}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+              {TAB_DESCS[activeTab] && (
+                <div className="mx-5 mb-1 mt-3 px-4 py-3 bg-[#FAFAF7] rounded-lg flex items-start justify-between gap-4">
+                  <p className="text-sm text-[#444] leading-relaxed">{TAB_DESCS[activeTab]}</p>
+                  {activeTab === 'programme' && (
+                    <label className="flex items-center gap-2 cursor-pointer flex-shrink-0">
+                      <span className="text-xs font-semibold text-mid whitespace-nowrap">Includes cash</span>
+                      <button
+                        role="switch"
+                        aria-checked={programmeHasCash}
+                        onClick={() => setProgrammeHasCash(v => !v)}
+                        className={`relative inline-flex h-5 w-9 items-center transition-colors flex-shrink-0 ${programmeHasCash ? 'bg-[#8ECB3C]' : 'bg-[#E4E2DA]'}`}
+                      >
+                        <span className={`inline-block h-3.5 w-3.5 bg-white shadow transform transition-transform ${programmeHasCash ? 'translate-x-4' : 'translate-x-1'}`} />
+                      </button>
+                    </label>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>{/* end p-5 */}
       </div>{/* end search card */}
 
-      {/* ── Funding type tabs — horizontal: badge LEFT, label+count RIGHT ── */}
-      {activeView === 'browse' && (
-        <div className="flex gap-2 mb-5">
-          {TYPE_TABS.map(tab => {
-            const isActive = activeTab === tab.id
-            // Active badge: light sage bg + dark icon (matches categorical inactive tint logic)
-            const badgeBg = isActive
-              ? (tab.id === 'grant' ? '#C0DD97' : tab.id === 'programme' ? '#F5C9BC' : tab.id === 'investment' ? '#B8D4EE' : '#F0D4A8')
-              : (tab.id === 'grant' ? '#E4F0D4' : tab.id === 'programme' ? '#FAECE7' : tab.id === 'investment' ? '#E6F1FB' : '#FAEEDA')
-            const badgeColor = isActive
-              ? (tab.id === 'grant' ? '#173404' : tab.id === 'programme' ? '#6B2010' : tab.id === 'investment' ? '#073060' : '#5C3507')
-              : (tab.id === 'grant' ? '#3B6D11' : tab.id === 'programme' ? '#993C1D' : tab.id === 'investment' ? '#0C447C' : '#854F0B')
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className="flex-1 flex flex-row items-center gap-3 px-4 py-3.5 rounded-xl transition-colors outline-none"
-                style={isActive ? {
-                  background: tab.id === 'grant' ? '#F1F7E4' : tab.id === 'programme' ? '#FAECE7' : tab.id === 'investment' ? '#E6F1FB' : '#FAEEDA',
-                  border: `1px solid ${tab.id === 'grant' ? 'rgba(99,153,34,0.35)' : tab.id === 'programme' ? 'rgba(153,60,29,0.3)' : tab.id === 'investment' ? 'rgba(12,68,124,0.3)' : 'rgba(133,79,11,0.3)'}`,
-                } : {
-                  background: '#fff',
-                  border: '1px solid #E8E0D1',
-                }}
-              >
-                {/* 40×40 icon badge */}
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: badgeBg, color: badgeColor }}>
-                  {tab.icon}
-                </div>
-                <div className="flex flex-col items-start gap-0.5 min-w-0">
-                  <span className="text-sm font-semibold leading-tight"
-                    style={{ color: isActive
-                      ? (tab.id === 'grant' ? '#173404' : tab.id === 'programme' ? '#1A1A18' : tab.id === 'investment' ? '#073060' : '#5C3507')
-                      : '#2C2C2A' }}>
-                    {tab.label}
-                  </span>
-                  {tab.count > 0 && (
-                    <span className="text-xs font-medium leading-none"
-                      style={{ color: isActive
-                        ? (tab.id === 'grant' ? '#639922' : tab.id === 'programme' ? '#993C1D' : tab.id === 'investment' ? '#0C447C' : '#854F0B')
-                        : '#8A8986' }}>
-                      {tab.count} {profileFilterOn
-                        ? 'matches'
-                        : tab.id === 'programme' ? 'programmes'
-                        : tab.id === 'investment' ? 'investments'
-                        : tab.id === 'in_kind' ? 'in-kind'
-                        : 'grants'}
-                    </span>
-                  )}
-                </div>
-              </button>
-            )
-          })}
-        </div>
-      )}
-
-      {/* ── Profile-off amber nudge ── */}
-      {activeView === 'browse' && org && !profileFilterOn && !aiResults && (
-        <div className="mb-3 px-4 py-3.5 rounded-xl flex items-center justify-between gap-4" style={{ background: '#F1F7E4', border: '0.5px solid rgba(57,109,17,0.12)' }}>
-          <div className="flex items-center gap-3 min-w-0">
-            {/* Icon badge — search magnifier, green */}
-            <div className="flex-shrink-0 flex items-center justify-center w-8 h-8"
-              style={{ background: '#C0DD97', borderRadius: 9, color: '#173404' }}>
-              <Search size={15} strokeWidth={2.5} />
-            </div>
-            {/* Two-line copy */}
-            <div className="min-w-0">
-              <p className="text-sm font-semibold leading-snug" style={{ color: '#2C2C2A' }}>Searching the full catalogue</p>
-              <p className="text-xs leading-snug mt-0.5" style={{ color: '#3B6D11' }}>Use search and filters to explore beyond your profile matches. Results aren&rsquo;t ranked by fit.</p>
-            </div>
-          </div>
-          <button
-            onClick={() => {
-              setProfileFilterOn(true)
-              if (org.primary_location) { setLocationFilter(org.primary_location); setLocationInput(org.primary_location) }
-              if ((org.impact_sectors as string[] | undefined)?.length) setActiveSectors(new Set(org.impact_sectors as ImpactSector[]))
-            }}
-            className="text-sm font-semibold px-4 py-2 flex-shrink-0 rounded-full whitespace-nowrap"
-            style={{ background: 'transparent', color: '#173404', border: '0.5px solid rgba(23,52,4,0.2)' }}
-          >
-            Filter by my profile
-          </button>
-        </div>
-      )}
-
-      {/* ── Results header (hidden when empty — empty-state card owns that space) ── */}
-      {activeView === 'browse' && hasSearched && displayGrants.length > 0 && (
+      {/* ── Results header ── */}
+      {activeView === 'matches' && hasSearched && (
         <div className="mb-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            {/* Count + match status */}
-            <div className="flex items-baseline gap-2 flex-wrap">
+            <p className="text-sm text-mid">
               {(() => {
                 const tabNoun = activeTab === 'programme' ? 'programmes' : activeTab === 'investment' ? 'investments' : activeTab === 'in_kind' ? 'in-kind opportunities' : 'grants'
-                const allCount = activeTab === 'grant' ? allGrants_raw.filter(g => g.fundingType === 'grant' || !g.fundingType).length
-                  : activeTab === 'programme' ? allGrants_raw.filter(g => g.fundingType === 'programme').length
-                  : activeTab === 'investment' ? allGrants_raw.filter(g => g.fundingType === 'investment').length
-                  : activeTab === 'in_kind' ? allGrants_raw.filter(g => g.fundingType === 'in_kind').length
-                  : allGrants_raw.length
-                if (aiResults && smartMatched) return (
-                  <>
-                    <strong className="text-3xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{displayGrants.length}</strong>
-                    <span className="text-base text-mid">{tabNoun}</span>
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: '#EAF3DE', color: '#173404' }}>✓ matched for {org?.name}</span>
-                  </>
-                )
-                if (aiResults) return (
-                  <>
-                    <strong className="text-3xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{displayGrants.length}</strong>
-                    <span className="text-base text-mid">results for &ldquo;{query}&rdquo;</span>
-                  </>
-                )
-                if (filterQuery) return (
-                  <>
-                    <strong className="text-3xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{displayGrants.length}</strong>
-                    <span className="text-base text-mid">{tabNoun} matching &ldquo;{filterQuery}&rdquo;</span>
-                  </>
-                )
-                return (
-                  <>
-                    <strong className="text-3xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{displayGrants.length}</strong>
-                    <span className="text-base text-mid">{tabNoun}</span>
-                    {profileFilterOn && (
-                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: '#EAF3DE', color: '#173404' }}>✓ matched</span>
-                    )}
-                    {!profileFilterOn && !filterQuery && !aiResults && (
-                      <span className="text-sm" style={{ color: '#9A9895' }}>&middot; all UK funding &middot; unfiltered</span>
-                    )}
-                    {profileFilterOn && allCount > displayGrants.length && (
-                      <button
-                        onClick={() => { setProfileFilterOn(false); setSortBy('freshest'); setActiveSectors(new Set()); setLocationFilter(''); setLocationInput('') }}
-                        className="text-sm font-semibold px-5 py-2 rounded-lg transition-colors"
-                        style={{ background: '#fff', color: '#2C2C2A', border: '1px solid #D0CCC4' }}
-                      >
-                        Show all {allCount} grants
-                      </button>
-                    )}
-                  </>
+                return aiResults && smartMatched ? (
+                  <><strong style={{ color: '#8ECB3C' }}>✦ {displayGrants.length}</strong> {tabNoun} matched for <strong className="text-charcoal">{org?.name}</strong></>
+                ) : aiResults ? (
+                  <><strong style={{ color: '#8ECB3C' }}>✦ {displayGrants.length}</strong> results for &ldquo;{query}&rdquo;</>
+                ) : filterQuery ? (
+                  <><strong className="text-3xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{displayGrants.length} {tabNoun}</strong><span className="text-base text-mid ml-2">matching &ldquo;{filterQuery}&rdquo;</span></>
+                ) : (
+                  <><strong className="text-3xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{displayGrants.length} {tabNoun}</strong>{profileFilterOn && <span className="text-base text-mid ml-2">matched for you</span>}</>
                 )
               })()}
-            </div>
+            </p>
             {!aiResults && (
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <span className="text-[10px] font-semibold text-[#8A8986] uppercase tracking-wider whitespace-nowrap">
-                  Sort by
+              <div className="flex items-center border border-[#E8E0D1] overflow-hidden flex-shrink-0 rounded-lg">
+                {/* Sort By label */}
+                <span className="px-3 py-2 text-[10px] font-semibold text-[#8A8986] uppercase tracking-wider border-r border-[#E8E0D1] bg-[#FAFAF7] whitespace-nowrap">
+                  Sort By
                 </span>
-                <div className="flex items-center" style={{ background: '#F1F0EA', borderRadius: 9999, padding: 3, gap: 2 }}>
-                  {([
-                    { id: 'match',    label: 'Best match'   },
-                    { id: 'freshest', label: 'Newest'       },
-                    { id: 'deadline', label: 'Closing soon' },
-                  ] as const).filter(t => profileFilterOn || t.id !== 'match').map(tab => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setSortBy(tab.id as 'match' | 'freshest' | 'deadline')}
-                      className="px-3.5 py-1.5 text-xs font-medium transition-all whitespace-nowrap"
-                      style={sortBy === tab.id
-                        ? { background: '#fff', color: '#1A1A18', borderRadius: 9999, boxShadow: '0 1px 2px rgba(0,0,0,0.06)' }
-                        : { background: 'transparent', color: '#5F5E5A', borderRadius: 9999 }}
-                    >{tab.label}</button>
-                  ))}
-                </div>
+                {([
+                  { id: 'match',    label: 'Best Match'   },
+                  { id: 'freshest', label: 'Newest'       },
+                  { id: 'deadline', label: 'Closing Soon' },
+                ] as const).map((tab, i) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setSortBy(tab.id as 'match' | 'freshest' | 'deadline')}
+                    className={`px-4 py-2 text-xs font-medium transition-colors whitespace-nowrap${i > 0 ? ' border-l border-[#E8E0D1]' : ''}`}
+                    style={sortBy === tab.id
+                      ? { backgroundColor: '#F1F7E4', color: '#639922' }
+                      : { backgroundColor: '#fff', color: '#5F5E5A' }}
+                  >{tab.label}</button>
+                ))}
               </div>
             )}
           </div>
         </div>
       )}
 
-      {/* ── Profile completion nudge ── */}
-      {hasSearched && matchQuality && matchQuality.score < 80 && !bannerDismissed && (() => {
-        // Build field list with medium-weight names
-        const missingFields = matchQuality.missing.slice(0, 3)
-        const extraCount    = matchQuality.missing.length - missingFields.length
-        const fieldNodes    = missingFields.map((f, i) => (
-          <span key={f.label}>
-            {i > 0 && (i === missingFields.length - 1 && extraCount === 0 ? ' and ' : ', ')}
-            <span className="font-medium" style={{ color: '#2C2C2A' }}>{f.label}</span>
-          </span>
-        ))
-        return (
-          <div className="mb-4 px-4 py-3.5 rounded-xl flex items-center justify-between gap-4" style={{ background: '#F1F7E4', border: '0.5px solid rgba(57,109,17,0.12)' }}>
-            <div className="flex items-center gap-3 min-w-0">
-              {/* Icon badge */}
-              <div className="flex-shrink-0 flex items-center justify-center w-8 h-8"
-                style={{ background: '#8ECB3C', borderRadius: 9, color: '#fff' }}>
-                <span className="text-[11px] font-bold leading-none">i</span>
-              </div>
-              {/* Two-line copy */}
-              <div className="min-w-0">
-                <p className="text-sm font-semibold leading-snug" style={{ color: '#2C2C2A' }}>
-                  Your match quality is {matchQuality.score < 40 ? 'low' : matchQuality.score < 65 ? 'partial' : 'nearly there'}
-                </p>
-                <p className="text-xs leading-snug mt-0.5" style={{ color: '#3B6D11' }}>
-                  {fieldNodes}{extraCount > 0 ? `, and ${extraCount} more` : ''}{' '}are missing from your profile.
-                </p>
-              </div>
-            </div>
-            {/* Button + dismiss */}
-            <div className="flex items-center gap-3 flex-shrink-0">
-              <a
-                href="/dashboard/profile"
-                className="inline-flex items-center whitespace-nowrap transition-colors"
-                style={{ background: 'transparent', color: '#173404', border: '0.5px solid rgba(23,52,4,0.2)', borderRadius: 9999, padding: '9px 16px', fontSize: 13, fontWeight: 500 }}
-                onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.background = '#fff'; (e.currentTarget as HTMLAnchorElement).style.borderColor = '#173404' }}
-                onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.background = 'transparent'; (e.currentTarget as HTMLAnchorElement).style.borderColor = 'rgba(23,52,4,0.2)' }}
-              >
-                Complete profile
-              </a>
-              <button
-                onClick={() => setBannerDismissed(true)}
-                className="flex-shrink-0 text-lg leading-none transition-colors appearance-none"
-                style={{ color: '#639922', background: 'none', border: 'none' }}
-                title="Dismiss"
-              >
-                ✕
-              </button>
+      {/* ── Match quality banner ── */}
+      {hasSearched && matchQuality && matchQuality.score < 80 && !bannerDismissed && (
+        <div className="mb-4 rounded-xl border border-amber-mid bg-amber-pale px-4 py-3.5 flex items-start gap-3">
+          {/* Quality ring */}
+          <div className="flex-shrink-0 mt-0.5">
+            <div className="relative w-11 h-11">
+              <svg viewBox="0 0 36 36" className="w-11 h-11 -rotate-90">
+                <circle cx="18" cy="18" r="14" fill="none" stroke="#FAC775" strokeWidth="4" />
+                <circle
+                  cx="18" cy="18" r="14" fill="none"
+                  stroke={matchQuality.score >= 60 ? '#BA7517' : '#D85A30'}
+                  strokeWidth="4"
+                  strokeDasharray={`${(matchQuality.score / 100) * 88} 88`}
+                  strokeLinecap="round"
+                />
+              </svg>
+              <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-amber-deep">
+                {matchQuality.score}%
+              </span>
             </div>
           </div>
-        )
-      })()}
+
+          {/* Text */}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-amber-deepest mb-0.5">
+              Your match quality is {matchQuality.score < 40 ? 'low' : matchQuality.score < 65 ? 'partial' : 'nearly there'}
+            </p>
+            <p className="text-xs text-amber-deepest leading-snug">
+              {matchQuality.missing.slice(0, 3).map(f => f.label).join(', ')}{' '}
+              {matchQuality.missing.length > 3 ? `and ${matchQuality.missing.length - 3} more` : ''} missing from your profile.{' '}
+              Complete it so Grant Tracker can find the grants most relevant to your work.
+            </p>
+            <a
+              href="/dashboard/profile"
+              className="inline-block mt-2 text-xs font-semibold text-white bg-amber-pale0 hover:bg-amber-deep px-3 py-1.5 transition-colors"
+            >
+              Complete profile →
+            </a>
+          </div>
+
+          {/* Dismiss */}
+          <button
+            onClick={() => setBannerDismissed(true)}
+            className="flex-shrink-0 text-amber-mid hover:text-amber-saturated text-lg leading-none mt-0.5"
+            title="Dismiss"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* ── Matches view ── */}
-      {activeView === 'browse' && hasSearched && grantsLoaded && (() => {
+      {activeView === 'matches' && hasSearched && (() => {
         const dismissedCount = displayGrants.filter(item => interactions.get(item.grant.id)?.has('dismissed')).length
         const visibleGrants  = showDismissed
           ? displayGrants
           : displayGrants.filter(item => !interactions.get(item.grant.id)?.has('dismissed'))
         return visibleGrants.length === 0 && dismissedCount === 0 ? (
-          (() => {
-            // Detection priority: B (search) → C (filters) → A (category empty)
-            const emptyCardStyle: React.CSSProperties = {
-              background: '#fff', borderRadius: 14, border: '0.5px solid rgba(0,0,0,0.06)', boxShadow: '0 1px 3px rgba(23,52,4,0.04), 0 4px 12px rgba(23,52,4,0.04)', transition: 'box-shadow 0.15s ease, transform 0.15s ease',
-              padding: '48px 40px', textAlign: 'center' as const,
-            }
-            const tabEmptyCfg: Record<string, { bg: string; color: string; icon: React.ReactNode }> = {
-              grant:      { bg: '#F1F7E4', color: '#3B6D11', icon: <Landmark    size={24} strokeWidth={1.5} /> },
-              programme:  { bg: '#FAECE7', color: '#993C1D', icon: <Rocket      size={24} strokeWidth={1.5} /> },
-              investment: { bg: '#E6F1FB', color: '#0C447C', icon: <TrendingUp  size={24} strokeWidth={1.5} /> },
-              in_kind:    { bg: '#FAEEDA', color: '#854F0B', icon: <Gift        size={24} strokeWidth={1.5} /> },
-            }
-            const cfg          = tabEmptyCfg[activeTab] ?? tabEmptyCfg.grant
-            const tabNounP     = activeTab === 'programme' ? 'programmes' : activeTab === 'investment' ? 'investments' : activeTab === 'in_kind' ? 'in-kind opportunities' : 'grants'
-            const tabNounS     = activeTab === 'programme' ? 'programme'  : activeTab === 'investment' ? 'investment'  : activeTab === 'in_kind' ? 'in-kind opportunity'   : 'grant'
-            // Raw catalogue count for this tab (no profile/sector/location filters)
-            const rawCatCount  = allGrants_raw.filter(g => ((g as GrantOpportunity & { fundingType?: FundingType }).fundingType ?? 'grant') === activeTab).length
-            // Non-sort, non-profile active filters for variant C detection
-            const nonSortFilterCount = [
-              !!amountMin, !!amountMax, deadlineFilter !== 'all',
-              activeSectors.size > 0, entryTypeFilter !== 'all',
-              freshnessFilter !== 'all', !showInviteOnly,
-              activeFunderCategory !== 'all', activeGeoScope !== 'all', !!locationFilter,
-            ].filter(Boolean).length
-
-            // ── B. Search query active ──────────────────────────────
-            if (filterQuery) return (
-              <div style={emptyCardStyle}>
-                <div className="flex justify-center mb-5">
-                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: '#F5F3EF', color: '#888' }}>
-                    <Search size={24} strokeWidth={1.5} />
-                  </div>
-                </div>
-                <h3 className="text-lg font-semibold mb-2" style={{ color: '#2C2C2A' }}>
-                  No results for &ldquo;{filterQuery}&rdquo;
-                </h3>
-                <p className="text-sm leading-relaxed mb-6 mx-auto" style={{ color: '#6B6A67', maxWidth: 380 }}>
-                  We couldn&rsquo;t find any matches for that search. Try broader terms — e.g. drop specific words, or search for the funder name.
-                </p>
+          <div className="text-center py-16 text-light">
+            <p className="text-4xl mb-3">🔍</p>
+            {filterQuery ? (
+              <>
+                <p className="mb-3">No grants matched &ldquo;<strong className="text-charcoal">{filterQuery}</strong>&rdquo; in your current filters.</p>
                 <button
                   onClick={() => { setInputValue(''); setFilterQuery('') }}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-lg appearance-none"
-                  style={{ background: '#fff', color: '#2C2C2A', border: '0.5px solid rgba(0,0,0,0.14)' }}
+                  className="px-4 py-2 text-xs font-semibold rounded-full transition-colors hover:opacity-80" style={{ color: '#639922', border: '1px solid rgba(142,203,60,0.4)', background: 'rgba(142,203,60,0.06)' }}
                 >
-                  <XCircle size={14} strokeWidth={2} /> Clear search
+                  Clear search
                 </button>
-              </div>
-            )
-
-            // ── C. Non-profile filters active ───────────────────────
-            if (nonSortFilterCount > 0) {
-              // Build human-readable filter value labels
-              const filterValueLabels: string[] = []
-              if (activeSectors.size > 0) {
-                const sectorNames = Array.from(activeSectors)
-                  .map(id => IMPACT_SECTOR_FILTERS.find(f => f.id === id)?.label ?? id)
-                filterValueLabels.push(...sectorNames)
-              }
-              if (locationFilter) filterValueLabels.push(locationFilter)
-              if (amountMin && amountMax) filterValueLabels.push(`£${Number(amountMin).toLocaleString()}–£${Number(amountMax).toLocaleString()}`)
-              else if (amountMin) filterValueLabels.push(`£${Number(amountMin).toLocaleString()}+`)
-              else if (amountMax) filterValueLabels.push(`up to £${Number(amountMax).toLocaleString()}`)
-              if (deadlineFilter !== 'all') filterValueLabels.push('deadline filter')
-              if (entryTypeFilter !== 'all') filterValueLabels.push('entry type')
-              if (activeFunderCategory !== 'all') filterValueLabels.push('funder type')
-              if (activeGeoScope !== 'all') filterValueLabels.push('geographic scope')
-              return (
-                <div style={emptyCardStyle}>
-                  <div className="flex justify-center mb-5">
-                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: '#FAEEDA', color: '#854F0B' }}>
-                      <SlidersHorizontal size={24} strokeWidth={1.5} />
-                    </div>
-                  </div>
-                  <h3 className="text-lg font-semibold mb-2" style={{ color: '#2C2C2A' }}>
-                    No {tabNounP} match your filters
-                  </h3>
-                  <p className="text-sm leading-relaxed mb-6 mx-auto" style={{ color: '#6B6A67', maxWidth: 400 }}>
-                    {filterValueLabels.length > 0
-                      ? `${filterValueLabels.join(' · ')} — try removing one, broadening the location, or adjusting the amount range.`
-                      : `${nonSortFilterCount} filter${nonSortFilterCount !== 1 ? 's' : ''} active — try removing one or adjusting the amount range.`}
-                  </p>
-                  <div className="flex items-center justify-center gap-3 flex-wrap">
-                    <button
-                      onClick={resetAllFilters}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-lg appearance-none"
-                      style={{ background: '#fff', color: '#2C2C2A', border: '0.5px solid rgba(0,0,0,0.14)', boxShadow: 'none' }}
-                    >
-                      Reset all filters
-                    </button>
-                    <button
-                      onClick={() => setFiltersOpen(true)}
-                      className="text-sm font-medium"
-                      style={{ color: '#6B6A67' }}
-                    >
-                      Adjust filters
-                    </button>
-                  </div>
-                </div>
-              )
-            }
-
-            // ── A. Category empty (profile on / default) ────────────
-            return (
-              <div style={emptyCardStyle}>
-                <div className="flex justify-center mb-5">
-                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: cfg.bg, color: cfg.color }}>
-                    {cfg.icon}
-                  </div>
-                </div>
-                <h3 className="text-lg font-semibold mb-2" style={{ color: '#2C2C2A' }}>
-                  {profileFilterOn
-                    ? `No ${tabNounP} for ${org?.name ?? 'your organisation'} yet`
-                    : `No ${tabNounP} found`}
-                </h3>
-                <p className="text-sm leading-relaxed mb-6 mx-auto" style={{ color: '#6B6A67', maxWidth: 420 }}>
-                  {profileFilterOn
-                    ? `Your profile doesn’t match any ${tabNounP} right now. That’s common for organisations focused on a specific area. There ${rawCatCount === 1 ? 'is' : 'are'} ${rawCatCount} ${rawCatCount === 1 ? tabNounS : tabNounP} in the full catalogue — you can explore them, or check if your profile could be broader.`
-                    : `There are no ${tabNounP} matching your current settings.`}
-                </p>
-                <div className="flex items-center justify-center gap-3 flex-wrap">
-                  {profileFilterOn && rawCatCount > 0 && (
-                    <button
-                      onClick={() => { setProfileFilterOn(false); setSortBy('freshest'); setActiveSectors(new Set()); setLocationFilter(''); setLocationInput('') }}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-lg appearance-none"
-                      style={{ background: '#fff', color: '#2C2C2A', border: '0.5px solid rgba(0,0,0,0.14)' }}
-                    >
-                      Show all {rawCatCount} {tabNounP}
-                    </button>
-                  )}
-                  <a
-                    href="/dashboard/profile"
-                    className="inline-flex items-center px-4 py-2 text-sm font-semibold rounded-lg"
-                    style={{ background: 'transparent', color: '#2C2C2A', border: '1px solid #D8D4CC' }}
-                  >
-                    Adjust my profile
-                  </a>
-                </div>
-              </div>
-            )
-          })()
+              </>
+            ) : (
+              <p className="mb-3">No grants found — try different keywords or clear the filters.</p>
+            )}
+          </div>
         ) : (
           <>
             {visibleGrants.slice(0, visibleCount).map(item => (
@@ -2739,7 +2428,6 @@ export default function SearchPage() {
                 interactions={interactions.get(item.grant.id) ?? new Set()}
                 onAddToPipeline={handleAddToPipeline}
                 isInPipeline={pipelinedIds.has(item.grant.title)}
-                pipelineStage={pipelinedIds.get(item.grant.title)?.stage}
                 onRemoveFromPipeline={handleRemoveFromPipeline}
                 onDismiss={handleDismiss}
                 onUndismiss={handleUndismiss}
@@ -2799,7 +2487,6 @@ export default function SearchPage() {
                 interactions={interactions.get(item.grant.id) ?? new Set()}
                 onAddToPipeline={handleAddToPipeline}
                 isInPipeline={pipelinedIds.has(item.grant.title)}
-                pipelineStage={pipelinedIds.get(item.grant.title)?.stage}
                 onRemoveFromPipeline={handleRemoveFromPipeline}
                 onDismiss={handleDismiss}
                 onUndismiss={handleUndismiss}
@@ -2823,6 +2510,57 @@ export default function SearchPage() {
         )
       })()}
 
+      {/* ── Latest tab: chronological feed, no profile filter ── */}
+      {activeView === 'latest' && (() => {
+        const latestGrants: DisplayGrant[] = [...allGrants]
+          .filter(g => !!g.dateAdded)
+          .sort((a, b) => (b.dateAdded ?? '').localeCompare(a.dateAdded ?? ''))
+          .concat(allGrants.filter(g => !g.dateAdded))
+          .map(g => ({ grant: g, score: 0, reason: '', isAiScore: false, breakdown: undefined }))
+        return latestGrants.length === 0 ? (
+          <div className="text-center py-16 text-light">
+            <CalendarDays className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+            <p className="font-medium text-charcoal">No grants loaded yet</p>
+          </div>
+        ) : (
+          <>
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <p className="text-3xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.02em' }}>{latestGrants.length} opportunities</p>
+                <p className="text-sm text-mid mt-0.5">Sorted by date added — newest first. Not filtered by your profile.</p>
+              </div>
+            </div>
+            {latestGrants.slice(0, visibleCount).map(item => (
+              <GrantCard
+                key={item.grant.id}
+                item={item}
+                hasOrg={!!org}
+                hasSearch={false}
+                interactions={interactions.get(item.grant.id) ?? new Set()}
+                onAddToPipeline={handleAddToPipeline}
+                isInPipeline={pipelinedIds.has(item.grant.title)}
+                onRemoveFromPipeline={handleRemoveFromPipeline}
+                onDismiss={handleDismiss}
+                onUndismiss={handleUndismiss}
+                onLike={handleLike}
+                onDislike={handleDislike}
+                onSave={handleSave}
+                onUnsave={handleUnsave}
+              />
+            ))}
+            {visibleCount < latestGrants.length && (
+              <div className="text-center py-6">
+                <button
+                  onClick={() => setVisibleCount(v => v + 30)}
+                  className="btn-outline px-6 py-2.5 text-sm"
+                >
+                  Show more ({latestGrants.length - visibleCount} remaining)
+                </button>
+              </div>
+            )}
+          </>
+        )
+      })()}
 
       {toast && (
         <div className="fixed bottom-6 right-6 bg-charcoal text-white px-5 py-3.5 shadow-card-lg text-sm z-50">

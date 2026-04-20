@@ -162,13 +162,6 @@ const TITLE_DOMAIN_KEYWORDS: Array<{
     sector: 'food',
     orgTerms: ['food', 'agriculture', 'farming'],
   },
-  {
-    words: ['deep tech', 'quantum', 'ai accelerator', 'machine learning grant',
-            'innovate uk', 'knowledge transfer partnership', 'r&d tax', 'edge growth',
-            'net zero innovation', 'defence innovation', 'catapult'],
-    sector: 'tech',
-    orgTerms: ['tech', 'technology', 'digital', 'innovation', 'software'],
-  },
 ]
 
 /**
@@ -658,7 +651,7 @@ export function computeMatchScore(
     // young_people) produce high coverage — e.g. football grants for a theatre.
     const PRIMARY_DOMAINS = [
       'sport', 'environment', 'heritage', 'international',
-      'food', 'animal_welfare', 'faith', 'tech',
+      'food', 'animal_welfare', 'faith',
     ]
     const grantPrimaryDomains = grantImpactSectors.filter(s => PRIMARY_DOMAINS.includes(s))
     if (grantPrimaryDomains.length > 0) {
@@ -836,7 +829,7 @@ export function computeMatchScore(
       const nichematch = nicheIntersection.length / Math.max(grantNicheTags.length, 1)
       const nicheBonus = Math.round(nichematch * 8)
       themesScore = Math.min(25, themesScore + nicheBonus)
-      if (nicheBonus >= 4) reasons.push(`Specialist ${nicheIntersection[0].replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())} focus — matches ${org.name}'s specialism`)
+      if (nicheBonus >= 4) reasons.push(`Specialist ${nicheIntersection[0].replace(/_/g, ' ')} focus — matches ${org.name}'s specialism`)
     } else {
       // Grant has a clear specialism the org doesn't share — gentle nudge down
       // (max -3) so the org still sees it, but it ranks lower than a specialist org.
@@ -966,13 +959,44 @@ export function computeMatchScore(
   }
   // If either side has no data, score stays at neutral (5)
 
-// ── 4. Grant size (informational only — always neutral) ──────
-  // Grant size is not used as a ranking signal: orgs typically want the
-  // largest grant available, so penalising large grants distorts relevance.
-  // Amounts still appear in the UI breakdown for reference only.
-  const grantSizeScore = 10
+  // ── 4. Grant size fit (max 20) ─────────────────────────────────────────
+  let grantSizeScore = 10
+  const grantMax = grant.amountMax ?? grant.amountMin ?? 0
+  const grantMin = grant.amountMin ?? 0
 
-    // ── 5. Funder type preference + funding type affinity (max 15) ────────
+  if (org.min_grant_target || org.max_grant_target) {
+    const targetMin = org.min_grant_target ?? 0
+    const targetMax = org.max_grant_target ?? Infinity
+    if (grantMax >= targetMin && grantMin <= targetMax) {
+      grantSizeScore = 20
+      const grantRangeStr = grantMin > 0 && grantMax > 0 && grantMin !== grantMax
+        ? `£${grantMin >= 1000 ? (grantMin/1000).toFixed(0)+'k' : grantMin}–£${grantMax >= 1000000 ? (grantMax/1000000).toFixed(1)+'m' : grantMax >= 1000 ? (grantMax/1000).toFixed(0)+'k' : grantMax}`
+        : grantMax > 0 ? `up to £${grantMax >= 1000000 ? (grantMax/1000000).toFixed(1)+'m' : grantMax >= 1000 ? (grantMax/1000).toFixed(0)+'k' : grantMax}` : 'this grant'
+      reasons.push(`${grantRangeStr} fits ${org.name}'s target size`)
+    } else if (grantMax === 0 && grantMin === 0) {
+      // No amount data — can't evaluate size, give neutral score
+      grantSizeScore = 10
+    } else if (grantMax < targetMin) {
+      // Grant ceiling is below org's minimum target — too small
+      grantSizeScore = 3
+    } else {
+      // Grant floor exceeds org's maximum target — too large.
+      // Penalise proportionally: a 2x overshoot is very different from a 20x one.
+      const overshootRatio = targetMax > 0 ? grantMin / targetMax : 10
+      grantSizeScore = overshootRatio > 10 ? 3 : overshootRatio > 4 ? 5 : 8
+    }
+  } else if (org.annual_income_band && grantMax > 0) {
+    const orgIncome = INCOME_MIDPOINTS[org.annual_income_band] ?? 50_000
+    const ratio = grantMax / orgIncome
+    if (ratio >= 0.05 && ratio <= 0.6)       grantSizeScore = 20
+    else if (ratio > 0.6 && ratio <= 1.2)    grantSizeScore = 14
+    else if (ratio > 1.2 && ratio <= 3.0)    grantSizeScore = 8
+    else if (ratio > 3.0)                    grantSizeScore = 3
+    else                                     grantSizeScore = 15
+    if (grantSizeScore >= 18) reasons.push(`Grant size suits ${org.name}`)
+  }
+
+  // ── 5. Funder type preference + funding type affinity (max 15) ────────
   let funderTypeScore = 8 // neutral base
 
   // Funder type preference (trust vs government vs lottery etc.)
@@ -1028,7 +1052,7 @@ export function computeMatchScore(
       if (grant.fundingSubtype === 'unrestricted') {
         reasons.push(`Unrestricted core funding — exactly what ${org.name} is looking for`)
       } else {
-        const subtypeLabel = grant.fundingSubtype.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+        const subtypeLabel = grant.fundingSubtype.replace(/_/g, ' ')
         reasons.push(`Matches your ${subtypeLabel} preference`)
       }
     } else {
@@ -1250,17 +1274,8 @@ export function computeMatchScore(
   }
 
   // ── Total ──────────────────────────────────────────────────────────────
-  // Reweighted: themes (35) + beneficiaries (20) dominate; location (15),
-  // eligibility (12), funder type (8), grant size (10 neutral) round out to 100.
-  // Raw dimension scores are scaled to their new maxes before summing.
-  const wLocation     = Math.round(locationScore     * 15 / 20)  // 20 → 15
-  const wThemes       = Math.round(themesScore       * 35 / 25)  // 25 → 35
-  const wBeneficiary  = Math.round(beneficiaryScore  * 20 / 10)  // 10 → 20
-  const wFunderType   = Math.round(funderTypeScore   *  8 / 15)  // 15 → 8
-  const wEligibility  = Math.round(eligibilityScore  * 12 / 15)  // 15 → 12
-
   let score = Math.min(100,
-    wLocation + wThemes + wBeneficiary + grantSizeScore + wFunderType + wEligibility
+    locationScore + themesScore + beneficiaryScore + grantSizeScore + funderTypeScore + eligibilityScore
   )
 
   // Freshness bonus — newly added grants get a gentle tiebreaker boost so fresh
@@ -1299,42 +1314,6 @@ export function computeMatchScore(
   // Build a narrative sentence rather than a flat bullet list
   const warns    = reasons.filter(r => /check|may |likely|not match|exceed|borough|restricted/i.test(r))
   const positives = reasons.filter(r => !warns.includes(r))
-
-  // Hard structural flags always produce a warn
-  if (locationMismatch && !warns.some(w => /geograph|location|area|borough|region/i.test(w))) {
-    const tag = grant.locationTag ?? 'a specific area'
-    warns.push('Geographic focus: ' + grant.funder + ' focuses on ' + tag + ' - your delivery area may not qualify')
-  }
-  if (primaryDomainMismatch && !warns.some(w => /sector|domain|speciali/i.test(w))) {
-    warns.push('Sector depth: this grant sits in a specialist domain that does not align with your primary focus')
-  }
-  if (structureMismatch && !warns.some(w => /structure|eligib|charity|CIC/i.test(w))) {
-    warns.push('Legal structure: your organisation type may not meet this funder eligibility requirements')
-  }
-
-  // Guaranteed caveat synthesis for sub-80 matches:
-  // rank dimensions by how far they are from their max, always surface the weakest one(s)
-  if (score < 80) {
-    const dimGaps: Array<{ key: string; gap: number; msg: string }> = [
-      { key: 'themes',      gap: 35 - wThemes,       msg: 'Sector alignment: thematic overlap with this funder priority areas is limited' },
-      { key: 'beneficiary', gap: 20 - wBeneficiary,  msg: 'Beneficiary group: this funder target group may not fully match your primary beneficiaries' },
-      { key: 'location',    gap: 15 - wLocation,     msg: 'Geographic focus: limited location overlap - check whether this funder covers your area' },
-      { key: 'eligibility', gap: 12 - wEligibility,  msg: 'Eligibility: some requirements are unclear - review the criteria carefully before applying' },
-      { key: 'funderType',  gap: 8  - wFunderType,   msg: 'Funder type: this funder type is outside your stated preferences' },
-    ].filter(d => d.gap > 0)
-    dimGaps.sort((a, b) => b.gap - a.gap)
-    // Always add caveat for the weakest dimension unless already covered
-    const dimKeywords: Record<string, RegExp> = {
-      themes:      /sector|theme|align/i,
-      beneficiary: /beneficiar|group|target/i,
-      location:    /geograph|location|area/i,
-      eligibility: /eligib|structure|require/i,
-      funderType:  /funder type|preference/i,
-    }
-    const toAdd = dimGaps.filter(d => !warns.some(w => dimKeywords[d.key].test(w)))
-    const limit = score < 60 ? 2 : 1
-    toAdd.slice(0, limit).forEach(d => warns.push(d.msg))
-  }
 
   let reason: string
   if (reasons.length === 0) {
@@ -1403,12 +1382,12 @@ export function computeMatchScore(
     positiveReasons: positives,
     warnReasons:     warns,
     breakdown: {
-      location:      { score: wLocation,     max: 15, label: 'Location' },
-      themes:        { score: wThemes,       max: 35, label: 'Themes & work' },
-      beneficiaries: { score: wBeneficiary,  max: 20, label: 'Beneficiaries' },
-      grantSize:     { score: grantSizeScore, max: 10, label: 'Grant size' },
-      funderType:    { score: wFunderType,   max: 8,  label: 'Funder type' },
-      eligibility:   { score: wEligibility,  max: 12, label: 'Eligibility' },
+      location:      { score: locationScore,      max: 20, label: 'Location' },
+      themes:        { score: themesScore,        max: 25, label: 'Themes & work' },
+      beneficiaries: { score: beneficiaryScore,   max: 10, label: 'Beneficiaries' },
+      grantSize:     { score: grantSizeScore,     max: 20, label: 'Grant size' },
+      funderType:    { score: funderTypeScore,    max: 15, label: 'Funder type' },
+      eligibility:   { score: eligibilityScore,   max: 15, label: 'Eligibility' },
     },
   }
 }
@@ -1418,5 +1397,5 @@ export function scoreColour(score: number): { bg: string; text: string; bar: str
   if (score >= 80) return { bg: 'bg-sage/15',  text: 'text-sage',  bar: 'bg-sage'  }
   if (score >= 65) return { bg: 'bg-gold/15',  text: 'text-gold',  bar: 'bg-gold'  }
   if (score >= 45) return { bg: 'bg-warm',     text: 'text-mid',   bar: 'bg-mid'   }
-  return               { bg: 'bg-coral-pale',   text: 'text-coral-saturated', bar: 'bg-coral-mid' }
+  return               { bg: 'bg-red-50',   text: 'text-red-400', bar: 'bg-red-300' }
 }

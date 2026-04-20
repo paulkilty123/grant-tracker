@@ -638,6 +638,7 @@ export default function ProfilePage() {
       niche_tags:                   form.nicheTags,
       has_asset_lock:               form.hasAssetLock,
       years_trading:                form.yearsTrading ? parseInt(form.yearsTrading) : null,
+      geographic_reach:             null,
       owner_id:                     userId,
       alerts_enabled:               form.alertsEnabled,
       alert_frequency:              form.alertFrequency,

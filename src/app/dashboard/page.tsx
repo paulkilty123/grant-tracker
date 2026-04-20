@@ -1,9 +1,8 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getDeadlineAlerts, formatCurrency } from '@/lib/utils'
-import { PIPELINE_STAGES } from '@/lib/utils'
 import type { PipelineItem, Organisation } from '@/types'
-import { Award, TrendingUp, Users, Rocket, GraduationCap, Gift, ArrowRight, CalendarDays, AlarmClock, Clock } from 'lucide-react'
+import { Award, TrendingUp, Users, Rocket, GraduationCap, Gift, ArrowRight, CalendarDays, Check, Sparkles, Bookmark, ListChecks, UserPlus } from 'lucide-react'
 import { computeMatchScore } from '@/lib/matching'
 import { normaliseScrapedGrant } from '@/lib/grants-normalise'
 
@@ -18,31 +17,16 @@ function formatDeadlineDate(deadline: string | null): { month: string; day: stri
   }
 }
 
-// Pick a lucide icon for a grant based on its title keywords
-function grantIcon(title: string) {
-  const t = title.toLowerCase()
-  if (t.includes('invest') || t.includes('loan') || t.includes('finance')) return TrendingUp
-  if (t.includes('women') || t.includes('diversity') || t.includes('inclusion')) return Users
-  if (t.includes('accelerat') || t.includes('incubat') || t.includes('startup')) return Rocket
-  if (t.includes('fellowship') || t.includes('training') || t.includes('education')) return GraduationCap
-  if (t.includes('in-kind') || t.includes('pro bono') || t.includes('support')) return Gift
-  return Award
-}
-
-// Small string hash used to seed the daily shuffle. Deterministic so the same
-// (userId, date) pair always produces the same ordering — means the user sees
-// the same three cards all day and refreshes don't cause flicker.
+// Deterministic daily rotation — same (userId, date) seed gives the same 3
+// cards all day so refreshes don't flicker. FNV-1a hash + LCG shuffle.
 function hashSeed(str: string): number {
-  let h = 2166136261 >>> 0 // FNV-1a offset basis
+  let h = 2166136261 >>> 0
   for (let i = 0; i < str.length; i++) {
     h ^= str.charCodeAt(i)
     h = Math.imul(h, 16777619) >>> 0
   }
   return h || 1
 }
-
-// Fisher–Yates shuffle seeded with a linear congruential generator. Pure
-// function: same input → same output. Never mutates the input array.
 function seededShuffle<T>(arr: T[], seed: number): T[] {
   const out = arr.slice()
   let s = seed
@@ -57,38 +41,36 @@ function seededShuffle<T>(arr: T[], seed: number): T[] {
 export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  // Layout gate guarantees user + completed onboarding before we get here —
+  // no null checks needed for redirect paths.
 
   const { data: org } = user
     ? await supabase.from('organisations').select('*').eq('owner_id', user.id).maybeSingle()
     : { data: null }
+  const typedOrg = org as Organisation | null
 
-  // New users without an org profile → send them to set one up
-  if (user && !org) {
-    redirect('/dashboard/profile')
-  }
-
-  const { data: rawItems } = org
-    ? await supabase.from('pipeline_items').select('*').eq('org_id', org.id).order('created_at', { ascending: false })
+  const { data: rawItems } = typedOrg
+    ? await supabase.from('pipeline_items').select('*').eq('org_id', typedOrg.id).order('created_at', { ascending: false })
     : { data: [] }
-
   const items: PipelineItem[] = rawItems ?? []
 
-  // ── Matched Opportunities ────────────────────────────────────────────────
-  // Pull a pool of active, non-expired grants from the funder-joined view,
-  // score each against the user's org, keep the top 30, then deterministically
-  // shuffle using a (user × date) seed so a different slice of 3 surfaces each
-  // day. Refreshing the page on the same day shows the same three cards —
-  // stability matters more than novelty within a single session.
+  // Saved-grant count feeds the empty/populated split alongside pipeline count.
+  // A user who's saved grants but not yet moved any to pipeline still counts
+  // as "active" — they've engaged with matches.
+  let savedCount = 0
+  if (typedOrg) {
+    const { count } = await supabase
+      .from('grant_interactions')
+      .select('id', { count: 'exact', head: true })
+      .eq('org_id', typedOrg.id)
+      .eq('action', 'saved')
+    savedCount = count ?? 0
+  }
+
+  // ── Matched Opportunities (used in both states) ──────────────────────────
   const today = new Date().toISOString().split('T')[0]
-  const typedOrg = org as Organisation | null
-  const matchedGrants: Array<{
-    id: string
-    title: string
-    funder: string
-    description: string
-    amountStr: string
-    searchHref: string
-  }> = []
+  type ScoredGrant = { grant: ReturnType<typeof normaliseScrapedGrant>; score: number; lastSeenAt: string | null }
+  let scoredAll: ScoredGrant[] = []
   if (typedOrg) {
     const { data: grantRows } = await supabase
       .from('grants_with_funder')
@@ -100,52 +82,78 @@ export default async function DashboardPage() {
       .limit(500)
 
     if (grantRows && grantRows.length > 0) {
-      const scored = grantRows
+      scoredAll = grantRows
         .map(row => {
-          const grant = normaliseScrapedGrant(row as Record<string, unknown>)
-          const match = computeMatchScore(grant, typedOrg)
-          return { grant, score: match.score }
+          const g = normaliseScrapedGrant(row as Record<string, unknown>)
+          return {
+            grant: g,
+            score: computeMatchScore(g, typedOrg).score,
+            lastSeenAt: (row as Record<string, unknown>).last_seen_at as string | null,
+          }
         })
         .filter(x => x.score > 0)
         .sort((a, b) => b.score - a.score)
-        .slice(0, 30)
-
-      // Deterministic daily rotation seeded by (userId, YYYY-MM-DD). The top
-      // 30 is a stable universe — only the which-3-we-show changes day to day.
-      const seed   = hashSeed(`${user?.id ?? 'anon'}-${today}`)
-      const picked = seededShuffle(scored, seed).slice(0, 3)
-
-      for (const p of picked) {
-        const g = p.grant
-        const amountStr = g.amountMin || g.amountMax
-          ? (g.amountMin && g.amountMax && g.amountMin !== g.amountMax
-              ? `${formatCurrency(g.amountMin)} – ${formatCurrency(g.amountMax)}`
-              : formatCurrency(g.amountMax || g.amountMin || 0))
-          : 'Amount on application'
-        matchedGrants.push({
-          id: g.id,
-          title: g.title,
-          funder: g.funder,
-          description: g.description,
-          amountStr,
-          searchHref: `/dashboard/search?grant=${encodeURIComponent(g.id)}`,
-        })
-      }
     }
   }
-  const matchedCount = matchedGrants.length
+  const totalMatchCount = scoredAll.length
 
-  const active    = items.filter(i => !['won', 'declined'].includes(i.stage))
-  const won       = items.filter(i => i.stage === 'won')
-  const submitted = items.filter(i => i.stage === 'submitted')
+  // Daily rotation: take top-30 universe, seeded-shuffle, slice 3.
+  const topPool = scoredAll.slice(0, 30)
+  const seed    = hashSeed(`${user?.id ?? 'anon'}-${today}`)
+  const picked  = seededShuffle(topPool, seed).slice(0, 3)
+  const matchedGrants = picked.map(p => {
+    const g = p.grant
+    const amountStr = g.amountMin || g.amountMax
+      ? (g.amountMin && g.amountMax && g.amountMin !== g.amountMax
+          ? `${formatCurrency(g.amountMin)} – ${formatCurrency(g.amountMax)}`
+          : formatCurrency(g.amountMax || g.amountMin || 0))
+      : 'Amount on application'
+    return {
+      id: g.id,
+      title: g.title,
+      funder: g.funder,
+      description: g.description,
+      amountStr,
+      fundingType: g.fundingType ?? 'grant',
+      scorePct: Math.round(p.score),
+      searchHref: `/dashboard/search?grant=${encodeURIComponent(g.id)}`,
+    }
+  })
 
-  // Stage pipeline values
+  // ── Week-scoped counters (for populated-state subtitle) ──────────────────
+  // Monday-midnight local — week runs Mon→Sun. "New matches since Monday"
+  // uses last_seen_at ≥ monday as a proxy for "recently surfaced".
+  const now = new Date()
+  const dow = now.getDay() // 0=Sun..6=Sat
+  const daysFromMonday = (dow + 6) % 7
+  const monday = new Date(now)
+  monday.setDate(now.getDate() - daysFromMonday)
+  monday.setHours(0, 0, 0, 0)
+  const mondayISO = monday.toISOString()
+
+  const sunday = new Date(monday)
+  sunday.setDate(monday.getDate() + 6)
+  sunday.setHours(23, 59, 59, 999)
+
+  const deadlinesThisWeek = items.filter(i => {
+    if (!i.deadline) return false
+    const d = new Date(i.deadline)
+    return d >= now && d <= sunday
+  }).length
+  const inProgressCount = items.filter(i => ['applying', 'submitted'].includes(i.stage)).length
+  const newMatchesThisWeek = scoredAll.filter(x => x.lastSeenAt && x.lastSeenAt >= mondayISO).length
+
+  // ── Pipeline tonal ladder — spec §1.4 + §8.2 ────────────────────────────
+  // Identified cream → Applying pale green → Submitted mid green → Won
+  // saturated green (cream text) → Declined soft coral (deep coral text).
+  // Break to coral at Declined is intentional per spec: not the next rung
+  // up, a different kind of outcome.
   const stageData = [
-    { id: 'identified', label: 'Identified', sublabel: 'Leads',    bg: '#EAF3DE', labelCol: '#639922', valCol: '#173404', dot: '#8ECB3C' },
-    { id: 'applying',   label: 'Applying',   sublabel: 'Active',   bg: '#F1F7E4', labelCol: '#639922', valCol: '#173404', dot: '#C0DD97' },
-    { id: 'submitted',  label: 'Submitted',  sublabel: 'Pending',  bg: '#E6F1FB', labelCol: '#0C447C', valCol: '#042C53', dot: '#378ADD' },
-    { id: 'won',        label: 'Won',        sublabel: 'Wins',     bg: '#2C2C2A', labelCol: '#8ECB3C', valCol: '#FFFFFF', dot: '#8ECB3C' },
-    { id: 'declined',   label: 'Declined',   sublabel: 'Archived', bg: '#FAFAF7', labelCol: '#5F5E5A', valCol: '#2C2C2A', dot: '#E4E2DA' },
+    { id: 'identified', label: 'Identified', bg: '#F5F1E8', labelCol: '#5F5E5A',            valCol: '#2C2C2A',            countCol: '#5F5E5A' },
+    { id: 'applying',   label: 'Applying',   bg: '#EAF3DE', labelCol: '#3F6814',            valCol: '#173404',            countCol: '#3F6814' },
+    { id: 'submitted',  label: 'Submitted',  bg: '#C0DD97', labelCol: '#3F6814',            valCol: '#173404',            countCol: '#3F6814' },
+    { id: 'won',        label: 'Won',        bg: '#639922', labelCol: 'rgba(250,247,242,0.78)', valCol: '#FAF7F2',        countCol: 'rgba(250,247,242,0.78)' },
+    { id: 'declined',   label: 'Declined',   bg: '#FAECE7', labelCol: '#993C1D',            valCol: '#993C1D',            countCol: '#993C1D' },
   ]
   const stageValues = stageData.map(s => ({
     ...s,
@@ -154,19 +162,9 @@ export default async function DashboardPage() {
   }))
   const totalValue = stageValues.reduce((sum, s) => sum + s.value, 0)
 
-  const stats = {
-    totalPipelineValue: active.reduce((s, i) => s + (i.amount_max ?? i.amount_requested ?? 0), 0),
-    totalWon:           won.reduce((s, i) => s + (i.amount_requested ?? 0), 0),
-    wonCount:           won.length,
-    activeCount:        active.length,
-    submittedCount:     submitted.length,
-  }
-
   const alerts = getDeadlineAlerts(items).slice(0, 4)
-  const urgentCount = alerts.filter(a => ['urgent','overdue'].includes(a.urgency)).length
 
-  // Derive first name only — surname is intentionally stripped so the greeting
-  // reads naturally ("Good morning, Paul" not "Good morning, Paul Kilty").
+  // ── Greeting ─────────────────────────────────────────────────────────────
   const rawName: string =
     (user?.user_metadata?.full_name as string | undefined) ??
     (user?.user_metadata?.name as string | undefined) ??
@@ -179,201 +177,290 @@ export default async function DashboardPage() {
     const first = cleaned.split(/\s+/)[0]
     return first.charAt(0).toUpperCase() + first.slice(1)
   })()
+  const hour = now.getHours()
+  const greetingTime = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
 
-  const hour = new Date().getHours()
-  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
-  const profileIncomplete = !org?.name
+  // State split: zero pipeline AND zero saved = empty; anything else = populated.
+  const hasActivity = items.length > 0 || savedCount > 0
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // EMPTY STATE (Day 1) — welcome banner, 5-item checklist, preview tiles
+  // ══════════════════════════════════════════════════════════════════════════
+  if (!hasActivity) {
+    return (
+      <div>
+        {/* Greeting */}
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold text-charcoal mb-1.5" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.02em' }}>
+            Welcome to Grant Tracker, {displayName}.
+          </h2>
+          <p className="text-sm text-mid">
+            Your profile's complete — time to find some funding.
+          </p>
+        </div>
+
+        {/* Welcome banner — pale-green → neutral gradient */}
+        <div
+          className="relative overflow-hidden rounded-xl p-8 md:p-10 mb-8 border"
+          style={{
+            background: 'linear-gradient(135deg, #EAF3DE 0%, #F1F8E4 50%, #FAFAF7 100%)',
+            borderColor: '#E4E2DA',
+          }}
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <span
+              className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-md"
+              style={{ background: 'rgba(132,204,22,0.20)', color: '#3F6814' }}
+            >
+              <Sparkles className="w-3 h-3" />
+              {totalMatchCount} matches ready
+            </span>
+          </div>
+          <h3 className="text-2xl md:text-3xl font-bold text-charcoal leading-tight mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.02em' }}>
+            We've found funding that fits your profile.
+          </h3>
+          <p className="text-sm md:text-base text-mid mb-6 max-w-2xl leading-relaxed">
+            Browse your matches, save the ones worth a closer look, and move them into your pipeline when you're ready to apply. Everything you do here feeds the matching — the more you engage, the sharper it gets.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <a
+              href="/dashboard/search"
+              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity"
+              style={{ background: '#8ECB3C', color: '#173404', fontFamily: 'var(--font-space-grotesk)', boxShadow: '0 2px 8px rgba(132,204,22,0.25)' }}
+            >
+              See my matches
+              <ArrowRight className="w-4 h-4" />
+            </a>
+            <a
+              href="/dashboard/search?tour=1"
+              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg border hover:bg-white/60 transition-colors"
+              style={{ borderColor: '#2C2C2A', color: '#2C2C2A', background: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-space-grotesk)' }}
+            >
+              Give me a tour
+            </a>
+          </div>
+        </div>
+
+        {/* Getting started — 5 items */}
+        <div className="mb-8">
+          <h3 className="text-xl font-bold text-charcoal mb-4" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+            Getting started
+          </h3>
+          <div className="bg-white rounded-xl border border-warm overflow-hidden" style={{ boxShadow: '0 2px 16px rgba(26,46,43,0.04)' }}>
+            {/* 1. Complete profile — done */}
+            <div className="flex items-center gap-4 p-5 border-b border-warm">
+              <div className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center" style={{ background: '#8ECB3C' }}>
+                <Check className="w-5 h-5 text-white" strokeWidth={3} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-charcoal line-through decoration-charcoal/30" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+                  Complete your profile
+                </p>
+                <p className="text-xs text-mid mt-0.5">Nice work — matches are running against your org now.</p>
+              </div>
+            </div>
+
+            {/* 2. Browse first matches — next (pale-green row + green ring on number) */}
+            <div className="flex items-center gap-4 p-5 border-b border-warm" style={{ background: '#EAF3DE' }}>
+              <div
+                className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold"
+                style={{
+                  background: '#FFFFFF',
+                  border: '2px solid #8ECB3C',
+                  color: '#3F6814',
+                  fontFamily: 'var(--font-space-grotesk)',
+                  boxShadow: '0 0 0 4px rgba(142,203,60,0.15)',
+                }}
+              >
+                2
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+                  Browse your first matches
+                </p>
+                <p className="text-xs text-mid mt-0.5">{totalMatchCount} opportunities scored against your profile.</p>
+              </div>
+              <a
+                href="/dashboard/search"
+                className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg hover:opacity-90 transition-opacity"
+                style={{ background: '#173404', color: '#FAF7F2', fontFamily: 'var(--font-space-grotesk)' }}
+              >
+                Start
+                <ArrowRight className="w-3 h-3" />
+              </a>
+            </div>
+
+            {/* 3. Save first opportunity — todo */}
+            <div className="flex items-center gap-4 p-5 border-b border-warm">
+              <div
+                className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold"
+                style={{ background: '#FFFFFF', border: '1.5px solid #E4E2DA', color: '#9A978E', fontFamily: 'var(--font-space-grotesk)' }}
+              >
+                3
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+                  Save your first opportunity
+                </p>
+                <p className="text-xs text-mid mt-0.5">Bookmark anything worth a closer look.</p>
+              </div>
+              <Bookmark className="w-4 h-4 text-mid flex-shrink-0" />
+            </div>
+
+            {/* 4. Add to pipeline — todo */}
+            <div className="flex items-center gap-4 p-5 border-b border-warm">
+              <div
+                className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold"
+                style={{ background: '#FFFFFF', border: '1.5px solid #E4E2DA', color: '#9A978E', fontFamily: 'var(--font-space-grotesk)' }}
+              >
+                4
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+                  Add your first grant to the pipeline
+                </p>
+                <p className="text-xs text-mid mt-0.5">Track deadlines and application progress in one place.</p>
+              </div>
+              <ListChecks className="w-4 h-4 text-mid flex-shrink-0" />
+            </div>
+
+            {/* 5. Enrich profile — todo + Later skip */}
+            <div className="flex items-center gap-4 p-5">
+              <div
+                className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold"
+                style={{ background: '#FFFFFF', border: '1.5px solid #E4E2DA', color: '#9A978E', fontFamily: 'var(--font-space-grotesk)' }}
+              >
+                5
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+                  Enrich your profile for sharper matches
+                </p>
+                <p className="text-xs text-mid mt-0.5">
+                  Add beneficiaries, past grants, and funding priorities.{' '}
+                  <a href="/dashboard/profile" className="underline underline-offset-2 hover:text-charcoal">Later</a>
+                </p>
+              </div>
+              <UserPlus className="w-4 h-4 text-mid flex-shrink-0" />
+            </div>
+          </div>
+        </div>
+
+        {/* "What you'll see here soon" — preview tiles */}
+        <div className="rounded-xl p-6 md:p-8 border" style={{ background: '#FAF7F2', borderColor: '#E4E2DA' }}>
+          <h3 className="text-sm font-bold uppercase tracking-wider text-mid mb-5" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+            What you'll see here soon
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4" style={{ opacity: 0.75 }}>
+            {/* Upcoming deadlines */}
+            <div className="bg-white rounded-lg p-5 border border-warm">
+              <div className="flex items-center gap-2 mb-3">
+                <CalendarDays className="w-4 h-4" style={{ color: '#5F5E5A' }} />
+                <p className="text-xs font-semibold uppercase tracking-wider text-mid">Upcoming deadlines</p>
+              </div>
+              <div className="space-y-2">
+                <div className="h-3 rounded bg-warm/60 w-3/4" />
+                <div className="h-3 rounded bg-warm/40 w-1/2" />
+                <div className="h-3 rounded bg-warm/40 w-2/3" />
+              </div>
+            </div>
+            {/* Pipeline at a glance */}
+            <div className="bg-white rounded-lg p-5 border border-warm">
+              <div className="flex items-center gap-2 mb-3">
+                <ListChecks className="w-4 h-4" style={{ color: '#5F5E5A' }} />
+                <p className="text-xs font-semibold uppercase tracking-wider text-mid">Pipeline at a glance</p>
+              </div>
+              <div className="flex gap-1 h-10">
+                <div className="flex-1 rounded" style={{ background: '#EAF3DE' }} />
+                <div className="flex-1 rounded" style={{ background: '#F1F7E4' }} />
+                <div className="flex-1 rounded" style={{ background: '#E6F1FB' }} />
+              </div>
+            </div>
+            {/* New matches */}
+            <div className="bg-white rounded-lg p-5 border border-warm">
+              <div className="flex items-center gap-2 mb-3">
+                <Sparkles className="w-4 h-4" style={{ color: '#5F5E5A' }} />
+                <p className="text-xs font-semibold uppercase tracking-wider text-mid">New matches</p>
+              </div>
+              <div className="space-y-2">
+                <div className="h-3 rounded bg-warm/60 w-full" />
+                <div className="h-3 rounded bg-warm/40 w-4/5" />
+                <div className="h-3 rounded bg-warm/40 w-3/5" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // POPULATED STATE (Week 2+) — dynamic subtitle, deadlines, pipeline, matches
+  // ══════════════════════════════════════════════════════════════════════════
+  const subtitleParts: string[] = []
+  if (deadlinesThisWeek > 0) subtitleParts.push(`${deadlinesThisWeek} deadline${deadlinesThisWeek === 1 ? '' : 's'} this week`)
+  if (inProgressCount > 0)   subtitleParts.push(`${inProgressCount} application${inProgressCount === 1 ? '' : 's'} in progress`)
+  if (newMatchesThisWeek > 0) subtitleParts.push(`${newMatchesThisWeek} new match${newMatchesThisWeek === 1 ? '' : 'es'} since Monday`)
+  if (subtitleParts.length === 0) subtitleParts.push(`${totalMatchCount} opportunities waiting for you`)
 
   return (
     <div>
-      {/* Setup banner */}
-      {profileIncomplete && (
-        <div className="mb-6 border border-amber-mid bg-amber-pale p-4 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <p className="text-sm font-semibold text-amber-deepest">Complete your profile to unlock matched grants</p>
-            <p className="text-xs text-amber-deep mt-0.5">Takes about 3 minutes — tells us your sector, location and legal structure.</p>
-          </div>
-          <a href="/dashboard/profile" className="flex-shrink-0 px-4 py-2 text-xs font-semibold rounded-full hover:opacity-90 transition-colors whitespace-nowrap" style={{ background: '#2C2C2A', color: '#FFFFFF', fontFamily: 'var(--font-space-grotesk)' }}>Set up profile →</a>
-        </div>
-      )}
-
       {/* Greeting */}
       <div className="mb-7">
         <h2 className="text-3xl font-bold text-charcoal mb-1.5" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.02em' }}>
-          {greeting}, {displayName}
+          {greetingTime}, {displayName}.
         </h2>
-        <div className="flex items-center flex-wrap gap-2 text-sm text-mid">
-          {!profileIncomplete && (
-            <>
-              <span>{urgentCount} urgent deadline{urgentCount !== 1 ? 's' : ''}</span>
-              <span className="text-warm">•</span>
-              <span>{stats.activeCount} active opportunit{stats.activeCount !== 1 ? 'ies' : 'y'}</span>
-              {urgentCount > 0 && (
-                <>
-                  <span className="text-warm">•</span>
-                  <a href="/dashboard/deadlines"
-                    className="text-xs font-bold uppercase tracking-wider hover:underline" style={{ color: '#8ECB3C' }}>
-                    Action Required
-                  </a>
-                </>
-              )}
-            </>
-          )}
-          {profileIncomplete && <span>Welcome to GrantTracker — your funding dashboard</span>}
-        </div>
+        <p className="text-sm text-mid">
+          {subtitleParts.join(' · ')}
+        </p>
       </div>
 
-      {/* Stat cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        {/* Card 1 — Total Pipeline (blue) */}
-        <div className="p-5 rounded-xl col-span-1" style={{ background: '#B5D4F4', boxShadow: '0 2px 16px rgba(56,189,248,0.18)' }}>
-          <p className="text-[10px] font-semibold uppercase tracking-wider mb-3" style={{ color: '#0C447C', opacity: 0.6 }}>Total Pipeline</p>
-          <p className="text-3xl font-bold leading-none mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#0C447C', letterSpacing: '-0.02em' }}>
-            {formatCurrency(stats.totalPipelineValue)}
-          </p>
-          <p className="text-xs" style={{ color: '#0C447C', opacity: 0.6 }}>{stats.activeCount} active opportunit{stats.activeCount !== 1 ? 'ies' : 'y'}</p>
-        </div>
-
-        {/* Card 2 — Won This Year (lime green) */}
-        <div className="p-5 rounded-xl" style={{ background: '#8ECB3C', boxShadow: '0 2px 16px rgba(132,204,22,0.25)' }}>
-          <p className="text-[10px] font-semibold uppercase tracking-wider mb-3" style={{ color: 'rgba(255,255,255,0.70)' }}>Won This Year</p>
-          <p className="text-3xl font-bold leading-none mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#ffffff', letterSpacing: '-0.02em' }}>{formatCurrency(stats.totalWon)}</p>
-          <p className="text-xs" style={{ color: 'rgba(255,255,255,0.70)' }}>{stats.wonCount} grant{stats.wonCount !== 1 ? 's' : ''} secured</p>
-        </div>
-
-        {/* Card 3 — Submitted (amber) */}
-        <div className="p-5 rounded-xl" style={{ background: '#FAC775', boxShadow: '0 2px 16px rgba(245,158,11,0.12)' }}>
-          <p className="text-[10px] font-semibold uppercase tracking-wider mb-3" style={{ color: '#854F0B' }}>Submitted</p>
-          <p className="text-3xl font-bold leading-none mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#412402', letterSpacing: '-0.02em' }}>{stats.submittedCount}</p>
-          <p className="text-xs" style={{ color: '#854F0B' }}>Application{stats.submittedCount !== 1 ? 's' : ''} awaiting decision</p>
-        </div>
-
-        {/* Card 4 — Urgent Deadlines (grey) */}
-        <div className="p-5 rounded-xl" style={{ background: '#E8E0D1', boxShadow: '0 2px 16px rgba(0,0,0,0.06)' }}>
-          <p className="text-[10px] font-semibold uppercase tracking-wider mb-3" style={{ color: '#5F5E5A' }}>Urgent Deadlines</p>
-          <div className="flex items-center gap-3 mb-2">
-            <p className="text-3xl font-bold leading-none" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.02em', color: urgentCount > 0 ? '#D85A30' : '#5F5E5A' }}>{urgentCount}</p>
-            <span className="flex items-center justify-center w-10 h-10 rounded-full" style={{ backgroundColor: 'rgba(234,88,12,0.12)' }}>
-              <AlarmClock className="w-5 h-5" style={{ color: '#D85A30' }} />
-            </span>
-          </div>
-          <p className="text-xs" style={{ color: '#5F5E5A' }}>In the next 10 days</p>
-        </div>
-      </div>
-
-      {/* Matched Opportunities — deterministic daily rotation over top 30 matches */}
-      {matchedCount > 0 && (
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Matched Opportunities</h3>
-            <a href="/dashboard/search" className="text-xs font-semibold uppercase tracking-wider hover:underline" style={{ color: "#8ECB3C" }}>
-              View All Opportunities →
-            </a>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {matchedGrants.map(g => {
-              const Icon = grantIcon(g.title)
-              return (
-                <a key={g.id}
-                  href={g.searchHref}
-                  className="bg-white border border-warm/80 rounded-xl p-5 flex flex-col hover:border-sage/40 hover:-translate-y-0.5 transition-all group"
-                  style={{ boxShadow: '0 2px 16px rgba(26,46,43,0.06)' }}>
-                  {/* Icon + Matched badge */}
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(132,204,22,0.12)' }}>
-                      <Icon className="w-5 h-5" style={{ color: '#8ECB3C' }} />
-                    </div>
-                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide" style={{ background: 'rgba(132,204,22,0.15)', color: '#639922' }}>Matched</span>
-                  </div>
-                  {/* Title + description */}
-                  <h4 className="text-base font-bold text-charcoal leading-snug mb-1.5 transition-colors line-clamp-2" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-                    {g.title}
-                  </h4>
-                  <p className="text-xs text-mid leading-relaxed line-clamp-2 mb-4 flex-1">
-                    {g.description}
-                  </p>
-                  {/* Amount + Funder */}
-                  <div className="border-t border-warm pt-3 flex gap-6">
-                    <div>
-                      <p className="text-[9px] font-semibold text-mid uppercase tracking-wider mb-0.5">Amount</p>
-                      <p className="text-sm font-bold text-charcoal">{g.amountStr}</p>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[9px] font-semibold text-mid uppercase tracking-wider mb-0.5">Funder</p>
-                      <p className="text-sm font-medium text-charcoal truncate">{g.funder}</p>
-                    </div>
-                  </div>
-                </a>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Pipeline + Deadlines */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      {/* This week's deadlines + Pipeline */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
 
         {/* Pipeline Overview */}
-        <div className="md:col-span-2 card">
+        <div className="md:col-span-2 card rounded-xl">
           <div className="flex items-center justify-between mb-5">
-            <h3 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Pipeline Overview</h3>
-            <a href="/dashboard/pipeline" className="text-xs font-semibold uppercase tracking-wider hover:underline" style={{ color: '#8ECB3C' }}>View Pipeline →</a>
+            <h3 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Pipeline</h3>
+            <a href="/dashboard/pipeline" className="text-xs font-semibold uppercase tracking-wider hover:underline" style={{ color: '#8ECB3C' }}>View pipeline →</a>
           </div>
 
-          {items.length === 0 ? (
-            <div className="text-center py-10 text-mid">
-              <p className="text-2xl mb-3">🔍</p>
-              <p className="text-sm font-medium text-charcoal mb-1">No grants tracked yet</p>
-              <p className="text-xs mb-4">Find a grant and hit <strong>+ Pipeline</strong> to start tracking.</p>
-              <a href="/dashboard/search" className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-full hover:opacity-90 transition-colors" style={{ background: '#8ECB3C', color: '#2C2C2A', fontFamily: 'var(--font-space-grotesk)' }}>
-                Find your first grant →
-              </a>
-            </div>
-          ) : (
-            <>
-              {/* Pipeline bar — semi-proportional layout.
-                  Every non-zero stage gets a guaranteed base width (flex-basis)
-                  so its £ amount stays legible even when one stage dwarfs the
-                  others. Any extra space is distributed proportionally to each
-                  stage's value via flex-grow. Without this, a £960k Identified
-                  column squeezes everything else into "£…" placeholders. */}
-              <a href="/dashboard/pipeline" className="flex rounded-2xl overflow-hidden mb-6 hover:opacity-95 transition-opacity" style={{ height: 140 }}>
-                {stageValues.map(s => {
-                  const grow = totalValue > 0 ? (s.value > 0 ? s.value : 0) : 1
-                  if (grow === 0) return null
-                  return (
-                    <div key={s.id} className="flex flex-col justify-center px-4"
-                      style={{ flexGrow: grow, flexShrink: 0, flexBasis: 110, background: s.bg, minWidth: 110 }}>
-                      <span className="text-[10px] font-bold uppercase tracking-widest mb-2 truncate"
-                        style={{ color: s.labelCol }}>
-                        {s.label}
-                      </span>
-                      <span className="font-display font-bold leading-none truncate"
-                        style={{ color: s.valCol, fontSize: 'clamp(18px, 2.2vw, 32px)' }}>
-                        {formatCurrency(s.value)}
-                      </span>
-                    </div>
-                  )
-                })}
-              </a>
-              {/* Count row — evenly spaced with coloured dot */}
-              <div className="grid grid-cols-5">
-                {stageValues.map(s => (
-                  <div key={s.id} className="flex flex-col items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: s.dot }} />
-                    <span className="text-lg font-bold text-charcoal leading-none">{s.count}</span>
-                    <span className="text-[9px] font-semibold text-mid uppercase tracking-widest">{s.sublabel}</span>
+          {/* Tonal ladder — each tile carries label + amount + count in one.
+              The earlier separate count row had mismatched vocab (Leads /
+              Pending / Archived) that didn't map to the stage names;
+              consolidating inside the tile also matches the spec §7.2
+              Pipeline card pattern and mirrors the Pipeline full-page view. */}
+          <a href="/dashboard/pipeline" className="flex rounded-xl overflow-hidden hover:opacity-95 transition-opacity" style={{ height: 160 }}>
+            {stageValues.map(s => {
+              const grow = totalValue > 0 ? (s.value > 0 ? s.value : 0) : 1
+              if (grow === 0) return null
+              return (
+                <div key={s.id} className="flex flex-col justify-between px-4 py-3.5"
+                  style={{ flexGrow: grow, flexShrink: 0, flexBasis: 110, background: s.bg, minWidth: 110 }}>
+                  <span className="text-[10px] font-bold uppercase tracking-widest truncate"
+                    style={{ color: s.labelCol }}>
+                    {s.label}
+                  </span>
+                  <div>
+                    <span className="block font-display font-bold leading-none truncate"
+                      style={{ color: s.valCol, fontSize: 'clamp(18px, 2.2vw, 30px)' }}>
+                      {formatCurrency(s.value)}
+                    </span>
+                    <span className="block text-[10px] font-semibold mt-1.5 truncate"
+                      style={{ color: s.countCol }}>
+                      {s.count} {s.count === 1 ? 'opportunity' : 'opportunities'}
+                    </span>
                   </div>
-                ))}
-              </div>
-            </>
-          )}
+                </div>
+              )
+            })}
+          </a>
         </div>
 
-        {/* Deadlines */}
-        <div className="card">
+        {/* This week's deadlines */}
+        <div className="card rounded-xl">
           <div className="flex items-center justify-between mb-5">
-            <h3 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Deadlines</h3>
+            <h3 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>This week's deadlines</h3>
             <CalendarDays className="w-4 h-4 text-mid" />
           </div>
 
@@ -386,19 +473,24 @@ export default async function DashboardPage() {
             <div className="space-y-1">
               {alerts.map(alert => {
                 const dateObj = formatDeadlineDate(alert.item.deadline)
-                const urgencyBadge =
-                  alert.urgency === 'overdue' ? { label: 'Overdue',  cls: 'bg-coral-saturated text-white' } :
-                  alert.urgency === 'urgent'  ? { label: 'Tomorrow', cls: 'bg-gold/20 text-gold font-bold' } :
-                  alert.urgency === 'soon'    ? { label: `In ${alert.daysUntil}d`, cls: 'bg-forest/10 text-forest' } :
-                                                { label: `${alert.daysUntil}d`,    cls: 'bg-forest/10 text-forest' }
+                // Override urgency buckets for display: spec wants coral for
+                // deadlines under 7 days. utils.ts keeps its own thresholds
+                // (<=10 "urgent") so this is a view-layer override only.
+                const d = alert.daysUntil
+                const pillLabel = d < 0 ? 'Overdue' : d === 0 ? 'Today' : d === 1 ? 'Tomorrow' : `${d}d`
+                const pillCls   = d < 7
+                  ? 'bg-[#FAECE7] text-[#993C1D]'
+                  : d <= 21
+                    ? 'bg-[#EAF3DE] text-[#3F6814]'
+                    : 'bg-[#F5F1E8] text-[#5F5E5A]'
+                const urgencyBadge = { label: pillLabel, cls: pillCls }
                 const amountStr = alert.item.amount_max ?? alert.item.amount_requested
                   ? formatCurrency(alert.item.amount_max ?? alert.item.amount_requested ?? 0)
                   : null
 
                 return (
                   <a key={alert.item.id} href="/dashboard/deadlines"
-                    className="flex items-center gap-3 py-2.5 border-b border-warm last:border-0 hover:bg-[#FAFAF7] -mx-2 px-2 rounded transition-colors">
-                    {/* Date column */}
+                    className="flex items-center gap-3 py-2.5 border-b border-warm last:border-0 hover:bg-[#FAFAF7] -mx-2 px-2 rounded-md transition-colors">
                     {dateObj ? (
                       <div className="flex flex-col items-center flex-shrink-0 w-9 text-center">
                         <span className="text-[9px] font-bold text-mid uppercase">{dateObj.month}</span>
@@ -407,11 +499,10 @@ export default async function DashboardPage() {
                     ) : (
                       <div className="w-9 flex-shrink-0" />
                     )}
-                    {/* Name + badge */}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-charcoal truncate">{alert.item.grant_name}</p>
                       <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide ${urgencyBadge.cls}`}>
+                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wide ${urgencyBadge.cls}`}>
                           {urgencyBadge.label}
                         </span>
                         {amountStr && <span className="text-[10px] text-mid">{amountStr}</span>}
@@ -425,14 +516,76 @@ export default async function DashboardPage() {
 
           <div className="mt-4">
             <a href="/dashboard/deadlines"
-              className="flex items-center justify-center gap-1.5 w-full py-2 text-xs font-semibold uppercase tracking-wider rounded-full border transition-colors" style={{ color: '#5F5E5A', borderColor: '#E4E2DA', fontFamily: 'var(--font-space-grotesk)' }}>
-              Calendar View
+              className="flex items-center justify-center gap-1.5 w-full py-2 text-xs font-semibold uppercase tracking-wider rounded-lg border transition-colors" style={{ color: '#5F5E5A', borderColor: '#E4E2DA', fontFamily: 'var(--font-space-grotesk)' }}>
+              Calendar view
               <ArrowRight className="w-3 h-3" />
             </a>
           </div>
         </div>
-
       </div>
+
+      {/* New matches */}
+      {matchedGrants.length > 0 && (
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>New matches</h3>
+            <a href="/dashboard/search" className="text-xs font-semibold uppercase tracking-wider hover:underline" style={{ color: "#8ECB3C" }}>
+              View all opportunities →
+            </a>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {matchedGrants.map(g => {
+              const typeConfig: Record<string, { label: string; bg: string; fg: string }> = {
+                grant:      { label: 'Grant',      bg: '#F1F7E4', fg: '#3B6D11' },
+                programme:  { label: 'Programme',  bg: '#FAECE7', fg: '#993C1D' },
+                investment: { label: 'Investment', bg: '#E6F1FB', fg: '#0C447C' },
+                in_kind:    { label: 'In-Kind',    bg: '#FAEEDA', fg: '#854F0B' },
+              }
+              const t = typeConfig[g.fundingType] ?? typeConfig.grant
+              return (
+                <a key={g.id}
+                  href={g.searchHref}
+                  className="bg-white rounded-xl p-5 flex flex-col hover:-translate-y-0.5 transition-all group"
+                  style={{ border: '0.5px solid rgba(0,0,0,0.10)', boxShadow: '0 2px 10px rgba(26,46,43,0.04)' }}>
+                  <div className="mb-4">
+                    <span className="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-md uppercase tracking-wider"
+                      style={{ background: t.bg, color: t.fg }}>
+                      {t.label}
+                    </span>
+                  </div>
+                  <h4 className="text-[15px] font-semibold text-charcoal leading-snug mb-1 line-clamp-2" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+                    {g.title}
+                  </h4>
+                  {/* Suppress funder line when seed data has title == funder
+                      (e.g. "The Brit Trust / The Brit Trust") — avoids the
+                      repeated-line visual tic while keeping the field for
+                      rows where they genuinely differ. */}
+                  {g.funder && g.funder.trim().toLowerCase() !== g.title.trim().toLowerCase() ? (
+                    <p className="text-xs text-mid mb-4 truncate">{g.funder}</p>
+                  ) : (
+                    <div className="mb-4" />
+                  )}
+                  <p className="text-[13px] font-semibold text-charcoal mb-4" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{g.amountStr}</p>
+                  {/* Match score + bar — spec §1.6.
+                      Qualitative band replaces the static "MATCH" label so
+                      the header carries meaning at a glance, not just the %. */}
+                  <div className="mt-auto pt-3" style={{ borderTop: '0.5px solid rgba(0,0,0,0.08)' }}>
+                    <div className="flex items-baseline justify-between mb-1.5">
+                      <span className="text-[11px] font-semibold" style={{ color: '#5F5E5A', fontFamily: 'var(--font-space-grotesk)' }}>
+                        {g.scorePct >= 85 ? 'Strong match' : g.scorePct >= 70 ? 'Good match' : 'Partial match'}
+                      </span>
+                      <span className="text-sm font-bold" style={{ color: '#3F6814', fontFamily: 'var(--font-space-grotesk)' }}>{g.scorePct}%</span>
+                    </div>
+                    <div className="h-1 rounded-sm overflow-hidden" style={{ background: 'rgba(57,109,17,0.15)' }}>
+                      <div className="h-full" style={{ width: `${g.scorePct}%`, background: '#8ECB3C', borderRadius: 2 }} />
+                    </div>
+                  </div>
+                </a>
+              )
+            })}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Organisation } from '@/types'
@@ -12,15 +12,15 @@ import {
   FolderKanban,
   CalendarClock,
   User,
-  MessageSquare,
   Activity,
   ClipboardList,
   Sparkles,
-  LogOut,
   Menu,
   X,
-  BookOpen,
   Building2,
+  MessageSquare,
+  LogOut,
+  ChevronUp,
 } from 'lucide-react'
 
 interface Props {
@@ -43,53 +43,66 @@ function matchProfileScore(org: Organisation | null): number {
 
 const ADMIN_EMAIL = 'paulkilty1@gmail.com'
 
-const NAV_GROUPS = [
-  {
-    label: 'Find Funding',
-    items: [
-      { href: '/dashboard/search',    label: 'Find Funding',  Icon: Search    },
-    ],
-  },
-  {
-    label: 'Manage',
-    items: [
-      { href: '/dashboard/pipeline',  label: 'Pipeline',   Icon: FolderKanban },
-      { href: '/dashboard/deadlines', label: 'Deadlines',  Icon: CalendarClock },
-    ],
-  },
-  {
-    label: 'Settings',
-    items: [
-      { href: '/dashboard/profile',  label: 'My Profile', Icon: User },
-      { href: '/dashboard/feedback', label: 'Feedback',   Icon: MessageSquare },
-    ],
-  },
-]
-
-const ADMIN_NAV_GROUP = {
-  label: 'Admin',
-  items: [
-    { href: '/dashboard/admin',              label: 'Grant Health',        Icon: Activity      },
-    { href: '/dashboard/admin/urls',         label: 'Grant Manager',       Icon: ClipboardList },
-    { href: '/dashboard/admin/corporate',    label: 'Partner Manager',     Icon: Building2     },
-    { href: '/dashboard/admin/intelligence', label: 'Funder Intelligence', Icon: Sparkles      },
-  ],
+const SB = {
+  text:       'rgba(245,241,232,0.72)',
+  textBright: '#F5F1E8',
+  icon:       'rgba(245,241,232,0.55)',
+  iconActive: '#8ECB3C',
+  hover:      'rgba(245,241,232,0.06)',
+  activeBg:   'rgba(142,203,60,0.14)',
+  accent:     '#8ECB3C',
+  divider:    'rgba(245,241,232,0.08)',
+  badgeBg:    'rgba(142,203,60,0.18)',
+  badgeText:  '#C0DD97',
 }
 
-/**
- * Sidebar — April 2026 design-spec overhaul.
- *  - Deep forest #173404 background with pale-green #97C459 nav labels
- *  - Active state: #27500A panel + pale green text + lime icon
- *  - Logo uses spec lime #8ECB3C, Space Grotesk
- *  - Mobile backdrop is deep-forest 40%, never black
- */
+const MAIN_NAV = [
+  { href: '/dashboard/search',    label: 'Find Funding', Icon: Search        },
+  { href: '/dashboard/pipeline',  label: 'Pipeline',     Icon: FolderKanban  },
+  { href: '/dashboard/deadlines', label: 'Deadlines',    Icon: CalendarClock },
+  { href: '/dashboard/profile',   label: 'Profile',      Icon: User          },
+  // Notifications slots in here (bell icon, unread badge) when the inbox ships in v1.1
+]
+
+const ADMIN_NAV = [
+  { href: '/dashboard/admin',              label: 'Grant Health',        Icon: Activity      },
+  { href: '/dashboard/admin/urls',         label: 'Grant Manager',       Icon: ClipboardList },
+  { href: '/dashboard/admin/corporate',    label: 'Partner Manager',     Icon: Building2     },
+  { href: '/dashboard/admin/intelligence', label: 'Funder Intelligence', Icon: Sparkles      },
+]
+
 export default function Sidebar({ org, userEmail }: Props) {
   const pathname    = usePathname()
   const router      = useRouter()
-  const [mobileOpen, setMobileOpen] = useState(false)
+  const [mobileOpen,   setMobileOpen]   = useState(false)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const userMenuRef = useRef<HTMLDivElement>(null)
 
-  const profileScore    = matchProfileScore(org)
-  const showProfileDot  = org !== null && profileScore < 80
+  const profileScore = matchProfileScore(org)
+  const showBadge    = org != null && profileScore < 80
+
+  const orgName  = org?.name ?? null
+  const initials = orgName
+    ? orgName.split(' ').map((w: string) => w[0]).slice(0, 2).join('').toUpperCase()
+    : userEmail.slice(0, 2).toUpperCase()
+
+  useEffect(() => {
+    if (!userMenuOpen) return
+    function onDoc(e: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false)
+      }
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setUserMenuOpen(false)
+    }
+    document.addEventListener('mousedown', onDoc)
+    document.addEventListener('keydown',   onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDoc)
+      document.removeEventListener('keydown',   onKey)
+    }
+  }, [userMenuOpen])
 
   async function handleSignOut() {
     const supabase = createClient()
@@ -97,20 +110,15 @@ export default function Sidebar({ org, userEmail }: Props) {
     router.push('/auth/login')
   }
 
-  const initials = org?.name
-    ? org.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
-    : userEmail.slice(0, 2).toUpperCase()
-
   const navLink = (
-    href: string,
+    href:  string,
     label: string,
-    Icon: React.ElementType,
-    showDot?: boolean,
-    score?: number,
+    Icon:  React.ElementType,
+    badge?: React.ReactNode,
   ) => {
     const isActive =
       pathname === href ||
-      (href !== '/dashboard' && href !== '/dashboard/admin' && pathname.startsWith(href)) ||
+      (href != '/dashboard' && href != '/dashboard/admin' && pathname.startsWith(href)) ||
       (href === '/dashboard/admin/intelligence' && pathname.startsWith('/dashboard/admin/watchlist'))
 
     return (
@@ -118,36 +126,57 @@ export default function Sidebar({ org, userEmail }: Props) {
         key={href}
         href={href}
         onClick={() => setMobileOpen(false)}
-        className={cn(
-          'flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-all',
-          'rounded-lg',
-          isActive
-            ? 'text-green-pale-1 bg-green-active'
-            : 'hover:bg-white/[0.04]',
-        )}
-        style={!isActive ? { color: '#97C459' } : undefined}
+        className="relative flex items-center gap-2.5 px-3 py-[9px] text-[15px] font-medium transition-colors"
+        style={{
+          borderRadius: 8,
+          color:      isActive ? SB.textBright : SB.text,
+          background: isActive ? SB.activeBg   : 'transparent',
+          fontFamily: 'var(--font-space-grotesk)',
+          textDecoration: 'none',
+        }}
+        onMouseEnter={e => {
+          if (!isActive) {
+            e.currentTarget.style.background = SB.hover
+            e.currentTarget.style.color      = SB.textBright
+          }
+        }}
+        onMouseLeave={e => {
+          if (!isActive) {
+            e.currentTarget.style.background = 'transparent'
+            e.currentTarget.style.color      = SB.text
+          }
+        }}
       >
+        {isActive && (
+          <span style={{
+            position: 'absolute', left: 0, top: 8, bottom: 8,
+            width: 2, background: SB.accent, borderRadius: '0 2px 2px 0',
+          }} />
+        )}
         <Icon
-          className="h-4 w-4 flex-shrink-0"
-          style={{ color: isActive ? '#8ECB3C' : '#97C459' }}
+          className="flex-shrink-0"
+          style={{ width: 15, height: 15, color: isActive ? SB.iconActive : SB.icon }}
         />
         <span className="flex-1">{label}</span>
-        {showDot && !isActive && (
-          <span
-            className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full"
-            style={{
-              background: 'rgba(250, 199, 117, 0.18)',
-              color: '#FAC775',
-              border: '0.5px solid rgba(250, 199, 117, 0.35)',
-            }}
-            title={`Match profile ${score}% complete`}
-          >
-            {score}%
-          </span>
-        )}
+        {badge}
       </Link>
     )
   }
+
+  const profileBadge = showBadge ? (
+    <span style={{
+      fontFamily: 'var(--font-dm-sans)', fontSize: 12, fontWeight: 500,
+      padding: '2px 7px', borderRadius: 999,
+      background: SB.badgeBg, color: SB.badgeText,
+    }}>
+      {profileScore}%
+    </span>
+  ) : undefined
+
+
+  const divider = (
+    <div style={{ height: 1, background: SB.divider, margin: '6px 0' }} />
+  )
 
   const sidebarContent = (
     <aside
@@ -156,110 +185,165 @@ export default function Sidebar({ org, userEmail }: Props) {
         'md:translate-x-0',
         mobileOpen ? 'translate-x-0' : '-translate-x-full',
       )}
-      style={{ background: '#173404' }}
+      style={{ background: '#173404', padding: '20px 12px 12px' }}
     >
       {/* Logo */}
       <div
-        className="px-5 py-5 flex items-center justify-between"
-        style={{ borderBottom: '0.5px solid rgba(255, 255, 255, 0.08)' }}
+        className="flex items-center justify-between px-3 pb-[18px] mb-2"
+        style={{ borderBottom: `0.5px solid ${SB.divider}` }}
       >
-        <Link href="/dashboard" className="no-underline">
-          <span
-            className="font-medium text-lg"
-            style={{
-              fontFamily: 'var(--font-space-grotesk)',
-              color: '#FFFFFF',
-              letterSpacing: '-0.02em',
-            }}
-          >
-            Grant<span style={{ color: '#8ECB3C' }}>Tracker</span>
-          </span>
+        <Link href="/dashboard" className="no-underline flex items-baseline gap-0">
+          <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 500, letterSpacing: '-0.02em', color: SB.textBright }}>Grant</span>
+          <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 500, letterSpacing: '-0.02em', color: SB.icon }}>Tracker</span>
         </Link>
-        <button
-          className="md:hidden"
-          style={{ color: 'rgba(255,255,255,0.5)' }}
-          onClick={() => setMobileOpen(false)}
-        >
+        <button className="md:hidden" style={{ color: SB.icon }} onClick={() => setMobileOpen(false)}>
           <X className="h-5 w-5" />
         </button>
       </div>
 
-      {/* Dashboard link */}
-      <div className="px-3 pt-4 space-y-0.5">
+      {/* Dashboard */}
+      <div className="mt-1">
         {navLink('/dashboard', 'Dashboard', LayoutDashboard)}
       </div>
 
-      {/* Nav groups */}
-      <nav className="flex-1 px-3 py-3 space-y-5 overflow-y-auto">
-        {[...NAV_GROUPS, ...(userEmail === ADMIN_EMAIL ? [ADMIN_NAV_GROUP] : [])].map(group => (
-          <div key={group.label}>
-            <p
-              className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em]"
-              style={{ color: 'rgba(151, 196, 89, 0.55)' }}
-            >
-              {group.label}
-            </p>
-            {group.items.map(item => navLink(
-              item.href,
-              item.label,
-              item.Icon,
-              item.href === '/dashboard/profile' ? showProfileDot : false,
-              item.href === '/dashboard/profile' ? profileScore : undefined,
-            ))}
-          </div>
+      {divider}
+
+      {/* Main nav */}
+      <nav className="flex flex-col gap-0.5">
+        {MAIN_NAV.map(item => navLink(
+          item.href,
+          item.label,
+          item.Icon,
+          item.href === '/dashboard/profile' ? profileBadge : undefined,
         ))}
       </nav>
 
-      {/* How to use */}
-      <div className="px-3 pb-2">
-        {navLink('/dashboard/instructions', 'How to use', BookOpen)}
-      </div>
+      {/* Admin section */}
+      {userEmail === ADMIN_EMAIL && (
+        <>
+          {divider}
+          <nav className="flex flex-col gap-0.5">
+            {ADMIN_NAV.map(item => navLink(item.href, item.label, item.Icon))}
+          </nav>
+        </>
+      )}
 
-      {/* User chip */}
-      <div className="px-4 py-4" style={{ borderTop: '0.5px solid rgba(255, 255, 255, 0.08)' }}>
-        <div className="flex items-center gap-2.5 mb-3">
-          <div
-            className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold flex-shrink-0"
-            style={{
-              background: 'rgba(142, 203, 60, 0.18)',
-              color: '#8ECB3C',
-              fontFamily: 'var(--font-space-grotesk)',
-            }}
-          >
+      {/* Spacer */}
+      <div className="flex-1" />
+
+      {divider}
+
+      {/* Help & feedback — dimmed lime */}
+      <Link
+        href="/dashboard/feedback"
+        onClick={() => setMobileOpen(false)}
+        className="flex items-center gap-2.5 px-3 py-[9px] text-[15px] font-medium"
+        style={{
+          borderRadius: 8,
+          color: 'rgba(151,196,89,0.8)',
+          background: 'transparent',
+          fontFamily: 'var(--font-space-grotesk)',
+          textDecoration: 'none',
+        }}
+        onMouseEnter={e => {
+          e.currentTarget.style.background = SB.hover
+          e.currentTarget.style.color = 'rgba(151,196,89,1)'
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.background = 'transparent'
+          e.currentTarget.style.color = 'rgba(151,196,89,0.8)'
+        }}
+      >
+        <MessageSquare style={{ width: 15, height: 15, color: 'inherit', flexShrink: 0 }} />
+        <span>Help &amp; feedback</span>
+      </Link>
+
+      {/* User card */}
+      <div ref={userMenuRef} style={{ position: 'relative', marginTop: 2 }}>
+        <button
+          onClick={() => setUserMenuOpen(v => !v)}
+          className="w-full flex items-center gap-2.5 px-3 py-2.5"
+          style={{
+            borderRadius: 8,
+            background: userMenuOpen ? SB.hover : 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            fontFamily: 'var(--font-space-grotesk)',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = SB.hover }}
+          onMouseLeave={e => { if (!userMenuOpen) e.currentTarget.style.background = 'transparent' }}
+        >
+          <div style={{
+            width: 30, height: 30, borderRadius: '50%', flexShrink: 0,
+            background: '#8ECB3C', color: '#173404',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-space-grotesk)',
+          }}>
             {initials}
           </div>
-          <div className="min-w-0 flex-1">
-            <p
-              className="truncate text-sm font-medium"
-              style={{ color: '#F1F7E4', fontFamily: 'var(--font-space-grotesk)' }}
-            >
-              {org?.name ?? 'Account'}
+          <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+            <p style={{
+              fontSize: 13, fontWeight: 500, color: SB.textBright,
+              margin: 0, lineHeight: 1.3,
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}>
+              {orgName ?? userEmail}
             </p>
-            <p
-              className="truncate text-[10px]"
-              style={{ color: 'rgba(151, 196, 89, 0.55)' }}
-            >
-              {userEmail}
+            <p style={{ fontSize: 11, color: SB.text, margin: 0, lineHeight: 1.3 }}>
+              Account &amp; settings
             </p>
           </div>
-        </div>
-        <button
-          onClick={handleSignOut}
-          className="flex items-center gap-2 text-xs transition-colors"
-          style={{ color: 'rgba(151, 196, 89, 0.55)' }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = '#F1F7E4')}
-          onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(151, 196, 89, 0.55)')}
-        >
-          <LogOut className="h-3.5 w-3.5" />
-          Sign out
+          <ChevronUp style={{
+            width: 14, height: 14, color: SB.icon, flexShrink: 0,
+            transform: userMenuOpen ? 'rotate(0deg)' : 'rotate(180deg)',
+            transition: 'transform 0.15s',
+          }} />
         </button>
+
+        {userMenuOpen && (
+          <div style={{
+            position: 'absolute',
+            bottom: 'calc(100% + 6px)',
+            left: 0, right: 0,
+            background: '#1E3D06',
+            borderRadius: 10,
+            border: `0.5px solid ${SB.divider}`,
+            overflow: 'hidden',
+            boxShadow: '0 -4px 16px -4px rgba(0,0,0,0.4)',
+          }}>
+            <Link
+              href="/dashboard/account"
+              onClick={() => { setUserMenuOpen(false); setMobileOpen(false) }}
+              className="flex items-center gap-2.5 px-3 py-2.5 no-underline"
+              style={{ color: SB.text, fontSize: 13, fontFamily: 'var(--font-space-grotesk)' }}
+              onMouseEnter={e => { e.currentTarget.style.background = SB.hover; e.currentTarget.style.color = SB.textBright }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = SB.text }}
+            >
+              <User style={{ width: 14, height: 14, flexShrink: 0 }} />
+              Account
+            </Link>
+            <div style={{ height: '0.5px', background: SB.divider }} />
+            <button
+              onClick={handleSignOut}
+              className="w-full flex items-center gap-2.5 px-3 py-2.5"
+              style={{
+                color: SB.text, fontSize: 13, fontFamily: 'var(--font-space-grotesk)',
+                background: 'transparent', border: 'none', cursor: 'pointer',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = SB.hover; e.currentTarget.style.color = SB.textBright }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = SB.text }}
+            >
+              <LogOut style={{ width: 14, height: 14, flexShrink: 0 }} />
+              Sign out
+            </button>
+          </div>
+        )}
       </div>
     </aside>
   )
 
   return (
     <>
-      {/* Mobile hamburger */}
       <button
         onClick={() => setMobileOpen(true)}
         className={cn(
@@ -268,13 +352,12 @@ export default function Sidebar({ org, userEmail }: Props) {
           'transition-opacity duration-200',
           mobileOpen ? 'opacity-0 pointer-events-none' : 'opacity-100',
         )}
-        style={{ background: '#173404', color: '#F1F7E4' }}
+        style={{ background: '#173404', color: '#F5F1E8' }}
         aria-label="Open menu"
       >
         <Menu className="h-5 w-5" />
       </button>
 
-      {/* Mobile overlay — deep-forest 40%, never black */}
       {mobileOpen && (
         <div
           className="fixed inset-0 z-40 md:hidden"

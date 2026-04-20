@@ -188,6 +188,7 @@ export interface Organisation {
   projects_running: number | null
   key_outcomes: string[]
   owner_id: string
+  geographic_reach: string | null
 }
 
 export interface PipelineItem {

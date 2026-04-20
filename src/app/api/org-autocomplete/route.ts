@@ -22,10 +22,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'URL is required' }, { status: 400 })
     }
 
-    // Ensure protocol
     const fullUrl = url.startsWith('http') ? url : `https://${url}`
 
-    // Fetch the website page — fall back gracefully if blocked (403 etc.)
     let pageText = ''
     try {
       const pageRes = await fetch(fullUrl, {
@@ -40,8 +38,6 @@ export async function POST(req: NextRequest) {
         const html = await pageRes.text()
         pageText = stripHtml(html).slice(0, 5000)
       }
-      // If not ok (403, 429, etc.) — fall through with empty pageText;
-      // Claude will still infer org info from the URL/domain.
     } catch {
       // Network error — fall through with empty pageText
     }
@@ -66,7 +62,17 @@ Extract information and return ONLY a valid JSON object with these exact keys:
   "beneficiaries": ["specific beneficiary group strings, e.g. BAME women, young people aged 16–25, care leavers, refugees"],
   "annualIncome": "best estimate — MUST be exactly one of: Under £10,000 | £10,000–£50,000 | £50,000–£100,000 | £100,000–£250,000 | £250,000–£500,000 | £500,000–£1 million | £1 million–£5 million | Over £5 million",
   "impactSectors": ["1 to 5 values from the IMPACT SECTOR list below, in priority order — most important first"],
-  "beneficiaryGroups": ["1 to 5 values from the BENEFICIARY GROUP list below — primary beneficiary first, then secondaries"]
+  "beneficiaryGroups": ["1 to 5 values from the BENEFICIARY GROUP list below — primary beneficiary first, then secondaries"],
+  "_confidence": {
+    "name": 0.0,
+    "orgType": 0.0,
+    "charityNumber": 0.0,
+    "primaryLocation": 0.0,
+    "mission": 0.0,
+    "annualIncome": 0.0,
+    "impactSectors": 0.0,
+    "beneficiaryGroups": 0.0
+  }
 }
 
 IMPACT SECTOR VALUES (pick 1–5 in priority order):
@@ -79,13 +85,20 @@ children, young_people, older_people, families, women_girls, men_boys, lgbtq,
 ethnic_minorities, refugees_migrants, disabled_people, mental_health, carers,
 veterans, ex_offenders, homeless, people_in_poverty, rural_communities, general_public
 
-Rules:
+Rules for _confidence (score each field 0.0–1.0):
+- 0.9–1.0: explicitly stated on the page, high certainty (e.g. org name in <title>, charity number found verbatim)
+- 0.7–0.89: strongly implied, low risk of error (e.g. charity number inferred from Charity Commission link, clear mission statement present)
+- 0.4–0.69: inferred with some uncertainty (e.g. income estimated from staff size, sector inferred from activity list)
+- 0.1–0.39: weak inference, could easily be wrong (e.g. location guessed from domain TLD, structure guessed from name alone)
+- 0.0: not determinable from available content (use null for the field value too)
+
+Rules for field values:
 - themes = broad thematic areas (4–8 items)
 - areasOfWork = concrete activities and programmes they run (4–8 items)
 - beneficiaries = specific people they help (3–6 items)
 - impactSectors = use ONLY the exact values listed above, in priority order (most core first)
 - beneficiaryGroups = use ONLY the exact values listed above; put primary beneficiary first; use "general_public" only if genuinely no specific group
-- If you cannot determine something with reasonable confidence, use null for strings or [] for arrays
+- If you cannot determine something, use null for strings, [] for arrays, and 0.0 for confidence
 - annualIncome: infer from staff size, scope of services, number of sites, or any financial figures mentioned
 - Return ONLY the JSON object — no markdown fences, no commentary`
 
@@ -98,7 +111,7 @@ Rules:
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1200,
+        max_tokens: 1400,
         messages: [{ role: 'user', content: prompt }],
       }),
     })
