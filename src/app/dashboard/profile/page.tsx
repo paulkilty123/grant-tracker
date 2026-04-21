@@ -497,9 +497,28 @@ function CompletionMeter({ org }: { org: Organisation }) {
 /* ═══════════════════════════════════════════════
    Scan Bar
    ═══════════════════════════════════════════════ */
-function ScanBar({ website }: { website?: string | null }) {
-  if (!website) return null
-  const display = website.replace(/^https?:\/\//, '').replace(/\/$/, '')
+function ScanBar({ orgId, website, onSaved }: { orgId: string; website?: string | null; onSaved: () => void }) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState('')
+  const [saving, setSaving] = useState(false)
+  const supabase = createClient()
+
+  function startEdit() { setDraft(website ?? ''); setEditing(true) }
+  function cancel() { setEditing(false) }
+
+  async function save() {
+    setSaving(true)
+    try {
+      const url = draft.trim()
+      const normalized = url && !url.startsWith('http') ? 'https://' + url : url
+      await updateOrganisation(orgId, { website_url: normalized || null })
+      onSaved()
+      setEditing(false)
+    } finally { setSaving(false) }
+  }
+
+  const display = website ? website.replace(/^https?:\/\//, '').replace(/\/$/, '') : null
+
   return (
     <div style={{
       background: T.white, border: `1px solid ${T.border}`, borderRadius: 12,
@@ -512,25 +531,69 @@ function ScanBar({ website }: { website?: string | null }) {
       }}>
         <Globe size={16} />
       </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, color: T.textSecondary, marginBottom: 2 }}>Website on file</div>
-        <div style={{ fontFamily: UI, fontWeight: 500, fontSize: 14.5, color: T.textPrimary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {display}
-        </div>
-      </div>
-      <button
-        style={{
-          fontFamily: UI, fontWeight: 500, fontSize: 13,
-          background: 'transparent', color: T.textPrimary,
-          border: `0.5px solid ${T.borderStrong}`,
-          padding: '7px 14px', borderRadius: 8, cursor: 'pointer',
-          display: 'inline-flex', alignItems: 'center', gap: 6,
-        }}
-        title="Re-scan coming soon"
-      >
-        <RotateCcw size={13} />
-        Re-scan & refresh
-      </button>
+
+      {editing ? (
+        <>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontFamily: UI, fontWeight: 500, fontSize: 12, color: T.textSecondary, marginBottom: 6 }}>
+              {display ? 'Change website URL' : 'Add your website'}
+            </div>
+            <input
+              type="url"
+              value={draft}
+              onChange={e => setDraft(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && save()}
+              placeholder="https://yourorg.org.uk"
+              autoFocus
+              style={{
+                fontFamily: BODY, fontSize: 14, color: T.textPrimary,
+                width: '100%', padding: '7px 10px',
+                border: `1px solid ${T.borderStrong}`, borderRadius: 7,
+                background: T.pageBg, outline: 'none',
+              }}
+            />
+          </div>
+          <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+            <button onClick={cancel} style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, color: T.textSecondary, background: T.white, border: `0.5px solid ${T.borderStrong}`, padding: '7px 12px', borderRadius: 7, cursor: 'pointer' }}>
+              Cancel
+            </button>
+            <button onClick={save} disabled={saving} style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, background: T.lime, color: T.greenDeep, border: 'none', padding: '7px 14px', borderRadius: 7, cursor: saving ? 'not-allowed' : 'pointer' }}>
+              {saving ? 'Saving\u2026' : 'Save'}
+            </button>
+          </div>
+        </>
+      ) : display ? (
+        <>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, color: T.textSecondary, marginBottom: 2 }}>Website on file</div>
+            <div style={{ fontFamily: UI, fontWeight: 500, fontSize: 14.5, color: T.textPrimary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {display}
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+            <button onClick={startEdit} style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, background: 'transparent', color: T.textSecondary, border: 'none', padding: '7px 10px', borderRadius: 7, cursor: 'pointer' }}>
+              Change URL
+            </button>
+            <button
+              style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, background: 'transparent', color: T.textPrimary, border: `0.5px solid ${T.borderStrong}`, padding: '7px 14px', borderRadius: 8, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              title="Re-scan coming soon"
+            >
+              <RotateCcw size={13} />
+              Re-scan &amp; refresh
+            </button>
+          </div>
+        </>
+      ) : (
+        <>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, color: T.textSecondary, marginBottom: 2 }}>No website on file</div>
+            <div style={{ fontFamily: BODY, fontSize: 13, color: T.textTertiary }}>Add your website so we can keep your profile up to date automatically</div>
+          </div>
+          <button onClick={startEdit} style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, background: T.lime, color: T.greenDeep, border: 'none', padding: '7px 16px', borderRadius: 8, cursor: 'pointer', flexShrink: 0 }}>
+            Add website
+          </button>
+        </>
+      )}
     </div>
   )
 }
@@ -1637,7 +1700,7 @@ export default function ProfilePage() {
         {/* Completion meter */}
         <CompletionMeter org={activeOrg} />
 
-        {/* Website scan bar — shown once website_url field exists on org */}
+        <ScanBar orgId={activeOrg.id} website={activeOrg.website_url} onSaved={() => loadOrgs(activeOrg.id)} />
 
         {/* Cards */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

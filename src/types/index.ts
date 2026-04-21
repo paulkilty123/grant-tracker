@@ -189,6 +189,7 @@ export interface Organisation {
   key_outcomes: string[]
   owner_id: string
   geographic_reach: string | null
+  website_url: string | null
 }
 
 export interface PipelineItem {
