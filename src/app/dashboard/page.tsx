@@ -69,7 +69,7 @@ export default async function DashboardPage() {
 
   // ── Matched Opportunities (used in both states) ──────────────────────────
   const today = new Date().toISOString().split('T')[0]
-  type ScoredGrant = { grant: ReturnType<typeof normaliseScrapedGrant>; score: number; lastSeenAt: string | null }
+  type ScoredGrant = { grant: ReturnType<typeof normaliseScrapedGrant>; score: number; lastSeenAt: string | null; breakdown: ReturnType<typeof computeMatchScore>['breakdown'] }
   let scoredAll: ScoredGrant[] = []
   if (typedOrg) {
     const { data: grantRows } = await supabase
@@ -87,7 +87,7 @@ export default async function DashboardPage() {
           const g = normaliseScrapedGrant(row as Record<string, unknown>)
           return {
             grant: g,
-            score: computeMatchScore(g, typedOrg).score,
+            ...(() => { const mr = computeMatchScore(g, typedOrg); return { score: mr.score, breakdown: mr.breakdown } })(),
             lastSeenAt: (row as Record<string, unknown>).last_seen_at as string | null,
           }
         })
@@ -108,7 +108,7 @@ export default async function DashboardPage() {
           ? `${formatCurrency(g.amountMin)} – ${formatCurrency(g.amountMax)}`
           : formatCurrency(g.amountMax || g.amountMin || 0))
       : 'Amount on application'
-    const matchResult = computeMatchScore(g, typedOrg!)
+    const matchResult = { breakdown: p.breakdown }
     const reasons: string[] = []
     if (matchResult.breakdown.location.score >= 8)      reasons.push('Your location')
     if (matchResult.breakdown.themes.score >= 15)       reasons.push('Your sector')
