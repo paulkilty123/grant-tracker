@@ -255,7 +255,7 @@ export default function Sidebar({ org, userEmail }: Props) {
         }}
       >
         <MessageSquare style={{ width: 15, height: 15, color: 'inherit', flexShrink: 0 }} />
-        <span>Help &amp; feedback</span>
+        <span>Feedback</span>
       </Link>
 
       {/* User card */}
