@@ -254,7 +254,7 @@ function AddLink({ label, onClick }: { label: string; onClick?: () => void }) {
 
 function FieldRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr', gap: 24, alignItems: 'start', padding: '4px 0' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '180px 1fr', gap: 24, alignItems: 'start', padding: '4px 0' }}>
       <div style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, color: T.textSecondary, paddingTop: 2 }}>
         {label}
       </div>
@@ -463,7 +463,7 @@ function OrgSwitcher({ orgs, activeOrgId, onSwitch }: {
 /* ═══════════════════════════════════════════════
    Completion Meter
    ═══════════════════════════════════════════════ */
-function CompletionMeter({ org, onJumpToCard }: { org: Organisation; onJumpToCard: (card: CardId) => void }) {
+function CompletionMeter({ org }: { org: Organisation }) {
   const { pct, missing } = computeCompleteness(org)
   const variant = pct >= 80
     ? { border: T.strongBorder,  bg: T.strongPanel,  label: T.strongBorder  }
@@ -484,37 +484,12 @@ function CompletionMeter({ org, onJumpToCard }: { org: Organisation; onJumpToCar
         <span style={{ fontFamily: BODY, fontSize: 14, color: T.textSecondary }}>
           {missing.length === 0
             ? 'Your profile is complete — matches are fully optimised'
-            : 'Click any missing field below to complete it'}
+            : `Add ${missing.map(m => m.label.toLowerCase()).join(' and ')} to reach 100%`}
         </span>
       </div>
-      <div style={{ height: 6, background: 'rgba(23,52,4,0.06)', borderRadius: 3, overflow: 'hidden', marginBottom: missing.length > 0 ? 14 : 0 }}>
+      <div style={{ height: 6, background: 'rgba(23,52,4,0.06)', borderRadius: 3, overflow: 'hidden' }}>
         <div style={{ height: '100%', width: `${pct}%`, background: variant.border, borderRadius: 3, transition: 'width 0.4s ease' }} />
       </div>
-      {missing.length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-          {missing.map(m => {
-            const card = FIELD_TO_CARD[m.label]
-            return (
-              <button
-                key={m.label}
-                onClick={() => card && onJumpToCard(card)}
-                style={{
-                  fontFamily: UI, fontWeight: 500, fontSize: 12,
-                  padding: '4px 10px', borderRadius: 8, cursor: 'pointer',
-                  border: `1px solid ${m.impact === 'high' ? '#C97B1A' : T.borderStrong}`,
-                  background: m.impact === 'high' ? '#FEF3E2' : T.pageBg,
-                  color: m.impact === 'high' ? '#854F0B' : T.textSecondary,
-                  display: 'inline-flex', alignItems: 'center', gap: 5,
-                  transition: 'all 0.12s',
-                }}
-              >
-                {m.impact === 'high' && <AlertTriangle size={10} />}
-                + {m.label}
-              </button>
-            )
-          })}
-        </div>
-      )}
     </div>
   )
 }
@@ -1623,16 +1598,34 @@ export default function ProfilePage() {
 
         {/* Page header */}
         <div style={{ marginBottom: 28 }}>
+          {/* Org eyebrow pill — context for single-org users */}
+          {orgs.length <= 1 && activeOrg && (
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              fontFamily: UI, fontWeight: 500, fontSize: 13, color: T.textSecondary,
+              marginBottom: 10, padding: '5px 10px 5px 5px',
+              background: T.white, border: `1px solid ${T.border}`, borderRadius: 20,
+            }}>
+              <span style={{
+                width: 22, height: 22, background: T.cream, borderRadius: '50%',
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                fontFamily: UI, fontWeight: 600, fontSize: 10, color: T.greenDeep,
+              }}>
+                {(activeOrg.name ?? 'O').split(' ').filter(Boolean).slice(0,2).map((w: string) => w[0].toUpperCase()).join('')}
+              </span>
+              {activeOrg.name}
+            </div>
+          )}
           <h1 style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 36, letterSpacing: '-0.02em', color: '#2C2C2A', lineHeight: 1.1, margin: '0 0 6px' }}>
             Your profile
           </h1>
           <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 14, color: '#5F5E5A', marginTop: 4 }}>
-            Each organisation you support has its own profile, matches, and pipeline.
+            Refine the details that drive your funding matches.
           </p>
         </div>
 
-        {/* Org switcher */}
-        {orgs.length > 0 && (
+        {/* Org switcher — admin/multi-org only */}
+        {orgs.length > 1 && (
           <OrgSwitcher
             orgs={orgs}
             activeOrgId={activeOrg.id}
@@ -1641,7 +1634,7 @@ export default function ProfilePage() {
         )}
 
         {/* Completion meter */}
-        <CompletionMeter org={activeOrg} onJumpToCard={onJumpToCard} />
+        <CompletionMeter org={activeOrg} />
 
         {/* Website scan bar — shown once website_url field exists on org */}
 
