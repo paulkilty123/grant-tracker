@@ -85,7 +85,6 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           justifyContent: 'center',
           gap: 8,
           lineHeight: 1,
-          opacity: disabled ? 0.45 : 1,
           transition: 'background 120ms ease, color 120ms ease',
           ...style,
         }}
