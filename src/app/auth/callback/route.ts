@@ -21,11 +21,13 @@ export async function GET(request: Request) {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return NextResponse.redirect(`${origin}/dashboard`)
 
-      const { data: org } = await supabase
+      const { data: orgs } = await supabase
         .from('organisations')
         .select('*')
         .eq('owner_id', user.id)
-        .maybeSingle<Organisation>()
+        .order('created_at', { ascending: true })
+        .limit(1)
+      const org = (orgs?.[0] ?? null) as Organisation | null
 
       let pipelineCount = 0
       if (org?.id) {
