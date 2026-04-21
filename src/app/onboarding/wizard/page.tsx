@@ -761,7 +761,7 @@ export default function OnboardingWizardPage() {
               const result = computeMatchScore(grant, orgForMatching as Parameters<typeof computeMatchScore>[1])
               return { grant, score: result.score }
             })
-            .filter(x => x.score >= 40)
+            .filter(x => x.score >= 40 && (x.grant.fundingType === 'grant' || !x.grant.fundingType))
             .sort((a, b) => b.score - a.score)
 
           setRevealCount(scored.length)
@@ -813,7 +813,7 @@ export default function OnboardingWizardPage() {
         minHeight: 620,
         width: '100%',
         // Gradient per design spec (not in HTML .hero-page, but explicit in text requirements)
-        background: 'linear-gradient(180deg, #F4F9ED 0%, #fff 100%)',
+        background: '#fff',
       }}>
         {/* Top-right step dots */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: 60 }}>
