@@ -22,10 +22,13 @@ const fadeInView = (delay = 0) => ({
   transition: { duration: 0.6, delay },
 })
 
+// TODO: Replace with Typeform/Notion form URL before launch
+const COHORT_URL = '/auth/signup'
+
 const navLinks = [
   { label: 'How it works', href: '#how' },
   { label: 'Features', href: '#features' },
-  { label: 'Pricing', href: '#pricing' },
+  { label: 'Founding cohort', href: '#cohort', cohort: true },
   { label: 'About', href: '#about' },
   { label: 'Contact', href: '#contact' },
 ]
@@ -46,70 +49,35 @@ const fundingTypes = [
 
 const audiences = [
   {
-    title: 'CICs & Social Enterprises',
+    title: 'CICs & social enterprises',
     desc: "Most funding databases were built with registered charities in mind. If you're a CIC or trading social enterprise, Grant Tracker matches funding to your legal structure and filters out grants you're not eligible to apply for.",
-    Icon: Shield, iconColor: '#639922', numberColor: 'rgba(99,153,34,0.18)', badgeBg: 'rgba(99,153,34,0.10)', badgeColor: '#173404',
-    decoBg: 'rgba(99,153,34,0.07)',
+    Icon: Shield, iconBg: '#EAF3DE', iconColor: '#3B6D11',
   },
   {
     title: 'Charities & CIOs',
     desc: "Trusts, foundations, lottery and government programmes matched to your cause, size and geography. Results are filtered to what your organisation can actually apply for.",
-    Icon: Landmark, iconColor: '#639922', numberColor: 'rgba(132,204,22,0.22)', badgeBg: 'rgba(148,207,53,0.15)', badgeColor: '#639922',
-    decoBg: 'rgba(148,207,53,0.07)',
+    Icon: Landmark, iconBg: '#E6F1FB', iconColor: '#0C447C',
   },
   {
-    title: 'Co-operatives & Community Groups',
+    title: 'Co-operatives & community groups',
     desc: "Whether you're worker-led, community-owned or unincorporated, funding is matched to how your organisation is set up, not just what you do.",
-    Icon: TreePine, iconColor: '#993C1D', numberColor: 'rgba(194,65,12,0.18)', badgeBg: 'rgba(251,146,60,0.12)', badgeColor: '#993C1D',
-    decoBg: 'rgba(251,146,60,0.07)',
+    Icon: TreePine, iconBg: '#FAECE7', iconColor: '#993C1D',
   },
   {
-    title: 'Impact Founders',
+    title: 'Impact founders',
     desc: "Early-stage, pre-revenue or working as an individual. Accelerators, fellowships and awards matched to your sector, stage and team.",
-    Icon: Lightbulb, iconColor: '#BA7517', numberColor: 'rgba(186,117,23,0.18)', badgeBg: 'rgba(250,199,117,0.15)', badgeColor: '#BA7517',
-    decoBg: 'rgba(250,199,117,0.08)',
+    Icon: Lightbulb, iconBg: '#FAEEDA', iconColor: '#854F0B',
   },
 ]
 
 const stats = [
   { value: '500+', label: 'Funding and support opportunities' },
-  { value: '4', label: 'Funding types — grants, programmes, investment & more' },
+  { value: '4', label: 'Funding types. Grants, programmes, investment and more' },
   { value: '12', label: 'Impact sectors covered' },
-  { value: 'Free', label: 'To start with, upgrade anytime' },
+  { value: 'Free', label: 'During beta. Founding cohort access' },
 ]
 
-const plans = [
-  {
-    name: 'Free', price: '£0', period: 'forever',
-    features: ['Browse full grant database', 'Filter by region & sector', 'Basic keyword search', 'Weekly email digest'],
-    cta: 'Get Started', popular: false,
-  },
-  {
-    name: '6 Months', price: '£65', period: '£10.83/month',
-    features: ['Everything in Free', 'Live Search (3/week)', 'Match scoring & ranking', 'Deadline alerts', 'Priority support'],
-    cta: 'Start 6-Month Plan', popular: true,
-  },
-  {
-    name: '12 Months', price: '£115', period: '£9.58/month — save 12%',
-    features: ['Everything in 6-Month', 'Best value per month', 'Annual grant calendar', 'Early access to new features'],
-    cta: 'Start Annual Plan', popular: false,
-  },
-]
 
-const testimonials = [
-  {
-    quote: "As a CIC we kept being told we weren't eligible for charity grants. Grant Tracker finally shows us what we can actually apply for — including accelerators and diversity funds we'd never heard of.",
-    name: 'Marcus', role: 'Director, community tech CIC, Manchester', initials: 'M',
-  },
-  {
-    quote: "We found three grants we didn't even know existed within our first search. One of them funded our entire summer programme.",
-    name: 'Sarah R.', role: 'Youth charity, Lewisham', initials: 'SR',
-  },
-  {
-    quote: "The search actually understands what we do. It's not just keyword matching — it found grants for community food growing we'd never have thought to check.",
-    name: 'Jess P.', role: 'Community garden lead, Bristol', initials: 'JP',
-  },
-]
 
 /* ─── Mockups ─── */
 const SearchMockup = () => (
@@ -297,7 +265,7 @@ export default function LandingPage() {
   const [activeSection, setActiveSection] = useState<string>('')
 
   useEffect(() => {
-    const sectionIds = ['how', 'features', 'about', 'pricing', 'contact']
+    const sectionIds = ['how', 'features', 'cohort', 'about', 'contact']
     const observers: IntersectionObserver[] = []
     sectionIds.forEach(id => {
       const el = document.getElementById(id)
@@ -346,14 +314,15 @@ export default function LandingPage() {
                 <a
                   key={link.label}
                   href={link.href}
-                  className="font-medium text-base transition-colors pb-1"
+                  className="font-medium text-base transition-colors pb-1 flex items-center gap-1.5"
                   style={{
                     fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif',
-                    color: isActive ? '#2C2C2A' : '#5F5E5A',
+                    color: (link as any).cohort ? '#173404' : isActive ? '#2C2C2A' : '#5F5E5A',
                     borderBottom: isActive ? '2px solid #8ECB3C' : '2px solid transparent',
                     transition: 'color 0.2s, border-color 0.2s',
                   }}
                 >
+                  {(link as any).cohort && <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#8ECB3C' }} />}
                   {link.label}
                 </a>
               )
@@ -364,13 +333,13 @@ export default function LandingPage() {
             <Link href="/auth/login" className="text-[#2C2C2A] font-semibold text-base hover:opacity-80 transition-opacity no-underline" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>
               Sign in
             </Link>
-            <Link href="/auth/signup" className="bg-[#8ECB3C] text-[#2C2C2A] px-8 py-3 rounded-full font-bold text-base hover:opacity-90 transition-all no-underline">
-              Get Started
+            <Link href={COHORT_URL} className="bg-[#8ECB3C] text-[#173404] px-8 py-3 rounded-full font-bold text-base hover:opacity-90 transition-all no-underline">
+              Apply to join
             </Link>
           </div>
           {/* Mobile */}
           <div className="flex md:hidden items-center gap-3">
-            <Link href="/auth/signup" className="bg-[#8ECB3C] text-[#2C2C2A] px-4 py-2 rounded-full text-sm font-bold hover:opacity-90 transition-all no-underline">Get started</Link>
+            <Link href={COHORT_URL} className="bg-[#8ECB3C] text-[#173404] px-4 py-2 rounded-full text-sm font-bold hover:opacity-90 transition-all no-underline">Apply to join</Link>
             <button onClick={() => setMobileOpen(o => !o)} className="p-1 text-[#2C2C2A]" aria-label="Toggle menu">
               {mobileOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
@@ -388,7 +357,7 @@ export default function LandingPage() {
               ))}
               <div className="flex flex-col gap-2 pt-2">
                 <Link href="/auth/login" onClick={() => setMobileOpen(false)} className="text-center text-sm text-[#5F5E5A] py-2 border border-slate-200 rounded-full">Sign in</Link>
-                <Link href="/auth/signup" onClick={() => setMobileOpen(false)} className="bg-[#8ECB3C] text-[#2C2C2A] rounded-full text-center text-sm font-bold py-2 hover:opacity-90 transition-colors">Get started free</Link>
+                <Link href={COHORT_URL} onClick={() => setMobileOpen(false)} className="bg-[#8ECB3C] text-[#173404] rounded-full text-center text-sm font-bold py-2 hover:opacity-90 transition-colors">Apply to join</Link>
               </div>
             </div>
           </motion.div>
@@ -401,11 +370,11 @@ export default function LandingPage() {
 
           {/* Left: text */}
           <motion.div {...fadeUp(0)} className="flex flex-col justify-start">
-            {/* Audience badge */}
-            <div className="flex items-center gap-3 bg-[#E6F1FB] text-[#0C447C] px-5 py-3 rounded-full w-fit mb-10">
-              <CheckCircle className="w-5 h-5 flex-shrink-0" />
+            {/* Cohort status pill */}
+            <div className="flex items-center gap-2 bg-[#E6F1FB] text-[#0C447C] px-4 py-2.5 rounded-full w-fit mb-10">
+              <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#8ECB3C' }} />
               <p className="font-bold text-xs tracking-wide uppercase">
-                Built for the UK social impact sector.
+                Founding cohort, applications open
               </p>
             </div>
             {/* Headline */}
@@ -422,18 +391,21 @@ export default function LandingPage() {
               Matched to your structure, sector and geography — across grants, programmes, social investment and in-kind support.
             </p>
             {/* CTAs */}
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-wrap gap-4 mb-4">
               <Link
-                href="/auth/signup"
-                className="text-white px-9 py-4 rounded-full font-bold text-base hover:opacity-95 transition-all no-underline"
+                href={COHORT_URL}
+                className="text-[#173404] px-9 py-4 rounded-full font-bold text-base hover:opacity-95 transition-all no-underline"
                 style={{ background: 'linear-gradient(180deg, #8ECB3C 0%, #639922 100%)', boxShadow: '0 10px 20px -5px rgba(132, 204, 22, 0.3)' }}
               >
-                Get started free
+                Apply to join
               </Link>
               <a href="#how" className="bg-[#F1F0EA] text-[#2C2C2A] px-9 py-4 rounded-full font-bold text-base hover:bg-[#E4E2DA] transition-all">
                 How it works
               </a>
             </div>
+            <p className="text-sm" style={{ color: '#8A8986' }}>
+              We&apos;re hand-picking 20&ndash;30 founding users. Free during beta.
+            </p>
           </motion.div>
 
           {/* Right: UI card */}
@@ -579,6 +551,20 @@ export default function LandingPage() {
         </section>
       )}
 
+      {/* STATS */}
+      <section className="py-16 md:py-20" style={{ background: '#2C2C2A' }}>
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
+            {stats.map((s, i) => (
+              <motion.div key={s.label} {...fadeInView(i * 0.1)} className="text-center">
+                <p className="leading-none mb-3" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(40px, 5vw, 64px)', color: '#8ECB3C', letterSpacing: '-0.03em' }}>{s.value}</p>
+                <p className="text-sm leading-relaxed" style={{ color: '#8A8986' }}>{s.label}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* HOW IT WORKS */}
       <section id="how" className="py-20 md:py-28 bg-white">
         <div className="mx-auto max-w-7xl px-6 md:px-8">
@@ -599,45 +585,25 @@ export default function LandingPage() {
             </div>
           </motion.div>
 
-          {/* Cards */}
+          {/* Cards — tonal green ladder */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[
-              {
-                num: '01', title: 'Setup your profile',
-                desc: 'List your impact, mission and target groups.',
-                Icon: Users,
-                bg: '#E6F1FB', numColor: '#0C447C', titleColor: '#2C2C2A', textColor: '#5F5E5A', iconColor: '#0C447C',
-              },
-              {
-                num: '02', title: 'Search & match',
-                desc: 'Discover opportunities matched to you.',
-                Icon: Search,
-                bg: '#FAEEDA', numColor: '#854F0B', titleColor: '#854F0B', textColor: '#854F0B', iconColor: '#854F0B',
-              },
-              {
-                num: '03', title: 'Track opportunities',
-                desc: 'Add to pipeline, get deadline alerts and apply.',
-                Icon: TrendingUp,
-                bg: '#E8E0D1', numColor: '#8A8986', titleColor: '#2C2C2A', textColor: '#5F5E5A', iconColor: '#8A8986',
-              },
-              {
-                num: '04', title: 'Submit & win',
-                desc: 'Increase your win-rate with strongly aligned applications.',
-                Icon: Award,
-                bg: '#8ECB3C', numColor: '#C0DD97', titleColor: '#ffffff', textColor: 'rgba(255,255,255,0.85)', iconColor: '#ffffff',
-              },
-            ].map((step, i) => (
+            {([
+              { num: '01', title: 'Setup your profile', desc: 'List your impact, mission and target groups.', Icon: Users, bg: '#F4F9ED', numOpacity: 0.35, textOpacity: 0.6 },
+              { num: '02', title: 'Search & match', desc: 'Discover opportunities matched to you.', Icon: Search, bg: '#EAF3DE', numOpacity: 0.38, textOpacity: 0.7 },
+              { num: '03', title: 'Track opportunities', desc: 'Add to pipeline, get deadline alerts and apply.', Icon: TrendingUp, bg: '#C0DD97', numOpacity: 0.5, textOpacity: 0.78 },
+              { num: '04', title: 'Submit & win', desc: 'Increase your win-rate with strongly aligned applications.', Icon: Award, bg: '#8ECB3C', numOpacity: 0.55, textOpacity: 0.82 },
+            ] as const).map((step, i) => (
               <motion.div
                 key={step.title}
                 {...fadeInView(i * 0.08)}
                 className="rounded-3xl p-7 flex flex-col min-h-[260px]"
                 style={{ background: step.bg }}
               >
-                <span className="text-4xl font-bold mb-6" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', color: step.numColor }}>{step.num}</span>
-                <h3 className="font-bold text-lg mb-3 leading-snug" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', color: step.titleColor }}>{step.title}</h3>
-                <p className="text-sm leading-relaxed flex-1" style={{ color: step.textColor }}>{step.desc}</p>
+                <span className="text-4xl font-bold mb-6" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', color: '#173404', opacity: step.numOpacity }}>{step.num}</span>
+                <h3 className="font-bold text-lg mb-3 leading-snug" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', color: '#173404' }}>{step.title}</h3>
+                <p className="text-sm leading-relaxed flex-1" style={{ color: '#173404', opacity: step.textOpacity }}>{step.desc}</p>
                 <div className="mt-6">
-                  <step.Icon className="w-6 h-6" style={{ color: step.iconColor }} />
+                  <step.Icon className="w-6 h-6" style={{ color: '#173404', opacity: 0.7 }} />
                 </div>
               </motion.div>
             ))}
@@ -667,67 +633,66 @@ export default function LandingPage() {
 
           {/* 2x2 grid */}
           <div className="grid md:grid-cols-2 gap-4">
-            {[
+            {([
               {
-                badge: '£300 – £500k+', badgeColor: '#639922', badgeBg: 'rgba(148,207,53,0.15)',
-                title: 'Grants', titleColor: '#2C2C2A',
+                badge: '£300 – £500k+', badgeColor: '#3B6D11', badgeBg: '#EAF3DE',
+                title: 'Grants',
                 desc: 'Trusts, foundations, National Lottery, Innovate UK, arts councils and government programmes.',
-                Icon: Landmark, iconColor: '#639922',
-                decoBg: 'rgba(148,207,53,0.07)', decoPos: '-translate-y-16 translate-x-16',
+                Icon: Landmark, iconColor: '#3B6D11', iconBg: '#EAF3DE', decoBg: 'rgba(148,207,53,0.10)',
               },
               {
-                badge: 'Equity-free', badgeColor: '#993C1D', badgeBg: 'rgba(251,146,60,0.15)',
-                title: 'Programmes', titleColor: '#2C2C2A',
+                badge: 'Support + mentoring', badgeColor: '#993C1D', badgeBg: '#FAECE7',
+                title: 'Programmes',
                 desc: 'Accelerators, incubators, fellowships and structured programmes with mentoring, networks and workspace.',
-                Icon: Rocket, iconColor: '#D85A30',
-                decoBg: 'rgba(251,146,60,0.12)', decoPos: 'translate-y-8 translate-x-8',
+                Icon: Rocket, iconColor: '#993C1D', iconBg: '#FAECE7', decoBg: 'rgba(251,146,60,0.10)',
               },
               {
-                badge: '£20k – £3m', badgeColor: '#0C447C', badgeBg: 'rgba(181,212,244,0.15)',
-                title: 'Social Investment', titleColor: '#2C2C2A',
+                badge: '£20k – £3M', badgeColor: '#0C447C', badgeBg: '#E6F1FB',
+                title: 'Social investment',
                 desc: 'Patient capital, loans and blended finance from Big Issue Invest, Charity Bank, Resonance and others.',
-                Icon: TrendingUp, iconColor: '#378ADD',
-                decoBg: 'rgba(181,212,244,0.12)', decoPos: 'top-1/2 -right-4',
+                Icon: TrendingUp, iconColor: '#0C447C', iconBg: '#E6F1FB', decoBg: 'rgba(181,212,244,0.12)',
               },
               {
-                badge: 'Resources & expertise', badgeColor: '#BA7517', badgeBg: 'rgba(250,199,117,0.15)',
-                title: 'In-Kind Support', titleColor: '#2C2C2A',
-                desc: 'Mentoring, training and workspace. Often overlooked, high value — especially at an early stage.',
-                Icon: HeartHandshake, iconColor: '#BA7517',
-                decoBg: 'rgba(250,199,117,0.10)', decoPos: 'translate-y-4 -translate-x-4',
+                badge: 'Skills, space, time', badgeColor: '#854F0B', badgeBg: '#FAEEDA',
+                title: 'In-kind support',
+                desc: 'Mentoring, training and workspace. Often overlooked, high value, especially at an early stage.',
+                Icon: HeartHandshake, iconColor: '#854F0B', iconBg: '#FAEEDA', decoBg: 'rgba(250,199,117,0.10)',
               },
-            ].map((card, i) => (
+            ] as const).map((card, i) => (
               <motion.div
                 key={card.title}
                 {...fadeInView(i * 0.07)}
                 className="relative overflow-hidden bg-white rounded-3xl p-7 md:p-9 group"
-                style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.05)' }}
+                style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.05)', border: '0.5px solid rgba(23,52,4,0.08)' }}
               >
-                {/* Decorative circle */}
+                {/* Soft decorative circle behind icon */}
                 <div
-                  className="absolute top-0 right-0 w-32 h-32 rounded-full pointer-events-none transition-transform duration-700 group-hover:scale-150"
-                  style={{ background: card.decoBg, transform: 'translate(2rem, -2rem)' }}
+                  className="absolute top-0 right-0 w-24 h-24 rounded-full pointer-events-none"
+                  style={{ background: card.decoBg, transform: 'translate(1.5rem, -1.5rem)', opacity: 0.7 }}
                 />
-                {/* Icon top-right */}
-                <div className="absolute top-6 right-6 opacity-25 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300 z-10">
-                  <card.Icon className="w-6 h-6" style={{ color: card.iconColor }} />
+                {/* Icon centred in its circle */}
+                <div
+                  className="absolute top-5 right-5 w-11 h-11 rounded-full flex items-center justify-center z-10"
+                  style={{ background: card.iconBg }}
+                >
+                  <card.Icon className="w-5 h-5" style={{ color: card.iconColor }} />
                 </div>
                 {/* Badge */}
                 <span
-                  className="inline-block px-3 py-1 rounded-full font-bold tracking-widest uppercase text-[10px] mb-5 relative z-10"
+                  className="inline-block px-3 py-1 rounded-full font-semibold text-[10px] mb-12 relative z-10 uppercase tracking-wider"
                   style={{ color: card.badgeColor, background: card.badgeBg }}
                 >
                   {card.badge}
                 </span>
                 {/* Title */}
                 <h3
-                  className="font-bold mb-3 relative z-10 transition-transform duration-300 group-hover:translate-x-1"
-                  style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: '1.375rem', color: card.titleColor }}
+                  className="font-bold mb-3 relative z-10"
+                  style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: '1.375rem', color: '#2C2C2A' }}
                 >
                   {card.title}
                 </h3>
                 {/* Description */}
-                <p className="text-gray-500 text-sm leading-relaxed max-w-md relative z-10">{card.desc}</p>
+                <p className="text-sm leading-relaxed max-w-md relative z-10" style={{ color: '#5F5E5A' }}>{card.desc}</p>
               </motion.div>
             ))}
           </div>
@@ -749,26 +714,26 @@ export default function LandingPage() {
                 </h2>
                 <ul className="space-y-6 mb-10">
                   {[
-                    { title: 'Intelligent Matching', desc: 'Profile-based matching across grants, programmes, investment and in-kind support.' },
-                    { title: 'Live Precision Search', desc: 'Live search ranked by structure, sector, geography and mission.' },
-                    { title: 'Pipeline Visibility', desc: 'Pipeline tracking from first contact to submission status.' },
-                    { title: 'Deadline Alerts', desc: 'Stay ahead with deadline alerts for grants closing within 14 days.' },
-                    { title: 'Impact Dashboard', desc: 'Full dashboard summary of pipeline value and upcoming deadlines.' },
+                    { title: 'Intelligent matching', desc: 'Profile-based matching across grants, programmes, investment and in-kind support.' },
+                    { title: 'Eligibility check', desc: "Seven-step filter removes grants you can't apply for, by structure, size, stage and more." },
+                    { title: 'Structured funder data', desc: 'Funders tagged by legal structure, sector, stage and eligibility. Deeper than keyword search.' },
+                    { title: 'Funder briefs', desc: "Insider context on each funder's priorities, timing and quirks." },
+                    { title: 'Pipeline & deadlines', desc: 'Track from identified to submitted, with alerts up to 14 days before deadlines.' },
                   ].map((item, i) => (
                     <li key={i} className="flex items-start gap-4">
-                      <span className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full" style={{ background: 'rgba(132,204,22,0.18)' }}>
-                        <Check className="w-4 h-4" style={{ color: '#8ECB3C' }} />
+                      <span className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full" style={{ background: '#EAF3DE' }}>
+                        <Check className="w-3.5 h-3.5" style={{ color: '#3B6D11' }} />
                       </span>
-                      <div className="pt-1">
+                      <div className="pt-0.5">
                         <p className="font-bold text-[#2C2C2A] text-base leading-snug mb-1">{item.title}</p>
                         <p className="text-sm text-[#5F5E5A] leading-relaxed">{item.desc}</p>
                       </div>
                     </li>
                   ))}
                 </ul>
-                <a href="/auth/signup" className="inline-flex items-center gap-3 bg-[#2C2C2A] text-white px-7 py-4 rounded-full font-bold text-base hover:bg-slate-800 transition-all no-underline">
-                  Start now <ArrowRight className="w-4 h-4" />
-                </a>
+                <Link href={COHORT_URL} className="inline-flex items-center gap-3 bg-[#8ECB3C] text-[#173404] px-7 py-4 rounded-full font-bold text-base hover:opacity-90 transition-all no-underline">
+                  Apply to join <ArrowRight className="w-4 h-4" />
+                </Link>
               </motion.div>
 
               {/* Right: description + scattered feature cards */}
@@ -917,14 +882,19 @@ export default function LandingPage() {
               <h2 className="mb-10 leading-[1.05]" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(36px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#2C2C2A' }}>
                 Built from<br /><span style={{ color: '#8ECB3C' }}>the inside.</span>
               </h2>
-              <blockquote className="mb-0">
-                <span className="block leading-none mb-2 select-none" style={{ fontSize: '5rem', color: '#8ECB3C', fontFamily: 'var(--font-dm-serif)', lineHeight: 1, marginBottom: '-2rem' }}>&ldquo;</span>
-                <p className="text-lg leading-relaxed mb-4" style={{ color: '#5F5E5A', fontFamily: 'var(--font-dm-serif)' }}>I&apos;ve spent 20 years in the social enterprise and charity sector, co-founding a youth music organisation, leading development strategy at local charities, and driving fundraising across a global co-working network.
+              <blockquote style={{ position: 'relative', paddingLeft: '40px', marginBottom: 0 }}>
+                {/* Opening quote in left gutter */}
+                <span className="select-none" style={{ position: 'absolute', left: 0, top: 0, fontSize: '56px', color: '#8ECB3C', fontFamily: "'Fraunces', Georgia, serif", lineHeight: 0.7, fontWeight: 400 }}>&ldquo;</span>
+                <p className="text-lg leading-relaxed mb-4" style={{ color: '#2C2C2A', fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, letterSpacing: '-0.005em' }}>
+                  I&apos;ve spent 20 years in the social enterprise and charity sector, co-founding a youth music organisation, leading development strategy at local charities, and driving fundraising across a global co-working network.
                 </p>
-                <p className="text-lg leading-relaxed" style={{ color: '#5F5E5A', fontFamily: 'var(--font-dm-serif)' }}>Throughout all of it, I was consistently frustrated by the same thing: a fragmented funding ecosystem that forced people like me to spend a disproportionate amount of time hunting opportunities rather than delivering impactful work.<span style={{ fontSize: '5rem', color: '#8ECB3C', fontFamily: 'var(--font-dm-serif)', lineHeight: 0, verticalAlign: '-0.5em', marginLeft: '0.1em' }}>&rdquo;</span>
+                <p className="text-lg leading-relaxed" style={{ color: '#2C2C2A', fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, letterSpacing: '-0.005em', marginBottom: '4px' }}>
+                  The frustration was the same every time: a fragmented funding ecosystem that forced people like me to spend more time hunting opportunities than delivering impactful work.
                 </p>
+                {/* Closing quote on its own line, right-aligned */}
+                <div className="select-none" style={{ textAlign: 'right', fontFamily: "'Fraunces', Georgia, serif", fontSize: '56px', color: '#8ECB3C', lineHeight: 0.5, fontWeight: 400, marginTop: '18px', paddingRight: '4px' }}>&rdquo;</div>
               </blockquote>
-              <p className="text-sm font-semibold" style={{ color: '#2C2C2A', fontFamily: 'var(--font-space-grotesk)', marginTop: '1rem' }}>Paul Kilty, founder</p>
+              <p className="text-sm font-semibold" style={{ color: '#5F5E5A', fontFamily: 'var(--font-space-grotesk)', marginTop: '24px' }}>Paul Kilty, founder</p>
             </motion.div>
 
             {/* Right: £8bn stat card + why it exists */}
@@ -933,16 +903,10 @@ export default function LandingPage() {
                 <p className="leading-none mb-3" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(56px, 8vw, 96px)', color: '#8ECB3C', letterSpacing: '-0.04em' }}>£8bn<span style={{ color: '#2C2C2A' }}>+</span></p>
                 <p className="text-sm font-semibold uppercase tracking-widest" style={{ color: '#5F5E5A', fontFamily: 'var(--font-space-grotesk)' }}>awarded by UK trusts &amp; foundations annually</p>
               </div>
-              <div className="rounded-3xl p-8 bg-white" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
-                <p className="text-base font-semibold mb-3" style={{ color: '#2C2C2A', fontFamily: 'var(--font-space-grotesk)' }}>Why it exists</p>
-                <p className="text-base leading-relaxed mb-3" style={{ color: '#5F5E5A' }}>
-                  The UK has thousands of active funders, but finding the right ones is effectively
-                  a full-time job. Most charities, CICs and social enterprises can&apos;t afford
-                  that — and they shouldn&apos;t have to.
-                </p>
+              <div className="rounded-3xl p-8 bg-white" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.04)', border: '0.5px solid rgba(23,52,4,0.08)' }}>
+                <p className="text-base font-semibold mb-3" style={{ color: '#2C2C2A', fontFamily: 'var(--font-space-grotesk)' }}>Filtered for you.</p>
                 <p className="text-base leading-relaxed" style={{ color: '#5F5E5A' }}>
-                  Grant Tracker matches you to grants, programmes, investments and in-kind support
-                  so you can spend that time delivering.
+                  Thousands of UK funders, but only a fraction fit your organisation. Grant Tracker filters by your legal structure, sector, geography and stage, so you only see what you can actually apply for.
                 </p>
               </div>
             </motion.div>
@@ -967,38 +931,26 @@ export default function LandingPage() {
               </p>
             </motion.div>
           </div>
-          <div className="grid sm:grid-cols-2 gap-x-6">
+          <div className="grid sm:grid-cols-2 gap-4">
             {audiences.map((card, i) => (
               <motion.div
                 key={card.title}
                 {...fadeInView(i * 0.08)}
-                className="flex items-start gap-5 py-7"
-                style={{
-                  paddingRight: i % 2 === 0 ? '1.5rem' : undefined,
-                  paddingLeft:  i % 2 === 1 ? '1.5rem' : undefined,
-                }}
+                className="flex items-start gap-4 p-6 bg-white rounded-2xl"
+                style={{ border: '0.5px solid rgba(23,52,4,0.08)', boxShadow: '0 1px 6px rgba(23,52,4,0.04)' }}
               >
-                {/* Number — left column */}
-                <span
-                  className="flex-shrink-0 font-bold leading-none select-none w-14 text-right"
-                  style={{
-                    fontFamily: 'var(--font-space-grotesk)',
-                    fontSize: 'clamp(36px, 4vw, 52px)',
-                    color: card.numberColor,
-                    letterSpacing: '-0.05em',
-                    lineHeight: 1,
-                  }}
+                {/* Icon in rounded square */}
+                <div
+                  className="flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center"
+                  style={{ background: card.iconBg }}
                 >
-                  {String(i + 1).padStart(2, '0')}
-                </span>
-                {/* Content — right column */}
+                  <card.Icon className="w-5 h-5" style={{ color: card.iconColor }} />
+                </div>
+                {/* Content */}
                 <div className="flex-1 pt-0.5">
-                  <div className="flex items-center gap-2 mb-2">
-                    <card.Icon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: card.iconColor }} />
-                    <h3 className="font-bold" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: '1.05rem', color: '#2C2C2A' }}>
-                      {card.title}
-                    </h3>
-                  </div>
+                  <h3 className="font-bold mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: '1.05rem', color: '#2C2C2A' }}>
+                    {card.title}
+                  </h3>
                   <p className="text-sm leading-relaxed" style={{ color: '#5F5E5A' }}>{card.desc}</p>
                 </div>
               </motion.div>
@@ -1024,16 +976,28 @@ export default function LandingPage() {
             </motion.div>
           </div>
 
-          {/* Three value cards */}
+          {/* Three value cards - distinct colours */}
           <div className="grid md:grid-cols-3 gap-4 mb-4">
-            {[
-              { label: 'Honest', body: "We don't inflate match scores or dress up poor-fit grants. If something isn't right for you, we'd rather tell you than waste your time.", bg: '#E6F1FB' },
-              { label: 'Practical', body: "Every feature exists because it makes the funding process easier. We don't add complexity for the sake of it.", bg: '#FAEEDA' },
-              { label: 'Accessible', body: "Good funding intelligence shouldn't only be available to organisations with big budgets. Grant Tracker is priced so smaller organisations can afford it.", bg: '#F1F7E4' },
-            ].map((v, i) => (
+            {([
+              {
+                label: 'Honest',
+                body: "We don't inflate match scores or dress up poor-fit grants. If something isn't right for you, we'd rather tell you than waste your time.",
+                bg: '#EAF3DE', titleColor: '#173404', bodyColor: '#3B6D11',
+              },
+              {
+                label: 'Practical',
+                body: "Every feature exists because it makes the funding process easier. We don't add complexity for the sake of it.",
+                bg: '#E6F1FB', titleColor: '#0C447C', bodyColor: 'rgba(12,68,124,0.85)',
+              },
+              {
+                label: 'Accessible',
+                body: "Good funding intelligence shouldn't only reach organisations with big budgets. Grant Tracker will always be priced to stay within reach of smaller ones.",
+                bg: '#F5F1E8', titleColor: '#2C2C2A', bodyColor: '#5F5E5A',
+              },
+            ] as const).map((v, i) => (
               <motion.div key={v.label} {...fadeInView(i * 0.08)} className="rounded-3xl p-8 flex flex-col" style={{ background: v.bg }}>
-                <p className="text-4xl font-bold mb-4" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#2C2C2A', letterSpacing: '-0.02em' }}>{v.label}</p>
-                <p className="text-base leading-relaxed flex-1" style={{ color: '#5F5E5A' }}>{v.body}</p>
+                <p className="text-4xl font-bold mb-4" style={{ fontFamily: 'var(--font-space-grotesk)', color: v.titleColor, letterSpacing: '-0.02em' }}>{v.label}</p>
+                <p className="text-base leading-relaxed flex-1" style={{ color: v.bodyColor }}>{v.body}</p>
               </motion.div>
             ))}
           </div>
@@ -1042,20 +1006,17 @@ export default function LandingPage() {
           <motion.div {...fadeInView(0.1)} className="rounded-3xl p-10 md:p-12 bg-white" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
             <div className="grid lg:grid-cols-2 gap-8 items-start">
               <div>
-                <p className="text-sm font-semibold tracking-widest uppercase mb-3" style={{ color: '#8ECB3C', fontFamily: 'var(--font-space-grotesk)' }}>Our approach to AI</p>
-                <p className="text-2xl font-bold leading-snug" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#2C2C2A', letterSpacing: '-0.02em' }}>
-                  Your voice. Your story.<br />Your evidence.
+                <p className="text-xs font-semibold tracking-widest uppercase mb-4" style={{ color: '#8ECB3C', fontFamily: 'var(--font-space-grotesk)' }}>Our approach to AI</p>
+                <p className="leading-snug" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: '19px', color: '#2C2C2A', letterSpacing: '-0.01em', maxWidth: '300px' }}>
+                  We use AI so you can spend less time searching. Not less time thinking.
                 </p>
               </div>
               <div className="space-y-4">
                 <p className="text-base leading-relaxed" style={{ color: '#5F5E5A' }}>
-                  Funders are increasingly inundated with AI-generated applications that are bland, generic and interchangeable.
-                  We don&apos;t want to make that problem worse.
+                  AI can refine your message, but we believe it&apos;s important to have an authentic voice. This helps you stand out from the crowd and demonstrate your impact.
                 </p>
                 <p className="text-base leading-relaxed" style={{ color: '#5F5E5A' }}>
-                  Grant Tracker uses AI where it genuinely helps: matching your profile to the right opportunities,
-                  building intelligence about how funders make decisions, and cutting the time you spend searching.
-                  Always in service of something genuinely yours — not instead of it.
+                  Grant Tracker uses AI where it genuinely helps: matching your profile to the right opportunities, building intelligence about how funders make decisions, and cutting the time you spend searching.
                 </p>
               </div>
             </div>
@@ -1064,101 +1025,66 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* STATS */}
-      <section className="py-16 md:py-20" style={{ background: '#2C2C2A' }}>
+      {/* APPLICATION / COHORT */}
+      <section id="cohort" className="py-20 md:py-28" style={{ background: '#FAFAF7' }}>
         <div className="mx-auto max-w-6xl px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
-            {stats.map((s, i) => (
-              <motion.div key={s.label} {...fadeInView(i * 0.1)} className="text-center">
-                <p className="leading-none mb-3" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(40px, 5vw, 64px)', color: '#8ECB3C', letterSpacing: '-0.03em' }}>{s.value}</p>
-                <p className="text-sm leading-relaxed" style={{ color: '#8A8986' }}>{s.label}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* PRICING */}
-      <section id="pricing" className="py-20 md:py-28" style={{ background: "#FAFAF7" }}>
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="grid lg:grid-cols-2 gap-8 items-end mb-14">
-            <motion.div {...fadeInView(0)}>
-              <p className="text-sm font-semibold tracking-widest uppercase mb-4" style={{ color: '#8ECB3C', fontFamily: 'var(--font-space-grotesk)' }}>Pricing</p>
-              <h2 className="leading-tight" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#2C2C2A' }}>
-                Plans that respect <span style={{ color: '#8ECB3C' }}>your budget.</span>
-              </h2>
-            </motion.div>
-            <motion.div {...fadeInView(0.1)}>
-              <p className="text-base leading-relaxed" style={{ color: '#5F5E5A' }}>Start free. Upgrade to live search, match scoring and tracking tools whenever you're ready.</p>
-            </motion.div>
-          </div>
-          <div className="grid md:grid-cols-3 gap-4">
-            {plans.map((plan, i) => (
-              <motion.div
-                key={plan.name}
-                {...fadeInView(i * 0.1)}
-                className="relative rounded-3xl p-8 flex flex-col"
-                style={{ background: plan.popular ? '#2C2C2A' : '#FAFAF7' }}
-              >
-                {plan.popular && (
-                  <span className="absolute top-6 right-6 rounded-full px-3 py-1 text-xs font-semibold" style={{ background: '#8ECB3C', color: '#2C2C2A', fontFamily: 'var(--font-space-grotesk)' }}>Most popular</span>
-                )}
-                <p className="text-sm font-semibold mb-4" style={{ color: plan.popular ? '#8ECB3C' : '#5F5E5A', fontFamily: 'var(--font-space-grotesk)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>{plan.name}</p>
-                <div className="mb-2">
-                  <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(40px, 5vw, 56px)', letterSpacing: '-0.03em', color: plan.popular ? '#FFFFFF' : '#2C2C2A' }}>{plan.price}</span>
-                </div>
-                <p className="text-sm mb-8" style={{ color: plan.popular ? '#8A8986' : '#8A8986' }}>{plan.period}</p>
-                <ul className="space-y-3 flex-1 mb-8">
-                  {plan.features.map((f) => (
-                    <li key={f} className="flex items-start gap-3 text-sm" style={{ color: plan.popular ? '#E4E2DA' : '#5F5E5A' }}>
-                      <span className="mt-0.5 flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center" style={{ background: '#8ECB3C' }}>
-                        <Check className="w-2.5 h-2.5" style={{ color: '#2C2C2A' }} />
-                      </span>
-                      <span>{f}</span>
-                    </li>
+          <motion.div {...fadeInView(0)}>
+            <p className="text-xs font-bold uppercase tracking-widest mb-5" style={{ color: '#8ECB3C', fontFamily: 'var(--font-space-grotesk)' }}>Founding cohort</p>
+            <h2 className="mb-4 leading-tight" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#2C2C2A' }}>
+              Building this with a <span style={{ color: '#8ECB3C' }}>small group.</span>
+            </h2>
+            <p className="text-base leading-relaxed mb-10 max-w-xl" style={{ color: '#5F5E5A' }}>
+              We&apos;re hand-picking 20&ndash;30 organisations for the founding cohort. If that sounds like you, we&apos;d love to hear from you.
+            </p>
+            <div className="grid md:grid-cols-2 gap-4 items-stretch">
+              {/* Who we're looking for */}
+              <div className="rounded-3xl p-8 bg-white flex flex-col" style={{ border: '0.5px solid rgba(23,52,4,0.08)', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
+                <p className="text-base font-semibold mb-5" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#2C2C2A' }}>Who we&apos;re looking for</p>
+                <div className="flex flex-col flex-1">
+                  {([
+                    { text: 'CICs and social enterprises', sub: 'Whether you&apos;re early-stage or scaling, from trust grants to blended social investment', dot: 'lime' },
+                    { text: 'Small charities and CIOs', sub: "Where fundraising is one person&apos;s many jobs, not a whole team", dot: 'lime' },
+                    { text: 'Co-operatives and community groups', sub: 'Worker-led, community-owned, or unincorporated', dot: 'lime' },
+                    { text: 'Impact founders', sub: 'Early-stage, pre-revenue, or working as an individual', dot: 'lime' },
+                    { text: 'Willing to give real feedback', sub: 'Occasional calls and messages as we build. This is the main thing we ask', dot: 'coral' },
+                  ] as const).map((item, i, arr) => (
+                    <div key={i} className="flex items-start gap-3 py-3" style={{ borderBottom: i < arr.length - 1 ? '0.5px solid rgba(23,52,4,0.08)' : 'none' }}>
+                      <span className="w-2 h-2 rounded-full flex-shrink-0 mt-1.5" style={{ background: item.dot === 'coral' ? '#D85A30' : '#8ECB3C' }} />
+                      <div>
+                        <p className="text-sm font-semibold" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#2C2C2A' }} dangerouslySetInnerHTML={{ __html: item.text }} />
+                        <p className="text-xs mt-0.5 leading-relaxed" style={{ color: '#8A8986' }} dangerouslySetInnerHTML={{ __html: item.sub }} />
+                      </div>
+                    </div>
                   ))}
-                </ul>
-                <Link
-                  href="/auth/signup"
-                  className="block rounded-full text-center py-3 text-sm font-semibold transition-opacity hover:opacity-80"
-                  style={{ background: plan.popular ? '#8ECB3C' : '#2C2C2A', color: plan.popular ? '#2C2C2A' : '#FFFFFF', fontFamily: 'var(--font-space-grotesk)' }}
-                >
-                  {plan.cta}
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* TESTIMONIALS */}
-      <section className="py-20 md:py-28 bg-white">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="grid lg:grid-cols-2 gap-8 items-end mb-14">
-            <motion.div {...fadeInView(0)}>
-              <p className="text-sm font-semibold tracking-widest uppercase mb-4" style={{ color: '#8ECB3C', fontFamily: 'var(--font-space-grotesk)' }}>Testimonials</p>
-              <h2 className="leading-tight" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#2C2C2A' }}>
-                Loved by <span style={{ color: '#8ECB3C' }}>small organisations.</span>
-              </h2>
-            </motion.div>
-            <motion.div {...fadeInView(0.1)}>
-              <p className="text-base leading-relaxed" style={{ color: '#5F5E5A' }}>Early users finding funding they never knew existed.</p>
-            </motion.div>
-          </div>
-          <div className="grid md:grid-cols-3 gap-4">
-            {testimonials.map((t, i) => (
-              <motion.div key={t.name} {...fadeInView(i * 0.1)} className="rounded-3xl p-8 flex flex-col bg-white">
-                <p className="text-base leading-relaxed flex-1 mb-8" style={{ color: '#5F5E5A' }}>&ldquo;{t.quote}&rdquo;</p>
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 rounded-full items-center justify-center text-white font-semibold text-sm flex-shrink-0" style={{ background: '#2C2C2A', fontFamily: 'var(--font-space-grotesk)' }}>{t.initials}</div>
-                  <div>
-                    <p className="text-sm font-semibold" style={{ color: '#2C2C2A', fontFamily: 'var(--font-space-grotesk)' }}>{t.name}</p>
-                    <p className="text-xs" style={{ color: '#8A8986' }}>{t.role}</p>
-                  </div>
                 </div>
-              </motion.div>
-            ))}
-          </div>
+              </div>
+              {/* The exchange */}
+              <div className="rounded-3xl p-8 flex flex-col" style={{ background: '#F5F1E8', border: '0.5px solid rgba(23,52,4,0.08)' }}>
+                <p className="text-base font-semibold mb-5" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#2C2C2A' }}>The exchange</p>
+                <div className="flex flex-col flex-1">
+                  {[
+                    { title: 'Free access during beta', sub: 'Full product access while we build together' },
+                    { title: 'Free first year after launch', sub: 'You keep full access for 12 months, on us' },
+                    { title: 'Founding rate from year two', sub: 'A permanently lower price for sticking with us' },
+                    { title: 'Direct line to the founder', sub: 'Your feedback shapes what we build next' },
+                  ].map((item, i, arr) => (
+                    <div key={i} className="flex items-start gap-3 py-3" style={{ borderBottom: i < arr.length - 1 ? '0.5px solid rgba(23,52,4,0.14)' : 'none' }}>
+                      <span className="text-sm font-bold flex-shrink-0 mt-0.5" style={{ color: '#639922' }}>&#10003;</span>
+                      <div>
+                        <p className="text-sm font-semibold" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#2C2C2A' }}>{item.title}</p>
+                        <p className="text-xs mt-0.5 leading-relaxed" style={{ color: '#5F5E5A' }}>{item.sub}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-6">
+                  <Link href={COHORT_URL} className="inline-flex items-center gap-2 bg-[#8ECB3C] text-[#173404] px-6 py-3 rounded-full font-bold text-sm hover:opacity-90 transition-all no-underline">
+                    Apply to join <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 
@@ -1200,46 +1126,51 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-20 md:py-28" style={{ background: '#2C2C2A' }}>
+      {/* FINAL CTA + FOOTER */}
+      <section className="pt-20 md:pt-28" style={{ background: '#FAFAF7' }}>
         <div className="mx-auto max-w-6xl px-6">
-          <motion.div {...fadeInView(0)} className="rounded-3xl p-12 md:p-20 text-center" style={{ background: '#8ECB3C' }}>
-            <h2 className="mb-6 leading-[1.05]" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(36px, 5.5vw, 72px)', letterSpacing: '-0.03em', color: '#2C2C2A' }}>
-              Find your funding.<br />Free to start.
+          {/* Final CTA block */}
+          <motion.div {...fadeInView(0)} className="rounded-t-3xl px-12 pt-14 pb-12 text-center" style={{ background: '#173404' }}>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-7 text-xs font-semibold uppercase tracking-wider" style={{ background: 'rgba(142,203,60,0.15)', color: '#C0DD97', fontFamily: 'var(--font-space-grotesk)' }}>
+              <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#8ECB3C' }} />
+              Founding cohort, applications open
+            </div>
+            <h2 className="mb-5 leading-tight" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(32px, 5vw, 56px)', letterSpacing: '-0.025em', color: '#FFFFFF' }}>
+              Help us build <span style={{ color: '#8ECB3C' }}>something better.</span>
             </h2>
-            <p className="mx-auto mb-10 max-w-lg text-base leading-relaxed" style={{ color: '#173404' }}>
-              Join CICs, charities, social enterprises and impact founders already discovering funding that actually fits.
+            <p className="mx-auto mb-8 max-w-md text-base leading-relaxed" style={{ color: '#C0DD97' }}>
+              We&apos;re hand-picking 20&ndash;30 organisations for the founding cohort. Free during beta, free first year after launch.
             </p>
             <Link
-              href="/auth/signup"
-              className="inline-block rounded-full px-10 py-4 text-base font-semibold transition-opacity hover:opacity-80"
-              style={{ background: '#2C2C2A', color: '#FFFFFF', fontFamily: 'var(--font-space-grotesk)' }}
+              href={COHORT_URL}
+              className="inline-flex items-center gap-2 rounded-full px-9 py-4 text-base font-bold transition-opacity hover:opacity-90 no-underline"
+              style={{ background: '#8ECB3C', color: '#173404', fontFamily: 'var(--font-space-grotesk)' }}
             >
-              Start for free
+              Apply to join <ArrowRight className="w-4 h-4" />
             </Link>
-            <p className="mt-5 text-sm" style={{ color: '#173404' }}>No credit card required</p>
+            <p className="mt-5 text-sm" style={{ color: '#97C459' }}>Applications reviewed within a week</p>
           </motion.div>
+          {/* Footer */}
+          <footer className="rounded-b-3xl px-12 py-8" style={{ background: '#0F2502' }}>
+            <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between" style={{ paddingBottom: '20px', borderBottom: '0.5px solid rgba(192,221,151,0.15)', marginBottom: '20px' }}>
+              <a href="/" className="flex items-center gap-2 no-underline">
+                <span className="text-lg font-bold" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#FFFFFF', letterSpacing: '-0.02em' }}>GrantTracker</span>
+              </a>
+              <div className="flex flex-wrap gap-5 text-xs font-medium" style={{ color: '#97C459', fontFamily: 'var(--font-space-grotesk)' }}>
+                <a href="#how" className="hover:text-white transition-colors">How it works</a>
+                <a href="#features" className="hover:text-white transition-colors">Features</a>
+                <a href="#cohort" className="hover:text-white transition-colors">Founding cohort</a>
+                <a href="#about" className="hover:text-white transition-colors">About</a>
+                <a href="#contact" className="hover:text-white transition-colors">Contact</a>
+              </div>
+            </div>
+            <div className="flex flex-col gap-1.5 md:flex-row md:items-center md:justify-between text-xs" style={{ color: '#97C459' }}>
+              <span>Built for the UK social impact sector.</span>
+              <span>&copy; 2026 Grant Tracker</span>
+            </div>
+          </footer>
         </div>
       </section>
-
-      {/* FOOTER */}
-      <footer className="py-10" style={{ background: '#2C2C2A', borderTop: '1px solid #2C2C2A' }}>
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="flex flex-col items-center gap-8 md:flex-row md:justify-between">
-            <a href="/" className="flex items-center gap-2">
-              <span className="text-lg font-bold" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#FFFFFF' }}>Grant<span style={{ color: '#8ECB3C' }}>Tracker</span></span>
-            </a>
-            <div className="flex flex-wrap justify-center gap-6 text-sm" style={{ color: '#8A8986' }}>
-              <a href="#how" className="hover:text-white transition-colors">How it works</a>
-              <a href="#features" className="hover:text-white transition-colors">Features</a>
-              <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
-              <a href="#about" className="hover:text-white transition-colors">About</a>
-              <a href="#contact" className="hover:text-white transition-colors">Contact</a>
-            </div>
-            <p className="text-xs" style={{ color: '#5F5E5A' }}>© 2026 Grant Tracker</p>
-          </div>
-        </div>
-      </footer>
 
     </div>
   )

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Plus_Jakarta_Sans, DM_Serif_Display, Space_Grotesk } from 'next/font/google'
+import { Plus_Jakarta_Sans, DM_Serif_Display, Space_Grotesk, Fraunces } from 'next/font/google'
 import './globals.css'
 
 const dmSans = Plus_Jakarta_Sans({
@@ -14,6 +14,13 @@ const dmSerif = DM_Serif_Display({
   weight: ['400'],
   style: ['normal', 'italic'],
   variable: '--font-dm-serif',
+  display: 'swap',
+})
+
+const fraunces = Fraunces({
+  subsets: ['latin'],
+  weight: ['400', '500'],
+  variable: '--font-fraunces',
   display: 'swap',
 })
 
@@ -35,7 +42,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${dmSans.variable} ${dmSerif.variable} ${spaceGrotesk.variable}`}>
+    <html lang="en" className={`${dmSans.variable} ${dmSerif.variable} ${spaceGrotesk.variable} ${fraunces.variable}`}>
       <body>{children}</body>
     </html>
   )
