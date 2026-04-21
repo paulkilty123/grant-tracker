@@ -85,6 +85,13 @@ const INCOME_BANDS = [
   '£1 million–£5 million', 'Over £5 million',
 ]
 
+const GEOGRAPHIC_REACH_OPTIONS = [
+  { value: 'local',         label: 'Local only',             hint: 'One town, borough, or district' },
+  { value: 'regional',      label: 'Regional / county-wide', hint: 'County, region, or multi-borough' },
+  { value: 'national',      label: 'National (UK-wide)',      hint: 'UK-wide programmes' },
+  { value: 'international', label: 'UK + international',      hint: 'Includes overseas work' },
+]
+
 const IMPACT_SECTOR_OPTIONS: { value: ImpactSector; label: string }[] = [
   { value: 'young_people',      label: 'Young People & Youth' },
   { value: 'community',         label: 'Community Dev & Spaces' },
@@ -1191,12 +1198,16 @@ function LocationCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEdit
             />
           </FieldRow>
           <FieldRow label="Geographic reach">
-            <input
+            <select
               value={draft.geographicReach}
               onChange={e => setDraft(p => ({ ...p!, geographicReach: e.target.value }))}
-              style={inputStyle()}
-              placeholder="e.g. South East England, National, London"
-            />
+              style={inputStyle({ appearance: 'auto' as const })}
+            >
+              <option value="">Select reach…</option>
+              {GEOGRAPHIC_REACH_OPTIONS.map(o => (
+                <option key={o.value} value={o.value}>{o.label} — {o.hint}</option>
+              ))}
+            </select>
           </FieldRow>
           {saveError && <p style={{ fontFamily: BODY, fontSize: 13, color: '#B91C1C' }}>{saveError}</p>}
         </>
@@ -1207,11 +1218,7 @@ function LocationCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEdit
           </FieldRow>
           <FieldRow label="Geographic reach">
             {org.geographic_reach ? (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                {String(org.geographic_reach).split(',').map(r => r.trim()).filter(Boolean).map(r => (
-                  <span key={r}>{locationPill(r)}</span>
-                ))}
-              </div>
+              locationPill(GEOGRAPHIC_REACH_OPTIONS.find(o => o.value === org.geographic_reach)?.label ?? String(org.geographic_reach))
             ) : <AddLink label="Add geographic reach" onClick={startEdit} />}
           </FieldRow>
         </>
