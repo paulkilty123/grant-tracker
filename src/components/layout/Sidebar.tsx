@@ -291,7 +291,7 @@ export default function Sidebar({ org, userEmail }: Props) {
               {orgName ?? userEmail}
             </p>
             <p style={{ fontSize: 11, color: SB.text, margin: 0, lineHeight: 1.3 }}>
-              Account &amp; settings
+              Account
             </p>
           </div>
           <ChevronUp style={{
