@@ -108,7 +108,7 @@ export default async function DashboardPage() {
           ? `${formatCurrency(g.amountMin)} – ${formatCurrency(g.amountMax)}`
           : formatCurrency(g.amountMax || g.amountMin || 0))
       : 'Amount on application'
-    const matchResult = computeMatchScore(g, typedOrg\!)
+    const matchResult = computeMatchScore(g, typedOrg!)
     const reasons: string[] = []
     if (matchResult.breakdown.location.score >= 8)      reasons.push('Your location')
     if (matchResult.breakdown.themes.score >= 15)       reasons.push('Your sector')
