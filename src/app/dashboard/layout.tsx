@@ -14,11 +14,14 @@ export default async function AppLayout({
 
   if (!user) redirect('/auth/login')
 
-  const { data: org } = await supabase
+  const { data: orgs } = await supabase
     .from('organisations')
     .select('*')
     .eq('owner_id', user.id)
-    .maybeSingle<Organisation>()
+    .order('created_at', { ascending: true })
+    .limit(1)
+
+  const org = (orgs?.[0] ?? null) as Organisation | null
 
   if (!isOnboardingComplete(org)) redirect('/onboarding/welcome')
 
