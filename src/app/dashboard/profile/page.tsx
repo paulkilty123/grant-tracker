@@ -1623,10 +1623,10 @@ export default function ProfilePage() {
 
         {/* Page header */}
         <div style={{ marginBottom: 28 }}>
-          <h1 style={{ fontFamily: UI, fontWeight: 600, fontSize: 28, letterSpacing: '-0.02em', color: T.textPrimary, marginBottom: 6 }}>
+          <h1 style={{ fontFamily: UI, fontWeight: 700, fontSize: 36, letterSpacing: '-0.02em', color: T.textPrimary, lineHeight: 1.1, marginBottom: 6 }}>
             Your profile
           </h1>
-          <p style={{ fontFamily: BODY, fontSize: 15, color: T.textSecondary }}>
+          <p style={{ fontFamily: BODY, fontSize: 14, color: T.textSecondary, marginTop: 4 }}>
             Each organisation you support has its own profile, matches, and pipeline.
           </p>
         </div>
