@@ -64,3 +64,12 @@ export async function getOrganisationsByOwner(userId: string): Promise<Organisat
   if (error) return []
   return data ?? []
 }
+
+export async function deleteOrganisation(id: string): Promise<void> {
+  const supabase = createClient()
+  const { error } = await supabase
+    .from('organisations')
+    .delete()
+    .eq('id', id)
+  if (error) throw error
+}
