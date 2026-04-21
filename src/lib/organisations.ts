@@ -19,10 +19,11 @@ export async function getOrganisationByOwner(userId: string): Promise<Organisati
     .from('organisations')
     .select('*')
     .eq('owner_id', userId)
-    .single()
+    .order('created_at', { ascending: true })
+    .limit(1)
 
-  if (error) return null
-  return data
+  if (error || !data?.length) return null
+  return data[0]
 }
 
 export async function createOrganisation(
