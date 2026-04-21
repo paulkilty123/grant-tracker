@@ -85,13 +85,17 @@ export default async function DashboardPage() {
       scoredAll = grantRows
         .map(row => {
           const g = normaliseScrapedGrant(row as Record<string, unknown>)
+          let mr: ReturnType<typeof computeMatchScore> | null = null
+          try { mr = computeMatchScore(g, typedOrg) } catch { mr = null }
+          if (!mr || mr.score <= 0) return null
           return {
             grant: g,
-            ...(() => { const mr = computeMatchScore(g, typedOrg); return { score: mr.score, breakdown: mr.breakdown } })(),
+            score: mr.score,
+            breakdown: mr.breakdown,
             lastSeenAt: (row as Record<string, unknown>).last_seen_at as string | null,
           }
         })
-        .filter(x => x.score > 0)
+        .filter((x): x is ScoredGrant => x !== null)
         .sort((a, b) => b.score - a.score)
     }
   }
