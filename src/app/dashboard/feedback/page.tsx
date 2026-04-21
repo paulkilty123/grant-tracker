@@ -311,7 +311,6 @@ export default function FeedbackPage() {
                       background: '#8ECB3C', color: '#173404', border: 'none',
                       padding: '10px 20px', borderRadius: 8,
                       cursor: (status === 'sending' || !isValid()) ? 'not-allowed' : 'pointer',
-                      opacity: (status === 'sending' || !isValid()) ? 0.45 : 1,
                       display: 'inline-flex', alignItems: 'center', gap: 8, transition: 'filter 0.15s',
                     }}
                   >
