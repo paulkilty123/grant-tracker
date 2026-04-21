@@ -51,3 +51,15 @@ export async function updateOrganisation(
 
   if (error) throw error
 }
+
+export async function getOrganisationsByOwner(userId: string): Promise<Organisation[]> {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from('organisations')
+    .select('*')
+    .eq('owner_id', userId)
+    .order('created_at', { ascending: true })
+
+  if (error) return []
+  return data ?? []
+}

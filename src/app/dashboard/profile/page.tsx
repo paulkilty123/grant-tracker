@@ -1,1381 +1,949 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { Sparkles, Globe, ArrowRight, ArrowLeft, ChevronRight, SkipForward, CheckCircle2, Zap } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { getOrganisationByOwner, createOrganisation, updateOrganisation } from '@/lib/organisations'
-import type { Organisation, OrgType, LegalStructure, OrgStage, ImpactSector, FunderType, FundingType, FundingSubtype, BeneficiaryGroup } from '@/types'
-import { SUBTYPE_LABELS } from '@/lib/funding-subtypes'
+import { getOrganisationsByOwner, updateOrganisation } from '@/lib/organisations'
+import { Pencil, Plus, ChevronDown, RotateCcw, Globe, Check, X, Star } from 'lucide-react'
+import type { Organisation, LegalStructure, OrgStage, ImpactSector, FundingType, BeneficiaryGroup } from '@/types'
 
-/* ────────────────────────────────────────────
+/* ═══════════════════════════════════════════════
+   Design tokens
+   ═══════════════════════════════════════════════ */
+const T = {
+  lime:          '#8ECB3C',
+  greenDeep:     '#173404',
+  greenMid:      '#639922',
+  pageBg:        '#FAFAF7',
+  cream:         '#F5F1E8',
+  white:         '#FFFFFF',
+  textPrimary:   '#2C2C2A',
+  textSecondary: '#5F5E5A',
+  textTertiary:  '#8A8986',
+  border:        'rgba(23, 52, 4, 0.08)',
+  borderStrong:  'rgba(23, 52, 4, 0.14)',
+  // Completion tier palette (mirrors opportunity card match tiers)
+  strongBorder:  '#639922',
+  strongPanel:   '#F4F9ED',
+  partialBorder: '#5A9080',
+  partialPanel:  '#F0F5F3',
+  weakBorder:    '#808580',
+  weakPanel:     '#F4F6F4',
+  // Pill families
+  greenBg:       '#E8F2D8',
+  greenText:     '#3F6018',
+  coralBg:       '#FAECE7',
+  coralText:     '#993C1D',
+  creamText:     '#3A3000',
+}
+
+const UI  = 'var(--font-space-grotesk)'
+const BODY = 'var(--font-dm-sans)'
+
+/* ═══════════════════════════════════════════════
    Option data
-   ──────────────────────────────────────────── */
-
-const LEGAL_STRUCTURE_OPTIONS: { value: LegalStructure; label: string; hint?: string }[] = [
-  { value: 'cic_guarantee',    label: 'CIC — Limited by Guarantee',         hint: 'Most common CIC structure' },
-  { value: 'cic_shares',       label: 'CIC — Limited by Shares',            hint: 'CIC with shareholder model' },
-  { value: 'cio',              label: 'Charitable Incorporated Organisation (CIO)' },
+   ═══════════════════════════════════════════════ */
+const LEGAL_STRUCTURE_OPTIONS: { value: LegalStructure; label: string }[] = [
+  { value: 'cic_guarantee',      label: 'CIC — Limited by Guarantee' },
+  { value: 'cic_shares',         label: 'CIC — Limited by Shares' },
+  { value: 'cio',                label: 'Charitable Incorporated Organisation (CIO)' },
   { value: 'registered_charity', label: 'Registered Charity (Ltd by Guarantee)' },
-  { value: 'ltd_guarantee',    label: 'Ltd by Guarantee (non-charity, non-CIC)' },
-  { value: 'ltd_shares',       label: 'Ltd by Shares (trading social enterprise)',  hint: 'Social mission required for soft matching' },
-  { value: 'llp',              label: 'Limited Liability Partnership (LLP)' },
-  { value: 'cooperative',      label: 'Co-operative / Community Benefit Society' },
-  { value: 'unincorporated',   label: 'Unincorporated Association / Community Group' },
-  { value: 'sole_trader',      label: 'Sole Trader / Individual Practitioner' },
-  { value: 'not_registered',   label: 'Not yet registered (idea / pre-registration)' },
+  { value: 'ltd_guarantee',      label: 'Ltd by Guarantee (non-charity, non-CIC)' },
+  { value: 'ltd_shares',         label: 'Ltd by Shares (trading social enterprise)' },
+  { value: 'llp',                label: 'Limited Liability Partnership (LLP)' },
+  { value: 'cooperative',        label: 'Co-operative / Community Benefit Society' },
+  { value: 'unincorporated',     label: 'Unincorporated Association / Community Group' },
+  { value: 'sole_trader',        label: 'Sole Trader / Individual Practitioner' },
+  { value: 'not_registered',     label: 'Not yet registered' },
 ]
 
-const ORG_STAGE_OPTIONS: { value: OrgStage; label: string; desc: string }[] = [
-  { value: 'idea',        label: 'Idea Stage',    desc: 'Not yet trading or registered' },
-  { value: 'pre_revenue', label: 'Pre-Revenue',   desc: 'Registered but no trading income yet' },
-  { value: 'early',       label: 'Early Stage',   desc: 'Under 3 years operating or under £100k income' },
-  { value: 'growth',      label: 'Growth',        desc: '3–10 years, building income and impact' },
-  { value: 'established', label: 'Established',   desc: 'Over 5 years — any size, from local charity to major institution' },
+const ORG_STAGE_OPTIONS: { value: OrgStage; label: string }[] = [
+  { value: 'idea',        label: 'Idea Stage' },
+  { value: 'pre_revenue', label: 'Pre-Revenue' },
+  { value: 'early',       label: 'Early Stage (under 3 yrs / under £100k)' },
+  { value: 'growth',      label: 'Growth (3–10 yrs)' },
+  { value: 'established', label: 'Established (5+ yrs)' },
+]
+
+const INCOME_BANDS = [
+  'Under £10,000', '£10,000–£50,000', '£50,000–£100,000',
+  '£100,000–£250,000', '£250,000–£500,000', '£500,000–£1 million',
+  '£1 million–£5 million', 'Over £5 million',
 ]
 
 const IMPACT_SECTOR_OPTIONS: { value: ImpactSector; label: string }[] = [
-  { value: 'young_people',  label: 'Young People & Youth'       },
-  { value: 'community',     label: 'Community Dev & Spaces'     },
-  { value: 'health',        label: 'Health & Wellbeing'         },
-  { value: 'mental_health', label: 'Mental Health'              },
-  { value: 'housing',       label: 'Housing & Homelessness'     },
-  { value: 'education',     label: 'Education & Skills'         },
-  { value: 'employment',    label: 'Employment & Livelihoods'   },
-  { value: 'disability',    label: 'Disability'                 },
-  { value: 'older_people',  label: 'Older People'               },
-  { value: 'environment',   label: 'Environment & Climate'      },
-  { value: 'creative',      label: 'Arts & Creative Industries' },
-  { value: 'heritage',      label: 'Heritage & Conservation'    },
-  { value: 'sport',         label: 'Sport & Physical Activity'  },
-  { value: 'women',         label: 'Women & Gender Equality'    },
-  { value: 'justice',       label: 'Justice, Rights & Democracy'},
-  { value: 'tech',          label: 'Tech for Good'              },
-  { value: 'financial',     label: 'Financial Inclusion'        },
-  { value: 'food',          label: 'Food & Agriculture'         },
-  { value: 'international',    label: 'International & Fair Trade'  },
-  { value: 'social_economy',    label: 'Social Economy & Co-ops'      },
+  { value: 'young_people',      label: 'Young People & Youth' },
+  { value: 'community',         label: 'Community Dev & Spaces' },
+  { value: 'health',            label: 'Health & Wellbeing' },
+  { value: 'mental_health',     label: 'Mental Health' },
+  { value: 'housing',           label: 'Housing & Homelessness' },
+  { value: 'education',         label: 'Education & Skills' },
+  { value: 'employment',        label: 'Employment & Livelihoods' },
+  { value: 'disability',        label: 'Disability' },
+  { value: 'older_people',      label: 'Older People' },
+  { value: 'environment',       label: 'Environment & Climate' },
+  { value: 'creative',          label: 'Arts & Creative Industries' },
+  { value: 'heritage',          label: 'Heritage & Conservation' },
+  { value: 'sport',             label: 'Sport & Physical Activity' },
+  { value: 'women',             label: 'Women & Gender Equality' },
+  { value: 'justice',           label: 'Justice, Rights & Democracy' },
+  { value: 'tech',              label: 'Tech for Good' },
+  { value: 'financial',         label: 'Financial Inclusion' },
+  { value: 'food',              label: 'Food & Agriculture' },
+  { value: 'international',     label: 'International & Fair Trade' },
+  { value: 'social_economy',    label: 'Social Economy & Co-ops' },
   { value: 'social_innovation', label: 'Social Innovation & Systems Change' },
 ]
 
-// Sub-sector tags available for each broad sector that has meaningful sub-divisions
 const NICHE_TAGS_BY_SECTOR: Partial<Record<ImpactSector, { value: string; label: string }[]>> = {
-  creative: [
-    { value: 'music',           label: 'Music' },
-    { value: 'theatre',         label: 'Theatre & Drama' },
-    { value: 'dance',           label: 'Dance' },
-    { value: 'visual_arts',     label: 'Visual Arts' },
-    { value: 'film_media',      label: 'Film & Media' },
-    { value: 'literature',      label: 'Literature & Writing' },
-    { value: 'crafts',          label: 'Crafts & Making' },
-    { value: 'circus_street',   label: 'Circus & Street Arts' },
+  creative:         [
+    { value: 'music',           label: 'Music' }, { value: 'theatre',       label: 'Theatre & Drama' },
+    { value: 'dance',           label: 'Dance' }, { value: 'visual_arts',   label: 'Visual Arts' },
+    { value: 'film_media',      label: 'Film & Media' }, { value: 'literature', label: 'Literature & Writing' },
+    { value: 'crafts',          label: 'Crafts & Making' }, { value: 'circus_street', label: 'Circus & Street Arts' },
   ],
-  sport: [
-    { value: 'football',        label: 'Football' },
-    { value: 'cricket',         label: 'Cricket' },
-    { value: 'rugby',           label: 'Rugby' },
-    { value: 'basketball',      label: 'Basketball' },
-    { value: 'swimming',        label: 'Swimming' },
-    { value: 'athletics',       label: 'Athletics' },
-    { value: 'tennis',          label: 'Tennis' },
-    { value: 'cycling',         label: 'Cycling' },
+  sport:            [
+    { value: 'football',        label: 'Football' }, { value: 'cricket',       label: 'Cricket' },
+    { value: 'rugby',           label: 'Rugby' },   { value: 'basketball',    label: 'Basketball' },
+    { value: 'swimming',        label: 'Swimming' }, { value: 'athletics',    label: 'Athletics' },
+    { value: 'tennis',          label: 'Tennis' },  { value: 'cycling',       label: 'Cycling' },
     { value: 'martial_arts',    label: 'Martial Arts & Boxing' },
-    { value: 'disability_sport',label: 'Disability Sport' },
-    { value: 'women_in_sport',  label: 'Women in Sport' },
+    { value: 'disability_sport',label: 'Disability Sport' }, { value: 'women_in_sport', label: 'Women in Sport' },
   ],
-  heritage: [
+  heritage:         [
     { value: 'built_heritage',      label: 'Historic Buildings' },
     { value: 'industrial_heritage', label: 'Industrial Heritage' },
     { value: 'natural_heritage',    label: 'Natural Heritage' },
     { value: 'museums_archives',    label: 'Museums & Archives' },
   ],
-  environment: [
-    { value: 'climate',         label: 'Climate & Net Zero' },
-    { value: 'biodiversity',    label: 'Biodiversity & Wildlife' },
-    { value: 'urban_greening',  label: 'Urban Greening' },
-    { value: 'marine',          label: 'Marine & Coastal' },
-    { value: 'energy',             label: 'Renewable Energy' },
-    { value: 'circular_economy',   label: 'Circular Economy & Zero Waste' },
+  environment:      [
+    { value: 'climate',          label: 'Climate & Net Zero' },
+    { value: 'biodiversity',     label: 'Biodiversity & Wildlife' },
+    { value: 'urban_greening',   label: 'Urban Greening' },
+    { value: 'marine',           label: 'Marine & Coastal' },
+    { value: 'energy',           label: 'Renewable Energy' },
+    { value: 'circular_economy', label: 'Circular Economy & Zero Waste' },
   ],
-  social_economy: [
+  social_economy:   [
     { value: 'worker_cooperative',  label: 'Worker Co-operative' },
     { value: 'community_shares',    label: 'Community Shares' },
     { value: 'social_franchise',    label: 'Social Franchise' },
     { value: 'community_ownership', label: 'Community Ownership' },
   ],
-  social_innovation: [
-    { value: 'tech_for_good',       label: 'Tech for Good' },
-    { value: 'impact_measurement',  label: 'Impact Measurement' },
-    { value: 'systems_change',      label: 'Systems Change' },
+  social_innovation:[
+    { value: 'tech_for_good',      label: 'Tech for Good' },
+    { value: 'impact_measurement', label: 'Impact Measurement' },
+    { value: 'systems_change',     label: 'Systems Change' },
   ],
-  education: [
-    { value: 'early_years',         label: 'Early Years' },
-    { value: 'stem',                label: 'STEM' },
-    { value: 'literacy_numeracy',   label: 'Literacy & Numeracy' },
-    { value: 'higher_education',    label: 'Higher Education' },
-    { value: 'vocational',          label: 'Vocational & Apprenticeships' },
-    { value: 'digital_literacy',    label: 'Digital Literacy' },
+  education:        [
+    { value: 'early_years',       label: 'Early Years' },
+    { value: 'stem',              label: 'STEM' },
+    { value: 'literacy_numeracy', label: 'Literacy & Numeracy' },
+    { value: 'higher_education',  label: 'Higher Education' },
+    { value: 'vocational',        label: 'Vocational & Apprenticeships' },
+    { value: 'digital_literacy',  label: 'Digital Literacy' },
   ],
 }
-
 
 const BENEFICIARY_OPTIONS: { value: BeneficiaryGroup; label: string }[] = [
-  { value: 'children',          label: 'Children (under 16)'            },
-  { value: 'young_people',      label: 'Young people (16-25)'          },
-  { value: 'older_people',      label: 'Older people (65+)'            },
-  { value: 'families',          label: 'Families & parents'             },
-  { value: 'women_girls',       label: 'Women & girls'                  },
-  { value: 'men_boys',          label: 'Men & boys'                     },
-  { value: 'lgbtq',             label: 'LGBTQ+ communities'             },
-  { value: 'ethnic_minorities', label: 'Ethnic minorities & BAME'       },
-  { value: 'refugees_migrants', label: 'Refugees & migrants'            },
-  { value: 'disabled_people',   label: 'Disabled people'                },
-  { value: 'mental_health',     label: 'People with mental health needs'},
-  { value: 'carers',            label: 'Carers & care leavers'          },
-  { value: 'veterans',          label: 'Veterans & armed forces'        },
-  { value: 'ex_offenders',      label: 'Ex-offenders'                   },
-  { value: 'homeless',          label: 'Homeless & rough sleepers'      },
-  { value: 'people_in_poverty', label: 'People in poverty'              },
-  { value: 'rural_communities', label: 'Rural & isolated communities'   },
-  { value: 'general_public',    label: 'General public (no specific group)' },
+  { value: 'children',          label: 'Children (under 16)' },
+  { value: 'young_people',      label: 'Young people (16–25)' },
+  { value: 'older_people',      label: 'Older people (65+)' },
+  { value: 'families',          label: 'Families & parents' },
+  { value: 'women_girls',       label: 'Women & girls' },
+  { value: 'men_boys',          label: 'Men & boys' },
+  { value: 'lgbtq',             label: 'LGBTQ+ communities' },
+  { value: 'ethnic_minorities', label: 'Ethnic minorities & BAME' },
+  { value: 'refugees_migrants', label: 'Refugees & migrants' },
+  { value: 'disabled_people',   label: 'Disabled people' },
+  { value: 'mental_health',     label: 'People with mental health needs' },
+  { value: 'carers',            label: 'Carers & care leavers' },
+  { value: 'veterans',          label: 'Veterans & armed forces' },
+  { value: 'ex_offenders',      label: 'Ex-offenders' },
+  { value: 'homeless',          label: 'Homeless & rough sleepers' },
+  { value: 'people_in_poverty', label: 'People in poverty' },
+  { value: 'rural_communities', label: 'Rural & isolated communities' },
+  { value: 'general_public',    label: 'General public' },
 ]
 
-const FUNDING_TYPE_OPTIONS: { value: FundingType; label: string; desc: string }[] = [
-  { value: 'grant',      label: 'Grants & Awards',    desc: 'Non-repayable cash: grants, bursaries, prizes, diversity funds' },
-  { value: 'programme',  label: 'Programmes',         desc: 'Accelerators, fellowships, incubators & support programmes' },
-  { value: 'investment', label: 'Social Investment',  desc: 'Repayable finance: loans, patient capital, blended finance' },
-  { value: 'in_kind',    label: 'In-Kind Support',    desc: 'Non-cash: software credits, ad grants, workspace, pro bono' },
+const FUNDING_TYPE_OPTIONS: { value: FundingType; label: string }[] = [
+  { value: 'grant',      label: 'Grants & Awards' },
+  { value: 'programme',  label: 'Programmes' },
+  { value: 'investment', label: 'Social Investment' },
+  { value: 'in_kind',    label: 'In-Kind Support' },
 ]
 
-/**
- * Funding sub-type options grouped by parent type.
- * `unrestricted` is starred because it's the "holy grail" for charities —
- * flexible core funding that can be spent however the org needs.
- */
-const FUNDING_SUBTYPE_GROUPS: { parent: FundingType; label: string; options: { value: FundingSubtype; hint?: string }[] }[] = [
-  {
-    parent: 'grant',
-    label: 'Grants & Awards',
-    options: [
-      { value: 'unrestricted', hint: 'Core funding — spend however you need ⭐' },
-      { value: 'restricted',   hint: 'Project-specific funding' },
-      { value: 'capital',      hint: 'Buildings, equipment, fit-out' },
-      { value: 'emergency',    hint: 'Crisis / hardship grants' },
-      { value: 'small_grant',  hint: 'Micro-grants, typically under £10k' },
-    ],
-  },
-  {
-    parent: 'programme',
-    label: 'Programmes',
-    options: [
-      { value: 'accelerator',  hint: '6–12 week cohort programmes' },
-      { value: 'incubator',    hint: 'Longer-term startup support' },
-      { value: 'fellowship',   hint: 'Individual leadership / sabbatical' },
-      { value: 'cohort_grant', hint: 'Peer cohort with cash attached' },
-      { value: 'award',        hint: 'Prizes & recognition' },
-    ],
-  },
-  {
-    parent: 'investment',
-    label: 'Social Investment',
-    options: [
-      { value: 'loan',              hint: 'Traditional repayable loan' },
-      { value: 'social_investment', hint: 'Mission-aligned repayable finance' },
-      { value: 'equity',            hint: 'Share of your company' },
-      { value: 'quasi_equity',      hint: 'Revenue-share / participation' },
-      { value: 'convertible',       hint: 'Debt that can convert to equity' },
-      { value: 'blended',           hint: 'Mix of grant + repayable' },
-    ],
-  },
-  {
-    parent: 'in_kind',
-    label: 'In-Kind Support',
-    options: [
-      { value: 'pro_bono_legal',      hint: 'Free legal support' },
-      { value: 'pro_bono_consulting', hint: 'Free strategy / ops consulting' },
-      { value: 'tech_product',        hint: 'Software credits, Google Ad Grants etc.' },
-      { value: 'volunteering',        hint: 'Skilled volunteers' },
-      { value: 'office_space',        hint: 'Free / subsidised workspace' },
-      { value: 'training',            hint: 'Courses, masterclasses, workshops' },
-    ],
-  },
-]
-
-const SOFT_MATCH_STRUCTURES: LegalStructure[] = ['ltd_guarantee', 'ltd_shares', 'llp', 'sole_trader', 'unincorporated']
-
-const INCOME_BANDS = [
-  'Under £10,000',
-  '£10,000–£50,000',
-  '£50,000–£100,000',
-  '£100,000–£250,000',
-  '£250,000–£500,000',
-  '£500,000–£1 million',
-  '£1 million–£5 million',
-  'Over £5 million',
-]
-
-const FUNDER_TYPE_OPTIONS: { value: FunderType; label: string }[] = [
-  { value: 'trust_foundation',    label: 'Trusts & Foundations'         },
-  { value: 'community_foundation',label: 'Community Foundations'        },
-  { value: 'corporate_foundation',label: 'Corporate Foundations'        },
-  { value: 'capacity_builder',    label: 'Capacity Builders'            },
-  { value: 'lottery',             label: 'National Lottery'             },
-  { value: 'local_authority',     label: 'Local Authority'              },
-  { value: 'government',          label: 'Central Government'           },
-  { value: 'corporate',           label: 'Corporate / CSR'              },
-  { value: 'housing_association', label: 'Housing Associations'         },
-  { value: 'competition',         label: 'Competitions & Awards'        },
-  { value: 'loan',                label: 'Social Lending'               },
-  { value: 'crowdfund_match',     label: 'Matched Crowdfunding'         },
-  { value: 'other',               label: 'Other'                        },
-]
-
-/* ────────────────────────────────────────────
-   Form state type & helpers
-   ──────────────────────────────────────────── */
-
-interface FormState {
-  name: string
-  charityNumber: string
-  orgType: OrgType
-  legalStructure: LegalStructure | ''
-  orgStage: OrgStage | ''
-  annualIncome: string
-  socialMissionDeclared: boolean
-  articlesRestrictProfit: boolean
-  alsoIndividualPractitioner: boolean
-  impactSectors: ImpactSector[]
-  beneficiaryGroups: BeneficiaryGroup[]
-  primaryLocation: string
-  geographicReach: string
-  themes: string
-  areasOfWork: string
-  beneficiaries: string
-  yearsOperating: string
-  peoplePerYear: string
-  volunteers: string
-  projectsRunning: string
-  keyOutcomes: string
-  minGrantTarget: string
-  maxGrantTarget: string
-  funderTypePreferences: FunderType[]
-  fundingTypePreferences: FundingType[]
-  fundingSubtypePreferences: FundingSubtype[]
-  nicheTags: string[]
-  hasAssetLock: boolean | null
-  yearsTrading: string
-  mission: string
-  alertsEnabled: boolean
-  alertFrequency: string
-  alertMinScore: string
+/* ═══════════════════════════════════════════════
+   Completeness logic
+   ═══════════════════════════════════════════════ */
+interface CompletenessResult {
+  pct: number
+  missing: { label: string; impact: 'high' | 'medium' }[]
 }
 
-const EMPTY_FORM: FormState = {
-  name: '',
-  charityNumber: '',
-  orgType: 'registered_charity',
-  legalStructure: '',
-  orgStage: '',
-  annualIncome: INCOME_BANDS[0],
-  socialMissionDeclared: false,
-  articlesRestrictProfit: false,
-  alsoIndividualPractitioner: false,
-  impactSectors: [],
-  beneficiaryGroups: [],
-  primaryLocation: '',
-  geographicReach: 'local',
-  themes: '',
-  areasOfWork: '',
-  beneficiaries: '',
-  yearsOperating: '',
-  peoplePerYear: '',
-  volunteers: '',
-  projectsRunning: '',
-  keyOutcomes: '',
-  minGrantTarget: '',
-  maxGrantTarget: '',
-  funderTypePreferences: [],
-  fundingTypePreferences: [],
-  fundingSubtypePreferences: [],
-  nicheTags: [],
-  hasAssetLock: null,
-  yearsTrading: '',
-  mission: '',
-  alertsEnabled: false,
-  alertFrequency: 'weekly',
-  alertMinScore: '70',
-}
-
-function orgToForm(org: Organisation): FormState {
-  return {
-    name:                       org.name ?? '',
-    charityNumber:              org.charity_number ?? org.cic_number ?? '',
-    orgType:                    org.org_type ?? 'registered_charity',
-    legalStructure:             org.legal_structure ?? '',
-    orgStage:                   org.org_stage ?? '',
-    annualIncome:               org.annual_income_band ?? INCOME_BANDS[0],
-    socialMissionDeclared:      org.social_mission_declared ?? false,
-    articlesRestrictProfit:     org.articles_restrict_profit ?? false,
-    alsoIndividualPractitioner: org.also_individual_practitioner ?? false,
-    impactSectors:              (org.impact_sectors ?? []) as ImpactSector[],
-    beneficiaryGroups:          (org.beneficiary_groups ?? []) as BeneficiaryGroup[],
-    primaryLocation:            org.primary_location ?? '',
-    geographicReach:            'local',
-    themes:                     (org.themes ?? []).join(', '),
-    areasOfWork:                (org.areas_of_work ?? []).join(', '),
-    beneficiaries:              (org.beneficiaries ?? []).join(', '),
-    yearsOperating:             org.years_operating != null ? String(org.years_operating) : '',
-    peoplePerYear:              org.people_per_year != null ? String(org.people_per_year) : '',
-    volunteers:                 org.volunteers != null ? String(org.volunteers) : '',
-    projectsRunning:            org.projects_running != null ? String(org.projects_running) : '',
-    keyOutcomes:                (org.key_outcomes ?? []).join('\n'),
-    minGrantTarget:             org.min_grant_target != null ? String(org.min_grant_target) : '',
-    maxGrantTarget:             org.max_grant_target != null ? String(org.max_grant_target) : '',
-    funderTypePreferences:      org.funder_type_preferences ?? [],
-    fundingTypePreferences:     (org.funding_type_preferences ?? []) as FundingType[],
-    fundingSubtypePreferences:  (org.funding_subtype_preferences ?? []) as FundingSubtype[],
-    nicheTags:                  org.niche_tags ?? [],
-    hasAssetLock:               org.has_asset_lock ?? null,
-    yearsTrading:               org.years_trading != null ? String(org.years_trading) : '',
-    mission:                    org.mission ?? '',
-    alertsEnabled:              (org as Organisation & { alerts_enabled?: boolean }).alerts_enabled ?? false,
-    alertFrequency:             (org as Organisation & { alert_frequency?: string }).alert_frequency ?? 'weekly',
-    alertMinScore:              String((org as Organisation & { alert_min_score?: number }).alert_min_score ?? 70),
-  }
-}
-
-function completenessScore(form: FormState): { score: number; missing: string[] } {
-  const checks: { label: string; filled: boolean }[] = [
-    { label: 'Name',                  filled: !!form.name.trim() },
-    { label: 'Legal structure',       filled: !!form.legalStructure },
-    { label: 'Organisation stage',    filled: !!form.orgStage },
-    { label: 'Impact sectors',        filled: form.impactSectors.length > 0 },
-    { label: 'Beneficiary groups',   filled: form.beneficiaryGroups.length > 0 },
-    { label: 'Annual income',         filled: !!form.annualIncome },
-    { label: 'Primary location',      filled: !!form.primaryLocation.trim() },
-    { label: 'Mission statement',     filled: !!form.mission.trim() },
-    { label: 'Areas of work',         filled: !!form.areasOfWork.trim() },
-    { label: 'Years operating',       filled: !!form.yearsOperating },
-    // Grant size targets are the primary input for size matching — prompt users to fill these in
-    { label: 'Grant size range',      filled: !!form.maxGrantTarget },
+function computeCompleteness(org: Organisation): CompletenessResult {
+  const fields: { label: string; filled: boolean; impact: 'high' | 'medium' }[] = [
+    { label: 'Impact sector',    filled: (org.impact_sectors?.length ?? 0) > 0,              impact: 'high'   },
+    { label: 'Who you serve',    filled: (org.beneficiary_groups?.length ?? 0) > 0,           impact: 'high'   },
+    { label: 'Location',         filled: !!org.primary_location,                              impact: 'high'   },
+    { label: 'Legal structure',  filled: !!org.legal_structure,                               impact: 'high'   },
+    { label: 'Annual income',    filled: !!org.annual_income_band,                            impact: 'medium' },
+    { label: 'Grant size range', filled: !!(org.min_grant_target || org.max_grant_target),    impact: 'medium' },
+    { label: 'Mission statement',filled: !!org.mission,                                       impact: 'medium' },
   ]
-  const filled = checks.filter(c => c.filled).length
-  const missing = checks.filter(c => !c.filled).map(c => c.label)
-  return { score: Math.round((filled / checks.length) * 100), missing }
+  const filledCount = fields.filter(f => f.filled).length
+  const pct = Math.round((filledCount / fields.length) * 100)
+  const missing = fields.filter(f => !f.filled)
+  return { pct, missing }
 }
 
-/* ────────────────────────────────────────────
-   Onboarding step definitions
-   ──────────────────────────────────────────── */
+function fmtThousands(v: string | number | null | undefined): string {
+  if (!v && v !== 0) return ''
+  const n = typeof v === 'string' ? parseInt(v.replace(/[^0-9]/g, '')) : v
+  if (isNaN(n)) return ''
+  if (n >= 1_000_000) return `£${(n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1)}m`
+  if (n >= 1_000)     return `£${Math.round(n / 1000)}k`
+  return `£${n}`
+}
 
-const ONBOARDING_STEPS = [
-  { id: 1, title: 'About Your Organisation',   short: 'Organisation' },
-  { id: 2, title: 'Impact Sectors',            short: 'Sectors' },
-  { id: 3, title: 'Who You Serve',             short: 'Beneficiaries' },
-  { id: 4, title: 'Location & Focus',          short: 'Location' },
-  { id: 5, title: 'Mission Statement',         short: 'Mission' },
-  { id: 6, title: 'Grant Preferences',         short: 'Preferences' },
-  { id: 7, title: 'Email Alerts',              short: 'Alerts' },
-]
+/* ═══════════════════════════════════════════════
+   Reusable small components
+   ═══════════════════════════════════════════════ */
 
-/* ────────────────────────────────────────────
-   Toggle switch component
-   ──────────────────────────────────────────── */
+function AddLink({ label, onClick }: { label: string; onClick?: () => void }) {
+  const [hov, setHov] = useState(false)
+  return (
+    <span
+      onClick={onClick}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        fontFamily: UI, fontWeight: 500, fontSize: 13,
+        color: hov ? T.greenDeep : T.textTertiary,
+        cursor: 'pointer',
+        display: 'inline-flex', alignItems: 'center', gap: 4,
+        borderBottom: hov ? `1px solid ${T.greenDeep}` : '1px dashed transparent',
+        paddingBottom: 1, transition: 'all 0.15s',
+      }}
+    >
+      + {label}
+    </span>
+  )
+}
+
+function FieldRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr', gap: 24, alignItems: 'start', padding: '4px 0' }}>
+      <div style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, color: T.textSecondary, paddingTop: 2 }}>
+        {label}
+      </div>
+      <div style={{ fontFamily: BODY, fontSize: 15, color: T.textPrimary }}>
+        {children}
+      </div>
+    </div>
+  )
+}
 
 function Toggle({ enabled, onToggle }: { enabled: boolean; onToggle: () => void }) {
   return (
-    <button
-      type="button"
+    <div
       onClick={onToggle}
-      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${
-        enabled ? 'bg-charcoal' : 'bg-warm'
-      }`}
+      style={{
+        width: 36, height: 20, borderRadius: 10, position: 'relative', cursor: 'pointer',
+        background: enabled ? T.lime : '#E0DFD9', transition: 'background 0.2s ease', flexShrink: 0,
+      }}
     >
-      <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-        enabled ? 'translate-x-5' : 'translate-x-0'
-      }`} />
+      <div style={{
+        position: 'absolute', width: 16, height: 16, background: T.white, borderRadius: '50%',
+        top: 2, left: enabled ? 18 : 2, transition: 'left 0.2s ease',
+        boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
+      }} />
+    </div>
+  )
+}
+
+type ChipState = 'unselected' | 'secondary' | 'primary'
+
+function PickerChip({ label, chipState, dimmed, onClick, showMakePrimary, onMakePrimary }: {
+  label: string; chipState: ChipState; dimmed?: boolean
+  onClick: () => void; showMakePrimary?: boolean; onMakePrimary?: () => void
+}) {
+  const [hov, setHov] = useState(false)
+  const isPrimary   = chipState === 'primary'
+  const isSecondary = chipState === 'secondary'
+  const isSelected  = isPrimary || isSecondary
+
+  const bg = isPrimary ? T.greenDeep : isSecondary ? T.greenBg : hov ? '#F0EFEB' : T.white
+  const color = isPrimary ? T.white : isSecondary ? T.greenText : dimmed ? T.textTertiary : T.textSecondary
+  const border = isPrimary ? T.greenDeep : isSecondary ? T.greenMid : T.borderStrong
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <button
+        onClick={onClick}
+        onMouseEnter={() => setHov(true)}
+        onMouseLeave={() => setHov(false)}
+        style={{
+          width: '100%', padding: '7px 10px', borderRadius: 8,
+          border: `1.5px solid ${border}`,
+          background: bg, color, cursor: 'pointer',
+          fontFamily: UI, fontSize: 12.5, fontWeight: isSelected ? 600 : 400,
+          display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.12s',
+          opacity: dimmed ? 0.4 : 1,
+        }}
+      >
+        {isPrimary && (
+          <Star size={9} fill="currentColor" color="currentColor" style={{ flexShrink: 0 }} />
+        )}
+        {isSecondary && (
+          <span style={{ width: 5, height: 5, borderRadius: '50%', background: T.greenText, flexShrink: 0 }} />
+        )}
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
+      </button>
+      {showMakePrimary && (
+        <button
+          onClick={e => { e.stopPropagation(); onMakePrimary?.() }}
+          style={{
+            position: 'absolute', top: -6, right: -6,
+            background: T.greenDeep, color: T.white,
+            border: 'none', borderRadius: 4, padding: '2px 6px',
+            fontSize: 10, fontFamily: UI, fontWeight: 600, cursor: 'pointer',
+            zIndex: 2, whiteSpace: 'nowrap',
+          }}
+        >
+          ★ Primary
+        </button>
+      )}
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════════════
+   Org Switcher
+   ═══════════════════════════════════════════════ */
+function OrgSwitcher({ orgs, activeOrgId, onSwitch }: {
+  orgs: Organisation[]
+  activeOrgId: string
+  onSwitch: (id: string) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const active = orgs.find(o => o.id === activeOrgId) ?? orgs[0]
+  const isMulti = orgs.length > 1
+
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onClickOutside)
+    return () => document.removeEventListener('mousedown', onClickOutside)
+  }, [])
+
+  const initials = (name: string) =>
+    name.split(' ').filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('')
+
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
+      marginBottom: 24, padding: '14px 18px',
+      background: T.white, border: `1px solid ${T.border}`, borderRadius: 12,
+    }}>
+      <div ref={ref} style={{ position: 'relative' }}>
+        <div
+          onClick={() => isMulti && setOpen(v => !v)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 12,
+            cursor: isMulti ? 'pointer' : 'default',
+            padding: '4px 8px', borderRadius: 8, margin: '-4px -8px',
+          }}
+        >
+          {/* Avatar */}
+          <div style={{
+            width: 36, height: 36, background: T.cream, borderRadius: 8,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontFamily: UI, fontWeight: 600, fontSize: 14, color: T.greenDeep, flexShrink: 0,
+          }}>
+            {initials(active?.name ?? 'O')}
+          </div>
+          <div>
+            <div style={{ fontFamily: UI, fontWeight: 500, fontSize: 11, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: T.textTertiary, marginBottom: 2 }}>
+              Viewing profile for
+            </div>
+            <div style={{ fontFamily: UI, fontWeight: 600, fontSize: 15.5, color: T.textPrimary, display: 'flex', alignItems: 'center', gap: 6 }}>
+              {active?.name ?? 'Your organisation'}
+              {isMulti && <ChevronDown size={14} color={T.textTertiary} />}
+            </div>
+          </div>
+          {isMulti && (
+            <span style={{ fontFamily: UI, fontSize: 12.5, color: T.textTertiary, padding: '3px 8px', background: T.pageBg, borderRadius: 10, marginLeft: 4 }}>
+              {orgs.length} organisations
+            </span>
+          )}
+        </div>
+
+        {/* Dropdown */}
+        {open && (
+          <div style={{
+            position: 'absolute', top: 'calc(100% + 8px)', left: 0, minWidth: 280,
+            background: T.white, border: `1px solid ${T.borderStrong}`, borderRadius: 10,
+            boxShadow: '0 6px 20px rgba(23,52,4,0.08)', padding: 6, zIndex: 20,
+          }}>
+            {orgs.map(o => (
+              <div
+                key={o.id}
+                onClick={() => { onSwitch(o.id); setOpen(false) }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 6,
+                  cursor: 'pointer', background: o.id === activeOrgId ? T.cream : 'transparent',
+                }}
+              >
+                <div style={{
+                  width: 28, height: 28, background: T.pageBg, border: `1px solid ${T.border}`, borderRadius: 6,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontFamily: UI, fontWeight: 600, fontSize: 12, color: T.greenDeep,
+                }}>
+                  {initials(o.name ?? 'O')}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: UI, fontWeight: 500, fontSize: 14, color: T.textPrimary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {o.name}
+                  </div>
+                  <div style={{ fontFamily: BODY, fontSize: 12, color: T.textTertiary }}>
+                    {LEGAL_STRUCTURE_OPTIONS.find(x => x.value === o.legal_structure)?.label?.split('(')[0].trim() ?? o.legal_structure ?? 'Unknown structure'}
+                    {o.primary_location ? ` · ${o.primary_location}` : ''}
+                  </div>
+                </div>
+                {o.id === activeOrgId && <Check size={14} color={T.greenDeep} />}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════════════
+   Completion Meter
+   ═══════════════════════════════════════════════ */
+function CompletionMeter({ org }: { org: Organisation }) {
+  const { pct, missing } = computeCompleteness(org)
+  const variant = pct >= 80
+    ? { border: T.strongBorder,  bg: T.strongPanel,  label: T.strongBorder  }
+    : pct >= 60
+    ? { border: T.partialBorder, bg: T.partialPanel, label: T.partialBorder }
+    : { border: T.weakBorder,    bg: T.weakPanel,    label: T.weakBorder    }
+
+  const topMissing = missing.slice(0, 2).map(m => m.label).join(' and ')
+  const caption = topMissing
+    ? `Add ${topMissing.toLowerCase()} to improve your match quality`
+    : 'Your profile is complete — matches are fully optimised'
+
+  return (
+    <div style={{
+      background: variant.bg, border: `1px solid ${variant.border}`,
+      borderRadius: 12, padding: '16px 22px', marginBottom: 24,
+    }}>
+      <div style={{ fontFamily: UI, fontWeight: 500, fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: variant.label, marginBottom: 8 }}>
+        Profile completeness
+      </div>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 10 }}>
+        <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 24, color: T.textPrimary, letterSpacing: '-0.01em' }}>{pct}%</span>
+        <span style={{ fontFamily: BODY, fontSize: 14, color: T.textSecondary }}>{caption}</span>
+      </div>
+      <div style={{ height: 6, background: 'rgba(23,52,4,0.06)', borderRadius: 3, overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: `${pct}%`, background: variant.border, borderRadius: 3, transition: 'width 0.4s ease' }} />
+      </div>
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════════════
+   Scan Bar
+   ═══════════════════════════════════════════════ */
+function ScanBar({ website }: { website?: string | null }) {
+  if (!website) return null
+  const display = website.replace(/^https?:\/\//, '').replace(/\/$/, '')
+  return (
+    <div style={{
+      background: T.white, border: `1px solid ${T.border}`, borderRadius: 12,
+      padding: '14px 18px', marginBottom: 16,
+      display: 'flex', alignItems: 'center', gap: 14,
+    }}>
+      <div style={{
+        flexShrink: 0, width: 32, height: 32, background: T.cream, borderRadius: 8,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.greenDeep,
+      }}>
+        <Globe size={16} />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, color: T.textSecondary, marginBottom: 2 }}>Website on file</div>
+        <div style={{ fontFamily: UI, fontWeight: 500, fontSize: 14.5, color: T.textPrimary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {display}
+        </div>
+      </div>
+      <button
+        style={{
+          fontFamily: UI, fontWeight: 500, fontSize: 13,
+          background: 'transparent', color: T.textPrimary,
+          border: `0.5px solid ${T.borderStrong}`,
+          padding: '7px 14px', borderRadius: 8, cursor: 'pointer',
+          display: 'inline-flex', alignItems: 'center', gap: 6,
+        }}
+        title="Re-scan coming soon"
+      >
+        <RotateCcw size={13} />
+        Re-scan & refresh
+      </button>
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════════════
+   Card shell (shared wrapper)
+   ═══════════════════════════════════════════════ */
+function CardShell({ title, badge, isEditing, onEdit, editDisabled, children, footer }: {
+  title: string
+  badge?: React.ReactNode
+  isEditing: boolean
+  onEdit: () => void
+  editDisabled?: boolean
+  children: React.ReactNode
+  footer?: React.ReactNode
+}) {
+  return (
+    <section style={{
+      background: T.white, border: `1px solid ${isEditing ? T.greenDeep : T.border}`,
+      borderRadius: 12, overflow: 'hidden',
+      boxShadow: isEditing ? '0 0 0 3px rgba(23,52,4,0.05)' : 'none',
+      transition: 'border-color 0.15s, box-shadow 0.15s',
+    }}>
+      {/* Header */}
+      <div style={{ padding: '18px 24px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <h2 style={{ fontFamily: UI, fontWeight: 600, fontSize: 17, color: T.textPrimary, letterSpacing: '-0.01em' }}>
+            {title}
+          </h2>
+          {badge}
+        </div>
+        {!isEditing && (
+          <button
+            onClick={onEdit}
+            disabled={editDisabled}
+            style={{
+              fontFamily: UI, fontWeight: 500, fontSize: 13,
+              color: editDisabled ? T.textTertiary : T.textSecondary,
+              background: 'transparent', border: 'none', cursor: editDisabled ? 'not-allowed' : 'pointer',
+              padding: '6px 10px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 6,
+              opacity: editDisabled ? 0.5 : 1,
+            }}
+          >
+            <Pencil size={14} />
+            Edit
+          </button>
+        )}
+        {isEditing && (
+          <span style={{ fontFamily: UI, fontWeight: 500, fontSize: 12, color: T.greenDeep, padding: '3px 10px', background: T.cream, borderRadius: 10 }}>
+            Editing
+          </span>
+        )}
+      </div>
+
+      {/* Body */}
+      <div style={{ padding: '0 24px 22px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {children}
+      </div>
+
+      {/* Footer (edit mode) */}
+      {footer && (
+        <div style={{ padding: '14px 24px', background: T.pageBg, borderTop: `1px solid ${T.border}`, display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+          {footer}
+        </div>
+      )}
+    </section>
+  )
+}
+
+function SaveBtn({ saving, onClick }: { saving: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={saving}
+      style={{
+        fontFamily: UI, fontWeight: 500, fontSize: 13.5,
+        background: saving ? '#C5E08A' : T.lime, color: T.greenDeep,
+        border: 'none', padding: '8px 18px', borderRadius: 8,
+        cursor: saving ? 'not-allowed' : 'pointer',
+      }}
+    >
+      {saving ? 'Saving…' : 'Save changes'}
+    </button>
+  )
+}
+function CancelBtn({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        fontFamily: UI, fontWeight: 500, fontSize: 13.5,
+        background: T.white, color: T.textPrimary,
+        border: `0.5px solid ${T.borderStrong}`, padding: '8px 16px', borderRadius: 8,
+        cursor: 'pointer',
+      }}
+    >
+      Cancel
     </button>
   )
 }
 
-/* ════════════════════════════════════════════
-   MAIN COMPONENT
-   ════════════════════════════════════════════ */
+function inputStyle(extra?: React.CSSProperties): React.CSSProperties {
+  return {
+    fontFamily: BODY, fontSize: 15, color: T.textPrimary,
+    width: '100%', padding: '8px 12px',
+    border: `1px solid ${T.borderStrong}`, borderRadius: 8,
+    background: T.pageBg, outline: 'none',
+    ...extra,
+  }
+}
 
-export default function ProfilePage() {
-  const router = useRouter()
-  const [form, setForm] = useState<FormState>(EMPTY_FORM)
-  const [orgId, setOrgId] = useState<string | null>(null)
-  const [isFirstSave, setIsFirstSave] = useState(false)
-  const [userId, setUserId] = useState('')
-  const [loading, setLoading] = useState(true)
+/* ═══════════════════════════════════════════════
+   Card 1 — About your organisation
+   ═══════════════════════════════════════════════ */
+interface AboutDraft {
+  name: string; legalStructure: LegalStructure | ''
+  annualIncomeBand: string; yearsTrading: string
+  orgStage: OrgStage | ''; charityNumber: string
+  alsoIndividualPractitioner: boolean
+}
+
+function AboutCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd }: {
+  org: Organisation; orgId: string
+  onSaved: () => void; isEditingOther: boolean
+  onEditStart: () => void; onEditEnd: () => void
+}) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState<AboutDraft | null>(null)
   const [saving, setSaving] = useState(false)
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'error'>('idle')
+  const [saveError, setSaveError] = useState<string | null>(null)
 
-  // Auto-fill state
-  const [websiteUrl, setWebsiteUrl] = useState('')
-  const [autoFilling, setAutoFilling] = useState(false)
-  const [autoFillError, setAutoFillError] = useState<string | null>(null)
-  const [autoFillSuccess, setAutoFillSuccess] = useState(false)
-
-  // Track unsaved changes — set true after auto-fill or manual edits, cleared on save
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
-
-  // Onboarding state: 'welcome' | 'url-review' | number (1-6) | null (full form for returning users)
-  const [onboardingPhase, setOnboardingPhase] = useState<'welcome' | 'url-review' | number | null>(null)
-
-  useEffect(() => {
-    async function load() {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      setUserId(user.id)
-      const org = await getOrganisationByOwner(user.id)
-      if (org) {
-        setOrgId(org.id)
-        setForm(orgToForm(org))
-        setOnboardingPhase(null) // existing user → full form
-      } else {
-        setIsFirstSave(true)
-        setOnboardingPhase('welcome') // new user → onboarding
-        const meta = user.user_metadata ?? {}
-        if (meta.org_name || meta.org_type) {
-          setForm(prev => ({
-            ...prev,
-            ...(meta.org_name ? { name: meta.org_name as string } : {}),
-            ...(meta.org_type ? { orgType: meta.org_type as OrgType } : {}),
-          }))
-        }
-      }
-      setLoading(false)
-    }
-    load()
-  }, [])
-
-  /* ── Form helpers ── */
-
-  function set(field: keyof FormState) {
-    return (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
-      setForm(prev => ({ ...prev, [field]: e.target.value }))
-  }
-
-  function toggleFunderType(type: FunderType) {
-    setForm(prev => ({
-      ...prev,
-      funderTypePreferences: prev.funderTypePreferences.includes(type)
-        ? prev.funderTypePreferences.filter(t => t !== type)
-        : [...prev.funderTypePreferences, type],
-    }))
-  }
-
-  function toggleFundingType(type: FundingType) {
-    setForm(prev => ({
-      ...prev,
-      fundingTypePreferences: prev.fundingTypePreferences.includes(type)
-        ? prev.fundingTypePreferences.filter(t => t !== type)
-        : [...prev.fundingTypePreferences, type],
-    }))
-  }
-
-  function toggleFundingSubtype(subtype: FundingSubtype) {
-    setForm(prev => ({
-      ...prev,
-      fundingSubtypePreferences: prev.fundingSubtypePreferences.includes(subtype)
-        ? prev.fundingSubtypePreferences.filter(s => s !== subtype)
-        : [...prev.fundingSubtypePreferences, subtype],
-    }))
-  }
-
-  function toggleImpactSector(sector: ImpactSector) {
-    setForm(prev => {
-      const current = prev.impactSectors
-      if (current.includes(sector)) {
-        return { ...prev, impactSectors: current.filter(s => s !== sector) }
-      }
-      if (current.length >= 5) return prev
-      return { ...prev, impactSectors: [...current, sector] }
+  function startEdit() {
+    setDraft({
+      name:                       org.name ?? '',
+      legalStructure:             (org.legal_structure as LegalStructure) ?? '',
+      annualIncomeBand:           org.annual_income_band ?? INCOME_BANDS[0],
+      yearsTrading:               org.years_trading != null ? String(org.years_trading) : '',
+      orgStage:                   (org.org_stage as OrgStage) ?? '',
+      charityNumber:              org.charity_number ?? org.cic_number ?? '',
+      alsoIndividualPractitioner: org.also_individual_practitioner ?? false,
     })
+    setEditing(true)
+    onEditStart()
   }
 
+  function cancel() { setEditing(false); setDraft(null); setSaveError(null); onEditEnd() }
 
-  function toggleNicheTag(tag: string) {
-    setForm(prev => {
-      const current = prev.nicheTags
-      if (current.includes(tag)) {
-        return { ...prev, nicheTags: current.filter(t => t !== tag) }
-      }
-      return { ...prev, nicheTags: [...current, tag] }
-    })
-  }
-
-    function moveImpactSector(sector: ImpactSector, direction: 'up' | 'down') {
-    setForm(prev => {
-      const arr = [...prev.impactSectors]
-      const idx = arr.indexOf(sector)
-      if (idx < 0) return prev
-      const newIdx = direction === 'up' ? idx - 1 : idx + 1
-      if (newIdx < 0 || newIdx >= arr.length) return prev
-      ;[arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]]
-      return { ...prev, impactSectors: arr }
-    })
-  }
-
-  function toggleBeneficiaryGroup(group: BeneficiaryGroup) {
-    setForm(prev => {
-      const current = prev.beneficiaryGroups
-      if (current.includes(group)) {
-        return { ...prev, beneficiaryGroups: current.filter(g => g !== group) }
-      }
-      if (current.length >= 5) return prev
-      return { ...prev, beneficiaryGroups: [...current, group] }
-    })
-  }
-
-  function moveBeneficiaryGroup(group: BeneficiaryGroup, direction: 'up' | 'down') {
-    setForm(prev => {
-      const arr = [...prev.beneficiaryGroups]
-      const idx = arr.indexOf(group)
-      if (idx < 0) return prev
-      const newIdx = direction === 'up' ? idx - 1 : idx + 1
-      if (newIdx < 0 || newIdx >= arr.length) return prev
-      ;[arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]]
-      return { ...prev, beneficiaryGroups: arr }
-    })
-  }
-
-  /* ── Auto-fill ── */
-
-  async function handleAutoFill() {
-    if (!websiteUrl.trim()) return
-    setAutoFilling(true)
-    setAutoFillError(null)
-    setAutoFillSuccess(false)
+  async function save() {
+    if (!draft) return
+    setSaving(true); setSaveError(null)
     try {
-      const res = await fetch('/api/org-autocomplete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: websiteUrl.trim() }),
+      await updateOrganisation(orgId, {
+        name:                       draft.name.trim() || undefined,
+        legal_structure:            draft.legalStructure || undefined,
+        annual_income_band:         draft.annualIncomeBand || undefined,
+        years_trading:              draft.yearsTrading ? parseInt(draft.yearsTrading) : null,
+        org_stage:                  draft.orgStage || undefined,
+        charity_number:             draft.charityNumber.trim() || null,
+        also_individual_practitioner: draft.alsoIndividualPractitioner,
       })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data?.error ?? 'Auto-fill failed')
-      // Validate annual income against known bands
-      const validIncome = INCOME_BANDS.includes(data.annualIncome)
-        ? data.annualIncome
-        : null
-
-      // Validate structured arrays against known taxonomy values
-      const validSectors = new Set(IMPACT_SECTOR_OPTIONS.map(o => o.value))
-      const validBeneficiaries = new Set(BENEFICIARY_OPTIONS.map(o => o.value))
-      const newSectors = Array.isArray(data.impactSectors)
-        ? (data.impactSectors as string[]).filter(s => validSectors.has(s as ImpactSector)).slice(0, 5) as ImpactSector[]
-        : []
-      const newBeneficiaries = Array.isArray(data.beneficiaryGroups)
-        ? (data.beneficiaryGroups as string[]).filter(b => validBeneficiaries.has(b as BeneficiaryGroup)).slice(0, 5) as BeneficiaryGroup[]
-        : []
-
-      setForm(prev => ({
-        ...prev,
-        name:              data.name            || prev.name,
-        charityNumber:     data.charityNumber   || prev.charityNumber,
-        orgType:           data.orgType         || prev.orgType,
-        annualIncome:      validIncome            || prev.annualIncome,
-        primaryLocation:   data.primaryLocation || prev.primaryLocation,
-        themes:            Array.isArray(data.themes)        ? data.themes.join(', ')        : prev.themes,
-        areasOfWork:       Array.isArray(data.areasOfWork)   ? data.areasOfWork.join(', ')   : prev.areasOfWork,
-        beneficiaries:     Array.isArray(data.beneficiaries) ? data.beneficiaries.join(', ') : prev.beneficiaries,
-        mission:           data.mission         || prev.mission,
-        impactSectors:     newSectors.length > 0     ? newSectors       : prev.impactSectors,
-        beneficiaryGroups: newBeneficiaries.length > 0 ? newBeneficiaries : prev.beneficiaryGroups,
-      }))
-      setAutoFillSuccess(true)
-      setHasUnsavedChanges(true)
-      // If in onboarding, move to review phase
-      if (onboardingPhase === 'welcome') {
-        setOnboardingPhase('url-review')
-      }
-    } catch (err) {
-      setAutoFillError(err instanceof Error ? err.message : 'Auto-fill failed — please try again')
-    } finally {
-      setAutoFilling(false)
-    }
+      setEditing(false); setDraft(null); onEditEnd(); onSaved()
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : 'Save failed')
+    } finally { setSaving(false) }
   }
 
-  /* ── Save ── */
-
-  async function handleSave() {
-    if (!form.name.trim()) return
-    setSaving(true)
-    setSaveStatus('idle')
-
-    const payload: Omit<Organisation, 'id' | 'created_at'> & { alerts_enabled: boolean; alert_frequency: string; alert_min_score: number } = {
-      name:                         form.name.trim(),
-      charity_number:               form.charityNumber.trim() || null,
-      cic_number:                   null,
-      org_type:                     form.orgType,
-      legal_structure:              form.legalStructure || null,
-      org_stage:                    form.orgStage || null,
-      social_mission_declared:      form.socialMissionDeclared,
-      articles_restrict_profit:     form.articlesRestrictProfit,
-      also_individual_practitioner: form.alsoIndividualPractitioner,
-      impact_sectors:               form.impactSectors,
-      beneficiary_groups:           form.beneficiaryGroups,
-      annual_income_band:           form.annualIncome,
-      primary_location:             form.primaryLocation.trim() || null,
-      themes:                       form.themes.split(',').map(s => s.trim()).filter(Boolean),
-      areas_of_work:                form.areasOfWork.split(',').map(s => s.trim()).filter(Boolean),
-      beneficiaries:                form.beneficiaries.split(',').map(s => s.trim()).filter(Boolean),
-      mission:                      form.mission.trim() || null,
-      years_operating:              form.yearsOperating ? parseInt(form.yearsOperating) : null,
-      people_per_year:              form.peoplePerYear ? parseInt(form.peoplePerYear) : null,
-      volunteers:                   form.volunteers ? parseInt(form.volunteers) : null,
-      projects_running:             form.projectsRunning ? parseInt(form.projectsRunning) : null,
-      key_outcomes:                 form.keyOutcomes.split('\n').map(s => s.trim()).filter(Boolean),
-      min_grant_target:             form.minGrantTarget ? parseInt(form.minGrantTarget.replace(/,/g, '')) : null,
-      max_grant_target:             form.maxGrantTarget ? parseInt(form.maxGrantTarget.replace(/,/g, '')) : null,
-      funder_type_preferences:      form.funderTypePreferences,
-      funding_type_preferences:     form.fundingTypePreferences,
-      funding_subtype_preferences:  form.fundingSubtypePreferences,
-      niche_tags:                   form.nicheTags,
-      has_asset_lock:               form.hasAssetLock,
-      years_trading:                form.yearsTrading ? parseInt(form.yearsTrading) : null,
-      geographic_reach:             null,
-      owner_id:                     userId,
-      alerts_enabled:               form.alertsEnabled,
-      alert_frequency:              form.alertFrequency,
-      alert_min_score:              parseInt(form.alertMinScore) || 70,
-    }
-
-    try {
-      if (orgId) {
-        await updateOrganisation(orgId, payload)
-      } else {
-        const created = await createOrganisation(payload)
-        setOrgId(created.id)
-      }
-      setSaveStatus('saved')
-      setHasUnsavedChanges(false)
-      if (isFirstSave) {
-        setTimeout(() => router.push('/dashboard/search?welcome=1'), 800)
-      } else {
-        setTimeout(() => setSaveStatus('idle'), 3000)
-      }
-    } catch {
-      setSaveStatus('error')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  /* ── Loading state ── */
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64 text-mid text-sm">
-        Loading profile…
-      </div>
-    )
-  }
-
-  const { score, missing } = completenessScore(form)
-  const scoreColor = score >= 80 ? 'bg-charcoal' : score >= 50 ? 'bg-gold' : 'bg-coral-saturated'
-  const scoreLabel = score >= 80 ? 'Strong profile' : score >= 50 ? 'Getting there' : 'Needs more detail'
-
-  /* ════════════════════════════════════════════
-     ONBOARDING: Welcome screen
-     ════════════════════════════════════════════ */
-
-  if (onboardingPhase === 'welcome') {
-    return (
-      <div className="max-w-xl mx-auto py-8">
-        {/* Welcome header */}
-        <div className="text-center mb-8">
-          <div className="w-14 h-14 bg-coral/10 rounded-2xl flex items-center justify-center mx-auto mb-5">
-            <Zap className="h-7 w-7 text-coral" />
-          </div>
-          <h2 className="font-serif text-3xl font-bold text-charcoal mb-2">
-            Let&apos;s set up your profile
-          </h2>
-          <p className="text-mid text-sm leading-relaxed max-w-md mx-auto">
-            Your profile tells us about your organisation so we can match you with relevant grants, accelerators and funding programmes. The more complete it is, the better your matches.
-          </p>
-        </div>
-
-        {/* Option 1: Auto-fill from URL */}
-        <div className="card mb-4">
-          <div className="flex items-start gap-3 mb-4">
-            <div className="w-8 h-8 bg-gold/10 flex items-center justify-center flex-shrink-0">
-              <Sparkles className="h-4 w-4 text-gold" />
-            </div>
-            <div>
-              <h3 className="font-serif text-base font-bold text-charcoal">
-                Fastest way: paste your website URL
-              </h3>
-              <p className="text-xs text-mid mt-0.5">
-                We&apos;ll read your website and fill in your profile automatically. Takes about 10 seconds.
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <input
-              type="url"
-              className="form-input flex-1"
-              placeholder="https://yourorganisation.co.uk"
-              value={websiteUrl}
-              onChange={e => { setWebsiteUrl(e.target.value); setAutoFillError(null); setAutoFillSuccess(false) }}
-              onKeyDown={e => e.key === 'Enter' && handleAutoFill()}
-            />
-            <button
-              onClick={handleAutoFill}
-              disabled={autoFilling || !websiteUrl.trim()}
-              className="px-5 py-2.5 bg-forest text-white text-sm font-semibold rounded-lg flex items-center gap-2 hover:opacity-90 transition-colors disabled:opacity-50 whitespace-nowrap"
-            >
-              <Sparkles className="h-3.5 w-3.5" />
-              {autoFilling ? 'Reading…' : 'Auto-fill'}
-            </button>
-          </div>
-          {autoFillError && (
-            <p className="text-xs text-coral-saturated mt-2">{autoFillError}</p>
-          )}
-          {autoFilling && (
-            <div className="mt-3 flex items-center gap-2">
-              <div className="w-4 h-4 border-2 border-coral border-t-transparent rounded-full animate-spin" />
-              <p className="text-xs text-mid">Reading your website and extracting organisation details…</p>
-            </div>
-          )}
-        </div>
-
-        {/* Divider */}
-        <div className="flex items-center gap-4 my-6">
-          <div className="flex-1 h-px bg-warm" />
-          <span className="text-xs text-mid font-medium">or</span>
-          <div className="flex-1 h-px bg-warm" />
-        </div>
-
-        {/* Option 2: Step-by-step */}
-        <button
-          onClick={() => setOnboardingPhase(1)}
-          className="w-full card hover:border-coral/40 transition-colors cursor-pointer text-left flex items-center gap-4 group mb-4"
-        >
-          <div className="w-8 h-8 bg-forest/10 flex items-center justify-center flex-shrink-0">
-            <ArrowRight className="h-4 w-4 text-forest" />
-          </div>
-          <div className="flex-1">
-            <h3 className="font-serif text-base font-bold text-charcoal group-hover:text-coral transition-colors">
-              Fill it in step by step
-            </h3>
-            <p className="text-xs text-mid mt-0.5">
-              Six short sections — takes about 3 minutes. We&apos;ll walk you through one at a time.
-            </p>
-          </div>
-          <ChevronRight className="h-5 w-5 text-mid group-hover:text-coral transition-colors flex-shrink-0" />
-        </button>
-
-        {/* Option 3: Skip */}
-        <button
-          onClick={() => router.push('/dashboard/search')}
-          className="w-full flex items-center justify-center gap-2 py-3 text-sm text-mid hover:text-charcoal transition-colors group"
-        >
-          <SkipForward className="h-3.5 w-3.5" />
-          <span>Skip for now — browse all grants without matching</span>
-        </button>
-        <p className="text-center text-xs text-light mt-1">
-          You can set up your profile any time from the sidebar
-        </p>
-      </div>
-    )
-  }
-
-  /* ════════════════════════════════════════════
-     ONBOARDING: URL review (auto-fill done)
-     ════════════════════════════════════════════ */
-
-  if (onboardingPhase === 'url-review') {
-    const filledFields = [
-      form.name && 'Organisation name',
-      form.mission && 'Mission',
-      form.primaryLocation && 'Location',
-      form.areasOfWork && 'Areas of work',
-      form.themes && 'Themes',
-      form.beneficiaries && 'Beneficiaries',
-    ].filter(Boolean)
-
-    return (
-      <div className="max-w-2xl mx-auto py-8">
-        {/* Success header */}
-        <div className="text-center mb-6">
-          <div className="w-14 h-14 bg-forest/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <CheckCircle2 className="h-7 w-7 text-forest" />
-          </div>
-          <h2 className="font-serif text-3xl font-bold text-charcoal mb-2">
-            Profile populated from your website
-          </h2>
-          <p className="text-mid text-sm">
-            We filled in {filledFields.length} field{filledFields.length !== 1 ? 's' : ''} automatically. Review below, tweak anything that needs changing, and save when you&apos;re happy.
-          </p>
-        </div>
-
-        {/* Completeness nudge */}
-        <div className="card mb-6">
-          <div className="flex items-center justify-between mb-2">
-            <span className="font-serif text-sm font-bold text-charcoal">{scoreLabel} — {score}% complete</span>
-            <span className={`text-xs font-semibold px-2.5 py-1 rounded-full text-white ${scoreColor}`}>{score}%</span>
-          </div>
-          <div className="w-full bg-warm rounded-full h-2 mb-2">
-            <div className={`h-2 rounded-full transition-all duration-500 ${scoreColor}`} style={{ width: `${score}%` }} />
-          </div>
-          {missing.length > 0 && (
-            <p className="text-xs text-mid">
-              <span className="font-medium">Still needs:</span> {missing.join(' · ')}
-            </p>
-          )}
-        </div>
-
-        {/* Show the full form for review */}
-        {renderFullForm()}
-
-        {/* Action buttons */}
-        <div className="sticky bottom-0 mt-6 -mx-6 px-6 py-4 bg-cream/95 backdrop-blur border-t border-warm flex items-center justify-between">
-          <button
-            onClick={() => setOnboardingPhase('welcome')}
-            className="flex items-center gap-1.5 text-sm text-mid hover:text-charcoal transition-colors"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Back
-          </button>
-          <div className="flex items-center gap-3">
-            {saveStatus === 'error' && <p className="text-xs text-coral-saturated">Save failed</p>}
-            {saveStatus === 'saved' && <p className="text-xs text-mid font-medium">Saved!</p>}
-            <button
-              onClick={handleSave}
-              disabled={saving || !form.name.trim()}
-              className="btn-primary disabled:opacity-50"
-            >
-              {saving ? 'Saving…' : 'Save & Find Grants'}
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  /* ════════════════════════════════════════════
-     ONBOARDING: Step-by-step wizard (steps 1–6)
-     ════════════════════════════════════════════ */
-
-  if (typeof onboardingPhase === 'number') {
-    const currentStep = onboardingPhase
-    const stepInfo = ONBOARDING_STEPS[currentStep - 1]
-    const isLast = currentStep === ONBOARDING_STEPS.length
-
-    return (
-      <div className="max-w-xl mx-auto py-8">
-        {/* Step indicator */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-xs text-mid font-medium">Step {currentStep} of {ONBOARDING_STEPS.length}</p>
-            <button
-              onClick={() => router.push('/dashboard/search')}
-              className="text-xs text-mid hover:text-charcoal transition-colors flex items-center gap-1"
-            >
-              <SkipForward className="h-3 w-3" />
-              Skip setup
-            </button>
-          </div>
-          {/* Progress dots */}
-          <div className="flex gap-1.5">
-            {ONBOARDING_STEPS.map((s) => (
-              <div
-                key={s.id}
-                className={`h-1.5 flex-1 rounded-full transition-colors ${
-                  s.id < currentStep ? 'bg-forest' : s.id === currentStep ? 'bg-coral' : 'bg-warm'
-                }`}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Step title */}
-        <h2 className="font-serif text-2xl font-bold text-charcoal mb-1">{stepInfo.title}</h2>
-        <p className="text-xs text-mid mb-5">
-          {currentStep === 1 && 'The basics about your organisation — name, legal structure, and stage.'}
-          {currentStep === 2 && 'Select 1 to 5 impact sectors that describe your work. This drives which funding pools you match against.'}
-          {currentStep === 3 && 'Who does your organisation primarily serve? Pick a primary beneficiary group and optional secondaries.'}
-          {currentStep === 4 && 'Where you\'re based and what your work focuses on.'}
-          {currentStep === 5 && 'A short description of what you do, who you serve, and the difference you make.'}
-          {currentStep === 6 && 'What kinds of funding are you looking for?'}
-          {currentStep === 7 && 'Get notified when new grants match your profile.'}
-        </p>
-
-        {/* Step content */}
-        <div className="card mb-6">
-          {currentStep === 1 && renderSection1()}
-          {currentStep === 2 && renderSection2()}
-          {currentStep === 3 && renderBeneficiarySection()}
-          {currentStep === 4 && renderSection3()}
-          {currentStep === 5 && renderSection4()}
-          {currentStep === 6 && renderSection5()}
-          {currentStep === 7 && renderSection6()}
-        </div>
-
-        {/* Navigation */}
-        <div className="flex items-center justify-between">
-          <button
-            onClick={() => setOnboardingPhase(currentStep === 1 ? 'welcome' : currentStep - 1)}
-            className="flex items-center gap-1.5 text-sm text-mid hover:text-charcoal transition-colors"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            {currentStep === 1 ? 'Back to start' : 'Previous'}
-          </button>
-
-          {isLast ? (
-            <button
-              onClick={handleSave}
-              disabled={saving || !form.name.trim()}
-              className="btn-primary disabled:opacity-50 flex items-center gap-2"
-            >
-              {saving ? 'Saving…' : 'Save & Find Grants'}
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          ) : (
-            <button
-              onClick={() => setOnboardingPhase(currentStep + 1)}
-              className="btn-primary flex items-center gap-2"
-            >
-              Next
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          )}
-        </div>
-      </div>
-    )
-  }
-
-  /* ════════════════════════════════════════════
-     FULL FORM (returning users / url-review)
-     ════════════════════════════════════════════ */
+  const lsLabel = LEGAL_STRUCTURE_OPTIONS.find(o => o.value === org.legal_structure)?.label
+  const stageLabel = ORG_STAGE_OPTIONS.find(o => o.value === org.org_stage)?.label
 
   return (
-    <div>
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
-        <div>
-          <h2 className="font-serif text-4xl font-bold text-charcoal leading-tight">Your Profile</h2>
-          <p className="text-mid text-sm mt-1.5">A complete profile means better grant matches and more relevant alerts</p>
-        </div>
-        <div className="flex items-center gap-3 flex-shrink-0">
-          {saveStatus === 'error' && (
-            <p className="text-xs text-coral-saturated">Save failed — please try again</p>
+    <CardShell
+      title="About your organisation"
+      isEditing={editing}
+      onEdit={startEdit}
+      editDisabled={isEditingOther}
+      footer={editing ? <><CancelBtn onClick={cancel} /><SaveBtn saving={saving} onClick={save} /></> : undefined}
+    >
+      {editing && draft ? (
+        <>
+          <FieldRow label="Organisation name">
+            <input
+              value={draft.name}
+              onChange={e => setDraft(p => ({ ...p!, name: e.target.value }))}
+              style={inputStyle()}
+              placeholder="Your organisation name"
+            />
+          </FieldRow>
+          <FieldRow label="Legal structure">
+            <select
+              value={draft.legalStructure}
+              onChange={e => setDraft(p => ({ ...p!, legalStructure: e.target.value as LegalStructure }))}
+              style={{ ...inputStyle(), appearance: 'none' as const }}
+            >
+              <option value="">Select structure…</option>
+              {LEGAL_STRUCTURE_OPTIONS.map(o => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+          </FieldRow>
+          <FieldRow label="Annual income">
+            <select
+              value={draft.annualIncomeBand}
+              onChange={e => setDraft(p => ({ ...p!, annualIncomeBand: e.target.value }))}
+              style={{ ...inputStyle(), appearance: 'none' as const }}
+            >
+              {INCOME_BANDS.map(b => <option key={b} value={b}>{b}</option>)}
+            </select>
+          </FieldRow>
+          <FieldRow label="Years operating">
+            <input
+              type="number" min="0" max="200"
+              value={draft.yearsTrading}
+              onChange={e => setDraft(p => ({ ...p!, yearsTrading: e.target.value }))}
+              style={inputStyle({ width: 120 })}
+              placeholder="e.g. 7"
+            />
+          </FieldRow>
+          <FieldRow label="Organisation stage">
+            <select
+              value={draft.orgStage}
+              onChange={e => setDraft(p => ({ ...p!, orgStage: e.target.value as OrgStage }))}
+              style={{ ...inputStyle(), appearance: 'none' as const }}
+            >
+              <option value="">Select stage…</option>
+              {ORG_STAGE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+          </FieldRow>
+          <FieldRow label="Charity / CIC number">
+            <input
+              value={draft.charityNumber}
+              onChange={e => setDraft(p => ({ ...p!, charityNumber: e.target.value }))}
+              style={inputStyle({ width: 200 })}
+              placeholder="Optional"
+            />
+          </FieldRow>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8, borderTop: `1px solid ${T.border}`, marginTop: 4 }}>
+            <span style={{ fontFamily: UI, fontSize: 13.5, color: T.textSecondary, fontWeight: 500 }}>
+              I&apos;m an individual practitioner (not an organisation)
+            </span>
+            <Toggle enabled={draft.alsoIndividualPractitioner} onToggle={() => setDraft(p => ({ ...p!, alsoIndividualPractitioner: !p!.alsoIndividualPractitioner }))} />
+          </div>
+          {saveError && <p style={{ fontFamily: BODY, fontSize: 13, color: '#B91C1C', marginTop: 4 }}>{saveError}</p>}
+        </>
+      ) : (
+        <>
+          <FieldRow label="Organisation name">
+            <span>{org.name || <AddLink label="Add name" onClick={startEdit} />}</span>
+          </FieldRow>
+          <FieldRow label="Legal structure">
+            <span>{lsLabel || <AddLink label="Add legal structure" onClick={startEdit} />}</span>
+          </FieldRow>
+          <FieldRow label="Annual income">
+            <span>{org.annual_income_band || <AddLink label="Add annual income" onClick={startEdit} />}</span>
+          </FieldRow>
+          <FieldRow label="Years operating">
+            <span>{org.years_trading != null ? `${org.years_trading} year${org.years_trading === 1 ? '' : 's'}` : <AddLink label="Add years operating" onClick={startEdit} />}</span>
+          </FieldRow>
+          <FieldRow label="Organisation stage">
+            <span>{stageLabel || <AddLink label="Add stage" onClick={startEdit} />}</span>
+          </FieldRow>
+          {(org.charity_number || org.cic_number) && (
+            <FieldRow label="Registration number">
+              <span style={{ fontSize: 13, color: T.textTertiary }}>{org.charity_number ?? org.cic_number}</span>
+            </FieldRow>
           )}
-          <button
-            onClick={handleSave}
-            disabled={saving || !form.name.trim()}
-            className={`px-5 py-2.5 text-white text-sm font-semibold rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 ${
-              hasUnsavedChanges ? 'bg-coral animate-pulse' : 'bg-forest'
-            }`}
-          >
-            {saving ? 'Saving…' : saveStatus === 'saved' ? '✓ Saved!' : hasUnsavedChanges ? 'Save Changes' : 'Save Profile'}
-          </button>
-        </div>
-      </div>
-
-      {/* Unsaved changes banner */}
-      {hasUnsavedChanges && (
-        <div className="flex items-center gap-3 bg-coral/10 border border-coral/30 rounded-xl px-4 py-3 mb-6">
-          <svg className="h-4 w-4 text-coral flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-          </svg>
-          <p className="text-xs text-charcoal font-medium flex-1">
-            You have unsaved changes. Click <strong>Save Changes</strong> above to keep this profile — refreshing the page will lose your edits.
-          </p>
-          <button onClick={handleSave} className="px-3 py-1.5 bg-coral text-white text-xs font-semibold rounded-lg hover:opacity-90 transition-colors whitespace-nowrap">
-            Save now
-          </button>
-        </div>
+          {org.also_individual_practitioner && (
+            <FieldRow label="">
+              <span style={{ fontFamily: UI, fontSize: 13, color: T.textSecondary, background: T.cream, padding: '3px 10px', borderRadius: 10 }}>
+                Individual practitioner
+              </span>
+            </FieldRow>
+          )}
+        </>
       )}
-
-      {/* Profile completeness bar */}
-      <div className="card mb-6">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <span className="font-serif text-base font-bold text-charcoal">{scoreLabel}</span>
-            <span className="text-xs text-mid">— {score}% complete</span>
-          </div>
-          <span className={`text-xs font-semibold px-2.5 py-1 rounded-full text-white ${scoreColor}`}>
-            {score}%
-          </span>
-        </div>
-        <div className="w-full bg-warm rounded-full h-2 mb-3">
-          <div
-            className={`h-2 rounded-full transition-all duration-500 ${scoreColor}`}
-            style={{ width: `${score}%` }}
-          />
-        </div>
-        {missing.length > 0 && (
-          <p className="text-xs text-mid">
-            <span className="font-medium">Still to fill in:</span>{' '}
-            {missing.join(' · ')}
-          </p>
-        )}
-        {score === 100 && (
-          <p className="text-xs text-mid font-medium">Your profile is fully complete — grant matching is working at full power</p>
-        )}
-      </div>
-
-      {/* Auto-fill card */}
-      <div className="card mb-6">
-        <div className="flex items-start gap-3 mb-3">
-          <div className="w-8 h-8 bg-gold/10 flex items-center justify-center flex-shrink-0">
-            <Sparkles className="h-4 w-4 text-gold" />
-          </div>
-          <div>
-            <h3 className="font-serif text-base font-bold text-charcoal">Auto-fill from your website</h3>
-            <p className="text-xs text-mid mt-0.5">
-              Enter your website and Grant Tracker will read it and fill in your profile automatically.
-            </p>
-          </div>
-        </div>
-        <div className="flex gap-3">
-          <input
-            type="url"
-            className="form-input flex-1"
-            placeholder="https://yourwebsite.co.uk"
-            value={websiteUrl}
-            onChange={e => { setWebsiteUrl(e.target.value); setAutoFillError(null); setAutoFillSuccess(false) }}
-            onKeyDown={e => e.key === 'Enter' && handleAutoFill()}
-          />
-          <button
-            onClick={handleAutoFill}
-            disabled={autoFilling || !websiteUrl.trim()}
-            className="px-4 py-2 bg-forest text-white text-sm font-medium rounded-lg flex items-center gap-2 hover:opacity-90 transition-colors disabled:opacity-50 whitespace-nowrap"
-          >
-            <Sparkles className="h-3.5 w-3.5" />
-            {autoFilling ? 'Reading…' : 'Auto-fill'}
-          </button>
-        </div>
-        {autoFillSuccess && (
-          <p className="text-xs text-charcoal mt-2 font-medium">Fields filled from your website — review below and save when ready.</p>
-        )}
-        {autoFillError && (
-          <p className="text-xs text-coral-saturated mt-2">{autoFillError}</p>
-        )}
-      </div>
-
-      {renderFullForm()}
-
-      {/* Sticky save footer */}
-      <div className="sticky bottom-0 mt-6 -mx-6 px-6 py-4 bg-cream/95 backdrop-blur border-t border-warm flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-24 bg-warm rounded-full h-1.5">
-            <div className={`h-1.5 rounded-full ${scoreColor}`} style={{ width: `${score}%` }} />
-          </div>
-          <span className="text-xs text-mid">{score}% complete</span>
-        </div>
-        <div className="flex items-center gap-3">
-          {saveStatus === 'error' && <p className="text-xs text-coral-saturated">Save failed</p>}
-          {saveStatus === 'saved' && <p className="text-xs text-mid font-medium">Saved!</p>}
-          {hasUnsavedChanges && saveStatus === 'idle' && <p className="text-xs text-coral font-medium">Unsaved changes</p>}
-          <button
-            onClick={handleSave}
-            disabled={saving || !form.name.trim()}
-            className={`btn-primary disabled:opacity-50 ${hasUnsavedChanges ? '!bg-coral' : ''}`}
-          >
-            {saving ? 'Saving…' : hasUnsavedChanges ? 'Save Changes' : 'Save Profile'}
-          </button>
-        </div>
-      </div>
-    </div>
+    </CardShell>
   )
+}
 
-  /* ════════════════════════════════════════════
-     SECTION RENDERERS (shared by wizard + full form)
-     ════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════
+   Card 2 — Your focus (sectors + beneficiaries)
+   ═══════════════════════════════════════════════ */
+interface FocusDraft {
+  impactSectors: ImpactSector[]
+  nicheTags: string[]
+  beneficiaryGroups: BeneficiaryGroup[]
+}
 
-  function renderSection1() {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-charcoal mb-1.5">
-            Organisation or venture name <span className="text-coral-saturated">*</span>
-          </label>
-          <input
-            className="form-input"
-            placeholder="e.g. Green Communities CIC or The Makers Project"
-            value={form.name}
-            onChange={set('name')}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-charcoal mb-1.5">
-            Legal structure <span className="text-coral-saturated">*</span>
-          </label>
-          <select className="form-select" value={form.legalStructure}
-            onChange={e => setForm(prev => ({ ...prev, legalStructure: e.target.value as LegalStructure }))}>
-            <option value="">Select your legal structure…</option>
-            {LEGAL_STRUCTURE_OPTIONS.map(o => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
-          <p className="text-xs text-light mt-1">This drives eligibility matching — pick the most accurate option</p>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-charcoal mb-1.5">Organisation stage</label>
-          <select className="form-select" value={form.orgStage}
-            onChange={e => setForm(prev => ({ ...prev, orgStage: e.target.value as OrgStage }))}>
-            <option value="">Select your stage…</option>
-            {ORG_STAGE_OPTIONS.map(o => (
-              <option key={o.value} value={o.value}>{o.label} — {o.desc}</option>
-            ))}
-          </select>
-          <p className="text-xs text-light mt-1">Some programmes are stage-gated (e.g. pre-revenue only)</p>
-        </div>
+function FocusCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd }: {
+  org: Organisation; orgId: string
+  onSaved: () => void; isEditingOther: boolean
+  onEditStart: () => void; onEditEnd: () => void
+}) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState<FocusDraft | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
-        {/* Social mission flags */}
-        {form.legalStructure && SOFT_MATCH_STRUCTURES.includes(form.legalStructure as LegalStructure) && (
-          <div className="md:col-span-2 border border-gold/30 bg-gold/5 p-4 space-y-3 rounded-xl">
-            <p className="text-xs font-semibold text-charcoal">
-              Social mission flags — help us soft-match you to funders who accept &ldquo;social enterprises&rdquo;
-            </p>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-charcoal font-medium">We self-identify as mission-driven / a social enterprise</p>
-                <p className="text-xs text-mid mt-0.5">Unlocks &ldquo;likely eligible&rdquo; matching for funders who accept social enterprises</p>
-              </div>
-              <Toggle enabled={form.socialMissionDeclared} onToggle={() => setForm(prev => ({ ...prev, socialMissionDeclared: !prev.socialMissionDeclared }))} />
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-charcoal font-medium">Our articles of association restrict profit distribution or state a social purpose</p>
-                <p className="text-xs text-mid mt-0.5">Relevant for funders who specify &ldquo;not-for-profit&rdquo; eligibility</p>
-              </div>
-              <Toggle enabled={form.articlesRestrictProfit} onToggle={() => setForm(prev => ({ ...prev, articlesRestrictProfit: !prev.articlesRestrictProfit }))} />
-            </div>
-          </div>
-        )}
+  function startEdit() {
+    setDraft({
+      impactSectors:    (org.impact_sectors as ImpactSector[]) ?? [],
+      nicheTags:        (org.niche_tags as string[]) ?? [],
+      beneficiaryGroups:(org.beneficiary_groups as BeneficiaryGroup[]) ?? [],
+    })
+    setEditing(true); onEditStart()
+  }
+  function cancel() { setEditing(false); setDraft(null); setSaveError(null); onEditEnd() }
 
-
-        {/* Commercial social enterprise fields — CIC shares and Ltd structures */}
-        {form.legalStructure && ['cic_shares', 'ltd_guarantee', 'ltd_shares', 'cooperative'].includes(form.legalStructure) && (
-          <div className="md:col-span-2 border border-forest/20 bg-forest/5 p-4 rounded-xl space-y-4">
-            <p className="text-xs font-semibold text-forest">Commercial structure details — helps match social investment & innovation funding</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-charcoal mb-1.5">Years trading</label>
-                <input
-                  type="number"
-                  className="form-input"
-                  placeholder="e.g. 3"
-                  min="0"
-                  value={form.yearsTrading}
-                  onChange={e => setForm(prev => ({ ...prev, yearsTrading: e.target.value }))}
-                />
-                <p className="text-xs text-light mt-1">Some funds require minimum trading history (e.g. 2+ years)</p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-charcoal mb-1.5">Asset lock</label>
-                <div className="flex gap-3 mt-2">
-                  {[{ val: true, label: 'Yes — full asset lock' }, { val: false, label: 'No asset lock' }].map(opt => (
-                    <button key={String(opt.val)} type="button"
-                      onClick={() => setForm(prev => ({ ...prev, hasAssetLock: opt.val }))}
-                      className={`flex-1 py-2 px-3 text-xs font-medium border rounded-lg transition-all ${
-                        form.hasAssetLock === opt.val
-                          ? 'bg-forest text-cream border-forest'
-                          : 'bg-white text-mid border-warm hover:border-forest hover:text-forest'
-                      }`}>
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-                <p className="text-xs text-light mt-1">CIC guarantee = yes; CIC shares / Ltd = typically no</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-                <div>
-          <label className="block text-sm font-medium text-charcoal mb-1.5">Charity / CIC / Company number <span className="text-light font-normal">(if applicable)</span></label>
-          <input
-            className="form-input"
-            placeholder="e.g. 1234567"
-            value={form.charityNumber}
-            onChange={set('charityNumber')}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-charcoal mb-1.5">Annual income / turnover</label>
-          <select className="form-select" value={form.annualIncome} onChange={set('annualIncome')}>
-            {INCOME_BANDS.map(b => (
-              <option key={b} value={b}>{b}</option>
-            ))}
-          </select>
-          <p className="text-xs text-light mt-1">Used to check income caps on grants — select the most accurate band</p>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-charcoal mb-1.5">Years operating</label>
-          <input
-            type="number"
-            min="0"
-            max="200"
-            className="form-input"
-            placeholder="e.g. 5"
-            value={form.yearsOperating}
-            onChange={set('yearsOperating')}
-          />
-          <p className="text-xs text-light mt-1">Some funders require a minimum trading history</p>
-        </div>
-
-        {/* Individual practitioner toggle */}
-        <div className="md:col-span-2">
-          <div className="flex items-center justify-between p-3 bg-warm border border-warm rounded-xl">
-            <div>
-              <p className="text-sm text-charcoal font-medium">I am also an individual practitioner (e.g. artist, filmmaker, musician)</p>
-              <p className="text-xs text-mid mt-0.5">Shows both organisational and individual grants — e.g. Arts Council DYCP, PRS Foundation</p>
-            </div>
-            <Toggle enabled={form.alsoIndividualPractitioner} onToggle={() => setForm(prev => ({ ...prev, alsoIndividualPractitioner: !prev.alsoIndividualPractitioner }))} />
-          </div>
-        </div>
-      </div>
-    )
+  async function save() {
+    if (!draft) return
+    setSaving(true); setSaveError(null)
+    try {
+      await updateOrganisation(orgId, {
+        impact_sectors:    draft.impactSectors,
+        niche_tags:        draft.nicheTags,
+        beneficiary_groups:draft.beneficiaryGroups,
+      })
+      setEditing(false); setDraft(null); onEditEnd(); onSaved()
+    } catch (e) { setSaveError(e instanceof Error ? e.message : 'Save failed') }
+    finally { setSaving(false) }
   }
 
-  function renderSection2() {
-    const RANK_LABELS = ['Primary', 'Secondary', 'Tertiary'] as const
-    const RANK_COLORS = [
-      'bg-forest text-white',
-      'bg-sage/80 text-white',
-      'bg-sage/40 text-charcoal',
-    ]
-    return (
-      <div>
-        {form.impactSectors.length < 2 && (
-          <div className="flex items-start gap-3 bg-gold/10 border border-gold/30 rounded-xl p-3.5 mb-4">
-            <svg className="h-4 w-4 text-gold flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-            </svg>
-            <div>
-              <p className="text-xs font-semibold text-charcoal">Impact sectors improve your match quality</p>
-              <p className="text-xs text-mid mt-0.5">
-                Select at least 2 sectors that describe your work. Grants are scored partly based on how well their sectors align with yours — without this, your matches will be less precise.
-              </p>
+  function chipState(arr: string[], val: string): ChipState {
+    const i = arr.indexOf(val)
+    return i === 0 ? 'primary' : i > 0 ? 'secondary' : 'unselected'
+  }
+
+  function toggleSector(s: ImpactSector) {
+    setDraft(prev => {
+      if (!prev) return prev
+      const cur = [...prev.impactSectors]
+      const i = cur.indexOf(s)
+      if (i === -1) {
+        if (cur.length >= 4) return prev
+        return { ...prev, impactSectors: [...cur, s] }
+      }
+      // removing a sector — clear its niche tags too
+      const removedTags = (NICHE_TAGS_BY_SECTOR[s] ?? []).map(t => t.value)
+      return { ...prev, impactSectors: cur.filter(x => x !== s), nicheTags: prev.nicheTags.filter(t => !removedTags.includes(t)) }
+    })
+  }
+  function makePrimarySector(s: ImpactSector) {
+    setDraft(prev => prev ? { ...prev, impactSectors: [s, ...prev.impactSectors.filter(x => x !== s)] } : prev)
+  }
+  function toggleNicheTag(tag: string) {
+    setDraft(prev => {
+      if (!prev) return prev
+      return prev.nicheTags.includes(tag)
+        ? { ...prev, nicheTags: prev.nicheTags.filter(t => t !== tag) }
+        : { ...prev, nicheTags: [...prev.nicheTags, tag] }
+    })
+  }
+  function toggleBeneficiary(b: BeneficiaryGroup) {
+    setDraft(prev => {
+      if (!prev) return prev
+      const cur = [...prev.beneficiaryGroups]
+      const i = cur.indexOf(b)
+      if (i === -1) {
+        if (cur.length >= 4) return prev
+        return { ...prev, beneficiaryGroups: [...cur, b] }
+      }
+      return { ...prev, beneficiaryGroups: cur.filter(x => x !== b) }
+    })
+  }
+  function makePrimaryBeneficiary(b: BeneficiaryGroup) {
+    setDraft(prev => prev ? { ...prev, beneficiaryGroups: [b, ...prev.beneficiaryGroups.filter(x => x !== b)] } : prev)
+  }
+
+  // Read-mode display
+  const sectors   = (org.impact_sectors as ImpactSector[]) ?? []
+  const nicheTags = (org.niche_tags as string[]) ?? []
+  const beneficiaries = (org.beneficiary_groups as BeneficiaryGroup[]) ?? []
+  const primarySector = IMPACT_SECTOR_OPTIONS.find(o => o.value === sectors[0])
+  const secondarySectors = sectors.slice(1).map(s => IMPACT_SECTOR_OPTIONS.find(o => o.value === s)).filter(Boolean)
+  const primaryBeneficiary = BENEFICIARY_OPTIONS.find(o => o.value === beneficiaries[0])
+  const secondaryBeneficiaries = beneficiaries.slice(1).map(b => BENEFICIARY_OPTIONS.find(o => o.value === b)).filter(Boolean)
+
+  const pillStyle = (kind: 'sector' | 'beneficiary', isPrimary: boolean): React.CSSProperties => ({
+    fontFamily: UI, fontWeight: 500, fontSize: 12.5, padding: '4px 10px', borderRadius: 20,
+    display: 'inline-flex', alignItems: 'center', gap: 5,
+    background: kind === 'sector' ? T.greenBg : T.coralBg,
+    color: kind === 'sector' ? T.greenText : T.coralText,
+  })
+
+  return (
+    <CardShell
+      title="Your focus"
+      isEditing={editing}
+      onEdit={startEdit}
+      editDisabled={isEditingOther}
+      footer={editing ? <><CancelBtn onClick={cancel} /><SaveBtn saving={saving} onClick={save} /></> : undefined}
+    >
+      {editing && draft ? (
+        <>
+          {/* Sector picker */}
+          <div>
+            <div style={{ marginBottom: 8 }}>
+              <span style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, color: T.textPrimary }}>Impact sectors</span>
+              <span style={{ fontFamily: BODY, fontSize: 13, color: T.textTertiary, marginLeft: 6 }}>
+                · pick 1 primary + up to 3 others
+              </span>
+              {draft.impactSectors.length >= 4 && (
+                <span style={{ fontFamily: UI, fontSize: 11, color: T.textTertiary, marginLeft: 8 }}>Max reached</span>
+              )}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
+              {IMPACT_SECTOR_OPTIONS.map(opt => {
+                const cs = chipState(draft.impactSectors, opt.value)
+                return (
+                  <PickerChip
+                    key={opt.value}
+                    label={opt.label}
+                    chipState={cs}
+                    dimmed={draft.impactSectors.length >= 4 && cs === 'unselected'}
+                    onClick={() => toggleSector(opt.value)}
+                    showMakePrimary={cs === 'secondary'}
+                    onMakePrimary={() => makePrimarySector(opt.value)}
+                  />
+                )
+              })}
             </div>
           </div>
-        )}
-        <p className="text-xs text-mid mb-4">
-          Select up to 5 sectors in priority order. The first sector you pick is your <span className="font-semibold text-forest">primary</span> focus and carries the most weight in matching.
-          {form.impactSectors.length >= 5 && (
-            <span className="text-gold font-medium"> Maximum 5 sectors reached.</span>
-          )}
-        </p>
 
-        {/* ── Selected sectors with rank badges and reorder controls ── */}
-        {form.impactSectors.length > 0 && (
-          <div className="mb-4 space-y-1.5">
-            {form.impactSectors.map((sec, idx) => {
-              const opt = IMPACT_SECTOR_OPTIONS.find(o => o.value === sec)
-              const label = opt?.label ?? sec
-              const rankLabel = idx < 3 ? RANK_LABELS[idx] : `#${idx + 1}`
-              const rankColor = idx < 3 ? RANK_COLORS[idx] : 'bg-warm text-mid'
-              return (
-                <div key={sec} className="flex items-center gap-2 px-3 py-2 border border-forest/30 bg-forest/5 rounded-lg">
-                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${rankColor}`}>
-                    {rankLabel}
-                  </span>
-                  <span className="text-xs font-medium text-charcoal flex-1">{label}</span>
-                  <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() => moveImpactSector(sec, 'up')}
-                      disabled={idx === 0}
-                      className="p-0.5 text-mid hover:text-forest disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
-                      title="Move up"
-                    >
-                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
-                      </svg>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => moveImpactSector(sec, 'down')}
-                      disabled={idx === form.impactSectors.length - 1}
-                      className="p-0.5 text-mid hover:text-forest disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
-                      title="Move down"
-                    >
-                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                      </svg>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => toggleImpactSector(sec)}
-                      className="p-0.5 ml-1 text-mid hover:text-coral-saturated transition-colors"
-                      title="Remove"
-                    >
-                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
-
-        {/* ── Sector picker grid ── */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {IMPACT_SECTOR_OPTIONS.map(s => {
-            const selected = form.impactSectors.includes(s.value)
-            const atMax = !selected && form.impactSectors.length >= 5
-            if (selected) return null  // already shown in ranked list above
-            return (
-              <button
-                key={s.value}
-                type="button"
-                onClick={() => toggleImpactSector(s.value)}
-                disabled={atMax}
-                className={`flex items-center gap-2 px-3 py-2.5 border text-sm font-medium transition-all text-left rounded-lg ${
-                  atMax
-                    ? 'border-warm text-mid opacity-40 cursor-not-allowed'
-                    : 'border-warm text-mid hover:border-forest hover:text-forest'
-                }`}
-              >
-                <span className="text-xs">{s.label}</span>
-              </button>
-            )
-          })}
-        </div>
-
-        {/* ── Niche / sub-sector picker (only for sectors with sub-divisions) ── */}
-        {(() => {
-          const nicheSectors = form.impactSectors.filter(s => NICHE_TAGS_BY_SECTOR[s])
-          if (nicheSectors.length === 0) return null
-          return (
-            <div className="mt-4 space-y-3">
-              <div className="flex items-center gap-2">
-                <div className="h-px flex-1 bg-warm" />
-                <p className="text-[11px] font-semibold text-mid uppercase tracking-wide">Specialise further <span className="font-normal normal-case">(optional — improves match precision)</span></p>
-                <div className="h-px flex-1 bg-warm" />
-              </div>
-              {nicheSectors.map(sector => {
+          {/* Sub-tag panel */}
+          {draft.impactSectors.filter(s => NICHE_TAGS_BY_SECTOR[s]).length > 0 && (
+            <div style={{ background: '#F5F1E8', borderLeft: '3px solid #8ECB3C', borderRadius: 8, padding: '12px 14px' }}>
+              {draft.impactSectors.filter(s => NICHE_TAGS_BY_SECTOR[s]).map(sector => {
                 const opts = NICHE_TAGS_BY_SECTOR[sector]!
-                const sectorLabel = IMPACT_SECTOR_OPTIONS.find(o => o.value === sector)?.label ?? sector
+                const sLabel = IMPACT_SECTOR_OPTIONS.find(o => o.value === sector)?.label ?? sector
                 return (
-                  <div key={sector}>
-                    <p className="text-xs text-mid mb-1.5">Within <span className="font-medium text-charcoal">{sectorLabel}</span>, your focus is:</p>
-                    <div className="flex flex-wrap gap-1.5">
+                  <div key={sector} style={{ marginBottom: 12 }}>
+                    <div style={{ fontFamily: UI, fontSize: 11, fontWeight: 600, color: T.textSecondary, marginBottom: 8, letterSpacing: '0.03em' }}>
+                      Specialisms in {sLabel} <span style={{ fontWeight: 400, color: T.textTertiary }}>(optional)</span>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 5 }}>
                       {opts.map(opt => {
-                        const selected = form.nicheTags.includes(opt.value)
+                        const selected = draft.nicheTags.includes(opt.value)
                         return (
                           <button
                             key={opt.value}
-                            type="button"
                             onClick={() => toggleNicheTag(opt.value)}
-                            className={`px-2.5 py-1 text-xs font-medium rounded-lg border transition-all ${
-                              selected
-                                ? 'bg-forest text-cream border-forest'
-                                : 'bg-white text-mid border-warm hover:border-forest hover:text-forest'
-                            }`}
+                            style={{
+                              fontSize: 11, fontFamily: BODY, padding: '5px 8px', borderRadius: 6,
+                              border: `1.5px solid ${selected ? '#8ECB3C' : '#D9D4C7'}`,
+                              background: selected ? '#EEF8D8' : '#FEFCF8',
+                              color: selected ? '#3A6B0E' : T.textSecondary,
+                              cursor: 'pointer', fontWeight: selected ? 600 : 400,
+                              textAlign: 'left' as const, lineHeight: 1.3,
+                            }}
                           >
-                            {selected && <span className="mr-1">✓</span>}{opt.label}
+                            {opt.label}
                           </button>
                         )
                       })}
@@ -1384,437 +952,582 @@ export default function ProfilePage() {
                 )
               })}
             </div>
-          )
-        })()}
-      </div>
-    )
-  }
-
-  function renderBeneficiarySection() {
-    return (
-      <div>
-        <p className="text-xs text-mid mb-4">
-          Select up to 5 groups. The first group you pick is your <span className="font-semibold text-forest">primary</span> beneficiary — all others are equally weighted secondaries.
-          {form.beneficiaryGroups.length >= 5 && (
-            <span className="text-gold font-medium"> Maximum 5 groups reached.</span>
           )}
-        </p>
 
-        {/* ── Selected beneficiaries with rank badges and reorder controls ── */}
-        {form.beneficiaryGroups.length > 0 && (
-          <div className="mb-4 space-y-1.5">
-            {form.beneficiaryGroups.map((grp, idx) => {
-              const opt = BENEFICIARY_OPTIONS.find(o => o.value === grp)
-              const label = opt?.label ?? grp
-              const isPrimary = idx === 0
-              return (
-                <div key={grp} className="flex items-center gap-2 px-3 py-2 border border-forest/30 bg-forest/5 rounded-lg">
-                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
-                    isPrimary ? 'bg-forest text-white' : 'bg-sage/40 text-charcoal'
-                  }`}>
-                    {isPrimary ? 'Primary' : 'Secondary'}
+          {/* Beneficiary picker */}
+          <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 16 }}>
+            <div style={{ marginBottom: 8 }}>
+              <span style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, color: T.textPrimary }}>Who you serve</span>
+              <span style={{ fontFamily: BODY, fontSize: 13, color: T.textTertiary, marginLeft: 6 }}>
+                · pick 1 primary + up to 3 others
+              </span>
+              {draft.beneficiaryGroups.length >= 4 && (
+                <span style={{ fontFamily: UI, fontSize: 11, color: T.textTertiary, marginLeft: 8 }}>Max reached</span>
+              )}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
+              {BENEFICIARY_OPTIONS.map(opt => {
+                const cs = chipState(draft.beneficiaryGroups, opt.value)
+                return (
+                  <PickerChip
+                    key={opt.value}
+                    label={opt.label}
+                    chipState={cs}
+                    dimmed={draft.beneficiaryGroups.length >= 4 && cs === 'unselected'}
+                    onClick={() => toggleBeneficiary(opt.value)}
+                    showMakePrimary={cs === 'secondary'}
+                    onMakePrimary={() => makePrimaryBeneficiary(opt.value)}
+                  />
+                )
+              })}
+            </div>
+          </div>
+
+          {saveError && <p style={{ fontFamily: BODY, fontSize: 13, color: '#B91C1C' }}>{saveError}</p>}
+        </>
+      ) : (
+        <>
+          {/* Sectors read mode */}
+          <FieldRow label="Primary sector">
+            {primarySector ? (
+              <div>
+                <span style={pillStyle('sector', true)}>
+                  <Star size={8} fill="currentColor" color="currentColor" />
+                  {primarySector.label}
+                </span>
+                {/* Sub-tags */}
+                {nicheTags.length > 0 && (
+                  <div style={{ marginTop: 8, paddingLeft: 14, borderLeft: `2px solid ${T.border}` }}>
+                    <div style={{ fontFamily: UI, fontSize: 11, fontWeight: 500, letterSpacing: '0.06em', textTransform: 'uppercase' as const, color: T.textTertiary, marginBottom: 6 }}>
+                      Sub-tags
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                      {nicheTags.map(tag => {
+                        const label = Object.values(NICHE_TAGS_BY_SECTOR).flat().find(t => t.value === tag)?.label ?? tag
+                        return (
+                          <span key={tag} style={{ fontFamily: UI, fontSize: 12, fontWeight: 500, padding: '3px 9px', borderRadius: 12, background: T.greenBg, color: T.greenText }}>
+                            {label}
+                          </span>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : <AddLink label="Add primary sector" onClick={startEdit} />}
+          </FieldRow>
+          {secondarySectors.length > 0 && (
+            <FieldRow label="Secondary sectors">
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {secondarySectors.map(s => s && (
+                  <span key={s.value} style={pillStyle('sector', false)}>
+                    <span style={{ width: 5, height: 5, borderRadius: '50%', background: T.greenText }} />
+                    {s.label}
                   </span>
-                  <span className="text-xs font-medium text-charcoal flex-1">{label}</span>
-                  <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() => moveBeneficiaryGroup(grp, 'up')}
-                      disabled={idx === 0}
-                      className="p-0.5 text-mid hover:text-forest disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
-                      title="Move up"
-                    >
-                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
-                      </svg>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => moveBeneficiaryGroup(grp, 'down')}
-                      disabled={idx === form.beneficiaryGroups.length - 1}
-                      className="p-0.5 text-mid hover:text-forest disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
-                      title="Move down"
-                    >
-                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                      </svg>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => toggleBeneficiaryGroup(grp)}
-                      className="p-0.5 ml-1 text-mid hover:text-coral-saturated transition-colors"
-                      title="Remove"
-                    >
-                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
+                ))}
+              </div>
+            </FieldRow>
+          )}
+          <FieldRow label="Primary beneficiaries">
+            {primaryBeneficiary ? (
+              <span style={pillStyle('beneficiary', true)}>
+                <Star size={8} fill="currentColor" color="currentColor" />
+                {primaryBeneficiary.label}
+              </span>
+            ) : <AddLink label="Add beneficiary group" onClick={startEdit} />}
+          </FieldRow>
+          {secondaryBeneficiaries.length > 0 && (
+            <FieldRow label="Secondary beneficiaries">
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {secondaryBeneficiaries.map(b => b && (
+                  <span key={b.value} style={pillStyle('beneficiary', false)}>
+                    <span style={{ width: 5, height: 5, borderRadius: '50%', background: T.coralText }} />
+                    {b.label}
+                  </span>
+                ))}
+              </div>
+            </FieldRow>
+          )}
+        </>
+      )}
+    </CardShell>
+  )
+}
 
-        {/* ── Beneficiary picker grid ── */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {BENEFICIARY_OPTIONS.map(o => {
-            const selected = form.beneficiaryGroups.includes(o.value)
-            const atMax = !selected && form.beneficiaryGroups.length >= 5
-            if (selected) return null
-            return (
+/* ═══════════════════════════════════════════════
+   Card 3 — Location and reach
+   ═══════════════════════════════════════════════ */
+interface LocationDraft { primaryLocation: string; geographicReach: string }
+
+function LocationCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd }: {
+  org: Organisation; orgId: string; onSaved: () => void
+  isEditingOther: boolean; onEditStart: () => void; onEditEnd: () => void
+}) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState<LocationDraft | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+
+  function startEdit() {
+    setDraft({ primaryLocation: org.primary_location ?? '', geographicReach: org.geographic_reach ?? '' })
+    setEditing(true); onEditStart()
+  }
+  function cancel() { setEditing(false); setDraft(null); setSaveError(null); onEditEnd() }
+
+  async function save() {
+    if (!draft) return
+    setSaving(true); setSaveError(null)
+    try {
+      await updateOrganisation(orgId, {
+        primary_location: draft.primaryLocation.trim() || null,
+        geographic_reach: draft.geographicReach.trim() || null,
+      })
+      setEditing(false); setDraft(null); onEditEnd(); onSaved()
+    } catch (e) { setSaveError(e instanceof Error ? e.message : 'Save failed') }
+    finally { setSaving(false) }
+  }
+
+  const locationPill = (text: string) => (
+    <span style={{ fontFamily: UI, fontWeight: 500, fontSize: 12.5, padding: '4px 10px', borderRadius: 12, background: '#F0EFEB', color: T.textSecondary, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+      📍 {text}
+    </span>
+  )
+
+  return (
+    <CardShell
+      title="Location and reach"
+      isEditing={editing}
+      onEdit={startEdit}
+      editDisabled={isEditingOther}
+      footer={editing ? <><CancelBtn onClick={cancel} /><SaveBtn saving={saving} onClick={save} /></> : undefined}
+    >
+      {editing && draft ? (
+        <>
+          <FieldRow label="Primary location">
+            <input
+              value={draft.primaryLocation}
+              onChange={e => setDraft(p => ({ ...p!, primaryLocation: e.target.value }))}
+              style={inputStyle()}
+              placeholder="e.g. Brighton & Hove, London, Manchester"
+            />
+          </FieldRow>
+          <FieldRow label="Geographic reach">
+            <input
+              value={draft.geographicReach}
+              onChange={e => setDraft(p => ({ ...p!, geographicReach: e.target.value }))}
+              style={inputStyle()}
+              placeholder="e.g. South East England, National, London"
+            />
+          </FieldRow>
+          {saveError && <p style={{ fontFamily: BODY, fontSize: 13, color: '#B91C1C' }}>{saveError}</p>}
+        </>
+      ) : (
+        <>
+          <FieldRow label="Primary location">
+            {org.primary_location ? locationPill(org.primary_location) : <AddLink label="Add primary location" onClick={startEdit} />}
+          </FieldRow>
+          <FieldRow label="Geographic reach">
+            {org.geographic_reach ? (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {String(org.geographic_reach).split(',').map(r => r.trim()).filter(Boolean).map(r => (
+                  <span key={r}>{locationPill(r)}</span>
+                ))}
+              </div>
+            ) : <AddLink label="Add geographic reach" onClick={startEdit} />}
+          </FieldRow>
+        </>
+      )}
+    </CardShell>
+  )
+}
+
+/* ═══════════════════════════════════════════════
+   Card 4 — Funding preferences
+   ═══════════════════════════════════════════════ */
+interface FundingDraft {
+  minGrantTarget: string; maxGrantTarget: string
+  fundingTypePreferences: FundingType[]
+}
+
+function FundingCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd }: {
+  org: Organisation; orgId: string; onSaved: () => void
+  isEditingOther: boolean; onEditStart: () => void; onEditEnd: () => void
+}) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState<FundingDraft | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+
+  function startEdit() {
+    setDraft({
+      minGrantTarget:        org.min_grant_target != null ? String(org.min_grant_target) : '',
+      maxGrantTarget:        org.max_grant_target != null ? String(org.max_grant_target) : '',
+      fundingTypePreferences:(org.funding_type_preferences as FundingType[]) ?? ['grant', 'programme', 'investment', 'in_kind'],
+    })
+    setEditing(true); onEditStart()
+  }
+  function cancel() { setEditing(false); setDraft(null); setSaveError(null); onEditEnd() }
+
+  async function save() {
+    if (!draft) return
+    setSaving(true); setSaveError(null)
+    try {
+      await updateOrganisation(orgId, {
+        min_grant_target:          draft.minGrantTarget ? parseInt(draft.minGrantTarget.replace(/[^0-9]/g, '')) : null,
+        max_grant_target:          draft.maxGrantTarget ? parseInt(draft.maxGrantTarget.replace(/[^0-9]/g, '')) : null,
+        funding_type_preferences:  draft.fundingTypePreferences,
+      })
+      setEditing(false); setDraft(null); onEditEnd(); onSaved()
+    } catch (e) { setSaveError(e instanceof Error ? e.message : 'Save failed') }
+    finally { setSaving(false) }
+  }
+
+  function toggleFundingType(t: FundingType) {
+    setDraft(prev => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        fundingTypePreferences: prev.fundingTypePreferences.includes(t)
+          ? prev.fundingTypePreferences.filter(x => x !== t)
+          : [...prev.fundingTypePreferences, t],
+      }
+    })
+  }
+
+  const minFmt = fmtThousands(org.min_grant_target)
+  const maxFmt = fmtThousands(org.max_grant_target)
+  const sizeLabel = minFmt && maxFmt ? `${minFmt} – ${maxFmt}` : minFmt || maxFmt || null
+
+  const ftLabels = ((org.funding_type_preferences as FundingType[]) ?? [])
+    .map(t => FUNDING_TYPE_OPTIONS.find(o => o.value === t)?.label).filter(Boolean)
+
+  return (
+    <CardShell
+      title="Funding preferences"
+      isEditing={editing}
+      onEdit={startEdit}
+      editDisabled={isEditingOther}
+      footer={editing ? <><CancelBtn onClick={cancel} /><SaveBtn saving={saving} onClick={save} /></> : undefined}
+    >
+      {editing && draft ? (
+        <>
+          <FieldRow label="Grant size range">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ position: 'relative', flex: 1 }}>
+                <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontFamily: BODY, fontSize: 15, color: T.textTertiary }}>£</span>
+                <input
+                  type="text" inputMode="numeric"
+                  value={draft.minGrantTarget}
+                  onChange={e => setDraft(p => ({ ...p!, minGrantTarget: e.target.value.replace(/[^0-9]/g, '') }))}
+                  style={{ ...inputStyle(), paddingLeft: 22 }}
+                  placeholder="Min"
+                />
+              </div>
+              <span style={{ color: T.textTertiary, flexShrink: 0 }}>–</span>
+              <div style={{ position: 'relative', flex: 1 }}>
+                <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontFamily: BODY, fontSize: 15, color: T.textTertiary }}>£</span>
+                <input
+                  type="text" inputMode="numeric"
+                  value={draft.maxGrantTarget}
+                  onChange={e => setDraft(p => ({ ...p!, maxGrantTarget: e.target.value.replace(/[^0-9]/g, '') }))}
+                  style={{ ...inputStyle(), paddingLeft: 22 }}
+                  placeholder="Max"
+                />
+              </div>
+            </div>
+          </FieldRow>
+          <FieldRow label="Funding types">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6 }}>
+              {FUNDING_TYPE_OPTIONS.map(opt => {
+                const selected = draft.fundingTypePreferences.includes(opt.value)
+                return (
+                  <button
+                    key={opt.value}
+                    onClick={() => toggleFundingType(opt.value)}
+                    style={{
+                      fontFamily: UI, fontWeight: selected ? 600 : 400, fontSize: 13,
+                      padding: '8px 12px', borderRadius: 8, cursor: 'pointer',
+                      border: `1.5px solid ${selected ? T.greenMid : T.borderStrong}`,
+                      background: selected ? T.greenBg : T.white, color: selected ? T.greenText : T.textSecondary,
+                      textAlign: 'left' as const, transition: 'all 0.12s',
+                    }}
+                  >
+                    {selected && <Check size={12} style={{ display: 'inline', marginRight: 6 }} />}
+                    {opt.label}
+                  </button>
+                )
+              })}
+            </div>
+          </FieldRow>
+          {saveError && <p style={{ fontFamily: BODY, fontSize: 13, color: '#B91C1C' }}>{saveError}</p>}
+        </>
+      ) : (
+        <>
+          <FieldRow label="Grant size range">
+            <span>{sizeLabel || <AddLink label="Add grant size range" onClick={startEdit} />}</span>
+          </FieldRow>
+          <FieldRow label="Funding types">
+            {ftLabels.length > 0 ? (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {ftLabels.map(label => (
+                  <span key={label} style={{ fontFamily: UI, fontWeight: 500, fontSize: 12.5, padding: '4px 10px', borderRadius: 12, background: T.cream, color: T.creamText }}>
+                    {label}
+                  </span>
+                ))}
+              </div>
+            ) : <AddLink label="Add funding types" onClick={startEdit} />}
+          </FieldRow>
+        </>
+      )}
+    </CardShell>
+  )
+}
+
+/* ═══════════════════════════════════════════════
+   Card 5 — Your story (mission)
+   ═══════════════════════════════════════════════ */
+function StoryCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd }: {
+  org: Organisation; orgId: string; onSaved: () => void
+  isEditingOther: boolean; onEditStart: () => void; onEditEnd: () => void
+}) {
+  const [editing, setEditing] = useState(false)
+  const [mission, setMission] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+
+  const hasMission = !!org.mission?.trim()
+
+  function startEdit() {
+    setMission(org.mission ?? '')
+    setEditing(true); onEditStart()
+  }
+  function cancel() { setEditing(false); setSaveError(null); onEditEnd() }
+
+  async function save() {
+    setSaving(true); setSaveError(null)
+    try {
+      await updateOrganisation(orgId, { mission: mission.trim() || null })
+      setEditing(false); onEditEnd(); onSaved()
+    } catch (e) { setSaveError(e instanceof Error ? e.message : 'Save failed') }
+    finally { setSaving(false) }
+  }
+
+  const quickWinBadge = !hasMission && !editing ? (
+    <span style={{ fontFamily: UI, fontWeight: 500, fontSize: 12, color: '#854F0B', padding: '3px 10px', background: '#FAEEDA', borderRadius: 10 }}>
+      Quick win
+    </span>
+  ) : null
+
+  return (
+    <section style={{
+      background: hasMission ? T.white : 'linear-gradient(135deg, #FDFCF7 0%, #F8F5EC 100%)',
+      border: `1px solid ${editing ? T.greenDeep : hasMission ? T.border : 'rgba(142,203,60,0.2)'}`,
+      borderRadius: 12, overflow: 'hidden',
+      boxShadow: editing ? '0 0 0 3px rgba(23,52,4,0.05)' : 'none',
+      transition: 'border-color 0.15s, box-shadow 0.15s',
+    }}>
+      {/* Header */}
+      <div style={{ padding: '18px 24px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <h2 style={{ fontFamily: UI, fontWeight: 600, fontSize: 17, color: T.textPrimary, letterSpacing: '-0.01em' }}>Your story</h2>
+          {quickWinBadge}
+          {editing && <span style={{ fontFamily: UI, fontWeight: 500, fontSize: 12, color: T.greenDeep, padding: '3px 10px', background: T.cream, borderRadius: 10 }}>Editing</span>}
+        </div>
+        {!editing && (
+          <button
+            onClick={startEdit}
+            disabled={isEditingOther}
+            style={{
+              fontFamily: UI, fontWeight: 500, fontSize: 13,
+              color: isEditingOther ? T.textTertiary : T.textSecondary,
+              background: 'transparent', border: 'none', cursor: isEditingOther ? 'not-allowed' : 'pointer',
+              padding: '6px 10px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 6,
+            }}
+          >
+            <Pencil size={14} />
+            Edit
+          </button>
+        )}
+      </div>
+
+      {/* Body */}
+      <div style={{ padding: '0 24px 22px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {editing ? (
+          <>
+            <textarea
+              value={mission}
+              onChange={e => setMission(e.target.value)}
+              rows={5}
+              style={{ ...inputStyle(), resize: 'vertical', lineHeight: 1.6 }}
+              placeholder="Describe what your organisation does, who you serve, and the change you want to see…"
+            />
+            {saveError && <p style={{ fontFamily: BODY, fontSize: 13, color: '#B91C1C' }}>{saveError}</p>}
+          </>
+        ) : hasMission ? (
+          <p style={{ fontFamily: BODY, fontSize: 15, color: T.textPrimary, lineHeight: 1.65, margin: 0 }}>
+            {org.mission}
+          </p>
+        ) : (
+          <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start', padding: '4px 0 8px' }}>
+            <div style={{
+              flexShrink: 0, width: 36, height: 36, background: T.lime, borderRadius: 10,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.greenDeep,
+            }}>
+              <Star size={18} fill="currentColor" />
+            </div>
+            <div>
+              <p style={{ fontFamily: BODY, fontSize: 14, color: T.textSecondary, marginBottom: 12, lineHeight: 1.55 }}>
+                A short mission statement helps us match you to funders whose language and values align with yours.
+                Funders increasingly look for this signal.
+              </p>
               <button
-                key={o.value}
-                type="button"
-                onClick={() => toggleBeneficiaryGroup(o.value)}
-                disabled={atMax}
-                className={`flex items-center gap-2 px-3 py-2.5 border text-sm font-medium transition-all text-left rounded-lg ${
-                  atMax
-                    ? 'border-warm text-mid opacity-40 cursor-not-allowed'
-                    : 'border-warm text-mid hover:border-forest hover:text-forest'
-                }`}
+                onClick={startEdit}
+                style={{
+                  fontFamily: UI, fontWeight: 500, fontSize: 13.5,
+                  background: T.lime, color: T.greenDeep, border: 'none',
+                  padding: '8px 16px', borderRadius: 8, cursor: 'pointer',
+                }}
               >
-                <span className="text-xs">{o.label}</span>
+                Add mission statement
               </button>
-            )
-          })}
-        </div>
-      </div>
-    )
-  }
-
-  function renderSection3() {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-charcoal mb-1.5">Primary location</label>
-          <input
-            className="form-input"
-            placeholder="e.g. Southwark, London  or  Bristol, England"
-            value={form.primaryLocation}
-            onChange={set('primaryLocation')}
-          />
-          <p className="text-xs text-light mt-1">For London orgs, include your borough first for precise matching — e.g. &ldquo;Hackney, London&rdquo; not just &ldquo;London&rdquo;</p>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-charcoal mb-1.5">Geographic reach</label>
-          <div className="form-input bg-warm/50 text-mid text-sm cursor-default">
-            Based on your primary location — local &amp; national grants both shown
-          </div>
-          <p className="text-xs text-light mt-1">Local grants in your area score highest; national grants apply to all</p>
-        </div>
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-charcoal mb-1.5">Priority themes</label>
-          <input
-            className="form-input"
-            placeholder="e.g. Domestic abuse, Mental health, Employment"
-            value={form.themes}
-            onChange={set('themes')}
-          />
-          <p className="text-xs text-light mt-1">Broad topic areas, comma-separated</p>
-        </div>
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-charcoal mb-1.5">Areas of work</label>
-          <input
-            className="form-input"
-            placeholder="e.g. English classes, Counselling, Food bank, CV workshops"
-            value={form.areasOfWork}
-            onChange={set('areasOfWork')}
-          />
-          <p className="text-xs text-light mt-1">Specific programmes and activities, comma-separated</p>
-        </div>
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-charcoal mb-1.5">Beneficiaries</label>
-          <input
-            className="form-input"
-            placeholder="e.g. BAME women, Refugees, Young people 16–25"
-            value={form.beneficiaries}
-            onChange={set('beneficiaries')}
-          />
-          <p className="text-xs text-light mt-1">Who you serve, comma-separated</p>
-        </div>
-      </div>
-    )
-  }
-
-  function renderSection4() {
-    return (
-      <div>
-        <textarea
-          className="form-textarea"
-          style={{ minHeight: 120 }}
-          placeholder="Describe what your organisation or venture does, who you serve, and the difference you make…"
-          value={form.mission}
-          onChange={set('mission')}
-        />
-        <p className="text-xs text-light mt-2">
-          The more specific you are, the better the grant matching. Include your location, who you help, and your approach.
-        </p>
-      </div>
-    )
-  }
-
-  function renderSection5() {
-    return (
-      <div>
-        {/* Grant size targets — most impactful matching signal */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-charcoal mb-1">
-            Target grant size range
-          </label>
-          <p className="text-xs text-mid mb-3">
-            What size grants are you typically applying for? This is the most important field for size matching — grants outside your range will score lower.
-          </p>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs text-mid mb-1">Minimum (£)</label>
-              <input
-                type="text"
-                className="form-input"
-                placeholder="e.g. 5000"
-                value={form.minGrantTarget}
-                onChange={set('minGrantTarget')}
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-mid mb-1">Maximum (£)</label>
-              <input
-                type="text"
-                className="form-input"
-                placeholder="e.g. 100000"
-                value={form.maxGrantTarget}
-                onChange={set('maxGrantTarget')}
-              />
-            </div>
-          </div>
-          <p className="text-xs text-light mt-2">Leave blank to see all grant sizes without size filtering</p>
-        </div>
-
-        <div className="border-t border-warm pt-5 mb-5">
-        {/* Funding type preferences */}
-        <div className="mb-5">
-          <label className="block text-sm font-medium text-charcoal mb-1.5">
-            Funding types I&apos;m interested in
-            <span className="text-light font-normal ml-1">(select all that apply)</span>
-          </label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {FUNDING_TYPE_OPTIONS.map(opt => {
-              const selected = form.fundingTypePreferences.includes(opt.value)
-              return (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => toggleFundingType(opt.value)}
-                  className={`flex flex-col items-start px-3 py-2.5 border text-left transition-all rounded-lg ${
-                    selected
-                      ? 'border-forest bg-forest/10 text-forest'
-                      : 'border-warm text-mid hover:border-forest hover:text-forest'
-                  }`}
-                >
-                  <span className="text-xs font-semibold">{opt.label}</span>
-                  <span className="text-xs opacity-70 mt-0.5">{opt.desc}</span>
-                  {selected && <span className="text-charcoal text-xs font-bold mt-1">✓ Selected</span>}
-                </button>
-              )
-            })}
-          </div>
-          <p className="text-xs text-light mt-2">Leave blank to see all funding types</p>
-        </div>
-
-        {/* Funding sub-type preferences */}
-        <div className="mb-5">
-          <label className="block text-sm font-medium text-charcoal mb-1">
-            Funding specifics I prefer
-            <span className="text-light font-normal ml-1">(optional — boosts matching)</span>
-          </label>
-          <p className="text-xs text-light mb-3">
-            Narrow down what kind of funding matters most. Picking <span className="font-semibold text-forest">Unrestricted</span> is the single biggest lever if you need flexible core funding.
-          </p>
-          <div className="space-y-3">
-            {FUNDING_SUBTYPE_GROUPS
-              .filter(g => form.fundingTypePreferences.length === 0 || form.fundingTypePreferences.includes(g.parent))
-              .map(group => (
-                <div key={group.parent}>
-                  <div className="text-xs font-semibold text-mid uppercase tracking-wide mb-1.5">{group.label}</div>
-                  <div className="flex flex-wrap gap-2">
-                    {group.options.map(opt => {
-                      const selected = form.fundingSubtypePreferences.includes(opt.value)
-                      const isStar = opt.value === 'unrestricted'
-                      return (
-                        <button
-                          key={opt.value}
-                          type="button"
-                          onClick={() => toggleFundingSubtype(opt.value)}
-                          title={opt.hint}
-                          className={`px-3 py-1.5 border text-xs font-medium transition-all rounded-full ${
-                            selected
-                              ? isStar
-                                ? 'border-gold bg-gold/15 text-charcoal'
-                                : 'border-forest bg-forest/10 text-forest'
-                              : 'border-warm text-mid hover:border-forest hover:text-forest'
-                          }`}
-                        >
-                          {SUBTYPE_LABELS[opt.value]}
-                          {selected && <span className="ml-1 font-bold">✓</span>}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-              ))}
-          </div>
-        </div>
-
-        {/* Funder type preferences */}
-        <div>
-          <label className="block text-sm font-medium text-charcoal mb-1.5">
-            Preferred funder types
-            <span className="text-light font-normal ml-1">(select all that apply)</span>
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {FUNDER_TYPE_OPTIONS.map(opt => {
-              const selected = form.funderTypePreferences.includes(opt.value)
-              return (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => toggleFunderType(opt.value)}
-                  className={`px-3 py-1.5 border text-xs font-medium transition-all rounded-full ${
-                    selected
-                      ? 'border-forest bg-forest/10 text-forest'
-                      : 'border-warm text-mid hover:border-forest hover:text-forest'
-                  }`}
-                >
-                  {opt.label}
-                  {selected && <span className="ml-1 font-bold">✓</span>}
-                </button>
-              )
-            })}
-          </div>
-          <p className="text-xs text-light mt-2">Leave blank to see all funder types</p>
-        </div>
-        </div>
-      </div>
-    )
-  }
-
-  function renderSection6() {
-    return (
-      <div>
-        <div className="flex items-center justify-between mb-4 p-4 bg-warm border border-warm rounded-xl">
-          <div>
-            <p className="font-serif text-base font-bold text-charcoal">Grant match alerts</p>
-            <p className="text-xs text-mid mt-0.5">
-              {form.alertsEnabled
-                ? 'You\'ll receive emails when new matching grants are found'
-                : 'Enable to get emailed when new matching grants open'}
-            </p>
-          </div>
-          <Toggle enabled={form.alertsEnabled} onToggle={() => setForm(prev => ({ ...prev, alertsEnabled: !prev.alertsEnabled }))} />
-        </div>
-
-        {form.alertsEnabled && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-charcoal mb-1.5">Alert frequency</label>
-              <select className="form-select" value={form.alertFrequency}
-                onChange={e => setForm(prev => ({ ...prev, alertFrequency: e.target.value }))}>
-                <option value="weekly">Weekly digest</option>
-                <option value="instant">As soon as found</option>
-              </select>
-              <p className="text-xs text-light mt-1">Weekly sends every Monday morning</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-charcoal mb-1.5">
-                Minimum match score to alert on
-              </label>
-              <select className="form-select" value={form.alertMinScore}
-                onChange={e => setForm(prev => ({ ...prev, alertMinScore: e.target.value }))}>
-                <option value="60">60% — catch more grants</option>
-                <option value="70">70% — balanced (recommended)</option>
-                <option value="80">80% — strong matches only</option>
-                <option value="90">90% — best matches only</option>
-              </select>
-              <p className="text-xs text-light mt-1">Higher = fewer but better-matched alerts</p>
             </div>
           </div>
         )}
       </div>
+
+      {/* Footer */}
+      {editing && (
+        <div style={{ padding: '14px 24px', background: T.pageBg, borderTop: `1px solid ${T.border}`, display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+          <CancelBtn onClick={cancel} />
+          <SaveBtn saving={saving} onClick={save} />
+        </div>
+      )}
+    </section>
+  )
+}
+
+/* ═══════════════════════════════════════════════
+   Main component
+   ═══════════════════════════════════════════════ */
+type CardId = 'about' | 'focus' | 'location' | 'funding' | 'story'
+
+export default function ProfilePage() {
+  const [orgs, setOrgs] = useState<Organisation[]>([])
+  const [activeOrgId, setActiveOrgId] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [editingCard, setEditingCard] = useState<CardId | null>(null)
+
+  const activeOrg = orgs.find(o => o.id === activeOrgId) ?? orgs[0] ?? null
+
+  async function loadOrgs(keepActiveId?: string) {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const allOrgs = await getOrganisationsByOwner(user.id)
+    setOrgs(allOrgs)
+
+    // Restore active org from localStorage, fall back to first
+    const stored = typeof window !== 'undefined' ? localStorage.getItem('gt_active_org_id') : null
+    const activeId = keepActiveId ?? stored ?? allOrgs[0]?.id ?? null
+    if (activeId && allOrgs.find(o => o.id === activeId)) {
+      setActiveOrgId(activeId)
+    } else if (allOrgs[0]) {
+      setActiveOrgId(allOrgs[0].id)
+    }
+  }
+
+  useEffect(() => {
+    loadOrgs().finally(() => setLoading(false))
+  }, [])
+
+  function switchOrg(id: string) {
+    setActiveOrgId(id)
+    if (typeof window !== 'undefined') localStorage.setItem('gt_active_org_id', id)
+    setEditingCard(null)
+  }
+
+  function startEditing(card: CardId) {
+    setEditingCard(card)
+  }
+  function stopEditing() {
+    setEditingCard(null)
+  }
+
+  if (loading) {
+    return (
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FAFAF7' }}>
+        <p style={{ fontFamily: UI, fontSize: 14, color: '#8A8986' }}>Loading…</p>
+      </div>
     )
   }
 
-  /* ── Full form (all sections together) ── */
-
-  function renderFullForm() {
+  if (!activeOrg) {
     return (
-      <div className="space-y-5">
-        {/* Section 1 */}
-        <div className="card">
-          <h3 className="font-serif text-base font-bold text-charcoal mb-4 flex items-center gap-2">
-            <span className="w-6 h-6 bg-charcoal/10 text-charcoal text-xs flex items-center justify-center font-bold rounded-full">1</span>
-            About Your Organisation
-          </h3>
-          {renderSection1()}
-        </div>
-
-        {/* Section 2 */}
-        <div className="card">
-          <h3 className="font-serif text-base font-bold text-charcoal mb-1 flex items-center gap-2">
-            <span className="w-6 h-6 bg-charcoal/10 text-charcoal text-xs flex items-center justify-center font-bold rounded-full">2</span>
-            Impact Sectors
-            <span className="text-xs text-light font-normal ml-1">— choose 1 to 5</span>
-          </h3>
-          {renderSection2()}
-        </div>
-
-        {/* Section 3 — Beneficiaries */}
-        <div className="card">
-          <h3 className="font-serif text-base font-bold text-charcoal mb-1 flex items-center gap-2">
-            <span className="w-6 h-6 bg-charcoal/10 text-charcoal text-xs flex items-center justify-center font-bold rounded-full">3</span>
-            Who You Serve
-          </h3>
-          <p className="text-xs text-mid mb-3 ml-8">Pick your primary beneficiary group first, then any secondary groups</p>
-          {renderBeneficiarySection()}
-        </div>
-
-        {/* Section 4 */}
-        <div className="card">
-          <h3 className="font-serif text-base font-bold text-charcoal mb-4 flex items-center gap-2">
-            <span className="w-6 h-6 bg-charcoal/10 text-charcoal text-xs flex items-center justify-center font-bold rounded-full">4</span>
-            Location & Focus
-          </h3>
-          {renderSection3()}
-        </div>
-
-        {/* Section 5 */}
-        <div className="card">
-          <h3 className="font-serif text-base font-bold text-charcoal mb-1 flex items-center gap-2">
-            <span className="w-6 h-6 bg-charcoal/10 text-charcoal text-xs flex items-center justify-center font-bold rounded-full">5</span>
-            Mission Statement
-          </h3>
-          <p className="text-xs text-mid mb-3 ml-8">Used to find the most relevant grants for your work</p>
-          {renderSection4()}
-        </div>
-
-        {/* Section 6 */}
-        <div className="card">
-          <h3 className="font-serif text-base font-bold text-charcoal mb-1 flex items-center gap-2">
-            <span className="w-6 h-6 bg-charcoal/10 text-charcoal text-xs flex items-center justify-center font-bold rounded-full">6</span>
-            Grant Preferences
-          </h3>
-          <p className="text-xs text-mid mb-4 ml-8">Tell us what kinds of funding you&apos;re interested in — improves your match scores</p>
-          {renderSection5()}
-        </div>
-
-        {/* Section 7 */}
-        <div className="card">
-          <h3 className="font-serif text-base font-bold text-charcoal mb-1 flex items-center gap-2">
-            <span className="w-6 h-6 bg-charcoal/10 text-charcoal text-xs flex items-center justify-center font-bold rounded-full">7</span>
-            Email Alerts
-          </h3>
-          <p className="text-xs text-mid mb-4 ml-8">Get notified by email when new grants match your organisation</p>
-          {renderSection6()}
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FAFAF7' }}>
+        <div style={{ textAlign: 'center' }}>
+          <p style={{ fontFamily: UI, fontSize: 15, color: '#5F5E5A', marginBottom: 16 }}>No organisation found.</p>
+          <a href="/onboarding/wizard" style={{ fontFamily: UI, fontWeight: 500, fontSize: 14, color: '#8ECB3C', textDecoration: 'none' }}>
+            Start onboarding →
+          </a>
         </div>
       </div>
     )
   }
+
+  const cardProps = (id: CardId) => ({
+    org: activeOrg,
+    orgId: activeOrg.id,
+    onSaved: () => loadOrgs(activeOrg.id),
+    isEditingOther: editingCard !== null && editingCard !== id,
+    onEditStart: () => startEditing(id),
+    onEditEnd: stopEditing,
+  })
+
+  return (
+    <div style={{ flex: 1, background: T.pageBg, overflowY: 'auto' }}>
+      <div style={{ padding: '40px 48px 80px', maxWidth: 920, margin: '0 auto' }}>
+
+        {/* Page header */}
+        <div style={{ marginBottom: 28 }}>
+          <h1 style={{ fontFamily: UI, fontWeight: 600, fontSize: 28, letterSpacing: '-0.02em', color: T.textPrimary, marginBottom: 6 }}>
+            Your profile
+          </h1>
+          <p style={{ fontFamily: BODY, fontSize: 15, color: T.textSecondary }}>
+            Each organisation you support has its own profile, matches, and pipeline.
+          </p>
+        </div>
+
+        {/* Org switcher */}
+        {orgs.length > 0 && (
+          <OrgSwitcher
+            orgs={orgs}
+            activeOrgId={activeOrg.id}
+            onSwitch={switchOrg}
+          />
+        )}
+
+        {/* Completion meter */}
+        <CompletionMeter org={activeOrg} />
+
+        {/* Website scan bar — shown once website_url field exists on org */}
+
+        {/* Cards */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <AboutCard   {...cardProps('about')} />
+          <FocusCard   {...cardProps('focus')} />
+          <LocationCard {...cardProps('location')} />
+          <FundingCard  {...cardProps('funding')} />
+          <StoryCard    {...cardProps('story')} />
+        </div>
+
+        {/* Footer */}
+        <div style={{ marginTop: 32, paddingTop: 24, borderTop: `1px solid ${T.border}`, display: 'flex', gap: 20, fontFamily: UI, fontSize: 13, color: T.textTertiary }}>
+          <a href="/dashboard/settings" style={{ color: T.textSecondary, textDecoration: 'none' }}>
+            Account &amp; notifications →
+          </a>
+        </div>
+
+      </div>
+    </div>
+  )
 }
