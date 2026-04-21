@@ -1460,18 +1460,15 @@ function StepReveal({ matchCount, topMatches, hasMission, onExplore, onAddMissio
     )
   }
 
-  const isFew = matchCount <= 5
-  const countLabel = isFew ? `Your ${matchCount} best-fit matches` : 'grants match your profile right now'
-
   return (
     <>
-      {/* Hero number */}
+      {/* Hero headline */}
       <div style={{ textAlign: 'center', padding: '16px 0 8px', marginBottom: 24 }}>
-        <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 56, fontWeight: 500, color: T.greenTextDeep, lineHeight: 1, marginBottom: 8 }}>
-          {matchCount}
+        <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 40, fontWeight: 500, color: T.greenTextDeep, lineHeight: 1.1, marginBottom: 8 }}>
+          Your matches are ready
         </div>
         <div style={{ fontSize: 14, color: T.textSecondary, fontFamily: 'var(--font-dm-sans)' }}>
-          {countLabel}
+          Here are your strongest fits — explore the full list to find more.
         </div>
       </div>
 
@@ -1523,7 +1520,7 @@ function StepReveal({ matchCount, topMatches, hasMission, onExplore, onAddMissio
       {/* CTA */}
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24 }}>
         <Button variant="primary" size="lg" onClick={onExplore}>
-          Explore all {matchCount} matches <ArrowRight size={15} />
+          Explore your matches <ArrowRight size={15} />
         </Button>
       </div>
     </>
