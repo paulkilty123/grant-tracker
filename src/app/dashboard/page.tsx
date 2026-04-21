@@ -45,7 +45,7 @@ export default async function DashboardPage() {
   // no null checks needed for redirect paths.
 
   const { data: org } = user
-    ? await supabase.from('organisations').select('*').eq('owner_id', user.id).maybeSingle()
+    ? await supabase.from('organisations').select('*').eq('owner_id', user.id).order('created_at', { ascending: true }).limit(1).then(r => ({ data: r.data?.[0] ?? null }))
     : { data: null }
   const typedOrg = org as Organisation | null
 

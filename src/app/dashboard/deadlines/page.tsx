@@ -629,7 +629,8 @@ export default function DeadlinesPage() {
       if (userErr || !user) { setLoading(false); return }
       setUserId(user.id)
 
-      const { data: org } = await supabase.from('organisations').select('*').eq('owner_id', user.id).maybeSingle()
+      const { data: orgs } = await supabase.from('organisations').select('*').eq('owner_id', user.id).order('created_at', { ascending: true }).limit(1)
+      const org = orgs?.[0] ?? null
       if (!org) { setLoading(false); return }
       setOrgId(org.id)
 
