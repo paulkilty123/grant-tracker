@@ -463,7 +463,7 @@ function OrgSwitcher({ orgs, activeOrgId, onSwitch }: {
 /* ═══════════════════════════════════════════════
    Completion Meter
    ═══════════════════════════════════════════════ */
-function CompletionMeter({ org }: { org: Organisation }) {
+function CompletionMeter({ org, onJumpToCard }: { org: Organisation; onJumpToCard: (card: CardId) => void }) {
   const { pct, missing } = computeCompleteness(org)
   const variant = pct >= 80
     ? { border: T.strongBorder,  bg: T.strongPanel,  label: T.strongBorder  }
@@ -484,12 +484,37 @@ function CompletionMeter({ org }: { org: Organisation }) {
         <span style={{ fontFamily: BODY, fontSize: 14, color: T.textSecondary }}>
           {missing.length === 0
             ? 'Your profile is complete — matches are fully optimised'
-            : `Add ${missing.map(m => m.label.toLowerCase()).join(' and ')} to reach 100%`}
+            : 'Click a missing field to complete it'}
         </span>
       </div>
-      <div style={{ height: 6, background: 'rgba(23,52,4,0.06)', borderRadius: 3, overflow: 'hidden' }}>
+      <div style={{ height: 6, background: 'rgba(23,52,4,0.06)', borderRadius: 3, overflow: 'hidden', marginBottom: missing.length > 0 ? 14 : 0 }}>
         <div style={{ height: '100%', width: `${pct}%`, background: variant.border, borderRadius: 3, transition: 'width 0.4s ease' }} />
       </div>
+      {missing.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          {missing.map(m => {
+            const card = FIELD_TO_CARD[m.label]
+            return (
+              <button
+                key={m.label}
+                onClick={() => card && onJumpToCard(card)}
+                style={{
+                  fontFamily: UI, fontWeight: 500, fontSize: 12,
+                  padding: '4px 10px', borderRadius: 8, cursor: card ? 'pointer' : 'default',
+                  border: `1px solid ${m.impact === 'high' ? '#C97B1A' : T.borderStrong}`,
+                  background: m.impact === 'high' ? '#FEF3E2' : T.pageBg,
+                  color: m.impact === 'high' ? '#854F0B' : T.textSecondary,
+                  display: 'inline-flex', alignItems: 'center', gap: 5,
+                  transition: 'all 0.12s',
+                }}
+              >
+                {m.impact === 'high' && <AlertTriangle size={10} />}
+                + {m.label}
+              </button>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
@@ -1698,7 +1723,7 @@ export default function ProfilePage() {
         )}
 
         {/* Completion meter */}
-        <CompletionMeter org={activeOrg} />
+        <CompletionMeter org={activeOrg} onJumpToCard={onJumpToCard} />
 
         <ScanBar orgId={activeOrg.id} website={activeOrg.website_url} onSaved={() => loadOrgs(activeOrg.id)} />
 
