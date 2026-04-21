@@ -112,12 +112,14 @@ export default async function DashboardPage() {
           ? `${formatCurrency(g.amountMin)} – ${formatCurrency(g.amountMax)}`
           : formatCurrency(g.amountMax || g.amountMin || 0))
       : 'Amount on application'
-    const matchResult = { breakdown: p.breakdown }
+    const bd = p.breakdown
     const reasons: string[] = []
-    if (matchResult.breakdown.location.score >= 8)      reasons.push('Your location')
-    if (matchResult.breakdown.themes.score >= 15)       reasons.push('Your sector')
-    if (matchResult.breakdown.grantSize.score >= 6)     reasons.push('Right size')
-    if (matchResult.breakdown.beneficiaries.score >= 8) reasons.push('Beneficiary match')
+    try {
+      if (bd?.location?.score >= 8)      reasons.push('Your location')
+      if (bd?.themes?.score >= 15)       reasons.push('Your sector')
+      if (bd?.grantSize?.score >= 6)     reasons.push('Right size')
+      if (bd?.beneficiaries?.score >= 8) reasons.push('Beneficiary match')
+    } catch { /* ignore breakdown errors */ }
     const daysAgo = p.lastSeenAt
       ? Math.floor((Date.now() - new Date(p.lastSeenAt).getTime()) / 86400000)
       : null
@@ -575,9 +577,9 @@ export default async function DashboardPage() {
                   {/* Amount */}
                   <p className="text-[13px] font-semibold text-charcoal mb-3" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{g.amountStr}</p>
                   {/* Match reasons */}
-                  {g.reasons.length > 0 && (
+                  {(g.reasons ?? []).length > 0 && (
                     <div className="flex flex-wrap gap-x-3 gap-y-1 mb-3">
-                      {g.reasons.map(r => (
+                      {(g.reasons ?? []).map(r => (
                         <span key={r} className="text-[11.5px] font-medium flex items-center gap-1" style={{ color: '#639922', fontFamily: 'var(--font-space-grotesk)' }}>
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} className="w-[10px] h-[10px] flex-shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
                           {r}
