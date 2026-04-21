@@ -108,6 +108,16 @@ export default async function DashboardPage() {
           ? `${formatCurrency(g.amountMin)} – ${formatCurrency(g.amountMax)}`
           : formatCurrency(g.amountMax || g.amountMin || 0))
       : 'Amount on application'
+    const matchResult = computeMatchScore(g, typedOrg\!)
+    const reasons: string[] = []
+    if (matchResult.breakdown.location.score >= 8)      reasons.push('Your location')
+    if (matchResult.breakdown.themes.score >= 15)       reasons.push('Your sector')
+    if (matchResult.breakdown.grantSize.score >= 6)     reasons.push('Right size')
+    if (matchResult.breakdown.beneficiaries.score >= 8) reasons.push('Beneficiary match')
+    const daysAgo = p.lastSeenAt
+      ? Math.floor((Date.now() - new Date(p.lastSeenAt).getTime()) / 86400000)
+      : null
+    const addedLabel = daysAgo === null ? null : daysAgo === 0 ? 'Added today' : daysAgo === 1 ? 'Added yesterday' : `Added ${daysAgo}d ago`
     return {
       id: g.id,
       title: g.title,
@@ -117,6 +127,8 @@ export default async function DashboardPage() {
       fundingType: g.fundingType ?? 'grant',
       scorePct: Math.round(p.score),
       searchHref: `/dashboard/search?grant=${encodeURIComponent(g.id)}`,
+      reasons: reasons.slice(0, 3),
+      addedLabel,
     }
   })
 
@@ -162,7 +174,7 @@ export default async function DashboardPage() {
   }))
   const totalValue = stageValues.reduce((sum, s) => sum + s.value, 0)
 
-  const alerts = getDeadlineAlerts(items).filter(a => a.daysUntil <= 7).slice(0, 3)
+  const alerts = getDeadlineAlerts(items).slice(0, 3)
 
   // ── Greeting ─────────────────────────────────────────────────────────────
   const rawName: string =
@@ -460,13 +472,13 @@ export default async function DashboardPage() {
         {/* This week's deadlines */}
         <div className="card rounded-xl">
           <div className="flex items-center justify-between mb-5">
-            <h3 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>This week's deadlines</h3>
+            <h3 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Upcoming deadlines</h3>
           </div>
 
           {alerts.length === 0 ? (
             <div className="text-center py-6 text-mid">
               <p className="text-sm">No upcoming deadlines</p>
-              <p className="text-xs mt-1">Add deadlines in the pipeline to track them here</p>
+              <p className="text-xs mt-1">Save a grant to start tracking</p>
             </div>
           ) : (
             <div className="space-y-1">
@@ -477,11 +489,9 @@ export default async function DashboardPage() {
                 // (<=10 "urgent") so this is a view-layer override only.
                 const d = alert.daysUntil
                 const pillLabel = d < 0 ? 'Overdue' : d === 0 ? 'Today' : d === 1 ? 'Tomorrow' : `${d}d`
-                const pillCls   = d < 7
+                const pillCls   = d <= 7
                   ? 'bg-[#FAECE7] text-[#993C1D]'
-                  : d <= 21
-                    ? 'bg-[#EAF3DE] text-[#3F6814]'
-                    : 'bg-[#F5F1E8] text-[#5F5E5A]'
+                  : 'bg-transparent text-[#5F5E5A] border border-[rgba(23,52,4,0.20)]'
                 const urgencyBadge = { label: pillLabel, cls: pillCls }
                 const amountStr = alert.item.amount_max ?? alert.item.amount_requested
                   ? formatCurrency(alert.item.amount_max ?? alert.item.amount_requested ?? 0)
@@ -527,11 +537,8 @@ export default async function DashboardPage() {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>New matches</h3>
-            <a href="/dashboard/search" className="text-xs font-semibold hover:underline" style={{ color: "#8ECB3C", fontFamily: "var(--font-space-grotesk)" }}>
-              View all opportunities →
-            </a>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {matchedGrants.map(g => {
               const typeConfig: Record<string, { label: string; bg: string; fg: string }> = {
                 grant:      { label: 'Grant',      bg: '#F1F7E4', fg: '#3B6D11' },
@@ -544,30 +551,38 @@ export default async function DashboardPage() {
                 <a key={g.id}
                   href={g.searchHref}
                   className="bg-white rounded-xl p-5 flex flex-col hover:-translate-y-0.5 transition-all group"
-                  style={{ border: '0.5px solid rgba(0,0,0,0.10)', boxShadow: '0 2px 10px rgba(26,46,43,0.04)' }}>
-                  <div className="mb-4">
+                  style={{ border: '1px solid rgba(23,52,4,0.08)', boxShadow: '0 2px 10px rgba(26,46,43,0.04)' }}>
+                  {/* Top row: type pill + added date */}
+                  <div className="flex items-center justify-between gap-2 mb-3">
                     <span className="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-md uppercase tracking-wider"
                       style={{ background: t.bg, color: t.fg }}>
                       {t.label}
                     </span>
+                    {g.addedLabel && (
+                      <span className="text-[11px]" style={{ color: '#8A8986' }}>{g.addedLabel}</span>
+                    )}
                   </div>
-                  <h4 className="text-[15px] font-semibold text-charcoal leading-snug mb-1 line-clamp-2" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+                  {/* Name */}
+                  <h4 className="text-[15px] font-semibold text-charcoal leading-snug mb-0.5 line-clamp-2" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
                     {g.title}
                   </h4>
-                  {/* Suppress funder line when seed data has title == funder
-                      (e.g. "The Brit Trust / The Brit Trust") — avoids the
-                      repeated-line visual tic while keeping the field for
-                      rows where they genuinely differ. */}
-                  {g.funder && g.funder.trim().toLowerCase() !== g.title.trim().toLowerCase() ? (
-                    <p className="text-xs text-mid mb-4 truncate">{g.funder}</p>
-                  ) : (
-                    <div className="mb-4" />
+                  {/* Funder — always shown */}
+                  <p className="text-xs mb-3 truncate" style={{ color: '#5F5E5A' }}>{g.funder || '\u00a0'}</p>
+                  {/* Amount */}
+                  <p className="text-[13px] font-semibold text-charcoal mb-3" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{g.amountStr}</p>
+                  {/* Match reasons */}
+                  {g.reasons.length > 0 && (
+                    <div className="flex flex-wrap gap-x-3 gap-y-1 mb-3">
+                      {g.reasons.map(r => (
+                        <span key={r} className="text-[11.5px] font-medium flex items-center gap-1" style={{ color: '#639922', fontFamily: 'var(--font-space-grotesk)' }}>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} className="w-[10px] h-[10px] flex-shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
+                          {r}
+                        </span>
+                      ))}
+                    </div>
                   )}
-                  <p className="text-[13px] font-semibold text-charcoal mb-4" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{g.amountStr}</p>
-                  {/* Match score + bar — spec §1.6.
-                      Qualitative band replaces the static "MATCH" label so
-                      the header carries meaning at a glance, not just the %. */}
-                  <div className="mt-auto pt-3" style={{ borderTop: '0.5px solid rgba(0,0,0,0.08)' }}>
+                  {/* Match score + bar */}
+                  <div className="mt-auto pt-3" style={{ borderTop: '1px solid rgba(23,52,4,0.06)' }}>
                     {(() => {
                       const isStrong = g.scorePct >= 85
                       const isPartial = g.scorePct >= 60
@@ -577,13 +592,11 @@ export default async function DashboardPage() {
                       return (
                         <>
                           <div className="flex items-baseline justify-between mb-1.5">
-                            <span className="text-[11px] font-semibold" style={{ color: '#5F5E5A', fontFamily: 'var(--font-space-grotesk)' }}>
-                              {label}
-                            </span>
+                            <span className="text-[11px]" style={{ color: '#5F5E5A' }}>{label}</span>
                             <span className="text-sm font-bold" style={{ color: pctColour, fontFamily: 'var(--font-space-grotesk)' }}>{g.scorePct}%</span>
                           </div>
-                          <div className="h-1 rounded-sm overflow-hidden" style={{ background: 'rgba(0,0,0,0.08)' }}>
-                            <div className="h-full" style={{ width: `${g.scorePct}%`, background: barColour, borderRadius: 2 }} />
+                          <div className="h-[5px] rounded-sm overflow-hidden" style={{ background: 'rgba(23,52,4,0.06)' }}>
+                            <div className="h-full" style={{ width: `${g.scorePct}%`, background: barColour, borderRadius: 3 }} />
                           </div>
                         </>
                       )
@@ -592,6 +605,20 @@ export default async function DashboardPage() {
                 </a>
               )
             })}
+            {/* View-all card — 4th slot */}
+            <a href="/dashboard/search"
+              className="flex flex-col items-center justify-center text-center gap-3 rounded-xl p-6 hover:-translate-y-0.5 transition-all"
+              style={{ border: '1.5px dashed rgba(99,153,34,0.45)', background: 'transparent', minHeight: 220 }}>
+              <div className="flex items-center justify-center w-12 h-12 rounded-xl" style={{ background: '#F5F1E8' }}>
+                <ArrowRight className="w-5 h-5" style={{ color: '#173404' }} />
+              </div>
+              <div>
+                <p className="text-base font-semibold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.005em' }}>
+                  {totalMatchCount > 3 ? `${totalMatchCount - 3} more matches` : 'All matches'}
+                </p>
+                <p className="text-sm mt-1" style={{ color: '#5F5E5A' }}>Explore all your opportunities →</p>
+              </div>
+            </a>
           </div>
         </div>
       )}
