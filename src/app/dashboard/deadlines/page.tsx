@@ -620,6 +620,7 @@ export default function DeadlinesPage() {
 
   // Day filter — when a calendar day is clicked, filter Scheduled to that date
   const [dayFilter, setDayFilter] = useState<string | null>(null)
+  const [needsDeadlineOpen, setNeedsDeadlineOpen] = useState(false)
 
   // ── Data loading ────────────────────────────────────────────────────────────
   async function loadData() {
@@ -875,549 +876,524 @@ export default function DeadlinesPage() {
     <div className="p-8 text-center"><p style={{ color: '#993C1D' }} className="font-medium">{error}</p></div>
   )
 
-  // ── Render ────────────────────────────────────────────────────────────────────
-  return (
-    <div style={{ fontFamily: 'var(--font-plus-jakarta, Plus Jakarta Sans, sans-serif)' }}>
+  // ── Render ─────────────────────────────────────────────────────────────────────────────────
+  // Split allScheduled into urgency buckets
+  function rowDays(row: ScheduledRow): number {
+    const dl = row.kind === 'pipeline' ? row.alert.item.deadline : row.grant.deadline
+    if (!dl) return 9999
+    return Math.ceil((new Date(dl).getTime() - Date.now()) / 86400000)
+  }
+  const thisWeek  = displayedScheduled.filter(r => rowDays(r) <= 7)
+  const thisMonth = displayedScheduled.filter(r => rowDays(r) > 7 && rowDays(r) <= 31)
+  const laterRows = displayedScheduled.filter(r => rowDays(r) > 31)
 
-      {/* Page header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 12 }}>
-        <div>
-          <h1 style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 36, fontWeight: 700,
-            letterSpacing: '-0.02em', margin: '0 0 4px', color: '#2C2C2A', lineHeight: 1.1 }}>Deadlines</h1>
-          <p style={{ fontSize: 13, color: '#5F5E5A', margin: 0 }}>
-            Every deadline across your pipeline, saved grants and live matches.
-          </p>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
-          {/* Stat summary */}
-          {(noDeadlineItems.length > 0 || allScheduled.length > 0) && (
-            <div style={{ textAlign: 'right' }}>
-              <p style={{ fontSize: 14, fontWeight: 700, color: '#2C2C2A', margin: 0, lineHeight: 1.2 }}>
-                {(noDeadlineItems.length > 0 || (showSaved && savedNoDeadline.length > 0)) && (
-                  <span style={{ color: '#5F5E5A' }}>{noDeadlineItems.length} need a date</span>
-                )}
-                {noDeadlineItems.length > 0 && allScheduled.length > 0 && (
-                  <span style={{ color: '#C5C3BC', margin: '0 5px' }}>&middot;</span>
-                )}
-                {allScheduled.length > 0 && (
-                  <span style={{ color: '#3B6D11' }}>{allScheduled.length} scheduled</span>
-                )}
-                {noDeadlineItems.length === 0 && allScheduled.length === 0 && (
-                  <span style={{ color: '#8A8986' }}>No deadlines yet</span>
-                )}
-              </p>
-            </div>
+  // "Needs a deadline" drawer contents
+  const needsDeadlineAll = [
+    ...noDeadlineItems.map(i => ({ kind: 'pipeline' as const, item: i })),
+    ...(showSaved ? savedNoDeadline.map(g => ({ kind: 'saved' as const, grant: g })) : []),
+  ]
+
+  // "This month" meta: show the date 31 days out
+  const date31 = new Date(Date.now() + 31 * 86400000)
+  const thisMonthMeta = `Due by ${date31.getDate()} ${MONTH_NAMES[date31.getMonth()]}`
+
+  const UI_FONT   = 'var(--font-space-grotesk)'
+  const BODY_FONT = 'var(--font-dm-sans)'
+
+  // Row renderer — new anatomy: 72px countdown pill | body | actions
+  function renderScheduledRow(row: ScheduledRow, bucket: 'week' | 'month' | 'later', isLast: boolean, rowKey: string) {
+    const days      = rowDays(row)
+    const isOverdue = days < 0
+    const dayStr    = isOverdue ? 'Overdue' : `${days}d`
+
+    const dl       = row.kind === 'pipeline' ? row.alert.item.deadline : row.grant.deadline
+    const dlLabel  = dateLabel(dl ?? null)
+
+    // Countdown pill colours
+    const ctBg     = bucket === 'week'  ? '#FAECE7' : bucket === 'month' ? '#F4F9ED' : '#FAFAF7'
+    const ctColor  = bucket === 'week'  ? '#993C1D' : bucket === 'month' ? '#639922' : '#5F5E5A'
+    const ctBorder = bucket === 'later' ? '1px solid rgba(23,52,4,0.08)' : 'none'
+
+    // Body data
+    let title = '', funder = '', amtStr = '', fundingType = 'grant'
+    if (row.kind === 'pipeline') {
+      const item  = row.alert.item
+      title       = item.grant_name
+      funder      = item.funder_name && item.funder_name !== item.grant_name ? item.funder_name : ''
+      amtStr      = formatRange(item.amount_min, item.amount_max ?? item.amount_requested) ?? ''
+      fundingType = itemFundingType(item)
+    } else {
+      const g     = row.grant
+      title       = g.title
+      funder      = g.funder && g.funder !== g.title ? g.funder : ''
+      amtStr      = g.amountMin || g.amountMax ? (formatRange(g.amountMin || null, g.amountMax || null) ?? '') : ''
+      fundingType = g.fundingType ?? 'grant'
+    }
+
+    // Actions
+    let actions: React.ReactNode = null
+    if (row.kind === 'pipeline') {
+      const stage = row.alert.item.stage
+      actions = (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+          {stage === 'applying' && (
+            <span style={{ fontFamily: UI_FONT, fontSize: 11, padding: '2px 8px', borderRadius: 10, fontWeight: 500,
+              background: '#EEEDFE', color: '#3C3489', whiteSpace: 'nowrap' }}>Applying</span>
           )}
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <a href="/dashboard/pipeline"
-              style={{ fontSize: 12, fontWeight: 500, padding: '7px 14px', border: '0.5px solid rgba(0,0,0,0.14)',
-                borderRadius: 10, color: '#2C2C2A', background: '#fff', display: 'inline-flex',
-                alignItems: 'center', gap: 6, textDecoration: 'none' }}>
-              Pipeline <ArrowRight size={12} />
-            </a>
-            <button onClick={() => setAddOpen(true)}
-              style={{ fontSize: 12, fontWeight: 600, padding: '7px 14px',
-                border: '1px solid #2C2C2A', borderRadius: 10,
-                background: '#fff', color: '#2C2C2A', display: 'inline-flex', alignItems: 'center',
-                gap: 6, cursor: 'pointer', fontFamily: 'inherit' }}
-              onMouseEnter={e => { e.currentTarget.style.background = '#2C2C2A'; e.currentTarget.style.color = '#fff' }}
-              onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = '#2C2C2A' }}>
-              <Plus size={12} /> Add deadline
+          {stage === 'submitted' && (
+            <span style={{ fontFamily: UI_FONT, fontSize: 11, padding: '2px 8px', borderRadius: 10, fontWeight: 500,
+              background: '#F4F9ED', color: '#639922', whiteSpace: 'nowrap' }}>Submitted</span>
+          )}
+          <a href="/dashboard/pipeline"
+            style={{ width: 28, height: 28, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              color: '#8A8986', borderRadius: 6, textDecoration: 'none', background: 'transparent' }}
+            onMouseEnter={e => { e.currentTarget.style.background = '#F5F1E8'; e.currentTarget.style.color = '#173404' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#8A8986' }}>
+            <ArrowRight size={14} />
+          </a>
+        </div>
+      )
+    } else if (row.kind === 'saved') {
+      actions = (
+        <button
+          onClick={() => handlePipelineMatch(row.grant)}
+          style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, padding: '6px 12px', borderRadius: 6,
+            border: 'none', background: '#8ECB3C', color: '#173404', cursor: 'pointer',
+            display: 'inline-flex', alignItems: 'center', gap: 4, flexShrink: 0, whiteSpace: 'nowrap' }}>
+          <Plus size={10} />Pipeline
+        </button>
+      )
+    } else {
+      const gId       = row.grant.id
+      const state     = matchState[gId]
+      const actioning = matchActioning[gId]
+      if (state === 'saved') {
+        actions = (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+            <span style={{ fontFamily: UI_FONT, fontSize: 11, padding: '2px 8px', borderRadius: 10, fontWeight: 500,
+              background: '#FAFAF7', color: '#5F5E5A', border: '1px solid rgba(23,52,4,0.14)', whiteSpace: 'nowrap' }}>Saved</span>
+            <button onClick={() => handlePipelineMatch(row.grant)}
+              style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, padding: '6px 12px', borderRadius: 6,
+                border: 'none', background: '#8ECB3C', color: '#173404', cursor: 'pointer',
+                display: 'inline-flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
+              <Plus size={10} />Pipeline
             </button>
           </div>
+        )
+      } else if (state === 'pipeline') {
+        actions = (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+            <span style={{ fontFamily: UI_FONT, fontSize: 11, padding: '2px 8px', borderRadius: 10, fontWeight: 500,
+              background: '#F4F9ED', color: '#639922', whiteSpace: 'nowrap' }}>Identified</span>
+            <a href="/dashboard/pipeline"
+              style={{ width: 28, height: 28, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                color: '#8A8986', borderRadius: 6, textDecoration: 'none' }}>
+              <ArrowRight size={14} />
+            </a>
+          </div>
+        )
+      } else if (actioning === 'done') {
+        actions = (
+          <span style={{ fontFamily: UI_FONT, fontSize: 11, fontWeight: 500, color: '#3B6D11',
+            display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+            <Check size={10} strokeWidth={3} /> Added
+          </span>
+        )
+      } else {
+        actions = (
+          <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+            <button onClick={() => handleSaveMatch(gId)} disabled={!!actioning}
+              style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, color: '#5F5E5A', padding: '6px 10px',
+                borderRadius: 6, border: '0.5px solid rgba(23,52,4,0.14)', background: '#fff',
+                cursor: actioning ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' }}>
+              {actioning === 'saving' ? '…' : 'Save'}
+            </button>
+            <button onClick={() => handlePipelineMatch(row.grant)} disabled={!!actioning}
+              style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, padding: '6px 12px', borderRadius: 6,
+                border: 'none', cursor: actioning ? 'not-allowed' : 'pointer',
+                background: actioning ? '#F5F1E8' : '#8ECB3C',
+                color: actioning ? '#8A8986' : '#173404',
+                display: 'inline-flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
+              {actioning === 'pipelining' ? '…' : <><Plus size={10} />Pipeline</>}
+            </button>
+          </div>
+        )
+      }
+    }
+
+    return (
+      <div key={rowKey}
+        style={{
+          display: 'grid', gridTemplateColumns: '72px 1fr auto', gap: 16, alignItems: 'center',
+          padding: '14px 22px',
+          borderBottom: isLast ? 'none' : '1px solid rgba(23,52,4,0.08)',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.background = '#FAFAF7' }}
+        onMouseLeave={e => { e.currentTarget.style.background = '' }}>
+
+        {/* Countdown pill */}
+        <div style={{
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          padding: '6px 4px', borderRadius: 8, flexShrink: 0,
+          background: ctBg, color: ctColor, border: ctBorder,
+        }}>
+          <div style={{ fontFamily: UI_FONT, fontWeight: 600, fontSize: 14, letterSpacing: '-0.01em', lineHeight: 1 }}>
+            {dayStr}
+          </div>
+          <div style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 11, opacity: 0.75, marginTop: 3 }}>
+            {dlLabel}
+          </div>
         </div>
+
+        {/* Body */}
+        <div style={{ minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 4, flexWrap: 'wrap' }}>
+            <span style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 14.5, color: '#2C2C2A', letterSpacing: '-0.005em' }}>
+              {title}
+            </span>
+            <TypeChip type={fundingType} />
+          </div>
+          <div style={{ fontFamily: BODY_FONT, fontSize: 13, color: '#8A8986', display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
+            {funder && <span style={{ color: '#5F5E5A' }}>{funder}</span>}
+            {funder && amtStr && <span style={{ opacity: 0.5 }}>·</span>}
+            {amtStr && <span style={{ color: '#639922', fontFamily: UI_FONT, fontWeight: 500, fontSize: 12.5 }}>{amtStr}</span>}
+          </div>
+        </div>
+
+        {/* Actions */}
+        {actions}
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ fontFamily: 'var(--font-dm-sans, Plus Jakarta Sans, sans-serif)' }}>
+
+      {/* Page header */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 28 }}>
+        <div>
+          <h1 style={{ fontFamily: UI_FONT, fontSize: 28, fontWeight: 600, letterSpacing: '-0.02em',
+            margin: '0 0 4px', color: '#2C2C2A' }}>Deadlines</h1>
+          <p style={{ fontFamily: BODY_FONT, fontSize: 14.5, color: '#5F5E5A', margin: 0 }}>
+            What's coming up across your pipeline, saved grants, and live matches.
+          </p>
+        </div>
+        <button onClick={() => setAddOpen(true)}
+          style={{ fontFamily: UI_FONT, fontSize: 13.5, fontWeight: 500, background: '#8ECB3C', color: '#173404',
+            border: 'none', padding: '9px 16px', borderRadius: 8, cursor: 'pointer',
+            display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0 }}
+          onMouseEnter={e => { e.currentTarget.style.filter = 'brightness(0.95)' }}
+          onMouseLeave={e => { e.currentTarget.style.filter = 'none' }}>
+          <Plus size={14} />
+          Add deadline
+        </button>
       </div>
 
       {/* Two-column layout */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'minmax(0,1fr) 240px',
-        gap: 20,
-      }}
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 320px', gap: 28, alignItems: 'start' }}
         className="deadlines-layout">
 
-        {/* ── Left column: list ── */}
-        <div style={{ minWidth: 0 }}>
+        {/* ── Left column: urgency-led stack ── */}
+        <div>
 
-          {/* Section 1: Needs a deadline */}
-          {noDeadlineItems.length > 0 && (
-            <>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, height: 22 }}>
-                <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 15, fontWeight: 600, color: '#2C2C2A' }}>
-                  Needs a deadline
-                </span>
-                <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 999, fontWeight: 500,
-                  background: '#F5F1E8', color: '#5F5E5A' }}>{noDeadlineItems.length + (showSaved ? savedNoDeadline.length : 0)}</span>
+          {/* This week */}
+          {thisWeek.length > 0 && (
+            <div style={{ background: '#fff', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '16px 22px', borderBottom: '1px solid rgba(23,52,4,0.08)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontFamily: UI_FONT, fontWeight: 600, fontSize: 15, color: '#2C2C2A', letterSpacing: '-0.01em' }}>This week</span>
+                  <span style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 12, color: '#993C1D', background: '#FAECE7', padding: '3px 9px', borderRadius: 10 }}>{thisWeek.length}</span>
+                </div>
+                <span style={{ fontFamily: BODY_FONT, fontSize: 12, color: '#8A8986' }}>Due in the next 7 days</span>
               </div>
-
-              <div style={{ background: '#fff', border: '0.5px solid rgba(0,0,0,0.10)', borderRadius: 10,
-                marginBottom: 12 }}>
-                {noDeadlineItems.map((item, idx) => {
-                  const amountStr = formatRange(item.amount_min, item.amount_max ?? item.amount_requested)
-                  const type      = itemFundingType(item)
-                  const val       = deadlineInputs[item.id] ?? ''
-                  const saving    = savingDeadline === item.id
-                  const success   = deadlineSuccesses.has(item.id)
-                  const funderDiff = item.funder_name && item.funder_name !== item.grant_name
-                  return (
-                    <div key={item.id} style={{
-                      display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', fontSize: 13,
-                      borderBottom: idx < noDeadlineItems.length - 1 ? '0.5px solid rgba(0,0,0,0.06)' : 'none',
-                    }}>
-                      <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        <span style={{ fontWeight: 500, color: '#2C2C2A' }}>{item.grant_name}</span>
-                        {funderDiff && (
-                          <span style={{ color: '#8A8986', fontWeight: 400 }}> &middot; {item.funder_name}</span>
-                        )}
-                        {amountStr && (
-                          <span style={{ color: '#8A8986' }}> &middot; <span style={{ color: '#3B6D11', fontWeight: 500 }}>{amountStr}</span></span>
-                        )}
-                      </div>
-                      <TypeChip type={type} />
-                      <StageChip stage={item.stage} />
-                      <DatePickerInput
-                        value={val}
-                        onChange={v => setDeadlineInputs(prev => ({ ...prev, [item.id]: v }))} />
-                      {success ? (
-                        <span style={{ fontSize: 11, fontWeight: 500, color: '#3B6D11', padding: '4px 10px',
-                          background: '#F1F7E4', borderRadius: 6, display: 'inline-flex', alignItems: 'center',
-                          gap: 4, flexShrink: 0 }}>
-                          <Check size={11} strokeWidth={3} /> Set
-                        </span>
-                      ) : (
-                        <button onClick={() => handleSetDeadline(item.id, val)} disabled={!val || saving}
-                          style={{ fontSize: 11, fontWeight: 500, padding: '4px 10px', border: 'none', borderRadius: 6,
-                            cursor: val && !saving ? 'pointer' : 'not-allowed', fontFamily: 'inherit', flexShrink: 0,
-                            background: val ? '#8ECB3C' : '#F5F1E8',
-                            color: val ? '#173404' : '#8A8986' }}>
-                          {saving ? '\u2026' : 'Set'}
-                        </button>
-                      )}
-                    </div>
-                  )
-                })}
-                {/* Saved grants needing a self-imposed deadline */}
-                {showSaved && savedNoDeadline.map((g, idx) => {
-                  const amtStr = g.amountMin || g.amountMax ? formatRange(g.amountMin || null, g.amountMax || null) : ''
-                  const type   = g.fundingType ?? 'grant'
-                  const val    = savedInputs[g.id] ?? ''
-                  const saving = savingSaved === g.id
-                  const success = savedSuccesses.has(g.id)
-                  const funderDiff = g.funder && g.funder !== g.title
-                  const totalRows = noDeadlineItems.length + savedNoDeadline.length
-                  const rowIdx = noDeadlineItems.length + idx
-                  return (
-                    <div key={g.id} style={{
-                      display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', fontSize: 13,
-                      borderTop: (noDeadlineItems.length > 0 || idx > 0) ? '0.5px solid rgba(0,0,0,0.06)' : 'none',
-                    }}>
-                      <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        <span style={{ fontWeight: 500, color: '#2C2C2A' }}>{g.title}</span>
-                        {funderDiff && (
-                          <span style={{ color: '#8A8986', fontWeight: 400 }}> &middot; {g.funder}</span>
-                        )}
-                        {amtStr && (
-                          <span style={{ color: '#8A8986' }}> &middot; <span style={{ color: '#3B6D11', fontWeight: 500 }}>{amtStr}</span></span>
-                        )}
-                      </div>
-                      <TypeChip type={type} />
-                      <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 999, fontWeight: 500,
-                        background: '#F5F1E8', color: '#5F5E5A', flexShrink: 0 }}>Saved</span>
-                      <DatePickerInput value={val}
-                        onChange={v => setSavedInputs(prev => ({ ...prev, [g.id]: v }))} />
-                      {success ? (
-                        <span style={{ fontSize: 11, fontWeight: 500, color: '#3B6D11', padding: '4px 10px',
-                          background: '#F1F7E4', borderRadius: 6, display: 'inline-flex', alignItems: 'center',
-                          gap: 4, flexShrink: 0 }}>
-                          <Check size={11} strokeWidth={3} /> Set
-                        </span>
-                      ) : (
-                        <button onClick={() => handleSetSavedDeadline(g, val)} disabled={!val || saving}
-                          style={{ fontSize: 11, fontWeight: 500, padding: '4px 10px', border: 'none', borderRadius: 6,
-                            cursor: val && !saving ? 'pointer' : 'not-allowed', fontFamily: 'inherit', flexShrink: 0,
-                            background: val ? '#8ECB3C' : '#F5F1E8',
-                            color: val ? '#173404' : '#8A8986' }}>
-                          {saving ? '\u2026' : 'Set'}
-                        </button>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            </>
+              {thisWeek.map((row, i) => renderScheduledRow(row, 'week', i === thisWeek.length - 1,
+                row.kind === 'pipeline' ? row.alert.item.id : row.grant.id + '-week-' + i))}
+            </div>
           )}
 
-          {/* Section 2: Scheduled */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, height: 22 }}>
-            <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 15, fontWeight: 600, color: '#2C2C2A' }}>
-              Scheduled
-            </span>
-            <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 999, fontWeight: 500,
-              background: '#F1F7E4', color: '#3B6D11' }}>
-              {displayedScheduled.length}{urgentCount > 0 && !dayFilter ? ` · ${urgentCount} urgent` : ''}
-            </span>
-            {dayFilter && (
-              <button onClick={() => setDayFilter(null)}
-                style={{ fontSize: 10, color: '#639922', background: 'none', border: 'none',
-                  cursor: 'pointer', padding: 0, fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-                × Clear {dateLabel(dayFilter)}
-              </button>
-            )}
-            <span style={{ fontSize: 10, color: '#8A8986', marginLeft: 'auto' }}>Sorted soonest first</span>
-          </div>
-
-          <div style={{ background: '#fff', border: '0.5px solid rgba(0,0,0,0.10)', borderRadius: 10,
-            marginBottom: 12, overflow: 'hidden' }}>
-
-            {displayedScheduled.length === 0 && (
-              <div style={{ padding: '20px 16px', textAlign: 'center', fontSize: 12, color: '#8A8986' }}>
-                {dayFilter ? `No deadlines on ${dateLabel(dayFilter)}.` : 'No scheduled deadlines yet.'}
-              </div>
-            )}
-
-            {displayedScheduled.map((row, idx) => {
-              const isLast = idx === displayedScheduled.length - 1
-
-              if (row.kind === 'pipeline') {
-                const a         = row.alert
-                const isUrgent  = a.urgency === 'urgent' || a.urgency === 'overdue'
-                const daysUntil = a.daysUntil
-                const showPill  = daysUntil != null && daysUntil <= 30
-                const type      = itemFundingType(a.item)
-                const dl        = dateLabel(a.item.deadline)
-                const amtStr    = formatRange(a.item.amount_min, a.item.amount_max ?? a.item.amount_requested)
-                const funderDiff = a.item.funder_name && a.item.funder_name !== a.item.grant_name
-                return (
-                  <div key={a.item.id}
-                    onClick={() => setEditItem(a.item)}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', fontSize: 13,
-                      borderBottom: isLast ? 'none' : '0.5px solid rgba(0,0,0,0.06)',
-                      borderLeft: isUrgent ? '3px solid #D85A30' : '3px solid transparent',
-                      cursor: 'pointer',
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.background = '#FAFAF7' }}
-                    onMouseLeave={e => { e.currentTarget.style.background = '#fff' }}>
-                    {/* Date block */}
-                    <div style={{ width: 54, flexShrink: 0, textAlign: 'center' }}>
-                      {showPill && (
-                        <div style={{ fontSize: 11, fontWeight: 600, padding: '2px 0', borderRadius: 999, marginBottom: 1,
-                          background: isUrgent ? '#FAECE7' : '#F1F7E4',
-                          color: isUrgent ? '#993C1D' : '#3B6D11' }}>
-                          {a.urgency === 'overdue' ? 'Overdue' : `${daysUntil}d`}
-                        </div>
-                      )}
-                      <div style={{ fontSize: showPill ? 11 : 12, color: '#5F5E5A' }}>{dl}</div>
-                    </div>
-                    {/* Body — single-line title·funder·amount */}
-                    <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      <span style={{ fontWeight: 500, color: '#2C2C2A' }}>{a.item.grant_name}</span>
-                      {funderDiff && (
-                        <span style={{ color: '#8A8986', fontWeight: 400 }}> &middot; {a.item.funder_name}</span>
-                      )}
-                      {amtStr && (
-                        <span style={{ color: '#8A8986' }}> &middot; <span style={{ color: '#3B6D11', fontWeight: 500 }}>{amtStr}</span></span>
-                      )}
-                    </div>
-                    <TypeChip type={type} />
-                    <StageChip stage={a.item.stage} />
-                    <ArrowRight size={12} style={{ color: '#8A8986', flexShrink: 0 }} />
-                  </div>
-                )
-              }
-
-              // Saved row
-              if (row.kind === 'saved') {
-                const g         = row.grant
-                const daysUntil = g.deadline
-                  ? Math.ceil((new Date(g.deadline).getTime() - Date.now()) / 86400000)
-                  : null
-                const isUrgent  = daysUntil != null && daysUntil <= 7
-                const showPill  = daysUntil != null && daysUntil <= 30
-                const dl        = dateLabel(g.deadline)
-                const amtStr    = g.amountMin || g.amountMax ? formatRange(g.amountMin || null, g.amountMax || null) : ''
-                const type      = g.fundingType ?? 'grant'
-                const funderDiff = g.funder && g.funder !== g.title
-                return (
-                  <div key={g.id} style={{
-                    display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', fontSize: 13,
-                    borderBottom: isLast ? 'none' : '0.5px solid rgba(0,0,0,0.06)',
-                    borderLeft: isUrgent ? '3px solid #D85A30' : '3px solid transparent',
-                    background: '#FDFCF8',
-                  }}>
-                    {/* Date block */}
-                    <div style={{ width: 54, flexShrink: 0, textAlign: 'center' }}>
-                      {showPill && (
-                        <div style={{ fontSize: 11, fontWeight: 600, padding: '2px 0', borderRadius: 999, marginBottom: 1,
-                          background: isUrgent ? '#FAECE7' : '#F1F7E4',
-                          color: isUrgent ? '#993C1D' : '#3B6D11' }}>
-                          {isUrgent ? `${daysUntil}d` : `${daysUntil}d`}
-                        </div>
-                      )}
-                      <div style={{ fontSize: showPill ? 11 : 12, color: '#5F5E5A' }}>{dl}</div>
-                    </div>
-                    {/* Body */}
-                    <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      <span style={{ fontWeight: 500, color: '#2C2C2A' }}>{g.title}</span>
-                      {funderDiff && (
-                        <span style={{ color: '#8A8986', fontWeight: 400 }}> &middot; {g.funder}</span>
-                      )}
-                      {amtStr && (
-                        <span style={{ color: '#8A8986' }}> &middot; <span style={{ color: '#3B6D11', fontWeight: 500 }}>{amtStr}</span></span>
-                      )}
-                    </div>
-                    <TypeChip type={type} />
-                    <span style={{ fontSize: 11, padding: '2px 7px', borderRadius: 999, fontWeight: 500,
-                      background: '#F5F1E8', color: '#5F5E5A', flexShrink: 0 }}>Saved</span>
-                    {g.applyUrl && (
-                      <a href={g.applyUrl} target="_blank" rel="noopener noreferrer"
-                        style={{ color: '#8A8986', display: 'inline-flex', flexShrink: 0 }}
-                        onClick={e => e.stopPropagation()}>
-                        <ExternalLink size={12} />
-                      </a>
-                    )}
-                  </div>
-                )
-              }
-
-              // Match row
-              const { grant: g, score } = row
-              const gId       = g.id
-              const state     = matchState[gId]
-              const actioning = matchActioning[gId]
-              const daysUntil = g.deadline
-                ? Math.ceil((new Date(g.deadline).getTime() - Date.now()) / 86400000)
-                : null
-              const isUrgent  = daysUntil != null && daysUntil <= 7
-              const showPill  = daysUntil != null && daysUntil <= 30
-              const dl        = dateLabel(g.deadline)
-              const amtStr    = g.amountMin || g.amountMax ? formatRange(g.amountMin || null, g.amountMax || null) : ''
-              const type      = g.fundingType ?? 'grant'
-              const dotColor  = score >= 70 ? '#97C459' : score >= 50 ? '#C0DD97' : '#D9D6CB'
-              const funderDiff = g.funder && g.funder !== g.title
-              return (
-                <div key={gId} style={{
-                  display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', fontSize: 13,
-                  borderBottom: isLast ? 'none' : '0.5px solid rgba(0,0,0,0.06)',
-                  borderLeft: isUrgent ? '3px solid #D85A30' : '3px solid transparent',
-                  background: '#FDFCF8',
-                }}>
-                  {/* Date block */}
-                  <div style={{ width: 54, flexShrink: 0, textAlign: 'center' }}>
-                    {showPill && (
-                      <div style={{ fontSize: 11, fontWeight: 600, padding: '2px 0', borderRadius: 999, marginBottom: 1,
-                        background: isUrgent ? '#FAECE7' : '#F1F7E4',
-                        color: isUrgent ? '#993C1D' : '#3B6D11' }}>
-                        {daysUntil}d
-                      </div>
-                    )}
-                    <div style={{ fontSize: showPill ? 11 : 12, color: '#5F5E5A' }}>{dl}</div>
-                  </div>
-                  {/* Body */}
-                  <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    <span style={{ fontWeight: 500, color: '#2C2C2A' }}>{g.title}</span>
-                    {funderDiff && (
-                      <span style={{ color: '#8A8986', fontWeight: 400 }}> &middot; {g.funder}</span>
-                    )}
-                    {amtStr && (
-                      <span style={{ color: '#8A8986' }}> &middot; <span style={{ color: '#3B6D11', fontWeight: 500 }}>{amtStr}</span></span>
-                    )}
-                  </div>
-                  {/* Match % — right-aligned, scannable with pills */}
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600,
-                    color: score >= 70 ? '#3B6D11' : score >= 50 ? '#5F5E5A' : '#8A8986', flexShrink: 0 }}>
-                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: dotColor, display: 'inline-block', flexShrink: 0 }} />
-                    {score}%
-                  </span>
-                  <TypeChip type={type} />
-                  {/* Actions */}
-                  {state === 'saved' && (
-                    <><span style={{ fontSize: 10, color: '#8A8986' }}>Saved</span><ArrowRight size={12} style={{ color: '#8A8986' }} /></>
-                  )}
-                  {state === 'pipeline' && (
-                    <><StageChip stage="identified" /><ArrowRight size={12} style={{ color: '#8A8986' }} /></>
-                  )}
-                  {!state && actioning === 'done' && (
-                    <span style={{ fontSize: 10, fontWeight: 500, color: '#3B6D11', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-                      <Check size={10} strokeWidth={3} /> Added
-                    </span>
-                  )}
-                  {!state && actioning !== 'done' && (
-                    <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
-                      <button onClick={() => handleSaveMatch(gId)} disabled={!!actioning}
-                        style={{ fontSize: 12, fontWeight: 500, color: '#5F5E5A', padding: '4px 8px', borderRadius: 6,
-                          border: '0.5px solid rgba(0,0,0,0.14)', background: '#fff', cursor: actioning ? 'not-allowed' : 'pointer',
-                          fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-                        {actioning === 'saving' ? '\u2026' : 'Save'}
-                      </button>
-                      <button onClick={() => handlePipelineMatch(g)} disabled={!!actioning}
-                        style={{ fontSize: 12, fontWeight: 500, padding: '4px 8px', borderRadius: 6, border: 'none',
-                          cursor: actioning ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
-                          background: actioning ? '#F5F1E8' : '#8ECB3C',
-                          color: actioning ? '#8A8986' : '#173404',
-                          display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-                        {actioning === 'pipelining' ? '\u2026' : <><Plus size={9} />Pipeline</>}
-                      </button>
-                    </div>
-                  )}
+          {/* This month */}
+          {thisMonth.length > 0 && (
+            <div style={{ background: '#fff', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '16px 22px', borderBottom: '1px solid rgba(23,52,4,0.08)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontFamily: UI_FONT, fontWeight: 600, fontSize: 15, color: '#2C2C2A', letterSpacing: '-0.01em' }}>This month</span>
+                  <span style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 12, color: '#8A8986', background: '#FAFAF7', padding: '3px 9px', borderRadius: 10 }}>{thisMonth.length}</span>
                 </div>
-              )
-            })}
-          </div>
+                <span style={{ fontFamily: BODY_FONT, fontSize: 12, color: '#8A8986' }}>{thisMonthMeta}</span>
+              </div>
+              {thisMonth.map((row, i) => renderScheduledRow(row, 'month', i === thisMonth.length - 1,
+                row.kind === 'pipeline' ? row.alert.item.id : row.grant.id + '-month-' + i))}
+            </div>
+          )}
+
+          {/* Later */}
+          {laterRows.length > 0 && (
+            <div style={{ background: '#fff', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '16px 22px', borderBottom: '1px solid rgba(23,52,4,0.08)', background: '#FAFAF7' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontFamily: UI_FONT, fontWeight: 600, fontSize: 15, color: '#2C2C2A', letterSpacing: '-0.01em' }}>Later</span>
+                  <span style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 12, color: '#8A8986', background: '#F0EFEB', padding: '3px 9px', borderRadius: 10 }}>{laterRows.length}</span>
+                </div>
+                <span style={{ fontFamily: BODY_FONT, fontSize: 12, color: '#8A8986' }}>Awareness only</span>
+              </div>
+              {laterRows.map((row, i) => renderScheduledRow(row, 'later', i === laterRows.length - 1,
+                row.kind === 'pipeline' ? row.alert.item.id : row.grant.id + '-later-' + i))}
+            </div>
+          )}
+
+          {/* Empty state */}
+          {displayedScheduled.length === 0 && (
+            <div style={{ background: '#fff', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, padding: '32px 22px', textAlign: 'center', marginBottom: 16 }}>
+              <p style={{ fontFamily: BODY_FONT, color: '#8A8986', fontSize: 14, margin: 0 }}>
+                {dayFilter ? `No deadlines on ${dateLabel(dayFilter)}.` : 'No scheduled deadlines yet. Add one to get started.'}
+              </p>
+            </div>
+          )}
+
+          {/* Needs a deadline — collapsed housekeeping drawer */}
+          {needsDeadlineAll.length > 0 && (
+            <div style={{ background: '#fff', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, overflow: 'hidden' }}>
+              <button
+                onClick={() => setNeedsDeadlineOpen(o => !o)}
+                style={{
+                  width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+                  padding: '14px 22px', background: '#FAFAF7', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = '#F5F1E8' }}
+                onMouseLeave={e => { e.currentTarget.style.background = '#FAFAF7' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8A8986" strokeWidth="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
+                  </svg>
+                  <span style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 14, color: '#5F5E5A' }}>Needs a deadline</span>
+                  <span style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 12, color: '#8A8986', background: '#F0EFEB', padding: '3px 9px', borderRadius: 10 }}>{needsDeadlineAll.length}</span>
+                </div>
+                <ChevronDown size={16} style={{ color: '#8A8986', transform: needsDeadlineOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+              </button>
+
+              {needsDeadlineOpen && (
+                <div>
+                  {needsDeadlineAll.map((row, idx) => {
+                    const isLast = idx === needsDeadlineAll.length - 1
+                    if (row.kind === 'pipeline') {
+                      const item    = row.item
+                      const amtStr  = formatRange(item.amount_min, item.amount_max ?? item.amount_requested) ?? ''
+                      const val     = deadlineInputs[item.id] ?? ''
+                      const saving  = savingDeadline === item.id
+                      const success = deadlineSuccesses.has(item.id)
+                      return (
+                        <div key={item.id} style={{
+                          display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 12, alignItems: 'center',
+                          padding: '12px 22px', borderBottom: isLast ? 'none' : '1px solid rgba(23,52,4,0.06)',
+                        }}
+                          onMouseEnter={e => { e.currentTarget.style.background = '#FAFAF7' }}
+                          onMouseLeave={e => { e.currentTarget.style.background = '' }}>
+                          <div>
+                            <div style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 14, color: '#2C2C2A', marginBottom: 2 }}>{item.grant_name}</div>
+                            <div style={{ fontFamily: BODY_FONT, fontSize: 12.5, color: '#8A8986' }}>
+                              {item.funder_name !== item.grant_name && <span>{item.funder_name} &middot; </span>}
+                              {amtStr && <span style={{ color: '#639922', fontFamily: UI_FONT, fontWeight: 500 }}>{amtStr}</span>}
+                            </div>
+                          </div>
+                          <DatePickerInput value={val}
+                            onChange={v => setDeadlineInputs(prev => ({ ...prev, [item.id]: v }))} />
+                          {success ? (
+                            <span style={{ fontFamily: UI_FONT, fontSize: 11, fontWeight: 500, color: '#3B6D11', padding: '4px 10px',
+                              background: '#F4F9ED', borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                              <Check size={11} strokeWidth={3} /> Set
+                            </span>
+                          ) : (
+                            <button onClick={() => handleSetDeadline(item.id, val)} disabled={!val || saving}
+                              style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, padding: '6px 12px', border: 'none', borderRadius: 6,
+                                cursor: val && !saving ? 'pointer' : 'not-allowed',
+                                background: val ? '#8ECB3C' : '#F0EFEB', color: val ? '#173404' : '#8A8986' }}>
+                              {saving ? '…' : 'Set date'}
+                            </button>
+                          )}
+                        </div>
+                      )
+                    } else {
+                      const g      = row.grant
+                      const amtStr = g.amountMin || g.amountMax ? (formatRange(g.amountMin || null, g.amountMax || null) ?? '') : ''
+                      const val    = savedInputs[g.id] ?? ''
+                      const saving = savingSaved === g.id
+                      const success = savedSuccesses.has(g.id)
+                      return (
+                        <div key={g.id} style={{
+                          display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 12, alignItems: 'center',
+                          padding: '12px 22px', borderBottom: isLast ? 'none' : '1px solid rgba(23,52,4,0.06)',
+                        }}
+                          onMouseEnter={e => { e.currentTarget.style.background = '#FAFAF7' }}
+                          onMouseLeave={e => { e.currentTarget.style.background = '' }}>
+                          <div>
+                            <div style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 14, color: '#2C2C2A', marginBottom: 2 }}>{g.title}</div>
+                            <div style={{ fontFamily: BODY_FONT, fontSize: 12.5, color: '#8A8986' }}>
+                              {g.funder && g.funder !== g.title && <span>{g.funder} &middot; </span>}
+                              {amtStr && <span style={{ color: '#639922', fontFamily: UI_FONT, fontWeight: 500 }}>{amtStr}</span>}
+                            </div>
+                          </div>
+                          <DatePickerInput value={val}
+                            onChange={v => setSavedInputs(prev => ({ ...prev, [g.id]: v }))} />
+                          {success ? (
+                            <span style={{ fontFamily: UI_FONT, fontSize: 11, fontWeight: 500, color: '#3B6D11', padding: '4px 10px',
+                              background: '#F4F9ED', borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                              <Check size={11} strokeWidth={3} /> Set
+                            </span>
+                          ) : (
+                            <button onClick={() => handleSetSavedDeadline(g, val)} disabled={!val || saving}
+                              style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, padding: '6px 12px', border: 'none', borderRadius: 6,
+                                cursor: val && !saving ? 'pointer' : 'not-allowed',
+                                background: val ? '#8ECB3C' : '#F0EFEB', color: val ? '#173404' : '#8A8986' }}>
+                              {saving ? '…' : 'Set date'}
+                            </button>
+                          )}
+                        </div>
+                      )
+                    }
+                  })}
+                </div>
+              )}
+            </div>
+          )}
 
         </div>
 
-        {/* ── Right column: calendar + sources ── */}
-        <div style={{ minWidth: 0 }} className="deadlines-sidebar">
+        {/* ── Right sidebar ── */}
+        <aside style={{ display: 'flex', flexDirection: 'column', gap: 16, position: 'sticky', top: 24 }} className="deadlines-sidebar">
 
-          {/* Section heading — same height as left heading */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, height: 22 }}>
-            <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13, fontWeight: 500, color: '#2C2C2A' }}>
-              Calendar
-            </span>
-          </div>
-
-          {/* Mini calendar card */}
-          <div style={{ background: '#fff', border: '0.5px solid rgba(0,0,0,0.10)', borderRadius: 10,
-            padding: 12, marginBottom: 12 }}>
+          {/* Calendar */}
+          <div style={{ background: '#fff', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, padding: '18px 20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+              <span style={{ fontFamily: UI_FONT, fontWeight: 600, fontSize: 14, color: '#2C2C2A' }}>Calendar</span>
+              <span style={{ fontFamily: UI_FONT, fontSize: 11.5, color: '#8A8986', fontWeight: 500 }}>{MONTH_NAMES[calMonth]} {calYear}</span>
+            </div>
 
             {/* Nav */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
               <button onClick={() => { if (calMonth === 0) { setCalMonth(11); setCalYear(y => y - 1) } else setCalMonth(m => m - 1) }}
-                style={{ width: 20, height: 20, borderRadius: 6, background: '#F1F0EA', border: 'none',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5F5E5A', cursor: 'pointer' }}>
-                <ChevronLeft size={10} strokeWidth={2.5} />
+                style={{ width: 24, height: 24, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  background: 'transparent', border: 'none', color: '#5F5E5A', cursor: 'pointer', borderRadius: 6 }}
+                onMouseEnter={e => { e.currentTarget.style.background = '#FAFAF7' }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
+                <ChevronLeft size={14} />
               </button>
-              <span style={{ flex: 1, textAlign: 'center', fontFamily: 'var(--font-space-grotesk)',
-                fontSize: 12, fontWeight: 500, color: '#2C2C2A' }}>
+              <span style={{ fontFamily: UI_FONT, fontWeight: 600, fontSize: 13.5, color: '#2C2C2A' }}>
                 {MONTH_NAMES[calMonth]} {calYear}
               </span>
               <button onClick={() => { if (calMonth === 11) { setCalMonth(0); setCalYear(y => y + 1) } else setCalMonth(m => m + 1) }}
-                style={{ width: 20, height: 20, borderRadius: 6, background: '#F1F0EA', border: 'none',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5F5E5A', cursor: 'pointer' }}>
-                <ChevronRight size={10} strokeWidth={2.5} />
+                style={{ width: 24, height: 24, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  background: 'transparent', border: 'none', color: '#5F5E5A', cursor: 'pointer', borderRadius: 6 }}
+                onMouseEnter={e => { e.currentTarget.style.background = '#FAFAF7' }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
+                <ChevronRight size={14} />
               </button>
             </div>
 
             {/* Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 2, fontSize: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 2 }}>
               {['M','T','W','T','F','S','S'].map((d, i) => (
-                <div key={i} style={{ textAlign: 'center', color: '#8A8986', padding: '3px 0',
-                  letterSpacing: '0.05em', fontSize: 9 }}>{d}</div>
+                <div key={i} style={{ textAlign: 'center', fontFamily: UI_FONT, fontWeight: 500, fontSize: 10.5,
+                  color: '#8A8986', padding: '4px 0', letterSpacing: '0.02em' }}>{d}</div>
               ))}
               {calDays.map((day, i) => {
-                const isToday   = day.isToday
-                const cellIso   = day.date.toISOString().split('T')[0]
-                const markers   = day.isCurrentMonth ? calMarkerMap.get(cellIso) : undefined
-                const hasAlerts = !!markers
-                const isActive  = dayFilter === cellIso
-                const hasUrgent = markers?.hasUrgent ?? false
-
-                // Priority: selected > urgent > has-deadline > today > empty
-                let bg = 'transparent'
-                let textColor = day.isCurrentMonth ? '#2C2C2A' : '#C5C3BC'
-                let border = 'none'
-                let fw: number = 400
-
-                if (!day.isCurrentMonth) {
-                  // out-of-month: always plain, no fill
-                } else if (isActive) {
-                  bg = '#8ECB3C'; textColor = '#173404'; fw = 600
-                } else if (hasUrgent) {
-                  bg = '#FAECE7'; textColor = '#993C1D'; fw = 500
-                } else if (hasAlerts) {
-                  bg = '#F1F7E4'; textColor = '#3B6D11'; fw = 500
-                } else if (isToday) {
-                  bg = '#FDFCF8'; textColor = '#3B6D11'; border = '1.5px solid #8ECB3C'; fw = 600
+                const cellIso  = day.date.toISOString().split('T')[0]
+                const markers  = day.isCurrentMonth ? calMarkerMap.get(cellIso) : undefined
+                const hasAlerts= !!markers
+                const isActive = dayFilter === cellIso
+                const hasUrgent= markers?.hasUrgent ?? false
+                let bg = 'transparent', textColor = day.isCurrentMonth ? '#2C2C2A' : '#C5C3BC', border = 'none', fw = 400
+                if (day.isCurrentMonth) {
+                  if      (isActive)   { bg = '#8ECB3C'; textColor = '#173404'; fw = 600 }
+                  else if (hasUrgent)  { bg = '#FAECE7'; textColor = '#993C1D'; fw = 600 }
+                  else if (hasAlerts)  { bg = '#F4F9ED'; textColor = '#639922'; fw = 600 }
+                  else if (day.isToday){ bg = '#FDFCF8'; border = '1.5px solid #8ECB3C'; textColor = '#639922'; fw = 600 }
                 }
-
-                // Hover: deepen fill slightly for interactive days
-                function hoverBg() {
-                  if (isActive) return '#7ABD2E'
-                  if (hasUrgent) return '#F5DDD8'
-                  if (hasAlerts) return '#E5F0D8'
-                  if (isToday) return '#F1F7E4'
-                  return 'transparent'
-                }
-
                 return (
                   <div key={i}
-                    onClick={() => {
-                      if (!day.isCurrentMonth || !hasAlerts) return
-                      setDayFilter(prev => prev === cellIso ? null : cellIso)
-                    }}
-                    style={{
-                      height: 28,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      borderRadius: 6, fontSize: 11, userSelect: 'none',
+                    onClick={() => { if (!day.isCurrentMonth || !hasAlerts) return; setDayFilter(prev => prev === cellIso ? null : cellIso) }}
+                    style={{ height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      borderRadius: 6, fontSize: 12, userSelect: 'none' as const, fontFamily: UI_FONT,
                       color: textColor, background: bg, border, fontWeight: fw,
-                      cursor: hasAlerts && day.isCurrentMonth ? 'pointer' : 'default',
-                    }}
-                    onMouseEnter={e => { if (day.isCurrentMonth) e.currentTarget.style.background = hoverBg() }}
-                    onMouseLeave={e => { e.currentTarget.style.background = bg }}>
+                      cursor: hasAlerts && day.isCurrentMonth ? 'pointer' : 'default' }}
+                    onMouseEnter={e => { if (day.isCurrentMonth && (hasAlerts || day.isToday)) e.currentTarget.style.opacity = '0.85' }}
+                    onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}>
                     {day.date.getDate()}
                   </div>
                 )
               })}
             </div>
 
+            {/* Day filter strip */}
+            {dayFilter && (
+              <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(23,52,4,0.08)',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                <span style={{ fontFamily: BODY_FONT, fontSize: 12.5, color: '#5F5E5A' }}>
+                  Filtered to <strong style={{ color: '#2C2C2A', fontFamily: UI_FONT }}>{dateLabel(dayFilter)}</strong>{' '}
+                  &middot; {displayedScheduled.length} deadline{displayedScheduled.length !== 1 ? 's' : ''}
+                </span>
+                <button onClick={() => setDayFilter(null)}
+                  style={{ fontFamily: UI_FONT, fontSize: 11.5, color: '#5F5E5A', background: 'transparent',
+                    border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
+                  Clear
+                </button>
+              </div>
+            )}
+
             {/* Legend */}
-            <div style={{ marginTop: 10, paddingTop: 8, borderTop: '0.5px solid rgba(0,0,0,0.06)',
-              display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px 6px' }}>
+            <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(23,52,4,0.08)',
+              display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 12px' }}>
               {[
-                { bg: '#F1F7E4', label: 'Has deadline' },
-                { bg: '#FAECE7', label: 'Urgent'       },
-                { bg: '#FDFCF8', label: 'Today', border: '1.5px solid #8ECB3C' },
-                { bg: '#8ECB3C', label: 'Selected'     },
+                { bg: '#FAECE7', label: 'Urgent (≤7d)' },
+                { bg: '#F4F9ED', label: 'Has deadline' },
+                { bg: '#8ECB3C', label: 'Selected' },
+                { bg: '#FDFCF8', border: '1.5px solid #8ECB3C', label: 'Today' },
               ].map(({ bg: d, label, border: b }) => (
-                <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <span style={{ width: 12, height: 12, borderRadius: 4, background: d,
+                <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ width: 10, height: 10, borderRadius: 3, background: d,
                     border: b ?? 'none', display: 'inline-block', flexShrink: 0 }} />
-                  <span style={{ fontSize: 11, color: '#5F5E5A' }}>{label}</span>
+                  <span style={{ fontFamily: BODY_FONT, fontSize: 11.5, color: '#5F5E5A' }}>{label}</span>
                 </div>
               ))}
             </div>
-
           </div>
 
           {/* Sources filter */}
-          <div style={{ background: '#F5F1E8', borderRadius: 10, padding: '10px 12px' }}>
-            <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 11, fontWeight: 500,
-              color: '#2C2C2A', marginBottom: 6 }}>Sources</div>
-            {[
-              { label: 'Pipeline', checked: showPipeline, count: alerts.length,        toggle: () => setShowPipeline(v => !v) },
-              { label: 'Saved',    checked: showSaved,    count: savedGrantRows.length + savedNoDeadline.length, toggle: () => setShowSaved(v => !v)    },
-              { label: 'Matches',  checked: showMatches,  count: matchRows.length,      toggle: () => setShowMatches(v => !v)  },
-            ].map(({ label, checked, count, toggle }) => (
-              <label key={label} onClick={toggle}
-                style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#2C2C2A',
-                  padding: '3px 0', cursor: 'pointer', userSelect: 'none' }}>
-                <span style={{ width: 12, height: 12, borderRadius: 3, display: 'inline-flex',
-                  alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                  background: checked ? '#639922' : '#fff',
-                  border: checked ? 'none' : '1.5px solid #D9D6CB' }}>
-                  {checked && <Check size={8} strokeWidth={4} color="#fff" />}
-                </span>
-                {label}
-                <span style={{ color: '#8A8986', marginLeft: 'auto' }}>{count}</span>
-              </label>
-            ))}
+          <div style={{ background: '#fff', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, padding: '18px 20px' }}>
+            <div style={{ fontFamily: UI_FONT, fontWeight: 600, fontSize: 14, color: '#2C2C2A', marginBottom: 14 }}>
+              Show deadlines from
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {[
+                { label: 'Pipeline',     checked: showPipeline, count: alerts.length,        toggle: () => setShowPipeline(v => !v)  },
+                { label: 'Saved grants', checked: showSaved,    count: savedGrantRows.length + savedNoDeadline.length, toggle: () => setShowSaved(v => !v) },
+                { label: 'Live matches', checked: showMatches,  count: matchRows.length,      toggle: () => setShowMatches(v => !v)   },
+              ].map(({ label, checked, count, toggle }) => (
+                <div key={label} onClick={toggle}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '7px 10px', margin: '0 -10px', borderRadius: 6, cursor: 'pointer', userSelect: 'none' as const }}
+                  onMouseEnter={e => { e.currentTarget.style.background = '#FAFAF7' }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ width: 16, height: 16, borderRadius: 4, flexShrink: 0,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      background: checked ? '#173404' : '#fff',
+                      border: checked ? 'none' : '1.5px solid rgba(23,52,4,0.14)' }}>
+                      {checked && <Check size={10} strokeWidth={3} style={{ color: '#fff' }} />}
+                    </div>
+                    <span style={{ fontFamily: UI_FONT, fontSize: 13, color: '#2C2C2A' }}>{label}</span>
+                  </div>
+                  <span style={{ fontFamily: UI_FONT, fontSize: 11.5, color: '#8A8986' }}>{count}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
-        </div>
+        </aside>
 
       </div>
 
-      {/* Responsive style — hide sidebar ≤900px */}
-      <style>{`
-        @media (max-width: 900px) {
-          .deadlines-layout { grid-template-columns: minmax(0,1fr) !important; }
-          .deadlines-sidebar { display: none !important; }
-        }
-        @media (max-width: 680px) {
-          .deadlines-layout .row-wrap { flex-wrap: wrap; }
-        }
-      `}</style>
+      {/* Responsive */}
+      <style dangerouslySetInnerHTML={{ __html: '@media (max-width: 1024px) { .deadlines-layout { grid-template-columns: minmax(0,1fr) \!important; } .deadlines-sidebar { position: static \!important; } }' }} />
 
       {/* Edit deadline modal */}
       {editItem && (
@@ -1425,7 +1401,7 @@ export default function DeadlinesPage() {
           onSaved={() => { setEditItem(null); loadData(); showToast('Deadline updated!') }} />
       )}
 
-      {/* Day alerts sheet (multiple items on same day) */}
+      {/* Day alerts sheet */}
       {dayPickerAlerts && (
         <DayAlertsSheet alerts={dayPickerAlerts} onClose={() => setDayPickerAlerts(null)}
           onSelect={item => { setDayPickerAlerts(null); setEditItem(item) }} />
