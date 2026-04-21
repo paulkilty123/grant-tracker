@@ -740,7 +740,7 @@ export default function OnboardingWizardPage() {
         alerts_enabled:               true,
         alert_frequency:              'weekly',
         alert_min_score:              70,
-        website_url:                  null,
+        website_url:                  url.trim() ? (url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim()) : null,
       }
 
       let currentOrgId = orgId
