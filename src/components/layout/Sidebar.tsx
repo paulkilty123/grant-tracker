@@ -80,7 +80,7 @@ export default function Sidebar({ org, userEmail }: Props) {
   const userMenuRef = useRef<HTMLDivElement>(null)
 
   const profileScore = matchProfileScore(org)
-  const showBadge    = org != null && profileScore < 80
+  const showBadge    = org != null && profileScore > 0
 
   const orgName  = org?.name ?? null
   const initials = orgName
