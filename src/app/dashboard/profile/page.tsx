@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { getOrganisationsByOwner, updateOrganisation } from '@/lib/organisations'
-import { Pencil, Plus, ChevronDown, RotateCcw, Globe, Check, X, Star } from 'lucide-react'
+import { getOrganisationsByOwner, updateOrganisation, deleteOrganisation } from '@/lib/organisations'
+import { Pencil, Plus, ChevronDown, RotateCcw, Globe, Check, X, Star, Trash2, AlertTriangle } from 'lucide-react'
 import type { Organisation, LegalStructure, OrgStage, ImpactSector, FundingType, BeneficiaryGroup } from '@/types'
 
 /* ═══════════════════════════════════════════════
@@ -38,6 +38,21 @@ const T = {
 
 const UI  = 'var(--font-space-grotesk)'
 const BODY = 'var(--font-dm-sans)'
+
+/* ═══════════════════════════════════════════════
+   Field → card mapping for jump-to-edit
+   ═══════════════════════════════════════════════ */
+type CardId = 'about' | 'focus' | 'location' | 'funding' | 'story'
+
+const FIELD_TO_CARD: Record<string, CardId> = {
+  'Impact sector':     'focus',
+  'Who you serve':     'focus',
+  'Location':          'location',
+  'Legal structure':   'about',
+  'Annual income':     'about',
+  'Grant size range':  'funding',
+  'Mission statement': 'story',
+}
 
 /* ═══════════════════════════════════════════════
    Option data
@@ -441,18 +456,13 @@ function OrgSwitcher({ orgs, activeOrgId, onSwitch }: {
 /* ═══════════════════════════════════════════════
    Completion Meter
    ═══════════════════════════════════════════════ */
-function CompletionMeter({ org }: { org: Organisation }) {
+function CompletionMeter({ org, onJumpToCard }: { org: Organisation; onJumpToCard: (card: CardId) => void }) {
   const { pct, missing } = computeCompleteness(org)
   const variant = pct >= 80
     ? { border: T.strongBorder,  bg: T.strongPanel,  label: T.strongBorder  }
     : pct >= 60
     ? { border: T.partialBorder, bg: T.partialPanel, label: T.partialBorder }
     : { border: T.weakBorder,    bg: T.weakPanel,    label: T.weakBorder    }
-
-  const topMissing = missing.slice(0, 2).map(m => m.label).join(' and ')
-  const caption = topMissing
-    ? `Add ${topMissing.toLowerCase()} to improve your match quality`
-    : 'Your profile is complete — matches are fully optimised'
 
   return (
     <div style={{
@@ -464,11 +474,40 @@ function CompletionMeter({ org }: { org: Organisation }) {
       </div>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 10 }}>
         <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 24, color: T.textPrimary, letterSpacing: '-0.01em' }}>{pct}%</span>
-        <span style={{ fontFamily: BODY, fontSize: 14, color: T.textSecondary }}>{caption}</span>
+        <span style={{ fontFamily: BODY, fontSize: 14, color: T.textSecondary }}>
+          {missing.length === 0
+            ? 'Your profile is complete — matches are fully optimised'
+            : 'Click any missing field below to complete it'}
+        </span>
       </div>
-      <div style={{ height: 6, background: 'rgba(23,52,4,0.06)', borderRadius: 3, overflow: 'hidden' }}>
+      <div style={{ height: 6, background: 'rgba(23,52,4,0.06)', borderRadius: 3, overflow: 'hidden', marginBottom: missing.length > 0 ? 14 : 0 }}>
         <div style={{ height: '100%', width: `${pct}%`, background: variant.border, borderRadius: 3, transition: 'width 0.4s ease' }} />
       </div>
+      {missing.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          {missing.map(m => {
+            const card = FIELD_TO_CARD[m.label]
+            return (
+              <button
+                key={m.label}
+                onClick={() => card && onJumpToCard(card)}
+                style={{
+                  fontFamily: UI, fontWeight: 500, fontSize: 12,
+                  padding: '4px 10px', borderRadius: 8, cursor: 'pointer',
+                  border: `1px solid ${m.impact === 'high' ? '#C97B1A' : T.borderStrong}`,
+                  background: m.impact === 'high' ? '#FEF3E2' : T.pageBg,
+                  color: m.impact === 'high' ? '#854F0B' : T.textSecondary,
+                  display: 'inline-flex', alignItems: 'center', gap: 5,
+                  transition: 'all 0.12s',
+                }}
+              >
+                {m.impact === 'high' && <AlertTriangle size={10} />}
+                + {m.label}
+              </button>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
@@ -517,7 +556,7 @@ function ScanBar({ website }: { website?: string | null }) {
 /* ═══════════════════════════════════════════════
    Card shell (shared wrapper)
    ═══════════════════════════════════════════════ */
-function CardShell({ title, badge, isEditing, onEdit, editDisabled, children, footer }: {
+function CardShell({ title, badge, isEditing, onEdit, editDisabled, children, footer, hasIncomplete, cardId }: {
   title: string
   badge?: React.ReactNode
   isEditing: boolean
@@ -525,12 +564,15 @@ function CardShell({ title, badge, isEditing, onEdit, editDisabled, children, fo
   editDisabled?: boolean
   children: React.ReactNode
   footer?: React.ReactNode
+  hasIncomplete?: boolean
+  cardId?: string
 }) {
+  const borderColor = isEditing ? T.greenDeep : hasIncomplete ? '#C97B1A' : T.border
   return (
-    <section style={{
-      background: T.white, border: `1px solid ${isEditing ? T.greenDeep : T.border}`,
+    <section id={cardId} style={{
+      background: T.white, border: `1px solid ${borderColor}`,
       borderRadius: 12, overflow: 'hidden',
-      boxShadow: isEditing ? '0 0 0 3px rgba(23,52,4,0.05)' : 'none',
+      boxShadow: isEditing ? '0 0 0 3px rgba(23,52,4,0.05)' : hasIncomplete ? '0 0 0 3px rgba(201,123,26,0.06)' : 'none',
       transition: 'border-color 0.15s, box-shadow 0.15s',
     }}>
       {/* Header */}
@@ -631,15 +673,20 @@ interface AboutDraft {
   alsoIndividualPractitioner: boolean
 }
 
-function AboutCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd }: {
+function AboutCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd, triggerOpen, onTriggered, hasIncomplete }: {
   org: Organisation; orgId: string
   onSaved: () => void; isEditingOther: boolean
   onEditStart: () => void; onEditEnd: () => void
+  triggerOpen?: boolean; onTriggered?: () => void; hasIncomplete?: boolean
 }) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState<AboutDraft | null>(null)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (triggerOpen && !editing) { startEdit(); onTriggered?.() }
+  }, [triggerOpen])
 
   function startEdit() {
     setDraft({
@@ -682,9 +729,11 @@ function AboutCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
   return (
     <CardShell
       title="About your organisation"
+      cardId="card-about"
       isEditing={editing}
       onEdit={startEdit}
       editDisabled={isEditingOther}
+      hasIncomplete={!editing && hasIncomplete}
       footer={editing ? <><CancelBtn onClick={cancel} /><SaveBtn saving={saving} onClick={save} /></> : undefined}
     >
       {editing && draft ? (
@@ -797,15 +846,20 @@ interface FocusDraft {
   beneficiaryGroups: BeneficiaryGroup[]
 }
 
-function FocusCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd }: {
+function FocusCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd, triggerOpen, onTriggered, hasIncomplete }: {
   org: Organisation; orgId: string
   onSaved: () => void; isEditingOther: boolean
   onEditStart: () => void; onEditEnd: () => void
+  triggerOpen?: boolean; onTriggered?: () => void; hasIncomplete?: boolean
 }) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState<FocusDraft | null>(null)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (triggerOpen && !editing) { startEdit(); onTriggered?.() }
+  }, [triggerOpen])
 
   function startEdit() {
     setDraft({
@@ -896,9 +950,11 @@ function FocusCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
   return (
     <CardShell
       title="Your focus"
+      cardId="card-focus"
       isEditing={editing}
       onEdit={startEdit}
       editDisabled={isEditingOther}
+      hasIncomplete={!editing && hasIncomplete}
       footer={editing ? <><CancelBtn onClick={cancel} /><SaveBtn saving={saving} onClick={save} /></> : undefined}
     >
       {editing && draft ? (
@@ -1075,14 +1131,19 @@ function FocusCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
    ═══════════════════════════════════════════════ */
 interface LocationDraft { primaryLocation: string; geographicReach: string }
 
-function LocationCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd }: {
+function LocationCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd, triggerOpen, onTriggered, hasIncomplete }: {
   org: Organisation; orgId: string; onSaved: () => void
   isEditingOther: boolean; onEditStart: () => void; onEditEnd: () => void
+  triggerOpen?: boolean; onTriggered?: () => void; hasIncomplete?: boolean
 }) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState<LocationDraft | null>(null)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (triggerOpen && !editing) { startEdit(); onTriggered?.() }
+  }, [triggerOpen])
 
   function startEdit() {
     setDraft({ primaryLocation: org.primary_location ?? '', geographicReach: org.geographic_reach ?? '' })
@@ -1112,9 +1173,11 @@ function LocationCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEdit
   return (
     <CardShell
       title="Location and reach"
+      cardId="card-location"
       isEditing={editing}
       onEdit={startEdit}
       editDisabled={isEditingOther}
+      hasIncomplete={!editing && hasIncomplete}
       footer={editing ? <><CancelBtn onClick={cancel} /><SaveBtn saving={saving} onClick={save} /></> : undefined}
     >
       {editing && draft ? (
@@ -1165,14 +1228,19 @@ interface FundingDraft {
   fundingTypePreferences: FundingType[]
 }
 
-function FundingCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd }: {
+function FundingCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd, triggerOpen, onTriggered, hasIncomplete }: {
   org: Organisation; orgId: string; onSaved: () => void
   isEditingOther: boolean; onEditStart: () => void; onEditEnd: () => void
+  triggerOpen?: boolean; onTriggered?: () => void; hasIncomplete?: boolean
 }) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState<FundingDraft | null>(null)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (triggerOpen && !editing) { startEdit(); onTriggered?.() }
+  }, [triggerOpen])
 
   function startEdit() {
     setDraft({
@@ -1220,9 +1288,11 @@ function FundingCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditE
   return (
     <CardShell
       title="Funding preferences"
+      cardId="card-funding"
       isEditing={editing}
       onEdit={startEdit}
       editDisabled={isEditingOther}
+      hasIncomplete={!editing && hasIncomplete}
       footer={editing ? <><CancelBtn onClick={cancel} /><SaveBtn saving={saving} onClick={save} /></> : undefined}
     >
       {editing && draft ? (
@@ -1302,9 +1372,10 @@ function FundingCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditE
 /* ═══════════════════════════════════════════════
    Card 5 — Your story (mission)
    ═══════════════════════════════════════════════ */
-function StoryCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd }: {
+function StoryCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd, triggerOpen, onTriggered, hasIncomplete }: {
   org: Organisation; orgId: string; onSaved: () => void
   isEditingOther: boolean; onEditStart: () => void; onEditEnd: () => void
+  triggerOpen?: boolean; onTriggered?: () => void; hasIncomplete?: boolean
 }) {
   const [editing, setEditing] = useState(false)
   const [mission, setMission] = useState('')
@@ -1312,6 +1383,10 @@ function StoryCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
   const [saveError, setSaveError] = useState<string | null>(null)
 
   const hasMission = !!org.mission?.trim()
+
+  useEffect(() => {
+    if (triggerOpen && !editing) { startEdit(); onTriggered?.() }
+  }, [triggerOpen])
 
   function startEdit() {
     setMission(org.mission ?? '')
@@ -1334,12 +1409,13 @@ function StoryCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
     </span>
   ) : null
 
+  const storyBorder = editing ? T.greenDeep : (!hasMission && hasIncomplete) ? '#C97B1A' : hasMission ? T.border : 'rgba(142,203,60,0.2)'
   return (
-    <section style={{
+    <section id="card-story" style={{
       background: hasMission ? T.white : 'linear-gradient(135deg, #FDFCF7 0%, #F8F5EC 100%)',
-      border: `1px solid ${editing ? T.greenDeep : hasMission ? T.border : 'rgba(142,203,60,0.2)'}`,
+      border: `1px solid ${storyBorder}`,
       borderRadius: 12, overflow: 'hidden',
-      boxShadow: editing ? '0 0 0 3px rgba(23,52,4,0.05)' : 'none',
+      boxShadow: editing ? '0 0 0 3px rgba(23,52,4,0.05)' : (!hasMission && hasIncomplete) ? '0 0 0 3px rgba(201,123,26,0.06)' : 'none',
       transition: 'border-color 0.15s, box-shadow 0.15s',
     }}>
       {/* Header */}
@@ -1425,13 +1501,14 @@ function StoryCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
 /* ═══════════════════════════════════════════════
    Main component
    ═══════════════════════════════════════════════ */
-type CardId = 'about' | 'focus' | 'location' | 'funding' | 'story'
-
 export default function ProfilePage() {
   const [orgs, setOrgs] = useState<Organisation[]>([])
   const [activeOrgId, setActiveOrgId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [editingCard, setEditingCard] = useState<CardId | null>(null)
+  const [jumpTarget, setJumpTarget] = useState<CardId | null>(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const activeOrg = orgs.find(o => o.id === activeOrgId) ?? orgs[0] ?? null
 
@@ -1468,6 +1545,34 @@ export default function ProfilePage() {
   function stopEditing() {
     setEditingCard(null)
   }
+  function onJumpToCard(card: CardId) {
+    setJumpTarget(card)
+    setEditingCard(card)
+    setTimeout(() => {
+      const el = document.getElementById(`card-${card}`)
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 60)
+  }
+  async function handleDeleteOrg() {
+    if (!activeOrg) return
+    setDeleting(true)
+    try {
+      await deleteOrganisation(activeOrg.id)
+      const remaining = orgs.filter(o => o.id !== activeOrg.id)
+      setOrgs(remaining)
+      const nextId = remaining[0]?.id ?? null
+      setActiveOrgId(nextId)
+      if (typeof window !== 'undefined') {
+        if (nextId) localStorage.setItem('gt_active_org_id', nextId)
+        else localStorage.removeItem('gt_active_org_id')
+      }
+      setShowDeleteConfirm(false)
+      setEditingCard(null)
+      if (!nextId) window.location.href = '/onboarding/wizard'
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Delete failed')
+    } finally { setDeleting(false) }
+  }
 
   if (loading) {
     return (
@@ -1490,6 +1595,9 @@ export default function ProfilePage() {
     )
   }
 
+  const { missing: missingFields } = computeCompleteness(activeOrg)
+  const incompleteCards = new Set(missingFields.map(m => FIELD_TO_CARD[m.label]).filter(Boolean) as CardId[])
+
   const cardProps = (id: CardId) => ({
     org: activeOrg,
     orgId: activeOrg.id,
@@ -1497,6 +1605,9 @@ export default function ProfilePage() {
     isEditingOther: editingCard !== null && editingCard !== id,
     onEditStart: () => startEditing(id),
     onEditEnd: stopEditing,
+    triggerOpen: jumpTarget === id,
+    onTriggered: () => setJumpTarget(null),
+    hasIncomplete: incompleteCards.has(id),
   })
 
   return (
@@ -1523,7 +1634,7 @@ export default function ProfilePage() {
         )}
 
         {/* Completion meter */}
-        <CompletionMeter org={activeOrg} />
+        <CompletionMeter org={activeOrg} onJumpToCard={onJumpToCard} />
 
         {/* Website scan bar — shown once website_url field exists on org */}
 
@@ -1536,7 +1647,70 @@ export default function ProfilePage() {
           <StoryCard    {...cardProps('story')} />
         </div>
 
-        {/* Footer */}
+        {/* Delete org danger zone */}
+        <div style={{ marginTop: 40, paddingTop: 24, borderTop: `1px solid ${T.border}` }}>
+          {!showDeleteConfirm ? (
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              style={{
+                fontFamily: UI, fontWeight: 500, fontSize: 13,
+                color: '#B94040', background: 'transparent',
+                border: '1px solid rgba(185,64,64,0.25)', borderRadius: 8,
+                padding: '8px 16px', cursor: 'pointer',
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+              }}
+            >
+              <Trash2 size={14} />
+              Delete this organisation
+            </button>
+          ) : (
+            <div style={{
+              background: '#FEF2F2', border: '1px solid rgba(185,64,64,0.3)',
+              borderRadius: 10, padding: '18px 20px',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 14 }}>
+                <AlertTriangle size={16} style={{ color: '#B94040', flexShrink: 0, marginTop: 2 }} />
+                <div>
+                  <div style={{ fontFamily: UI, fontWeight: 600, fontSize: 14, color: '#7A2020', marginBottom: 4 }}>
+                    Delete &ldquo;{activeOrg.name}&rdquo;?
+                  </div>
+                  <div style={{ fontFamily: BODY, fontSize: 13, color: '#9A4040', lineHeight: 1.5 }}>
+                    This will permanently remove the organisation, its profile, and all pipeline records. This cannot be undone.
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  onClick={handleDeleteOrg}
+                  disabled={deleting}
+                  style={{
+                    fontFamily: UI, fontWeight: 600, fontSize: 13,
+                    background: '#B94040', color: '#fff',
+                    border: 'none', borderRadius: 8,
+                    padding: '8px 18px', cursor: deleting ? 'not-allowed' : 'pointer',
+                    opacity: deleting ? 0.7 : 1,
+                  }}
+                >
+                  {deleting ? 'Deleting…' : 'Yes, delete it'}
+                </button>
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  disabled={deleting}
+                  style={{
+                    fontFamily: UI, fontWeight: 500, fontSize: 13,
+                    background: 'transparent', color: '#7A2020',
+                    border: '1px solid rgba(185,64,64,0.25)', borderRadius: 8,
+                    padding: '8px 16px', cursor: 'pointer',
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+{/* Footer */}
         <div style={{ marginTop: 32, paddingTop: 24, borderTop: `1px solid ${T.border}`, display: 'flex', gap: 20, fontFamily: UI, fontSize: 13, color: T.textTertiary }}>
           <a href="/dashboard/settings" style={{ color: T.textSecondary, textDecoration: 'none' }}>
             Account &amp; notifications →
