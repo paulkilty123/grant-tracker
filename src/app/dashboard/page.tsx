@@ -162,7 +162,7 @@ export default async function DashboardPage() {
   }))
   const totalValue = stageValues.reduce((sum, s) => sum + s.value, 0)
 
-  const alerts = getDeadlineAlerts(items).slice(0, 4)
+  const alerts = getDeadlineAlerts(items).slice(0, 3)
 
   // ── Greeting ─────────────────────────────────────────────────────────────
   const rawName: string =
