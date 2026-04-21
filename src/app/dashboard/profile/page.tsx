@@ -418,6 +418,22 @@ function OrgSwitcher({ orgs, activeOrgId, onSwitch }: {
           </div>
         )}
       </div>
+
+      {/* Add organisation button */}
+      <a
+        href="/onboarding/wizard"
+        style={{
+          fontFamily: UI, fontWeight: 500, fontSize: 13,
+          color: T.textSecondary, textDecoration: 'none',
+          border: `0.5px solid ${T.borderStrong}`,
+          padding: '7px 14px', borderRadius: 8,
+          display: 'inline-flex', alignItems: 'center', gap: 6,
+          flexShrink: 0,
+        }}
+      >
+        <Plus size={13} />
+        Add organisation
+      </a>
     </div>
   )
 }
