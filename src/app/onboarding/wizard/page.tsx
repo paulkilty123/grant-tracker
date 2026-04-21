@@ -122,10 +122,10 @@ const FUNDING_TYPES: { value: FundingType; label: string; desc: string }[] = [
    Types
    ═══════════════════════════════════════════════ */
 
-type WizardStep = 'entry' | 'review' | 'manual' | 'sectors' | 'location' | 'reveal'
+type WizardStep = 'entry' | 'review' | 'manual' | 'sectors' | 'beneficiaries' | 'location' | 'reveal'
 
 const STEP_DOT_POS: Record<WizardStep, number> = {
-  entry: 1, review: 2, manual: 2, sectors: 3, location: 4, reveal: 5,
+  entry: 1, review: 2, manual: 2, sectors: 3, beneficiaries: 4, location: 5, reveal: 6,
 }
 
 type FieldConfidence = 'confident' | 'uncertain' | 'missing'
@@ -179,6 +179,7 @@ interface WizardState {
   minGrantTarget:   string   // raw digit string, formatted on display
   maxGrantTarget:   string
   fundingTypes:     FundingType[]
+  nicheTags:        string[]
 }
 
 const EMPTY_STATE: WizardState = {
@@ -187,6 +188,7 @@ const EMPTY_STATE: WizardState = {
   impactSectors: [], beneficiaryGroups: [],
   minGrantTarget: '', maxGrantTarget: '',
   fundingTypes: ['grant', 'programme', 'investment', 'in_kind'],
+  nicheTags: [],
 }
 
 /* ═══════════════════════════════════════════════
@@ -271,7 +273,7 @@ const ACTIONS_STYLE: React.CSSProperties = {
   borderTop: `0.5px solid ${T.borderLight}`,
 }
 
-function StepDots({ active, total = 5 }: { active: number; total?: number }) {
+function StepDots({ active, total = 6 }: { active: number; total?: number }) {
   return (
     <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
       {Array.from({ length: total }, (_, i) => {
@@ -567,6 +569,7 @@ export default function OnboardingWizardPage() {
           fundingTypes:     (org.funding_type_preferences as FundingType[])?.length
                               ? (org.funding_type_preferences as FundingType[])
                               : ['grant', 'programme', 'investment', 'in_kind'],
+          nicheTags:        (org.niche_tags as string[]) ?? [],
         })
       }
       setLoading(false)
@@ -679,6 +682,13 @@ export default function OnboardingWizardPage() {
   function makePrimaryBeneficiary(b: BeneficiaryGroup) {
     setState(prev => ({ ...prev, beneficiaryGroups: [b, ...prev.beneficiaryGroups.filter(x => x !== b)] }))
   }
+  function toggleNicheTag(tag: string) {
+    setState(prev => {
+      const cur = prev.nicheTags
+      if (cur.includes(tag)) return { ...prev, nicheTags: cur.filter(x => x !== tag) }
+      return { ...prev, nicheTags: [...cur, tag] }
+    })
+  }
   function toggleFundingType(t: FundingType) {
     setState(prev => ({
       ...prev,
@@ -704,6 +714,7 @@ export default function OnboardingWizardPage() {
         also_individual_practitioner: false,
         impact_sectors:               state.impactSectors,
         beneficiary_groups:           state.beneficiaryGroups,
+        niche_tags:                   state.nicheTags,
         annual_income_band:           state.annualIncomeBand || null,
         primary_location:             state.primaryLocation.trim() || null,
         geographic_reach:             state.geographicReach || null,
@@ -721,7 +732,6 @@ export default function OnboardingWizardPage() {
         funder_type_preferences:      [],
         funding_type_preferences:     state.fundingTypes,
         funding_subtype_preferences:  [],
-        niche_tags:                   [],
         has_asset_lock:               null,
         years_trading:                null,
         owner_id:                     userId,
@@ -791,7 +801,8 @@ export default function OnboardingWizardPage() {
     }
   }
 
-  const sectorsValid  = state.impactSectors.length > 0 && state.beneficiaryGroups.length > 0
+  const sectorsValid      = state.impactSectors.length > 0
+  const beneficiariesValid = state.beneficiaryGroups.length > 0
   const locationValid = !!(state.name.trim() && state.legalStructure)
 
   if (loading) {
@@ -890,14 +901,24 @@ export default function OnboardingWizardPage() {
       {step === 'sectors' && (
         <StepSectors
           impactSectors={state.impactSectors}
-          beneficiaryGroups={state.beneficiaryGroups}
+          nicheTags={state.nicheTags}
           toggleSector={toggleSector}
           makePrimarySector={makePrimarySector}
+          toggleNicheTag={toggleNicheTag}
+          onBack={() => setStep(extracted ? 'review' : 'manual')}
+          onContinue={() => setStep('beneficiaries')}
+          canContinue={sectorsValid}
+        />
+      )}
+
+      {step === 'beneficiaries' && (
+        <StepBeneficiaries
+          beneficiaryGroups={state.beneficiaryGroups}
           toggleBeneficiary={toggleBeneficiary}
           makePrimaryBeneficiary={makePrimaryBeneficiary}
-          onBack={() => setStep(extracted ? 'review' : 'manual')}
+          onBack={() => setStep('sectors')}
           onContinue={() => setStep('location')}
-          canContinue={sectorsValid}
+          canContinue={beneficiariesValid}
         />
       )}
 
@@ -909,7 +930,7 @@ export default function OnboardingWizardPage() {
           saving={saving}
           saveError={saveError}
           canContinue={locationValid}
-          onBack={() => setStep('sectors')}
+          onBack={() => setStep('beneficiaries')}
           onFinish={handleFinish}
         />
       )}
@@ -1198,17 +1219,81 @@ function StepManual({ state, update, onBack, onContinue }: {
 }
 
 /* ═══════════════════════════════════════════════
-   Step 3 — Sector + beneficiary pickers
+   Sub-tags by sector (Step 3a)
    ═══════════════════════════════════════════════ */
 
-function StepSectors({ impactSectors, beneficiaryGroups, toggleSector, makePrimarySector, toggleBeneficiary, makePrimaryBeneficiary, onBack, onContinue, canContinue }: {
-  impactSectors: ImpactSector[]; beneficiaryGroups: BeneficiaryGroup[]
-  toggleSector: (s: ImpactSector) => void; makePrimarySector: (s: ImpactSector) => void
-  toggleBeneficiary: (b: BeneficiaryGroup) => void; makePrimaryBeneficiary: (b: BeneficiaryGroup) => void
+const NICHE_TAGS_BY_SECTOR: Partial<Record<ImpactSector, { value: string; label: string }[]>> = {
+  creative: [
+    { value: 'music',           label: 'Music' },
+    { value: 'theatre',         label: 'Theatre & Drama' },
+    { value: 'dance',           label: 'Dance' },
+    { value: 'visual_arts',     label: 'Visual Arts' },
+    { value: 'film_media',      label: 'Film & Media' },
+    { value: 'literature',      label: 'Literature & Writing' },
+    { value: 'crafts',          label: 'Crafts & Making' },
+    { value: 'circus_street',   label: 'Circus & Street Arts' },
+  ],
+  sport: [
+    { value: 'football',        label: 'Football' },
+    { value: 'cricket',         label: 'Cricket' },
+    { value: 'rugby',           label: 'Rugby' },
+    { value: 'basketball',      label: 'Basketball' },
+    { value: 'swimming',        label: 'Swimming' },
+    { value: 'athletics',       label: 'Athletics' },
+    { value: 'tennis',          label: 'Tennis' },
+    { value: 'cycling',         label: 'Cycling' },
+    { value: 'martial_arts',    label: 'Martial Arts & Boxing' },
+    { value: 'disability_sport',label: 'Disability Sport' },
+    { value: 'women_in_sport',  label: 'Women in Sport' },
+  ],
+  heritage: [
+    { value: 'built_heritage',      label: 'Historic Buildings' },
+    { value: 'industrial_heritage', label: 'Industrial Heritage' },
+    { value: 'natural_heritage',    label: 'Natural Heritage' },
+    { value: 'museums_archives',    label: 'Museums & Archives' },
+  ],
+  environment: [
+    { value: 'climate',          label: 'Climate & Net Zero' },
+    { value: 'biodiversity',     label: 'Biodiversity & Wildlife' },
+    { value: 'urban_greening',   label: 'Urban Greening' },
+    { value: 'marine',           label: 'Marine & Coastal' },
+    { value: 'energy',           label: 'Renewable Energy' },
+    { value: 'circular_economy', label: 'Circular Economy & Zero Waste' },
+  ],
+  social_economy: [
+    { value: 'worker_cooperative',  label: 'Worker Co-operative' },
+    { value: 'community_shares',    label: 'Community Shares' },
+    { value: 'social_franchise',    label: 'Social Franchise' },
+    { value: 'community_ownership', label: 'Community Ownership' },
+  ],
+  social_innovation: [
+    { value: 'tech_for_good',      label: 'Tech for Good' },
+    { value: 'impact_measurement', label: 'Impact Measurement' },
+    { value: 'systems_change',     label: 'Systems Change' },
+  ],
+  education: [
+    { value: 'early_years',       label: 'Early Years' },
+    { value: 'stem',              label: 'STEM' },
+    { value: 'literacy_numeracy', label: 'Literacy & Numeracy' },
+    { value: 'higher_education',  label: 'Higher Education' },
+    { value: 'vocational',        label: 'Vocational & Apprenticeships' },
+    { value: 'digital_literacy',  label: 'Digital Literacy' },
+  ],
+}
+
+/* ═══════════════════════════════════════════════
+   Step 3a — Sectors + sub-tags
+   ═══════════════════════════════════════════════ */
+
+function StepSectors({ impactSectors, nicheTags, toggleSector, makePrimarySector, toggleNicheTag, onBack, onContinue, canContinue }: {
+  impactSectors: ImpactSector[]
+  nicheTags: string[]
+  toggleSector: (s: ImpactSector) => void
+  makePrimarySector: (s: ImpactSector) => void
+  toggleNicheTag: (tag: string) => void
   onBack: () => void; onContinue: () => void; canContinue: boolean
 }) {
-  const sectorMax      = impactSectors.length >= 4
-  const beneficiaryMax = beneficiaryGroups.length >= 4
+  const sectorMax = impactSectors.length >= 4
 
   function chipStateFor(arr: string[], val: string): 'unselected' | 'secondary' | 'primary' {
     const idx = arr.indexOf(val)
@@ -1216,6 +1301,9 @@ function StepSectors({ impactSectors, beneficiaryGroups, toggleSector, makePrima
     if (idx > 0)   return 'secondary'
     return 'unselected'
   }
+
+  // Which sectors have sub-tags and are currently selected
+  const nicheSectors = impactSectors.filter(s => NICHE_TAGS_BY_SECTOR[s])
 
   return (
     <>
@@ -1246,8 +1334,92 @@ function StepSectors({ impactSectors, beneficiaryGroups, toggleSector, makePrima
         })}
       </div>
 
-      {/* Beneficiaries */}
-      <div style={{ marginBottom: 10, marginTop: 8 }}>
+      {/* Sub-tag panel — shown when any selected sector has sub-tags */}
+      {nicheSectors.length > 0 && (
+        <div style={{
+          background: '#F5F1E8',
+          borderLeft: '3px solid #8ECB3C',
+          borderRadius: 8,
+          padding: '12px 14px',
+          marginBottom: 20,
+        }}>
+          {nicheSectors.map(sector => {
+            const opts = NICHE_TAGS_BY_SECTOR[sector]!
+            const label = IMPACT_SECTORS.find(o => o.value === sector)?.label ?? sector
+            return (
+              <div key={sector} style={{ marginBottom: nicheSectors.indexOf(sector) < nicheSectors.length - 1 ? 14 : 0 }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: T.textSecondary, fontFamily: 'var(--font-space-grotesk)', marginBottom: 8, letterSpacing: '0.03em' }}>
+                  Specialisms in {label} <span style={{ fontWeight: 400, color: T.textTertiary }}>(optional)</span>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 5 }}>
+                  {opts.map(opt => {
+                    const selected = nicheTags.includes(opt.value)
+                    return (
+                      <button
+                        key={opt.value}
+                        onClick={() => toggleNicheTag(opt.value)}
+                        style={{
+                          fontSize: 11,
+                          fontFamily: 'var(--font-dm-sans)',
+                          padding: '5px 8px',
+                          borderRadius: 6,
+                          border: selected ? '1.5px solid #8ECB3C' : '1.5px solid #D9D4C7',
+                          background: selected ? '#EEF8D8' : '#FEFCF8',
+                          color: selected ? '#3A6B0E' : T.textSecondary,
+                          cursor: 'pointer',
+                          fontWeight: selected ? 600 : 400,
+                          transition: 'all 0.12s',
+                          textAlign: 'left' as const,
+                          lineHeight: 1.3,
+                        }}
+                      >
+                        {opt.label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      <div style={ACTIONS_STYLE}>
+        <BackLink onClick={onBack} />
+        <Button variant="primary" onClick={onContinue} disabled={!canContinue}>
+          Continue <ArrowRight size={14} />
+        </Button>
+      </div>
+    </>
+  )
+}
+
+/* ═══════════════════════════════════════════════
+   Step 3b — Beneficiaries
+   ═══════════════════════════════════════════════ */
+
+function StepBeneficiaries({ beneficiaryGroups, toggleBeneficiary, makePrimaryBeneficiary, onBack, onContinue, canContinue }: {
+  beneficiaryGroups: BeneficiaryGroup[]
+  toggleBeneficiary: (b: BeneficiaryGroup) => void
+  makePrimaryBeneficiary: (b: BeneficiaryGroup) => void
+  onBack: () => void; onContinue: () => void; canContinue: boolean
+}) {
+  const beneficiaryMax = beneficiaryGroups.length >= 4
+
+  function chipStateFor(arr: string[], val: string): 'unselected' | 'secondary' | 'primary' {
+    const idx = arr.indexOf(val)
+    if (idx === 0) return 'primary'
+    if (idx > 0)   return 'secondary'
+    return 'unselected'
+  }
+
+  return (
+    <>
+      <BackLink onClick={onBack} />
+      <h1 style={H1_STYLE}>Who do you serve?</h1>
+      <p style={SUBTITLE_STYLE}>Pick your primary beneficiary group first — we&rsquo;ll weight it most in matching.</p>
+
+      <div style={{ marginBottom: 10 }}>
         <span style={{ fontSize: 13, fontWeight: 500, color: T.textPrimary, fontFamily: 'var(--font-space-grotesk)' }}>Who you serve</span>
         <span style={{ fontSize: 13, color: T.textTertiary, marginLeft: 6, fontFamily: 'var(--font-dm-sans)' }}>· pick 1 primary + up to 3 others</span>
         {beneficiaryMax && <span style={{ fontSize: 11, color: T.textTertiary, marginLeft: 8, fontFamily: 'var(--font-space-grotesk)' }}>Max reached</span>}
@@ -1269,24 +1441,11 @@ function StepSectors({ impactSectors, beneficiaryGroups, toggleSector, makePrima
         })}
       </div>
 
-      {/* Selection summary */}
-      {(impactSectors.length > 0 || beneficiaryGroups.length > 0) && (
+      {beneficiaryGroups.length > 0 && (
         <div style={{ background: T.pageBg, padding: '12px 14px', borderRadius: 10, marginBottom: 16, fontSize: 12, color: T.textSecondary, fontFamily: 'var(--font-dm-sans)' }}>
-          {impactSectors.length > 0 && (
-            <span>
-              <strong style={{ color: T.textPrimary, fontWeight: 500 }}>Sector:</strong>{'  '}
-              {IMPACT_SECTORS.find(o => o.value === impactSectors[0])?.label}
-              {impactSectors.length > 1 && ` + ${impactSectors.length - 1} more`}
-            </span>
-          )}
-          {impactSectors.length > 0 && beneficiaryGroups.length > 0 && <span style={{ margin: '0 8px', color: '#C9C5BC' }}>·</span>}
-          {beneficiaryGroups.length > 0 && (
-            <span>
-              <strong style={{ color: T.textPrimary, fontWeight: 500 }}>For:</strong>{'  '}
-              {BENEFICIARY_GROUPS.find(o => o.value === beneficiaryGroups[0])?.label}
-              {beneficiaryGroups.length > 1 && ` + ${beneficiaryGroups.length - 1} more`}
-            </span>
-          )}
+          <strong style={{ color: T.textPrimary, fontWeight: 500 }}>For:</strong>{'  '}
+          {BENEFICIARY_GROUPS.find(o => o.value === beneficiaryGroups[0])?.label}
+          {beneficiaryGroups.length > 1 && ` + ${beneficiaryGroups.length - 1} more`}
         </div>
       )}
 
