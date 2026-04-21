@@ -69,7 +69,7 @@ export default async function DashboardPage() {
 
   // ── Matched Opportunities (used in both states) ──────────────────────────
   const today = new Date().toISOString().split('T')[0]
-  type ScoredGrant = { grant: ReturnType<typeof normaliseScrapedGrant>; score: number; lastSeenAt: string | null; breakdown: ReturnType<typeof computeMatchScore>['breakdown'] }
+  type ScoredGrant = { grant: ReturnType<typeof normaliseScrapedGrant>; score: number; lastSeenAt: string | null }
   let scoredAll: ScoredGrant[] = []
   if (typedOrg) {
     const { data: grantRows } = await supabase
@@ -85,13 +85,11 @@ export default async function DashboardPage() {
       scoredAll = grantRows
         .map(row => {
           const g = normaliseScrapedGrant(row as Record<string, unknown>)
-          let mr: ReturnType<typeof computeMatchScore> | null = null
-          try { mr = computeMatchScore(g, typedOrg) } catch { mr = null }
-          if (!mr || mr.score <= 0) return null
+          const score = computeMatchScore(g, typedOrg).score
+          if (score <= 0) return null
           return {
             grant: g,
-            score: mr.score,
-            breakdown: mr.breakdown,
+            score,
             lastSeenAt: (row as Record<string, unknown>).last_seen_at as string | null,
           }
         })
@@ -112,18 +110,6 @@ export default async function DashboardPage() {
           ? `${formatCurrency(g.amountMin)} – ${formatCurrency(g.amountMax)}`
           : formatCurrency(g.amountMax || g.amountMin || 0))
       : 'Amount on application'
-    const bd = p.breakdown
-    const reasons: string[] = []
-    try {
-      if (bd?.location?.score >= 8)      reasons.push('Your location')
-      if (bd?.themes?.score >= 15)       reasons.push('Your sector')
-      if (bd?.grantSize?.score >= 6)     reasons.push('Right size')
-      if (bd?.beneficiaries?.score >= 8) reasons.push('Beneficiary match')
-    } catch { /* ignore breakdown errors */ }
-    const daysAgo = p.lastSeenAt
-      ? Math.floor((Date.now() - new Date(p.lastSeenAt).getTime()) / 86400000)
-      : null
-    const addedLabel = daysAgo === null ? null : daysAgo === 0 ? 'Added today' : daysAgo === 1 ? 'Added yesterday' : `Added ${daysAgo}d ago`
     return {
       id: g.id,
       title: g.title,
@@ -133,8 +119,6 @@ export default async function DashboardPage() {
       fundingType: g.fundingType ?? 'grant',
       scorePct: Math.round(p.score),
       searchHref: `/dashboard/search?grant=${encodeURIComponent(g.id)}`,
-      reasons: reasons.slice(0, 3),
-      addedLabel,
     }
   })
 
@@ -558,15 +542,11 @@ export default async function DashboardPage() {
                   href={g.searchHref}
                   className="bg-white rounded-xl p-5 flex flex-col hover:-translate-y-0.5 transition-all group"
                   style={{ border: '1px solid rgba(23,52,4,0.08)', boxShadow: '0 2px 10px rgba(26,46,43,0.04)' }}>
-                  {/* Top row: type pill + added date */}
-                  <div className="flex items-center justify-between gap-2 mb-3">
+                  <div className="mb-3">
                     <span className="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-md uppercase tracking-wider"
                       style={{ background: t.bg, color: t.fg }}>
                       {t.label}
                     </span>
-                    {g.addedLabel && (
-                      <span className="text-[11px]" style={{ color: '#8A8986' }}>{g.addedLabel}</span>
-                    )}
                   </div>
                   {/* Name */}
                   <h4 className="text-[15px] font-semibold text-charcoal leading-snug mb-0.5 line-clamp-2" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
@@ -576,17 +556,6 @@ export default async function DashboardPage() {
                   <p className="text-xs mb-3 truncate" style={{ color: '#5F5E5A' }}>{g.funder || '\u00a0'}</p>
                   {/* Amount */}
                   <p className="text-[13px] font-semibold text-charcoal mb-3" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{g.amountStr}</p>
-                  {/* Match reasons */}
-                  {(g.reasons ?? []).length > 0 && (
-                    <div className="flex flex-wrap gap-x-3 gap-y-1 mb-3">
-                      {(g.reasons ?? []).map(r => (
-                        <span key={r} className="text-[11.5px] font-medium flex items-center gap-1" style={{ color: '#639922', fontFamily: 'var(--font-space-grotesk)' }}>
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} className="w-[10px] h-[10px] flex-shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
-                          {r}
-                        </span>
-                      ))}
-                    </div>
-                  )}
                   {/* Match score + bar */}
                   <div className="mt-auto pt-3" style={{ borderTop: '1px solid rgba(23,52,4,0.06)' }}>
                     {(() => {
