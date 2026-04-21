@@ -421,7 +421,7 @@ function OrgSwitcher({ orgs, activeOrgId, onSwitch }: {
 
       {/* Add organisation button */}
       <a
-        href="/onboarding/wizard"
+        href="/onboarding/wizard?new=1"
         style={{
           fontFamily: UI, fontWeight: 500, fontSize: 13,
           color: T.textSecondary, textDecoration: 'none',
@@ -1482,7 +1482,7 @@ export default function ProfilePage() {
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FAFAF7' }}>
         <div style={{ textAlign: 'center' }}>
           <p style={{ fontFamily: UI, fontSize: 15, color: '#5F5E5A', marginBottom: 16 }}>No organisation found.</p>
-          <a href="/onboarding/wizard" style={{ fontFamily: UI, fontWeight: 500, fontSize: 14, color: '#8ECB3C', textDecoration: 'none' }}>
+          <a href="/onboarding/wizard?new=1" style={{ fontFamily: UI, fontWeight: 500, fontSize: 14, color: '#8ECB3C', textDecoration: 'none' }}>
             Start onboarding →
           </a>
         </div>

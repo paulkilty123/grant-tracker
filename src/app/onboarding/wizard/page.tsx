@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, ArrowRight, ChevronRight, Check, Globe, Pencil, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -523,6 +523,8 @@ function LoadingDots() {
 
 export default function OnboardingWizardPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const isNewOrg = searchParams.get('new') === '1'
   const supabase = createClient()
 
   const [step, setStep]           = useState<WizardStep>('entry')
@@ -551,7 +553,7 @@ export default function OnboardingWizardPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/auth/login'); return }
       setUserId(user.id)
-      const org = await getOrganisationByOwner(user.id)
+      const org = isNewOrg ? null : await getOrganisationByOwner(user.id)
       if (org) {
         setOrgId(org.id)
         setState({
