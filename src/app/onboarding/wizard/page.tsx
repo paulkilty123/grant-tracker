@@ -130,8 +130,8 @@ const STEP_DOT_POS: Record<WizardStep, number> = {
 
 type FieldConfidence = 'confident' | 'uncertain' | 'missing'
 
-function fieldConf(c: number | undefined | null): FieldConfidence {
-  if (c == null || c < 0.4) return 'missing'
+function fieldConf(c: number | undefined | null, hasValue = false): FieldConfidence {
+  if (c == null || c < 0.4) return hasValue ? 'uncertain' : 'missing'
   if (c < 0.8)              return 'uncertain'
   return 'confident'
 }
@@ -730,12 +730,16 @@ export default function OnboardingWizardPage() {
         alert_min_score:              70,
       }
 
+      let currentOrgId = orgId
       if (orgId) {
         await updateOrganisation(orgId, payload)
       } else {
         const created = await createOrganisation(payload as Parameters<typeof createOrganisation>[0])
+        currentOrgId = created.id
         setOrgId(created.id)
       }
+      // Build org for matching directly — avoids read-after-write race condition
+      const orgForMatching = { ...payload, id: currentOrgId ?? '', created_at: new Date().toISOString() }
 
       matchFetchRef.current = (async () => {
         try {
@@ -748,16 +752,16 @@ export default function OnboardingWizardPage() {
             .limit(1500)
 
           if (!scraped) return
-          const savedOrg = await getOrganisationByOwner(userId)
-          if (!savedOrg) return
+
+
 
           const scored = scraped
             .map(row => {
               const grant  = normaliseScrapedGrant(row as Record<string, unknown>)
-              const result = computeMatchScore(grant, savedOrg)
+              const result = computeMatchScore(grant, orgForMatching as Parameters<typeof computeMatchScore>[1])
               return { grant, score: result.score }
             })
-            .filter(x => x.score > 20)
+            .filter(x => x.score >= 40)
             .sort((a, b) => b.score - a.score)
 
           setRevealCount(scored.length)
@@ -956,7 +960,7 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual }: {
             style={{ ...INPUT_STYLE, fontSize: 15, padding: '14px 14px 14px 34px', boxSizing: 'border-box' }}
           />
         </div>
-        <Button variant="primary" size="lg" onClick={onAutoFill} disabled={fetching || !url.trim()}>
+        <Button variant="primary" size="lg" onClick={onAutoFill} disabled={fetching}>
           {fetching ? 'Reading…' : 'Auto-fill profile'}
         </Button>
       </div>
@@ -1036,7 +1040,7 @@ function StepReview({ extracted, confirmed, editingField, setEditingField, confi
             key={field.key}
             label={field.label}
             value={field.value}
-            fieldState={fieldConf(extracted.confidence[field.key])}
+            fieldState={fieldConf(extracted.confidence[field.key], \!\!field.value)}
             isConfirmed={confirmed.has(field.key)}
             isEditing={editingField === field.key}
             type={field.type}
@@ -1134,6 +1138,9 @@ function ReviewField({ label, value, fieldState: fState, isConfirmed, isEditing,
       </div>
 
       {/* Edit / confirm actions */}
+      {!isEditing && !type && fState === 'uncertain' && !isConfirmed && (
+        <button onClick={() => onConfirm()} style={{ fontSize: 11, color: T.amberMid, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-space-grotesk)', padding: '2px 8px', whiteSpace: 'nowrap' as const, flexShrink: 0, alignSelf: 'flex-start', marginTop: 1 }}>Looks right 2713</button>
+      )}
       {!isEditing && type && (
         <div style={{ display: 'flex', gap: 4, flexShrink: 0, marginTop: 1 }}>
           {fState === 'uncertain' && !isConfirmed && (
@@ -1478,7 +1485,7 @@ function StepReveal({ matchCount, topMatches, hasMission, onExplore, onAddMissio
             {topMatches.map(m => (
               <Link
                 key={m.id}
-                href={`/dashboard/grants/${m.id}`}
+                href="/dashboard/search"
                 style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: T.pageBg, border: `0.5px solid ${T.borderLight}`, borderRadius: 10, textDecoration: 'none', cursor: 'pointer', transition: 'background 120ms ease' }}
                 onMouseEnter={e => (e.currentTarget.style.background = T.cream1)}
                 onMouseLeave={e => (e.currentTarget.style.background = T.pageBg)}
