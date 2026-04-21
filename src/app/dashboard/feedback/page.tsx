@@ -87,7 +87,7 @@ function formatDate(iso: string) {
 }
 
 export default function FeedbackPage() {
-  const [activeTab, setActiveTab]     = useState<TabId>('general')
+  const [activeTab, setActiveTab]     = useState<TabId>('feature')
   const [status, setStatus]           = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [submissions, setSubmissions] = useState<Submission[]>([])
 
