@@ -30,15 +30,16 @@ interface Props {
 
 function matchProfileScore(org: Organisation | null): number {
   if (!org) return 0
-  const checks = [
-    (org.themes?.length        ?? 0) > 0,
-    (org.areas_of_work?.length ?? 0) > 0,
+  const fields = [
+    (org.impact_sectors?.length     ?? 0) > 0,
+    (org.beneficiary_groups?.length ?? 0) > 0,
     !!org.primary_location,
-    !!org.mission,
+    !!org.legal_structure,
     !!org.annual_income_band,
-    (org.beneficiaries?.length ?? 0) > 0,
+    !!(org.min_grant_target || org.max_grant_target),
+    !!org.mission,
   ]
-  return Math.round((checks.filter(Boolean).length / checks.length) * 100)
+  return Math.round((fields.filter(Boolean).length / fields.length) * 100)
 }
 
 const ADMIN_EMAIL = 'paulkilty1@gmail.com'
