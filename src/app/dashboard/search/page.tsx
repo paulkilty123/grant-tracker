@@ -1889,18 +1889,19 @@ export default function SearchPage() {
     setInputValue(smartQuery)
   }
 
-  const orgIsIncomplete = org && !org.themes?.length && !org.areas_of_work?.length && !org.primary_location
+  const orgIsIncomplete = org && !org.primary_location && !(org.impact_sectors?.length)
 
   // Compute match-quality profile score + missing fields for the banner
   const matchQuality = (() => {
     if (!org) return null
     const fields: { label: string; filled: boolean; impact: 'high' | 'medium' }[] = [
-      { label: 'Priority themes',   filled: (org.themes?.length        ?? 0) > 0, impact: 'high'   },
-      { label: 'Areas of work',     filled: (org.areas_of_work?.length ?? 0) > 0, impact: 'high'   },
-      { label: 'Location',          filled: !!org.primary_location,                impact: 'high'   },
-      { label: 'Mission statement', filled: !!org.mission,                         impact: 'medium' },
-      { label: 'Annual income',     filled: !!org.annual_income_band,              impact: 'medium' },
-      { label: 'Beneficiaries',     filled: (org.beneficiaries?.length ?? 0) > 0, impact: 'medium' },
+      { label: 'Impact sector',    filled: (org.impact_sectors?.length     ?? 0) > 0,        impact: 'high'   },
+      { label: 'Who you serve',    filled: (org.beneficiary_groups?.length  ?? 0) > 0,        impact: 'high'   },
+      { label: 'Location',         filled: !!org.primary_location,                            impact: 'high'   },
+      { label: 'Legal structure',  filled: !!org.legal_structure,                             impact: 'high'   },
+      { label: 'Annual income',    filled: !!org.annual_income_band,                          impact: 'medium' },
+      { label: 'Grant size range', filled: !!(org.min_grant_target || org.max_grant_target),  impact: 'medium' },
+      { label: 'Mission statement',filled: !!org.mission,                                     impact: 'medium' },
     ]
     const filledCount = fields.filter(f => f.filled).length
     const score = Math.round((filledCount / fields.length) * 100)
