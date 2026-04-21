@@ -1491,6 +1491,7 @@ export default function ProfilePage() {
   const [jumpTarget, setJumpTarget] = useState<CardId | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
 
   const activeOrg = orgs.find(o => o.id === activeOrgId) ?? orgs[0] ?? null
 
@@ -1624,8 +1625,8 @@ export default function ProfilePage() {
           </p>
         </div>
 
-        {/* Org switcher — admin/multi-org only */}
-        {orgs.length > 1 && (
+        {/* Org switcher — admin only */}
+        {isAdmin && orgs.length > 1 && (
           <OrgSwitcher
             orgs={orgs}
             activeOrgId={activeOrg.id}
