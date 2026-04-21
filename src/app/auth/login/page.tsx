@@ -52,7 +52,8 @@ function LoginForm() {
     try {
       const userId = signIn?.user?.id
       if (!userId) { router.push('/dashboard'); router.refresh(); return }
-      const { data: org } = await supabase.from('organisations').select('*').eq('owner_id', userId).maybeSingle()
+      const { data: orgs } = await supabase.from('organisations').select('*').eq('owner_id', userId).order('created_at', { ascending: true }).limit(1)
+      const org = (orgs?.[0] ?? null)
       let pipelineCount = 0
       if (org?.id) {
         const { count } = await supabase.from('pipeline_items').select('id', { count: 'exact', head: true }).eq('org_id', org.id)
