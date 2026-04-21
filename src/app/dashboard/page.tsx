@@ -164,14 +164,54 @@ export default async function DashboardPage() {
   }))
   const totalValue = stageValues.reduce((sum, s) => sum + s.value, 0)
 
-  const alerts = items
+  // ── Upcoming deadlines (pipeline + catalogue, next 3) ───────────────
+  type DlRow = { id: string; name: string; deadline: string; daysUntil: number; amountStr: string | null; href: string }
+  function parseDaysUntil(dl: string): number {
+    const parts = dl.split('-').map(Number)
+    const d = new Date(parts[0], parts[1] - 1, parts[2])
+    return Math.round((d.getTime() - Date.now()) / 86400000)
+  }
+
+  const pipelineRows: DlRow[] = items
     .filter(i => !!i.deadline)
-    .map(i => {
-      const parts = i.deadline!.split('-').map(Number)
-      const d = new Date(parts[0], parts[1] - 1, parts[2])
-      const daysUntil = Math.round((d.getTime() - Date.now()) / 86400000)
-      return { item: i, daysUntil }
+    .map(i => ({
+      id: `pl-${i.id}`,
+      name: i.grant_name,
+      deadline: i.deadline as string,
+      daysUntil: parseDaysUntil(i.deadline as string),
+      amountStr: (i.amount_max ?? i.amount_requested)
+        ? formatCurrency(i.amount_max ?? i.amount_requested ?? 0)
+        : null,
+      href: '/dashboard/deadlines',
+    }))
+    .sort((a, b) => a.daysUntil - b.daysUntil)
+
+  const catalogueRows: DlRow[] = scoredAll
+    .filter(x => {
+      if (!x.grant.deadline) return false
+      const du = parseDaysUntil(x.grant.deadline)
+      return du >= 0
     })
+    .filter(x => !pipelineRows.some(p => p.name.toLowerCase() === x.grant.title.toLowerCase()))
+    .slice(0, 6)
+    .map(x => {
+      const g = x.grant
+      const du = parseDaysUntil(g.deadline as string)
+      const amt = g.amountMin || g.amountMax
+        ? formatCurrency(g.amountMax || g.amountMin || 0)
+        : null
+      return {
+        id: `cat-${g.id}`,
+        name: g.title,
+        deadline: g.deadline as string,
+        daysUntil: du,
+        amountStr: amt,
+        href: `/dashboard/search?grant=${encodeURIComponent(g.id)}`,
+      }
+    })
+    .sort((a, b) => a.daysUntil - b.daysUntil)
+
+  const alerts: DlRow[] = [...pipelineRows, ...catalogueRows]
     .sort((a, b) => a.daysUntil - b.daysUntil)
     .slice(0, 3)
 
@@ -481,23 +521,15 @@ export default async function DashboardPage() {
             </div>
           ) : (
             <div className="space-y-1">
-              {alerts.map(alert => {
-                const dateObj = formatDeadlineDate(alert.item.deadline)
-                // Override urgency buckets for display: spec wants coral for
-                // deadlines under 7 days. utils.ts keeps its own thresholds
-                // (<=10 "urgent") so this is a view-layer override only.
-                const d = alert.daysUntil
+              {alerts.map(row => {
+                const dateObj = formatDeadlineDate(row.deadline)
+                const d = row.daysUntil
                 const pillLabel = d < 0 ? 'Overdue' : d === 0 ? 'Today' : d === 1 ? 'Tomorrow' : `${d}d`
                 const pillCls   = d <= 7
                   ? 'bg-[#FAECE7] text-[#993C1D]'
                   : 'bg-transparent text-[#5F5E5A] border border-[rgba(23,52,4,0.20)]'
-                const urgencyBadge = { label: pillLabel, cls: pillCls }
-                const amountStr = alert.item.amount_max ?? alert.item.amount_requested
-                  ? formatCurrency(alert.item.amount_max ?? alert.item.amount_requested ?? 0)
-                  : null
-
                 return (
-                  <a key={alert.item.id} href="/dashboard/deadlines"
+                  <a key={row.id} href={row.href}
                     className="flex items-center gap-3 py-2.5 border-b border-warm last:border-0 hover:bg-[#FAFAF7] -mx-2 px-2 rounded-md transition-colors">
                     {dateObj ? (
                       <div className="flex flex-col items-center flex-shrink-0 w-9 text-center">
@@ -508,12 +540,12 @@ export default async function DashboardPage() {
                       <div className="w-9 flex-shrink-0" />
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-charcoal truncate">{alert.item.grant_name}</p>
+                      <p className="text-sm font-medium text-charcoal truncate">{row.name}</p>
                       <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wide ${urgencyBadge.cls}`}>
-                          {urgencyBadge.label}
+                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wide ${pillCls}`}>
+                          {pillLabel}
                         </span>
-                        {amountStr && <span className="text-[10px] text-mid">{amountStr}</span>}
+                        {row.amountStr && <span className="text-[10px] text-mid">{row.amountStr}</span>}
                       </div>
                     </div>
                   </a>
