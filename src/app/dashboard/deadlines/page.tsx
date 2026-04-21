@@ -1126,21 +1126,6 @@ export default function DeadlinesPage() {
             </div>
           )}
 
-          {/* Later */}
-          {laterRows.length > 0 && (
-            <div style={{ background: '#fff', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '16px 22px', borderBottom: '1px solid rgba(23,52,4,0.08)', background: '#FAFAF7' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ fontFamily: UI_FONT, fontWeight: 600, fontSize: 15, color: '#2C2C2A', letterSpacing: '-0.01em' }}>Later</span>
-                  <span style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 12, color: '#8A8986', background: '#F0EFEB', padding: '3px 9px', borderRadius: 10 }}>{laterRows.length}</span>
-                </div>
-                <span style={{ fontFamily: BODY_FONT, fontSize: 12, color: '#8A8986' }}>Awareness only</span>
-              </div>
-              {laterRows.map((row, i) => renderScheduledRow(row, 'later', i === laterRows.length - 1,
-                row.kind === 'pipeline' ? row.alert.item.id : row.grant.id + '-later-' + i))}
-            </div>
-          )}
-
           {/* Empty state */}
           {displayedScheduled.length === 0 && (
             <div style={{ background: '#fff', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, padding: '32px 22px', textAlign: 'center', marginBottom: 16 }}>
@@ -1150,29 +1135,18 @@ export default function DeadlinesPage() {
             </div>
           )}
 
-          {/* Needs a deadline — collapsed housekeeping drawer */}
+
+          {/* Needs a deadline */}
           {needsDeadlineAll.length > 0 && (
-            <div style={{ background: '#fff', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, overflow: 'hidden' }}>
-              <button
-                onClick={() => setNeedsDeadlineOpen(o => !o)}
-                style={{
-                  width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
-                  padding: '14px 22px', background: '#FAFAF7', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
-                }}
-                onMouseEnter={e => { e.currentTarget.style.background = '#F5F1E8' }}
-                onMouseLeave={e => { e.currentTarget.style.background = '#FAFAF7' }}>
+            <div style={{ background: '#fff', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '16px 22px', borderBottom: '1px solid rgba(23,52,4,0.08)', background: '#FAFAF7' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8A8986" strokeWidth="2">
-                    <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
-                  </svg>
-                  <span style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 14, color: '#5F5E5A' }}>Needs a deadline</span>
+                  <span style={{ fontFamily: UI_FONT, fontWeight: 600, fontSize: 15, color: '#2C2C2A', letterSpacing: '-0.01em' }}>Needs a deadline</span>
                   <span style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 12, color: '#8A8986', background: '#F0EFEB', padding: '3px 9px', borderRadius: 10 }}>{needsDeadlineAll.length}</span>
                 </div>
-                <ChevronDown size={16} style={{ color: '#8A8986', transform: needsDeadlineOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
-              </button>
-
-              {needsDeadlineOpen && (
-                <div>
+                <span style={{ fontFamily: BODY_FONT, fontSize: 12, color: '#8A8986' }}>Pick a date to schedule</span>
+              </div>
+              <div>
                   {needsDeadlineAll.map((row, idx) => {
                     const isLast = idx === needsDeadlineAll.length - 1
                     if (row.kind === 'pipeline') {
@@ -1251,8 +1225,22 @@ export default function DeadlinesPage() {
                       )
                     }
                   })}
+              </div>
+            </div>
+          )}
+
+          {/* Later */}
+          {laterRows.length > 0 && (
+            <div style={{ background: '#fff', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '16px 22px', borderBottom: '1px solid rgba(23,52,4,0.08)', background: '#FAFAF7' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontFamily: UI_FONT, fontWeight: 600, fontSize: 15, color: '#2C2C2A', letterSpacing: '-0.01em' }}>Later</span>
+                  <span style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 12, color: '#8A8986', background: '#F0EFEB', padding: '3px 9px', borderRadius: 10 }}>{laterRows.length}</span>
                 </div>
-              )}
+                <span style={{ fontFamily: BODY_FONT, fontSize: 12, color: '#8A8986' }}>Awareness only</span>
+              </div>
+              {laterRows.map((row, i) => renderScheduledRow(row, 'later', i === laterRows.length - 1,
+                row.kind === 'pipeline' ? row.alert.item.id : row.grant.id + '-later-' + i))}
             </div>
           )}
 
