@@ -162,7 +162,7 @@ export default async function DashboardPage() {
   }))
   const totalValue = stageValues.reduce((sum, s) => sum + s.value, 0)
 
-  const alerts = getDeadlineAlerts(items).slice(0, 3)
+  const alerts = getDeadlineAlerts(items).filter(a => a.daysUntil <= 7).slice(0, 3)
 
   // ── Greeting ─────────────────────────────────────────────────────────────
   const rawName: string =
@@ -422,7 +422,7 @@ export default async function DashboardPage() {
         <div className="md:col-span-2 card rounded-xl">
           <div className="flex items-center justify-between mb-5">
             <h3 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Pipeline</h3>
-            <a href="/dashboard/pipeline" className="text-xs font-semibold uppercase tracking-wider hover:underline" style={{ color: '#8ECB3C' }}>View pipeline →</a>
+            <a href="/dashboard/pipeline" className="text-xs font-semibold hover:underline" style={{ color: '#8ECB3C', fontFamily: 'var(--font-space-grotesk)' }}>View pipeline →</a>
           </div>
 
           {/* Tonal ladder — each tile carries label + amount + count in one.
@@ -461,7 +461,6 @@ export default async function DashboardPage() {
         <div className="card rounded-xl">
           <div className="flex items-center justify-between mb-5">
             <h3 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>This week's deadlines</h3>
-            <CalendarDays className="w-4 h-4 text-mid" />
           </div>
 
           {alerts.length === 0 ? (
@@ -514,11 +513,10 @@ export default async function DashboardPage() {
             </div>
           )}
 
-          <div className="mt-4">
+          <div className="mt-4 pt-3" style={{ borderTop: '0.5px solid rgba(0,0,0,0.08)' }}>
             <a href="/dashboard/deadlines"
-              className="flex items-center justify-center gap-1.5 w-full py-2 text-xs font-semibold uppercase tracking-wider rounded-lg border transition-colors" style={{ color: '#5F5E5A', borderColor: '#E4E2DA', fontFamily: 'var(--font-space-grotesk)' }}>
-              Calendar view
-              <ArrowRight className="w-3 h-3" />
+              className="text-xs font-semibold hover:underline" style={{ color: '#8ECB3C', fontFamily: 'var(--font-space-grotesk)' }}>
+              View all deadlines →
             </a>
           </div>
         </div>
@@ -529,7 +527,7 @@ export default async function DashboardPage() {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>New matches</h3>
-            <a href="/dashboard/search" className="text-xs font-semibold uppercase tracking-wider hover:underline" style={{ color: "#8ECB3C" }}>
+            <a href="/dashboard/search" className="text-xs font-semibold hover:underline" style={{ color: "#8ECB3C", fontFamily: "var(--font-space-grotesk)" }}>
               View all opportunities →
             </a>
           </div>
@@ -570,15 +568,26 @@ export default async function DashboardPage() {
                       Qualitative band replaces the static "MATCH" label so
                       the header carries meaning at a glance, not just the %. */}
                   <div className="mt-auto pt-3" style={{ borderTop: '0.5px solid rgba(0,0,0,0.08)' }}>
-                    <div className="flex items-baseline justify-between mb-1.5">
-                      <span className="text-[11px] font-semibold" style={{ color: '#5F5E5A', fontFamily: 'var(--font-space-grotesk)' }}>
-                        {g.scorePct >= 85 ? 'Strong match' : g.scorePct >= 70 ? 'Good match' : 'Partial match'}
-                      </span>
-                      <span className="text-sm font-bold" style={{ color: '#3F6814', fontFamily: 'var(--font-space-grotesk)' }}>{g.scorePct}%</span>
-                    </div>
-                    <div className="h-1 rounded-sm overflow-hidden" style={{ background: 'rgba(57,109,17,0.15)' }}>
-                      <div className="h-full" style={{ width: `${g.scorePct}%`, background: '#8ECB3C', borderRadius: 2 }} />
-                    </div>
+                    {(() => {
+                      const isStrong = g.scorePct >= 85
+                      const isPartial = g.scorePct >= 60
+                      const barColour = isStrong ? '#8ECB3C' : isPartial ? '#5A9080' : '#9A9A9A'
+                      const pctColour = isStrong ? '#3F6814' : isPartial ? '#2D6B5E' : '#5F5E5A'
+                      const label = isStrong ? 'Strong match' : isPartial ? 'Good match' : 'Partial match'
+                      return (
+                        <>
+                          <div className="flex items-baseline justify-between mb-1.5">
+                            <span className="text-[11px] font-semibold" style={{ color: '#5F5E5A', fontFamily: 'var(--font-space-grotesk)' }}>
+                              {label}
+                            </span>
+                            <span className="text-sm font-bold" style={{ color: pctColour, fontFamily: 'var(--font-space-grotesk)' }}>{g.scorePct}%</span>
+                          </div>
+                          <div className="h-1 rounded-sm overflow-hidden" style={{ background: 'rgba(0,0,0,0.08)' }}>
+                            <div className="h-full" style={{ width: `${g.scorePct}%`, background: barColour, borderRadius: 2 }} />
+                          </div>
+                        </>
+                      )
+                    })()}
                   </div>
                 </a>
               )
