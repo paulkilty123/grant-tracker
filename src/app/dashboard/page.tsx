@@ -164,7 +164,16 @@ export default async function DashboardPage() {
   }))
   const totalValue = stageValues.reduce((sum, s) => sum + s.value, 0)
 
-  const alerts = getDeadlineAlerts(items).slice(0, 3)
+  const alerts = items
+    .filter(i => !!i.deadline)
+    .map(i => {
+      const parts = i.deadline!.split('-').map(Number)
+      const d = new Date(parts[0], parts[1] - 1, parts[2])
+      const daysUntil = Math.round((d.getTime() - Date.now()) / 86400000)
+      return { item: i, daysUntil }
+    })
+    .sort((a, b) => a.daysUntil - b.daysUntil)
+    .slice(0, 3)
 
   // ── Greeting ─────────────────────────────────────────────────────────────
   const rawName: string =
@@ -588,10 +597,8 @@ export default async function DashboardPage() {
                 <ArrowRight className="w-5 h-5" style={{ color: '#173404' }} />
               </div>
               <div>
-                <p className="text-base font-semibold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.005em' }}>
-                  {totalMatchCount > 3 ? `${totalMatchCount - 3} more matches` : 'All matches'}
-                </p>
-                <p className="text-sm mt-1" style={{ color: '#5F5E5A' }}>Explore all your opportunities →</p>
+                <p className="text-base font-semibold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.005em' }}>See all matches</p>
+                <p className="text-sm mt-1" style={{ color: '#5F5E5A' }}>Browse your full list →</p>
               </div>
             </a>
           </div>
