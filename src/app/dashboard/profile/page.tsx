@@ -325,7 +325,7 @@ function PickerChip({ label, chipState, dimmed, onClick, showMakePrimary, onMake
             zIndex: 2, whiteSpace: 'nowrap',
           }}
         >
-          ★ Primary
+          Set as primary
         </button>
       )}
     </div>

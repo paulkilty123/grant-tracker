@@ -441,7 +441,7 @@ function PickerChip({
           onClick={e => { e.stopPropagation(); onMakePrimary?.() }}
           onMouseEnter={() => setHov(true)}
           onMouseLeave={() => setHov(false)}
-          title="Make primary"
+          title="Set as primary"
           style={{
             position: 'absolute', top: -7, right: -7,
             width: 18, height: 18, borderRadius: '50%',
