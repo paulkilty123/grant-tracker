@@ -1049,7 +1049,7 @@ export default function LandingPage() {
       <section id="cohort" className="py-20 md:py-28" style={{ background: '#FAFAF7' }}>
         <div className="mx-auto max-w-6xl px-6">
           <motion.div {...fadeInView(0)}>
-            <div style={{ background: 'white', borderRadius: 14, padding: '64px 48px', textAlign: 'center' }}>
+            <div style={{ background: 'white', borderRadius: 14, padding: '64px 48px', textAlign: 'center', boxShadow: '0 2px 12px rgba(0,0,0,0.04)', border: '0.5px solid rgba(23,52,4,0.06)' }}>
               <div className="inline-flex items-center bg-[#E6F1FB] text-[#0C447C] px-4 py-2.5 rounded-full mb-6">
                 <p className="font-bold text-xs tracking-wide uppercase">Founding cohort, applications open</p>
               </div>
