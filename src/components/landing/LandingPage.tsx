@@ -1050,11 +1050,11 @@ export default function LandingPage() {
       <section id="cohort" className="py-20 md:py-28" style={{ background: '#FAFAF7' }}>
         <div className="mx-auto max-w-6xl px-6">
           <motion.div {...fadeInView(0)}>
-            <div style={{ background: '#FAFAF7', borderRadius: 14, padding: '64px 48px', textAlign: 'center' }}>
-              <p style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 11.5, color: '#8ECB3C', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 16 }}>
-                Founding cohort, applications open
-              </p>
-              <h2 style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 36, lineHeight: 1.15, letterSpacing: '-0.02em', color: '#2C2C2A', maxWidth: 580, margin: '0 auto 20px' }}>
+            <div style={{ background: 'white', borderRadius: 14, padding: '64px 48px', textAlign: 'center' }}>
+              <div className="inline-flex items-center bg-[#E6F1FB] text-[#0C447C] px-4 py-2.5 rounded-full mb-6">
+                <p className="font-bold text-xs tracking-wide uppercase">Founding cohort, applications open</p>
+              </div>
+              <h2 style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(32px, 4.5vw, 56px)', lineHeight: 1.1, letterSpacing: '-0.03em', color: '#2C2C2A', maxWidth: 640, margin: '0 auto 20px' }}>
                 Building this with a <span style={{ color: '#8ECB3C' }}>small group.</span>
               </h2>
               <p style={{ fontSize: 16, color: '#5F5E5A', lineHeight: 1.6, maxWidth: 540, margin: '0 auto 12px' }}>
@@ -1069,7 +1069,6 @@ export default function LandingPage() {
               >
                 Apply to join <span>&#8594;</span>
               </Link>
-              <p style={{ fontSize: 12.5, color: '#8A8986', marginTop: 14 }}>Applications reviewed within a week</p>
             </div>
           </motion.div>
         </div>
