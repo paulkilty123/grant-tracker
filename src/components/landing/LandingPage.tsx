@@ -1000,8 +1000,8 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-3 gap-4 mb-4">
             {([
               {
-                label: 'Honest',
-                body: "We don't inflate match scores or dress up poor-fit grants. If something isn't right for you, we'd rather tell you than waste your time.",
+                label: 'Open',
+                body: "Talk to us. Tell us what's working, what's not, what's missing. We want to collaborate with users, not dictate to them.",
                 bg: '#EAF3DE', titleColor: '#173404', bodyColor: '#3B6D11',
               },
               {
