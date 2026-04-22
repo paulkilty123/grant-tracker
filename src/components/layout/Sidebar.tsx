@@ -226,6 +226,13 @@ export default function Sidebar({ org, userEmail }: Props) {
           <nav className="flex flex-col gap-0.5">
             {ADMIN_NAV.map(item => navLink(item.href, item.label, item.Icon))}
           </nav>
+          <Link
+            href="/dashboard/admin/feedback"
+            onClick={() => setMobileOpen(false)}
+            style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', padding: '4px 12px', display: 'block', textDecoration: 'none' }}
+          >
+            match feedback
+          </Link>
         </>
       )}
 
