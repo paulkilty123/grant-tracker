@@ -626,7 +626,7 @@ export default function LandingPage() {
             </div>
             <div className="lg:pb-2">
               <p className="text-[#5F5E5A] text-base leading-relaxed max-w-sm">
-                Not every organisation needs a grant. We surface the full funding landscape matched to your structure and stage.
+                Not every organisation needs a grant. We show the full funding landscape matched to your structure and stage.
               </p>
             </div>
           </motion.div>
