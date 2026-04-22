@@ -873,7 +873,7 @@ export default function LandingPage() {
       <section id="about" className="py-16 md:py-20" style={{ background: '#FAFAF7' }}>
         <div className="mx-auto max-w-6xl px-6">
           {/* Split panel: cream left / forest right */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1.15fr 1fr', borderRadius: 14, overflow: 'hidden' }} className="max-lg:\!grid-cols-1">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderRadius: 14, overflow: 'hidden' }} className="max-lg:\!grid-cols-1">
 
             {/* LEFT: cream panel */}
             <motion.div {...fadeInView(0)} style={{ background: '#F5F1E8', padding: '56px 44px' }}>
