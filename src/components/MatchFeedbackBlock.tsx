@@ -51,12 +51,12 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore }: Props) {
     reasons: string[],
     text: string,
   ) => {
-    if (\!userId) return
+    if (!userId) return
     await saveMatchFeedback({
       userId,
       grantId,
       direction: dir,
-      reasons: reasons.filter(r => r \!== 'something_else'),
+      reasons: reasons.filter(r => r !== 'something_else'),
       freeText: text.trim() || null,
       matchScoreAtTime: matchScore,
     })
@@ -64,28 +64,28 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore }: Props) {
 
   async function handleDirectionTap(dir: 'up' | 'down') {
     // Switching direction resets chips/text
-    if (direction \!== dir) {
+    if (direction !== dir) {
       setSelectedReasons([])
       setFreeText('')
       setShowTextInput(false)
     }
     setDirection(dir)
-    await save(dir, direction \!== dir ? [] : selectedReasons, direction \!== dir ? '' : freeText)
+    await save(dir, direction !== dir ? [] : selectedReasons, direction !== dir ? '' : freeText)
   }
 
   async function handleChipToggle(value: string) {
-    if (\!direction) return
+    if (!direction) return
     if (value === 'something_else') {
-      const next = \!showTextInput
+      const next = !showTextInput
       setShowTextInput(next)
-      if (\!next) {
+      if (!next) {
         setFreeText('')
         await save(direction, selectedReasons, '')
       }
       return
     }
     const next = selectedReasons.includes(value)
-      ? selectedReasons.filter(r => r \!== value)
+      ? selectedReasons.filter(r => r !== value)
       : [...selectedReasons, value]
     setSelectedReasons(next)
     await save(direction, next, freeText)
@@ -147,7 +147,7 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore }: Props) {
     border: '0.5px solid rgba(99,153,34,0.3)', background: 'white', color: '#3B6D11',
   }
 
-  if (\!direction) {
+  if (!direction) {
     return (
       <div style={{ ...divider, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
         <div style={{ fontSize: 13, color: '#3B6D11', fontFamily: 'var(--font-space-grotesk)', fontWeight: 500 }}>
@@ -187,7 +187,7 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore }: Props) {
           </button>
           <button
             onClick={() => handleDirectionTap('down')}
-            style={{ ...btnBase, background: \!isUp ? '#FAECE7' : 'white', border: \!isUp ? '0.5px solid #D85A30' : '0.5px solid rgba(99,153,34,0.3)', color: \!isUp ? '#993C1D' : '#3B6D11' }}
+            style={{ ...btnBase, background: !isUp ? '#FAECE7' : 'white', border: !isUp ? '0.5px solid #D85A30' : '0.5px solid rgba(99,153,34,0.3)', color: !isUp ? '#993C1D' : '#3B6D11' }}
           >
             <ThumbDown /> Not for us
           </button>
