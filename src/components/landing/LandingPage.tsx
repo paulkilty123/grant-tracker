@@ -667,11 +667,11 @@ export default function LandingPage() {
               >
                 {/* Soft decorative circle behind icon */}
                 <div
-                  style={{ position: 'absolute', top: '50%', right: -20, width: 130, height: 130, borderRadius: '50%', transform: 'translateY(-50%)', background: card.decoBg, opacity: 0.85, pointerEvents: 'none', zIndex: 0 }}
+                  style={{ position: 'absolute', top: -20, right: -20, width: 130, height: 130, borderRadius: '50%', background: card.decoBg, opacity: 0.85, pointerEvents: 'none', zIndex: 0 }}
                 />
                 {/* Icon centred in its circle */}
                 <div
-                  style={{ position: 'absolute', top: '50%', right: 23, width: 44, height: 44, borderRadius: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}
+                  style={{ position: 'absolute', top: 23, right: 23, width: 44, height: 44, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}
                 >
                   <card.Icon className="w-7 h-7" style={{ color: card.iconColor }} />
                 </div>
