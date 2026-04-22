@@ -66,7 +66,7 @@ export default function AdminFeedbackPage() {
   useEffect(() => {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
-      if (\!user || user.email \!== ADMIN_EMAIL) {
+      if (!user || user.email !== ADMIN_EMAIL) {
         setAllowed(false)
         setLoading(false)
         return
@@ -78,7 +78,7 @@ export default function AdminFeedbackPage() {
         .select('*')
         .order('created_at', { ascending: false })
 
-      if (\!feedback) { setLoading(false); return }
+      if (!feedback) { setLoading(false); return }
 
       // fetch grant titles
       const grantIds = [...new Set(feedback.map(f => f.grant_id))]
@@ -116,7 +116,7 @@ export default function AdminFeedbackPage() {
   rows.forEach(r => {
     const key = r.created_at.slice(0, 10)
     if (dayMap.has(key)) {
-      const slot = dayMap.get(key)\!
+      const slot = dayMap.get(key)!
       if (r.direction === 'up') slot.up++
       else slot.down++
     }
@@ -128,8 +128,8 @@ export default function AdminFeedbackPage() {
   const chipMap = new Map<string, { up: number; down: number }>()
   rows.forEach(r => {
     (r.reasons || []).forEach(reason => {
-      if (\!chipMap.has(reason)) chipMap.set(reason, { up: 0, down: 0 })
-      const slot = chipMap.get(reason)\!
+      if (!chipMap.has(reason)) chipMap.set(reason, { up: 0, down: 0 })
+      const slot = chipMap.get(reason)!
       if (r.direction === 'up') slot.up++
       else slot.down++
     })
@@ -142,8 +142,8 @@ export default function AdminFeedbackPage() {
   // ── hot grants ───────────────────────────────────────────────────────────
   const grantMap = new Map<string, { title: string; up: number; down: number }>()
   rows.forEach(r => {
-    if (\!grantMap.has(r.grant_id)) grantMap.set(r.grant_id, { title: r.grant_title || r.grant_id, up: 0, down: 0 })
-    const slot = grantMap.get(r.grant_id)\!
+    if (!grantMap.has(r.grant_id)) grantMap.set(r.grant_id, { title: r.grant_title || r.grant_id, up: 0, down: 0 })
+    const slot = grantMap.get(r.grant_id)!
     if (r.direction === 'up') slot.up++
     else slot.down++
   })
