@@ -1703,7 +1703,7 @@ export default function SearchPage() {
       // Action-bar like/dislike signals
       for (const [grantId, grantInteractions] of Array.from(interactions.entries())) {
         const g = allGrants.find(g => g.id === grantId)
-        if (\!g) continue
+        if (!g) continue
         if (grantInteractions.has('liked')) {
           for (const s of g.sectors) boosts.set(s, (boosts.get(s) ?? 0) + LIKE_SECTOR_BOOST)
         }
@@ -1714,7 +1714,7 @@ export default function SearchPage() {
       // Match-block feedback signals (weighted higher — more considered signal)
       for (const [grantId, fb] of Array.from(matchFeedbackMap.entries())) {
         const g = allGrants.find(g => g.id === grantId)
-        if (\!g) continue
+        if (!g) continue
         if (fb.direction === 'up') {
           for (const s of g.sectors) boosts.set(s, (boosts.get(s) ?? 0) + FB_UP_SECTOR_BOOST)
         } else {
