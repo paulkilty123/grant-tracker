@@ -870,45 +870,49 @@ export default function LandingPage() {
       </div>
 
       {/* ABOUT — Block 1: Founder story */}
-      <section id="about" className="py-20 md:py-28" style={{ background: '#FAFAF7' }}>
+      <section id="about" className="py-16 md:py-20" style={{ background: '#FAFAF7' }}>
         <div className="mx-auto max-w-6xl px-6">
-          <div className="grid lg:grid-cols-2 gap-16 items-start">
+          <div style={{ background: '#173404', borderRadius: 14, padding: '64px 56px' }}>
 
-            {/* Left: label + heading + quote */}
-            <motion.div {...fadeInView(0)}>
-              <p className="text-sm font-semibold tracking-widest uppercase mb-4" style={{ color: '#8ECB3C', fontFamily: 'var(--font-space-grotesk)' }}>About</p>
-              <h2 className="mb-10 leading-[1.05]" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(36px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#2C2C2A' }}>
-                Built from<br /><span style={{ color: '#8ECB3C' }}>the inside.</span>
-              </h2>
-              <blockquote style={{ position: 'relative', paddingLeft: '40px', marginBottom: 0 }}>
-                {/* Opening quote in left gutter */}
-                <span className="select-none" style={{ position: 'absolute', left: 0, top: 0, fontSize: '56px', color: '#8ECB3C', fontFamily: "'Fraunces', Georgia, serif", lineHeight: 0.7, fontWeight: 400 }}>&ldquo;</span>
-                <p className="text-lg leading-relaxed mb-4" style={{ color: '#2C2C2A', fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, letterSpacing: '-0.005em' }}>
-                  I&apos;ve spent 20 years in the social enterprise and charity sector, co-founding a youth music organisation, leading development strategy at local charities, and driving fundraising across a global co-working network.
-                </p>
-                <p className="text-lg leading-relaxed" style={{ color: '#2C2C2A', fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, letterSpacing: '-0.005em', marginBottom: '4px' }}>
-                  The frustration was the same every time: a fragmented funding ecosystem that forced people like me to spend more time hunting opportunities than delivering impactful work.
-                </p>
-                {/* Closing quote on its own line, right-aligned */}
-                <div className="select-none" style={{ textAlign: 'right', fontFamily: "'Fraunces', Georgia, serif", fontSize: '56px', color: '#8ECB3C', lineHeight: 0.5, fontWeight: 400, marginTop: '18px', paddingRight: '4px' }}>&rdquo;</div>
-              </blockquote>
-              <p className="text-sm font-semibold" style={{ color: '#5F5E5A', fontFamily: 'var(--font-space-grotesk)', marginTop: '24px' }}>Paul Kilty, founder</p>
-            </motion.div>
+            {/* Eyebrow */}
+            <p style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 12, color: '#8ECB3C', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 16 }}>About</p>
 
-            {/* Right: £8bn stat card + why it exists */}
-            <motion.div {...fadeInView(0.1)} className="flex flex-col gap-6">
-              <div className="rounded-3xl p-10 text-center" style={{ background: '#F1F7E4' }}>
-                <p className="leading-none mb-3" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(56px, 8vw, 96px)', color: '#8ECB3C', letterSpacing: '-0.04em' }}>£8bn<span style={{ color: '#2C2C2A' }}>+</span></p>
-                <p className="text-sm font-semibold uppercase tracking-widest" style={{ color: '#5F5E5A', fontFamily: 'var(--font-space-grotesk)' }}>awarded by UK trusts &amp; foundations annually</p>
-              </div>
-              <div className="rounded-3xl p-8 bg-white" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.04)', border: '0.5px solid rgba(23,52,4,0.08)' }}>
-                <p className="text-base font-semibold mb-3" style={{ color: '#2C2C2A', fontFamily: 'var(--font-space-grotesk)' }}>Filtered for you.</p>
-                <p className="text-base leading-relaxed" style={{ color: '#5F5E5A' }}>
-                  Thousands of UK funders, but only a fraction fit your organisation. Grant Tracker filters by your legal structure, sector, geography and stage, so you only see what you can actually apply for.
-                </p>
-              </div>
-            </motion.div>
+            {/* Two-col grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1.15fr 1fr', gap: 48, alignItems: 'start' }} className="max-lg:grid-cols-1">
 
+              {/* Left: heading + quote */}
+              <motion.div {...fadeInView(0)}>
+                <h2 style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 'clamp(32px, 4vw, 42px)', lineHeight: 1.1, letterSpacing: '-0.02em', color: 'white', margin: '0 0 32px 0' }}>
+                  Built from<br /><span style={{ color: '#8ECB3C' }}>the inside.</span>
+                </h2>
+                <blockquote style={{ position: 'relative', paddingLeft: '44px', paddingRight: '12px', marginTop: 28 }}>
+                  <span className="select-none" style={{ position: 'absolute', left: 0, top: 4, fontSize: '62px', color: '#8ECB3C', fontFamily: "'Fraunces', Georgia, serif", lineHeight: 0.7, fontWeight: 500 }}>&ldquo;</span>
+                  <p style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 19, color: 'white', lineHeight: 1.55, letterSpacing: '-0.005em', margin: '0 0 18px 0' }}>
+                    I&apos;ve spent 20 years in the social enterprise and charity sector, co-founding a youth music organisation, leading development strategy at local charities, and driving fundraising across a global co-working network.
+                  </p>
+                  <p style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 19, color: 'white', lineHeight: 1.55, letterSpacing: '-0.005em', margin: '0 0 4px 0' }}>
+                    The frustration was the same every time: a fragmented funding ecosystem that forced people like me to spend more time hunting opportunities than delivering impactful work.
+                  </p>
+                  <div className="select-none" style={{ textAlign: 'right', fontFamily: "'Fraunces', Georgia, serif", fontSize: '62px', color: '#8ECB3C', lineHeight: 0.5, fontWeight: 500, marginTop: 18, paddingRight: 4 }}>&rdquo;</div>
+                </blockquote>
+                <p style={{ fontSize: 13, fontWeight: 500, color: '#C0DD97', marginTop: 20, fontFamily: 'var(--font-space-grotesk)' }}>Paul Kilty, founder</p>
+              </motion.div>
+
+              {/* Right: £8bn stat card + filtered card */}
+              <motion.div {...fadeInView(0.1)} className="flex flex-col gap-4">
+                <div style={{ background: '#8ECB3C', borderRadius: 14, padding: '32px 32px 26px' }}>
+                  <p style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 'clamp(48px, 6vw, 64px)', color: '#173404', letterSpacing: '-0.03em', lineHeight: 1, marginBottom: 12 }}>£8bn+</p>
+                  <p style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 11.5, color: '#173404', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', opacity: 0.8 }}>Awarded by UK trusts &amp; foundations annually</p>
+                </div>
+                <div style={{ background: 'rgba(255,255,255,0.08)', border: '0.5px solid rgba(142,203,60,0.2)', borderRadius: 14, padding: '24px 26px' }}>
+                  <p style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 16, color: 'white', letterSpacing: '-0.01em', marginBottom: 10 }}>Filtered for you.</p>
+                  <p style={{ fontSize: 13.5, color: '#C0DD97', lineHeight: 1.6 }}>
+                    Thousands of UK funders, but only a fraction fit your organisation. Grant Tracker filters by your legal structure, sector, geography and stage, so you only see what you can actually apply for.
+                  </p>
+                </div>
+              </motion.div>
+
+            </div>
           </div>
         </div>
       </section>
