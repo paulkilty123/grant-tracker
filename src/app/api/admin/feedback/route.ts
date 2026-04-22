@@ -6,7 +6,7 @@ const ADMIN_EMAIL = 'paulkilty1@gmail.com'
 
 export async function GET() {
   // Auth check — who is calling?
-  const authClient = createServerClient()
+  const authClient = await createServerClient()
   const { data: { user } } = await authClient.auth.getUser()
   if (!user || user.email !== ADMIN_EMAIL) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
