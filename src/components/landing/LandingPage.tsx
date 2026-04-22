@@ -1027,7 +1027,8 @@ export default function LandingPage() {
             <div className="grid lg:grid-cols-2 gap-8 items-start">
               <div>
                 <h2 className="font-bold leading-tight" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 'clamp(20px, 2vw, 28px)', fontWeight: 600, letterSpacing: '-0.02em', color: '#2C2C2A' }}>
-                  We use AI so you can spend less time searching.<br />
+                  We use AI so you can<br />
+                  spend less time searching.<br />
                   <span style={{ color: '#8ECB3C' }}>Not less time thinking.</span>
                 </h2>
               </div>
