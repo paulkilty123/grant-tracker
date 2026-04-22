@@ -647,7 +647,7 @@ export default function LandingPage() {
                 Icon: Rocket, iconColor: '#993C1D', iconBg: '#FAECE7', decoBg: 'rgba(251,146,60,0.10)',
               },
               {
-                badge: '£20k – £3M', badgeColor: '#0C447C', badgeBg: '#E6F1FB',
+                badge: '£20k – £3m', badgeColor: '#0C447C', badgeBg: '#E6F1FB',
                 title: 'Social investment',
                 desc: 'Patient capital, loans and blended finance from Big Issue Invest, Charity Bank, Resonance and others.',
                 Icon: TrendingUp, iconColor: '#0C447C', iconBg: '#E6F1FB', decoBg: 'rgba(181,212,244,0.12)',
@@ -662,25 +662,23 @@ export default function LandingPage() {
               <motion.div
                 key={card.title}
                 {...fadeInView(i * 0.07)}
-                className="relative overflow-hidden bg-white rounded-3xl p-7 md:p-9 group"
-                style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.05)', border: '0.5px solid rgba(23,52,4,0.08)' }}
+                className="relative bg-white rounded-3xl group"
+                style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.05)', border: '0.5px solid rgba(23,52,4,0.08)', padding: 18, overflow: 'hidden' }}
               >
                 {/* Soft decorative circle behind icon */}
                 <div
-                  className="absolute top-0 right-0 w-24 h-24 rounded-full pointer-events-none"
-                  style={{ background: card.decoBg, transform: 'translate(1.5rem, -1.5rem)', opacity: 0.7 }}
+                  style={{ position: 'absolute', top: -20, right: -20, width: 84, height: 84, borderRadius: '50%', background: card.decoBg, opacity: 0.7, pointerEvents: 'none' }}
                 />
                 {/* Icon centred in its circle */}
                 <div
-                  className="absolute top-5 right-5 w-11 h-11 rounded-full flex items-center justify-center z-10"
-                  style={{ background: card.iconBg }}
+                  style={{ position: 'absolute', top: 0, right: 0, width: 44, height: 44, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10, background: card.iconBg }}
                 >
                   <card.Icon className="w-5 h-5" style={{ color: card.iconColor }} />
                 </div>
                 {/* Badge */}
                 <span
-                  className="inline-block px-3 py-1 rounded-full font-semibold text-[10px] mb-12 relative z-10 uppercase tracking-wider"
-                  style={{ color: card.badgeColor, background: card.badgeBg }}
+                  className="inline-block px-3 py-0.5 rounded-full font-medium text-[10px] mb-4 relative z-10 uppercase tracking-wider"
+                  style={{ color: card.badgeColor, background: card.badgeBg, letterSpacing: '0.02em' }}
                 >
                   {card.badge}
                 </span>
