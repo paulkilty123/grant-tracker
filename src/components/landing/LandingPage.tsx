@@ -71,7 +71,7 @@ const audiences = [
 ]
 
 const stats = [
-  { value: '500+', label: 'Funding and support opportunities' },
+  { value: '400+', label: 'Funding and support opportunities' },
   { value: '4', label: 'Funding types. Grants, programmes, investment and more' },
   { value: '12', label: 'Impact sectors covered' },
   { value: 'Free', label: 'During beta. Founding cohort access' },
