@@ -37,9 +37,10 @@ interface Props {
   grantId: string
   userId: string
   matchScore: number
+  compact?: boolean
 }
 
-export function MatchFeedbackBlock({ grantId, userId, matchScore }: Props) {
+export function MatchFeedbackBlock({ grantId, userId, matchScore, compact = false }: Props) {
   const [direction, setDirection]             = useState<'up' | 'down' | null>(null)
   const [selectedReasons, setSelectedReasons] = useState<string[]>([])
   const [freeText, setFreeText]               = useState('')
@@ -174,6 +175,14 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore }: Props) {
 
   // ── Default: no direction chosen ──────────────────────────────────────
   if (!direction) {
+    if (compact) {
+      return (
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button onClick={() => handleDirectionTap('up')} style={btnBase}><ThumbUp /> Good match</button>
+          <button onClick={() => handleDirectionTap('down')} style={btnBase}><ThumbDown /> Not for us</button>
+        </div>
+      )
+    }
     return (
       <div style={{ ...divider, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
         <div style={{ fontSize: 13, color: '#3B6D11', fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, display: 'inline-flex', alignItems: 'center' }}>

@@ -451,6 +451,16 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
   }
 
   // ── Reason strings ──
+  const DIMENSION_LABELS: Record<string, string> = {
+    themes: 'Sector', grantSize: 'Size', eligibility: 'Eligibility',
+    location: 'Location', funderType: 'Funding type',
+  }
+  const getMatchedDimensions = (bd?: typeof breakdown): string[] => {
+    if (!bd) return []
+    return (Object.entries(bd) as [string, { score: number; max: number }][])
+      .filter(([, v]) => v.max > 0 && v.score >= v.max * 0.45)
+      .map(([k]) => DIMENSION_LABELS[k] ?? k.replace(/([A-Z])/g, ' ').replace(/^./, c => c.toUpperCase()))
+  }
   const cleanReason = (s: string) => s.replace(/\b([a-z][a-z]*_[a-z][a-z_]*)\b/g,
     w => w.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()))
   const WARN_RE2 = /check|may |likely|not match|exceed|borough|restricted/i
@@ -749,60 +759,100 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
 
         </div>{/* end card-upper */}
 
-        {/* ── Match module (always visible when match data exists) ── */}
-        {hasOrg && hasSearch && reason && (rawPos.length > 0 || allWarns.length > 0) && (
-          <div style={{ marginTop: 14, padding: '12px 14px', background: tierHue.panelBg, borderRadius: 10, borderLeft: `3px solid ${tierHue.border}` }}>
-            <div style={{ display: 'flex', gap: 14 }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6, color: tierHue.title, fontFamily: 'var(--font-space-grotesk)' }}>
-                  {moduleTitle}
-                </div>
-                {(() => {
-                  const posLimit  = score >= 80 ? 3 : score >= 60 ? 3 : 2
-                  const warnLimit = score >= 80 ? 1 : score >= 60 ? 3 : 4
-                  const shownPos  = rawPos.slice(0, posLimit)
-                  const shownWarn = allWarns.slice(0, warnLimit)
-                  const isStrong  = score >= 80
-                  return (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      {shownPos.map((r, i) => (
-                        <div key={i} style={{ fontSize: 12, color: '#2C2C2A', lineHeight: 1.5, display: 'flex', gap: 6, fontFamily: 'var(--font-dm-sans)' }}>
-                          <span style={{ color: tierHue.positive, flexShrink: 0 }}>✓</span>
-                          <span>{r}</span>
-                        </div>
-                      ))}
-                      {shownWarn.length > 0 && isStrong && (
-                        <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: tierHue.caveatText, marginTop: 6, marginBottom: 2, fontFamily: 'var(--font-space-grotesk)' }}>
-                          Why not higher
-                        </div>
-                      )}
-                      {shownWarn.map((r, i) => (
-                        <div key={`w${i}`} style={{ fontSize: 12, color: tierHue.caveatText, lineHeight: 1.5, display: 'flex', gap: 6, fontFamily: 'var(--font-dm-sans)' }}>
-                          <span style={{ color: '#BA7517', flexShrink: 0 }}>△</span>
-                          <span>{r}</span>
-                        </div>
+        {/* ── Match module ── */}
+        {hasOrg && hasSearch && reason && (rawPos.length > 0 || allWarns.length > 0) && (() => {
+          const isExpanded = expandedMatchIds.has(grant.id)
+          const toggleExpand = () => setExpandedMatchIds(prev => {
+            const next = new Set(prev)
+            if (next.has(grant.id)) next.delete(grant.id)
+            else next.add(grant.id)
+            return next
+          })
+          const matchedDims = getMatchedDimensions(breakdown)
+          return (
+            <div style={{ marginTop: 14, background: tierHue.panelBg, borderRadius: 10, borderLeft: `3px solid ${tierHue.border}` }}>
+              {!isExpanded ? (
+                /* COMPACT STATE */
+                <div style={{ padding: '10px 14px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1, minWidth: 0, flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0, minWidth: 120 }}>
+                      <div style={{ display: 'inline-flex', alignItems: 'baseline', gap: 6 }}>
+                        <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 18, fontWeight: 500, color: tierHue.title, letterSpacing: '-0.01em' }}>{score}%</span>
+                        <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 10.5, color: tierHue.title, letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 500 }}>{tier}</span>
+                      </div>
+                      <div style={{ height: 3, background: tierHue.barBg, borderRadius: 2, overflow: 'hidden' }}>
+                        <div style={{ height: '100%', background: tierHue.ring, borderRadius: 2, width: `${score}%` }} />
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      {matchedDims.map(dim => (
+                        <span key={dim} style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 12.5, color: tierHue.title, fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                          <span style={{ color: tierHue.positive }}>✓</span>{dim}
+                        </span>
                       ))}
                     </div>
-                  )
-                })()}
-              </div>
-              <div style={{ width: 120, flexShrink: 0, textAlign: 'right' }}>
-                <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 22, fontWeight: 500, color: tierHue.title }}>{score}%</div>
-                <div style={{ height: 4, borderRadius: 2, overflow: 'hidden', marginTop: 4, background: tierHue.barBg }}>
-                  <div style={{ height: '100%', borderRadius: 2, background: tierHue.ring, width: `${score}%` }} />
+                    <button onClick={toggleExpand} style={{ background: 'transparent', border: 'none', fontFamily: 'var(--font-space-grotesk)', fontSize: 12, color: tierHue.title, cursor: 'pointer', padding: 0, fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 3, opacity: 0.7, flexShrink: 0 }}>
+                      Show details <span style={{ fontSize: 14, lineHeight: 1 }}>›</span>
+                    </button>
+                  </div>
+                  {org?.owner_id && (
+                    <MatchFeedbackBlock grantId={grant.id} userId={org.owner_id} matchScore={score} compact />
+                  )}
                 </div>
-                <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 4, color: tierHue.title, fontFamily: 'var(--font-space-grotesk)' }}>{tier}</div>
-              </div>
+              ) : (
+                /* EXPANDED STATE */
+                <div style={{ padding: '12px 14px 14px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginBottom: 8 }}>
+                    <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: tierHue.title, fontFamily: 'var(--font-space-grotesk)' }}>{moduleTitle}</div>
+                    <div style={{ display: 'inline-flex', alignItems: 'baseline', gap: 6 }}>
+                      <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 18, fontWeight: 500, color: tierHue.title }}>{score}%</span>
+                      <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 10.5, color: tierHue.title, letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 500 }}>{tier}</span>
+                    </div>
+                  </div>
+                  <div style={{ height: 3, background: tierHue.barBg, borderRadius: 2, overflow: 'hidden', marginBottom: 10 }}>
+                    <div style={{ height: '100%', background: tierHue.ring, borderRadius: 2, width: `${score}%` }} />
+                  </div>
+                  {(() => {
+                    const posLimit  = score >= 80 ? 3 : score >= 60 ? 3 : 2
+                    const warnLimit = score >= 80 ? 1 : score >= 60 ? 3 : 4
+                    const shownPos  = rawPos.slice(0, posLimit)
+                    const shownWarn = allWarns.slice(0, warnLimit)
+                    const isStrong  = score >= 80
+                    return (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginBottom: 10 }}>
+                        {shownPos.map((r, i) => (
+                          <div key={i} style={{ fontSize: 12, color: '#2C2C2A', lineHeight: 1.5, display: 'flex', gap: 6, fontFamily: 'var(--font-dm-sans)' }}>
+                            <span style={{ color: tierHue.positive, flexShrink: 0 }}>✓</span>
+                            <span>{r}</span>
+                          </div>
+                        ))}
+                        {shownWarn.length > 0 && isStrong && (
+                          <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: tierHue.caveatText, marginTop: 6, marginBottom: 2, fontFamily: 'var(--font-space-grotesk)' }}>
+                            Why not higher
+                          </div>
+                        )}
+                        {shownWarn.map((r, i) => (
+                          <div key={`w${i}`} style={{ fontSize: 12, color: tierHue.caveatText, lineHeight: 1.5, display: 'flex', gap: 6, fontFamily: 'var(--font-dm-sans)' }}>
+                            <span style={{ color: '#BA7517', flexShrink: 0 }}>△</span>
+                            <span>{r}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )
+                  })()}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, paddingTop: 10, borderTop: `0.5px solid ${tierHue.ring}40` }}>
+                    <button onClick={toggleExpand} style={{ background: 'transparent', border: 'none', fontFamily: 'var(--font-space-grotesk)', fontSize: 11.5, color: '#8A8986', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>
+                      Collapse
+                    </button>
+                    {org?.owner_id && (
+                      <MatchFeedbackBlock grantId={grant.id} userId={org.owner_id} matchScore={score} />
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
-            {org?.owner_id && (
-              <MatchFeedbackBlock
-                grantId={grant.id}
-                userId={org.owner_id}
-                matchScore={score}
-              />
-            )}
-          </div>
-        )}
+          )
+        })()}
 
       </div>{/* end card-body */}
 
@@ -1135,6 +1185,7 @@ export default function SearchPage() {
   const [bannerDismissed, setBannerDismissed] = useState(false)
   const [interactions, setInteractions] = useState<Map<string, Set<InteractionAction>>>(new Map())
   const [matchFeedbackMap, setMatchFeedbackMap] = useState<Map<string, StoredFeedback>>(new Map())
+  const [expandedMatchIds, setExpandedMatchIds] = useState<Set<string>>(new Set())
   const [showDismissed, setShowDismissed] = useState(false)
   const [scrapedGrants, setScrapedGrants] = useState<EnrichedGrant[]>([])
   const [grantsLoaded, setGrantsLoaded]   = useState(false)
