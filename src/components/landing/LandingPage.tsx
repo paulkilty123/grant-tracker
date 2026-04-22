@@ -900,11 +900,33 @@ export default function LandingPage() {
                 <p style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 'clamp(48px, 5vw, 64px)', color: '#173404', letterSpacing: '-0.03em', lineHeight: 1, marginBottom: 12 }}>£8bn+</p>
                 <p style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 11.5, color: '#173404', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', opacity: 0.8 }}>Awarded by UK trusts &amp; foundations annually</p>
               </div>
-              <div style={{ background: 'rgba(255,255,255,0.08)', border: '0.5px solid rgba(142,203,60,0.2)', borderRadius: 14, padding: '32px 32px 30px' }}>
+              <div style={{ background: 'rgba(255,255,255,0.08)', border: '0.5px solid rgba(142,203,60,0.2)', borderRadius: 14, padding: '32px 32px 30px', marginBottom: 28 }}>
                 <p style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 19, color: 'white', letterSpacing: '-0.01em', marginBottom: 14 }}>Filtered for you.</p>
                 <p style={{ fontSize: 14.5, color: '#C0DD97', lineHeight: 1.65 }}>
                   There are thousands of UK funders, but only a fraction fit your organisation. Grant Tracker filters by your legal structure, sector, location and stage, so you only see what you can actually apply for.
                 </p>
+              </div>
+
+              {/* Example filter chain */}
+              <div style={{ marginTop: 4 }}>
+                <p style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 11.5, color: '#8ECB3C', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 14 }}>An example</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10 }}>
+                  {(() => {
+                    const ghostPill = (label: string) => (
+                      <span key={label} style={{ display: 'inline-flex', alignItems: 'center', padding: '8px 16px', background: 'transparent', border: '0.5px solid rgba(142,203,60,0.35)', borderRadius: 20, fontFamily: 'var(--font-space-grotesk)', fontSize: 13, fontWeight: 500, color: '#C0DD97', letterSpacing: '-0.005em', whiteSpace: 'nowrap' }}>{label}</span>
+                    )
+                    const chevron = (i: number) => (
+                      <svg key={`c${i}`} width="10" height="14" viewBox="0 0 10 14" fill="none" stroke="#8ECB3C" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.7 }}><polyline points="2 2 8 7 2 12"/></svg>
+                    )
+                    return [
+                      ghostPill('CIC'), chevron(0),
+                      ghostPill('Arts & culture'), chevron(1),
+                      ghostPill('London'), chevron(2),
+                      ghostPill('Early-stage'), chevron(3),
+                      <span key="result" style={{ display: 'inline-flex', alignItems: 'center', padding: '8px 16px', background: '#8ECB3C', border: '0.5px solid #8ECB3C', borderRadius: 20, fontFamily: 'var(--font-space-grotesk)', fontSize: 13, fontWeight: 500, color: '#173404', letterSpacing: '-0.005em', whiteSpace: 'nowrap' }}>£10k Arts Grant</span>
+                    ]
+                  })()}
+                </div>
               </div>
 
               {/* Org type pills */}
