@@ -59,12 +59,12 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore }: Props) {
     reasons: string[],
     text: string,
   ) => {
-    if (\!userId) return
+    if (!userId) return
     await saveMatchFeedback({
       userId,
       grantId,
       direction: dir,
-      reasons: reasons.filter(r => r \!== 'something_else'),
+      reasons: reasons.filter(r => r !== 'something_else'),
       freeText: text.trim() || null,
       matchScoreAtTime: matchScore,
     })
@@ -77,7 +77,7 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore }: Props) {
   }
 
   async function handleDirectionTap(dir: 'up' | 'down') {
-    const isSwitch = direction \!== dir
+    const isSwitch = direction !== dir
     const nextReasons = isSwitch ? [] : selectedReasons
     const nextText    = isSwitch ? '' : freeText
     if (isSwitch) {
@@ -90,18 +90,18 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore }: Props) {
   }
 
   function handleChipToggle(value: string) {
-    if (\!direction) return
+    if (!direction) return
     if (value === 'something_else') {
-      const next = \!showTextInput
+      const next = !showTextInput
       setShowTextInput(next)
-      if (\!next) {
+      if (!next) {
         setFreeText('')
         scheduleChipSave(direction, selectedReasons, '')
       }
       return
     }
     const next = selectedReasons.includes(value)
-      ? selectedReasons.filter(r => r \!== value)
+      ? selectedReasons.filter(r => r !== value)
       : [...selectedReasons, value]
     setSelectedReasons(next)
     scheduleChipSave(direction, next, freeText)
@@ -109,13 +109,13 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore }: Props) {
 
   function handleTextChange(text: string) {
     setFreeText(text)
-    if (\!direction) return
+    if (!direction) return
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => { save(direction, selectedReasons, text) }, 1500)
   }
 
   function handleTextBlur() {
-    if (\!direction || \!freeText.trim()) return
+    if (!direction || !freeText.trim()) return
     if (debounceRef.current) clearTimeout(debounceRef.current)
     save(direction, selectedReasons, freeText)
   }
@@ -172,7 +172,7 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore }: Props) {
   ) : null
 
   // ── Default: no direction chosen ──────────────────────────────────────
-  if (\!direction) {
+  if (!direction) {
     return (
       <div style={{ ...divider, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
         <div style={{ fontSize: 13, color: '#3B6D11', fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, display: 'inline-flex', alignItems: 'center' }}>
@@ -209,7 +209,7 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore }: Props) {
           </button>
           <button
             onClick={() => handleDirectionTap('down')}
-            style={{ ...btnBase, background: \!isUp ? '#FAECE7' : 'white', border: \!isUp ? '0.5px solid #D85A30' : '0.5px solid rgba(99,153,34,0.3)', color: \!isUp ? '#993C1D' : '#3B6D11' }}
+            style={{ ...btnBase, background: !isUp ? '#FAECE7' : 'white', border: !isUp ? '0.5px solid #D85A30' : '0.5px solid rgba(99,153,34,0.3)', color: !isUp ? '#993C1D' : '#3B6D11' }}
           >
             <ThumbDown /> Not for us
           </button>
