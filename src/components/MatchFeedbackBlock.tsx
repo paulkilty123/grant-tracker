@@ -13,11 +13,12 @@ const DOWN_CHIPS = [
 ]
 
 const UP_CHIPS = [
-  { value: 'great_fit',      label: 'Great fit for us' },
-  { value: 'strong_funder',  label: 'Strong funder' },
-  { value: 'good_size',      label: 'Good size' },
-  { value: 'good_timing',    label: 'Good timing' },
-  { value: 'something_else', label: 'Something else' },
+  { value: 'right_size',       label: 'Right size' },
+  { value: 'right_sector',     label: 'Right sector' },
+  { value: 'right_timing',     label: 'Right timing' },
+  { value: 'good_eligibility', label: 'Good eligibility fit' },
+  { value: 'matches_style',    label: 'Matches our style' },
+  { value: 'something_else',   label: 'Something else' },
 ]
 
 const ThumbUp = () => (
