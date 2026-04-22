@@ -908,8 +908,7 @@ export default function LandingPage() {
               </div>
 
               {/* Example filter chain */}
-              <div style={{ marginTop: 4 }}>
-                <p style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 11.5, color: '#8ECB3C', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 14 }}>An example</p>
+              <div style={{ marginTop: 20 }}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10 }}>
                   {(() => {
                     const ghostPill = (label: string) => (
