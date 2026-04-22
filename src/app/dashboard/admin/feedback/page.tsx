@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
 const ADMIN_EMAIL = 'paulkilty1@gmail.com'
 
@@ -18,39 +17,15 @@ interface FeedbackRow {
   grant_title?: string
 }
 
-interface DayStat {
-  date: string
-  up: number
-  down: number
-}
-
-interface ChipStat {
-  reason: string
-  up: number
-  down: number
-}
-
-interface HotGrant {
-  grant_id: string
-  title: string
-  up: number
-  down: number
-  total: number
-  pctNeg: number
-}
+interface DayStat { date: string; up: number; down: number }
+interface ChipStat { reason: string; up: number; down: number }
+interface HotGrant { grant_id: string; title: string; up: number; down: number; total: number; pctNeg: number }
 
 const CHIP_LABELS: Record<string, string> = {
-  right_size: 'Right size',
-  right_sector: 'Right sector',
-  right_timing: 'Right timing',
-  good_eligibility: 'Good eligibility',
-  matches_style: 'Matches style',
-  wrong_size: 'Wrong size',
-  wrong_sector: 'Wrong sector',
-  wrong_timing: 'Wrong timing',
-  eligibility_issue: 'Eligibility issue',
-  wrong_style: 'Wrong style',
-  something_else: 'Something else',
+  right_size: 'Right size', right_sector: 'Right sector', right_timing: 'Right timing',
+  good_eligibility: 'Good eligibility', matches_style: 'Matches style',
+  wrong_size: 'Wrong size', wrong_sector: 'Wrong sector', wrong_timing: 'Wrong timing',
+  eligibility_issue: 'Eligibility issue', wrong_style: 'Wrong style', something_else: 'Something else',
 }
 
 function fmt(date: string) {
@@ -58,81 +33,54 @@ function fmt(date: string) {
 }
 
 export default function AdminFeedbackPage() {
-  const supabase = createClientComponentClient()
-  const [allowed, setAllowed] = useState<boolean | null>(null)
   const [rows, setRows] = useState<FeedbackRow[]>([])
   const [loading, setLoading] = useState(true)
+  const [denied, setDenied] = useState(false)
 
   useEffect(() => {
-    async function load() {
-      const { data: { session } } = await supabase.auth.getSession()
-      const user = session?.user
-      if (!user || user.email !== ADMIN_EMAIL) {
-        setAllowed(false)
+    fetch('/api/admin/feedback')
+      .then(r => {
+        if (r.status === 403) { setDenied(true); setLoading(false); return null }
+        return r.json()
+      })
+      .then(data => {
+        if (\!data) return
+        setRows(data.rows || [])
         setLoading(false)
-        return
-      }
-      setAllowed(true)
-
-      const { data: feedback } = await supabase
-        .from('match_feedback')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (!feedback) { setLoading(false); return }
-
-      // fetch grant titles
-      const grantIds = Array.from(new Set(feedback.map(f => f.grant_id)))
-      const { data: grants } = await supabase
-        .from('scraped_grants')
-        .select('id, title')
-        .in('id', grantIds)
-
-      const titleMap = new Map((grants || []).map(g => [g.id, g.title]))
-
-      setRows(feedback.map(f => ({ ...f, grant_title: titleMap.get(f.grant_id) ?? f.grant_id })))
-      setLoading(false)
-    }
-    load()
+      })
+      .catch(() => setLoading(false))
   }, [])
 
-  if (loading) return <div style={{ padding: 48, fontFamily: 'DM Sans, sans-serif', color: '#666' }}>Loading…</div>
-  if (allowed === false) return <div style={{ padding: 48, fontFamily: 'DM Sans, sans-serif', color: '#c00' }}>Access denied.</div>
+  if (loading) return <div style={{ padding: 48, fontFamily: 'DM Sans, sans-serif', color: '#666' }}>Loading...</div>
+  if (denied) return <div style={{ padding: 48, fontFamily: 'DM Sans, sans-serif', color: '#c00' }}>Access denied.</div>
 
-  // ── stats ────────────────────────────────────────────────────────────────
   const total = rows.length
   const upCount = rows.filter(r => r.direction === 'up').length
   const downCount = rows.filter(r => r.direction === 'down').length
   const freeTextCount = rows.filter(r => r.free_text && r.free_text.trim().length > 0).length
 
-  // ── last 30 days bar chart data ──────────────────────────────────────────
   const dayMap = new Map<string, { up: number; down: number }>()
   const now = new Date()
   for (let i = 29; i >= 0; i--) {
-    const d = new Date(now)
-    d.setDate(d.getDate() - i)
-    const key = d.toISOString().slice(0, 10)
-    dayMap.set(key, { up: 0, down: 0 })
+    const d = new Date(now); d.setDate(d.getDate() - i)
+    dayMap.set(d.toISOString().slice(0, 10), { up: 0, down: 0 })
   }
   rows.forEach(r => {
     const key = r.created_at.slice(0, 10)
     if (dayMap.has(key)) {
-      const slot = dayMap.get(key)!
-      if (r.direction === 'up') slot.up++
-      else slot.down++
+      const slot = dayMap.get(key)\!
+      if (r.direction === 'up') slot.up++; else slot.down++
     }
   })
   const days: DayStat[] = Array.from(dayMap.entries()).map(([date, v]) => ({ date, ...v }))
   const maxDay = Math.max(1, ...days.map(d => d.up + d.down))
 
-  // ── chip breakdown ───────────────────────────────────────────────────────
   const chipMap = new Map<string, { up: number; down: number }>()
   rows.forEach(r => {
     (r.reasons || []).forEach(reason => {
-      if (!chipMap.has(reason)) chipMap.set(reason, { up: 0, down: 0 })
-      const slot = chipMap.get(reason)!
-      if (r.direction === 'up') slot.up++
-      else slot.down++
+      if (\!chipMap.has(reason)) chipMap.set(reason, { up: 0, down: 0 })
+      const slot = chipMap.get(reason)\!
+      if (r.direction === 'up') slot.up++; else slot.down++
     })
   })
   const chipStats: ChipStat[] = Array.from(chipMap.entries())
@@ -140,28 +88,16 @@ export default function AdminFeedbackPage() {
     .sort((a, b) => (b.up + b.down) - (a.up + a.down))
   const maxChip = Math.max(1, ...chipStats.map(c => c.up + c.down))
 
-  // ── hot grants ───────────────────────────────────────────────────────────
   const grantMap = new Map<string, { title: string; up: number; down: number }>()
   rows.forEach(r => {
-    if (!grantMap.has(r.grant_id)) grantMap.set(r.grant_id, { title: r.grant_title || r.grant_id, up: 0, down: 0 })
-    const slot = grantMap.get(r.grant_id)!
-    if (r.direction === 'up') slot.up++
-    else slot.down++
+    if (\!grantMap.has(r.grant_id)) grantMap.set(r.grant_id, { title: r.grant_title || r.grant_id, up: 0, down: 0 })
+    const slot = grantMap.get(r.grant_id)\!
+    if (r.direction === 'up') slot.up++; else slot.down++
   })
   const hotGrants: HotGrant[] = Array.from(grantMap.entries())
-    .map(([grant_id, v]) => ({
-      grant_id,
-      title: v.title,
-      up: v.up,
-      down: v.down,
-      total: v.up + v.down,
-      pctNeg: v.up + v.down > 0 ? Math.round((v.down / (v.up + v.down)) * 100) : 0,
-    }))
-    .filter(g => g.total >= 2)
-    .sort((a, b) => b.total - a.total)
-    .slice(0, 20)
+    .map(([grant_id, v]) => ({ grant_id, title: v.title, up: v.up, down: v.down, total: v.up + v.down, pctNeg: v.up + v.down > 0 ? Math.round((v.down / (v.up + v.down)) * 100) : 0 }))
+    .filter(g => g.total >= 2).sort((a, b) => b.total - a.total).slice(0, 20)
 
-  // ── free text ────────────────────────────────────────────────────────────
   const freeTexts = rows.filter(r => r.free_text && r.free_text.trim().length > 0)
 
   const s: Record<string, React.CSSProperties> = {
@@ -169,26 +105,20 @@ export default function AdminFeedbackPage() {
     h1: { fontSize: 26, fontWeight: 700, color: '#1f5c52', marginBottom: 8 },
     sub: { fontSize: 14, color: '#666', marginBottom: 36 },
     statGrid: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 40 },
-    statCard: { background: '#faf7f2', border: '1px solid #e8ddd0', borderRadius: 0, padding: '20px 24px' },
+    statCard: { background: '#faf7f2', border: '1px solid #e8ddd0', padding: '20px 24px' },
     statNum: { fontSize: 34, fontWeight: 700, color: '#1f5c52', lineHeight: 1 },
     statLabel: { fontSize: 13, color: '#666', marginTop: 6 },
     section: { marginBottom: 44 },
     sectionTitle: { fontSize: 15, fontWeight: 600, color: '#2c2c2a', marginBottom: 16 },
-    card: { background: '#fff', border: '1px solid #e8ddd0', borderRadius: 0, padding: '24px 28px' },
-    barTrack: { height: 28, background: '#f0ece6', borderRadius: 0, overflow: 'hidden', display: 'flex', marginBottom: 6 },
+    card: { background: '#fff', border: '1px solid #e8ddd0', padding: '24px 28px' },
     table: { width: '100%', borderCollapse: 'collapse' as const, fontSize: 13 },
     th: { textAlign: 'left' as const, padding: '8px 12px', borderBottom: '1px solid #e8ddd0', color: '#666', fontWeight: 500 },
     td: { padding: '10px 12px', borderBottom: '1px solid #f3efea', verticalAlign: 'top' as const },
     warn: { color: '#c96a00', fontWeight: 600 },
   }
 
-
   const pillStyle = (dir: 'up' | 'down'): React.CSSProperties => ({
-    display: 'inline-block',
-    padding: '2px 8px',
-    borderRadius: 0,
-    fontSize: 11,
-    fontWeight: 600,
+    display: 'inline-block', padding: '2px 8px', fontSize: 11, fontWeight: 600,
     background: dir === 'up' ? '#e6f4e6' : '#fce8e8',
     color: dir === 'up' ? '#2a7a2a' : '#c00',
   })
@@ -196,9 +126,8 @@ export default function AdminFeedbackPage() {
   return (
     <div style={s.page}>
       <div style={s.h1}>Match Feedback</div>
-      <div style={s.sub}>All signals from thumbs up / down interactions. Updates in real time.</div>
+      <div style={s.sub}>All signals from thumbs up / down interactions.</div>
 
-      {/* stat cards */}
       <div style={s.statGrid}>
         {[
           { num: total, label: 'Total events' },
@@ -213,7 +142,6 @@ export default function AdminFeedbackPage() {
         ))}
       </div>
 
-      {/* activity chart */}
       <div style={s.section}>
         <div style={s.sectionTitle}>Activity — last 30 days</div>
         <div style={s.card}>
@@ -223,9 +151,9 @@ export default function AdminFeedbackPage() {
               const upH = d.up + d.down > 0 ? Math.round((d.up / (d.up + d.down)) * h) : 0
               const downH = h - upH
               return (
-                <div key={d.date} title={`${d.date}: ${d.up}↑ ${d.down}↓`} style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-                  {downH > 0 && <div style={{ height: downH, background: '#f4a0a0', borderRadius: 0 }} />}
-                  {upH > 0 && <div style={{ height: upH, background: '#6dbf6d', borderRadius: 0 }} />}
+                <div key={d.date} title={`${d.date}: ${d.up} up ${d.down} down`} style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+                  {downH > 0 && <div style={{ height: downH, background: '#f4a0a0' }} />}
+                  {upH > 0 && <div style={{ height: upH, background: '#6dbf6d' }} />}
                   {h === 0 && <div style={{ height: 2, background: '#e8e0d8' }} />}
                 </div>
               )
@@ -238,25 +166,23 @@ export default function AdminFeedbackPage() {
         </div>
       </div>
 
-      {/* chip breakdown */}
       <div style={s.section}>
         <div style={s.sectionTitle}>Reason chips</div>
         <div style={s.card}>
           {chipStats.length === 0 && <div style={{ color: '#999', fontSize: 13 }}>No chips recorded yet.</div>}
           {chipStats.map(c => {
-            const total = c.up + c.down
-            const upPct = Math.round((c.up / total) * 100)
-            const downPct = 100 - upPct
+            const t = c.up + c.down
+            const upPct = Math.round((c.up / t) * 100)
             return (
               <div key={c.reason} style={{ marginBottom: 14 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 4 }}>
                   <span style={{ fontWeight: 500 }}>{CHIP_LABELS[c.reason] ?? c.reason}</span>
-                  <span style={{ color: '#888' }}>{c.up}↑ {c.down}↓</span>
+                  <span style={{ color: '#888' }}>{c.up} up {c.down} down</span>
                 </div>
-                <div style={{ ...s.barTrack, height: 12 }}>
-                  <div style={{ width: `${(total / maxChip) * 100}%`, display: 'flex', height: '100%' }}>
+                <div style={{ height: 12, background: '#f0ece6', overflow: 'hidden' }}>
+                  <div style={{ width: `${(t / maxChip) * 100}%`, display: 'flex', height: '100%' }}>
                     <div style={{ width: `${upPct}%`, background: '#6dbf6d' }} />
-                    <div style={{ width: `${downPct}%`, background: '#f4a0a0' }} />
+                    <div style={{ width: `${100 - upPct}%`, background: '#f4a0a0' }} />
                   </div>
                 </div>
               </div>
@@ -265,7 +191,6 @@ export default function AdminFeedbackPage() {
         </div>
       </div>
 
-      {/* hot grants */}
       <div style={s.section}>
         <div style={s.sectionTitle}>Grants with most signals</div>
         <div style={s.card}>
@@ -273,11 +198,7 @@ export default function AdminFeedbackPage() {
           {hotGrants.length > 0 && (
             <table style={s.table}>
               <thead>
-                <tr>
-                  {['Grant', '👍', '👎', 'Total', '% Neg', ''].map(h => (
-                    <th key={h} style={s.th}>{h}</th>
-                  ))}
-                </tr>
+                <tr>{['Grant', 'Up', 'Down', 'Total', '% Neg', ''].map(h => <th key={h} style={s.th}>{h}</th>)}</tr>
               </thead>
               <tbody>
                 {hotGrants.map(g => (
@@ -287,9 +208,7 @@ export default function AdminFeedbackPage() {
                     <td style={{ ...s.td, color: '#c00', fontWeight: 600 }}>{g.down}</td>
                     <td style={s.td}>{g.total}</td>
                     <td style={s.td}>{g.pctNeg}%</td>
-                    <td style={s.td}>
-                      {g.total >= 3 && g.pctNeg >= 70 && <span style={s.warn}>⚠ Review</span>}
-                    </td>
+                    <td style={s.td}>{g.total >= 3 && g.pctNeg >= 70 && <span style={s.warn}>Review</span>}</td>
                   </tr>
                 ))}
               </tbody>
@@ -298,7 +217,6 @@ export default function AdminFeedbackPage() {
         </div>
       </div>
 
-      {/* free text */}
       <div style={s.section}>
         <div style={s.sectionTitle}>Free text ({freeTextCount})</div>
         <div style={s.card}>
