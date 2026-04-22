@@ -1050,60 +1050,26 @@ export default function LandingPage() {
       <section id="cohort" className="py-20 md:py-28" style={{ background: '#FAFAF7' }}>
         <div className="mx-auto max-w-6xl px-6">
           <motion.div {...fadeInView(0)}>
-            <p className="text-xs font-bold uppercase tracking-widest mb-5" style={{ color: '#8ECB3C', fontFamily: 'var(--font-space-grotesk)' }}>Founding cohort</p>
-            <h2 className="mb-4 leading-tight" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#2C2C2A' }}>
-              Building this with a <span style={{ color: '#8ECB3C' }}>small group.</span>
-            </h2>
-            <p className="text-base leading-relaxed mb-10 max-w-xl" style={{ color: '#5F5E5A' }}>
-              We&apos;re hand-picking 20&ndash;30 organisations for the founding cohort. If that sounds like you, we&apos;d love to hear from you.
-            </p>
-            <div className="grid md:grid-cols-2 gap-4 items-stretch">
-              {/* Who we're looking for */}
-              <div className="rounded-3xl p-8 bg-white flex flex-col" style={{ border: '0.5px solid rgba(23,52,4,0.08)', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
-                <p className="text-base font-semibold mb-5" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#2C2C2A' }}>Who we&apos;re looking for</p>
-                <div className="flex flex-col flex-1">
-                  {([
-                    { text: 'CICs and social enterprises', sub: 'Whether you&apos;re early-stage or scaling, from trust grants to blended social investment', dot: 'lime' },
-                    { text: 'Small charities and CIOs', sub: "Where fundraising is one person&apos;s many jobs, not a whole team", dot: 'lime' },
-                    { text: 'Co-operatives and community groups', sub: 'Worker-led, community-owned, or unincorporated', dot: 'lime' },
-                    { text: 'Impact founders', sub: 'Early-stage, pre-revenue, or working as an individual', dot: 'lime' },
-                    { text: 'Willing to give real feedback', sub: 'Occasional calls and messages as we build. This is the main thing we ask', dot: 'coral' },
-                  ] as const).map((item, i, arr) => (
-                    <div key={i} className="flex items-start gap-3 py-3" style={{ borderBottom: i < arr.length - 1 ? '0.5px solid rgba(23,52,4,0.08)' : 'none' }}>
-                      <span className="w-2 h-2 rounded-full flex-shrink-0 mt-1.5" style={{ background: item.dot === 'coral' ? '#D85A30' : '#8ECB3C' }} />
-                      <div>
-                        <p className="text-sm font-semibold" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#2C2C2A' }} dangerouslySetInnerHTML={{ __html: item.text }} />
-                        <p className="text-xs mt-0.5 leading-relaxed" style={{ color: '#8A8986' }} dangerouslySetInnerHTML={{ __html: item.sub }} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              {/* The exchange */}
-              <div className="rounded-3xl p-8 flex flex-col" style={{ background: '#F5F1E8', border: '0.5px solid rgba(23,52,4,0.08)' }}>
-                <p className="text-base font-semibold mb-5" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#2C2C2A' }}>The exchange</p>
-                <div className="flex flex-col flex-1">
-                  {[
-                    { title: 'Free access during beta', sub: 'Full product access while we build together' },
-                    { title: 'Free first year after launch', sub: 'You keep full access for 12 months, on us' },
-                    { title: 'Founding rate from year two', sub: 'A permanently lower price for sticking with us' },
-                    { title: 'Direct line to the founder', sub: 'Your feedback shapes what we build next' },
-                  ].map((item, i, arr) => (
-                    <div key={i} className="flex items-start gap-3 py-3" style={{ borderBottom: i < arr.length - 1 ? '0.5px solid rgba(23,52,4,0.14)' : 'none' }}>
-                      <span className="text-sm font-bold flex-shrink-0 mt-0.5" style={{ color: '#639922' }}>&#10003;</span>
-                      <div>
-                        <p className="text-sm font-semibold" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#2C2C2A' }}>{item.title}</p>
-                        <p className="text-xs mt-0.5 leading-relaxed" style={{ color: '#5F5E5A' }}>{item.sub}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-6">
-                  <Link href={COHORT_URL} className="inline-flex items-center gap-2 bg-[#8ECB3C] text-[#173404] px-6 py-3 rounded-full font-bold text-sm hover:opacity-90 transition-all no-underline">
-                    Apply to join <ArrowRight className="w-4 h-4" />
-                  </Link>
-                </div>
-              </div>
+            <div style={{ background: '#FAFAF7', borderRadius: 14, padding: '64px 48px', textAlign: 'center' }}>
+              <p style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 11.5, color: '#8ECB3C', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 16 }}>
+                Founding cohort, applications open
+              </p>
+              <h2 style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 36, lineHeight: 1.15, letterSpacing: '-0.02em', color: '#2C2C2A', maxWidth: 580, margin: '0 auto 20px' }}>
+                Building this with a <span style={{ color: '#8ECB3C' }}>small group.</span>
+              </h2>
+              <p style={{ fontSize: 16, color: '#5F5E5A', lineHeight: 1.6, maxWidth: 540, margin: '0 auto 12px' }}>
+                I&apos;m hand-picking 20&ndash;30 organisations to help shape Grant Tracker as I build it.
+              </p>
+              <p style={{ fontSize: 16, color: '#5F5E5A', lineHeight: 1.6, maxWidth: 540, margin: '0 auto 32px' }}>
+                Free during beta and for the first year after launch. Plus a direct line to me whenever you need it. A genuine founding cohort, not a waitlist.
+              </p>
+              <Link
+                href={COHORT_URL}
+                style={{ background: '#8ECB3C', color: '#173404', padding: '13px 28px', borderRadius: 24, fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 15, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}
+              >
+                Apply to join <span>&#8594;</span>
+              </Link>
+              <p style={{ fontSize: 12.5, color: '#8A8986', marginTop: 14 }}>Applications reviewed within a week</p>
             </div>
           </motion.div>
         </div>
