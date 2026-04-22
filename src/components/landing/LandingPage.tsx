@@ -580,7 +580,7 @@ export default function LandingPage() {
             </div>
             <div className="lg:pb-2">
               <p className="text-[#5F5E5A] text-base leading-relaxed max-w-sm">
-                GrantTracker streamlines your funding journey from initial discovery to successful submission — matched to your organisation.
+                Find grants, programmes, investment and in-kind support, matched to your organisation.
               </p>
             </div>
           </motion.div>
