@@ -552,13 +552,16 @@ export default function LandingPage() {
       )}
 
       {/* STATS */}
-      <section className="py-16 md:py-20" style={{ background: '#2C2C2A' }}>
+      <section className="py-8 md:py-10" style={{ background: '#FAFAF7' }}>
         <div className="mx-auto max-w-6xl px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
+          <div
+            className="grid grid-cols-2 md:grid-cols-4 gap-6"
+            style={{ background: '#173404', borderRadius: 14, padding: '36px 40px' }}
+          >
             {stats.map((s, i) => (
-              <motion.div key={s.label} {...fadeInView(i * 0.1)} className="text-center">
-                <p className="leading-none mb-3" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(40px, 5vw, 64px)', color: '#8ECB3C', letterSpacing: '-0.03em' }}>{s.value}</p>
-                <p className="text-sm leading-relaxed" style={{ color: '#8A8986' }}>{s.label}</p>
+              <motion.div key={s.label} {...fadeInView(i * 0.1)}>
+                <p className="leading-none mb-2.5" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 36, color: '#8ECB3C', letterSpacing: '-0.02em' }}>{s.value}</p>
+                <p style={{ fontSize: 12.5, color: '#C0DD97', lineHeight: 1.45 }}>{s.label}</p>
               </motion.div>
             ))}
           </div>
