@@ -884,7 +884,7 @@ export default function LandingPage() {
               <blockquote style={{ position: 'relative', paddingLeft: '42px', paddingRight: '12px', marginTop: 8 }}>
                 <span className="select-none" style={{ position: 'absolute', left: 0, top: 2, fontSize: '58px', color: '#8ECB3C', fontFamily: "'Fraunces', Georgia, serif", lineHeight: 0.7, fontWeight: 500 }}>&ldquo;</span>
                 <p style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 18, color: '#2C2C2A', lineHeight: 1.55, letterSpacing: '-0.005em', margin: '0 0 16px 0' }}>
-                  I&apos;ve spent 20 years in the social enterprise and charity sector, co-founding a youth music organisation, leading development strategy at local charities, and driving fundraising across a global co-working network.
+                  I&apos;ve spent 20 years in the social enterprise and charity sector, co-founding a youth music organisation, leading development strategy at local charities, and driving fundraising across a global co-working network for social entrepreneurs.
                 </p>
                 <p style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 18, color: '#2C2C2A', lineHeight: 1.55, letterSpacing: '-0.005em', margin: '0 0 4px 0' }}>
                   The frustration was the same every time: a fragmented funding ecosystem that forced people like me to spend more time hunting opportunities than delivering impactful work.
