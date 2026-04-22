@@ -1128,11 +1128,10 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* FINAL CTA + FOOTER */}
-      <section className="pt-20 md:pt-28" style={{ background: '#FAFAF7' }}>
+      {/* FINAL CTA */}
+      <section className="pt-20 md:pt-28 pb-16 md:pb-24 text-center" style={{ background: '#173404' }}>
         <div className="mx-auto max-w-6xl px-6">
-          {/* Final CTA block */}
-          <motion.div {...fadeInView(0)} className="rounded-t-3xl px-12 pt-14 pb-12 text-center" style={{ background: '#173404' }}>
+          <motion.div {...fadeInView(0)}>
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-7 text-xs font-semibold uppercase tracking-wider" style={{ background: 'rgba(142,203,60,0.15)', color: '#C0DD97', fontFamily: 'var(--font-space-grotesk)' }}>
               <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#8ECB3C' }} />
               Founding cohort, applications open
@@ -1152,27 +1151,30 @@ export default function LandingPage() {
             </Link>
             <p className="mt-5 text-sm" style={{ color: '#97C459' }}>Applications reviewed within a week</p>
           </motion.div>
-          {/* Footer */}
-          <footer className="rounded-b-3xl px-12 py-8" style={{ background: '#0F2502' }}>
-            <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between" style={{ paddingBottom: '20px', borderBottom: '0.5px solid rgba(192,221,151,0.15)', marginBottom: '20px' }}>
-              <a href="/" className="flex items-center gap-2 no-underline">
-                <span className="text-lg font-bold" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#FFFFFF', letterSpacing: '-0.02em' }}>GrantTracker</span>
-              </a>
-              <div className="flex flex-wrap gap-5 text-xs font-medium" style={{ color: '#97C459', fontFamily: 'var(--font-space-grotesk)' }}>
-                <a href="#how" className="hover:text-white transition-colors">How it works</a>
-                <a href="#features" className="hover:text-white transition-colors">Features</a>
-                <a href="#cohort" className="hover:text-white transition-colors">Founding cohort</a>
-                <a href="#about" className="hover:text-white transition-colors">About</a>
-                <a href="#contact" className="hover:text-white transition-colors">Contact</a>
-              </div>
-            </div>
-            <div className="flex flex-col gap-1.5 md:flex-row md:items-center md:justify-between text-xs" style={{ color: '#97C459' }}>
-              <span>Built for the UK social impact sector.</span>
-              <span>&copy; 2026 Grant Tracker</span>
-            </div>
-          </footer>
         </div>
       </section>
+
+      {/* FOOTER */}
+      <footer className="px-6 py-8" style={{ background: '#0F2502' }}>
+        <div className="mx-auto max-w-6xl">
+          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between" style={{ paddingBottom: '20px', borderBottom: '0.5px solid rgba(192,221,151,0.15)', marginBottom: '20px' }}>
+            <a href="/" className="flex items-center gap-2 no-underline">
+              <span className="text-lg font-bold" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#FFFFFF', letterSpacing: '-0.02em' }}>GrantTracker</span>
+            </a>
+            <div className="flex flex-wrap gap-5 text-xs font-medium" style={{ color: '#97C459', fontFamily: 'var(--font-space-grotesk)' }}>
+              <a href="#how" className="hover:text-white transition-colors">How it works</a>
+              <a href="#features" className="hover:text-white transition-colors">Features</a>
+              <a href="#cohort" className="hover:text-white transition-colors">Founding cohort</a>
+              <a href="#about" className="hover:text-white transition-colors">About</a>
+              <a href="#contact" className="hover:text-white transition-colors">Contact</a>
+            </div>
+          </div>
+          <div className="flex flex-col gap-1.5 md:flex-row md:items-center md:justify-between text-xs" style={{ color: '#97C459' }}>
+            <span>Built for the UK social impact sector.</span>
+            <span>&copy; 2026 Grant Tracker</span>
+          </div>
+        </div>
+      </footer>
 
     </div>
   )
