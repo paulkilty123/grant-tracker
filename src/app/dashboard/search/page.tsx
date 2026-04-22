@@ -504,11 +504,12 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
   })()
 
   // ── Match tier ──
-  const tier       = score >= 80 ? 'Strong match' : score >= 60 ? 'Partial match' : 'Weak match'
-  const tierHue    = score >= 80 ? { ring: '#639922', title: '#3B6D11', panelBg: '#F4F9ED', border: '#639922', barBg: 'rgba(99,153,34,0.15)',    positive: '#639922', caveat: '#5A9080', caveatText: '#3E6357' }
-                   : score >= 60 ? { ring: '#5A9080', title: '#3E6357', panelBg: '#F0F5F3', border: '#5A9080', barBg: 'rgba(90,144,128,0.18)',    positive: '#639922', caveat: '#5A9080', caveatText: '#3E6357' }
-                   :               { ring: '#808580', title: '#5B605B', panelBg: '#F4F6F4', border: '#808580', barBg: 'rgba(128,133,128,0.2)',    positive: '#639922', caveat: '#808580', caveatText: '#5B605B' }
-  const moduleTitle = score >= 80 ? 'Why this strongly matches' : score >= 60 ? 'Why this partially matches' : 'Why this weakly matches'
+  const tier       = score >= 80 ? 'Strong match' : score >= 70 ? 'Good match' : score >= 50 ? 'Partial match' : 'Weak match'
+  const tierHue    = score >= 80 ? { ring: '#639922', title: '#3B6D11', panelBg: '#F4F9ED', border: '#639922', barBg: 'rgba(99,153,34,0.15)',    positive: '#639922', caveat: '#639922', caveatText: '#3B6D11' }
+                   : score >= 70 ? { ring: '#8ECB3C', title: '#3B6D11', panelBg: '#F7FBF0', border: '#8ECB3C', barBg: 'rgba(142,203,60,0.15)',   positive: '#8ECB3C', caveat: '#8ECB3C', caveatText: '#3B6D11' }
+                   : score >= 50 ? { ring: '#BA7517', title: '#7A4E10', panelBg: '#FBF7EE', border: '#BA7517', barBg: 'rgba(186,117,23,0.12)',   positive: '#BA7517', caveat: '#BA7517', caveatText: '#7A4E10' }
+                   :               { ring: '#A06060', title: '#7A3030', panelBg: '#FAF1EE', border: '#A06060', barBg: 'rgba(160,96,96,0.12)',    positive: '#A06060', caveat: '#A06060', caveatText: '#7A3030' }
+  const moduleTitle = score >= 80 ? 'Why this strongly matches' : score >= 70 ? 'Why this is a good match' : score >= 50 ? 'Why this partially matches' : 'Why this weakly matches'
 
   // ── Funder type label ──
   const FUNDER_TYPE_LBLS: Record<string, string> = {
@@ -784,9 +785,9 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
             .filter(d => !(d.hideAt100 && d.pct >= 100))
 
           const barFill = (pct: number) =>
-            pct >= 80 ? '#639922' : pct >= 60 ? '#5A9080' : pct >= 40 ? '#BA7517' : '#A06060'
+            pct >= 80 ? '#639922' : pct >= 70 ? '#8ECB3C' : pct >= 50 ? '#BA7517' : '#A06060'
           const barText = (pct: number) =>
-            pct >= 80 ? tierHue.title : pct >= 60 ? '#3E6357' : pct >= 40 ? '#7A4E10' : '#7A3030'
+            pct >= 80 ? '#3B6D11' : pct >= 70 ? '#3B6D11' : pct >= 50 ? '#7A4E10' : '#7A3030'
 
           const ChevronIcon = () => (
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
