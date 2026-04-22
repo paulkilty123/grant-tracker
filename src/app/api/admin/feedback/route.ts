@@ -8,14 +8,14 @@ export async function GET() {
   // Auth check — who is calling?
   const authClient = createServerClient()
   const { data: { user } } = await authClient.auth.getUser()
-  if (\!user || user.email \!== ADMIN_EMAIL) {
+  if (!user || user.email !== ADMIN_EMAIL) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
   // Service role client — bypasses RLS to read all feedback
   const admin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL\!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY\!
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
   const { data: feedback, error } = await admin

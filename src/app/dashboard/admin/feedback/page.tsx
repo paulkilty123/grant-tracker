@@ -44,7 +44,7 @@ export default function AdminFeedbackPage() {
         return r.json()
       })
       .then(data => {
-        if (\!data) return
+        if (!data) return
         setRows(data.rows || [])
         setLoading(false)
       })
@@ -68,7 +68,7 @@ export default function AdminFeedbackPage() {
   rows.forEach(r => {
     const key = r.created_at.slice(0, 10)
     if (dayMap.has(key)) {
-      const slot = dayMap.get(key)\!
+      const slot = dayMap.get(key)!
       if (r.direction === 'up') slot.up++; else slot.down++
     }
   })
@@ -78,8 +78,8 @@ export default function AdminFeedbackPage() {
   const chipMap = new Map<string, { up: number; down: number }>()
   rows.forEach(r => {
     (r.reasons || []).forEach(reason => {
-      if (\!chipMap.has(reason)) chipMap.set(reason, { up: 0, down: 0 })
-      const slot = chipMap.get(reason)\!
+      if (!chipMap.has(reason)) chipMap.set(reason, { up: 0, down: 0 })
+      const slot = chipMap.get(reason)!
       if (r.direction === 'up') slot.up++; else slot.down++
     })
   })
@@ -90,8 +90,8 @@ export default function AdminFeedbackPage() {
 
   const grantMap = new Map<string, { title: string; up: number; down: number }>()
   rows.forEach(r => {
-    if (\!grantMap.has(r.grant_id)) grantMap.set(r.grant_id, { title: r.grant_title || r.grant_id, up: 0, down: 0 })
-    const slot = grantMap.get(r.grant_id)\!
+    if (!grantMap.has(r.grant_id)) grantMap.set(r.grant_id, { title: r.grant_title || r.grant_id, up: 0, down: 0 })
+    const slot = grantMap.get(r.grant_id)!
     if (r.direction === 'up') slot.up++; else slot.down++
   })
   const hotGrants: HotGrant[] = Array.from(grantMap.entries())
