@@ -746,55 +746,57 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
 
         {/* ── Match module (always visible when match data exists) ── */}
         {hasOrg && hasSearch && reason && (rawPos.length > 0 || allWarns.length > 0) && (
-          <div style={{ display: 'flex', gap: 14, marginTop: 14, padding: '12px 14px', background: tierHue.panelBg, borderRadius: 10, borderLeft: `3px solid ${tierHue.border}` }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6, color: tierHue.title, fontFamily: 'var(--font-space-grotesk)' }}>
-                {moduleTitle}
+          <div style={{ marginTop: 14, padding: '12px 14px', background: tierHue.panelBg, borderRadius: 10, borderLeft: `3px solid ${tierHue.border}` }}>
+            <div style={{ display: 'flex', gap: 14 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6, color: tierHue.title, fontFamily: 'var(--font-space-grotesk)' }}>
+                  {moduleTitle}
+                </div>
+                {(() => {
+                  const posLimit  = score >= 80 ? 3 : score >= 60 ? 3 : 2
+                  const warnLimit = score >= 80 ? 1 : score >= 60 ? 3 : 4
+                  const shownPos  = rawPos.slice(0, posLimit)
+                  const shownWarn = allWarns.slice(0, warnLimit)
+                  const isStrong  = score >= 80
+                  return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      {shownPos.map((r, i) => (
+                        <div key={i} style={{ fontSize: 12, color: '#2C2C2A', lineHeight: 1.5, display: 'flex', gap: 6, fontFamily: 'var(--font-dm-sans)' }}>
+                          <span style={{ color: tierHue.positive, flexShrink: 0 }}>✓</span>
+                          <span>{r}</span>
+                        </div>
+                      ))}
+                      {shownWarn.length > 0 && isStrong && (
+                        <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: tierHue.caveatText, marginTop: 6, marginBottom: 2, fontFamily: 'var(--font-space-grotesk)' }}>
+                          Why not higher
+                        </div>
+                      )}
+                      {shownWarn.map((r, i) => (
+                        <div key={`w${i}`} style={{ fontSize: 12, color: tierHue.caveatText, lineHeight: 1.5, display: 'flex', gap: 6, fontFamily: 'var(--font-dm-sans)' }}>
+                          <span style={{ color: '#BA7517', flexShrink: 0 }}>△</span>
+                          <span>{r}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )
+                })()}
               </div>
-              {(() => {
-                const posLimit  = score >= 80 ? 3 : score >= 60 ? 3 : 2
-                const warnLimit = score >= 80 ? 1 : score >= 60 ? 3 : 4
-                const shownPos  = rawPos.slice(0, posLimit)
-                const shownWarn = allWarns.slice(0, warnLimit)
-                const isStrong  = score >= 80
-                return (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    {shownPos.map((r, i) => (
-                      <div key={i} style={{ fontSize: 12, color: '#2C2C2A', lineHeight: 1.5, display: 'flex', gap: 6, fontFamily: 'var(--font-dm-sans)' }}>
-                        <span style={{ color: tierHue.positive, flexShrink: 0 }}>✓</span>
-                        <span>{r}</span>
-                      </div>
-                    ))}
-                    {shownWarn.length > 0 && isStrong && (
-                      <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: tierHue.caveatText, marginTop: 6, marginBottom: 2, fontFamily: 'var(--font-space-grotesk)' }}>
-                        Why not higher
-                      </div>
-                    )}
-                    {shownWarn.map((r, i) => (
-                      <div key={`w${i}`} style={{ fontSize: 12, color: tierHue.caveatText, lineHeight: 1.5, display: 'flex', gap: 6, fontFamily: 'var(--font-dm-sans)' }}>
-                        <span style={{ color: '#BA7517', flexShrink: 0 }}>△</span>
-                        <span>{r}</span>
-                      </div>
-                    ))}
-                  </div>
-                )
-              })()}
-            </div>
-            <div style={{ width: 120, flexShrink: 0, textAlign: 'right' }}>
-              <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 22, fontWeight: 500, color: tierHue.title }}>{score}%</div>
-              <div style={{ height: 4, borderRadius: 2, overflow: 'hidden', marginTop: 4, background: tierHue.barBg }}>
-                <div style={{ height: '100%', borderRadius: 2, background: tierHue.ring, width: `${score}%` }} />
+              <div style={{ width: 120, flexShrink: 0, textAlign: 'right' }}>
+                <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 22, fontWeight: 500, color: tierHue.title }}>{score}%</div>
+                <div style={{ height: 4, borderRadius: 2, overflow: 'hidden', marginTop: 4, background: tierHue.barBg }}>
+                  <div style={{ height: '100%', borderRadius: 2, background: tierHue.ring, width: `${score}%` }} />
+                </div>
+                <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 4, color: tierHue.title, fontFamily: 'var(--font-space-grotesk)' }}>{tier}</div>
               </div>
-              <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 4, color: tierHue.title, fontFamily: 'var(--font-space-grotesk)' }}>{tier}</div>
             </div>
+            {org?.owner_id && (
+              <MatchFeedbackBlock
+                grantId={grant.id}
+                userId={org.owner_id}
+                matchScore={score}
+              />
+            )}
           </div>
-          {org?.owner_id && (
-            <MatchFeedbackBlock
-              grantId={grant.id}
-              userId={org.owner_id}
-              matchScore={score}
-            />
-          )}
         )}
 
       </div>{/* end card-body */}
