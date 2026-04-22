@@ -384,6 +384,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
   const [descExpanded, setDescExpanded] = useState(false)
   const [insightsExpanded, setInsightsExpanded] = useState(false)
   const [whyExpanded, setWhyExpanded] = useState(false)
+  const [matchExpanded, setMatchExpanded] = useState(false)
   const [insightsHover, setInsightsHover] = useState(false)
   const isDismissed  = interactions.has('dismissed')
   const isLiked      = interactions.has('liked')
@@ -761,13 +762,8 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
 
         {/* ── Match module ── */}
         {hasOrg && hasSearch && reason && (rawPos.length > 0 || allWarns.length > 0) && (() => {
-          const isExpanded = expandedMatchIds.has(grant.id)
-          const toggleExpand = () => setExpandedMatchIds(prev => {
-            const next = new Set(prev)
-            if (next.has(grant.id)) next.delete(grant.id)
-            else next.add(grant.id)
-            return next
-          })
+          const isExpanded = matchExpanded
+          const toggleExpand = () => setMatchExpanded(e => !e)
           const matchedDims = getMatchedDimensions(breakdown)
           return (
             <div style={{ marginTop: 14, background: tierHue.panelBg, borderRadius: 10, borderLeft: `3px solid ${tierHue.border}` }}>
@@ -1185,7 +1181,6 @@ export default function SearchPage() {
   const [bannerDismissed, setBannerDismissed] = useState(false)
   const [interactions, setInteractions] = useState<Map<string, Set<InteractionAction>>>(new Map())
   const [matchFeedbackMap, setMatchFeedbackMap] = useState<Map<string, StoredFeedback>>(new Map())
-  const [expandedMatchIds, setExpandedMatchIds] = useState<Set<string>>(new Set())
   const [showDismissed, setShowDismissed] = useState(false)
   const [scrapedGrants, setScrapedGrants] = useState<EnrichedGrant[]>([])
   const [grantsLoaded, setGrantsLoaded]   = useState(false)
