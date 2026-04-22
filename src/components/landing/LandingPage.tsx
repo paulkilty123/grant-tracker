@@ -671,9 +671,9 @@ export default function LandingPage() {
                 />
                 {/* Icon centred in its circle */}
                 <div
-                  style={{ position: 'absolute', top: '50%', right: 23, width: 44, height: 44, borderRadius: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10, background: card.iconBg }}
+                  style={{ position: 'absolute', top: '50%', right: 23, width: 44, height: 44, borderRadius: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}
                 >
-                  <card.Icon className="w-5 h-5" style={{ color: card.iconColor }} />
+                  <card.Icon className="w-7 h-7" style={{ color: card.iconColor }} />
                 </div>
                 {/* Badge */}
                 <span
@@ -942,7 +942,7 @@ export default function LandingPage() {
                   className="flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center"
                   style={{ background: card.iconBg }}
                 >
-                  <card.Icon className="w-5 h-5" style={{ color: card.iconColor }} />
+                  <card.Icon className="w-7 h-7" style={{ color: card.iconColor }} />
                 </div>
                 {/* Content */}
                 <div className="flex-1 pt-0.5">
