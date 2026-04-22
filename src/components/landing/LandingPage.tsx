@@ -878,7 +878,7 @@ export default function LandingPage() {
             {/* LEFT: cream panel */}
             <motion.div {...fadeInView(0)} style={{ background: '#F5F1E8', padding: '56px 44px' }}>
               <p style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 12, color: '#8ECB3C', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 16 }}>About</p>
-              <h2 style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 'clamp(28px, 3vw, 36px)', lineHeight: 1.12, letterSpacing: '-0.02em', color: '#2C2C2A', margin: '0 0 28px 0' }}>
+              <h2 style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 'clamp(32px, 4.5vw, 56px)', lineHeight: 1.05, letterSpacing: '-0.03em', color: '#2C2C2A', margin: '0 0 28px 0' }}>
                 Built from<br /><span style={{ color: '#8ECB3C' }}>the inside.</span>
               </h2>
               <blockquote style={{ position: 'relative', paddingLeft: '42px', paddingRight: '12px', marginTop: 8 }}>
