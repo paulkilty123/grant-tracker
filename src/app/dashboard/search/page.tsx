@@ -761,88 +761,90 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
         </div>{/* end card-upper */}
 
         {/* ── Match module ── */}
-        {hasOrg && hasSearch && reason && (rawPos.length > 0 || allWarns.length > 0) && (() => {
+        {hasOrg && hasSearch && reason && breakdown && (() => {
           const isExpanded = matchExpanded
           const toggleExpand = () => setMatchExpanded(e => !e)
-          const matchedDims = getMatchedDimensions(breakdown)
+
+          // Per-dimension bars from breakdown
+          const DIM_ORDER = [
+            { key: 'themes',        label: 'Sector',       hideAt100: false },
+            { key: 'grantSize',     label: 'Size',         hideAt100: false },
+            { key: 'location',      label: 'Location',     hideAt100: false },
+            { key: 'beneficiaries', label: 'Beneficiaries',hideAt100: false },
+            { key: 'eligibility',   label: 'Eligibility',  hideAt100: true  },
+            { key: 'funderType',    label: 'Funding type', hideAt100: true  },
+          ]
+          const dimBars = DIM_ORDER
+            .filter(d => (breakdown as any)[d.key]?.max > 0)
+            .map(d => {
+              const dim = (breakdown as any)[d.key]
+              const pct = Math.round((dim.score / dim.max) * 100)
+              return { label: d.label, pct, hideAt100: d.hideAt100 }
+            })
+            .filter(d => !(d.hideAt100 && d.pct >= 100))
+
+          const barFill = (pct: number) =>
+            pct >= 80 ? '#639922' : pct >= 60 ? '#5A9080' : pct >= 40 ? '#BA7517' : '#A06060'
+          const barText = (pct: number) =>
+            pct >= 80 ? tierHue.title : pct >= 60 ? '#3E6357' : pct >= 40 ? '#7A4E10' : '#7A3030'
+
+          const ChevronIcon = () => (
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="2,4 6,8 10,4" />
+            </svg>
+          )
+
           return (
             <div style={{ marginTop: 14, background: tierHue.panelBg, borderRadius: 10, borderLeft: `3px solid ${tierHue.border}` }}>
-              {!isExpanded ? (
-                /* COMPACT STATE */
-                <div style={{ padding: '10px 14px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1, minWidth: 0, flexWrap: 'wrap' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0, minWidth: 120 }}>
-                      <div style={{ display: 'inline-flex', alignItems: 'baseline', gap: 6 }}>
-                        <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 18, fontWeight: 500, color: tierHue.title, letterSpacing: '-0.01em' }}>{score}%</span>
-                        <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 10.5, color: tierHue.title, letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 500 }}>{tier}</span>
-                      </div>
-                      <div style={{ height: 3, background: tierHue.barBg, borderRadius: 2, overflow: 'hidden' }}>
-                        <div style={{ height: '100%', background: tierHue.ring, borderRadius: 2, width: `${score}%` }} />
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      {matchedDims.map(dim => (
-                        <span key={dim} style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 12.5, color: tierHue.title, fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                          <span style={{ color: tierHue.positive }}>✓</span>{dim}
-                        </span>
-                      ))}
-                    </div>
-                    <button onClick={toggleExpand} style={{ background: 'transparent', border: 'none', fontFamily: 'var(--font-space-grotesk)', fontSize: 12, color: tierHue.title, cursor: 'pointer', padding: 0, fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 3, opacity: 0.7, flexShrink: 0 }}>
-                      Show details <span style={{ fontSize: 14, lineHeight: 1 }}>›</span>
-                    </button>
+              {/* Header row — identical in both states */}
+              <div style={{ padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                {/* Score + bar stack */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0, minWidth: 100 }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'baseline', gap: 6 }}>
+                    <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 18, fontWeight: 500, color: tierHue.title, letterSpacing: '-0.01em' }}>{score}%</span>
+                    <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 10.5, color: tierHue.title, letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 500 }}>{tier}</span>
                   </div>
-                  {org?.owner_id && (
-                    <MatchFeedbackBlock grantId={grant.id} userId={org.owner_id} matchScore={score} compact />
-                  )}
-                </div>
-              ) : (
-                /* EXPANDED STATE */
-                <div style={{ padding: '12px 14px 14px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginBottom: 8 }}>
-                    <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: tierHue.title, fontFamily: 'var(--font-space-grotesk)' }}>{moduleTitle}</div>
-                    <div style={{ display: 'inline-flex', alignItems: 'baseline', gap: 6 }}>
-                      <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 18, fontWeight: 500, color: tierHue.title }}>{score}%</span>
-                      <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 10.5, color: tierHue.title, letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 500 }}>{tier}</span>
-                    </div>
-                  </div>
-                  <div style={{ height: 3, background: tierHue.barBg, borderRadius: 2, overflow: 'hidden', marginBottom: 10 }}>
+                  <div style={{ height: 3, background: tierHue.barBg, borderRadius: 2, overflow: 'hidden' }}>
                     <div style={{ height: '100%', background: tierHue.ring, borderRadius: 2, width: `${score}%` }} />
                   </div>
-                  {(() => {
-                    const posLimit  = score >= 80 ? 3 : score >= 60 ? 3 : 2
-                    const warnLimit = score >= 80 ? 1 : score >= 60 ? 3 : 4
-                    const shownPos  = rawPos.slice(0, posLimit)
-                    const shownWarn = allWarns.slice(0, warnLimit)
-                    const isStrong  = score >= 80
-                    return (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginBottom: 10 }}>
-                        {shownPos.map((r, i) => (
-                          <div key={i} style={{ fontSize: 12, color: '#2C2C2A', lineHeight: 1.5, display: 'flex', gap: 6, fontFamily: 'var(--font-dm-sans)' }}>
-                            <span style={{ color: tierHue.positive, flexShrink: 0 }}>✓</span>
-                            <span>{r}</span>
-                          </div>
-                        ))}
-                        {shownWarn.length > 0 && isStrong && (
-                          <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: tierHue.caveatText, marginTop: 6, marginBottom: 2, fontFamily: 'var(--font-space-grotesk)' }}>
-                            Why not higher
-                          </div>
-                        )}
-                        {shownWarn.map((r, i) => (
-                          <div key={`w${i}`} style={{ fontSize: 12, color: tierHue.caveatText, lineHeight: 1.5, display: 'flex', gap: 6, fontFamily: 'var(--font-dm-sans)' }}>
-                            <span style={{ color: '#BA7517', flexShrink: 0 }}>△</span>
-                            <span>{r}</span>
-                          </div>
-                        ))}
+                </div>
+                {/* Chevron — rotates in place */}
+                <button
+                  aria-expanded={isExpanded}
+                  onClick={toggleExpand}
+                  style={{
+                    width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
+                    border: `0.5px solid ${tierHue.ring}60`,
+                    background: 'transparent', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: tierHue.title,
+                    transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.25s ease',
+                  }}
+                >
+                  <ChevronIcon />
+                </button>
+                {/* Spacer */}
+                <div style={{ flex: 1 }} />
+                {/* Feedback buttons — always in header */}
+                {org?.owner_id && (
+                  <MatchFeedbackBlock grantId={grant.id} userId={org.owner_id} matchScore={score} compact />
+                )}
+              </div>
+
+              {/* Expanded: dimension bars */}
+              {isExpanded && dimBars.length > 0 && (
+                <div style={{ padding: '0 14px 14px' }}>
+                  <div style={{ borderTop: `0.5px solid ${tierHue.ring}40`, paddingTop: 12 }}>
+                    {dimBars.map(d => (
+                      <div key={d.label} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                        <div style={{ width: 100, fontSize: 12, color: '#666', fontFamily: 'var(--font-space-grotesk)', flexShrink: 0 }}>{d.label}</div>
+                        <div style={{ flex: 1, height: 5, background: tierHue.barBg, borderRadius: 3, overflow: 'hidden' }}>
+                          <div style={{ height: '100%', width: `${d.pct}%`, background: barFill(d.pct), borderRadius: 3, transition: 'width 0.4s ease' }} />
+                        </div>
+                        <div style={{ width: 36, fontSize: 12, color: barText(d.pct), textAlign: 'right', fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, flexShrink: 0 }}>{d.pct}%</div>
                       </div>
-                    )
-                  })()}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, paddingTop: 10, borderTop: `0.5px solid ${tierHue.ring}40` }}>
-                    <button onClick={toggleExpand} style={{ background: 'transparent', border: 'none', fontFamily: 'var(--font-space-grotesk)', fontSize: 11.5, color: '#8A8986', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>
-                      Collapse
-                    </button>
-                    {org?.owner_id && (
-                      <MatchFeedbackBlock grantId={grant.id} userId={org.owner_id} matchScore={score} />
-                    )}
+                    ))}
                   </div>
                 </div>
               )}
