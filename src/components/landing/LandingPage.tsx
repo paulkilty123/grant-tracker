@@ -23,7 +23,7 @@ const fadeInView = (delay = 0) => ({
 })
 
 // TODO: Replace with Typeform/Notion form URL before launch
-const COHORT_URL = '/auth/signup'
+const COHORT_URL = '/apply'
 
 const navLinks = [
   { label: 'How it works', href: '#how' },
