@@ -13,6 +13,7 @@ import type { FeedbackSignals, MatchBreakdown } from '@/lib/matching'
 import { getInteractions, recordInteraction, removeInteraction } from '@/lib/interactions'
 import { saveSearchHistory, getSearchHistory, deleteSearchHistory, getWeeklySearchCount } from '@/lib/searchHistory'
 import type { GrantOpportunity, Organisation, FunderType, FundingType, ImpactSector, LegalStructure } from '@/types'
+import { MatchFeedbackBlock } from '@/components/MatchFeedbackBlock'
 import { SUBTYPE_LABELS } from '@/lib/funding-subtypes'
 import { normaliseScrapedGrant, type EnrichedGrant } from '@/lib/grants-normalise'
 import type { InteractionAction } from '@/lib/interactions'
@@ -787,6 +788,13 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
               <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 4, color: tierHue.title, fontFamily: 'var(--font-space-grotesk)' }}>{tier}</div>
             </div>
           </div>
+          {org?.owner_id && (
+            <MatchFeedbackBlock
+              grantId={grant.id}
+              userId={org.owner_id}
+              matchScore={score}
+            />
+          )}
         )}
 
       </div>{/* end card-body */}
