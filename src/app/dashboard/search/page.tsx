@@ -269,6 +269,7 @@ interface AIResult {
 interface DisplayGrant {
   grant: GrantOpportunity
   score: number
+  displayScore: number
   reason: string
   isAiScore: boolean
   breakdown?: MatchBreakdown
@@ -380,7 +381,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
   isInPipeline?: boolean
   pipelineStage?: string
 }) {
-  const { grant, score, reason, isAiScore, breakdown, eligibilityStatus, eligibilityReason, positiveReasons, warnReasons } = item
+  const { grant, score, displayScore, reason, isAiScore, breakdown, eligibilityStatus, eligibilityReason, positiveReasons, warnReasons } = item
   const [descExpanded, setDescExpanded] = useState(false)
   const [insightsExpanded, setInsightsExpanded] = useState(false)
   const [whyExpanded, setWhyExpanded] = useState(false)
@@ -802,11 +803,11 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                 {/* Score + bar stack */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0, minWidth: 100 }}>
                   <div style={{ display: 'inline-flex', alignItems: 'baseline', gap: 6 }}>
-                    <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 18, fontWeight: 500, color: tierHue.title, letterSpacing: '-0.01em' }}>{score}%</span>
-                    <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 10.5, color: tierHue.title, letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 500 }}>{tier}</span>
+                    <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 18, fontWeight: 500, color: tierHue.title, letterSpacing: '-0.01em' }}>{displayScore}%</span>
+                    <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 10.5, color: tierHue.title, letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 500 }}>{displayScore >= 80 ? 'Strong match' : displayScore >= 70 ? 'Good match' : displayScore >= 50 ? 'Partial match' : 'Weak match'}</span>
                   </div>
                   <div style={{ height: 3, background: tierHue.barBg, borderRadius: 2, overflow: 'hidden' }}>
-                    <div style={{ height: '100%', background: tierHue.ring, borderRadius: 2, width: `${score}%` }} />
+                    <div style={{ height: '100%', background: tierHue.ring, borderRadius: 2, width: `${displayScore}%` }} />
                   </div>
                 </div>
                 {/* Chevron — rotates in place */}
@@ -1738,7 +1739,7 @@ export default function SearchPage() {
         .map(r => {
           const grant = allGrants.find(g => g.id === r.grantId)
           if (!grant) return null
-          return { grant, score: r.score, reason: r.reason, isAiScore: true }
+          return { grant, score: r.score, displayScore: r.score, reason: r.reason, isAiScore: true }
         })
         .filter((x): x is DisplayGrant => x !== null)
     }
@@ -1777,6 +1778,7 @@ export default function SearchPage() {
       if (org) {
         const match = computeMatchScore(grant, org, feedbackSignals)
         const grantInteractions = interactions.get(grant.id) ?? new Set()
+        const displayScore = match.score
         let score = match.score
         if (grantInteractions.has('liked'))    score = Math.min(100, score + LIKE_SCORE_BOOST)
         if (grantInteractions.has('disliked')) score = Math.max(0,   score - DISLIKE_SCORE_PENALTY)
@@ -1784,9 +1786,9 @@ export default function SearchPage() {
         const mfb = matchFeedbackMap.get(grant.id)
         if (mfb?.direction === 'up')   score = Math.min(100, score + FB_UP_SCORE_BOOST)
         if (mfb?.direction === 'down') score = Math.max(0,   score - FB_DOWN_SCORE_PENALTY)
-        return { grant, score, reason: match.reason, isAiScore: false, breakdown: match.breakdown, eligibilityStatus: match.eligibilityStatus, eligibilityReason: match.eligibilityReason, positiveReasons: match.positiveReasons, warnReasons: match.warnReasons }
+        return { grant, score, displayScore, reason: match.reason, isAiScore: false, breakdown: match.breakdown, eligibilityStatus: match.eligibilityStatus, eligibilityReason: match.eligibilityReason, positiveReasons: match.positiveReasons, warnReasons: match.warnReasons }
       }
-      return { grant, score: 0, reason: '', isAiScore: false }
+      return { grant, score: 0, displayScore: 0, reason: '', isAiScore: false }
     })
 
     // When "Latest Grants" tab is active and no explicit sort chosen, default to newest-first by dateAdded
@@ -2860,7 +2862,7 @@ export default function SearchPage() {
       {activeView === 'saved' && (() => {
         const savedGrants: DisplayGrant[] = allGrants
           .filter(g => interactions.get(g.id)?.has('saved'))
-          .map(g => ({ grant: g, score: 0, reason: '', isAiScore: false, breakdown: undefined }))
+          .map(g => ({ grant: g, score: 0, displayScore: 0, reason: '', isAiScore: false, breakdown: undefined }))
         return savedGrants.length === 0 ? (
           <div className="text-center py-16 text-light">
             <Bookmark className="h-12 w-12 mx-auto mb-4 text-gray-300" />
