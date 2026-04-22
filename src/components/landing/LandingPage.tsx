@@ -1033,7 +1033,7 @@ export default function LandingPage() {
               </div>
               <div className="space-y-4">
                 <p className="text-base leading-relaxed" style={{ color: '#5F5E5A' }}>
-                  AI can refine your message, but we believe it&apos;s important to have an authentic voice. This helps you stand out from the crowd and demonstrate your impact.
+                  Funders are inundated with misaligned AI-written applications. We don&apos;t want to make the problem worse. So it&apos;s more important than ever to find the right match, and for your authentic voice to come through. That&apos;s how you stand out.
                 </p>
                 <p className="text-base leading-relaxed" style={{ color: '#5F5E5A' }}>
                   Grant Tracker uses AI where it genuinely helps: matching your profile to the right opportunities, building intelligence about how funders make decisions, and cutting the time you spend searching.
