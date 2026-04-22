@@ -178,17 +178,19 @@ export default function AdminFeedbackPage() {
     table: { width: '100%', borderCollapse: 'collapse' as const, fontSize: 13 },
     th: { textAlign: 'left' as const, padding: '8px 12px', borderBottom: '1px solid #e8ddd0', color: '#666', fontWeight: 500 },
     td: { padding: '10px 12px', borderBottom: '1px solid #f3efea', verticalAlign: 'top' as const },
-    pill: (dir: 'up' | 'down') => ({
-      display: 'inline-block',
-      padding: '2px 8px',
-      borderRadius: 0,
-      fontSize: 11,
-      fontWeight: 600,
-      background: dir === 'up' ? '#e6f4e6' : '#fce8e8',
-      color: dir === 'up' ? '#2a7a2a' : '#c00',
-    }),
     warn: { color: '#c96a00', fontWeight: 600 },
   }
+
+
+  const pillStyle = (dir: 'up' | 'down'): React.CSSProperties => ({
+    display: 'inline-block',
+    padding: '2px 8px',
+    borderRadius: 0,
+    fontSize: 11,
+    fontWeight: 600,
+    background: dir === 'up' ? '#e6f4e6' : '#fce8e8',
+    color: dir === 'up' ? '#2a7a2a' : '#c00',
+  })
 
   return (
     <div style={s.page}>
@@ -303,7 +305,7 @@ export default function AdminFeedbackPage() {
           {freeTexts.map(r => (
             <div key={r.id} style={{ paddingBottom: 16, marginBottom: 16, borderBottom: '1px solid #f0ece6' }}>
               <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 6 }}>
-                <span style={s.pill(r.direction)}>{r.direction === 'up' ? 'Good match' : 'Not for us'}</span>
+                <span style={pillStyle(r.direction)}>{r.direction === 'up' ? 'Good match' : 'Not for us'}</span>
                 <span style={{ fontSize: 12, color: '#888' }}>{r.grant_title}</span>
                 <span style={{ fontSize: 12, color: '#aaa', marginLeft: 'auto' }}>{fmt(r.created_at)}</span>
               </div>
