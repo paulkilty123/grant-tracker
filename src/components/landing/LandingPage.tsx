@@ -906,6 +906,16 @@ export default function LandingPage() {
                   There are thousands of UK funders, but only a fraction fit your organisation. Grant Tracker filters by your legal structure, sector, location and stage, so you only see what you can actually apply for.
                 </p>
               </div>
+
+              {/* Org type pills */}
+              <div>
+                <p style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 11, fontWeight: 500, color: '#8ECB3C', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 10 }}>Works for</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {['Registered charity', 'CIC', 'Social enterprise', 'Unincorporated', 'Community group'].map(label => (
+                    <span key={label} style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 12, fontWeight: 500, color: '#C0DD97', background: 'rgba(255,255,255,0.07)', border: '0.5px solid rgba(192,221,151,0.2)', borderRadius: 99, padding: '4px 12px' }}>{label}</span>
+                  ))}
+                </div>
+              </div>
             </motion.div>
 
           </div>
