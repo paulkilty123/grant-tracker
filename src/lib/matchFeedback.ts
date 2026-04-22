@@ -34,3 +34,30 @@ export async function deleteMatchFeedback(userId: string, grantId: string): Prom
     .delete()
     .match({ user_id: userId, grant_id: grantId })
 }
+
+export interface StoredFeedback {
+  direction: 'up' | 'down'
+  reasons: string[]
+  freeText: string | null
+}
+
+/** Load all match feedback for a user, returned as a map: grantId -> feedback */
+export async function getMatchFeedback(
+  userId: string,
+): Promise<Map<string, StoredFeedback>> {
+  const supabase = createClient()
+  const { data } = await supabase
+    .from('match_feedback')
+    .select('grant_id, direction, reasons, free_text')
+    .eq('user_id', userId)
+
+  const result = new Map<string, StoredFeedback>()
+  for (const row of data ?? []) {
+    result.set(row.grant_id, {
+      direction: row.direction as 'up' | 'down',
+      reasons: row.reasons ?? [],
+      freeText: row.free_text ?? null,
+    })
+  }
+  return result
+}

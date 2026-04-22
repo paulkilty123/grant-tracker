@@ -11,6 +11,11 @@ import { getOrganisationByOwner } from '@/lib/organisations'
 import { computeMatchScore, scoreColour } from '@/lib/matching'
 import type { FeedbackSignals, MatchBreakdown } from '@/lib/matching'
 import { getInteractions, recordInteraction, removeInteraction } from '@/lib/interactions'
+import { getMatchFeedback, type StoredFeedback } from '@/lib/matchFeedback'
+import {
+  LIKE_SCORE_BOOST, DISLIKE_SCORE_PENALTY, LIKE_SECTOR_BOOST, DISLIKE_SECTOR_PENALTY,
+  FB_UP_SCORE_BOOST, FB_DOWN_SCORE_PENALTY, FB_UP_SECTOR_BOOST, FB_DOWN_SECTOR_PENALTY,
+} from '@/lib/matchWeights'
 import { saveSearchHistory, getSearchHistory, deleteSearchHistory, getWeeklySearchCount } from '@/lib/searchHistory'
 import type { GrantOpportunity, Organisation, FunderType, FundingType, ImpactSector, LegalStructure } from '@/types'
 import { MatchFeedbackBlock } from '@/components/MatchFeedbackBlock'
@@ -1129,6 +1134,7 @@ export default function SearchPage() {
   const [freshnessFilter, setFreshnessFilter] = useState<'all' | '7d' | '14d' | '30d'>('all')
   const [bannerDismissed, setBannerDismissed] = useState(false)
   const [interactions, setInteractions] = useState<Map<string, Set<InteractionAction>>>(new Map())
+  const [matchFeedbackMap, setMatchFeedbackMap] = useState<Map<string, StoredFeedback>>(new Map())
   const [showDismissed, setShowDismissed] = useState(false)
   const [scrapedGrants, setScrapedGrants] = useState<EnrichedGrant[]>([])
   const [grantsLoaded, setGrantsLoaded]   = useState(false)
@@ -1226,6 +1232,8 @@ export default function SearchPage() {
       if (o) {
         const ix = await getInteractions(o.id)
         setInteractions(ix)
+        const mfb = await getMatchFeedback(user.id)
+        setMatchFeedbackMap(mfb)
         // Load existing pipeline grant names to show button state
         const { data: pipelineRows } = await supabase
           .from('pipeline_items')
@@ -1692,18 +1700,25 @@ export default function SearchPage() {
     const feedbackSignals: FeedbackSignals = (() => {
       const boosts    = new Map<string, number>()
       const penalties = new Map<string, number>()
+      // Action-bar like/dislike signals
       for (const [grantId, grantInteractions] of Array.from(interactions.entries())) {
-        const likedGrant = allGrants.find(g => g.id === grantId)
-        if (!likedGrant) continue
+        const g = allGrants.find(g => g.id === grantId)
+        if (\!g) continue
         if (grantInteractions.has('liked')) {
-          for (const s of likedGrant.sectors) {
-            boosts.set(s, (boosts.get(s) ?? 0) + 3)
-          }
+          for (const s of g.sectors) boosts.set(s, (boosts.get(s) ?? 0) + LIKE_SECTOR_BOOST)
         }
         if (grantInteractions.has('disliked')) {
-          for (const s of likedGrant.sectors) {
-            penalties.set(s, (penalties.get(s) ?? 0) + 2)
-          }
+          for (const s of g.sectors) penalties.set(s, (penalties.get(s) ?? 0) + DISLIKE_SECTOR_PENALTY)
+        }
+      }
+      // Match-block feedback signals (weighted higher — more considered signal)
+      for (const [grantId, fb] of Array.from(matchFeedbackMap.entries())) {
+        const g = allGrants.find(g => g.id === grantId)
+        if (\!g) continue
+        if (fb.direction === 'up') {
+          for (const s of g.sectors) boosts.set(s, (boosts.get(s) ?? 0) + FB_UP_SECTOR_BOOST)
+        } else {
+          for (const s of g.sectors) penalties.set(s, (penalties.get(s) ?? 0) + FB_DOWN_SECTOR_PENALTY)
         }
       }
       return { sectorBoosts: boosts, sectorPenalties: penalties }
@@ -1714,8 +1729,12 @@ export default function SearchPage() {
         const match = computeMatchScore(grant, org, feedbackSignals)
         const grantInteractions = interactions.get(grant.id) ?? new Set()
         let score = match.score
-        if (grantInteractions.has('liked'))    score = Math.min(100, score + 12)
-        if (grantInteractions.has('disliked')) score = Math.max(0,   score - 20)
+        if (grantInteractions.has('liked'))    score = Math.min(100, score + LIKE_SCORE_BOOST)
+        if (grantInteractions.has('disliked')) score = Math.max(0,   score - DISLIKE_SCORE_PENALTY)
+        // Match-block feedback — higher weight, more deliberate signal
+        const mfb = matchFeedbackMap.get(grant.id)
+        if (mfb?.direction === 'up')   score = Math.min(100, score + FB_UP_SCORE_BOOST)
+        if (mfb?.direction === 'down') score = Math.max(0,   score - FB_DOWN_SCORE_PENALTY)
         return { grant, score, reason: match.reason, isAiScore: false, breakdown: match.breakdown, eligibilityStatus: match.eligibilityStatus, eligibilityReason: match.eligibilityReason, positiveReasons: match.positiveReasons, warnReasons: match.warnReasons }
       }
       return { grant, score: 0, reason: '', isAiScore: false }
