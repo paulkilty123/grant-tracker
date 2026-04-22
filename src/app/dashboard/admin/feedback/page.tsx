@@ -81,7 +81,7 @@ export default function AdminFeedbackPage() {
       if (!feedback) { setLoading(false); return }
 
       // fetch grant titles
-      const grantIds = [...new Set(feedback.map(f => f.grant_id))]
+      const grantIds = Array.from(new Set(feedback.map(f => f.grant_id)))
       const { data: grants } = await supabase
         .from('scraped_grants')
         .select('id, title')
