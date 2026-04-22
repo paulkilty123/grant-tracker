@@ -1026,7 +1026,7 @@ export default function LandingPage() {
           <motion.div {...fadeInView(0.1)} className="rounded-3xl p-10 md:p-12 bg-white" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
             <div className="grid lg:grid-cols-2 gap-8 items-start">
               <div>
-                <h2 className="font-bold leading-tight" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#2C2C2A' }}>
+                <h2 className="font-bold leading-tight" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 'clamp(20px, 2vw, 28px)', fontWeight: 600, letterSpacing: '-0.02em', color: '#2C2C2A' }}>
                   We use AI so you can spend less time searching.<br />
                   <span style={{ color: '#8ECB3C' }}>Not less time thinking.</span>
                 </h2>
