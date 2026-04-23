@@ -182,7 +182,7 @@ export default function Sidebar({ org, userEmail }: Props) {
   const sidebarContent = (
     <aside
       className={cn(
-        'fixed left-0 top-0 bottom-0 w-60 flex flex-col z-50 transition-transform duration-300',
+        'fixed left-0 top-0 bottom-0 w-[min(240px,82vw)] flex flex-col z-50 transition-transform duration-300',
         'md:translate-x-0',
         mobileOpen ? 'translate-x-0' : '-translate-x-full',
       )}

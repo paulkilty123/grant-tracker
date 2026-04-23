@@ -136,7 +136,7 @@ const PipelineMockup = () => (
     </div>
     <p className="font-serif text-[28px] font-bold text-charcoal leading-tight">£187,500</p>
     <p className="text-[11px] text-coral font-medium mb-4">7 active opportunities</p>
-    <div className="grid grid-cols-3 gap-2 mb-4 text-[10px]">
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4 text-[10px]">
       {[{ name: 'Identified', items: 2 }, { name: 'Applying', items: 2 }, { name: 'Submitted', items: 1 }].map((col) => (
         <div key={col.name}>
           <div className="mb-2 text-center font-medium text-mid uppercase tracking-wider">{col.name}</div>
@@ -176,7 +176,7 @@ const DashboardMockup = () => (
       <p className="text-[11px] font-bold text-charcoal uppercase tracking-wider">Dashboard</p>
       <span className="ml-auto text-[10px] text-mid">Just now</span>
     </div>
-    <div className="grid grid-cols-3 gap-2 mb-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
       {[
         { label: 'Pipeline value', value: '£187.5k', Icon: TrendingUp, accent: true },
         { label: 'Active', value: '7', Icon: Activity, accent: false },
@@ -366,7 +366,7 @@ export default function LandingPage() {
 
       {/* HERO */}
       <section className="relative overflow-hidden" style={{ background: '#FAFAF7', minHeight: '100vh' }}>
-        <div className="relative z-10 mx-auto max-w-7xl px-6 md:px-8 grid lg:grid-cols-2 gap-16 lg:gap-12 items-start" style={{ paddingTop: 'clamp(100px, 14vw, 128px)', paddingBottom: '80px' }}>
+        <div className="relative z-10 mx-auto max-w-7xl px-6 md:px-8 grid lg:grid-cols-2 gap-16 lg:gap-12 items-start" style={{ paddingTop: 'clamp(80px, 14vw, 128px)', paddingBottom: 'clamp(40px, 8vw, 80px)' }}>
 
           {/* Left: text */}
           <motion.div {...fadeUp(0)} className="flex flex-col justify-start">
@@ -554,7 +554,7 @@ export default function LandingPage() {
       {/* STATS */}
       <section className="py-16 md:py-20" style={{ background: '#173404' }}>
         <div className="mx-auto max-w-6xl px-6 md:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-14">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-14">
             {stats.map((s, i) => (
               <motion.div key={s.label} {...fadeInView(i * 0.1)}>
                 <p className="leading-none mb-3" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 'clamp(40px, 4vw, 56px)', color: '#8ECB3C', letterSpacing: '-0.02em' }}>{s.value}</p>
@@ -873,7 +873,7 @@ export default function LandingPage() {
       <section id="about" className="py-16 md:py-20" style={{ background: '#FAFAF7' }}>
         <div className="mx-auto max-w-6xl px-6">
           {/* Split panel: cream left / forest right */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderRadius: 14, overflow: 'hidden' }} className="max-lg:\!grid-cols-1">
+          <div className="grid grid-cols-1 lg:grid-cols-2 max-lg:\!grid-cols-1" style={{ borderRadius: 14, overflow: 'hidden' }}>
 
             {/* LEFT: cream panel */}
             <motion.div {...fadeInView(0)} style={{ background: '#F5F1E8', padding: '56px 44px' }}>

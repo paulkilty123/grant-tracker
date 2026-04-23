@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
+import { useIsMobile } from '@/hooks/useIsMobile'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, ArrowRight, ChevronRight, Check, Globe, Pencil, X } from 'lucide-react'
@@ -464,6 +465,7 @@ function CardShell({
   showSkip?: boolean
   children: React.ReactNode
 }) {
+  const isMobile = useIsMobile()
   return (
     <div className="flex-1 flex items-start justify-center px-4 py-8 md:py-12">
       <div className="w-full max-w-[720px]">
@@ -475,14 +477,14 @@ function CardShell({
           boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
         }}>
           {/* Card header */}
-          <div style={{ padding: '20px 32px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ padding: isMobile ? '16px 20px 0' : '20px 32px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 20, color: T.textPrimary, letterSpacing: '-0.02em' }}>
               GrantTracker
             </span>
             <StepDots active={step} />
           </div>
           {/* Card body */}
-          <div style={{ padding: '28px 32px 32px' }}>
+          <div style={{ padding: isMobile ? '20px 18px 24px' : '28px 32px 32px' }}>
             {children}
           </div>
         </div>

@@ -31,6 +31,13 @@ const spaceGrotesk = Space_Grotesk({
   display: 'swap',
 })
 
+import type { Viewport } from 'next'
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+}
+
 export const metadata: Metadata = {
   title: 'Grant Tracker — UK Funding for CICs, Social Enterprises, Charities & Impact Founders',
   description: 'Find grants, accelerators, social investment, and diversity funding matched to your legal structure and mission. Built for CICs, social enterprises, charities, co-operatives, and impact-driven founders across the UK.',

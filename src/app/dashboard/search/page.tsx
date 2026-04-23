@@ -19,6 +19,7 @@ import {
 import { saveSearchHistory, getSearchHistory, deleteSearchHistory, getWeeklySearchCount } from '@/lib/searchHistory'
 import type { GrantOpportunity, Organisation, FunderType, FundingType, ImpactSector, LegalStructure } from '@/types'
 import { MatchFeedbackBlock } from '@/components/MatchFeedbackBlock'
+import { useIsMobile } from '@/hooks/useIsMobile'
 import { SUBTYPE_LABELS } from '@/lib/funding-subtypes'
 import { normaliseScrapedGrant, type EnrichedGrant } from '@/lib/grants-normalise'
 import type { InteractionAction } from '@/lib/interactions'
@@ -386,6 +387,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
   const [insightsExpanded, setInsightsExpanded] = useState(false)
   const [whyExpanded, setWhyExpanded] = useState(false)
   const [matchExpanded, setMatchExpanded] = useState(false)
+  const isMobile = useIsMobile()
   const [insightsHover, setInsightsHover] = useState(false)
   const isDismissed  = interactions.has('dismissed')
   const isLiked      = interactions.has('liked')
@@ -584,10 +586,10 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
     <div className="bg-white mb-3 overflow-hidden" style={{ borderRadius: 14, border: '0.5px solid rgba(0,0,0,0.1)', boxShadow: '0 1px 3px rgba(23,52,4,0.04), 0 4px 12px rgba(23,52,4,0.04)', transition: 'box-shadow 0.15s ease, transform 0.15s ease' }} onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 2px 5px rgba(23,52,4,0.05), 0 8px 20px rgba(23,52,4,0.06)'; e.currentTarget.style.transform = 'translateY(-1px)' }} onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 1px 3px rgba(23,52,4,0.04), 0 4px 12px rgba(23,52,4,0.04)'; e.currentTarget.style.transform = 'translateY(0)' }}>
 
       {/* ── Card body ── */}
-      <div style={{ padding: '18px 22px' }}>
+      <div style={{ padding: isMobile ? '12px 14px' : '18px 22px' }}>
 
         {/* ── Upper: content-col + actions-col ── */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
 
           {/* ── Content column ── */}
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -653,7 +655,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
             </p>
 
             {/* Meta grid: Amount / Deadline / Eligible / Type */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, paddingTop: 12, borderTop: '0.5px solid rgba(0,0,0,0.06)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? 10 : 16, paddingTop: 12, borderTop: '0.5px solid rgba(0,0,0,0.06)' }}>
               <div>
                 <div style={{ fontSize: 10, color: '#8A8986', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3, fontFamily: 'var(--font-dm-sans)' }}>Amount</div>
                 <div style={{ fontSize: 13, color: '#3B6D11', fontWeight: 500, fontFamily: 'var(--font-dm-sans)' }}>{formatRange(grant.amountMin, grant.amountMax) || '—'}</div>
@@ -689,7 +691,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
               ? pipelineStage.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())
               : 'Identified'
             return (
-              <div style={{ width: 170, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 7 }}>
+              <div style={{ width: isMobile ? '100%' : 170, flexShrink: 0, display: 'flex', flexDirection: isMobile ? 'row' : 'column', flexWrap: 'wrap', gap: 7, paddingTop: isMobile ? 10 : 0, borderTop: isMobile ? '0.5px solid rgba(0,0,0,0.06)' : 'none' }}>
 
                 {/* In pipeline status pill */}
                 {state === 'pipeline' && (
