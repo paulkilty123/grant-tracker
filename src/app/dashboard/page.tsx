@@ -483,8 +483,7 @@ export default async function DashboardPage() {
               Pipeline card pattern and mirrors the Pipeline full-page view. */}
           <a href="/dashboard/pipeline" className="flex rounded-xl overflow-hidden hover:opacity-95 transition-opacity" style={{ height: 160 }}>
             {stageValues.map(s => {
-              const grow = totalValue > 0 ? (s.value > 0 ? s.value : 0) : 1
-              if (grow === 0) return null
+              const grow = totalValue > 0 ? (s.value > 0 ? s.value : totalValue * 0.08) : 1
               return (
                 <div key={s.id} className="flex flex-col justify-between px-4 py-3.5"
                   style={{ flexGrow: grow, flexShrink: 0, flexBasis: 110, background: s.bg, minWidth: 110 }}>
@@ -495,11 +494,11 @@ export default async function DashboardPage() {
                   <div>
                     <span className="block font-display font-bold leading-none truncate"
                       style={{ color: s.valCol, fontSize: 'clamp(18px, 2.2vw, 30px)' }}>
-                      {formatCurrency(s.value)}
+                      {s.value > 0 ? formatCurrency(s.value) : '—'}
                     </span>
                     <span className="block text-[10px] font-semibold mt-1.5 truncate"
                       style={{ color: s.countCol }}>
-                      {s.count} {s.count === 1 ? 'opportunity' : 'opportunities'}
+                      {s.count > 0 ?  : 'None yet'}
                     </span>
                   </div>
                 </div>
