@@ -496,7 +496,7 @@ export default async function DashboardPage() {
                   <div>
                     <span className="block font-display font-bold leading-none truncate"
                       style={{ color: s.valCol, fontSize: 'clamp(18px, 2.2vw, 30px)' }}>
-                      {s.value > 0 ? formatCurrency(s.value) : (s.count > 0 ? s.count + ' secured' : '—')}
+                      {s.value > 0 ? formatCurrency(s.value) : (s.count > 0 ? s.count : '—')}
                     </span>
                     <span className="block text-[10px] font-semibold mt-1.5 truncate"
                       style={{ color: s.countCol }}>
