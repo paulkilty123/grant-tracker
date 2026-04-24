@@ -491,7 +491,7 @@ function CardShell({
         {showSkip && (
           <div style={{ textAlign: 'center', marginTop: 4 }}>
             <Link
-              href="/dashboard/search"
+              href="/dashboard/profile"
               style={{ fontSize: 13, color: T.textTertiary, fontFamily: 'var(--font-space-grotesk)', padding: '12px 16px', display: 'inline-block', textDecoration: 'none' }}
               onMouseEnter={e => (e.currentTarget.style.color = T.textSecondary)}
               onMouseLeave={e => (e.currentTarget.style.color = T.textTertiary)}
@@ -862,7 +862,7 @@ export default function OnboardingWizardPage() {
         {/* Bottom skip */}
         <div style={{ textAlign: 'center' }}>
           <Link
-            href="/dashboard/search"
+            href="/dashboard/profile"
             style={{ fontSize: 13, color: T.textTertiary, fontFamily: 'var(--font-space-grotesk)', padding: '12px 16px', display: 'inline-block', textDecoration: 'none' }}
             onMouseEnter={e => (e.currentTarget.style.color = T.textSecondary)}
             onMouseLeave={e => (e.currentTarget.style.color = T.textTertiary)}
@@ -945,7 +945,7 @@ export default function OnboardingWizardPage() {
           matchCount={revealCount}
           topMatches={revealMatches}
           hasMission={!!state.mission.trim()}
-          onExplore={() => router.push('/dashboard/search?welcome=1')}
+          onExplore={() => router.push('/dashboard/profile')}
           onAddMission={() => router.push('/dashboard/profile?section=mission')}
         />
       )}
@@ -1646,7 +1646,7 @@ function StepReveal({ matchCount, topMatches, hasMission, onExplore, onAddMissio
             {topMatches.map(m => (
               <Link
                 key={m.id}
-                href="/dashboard/search"
+                href="/dashboard/profile"
                 style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: T.pageBg, border: `0.5px solid ${T.borderLight}`, borderRadius: 10, textDecoration: 'none', cursor: 'pointer', transition: 'background 120ms ease' }}
                 onMouseEnter={e => (e.currentTarget.style.background = T.cream1)}
                 onMouseLeave={e => (e.currentTarget.style.background = T.pageBg)}

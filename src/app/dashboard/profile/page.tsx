@@ -1651,14 +1651,58 @@ export default function ProfilePage() {
     )
   }
 
+  const [creating, setCreating] = useState(false)
+  const [newOrgName, setNewOrgName] = useState('')
+
+  async function handleCreateOrg(e: React.FormEvent) {
+    e.preventDefault()
+    if (!newOrgName.trim()) return
+    setCreating(true)
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const { data: created } = await supabase
+      .from('organisations')
+      .insert({ name: newOrgName.trim(), owner_id: user.id })
+      .select()
+      .single()
+    if (created) {
+      await loadOrgs(created.id)
+      setEditingCard('about')
+    }
+    setCreating(false)
+  }
+
   if (!activeOrg) {
     return (
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FAFAF7' }}>
-        <div style={{ textAlign: 'center' }}>
-          <p style={{ fontFamily: UI, fontSize: 15, color: '#5F5E5A', marginBottom: 16 }}>No organisation found.</p>
-          <a href="/onboarding/wizard?new=1" style={{ fontFamily: UI, fontWeight: 500, fontSize: 14, color: '#8ECB3C', textDecoration: 'none' }}>
-            Start onboarding →
-          </a>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FAFAF7', padding: 24 }}>
+        <div style={{ maxWidth: 440, width: '100%' }}>
+          <h1 style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 28, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 8 }}>
+            {"Let's set up your profile"}
+          </h1>
+          <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 14, color: '#5F5E5A', marginBottom: 32 }}>
+            {"Start with your organisation name and we'll walk you through the rest."}
+          </p>
+          <form onSubmit={handleCreateOrg}>
+            <label style={{ display: 'block', fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, fontSize: 13, color: '#2C2C2A', marginBottom: 6 }}>
+              Organisation name
+            </label>
+            <input
+              type="text"
+              value={newOrgName}
+              onChange={e => setNewOrgName(e.target.value)}
+              placeholder="e.g. AudioActive"
+              required
+              style={{ display: 'block', width: '100%', padding: '10px 14px', border: '1.5px solid rgba(23,52,4,0.14)', borderRadius: 10, fontFamily: 'var(--font-dm-sans)', fontSize: 14, color: '#2C2C2A', background: '#fff', marginBottom: 16, boxSizing: 'border-box' as const }}
+            />
+            <button
+              type="submit"
+              disabled={creating || !newOrgName.trim()}
+              style={{ width: '100%', padding: '11px 0', background: '#8ECB3C', color: '#173404', border: 'none', borderRadius: 10, fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 14, cursor: 'pointer', opacity: (creating || !newOrgName.trim()) ? 0.6 : 1 }}
+            >
+              {creating ? 'Creating\u2026' : 'Continue \u2192'}
+            </button>
+          </form>
         </div>
       </div>
     )

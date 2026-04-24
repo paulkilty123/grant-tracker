@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { isOnboardingComplete } from '@/lib/onboarding'
 import Sidebar from '@/components/layout/Sidebar'
 import type { Organisation } from '@/types'
 
@@ -22,8 +21,6 @@ export default async function AppLayout({
     .limit(1)
 
   const org = (orgs?.[0] ?? null) as Organisation | null
-
-  if (!isOnboardingComplete(org)) redirect('/onboarding/welcome')
 
   return (
     <div className="flex min-h-screen">
