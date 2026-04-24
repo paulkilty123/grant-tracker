@@ -483,7 +483,8 @@ export default async function DashboardPage() {
               Pipeline card pattern and mirrors the Pipeline full-page view. */}
           <a href="/dashboard/pipeline" className="flex rounded-xl overflow-hidden hover:opacity-95 transition-opacity" style={{ height: 160 }}>
             {stageValues.map(s => {
-              const grow = totalValue > 0 ? (s.value > 0 ? s.value : totalValue * 0.08) : 1
+              const maxVal = Math.max(...stageValues.map(x => x.value), 1)
+              const grow = Math.max(s.value, maxVal * 0.12)
               return (
                 <div key={s.id} className="flex flex-col justify-between px-4 py-3.5"
                   style={{ flexGrow: grow, flexShrink: 0, flexBasis: 110, background: s.bg, minWidth: 110 }}>
