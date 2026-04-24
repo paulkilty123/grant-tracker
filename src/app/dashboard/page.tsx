@@ -498,7 +498,7 @@ export default async function DashboardPage() {
                     </span>
                     <span className="block text-[10px] font-semibold mt-1.5 truncate"
                       style={{ color: s.countCol }}>
-                      {s.count > 0 ?  : 'None yet'}
+                      {s.count > 0 ? (s.count === 1 ? '1 opportunity' : s.count + ' opportunities') : 'None yet'}
                     </span>
                   </div>
                 </div>
