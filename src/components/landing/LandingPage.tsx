@@ -333,13 +333,13 @@ export default function LandingPage() {
             <Link href="/auth/login" className="text-[#2C2C2A] font-semibold text-base hover:opacity-80 transition-opacity no-underline" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>
               Sign in
             </Link>
-            <Link href={COHORT_URL} className="bg-[#8ECB3C] text-[#173404] px-8 py-3 rounded-full font-bold text-base hover:opacity-90 transition-all no-underline">
+            <Link href={COHORT_URL} className="bg-[#8ECB3C] text-[#173404] px-8 py-3 rounded-[10px] font-bold text-base hover:opacity-90 transition-all no-underline">
               Apply to join
             </Link>
           </div>
           {/* Mobile */}
           <div className="flex md:hidden items-center gap-3">
-            <Link href={COHORT_URL} className="bg-[#8ECB3C] text-[#173404] px-4 py-2 rounded-full text-sm font-bold hover:opacity-90 transition-all no-underline">Apply to join</Link>
+            <Link href={COHORT_URL} className="bg-[#8ECB3C] text-[#173404] px-4 py-2 rounded-[10px] text-sm font-bold hover:opacity-90 transition-all no-underline">Apply to join</Link>
             <button onClick={() => setMobileOpen(o => !o)} className="p-1 text-[#2C2C2A]" aria-label="Toggle menu">
               {mobileOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
@@ -356,8 +356,8 @@ export default function LandingPage() {
                 <a key={link.label} href={link.href} className="text-sm text-[#5F5E5A]" onClick={() => setMobileOpen(false)}>{link.label}</a>
               ))}
               <div className="flex flex-col gap-2 pt-2">
-                <Link href="/auth/login" onClick={() => setMobileOpen(false)} className="text-center text-sm text-[#5F5E5A] py-2 border border-slate-200 rounded-full">Sign in</Link>
-                <Link href={COHORT_URL} onClick={() => setMobileOpen(false)} className="bg-[#8ECB3C] text-[#173404] rounded-full text-center text-sm font-bold py-2 hover:opacity-90 transition-colors">Apply to join</Link>
+                <Link href="/auth/login" onClick={() => setMobileOpen(false)} className="text-center text-sm text-[#5F5E5A] py-2 border border-slate-200 rounded-[10px]">Sign in</Link>
+                <Link href={COHORT_URL} onClick={() => setMobileOpen(false)} className="bg-[#8ECB3C] text-[#173404] rounded-[10px] text-center text-sm font-bold py-2 hover:opacity-90 transition-colors">Apply to join</Link>
               </div>
             </div>
           </motion.div>
@@ -394,12 +394,12 @@ export default function LandingPage() {
             <div className="flex flex-wrap gap-4 mb-4">
               <Link
                 href={COHORT_URL}
-                className="text-[#173404] px-9 py-4 rounded-full font-bold text-base hover:opacity-95 transition-all no-underline"
+                className="text-[#173404] px-9 py-4 rounded-[10px] font-bold text-base hover:opacity-95 transition-all no-underline"
                 style={{ background: 'linear-gradient(180deg, #8ECB3C 0%, #639922 100%)', boxShadow: '0 10px 20px -5px rgba(132, 204, 22, 0.3)' }}
               >
                 Apply to join
               </Link>
-              <a href="#how" className="bg-[#F1F0EA] text-[#2C2C2A] px-9 py-4 rounded-full font-bold text-base hover:bg-[#E4E2DA] transition-all">
+              <a href="#how" className="bg-[#F1F0EA] text-[#2C2C2A] px-9 py-4 rounded-[10px] font-bold text-base hover:bg-[#E4E2DA] transition-all">
                 How it works
               </a>
             </div>
@@ -729,7 +729,7 @@ export default function LandingPage() {
                     </li>
                   ))}
                 </ul>
-                <Link href={COHORT_URL} className="inline-flex items-center gap-3 bg-[#8ECB3C] text-[#173404] px-7 py-4 rounded-full font-bold text-base hover:opacity-90 transition-all no-underline">
+                <Link href={COHORT_URL} className="inline-flex items-center gap-3 bg-[#8ECB3C] text-[#173404] px-7 py-4 rounded-[10px] font-bold text-base hover:opacity-90 transition-all no-underline">
                   Apply to join <ArrowRight className="w-4 h-4" />
                 </Link>
               </motion.div>
@@ -1127,7 +1127,7 @@ export default function LandingPage() {
             </p>
             <Link
               href={COHORT_URL}
-              className="inline-flex items-center gap-2 rounded-full px-9 py-4 text-base font-bold transition-opacity hover:opacity-90 no-underline"
+              className="inline-flex items-center gap-2 rounded-[10px] px-9 py-4 text-base font-bold transition-opacity hover:opacity-90 no-underline"
               style={{ background: '#8ECB3C', color: '#173404', fontFamily: 'var(--font-space-grotesk)' }}
             >
               Apply to join <ArrowRight className="w-4 h-4" />
