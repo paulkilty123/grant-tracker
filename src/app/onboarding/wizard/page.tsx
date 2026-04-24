@@ -895,6 +895,7 @@ export default function OnboardingWizardPage() {
           onSkip={() => setStep('sectors')}
           onContinue={() => setStep('sectors')}
           onEditBeneficiaries={() => setStep('beneficiaries')}
+          onEditSectors={() => setStep('sectors')}
         />
       )}
 
@@ -1023,14 +1024,14 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual }: {
    Step 2A — Review extracted data
    ═══════════════════════════════════════════════ */
 
-function StepReview({ extracted, confirmed, editingField, setEditingField, confirmField, canContinue, onBack, onSkip, onContinue, onEditBeneficiaries }: {
+function StepReview({ extracted, confirmed, editingField, setEditingField, confirmField, canContinue, onBack, onSkip, onContinue, onEditBeneficiaries, onEditSectors }: {
   extracted: ExtractedData
   confirmed: Set<string>
   editingField: string | null
   setEditingField: (f: string | null) => void
   confirmField: (field: string, value?: string) => void
   canContinue: boolean
-  onBack: () => void; onSkip: () => void; onContinue: () => void; onEditBeneficiaries: () => void
+  onBack: () => void; onSkip: () => void; onContinue: () => void; onEditBeneficiaries: () => void; onEditSectors: () => void
 }) {
   const hostname = (() => {
     try { return new URL(extracted.url.startsWith('http') ? extracted.url : `https://${extracted.url}`).hostname }
@@ -1047,7 +1048,7 @@ function StepReview({ extracted, confirmed, editingField, setEditingField, confi
     { key: 'name',              label: 'Organisation name', value: extracted.name,            stateKey: 'name',            type: 'text' },
     { key: 'legalStructure',    label: 'Legal structure',   value: LEGAL_STRUCTURE_OPTIONS.find(o => o.value === extracted.legalStructure)?.label ?? extracted.legalStructure, stateKey: 'legalStructure', type: 'select', options: LEGAL_STRUCTURE_OPTIONS },
     { key: 'primaryLocation',   label: 'Primary location',  value: extracted.primaryLocation,  stateKey: 'primaryLocation', type: 'text' },
-    { key: 'impactSectors',     label: 'Primary sector',    value: extracted.impactSectors.slice(0,2).map(s => IMPACT_SECTORS.find(o => o.value === s)?.label ?? s).join(' · ') || null },
+    { key: 'impactSectors',     label: 'Primary sector',    value: extracted.impactSectors.slice(0,2).map(s => IMPACT_SECTORS.find(o => o.value === s)?.label ?? s).join(' · ') || null, onNavigate: onEditSectors },
     { key: 'beneficiaryGroups', label: 'Who you serve',     value: extracted.beneficiaryGroups.slice(0,2).map(b => BENEFICIARY_GROUPS.find(o => o.value === b)?.label ?? b).join(' · ') || null, onNavigate: onEditBeneficiaries },
     { key: 'annualIncomeBand',  label: 'Annual income',     value: extracted.annualIncomeBand, stateKey: 'annualIncomeBand', type: 'select', options: INCOME_BANDS.map(b => ({ value: b, label: b })) },
   ]
