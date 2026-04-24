@@ -410,7 +410,7 @@ function PickerChip({
   return (
     <div style={{ position: 'relative' }}>
       <button
-        onClick={() => !dimmed && onClick()}
+        onClick={() => { if (!dimmed) { setHov(false); onClick() } }}
         onMouseEnter={() => setHov(true)}
         onMouseLeave={() => setHov(false)}
         style={{
