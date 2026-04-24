@@ -437,21 +437,24 @@ function PickerChip({
         {isPrimary && <span style={{ color: T.lime, fontSize: 11 }}>★</span>}
         {label}
       </button>
-      {showMakePrimary && hov && (
+      {showMakePrimary && isSecondary && (
         <button
           onClick={e => { e.stopPropagation(); onMakePrimary?.() }}
           onMouseEnter={() => setHov(true)}
           onMouseLeave={() => setHov(false)}
-          title="Set as primary"
           style={{
-            position: 'absolute', top: -7, right: -7,
-            width: 18, height: 18, borderRadius: '50%',
+            position: 'absolute', top: -9, right: -2,
+            padding: '2px 7px', borderRadius: 99,
             background: T.greenDeep, color: T.lime,
             border: 'none', cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            zIndex: 1, fontSize: 10,
+            gap: 3, zIndex: 1, fontSize: 10, fontWeight: 600,
+            fontFamily: 'var(--font-space-grotesk)',
+            whiteSpace: 'nowrap' as const,
           }}
-        >★</button>
+        >
+          <span style={{ fontSize: 9 }}>★</span> Set as primary
+        </button>
       )}
     </div>
   )
