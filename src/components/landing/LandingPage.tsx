@@ -395,7 +395,7 @@ export default function LandingPage() {
               <Link
                 href={COHORT_URL}
                 className="text-[#173404] px-9 py-4 rounded-[10px] font-bold text-base hover:opacity-95 transition-all no-underline"
-                style={{ background: 'linear-gradient(180deg, #8ECB3C 0%, #639922 100%)', boxShadow: '0 10px 20px -5px rgba(132, 204, 22, 0.3)' }}
+                style={{ background: '#8ECB3C' }}
               >
                 Apply to join
               </Link>
