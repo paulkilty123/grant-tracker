@@ -388,7 +388,7 @@ export default function LandingPage() {
             </h1>
             {/* Subtext */}
             <p className="text-[#5F5E5A] leading-relaxed font-medium text-lg max-w-lg mb-10">
-              Matched to your structure, sector and geography — across grants, programmes, social investment and in-kind support.
+              Find grants, programmes, investment and in-kind support, matched to your organisation.
             </p>
             {/* CTAs */}
             <div className="flex flex-wrap gap-4 mb-4">
