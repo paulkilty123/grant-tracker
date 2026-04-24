@@ -483,13 +483,12 @@ export default async function DashboardPage() {
               Pipeline card pattern and mirrors the Pipeline full-page view. */}
           <a href="/dashboard/pipeline" className="flex rounded-xl overflow-hidden hover:opacity-95 transition-opacity" style={{ height: 160 }}>
             {stageValues.map(s => {
-              // Use square-root scaling so large values don't crush small ones.
-              // Stages with no value get a fixed minimum so they always appear.
-              const FLOOR = 30000
-              const grow = s.value > 0 ? Math.sqrt(s.value) + FLOOR : FLOOR
+              const maxVal = Math.max(...stageValues.map(x => x.value).filter(v => v > 0), 100000)
+              const FLOOR = maxVal / 12
+              const grow = Math.max(s.value, FLOOR)
               return (
                 <div key={s.id} className="flex flex-col justify-between px-4 py-3.5"
-                  style={{ flexGrow: grow, flexShrink: 0, flexBasis: 100, background: s.bg, minWidth: 100, overflow: 'hidden' }}>
+                  style={{ flexGrow: grow, flexShrink: 0, flexBasis: 110, background: s.bg, minWidth: 110, overflow: 'hidden' }}>
                   <span className="text-[10px] font-bold uppercase tracking-widest truncate"
                     style={{ color: s.labelCol }}>
                     {s.label}
@@ -497,7 +496,7 @@ export default async function DashboardPage() {
                   <div>
                     <span className="block font-display font-bold leading-none truncate"
                       style={{ color: s.valCol, fontSize: 'clamp(18px, 2.2vw, 30px)' }}>
-                      {s.value > 0 ? formatCurrency(s.value) : '—'}
+                      {s.value > 0 ? formatCurrency(s.value) : (s.count > 0 ? s.count + ' secured' : '—')}
                     </span>
                     <span className="block text-[10px] font-semibold mt-1.5 truncate"
                       style={{ color: s.countCol }}>
