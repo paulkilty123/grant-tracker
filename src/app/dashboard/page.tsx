@@ -481,7 +481,7 @@ export default async function DashboardPage() {
               Pending / Archived) that didn't map to the stage names;
               consolidating inside the tile also matches the spec §7.2
               Pipeline card pattern and mirrors the Pipeline full-page view. */}
-          <a href="/dashboard/pipeline" className="flex rounded-xl overflow-hidden hover:opacity-95 transition-opacity" style={{ height: 160 }}>
+          <a href="/dashboard/pipeline" className="flex rounded-xl overflow-hidden hover:opacity-95 transition-opacity" style={{ height: 210 }}>
             {stageValues.map(s => {
               const maxVal = Math.max(...stageValues.map(x => x.value).filter(v => v > 0), 100000)
               const FLOOR = maxVal / 12
