@@ -437,7 +437,7 @@ function PickerChip({
         {isPrimary && <span style={{ color: T.lime, fontSize: 11 }}>★</span>}
         {label}
       </button>
-      {showMakePrimary && isSecondary && (
+      {showMakePrimary && isSecondary && hov && (
         <button
           onClick={e => { e.stopPropagation(); onMakePrimary?.() }}
           onMouseEnter={() => setHov(true)}
@@ -568,7 +568,7 @@ export default function OnboardingWizardPage() {
           annualIncomeBand: org.annual_income_band ?? '',
           geographicReach:  org.geographic_reach ?? '',
           mission:          org.mission ?? '',
-          impactSectors:    (org.impact_sectors as ImpactSector[]) ?? [],
+          impactSectors:    ((org.impact_sectors as ImpactSector[]) ?? []).slice(0, 4),
           beneficiaryGroups: (org.beneficiary_groups as BeneficiaryGroup[]) ?? [],
           // Store raw digits; fmtThousands() formats on display
           minGrantTarget:   org.min_grant_target != null ? String(org.min_grant_target) : '',
@@ -614,7 +614,7 @@ export default function OnboardingWizardPage() {
         primaryLocation:   data.primaryLocation ?? null,
         annualIncomeBand:  data.annualIncome ?? null,
         mission:           data.mission ?? null,
-        impactSectors:     Array.isArray(data.impactSectors) ? data.impactSectors.slice(0, 5) : [],
+        impactSectors:     Array.isArray(data.impactSectors) ? data.impactSectors.slice(0, 4) : [],
         beneficiaryGroups: Array.isArray(data.beneficiaryGroups) ? data.beneficiaryGroups.slice(0, 5) : [],
         confidence: {
           name:              conf.name,
