@@ -483,14 +483,13 @@ export default async function DashboardPage() {
               Pipeline card pattern and mirrors the Pipeline full-page view. */}
           <a href="/dashboard/pipeline" className="flex rounded-xl overflow-hidden hover:opacity-95 transition-opacity" style={{ height: 160 }}>
             {stageValues.map(s => {
-              const totalVal = stageValues.reduce((a, x) => a + x.value, 0)
-              const minPct = 12
-              const pct = totalVal > 0
-                ? Math.max((s.value / totalVal) * 100, s.count > 0 ? minPct : minPct * 0.7)
-                : 20
+              // Use square-root scaling so large values don't crush small ones.
+              // Stages with no value get a fixed minimum so they always appear.
+              const FLOOR = 30000
+              const grow = s.value > 0 ? Math.sqrt(s.value) + FLOOR : FLOOR
               return (
                 <div key={s.id} className="flex flex-col justify-between px-4 py-3.5"
-                  style={{ width: pct + '%', flexShrink: 0, background: s.bg }}>
+                  style={{ flexGrow: grow, flexShrink: 0, flexBasis: 100, background: s.bg, minWidth: 100, overflow: 'hidden' }}>
                   <span className="text-[10px] font-bold uppercase tracking-widest truncate"
                     style={{ color: s.labelCol }}>
                     {s.label}
