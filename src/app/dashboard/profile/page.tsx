@@ -93,7 +93,6 @@ const GEOGRAPHIC_REACH_OPTIONS = [
 ]
 
 const IMPACT_SECTOR_OPTIONS: { value: ImpactSector; label: string }[] = [
-  { value: 'young_people',      label: 'Young People & Youth' },
   { value: 'community',         label: 'Community Dev & Spaces' },
   { value: 'health',            label: 'Health & Wellbeing' },
   { value: 'mental_health',     label: 'Mental Health' },

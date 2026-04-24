@@ -155,7 +155,7 @@ export interface Organisation {
   articles_restrict_profit: boolean
   /** User is both an individual practitioner AND an org — show both grant types */
   also_individual_practitioner: boolean
-  /** 1–3 impact sectors from the 12-sector taxonomy */
+  /** 1–3 impact sectors from the 14-sector taxonomy */
   impact_sectors: ImpactSector[]
   /** Sub-sector specialisation tags — finer-grained than impact_sectors (e.g. "music", "theatre") */
   niche_tags: string[]
@@ -245,7 +245,7 @@ export interface GrantOpportunity {
   isRolling: boolean
   isLocal: boolean
   sectors: string[]
-  /** New 12-sector taxonomy tags */
+  /** New 14-sector taxonomy tags */
   impactSectors?: ImpactSector[]
   /** Sub-sector specialism tags set by the classifier (e.g. "music", "theatre", "dance") */
   nicheTags?: string[]

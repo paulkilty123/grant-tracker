@@ -94,7 +94,9 @@ const STRUCTURE_LABELS: Record<string, string> = {
 
 // 12-sector taxonomy — aligned with Profile's Impact Sectors (single source of truth)
 const IMPACT_SECTOR_FILTERS: { id: ImpactSector; label: string }[] = [
-  { id: 'young_people',  label: 'Young People & Youth' },
+  { id: 'sport',         label: 'Sport & Physical Activity' },
+  { id: 'heritage',      label: 'Heritage & Culture' },
+  { id: 'social_economy',label: 'Social Economy & Co-ops' },
   { id: 'creative',      label: 'Arts & Creative Industries' },
   { id: 'community',     label: 'Community Development' },
   { id: 'education',     label: 'Education & Skills' },
@@ -439,10 +441,12 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
 
   // ── Sector pill colours ──
   const SECTOR_PILL: Record<string, { bg: string; color: string }> = {
-    // keys match the 12-sector ImpactSector taxonomy IDs
+    // keys match the 14-sector ImpactSector taxonomy IDs
     environment:   { bg: '#EAF3DE', color: '#27500A' },  // pale green deep
     community:     { bg: '#F1F7E4', color: '#3B6D11' },  // pale green lighter
-    young_people:  { bg: '#FAECE7', color: '#993C1D' },  // coral
+    sport:         { bg: '#EAF3DE', color: '#27500A' },  // green
+    heritage:      { bg: '#FAEEDA', color: '#854F0B' },  // amber
+    social_economy:{ bg: '#E6F1FB', color: '#0C447C' },  // blue
     justice:       { bg: '#FAECE7', color: '#993C1D' },  // coral
     mental_health: { bg: '#E6F1FB', color: '#0C447C' },  // blue
     health:        { bg: '#D3E8F7', color: '#093F72' },  // blue deep
@@ -1614,7 +1618,7 @@ export default function SearchPage() {
   // DB is the single source of truth — all seed grants have been migrated.
   const allGrants = scrapedGrants
 
-  // Sector filter now uses the fixed 12-sector taxonomy (IMPACT_SECTOR_FILTERS)
+  // Sector filter now uses the fixed 14-sector taxonomy (IMPACT_SECTOR_FILTERS)
   // rather than a dynamic list derived from free-text grant.sectors[]
 
   function toggleSector(s: ImpactSector) {

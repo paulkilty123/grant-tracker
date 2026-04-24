@@ -70,7 +70,9 @@ const LEGAL_STRUCTURE_OPTIONS: { value: LegalStructure; label: string }[] = [
 ]
 
 const IMPACT_SECTORS: { value: ImpactSector; label: string }[] = [
-  { value: 'young_people',  label: 'Young People & Youth' },
+  { value: 'sport',         label: 'Sport & Physical Activity' },
+  { value: 'heritage',      label: 'Heritage & Culture' },
+  { value: 'social_economy',label: 'Social Economy & Co-ops' },
   { value: 'community',     label: 'Community Dev & Spaces' },
   { value: 'health',        label: 'Health & Wellbeing' },
   { value: 'mental_health', label: 'Mental Health' },
