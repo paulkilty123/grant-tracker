@@ -41,7 +41,7 @@ export default function ApplyPage() {
               Hi, I&apos;m Paul. I&apos;ve spent the last twenty years in the social enterprise and charity sector, and I&apos;ve built Grant Tracker because I got tired of watching good people spend more time hunting for funding than doing the work the funding was meant to support.
             </p>
             <p style={{ fontFamily: SERIF, fontWeight: 400, fontSize: 19, lineHeight: 1.6, color: '#2C2C2A', marginBottom: 18, letterSpacing: '-0.005em' }}>
-              Before launching properly, I want to build it with a small group of real users. Not a waitlist or marketing funnel, but a genuine founding cohort — around 20 to 30 organisations — whose feedback shapes how Grant Tracker works, who get to try new features first, and who benefit from being here first.
+              Paid signups open in June. Before that, I want to build Grant Tracker with a small group of real users. Not a waitlist or marketing funnel, but a genuine founding cohort of around 20 to 30 organisations whose feedback shapes how Grant Tracker works, who get to try new features first, and who benefit from being here first.
             </p>
             <p style={{ fontFamily: SERIF, fontWeight: 400, fontSize: 19, lineHeight: 1.6, color: '#2C2C2A', letterSpacing: '-0.005em' }}>
               If that sounds interesting, I&apos;d love to hear from you.
@@ -51,6 +51,19 @@ export default function ApplyPage() {
             <strong style={{ fontWeight: 500, color: '#2C2C2A' }}>Paul Kilty</strong>, founder
           </div>
         </div>
+
+        {/* WHAT GRANT TRACKER DOES */}
+        <section style={{ padding: '0 0 56px' }}>
+          <h2 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.15, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 20 }}>
+            What Grant Tracker <span style={{ color: '#8ECB3C' }}>does.</span>
+          </h2>
+          <p style={{ fontSize: 16, color: '#5F5E5A', lineHeight: 1.65, marginBottom: 16 }}>
+            Grant Tracker finds relevant funding for your organisation, filters out the noise, and helps you manage applications from first sight to submission. It&apos;s built to replace the spreadsheet you&apos;ve been meaning to update, the three browser tabs you keep forgetting to check, and the nagging feeling you&apos;re missing something you should have seen.
+          </p>
+          <p style={{ fontSize: 16, color: '#5F5E5A', lineHeight: 1.65 }}>
+            It&apos;s designed specifically for the UK social impact sector: charities, CICs, social enterprises, co-operatives, and the people doing fundraising work alongside everything else.
+          </p>
+        </section>
 
         {/* WHO I'M LOOKING FOR */}
         <section style={{ padding: '0 0 56px' }}>
@@ -66,9 +79,9 @@ export default function ApplyPage() {
           <ul style={{ listStyle: 'none', margin: '20px 0 0', padding: 0 }}>
             {[
               'CICs and social enterprises, from early-stage through to those scaling up with social investment',
-              "Small charities and CIOs where fundraising is one person's many jobs, not a whole team",
+              "Small charities and CIOs where fundraising is one person’s many jobs, not a whole team",
               'Co-operatives and community groups, including worker-led, community-owned, and unincorporated groups',
-              'Impact founders — early-stage, pre-revenue, or working as an individual',
+              'Impact founders who are early-stage, pre-revenue, or working as an individual',
             ].map((item, i) => (
               <li key={i} style={{ position: 'relative', paddingLeft: 20, marginBottom: 12, fontSize: 16, color: '#5F5E5A', lineHeight: 1.6 }}>
                 <span style={{ position: 'absolute', left: 0, top: 10, width: 6, height: 6, background: '#8ECB3C', borderRadius: '50%', display: 'inline-block' }} />
@@ -76,7 +89,10 @@ export default function ApplyPage() {
               </li>
             ))}
           </ul>
-          <p style={{ fontSize: 16, color: '#5F5E5A', lineHeight: 1.65, marginTop: 24 }}>
+          <p style={{ fontSize: 16, color: '#5F5E5A', lineHeight: 1.65, marginTop: 20 }}>
+            I&apos;m keen to bring together organisations at different stages of fundraising experience and across different sectors. The cohort works best with a range of perspectives, so don&apos;t rule yourself out if you&apos;re newer to this, and don&apos;t assume you&apos;re in if you&apos;ve been doing it for decades.
+          </p>
+          <p style={{ fontSize: 16, color: '#5F5E5A', lineHeight: 1.65, marginTop: 16 }}>
             You don&apos;t need to fit neatly into one of these. If you&apos;re doing impact work in the UK and looking for funding, tell me about you.
           </p>
         </section>
@@ -93,9 +109,9 @@ export default function ApplyPage() {
             <ul style={{ listStyle: 'none', margin: '20px 0 0', padding: 0 }}>
               {[
                 { title: 'Free access during beta.', body: 'Full product, no limits, no payment details required.' },
-                { title: 'Free first year after launch.', body: 'Twelve months of full access on me, as a thank you for being here first.' },
-                { title: 'Founding rate from year two.', body: 'A permanently lower price for active cohort members, for as long as you stay with Grant Tracker.' },
-                { title: 'A direct line to me.', body: "When something's not working, when you have an idea, when you want to talk to someone who can actually change the product — that's me." },
+                { title: 'Free for six months after paid signups open.', body: 'Six months of full access on me, as a thank you for being here first.' },
+                { title: 'A permanent founding rate.', body: 'After your free six months, cohort members lock in a price significantly below the standard subscription, for as long as you stay with Grant Tracker.' },
+                { title: 'A direct line to me.', body: "When something’s not working, when you have an idea, when you want to talk to someone who can actually change the product, that’s me." },
               ].map((item, i) => (
                 <li key={i} style={{ position: 'relative', paddingLeft: 28, marginBottom: 16, fontSize: 16, color: '#5F5E5A', lineHeight: 1.6 }}>
                   <span style={{ position: 'absolute', left: 0, top: 2, color: '#639922', fontWeight: 500, fontSize: 17, lineHeight: 1 }}>✓</span>
@@ -106,26 +122,39 @@ export default function ApplyPage() {
           </div>
         </section>
 
-        {/* THE ONE THING I'M ASKING */}
+        {/* WHAT I'M ASKING IN RETURN */}
         <section style={{ padding: '0 0 56px' }}>
           <div style={{ background: '#E8DFC8', borderRadius: 14, padding: '40px 36px' }}>
-            <h2 style={{ fontFamily: UI, fontWeight: 500, fontSize: 24, lineHeight: 1.15, letterSpacing: '-0.02em', color: '#173404', marginBottom: 20 }}>
-              The one thing I&apos;m asking.
+            <h2 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.15, letterSpacing: '-0.02em', color: '#173404', marginBottom: 14 }}>
+              What I&apos;m asking <span style={{ color: '#639922' }}>in return.</span>
             </h2>
             <p style={{ fontSize: 16, color: '#2C2C2A', lineHeight: 1.65, marginBottom: 16 }}>
-              In return, I&apos;m asking for one real thing: <strong style={{ color: '#2C2C2A', fontWeight: 500 }}>your feedback.</strong>
+              One real thing: your honest engagement.
             </p>
-            <p style={{ fontSize: 16, color: '#2C2C2A', lineHeight: 1.65, marginBottom: 16 }}>
-              Occasional conversations about what&apos;s working and what isn&apos;t. A reply when I ask a question. Willingness to try something that&apos;s still being built, and tell me honestly when it doesn&apos;t work.
+            <p style={{ fontSize: 16, color: '#2C2C2A', lineHeight: 1.65, marginBottom: 8 }}>
+              In practice that looks like:
             </p>
+            <ul style={{ listStyle: 'none', margin: '0 0 20px', padding: 0 }}>
+              {[
+                'Using the product regularly enough that your feedback is grounded in real use',
+                'A short monthly check-in. Could be a call, could be an email exchange, whatever works for you',
+                "Responding when I ask specific questions about what’s working and what isn’t",
+                "Willingness to try something that’s still being built, and tell me honestly when it doesn’t work",
+              ].map((item, i) => (
+                <li key={i} style={{ position: 'relative', paddingLeft: 20, marginBottom: 10, fontSize: 16, color: '#2C2C2A', lineHeight: 1.6 }}>
+                  <span style={{ position: 'absolute', left: 0, top: 10, width: 6, height: 6, background: '#639922', borderRadius: '50%', display: 'inline-block' }} />
+                  {item}
+                </li>
+              ))}
+            </ul>
             <p style={{ fontSize: 16, color: '#2C2C2A', lineHeight: 1.65, marginBottom: 16 }}>
               You&apos;ll also be the first to see new features and shape them before they go live.
             </p>
             <p style={{ fontSize: 16, color: '#2C2C2A', lineHeight: 1.65, marginBottom: 20 }}>
               That&apos;s the whole deal. If you&apos;re willing to give that, I&apos;d love to have you in the cohort.
             </p>
-            <p style={{ fontSize: 14.5, color: '#5F5E5A', lineHeight: 1.6 }}>
-              Being in the cohort means staying in touch. If we lose contact, the cohort benefits lapse.
+            <p style={{ fontSize: 14.5, color: '#5F5E5A', lineHeight: 1.6, borderTop: '0.5px solid rgba(23,52,4,0.12)', paddingTop: 16 }}>
+              One condition: cohort benefits, including the founding rate, depend on staying active and staying in touch. If you go quiet for six months, cohort status lapses and you move to standard pricing. Not as a penalty, just to keep the cohort what it&apos;s meant to be: a working group, not a free tier.
             </p>
           </div>
         </section>
@@ -166,8 +195,8 @@ export default function ApplyPage() {
           <ol style={{ listStyle: 'none', padding: 0 }}>
             {[
               'I read every application personally, usually within a week.',
-              "If you're a good fit for the founding cohort, I'll email you with next steps and an invite to set up your account.",
-              "If now isn't the right time, I'll still reply. You'll hear back either way.",
+              "If you’re a good fit for the founding cohort, I’ll email you with next steps and an invite to set up your account.",
+              "If now isn’t the right time, I’ll still reply. You’ll hear back either way.",
             ].map((step, i) => (
               <li key={i} style={{ position: 'relative', paddingLeft: 38, marginBottom: 16, fontSize: 15, color: '#5F5E5A', lineHeight: 1.6 }}>
                 <span style={{ position: 'absolute', left: 0, top: 2, width: 24, height: 24, background: '#EAF3DE', color: '#3B6D11', fontFamily: UI, fontWeight: 500, fontSize: 12, borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{i + 1}</span>
@@ -184,20 +213,28 @@ export default function ApplyPage() {
           </h2>
           {[
             {
-              q: 'How long will the beta last?',
-              a: "Honest answer: I don't know exactly. Long enough that I can genuinely improve the product based on cohort feedback, short enough that it doesn't drag. Probably three to six months, but I'd rather get it right than rush.",
+              q: 'When do paid signups open?',
+              a: 'June 2026. The cohort runs until then, giving us time to iterate on the product based on real use before Grant Tracker opens to everyone. Cohort members keep their founding benefits regardless of when paid signups open to the wider public.',
             },
             {
-              q: "What if I don't hear back?",
-              a: "You will. I commit to replying to every application, usually within a week. If it's been longer, please email me directly at hello@granttracker.co.uk.",
+              q: 'How long will the beta last?',
+              a: "Honest answer: long enough that I can genuinely improve the product based on cohort feedback, short enough that it doesn’t drag. The aim is paid signups in June, with the cohort beta running alongside until the product feels ready.",
+            },
+            {
+              q: 'What will the founding rate actually be?',
+              a: "I’m still working out the standard price, partly through conversations with cohort members. What I can commit to now is that founding rate members will pay meaningfully less than the public price, permanently, for as long as they stay active in the cohort.",
+            },
+            {
+              q: "What if I don’t hear back?",
+              a: "You will. I commit to replying to every application, usually within a week. If it’s been longer, please email me directly at hello@granttracker.co.uk.",
             },
             {
               q: 'What if the founding cohort is full?',
-              a: "If applications close before you apply, I'll let you know and keep you on a waitlist for any open spots. And I'll let you know when we launch properly.",
+              a: "If applications close before you apply, I’ll let you know and keep you on a waitlist for any open spots. And I’ll let you know when paid signups open.",
             },
             {
               q: 'Is my data safe?',
-              a: "Yes. Your organisation data stays private to your account. Cohort members are never shared with funders, other organisations, or third parties without explicit permission.",
+              a: 'Yes. Your organisation data stays private to your account. Cohort members are never shared with funders, other organisations, or third parties without explicit permission.',
             },
           ].map((item, i, arr) => (
             <div key={i} style={{ padding: '20px 0', borderTop: '0.5px solid rgba(23,52,4,0.08)', ...(i === arr.length - 1 ? { borderBottom: '0.5px solid rgba(23,52,4,0.08)' } : {}) }}>
