@@ -1064,7 +1064,7 @@ export default function LandingPage() {
               </p>
               <Link
                 href={COHORT_URL}
-                style={{ background: '#8ECB3C', color: '#173404', padding: '13px 28px', borderRadius: 24, fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 15, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}
+                style={{ background: '#8ECB3C', color: '#173404', padding: '13px 28px', borderRadius: 10, fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 15, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}
               >
                 Apply to join <span>&#8594;</span>
               </Link>
