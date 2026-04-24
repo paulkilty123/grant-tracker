@@ -894,8 +894,11 @@ export default function OnboardingWizardPage() {
           onBack={() => setStep('entry')}
           onSkip={() => setStep('sectors')}
           onContinue={() => setStep('sectors')}
-          onEditBeneficiaries={() => setStep('beneficiaries')}
-          onEditSectors={() => setStep('sectors')}
+          wizardState={state}
+          toggleSector={toggleSector}
+          makePrimarySector={makePrimarySector}
+          toggleBeneficiary={toggleBeneficiary}
+          makePrimaryBeneficiary={makePrimaryBeneficiary}
         />
       )}
 
@@ -1024,14 +1027,19 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual }: {
    Step 2A — Review extracted data
    ═══════════════════════════════════════════════ */
 
-function StepReview({ extracted, confirmed, editingField, setEditingField, confirmField, canContinue, onBack, onSkip, onContinue, onEditBeneficiaries, onEditSectors }: {
+function StepReview({ extracted, confirmed, editingField, setEditingField, confirmField, canContinue, onBack, onSkip, onContinue, wizardState, toggleSector, makePrimarySector, toggleBeneficiary, makePrimaryBeneficiary }: {
   extracted: ExtractedData
   confirmed: Set<string>
   editingField: string | null
   setEditingField: (f: string | null) => void
   confirmField: (field: string, value?: string) => void
   canContinue: boolean
-  onBack: () => void; onSkip: () => void; onContinue: () => void; onEditBeneficiaries: () => void; onEditSectors: () => void
+  onBack: () => void; onSkip: () => void; onContinue: () => void
+  wizardState: WizardState
+  toggleSector: (s: ImpactSector) => void
+  makePrimarySector: (s: ImpactSector) => void
+  toggleBeneficiary: (b: BeneficiaryGroup) => void
+  makePrimaryBeneficiary: (b: BeneficiaryGroup) => void
 }) {
   const hostname = (() => {
     try { return new URL(extracted.url.startsWith('http') ? extracted.url : `https://${extracted.url}`).hostname }
@@ -1041,15 +1049,19 @@ function StepReview({ extracted, confirmed, editingField, setEditingField, confi
   const fields: Array<{
     key: keyof typeof extracted.confidence
     label: string; value: string | null
-    stateKey?: string; type?: 'text' | 'select'
+    stateKey?: string; type?: 'text' | 'select' | 'chips'
     options?: { value: string; label: string }[]
-    onNavigate?: () => void
+    chipOptions?: { value: string; label: string }[]
+    selectedChips?: string[]
+    maxChips?: number
+    onToggleChip?: (val: string) => void
+    onMakePrimaryChip?: (val: string) => void
   }> = [
     { key: 'name',              label: 'Organisation name', value: extracted.name,            stateKey: 'name',            type: 'text' },
     { key: 'legalStructure',    label: 'Legal structure',   value: LEGAL_STRUCTURE_OPTIONS.find(o => o.value === extracted.legalStructure)?.label ?? extracted.legalStructure, stateKey: 'legalStructure', type: 'select', options: LEGAL_STRUCTURE_OPTIONS },
     { key: 'primaryLocation',   label: 'Primary location',  value: extracted.primaryLocation,  stateKey: 'primaryLocation', type: 'text' },
-    { key: 'impactSectors',     label: 'Primary sector',    value: extracted.impactSectors.slice(0,2).map(s => IMPACT_SECTORS.find(o => o.value === s)?.label ?? s).join(' · ') || null, onNavigate: onEditSectors },
-    { key: 'beneficiaryGroups', label: 'Who you serve',     value: extracted.beneficiaryGroups.slice(0,2).map(b => BENEFICIARY_GROUPS.find(o => o.value === b)?.label ?? b).join(' · ') || null, onNavigate: onEditBeneficiaries },
+    { key: 'impactSectors',     label: 'Primary sector',    value: wizardState.impactSectors.slice(0,2).map(s => IMPACT_SECTORS.find(o => o.value === s)?.label ?? s).join(' · ') || null, type: 'chips' as const, chipOptions: IMPACT_SECTORS, selectedChips: wizardState.impactSectors, maxChips: 4, onToggleChip: (v) => toggleSector(v as ImpactSector), onMakePrimaryChip: (v) => makePrimarySector(v as ImpactSector) },
+    { key: 'beneficiaryGroups', label: 'Who you serve',     value: wizardState.beneficiaryGroups.slice(0,2).map(b => BENEFICIARY_GROUPS.find(o => o.value === b)?.label ?? b).join(' · ') || null, type: 'chips' as const, chipOptions: BENEFICIARY_GROUPS, selectedChips: wizardState.beneficiaryGroups, maxChips: 4, onToggleChip: (v) => toggleBeneficiary(v as BeneficiaryGroup), onMakePrimaryChip: (v) => makePrimaryBeneficiary(v as BeneficiaryGroup) },
     { key: 'annualIncomeBand',  label: 'Annual income',     value: extracted.annualIncomeBand, stateKey: 'annualIncomeBand', type: 'select', options: INCOME_BANDS.map(b => ({ value: b, label: b })) },
   ]
   const foundCount = fields.filter(f => f.value).length
@@ -1080,7 +1092,11 @@ function StepReview({ extracted, confirmed, editingField, setEditingField, confi
             onEdit={() => setEditingField(field.key)}
             onConfirm={val => confirmField(field.key, val)}
             onCancel={() => setEditingField(null)}
-            onNavigate={field.onNavigate}
+            chipOptions={field.chipOptions}
+            selectedChips={field.selectedChips}
+            maxChips={field.maxChips}
+            onToggleChip={field.onToggleChip}
+            onMakePrimaryChip={field.onMakePrimaryChip}
           />
         ))}
       </div>
@@ -1095,11 +1111,15 @@ function StepReview({ extracted, confirmed, editingField, setEditingField, confi
   )
 }
 
-function ReviewField({ label, value, fieldState: fState, isConfirmed, isEditing, type, options, onNavigate, onEdit, onConfirm, onCancel }: {
+function ReviewField({ label, value, fieldState: fState, isConfirmed, isEditing, type, options, chipOptions, selectedChips, maxChips, onToggleChip, onMakePrimaryChip, onEdit, onConfirm, onCancel }: {
   label: string; value: string | null
   fieldState: FieldConfidence; isConfirmed: boolean; isEditing: boolean
-  type?: 'text' | 'select'; options?: { value: string; label: string }[]
-  onNavigate?: () => void
+  type?: 'text' | 'select' | 'chips'; options?: { value: string; label: string }[]
+  chipOptions?: { value: string; label: string }[]
+  selectedChips?: string[]
+  maxChips?: number
+  onToggleChip?: (val: string) => void
+  onMakePrimaryChip?: (val: string) => void
   onEdit: () => void; onConfirm: (val?: string) => void; onCancel: () => void
 }) {
   const [draft, setDraft] = useState(value ?? '')
@@ -1137,7 +1157,47 @@ function ReviewField({ label, value, fieldState: fState, isConfirmed, isEditing,
           {label}
           {fState === 'uncertain' && !isConfirmed && <span style={{ marginLeft: 6, color: T.amberMid }}> · please confirm</span>}
         </div>
-        {isEditing && type ? (
+        {isEditing && type === 'chips' && chipOptions ? (
+          <div style={{ marginTop: 8 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6, marginBottom: 10 }}>
+              {chipOptions.map(opt => {
+                const sel = selectedChips?.includes(opt.value) ?? false
+                const isPrimary = sel && selectedChips?.[0] === opt.value
+                const atMax = (selectedChips?.length ?? 0) >= (maxChips ?? 4)
+                const dimmed = !sel && atMax
+                return (
+                  <button
+                    key={opt.value}
+                    onClick={() => { if (!dimmed) onToggleChip?.(opt.value) }}
+                    style={{
+                      padding: '5px 10px', borderRadius: 6, fontSize: 12,
+                      fontFamily: 'var(--font-space-grotesk)', cursor: dimmed ? 'not-allowed' : 'pointer',
+                      opacity: dimmed ? 0.4 : 1, transition: 'all 120ms ease',
+                      background: isPrimary ? T.greenDeep : sel ? T.greenCream : '#fff',
+                      color: isPrimary ? '#fff' : sel ? T.greenTextDeep : T.textSecondary,
+                      border: `1px solid ${isPrimary ? T.greenDeep : sel ? T.greenMid : T.borderInput}`,
+                      fontWeight: sel ? 500 : 400,
+                    }}
+                  >
+                    {isPrimary && <span style={{ marginRight: 4, fontSize: 10 }}>★</span>}
+                    {opt.label}
+                    {sel && !isPrimary && (
+                      <span
+                        onClick={e => { e.stopPropagation(); onMakePrimaryChip?.(opt.value) }}
+                        title="Set as primary"
+                        style={{ marginLeft: 5, fontSize: 9, opacity: 0.6, cursor: 'pointer' }}
+                      >★</span>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+            {(selectedChips?.length ?? 0) >= (maxChips ?? 4) && (
+              <p style={{ fontSize: 11, color: T.textTertiary, margin: '0 0 8px', fontFamily: 'var(--font-space-grotesk)' }}>Max {maxChips} selected</p>
+            )}
+            <Button variant="primary" size="sm" onClick={() => onConfirm()}>Done</Button>
+          </div>
+        ) : isEditing && type ? (
           <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 2 }}>
             {type === 'select' && options ? (
               <select
@@ -1175,11 +1235,7 @@ function ReviewField({ label, value, fieldState: fState, isConfirmed, isEditing,
       {!isEditing && !type && fState === 'uncertain' && !isConfirmed && (
         <button onClick={() => onConfirm()} style={{ fontSize: 11, color: T.amberMid, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-space-grotesk)', padding: '2px 8px', whiteSpace: 'nowrap' as const, flexShrink: 0, alignSelf: 'flex-start', marginTop: 1 }}>Looks right ✓</button>
       )}
-      {!isEditing && onNavigate && (
-        <button onClick={onNavigate} style={{ fontSize: 11, color: T.textTertiary, background: 'transparent', border: 'none', cursor: 'pointer', padding: '2px 8px', flexShrink: 0, alignSelf: 'flex-start', marginTop: 1 }}>
-          <Pencil size={11} />
-        </button>
-      )}
+
       {!isEditing && type && (
         <div style={{ display: 'flex', gap: 4, flexShrink: 0, marginTop: 1 }}>
           {fState === 'uncertain' && !isConfirmed && (
