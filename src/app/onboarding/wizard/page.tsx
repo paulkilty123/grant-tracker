@@ -894,6 +894,7 @@ export default function OnboardingWizardPage() {
           onBack={() => setStep('entry')}
           onSkip={() => setStep('sectors')}
           onContinue={() => setStep('sectors')}
+          onEditBeneficiaries={() => setStep('beneficiaries')}
         />
       )}
 
@@ -1022,14 +1023,14 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual }: {
    Step 2A — Review extracted data
    ═══════════════════════════════════════════════ */
 
-function StepReview({ extracted, confirmed, editingField, setEditingField, confirmField, canContinue, onBack, onSkip, onContinue }: {
+function StepReview({ extracted, confirmed, editingField, setEditingField, confirmField, canContinue, onBack, onSkip, onContinue, onEditBeneficiaries }: {
   extracted: ExtractedData
   confirmed: Set<string>
   editingField: string | null
   setEditingField: (f: string | null) => void
   confirmField: (field: string, value?: string) => void
   canContinue: boolean
-  onBack: () => void; onSkip: () => void; onContinue: () => void
+  onBack: () => void; onSkip: () => void; onContinue: () => void; onEditBeneficiaries: () => void
 }) {
   const hostname = (() => {
     try { return new URL(extracted.url.startsWith('http') ? extracted.url : `https://${extracted.url}`).hostname }
@@ -1041,12 +1042,13 @@ function StepReview({ extracted, confirmed, editingField, setEditingField, confi
     label: string; value: string | null
     stateKey?: string; type?: 'text' | 'select'
     options?: { value: string; label: string }[]
+    onNavigate?: () => void
   }> = [
     { key: 'name',              label: 'Organisation name', value: extracted.name,            stateKey: 'name',            type: 'text' },
     { key: 'legalStructure',    label: 'Legal structure',   value: LEGAL_STRUCTURE_OPTIONS.find(o => o.value === extracted.legalStructure)?.label ?? extracted.legalStructure, stateKey: 'legalStructure', type: 'select', options: LEGAL_STRUCTURE_OPTIONS },
     { key: 'primaryLocation',   label: 'Primary location',  value: extracted.primaryLocation,  stateKey: 'primaryLocation', type: 'text' },
     { key: 'impactSectors',     label: 'Primary sector',    value: extracted.impactSectors.slice(0,2).map(s => IMPACT_SECTORS.find(o => o.value === s)?.label ?? s).join(' · ') || null },
-    { key: 'beneficiaryGroups', label: 'Who you serve',     value: extracted.beneficiaryGroups.slice(0,2).map(b => BENEFICIARY_GROUPS.find(o => o.value === b)?.label ?? b).join(' · ') || null },
+    { key: 'beneficiaryGroups', label: 'Who you serve',     value: extracted.beneficiaryGroups.slice(0,2).map(b => BENEFICIARY_GROUPS.find(o => o.value === b)?.label ?? b).join(' · ') || null, onNavigate: onEditBeneficiaries },
     { key: 'annualIncomeBand',  label: 'Annual income',     value: extracted.annualIncomeBand, stateKey: 'annualIncomeBand', type: 'select', options: INCOME_BANDS.map(b => ({ value: b, label: b })) },
   ]
   const foundCount = fields.filter(f => f.value).length
@@ -1077,6 +1079,7 @@ function StepReview({ extracted, confirmed, editingField, setEditingField, confi
             onEdit={() => setEditingField(field.key)}
             onConfirm={val => confirmField(field.key, val)}
             onCancel={() => setEditingField(null)}
+            onNavigate={field.onNavigate}
           />
         ))}
       </div>
@@ -1091,10 +1094,11 @@ function StepReview({ extracted, confirmed, editingField, setEditingField, confi
   )
 }
 
-function ReviewField({ label, value, fieldState: fState, isConfirmed, isEditing, type, options, onEdit, onConfirm, onCancel }: {
+function ReviewField({ label, value, fieldState: fState, isConfirmed, isEditing, type, options, onNavigate, onEdit, onConfirm, onCancel }: {
   label: string; value: string | null
   fieldState: FieldConfidence; isConfirmed: boolean; isEditing: boolean
   type?: 'text' | 'select'; options?: { value: string; label: string }[]
+  onNavigate?: () => void
   onEdit: () => void; onConfirm: (val?: string) => void; onCancel: () => void
 }) {
   const [draft, setDraft] = useState(value ?? '')
@@ -1169,6 +1173,11 @@ function ReviewField({ label, value, fieldState: fState, isConfirmed, isEditing,
       {/* Edit / confirm actions */}
       {!isEditing && !type && fState === 'uncertain' && !isConfirmed && (
         <button onClick={() => onConfirm()} style={{ fontSize: 11, color: T.amberMid, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-space-grotesk)', padding: '2px 8px', whiteSpace: 'nowrap' as const, flexShrink: 0, alignSelf: 'flex-start', marginTop: 1 }}>Looks right ✓</button>
+      )}
+      {!isEditing && onNavigate && (
+        <button onClick={onNavigate} style={{ fontSize: 11, color: T.textTertiary, background: 'transparent', border: 'none', cursor: 'pointer', padding: '2px 8px', flexShrink: 0, alignSelf: 'flex-start', marginTop: 1 }}>
+          <Pencil size={11} />
+        </button>
       )}
       {!isEditing && type && (
         <div style={{ display: 'flex', gap: 4, flexShrink: 0, marginTop: 1 }}>
