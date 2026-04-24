@@ -1579,6 +1579,8 @@ export default function ProfilePage() {
   const [jumpTarget, setJumpTarget] = useState<CardId | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [newOrgName, setNewOrgName] = useState('')
   const activeOrg = orgs.find(o => o.id === activeOrgId) ?? orgs[0] ?? null
 
   async function loadOrgs(keepActiveId?: string) {
@@ -1650,9 +1652,6 @@ export default function ProfilePage() {
       </div>
     )
   }
-
-  const [creating, setCreating] = useState(false)
-  const [newOrgName, setNewOrgName] = useState('')
 
   async function handleCreateOrg(e: React.FormEvent) {
     e.preventDefault()
