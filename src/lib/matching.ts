@@ -857,7 +857,7 @@ export function computeMatchScore(
   }
 
     // ── Title keyword veto ────────────────────────────────────────────────
-  // Grant titles are very high-confidence domain signals — catches mismatches
+  // Grant titles and descriptions are high-confidence domain signals — catches mismatches
   // even when impact_sectors is absent or sparsely tagged.  Only fires when
   // the org has some sector/theme data (can't veto a completely blank profile).
   // Supplements the structured primaryDomainMismatch check above.
@@ -867,8 +867,9 @@ export function computeMatchScore(
     const orgThemeStrings = (org.themes ?? []).map(t => t.toLowerCase())
     const orgMissionLower = (org.mission ?? '').toLowerCase()
     const titleLower = grant.title.toLowerCase()
+    const descLower = (grant.description || '').toLowerCase()
     for (const { words, orgTerms } of TITLE_DOMAIN_KEYWORDS) {
-      if (words.some(w => titleLower.includes(w))) {
+      if (words.some(w => titleLower.includes(w) || descLower.includes(w))) {
         // Substring match against themes/mission so multi-word themes like
         // "food poverty" or "environmental education" still register as coverage.
         const orgCovers = orgTerms.some(t =>
