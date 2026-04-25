@@ -388,7 +388,7 @@ export default function LandingPage() {
             </h1>
             {/* Subtext */}
             <p className="text-[#5F5E5A] leading-relaxed font-medium text-lg max-w-lg mb-10">
-              Find grants, programmes, investment and in-kind support, matched to your organisation.
+              Discover grants, programmes, investment and in-kind support, all suited to your setup and impact priorities.
             </p>
             {/* CTAs */}
             <div className="flex flex-wrap gap-4 mb-4">
@@ -580,7 +580,7 @@ export default function LandingPage() {
             </div>
             <div className="lg:pb-2">
               <p className="text-[#5F5E5A] text-base leading-relaxed max-w-sm">
-                Find grants, programmes, investment and in-kind support, matched to your organisation.
+                Discover grants, programmes, investment and in-kind support, all suited to your setup and impact priorities.
               </p>
             </div>
           </motion.div>
