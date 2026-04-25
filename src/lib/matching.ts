@@ -169,6 +169,14 @@ const TITLE_DOMAIN_KEYWORDS: Array<{
     sector: 'tech',
     orgTerms: ['tech', 'technology', 'digital', 'innovation', 'software'],
   },
+  {
+    words: ['visually impaired', 'sight loss', 'blind', 'blindness', 'visual impairment',
+            'deaf', 'deafblind', 'hearing loss', 'disability', 'disabled people',
+            'learning disability', 'physical disability', 'wheelchair'],
+    sector: 'disability',
+    orgTerms: ['disability', 'disabled', 'blind', 'deaf', 'sight', 'hearing', 'impairment', 'accessible'],
+  },
+  },
 ]
 
 /**
@@ -654,11 +662,13 @@ export function computeMatchScore(
     // ── Primary domain mismatch check ─────────────────────────────────────
     // These sectors strongly characterise what a grant is fundamentally about.
     // If a grant includes any of these but the org does NOT, the match is
-    // misleading even when generic cross-cutting sectors (community, health,
-    // young_people) produce high coverage — e.g. football grants for a theatre.
+    // misleading even when generic cross-cutting sectors (community,
+    // young_people) produce high coverage — e.g. football grants for a theatre,
+    // or disability grants for a music charity.
     const PRIMARY_DOMAINS = [
       'sport', 'environment', 'heritage', 'international',
       'food', 'animal_welfare', 'faith', 'tech',
+      'disability', 'health',
     ]
     const grantPrimaryDomains = grantImpactSectors.filter(s => PRIMARY_DOMAINS.includes(s))
     if (grantPrimaryDomains.length > 0) {
