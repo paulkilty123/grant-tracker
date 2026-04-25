@@ -486,6 +486,10 @@ export function computeMatchScore(
   org: Organisation,
   feedback?: FeedbackSignals,
 ): MatchResult {
+  // DEBUG: v2 marker — remove after confirming deploy
+  if (grant.title.toLowerCase().includes('ulverscroft')) {
+    console.log('[MATCH-DEBUG-v2] Ulverscroft scoring START for org:', org.name)
+  }
   const reasons: string[] = []
 
   // Full grant text used for keyword matching (includes funderBrief when available)
@@ -883,6 +887,13 @@ export function computeMatchScore(
         if (!orgCovers) {
           primaryDomainMismatch = true
           themesScore = Math.min(themesScore, 5)
+          if (grant.title.toLowerCase().includes('ulverscroft')) {
+            console.log('[MATCH-DEBUG-v2] VETO FIRED for', grant.title, '— primaryDomainMismatch=true, themesScore capped at 5')
+          }
+        } else {
+          if (grant.title.toLowerCase().includes('ulverscroft')) {
+            console.log('[MATCH-DEBUG-v2] VETO SKIPPED — orgCovers=true')
+          }
         }
         break
       }
