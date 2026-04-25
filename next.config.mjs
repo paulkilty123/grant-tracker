@@ -1,3 +1,4 @@
+// build-cache-bust: 2026-04-25
 const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
