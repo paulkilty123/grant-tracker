@@ -176,7 +176,6 @@ const TITLE_DOMAIN_KEYWORDS: Array<{
     sector: 'disability',
     orgTerms: ['disability', 'disabled', 'blind', 'deaf', 'sight', 'hearing', 'impairment', 'accessible'],
   },
-  },
 ]
 
 /**
