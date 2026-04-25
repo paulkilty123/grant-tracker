@@ -488,12 +488,16 @@ export function computeMatchScore(
 ): MatchResult {
   const reasons: string[] = []
 
-  // Full grant text used for keyword matching
+  // Full grant text used for keyword matching (includes funderBrief when available)
+  const funderBriefText = (grant as Record<string, unknown>).funderBrief && typeof (grant as Record<string, unknown>).funderBrief === 'object'
+    ? Object.values((grant as Record<string, unknown>).funderBrief as Record<string, unknown>).filter(v => typeof v === 'string').join(' ')
+    : ''
   const grantText = [
     grant.title,
     grant.description,
     grant.sectors.join(' '),
     grant.eligibilityCriteria.join(' '),
+    funderBriefText,
   ].join(' ').toLowerCase()
 
   // ── 1. Location (max 25) ───────────────────────────────────────────────
@@ -866,10 +870,8 @@ export function computeMatchScore(
     const orgSectorSet = new Set(orgImpactSectors)
     const orgThemeStrings = (org.themes ?? []).map(t => t.toLowerCase())
     const orgMissionLower = (org.mission ?? '').toLowerCase()
-    const titleLower = grant.title.toLowerCase()
-    const descLower = (grant.description || '').toLowerCase()
     for (const { words, orgTerms } of TITLE_DOMAIN_KEYWORDS) {
-      if (words.some(w => titleLower.includes(w) || descLower.includes(w))) {
+      if (words.some(w => grantText.includes(w))) {
         // Substring match against themes/mission so multi-word themes like
         // "food poverty" or "environmental education" still register as coverage.
         const orgCovers = orgTerms.some(t =>
