@@ -174,7 +174,7 @@ const TITLE_DOMAIN_KEYWORDS: Array<{
             'deaf', 'deafblind', 'hearing loss', 'disability', 'disabled people',
             'learning disability', 'physical disability', 'wheelchair'],
     sector: 'disability',
-    orgTerms: ['disability', 'disabled', 'blind', 'deaf', 'sight', 'hearing', 'impairment', 'accessible'],
+    orgTerms: ['disability', 'disabled', 'blind', 'deaf', 'sight loss', 'hearing loss', 'visual impairment', 'visually impaired'],
   },
 ]
 
