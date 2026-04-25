@@ -489,8 +489,9 @@ export function computeMatchScore(
   const reasons: string[] = []
 
   // Full grant text used for keyword matching (includes funderBrief when available)
-  const funderBriefText = (grant as Record<string, unknown>).funderBrief && typeof (grant as Record<string, unknown>).funderBrief === 'object'
-    ? Object.values((grant as Record<string, unknown>).funderBrief as Record<string, unknown>).filter(v => typeof v === 'string').join(' ')
+  const grantAny = grant as unknown as Record<string, unknown>
+  const funderBriefText = grantAny.funderBrief && typeof grantAny.funderBrief === 'object'
+    ? Object.values(grantAny.funderBrief as Record<string, unknown>).filter(v => typeof v === 'string').join(' ')
     : ''
   const grantText = [
     grant.title,
