@@ -486,9 +486,10 @@ export function computeMatchScore(
   org: Organisation,
   feedback?: FeedbackSignals,
 ): MatchResult {
-  // DEBUG: v2 marker — remove after confirming deploy
-  if (grant.title.toLowerCase().includes('ulverscroft')) {
-    console.log('[MATCH-DEBUG-v2] Ulverscroft scoring START for org:', org.name)
+  // DEBUG: v3 marker — uses window property (survives minification)
+  if (typeof window !== 'undefined' && grant.title.toLowerCase().includes('ulverscroft')) {
+    (window as unknown as Record<string,unknown>).__MATCH_V3 = { org: org.name, title: grant.title, ts: Date.now() }
+    try { console.warn('[MATCH-v3]', grant.title, org.name) } catch {}
   }
   const reasons: string[] = []
 
