@@ -3,7 +3,7 @@ import type { GrantOpportunity, Organisation, LegalStructure, BeneficiaryGroup }
 export interface MatchBreakdown {
   location:      { score: number; max: number; label: string }
   themes:        { score: number; max: number; label: string }
-  beneficiaries: { score: number; max: number; label: string }
+  beneficiaries?: { score: number; max: number; label: string }
   grantSize:     { score: number; max: number; label: string }
   funderType:    { score: number; max: number; label: string }
   eligibility:   { score: number; max: number; label: string }
@@ -675,8 +675,7 @@ export function computeMatchScore(
     // or disability grants for a music charity.
     const PRIMARY_DOMAINS = [
       'sport', 'environment', 'heritage', 'international',
-      'food', 'animal_welfare', 'faith', 'tech',
-      'disability', 'health',
+      'food', 'animal_welfare', 'faith',
     ]
     const grantPrimaryDomains = grantImpactSectors.filter(s => PRIMARY_DOMAINS.includes(s))
     if (grantPrimaryDomains.length > 0) {
@@ -870,13 +869,14 @@ export function computeMatchScore(
   // even when impact_sectors is absent or sparsely tagged.  Only fires when
   // the org has some sector/theme data (can't veto a completely blank profile).
   // Supplements the structured primaryDomainMismatch check above.
-  const orgHasProfile = orgImpactSectors.length > 0 || (org.themes ?? []).length > 0 || (org.mission ?? "").length > 0
+  const orgHasProfile = orgImpactSectors.length > 0 || (org.themes ?? []).length > 0
   if (orgHasProfile && !primaryDomainMismatch) {
     const orgSectorSet = new Set(orgImpactSectors)
     const orgThemeStrings = (org.themes ?? []).map(t => t.toLowerCase())
     const orgMissionLower = (org.mission ?? '').toLowerCase()
+    const titleLower = grant.title.toLowerCase()
     for (const { words, orgTerms } of TITLE_DOMAIN_KEYWORDS) {
-      if (words.some(w => grantText.includes(w))) {
+      if (words.some(w => titleLower.includes(w))) {
         // Substring match against themes/mission so multi-word themes like
         // "food poverty" or "environmental education" still register as coverage.
         const orgCovers = orgTerms.some(t =>
@@ -887,11 +887,31 @@ export function computeMatchScore(
         if (!orgCovers) {
           primaryDomainMismatch = true
           themesScore = Math.min(themesScore, 5)
-          if (grant.title.toLowerCase().includes('ulverscroft')) {
-          }
-        } else {
-          if (grant.title.toLowerCase().includes('ulverscroft')) {
-          }
+        }
+        break
+      }
+    }
+  }
+
+  // ── FunderBrief specialist domain check ──────────────────────────────
+  // When the title-based keyword veto didn't fire, check funderBrief.what_they_fund
+  // for strong specialist signals. This catches grants like "Ulverscroft Foundation"
+  // where the title is generic but what_they_fund clearly indicates a specialist domain.
+  if (!primaryDomainMismatch && funderBriefText.length > 0) {
+    const wtfLower = funderBriefText.toLowerCase()
+    for (const { words, orgTerms } of TITLE_DOMAIN_KEYWORDS) {
+      if (words.some(w => wtfLower.includes(w))) {
+        const orgSectorSet2 = new Set(orgImpactSectors)
+        const orgThemeStrings2 = (org.themes ?? []).map(t => t.toLowerCase())
+        const orgMissionLower2 = (org.mission ?? '').toLowerCase()
+        const orgCovers = orgTerms.some(t =>
+          orgSectorSet2.has(t) ||
+          orgThemeStrings2.some(theme => theme.includes(t)) ||
+          orgMissionLower2.includes(t)
+        )
+        if (!orgCovers) {
+          primaryDomainMismatch = true
+          themesScore = Math.min(themesScore, 5)
         }
         break
       }
