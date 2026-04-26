@@ -1787,7 +1787,7 @@ export default function SearchPage() {
         let displayScore = match.score
         let score = match.score
         // DEBUG: test if page.tsx changes deploy to Vercel
-        if (grant.title.toLowerCase().includes("ulverscroft")) { score = 1; displayScore = 1; console.warn("ULVERSCROFT-DEBUG-PAGE: forced score to 1"); }
+        if (grant.title.toLowerCase().includes("ulverscroft")) { console.warn("ULVERSCROFT-MATCH-DETAIL", JSON.stringify({ score: match.score, reason: match.reason, breakdown: match.breakdown, eligStatus: match.eligibilityStatus, eligReason: match.eligibilityReason, positiveReasons: match.positiveReasons, warnReasons: match.warnReasons })); }
         if (grantInteractions.has('liked'))    score = Math.min(100, score + LIKE_SCORE_BOOST)
         if (grantInteractions.has('disliked')) score = Math.max(0,   score - DISLIKE_SCORE_PENALTY)
         // Match-block feedback — higher weight, more deliberate signal
