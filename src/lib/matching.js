@@ -960,7 +960,7 @@ export function computeMatchScore(grant, org, feedback) {
                 structureMismatch = false;
                 eligibilityScore = Math.min(10, eligibilityScore + 3);
                 const label = structureLabel(org.legal_structure ?? orgStructures[0]);
-                reasons.push(`Eligible as a ${label}`);
+                if (!reasons.some(r => r.startsWith('Eligible as'))) reasons.push(`Eligible as a ${label}`);
             }
             else {
                 // Hard ineligibility — significant penalty
