@@ -486,25 +486,6 @@ export function computeMatchScore(
   org: Organisation,
   feedback?: FeedbackSignals,
 ): MatchResult {
-  // DEBUG: hard-coded Ulverscroft return to confirm function executes
-  if (grant.title.toLowerCase().includes('ulverscroft')) {
-    return {
-      score: 1,
-      reason: 'DEBUG: matching.ts v4 is live',
-      eligibilityStatus: 'check_required' as EligibilityStatus,
-      eligibilityReason: null,
-      positiveReasons: [],
-      warnReasons: ['DEBUG: if you see 1% this code is running'],
-      breakdown: {
-        location:     { score: 0, max: 15, label: 'Location' },
-        themes:       { score: 0, max: 35, label: 'Themes & work' },
-        beneficiaries:{ score: 0, max: 20, label: 'Beneficiaries' },
-        grantSize:    { score: 0, max: 10, label: 'Grant size' },
-        funderType:   { score: 0, max: 8,  label: 'Funder type' },
-        eligibility:  { score: 0, max: 12, label: 'Eligibility' },
-      },
-    }
-  }
   const reasons: string[] = []
 
   // Full grant text used for keyword matching (includes funderBrief when available)
