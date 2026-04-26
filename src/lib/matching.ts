@@ -151,7 +151,7 @@ const TITLE_DOMAIN_KEYWORDS: Array<{
     orgTerms: ['heritage', 'historic', 'museum'],
   },
   {
-    words: ['overseas', 'international development', 'global south', 'developing world'],
+    words: ['overseas aid', 'international development', 'global south', 'developing world', 'overseas charity', 'overseas project'],
     sector: 'international',
     orgTerms: ['international', 'overseas', 'global'],
   },
@@ -866,7 +866,7 @@ export function computeMatchScore(
   // even when impact_sectors is absent or sparsely tagged.  Only fires when
   // the org has some sector/theme data (can't veto a completely blank profile).
   // Supplements the structured primaryDomainMismatch check above.
-  const orgHasProfile = orgImpactSectors.length > 0 || (org.themes ?? []).length > 0
+  const orgHasProfile = orgImpactSectors.length > 0 || (org.themes ?? []).length > 0 || (org.mission ?? "").length > 0
   if (orgHasProfile && !primaryDomainMismatch) {
     const orgSectorSet = new Set(orgImpactSectors)
     const orgThemeStrings = (org.themes ?? []).map(t => t.toLowerCase())
@@ -884,11 +884,9 @@ export function computeMatchScore(
           primaryDomainMismatch = true
           themesScore = Math.min(themesScore, 5)
           if (grant.title.toLowerCase().includes('ulverscroft')) {
-            console.log('[MATCH-DEBUG-v2] VETO FIRED for', grant.title, '— primaryDomainMismatch=true, themesScore capped at 5')
           }
         } else {
           if (grant.title.toLowerCase().includes('ulverscroft')) {
-            console.log('[MATCH-DEBUG-v2] VETO SKIPPED — orgCovers=true')
           }
         }
         break

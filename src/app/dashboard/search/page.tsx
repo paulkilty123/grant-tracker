@@ -1784,40 +1784,8 @@ export default function SearchPage() {
       if (org) {
         const match = computeMatchScore(grant, org, feedbackSignals)
         const grantInteractions = interactions.get(grant.id) ?? new Set()
-        let displayScore = match.score
+        const displayScore = match.score
         let score = match.score
-        // DEBUG: test if page.tsx changes deploy to Vercel
-        if (grant.title.toLowerCase().includes("ulverscroft")) {
-          const _ga = grant as unknown as Record<string,unknown>;
-          const _hasBrief = !!_ga.funderBrief;
-          const _briefKeys = _ga.funderBrief && typeof _ga.funderBrief === "object" ? Object.keys(_ga.funderBrief as Record<string,unknown>) : [];
-          const _briefSnippet = _ga.funderBrief && typeof _ga.funderBrief === "object" ? JSON.stringify(_ga.funderBrief).substring(0, 300) : "N/A";
-          console.warn("ULVERSCROFT-MATCH", JSON.stringify({ score: match.score, breakdown: match.breakdown }));
-          console.warn("ULVERSCROFT-GRANT", JSON.stringify({ hasFunderBrief: _hasBrief, briefKeys: _briefKeys, sectors: grant.sectors, title: grant.title }));
-          console.warn("ULVERSCROFT-BRIEF", _briefSnippet);
-          const _bf = _ga.funderBrief as Record<string,unknown> | null;
-          if (_bf) {
-            console.warn("ULVERSCROFT-WHO-CAN-APPLY", String(_bf.who_can_apply || ""));
-            console.warn("ULVERSCROFT-WHAT-THEY-FUND", String(_bf.what_they_fund || "").substring(0, 300));
-            const _allBrief = Object.values(_bf).filter(v => typeof v === "string").join(" ").toLowerCase();
-            // Also log the org profile to see what orgCovers would check against
-            const _orgSectors = (org as unknown as Record<string,unknown>).impactSectors || [];
-            const _orgThemes = (org as unknown as Record<string,unknown>).themes || [];
-            const _orgMission = String((org as unknown as Record<string,unknown>).mission || "");
-            console.warn("ULVERSCROFT-ORG-PROFILE", JSON.stringify({
-              impactSectors: _orgSectors,
-              themes: _orgThemes,
-              missionSnippet: _orgMission.substring(0, 300),
-            }));
-            console.warn("ULVERSCROFT-KEYWORD-CHECK", JSON.stringify({
-              hasOverseas: _allBrief.includes("overseas"),
-              hasVisuallyImpaired: _allBrief.includes("visually impaired"),
-              hasVisualImpairment: _allBrief.includes("visual impairment"),
-              hasBlind: _allBrief.includes("blind"),
-              hasDisability: _allBrief.includes("disability"),
-            }));
-          }
-        }
         if (grantInteractions.has('liked'))    score = Math.min(100, score + LIKE_SCORE_BOOST)
         if (grantInteractions.has('disliked')) score = Math.max(0,   score - DISLIKE_SCORE_PENALTY)
         // Match-block feedback — higher weight, more deliberate signal
