@@ -2035,6 +2035,12 @@ export default function SearchPage() {
     setActiveFunderCategory('all')
     setActiveGeoScope('all')
     setProfileFilterOn(false)
+    // Clear search state too
+    setInputValue('')
+    setFilterQuery('')
+    setQuery('')
+    setAiResults(null)
+    setSmartMatched(false)
   }
 
   function toggleGroup(label: string) {
@@ -2260,6 +2266,15 @@ export default function SearchPage() {
                     className="flex-1 bg-transparent outline-none text-sm text-charcoal placeholder-gray-400 min-w-0"
                     placeholder="Search by grant name, keyword or funder..."
                   />
+                  {(inputValue || query || aiResults) && (
+                    <button
+                      onClick={() => { setInputValue(''); setFilterQuery(''); setQuery(''); setAiResults(null); setSmartMatched(false) }}
+                      className="flex-shrink-0 p-1 rounded-full hover:bg-gray-100 transition-colors"
+                      title="Clear search"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8A8986" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  )}
                 </div>
                 {/* Divider */}
                 <div className="w-px h-6 bg-gray-200 flex-shrink-0" />
