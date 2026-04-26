@@ -366,7 +366,7 @@ function StalenessBadge({ lastVerifiedAt }: { lastVerifiedAt?: string }) {
 }
 
 // ── Grant Card ───────────────────────────────────────────────────────────────
-function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline, onRemoveFromPipeline, onDismiss, onUndismiss, onLike, onDislike, onSave, onUnsave, showIfDismissed, isInPipeline, pipelineStage }: {
+function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline, onRemoveFromPipeline, onDismiss, onUndismiss, onLike, onDislike, onSave, onUnsave, showIfDismissed, isInPipeline, pipelineStage, lastSearchVisit }: {
   item: DisplayGrant
   hasOrg: boolean
   hasSearch: boolean
@@ -383,6 +383,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
   showIfDismissed?: boolean
   isInPipeline?: boolean
   pipelineStage?: string
+  lastSearchVisit?: string | null
 }) {
   const { grant, score, displayScore, reason, isAiScore, breakdown, eligibilityStatus, eligibilityReason, positiveReasons, warnReasons } = item
   const [descExpanded, setDescExpanded] = useState(false)
@@ -400,6 +401,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
   // "New this week" badge — show if added within last 7 days
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
   const isNewThisWeek = !!grant.dateAdded && grant.dateAdded >= sevenDaysAgo
+  const isNewForYou = !!grant.dateAdded && !!lastSearchVisit && grant.dateAdded > lastSearchVisit.split('T')[0]
 
   // Classify the entry so users know what they're looking at
   const entryType: 'live' | 'rolling' | 'profile' =
@@ -632,6 +634,11 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
               {grant.isInviteOnly && (
                 <span style={{ fontSize: 10, padding: '3px 9px', borderRadius: 9999, fontWeight: 500, whiteSpace: 'nowrap', background: '#F3EDFA', color: '#6B21A8', fontFamily: 'var(--font-dm-sans)', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
                   ✉ Invite only
+                </span>
+              )}
+              {isNewForYou && (
+                <span style={{ fontSize: 10, padding: '3px 9px', borderRadius: 9999, fontWeight: 600, whiteSpace: 'nowrap', background: 'rgba(142,203,60,0.18)', color: '#3B6D11', fontFamily: 'var(--font-dm-sans)', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                  ✦ New for you
                 </span>
               )}
             </div>
@@ -1230,6 +1237,7 @@ export default function SearchPage() {
   // filter panel silently flipped it back on. Now the toggle only changes
   // when the user clicks it directly (or when the org first loads).
   const [profileFilterOn, setProfileFilterOn]     = useState(false)
+  const [lastSearchVisit, setLastSearchVisit]       = useState<string | null>(null)
 
   // ── Live search (web) state ───────────────────────────────────────────────
   const [searchMode, setSearchMode]               = useState<'database' | 'live'>('database')
@@ -1309,6 +1317,22 @@ export default function SearchPage() {
         // Mirror today's behaviour: if the org has profile data worth
         // filtering on, start with the profile filter toggled on.
         if (o.primary_location || o.impact_sectors?.length) setProfileFilterOn(true)
+        // ── "New for you" visit tracking ──
+        // Fetch the org's last_visited_search_page_at so we can badge new grants,
+        // then update it after a 3-second delay so the user sees badges first.
+        const { data: visitRow } = await supabase
+          .from('organisations')
+          .select('last_visited_search_page_at')
+          .eq('id', o.id)
+          .single()
+        const prevVisit = visitRow?.last_visited_search_page_at ?? null
+        setLastSearchVisit(prevVisit)
+        setTimeout(async () => {
+          await supabase
+            .from('organisations')
+            .update({ last_visited_search_page_at: new Date().toISOString() })
+            .eq('id', o.id)
+        }, 3000)
         setSearchModeToggle('profile')
         setProfileChipsApplied(true)
         setHasSearched(true)
@@ -2856,6 +2880,7 @@ export default function SearchPage() {
                 onSave={handleSave}
                 onUnsave={handleUnsave}
                 showIfDismissed={showDismissed}
+                lastSearchVisit={lastSearchVisit}
               />
             ))}
             {visibleCount < visibleGrants.length && (
@@ -2915,6 +2940,7 @@ export default function SearchPage() {
                 onDislike={handleDislike}
                   onSave={handleSave}
                 onUnsave={handleUnsave}
+                lastSearchVisit={lastSearchVisit}
               />
             ))}
             {visibleCount < savedGrants.length && (
