@@ -1837,14 +1837,15 @@ export default function SearchPage() {
       withScores.sort((a, b) => (b.grant.amountMax ?? 0) - (a.grant.amountMax ?? 0))
     } else if (sortBy === 'freshest') {
       withScores.sort((a, b) => {
-        const aDate = a.grant.lastVerifiedAt ?? a.grant.dateAdded ?? ''
-        const bDate = b.grant.lastVerifiedAt ?? b.grant.dateAdded ?? ''
+        const aDate = a.grant.dateAdded ?? ''
+        const bDate = b.grant.dateAdded ?? ''
         return bDate.localeCompare(aDate)
       })
     } else if (sortBy === 'deadline') {
       withScores.sort((a, b) => {
-        const aDeadline = a.grant.deadline ?? '9999-12-31'
-        const bDeadline = b.grant.deadline ?? '9999-12-31'
+        // Rolling grants and grants without deadlines go to the bottom
+        const aDeadline = (!a.grant.isRolling && a.grant.deadline) ? a.grant.deadline : '9999-12-31'
+        const bDeadline = (!b.grant.isRolling && b.grant.deadline) ? b.grant.deadline : '9999-12-31'
         return aDeadline.localeCompare(bDeadline)
       })
     }
