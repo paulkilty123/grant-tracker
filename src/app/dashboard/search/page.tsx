@@ -1800,6 +1800,15 @@ export default function SearchPage() {
             console.warn("ULVERSCROFT-WHO-CAN-APPLY", String(_bf.who_can_apply || ""));
             console.warn("ULVERSCROFT-WHAT-THEY-FUND", String(_bf.what_they_fund || "").substring(0, 300));
             const _allBrief = Object.values(_bf).filter(v => typeof v === "string").join(" ").toLowerCase();
+            // Also log the org profile to see what orgCovers would check against
+            const _orgSectors = (org as unknown as Record<string,unknown>).impactSectors || [];
+            const _orgThemes = (org as unknown as Record<string,unknown>).themes || [];
+            const _orgMission = String((org as unknown as Record<string,unknown>).mission || "");
+            console.warn("ULVERSCROFT-ORG-PROFILE", JSON.stringify({
+              impactSectors: _orgSectors,
+              themes: _orgThemes,
+              missionSnippet: _orgMission.substring(0, 300),
+            }));
             console.warn("ULVERSCROFT-KEYWORD-CHECK", JSON.stringify({
               hasOverseas: _allBrief.includes("overseas"),
               hasVisuallyImpaired: _allBrief.includes("visually impaired"),
