@@ -1787,7 +1787,15 @@ export default function SearchPage() {
         let displayScore = match.score
         let score = match.score
         // DEBUG: test if page.tsx changes deploy to Vercel
-        if (grant.title.toLowerCase().includes("ulverscroft")) { console.warn("ULVERSCROFT-MATCH-DETAIL", JSON.stringify({ score: match.score, reason: match.reason, breakdown: match.breakdown, eligStatus: match.eligibilityStatus, eligReason: match.eligibilityReason, positiveReasons: match.positiveReasons, warnReasons: match.warnReasons })); }
+        if (grant.title.toLowerCase().includes("ulverscroft")) {
+          const _ga = grant as unknown as Record<string,unknown>;
+          const _hasBrief = !!_ga.funderBrief;
+          const _briefKeys = _ga.funderBrief && typeof _ga.funderBrief === "object" ? Object.keys(_ga.funderBrief as Record<string,unknown>) : [];
+          const _briefSnippet = _ga.funderBrief && typeof _ga.funderBrief === "object" ? JSON.stringify(_ga.funderBrief).substring(0, 300) : "N/A";
+          console.warn("ULVERSCROFT-MATCH", JSON.stringify({ score: match.score, breakdown: match.breakdown }));
+          console.warn("ULVERSCROFT-GRANT", JSON.stringify({ hasFunderBrief: _hasBrief, briefKeys: _briefKeys, sectors: grant.sectors, title: grant.title }));
+          console.warn("ULVERSCROFT-BRIEF", _briefSnippet);
+        }
         if (grantInteractions.has('liked'))    score = Math.min(100, score + LIKE_SCORE_BOOST)
         if (grantInteractions.has('disliked')) score = Math.max(0,   score - DISLIKE_SCORE_PENALTY)
         // Match-block feedback — higher weight, more deliberate signal
