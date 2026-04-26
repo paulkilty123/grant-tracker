@@ -600,6 +600,15 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
           {/* ── Content column ── */}
           <div style={{ flex: 1, minWidth: 0 }}>
 
+            {/* "New for you" badge — above pills so it stands out */}
+            {isNewForYou && (
+              <div style={{ marginBottom: 8 }}>
+                <span style={{ fontSize: 11, padding: '4px 10px', borderRadius: 9999, fontWeight: 600, whiteSpace: 'nowrap', background: '#8ECB3C', color: '#173404', fontFamily: 'var(--font-dm-sans)', display: 'inline-flex', alignItems: 'center', gap: 4, letterSpacing: '0.01em' }}>
+                  ✦ New for you
+                </span>
+              </div>
+            )}
+
             {/* Pill row: sectors + funder-type + location */}
             <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap', alignItems: 'center' }}>
               {visibleSectors.map(s => {
@@ -634,11 +643,6 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
               {grant.isInviteOnly && (
                 <span style={{ fontSize: 10, padding: '3px 9px', borderRadius: 9999, fontWeight: 500, whiteSpace: 'nowrap', background: '#F3EDFA', color: '#6B21A8', fontFamily: 'var(--font-dm-sans)', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
                   ✉ Invite only
-                </span>
-              )}
-              {isNewForYou && (
-                <span style={{ fontSize: 10, padding: '3px 9px', borderRadius: 9999, fontWeight: 600, whiteSpace: 'nowrap', background: 'rgba(142,203,60,0.18)', color: '#3B6D11', fontFamily: 'var(--font-dm-sans)', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-                  ✦ New for you
                 </span>
               )}
             </div>
