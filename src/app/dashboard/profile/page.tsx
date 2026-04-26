@@ -525,8 +525,58 @@ function ScanBar({ orgId, website, onSaved }: { orgId: string; website?: string 
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState('')
   const [saving, setSaving] = useState(false)
-  const [scanHint, setScanHint] = useState(false)
+  const [scanning, setScanning] = useState(false)
+  const [scanResults, setScanResults] = useState<Record<string, unknown> | null>(null)
+  const [scanError, setScanError] = useState<string | null>(null)
+  const [acceptedFields, setAcceptedFields] = useState<Set<string>>(new Set())
+  const [applySaving, setApplySaving] = useState(false)
   const supabase = createClient()
+
+  async function runScan() {
+    setScanning(true)
+    setScanError(null)
+    setScanResults(null)
+    try {
+      const res = await fetch('/api/scan-website', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orgId }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setScanError(data.error ?? 'Scan failed'); return }
+      if (data.fieldsFound === 0) { setScanError('Could not extract any profile data from your website'); return }
+      setScanResults(data.extracted)
+      setAcceptedFields(new Set(Object.keys(data.extracted)))
+    } catch { setScanError('Network error — please try again') }
+    finally { setScanning(false) }
+  }
+
+  function toggleField(field: string) {
+    setAcceptedFields(prev => {
+      const next = new Set(prev)
+      if (next.has(field)) next.delete(field); else next.add(field)
+      return next
+    })
+  }
+
+  async function applyResults() {
+    if (!scanResults) return
+    setApplySaving(true)
+    try {
+      const updates: Record<string, unknown> = {}
+      for (const field of acceptedFields) {
+        if (scanResults[field] !== undefined) updates[field] = scanResults[field]
+      }
+      if (Object.keys(updates).length > 0) {
+        await updateOrganisation(orgId, updates)
+        onSaved()
+      }
+      setScanResults(null)
+      setAcceptedFields(new Set())
+    } finally { setApplySaving(false) }
+  }
+
+  function dismissScan() { setScanResults(null); setScanError(null); setAcceptedFields(new Set()) }
 
   function startEdit() { setDraft(website ?? ''); setEditing(true) }
   function cancel() { setEditing(false) }
@@ -600,11 +650,12 @@ function ScanBar({ orgId, website, onSaved }: { orgId: string; website?: string 
               Change URL
             </button>
             <button
-              onClick={() => { setScanHint(true); setTimeout(() => setScanHint(false), 3000) }}
-              style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, background: scanHint ? T.lime : 'transparent', color: scanHint ? T.greenDeep : T.textPrimary, border: `0.5px solid ${scanHint ? T.greenDeep : T.borderStrong}`, padding: '7px 14px', borderRadius: 8, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, transition: 'all 0.2s ease' }}
+              onClick={runScan}
+              disabled={scanning}
+              style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, background: scanning ? T.lime : 'transparent', color: scanning ? T.greenDeep : T.textPrimary, border: `0.5px solid ${scanning ? T.greenDeep : T.borderStrong}`, padding: '7px 14px', borderRadius: 8, cursor: scanning ? 'default' : 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, transition: 'all 0.2s ease', opacity: scanning ? 0.8 : 1 }}
             >
-              <RotateCcw size={13} />
-              {scanHint ? 'Coming soon!' : 'Re-scan & refresh'}
+              <RotateCcw size={13} style={scanning ? { animation: 'spin 1s linear infinite' } : undefined} />
+              {scanning ? 'Scanning...' : 'Re-scan & refresh'}
             </button>
           </div>
         </>
@@ -618,6 +669,47 @@ function ScanBar({ orgId, website, onSaved }: { orgId: string; website?: string 
             Add website
           </button>
         </>
+      )}
+      {/* Scan error */}
+      {scanError && (
+        <div style={{ marginTop: 12, padding: '10px 14px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontFamily: BODY, fontSize: 13, color: '#991B1B' }}>{scanError}</span>
+          <button onClick={dismissScan} style={{ fontFamily: UI, fontSize: 12, color: '#991B1B', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>Dismiss</button>
+        </div>
+      )}
+
+      {/* Scan results review panel */}
+      {scanResults && (
+        <div style={{ marginTop: 14, background: T.cream, border: `1px solid ${T.border}`, borderRadius: 10, padding: '16px 18px' }}>
+          <div style={{ fontFamily: UI, fontWeight: 600, fontSize: 14, color: T.greenDeep, marginBottom: 4 }}>Website scan results</div>
+          <div style={{ fontFamily: BODY, fontSize: 12, color: T.textTertiary, marginBottom: 14 }}>Tick the fields you want to update. Untick to keep your current values.</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {Object.entries(scanResults).map(([field, value]) => {
+              const labels: Record<string, string> = { mission: 'Mission statement', impact_sectors: 'Impact sectors', beneficiary_groups: 'Who you serve', legal_structure: 'Legal structure', annual_income_band: 'Annual income', primary_location: 'Location', geographic_reach: 'Geographic reach' }
+              const label = labels[field] ?? field
+              const isArray = Array.isArray(value)
+              const displayValue = isArray ? (value as string[]).join(', ') : String(value)
+              const checked = acceptedFields.has(field)
+              return (
+                <label key={field} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', padding: '8px 12px', background: checked ? '#F0FAE5' : T.white, border: `1px solid ${checked ? '#8ECB3C' : T.border}`, borderRadius: 8, transition: 'all 0.15s ease' }}>
+                  <input type="checkbox" checked={checked} onChange={() => toggleField(field)} style={{ marginTop: 2, accentColor: T.greenDeep }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontFamily: UI, fontSize: 12, fontWeight: 600, color: T.textPrimary, marginBottom: 2 }}>{label}</div>
+                    <div style={{ fontFamily: BODY, fontSize: 12, color: T.textSecondary, lineHeight: 1.4, wordBreak: 'break-word' }}>{displayValue}</div>
+                  </div>
+                </label>
+              )
+            })}
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 14 }}>
+            <button onClick={dismissScan} style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, background: 'transparent', color: T.textSecondary, border: 'none', padding: '7px 12px', borderRadius: 7, cursor: 'pointer' }}>
+              Cancel
+            </button>
+            <button onClick={applyResults} disabled={acceptedFields.size === 0 || applySaving} style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, background: acceptedFields.size > 0 ? T.greenDeep : T.border, color: acceptedFields.size > 0 ? T.white : T.textTertiary, border: 'none', padding: '7px 16px', borderRadius: 8, cursor: acceptedFields.size > 0 ? 'pointer' : 'default' }}>
+              {applySaving ? 'Saving...' : `Apply ${acceptedFields.size} field${acceptedFields.size !== 1 ? 's' : ''}`}
+            </button>
+          </div>
+        </div>
       )}
     </div>
   )
