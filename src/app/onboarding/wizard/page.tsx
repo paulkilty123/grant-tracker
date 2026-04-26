@@ -578,7 +578,11 @@ export default function OnboardingWizardPage() {
           fundingTypes:     (org.funding_type_preferences as FundingType[])?.length
                               ? (org.funding_type_preferences as FundingType[])
                               : ['grant', 'programme', 'investment', 'in_kind'],
-          nicheTags:        (org.niche_tags as string[]) ?? [],
+          nicheTags:        (() => {
+            const sectors = ((org.impact_sectors as ImpactSector[]) ?? []).slice(0, 4)
+            const valid = validNicheTagsFor(sectors)
+            return ((org.niche_tags as string[]) ?? []).filter(t => valid.has(t))
+          })(),
         })
       }
       setLoading(false)
@@ -723,7 +727,7 @@ export default function OnboardingWizardPage() {
         also_individual_practitioner: false,
         impact_sectors:               state.impactSectors,
         beneficiary_groups:           state.beneficiaryGroups,
-        niche_tags:                   state.nicheTags,
+        niche_tags:                   state.nicheTags.filter(t => validNicheTagsFor(state.impactSectors).has(t)),
         annual_income_band:           state.annualIncomeBand || null,
         primary_location:             state.primaryLocation.trim() || null,
         geographic_reach:             state.geographicReach || null,
@@ -1355,6 +1359,10 @@ const NICHE_TAGS_BY_SECTOR: Partial<Record<ImpactSector, { value: string; label:
     { value: 'vocational',        label: 'Vocational & Apprenticeships' },
     { value: 'digital_literacy',  label: 'Digital Literacy' },
   ],
+}
+
+function validNicheTagsFor(sectors: ImpactSector[]): Set<string> {
+  return new Set(sectors.flatMap(s => (NICHE_TAGS_BY_SECTOR[s] ?? []).map(t => t.value)))
 }
 
 /* ═══════════════════════════════════════════════

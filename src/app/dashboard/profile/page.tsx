@@ -165,6 +165,10 @@ const NICHE_TAGS_BY_SECTOR: Partial<Record<ImpactSector, { value: string; label:
   ],
 }
 
+function validNicheTagsFor(sectors: ImpactSector[]): Set<string> {
+  return new Set(sectors.flatMap(s => (NICHE_TAGS_BY_SECTOR[s] ?? []).map(t => t.value)))
+}
+
 const BENEFICIARY_OPTIONS: { value: BeneficiaryGroup; label: string }[] = [
   { value: 'children',          label: 'Children (under 16)' },
   { value: 'young_people',      label: 'Young people (16–25)' },
@@ -978,9 +982,11 @@ function FocusCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
   }, [triggerOpen])
 
   function startEdit() {
+    const sectors = (org.impact_sectors as ImpactSector[]) ?? []
+    const valid = validNicheTagsFor(sectors)
     setDraft({
-      impactSectors:    (org.impact_sectors as ImpactSector[]) ?? [],
-      nicheTags:        (org.niche_tags as string[]) ?? [],
+      impactSectors:    sectors,
+      nicheTags:        ((org.niche_tags as string[]) ?? []).filter(t => valid.has(t)),
       beneficiaryGroups:(org.beneficiary_groups as BeneficiaryGroup[]) ?? [],
     })
     setEditing(true); onEditStart()
@@ -991,9 +997,10 @@ function FocusCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
     if (!draft) return
     setSaving(true); setSaveError(null)
     try {
+      const valid = validNicheTagsFor(draft.impactSectors)
       await updateOrganisation(orgId, {
         impact_sectors:    draft.impactSectors,
-        niche_tags:        draft.nicheTags,
+        niche_tags:        draft.nicheTags.filter(t => valid.has(t)),
         beneficiary_groups:draft.beneficiaryGroups,
       })
       setEditing(false); setDraft(null); onEditEnd(); onSaved()
@@ -1049,7 +1056,8 @@ function FocusCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
 
   // Read-mode display
   const sectors   = (org.impact_sectors as ImpactSector[]) ?? []
-  const nicheTags = (org.niche_tags as string[]) ?? []
+  const validRead = validNicheTagsFor(sectors)
+  const nicheTags = ((org.niche_tags as string[]) ?? []).filter(t => validRead.has(t))
   const beneficiaries = (org.beneficiary_groups as BeneficiaryGroup[]) ?? []
   const primarySector = IMPACT_SECTOR_OPTIONS.find(o => o.value === sectors[0])
   const secondarySectors = sectors.slice(1).map(s => IMPACT_SECTOR_OPTIONS.find(o => o.value === s)).filter(Boolean)
