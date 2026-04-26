@@ -533,20 +533,34 @@ function ScanBar({ orgId, website, onSaved }: { orgId: string; website?: string 
   const supabase = createClient()
 
   async function runScan() {
+    if (!website) return
     setScanning(true)
     setScanError(null)
     setScanResults(null)
     try {
-      const res = await fetch('/api/scan-website', {
+      const res = await fetch('/api/org-autocomplete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orgId }),
+        body: JSON.stringify({ url: website }),
       })
       const data = await res.json()
       if (!res.ok) { setScanError(data.error ?? 'Scan failed'); return }
-      if (data.fieldsFound === 0) { setScanError('Could not extract any profile data from your website'); return }
-      setScanResults(data.extracted)
-      setAcceptedFields(new Set(Object.keys(data.extracted)))
+
+      // Map org-autocomplete response to profile fields
+      const result: Record<string, unknown> = {}
+      if (data.mission) result.mission = String(data.mission).slice(0, 200)
+      if (Array.isArray(data.impactSectors) && data.impactSectors.length > 0) result.impact_sectors = data.impactSectors.slice(0, 5)
+      if (Array.isArray(data.beneficiaryGroups) && data.beneficiaryGroups.length > 0) result.beneficiary_groups = data.beneficiaryGroups.slice(0, 5)
+      if (data.primaryLocation) result.primary_location = String(data.primaryLocation).slice(0, 100)
+      if (data.annualIncome) result.annual_income_band = data.annualIncome
+
+      // Map orgType to legal_structure
+      const structureMap: Record<string, string> = { registered_charity: 'registered_charity', cic: 'cic_guarantee', social_enterprise: 'ltd_guarantee', community_group: 'unincorporated' }
+      if (data.orgType && structureMap[data.orgType]) result.legal_structure = structureMap[data.orgType]
+
+      if (Object.keys(result).length === 0) { setScanError('Could not extract any profile data from your website'); return }
+      setScanResults(result)
+      setAcceptedFields(new Set(Object.keys(result)))
     } catch { setScanError('Network error — please try again') }
     finally { setScanning(false) }
   }
