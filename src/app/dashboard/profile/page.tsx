@@ -564,7 +564,7 @@ function ScanBar({ orgId, website, onSaved }: { orgId: string; website?: string 
     setApplySaving(true)
     try {
       const updates: Record<string, unknown> = {}
-      for (const field of acceptedFields) {
+      for (const field of Array.from(acceptedFields)) {
         if (scanResults[field] !== undefined) updates[field] = scanResults[field]
       }
       if (Object.keys(updates).length > 0) {
