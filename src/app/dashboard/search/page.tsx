@@ -497,13 +497,13 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
     }
     // Use optional chaining on every field — guards against stale localStorage shapes
     const gaps: Array<{ gap: number; msg: string }> = [
-      { gap: (breakdown.themes?.max ?? 35)        - (breakdown.themes?.score ?? 0),
+      { gap: (breakdown.themes?.max ?? 20)        - (breakdown.themes?.score ?? 0),
         msg: (() => { const s = firstSentence(brief?.what_they_fund); return s ? 'Sector focus: ' + s : 'Sector alignment: thematic overlap with this funder priority areas is limited' })() },
-      { gap: (breakdown.beneficiaries?.max ?? 20) - (breakdown.beneficiaries?.score ?? 0),
+      { gap: (breakdown.beneficiaries?.max ?? 10) - (breakdown.beneficiaries?.score ?? 0),
         msg: (() => { const s = firstSentence(brief?.current_priorities); return s ? 'Beneficiary focus: ' + s : 'Beneficiary group: target beneficiaries may not fully match yours' })() },
-      { gap: (breakdown.location?.max ?? 15)      - (breakdown.location?.score ?? 0),
+      { gap: (breakdown.location?.max ?? 25)      - (breakdown.location?.score ?? 0),
         msg: (() => { const s = firstSentence(brief?.geographic_focus); return s ? 'Geographic focus: ' + s : 'Geographic focus: limited overlap - check whether this funder covers your area' })() },
-      { gap: (breakdown.eligibility?.max ?? 12)   - (breakdown.eligibility?.score ?? 0),
+      { gap: (breakdown.eligibility?.max ?? 10)   - (breakdown.eligibility?.score ?? 0),
         msg: (() => { const s = firstSentence(brief?.who_can_apply); return s ? 'Eligibility: ' + s : 'Eligibility: some requirements may be unclear - review before applying' })() },
     ].filter(d => d.gap > 0).sort((a, b) => b.gap - a.gap)
     const limit = score < 60 ? 2 : 1
