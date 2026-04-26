@@ -526,17 +526,13 @@ function ScanBar({ orgId, website, onSaved }: { orgId: string; website?: string 
   const [draft, setDraft] = useState('')
   const [saving, setSaving] = useState(false)
   const [scanning, setScanning] = useState(false)
-  const [scanResults, setScanResults] = useState<Record<string, unknown> | null>(null)
-  const [scanError, setScanError] = useState<string | null>(null)
-  const [acceptedFields, setAcceptedFields] = useState<Set<string>>(new Set())
-  const [applySaving, setApplySaving] = useState(false)
+  const [scanMsg, setScanMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const supabase = createClient()
 
   async function runScan() {
     if (!website) return
     setScanning(true)
-    setScanError(null)
-    setScanResults(null)
+    setScanMsg(null)
     try {
       const res = await fetch('/api/org-autocomplete', {
         method: 'POST',
@@ -544,53 +540,30 @@ function ScanBar({ orgId, website, onSaved }: { orgId: string; website?: string 
         body: JSON.stringify({ url: website }),
       })
       const data = await res.json()
-      if (!res.ok) { setScanError(data.error ?? 'Scan failed'); return }
+      if (!res.ok) { setScanMsg({ type: 'error', text: data.error ?? 'Scan failed' }); return }
 
-      // Map org-autocomplete response to profile fields
-      const result: Record<string, unknown> = {}
-      if (data.mission) result.mission = String(data.mission).slice(0, 200)
-      if (Array.isArray(data.impactSectors) && data.impactSectors.length > 0) result.impact_sectors = data.impactSectors.slice(0, 5)
-      if (Array.isArray(data.beneficiaryGroups) && data.beneficiaryGroups.length > 0) result.beneficiary_groups = data.beneficiaryGroups.slice(0, 5)
-      if (data.primaryLocation) result.primary_location = String(data.primaryLocation).slice(0, 100)
-      if (data.annualIncome) result.annual_income_band = data.annualIncome
+      // Map response to profile fields — only update fields that have data
+      const updates: Record<string, unknown> = {}
+      const fieldNames: string[] = []
+      const labels: Record<string, string> = { mission: 'mission', impact_sectors: 'sectors', beneficiary_groups: 'beneficiaries', primary_location: 'location', annual_income_band: 'income', legal_structure: 'legal structure' }
 
-      // Map orgType to legal_structure
+      if (data.mission) { updates.mission = String(data.mission).slice(0, 200); fieldNames.push(labels.mission) }
+      if (Array.isArray(data.impactSectors) && data.impactSectors.length > 0) { updates.impact_sectors = data.impactSectors.slice(0, 5); fieldNames.push(labels.impact_sectors) }
+      if (Array.isArray(data.beneficiaryGroups) && data.beneficiaryGroups.length > 0) { updates.beneficiary_groups = data.beneficiaryGroups.slice(0, 5); fieldNames.push(labels.beneficiary_groups) }
+      if (data.primaryLocation) { updates.primary_location = String(data.primaryLocation).slice(0, 100); fieldNames.push(labels.primary_location) }
+      if (data.annualIncome) { updates.annual_income_band = data.annualIncome; fieldNames.push(labels.annual_income_band) }
       const structureMap: Record<string, string> = { registered_charity: 'registered_charity', cic: 'cic_guarantee', social_enterprise: 'ltd_guarantee', community_group: 'unincorporated' }
-      if (data.orgType && structureMap[data.orgType]) result.legal_structure = structureMap[data.orgType]
+      if (data.orgType && structureMap[data.orgType]) { updates.legal_structure = structureMap[data.orgType]; fieldNames.push(labels.legal_structure) }
 
-      if (Object.keys(result).length === 0) { setScanError('Could not extract any profile data from your website'); return }
-      setScanResults(result)
-      setAcceptedFields(new Set(Object.keys(result)))
-    } catch { setScanError('Network error — please try again') }
+      if (Object.keys(updates).length === 0) { setScanMsg({ type: 'error', text: 'Could not extract any profile data from your website' }); return }
+
+      await updateOrganisation(orgId, updates)
+      onSaved()
+      setScanMsg({ type: 'success', text: `Updated ${fieldNames.join(', ')} — review below and edit anything that needs adjusting` })
+      setTimeout(() => setScanMsg(null), 8000)
+    } catch { setScanMsg({ type: 'error', text: 'Network error — please try again' }) }
     finally { setScanning(false) }
   }
-
-  function toggleField(field: string) {
-    setAcceptedFields(prev => {
-      const next = new Set(prev)
-      if (next.has(field)) next.delete(field); else next.add(field)
-      return next
-    })
-  }
-
-  async function applyResults() {
-    if (!scanResults) return
-    setApplySaving(true)
-    try {
-      const updates: Record<string, unknown> = {}
-      for (const field of Array.from(acceptedFields)) {
-        if (scanResults[field] !== undefined) updates[field] = scanResults[field]
-      }
-      if (Object.keys(updates).length > 0) {
-        await updateOrganisation(orgId, updates)
-        onSaved()
-      }
-      setScanResults(null)
-      setAcceptedFields(new Set())
-    } finally { setApplySaving(false) }
-  }
-
-  function dismissScan() { setScanResults(null); setScanError(null); setAcceptedFields(new Set()) }
 
   function startEdit() { setDraft(website ?? ''); setEditing(true) }
   function cancel() { setEditing(false) }
@@ -684,45 +657,11 @@ function ScanBar({ orgId, website, onSaved }: { orgId: string; website?: string 
           </button>
         </>
       )}
-      {/* Scan error */}
-      {scanError && (
-        <div style={{ marginTop: 12, padding: '10px 14px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontFamily: BODY, fontSize: 13, color: '#991B1B' }}>{scanError}</span>
-          <button onClick={dismissScan} style={{ fontFamily: UI, fontSize: 12, color: '#991B1B', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>Dismiss</button>
-        </div>
-      )}
-
-      {/* Scan results review panel */}
-      {scanResults && (
-        <div style={{ marginTop: 14, background: T.cream, border: `1px solid ${T.border}`, borderRadius: 10, padding: '16px 18px' }}>
-          <div style={{ fontFamily: UI, fontWeight: 600, fontSize: 14, color: T.greenDeep, marginBottom: 4 }}>Website scan results</div>
-          <div style={{ fontFamily: BODY, fontSize: 12, color: T.textTertiary, marginBottom: 14 }}>Tick the fields you want to update. Untick to keep your current values.</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {Object.entries(scanResults).map(([field, value]) => {
-              const labels: Record<string, string> = { mission: 'Mission statement', impact_sectors: 'Impact sectors', beneficiary_groups: 'Who you serve', legal_structure: 'Legal structure', annual_income_band: 'Annual income', primary_location: 'Location', geographic_reach: 'Geographic reach' }
-              const label = labels[field] ?? field
-              const isArray = Array.isArray(value)
-              const displayValue = isArray ? (value as string[]).join(', ') : String(value)
-              const checked = acceptedFields.has(field)
-              return (
-                <label key={field} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', padding: '8px 12px', background: checked ? '#F0FAE5' : T.white, border: `1px solid ${checked ? '#8ECB3C' : T.border}`, borderRadius: 8, transition: 'all 0.15s ease' }}>
-                  <input type="checkbox" checked={checked} onChange={() => toggleField(field)} style={{ marginTop: 2, accentColor: T.greenDeep }} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: UI, fontSize: 12, fontWeight: 600, color: T.textPrimary, marginBottom: 2 }}>{label}</div>
-                    <div style={{ fontFamily: BODY, fontSize: 12, color: T.textSecondary, lineHeight: 1.4, wordBreak: 'break-word' }}>{displayValue}</div>
-                  </div>
-                </label>
-              )
-            })}
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 14 }}>
-            <button onClick={dismissScan} style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, background: 'transparent', color: T.textSecondary, border: 'none', padding: '7px 12px', borderRadius: 7, cursor: 'pointer' }}>
-              Cancel
-            </button>
-            <button onClick={applyResults} disabled={acceptedFields.size === 0 || applySaving} style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, background: acceptedFields.size > 0 ? T.greenDeep : T.border, color: acceptedFields.size > 0 ? T.white : T.textTertiary, border: 'none', padding: '7px 16px', borderRadius: 8, cursor: acceptedFields.size > 0 ? 'pointer' : 'default' }}>
-              {applySaving ? 'Saving...' : `Apply ${acceptedFields.size} field${acceptedFields.size !== 1 ? 's' : ''}`}
-            </button>
-          </div>
+      {/* Scan feedback message */}
+      {scanMsg && (
+        <div style={{ marginTop: 12, padding: '10px 14px', background: scanMsg.type === 'success' ? '#F0FAE5' : '#FEF2F2', border: `1px solid ${scanMsg.type === 'success' ? '#8ECB3C' : '#FECACA'}`, borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontFamily: BODY, fontSize: 13, color: scanMsg.type === 'success' ? T.greenDeep : '#991B1B' }}>{scanMsg.text}</span>
+          <button onClick={() => setScanMsg(null)} style={{ fontFamily: UI, fontSize: 12, color: scanMsg.type === 'success' ? T.greenDeep : '#991B1B', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, flexShrink: 0, marginLeft: 12 }}>Dismiss</button>
         </div>
       )}
     </div>
