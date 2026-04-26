@@ -514,7 +514,7 @@ export function computeMatchScore(grant, org, feedback) {
             }
         }
     }
-    // ── 2. Themes / sectors (max 20) ──────────────────────────────────────
+    // ── 2. Themes / sectors (max 25) ──────────────────────────────────────
     let themesScore = 0;
     let primaryDomainMismatch = false;
     // Normalise both sector arrays to canonical form and deduplicate.
@@ -539,7 +539,7 @@ export function computeMatchScore(grant, org, feedback) {
         const grantCoverage = weightedGrantTotal > 0 ? weightedIntersection / weightedGrantTotal : 0;
         const orgCoverage = weightedOrgTotal > 0 ? weightedIntersection / weightedOrgTotal : 0;
         const coverage = 0.7 * grantCoverage + 0.3 * orgCoverage;
-        themesScore = hits > 0 ? Math.max(3, Math.round(coverage * 20)) : 3;
+        themesScore = hits > 0 ? Math.max(3, Math.round(coverage * 25)) : 3;
         // ── Primary domain mismatch check ─────────────────────────────────────
         // These sectors strongly characterise what a grant is fundamentally about.
         // If a grant includes any of these but the org does NOT, the match is
@@ -620,7 +620,7 @@ export function computeMatchScore(grant, org, feedback) {
                     weightedHits += weight;
             }
             const ratio = totalWeight > 0 ? weightedHits / totalWeight : 0;
-            themesScore = Math.round(ratio * 20);
+            themesScore = Math.round(ratio * 25);
             if (ratio >= 0.4)
                 reasons.push('Strong theme match');
             else if (ratio >= 0.15)
@@ -630,7 +630,7 @@ export function computeMatchScore(grant, org, feedback) {
         const grantSectorsLower = grant.sectors.map(s => s.toLowerCase());
         const orgThemesFlat = (org.themes ?? []).map(t => t.toLowerCase());
         const sectorHits = grantSectorsLower.filter(s => orgThemesFlat.some(t => s.includes(t.split(' ')[0]) || t.includes(s.split(' ')[0]))).length;
-        themesScore = Math.min(20, themesScore + sectorHits * 4);
+        themesScore = Math.min(25, themesScore + sectorHits * 4);
     }
     // ── Title keyword veto ────────────────────────────────────────────────
     // Grant titles are very high-confidence domain signals — catches mismatches
@@ -703,58 +703,58 @@ export function computeMatchScore(grant, org, feedback) {
                 boostedSector = true;
         }
         const cappedDelta = Math.max(-5, Math.min(6, feedbackDelta));
-        themesScore = Math.max(0, Math.min(20, themesScore + cappedDelta));
+        themesScore = Math.max(0, Math.min(25, themesScore + cappedDelta));
         if (boostedSector && cappedDelta >= 3)
             reasons.push('Matches your liked grant types');
     }
-    // ── 3. Grant size fit (max 20) ─────────────────────────────────────────
-    let grantSizeScore = 10;
+    // ── 3. Grant size fit (max 10) ─────────────────────────────────────────
+    let grantSizeScore = 5;
     const grantMax = grant.amountMax ?? grant.amountMin ?? 0;
     const grantMin = grant.amountMin ?? 0;
     if (org.min_grant_target || org.max_grant_target) {
         const targetMin = org.min_grant_target ?? 0;
         const targetMax = org.max_grant_target ?? Infinity;
         if (grantMax >= targetMin && grantMin <= targetMax) {
-            grantSizeScore = 20;
+            grantSizeScore = 10;
             reasons.push('Within your target grant size');
         }
         else if (grantMax < targetMin) {
             // Grant ceiling is below org's minimum target — too small
-            grantSizeScore = 3;
+            grantSizeScore = 1;
         }
         else {
             // Grant floor exceeds org's maximum target — too large.
             // Penalise proportionally: a 2x overshoot is very different from a 20x one.
             const overshootRatio = targetMax > 0 ? grantMin / targetMax : 10;
-            grantSizeScore = overshootRatio > 10 ? 3 : overshootRatio > 4 ? 5 : 8;
+            grantSizeScore = overshootRatio > 10 ? 1 : overshootRatio > 4 ? 3 : 5;
         }
     }
     else if (org.annual_income_band && grantMax > 0) {
         const orgIncome = INCOME_MIDPOINTS[org.annual_income_band] ?? 50_000;
         const ratio = grantMax / orgIncome;
         if (ratio >= 0.05 && ratio <= 0.6)
-            grantSizeScore = 20;
+            grantSizeScore = 10;
         else if (ratio > 0.6 && ratio <= 1.2)
-            grantSizeScore = 14;
+            grantSizeScore = 7;
         else if (ratio > 1.2 && ratio <= 3.0)
-            grantSizeScore = 8;
+            grantSizeScore = 4;
         else if (ratio > 3.0)
-            grantSizeScore = 3;
+            grantSizeScore = 1;
         else
-            grantSizeScore = 15;
-        if (grantSizeScore >= 18)
+            grantSizeScore = 8;
+        if (grantSizeScore >= 9)
             reasons.push('Grant size suits your organisation');
     }
-    // ── 4. Funder type preference + funding type affinity (max 15) ────────
-    let funderTypeScore = 8; // neutral base
+    // ── 4. Funder type preference + funding type affinity (max 10) ────────
+    let funderTypeScore = 5; // neutral base
     // Funder type preference (trust vs government vs lottery etc.)
     if (org.funder_type_preferences?.length) {
         if (org.funder_type_preferences.includes(grant.funderType)) {
-            funderTypeScore = 15;
+            funderTypeScore = 10;
             reasons.push('Preferred funder type');
         }
         else {
-            funderTypeScore = 3;
+            funderTypeScore = 1;
         }
     }
     // Funding type affinity
@@ -764,12 +764,12 @@ export function computeMatchScore(grant, org, feedback) {
         if (prefs.length > 0) {
             // ── Explicit preference (Phase 3): use what the user told us ──────────
             if (prefs.includes(ft)) {
-                funderTypeScore = Math.min(15, funderTypeScore + 4);
+                funderTypeScore = Math.min(10, funderTypeScore + 3);
                 reasons.push('Matches your funding type preference');
             }
             else {
                 // Explicitly not preferred — mild penalty
-                funderTypeScore = Math.max(0, funderTypeScore - 3);
+                funderTypeScore = Math.max(0, funderTypeScore - 2);
             }
         }
         else if (org.org_stage) {
@@ -777,16 +777,16 @@ export function computeMatchScore(grant, org, feedback) {
             const isEarly = ['idea', 'pre_revenue', 'early'].includes(org.org_stage);
             const isGrowth = ['growth', 'established'].includes(org.org_stage);
             if (isEarly && ft === 'programme') {
-                funderTypeScore = Math.min(15, funderTypeScore + 3);
+                funderTypeScore = Math.min(10, funderTypeScore + 2);
                 reasons.push('Programme suits your stage');
             }
             else if (isGrowth && ft === 'investment') {
-                funderTypeScore = Math.min(15, funderTypeScore + 2);
+                funderTypeScore = Math.min(10, funderTypeScore + 1);
                 reasons.push('Investment suits growth stage');
             }
         }
     }
-    // ── 5. Eligibility / org type (max 10) ────────────────────────────────
+    // ── 5. Eligibility / org type (max 15) ────────────────────────────────
     // Prefer the modern legal_structure field; fall back to legacy org_type.
     // CIO is a charity structure, so treat it as charity-like for scoring.
     const isCharityLike = org.legal_structure === 'registered_charity' ||
@@ -799,9 +799,9 @@ export function computeMatchScore(grant, org, feedback) {
         org.legal_structure === 'ltd_shares' ||
         org.legal_structure === 'cooperative' ||
         (org.legal_structure == null && org.org_type === 'social_enterprise');
-    let eligibilityScore = isCharityLike ? 8 :
-        isCICLike ? 7 :
-            isSELike ? 6 : 5;
+    let eligibilityScore = isCharityLike ? 12 :
+        isCICLike ? 10 :
+            isSELike ? 9 : 7;
     let structureMismatch = false;
     const eligibilityText = grant.eligibilityCriteria.join(' ').toLowerCase();
     if (eligibilityText) {
@@ -813,15 +813,15 @@ export function computeMatchScore(grant, org, feedback) {
         const isCICEligible = cicKeywords.some(k => eligibilityText.includes(k));
         const isSEEligible = seKeywords.some(k => eligibilityText.includes(k));
         if (isCharityEligible && isCharityLike) {
-            eligibilityScore = Math.min(10, eligibilityScore + 3);
+            eligibilityScore = Math.min(15, eligibilityScore + 3);
             reasons.push('Eligible as a registered charity');
         }
         else if (isCICEligible && isCICLike) {
-            eligibilityScore = Math.min(10, eligibilityScore + 3);
+            eligibilityScore = Math.min(15, eligibilityScore + 3);
             reasons.push('Eligible as a CIC');
         }
         else if (isSEEligible && (isSELike || isCICLike)) {
-            eligibilityScore = Math.min(10, eligibilityScore + 2);
+            eligibilityScore = Math.min(15, eligibilityScore + 2);
         }
         else if (isCharityEligible && !isCharityLike) {
             // Hard penalty — "registered charity" requirement is a strong eligibility gate
@@ -830,7 +830,7 @@ export function computeMatchScore(grant, org, feedback) {
             reasons.push('Check eligibility — may require registered charity status');
         }
         if (vcseKeywords.some(k => eligibilityText.includes(k))) {
-            eligibilityScore = Math.min(10, eligibilityScore + 1);
+            eligibilityScore = Math.min(15, eligibilityScore + 1);
         }
         // Faith-building veto: if eligibility requires a church/place of worship,
         // orgs with no faith sector should be strongly penalised.
@@ -853,7 +853,7 @@ export function computeMatchScore(grant, org, feedback) {
             const orgRegion = org.primary_location.split(',')[1]?.trim().toLowerCase() ?? '';
             const country = org.primary_location.split(',').pop()?.trim().toLowerCase() ?? '';
             if (city && eligibilityText.includes(city)) {
-                eligibilityScore = Math.min(10, eligibilityScore + 2);
+                eligibilityScore = Math.min(15, eligibilityScore + 2);
                 reasons.push('Your location meets eligibility');
             }
             // UK nation restriction — checks both grant TITLE and eligibility text with
@@ -911,7 +911,7 @@ export function computeMatchScore(grant, org, feedback) {
         if (org.mission && eligibilityText.length > 20) {
             const missionHitRatio = phraseHitRatio(org.mission, eligibilityText);
             if (missionHitRatio >= 0.15) {
-                eligibilityScore = Math.min(10, eligibilityScore + 1);
+                eligibilityScore = Math.min(15, eligibilityScore + 1);
             }
         }
         const incomeCap = parseIncomeCapFromText(eligibilityText);
@@ -921,7 +921,7 @@ export function computeMatchScore(grant, org, feedback) {
                 reasons.push('Your income may exceed this grant\'s cap');
             }
             else {
-                eligibilityScore = Math.min(10, eligibilityScore + 1);
+                eligibilityScore = Math.min(15, eligibilityScore + 1);
             }
         }
         // ── Trading history / account age check ──────────────────────────────
@@ -937,7 +937,7 @@ export function computeMatchScore(grant, org, feedback) {
                         reasons.push(`May require ${required}+ years of accounts — check eligibility`);
                     }
                     else {
-                        eligibilityScore = Math.min(10, eligibilityScore + 1);
+                        eligibilityScore = Math.min(15, eligibilityScore + 1);
                     }
                 }
             }
@@ -958,7 +958,7 @@ export function computeMatchScore(grant, org, feedback) {
             if (isEligible) {
                 // Confirmed eligible — structured data overrides any earlier text-based mismatch flag
                 structureMismatch = false;
-                eligibilityScore = Math.min(10, eligibilityScore + 3);
+                eligibilityScore = Math.min(15, eligibilityScore + 3);
                 const label = structureLabel(org.legal_structure ?? orgStructures[0]);
                 if (!reasons.some(r => r.startsWith('Eligible as'))) reasons.push(`Eligible as a ${label}`);
             }
@@ -972,11 +972,11 @@ export function computeMatchScore(grant, org, feedback) {
         }
         // If orgStructures is empty (no legal structure data) we can't gate — leave score as-is
     }
-    // ── 6. Beneficiary alignment (max 10) ──────────────────────────────────
+    // ── 6. Beneficiary alignment (max 15) ──────────────────────────────────
     // Compares who the grant targets (grant.beneficiaryGroups from target_beneficiaries)
     // against who the org serves (org.beneficiary_groups). general_public is treated
     // as "open to all" — it never penalises, just gives a neutral base.
-    let beneficiaryScore = 5; // neutral base
+    let beneficiaryScore = 7; // neutral base
     let beneficiaryMismatch = false;
     {
         const gBen = grant.beneficiaryGroups ?? [];
@@ -985,7 +985,7 @@ export function computeMatchScore(grant, org, feedback) {
         const orgIsGeneral = oBen.length === 0;
         if (grantIsGeneral || orgIsGeneral) {
             // No specific beneficiary data on one or both sides — neutral score
-            beneficiaryScore = 5;
+            beneficiaryScore = 7;
         }
         else {
             // Both have specific beneficiary data — compute overlap
@@ -994,12 +994,12 @@ export function computeMatchScore(grant, org, feedback) {
             const intersection = [...gSet].filter(b => oSet.has(b));
             if (gSet.size === 0) {
                 // Grant only had general_public after filtering
-                beneficiaryScore = 5;
+                beneficiaryScore = 7;
             }
             else if (intersection.length > 0) {
                 // Overlap — score proportionally
                 const coverage = intersection.length / gSet.size;
-                beneficiaryScore = Math.max(4, Math.round(coverage * 10));
+                beneficiaryScore = Math.max(5, Math.round(coverage * 15));
                 if (intersection.length >= 2) {
                     reasons.push(`Serves ${intersection.slice(0, 2).map(b => b.replace(/_/g, ' ')).join(' & ')}`);
                 }
@@ -1072,11 +1072,11 @@ export function computeMatchScore(grant, org, feedback) {
         reason,
         breakdown: {
             location: { score: locationScore, max: 25, label: 'Location' },
-            themes: { score: themesScore, max: 20, label: 'Themes & work' },
-            grantSize: { score: grantSizeScore, max: 20, label: 'Grant size' },
-            funderType: { score: funderTypeScore, max: 15, label: 'Funder type' },
-            eligibility: { score: eligibilityScore, max: 10, label: 'Eligibility' },
-            beneficiaries: { score: beneficiaryScore, max: 10, label: 'Beneficiaries' },
+            themes: { score: themesScore, max: 25, label: 'Themes & work' },
+            grantSize: { score: grantSizeScore, max: 10, label: 'Grant size' },
+            funderType: { score: funderTypeScore, max: 10, label: 'Funder type' },
+            eligibility: { score: eligibilityScore, max: 15, label: 'Eligibility' },
+            beneficiaries: { score: beneficiaryScore, max: 15, label: 'Beneficiaries' },
         },
     };
 }
