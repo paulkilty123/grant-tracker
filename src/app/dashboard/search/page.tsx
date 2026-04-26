@@ -629,6 +629,11 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                   </span>
                 )
               })()}
+              {grant.isInviteOnly && (
+                <span style={{ fontSize: 10, padding: '3px 9px', borderRadius: 9999, fontWeight: 500, whiteSpace: 'nowrap', background: '#F3EDFA', color: '#6B21A8', fontFamily: 'var(--font-dm-sans)', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                  ✉ Invite only
+                </span>
+              )}
             </div>
 
             {/* Title + funder name (suppress funder when it duplicates the title) */}
