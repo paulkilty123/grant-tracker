@@ -486,10 +486,24 @@ export function computeMatchScore(
   org: Organisation,
   feedback?: FeedbackSignals,
 ): MatchResult {
-  // DEBUG: v3 marker — uses window property (survives minification)
-  if (typeof window !== 'undefined' && grant.title.toLowerCase().includes('ulverscroft')) {
-    (window as unknown as Record<string,unknown>).__MATCH_V3 = { org: org.name, title: grant.title, ts: Date.now() }
-    try { console.warn('[MATCH-v3]', grant.title, org.name) } catch {}
+  // DEBUG: hard-coded Ulverscroft return to confirm function executes
+  if (grant.title.toLowerCase().includes('ulverscroft')) {
+    return {
+      score: 1,
+      reason: 'DEBUG: matching.ts v4 is live',
+      eligibilityStatus: 'check_required' as EligibilityStatus,
+      eligibilityReason: null,
+      positiveReasons: [],
+      warnReasons: ['DEBUG: if you see 1% this code is running'],
+      breakdown: {
+        location:     { score: 0, max: 15, label: 'Location' },
+        themes:       { score: 0, max: 35, label: 'Themes & work' },
+        beneficiaries:{ score: 0, max: 20, label: 'Beneficiaries' },
+        grantSize:    { score: 0, max: 10, label: 'Grant size' },
+        funderType:   { score: 0, max: 8,  label: 'Funder type' },
+        eligibility:  { score: 0, max: 12, label: 'Eligibility' },
+      },
+    }
   }
   const reasons: string[] = []
 
