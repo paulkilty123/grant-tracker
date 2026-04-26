@@ -525,6 +525,7 @@ function ScanBar({ orgId, website, onSaved }: { orgId: string; website?: string 
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState('')
   const [saving, setSaving] = useState(false)
+  const [scanHint, setScanHint] = useState(false)
   const supabase = createClient()
 
   function startEdit() { setDraft(website ?? ''); setEditing(true) }
@@ -599,11 +600,11 @@ function ScanBar({ orgId, website, onSaved }: { orgId: string; website?: string 
               Change URL
             </button>
             <button
-              style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, background: 'transparent', color: T.textPrimary, border: `0.5px solid ${T.borderStrong}`, padding: '7px 14px', borderRadius: 8, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}
-              title="Re-scan coming soon"
+              onClick={() => { setScanHint(true); setTimeout(() => setScanHint(false), 3000) }}
+              style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, background: scanHint ? T.lime : 'transparent', color: scanHint ? T.greenDeep : T.textPrimary, border: `0.5px solid ${scanHint ? T.greenDeep : T.borderStrong}`, padding: '7px 14px', borderRadius: 8, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, transition: 'all 0.2s ease' }}
             >
               <RotateCcw size={13} />
-              Re-scan &amp; refresh
+              {scanHint ? 'Coming soon!' : 'Re-scan & refresh'}
             </button>
           </div>
         </>
