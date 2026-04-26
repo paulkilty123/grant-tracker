@@ -776,10 +776,10 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
           // Per-dimension bars from breakdown
           const DIM_ORDER = [
             { key: 'themes',        label: 'Sector',       hideAt100: false },
-            { key: 'grantSize',     label: 'Size',         hideAt100: false },
             { key: 'location',      label: 'Location',     hideAt100: false },
             { key: 'beneficiaries', label: 'Beneficiaries',hideAt100: false },
-            { key: 'eligibility',   label: 'Eligibility',  hideAt100: true  },
+            { key: 'eligibility',   label: 'Eligibility',  hideAt100: false },
+            { key: 'grantSize',     label: 'Size',         hideAt100: true  },
             { key: 'funderType',    label: 'Funding type', hideAt100: true  },
           ]
           const dimBars = DIM_ORDER
