@@ -598,15 +598,6 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
           {/* ── Content column ── */}
           <div style={{ flex: 1, minWidth: 0 }}>
 
-            {/* "New this week" badge — above pills so it stands out */}
-            {isNewThisWeek && (
-              <div style={{ marginBottom: 8 }}>
-                <span style={{ fontSize: 11, padding: '4px 10px', borderRadius: 9999, fontWeight: 600, whiteSpace: 'nowrap', background: '#8ECB3C', color: '#173404', fontFamily: 'var(--font-dm-sans)', display: 'inline-flex', alignItems: 'center', gap: 4, letterSpacing: '0.01em' }}>
-                  ✦ New this week
-                </span>
-              </div>
-            )}
-
             {/* Pill row: sectors + funder-type + location */}
             <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap', alignItems: 'center' }}>
               {visibleSectors.map(s => {
@@ -848,6 +839,12 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                 </button>
                 {/* Spacer */}
                 <div style={{ flex: 1 }} />
+                {/* "New this week" badge */}
+                {isNewThisWeek && (
+                  <span style={{ fontSize: 11, padding: '4px 12px', borderRadius: 9999, fontWeight: 700, whiteSpace: 'nowrap', background: '#8ECB3C', color: '#173404', fontFamily: 'var(--font-dm-sans)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                    ✦ New this week
+                  </span>
+                )}
                 {/* Feedback buttons — always in header */}
                 {org?.owner_id && (
                   <MatchFeedbackBlock grantId={grant.id} userId={org.owner_id} matchScore={score} compact />
