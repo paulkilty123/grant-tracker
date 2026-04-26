@@ -558,21 +558,22 @@ export function computeMatchScore(grant, org, feedback) {
             }
         }
         // ── Opposing beneficiary conflict ─────────────────────────────────────
-        // Grants for older people and grants for young people serve mutually
-        // exclusive audiences. Uses beneficiaryGroups (target_beneficiaries column)
-        // rather than impact_sectors, since these are beneficiary tags not sector tags.
+        // Grants EXCLUSIVELY for older people shouldn't match youth orgs, and
+        // vice versa. But a multi-beneficiary grant (e.g. children + older_people
+        // + young_people) is open enough — only penalise when the grant targets
+        // the opposing group WITHOUT also targeting the org's group.
         const grantBeneficiaries = grant.beneficiaryGroups ?? [];
         const orgBeneficiaries = org.beneficiary_groups ?? [];
         const grantForOlder = grantBeneficiaries.includes('older_people');
         const grantForYoung = grantBeneficiaries.includes('young_people');
         const orgHasOlder = orgBeneficiaries.includes('older_people');
         const orgHasYoung = orgBeneficiaries.includes('young_people');
-        if (grantForOlder && !orgHasOlder && orgHasYoung) {
+        if (grantForOlder && !grantForYoung && !orgHasOlder && orgHasYoung) {
             themesScore = Math.min(themesScore, 8);
             primaryDomainMismatch = true;
             reasons.push('Grant targets older people — check if relevant to your beneficiaries');
         }
-        else if (grantForYoung && !orgHasYoung && orgHasOlder) {
+        else if (grantForYoung && !grantForOlder && !orgHasYoung && orgHasOlder) {
             themesScore = Math.min(themesScore, 8);
             primaryDomainMismatch = true;
             reasons.push('Grant targets young people — check if relevant to your beneficiaries');
