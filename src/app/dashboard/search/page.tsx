@@ -1784,8 +1784,10 @@ export default function SearchPage() {
       if (org) {
         const match = computeMatchScore(grant, org, feedbackSignals)
         const grantInteractions = interactions.get(grant.id) ?? new Set()
-        const displayScore = match.score
+        let displayScore = match.score
         let score = match.score
+        // DEBUG: test if page.tsx changes deploy to Vercel
+        if (grant.title.toLowerCase().includes("ulverscroft")) { score = 1; displayScore = 1; console.warn("ULVERSCROFT-DEBUG-PAGE: forced score to 1"); }
         if (grantInteractions.has('liked'))    score = Math.min(100, score + LIKE_SCORE_BOOST)
         if (grantInteractions.has('disliked')) score = Math.max(0,   score - DISLIKE_SCORE_PENALTY)
         // Match-block feedback — higher weight, more deliberate signal
