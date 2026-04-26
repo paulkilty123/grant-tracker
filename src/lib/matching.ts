@@ -490,8 +490,12 @@ export function computeMatchScore(
 
   // Full grant text used for keyword matching (includes funderBrief when available)
   const grantAny = grant as unknown as Record<string, unknown>
-  const funderBriefText = grantAny.funderBrief && typeof grantAny.funderBrief === 'object'
-    ? Object.values(grantAny.funderBrief as Record<string, unknown>).filter(v => typeof v === 'string').join(' ')
+  // Only use what_they_fund for keyword matching — other funderBrief fields
+  // (who_can_apply, exclusions, etc.) contain incidental keywords that cause
+  // false-positive domain vetoes.
+  const funderBriefObj = grantAny.funderBrief as Record<string, unknown> | null
+  const funderBriefText = funderBriefObj && typeof funderBriefObj === 'object'
+    ? String(funderBriefObj.what_they_fund ?? '')
     : ''
   const grantText = [
     grant.title,
