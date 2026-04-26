@@ -587,7 +587,19 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
   const overflowCount  = allSectors.length - visibleSectors.length
 
   return (
-    <div className="bg-white mb-3 overflow-hidden" style={{ borderRadius: 14, border: '0.5px solid rgba(0,0,0,0.1)', boxShadow: '0 1px 3px rgba(23,52,4,0.04), 0 4px 12px rgba(23,52,4,0.04)', transition: 'box-shadow 0.15s ease, transform 0.15s ease' }} onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 2px 5px rgba(23,52,4,0.05), 0 8px 20px rgba(23,52,4,0.06)'; e.currentTarget.style.transform = 'translateY(-1px)' }} onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 1px 3px rgba(23,52,4,0.04), 0 4px 12px rgba(23,52,4,0.04)'; e.currentTarget.style.transform = 'translateY(0)' }}>
+    <div className="bg-white mb-3 overflow-hidden" style={{ position: 'relative', borderRadius: 14, border: '0.5px solid rgba(0,0,0,0.1)', boxShadow: '0 1px 3px rgba(23,52,4,0.04), 0 4px 12px rgba(23,52,4,0.04)', transition: 'box-shadow 0.15s ease, transform 0.15s ease' }} onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 2px 5px rgba(23,52,4,0.05), 0 8px 20px rgba(23,52,4,0.06)'; e.currentTarget.style.transform = 'translateY(-1px)' }} onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 1px 3px rgba(23,52,4,0.04), 0 4px 12px rgba(23,52,4,0.04)'; e.currentTarget.style.transform = 'translateY(0)' }}>
+
+      {/* "New this week" corner ribbon */}
+      {isNewThisWeek && (
+        <>
+          <div style={{ position: 'absolute', top: 0, right: 0, width: 0, height: 0, borderLeft: '90px solid transparent', borderTop: '90px solid #8ECB3C', zIndex: 2 }} />
+          <div style={{ position: 'absolute', top: 4, right: 4, width: 56, height: 56, display: 'flex', alignItems: 'center', justifyContent: 'center', transform: 'rotate(45deg)', zIndex: 3 }}>
+            <span style={{ fontSize: 10, fontWeight: 600, color: '#173404', letterSpacing: '0.04em', textAlign: 'center', lineHeight: 1.2, whiteSpace: 'nowrap', fontFamily: 'var(--font-space-grotesk)' }}>
+              NEW<br />THIS WEEK
+            </span>
+          </div>
+        </>
+      )}
 
       {/* ── Card body ── */}
       <div style={{ padding: isMobile ? '12px 14px' : '18px 22px' }}>
@@ -839,12 +851,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                 </button>
                 {/* Spacer */}
                 <div style={{ flex: 1 }} />
-                {/* "New this week" badge */}
-                {isNewThisWeek && (
-                  <span style={{ fontSize: 11, padding: '4px 12px', borderRadius: 9999, fontWeight: 700, whiteSpace: 'nowrap', background: '#8ECB3C', color: '#173404', fontFamily: 'var(--font-dm-sans)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                    ✦ New this week
-                  </span>
-                )}
+
                 {/* Feedback buttons — always in header */}
                 {org?.owner_id && (
                   <MatchFeedbackBlock grantId={grant.id} userId={org.owner_id} matchScore={score} compact />
