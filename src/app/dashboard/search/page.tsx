@@ -1786,6 +1786,19 @@ export default function SearchPage() {
         const grantInteractions = interactions.get(grant.id) ?? new Set()
         const displayScore = match.score
         let score = match.score
+        // VETO-DEBUG: replicate the keyword veto inline to see what happens
+        if (grant.title.toLowerCase().includes("ulverscroft")) {
+          const _ga2 = grant as unknown as Record<string,unknown>;
+          const _fb = _ga2.funderBrief;
+          const _fbText = _fb && typeof _fb === "object" ? Object.values(_fb as Record<string,unknown>).filter(v => typeof v === "string").join(" ") : "";
+          const _gt = [grant.title, grant.description, grant.sectors.join(" "), grant.eligibilityCriteria.join(" "), _fbText].join(" ").toLowerCase();
+          const _disabilityWords = ["visually impaired", "sight loss", "blind", "blindness", "visual impairment", "deaf", "deafblind", "hearing loss", "disability", "disabled people"];
+          const _matchedWord = _disabilityWords.find(w => _gt.includes(w));
+          const _orgMission = ((org as unknown as Record<string,unknown>).mission as string || "").toLowerCase();
+          const _orgTerms = ["disability", "disabled", "blind", "deaf", "sight loss", "hearing loss", "visual impairment", "visually impaired"];
+          const _orgCovers = _orgTerms.some(t => _orgMission.includes(t));
+          console.warn("VETO-DEBUG", JSON.stringify({ matchedWord: _matchedWord || "none", orgCovers: _orgCovers, shouldVeto: !!_matchedWord && !_orgCovers, actualScore: match.score }));
+        }
         if (grantInteractions.has('liked'))    score = Math.min(100, score + LIKE_SCORE_BOOST)
         if (grantInteractions.has('disliked')) score = Math.max(0,   score - DISLIKE_SCORE_PENALTY)
         // Match-block feedback — higher weight, more deliberate signal
