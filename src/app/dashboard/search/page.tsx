@@ -1331,12 +1331,13 @@ export default function SearchPage() {
           .single()
         const prevVisit = visitRow?.last_visited_search_page_at ?? null
         setLastSearchVisit(prevVisit)
+        // Update last visit after 30s so user sees badges first
         setTimeout(async () => {
           await supabase
             .from('organisations')
             .update({ last_visited_search_page_at: new Date().toISOString() })
             .eq('id', o.id)
-        }, 3000)
+        }, 30000)
         setSearchModeToggle('profile')
         setProfileChipsApplied(true)
         setHasSearched(true)
