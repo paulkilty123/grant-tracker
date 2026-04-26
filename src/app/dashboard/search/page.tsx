@@ -647,7 +647,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', margin: showFunder ? '0 0 2px' : '0 0 10px' }}>
                     <h3 style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 17, fontWeight: 500, color: '#2C2C2A', margin: 0, lineHeight: 1.3 }}>{grant.title}</h3>
                     {isNewThisWeek && (
-                      <div style={{ border: '1.5px solid #8ECB3C', color: '#8ECB3C', fontSize: 9, fontWeight: 500, padding: '3px 10px', borderRadius: 4, letterSpacing: '0.08em', textTransform: 'uppercase', transform: 'rotate(-3deg)', background: '#173404', flexShrink: 0, fontFamily: 'var(--font-space-grotesk)' }}>
+                      <div style={{ border: '2px solid #173404', color: '#173404', fontSize: 12, fontWeight: 500, padding: '5px 14px', borderRadius: 5, letterSpacing: '0.08em', textTransform: 'uppercase', transform: 'rotate(-3deg)', background: '#EAF3DE', flexShrink: 0, fontFamily: 'var(--font-space-grotesk)' }}>
                         New this week
                       </div>
                     )}
