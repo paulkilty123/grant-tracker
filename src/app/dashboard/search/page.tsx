@@ -1795,6 +1795,19 @@ export default function SearchPage() {
           console.warn("ULVERSCROFT-MATCH", JSON.stringify({ score: match.score, breakdown: match.breakdown }));
           console.warn("ULVERSCROFT-GRANT", JSON.stringify({ hasFunderBrief: _hasBrief, briefKeys: _briefKeys, sectors: grant.sectors, title: grant.title }));
           console.warn("ULVERSCROFT-BRIEF", _briefSnippet);
+          const _bf = _ga.funderBrief as Record<string,unknown> | null;
+          if (_bf) {
+            console.warn("ULVERSCROFT-WHO-CAN-APPLY", String(_bf.who_can_apply || ""));
+            console.warn("ULVERSCROFT-WHAT-THEY-FUND", String(_bf.what_they_fund || "").substring(0, 300));
+            const _allBrief = Object.values(_bf).filter(v => typeof v === "string").join(" ").toLowerCase();
+            console.warn("ULVERSCROFT-KEYWORD-CHECK", JSON.stringify({
+              hasOverseas: _allBrief.includes("overseas"),
+              hasVisuallyImpaired: _allBrief.includes("visually impaired"),
+              hasVisualImpairment: _allBrief.includes("visual impairment"),
+              hasBlind: _allBrief.includes("blind"),
+              hasDisability: _allBrief.includes("disability"),
+            }));
+          }
         }
         if (grantInteractions.has('liked'))    score = Math.min(100, score + LIKE_SCORE_BOOST)
         if (grantInteractions.has('disliked')) score = Math.max(0,   score - DISLIKE_SCORE_PENALTY)
