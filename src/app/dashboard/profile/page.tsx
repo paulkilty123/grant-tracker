@@ -545,8 +545,9 @@ function ScanBar({ orgId, website, onSaved }: { orgId: string; website?: string 
       // Map response to profile fields — only update fields that have data
       const updates: Record<string, unknown> = {}
       const fieldNames: string[] = []
-      const labels: Record<string, string> = { mission: 'mission', impact_sectors: 'sectors', beneficiary_groups: 'beneficiaries', primary_location: 'location', annual_income_band: 'income', legal_structure: 'legal structure' }
+      const labels: Record<string, string> = { name: 'name', mission: 'mission', impact_sectors: 'sectors', beneficiary_groups: 'beneficiaries', primary_location: 'location', annual_income_band: 'income', legal_structure: 'legal structure' }
 
+      if (data.name) { updates.name = String(data.name).slice(0, 150); fieldNames.push(labels.name) }
       if (data.mission) { updates.mission = String(data.mission).slice(0, 200); fieldNames.push(labels.mission) }
       if (Array.isArray(data.impactSectors) && data.impactSectors.length > 0) { updates.impact_sectors = data.impactSectors.slice(0, 5); fieldNames.push(labels.impact_sectors) }
       if (Array.isArray(data.beneficiaryGroups) && data.beneficiaryGroups.length > 0) { updates.beneficiary_groups = data.beneficiaryGroups.slice(0, 5); fieldNames.push(labels.beneficiary_groups) }
