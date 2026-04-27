@@ -126,7 +126,7 @@ function LoginForm() {
                   onChange={e => setPassword(e.target.value)}
                   className="form-input"
                   style={{ paddingRight: 56 }}
-                  placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"
+                  placeholder={'\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'}
                   autoComplete="current-password"
                   required
                 />

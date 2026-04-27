@@ -148,7 +148,7 @@ function ResetPasswordContent() {
                     value={confirm}
                     onChange={e => setConfirm(e.target.value)}
                     className="form-input"
-                    placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"
+                    placeholder={'\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'}
                     required
                   />
                 </div>
