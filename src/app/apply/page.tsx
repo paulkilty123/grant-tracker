@@ -41,7 +41,7 @@ export default function ApplyPage() {
               Hi, I&apos;m Paul. I&apos;ve spent the last twenty years in the social enterprise and charity sector, and I&apos;ve built Grant Tracker because I got tired of watching good people spend more time hunting for funding than doing the work the funding was meant to support.
             </p>
             <p style={{ fontFamily: SERIF, fontWeight: 400, fontSize: 19, lineHeight: 1.6, color: '#2C2C2A', marginBottom: 18, letterSpacing: '-0.005em' }}>
-              Paid signups open in June. Before that, I want to build Grant Tracker with a small group of real users. Not a waitlist or marketing funnel, but a genuine founding cohort of around 20 to 30 organisations whose feedback shapes how Grant Tracker works, who get to try new features first, and who benefit from being here first.
+              I&apos;m building Grant Tracker with a small group of real users before opening it more widely in June. Not a waitlist or marketing funnel, but a genuine founding cohort of around 20 to 30 organisations whose feedback shapes how Grant Tracker works, who get to try new features first, and who benefit from being here first.
             </p>
             <p style={{ fontFamily: SERIF, fontWeight: 400, fontSize: 19, lineHeight: 1.6, color: '#2C2C2A', letterSpacing: '-0.005em' }}>
               If that sounds interesting, I&apos;d love to hear from you.
