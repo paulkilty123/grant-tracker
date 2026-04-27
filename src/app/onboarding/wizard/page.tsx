@@ -408,56 +408,65 @@ function PickerChip({
   const isPrimary   = chipState === 'primary'
   const isSecondary = chipState === 'secondary'
   const showHover   = hov && !dimmed && chipState === 'unselected'
+  const showSecondaryStar = isSecondary && showMakePrimary && !!onMakePrimary
 
   return (
-    <div style={{ position: 'relative' }}>
-      <button
-        onClick={() => { if (!dimmed) { setHov(false); onClick() } }}
-        onMouseEnter={() => setHov(true)}
-        onMouseLeave={() => setHov(false)}
-        style={{
-          width: '100%',
-          padding: '9px 12px',
-          border: `0.5px solid ${isPrimary ? T.greenDeep : isSecondary ? T.greenMid : showHover ? T.greenMid : T.borderInput}`,
-          borderRadius: 8,
-          background: isPrimary ? T.greenDeep : isSecondary || showHover ? T.greenCream : '#fff',
-          color: isPrimary ? '#fff' : isSecondary || showHover ? T.greenTextDeep : T.textPrimary,
-          fontSize: 12,
-          fontWeight: isPrimary || isSecondary ? 500 : 400,
-          cursor: dimmed ? 'default' : 'pointer',
-          textAlign: 'center' as const,
-          fontFamily: 'var(--font-dm-sans)',
-          lineHeight: 1.3,
-          transition: 'all 120ms ease',
-          opacity: dimmed ? 0.38 : 1,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 4,
-        }}
-      >
-        {isPrimary && <span style={{ color: T.lime, fontSize: 11 }}>★</span>}
-        {label}
-      </button>
-      {showMakePrimary && isSecondary && hov && (
+    <div
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        position: 'relative',
+        width: '100%',
+        padding: '9px 12px',
+        border: `0.5px solid ${isPrimary ? T.greenDeep : isSecondary ? T.greenMid : showHover ? T.greenMid : T.borderInput}`,
+        borderRadius: 8,
+        background: isPrimary ? T.greenDeep : isSecondary || showHover ? T.greenCream : '#fff',
+        color: isPrimary ? '#fff' : isSecondary || showHover ? T.greenTextDeep : T.textPrimary,
+        fontSize: 12,
+        fontWeight: isPrimary || isSecondary ? 500 : 400,
+        cursor: dimmed ? 'default' : 'pointer',
+        textAlign: 'center' as const,
+        fontFamily: 'var(--font-dm-sans)',
+        lineHeight: 1.3,
+        transition: 'all 120ms ease',
+        opacity: dimmed ? 0.38 : 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 6,
+      }}
+      onClick={() => { if (!dimmed) onClick() }}
+      role="button"
+      tabIndex={dimmed ? -1 : 0}
+      onKeyDown={e => { if (!dimmed && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onClick() } }}
+    >
+      {isPrimary && <span aria-label="primary" style={{ color: T.lime, fontSize: 11 }}>★</span>}
+      {showSecondaryStar && (
         <button
+          type="button"
+          aria-label={`Make ${label} primary`}
+          title="Make primary"
           onClick={e => { e.stopPropagation(); onMakePrimary?.() }}
-          onMouseEnter={() => setHov(true)}
-          onMouseLeave={() => setHov(false)}
           style={{
-            position: 'absolute', top: -9, right: -2,
-            padding: '2px 7px', borderRadius: 99,
-            background: T.greenDeep, color: T.lime,
-            border: 'none', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            gap: 3, zIndex: 1, fontSize: 10, fontWeight: 600,
-            fontFamily: 'var(--font-space-grotesk)',
-            whiteSpace: 'nowrap' as const,
+            background: 'transparent',
+            border: 'none',
+            padding: 0,
+            margin: 0,
+            cursor: 'pointer',
+            color: T.greenMid,
+            fontSize: 13,
+            lineHeight: 1,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            opacity: hov ? 1 : 0.55,
+            transition: 'opacity 120ms ease',
           }}
         >
-          <span style={{ fontSize: 9 }}>★</span> Set as primary
+          ☆
         </button>
       )}
+      <span>{label}</span>
     </div>
   )
 }
@@ -1393,7 +1402,7 @@ function StepSectors({ impactSectors, nicheTags, toggleSector, makePrimarySector
     <>
       <BackLink onClick={onBack} />
       <h1 style={H1_STYLE}>What do you focus on?</h1>
-      <p style={SUBTITLE_STYLE}>Pick your primary focus first — that&rsquo;s what we&rsquo;ll weight most in matching.</p>
+      <p style={SUBTITLE_STYLE}>Pick your primary focus first. That&rsquo;s what we&rsquo;ll weight most in matching.</p>
 
       {/* Impact sectors */}
       <div style={{ marginBottom: 10 }}>
@@ -1401,7 +1410,10 @@ function StepSectors({ impactSectors, nicheTags, toggleSector, makePrimarySector
         <span style={{ fontSize: 13, color: T.textTertiary, marginLeft: 6, fontFamily: 'var(--font-dm-sans)' }}>· pick 1 primary + up to 3 others</span>
         {sectorMax && <span style={{ fontSize: 11, color: T.textTertiary, marginLeft: 8, fontFamily: 'var(--font-space-grotesk)' }}>Max reached</span>}
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 20 }}>
+      <p style={{ fontSize: 12.5, color: T.textTertiary, fontFamily: 'var(--font-dm-sans)', marginTop: 0, marginBottom: 12, lineHeight: 1.5 }}>
+        Not sure between two similar sectors? Pick the closest fit. You can always change it later.
+      </p>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 12 }}>
         {IMPACT_SECTORS.map(opt => {
           const cs = chipStateFor(impactSectors, opt.value)
           return (
@@ -1417,6 +1429,21 @@ function StepSectors({ impactSectors, nicheTags, toggleSector, makePrimarySector
           )
         })}
       </div>
+      {impactSectors.includes('mental_health') && impactSectors.includes('health') && (
+        <div style={{
+          background: T.amberBgSoft,
+          border: `0.5px solid rgba(186,117,23,0.25)`,
+          borderRadius: 8,
+          padding: '10px 14px',
+          marginBottom: 20,
+          fontSize: 12.5,
+          color: T.amberMid,
+          fontFamily: 'var(--font-dm-sans)',
+          lineHeight: 1.5,
+        }}>
+          Most orgs fit one of Mental Health or Health &amp; Wellbeing, not both. They target different funder pools, so picking just the closest match usually gives stronger results.
+        </div>
+      )}
 
       {/* Sub-tag panel — shown when any selected sector has sub-tags */}
       {nicheSectors.length > 0 && (
