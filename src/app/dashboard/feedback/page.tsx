@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Lightbulb, AlertCircle, Search, MessageSquare, ArrowRight, Mail, CheckCircle } from 'lucide-react'
+import { useIsMobile } from '@/hooks/useIsMobile'
 
 type TabId = 'feature' | 'bug' | 'missing_funder' | 'general'
 type SubmissionStatus = 'received' | 'reviewing' | 'actioned' | 'shipped'
@@ -87,6 +88,7 @@ function formatDate(iso: string) {
 }
 
 export default function FeedbackPage() {
+  const isMobile = useIsMobile()
   const [activeTab, setActiveTab]     = useState<TabId>('feature')
   const [status, setStatus]           = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [submissions, setSubmissions] = useState<Submission[]>([])
@@ -162,7 +164,7 @@ export default function FeedbackPage() {
   const meta = TABS.find(t => t.id === activeTab)!
 
   return (
-    <div style={{ padding: '40px 48px 80px', maxWidth: 1100, margin: '0 auto' }}>
+    <div style={{ padding: isMobile ? '24px 16px 60px' : '40px 48px 80px', maxWidth: 1100, margin: '0 auto' }}>
 
       {/* Header */}
       <div style={{ marginBottom: 32 }}>
@@ -174,15 +176,15 @@ export default function FeedbackPage() {
         </p>
       </div>
 
-      {/* Two-column layout */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 32, alignItems: 'start' }}>
+      {/* Two-column layout — collapses to single column on mobile */}
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 320px', gap: isMobile ? 20 : 32, alignItems: 'start' }}>
 
         {/* LEFT: form */}
         <div>
 
-          {/* Category tab strip */}
+          {/* Category tab strip — 2x2 grid on mobile to keep labels readable */}
           <div style={{
-            display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 4,
+            display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 4,
             padding: 4, background: '#FFFFFF',
             border: '1px solid rgba(23,52,4,0.08)', borderRadius: 10, marginBottom: 20,
           }}>
@@ -297,8 +299,8 @@ export default function FeedbackPage() {
                   )}
                 </div>
 
-                {/* Form footer */}
-                <div style={{ background: '#FAFAF7', borderTop: '1px solid rgba(23,52,4,0.08)', padding: '14px 26px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+                {/* Form footer — stacks on mobile so the submit button stays full-width and reachable */}
+                <div style={{ background: '#FAFAF7', borderTop: '1px solid rgba(23,52,4,0.08)', padding: isMobile ? '14px 18px' : '14px 26px', display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'center', justifyContent: 'space-between', gap: isMobile ? 12 : 16 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-dm-sans)', fontSize: 12.5, color: '#8A8986' }}>
                     <CheckCircle size={13} />
                     Your account and browser details are attached automatically

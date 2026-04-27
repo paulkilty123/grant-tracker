@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { getOrganisationsByOwner, updateOrganisation, deleteOrganisation } from '@/lib/organisations'
 import { Pencil, Plus, ChevronDown, RotateCcw, Globe, Check, X, Star, Trash2, AlertTriangle } from 'lucide-react'
 import type { Organisation, LegalStructure, OrgStage, ImpactSector, FundingType, BeneficiaryGroup } from '@/types'
+import { useIsMobile } from '@/hooks/useIsMobile'
 
 /* ═══════════════════════════════════════════════
    Design tokens
@@ -256,8 +257,9 @@ function AddLink({ label, onClick }: { label: string; onClick?: () => void }) {
 }
 
 function FieldRow({ label, children }: { label: string; children: React.ReactNode }) {
+  const isMobile = useIsMobile()
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '180px 1fr', gap: 24, alignItems: 'start', padding: '4px 0' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '180px 1fr', gap: isMobile ? 8 : 24, alignItems: 'start', padding: '4px 0' }}>
       <div style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, color: T.textSecondary, paddingTop: 2 }}>
         {label}
       </div>
@@ -972,6 +974,7 @@ function FocusCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
   onEditStart: () => void; onEditEnd: () => void
   triggerOpen?: boolean; onTriggered?: () => void; hasIncomplete?: boolean
 }) {
+  const isMobile = useIsMobile()
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState<FocusDraft | null>(null)
   const [saving, setSaving] = useState(false)
@@ -1094,7 +1097,7 @@ function FocusCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
                 <span style={{ fontFamily: UI, fontSize: 11, color: T.textTertiary, marginLeft: 8 }}>Max reached</span>
               )}
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: 6 }}>
               {IMPACT_SECTOR_OPTIONS.map(opt => {
                 const cs = chipState(draft.impactSectors, opt.value)
                 return (
@@ -1123,7 +1126,7 @@ function FocusCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
                     <div style={{ fontFamily: UI, fontSize: 11, fontWeight: 600, color: T.textSecondary, marginBottom: 8, letterSpacing: '0.03em' }}>
                       Specialisms in {sLabel} <span style={{ fontWeight: 400, color: T.textTertiary }}>(optional)</span>
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 5 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 5 }}>
                       {opts.map(opt => {
                         const selected = draft.nicheTags.includes(opt.value)
                         return (
@@ -1161,7 +1164,7 @@ function FocusCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
                 <span style={{ fontFamily: UI, fontSize: 11, color: T.textTertiary, marginLeft: 8 }}>Max reached</span>
               )}
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: 6 }}>
               {BENEFICIARY_OPTIONS.map(opt => {
                 const cs = chipState(draft.beneficiaryGroups, opt.value)
                 return (
@@ -1626,6 +1629,7 @@ function StoryCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
    Main component
    ═══════════════════════════════════════════════ */
 export default function ProfilePage() {
+  const isMobile = useIsMobile()
   const [orgs, setOrgs] = useState<Organisation[]>([])
   const [activeOrgId, setActiveOrgId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -1778,14 +1782,14 @@ export default function ProfilePage() {
 
   return (
     <div style={{ flex: 1, background: T.pageBg, overflowY: 'auto' }}>
-      <div style={{ padding: '40px 48px 80px', maxWidth: 920, margin: '0 auto' }}>
+      <div style={{ padding: isMobile ? '24px 16px 60px' : '40px 48px 80px', maxWidth: 920, margin: '0 auto' }}>
 
         {/* Page header */}
         <div style={{ marginBottom: 28 }}>
-          <h1 style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 36, letterSpacing: '-0.02em', color: '#2C2C2A', lineHeight: 1.1, margin: '0 0 6px' }}>
+          <h1 style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: isMobile ? 28 : 36, letterSpacing: '-0.02em', color: '#2C2C2A', lineHeight: 1.1, margin: '0 0 6px' }}>
             Your profile
           </h1>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+          <div style={{ display: 'flex', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', gap: isMobile ? 10 : 16, flexDirection: isMobile ? 'column' : 'row' }}>
             <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 14, color: '#5F5E5A', margin: 0 }}>
               Refine the details that drive your funding matches.
             </p>

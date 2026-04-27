@@ -6,6 +6,7 @@ import { getOrganisationsByOwner } from '@/lib/organisations'
 import { Star, Check, X, AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
 import type { Organisation } from '@/types'
+import { useIsMobile } from '@/hooks/useIsMobile'
 
 /* ─── design tokens ─── */
 const T = {
@@ -65,6 +66,22 @@ function Card({ children }: { children: React.ReactNode }) {
 }
 
 function Row({ label, children, action, last }: { label: React.ReactNode; children: React.ReactNode; action?: React.ReactNode; last?: boolean }) {
+  const isMobile = useIsMobile()
+  if (isMobile) {
+    return (
+      <div style={{
+        display: 'flex', flexDirection: 'column', gap: 8,
+        padding: '14px 16px',
+        borderBottom: last ? 'none' : `1px solid ${T.border}`,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <div style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, color: T.textSecondary }}>{label}</div>
+          {action}
+        </div>
+        <div>{children}</div>
+      </div>
+    )
+  }
   return (
     <div style={{
       display: 'grid', gridTemplateColumns: '160px 1fr auto', gap: 20,
@@ -467,6 +484,7 @@ function DeleteModal({ email, onClose, onConfirm }: { email: string; onClose: ()
    Main page
    ═══════════════════════════════════════════════ */
 export default function AccountPage() {
+  const isMobile = useIsMobile()
   const supabase = createClient()
   const [userId, setUserId]         = useState<string | null>(null)
   const [email, setEmail]           = useState('')
@@ -536,7 +554,7 @@ export default function AccountPage() {
   const orgMeta = [legalStr, location, linkedDate ? `Linked ${linkedDate}` : null].filter(Boolean).join(' · ')
 
   return (
-    <div style={{ padding: '40px 48px 80px', maxWidth: 760, margin: '0 auto' }}>
+    <div style={{ padding: isMobile ? '24px 16px 60px' : '40px 48px 80px', maxWidth: 760, margin: '0 auto' }}>
       {/* Page header */}
       <div style={{ marginBottom: 36 }}>
         <h1 style={{ fontFamily: UI, fontWeight: 600, fontSize: 28, letterSpacing: '-0.02em', color: T.textPrimary, marginBottom: 6 }}>Account</h1>
@@ -635,10 +653,10 @@ export default function AccountPage() {
         <div style={{ fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textSecondary, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 14 }}>
           Danger zone
         </div>
-        <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, padding: '20px 22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20 }}>
+        <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, padding: isMobile ? '16px 18px' : '20px 22px', display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', gap: isMobile ? 12 : 20 }}>
           <div style={{ flex: 1 }}>
             <div style={{ fontFamily: UI, fontWeight: 600, fontSize: 14.5, color: T.textPrimary, marginBottom: 2 }}>Delete your account</div>
-            <div style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, lineHeight: 1.5 }}>Permanently removes your account, all your organisations, and every associated profile, match, and pipeline record. This can't be undone.</div>
+            <div style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, lineHeight: 1.5 }}>Permanently removes your account, all your organisations, and every associated profile, match, and pipeline record. This can&apos;t be undone.</div>
           </div>
           <DangerButton onClick={() => setShowDeleteModal(true)}>Delete account</DangerButton>
         </div>
