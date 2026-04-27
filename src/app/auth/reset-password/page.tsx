@@ -4,7 +4,10 @@ import { useState, useEffect, Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import Logo from '@/components/Logo'
+import { ArrowLeft } from 'lucide-react'
+
+const UI = "var(--font-space-grotesk), Space Grotesk, sans-serif"
+const BODY = "var(--font-dm-sans), Plus Jakarta Sans, sans-serif"
 
 function ResetPasswordContent() {
   const [password, setPassword] = useState('')
@@ -61,79 +64,122 @@ function ResetPasswordContent() {
   }
 
   return (
-    <div className="min-h-screen bg-cream flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-3 mb-4">
-            <Logo variant="dark" size="md" />
-          </div>
-          <p className="text-mid text-sm">Choose a new password</p>
-        </div>
+    <div style={{ background: '#FAFAF7', minHeight: '100vh', fontFamily: BODY, color: '#2C2C2A' }}>
 
-        <div className="card">
+      {/* NAV */}
+      <nav style={{ background: 'white', borderBottom: '0.5px solid rgba(23,52,4,0.08)', padding: '18px 0' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Link href="/" style={{ fontFamily: UI, fontWeight: 500, fontSize: 24, letterSpacing: '-0.03em', color: '#2C2C2A', textDecoration: 'none' }}>GrantTracker</Link>
+          <Link href="/" style={{ fontFamily: UI, fontSize: 13.5, color: '#5F5E5A', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <ArrowLeft size={14} /> Back to home
+          </Link>
+        </div>
+      </nav>
+
+      <div style={{ maxWidth: 460, margin: '0 auto', padding: '64px 24px 48px' }}>
+
+        <div style={{ background: 'white', borderRadius: 16, padding: '40px 36px', boxShadow: '0 2px 24px rgba(23,52,4,0.06)', border: '0.5px solid rgba(23,52,4,0.06)' }}>
           {exchanging ? (
-            <div className="text-center py-6 text-mid text-sm">Verifying reset link…</div>
+            <p style={{ fontFamily: BODY, fontSize: 14, color: '#5F5E5A', textAlign: 'center', padding: '12px 0' }}>Verifying reset link...</p>
           ) : done ? (
-            <div className="text-center py-4">
-              <div className="text-4xl mb-4">✅</div>
-              <h2 className="font-display text-lg font-bold text-forest mb-2">Password updated!</h2>
-              <p className="text-sm text-mid">Taking you to your dashboard…</p>
-            </div>
-          ) : error && !password ? (
-            /* Link expired / already used — show a clear recovery path */
-            <div className="text-center py-4">
-              <div className="text-4xl mb-4">🔗</div>
-              <h2 className="font-display text-lg font-bold text-forest mb-2">Reset link expired</h2>
-              <p className="text-sm text-mid mb-6">
-                This link has already been used or has expired. Reset links are single-use and valid for 1 hour.
+            <>
+              <h1 style={{ fontFamily: UI, fontWeight: 500, fontSize: 24, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 8 }}>
+                Password updated
+              </h1>
+              <p style={{ fontFamily: BODY, fontSize: 14.5, color: '#5F5E5A' }}>
+                Taking you to your dashboard...
               </p>
-              <Link href="/auth/forgot-password" className="btn-primary inline-block">
-                Request a new reset link →
-              </Link>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {error && (
-                <div className="bg-coral-pale text-coral-saturated text-sm px-4 py-3 rounded-lg">{error}</div>
-              )}
-              <div>
-                <label className="block text-sm font-medium text-charcoal mb-1.5">New password</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  className="form-input"
-                  placeholder="At least 8 characters"
-                  required
-                  minLength={8}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-charcoal mb-1.5">Confirm new password</label>
-                <input
-                  type="password"
-                  value={confirm}
-                  onChange={e => setConfirm(e.target.value)}
-                  className="form-input"
-                  placeholder="••••••••"
-                  required
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="btn-primary w-full justify-center flex disabled:opacity-50"
+            </>
+          ) : error && !password ? (
+            <>
+              <h1 style={{ fontFamily: UI, fontWeight: 500, fontSize: 24, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 8 }}>
+                Reset link expired
+              </h1>
+              <p style={{ fontFamily: BODY, fontSize: 14.5, color: '#5F5E5A', lineHeight: 1.55, marginBottom: 24 }}>
+                This link has already been used or has expired. Reset links are single-use and valid for one hour.
+              </p>
+              <Link
+                href="/auth/forgot-password"
+                style={{
+                  display: 'inline-block',
+                  background: '#8ECB3C',
+                  color: '#173404',
+                  fontFamily: UI,
+                  fontWeight: 600,
+                  fontSize: 15,
+                  padding: '13px 22px',
+                  borderRadius: 10,
+                  textDecoration: 'none',
+                }}
               >
-                {loading ? 'Saving…' : 'Set new password'}
-              </button>
-            </form>
+                Request a new reset link
+              </Link>
+            </>
+          ) : (
+            <>
+              <h1 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.15, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 6 }}>
+                Choose a new password
+              </h1>
+              <p style={{ fontFamily: BODY, fontSize: 14.5, color: '#5F5E5A', marginBottom: 24 }}>
+                Pick something at least 8 characters long.
+              </p>
+              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {error && (
+                  <div style={{ background: '#FAECE7', border: '0.5px solid rgba(153,60,29,0.25)', color: '#993C1D', fontSize: 13, padding: '11px 14px', borderRadius: 10 }}>
+                    {error}
+                  </div>
+                )}
+                <div>
+                  <label style={{ display: 'block', fontFamily: UI, fontWeight: 500, fontSize: 13, color: '#2C2C2A', marginBottom: 6 }}>New password</label>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    className="form-input"
+                    placeholder="At least 8 characters"
+                    required
+                    minLength={8}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontFamily: UI, fontWeight: 500, fontSize: 13, color: '#2C2C2A', marginBottom: 6 }}>Confirm new password</label>
+                  <input
+                    type="password"
+                    value={confirm}
+                    onChange={e => setConfirm(e.target.value)}
+                    className="form-input"
+                    placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"
+                    required
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  style={{
+                    marginTop: 4,
+                    background: '#8ECB3C',
+                    color: '#173404',
+                    fontFamily: UI,
+                    fontWeight: 600,
+                    fontSize: 15,
+                    padding: '13px 22px',
+                    borderRadius: 10,
+                    border: 'none',
+                    cursor: loading ? 'default' : 'pointer',
+                    opacity: loading ? 0.7 : 1,
+                    transition: 'opacity 0.15s',
+                  }}
+                >
+                  {loading ? 'Saving...' : 'Set new password'}
+                </button>
+              </form>
+            </>
           )}
 
           {!done && !exchanging && !(error && !password) && (
-            <div className="mt-5 pt-5 border-t border-warm text-center">
-              <Link href="/auth/login" className="text-sm text-mid hover:text-charcoal transition-colors">
-                ← Back to sign in
+            <div style={{ marginTop: 24, paddingTop: 20, borderTop: '0.5px solid rgba(23,52,4,0.08)', textAlign: 'center' }}>
+              <Link href="/auth/login" style={{ fontFamily: UI, fontSize: 13, color: '#5F5E5A', textDecoration: 'none' }}>
+                Back to sign in
               </Link>
             </div>
           )}
@@ -145,7 +191,11 @@ function ResetPasswordContent() {
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-cream flex items-center justify-center"><p className="text-mid text-sm">Loading…</p></div>}>
+    <Suspense fallback={
+      <div style={{ background: '#FAFAF7', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ fontFamily: BODY, fontSize: 14, color: '#5F5E5A' }}>Loading...</p>
+      </div>
+    }>
       <ResetPasswordContent />
     </Suspense>
   )

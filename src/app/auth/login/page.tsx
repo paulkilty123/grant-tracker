@@ -4,19 +4,21 @@ import { useState, Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Search, ArrowRight, Bell, Lock } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { isOnboardingComplete, computePostLoginPath } from '@/lib/onboarding'
-import RadioWaveIcon from '@/components/icons/RadioWaveIcon'
+
+const UI = "var(--font-space-grotesk), Space Grotesk, sans-serif"
+const BODY = "var(--font-dm-sans), Plus Jakarta Sans, sans-serif"
 
 const ERROR_MESSAGES: Record<string, string> = {
-  'Invalid login credentials': 'Incorrect email or password \u2014 please try again.',
+  'Invalid login credentials': 'Incorrect email or password. Please try again.',
   'Email not confirmed': 'Please check your email and click the confirmation link first.',
-  'Too many requests': 'Too many attempts \u2014 please wait a few minutes and try again.',
+  'Too many requests': 'Too many attempts. Please wait a few minutes and try again.',
 }
 
 const URL_ERROR_MESSAGES: Record<string, string> = {
-  'otp_expired':         'That confirmation link has expired. Please sign up again to receive a new one.',
-  'confirmation_failed': "We couldn't confirm your email \u2014 the link may have already been used. Try signing in, or sign up again.",
+  'otp_expired':         'That confirmation link has expired. Please request a new one.',
+  'confirmation_failed': "We couldn't confirm your email. The link may have already been used.",
   'auth_error':          'Something went wrong with that link. Please try again.',
 }
 
@@ -72,107 +74,95 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: '#FAFAF7' }}>
-      <div className="w-full max-w-4xl">
+    <div style={{ background: '#FAFAF7', minHeight: '100vh', fontFamily: BODY, color: '#2C2C2A' }}>
 
-        <div className="mb-6">
-          <Link href="/" className="text-sm inline-flex items-center gap-1.5 hover:opacity-70 transition-opacity" style={{ color: '#5F5E5A', fontFamily: 'var(--font-space-grotesk)' }}>
-            &larr; Back to home
+      {/* NAV */}
+      <nav style={{ background: 'white', borderBottom: '0.5px solid rgba(23,52,4,0.08)', padding: '18px 0' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Link href="/" style={{ fontFamily: UI, fontWeight: 500, fontSize: 24, letterSpacing: '-0.03em', color: '#2C2C2A', textDecoration: 'none' }}>GrantTracker</Link>
+          <Link href="/" style={{ fontFamily: UI, fontSize: 13.5, color: '#5F5E5A', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <ArrowLeft size={14} /> Back to home
           </Link>
         </div>
+      </nav>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 overflow-hidden rounded-3xl" style={{ boxShadow: '0 8px 48px rgba(0,0,0,0.10)' }}>
+      <div style={{ maxWidth: 460, margin: '0 auto', padding: '64px 24px 48px' }}>
 
-          {/* Left panel */}
-          <div className="text-white p-10 hidden lg:flex flex-col justify-between" style={{ background: '#2C2C2A' }}>
+        {/* Card */}
+        <div style={{ background: 'white', borderRadius: 16, padding: '40px 36px', boxShadow: '0 2px 24px rgba(23,52,4,0.06)', border: '0.5px solid rgba(23,52,4,0.06)' }}>
+          <h1 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.15, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 6 }}>
+            Welcome back
+          </h1>
+          <p style={{ fontFamily: BODY, fontSize: 14.5, color: '#5F5E5A', marginBottom: 28 }}>
+            Sign in to your Grant Tracker account.
+          </p>
+
+          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {urlErrorMessage && (
+              <div style={{ background: '#FFFBEB', border: '0.5px solid rgba(180,135,40,0.25)', color: '#854F0B', fontSize: 13, padding: '11px 14px', borderRadius: 10 }}>
+                {urlErrorMessage}
+              </div>
+            )}
+            {error && (
+              <div style={{ background: '#FAECE7', border: '0.5px solid rgba(153,60,29,0.25)', color: '#993C1D', fontSize: 13, padding: '11px 14px', borderRadius: 10 }}>
+                {error}
+              </div>
+            )}
+
             <div>
-              <a href="/" className="no-underline inline-flex items-center gap-2 mb-2">
-                <span className="font-bold text-xl" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#FFFFFF', letterSpacing: '-0.02em' }}>Grant<span style={{ color: '#8ECB3C' }}>Tracker</span></span>
-              </a>
-              <p className="text-sm mb-10" style={{ color: '#8A8986' }}>Find grants, accelerators, investment and support programmes &mdash; matched to you, managed in one place.</p>
-              <div className="space-y-6">
-                {[
-                  { Icon: Search,     title: 'Find funding that fits',    desc: 'Search grants, accelerators and social investment filtered to your structure, sector and stage.' },
-                  { Icon: ArrowRight, title: 'Track every application',   desc: 'A visual pipeline keeps every opportunity in view \u2014 from first contact to decision.' },
-                  { Icon: Bell,       title: 'Never miss a deadline',     desc: 'Instant or weekly alerts when new matches appear or deadlines are approaching.' },
-                ].map(({ Icon, title, desc }) => (
-                  <div key={title} className="flex gap-3.5">
-                    <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: 'rgba(132,204,22,0.12)' }}>
-                      <Icon size={16} style={{ color: '#8ECB3C' }} />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-sm" style={{ color: '#FFFFFF', fontFamily: 'var(--font-space-grotesk)' }}>{title}</p>
-                      <p className="text-xs leading-relaxed mt-0.5" style={{ color: '#8A8986' }}>{desc}</p>
-                    </div>
-                  </div>
-                ))}
+              <label style={{ display: 'block', fontFamily: UI, fontWeight: 500, fontSize: 13, color: '#2C2C2A', marginBottom: 6 }}>Email</label>
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="form-input" placeholder="you@organisation.org" autoComplete="email" required />
+            </div>
+
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                <label style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, color: '#2C2C2A' }}>Password</label>
+                <Link href="/auth/forgot-password" style={{ fontFamily: UI, fontSize: 12, color: '#3B6D11', textDecoration: 'none' }}>Forgot password?</Link>
+              </div>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showPw ? 'text' : 'password'}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  className="form-input"
+                  style={{ paddingRight: 56 }}
+                  placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"
+                  autoComplete="current-password"
+                  required
+                />
+                <button type="button" onClick={() => setShowPw(v => !v)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontFamily: UI, fontSize: 12, color: '#8A8986', background: 'transparent', border: 'none', cursor: 'pointer' }} tabIndex={-1}>
+                  {showPw ? 'Hide' : 'Show'}
+                </button>
               </div>
             </div>
-            <div className="flex items-center gap-2 mt-10 pt-6" style={{ borderTop: '1px solid #2C2C2A' }}>
-              <Lock size={12} style={{ color: '#5F5E5A' }} />
-              <p className="text-xs" style={{ color: '#5F5E5A' }}>Your data is never shared or sold</p>
-            </div>
-          </div>
 
-          {/* Right: form */}
-          <div className="bg-white p-8 lg:p-10 flex flex-col justify-center">
-            <div className="mb-8 lg:hidden flex justify-center">
-              <a href="/" className="no-underline inline-flex items-center gap-2">
-                <span className="font-bold text-lg" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#2C2C2A' }}>Grant<span style={{ color: '#8ECB3C' }}>Tracker</span></span>
-              </a>
-            </div>
-            <h1 className="font-bold leading-tight mb-1" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 'clamp(22px, 3vw, 28px)', letterSpacing: '-0.02em', color: '#2C2C2A' }}>Welcome back</h1>
-            <p className="text-sm mb-7" style={{ color: '#8A8986' }}>Sign in to your Grant Tracker account</p>
-
-            <form onSubmit={handleLogin} className="space-y-4">
-              {urlErrorMessage && (
-                <div className="text-amber-700 text-sm px-4 py-3 rounded-xl border border-amber-200" style={{ background: '#FFFBEB' }}>
-                  {urlErrorMessage}
-                </div>
-              )}
-              {error && (
-                <div className="text-coral-saturated text-sm px-4 py-3 rounded-xl border border-coral-mid" style={{ background: '#FAECE7' }}>
-                  {error}
-                </div>
-              )}
-              <div>
-                <label className="block text-sm font-semibold mb-1.5" style={{ color: '#2C2C2A', fontFamily: 'var(--font-space-grotesk)' }}>Email</label>
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="form-input rounded-xl" placeholder="you@organisation.org" autoComplete="email" required />
-              </div>
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-sm font-semibold" style={{ color: '#2C2C2A', fontFamily: 'var(--font-space-grotesk)' }}>Password</label>
-                  <Link href="/auth/forgot-password" className="text-xs hover:underline" style={{ color: '#8ECB3C' }}>Forgot password?</Link>
-                </div>
-                <div className="relative">
-                  <input
-                    type={showPw ? 'text' : 'password'}
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    className="form-input pr-10 rounded-xl"
-                    placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;"
-                    autoComplete="current-password"
-                    required
-                  />
-                  <button type="button" onClick={() => setShowPw(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs hover:opacity-70" style={{ color: '#8A8986' }} tabIndex={-1}>
-                    {showPw ? 'Hide' : 'Show'}
-                  </button>
-                </div>
-              </div>
-              <button type="submit" disabled={loading} className="w-full flex justify-center items-center rounded-full py-3.5 text-sm font-bold transition-opacity hover:opacity-80 mt-2" style={{ background: '#8ECB3C', color: '#2C2C2A', fontFamily: 'var(--font-space-grotesk)' }}>
-                {loading ? 'Signing in\u2026' : 'Sign in'}
-              </button>
-            </form>
-
-            <div className="mt-6 pt-6 text-center" style={{ borderTop: '1px solid #F0F0F0' }}>
-              <p className="text-sm" style={{ color: '#8A8986' }}>
-                Don&apos;t have an account?{' '}
-                <Link href="/auth/signup" className="font-semibold hover:underline" style={{ color: '#8ECB3C' }}>Create one free</Link>
-              </p>
-            </div>
-          </div>
-
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                marginTop: 8,
+                background: '#8ECB3C',
+                color: '#173404',
+                fontFamily: UI,
+                fontWeight: 600,
+                fontSize: 15,
+                padding: '13px 22px',
+                borderRadius: 10,
+                border: 'none',
+                cursor: loading ? 'default' : 'pointer',
+                opacity: loading ? 0.7 : 1,
+                transition: 'opacity 0.15s',
+              }}
+            >
+              {loading ? 'Signing in...' : 'Sign in'}
+            </button>
+          </form>
         </div>
+
+        <p style={{ fontFamily: BODY, fontSize: 13, color: '#8A8986', textAlign: 'center', marginTop: 24 }}>
+          Want to join the founding cohort?{' '}
+          <Link href="/apply" style={{ fontFamily: UI, fontWeight: 500, color: '#3B6D11', textDecoration: 'none' }}>Apply here</Link>
+        </p>
       </div>
     </div>
   )

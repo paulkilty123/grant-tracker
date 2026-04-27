@@ -526,7 +526,7 @@ export default function LandingPage() {
                       )}
                     </span>
                     <Link
-                      href="/auth/signup"
+                      href="/apply"
                       className="text-[11px] font-semibold text-coral hover:underline"
                     >
                       View &amp; track →
@@ -539,7 +539,7 @@ export default function LandingPage() {
             {/* CTA bar */}
             <motion.div {...fadeInView(0.2)} className="text-center">
               <Link
-                href="/auth/signup"
+                href="/apply"
                 className="inline-flex items-center gap-2 bg-forest text-white px-8 py-3.5 text-sm font-semibold hover:opacity-90 transition-colors"
                 style={{ borderRadius: '0px' }}
               >

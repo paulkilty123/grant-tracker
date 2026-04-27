@@ -3,7 +3,10 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import Logo from '@/components/Logo'
+import { ArrowLeft } from 'lucide-react'
+
+const UI = "var(--font-space-grotesk), Space Grotesk, sans-serif"
+const BODY = "var(--font-dm-sans), Plus Jakarta Sans, sans-serif"
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
@@ -31,70 +34,97 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-cream flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-3 mb-4">
-            <Logo variant="dark" size="md" />
-          </div>
-          <p className="text-mid text-sm">Reset your password</p>
-        </div>
+    <div style={{ background: '#FAFAF7', minHeight: '100vh', fontFamily: BODY, color: '#2C2C2A' }}>
 
-        <div className="card">
+      {/* NAV */}
+      <nav style={{ background: 'white', borderBottom: '0.5px solid rgba(23,52,4,0.08)', padding: '18px 0' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Link href="/" style={{ fontFamily: UI, fontWeight: 500, fontSize: 24, letterSpacing: '-0.03em', color: '#2C2C2A', textDecoration: 'none' }}>GrantTracker</Link>
+          <Link href="/" style={{ fontFamily: UI, fontSize: 13.5, color: '#5F5E5A', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <ArrowLeft size={14} /> Back to home
+          </Link>
+        </div>
+      </nav>
+
+      <div style={{ maxWidth: 460, margin: '0 auto', padding: '64px 24px 48px' }}>
+
+        <div style={{ background: 'white', borderRadius: 16, padding: '40px 36px', boxShadow: '0 2px 24px rgba(23,52,4,0.06)', border: '0.5px solid rgba(23,52,4,0.06)' }}>
           {sent ? (
-            <div className="text-center py-4">
-              <div className="text-4xl mb-4">📬</div>
-              <h2 className="font-display text-lg font-bold text-forest mb-2">Check your email</h2>
-              <p className="text-sm text-mid mb-4">
-                If <strong className="text-charcoal">{email}</strong> has an account, a reset link is on its way.
-                Click the link to set a new password.
+            <>
+              <h1 style={{ fontFamily: UI, fontWeight: 500, fontSize: 24, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 10 }}>
+                Check your email
+              </h1>
+              <p style={{ fontFamily: BODY, fontSize: 14.5, color: '#5F5E5A', lineHeight: 1.55, marginBottom: 18 }}>
+                If <strong style={{ color: '#2C2C2A' }}>{email}</strong> has an account, a reset link is on its way. Click it to set a new password.
               </p>
-              <div className="bg-amber-50 border border-amber-100 rounded-lg px-4 py-3 text-left mb-4">
-                <p className="text-xs text-amber-700 font-semibold mb-1">Not arrived?</p>
-                <ul className="text-xs text-amber-600 space-y-1">
-                  <li>· Check your spam or junk folder</li>
-                  <li>· Allow a minute or two for delivery</li>
-                  <li>· Make sure you entered the right address</li>
-                  <li>· You can only request one link per hour</li>
+              <div style={{ background: '#F5F1E8', border: '0.5px solid rgba(180,135,40,0.18)', borderRadius: 10, padding: '14px 16px', marginBottom: 20 }}>
+                <p style={{ fontFamily: UI, fontWeight: 500, fontSize: 12, color: '#2C2C2A', marginBottom: 6 }}>Not arrived?</p>
+                <ul style={{ fontFamily: BODY, fontSize: 12.5, color: '#5F5E5A', lineHeight: 1.6, paddingLeft: 18, margin: 0 }}>
+                  <li>Check your spam or junk folder</li>
+                  <li>Allow a minute or two for delivery</li>
+                  <li>Make sure you entered the right address</li>
+                  <li>You can only request one link per hour</li>
                 </ul>
               </div>
-              <button onClick={() => setSent(false)} className="text-sm text-sage hover:underline">
+              <button
+                onClick={() => setSent(false)}
+                style={{ fontFamily: UI, fontSize: 13, color: '#3B6D11', background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', textDecoration: 'underline' }}
+              >
                 Try a different email address
               </button>
-            </div>
+            </>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <p className="text-sm text-mid">
-                Enter the email address for your account and we&apos;ll send you a link to reset your password.
+            <>
+              <h1 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.15, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 6 }}>
+                Reset your password
+              </h1>
+              <p style={{ fontFamily: BODY, fontSize: 14.5, color: '#5F5E5A', lineHeight: 1.55, marginBottom: 24 }}>
+                Enter the email address for your account and we&apos;ll send you a link to set a new password.
               </p>
-              {error && (
-                <div className="bg-coral-pale text-coral-saturated text-sm px-4 py-3 rounded-lg">{error}</div>
-              )}
-              <div>
-                <label className="block text-sm font-medium text-charcoal mb-1.5">Email address</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  className="form-input"
-                  placeholder="you@organisation.org"
-                  required
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="btn-primary w-full justify-center flex"
-              >
-                {loading ? 'Sending…' : 'Send reset link'}
-              </button>
-            </form>
+              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {error && (
+                  <div style={{ background: '#FAECE7', border: '0.5px solid rgba(153,60,29,0.25)', color: '#993C1D', fontSize: 13, padding: '11px 14px', borderRadius: 10 }}>
+                    {error}
+                  </div>
+                )}
+                <div>
+                  <label style={{ display: 'block', fontFamily: UI, fontWeight: 500, fontSize: 13, color: '#2C2C2A', marginBottom: 6 }}>Email address</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    className="form-input"
+                    placeholder="you@organisation.org"
+                    required
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  style={{
+                    marginTop: 4,
+                    background: '#8ECB3C',
+                    color: '#173404',
+                    fontFamily: UI,
+                    fontWeight: 600,
+                    fontSize: 15,
+                    padding: '13px 22px',
+                    borderRadius: 10,
+                    border: 'none',
+                    cursor: loading ? 'default' : 'pointer',
+                    opacity: loading ? 0.7 : 1,
+                    transition: 'opacity 0.15s',
+                  }}
+                >
+                  {loading ? 'Sending...' : 'Send reset link'}
+                </button>
+              </form>
+            </>
           )}
 
-          <div className="mt-5 pt-5 border-t border-warm text-center">
-            <Link href="/auth/login" className="text-sm text-mid hover:text-charcoal transition-colors">
-              ← Back to sign in
+          <div style={{ marginTop: 24, paddingTop: 20, borderTop: '0.5px solid rgba(23,52,4,0.08)', textAlign: 'center' }}>
+            <Link href="/auth/login" style={{ fontFamily: UI, fontSize: 13, color: '#5F5E5A', textDecoration: 'none' }}>
+              Back to sign in
             </Link>
           </div>
         </div>
