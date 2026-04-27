@@ -352,6 +352,7 @@ function OrgSwitcher({ orgs, activeOrgId, onSwitch }: {
   activeOrgId: string
   onSwitch: (id: string) => void
 }) {
+  const isMobile = useIsMobile()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const active = orgs.find(o => o.id === activeOrgId) ?? orgs[0]
@@ -370,17 +371,22 @@ function OrgSwitcher({ orgs, activeOrgId, onSwitch }: {
 
   return (
     <div style={{
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
+      display: 'flex',
+      flexDirection: isMobile ? 'column' : 'row',
+      alignItems: isMobile ? 'stretch' : 'center',
+      justifyContent: 'space-between',
+      gap: isMobile ? 12 : 16,
       marginBottom: 24, padding: '14px 18px',
       background: T.white, border: `1px solid ${T.border}`, borderRadius: 12,
     }}>
-      <div ref={ref} style={{ position: 'relative' }}>
+      <div ref={ref} style={{ position: 'relative', minWidth: 0, flex: isMobile ? 'unset' : 1 }}>
         <div
           onClick={() => isMulti && setOpen(v => !v)}
           style={{
             display: 'flex', alignItems: 'center', gap: 12,
             cursor: isMulti ? 'pointer' : 'default',
             padding: '4px 8px', borderRadius: 8, margin: '-4px -8px',
+            minWidth: 0,
           }}
         >
           {/* Avatar */}
@@ -391,17 +397,17 @@ function OrgSwitcher({ orgs, activeOrgId, onSwitch }: {
           }}>
             {initials(active?.name ?? 'O')}
           </div>
-          <div>
+          <div style={{ minWidth: 0, flex: 1 }}>
             <div style={{ fontFamily: UI, fontWeight: 500, fontSize: 11, letterSpacing: '0.07em', textTransform: 'uppercase' as const, color: T.textTertiary, marginBottom: 2 }}>
               Viewing profile for
             </div>
-            <div style={{ fontFamily: UI, fontWeight: 600, fontSize: 15.5, color: T.textPrimary, display: 'flex', alignItems: 'center', gap: 6 }}>
-              {active?.name ?? 'Your organisation'}
-              {isMulti && <ChevronDown size={14} color={T.textTertiary} />}
+            <div style={{ fontFamily: UI, fontWeight: 600, fontSize: 15.5, color: T.textPrimary, display: 'flex', alignItems: 'center', gap: 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{active?.name ?? 'Your organisation'}</span>
+              {isMulti && <ChevronDown size={14} color={T.textTertiary} style={{ flexShrink: 0 }} />}
             </div>
           </div>
-          {isMulti && (
-            <span style={{ fontFamily: UI, fontSize: 12.5, color: T.textTertiary, padding: '3px 8px', background: T.pageBg, borderRadius: 10, marginLeft: 4 }}>
+          {isMulti && !isMobile && (
+            <span style={{ fontFamily: UI, fontSize: 12.5, color: T.textTertiary, padding: '3px 8px', background: T.pageBg, borderRadius: 10, marginLeft: 4, flexShrink: 0 }}>
               {orgs.length} organisations
             </span>
           )}
@@ -446,7 +452,7 @@ function OrgSwitcher({ orgs, activeOrgId, onSwitch }: {
         )}
       </div>
 
-      {/* Add organisation button */}
+      {/* Add organisation button — full-width on mobile, inline on desktop */}
       <a
         href="/onboarding/wizard?new=1"
         style={{
@@ -456,10 +462,15 @@ function OrgSwitcher({ orgs, activeOrgId, onSwitch }: {
           padding: '7px 14px', borderRadius: 8,
           display: 'inline-flex', alignItems: 'center', gap: 6,
           flexShrink: 0,
+          alignSelf: isMobile ? 'stretch' : 'auto',
+          justifyContent: 'center',
         }}
       >
         <Plus size={13} />
         Add organisation
+        {isMobile && isMulti && (
+          <span style={{ fontSize: 12, color: T.textTertiary, marginLeft: 4 }}>· {orgs.length} active</span>
+        )}
       </a>
     </div>
   )
@@ -528,6 +539,7 @@ function CompletionMeter({ org, onJumpToCard }: { org: Organisation; onJumpToCar
    Scan Bar
    ═══════════════════════════════════════════════ */
 function ScanBar({ orgId, website, onSaved }: { orgId: string; website?: string | null; onSaved: () => void }) {
+  const isMobile = useIsMobile()
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState('')
   const [saving, setSaving] = useState(false)
@@ -592,7 +604,10 @@ function ScanBar({ orgId, website, onSaved }: { orgId: string; website?: string 
     <div style={{
       background: T.white, border: `1px solid ${T.border}`, borderRadius: 12,
       padding: '14px 18px', marginBottom: 16,
-      display: 'flex', alignItems: 'center', gap: 14,
+      display: 'flex',
+      flexWrap: 'wrap' as const,
+      alignItems: 'center',
+      gap: isMobile ? 10 : 14,
     }}>
       <div style={{
         flexShrink: 0, width: 32, height: 32, background: T.cream, borderRadius: 8,
@@ -622,7 +637,7 @@ function ScanBar({ orgId, website, onSaved }: { orgId: string; website?: string 
               }}
             />
           </div>
-          <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: 6, flexShrink: 0, flexBasis: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'flex-end' : 'flex-start' }}>
             <button onClick={cancel} style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, color: T.textSecondary, background: T.white, border: `0.5px solid ${T.borderStrong}`, padding: '7px 12px', borderRadius: 7, cursor: 'pointer' }}>
               Cancel
             </button>
@@ -639,7 +654,7 @@ function ScanBar({ orgId, website, onSaved }: { orgId: string; website?: string 
               {display}
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: 6, flexShrink: 0, flexBasis: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'flex-end' : 'flex-start' }}>
             <button onClick={startEdit} style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, background: 'transparent', color: T.textSecondary, border: 'none', padding: '7px 10px', borderRadius: 7, cursor: 'pointer' }}>
               Change URL
             </button>
@@ -659,7 +674,7 @@ function ScanBar({ orgId, website, onSaved }: { orgId: string; website?: string 
             <div style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, color: T.textSecondary, marginBottom: 2 }}>No website on file</div>
             <div style={{ fontFamily: BODY, fontSize: 13, color: T.textTertiary }}>Add your website so we can keep your profile up to date automatically</div>
           </div>
-          <button onClick={startEdit} style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, background: T.lime, color: T.greenDeep, border: 'none', padding: '7px 16px', borderRadius: 8, cursor: 'pointer', flexShrink: 0 }}>
+          <button onClick={startEdit} style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, background: T.lime, color: T.greenDeep, border: 'none', padding: '7px 16px', borderRadius: 8, cursor: 'pointer', flexShrink: 0, flexBasis: isMobile ? '100%' : 'auto' }}>
             Add website
           </button>
         </>
