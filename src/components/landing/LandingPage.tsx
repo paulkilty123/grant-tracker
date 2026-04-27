@@ -1060,7 +1060,7 @@ export default function LandingPage() {
                 I&apos;m hand-picking 20&ndash;30 organisations to help shape Grant Tracker as I build it.
               </p>
               <p style={{ fontSize: 16, color: '#5F5E5A', lineHeight: 1.6, maxWidth: 540, margin: '0 auto 32px' }}>
-                Free during beta and for the first year after launch. Plus a direct line to me whenever you need it. A genuine founding cohort, not a waitlist.
+                Free for six months. Plus a direct line to me whenever you need it. A genuine founding cohort, not a waitlist.
               </p>
               <Link
                 href={COHORT_URL}
@@ -1123,7 +1123,7 @@ export default function LandingPage() {
               Help us build <span style={{ color: '#8ECB3C' }}>something better.</span>
             </h2>
             <p className="mx-auto mb-8 max-w-md text-base leading-relaxed" style={{ color: '#C0DD97' }}>
-              We&apos;re hand-picking 20&ndash;30 organisations for the founding cohort. Free during beta, free first year after launch.
+              We&apos;re hand-picking 20&ndash;30 organisations for the founding cohort. Free for six months.
             </p>
             <Link
               href={COHORT_URL}
