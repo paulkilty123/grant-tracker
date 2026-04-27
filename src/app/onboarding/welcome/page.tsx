@@ -5,6 +5,9 @@ import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
+const UI = "var(--font-space-grotesk), Space Grotesk, sans-serif"
+const BODY = "var(--font-dm-sans), Plus Jakarta Sans, sans-serif"
+
 function firstName(email: string | null | undefined, meta: Record<string, unknown> | null): string {
   const metaName = typeof meta?.first_name === 'string' ? (meta.first_name as string).trim() : ''
   if (metaName) return metaName
@@ -32,64 +35,102 @@ export default function OnboardingWelcomePage() {
   }, [])
 
   return (
-    <div className="flex-1 flex items-center justify-center px-6 py-12">
-      <div className="w-full max-w-xl text-center">
-        {/* "You're in" cohort pill */}
-        <span
-          className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold"
-          style={{
-            fontFamily: 'var(--font-space-grotesk)',
-            background: '#F5F1E8',
-            color: '#173404',
-            border: '1px solid #E8E0D1',
-            borderRadius: 9999,
-            letterSpacing: '0.02em',
-          }}
-        >
-          <span
-            className="inline-block w-1.5 h-1.5 rounded-full"
-            style={{ background: '#8ECB3C' }}
-          />
-          You&rsquo;re in — founding cohort
-        </span>
+    <div style={{
+      flex: 1,
+      display: 'flex',
+      flexDirection: 'column',
+      padding: '20px 24px 40px',
+      minHeight: 620,
+      width: '100%',
+      background: '#fff',
+      fontFamily: BODY,
+      color: '#2C2C2A',
+    }}>
+      {/* Hero — matches wizard step 'entry' positioning */}
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+        textAlign: 'center',
+        maxWidth: 560,
+        margin: '0 auto',
+        width: '100%',
+        paddingTop: 80,
+      }}>
+        {/* Eyebrow */}
+        <div style={{
+          fontFamily: UI,
+          fontWeight: 500,
+          fontSize: 11.5,
+          color: '#8ECB3C',
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase',
+          marginBottom: 20,
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 8,
+        }}>
+          <span style={{ width: 6, height: 6, background: '#8ECB3C', borderRadius: '50%', display: 'inline-block', flexShrink: 0 }} />
+          Founding cohort, you&rsquo;re in
+        </div>
 
-        {/* DM Serif welcome heading */}
-        <h1
-          className="mt-6 leading-tight"
-          style={{
-            fontFamily: 'var(--font-dm-serif)',
-            fontWeight: 400,
-            fontSize: 'clamp(40px, 6vw, 64px)',
-            color: '#173404',
-            letterSpacing: '-0.01em',
-          }}
-        >
+        <h1 style={{
+          fontFamily: UI,
+          fontWeight: 500,
+          fontSize: 'clamp(36px, 5.5vw, 52px)',
+          lineHeight: 1.08,
+          letterSpacing: '-0.025em',
+          color: '#2C2C2A',
+          marginBottom: 18,
+        }}>
           Welcome, {name}.
         </h1>
 
-        <p
-          className="mt-5 text-base leading-relaxed max-w-md mx-auto"
-          style={{ color: '#5F5E5A' }}
-        >
-          You&rsquo;re one of the first to use Grant Tracker. Let&rsquo;s set up your organisation
-          so we can match you with funding that actually fits &mdash; about two minutes.
+        <p style={{
+          fontFamily: BODY,
+          fontSize: 17,
+          lineHeight: 1.55,
+          color: '#5F5E5A',
+          maxWidth: 460,
+          marginBottom: 36,
+        }}>
+          You&rsquo;re one of the first to use Grant Tracker. Let&rsquo;s set up your organisation so we can match you with funding that actually fits. About two minutes.
         </p>
 
-        <div className="mt-10">
-          <Link
-            href="/onboarding/wizard"
-            className="inline-flex items-center gap-2 px-6 py-3.5 text-sm font-bold transition-opacity hover:opacity-80"
-            style={{
-              fontFamily: 'var(--font-space-grotesk)',
-              background: '#8ECB3C',
-              color: '#173404',
-              borderRadius: 9999,
-            }}
-          >
-            Let&rsquo;s get you set up
-            <ArrowRight size={16} strokeWidth={2.5} />
-          </Link>
-        </div>
+        <Link
+          href="/onboarding/wizard"
+          style={{
+            fontFamily: UI,
+            fontWeight: 600,
+            fontSize: 15,
+            background: '#8ECB3C',
+            color: '#173404',
+            padding: '13px 24px',
+            borderRadius: 10,
+            textDecoration: 'none',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            transition: 'opacity 0.15s',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.opacity = '0.9')}
+          onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+        >
+          Let&rsquo;s get you set up
+          <ArrowRight size={16} strokeWidth={2.5} />
+        </Link>
+      </div>
+
+      {/* Bottom skip — matches wizard's pattern */}
+      <div style={{ textAlign: 'center' }}>
+        <Link
+          href="/dashboard/profile"
+          style={{ fontFamily: UI, fontSize: 13, color: '#8A8986', padding: '12px 16px', display: 'inline-block', textDecoration: 'none' }}
+        >
+          Skip setup for now
+        </Link>
       </div>
     </div>
   )
