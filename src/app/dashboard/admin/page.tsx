@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import ThreeSixtyGivingPanel from './ThreeSixtyGivingPanel'
 import FillAmountsPanel from './FillAmountsPanel'
 import DiscoveryPanel from './DiscoveryPanel'
+import ClearProfileButton from './ClearProfileButton'
 
 // Human-readable labels for each source key
 const SOURCE_LABELS: Record<string, string> = {
@@ -212,6 +213,8 @@ export default async function AdminPage() {
           {stats.length} sources · {totalActive.toLocaleString()} active grants
         </p>
       </div>
+
+      <ClearProfileButton />
 
       {/* Summary KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-7">
