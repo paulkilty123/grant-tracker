@@ -435,9 +435,16 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
       )
     : grant.sectors.map(s => sectorLabel(s)).filter(Boolean).slice(0, 3) as string[]
 
-  // Eligible structure labels
-  const structureLabels = ((grant as EnrichedGrant).eligibleStructures ?? [])
-    .slice(0, 3).map(s => STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()))
+  // Eligible structure labels — lead with the user's own structure if they
+  // qualify, so the cell answers "is this for me?" at a glance.
+  const eligibleRaw = ((grant as EnrichedGrant).eligibleStructures ?? []) as string[]
+  const userStructure = org?.legal_structure as string | null | undefined
+  const orderedEligible = (userStructure && eligibleRaw.includes(userStructure))
+    ? [userStructure, ...eligibleRaw.filter(s => s !== userStructure)]
+    : eligibleRaw
+  const structureLabels = orderedEligible.map(s =>
+    STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+  )
 
   // ── Sector pill colours ──
   const SECTOR_PILL: Record<string, { bg: string; color: string }> = {
@@ -683,7 +690,12 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
               <div>
                 <div style={{ fontSize: 10, color: '#8A8986', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3, fontFamily: 'var(--font-dm-sans)' }}>Eligible</div>
                 <div style={{ fontSize: 13, color: '#2C2C2A', fontFamily: 'var(--font-dm-sans)', display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
-                  <span>{structureLabels.length > 0 ? structureLabels.slice(0, 2).join(', ') : '—'}</span>
+                  <span>
+                    {structureLabels.length > 0 ? structureLabels.slice(0, 2).join(', ') : '—'}
+                    {structureLabels.length > 2 && (
+                      <span style={{ color: '#8A8986' }}> +{structureLabels.length - 2}</span>
+                    )}
+                  </span>
                   {qualifies && <span style={{ color: '#639922', fontSize: 11 }}>✓</span>}
                 </div>
               </div>

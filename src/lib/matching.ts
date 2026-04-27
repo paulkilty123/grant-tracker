@@ -1292,14 +1292,24 @@ export function computeMatchScore(
   }
 
   // ── Total ──────────────────────────────────────────────────────────────
-  // Reweighted: themes (35) + beneficiaries (20) dominate; location (15),
-  // eligibility (12), funder type (8), grant size (10 neutral) round out to 100.
-  // Raw dimension scores are scaled to their new maxes before summing.
-  const wLocation     = Math.round(locationScore     * 15 / 20)  // 20 → 15
-  const wThemes       = Math.round(themesScore       * 35 / 25)  // 25 → 35
-  const wBeneficiary  = Math.round(beneficiaryScore  * 20 / 10)  // 10 → 20
-  const wFunderType   = Math.round(funderTypeScore   *  8 / 15)  // 15 → 8
-  const wEligibility  = Math.round(eligibilityScore  * 12 / 15)  // 15 → 12
+  // Weights vary by funding type. Grants weight beneficiaries heavily (20pts)
+  // because charity grants typically pick on who you serve. In-kind, programme
+  // and investment funders pick on what your organisation does (themes) and
+  // its viability (eligibility) — they fund the org itself, not its end users.
+  // For those, beneficiary signal is mostly noise, so we drop it to 5 and
+  // route the freed 15 points to themes.
+  const isOrgCentredType = grant.fundingType === 'in_kind'
+                        || grant.fundingType === 'investment'
+                        || grant.fundingType === 'programme'
+
+  const themesMax       = isOrgCentredType ? 50 : 35
+  const beneficiaryMax  = isOrgCentredType ?  5 : 20
+
+  const wLocation     = Math.round(locationScore     * 15 / 20)
+  const wThemes       = Math.round(themesScore       * themesMax / 25)
+  const wBeneficiary  = Math.round(beneficiaryScore  * beneficiaryMax / 10)
+  const wFunderType   = Math.round(funderTypeScore   *  8 / 15)
+  const wEligibility  = Math.round(eligibilityScore  * 12 / 15)
 
   let score = Math.min(100,
     wLocation + wThemes + wBeneficiary + grantSizeScore + wFunderType + wEligibility
@@ -1445,12 +1455,12 @@ export function computeMatchScore(
     positiveReasons: positives,
     warnReasons:     warns,
     breakdown: {
-      location:      { score: wLocation,     max: 15, label: 'Location' },
-      themes:        { score: wThemes,       max: 35, label: 'Themes & work' },
-      beneficiaries: { score: wBeneficiary,  max: 20, label: 'Beneficiaries' },
-      grantSize:     { score: grantSizeScore, max: 10, label: 'Grant size' },
-      funderType:    { score: wFunderType,   max: 8,  label: 'Funder type' },
-      eligibility:   { score: wEligibility,  max: 12, label: 'Eligibility' },
+      location:      { score: wLocation,     max: 15,             label: 'Location' },
+      themes:        { score: wThemes,       max: themesMax,      label: 'Themes & work' },
+      beneficiaries: { score: wBeneficiary,  max: beneficiaryMax, label: 'Beneficiaries' },
+      grantSize:     { score: grantSizeScore, max: 10,            label: 'Grant size' },
+      funderType:    { score: wFunderType,   max: 8,              label: 'Funder type' },
+      eligibility:   { score: wEligibility,  max: 12,             label: 'Eligibility' },
     },
   }
 }
