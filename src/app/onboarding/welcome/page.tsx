@@ -57,7 +57,7 @@ export default function OnboardingWelcomePage() {
         maxWidth: 560,
         margin: '0 auto',
         width: '100%',
-        paddingTop: 80,
+        paddingTop: 146,
       }}>
         {/* Eyebrow */}
         <div style={{
