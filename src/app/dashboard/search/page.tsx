@@ -96,7 +96,7 @@ const STRUCTURE_LABELS: Record<string, string> = {
 const IMPACT_SECTOR_FILTERS: { id: ImpactSector; label: string }[] = [
   { id: 'sport',         label: 'Sport & Physical Activity' },
   { id: 'heritage',      label: 'Heritage & Culture' },
-  { id: 'social_economy',label: 'Social Economy & Co-ops' },
+  { id: 'social_economy',label: 'Co-ops & Community Ownership' },
   { id: 'creative',      label: 'Arts & Creative Industries' },
   { id: 'community',     label: 'Community Development' },
   { id: 'education',     label: 'Education & Skills' },

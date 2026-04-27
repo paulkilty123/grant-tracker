@@ -88,8 +88,8 @@ const IMPACT_SECTORS: { value: ImpactSector; label: string }[] = [
   { value: 'financial',         label: 'Financial Inclusion' },
   { value: 'food',              label: 'Food & Agriculture' },
   { value: 'international',     label: 'International & Fair Trade' },
-  { value: 'social_economy',    label: 'Social Economy & Co-ops' },
-  { value: 'social_innovation', label: 'Social Innovation & Systems Change' },
+  { value: 'social_economy',    label: 'Co-ops & Community Ownership' },
+  { value: 'social_innovation', label: 'Innovation & Systems Change' },
 ]
 
 const BENEFICIARY_GROUPS: { value: BeneficiaryGroup; label: string }[] = [
