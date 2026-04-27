@@ -1405,14 +1405,32 @@ function StepSectors({ impactSectors, nicheTags, toggleSector, makePrimarySector
       <p style={SUBTITLE_STYLE}>Pick your primary focus first. That&rsquo;s what we&rsquo;ll weight most in matching.</p>
 
       {/* Impact sectors */}
-      <div style={{ marginBottom: 10 }}>
+      <div style={{ marginBottom: 6, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' as const }}>
         <span style={{ fontSize: 13, fontWeight: 500, color: T.textPrimary, fontFamily: 'var(--font-space-grotesk)' }}>Your impact sector</span>
-        <span style={{ fontSize: 13, color: T.textTertiary, marginLeft: 6, fontFamily: 'var(--font-dm-sans)' }}>· pick 1 primary + up to 3 others</span>
-        {sectorMax && <span style={{ fontSize: 11, color: T.textTertiary, marginLeft: 8, fontFamily: 'var(--font-space-grotesk)' }}>Max reached</span>}
+        {sectorMax && <span style={{ fontSize: 11, color: T.textTertiary, fontFamily: 'var(--font-space-grotesk)', letterSpacing: '0.04em', textTransform: 'uppercase' as const }}>Max reached</span>}
       </div>
-      <p style={{ fontSize: 12.5, color: T.textTertiary, fontFamily: 'var(--font-dm-sans)', marginTop: 0, marginBottom: 12, lineHeight: 1.5 }}>
-        Not sure between two similar sectors? Pick the closest fit. You can always change it later.
-      </p>
+      <div style={{ marginBottom: 12, fontSize: 12.5, color: T.textSecondary, fontFamily: 'var(--font-dm-sans)', lineHeight: 1.55, display: 'flex', flexDirection: 'column' as const, gap: 4 }}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' as const }}>
+          Pick 1
+          <span aria-label="primary" style={{
+            display: 'inline-flex', alignItems: 'center', gap: 4,
+            background: T.greenDeep, color: '#fff',
+            padding: '2px 8px', borderRadius: 99,
+            fontSize: 11, fontWeight: 500,
+            fontFamily: 'var(--font-space-grotesk)',
+            lineHeight: 1.2,
+          }}>
+            <span style={{ color: T.lime, fontSize: 10 }}>★</span>
+            primary
+          </span>
+          plus up to 3 others. Tap a
+          <span style={{ color: T.greenMid, fontSize: 13, lineHeight: 1 }}>☆</span>
+          on a chip to change which is primary.
+        </span>
+        <span style={{ color: T.textTertiary, fontSize: 12 }}>
+          Not sure between two similar sectors? Pick the closest fit. You can always change it later.
+        </span>
+      </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 12 }}>
         {IMPACT_SECTORS.map(opt => {
           const cs = chipStateFor(impactSectors, opt.value)
