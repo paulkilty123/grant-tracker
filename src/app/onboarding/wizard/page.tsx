@@ -1546,12 +1546,33 @@ function StepBeneficiaries({ beneficiaryGroups, toggleBeneficiary, makePrimaryBe
     <>
       <BackLink onClick={onBack} />
       <h1 style={H1_STYLE}>Who do you serve?</h1>
-      <p style={SUBTITLE_STYLE}>Pick your primary beneficiary group first — we&rsquo;ll weight it most in matching.</p>
+      <p style={SUBTITLE_STYLE}>Pick your primary beneficiary group first. That&rsquo;s what we&rsquo;ll weight most in matching.</p>
 
-      <div style={{ marginBottom: 10 }}>
+      <div style={{ marginBottom: 6, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' as const }}>
         <span style={{ fontSize: 13, fontWeight: 500, color: T.textPrimary, fontFamily: 'var(--font-space-grotesk)' }}>Who you serve</span>
-        <span style={{ fontSize: 13, color: T.textTertiary, marginLeft: 6, fontFamily: 'var(--font-dm-sans)' }}>· pick 1 primary + up to 3 others</span>
-        {beneficiaryMax && <span style={{ fontSize: 11, color: T.textTertiary, marginLeft: 8, fontFamily: 'var(--font-space-grotesk)' }}>Max reached</span>}
+        {beneficiaryMax && <span style={{ fontSize: 11, color: T.textTertiary, fontFamily: 'var(--font-space-grotesk)', letterSpacing: '0.04em', textTransform: 'uppercase' as const }}>Max reached</span>}
+      </div>
+      <div style={{ marginBottom: 12, fontSize: 12.5, color: T.textSecondary, fontFamily: 'var(--font-dm-sans)', lineHeight: 1.55, display: 'flex', flexDirection: 'column' as const, gap: 4 }}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' as const }}>
+          Pick 1
+          <span aria-label="primary" style={{
+            display: 'inline-flex', alignItems: 'center', gap: 4,
+            background: T.greenDeep, color: '#fff',
+            padding: '2px 8px', borderRadius: 99,
+            fontSize: 11, fontWeight: 500,
+            fontFamily: 'var(--font-space-grotesk)',
+            lineHeight: 1.2,
+          }}>
+            <span style={{ color: T.lime, fontSize: 10 }}>★</span>
+            primary
+          </span>
+          plus up to 3 others. Tap a
+          <span style={{ color: T.greenMid, fontSize: 13, lineHeight: 1 }}>☆</span>
+          on a chip to change which is primary.
+        </span>
+        <span style={{ color: T.textTertiary, fontSize: 12 }}>
+          Pick the closest fit. You can always add or change groups later.
+        </span>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 16 }}>
         {BENEFICIARY_GROUPS.map(opt => {
