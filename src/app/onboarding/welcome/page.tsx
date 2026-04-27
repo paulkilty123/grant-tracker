@@ -129,7 +129,7 @@ export default function OnboardingWelcomePage() {
           href="/dashboard/profile"
           style={{ fontFamily: UI, fontSize: 13, color: '#8A8986', padding: '12px 16px', display: 'inline-block', textDecoration: 'none' }}
         >
-          Skip setup for now
+          Set up later
         </Link>
       </div>
     </div>

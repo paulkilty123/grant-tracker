@@ -501,7 +501,7 @@ function CardShell({
               onMouseEnter={e => (e.currentTarget.style.color = T.textSecondary)}
               onMouseLeave={e => (e.currentTarget.style.color = T.textTertiary)}
             >
-              Skip setup for now
+              Set up later
             </Link>
           </div>
         )}
@@ -876,7 +876,7 @@ export default function OnboardingWizardPage() {
             onMouseEnter={e => (e.currentTarget.style.color = T.textSecondary)}
             onMouseLeave={e => (e.currentTarget.style.color = T.textTertiary)}
           >
-            Skip setup for now
+            Set up later
           </Link>
         </div>
       </div>
