@@ -486,8 +486,8 @@ function CompletionMeter({ org, onJumpToCard }: { org: Organisation; onJumpToCar
         <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 24, color: T.textPrimary, letterSpacing: '-0.01em' }}>{pct}%</span>
         <span style={{ fontFamily: BODY, fontSize: 14, color: T.textSecondary }}>
           {missing.length === 0
-            ? 'Your profile is complete — matches are fully optimised'
-            : 'Click a missing field to complete it'}
+            ? 'Your profile is complete. Matches are fully optimised.'
+            : 'Click a missing field to complete it.'}
         </span>
       </div>
       <div style={{ height: 6, background: 'rgba(23,52,4,0.06)', borderRadius: 3, overflow: 'hidden', marginBottom: missing.length > 0 ? 14 : 0 }}>

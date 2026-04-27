@@ -624,7 +624,7 @@ export default function AccountPage() {
           <div style={{ flex: 1 }}>
             <div style={{ fontFamily: UI, fontWeight: 600, fontSize: 15, color: T.textPrimary, marginBottom: 4 }}>You're in the founding cohort</div>
             <div style={{ fontFamily: BODY, fontSize: 13.5, color: T.textSecondary, lineHeight: 1.55 }}>
-              Grant Tracker is free for you during beta. Billing starts after launch at your <strong style={{ color: T.textPrimary, fontWeight: 600 }}>founding rate</strong> — a first-year discount on whichever plan you choose. We'll email you ahead of any changes, so there are no surprises.
+              Grant Tracker is free for you for six months. After that, cohort members lock in a permanent <strong style={{ color: T.textPrimary, fontWeight: 600 }}>founding rate</strong>, meaningfully below the standard price, for as long as you stay active. We&apos;ll email you ahead of any changes, so there are no surprises.
             </div>
           </div>
         </div>
