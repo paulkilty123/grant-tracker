@@ -40,8 +40,24 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://granttracker.co.uk'),
   title: 'Grant Tracker — UK Funding for CICs, Social Enterprises, Charities & Impact Founders',
   description: 'Find grants, accelerators, social investment, and diversity funding matched to your legal structure and mission. Built for CICs, social enterprises, charities, co-operatives, and impact-driven founders across the UK.',
+  openGraph: {
+    type: 'website',
+    url: 'https://granttracker.co.uk',
+    siteName: 'Grant Tracker',
+    title: 'Grant Tracker — UK Funding, Matched For You',
+    description: 'Discover grants, programmes, investment and in-kind support, all matched to your setup and impact priorities. Built for UK charities, CICs, social enterprises and co-operatives.',
+    images: [{ url: '/og-image-base.png', width: 1200, height: 630, alt: 'Grant Tracker — UK funding matched for you' }],
+    locale: 'en_GB',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Grant Tracker — UK Funding, Matched For You',
+    description: 'Discover grants, programmes, investment and in-kind support, all matched to your setup and impact priorities.',
+    images: ['/og-image-base.png'],
+  },
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
