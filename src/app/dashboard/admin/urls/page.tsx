@@ -554,17 +554,15 @@ export default function UrlAdminPage() {
     const edits = reviewEdits[grant.id] ?? {}
     if (Object.keys(edits).length > 0) {
       const fields: Record<string, unknown> = {}
-      if (edits.funder_type  !== undefined) fields.funder_type  = edits.funder_type
-      if (edits.funding_type !== undefined) fields.funding_type = edits.funding_type
-      if (edits.amount_min   !== undefined) fields.amount_min   = edits.amount_min ? parseInt(String(edits.amount_min).replace(/[^0-9]/g,'')) : null
-      if (edits.amount_max   !== undefined) fields.amount_max   = edits.amount_max ? parseInt(String(edits.amount_max).replace(/[^0-9]/g,'')) : null
-      if (edits.deadline     !== undefined) fields.deadline     = edits.deadline || null
-      if (edits.is_rolling   !== undefined) fields.is_rolling   = edits.is_rolling
-      if (edits.location_tag !== undefined) fields.location_tag = edits.location_tag || null
-      await createClient().from('scraped_grants').update(fields).eq('id', grant.id)
-      if (edits.is_invite_only !== undefined) fields.is_invite_only = edits.is_invite_only
-      if (edits.is_rolling !== undefined) fields.is_rolling = edits.is_rolling
-      if (edits.description !== undefined) fields.description = edits.description || null
+      if (edits.funder_type    !== undefined) fields.funder_type     = edits.funder_type
+      if (edits.funding_type   !== undefined) fields.funding_type    = edits.funding_type
+      if (edits.amount_min     !== undefined) fields.amount_min      = edits.amount_min ? parseInt(String(edits.amount_min).replace(/[^0-9]/g,'')) : null
+      if (edits.amount_max     !== undefined) fields.amount_max      = edits.amount_max ? parseInt(String(edits.amount_max).replace(/[^0-9]/g,'')) : null
+      if (edits.deadline       !== undefined) fields.deadline        = edits.deadline || null
+      if (edits.is_rolling     !== undefined) fields.is_rolling      = edits.is_rolling
+      if (edits.location_tag   !== undefined) fields.location_tag    = edits.location_tag || null
+      if (edits.is_invite_only !== undefined) fields.is_invite_only  = edits.is_invite_only
+      if (edits.description    !== undefined) fields.description     = edits.description || null
       if (edits.eligible_structures !== undefined) {
         try {
           let structs: string[] = JSON.parse(String(edits.eligible_structures))
@@ -576,8 +574,13 @@ export default function UrlAdminPage() {
           fields.eligible_structures = structs
         } catch { /* ignore */ }
       }
-      if (edits.impact_sectors !== undefined) { try { fields.impact_sectors = JSON.parse(String(edits.impact_sectors)) } catch { /* ignore */ } }
+      if (edits.impact_sectors       !== undefined) { try { fields.impact_sectors       = JSON.parse(String(edits.impact_sectors))       } catch { /* ignore */ } }
       if (edits.target_beneficiaries !== undefined) { try { fields.target_beneficiaries = JSON.parse(String(edits.target_beneficiaries)) } catch { /* ignore */ } }
+      if (Object.keys(fields).length > 0) {
+        await createClient().from('scraped_grants').update(fields).eq('id', grant.id)
+        setGrants(prev => prev.map(g => g.id === grant.id ? { ...g, ...fields } as Grant : g))
+        setReviewEdits(s => { const n = { ...s }; delete n[grant.id]; return n })
+      }
     }
     // Activate
     await approveGrant(grant.id)
@@ -1909,7 +1912,15 @@ export default function UrlAdminPage() {
           <Pencil className="h-3 w-3" />
         </button>
         <button
-          onClick={() => setExpandedReviewId(id => id === grant.id ? null : grant.id)}
+          onClick={() => {
+            if (expandedReviewId === grant.id) {
+              // Closing while open: persist any pending edits, otherwise just collapse.
+              if (Object.keys(reviewEdits[grant.id] ?? {}).length > 0) saveGrantEdits(grant)
+              else setExpandedReviewId(null)
+            } else {
+              setExpandedReviewId(grant.id)
+            }
+          }}
           title="Review & edit fields (location, amounts, eligibility…)"
           className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${expandedReviewId === grant.id ? 'bg-forest text-white' : 'bg-forest/10 text-forest hover:bg-forest hover:text-white'}`}
         >
@@ -2948,7 +2959,14 @@ export default function UrlAdminPage() {
                             className="rounded-full border border-warm p-1.5 text-mid hover:border-forest hover:text-forest transition-colors">
                             <Pencil className="h-3 w-3" />
                           </button>
-                          <button onClick={() => setExpandedReviewId(id => id === grant.id ? null : grant.id)}
+                          <button onClick={() => {
+                            if (expandedReviewId === grant.id) {
+                              if (Object.keys(reviewEdits[grant.id] ?? {}).length > 0) saveGrantEdits(grant)
+                              else setExpandedReviewId(null)
+                            } else {
+                              setExpandedReviewId(grant.id)
+                            }
+                          }}
                             className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${expandedReviewId === grant.id ? 'bg-forest text-white' : 'bg-forest/10 text-forest hover:bg-forest hover:text-white'}`}>
                             {expandedReviewId === grant.id ? 'Close' : 'Review'}
                           </button>
