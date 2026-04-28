@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { Plus_Jakarta_Sans, DM_Serif_Display, Space_Grotesk, Fraunces } from 'next/font/google'
-import Script from 'next/script'
+import PlausibleProvider from 'next-plausible'
 import './globals.css'
 
 const dmSans = Plus_Jakarta_Sans({
@@ -52,14 +52,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${dmSans.variable} ${dmSerif.variable} ${spaceGrotesk.variable} ${fraunces.variable}`}>
       <head>
-        <Script
-          src="https://plausible.io/js/pa-hsmp_h1qvBaZ_YSXf31MJ.js"
-          strategy="afterInteractive"
-          async
-        />
-        <Script id="plausible-init" strategy="afterInteractive">
-          {`window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};plausible.init()`}
-        </Script>
+        <PlausibleProvider src="https://plausible.io/js/pa-hsmp_h1qvBaZ_YSXf31MJ.js" />
       </head>
       <body>{children}</body>
     </html>
