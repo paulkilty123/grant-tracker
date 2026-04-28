@@ -1747,8 +1747,13 @@ export default function UrlAdminPage() {
     // together so an "Exclusions: CICs cannot apply" line still ticked CIC
     // because the matcher saw "CIC" in the blob.
     const brief = grant.funder_brief as Record<string, string | null> | null
-    const inclusionText = [brief?.what_they_fund, brief?.who_can_apply, brief?.priorities]
-      .filter(Boolean).join(' ').toLowerCase()
+    // Include every brief section likely to mention applicant types — not just
+    // what_they_fund/who_can_apply/priorities. NFP / structure cues often
+    // surface in how_to_apply, strong_application or funder_tips too.
+    const inclusionText = [
+      brief?.what_they_fund, brief?.who_can_apply, brief?.priorities,
+      brief?.how_to_apply, brief?.strong_application, brief?.funder_tips,
+    ].filter(Boolean).join(' ').toLowerCase()
     const exclusionText = (brief?.exclusions ?? '').toLowerCase()
     const fallbackText = [
       (grant as Grant & { description?: string }).description ?? '',
@@ -1769,11 +1774,14 @@ export default function UrlAdminPage() {
     if (/\bcios?\b|charitable\s+incorporated\s+organisation/.test(text)) {
       structs.add('cio'); structs.add('registered_charity')
     }
-    // Not-for-profit / non-profit phrasing — opens the charity-shaped + SE set.
-    if (/\bnot[-\s]?for[-\s]?profit\b|\bnon[-\s]?profit\b|\bnonprofit\b/.test(text)) {
+    // Not-for-profit / non-profit phrasing — opens the charity-shaped + SE
+    // set including ltd_guarantee (the most common NFP company structure).
+    // Trailing s? handles plurals like "non-profits" / "not-for-profits".
+    if (/\bnot[-\s]?for[-\s]?profits?\b|\bnon[-\s]?profits?\b|\bnonprofits?\b/.test(text)) {
       structs.add('registered_charity'); structs.add('cio')
       structs.add('cic_guarantee'); structs.add('cic_shares')
       structs.add('ltd_guarantee'); structs.add('cooperative')
+      structs.add('unincorporated')
     }
     // VCSE umbrella term (voluntary, community, social enterprise).
     if (/\bvcse\b|voluntary,?\s+community(?:\s+and)?\s+social\s+enterprise/.test(text)) {
