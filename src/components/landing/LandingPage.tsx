@@ -410,21 +410,21 @@ export default function LandingPage() {
 
           {/* Right: UI card */}
           <motion.div {...fadeUp(0.2)} className="relative lg:pl-8 flex items-start pt-4">
-            <div className="bg-white rounded-3xl p-8 w-full" style={{ boxShadow: '0 40px 100px -20px rgba(0,0,0,0.08)' }}>
+            <div className="bg-white rounded-3xl p-5 sm:p-8 w-full min-w-0" style={{ boxShadow: '0 40px 100px -20px rgba(0,0,0,0.08)' }}>
               {/* Card header */}
-              <div className="flex justify-between items-start mb-8">
-                <div>
+              <div className="flex flex-col gap-3 mb-6 sm:flex-row sm:justify-between sm:items-start sm:mb-8 sm:gap-4">
+                <div className="min-w-0">
                   <h3 className="text-2xl font-bold text-[#2C2C2A] tracking-tight" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>Digital Inclusion Fund</h3>
                   <p className="text-[#5F5E5A] font-medium mt-0.5 text-sm">Active Grant Application</p>
                 </div>
-                <div className="bg-[#C0DD97] px-4 py-1.5 rounded-full flex items-center gap-1.5 flex-shrink-0">
+                <div className="bg-[#C0DD97] px-4 py-1.5 rounded-full flex items-center gap-1.5 flex-shrink-0 self-start">
                   <span className="w-2 h-2 rounded-full bg-[#8ECB3C] animate-pulse" />
                   <span className="text-[#2C2C2A] font-bold text-xs tracking-tight">Pipeline: Draft</span>
                 </div>
               </div>
               {/* Stats grid */}
-              <div className="grid grid-cols-2 gap-4 mb-5">
-                <div className="bg-[#F1F0EA] rounded-2xl p-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+                <div className="bg-[#F1F0EA] rounded-2xl p-4 sm:p-5 min-w-0">
                   <p className="text-[#5F5E5A] text-[11px] font-bold uppercase tracking-wider mb-1">Matching Score</p>
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-5xl font-bold text-[#8ECB3C]" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>94%</span>
@@ -437,7 +437,7 @@ export default function LandingPage() {
                   </div>
                   <p className="text-[11px] text-[#5F5E5A] mt-3 font-semibold italic">Based on Youth Fund criteria</p>
                 </div>
-                <div className="bg-[#E6F1FB] rounded-2xl p-5">
+                <div className="bg-[#E6F1FB] rounded-2xl p-4 sm:p-5 min-w-0">
                   <p className="text-[#0C447C] text-[11px] font-bold uppercase tracking-wider mb-1">Requested Funding</p>
                   <div className="flex items-baseline">
                     <span className="text-4xl font-bold text-[#2C2C2A]" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>£25,000</span>
@@ -455,17 +455,17 @@ export default function LandingPage() {
                   { Icon: TrendingUp, label: 'Social Investment', sub: 'Sustainable growth model', iconBg: 'rgba(206,188,139,0.4)', iconColor: '#854F0B', tag: 'High Priority', tagStyle: { background: '#FAC775', color: '#412402' } },
                   { Icon: Rocket, label: 'Incubation Programme', sub: 'Capacity building', iconBg: 'rgba(190,242,100,0.4)', iconColor: '#639922', tag: 'Phase 1', tagStyle: { color: '#8ECB3C', fontWeight: '800', letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: '11px' } },
                 ].map((row) => (
-                  <div key={row.label} className="flex items-center justify-between p-4 bg-[#F1F0EA] rounded-xl">
-                    <div className="flex items-center gap-3">
+                  <div key={row.label} className="flex items-center justify-between gap-3 p-4 bg-[#F1F0EA] rounded-xl">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
                       <div className="rounded-full flex items-center justify-center w-12 h-12 flex-shrink-0" style={{ background: row.iconBg }}>
                         <row.Icon className="w-5 h-5" style={{ color: row.iconColor }} />
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <p className="text-sm font-bold text-[#2C2C2A]">{row.label}</p>
                         <p className="text-xs text-[#5F5E5A]">{row.sub}</p>
                       </div>
                     </div>
-                    <span className="px-3 py-1 rounded-lg text-[10px] font-extrabold" style={row.tagStyle}>{row.tag}</span>
+                    <span className="px-3 py-1 rounded-lg text-[10px] font-extrabold whitespace-nowrap flex-shrink-0" style={row.tagStyle}>{row.tag}</span>
                   </div>
                 ))}
               </div>
