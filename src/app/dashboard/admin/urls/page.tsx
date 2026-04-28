@@ -1802,10 +1802,12 @@ export default function UrlAdminPage() {
     if (/\bcics?\b|community\s+interest\s+compan/.test(text)) {
       structs.add('cic_guarantee'); structs.add('cic_shares')
     }
-    // Social enterprises — handle singular and plural
+    // Social enterprises — broad catch-all for all org structures apart from
+    // charity / CIO. Ticks every CIC + Ltd + co-op + unincorporated variant.
     if (/\bsocial\s+enterprise(s)?\b/.test(text)) {
       structs.add('cic_guarantee'); structs.add('cic_shares')
-      structs.add('ltd_guarantee'); structs.add('ltd_shares'); structs.add('cooperative')
+      structs.add('ltd_guarantee'); structs.add('ltd_shares')
+      structs.add('cooperative'); structs.add('unincorporated')
     }
     // Co-operatives
     if (/co.operative|community\s+benefit\s+society|\bcbs\b/.test(text)) {
