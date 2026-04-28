@@ -2227,14 +2227,13 @@ export default function SearchPage() {
       )}
 
       {/* ── Subtitle row: text left, tabs right ── */}
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex flex-col gap-3 mb-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         {/* Left: subtitle (conditional) */}
-        <div className="flex items-center gap-2 text-sm text-mid">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-mid min-w-0">
           {activeView === 'browse' && org && (
             <>
               <span className="w-2 h-2 flex-shrink-0 rounded-full" style={{ backgroundColor: '#8ECB3C' }} />
-              Matched for <strong className="text-charcoal">{org.name ?? 'your organisation'}</strong>
-              {org.primary_location && <span className="text-mid">· {org.primary_location}</span>}
+              <span>Matched for <strong className="text-charcoal">{org.name ?? 'your organisation'}</strong>{org.primary_location && <span className="text-mid"> · {org.primary_location}</span>}</span>
             </>
           )}
           {activeView === 'browse' && !org && (
