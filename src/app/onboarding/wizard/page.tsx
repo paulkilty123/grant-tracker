@@ -679,6 +679,10 @@ export default function OnboardingWizardPage() {
     if (value !== undefined) {
       const key = field as keyof WizardState
       if (key in EMPTY_STATE) setState(prev => ({ ...prev, [key]: value }))
+      // StepReview renders field values from `extracted`, so mirror the edit
+      // there too — otherwise the row visually reverts to the auto-fill value
+      // even though wizard state is updated correctly.
+      setExtracted(prev => prev ? ({ ...prev, [field]: value } as ExtractedData) : prev)
     }
     setConfirmed(prev => { const n = new Set(prev); n.add(field); return n })
     setEditingField(null)
