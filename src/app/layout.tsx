@@ -49,14 +49,14 @@ export const metadata: Metadata = {
     siteName: 'Grant Tracker',
     title: 'Grant Tracker — UK Funding, Matched For You',
     description: 'Discover grants, programmes, investment and in-kind support, all matched to your setup and impact priorities. Built for UK charities, CICs, social enterprises and co-operatives.',
-    images: [{ url: '/og-image-base.png', width: 1200, height: 630, alt: 'Grant Tracker — UK funding matched for you' }],
     locale: 'en_GB',
+    // og:image is supplied by src/app/opengraph-image.tsx (rendered dynamically).
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Grant Tracker — UK Funding, Matched For You',
     description: 'Discover grants, programmes, investment and in-kind support, all matched to your setup and impact priorities.',
-    images: ['/og-image-base.png'],
+    // twitter:image is supplied by src/app/opengraph-image.tsx (rendered dynamically).
   },
   icons: {
     icon: [
