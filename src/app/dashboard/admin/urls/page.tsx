@@ -1,6 +1,6 @@
 'use client'
 import React from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -169,7 +169,7 @@ function SavedForLaterTab() {
             const ft = grant.funding_type
             const ftStyle = ft ? (FT_STYLE[ft] ?? { bg: '#f3f4f6', color: '#5F5E5A', label: ft }) : null
             return (
-              <tr key={grant.id} className="hover:bg-cream/50 transition-colors">
+              <tr key={grant.id} id={`grant-row-${grant.id}`} className="hover:bg-cream/50 transition-colors">
                 <td className="px-5 py-3 max-w-[200px]">
                   <p className="font-medium text-charcoal leading-snug line-clamp-2">{grant.title}</p>
                   <p className="text-xs text-mid mt-0.5">{grant.funder}</p>
@@ -216,7 +216,9 @@ export default function UrlAdminPage() {
   const [authorised, setAuthorised] = useState<boolean | null>(null)
   const [stats, setStats]           = useState<Stats | null>(null)
   const [grants, setGrants]         = useState<Grant[]>([])
-  const [filter, setFilter]         = useState<Filter>('dead')
+  const searchParams                = useSearchParams()
+  const focusId                     = searchParams.get('focus')
+  const [filter, setFilter]         = useState<Filter>(focusId ? 'category' : 'dead')
   const [running, setRunning]       = useState(false)
   const [runResult, setRunResult]   = useState<{ ok: number; dead: number; deadSeedGrants: DeadSeedGrant[] } | null>(null)
   const [validationProgress, setValidationProgress] = useState<{ checked: number; total: number; ok: number; dead: number } | null>(null)
@@ -660,6 +662,20 @@ export default function UrlAdminPage() {
 
   // ── Clear selection when switching tabs ──────────────────────────────────────
   useEffect(() => { setSelectedIds(new Set()) }, [filter])
+
+  // ── Deep-link: ?focus=<id> from the admin Review Sweep panel ────────────────
+  // Once category data has loaded, expand the targeted grant and scroll it
+  // into view so the user lands directly on the row they want to re-review.
+  useEffect(() => {
+    if (!focusId) return
+    if (categoryGrants.length === 0) return
+    setExpandedReviewId(focusId)
+    const t = setTimeout(() => {
+      const el = document.getElementById(`grant-row-${focusId}`)
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 80)
+    return () => clearTimeout(t)
+  }, [focusId, categoryGrants.length])
 
   // ── Filtered seed grants (client-side, seed tab) ─────────────────────────────
   const filteredSeedGrants = useMemo(() => {
@@ -2813,7 +2829,7 @@ export default function UrlAdminPage() {
                 </thead>
                 <tbody className="divide-y divide-warm/60">
                   {filteredSeedGrants.map(grant => (
-                    <tr key={grant.id} className="hover:bg-cream/50 transition-colors">
+                    <tr key={grant.id} id={`grant-row-${grant.id}`} className="hover:bg-cream/50 transition-colors">
                       <td className="px-5 py-3 max-w-[220px]">
                         <p className="font-medium text-charcoal leading-snug line-clamp-2">{grant.title}</p>
                         <p className="text-xs text-mid mt-0.5">{grant.funder}</p>
@@ -3022,7 +3038,7 @@ export default function UrlAdminPage() {
               </thead>
               <tbody className="divide-y divide-warm/60">
                 {suspiciousGrants.map(grant => (
-                  <tr key={grant.id} className="group hover:bg-cream/40 transition-colors">
+                  <tr key={grant.id} id={`grant-row-${grant.id}`} className="group hover:bg-cream/40 transition-colors">
                     <td className="px-5 py-3">
                       <input
                         type="checkbox"
