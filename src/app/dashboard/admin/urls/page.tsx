@@ -1485,6 +1485,8 @@ export default function UrlAdminPage() {
         setNewGrants(prev => prev.map(g => g.id === grant.id ? { ...g, funder_brief: brief } : g))
         setReviewGrants(prev => prev.map(g => g.id === grant.id ? { ...g, funder_brief: brief } : g))
         setSuspiciousGrants(prev => prev.map(g => g.id === grant.id ? { ...g, funder_brief: brief } : g))
+        setRecentGrants(prev => prev.map(patch))
+        setCategoryGrants(prev => prev.map(g => g.id === grant.id ? { ...g, funder_brief: brief } : g))
       }
     } catch { /* silent — network or timeout */ } finally {
       clearTimeout(clientTimeout)
@@ -1835,7 +1837,11 @@ export default function UrlAdminPage() {
       clearTimeout(clientTimeout)
       const json = await res.json()
       if (res.ok && json.brief) {
-        setReviewGrants(prev => prev.map(g => g.id === grant.id ? { ...g, funder_brief: json.brief } : g))
+        const patch = (g: Grant) => g.id === grant.id ? { ...g, funder_brief: json.brief } : g
+        setReviewGrants(prev => prev.map(patch))
+        setGrants(prev => prev.map(patch))
+        setRecentGrants(prev => prev.map(patch))
+        setCategoryGrants(prev => prev.map(g => g.id === grant.id ? { ...g, funder_brief: json.brief } : g))
       } else {
         setReviewEnrichError(e => ({ ...e, [grant.id]: json.error ?? `Error ${res.status}` }))
       }
