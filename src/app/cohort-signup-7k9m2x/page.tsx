@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { usePlausible } from 'next-plausible'
 import { createClient } from '@/lib/supabase/client'
-import { createOrganisation } from '@/lib/organisations'
 
 const UI = "var(--font-space-grotesk), Space Grotesk, sans-serif"
 const BODY = "var(--font-dm-sans), Plus Jakarta Sans, sans-serif"
@@ -23,7 +22,7 @@ export default function CohortSignupPage() {
   const router = useRouter()
   const plausible = usePlausible()
   const [firstName, setFirstName] = useState('')
-  const [orgName, setOrgName]     = useState('')
+  const [lastName, setLastName]   = useState('')
   const [email, setEmail]         = useState('')
   const [password, setPassword]   = useState('')
   const [confirm, setConfirm]     = useState('')
@@ -37,7 +36,7 @@ export default function CohortSignupPage() {
     setError(null)
 
     if (!firstName.trim()) return setError('Please enter your first name.')
-    if (!orgName.trim())   return setError('Please enter your organisation name.')
+    if (!lastName.trim())  return setError('Please enter your last name.')
     if (!EMAIL_RE.test(email.trim())) return setError('Please enter a valid email address.')
     if (password.length < 8) return setError('Password must be at least 8 characters.')
     if (password !== confirm) return setError('Passwords do not match.')
@@ -45,11 +44,13 @@ export default function CohortSignupPage() {
     setLoading(true)
 
     const supabase = createClient()
+    const fn = firstName.trim()
+    const ln = lastName.trim()
     const { data, error: signUpError } = await supabase.auth.signUp({
       email: email.trim(),
       password,
       options: {
-        data: { full_name: firstName.trim(), org_name: orgName.trim() },
+        data: { first_name: fn, last_name: ln, full_name: `${fn} ${ln}` },
         emailRedirectTo: `${window.location.origin}/auth/callback?next=/onboarding/welcome`,
       },
     })
@@ -69,55 +70,14 @@ export default function CohortSignupPage() {
     plausible('signup_completed')
 
     if (!data.session) {
-      // Email confirmation required: org_name is stored in user metadata so the
-      // wizard can prefill it after the user confirms.
+      // Email confirmation required: the wizard collects org name and the rest
+      // of the profile fresh after the user confirms.
       setCheckEmail(true)
       setLoading(false)
       return
     }
 
-    // Logged in immediately. Create the org row and send them to onboarding.
-    try {
-      await createOrganisation({
-        name: orgName.trim(),
-        owner_id: data.user!.id,
-        org_type: 'other',
-        charity_number: null,
-        cic_number: null,
-        legal_structure: null,
-        social_mission_declared: false,
-        articles_restrict_profit: false,
-        also_individual_practitioner: false,
-        impact_sectors: [],
-        niche_tags: [],
-        has_asset_lock: null,
-        years_trading: null,
-        org_stage: null,
-        annual_income_band: null,
-        primary_location: null,
-        areas_of_work: [],
-        beneficiaries: [],
-        beneficiary_groups: [],
-        themes: [],
-        mission: null,
-        min_grant_target: null,
-        max_grant_target: null,
-        funder_type_preferences: [],
-        funding_type_preferences: [],
-        funding_subtype_preferences: [],
-        people_per_year: null,
-        volunteers: null,
-        years_operating: null,
-        projects_running: null,
-        key_outcomes: [],
-        geographic_reach: null,
-        website_url: null,
-      })
-    } catch (e) {
-      // Org creation is non-fatal: the onboarding wizard will create one if missing.
-      console.warn('Org creation failed at cohort signup', e)
-    }
-
+    // Logged in immediately. Org row gets created by the wizard on first save.
     router.push('/onboarding/welcome')
     router.refresh()
   }
@@ -161,14 +121,15 @@ export default function CohortSignupPage() {
           </div>
         )}
 
-        <div>
-          <label style={{ display: 'block', fontFamily: UI, fontWeight: 500, fontSize: 13, color: '#2C2C2A', marginBottom: 6 }}>First name</label>
-          <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)} className="form-input" placeholder="Jane" autoComplete="given-name" required />
-        </div>
-
-        <div>
-          <label style={{ display: 'block', fontFamily: UI, fontWeight: 500, fontSize: 13, color: '#2C2C2A', marginBottom: 6 }}>Organisation name</label>
-          <input type="text" value={orgName} onChange={e => setOrgName(e.target.value)} className="form-input" placeholder="e.g. East London Arts Trust" autoComplete="organization" required />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label style={{ display: 'block', fontFamily: UI, fontWeight: 500, fontSize: 13, color: '#2C2C2A', marginBottom: 6 }}>First name</label>
+            <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)} className="form-input" placeholder="Jane" autoComplete="given-name" required />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontFamily: UI, fontWeight: 500, fontSize: 13, color: '#2C2C2A', marginBottom: 6 }}>Last name</label>
+            <input type="text" value={lastName} onChange={e => setLastName(e.target.value)} className="form-input" placeholder="Doe" autoComplete="family-name" required />
+          </div>
         </div>
 
         <div>
