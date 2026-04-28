@@ -418,7 +418,7 @@ export default function LandingPage() {
               <div className="flex flex-col gap-3 mb-6 sm:flex-row sm:justify-between sm:items-start sm:mb-8 sm:gap-4">
                 <div className="min-w-0">
                   <h3 className="text-2xl font-bold text-[#2C2C2A] tracking-tight" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>Digital Inclusion Fund</h3>
-                  <p className="text-[#5F5E5A] font-medium mt-0.5 text-sm">Active Grant Application</p>
+                  <p className="text-[#5F5E5A] font-medium mt-0.5 text-sm">Match summary</p>
                 </div>
                 <div className="bg-[#C0DD97] px-4 py-1.5 rounded-full flex items-center gap-1.5 flex-shrink-0 self-start">
                   <span className="w-2 h-2 rounded-full bg-[#8ECB3C] animate-pulse" />
@@ -428,7 +428,7 @@ export default function LandingPage() {
               {/* Stats grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
                 <div className="bg-[#F1F0EA] rounded-2xl p-4 sm:p-5 min-w-0">
-                  <p className="text-[#5F5E5A] text-[11px] font-bold uppercase tracking-wider mb-1">Matching Score</p>
+                  <p className="text-[#5F5E5A] text-[11px] mb-1">Eligibility match</p>
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-5xl font-bold text-[#8ECB3C]" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>94%</span>
                     <span className="text-[#5F5E5A] font-bold text-sm">Match</span>
@@ -438,7 +438,7 @@ export default function LandingPage() {
                       <div className="h-full bg-[#8ECB3C] rounded-full" style={{ width: '94%' }} />
                     </div>
                   </div>
-                  <p className="text-[11px] text-[#5F5E5A] mt-3 font-semibold italic">Based on Youth Fund criteria</p>
+                  <p className="text-[11px] text-[#5F5E5A] mt-3 font-semibold italic">Across 12 eligibility checks</p>
                 </div>
                 <div className="bg-[#E6F1FB] rounded-2xl p-4 sm:p-5 min-w-0">
                   <p className="text-[#0C447C] text-[11px] font-bold uppercase tracking-wider mb-1">Requested Funding</p>
@@ -447,16 +447,16 @@ export default function LandingPage() {
                   </div>
                   <div className="mt-6 flex items-center gap-1.5">
                     <BadgeCheck className="w-4 h-4 text-[#0C447C]" />
-                    <span className="text-[11px] font-bold text-[#0C447C] uppercase tracking-tight">Verified UK Funder</span>
+                    <span className="text-[11px] font-bold text-[#0C447C] tracking-tight">Verified UK funder</span>
                   </div>
                 </div>
               </div>
               {/* List rows */}
               <div className="space-y-3">
                 {[
-                  { Icon: Users, label: 'Community Reach', sub: 'Social impact focus', iconBg: '#E6F1FB', iconColor: '#0C447C', tag: 'High Priority', tagStyle: { background: '#FAC775', color: '#412402' } },
-                  { Icon: TrendingUp, label: 'Social Investment', sub: 'Sustainable growth model', iconBg: 'rgba(206,188,139,0.4)', iconColor: '#854F0B', tag: 'High Priority', tagStyle: { background: '#FAC775', color: '#412402' } },
-                  { Icon: Rocket, label: 'Incubation Programme', sub: 'Capacity building', iconBg: 'rgba(190,242,100,0.4)', iconColor: '#639922', tag: 'Phase 1', tagStyle: { color: '#8ECB3C', fontWeight: '800', letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: '11px' } },
+                  { Icon: Users, label: 'Eligible org type', sub: 'CIC, charity or social enterprise', iconBg: '#E6F1FB', iconColor: '#0C447C' },
+                  { Icon: TrendingUp, label: 'Geographic focus', sub: 'UK-based', iconBg: 'rgba(206,188,139,0.4)', iconColor: '#854F0B' },
+                  { Icon: Rocket, label: 'Income range', sub: 'Under £500k turnover', iconBg: 'rgba(190,242,100,0.4)', iconColor: '#639922' },
                 ].map((row) => (
                   <div key={row.label} className="flex items-center justify-between gap-3 p-4 bg-[#F1F0EA] rounded-xl">
                     <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -468,7 +468,9 @@ export default function LandingPage() {
                         <p className="text-xs text-[#5F5E5A]">{row.sub}</p>
                       </div>
                     </div>
-                    <span className="px-3 py-1 rounded-lg text-[10px] font-extrabold whitespace-nowrap flex-shrink-0" style={row.tagStyle}>{row.tag}</span>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold whitespace-nowrap flex-shrink-0" style={{ background: '#F1F7E4', color: '#3B6D11' }}>
+                      <Check className="w-3 h-3" strokeWidth={3} /> Match
+                    </span>
                   </div>
                 ))}
               </div>
