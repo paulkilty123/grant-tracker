@@ -1013,7 +1013,12 @@ function StepEntry({ url, setUrl, fetching, error, onAutoFill, onManual }: {
           />
         </div>
         <Button variant="primary" size="lg" onClick={onAutoFill} disabled={fetching}>
-          {fetching ? 'Reading…' : 'Auto-fill profile'}
+          {fetching ? (
+            <span className="inline-flex items-center gap-2">
+              <span className="dot-bounce inline-flex gap-0.5"><span/><span/><span/></span>
+              Reading…
+            </span>
+          ) : 'Auto-fill profile'}
         </Button>
       </div>
 
