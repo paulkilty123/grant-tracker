@@ -53,7 +53,7 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   const isAuthPage = pathname.startsWith('/auth')
-  const isPublicPage = pathname === '/' || pathname === '/apply' || pathname === '/cohort-signup-7k9m2x'
+  const isPublicPage = pathname === '/' || pathname === '/apply' || pathname === '/cohort-signup-7k9m2x' || pathname === '/privacy' || pathname === '/terms'
   const isApiRoute = pathname.startsWith('/api/')
 
   // Redirect unauthenticated users to login
