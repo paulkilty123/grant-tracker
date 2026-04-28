@@ -46,7 +46,7 @@ type CategoryGrant = Grant & {
 }
 
 type Stats = { total: number; withUrl: number; ok: number; dead: number; unchecked: number; noUrl: number; seedTotal?: number; newCount?: number; reviewCount?: number; suspiciousCount?: number }
-type Filter = 'dead' | 'unchecked' | 'no_url' | 'all' | 'seed' | 'new' | 'category' | 'review' | 'suspicious' | 'url_issues' | 'saved'
+type Filter = 'dead' | 'unchecked' | 'no_url' | 'all' | 'seed' | 'new' | 'category' | 'review' | 'suspicious' | 'url_issues' | 'saved' | 'recent'
 type SuspiciousGrant = Grant & { url_quality_score: number | null; url_quality_issues: string[] }
 type DeadSeedGrant = { id: string; title: string; funder: string; url: string }
 type NewGrant = Grant & { first_seen_at: string }
@@ -218,7 +218,7 @@ export default function UrlAdminPage() {
   const [grants, setGrants]         = useState<Grant[]>([])
   const searchParams                = useSearchParams()
   const focusId                     = searchParams.get('focus')
-  const [filter, setFilter]         = useState<Filter>(focusId ? 'category' : 'dead')
+  const [filter, setFilter]         = useState<Filter>(focusId ? 'recent' : 'dead')
   const [running, setRunning]       = useState(false)
   const [runResult, setRunResult]   = useState<{ ok: number; dead: number; deadSeedGrants: DeadSeedGrant[] } | null>(null)
   const [validationProgress, setValidationProgress] = useState<{ checked: number; total: number; ok: number; dead: number } | null>(null)
@@ -239,6 +239,7 @@ export default function UrlAdminPage() {
   const [newGrants, setNewGrants]             = useState<NewGrant[]>([])
   const [newSources, setNewSources]           = useState<Set<string>>(new Set())
   const [reviewGrants, setReviewGrants]       = useState<Grant[]>([])
+  const [recentGrants, setRecentGrants]       = useState<Grant[]>([])
   const [expandedReviewId, setExpandedReviewId] = useState<string | null>(null)
   const [reviewEdits, setReviewEdits]           = useState<Record<string, Record<string, string | boolean | number | null>>>({})
   const [reviewPublishing, setReviewPublishing] = useState<Record<string, boolean>>({})
@@ -448,6 +449,22 @@ export default function UrlAdminPage() {
       }
       return next
     })
+  }, [filter])
+
+  // ── Load recently-activated grants (last 21 days, for review sweep) ─────────
+  // Surfaced as the "Recently activated" tab so the admin can spot-check
+  // grants that may have lost manual edits to the historical publish bug.
+  const loadRecentGrants = useCallback(async () => {
+    if (filter !== 'recent') return
+    const since = new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString()
+    const { data } = await createClient()
+      .from('scraped_grants')
+      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief, grant_sources, description, location_tag, amount_min, amount_max, deadline, is_rolling, eligible_structures, funder_type, funding_type, first_seen_at, impact_sectors, target_beneficiaries')
+      .eq('is_active', true)
+      .gte('first_seen_at', since)
+      .order('first_seen_at', { ascending: false })
+      .limit(300)
+    setRecentGrants((data ?? []) as Grant[])
   }, [filter])
 
   // ── Load suspicious grants (low quality score) ───────────────────────────────
@@ -682,25 +699,29 @@ export default function UrlAdminPage() {
   }, [authorised, filter, loadReviewGrants])
 
   useEffect(() => {
+    if (authorised && filter === 'recent') loadRecentGrants()
+  }, [authorised, filter, loadRecentGrants])
+
+  useEffect(() => {
     if (authorised && filter === 'suspicious') loadSuspiciousGrants()
   }, [authorised, filter, loadSuspiciousGrants])
 
   // ── Clear selection when switching tabs ──────────────────────────────────────
   useEffect(() => { setSelectedIds(new Set()) }, [filter])
 
-  // ── Deep-link: ?focus=<id> from the admin Review Sweep panel ────────────────
-  // Once category data has loaded, expand the targeted grant and scroll it
-  // into view so the user lands directly on the row they want to re-review.
+  // ── Deep-link: ?focus=<id> targets the Recently activated tab ────────────
+  // Once data has loaded for the active tab (recent or category), expand the
+  // targeted grant and scroll it into view.
   useEffect(() => {
     if (!focusId) return
-    if (categoryGrants.length === 0) return
+    if (recentGrants.length === 0 && categoryGrants.length === 0) return
     setExpandedReviewId(focusId)
     const t = setTimeout(() => {
       const el = document.getElementById(`grant-row-${focusId}`)
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }, 80)
     return () => clearTimeout(t)
-  }, [focusId, categoryGrants.length])
+  }, [focusId, recentGrants.length, categoryGrants.length])
 
   // ── Filtered seed grants (client-side, seed tab) ─────────────────────────────
   const filteredSeedGrants = useMemo(() => {
@@ -2538,6 +2559,7 @@ export default function UrlAdminPage() {
           { key: 'review',     label: `Needs Review${stats?.reviewCount ? ` (${stats.reviewCount})` : ''}`, urgent: (stats?.reviewCount ?? 0) > 0 },
           { key: 'saved',      label: 'Saved for Later', urgent: false },
           { key: 'all',        label: 'All grants' },
+          { key: 'recent',     label: 'Recently activated' },
           { key: 'new',        label: `New this week${stats ? ` (${stats.newCount ?? 0})` : ''}` },
           { key: 'category',   label: 'By Category' },
           { key: 'url_issues', label: `URL Issues${stats ? ` (${(stats.dead ?? 0) + (stats.unchecked ?? 0) + (stats.noUrl ?? 0)})` : ''}` },
@@ -3065,6 +3087,105 @@ export default function UrlAdminPage() {
             </div>
             )
           })()}
+        </div>
+      )}
+
+      {/* ── Recently activated tab (review-sweep) ──────────────────────────── */}
+      {filter === 'recent' && (
+        <div className="rounded-xl border border-warm bg-white overflow-hidden shadow-card">
+          <div className="border-b border-warm bg-amber-50 px-5 py-3">
+            <p className="text-sm font-semibold text-amber-800">
+              {recentGrants.length} grant{recentGrants.length !== 1 ? 's' : ''} activated in the last 21 days
+            </p>
+            <p className="text-xs text-amber-600 mt-0.5">
+              Spot-check edits to <strong>eligible structures, beneficiaries, sectors, description</strong> and <strong>invite-only</strong> — fields the historical Confirm &amp; Publish bug used to drop. Rows tinted amber are missing one of those fields. Click <em>Review</em> to edit inline.
+            </p>
+          </div>
+          {recentGrants.length === 0 ? (
+            <div className="py-16 text-center">
+              <CheckCircle className="mx-auto mb-3 h-8 w-8 text-sage" />
+              <p className="text-mid text-sm">Nothing activated in the last 21 days.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-warm bg-warm/30 text-left text-xs font-semibold text-mid uppercase tracking-wider">
+                    <th className="px-5 py-3">Grant / Funder</th>
+                    <th className="px-3 py-3">First seen</th>
+                    <th className="px-3 py-3">Eligible structures</th>
+                    <th className="px-3 py-3">Beneficiaries</th>
+                    <th className="px-3 py-3">Sectors</th>
+                    <th className="px-3 py-3 text-center">Invite</th>
+                    <th className="px-3 py-3 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-warm/60">
+                  {recentGrants.map(grant => {
+                    const g = grant as Grant & {
+                      eligible_structures?: string[] | null
+                      target_beneficiaries?: string[] | null
+                      impact_sectors?: string[] | null
+                      first_seen_at?: string | null
+                    }
+                    const flagged =
+                      !g.eligible_structures || g.eligible_structures.length === 0 ||
+                      !g.target_beneficiaries || g.target_beneficiaries.length === 0 ||
+                      !g.impact_sectors || g.impact_sectors.length === 0 ||
+                      !g.description || g.description.trim().length === 0
+                    const arrSummary = (arr?: string[] | null) =>
+                      arr && arr.length > 0
+                        ? (arr.length > 3 ? `${arr.slice(0, 3).join(', ')} +${arr.length - 3}` : arr.join(', '))
+                        : '—'
+                    return (
+                      <React.Fragment key={grant.id}>
+                        <tr id={`grant-row-${grant.id}`} className={flagged ? 'bg-amber-50/40' : 'hover:bg-cream/50 transition-colors'}>
+                          <td className="px-5 py-3 max-w-[260px]">
+                            <p className="font-medium text-charcoal leading-snug line-clamp-2">{grant.title}</p>
+                            <p className="text-xs text-mid mt-0.5">{grant.funder ?? '—'}</p>
+                            {grant.apply_url && (
+                              <a href={grant.apply_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-forest underline mt-1 inline-block break-all">
+                                {grant.apply_url.replace(/^https?:\/\//, '').slice(0, 50)}
+                              </a>
+                            )}
+                          </td>
+                          <td className="px-3 py-3 text-xs text-mid whitespace-nowrap align-top">
+                            {g.first_seen_at ? new Date(g.first_seen_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '—'}
+                          </td>
+                          <td className="px-3 py-3 text-xs text-charcoal max-w-[200px] align-top">{arrSummary(g.eligible_structures)}</td>
+                          <td className="px-3 py-3 text-xs text-charcoal max-w-[180px] align-top">{arrSummary(g.target_beneficiaries)}</td>
+                          <td className="px-3 py-3 text-xs text-charcoal max-w-[180px] align-top">{arrSummary(g.impact_sectors)}</td>
+                          <td className="px-3 py-3 text-center align-top">
+                            {grant.is_invite_only ? <span className="text-xs text-coral-deep font-semibold">YES</span> : <span className="text-xs text-light">—</span>}
+                          </td>
+                          <td className="px-3 py-3 text-right align-top whitespace-nowrap">
+                            <button onClick={() => {
+                              if (expandedReviewId === grant.id) {
+                                if (Object.keys(reviewEdits[grant.id] ?? {}).length > 0) saveGrantEdits(grant)
+                                else setExpandedReviewId(null)
+                              } else {
+                                setExpandedReviewId(grant.id)
+                              }
+                            }}
+                              className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${expandedReviewId === grant.id ? 'bg-forest text-white' : 'bg-forest/10 text-forest hover:bg-forest hover:text-white'}`}>
+                              {expandedReviewId === grant.id ? 'Close' : 'Review'}
+                            </button>
+                          </td>
+                        </tr>
+                        {expandedReviewId === grant.id && (
+                          <tr>
+                            <td colSpan={7} className="px-0 pb-2">
+                              {renderReviewPanel(grant, 'approved')}
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 

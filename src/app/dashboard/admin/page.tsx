@@ -4,7 +4,6 @@ import ThreeSixtyGivingPanel from './ThreeSixtyGivingPanel'
 import FillAmountsPanel from './FillAmountsPanel'
 import DiscoveryPanel from './DiscoveryPanel'
 import ClearProfileButton from './ClearProfileButton'
-import ReviewSweepPanel from './ReviewSweepPanel'
 
 // Human-readable labels for each source key
 const SOURCE_LABELS: Record<string, string> = {
@@ -216,8 +215,6 @@ export default async function AdminPage() {
       </div>
 
       <ClearProfileButton />
-
-      <ReviewSweepPanel />
 
       {/* Summary KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-7">
