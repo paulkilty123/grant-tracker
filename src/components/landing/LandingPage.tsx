@@ -1006,17 +1006,17 @@ export default function LandingPage() {
               {
                 label: 'Honest',
                 body: "We don't inflate match scores or dress up poor-fit grants. If something isn't right for you, we'd rather tell you than waste your time.",
-                bg: '#EAF3DE', titleColor: '#173404', bodyColor: '#3B6D11',
+                bg: '#173404', titleColor: '#8ECB3C', bodyColor: '#C0DD97',
               },
               {
                 label: 'Practical',
                 body: "Every feature exists because it makes the funding process easier. We don't add complexity for the sake of it.",
-                bg: '#E6F1FB', titleColor: '#0C447C', bodyColor: 'rgba(12,68,124,0.85)',
+                bg: '#639922', titleColor: '#F1F7E4', bodyColor: '#EAF3DE',
               },
               {
                 label: 'Accessible',
                 body: "Good funding intelligence shouldn't only reach organisations with big budgets. Grant Tracker will always be priced to stay within reach of smaller ones.",
-                bg: '#F5F1E8', titleColor: '#2C2C2A', bodyColor: '#5F5E5A',
+                bg: '#F5F1E8', titleColor: '#173404', bodyColor: '#3B6D11',
               },
             ] as const).map((v, i) => (
               <motion.div key={v.label} {...fadeInView(i * 0.08)} className="rounded-3xl p-8 flex flex-col" style={{ background: v.bg }}>
