@@ -428,7 +428,7 @@ export default function LandingPage() {
               {/* Stats grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
                 <div className="bg-[#F1F0EA] rounded-2xl p-4 sm:p-5 min-w-0">
-                  <p className="text-[#5F5E5A] text-[11px] mb-1">Eligibility match</p>
+                  <p className="text-[#5F5E5A] text-xs font-semibold mb-1">Eligibility match</p>
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-5xl font-bold text-[#8ECB3C]" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>94%</span>
                     <span className="text-[#5F5E5A] font-bold text-sm">Match</span>
