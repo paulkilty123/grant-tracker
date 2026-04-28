@@ -1610,11 +1610,29 @@ export default function UrlAdminPage() {
     // eslint-disable-next-line no-console
     console.warn('[detectLocation] v3-boroughs', { id: grant.id, title: grant.title, text: text.slice(0, 400), hasBrief: !!brief, geographicFocus: brief?.geographic_focus })
 
-    // UK nations — check first (most specific)
+    // UK-wide signals — check FIRST so a brief that mentions individual
+    // nations as examples (e.g. "UK-wide, delivered across England, Wales
+    // and Scotland") doesn't get tagged as the last-mentioned nation.
+    if (/\buk[-\s]?wide\b|\bukwide\b|\bunited\s+kingdom\b|\bnationwide\b|\bnational\s+(?:programme|fund|scheme|charity)\b|\bacross\s+the\s+uk\b|\bthroughout\s+the\s+uk\b/.test(text)) {
+      setReviewField(grant.id, 'location_tag', 'UK'); return
+    }
+
+    // Multiple UK nations mentioned together — also treat as UK-wide.
+    const nationMatches = [
+      /\bscotland\b|\bscottish\b/.test(text),
+      /\bwales\b|\bwelsh\b|\bcymru\b/.test(text),
+      /\bnorthern\s+ireland\b/.test(text),
+      /\bengland\b|\benglish\b/.test(text),
+    ].filter(Boolean).length
+    if (nationMatches >= 2) {
+      setReviewField(grant.id, 'location_tag', 'UK'); return
+    }
+
+    // Single-nation matches
     if (/\bscotland\b|\bscottish\b/.test(text)) { setReviewField(grant.id, 'location_tag', 'Scotland'); return }
     if (/\bwales\b|\bwelsh\b|\bcymru\b/.test(text)) { setReviewField(grant.id, 'location_tag', 'Wales'); return }
-    if (/\bnorthern ireland\b/.test(text)) { setReviewField(grant.id, 'location_tag', 'Northern Ireland'); return }
-    if (/\bengland\b|\benglish\b/.test(text) && !/uk|united kingdom/.test(text)) { setReviewField(grant.id, 'location_tag', 'England'); return }
+    if (/\bnorthern\s+ireland\b/.test(text)) { setReviewField(grant.id, 'location_tag', 'Northern Ireland'); return }
+    if (/\bengland\b|\benglish\b/.test(text)) { setReviewField(grant.id, 'location_tag', 'England'); return }
 
     // London boroughs — check BEFORE generic 'London' so a Camden-specific
     // grant tags as 'Camden', not 'London'. Match whole words / borough phrases
@@ -1700,8 +1718,9 @@ export default function UrlAdminPage() {
       }
     }
 
-    // UK-wide signals
-    if (/\buk\b|\bunited kingdom\b|\buk-wide\b|\buk wide\b|\bnational\b/.test(text)) {
+    // Final UK-wide fallback: a bare \buk\b mention. Kept last so a single
+    // "UK" reference doesn't beat a clear regional / borough signal above.
+    if (/\buk\b/.test(text)) {
       setReviewField(grant.id, 'location_tag', 'UK'); return
     }
 
