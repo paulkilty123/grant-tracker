@@ -566,45 +566,48 @@ export default function LandingPage() {
       </section>
 
       {/* HOW IT WORKS */}
-      <section id="how" className="py-20 md:py-28 bg-white">
+      <section id="how" className="py-16 md:py-[72px] bg-white">
         <div className="mx-auto max-w-7xl px-6 md:px-8">
 
-          {/* Header row */}
-          <motion.div {...fadeInView(0)} className="grid lg:grid-cols-2 gap-8 items-end mb-14">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest mb-5" style={{ color: '#8ECB3C' }}>Process</p>
-              <h2 className="font-bold leading-tight" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#2C2C2A' }}>
-                Setup, search and<br/>
-                <span style={{ color: '#8ECB3C' }}>track what matters</span>
-              </h2>
-            </div>
-            <div className="lg:pb-2">
-              <p className="text-[#5F5E5A] text-base leading-relaxed max-w-sm">
-                Discover grants, programmes, investment and in-kind support, all suited to your setup and impact priorities.
-              </p>
-            </div>
+          {/* Eyebrow */}
+          <motion.div {...fadeInView(0)} className="inline-flex items-center gap-2 mb-6" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#8ECB3C' }} aria-hidden="true" />
+            <span className="uppercase" style={{ color: '#639922', fontSize: 11.5, fontWeight: 500, letterSpacing: '0.08em' }}>Process</span>
           </motion.div>
 
-          {/* Cards — tonal green ladder */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Header row */}
+          <motion.div {...fadeInView(0.05)} className="grid md:grid-cols-[1.4fr_1fr] gap-4 md:gap-8 items-start mb-8 md:mb-12">
+            <h2 className="m-0" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: 'clamp(36px, 4vw, 48px)', fontWeight: 500, lineHeight: 1.05, letterSpacing: '-0.025em', color: '#173404' }}>
+              Setup, search and{' '}
+              <span className="block" style={{ color: '#8ECB3C' }}>track what matters.</span>
+            </h2>
+            <p className="m-0 md:mt-2 max-w-sm" style={{ fontFamily: 'var(--font-plus-jakarta, Plus Jakarta Sans, sans-serif)', fontSize: 16, lineHeight: 1.55, color: '#5F5E5A', letterSpacing: '-0.005em' }}>
+              Discover grants, programmes, investment and in-kind support, all suited to your setup and impact priorities.
+            </p>
+          </motion.div>
+
+          {/* Cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
             {([
-              { num: '01', title: 'Setup your profile', desc: 'List your impact, mission and target groups.', Icon: Users, bg: '#F4F9ED', numOpacity: 0.35, textOpacity: 0.6 },
-              { num: '02', title: 'Search & match', desc: 'Discover opportunities matched to you.', Icon: Search, bg: '#EAF3DE', numOpacity: 0.38, textOpacity: 0.7 },
-              { num: '03', title: 'Track opportunities', desc: 'Add to pipeline, get deadline alerts and apply.', Icon: TrendingUp, bg: '#C0DD97', numOpacity: 0.5, textOpacity: 0.78 },
-              { num: '04', title: 'Submit & win', desc: 'Increase your win-rate with strongly aligned applications.', Icon: Award, bg: '#8ECB3C', numOpacity: 0.55, textOpacity: 0.82 },
+              { num: '01', title: 'Setup your profile', desc: 'List your impact, mission and target groups.', Icon: Users },
+              { num: '02', title: 'Search and match', desc: 'Discover opportunities matched to you.', Icon: Search },
+              { num: '03', title: 'Track opportunities', desc: 'Add to pipeline, get deadline alerts and apply.', Icon: TrendingUp },
+              { num: '04', title: 'Submit and win', desc: 'Increase your win-rate with strongly aligned applications.', Icon: Award },
             ] as const).map((step, i) => (
               <motion.div
                 key={step.title}
                 {...fadeInView(i * 0.08)}
-                className="rounded-3xl p-7 flex flex-col min-h-[260px]"
-                style={{ background: step.bg }}
+                className="flex flex-col"
+                style={{ background: '#F1F7E4', borderRadius: 16, padding: '22px 22px 24px' }}
               >
-                <span className="text-4xl font-bold mb-6" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', color: '#173404', opacity: step.numOpacity }}>{step.num}</span>
-                <h3 className="font-bold text-lg mb-3 leading-snug" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', color: '#173404' }}>{step.title}</h3>
-                <p className="text-sm leading-relaxed flex-1" style={{ color: '#173404', opacity: step.textOpacity }}>{step.desc}</p>
-                <div className="mt-6">
-                  <step.Icon className="w-6 h-6" style={{ color: '#173404', opacity: 0.7 }} />
+                <div className="flex items-start justify-between gap-3 mb-3.5">
+                  <span style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: 14, fontWeight: 500, color: '#639922', letterSpacing: '0.04em', paddingTop: 12 }}>{step.num}</span>
+                  <div className="flex items-center justify-center flex-shrink-0" style={{ width: 44, height: 44, borderRadius: 999, background: '#FFFFFF', color: '#173404' }}>
+                    <step.Icon style={{ width: 22, height: 22 }} strokeWidth={1.8} />
+                  </div>
                 </div>
+                <h3 className="m-0 mb-1.5" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: 18, fontWeight: 500, color: '#173404', letterSpacing: '-0.015em' }}>{step.title}</h3>
+                <p className="m-0" style={{ fontFamily: 'var(--font-plus-jakarta, Plus Jakarta Sans, sans-serif)', fontSize: 14, lineHeight: 1.5, color: '#3B6D11' }}>{step.desc}</p>
               </motion.div>
             ))}
           </div>
