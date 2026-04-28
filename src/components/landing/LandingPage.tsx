@@ -1158,6 +1158,7 @@ export default function LandingPage() {
             <span>Built for the UK social impact sector.</span>
             <span className="flex items-center gap-4">
               <Link href="/privacy" className="hover:text-white transition-colors no-underline" style={{ color: '#97C459' }}>Privacy</Link>
+              <Link href="/terms" className="hover:text-white transition-colors no-underline" style={{ color: '#97C459' }}>Terms</Link>
               <span>&copy; 2026 Grant Tracker</span>
             </span>
           </div>
