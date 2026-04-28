@@ -600,7 +600,7 @@ export default function LandingPage() {
                 style={{ background: '#F1F7E4', borderRadius: 16, padding: '22px 22px 24px' }}
               >
                 <div className="flex items-start justify-between gap-3 mb-3.5">
-                  <span style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: 14, fontWeight: 500, color: '#639922', letterSpacing: '0.04em', paddingTop: 12 }}>{step.num}</span>
+                  <span style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: 32, fontWeight: 500, color: '#639922', letterSpacing: '-0.01em', lineHeight: 1 }}>{step.num}</span>
                   <div className="flex items-center justify-center flex-shrink-0" style={{ width: 44, height: 44, borderRadius: 999, background: '#FFFFFF', color: '#173404' }}>
                     <step.Icon style={{ width: 22, height: 22 }} strokeWidth={1.8} />
                   </div>
