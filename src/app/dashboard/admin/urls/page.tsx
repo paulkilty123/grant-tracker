@@ -2118,11 +2118,37 @@ export default function UrlAdminPage() {
           <div><label className="text-mid block mb-0.5">Amount max (£)</label>
             <input type="number" value={String(getReviewVal(grant.id,'amount_max',grant.amount_max ?? ''))} onChange={e=>setReviewField(grant.id,'amount_max',e.target.value)} className="form-input text-xs py-1 w-full" placeholder="e.g. 50000" /></div>
           <div><label className="text-mid block mb-0.5">Deadline</label>
-            <input type="text" value={String(getReviewVal(grant.id,'deadline',grant.deadline ?? ''))} onChange={e=>setReviewField(grant.id,'deadline',e.target.value)} disabled={Boolean(getReviewVal(grant.id,'is_rolling',grant.is_rolling ?? false))} className="form-input text-xs py-1 w-full" placeholder="YYYY-MM-DD" /></div>
+            <input
+              type="text"
+              value={String(getReviewVal(grant.id,'deadline',grant.deadline ?? ''))}
+              onChange={e=>{
+                setReviewField(grant.id,'deadline',e.target.value)
+                // Typing a deadline implies the grant isn't rolling — clear the
+                // rolling flag automatically so the two states stay consistent.
+                if (e.target.value.trim()) {
+                  setReviewField(grant.id,'is_rolling',false)
+                }
+              }}
+              className="form-input text-xs py-1 w-full"
+              placeholder="YYYY-MM-DD"
+            /></div>
         </div>
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mb-3">
           <div className="flex items-center gap-2">
-            <input type="checkbox" id={`rolling-${mode}-${grant.id}`} checked={Boolean(getReviewVal(grant.id,'is_rolling',grant.is_rolling ?? false))} onChange={e=>setReviewField(grant.id,'is_rolling',e.target.checked)} className="h-3.5 w-3.5 accent-forest" />
+            <input
+              type="checkbox"
+              id={`rolling-${mode}-${grant.id}`}
+              checked={Boolean(getReviewVal(grant.id,'is_rolling',grant.is_rolling ?? false))}
+              onChange={e=>{
+                setReviewField(grant.id,'is_rolling',e.target.checked)
+                // Marking as rolling implies no deadline — clear it so
+                // the two states stay consistent.
+                if (e.target.checked) {
+                  setReviewField(grant.id,'deadline','')
+                }
+              }}
+              className="h-3.5 w-3.5 accent-forest"
+            />
             <label htmlFor={`rolling-${mode}-${grant.id}`} className="text-xs text-mid cursor-pointer">Rolling deadline</label>
           </div>
           <div className="flex items-center gap-2">
