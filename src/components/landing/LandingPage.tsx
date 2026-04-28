@@ -6,6 +6,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Menu, X, Check, Search, Calendar, TrendingUp, Activity, Clock, Mail, MessageSquare, Bell, LayoutGrid, ArrowRight, Award, CheckCircle, BadgeCheck, Users, Rocket, Landmark, HeartHandshake, Building2, Shield, TreePine, Lightbulb } from 'lucide-react'
 import ContactForm from '@/components/ContactForm'
+import { usePlausible } from 'next-plausible'
 import RadioWaveIcon from '@/components/icons/RadioWaveIcon'
 
 /* ─── helpers ─── */
@@ -261,6 +262,8 @@ const SECTOR_LABELS: Record<string, string> = {
 
 /* ─── page ─── */
 export default function LandingPage() {
+  const plausible = usePlausible()
+  const trackCohortApply = () => plausible('cohort_apply_clicked')
   const [mobileOpen, setMobileOpen] = useState(false)
   const [activeSection, setActiveSection] = useState<string>('')
 
@@ -333,13 +336,13 @@ export default function LandingPage() {
             <Link href="/auth/login" className="text-[#2C2C2A] font-semibold text-base hover:opacity-80 transition-opacity no-underline" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>
               Sign in
             </Link>
-            <Link href={COHORT_URL} className="bg-[#8ECB3C] text-[#173404] px-8 py-3 rounded-[10px] font-bold text-base hover:opacity-90 transition-all no-underline">
+            <Link href={COHORT_URL} onClick={trackCohortApply} className="bg-[#8ECB3C] text-[#173404] px-8 py-3 rounded-[10px] font-bold text-base hover:opacity-90 transition-all no-underline">
               Apply to join
             </Link>
           </div>
           {/* Mobile */}
           <div className="flex md:hidden items-center gap-3">
-            <Link href={COHORT_URL} className="bg-[#8ECB3C] text-[#173404] px-4 py-2 rounded-[10px] text-sm font-bold hover:opacity-90 transition-all no-underline">Apply to join</Link>
+            <Link href={COHORT_URL} onClick={trackCohortApply} className="bg-[#8ECB3C] text-[#173404] px-4 py-2 rounded-[10px] text-sm font-bold hover:opacity-90 transition-all no-underline">Apply to join</Link>
             <button onClick={() => setMobileOpen(o => !o)} className="p-1 text-[#2C2C2A]" aria-label="Toggle menu">
               {mobileOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
@@ -357,7 +360,7 @@ export default function LandingPage() {
               ))}
               <div className="flex flex-col gap-2 pt-2">
                 <Link href="/auth/login" onClick={() => setMobileOpen(false)} className="text-center text-sm text-[#5F5E5A] py-2 border border-slate-200 rounded-[10px]">Sign in</Link>
-                <Link href={COHORT_URL} onClick={() => setMobileOpen(false)} className="bg-[#8ECB3C] text-[#173404] rounded-[10px] text-center text-sm font-bold py-2 hover:opacity-90 transition-colors">Apply to join</Link>
+                <Link href={COHORT_URL} onClick={() => { trackCohortApply(); setMobileOpen(false) }} className="bg-[#8ECB3C] text-[#173404] rounded-[10px] text-center text-sm font-bold py-2 hover:opacity-90 transition-colors">Apply to join</Link>
               </div>
             </div>
           </motion.div>
@@ -394,6 +397,7 @@ export default function LandingPage() {
             <div className="flex flex-wrap gap-4 mb-4">
               <Link
                 href={COHORT_URL}
+                onClick={trackCohortApply}
                 className="text-[#173404] px-9 py-4 rounded-[10px] font-bold text-base hover:opacity-95 transition-all no-underline"
                 style={{ background: '#8ECB3C' }}
               >
@@ -731,7 +735,7 @@ export default function LandingPage() {
                     </li>
                   ))}
                 </ul>
-                <Link href={COHORT_URL} className="inline-flex items-center gap-3 bg-[#8ECB3C] text-[#173404] px-7 py-4 rounded-[10px] font-bold text-base hover:opacity-90 transition-all no-underline">
+                <Link href={COHORT_URL} onClick={trackCohortApply} className="inline-flex items-center gap-3 bg-[#8ECB3C] text-[#173404] px-7 py-4 rounded-[10px] font-bold text-base hover:opacity-90 transition-all no-underline">
                   Apply to join <ArrowRight className="w-4 h-4" />
                 </Link>
               </motion.div>
@@ -1066,6 +1070,7 @@ export default function LandingPage() {
               </p>
               <Link
                 href={COHORT_URL}
+                onClick={trackCohortApply}
                 style={{ background: '#8ECB3C', color: '#173404', padding: '13px 28px', borderRadius: 10, fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 15, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}
               >
                 Apply to join <span>&#8594;</span>
@@ -1129,6 +1134,7 @@ export default function LandingPage() {
             </p>
             <Link
               href={COHORT_URL}
+              onClick={trackCohortApply}
               className="inline-flex items-center gap-2 rounded-[10px] px-9 py-4 text-base font-bold transition-opacity hover:opacity-90 no-underline"
               style={{ background: '#8ECB3C', color: '#173404', fontFamily: 'var(--font-space-grotesk)' }}
             >

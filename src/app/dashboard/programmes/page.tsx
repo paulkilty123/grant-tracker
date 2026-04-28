@@ -5,6 +5,7 @@ import { Rocket, GraduationCap, Gift, MapPin, ChevronRight } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { createPipelineItem } from '@/lib/pipeline'
 import { getOrganisationByOwner } from '@/lib/organisations'
+import { usePlausible } from 'next-plausible'
 import GrantDetailModal from '@/components/GrantDetailModal'
 import { formatRange } from '@/lib/utils'
 import type { FunderType } from '@/types'
@@ -193,6 +194,7 @@ function ProgrammeCard({ prog, onViewDetail, onAddToPipeline }: {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function ProgrammesPage() {
+  const plausible = usePlausible()
   const [programmes, setProgrammes]   = useState<Programme[]>([])
   const [loading, setLoading]         = useState(true)
   const [activeTab, setActiveTab]     = useState<FilterTab>('all')
@@ -242,6 +244,7 @@ export default function ProgrammesPage() {
         outcome_notes:        null,
         created_by:           user.id,
       })
+      plausible('pipeline_added')
       setPipelineMsg('Added to pipeline!')
     } catch {
       setPipelineMsg('Already in pipeline')

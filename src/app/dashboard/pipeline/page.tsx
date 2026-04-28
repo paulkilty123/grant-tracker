@@ -10,6 +10,7 @@ import {
   deletePipelineItem,
 } from '@/lib/pipeline'
 import { getOrganisationByOwner } from '@/lib/organisations'
+import { usePlausible } from 'next-plausible'
 import { PIPELINE_STAGES, formatDeadline, formatRange, cn } from '@/lib/utils'
 import type { PipelineItem, PipelineStage, Organisation } from '@/types'
 import { Search, Pencil, Send, Trophy, XCircle, Sparkles, Loader2, Link, ArrowRight, Calendar, AlarmClock, X as XIcon, Circle, FileText, PenLine, RefreshCw, Eye, CheckCircle2, GripVertical, Trash2, ChevronDown } from 'lucide-react'
@@ -576,6 +577,7 @@ function AddModal({
   onClose: () => void
   onAdd: (item: PipelineItem) => void
 }) {
+  const plausible = usePlausible()
   const [form, setForm] = useState({
     grant_name: '',
     funder_name: '',
@@ -646,6 +648,7 @@ function AddModal({
       outcome_notes: null,
       created_by: userId,
     })
+    plausible('pipeline_added')
     onAdd(newItem)
     setSaving(false)
     onClose()

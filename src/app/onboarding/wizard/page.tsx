@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { ArrowLeft, ArrowRight, ChevronRight, Check, Globe, Pencil, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner, createOrganisation, updateOrganisation } from '@/lib/organisations'
+import { usePlausible } from 'next-plausible'
 import { computeMatchScore } from '@/lib/matching'
 import { normaliseScrapedGrant } from '@/lib/grants-normalise'
 import type { LegalStructure, ImpactSector, BeneficiaryGroup, FundingType } from '@/types'
@@ -539,6 +540,7 @@ function LoadingDots() {
 
 export default function OnboardingWizardPage() {
   const router = useRouter()
+  const plausible = usePlausible()
   const searchParams = useSearchParams()
   const isNewOrg = searchParams.get('new') === '1'
   const supabase = createClient()
@@ -816,6 +818,7 @@ export default function OnboardingWizardPage() {
         }
       })()
 
+      plausible('profile_completed')
       setStep('reveal')
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'Failed to save — please try again.')

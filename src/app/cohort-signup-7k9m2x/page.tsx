@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
+import { usePlausible } from 'next-plausible'
 import { createClient } from '@/lib/supabase/client'
 import { createOrganisation } from '@/lib/organisations'
 
@@ -20,6 +21,7 @@ function isExistingUserSignupResponse(data: { user: { identities?: { id: string 
 
 export default function CohortSignupPage() {
   const router = useRouter()
+  const plausible = usePlausible()
   const [firstName, setFirstName] = useState('')
   const [orgName, setOrgName]     = useState('')
   const [email, setEmail]         = useState('')
@@ -63,6 +65,8 @@ export default function CohortSignupPage() {
       setLoading(false)
       return
     }
+
+    plausible('signup_completed')
 
     if (!data.session) {
       // Email confirmation required: org_name is stored in user metadata so the

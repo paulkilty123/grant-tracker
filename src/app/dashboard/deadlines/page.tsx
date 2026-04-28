@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { getDeadlineAlerts, formatDeadline, formatRange, PIPELINE_STAGES } from '@/lib/utils'
 import { updatePipelineStage, updatePipelineItem, createPipelineItem } from '@/lib/pipeline'
 import { recordInteraction } from '@/lib/interactions'
+import { usePlausible } from 'next-plausible'
 import { normaliseScrapedGrant, type EnrichedGrant } from '@/lib/grants-normalise'
 import { computeMatchScore } from '@/lib/matching'
 import type { DeadlineAlert, PipelineItem, PipelineStage, FundingType, Organisation } from '@/types'
@@ -94,6 +95,7 @@ function AddDeadlineModal({ orgId, userId, onClose, onSaved }: {
   onClose: () => void
   onSaved: () => void
 }) {
+  const plausible = usePlausible()
   const [grantName, setGrantName]         = useState('')
   const [funderName, setFunderName]       = useState('')
   const [deadline, setDeadline]           = useState('')
@@ -128,6 +130,7 @@ function AddDeadlineModal({ orgId, userId, onClose, onSaved }: {
         outcome_notes: null,
         created_by: userId,
       })
+      plausible('pipeline_added')
       onSaved()
     } finally {
       setSaving(false)
@@ -582,6 +585,7 @@ function TypeChip({ type }: { type: string }) {
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function DeadlinesPage() {
+  const plausible = usePlausible()
   const [alerts,           setAlerts]           = useState<DeadlineAlert[]>([])
   const [noDeadlineItems,  setNoDeadlineItems]  = useState<PipelineItem[]>([])
   const [loading,          setLoading]          = useState(true)
@@ -743,6 +747,7 @@ export default function DeadlinesPage() {
       outcome_notes: null,
       created_by: userId,
     })
+    plausible('pipeline_added')
     setSavingSaved(null)
     setSavedSuccesses(prev => new Set(prev).add(grant.id))
     setTimeout(() => {
@@ -754,6 +759,7 @@ export default function DeadlinesPage() {
   async function handleSaveMatch(grantId: string) {
     setMatchActioning(prev => ({ ...prev, [grantId]: 'saving' }))
     await recordInteraction(orgId, grantId, 'saved')
+    plausible('grant_saved')
     setMatchActioning(prev => ({ ...prev, [grantId]: 'done' }))
     setTimeout(() => {
       setMatchState(prev => ({ ...prev, [grantId]: 'saved' }))
@@ -784,6 +790,7 @@ export default function DeadlinesPage() {
       outcome_notes: null,
       created_by: userId,
     })
+    plausible('pipeline_added')
     setMatchActioning(prev => ({ ...prev, [id]: 'done' }))
     setTimeout(() => {
       setMatchState(prev => ({ ...prev, [id]: 'pipeline' }))

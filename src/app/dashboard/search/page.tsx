@@ -19,6 +19,7 @@ import {
 import { saveSearchHistory, getSearchHistory, deleteSearchHistory, getWeeklySearchCount } from '@/lib/searchHistory'
 import type { GrantOpportunity, Organisation, FunderType, FundingType, ImpactSector, LegalStructure } from '@/types'
 import { MatchFeedbackBlock } from '@/components/MatchFeedbackBlock'
+import { usePlausible } from 'next-plausible'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import { SUBTYPE_LABELS } from '@/lib/funding-subtypes'
 import { normaliseScrapedGrant, type EnrichedGrant } from '@/lib/grants-normalise'
@@ -1192,6 +1193,7 @@ function tokenMatches(token: string, text: string, wordsCache?: string[]): boole
 // ── Page ─────────────────────────────────────────────────────────────────────
 export default function SearchPage() {
   const searchParams = useSearchParams()
+  const plausible = usePlausible()
 
   // Initialise filters from URL params (used by landing page category links)
   const initSector      = searchParams.get('sector')      as ImpactSector | null
@@ -1476,6 +1478,7 @@ export default function SearchPage() {
         outcome_date: null, outcome_notes: null,
         created_by: userId,
       })
+      plausible('pipeline_added')
       showToast(`"${grant.title}" added to pipeline!`)
     } catch {
       showToast('Failed to add — please try again')
@@ -1514,6 +1517,7 @@ export default function SearchPage() {
   async function handleSave(grantId: string) {
     if (!org) return
     await recordInteraction(org.id, grantId, 'saved')
+    plausible('grant_saved')
     setInteractions(prev => {
       const next = new Map(prev)
       if (!next.has(grantId)) next.set(grantId, new Set())
@@ -1613,6 +1617,7 @@ export default function SearchPage() {
         outcome_notes:        null,
         created_by:           userId,
       })
+      plausible('pipeline_added')
       setPipelinedIds(prev => new Map(prev).set(grant.title, { id: added.id, stage: 'identified' }))
       // Automatically clear 'saved' when promoted to pipeline
       if (interactions.get(grant.id)?.has('saved')) {
