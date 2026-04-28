@@ -1743,61 +1743,112 @@ export default function UrlAdminPage() {
   ]
 
    function detectEligibility(grant: Grant) {
-    // Use funder brief first (most reliable), fall back to description
+    // Split inclusion vs exclusion text. Earlier version mashed everything
+    // together so an "Exclusions: CICs cannot apply" line still ticked CIC
+    // because the matcher saw "CIC" in the blob.
     const brief = grant.funder_brief as Record<string, string | null> | null
-    const primaryText = [brief?.what_they_fund, brief?.who_can_apply, brief?.priorities, brief?.exclusions]
+    const inclusionText = [brief?.what_they_fund, brief?.who_can_apply, brief?.priorities]
       .filter(Boolean).join(' ').toLowerCase()
+    const exclusionText = (brief?.exclusions ?? '').toLowerCase()
     const fallbackText = [
       (grant as Grant & { description?: string }).description ?? '',
       grant.title ?? '',
     ].join(' ').toLowerCase()
-    const text = primaryText.length > 30 ? primaryText : fallbackText
+    const text = inclusionText.length > 30 ? inclusionText : fallbackText
 
-    // Detect phrases that mean "no formal structure required" — these should
-    // not flip the charity flag on via the raw "registered charity" match below.
+    // Phrases that mean "no formal structure required" — these should not
+    // flip the charity flag on via the raw "registered charity" match below.
     const openToAnyone = /no (?:requirement|need)\s+to\s+be\s+(?:a\s+)?(?:registered\s+)?(?:charity|formal|incorporated|organisation|organi[sz]ation|company)|not\s+required\s+to\s+be\s+(?:a\s+)?(?:registered\s+)?(?:charity|formal|incorporated|organisation|organi[sz]ation|company)|don'?t\s+(?:have\s+to\s+|need\s+to\s+)?be\s+(?:a\s+)?(?:registered\s+)?(?:charity|formal|organisation|organi[sz]ation)|any(?:one|\s+type\s+of|\s+kind\s+of)|individuals?\s+(?:and|or)\s+(?:informal|community|groups|organisations)|informal\s+groups?\s+can\s+apply/.test(text)
 
-    const structs: string[] = []
+    const structs = new Set<string>()
     // Charities — most common, check first (but suppress if 'no requirement to be a registered charity')
     if (/\bcharit(y|ies|able)\b|registered charit|charities only|charity only/.test(text) && !openToAnyone) {
-      structs.push('registered_charity', 'cio')
+      structs.add('registered_charity'); structs.add('cio')
     }
-    // Community groups / voluntary sector = unincorporated, NOT CIC
-    if (/community group|voluntary group|voluntary organi|vcse|informal group|resident.led group/.test(text)) {
-      if (!structs.includes('unincorporated')) structs.push('unincorporated')
+    // CIO — explicit. Catches grants targeting CIOs without the word "charity".
+    if (/\bcios?\b|charitable\s+incorporated\s+organisation/.test(text)) {
+      structs.add('cio'); structs.add('registered_charity')
+    }
+    // Not-for-profit / non-profit phrasing — opens the charity-shaped + SE set.
+    if (/\bnot[-\s]?for[-\s]?profit\b|\bnon[-\s]?profit\b|\bnonprofit\b/.test(text)) {
+      structs.add('registered_charity'); structs.add('cio')
+      structs.add('cic_guarantee'); structs.add('cic_shares')
+      structs.add('ltd_guarantee'); structs.add('cooperative')
+    }
+    // VCSE umbrella term (voluntary, community, social enterprise).
+    if (/\bvcse\b|voluntary,?\s+community(?:\s+and)?\s+social\s+enterprise/.test(text)) {
+      structs.add('registered_charity'); structs.add('cio')
+      structs.add('cic_guarantee'); structs.add('cic_shares')
+      structs.add('ltd_guarantee'); structs.add('cooperative')
+      structs.add('unincorporated')
+    }
+    // Community / voluntary groups → unincorporated (not CIC).
+    if (/community\s+group|voluntary\s+group|voluntary\s+organi|informal\s+group|resident.led\s+group|voluntary\s+sector/.test(text)) {
+      structs.add('unincorporated')
+    }
+    // Faith / religious groups → typically charity-shaped or unincorporated.
+    if (/faith\s+(?:group|based|organi)|religious\s+(?:group|organi)|church(?:es)?|mosque|synagogue|gurdwara|temple/.test(text)) {
+      structs.add('registered_charity'); structs.add('cio'); structs.add('unincorporated')
     }
     // CICs — only when explicitly named
-    if (/\bcics?\b|community interest compan/.test(text)) {
-      structs.push('cic_guarantee', 'cic_shares')
+    if (/\bcics?\b|community\s+interest\s+compan/.test(text)) {
+      structs.add('cic_guarantee'); structs.add('cic_shares')
     }
     // Social enterprises — handle singular and plural
-    if (/\bsocial enterprise(s)?\b/.test(text)) {
-      if (!structs.includes('cic_guarantee')) structs.push('cic_guarantee', 'cic_shares')
-      structs.push('ltd_guarantee', 'ltd_shares', 'cooperative')
+    if (/\bsocial\s+enterprise(s)?\b/.test(text)) {
+      structs.add('cic_guarantee'); structs.add('cic_shares')
+      structs.add('ltd_guarantee'); structs.add('ltd_shares'); structs.add('cooperative')
     }
     // Co-operatives
-    if (/co.operative|community benefit society|\bcbs\b/.test(text)) {
-      if (!structs.includes('cooperative')) structs.push('cooperative')
+    if (/co.operative|community\s+benefit\s+society|\bcbs\b/.test(text)) {
+      structs.add('cooperative')
     }
     // Ltd companies — only when explicit
-    if (/ltd company|limited company|ltd by shares|trading company/.test(text)) {
-      if (!structs.includes('ltd_shares')) structs.push('ltd_shares', 'ltd_guarantee')
+    if (/ltd\s+company|limited\s+company|ltd\s+by\s+shares|trading\s+company/.test(text)) {
+      structs.add('ltd_shares'); structs.add('ltd_guarantee')
     }
     // Individuals (singular OR plural)
-    if (/\bindividuals?\b|sole trader|freelance|\bpractitioner\b/.test(text)) {
-      structs.push('sole_trader')
+    if (/\bindividuals?\b|sole\s+trader|freelance|\bpractitioner\b/.test(text)) {
+      structs.add('sole_trader')
     }
     // 'No requirement to be a registered charity / formal organisation' →
     // ticks the open set (charity, CIO, SE variants, unincorporated, sole_trader)
     if (openToAnyone) {
-      structs.push('registered_charity', 'cio', 'cic_guarantee', 'cic_shares', 'ltd_guarantee', 'ltd_shares', 'cooperative', 'unincorporated', 'sole_trader')
+      ;['registered_charity','cio','cic_guarantee','cic_shares','ltd_guarantee','ltd_shares','cooperative','unincorporated','sole_trader']
+        .forEach(s => structs.add(s))
     }
     // Open to all (existing fallback)
-    if (structs.length === 0 && /open to all|any organi|any registered|all organi/.test(text)) {
-      structs.push('registered_charity', 'cio', 'cic_guarantee', 'cic_shares', 'ltd_guarantee', 'ltd_shares', 'cooperative', 'unincorporated')
+    if (structs.size === 0 && /open\s+to\s+all|any\s+organi|any\s+registered|all\s+organi/.test(text)) {
+      ;['registered_charity','cio','cic_guarantee','cic_shares','ltd_guarantee','ltd_shares','cooperative','unincorporated']
+        .forEach(s => structs.add(s))
     }
-    if (structs.length > 0) {
-      setReviewField(grant.id, 'eligible_structures', JSON.stringify(Array.from(new Set(structs))))
+
+    // Exclusion pass — remove structures explicitly excluded.
+    // Examples: "CICs are not eligible", "no individuals", "for-profit
+    // companies cannot apply".
+    if (exclusionText.length > 0) {
+      if (/\bcics?\b|community\s+interest\s+compan/.test(exclusionText)) {
+        structs.delete('cic_guarantee'); structs.delete('cic_shares')
+      }
+      if (/\bindividuals?\b|sole\s+trader|freelance/.test(exclusionText)) {
+        structs.delete('sole_trader')
+      }
+      if (/for[-\s]?profit|commercial\s+(?:companies|organisations|business)|private\s+(?:companies|business)|ltd\s+by\s+shares|limited\s+by\s+shares/.test(exclusionText)) {
+        structs.delete('ltd_shares')
+      }
+      if (/unincorporated|informal\s+group/.test(exclusionText)) {
+        structs.delete('unincorporated')
+      }
+      if (/\bcios?\b|charitable\s+incorporated\s+organisation/.test(exclusionText)) {
+        structs.delete('cio')
+      }
+      if (/co.operative|\bcbs\b|community\s+benefit\s+society/.test(exclusionText)) {
+        structs.delete('cooperative')
+      }
+    }
+
+    if (structs.size > 0) {
+      setReviewField(grant.id, 'eligible_structures', JSON.stringify(Array.from(structs)))
     }
   }
 
