@@ -606,13 +606,23 @@ export default function OnboardingWizardPage() {
   }
 
   async function handleAutoFill() {
-    if (!url.trim()) return
+    const raw = url.trim()
+    if (!raw) return
+    // Basic URL sanity check before hitting the API: must look like a domain
+    // (contains a dot, no whitespace). Catches users typing free-text into
+    // the URL field, which would otherwise produce a Review screen of empty
+    // rows with a URL-encoded "host" like "legal%20structure".
+    const stripped = raw.replace(/^https?:\/\//i, '').replace(/\/$/, '')
+    if (/\s/.test(stripped) || !stripped.includes('.')) {
+      setFetchError('That doesn’t look like a website address. Try something like yourorganisation.co.uk.')
+      return
+    }
     setFetching(true); setFetchError(null)
     try {
       const res  = await fetch('/api/org-autocomplete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: url.trim() }),
+        body: JSON.stringify({ url: raw }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data?.error ?? 'Auto-fill failed')
@@ -625,7 +635,7 @@ export default function OnboardingWizardPage() {
       else if (data.orgType === 'community_group')  derivedLegal = 'unincorporated'
 
       const ext: ExtractedData = {
-        url: url.trim(),
+        url: raw,
         name:              data.name ?? null,
         legalStructure:    derivedLegal || null,
         primaryLocation:   data.primaryLocation ?? null,
@@ -642,6 +652,17 @@ export default function OnboardingWizardPage() {
           impactSectors:     conf.impactSectors,
           beneficiaryGroups: conf.beneficiaryGroups,
         },
+      }
+      // Count what was actually extracted. If we got nothing useful, skip the
+      // empty Review screen and drop the user into manual entry instead.
+      const foundCount = [
+        ext.name, ext.legalStructure, ext.primaryLocation,
+        ext.annualIncomeBand, ext.mission,
+      ].filter(Boolean).length + (ext.impactSectors.length > 0 ? 1 : 0) + (ext.beneficiaryGroups.length > 0 ? 1 : 0)
+      if (foundCount === 0) {
+        setFetchError('We couldn’t pick anything up from that site. Fill the details in below.')
+        setStep('manual')
+        return
       }
       setExtracted(ext)
       setState(prev => ({
