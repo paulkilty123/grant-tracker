@@ -234,6 +234,12 @@ export default async function DashboardPage() {
   // State split: zero pipeline AND zero saved = empty; anything else = populated.
   const hasActivity = items.length > 0 || savedCount > 0
 
+  // Profile-complete signal: the wizard guarantees both an impact_sector and a
+  // legal_structure on finish. If either is missing the user is in a "Set up
+  // later" / cleared state and the dashboard should prompt them to onboard
+  // rather than celebrate matches.
+  const profileComplete = !!(typedOrg && (typedOrg.impact_sectors?.length ?? 0) > 0 && typedOrg.legal_structure)
+
   // ══════════════════════════════════════════════════════════════════════════
   // EMPTY STATE (Day 1) — welcome banner, 5-item checklist, preview tiles
   // ══════════════════════════════════════════════════════════════════════════
@@ -246,7 +252,9 @@ export default async function DashboardPage() {
             Welcome to Grant Tracker, {displayName}.
           </h2>
           <p className="text-sm text-mid">
-            Your profile's complete — time to find some funding.
+            {profileComplete
+              ? "Your profile's complete — time to find some funding."
+              : 'Tell us about your organisation so we can match you to the right funding.'}
           </p>
         </div>
 
@@ -264,31 +272,48 @@ export default async function DashboardPage() {
               style={{ background: 'rgba(132,204,22,0.20)', color: '#3F6814' }}
             >
               <Sparkles className="w-3 h-3" />
-              {totalMatchCount} matches ready
+              {profileComplete ? `${totalMatchCount} matches ready` : 'Profile incomplete'}
             </span>
           </div>
           <h3 className="text-2xl md:text-3xl font-bold text-charcoal leading-tight mb-2" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.02em' }}>
-            We've found funding that fits your profile.
+            {profileComplete
+              ? "We've found funding that fits your profile."
+              : 'Set up your profile to unlock matches.'}
           </h3>
           <p className="text-sm md:text-base text-mid mb-6 max-w-2xl leading-relaxed">
-            Browse your matches, save the ones worth a closer look, and move them into your pipeline when you're ready to apply. Everything you do here feeds the matching — the more you engage, the sharper it gets.
+            {profileComplete
+              ? "Browse your matches, save the ones worth a closer look, and move them into your pipeline when you're ready to apply. Everything you do here feeds the matching — the more you engage, the sharper it gets."
+              : 'Takes about 2 minutes. Tell us your org type, where you work, who you serve and what you do — and we’ll score every UK funder against you.'}
           </p>
           <div className="flex flex-wrap gap-3">
-            <a
-              href="/dashboard/search"
-              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity"
-              style={{ background: '#8ECB3C', color: '#173404', fontFamily: 'var(--font-space-grotesk)', boxShadow: '0 2px 8px rgba(132,204,22,0.25)' }}
-            >
-              See my matches
-              <ArrowRight className="w-4 h-4" />
-            </a>
-            <a
-              href="/dashboard/search?tour=1"
-              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg border hover:bg-white/60 transition-colors"
-              style={{ borderColor: '#2C2C2A', color: '#2C2C2A', background: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-space-grotesk)' }}
-            >
-              Give me a tour
-            </a>
+            {profileComplete ? (
+              <>
+                <a
+                  href="/dashboard/search"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity"
+                  style={{ background: '#8ECB3C', color: '#173404', fontFamily: 'var(--font-space-grotesk)', boxShadow: '0 2px 8px rgba(132,204,22,0.25)' }}
+                >
+                  See my matches
+                  <ArrowRight className="w-4 h-4" />
+                </a>
+                <a
+                  href="/dashboard/search?tour=1"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg border hover:bg-white/60 transition-colors"
+                  style={{ borderColor: '#2C2C2A', color: '#2C2C2A', background: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-space-grotesk)' }}
+                >
+                  Give me a tour
+                </a>
+              </>
+            ) : (
+              <a
+                href="/onboarding/wizard"
+                className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity"
+                style={{ background: '#8ECB3C', color: '#173404', fontFamily: 'var(--font-space-grotesk)', boxShadow: '0 2px 8px rgba(132,204,22,0.25)' }}
+              >
+                Complete your profile
+                <ArrowRight className="w-4 h-4" />
+              </a>
+            )}
           </div>
         </div>
 
@@ -298,29 +323,63 @@ export default async function DashboardPage() {
             Getting started
           </h3>
           <div className="bg-white rounded-xl border border-warm overflow-hidden" style={{ boxShadow: '0 2px 16px rgba(26,46,43,0.04)' }}>
-            {/* 1. Complete profile — done */}
-            <div className="flex items-center gap-4 p-5 border-b border-warm">
-              <div className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center" style={{ background: '#8ECB3C' }}>
-                <Check className="w-5 h-5 text-white" strokeWidth={3} />
-              </div>
+            {/* 1. Complete profile — done if onboarded, active otherwise */}
+            <div className="flex items-center gap-4 p-5 border-b border-warm" style={profileComplete ? undefined : { background: '#EAF3DE' }}>
+              {profileComplete ? (
+                <div className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center" style={{ background: '#8ECB3C' }}>
+                  <Check className="w-5 h-5 text-white" strokeWidth={3} />
+                </div>
+              ) : (
+                <div
+                  className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold"
+                  style={{
+                    background: '#FFFFFF',
+                    border: '2px solid #8ECB3C',
+                    color: '#3F6814',
+                    fontFamily: 'var(--font-space-grotesk)',
+                    boxShadow: '0 0 0 4px rgba(142,203,60,0.15)',
+                  }}
+                >
+                  1
+                </div>
+              )}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-charcoal line-through decoration-charcoal/30" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+                <p className={`text-sm font-semibold text-charcoal ${profileComplete ? 'line-through decoration-charcoal/30' : ''}`} style={{ fontFamily: 'var(--font-space-grotesk)' }}>
                   Complete your profile
                 </p>
-                <p className="text-xs text-mid mt-0.5">Nice work — matches are running against your org now.</p>
+                <p className="text-xs text-mid mt-0.5">
+                  {profileComplete
+                    ? 'Nice work — matches are running against your org now.'
+                    : 'Tell us your org type, location, and who you serve so we can score funders for you.'}
+                </p>
               </div>
+              {!profileComplete && (
+                <a
+                  href="/onboarding/wizard"
+                  className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg hover:opacity-90 transition-opacity"
+                  style={{ background: '#173404', color: '#FAF7F2', fontFamily: 'var(--font-space-grotesk)' }}
+                >
+                  Start
+                  <ArrowRight className="w-3 h-3" />
+                </a>
+              )}
             </div>
 
-            {/* 2. Browse first matches — next (pale-green row + green ring on number) */}
-            <div className="flex items-center gap-4 p-5 border-b border-warm" style={{ background: '#EAF3DE' }}>
+            {/* 2. Browse first matches — only "active" once profile is done */}
+            <div className="flex items-center gap-4 p-5 border-b border-warm" style={profileComplete ? { background: '#EAF3DE' } : undefined}>
               <div
                 className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold"
-                style={{
+                style={profileComplete ? {
                   background: '#FFFFFF',
                   border: '2px solid #8ECB3C',
                   color: '#3F6814',
                   fontFamily: 'var(--font-space-grotesk)',
                   boxShadow: '0 0 0 4px rgba(142,203,60,0.15)',
+                } : {
+                  background: '#FFFFFF',
+                  border: '1.5px solid #E4E2DA',
+                  color: '#8A8986',
+                  fontFamily: 'var(--font-space-grotesk)',
                 }}
               >
                 2
@@ -329,16 +388,22 @@ export default async function DashboardPage() {
                 <p className="text-sm font-semibold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
                   Browse your first matches
                 </p>
-                <p className="text-xs text-mid mt-0.5">{totalMatchCount} opportunities scored against your profile.</p>
+                <p className="text-xs text-mid mt-0.5">
+                  {profileComplete
+                    ? `${totalMatchCount} opportunities scored against your profile.`
+                    : 'Unlocks once your profile is set up.'}
+                </p>
               </div>
-              <a
-                href="/dashboard/search"
-                className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg hover:opacity-90 transition-opacity"
-                style={{ background: '#173404', color: '#FAF7F2', fontFamily: 'var(--font-space-grotesk)' }}
-              >
-                Start
-                <ArrowRight className="w-3 h-3" />
-              </a>
+              {profileComplete && (
+                <a
+                  href="/dashboard/search"
+                  className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg hover:opacity-90 transition-opacity"
+                  style={{ background: '#173404', color: '#FAF7F2', fontFamily: 'var(--font-space-grotesk)' }}
+                >
+                  Start
+                  <ArrowRight className="w-3 h-3" />
+                </a>
+              )}
             </div>
 
             {/* 3. Save first opportunity — todo */}
