@@ -10,7 +10,7 @@ export default function ClearProfileButton() {
   async function handleClick() {
     if (busy) return
     const ok = window.confirm(
-      "Simulates a 'Set up later' user. Wipes your sectors, beneficiaries, location, mission, preferences, pipeline and saved grants. Org name is kept. Other users are unaffected. Continue?"
+      "Simulates a 'Set up later' user. Wipes org name, annual income, sectors, beneficiaries, location, mission, preferences, pipeline and saved grants. Other users are unaffected. Continue?"
     )
     if (!ok) return
 
@@ -35,7 +35,7 @@ export default function ClearProfileButton() {
         <div>
           <h3 className="font-display text-base font-bold text-charcoal">Clear my profile</h3>
           <p className="text-xs text-mid mt-1 max-w-md">
-            Simulates a &ldquo;Set up later&rdquo; user. Wipes your sectors, beneficiaries, location, mission, preferences, pipeline and saved grants. Org name is kept. Other users are unaffected. After clearing, navigate directly to the page you want to preview without signing out.
+            Simulates a &ldquo;Set up later&rdquo; user. Wipes org name, annual income, sectors, beneficiaries, location, mission, preferences, pipeline and saved grants. Other users are unaffected. After clearing, navigate directly to the page you want to preview without signing out.
           </p>
         </div>
         <div className="flex items-center gap-3">

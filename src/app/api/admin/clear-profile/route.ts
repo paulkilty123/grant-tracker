@@ -30,9 +30,11 @@ export async function POST() {
     return NextResponse.json({ error: 'No organisation found for admin user' }, { status: 404 })
   }
 
-  // Mirrors a user who pressed "Set up later" during onboarding: org row exists,
-  // name was entered at signup (kept as-is), everything else empty.
+  // Mirrors a user who pressed "Set up later" during onboarding: org row exists
+  // (id + owner_id preserved so the user stays logged in and routed), every
+  // user-input field — including org name and annual income band — wiped.
   const reset = {
+    name:                         '',
     charity_number:               null,
     cic_number:                   null,
     org_type:                     'other',
