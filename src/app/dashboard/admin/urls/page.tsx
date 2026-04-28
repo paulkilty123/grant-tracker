@@ -572,8 +572,13 @@ export default function UrlAdminPage() {
         alert(`Save failed: ${err.error ?? res.statusText}`)
         return
       }
-      // Reflect edits in local state so the UI shows the new values after saving
-      setGrants(prev => prev.map(g => g.id === grant.id ? { ...g, ...fields } as Grant : g))
+      // Reflect edits in every list-state that might hold this grant so the
+      // row visually updates regardless of which tab the user saved from.
+      const merge = (g: Grant) => g.id === grant.id ? { ...g, ...fields } as Grant : g
+      setGrants(prev => prev.map(merge))
+      setRecentGrants(prev => prev.map(merge))
+      setCategoryGrants(prev => prev.map(g => g.id === grant.id ? { ...g, ...fields } as CategoryGrant : g))
+      setReviewGrants(prev => prev.map(merge))
       setReviewEdits(s => { const n = { ...s }; delete n[grant.id]; return n })
     }
     setReviewPublishing(s => ({ ...s, [grant.id]: false }))
@@ -622,7 +627,11 @@ export default function UrlAdminPage() {
           alert(`Save failed: ${err.error ?? res.statusText}`)
           return
         }
-        setGrants(prev => prev.map(g => g.id === grant.id ? { ...g, ...fields } as Grant : g))
+        const merge = (g: Grant) => g.id === grant.id ? { ...g, ...fields } as Grant : g
+        setGrants(prev => prev.map(merge))
+        setRecentGrants(prev => prev.map(merge))
+        setCategoryGrants(prev => prev.map(g => g.id === grant.id ? { ...g, ...fields } as CategoryGrant : g))
+        setReviewGrants(prev => prev.map(merge))
         setReviewEdits(s => { const n = { ...s }; delete n[grant.id]; return n })
       }
     }
