@@ -109,7 +109,7 @@ function PipelineCard({
       onDragStart={e => onDragStart(e, item.id)}
       onDragEnd={onDragEnd}
       onClick={() => onClick(item)}
-      className="pipeline-card cursor-grab active:cursor-grabbing"
+      className="pipeline-card cursor-pointer active:cursor-grabbing"
     >
       {/* Drag handle + badges row */}
       <div className="flex items-start justify-between mb-2">
