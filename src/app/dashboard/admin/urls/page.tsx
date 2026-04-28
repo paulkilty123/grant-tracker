@@ -1530,70 +1530,65 @@ export default function UrlAdminPage() {
     // (safe to use bare dates since this field is specifically about the decision timeline)
     if (!getReviewVal(grant.id,'deadline',null)) {
       const months: Record<string,string> = { jan:'01',feb:'02',mar:'03',apr:'04',may:'05',jun:'06',jul:'07',aug:'08',sep:'09',oct:'10',nov:'11',dec:'12' }
+      const todayISO = new Date().toISOString().slice(0,10)
+      const candidates: string[] = []
 
       // Multi-round list: e.g. '2026 deadlines are: 27 February, 1 May, 6 July...'
-      // Grabs the LAST date (keeps grant visible through all rounds) + sets is_rolling.
+      // Collects every round in the list and flags the grant as rolling.
       const deadlineListRe = /(\d{4})\s+deadlines?\s*(?:are|for)?[^:]*:\s*([\d\w\s,]+)/i
       const mList = timelineText.match(deadlineListRe)
       if (mList) {
         const yr = mList[1]
         const listPart = mList[2]
-        const dateEntries = Array.from(listPart.matchAll(/(\d{1,2})(?:st|nd|rd|th)?\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*/gi))
-        if (dateEntries.length > 0) {
-          const last = dateEntries[dateEntries.length - 1]
-          const day = last[1].padStart(2,'0')
-          const mon = months[last[2].toLowerCase().slice(0,3)] ?? '01'
-          updates.deadline = `${yr}-${mon}-${day}`
-          updates.is_rolling = true
+        for (const e of Array.from(listPart.matchAll(/(\d{1,2})(?:st|nd|rd|th)?\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*/gi))) {
+          const day = e[1].padStart(2,'0')
+          const mon = months[e[2].toLowerCase().slice(0,3)]
+          if (mon) candidates.push(`${yr}-${mon}-${day}`)
+        }
+        if (candidates.length > 0) updates.is_rolling = true
+      }
+
+      // Bare DD Month YYYY (with optional ordinal suffix) anywhere in the
+      // decision-timeline text. Safe to be permissive here since the field is
+      // specifically about deadline / decision dates.
+      for (const m of Array.from(timelineText.matchAll(/(\d{1,2})(?:st|nd|rd|th)?\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+(\d{4})/gi))) {
+        const day = m[1].padStart(2,'0')
+        const mon = months[m[2].toLowerCase().slice(0,3)]
+        if (mon) candidates.push(`${m[3]}-${mon}-${day}`)
+      }
+      // Bare Month DD YYYY (US style)
+      for (const m of Array.from(timelineText.matchAll(/(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+(\d{1,2})(?:st|nd|rd|th)?,?\s*(\d{4})/gi))) {
+        const mon = months[m[1].toLowerCase().slice(0,3)]
+        const day = m[2].padStart(2,'0')
+        if (mon) candidates.push(`${m[3]}-${mon}-${day}`)
+      }
+      // Month YYYY only (no day) — e.g. "September 2026" — coerce to last day
+      // of the month so it doesn't accidentally land on the 1st. Only used as
+      // a fallback if no full date was found.
+      if (candidates.length === 0) {
+        for (const m of Array.from(timelineText.matchAll(/(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+(\d{4})/gi))) {
+          const mon = months[m[1].toLowerCase().slice(0,3)]
+          if (!mon) continue
+          const yr = m[2]
+          const lastDay = new Date(parseInt(yr), parseInt(mon), 0).getDate()
+          candidates.push(`${yr}-${mon}-${String(lastDay).padStart(2,'0')}`)
         }
       }
 
-      if (!updates.deadline) {
-      // Keyword + DD Month YYYY (with optional ordinal suffix: 1st, 2nd, 3rd, 4th...)
-      const closeReEU = /(?:clos(?:e|es|ing)|deadline|apply by|applications? (?:close|due))[^.]*?(\d{1,2})(?:st|nd|rd|th)?\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+(\d{4})/i
-      // Keyword + Month DD YYYY (US style, with optional ordinal suffix)
-      const closeReUS = /(?:clos(?:e|es|ing)|deadline|apply by|applications? (?:close|due))[^.]*?(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+(\d{1,2})(?:st|nd|rd|th)?,?\s*(\d{4})/i
-      // Fallback: bare DD Month YYYY anywhere in timeline (safe since field is specifically about deadlines)
-      const bareReEU  = /(\d{1,2})(?:st|nd|rd|th)?\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+(\d{4})/i
-      // Fallback: bare Month DD YYYY
-      const bareReUS  = /(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+(\d{1,2})(?:st|nd|rd|th)?,?\s*(\d{4})/i
-      const mEU  = timelineText.match(closeReEU)
-      const mUS  = timelineText.match(closeReUS)
-      const mbEU = (!mEU && !mUS) ? timelineText.match(bareReEU) : null
-      const mbUS = (!mEU && !mUS && !mbEU) ? timelineText.match(bareReUS) : null
-      if (mEU) {
-        const day = mEU[1].padStart(2,'0')
-        const mon = months[mEU[2].toLowerCase().slice(0,3)] ?? '01'
-        updates.deadline = `${mEU[3]}-${mon}-${day}`
-        updates.is_rolling = false
-      } else if (mUS) {
-        const mon = months[mUS[1].toLowerCase().slice(0,3)] ?? '01'
-        const day = mUS[2].padStart(2,'0')
-        updates.deadline = `${mUS[3]}-${mon}-${day}`
-        updates.is_rolling = false
-      } else if (mbEU) {
-        const day = mbEU[1].padStart(2,'0')
-        const mon = months[mbEU[2].toLowerCase().slice(0,3)] ?? '01'
-        updates.deadline = `${mbEU[3]}-${mon}-${day}`
-        updates.is_rolling = false
-      } else if (mbUS) {
-        const mon = months[mbUS[1].toLowerCase().slice(0,3)] ?? '01'
-        const day = mbUS[2].padStart(2,'0')
-        updates.deadline = `${mbUS[3]}-${mon}-${day}`
-        updates.is_rolling = false
-      } else {
-        // Month YYYY only (no day) — e.g. "Current deadline September 2026"
-        const moYrKeyword = /(?:clos(?:e|es|ing)|deadline|apply by|applications? (?:close|due))[^.]*?(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+(\d{4})/i
-        const moYrBare    = /(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+(\d{4})/i
-        const mMY = timelineText.match(moYrKeyword) ?? timelineText.match(moYrBare)
-        if (mMY) {
-          const mon = months[mMY[1].toLowerCase().slice(0,3)] ?? '01'
-          const yr  = mMY[2]
-          const lastDay = new Date(parseInt(yr), parseInt(mon), 0).getDate()
-          updates.deadline = `${yr}-${mon}-${String(lastDay).padStart(2,'0')}`
-          updates.is_rolling = false
-        }
-      }
+      // Dedupe + sort. Pick the earliest date that's today-or-future. If
+      // every candidate is in the past, fall back to the latest past date so
+      // we surface *some* signal rather than nothing — but flag it implicitly
+      // by leaving is_rolling unchanged so the user can sanity-check.
+      const unique = Array.from(new Set(candidates)).sort()
+      const future = unique.filter(d => d >= todayISO)
+      if (future.length > 0) {
+        updates.deadline = future[0]
+        // If we picked a future date but the multi-round flag was set above,
+        // keep is_rolling=true; otherwise we're a one-shot deadline.
+        if (updates.is_rolling === undefined) updates.is_rolling = false
+      } else if (unique.length > 0) {
+        updates.deadline = unique[unique.length - 1]
+        if (updates.is_rolling === undefined) updates.is_rolling = false
       }
     }
     if (Object.keys(updates).length > 0) {
