@@ -13,7 +13,7 @@ import { getOrganisationByOwner } from '@/lib/organisations'
 import { usePlausible } from 'next-plausible'
 import { PIPELINE_STAGES, formatDeadline, formatRange, cn } from '@/lib/utils'
 import type { PipelineItem, PipelineStage, Organisation } from '@/types'
-import { Search, Pencil, Send, Trophy, XCircle, Sparkles, Loader2, Link, ArrowRight, Calendar, AlarmClock, X as XIcon, Circle, FileText, PenLine, RefreshCw, Eye, CheckCircle2, GripVertical, Trash2, ChevronDown } from 'lucide-react'
+import { Search, Pencil, Send, Trophy, XCircle, Sparkles, Loader2, Link, ArrowRight, Calendar, AlarmClock, X as XIcon, Circle, FileText, PenLine, RefreshCw, Eye, CheckCircle2, GripVertical, Trash2 } from 'lucide-react'
 
 const STAGE_ICONS: Record<string, React.ReactNode> = {
   identified: <Search size={13} strokeWidth={2.5} />,
@@ -251,7 +251,6 @@ function PipelineModal({
 
   const [notes, setNotes] = useState(item.notes ?? '')
   const [progress, setProgress] = useState(getWritingStage(item.application_progress).value)
-  const [progressOpen, setProgressOpen] = useState(false)
   const [deadline, setDeadline] = useState(item.deadline ?? '')
   const [amountMin, setAmountMin] = useState(item.amount_min != null ? String(item.amount_min) : '')
   const [amountMax, setAmountMax] = useState(item.amount_max != null ? String(item.amount_max) : (item.amount_requested != null ? String(item.amount_requested) : ''))
@@ -435,57 +434,47 @@ function PipelineModal({
             </div>
           </div>
 
-          {/* Writing progress — collapsible disclosure */}
+          {/* Writing progress — always expanded so users see the controls */}
           <div style={{ borderTop: '0.5px solid rgba(0,0,0,0.08)', paddingTop: 16 }}>
-            <button
-              type="button"
-              onClick={() => setProgressOpen(p => !p)}
-              className="w-full flex items-center justify-between"
-              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginBottom: progressOpen ? 12 : 0 }}
-            >
+            <div className="flex items-center justify-between" style={{ marginBottom: 12 }}>
               <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#5F5E5A', margin: 0 }}>Writing progress</p>
               <span className="flex items-center gap-1.5" style={{ fontSize: 11, color: '#5F5E5A' }}>
                 {getWritingStage(progress).label}
                 {progress > 0 && <span style={{ color: '#8A8986' }}>· {progress}%</span>}
-                <ChevronDown size={13} strokeWidth={2} style={{ transform: progressOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.15s' }} />
               </span>
-            </button>
-            {progressOpen && (
-              <>
-                <div className="grid grid-cols-4 gap-1.5 mb-3">
-                  {WRITING_STAGES.map(s => {
-                    const isActive = getWritingStage(progress).value === s.value
-                    return (
-                      <button
-                        key={s.value}
-                        type="button"
-                        onClick={() => setProgress(s.value)}
-                        style={{
-                          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                          padding: '8px 4px',
-                          background: isActive ? '#F1F7E4' : '#fff',
-                          border: `1px solid ${isActive ? '#639922' : 'rgba(0,0,0,0.08)'}`,
-                          borderRadius: 8,
-                          cursor: 'pointer',
-                          transition: 'all 0.12s',
-                          fontFamily: 'inherit',
-                        }}
-                      >
-                        <span style={{ color: isActive ? '#3B6D11' : '#8A8986' }}>
-                          {WRITING_STAGE_ICONS[s.value]}
-                        </span>
-                        <span style={{ fontSize: 9, fontWeight: 600, color: isActive ? '#3B6D11' : '#5F5E5A', lineHeight: 1.3 }}>
-                          {s.label}
-                        </span>
-                      </button>
-                    )
-                  })}
-                </div>
-                <div style={{ height: 6, background: 'rgba(57,109,17,0.15)', borderRadius: 3, overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${progress}%`, background: '#639922', borderRadius: 3, transition: 'width 0.3s ease' }} />
-                </div>
-              </>
-            )}
+            </div>
+            <div className="grid grid-cols-4 gap-1.5 mb-3">
+              {WRITING_STAGES.map(s => {
+                const isActive = getWritingStage(progress).value === s.value
+                return (
+                  <button
+                    key={s.value}
+                    type="button"
+                    onClick={() => setProgress(s.value)}
+                    style={{
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                      padding: '8px 4px',
+                      background: isActive ? '#F1F7E4' : '#fff',
+                      border: `1px solid ${isActive ? '#639922' : 'rgba(0,0,0,0.08)'}`,
+                      borderRadius: 8,
+                      cursor: 'pointer',
+                      transition: 'all 0.12s',
+                      fontFamily: 'inherit',
+                    }}
+                  >
+                    <span style={{ color: isActive ? '#3B6D11' : '#8A8986' }}>
+                      {WRITING_STAGE_ICONS[s.value]}
+                    </span>
+                    <span style={{ fontSize: 9, fontWeight: 600, color: isActive ? '#3B6D11' : '#5F5E5A', lineHeight: 1.3 }}>
+                      {s.label}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+            <div style={{ height: 6, background: 'rgba(57,109,17,0.15)', borderRadius: 3, overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${progress}%`, background: '#639922', borderRadius: 3, transition: 'width 0.3s ease' }} />
+            </div>
           </div>
 
           {/* Grant URL */}
