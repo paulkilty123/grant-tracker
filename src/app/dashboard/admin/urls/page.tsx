@@ -541,7 +541,20 @@ export default function UrlAdminPage() {
       } catch { /* ignore */ }
     }
     if (Object.keys(fields).length > 0) {
-      await createClient().from('scraped_grants').update(fields).eq('id', grant.id)
+      // Browser anon client is blocked by RLS — go through the admin API
+      // (service-role key) so the update actually lands.
+      const res = await fetch('/api/admin/update-grant', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: grant.id, fields }),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        console.error('saveGrantEdits failed:', err)
+        setReviewPublishing(s => ({ ...s, [grant.id]: false }))
+        alert(`Save failed: ${err.error ?? res.statusText}`)
+        return
+      }
       // Reflect edits in local state so the UI shows the new values after saving
       setGrants(prev => prev.map(g => g.id === grant.id ? { ...g, ...fields } as Grant : g))
       setReviewEdits(s => { const n = { ...s }; delete n[grant.id]; return n })
@@ -579,7 +592,19 @@ export default function UrlAdminPage() {
       if (edits.impact_sectors       !== undefined) { try { fields.impact_sectors       = JSON.parse(String(edits.impact_sectors))       } catch { /* ignore */ } }
       if (edits.target_beneficiaries !== undefined) { try { fields.target_beneficiaries = JSON.parse(String(edits.target_beneficiaries)) } catch { /* ignore */ } }
       if (Object.keys(fields).length > 0) {
-        await createClient().from('scraped_grants').update(fields).eq('id', grant.id)
+        // Browser anon client is blocked by RLS — go through the admin API.
+        const res = await fetch('/api/admin/update-grant', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: grant.id, fields }),
+        })
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}))
+          console.error('publishReviewGrant edits failed:', err)
+          setReviewPublishing(s => ({ ...s, [grant.id]: false }))
+          alert(`Save failed: ${err.error ?? res.statusText}`)
+          return
+        }
         setGrants(prev => prev.map(g => g.id === grant.id ? { ...g, ...fields } as Grant : g))
         setReviewEdits(s => { const n = { ...s }; delete n[grant.id]; return n })
       }
