@@ -6,6 +6,9 @@ import { getOrganisationsByOwner, updateOrganisation, deleteOrganisation } from 
 import { Pencil, Plus, ChevronDown, RotateCcw, Globe, Check, X, Star, Trash2, AlertTriangle } from 'lucide-react'
 import type { Organisation, LegalStructure, OrgStage, ImpactSector, FundingType, BeneficiaryGroup } from '@/types'
 import { useIsMobile } from '@/hooks/useIsMobile'
+import ClearProfileButton from '@/app/dashboard/admin/ClearProfileButton'
+
+const ADMIN_EMAIL = 'paulkilty1@gmail.com'
 
 /* ═══════════════════════════════════════════════
    Design tokens
@@ -1646,6 +1649,7 @@ function StoryCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
 export default function ProfilePage() {
   const isMobile = useIsMobile()
   const [orgs, setOrgs] = useState<Organisation[]>([])
+  const [userEmail, setUserEmail] = useState<string | null>(null)
   const [activeOrgId, setActiveOrgId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [editingCard, setEditingCard] = useState<CardId | null>(null)
@@ -1660,6 +1664,7 @@ export default function ProfilePage() {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
+    setUserEmail(user.email ?? null)
     const allOrgs = await getOrganisationsByOwner(user.id)
     setOrgs(allOrgs)
 
@@ -1842,6 +1847,9 @@ export default function ProfilePage() {
         <CompletionMeter org={activeOrg} onJumpToCard={onJumpToCard} />
 
         <ScanBar orgId={activeOrg.id} website={activeOrg.website_url} onSaved={() => loadOrgs(activeOrg.id)} />
+
+        {/* Admin: clear profile (mirrors a fresh "Set up later" user) */}
+        {userEmail === ADMIN_EMAIL && <ClearProfileButton />}
 
         {/* Cards */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
