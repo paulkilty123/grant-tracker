@@ -566,24 +566,23 @@ export default function LandingPage() {
       </section>
 
       {/* HOW IT WORKS */}
-      <section id="how" className="py-16 md:py-[72px] bg-white">
+      <section id="how" className="py-20 md:py-28 bg-white">
         <div className="mx-auto max-w-7xl px-6 md:px-8">
 
-          {/* Eyebrow */}
-          <motion.div {...fadeInView(0)} className="inline-flex items-center gap-2 mb-6" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>
-            <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#8ECB3C' }} aria-hidden="true" />
-            <span className="uppercase" style={{ color: '#639922', fontSize: 11.5, fontWeight: 500, letterSpacing: '0.08em' }}>Process</span>
-          </motion.div>
-
           {/* Header row */}
-          <motion.div {...fadeInView(0.05)} className="grid md:grid-cols-[1.4fr_1fr] gap-4 md:gap-8 items-start mb-8 md:mb-12">
-            <h2 className="m-0" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: 'clamp(36px, 4vw, 48px)', fontWeight: 500, lineHeight: 1.05, letterSpacing: '-0.025em', color: '#173404' }}>
-              Setup, search and{' '}
-              <span className="block" style={{ color: '#8ECB3C' }}>track what matters.</span>
-            </h2>
-            <p className="m-0 md:mt-2 max-w-sm" style={{ fontFamily: 'var(--font-plus-jakarta, Plus Jakarta Sans, sans-serif)', fontSize: 16, lineHeight: 1.55, color: '#5F5E5A', letterSpacing: '-0.005em' }}>
-              Discover grants, programmes, investment and in-kind support, all suited to your setup and impact priorities.
-            </p>
+          <motion.div {...fadeInView(0)} className="grid lg:grid-cols-2 gap-8 items-end mb-14">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest mb-5" style={{ color: '#8ECB3C' }}>Process</p>
+              <h2 className="font-bold leading-tight" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: '#2C2C2A' }}>
+                Setup, search and<br/>
+                <span style={{ color: '#8ECB3C' }}>track what matters</span>
+              </h2>
+            </div>
+            <div className="lg:pb-2">
+              <p className="text-[#5F5E5A] text-base leading-relaxed max-w-sm">
+                Discover grants, programmes, investment and in-kind support, all suited to your setup and impact priorities.
+              </p>
+            </div>
           </motion.div>
 
           {/* Cards */}
