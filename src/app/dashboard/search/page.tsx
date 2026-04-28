@@ -1298,14 +1298,6 @@ export default function SearchPage() {
     } catch { /* ignore */ }
   }, [query, aiResults, activeType, smartMatched, liveResults, liveSmartMatched, activeView])
 
-  // Debounce inputValue → filterQuery so local text filtering kicks in
-  // ~150ms after the user stops typing. Fast enough to feel live, slow
-  // enough that we're not re-running the filter pipeline on every keystroke.
-  useEffect(() => {
-    const handle = setTimeout(() => setFilterQuery(inputValue.trim().toLowerCase()), 150)
-    return () => clearTimeout(handle)
-  }, [inputValue])
-
   useEffect(() => {
     async function loadOrg() {
       const supabase = createClient()
@@ -1438,6 +1430,7 @@ export default function SearchPage() {
     if (item.sectors?.length) setLiveSelectedSectors(item.sectors)
     if (item.location)        setLocationFilter(item.location)
     setInputValue(item.query)
+    setFilterQuery(item.query.trim().toLowerCase())
     // Try to restore from localStorage instantly — no network call needed
     try {
       const lsKey = `liveSearch:${item.query}:${(item.sectors ?? []).sort().join('|')}:${item.location ?? ''}`
@@ -1996,6 +1989,7 @@ export default function SearchPage() {
     if (!q.trim() && !locationFilter.trim()) return
     setQuery(q)
     setInputValue(q)
+    setFilterQuery(q.trim().toLowerCase())
     setHasSearched(true)
     const combined = [q.trim(), locationFilter.trim()].filter(Boolean).join(' ')
     await runAISearch(combined, false, true)
