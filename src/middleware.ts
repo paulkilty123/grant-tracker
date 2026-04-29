@@ -55,9 +55,22 @@ export async function middleware(request: NextRequest) {
   const isAuthPage = pathname.startsWith('/auth')
   const isPublicPage = pathname === '/' || pathname === '/apply' || pathname === '/cohort-signup-7k9m2x' || pathname === '/privacy' || pathname === '/terms'
   const isApiRoute = pathname.startsWith('/api/')
+  // Next-generated metadata routes must be reachable for crawlers (WhatsApp,
+  // Slack, LinkedIn, Twitter, Facebook) to fetch the OG / Twitter image.
+  // Without this they get redirected to /auth/login and the link preview
+  // never renders.
+  const isMetadataRoute =
+    pathname.startsWith('/opengraph-image') ||
+    pathname.startsWith('/twitter-image') ||
+    pathname.startsWith('/icon') ||
+    pathname.startsWith('/apple-icon') ||
+    pathname === '/manifest.webmanifest' ||
+    pathname === '/site.webmanifest' ||
+    pathname === '/robots.txt' ||
+    pathname === '/sitemap.xml'
 
   // Redirect unauthenticated users to login
-  if (!user && !isAuthPage && !isPublicPage && !isApiRoute) {
+  if (!user && !isAuthPage && !isPublicPage && !isApiRoute && !isMetadataRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth/login'
     return NextResponse.redirect(url)
