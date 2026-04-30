@@ -1542,6 +1542,14 @@ export default function UrlAdminPage() {
       if (!getReviewVal(grant.id,'amount_max',null)) updates.amount_max = sorted[sorted.length-1]
     }
 
+    // ── Detect rolling cues ────────────────────────────────────────────────
+    // Phrases that mean "no fixed deadline" — applications can be submitted
+    // at any time / considered at the next meeting / considered monthly /
+    // year-round etc. Marks the grant as rolling regardless of any dated
+    // matches below (a board-meeting cycle is still rolling, not a one-shot
+    // deadline).
+    const hasRollingCue = /\b(?:rolling(?:\s+(?:basis|deadline|application|programme))?|any[-\s]*time|year[-\s]?round|all\s+year\s+round|open\s+all\s+year|no\s+(?:fixed\s+)?(?:closing\s+date|deadline)|ongoing\s+(?:application|programme)|continuous(?:ly)?|continually(?:\s+accept)?|considered\s+(?:monthly|quarterly|weekly|on\s+a\s+rolling\s+basis|at\s+the\s+next)|submitted\s+at\s+any\s+time|accepted\s+(?:at\s+any\s+time|year[-\s]?round|on\s+a\s+rolling))\b/i.test(timelineText)
+
     // ── Extract deadline ──────────────────────────────────────────────────────
     // Handles ordinal suffixes (1st, 2nd, 3rd, 4th etc.) + bare date fallback
     // (safe to use bare dates since this field is specifically about the decision timeline)
@@ -1606,6 +1614,15 @@ export default function UrlAdminPage() {
       } else if (unique.length > 0) {
         updates.deadline = unique[unique.length - 1]
         if (updates.is_rolling === undefined) updates.is_rolling = false
+      }
+
+      // Rolling cue overrides anything we picked above. If the timeline
+      // says "any time / next meeting / monthly", the grant is rolling
+      // regardless of whether we extracted a specific date.
+      if (hasRollingCue) {
+        updates.is_rolling = true
+        // Don't carry forward a fixed deadline if the timeline says rolling.
+        if (updates.deadline) delete updates.deadline
       }
     }
     if (Object.keys(updates).length > 0) {
