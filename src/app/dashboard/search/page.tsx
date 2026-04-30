@@ -555,14 +555,19 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
   const ftPill = grant.fundingType ? FUNDING_TYPE_PILL[grant.fundingType] ?? null : null
 
   // ── Deadline display ──
-  const deadlineDisplay = grant.isRolling || !grant.deadline
-    ? 'Rolling'
-    : (() => {
-        const parts = grant.deadline!.split('-').map(Number)
-        if (parts.length != 3 || parts.some(isNaN)) return 'Rolling'
-        return new Date(parts[0], parts[1] - 1, parts[2])
-          .toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-      })()
+  // Three-state rendering: a fixed deadline, "Opens [next round]" when the
+  // grant is currently between rounds (nextOpenDate set + not rolling +
+  // no deadline), or "Rolling" as the fallback when always-open.
+  const deadlineDisplay = (!grant.isRolling && !grant.deadline && grant.nextOpenDate)
+    ? `Opens ${grant.nextOpenDate}`
+    : grant.isRolling || !grant.deadline
+      ? 'Rolling'
+      : (() => {
+          const parts = grant.deadline!.split('-').map(Number)
+          if (parts.length != 3 || parts.some(isNaN)) return 'Rolling'
+          return new Date(parts[0], parts[1] - 1, parts[2])
+            .toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+        })()
 
   // ── Qualify check ──
   const qualifies = hasOrg && !!org?.legal_structure && (() => {

@@ -546,6 +546,11 @@ export default function UrlAdminPage() {
     if (edits.location_tag !== undefined) fields.location_tag = edits.location_tag || null
     if (edits.is_invite_only !== undefined) fields.is_invite_only = edits.is_invite_only
     if (edits.description  !== undefined) fields.description  = edits.description || null
+    if (edits.next_open_date !== undefined) {
+      const v = String(edits.next_open_date).trim() || null
+      fields.next_open_date = v
+      fields.next_open_date_parsed = parseOpenDate(v)
+    }
     if (edits.eligible_structures !== undefined) {
       try {
         let structs: string[] = JSON.parse(String(edits.eligible_structures))
@@ -600,6 +605,11 @@ export default function UrlAdminPage() {
       if (edits.location_tag   !== undefined) fields.location_tag    = edits.location_tag || null
       if (edits.is_invite_only !== undefined) fields.is_invite_only  = edits.is_invite_only
       if (edits.description    !== undefined) fields.description     = edits.description || null
+      if (edits.next_open_date !== undefined) {
+        const v = String(edits.next_open_date).trim() || null
+        fields.next_open_date = v
+        fields.next_open_date_parsed = parseOpenDate(v)
+      }
       if (edits.eligible_structures !== undefined) {
         try {
           let structs: string[] = JSON.parse(String(edits.eligible_structures))
@@ -1624,6 +1634,30 @@ export default function UrlAdminPage() {
         // Don't carry forward a fixed deadline if the timeline says rolling.
         if (updates.deadline) delete updates.deadline
       }
+
+      // ── "Next opens" cue ────────────────────────────────────────────────
+      // If the timeline talks about a future application window, the grant
+      // is currently between rounds (not rolling, not a one-shot deadline).
+      // Capture the time hint (e.g. "Spring 2026", "September 2026", "2026")
+      // into next_open_date so the card can render an "Opens X" state.
+      const nextOpenCueRe = /(?:next\s+(?:application\s+|funding\s+|grant\s+|funding\s+round\s+|grant\s+round\s+)?(?:round|window|cohort|intake|cycle|programme|eoi|application)?\s*(?:opens?|reopens?|will\s+(?:open|re-?open)|is\s+expected\s+to\s+(?:open|re-?open))|applications?\s+(?:will\s+)?(?:open|reopen)\s+(?:again\s+)?(?:in|on)?)[^.]{0,150}/i
+      const nextOpenMatch = timelineText.match(nextOpenCueRe)
+      if (nextOpenMatch) {
+        const snippet = nextOpenMatch[0]
+        // Look for a season/qualifier/quarter/month + year, then bare year as fallback.
+        const fragRe = /\b(early|mid|late|spring|summer|autumn|fall|winter|q[1-4]|jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+(20\d{2})\b|\b(20\d{2})\b/i
+        const fragMatch = snippet.match(fragRe)
+        if (fragMatch) {
+          const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()
+          const value = (fragMatch[1] && fragMatch[2])
+            ? `${cap(fragMatch[1])} ${fragMatch[2]}`
+            : `TBC ${fragMatch[3]}`
+          updates.next_open_date = value
+          // Currently between rounds: not rolling, no fixed deadline.
+          updates.is_rolling = false
+          if (updates.deadline) delete updates.deadline
+        }
+      }
     }
     if (Object.keys(updates).length > 0) {
       setReviewEdits(s => ({ ...s, [grant.id]: { ...(s[grant.id] ?? {}), ...updates } }))
@@ -2301,11 +2335,32 @@ export default function UrlAdminPage() {
                 // rolling flag automatically so the two states stay consistent.
                 if (e.target.value.trim()) {
                   setReviewField(grant.id,'is_rolling',false)
+                  setReviewField(grant.id,'next_open_date','')
                 }
               }}
               className="form-input text-xs py-1 w-full"
               placeholder="YYYY-MM-DD"
             /></div>
+        </div>
+        {/* Next opens — only shown if the grant is currently between rounds */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs mb-3">
+          <div className="sm:col-span-2"><label className="text-mid block mb-0.5">Next opens (between rounds)</label>
+            <input
+              type="text"
+              value={String(getReviewVal(grant.id,'next_open_date',(grant as Grant & { next_open_date?: string|null }).next_open_date ?? ''))}
+              onChange={e=>{
+                setReviewField(grant.id,'next_open_date',e.target.value)
+                // If the next-open marker is set, the grant isn't rolling and
+                // shouldn't carry an old deadline — clear both for consistency.
+                if (e.target.value.trim()) {
+                  setReviewField(grant.id,'deadline','')
+                  setReviewField(grant.id,'is_rolling',false)
+                }
+              }}
+              className="form-input text-xs py-1 w-full"
+              placeholder="e.g. TBC 2026 / September 2026 / Q3 2026"
+            />
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mb-3">
           <div className="flex items-center gap-2">
