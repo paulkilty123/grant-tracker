@@ -1468,6 +1468,7 @@ export default function UrlAdminPage() {
   async function enrichGrantFromManager(grant: Grant) {
     if (enrichingId) return
     setEnrichingId(grant.id)
+    setReviewEnrichError(e => { const n = { ...e }; delete n[grant.id]; return n })
     const controller = new AbortController()
     const clientTimeout = setTimeout(() => controller.abort(), 50000)
     try {
@@ -1487,8 +1488,24 @@ export default function UrlAdminPage() {
         setSuspiciousGrants(prev => prev.map(g => g.id === grant.id ? { ...g, funder_brief: brief } : g))
         setRecentGrants(prev => prev.map(patch))
         setCategoryGrants(prev => prev.map(g => g.id === grant.id ? { ...g, funder_brief: brief } : g))
+      } else {
+        // Surface the API error so we don't silently fail with no feedback —
+        // most common cause is the funder URL being unfetchable + no
+        // description to fall back to.
+        const errJson = await res.json().catch(() => ({}))
+        const msg = errJson.error ?? `Enrichment failed (${res.status}). Try Re-enrich after pasting page text via Sources, or fix the apply URL.`
+        setReviewEnrichError(e => ({ ...e, [grant.id]: msg }))
+        // eslint-disable-next-line no-console
+        console.error('[enrichGrantFromManager]', res.status, errJson)
       }
-    } catch { /* silent — network or timeout */ } finally {
+    } catch (err) {
+      const msg = err instanceof Error && err.name === 'AbortError'
+        ? 'Enrichment timed out — paste page text via Sources and Re-enrich.'
+        : 'Network error — try again.'
+      setReviewEnrichError(e => ({ ...e, [grant.id]: msg }))
+      // eslint-disable-next-line no-console
+      console.error('[enrichGrantFromManager] threw', err)
+    } finally {
       clearTimeout(clientTimeout)
       setEnrichingId(null)
     }
