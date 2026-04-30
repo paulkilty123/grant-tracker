@@ -1807,9 +1807,13 @@ export default function UrlAdminPage() {
       structs.add('ltd_guarantee'); structs.add('cooperative')
       structs.add('unincorporated')
     }
-    // Community / voluntary groups → unincorporated (not CIC).
-    if (/community\s+group|voluntary\s+group|voluntary\s+organi|informal\s+group|resident.led\s+group|voluntary\s+sector/.test(text)) {
+    // Community / voluntary groups + community / voluntary organisations.
+    // Adds unincorporated AND ltd_guarantee (the most common UK NFP company
+    // structure for incorporated community orgs), since "community
+    // organisations" tends to span both informal groups and CLGs.
+    if (/community\s+(?:group|organi)|voluntary\s+(?:group|organi|sector)|informal\s+group|resident.led\s+group/.test(text)) {
       structs.add('unincorporated')
+      structs.add('ltd_guarantee')
     }
     // Faith / religious groups → typically charity-shaped or unincorporated.
     if (/faith\s+(?:group|based|organi)|religious\s+(?:group|organi)|church(?:es)?|mosque|synagogue|gurdwara|temple/.test(text)) {
