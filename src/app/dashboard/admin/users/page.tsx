@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 
 interface UserRow {
   id: string
@@ -40,6 +41,7 @@ function displayName(u: UserRow): string {
 }
 
 export default function AdminUsersPage() {
+  const router = useRouter()
   const [rows, setRows] = useState<UserRow[]>([])
   const [loading, setLoading] = useState(true)
   const [denied, setDenied] = useState(false)
@@ -168,7 +170,11 @@ export default function AdminUsersPage() {
               ) : filtered.map(u => {
                 const isAdmin = u.email === ADMIN_EMAIL
                 return (
-                  <tr key={u.id} className={`hover:bg-warm/20 transition-colors ${isAdmin ? 'bg-amber-50/30' : ''}`}>
+                  <tr
+                    key={u.id}
+                    onClick={() => router.push(`/dashboard/admin/users/${u.id}`)}
+                    className={`hover:bg-warm/20 transition-colors cursor-pointer ${isAdmin ? 'bg-amber-50/30' : ''}`}
+                  >
                     <td className="px-4 py-3">
                       <p className="font-medium text-charcoal">{displayName(u)}</p>
                       {isAdmin && <p className="text-[10px] text-amber-700 font-semibold uppercase tracking-wider mt-0.5">Admin</p>}
