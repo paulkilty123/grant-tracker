@@ -972,59 +972,84 @@ async function crawlCFNI(): Promise<CrawlResult> {
 }
 
 // ── Source 13: Heart of England Community Foundation (West Midlands) ──────────
-// Scrapes heartofenglandcf.co.uk/grants/
-// Uses Divi builder — each grant row is a .et_pb_row div containing an h2 title.
-// Max grant and deadline are extracted by regex from the row text.
+// Old .co.uk site has broken TLS; .org migration is a JS-rendered SPA so we
+// can't scrape without a browser-mode fetcher. Static seed of headline funds
+// — HoECF carries the Birmingham & Black Country Communities Fund (formerly
+// run by the standalone bbbcf.org.uk, which has shut down).
 async function crawlHeartOfEnglandCF(): Promise<CrawlResult> {
   const SOURCE = 'heart_of_england_cf'
-  const BASE   = 'https://www.heartofenglandcf.co.uk'
-  const URL    = `${BASE}/grants/`
-
+  const BASE   = 'https://www.heartofenglandcf.org'
   try {
-    const html  = await fetchHtml(URL)
-    const root  = parseHTML(html)
-    const grants: ScrapedGrant[] = []
-
-    for (const row of root.querySelectorAll('.et_pb_row')) {
-      const title = row.querySelector('h2')?.text?.trim()
-      if (!title) continue
-
-      const rowText = row.text ?? ''
-
-      // Max grant: "Maximum Grant: £2,000"
-      const maxMatch = rowText.match(/Maximum Grant:\s*(£[\d,]+)/)
-      const amount   = maxMatch ? parsePoundAmount(maxMatch[1]) : null
-
-      // Deadline: "Deadline: Rolling Programme" or a date
-      const deadlineRaw = rowText.match(/Deadline:\s*([^\n]+)/)?.[1]?.trim() ?? ''
-      const isRolling   = /rolling/i.test(deadlineRaw)
-      const deadline    = isRolling ? null : parseDeadline(deadlineRaw)
-
-      // Supporting (sector): "Supporting: Disadvantage or social exclusion"
-      const supporting = rowText.match(/Supporting:\s*([^\n]+)/)?.[1]?.trim() ?? ''
-
-      const slug = slugify(title)
-
-      grants.push({
-        external_id:          `heart_of_england_cf_${slug}`,
+    return await upsertGrants(SOURCE, [
+      {
+        external_id:          `${SOURCE}_bbbcc_fund`,
         source:               SOURCE,
-        title,
+        title:                'Birmingham & Black Country Communities Fund',
         funder:               'Heart of England Community Foundation',
         funder_type:          'community_foundation',
-        description:          supporting,
-        amount_min:           null,
-        amount_max:           amount,
-        deadline,
-        is_rolling:           isRolling,
+        description:          'Grants up to £3,000 to support people in Birmingham and the Black Country. Funded from a portfolio of endowment funds. Applications must promote health and wellbeing, tackle disadvantage, support local solutions to local needs, or promote community cohesion.',
+        amount_min:           500,
+        amount_max:           3000,
+        deadline:             null,
+        is_rolling:           true,
         is_local:             true,
-        sectors:              supporting ? [supporting.toLowerCase()] : ['community'],
-        eligibility_criteria: ['West Midlands based organisations'],
-        apply_url:            URL,
-        raw_data:             { title, deadlineRaw, maxMatch: maxMatch?.[1], supporting } as Record<string, unknown>,
-      })
-    }
-
-    return await upsertGrants(SOURCE, grants)
+        sectors:              ['community', 'social welfare', 'health', 'diversity'],
+        eligibility_criteria: ['Charity, community group or social enterprise in Birmingham or the Black Country', 'Project addresses one of: health & wellbeing, disadvantage, local solutions, community cohesion'],
+        apply_url:            `${BASE}/birmingham-black-country-communities-fund/`,
+        raw_data:             { note: 'Static seed — migrated from defunct bbbcf.org.uk into HoECF.' } as Record<string, unknown>,
+      },
+      {
+        external_id:          `${SOURCE}_csw_fund`,
+        source:               SOURCE,
+        title:                'Coventry, Solihull & Warwickshire Communities Fund',
+        funder:               'Heart of England Community Foundation',
+        funder_type:          'community_foundation',
+        description:          'Grants up to £3,000 to local charities and community groups working across Coventry, Solihull and Warwickshire. Supports projects that improve community wellbeing, address disadvantage and bring local people together.',
+        amount_min:           500,
+        amount_max:           3000,
+        deadline:             null,
+        is_rolling:           true,
+        is_local:             true,
+        sectors:              ['community', 'social welfare', 'health'],
+        eligibility_criteria: ['Charity, community group or social enterprise in Coventry, Solihull or Warwickshire'],
+        apply_url:            `${BASE}/available-grants/`,
+        raw_data:             { note: 'Static seed.' } as Record<string, unknown>,
+      },
+      {
+        external_id:          `${SOURCE}_im_properties`,
+        source:               SOURCE,
+        title:                'IM Properties Community Fund',
+        funder:               'Heart of England Community Foundation',
+        funder_type:          'community_foundation',
+        description:          'Grants up to £3,000 supporting community projects within IM Properties development areas across the West Midlands. Particular focus on projects benefiting communities near IM Properties commercial sites.',
+        amount_min:           500,
+        amount_max:           3000,
+        deadline:             null,
+        is_rolling:           true,
+        is_local:             true,
+        sectors:              ['community', 'environment', 'youth', 'sport'],
+        eligibility_criteria: ['Charity or community group in West Midlands', 'Project should benefit communities near IM Properties development sites'],
+        apply_url:            `${BASE}/available-grants/`,
+        raw_data:             { note: 'Static seed.' } as Record<string, unknown>,
+      },
+      {
+        external_id:          `${SOURCE}_community_energy_warks`,
+        source:               SOURCE,
+        title:                'Community Energy Warwickshire Fund',
+        funder:               'Heart of England Community Foundation',
+        funder_type:          'community_foundation',
+        description:          'Grants up to £2,000 for community projects across Warwickshire that reduce energy use, improve sustainability or address fuel poverty. Targets local groups taking practical action on the cost-of-living and climate.',
+        amount_min:           250,
+        amount_max:           2000,
+        deadline:             null,
+        is_rolling:           true,
+        is_local:             true,
+        sectors:              ['environment', 'community', 'sustainability', 'fuel poverty'],
+        eligibility_criteria: ['Charity or community group in Warwickshire', 'Project addresses energy efficiency, sustainability or fuel poverty'],
+        apply_url:            `${BASE}/available-grants/`,
+        raw_data:             { note: 'Static seed.' } as Record<string, unknown>,
+      },
+    ])
   } catch (err) {
     return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
   }
@@ -2735,68 +2760,55 @@ async function crawlJRF(): Promise<CrawlResult> {
 }
 
 // ── Source 68 — Access — The Foundation for Social Investment ─────────────────
-// access-gi.org.uk — blended finance and grants for social enterprises and charities.
+// access-socialinvestment.org.uk — blended finance and dormant-assets-funded
+// programmes for charities and social enterprises. Static seed — listing page
+// is dynamic; we curate the headline programmes by hand.
 async function crawlAccessFoundation(): Promise<CrawlResult> {
   const SOURCE = 'access_foundation'
-  const BASE   = 'https://www.access-gi.org.uk'
+  const BASE   = 'https://access-socialinvestment.org.uk'
   try {
-    const html  = await fetchHtml(`${BASE}/programmes/`)
-    const root  = parseHTML(html)
-    const grants: ScrapedGrant[] = []
-
-    for (const card of root.querySelectorAll('article, .programme, .card, .grant-item')) {
-      const titleEl = card.querySelector('h2 a, h3 a, h2, h3')
-      const title   = titleEl?.text?.trim()
-      if (!title || title.length < 5) continue
-
-      const href = card.querySelector('a')?.getAttribute('href') ?? ''
-      const url  = href.startsWith('http') ? href : `${BASE}${href}`
-      const slug = slugify(href || title)
-      const desc = card.querySelector('p')?.text?.trim() ?? ''
-
-      grants.push({
-        external_id:          `access_foundation_${slug}`,
-        source:               SOURCE,
-        title,
-        funder:               'Access — The Foundation for Social Investment',
-        funder_type:          'trust_foundation',
-        description:          desc || 'Programme from Access — The Foundation for Social Investment.',
-        amount_min:           null,
-        amount_max:           null,
-        deadline:             null,
-        is_rolling:           true,
-        is_local:             false,
-        sectors:              ['social enterprise', 'social investment', 'community business'],
-        eligibility_criteria: ['Social enterprises and charities with potential for investment readiness'],
-        apply_url:            url || null,
-        raw_data:             { title, href } as Record<string, unknown>,
-      })
-    }
-
-    if (grants.length > 0) return await upsertGrants(SOURCE, grants)
-
     return await upsertGrants(SOURCE, [
       {
-        external_id:          `${SOURCE}_growth`,
+        external_id:          `${SOURCE}_dormant_assets_2025`,
         source:               SOURCE,
-        title:                'Access Foundation — Growth Fund',
+        title:                'Access — 2025 Dormant Assets Release',
         funder:               'Access — The Foundation for Social Investment',
         funder_type:          'trust_foundation',
-        description:          'Blended finance combining grants and social investment loans to help charities and social enterprises grow. Particularly targets organisations that are investment ready but need a grant element to make a deal viable.',
+        description:          'Access oversees the allocation of £87.5m of Dormant Assets funding to social investment, working with partners to deliver the Community Enterprise Growth Plan. Funding aims to increase investment in community enterprises and mission-driven businesses, particularly in places affected by long-term economic decline.',
         amount_min:           50000,
-        amount_max:           500000,
+        amount_max:           1000000,
         deadline:             null,
         is_rolling:           true,
         is_local:             false,
-        sectors:              ['social enterprise', 'social investment', 'community', 'health', 'employment'],
+        sectors:              ['social enterprise', 'social investment', 'community business', 'community wealth'],
         eligibility_criteria: [
-          'Charity or social enterprise based in England',
-          'Minimum 3 years of trading',
-          'Ability to service investment (loan element)',
-          'Must demonstrate social impact',
+          'Charity, social enterprise or mission-driven business in England',
+          'Investment-ready or working towards readiness',
+          'Operating in places affected by long-term economic decline (preference)',
         ],
-        apply_url:            `${BASE}/programmes/`,
-        raw_data:             { note: 'Hardcoded fallback' } as Record<string, unknown>,
+        apply_url:            `${BASE}/what-we-do/2025-dormant-assets-release`,
+        raw_data:             { note: 'Static seed — Access manages partner-led funds rather than direct applications.' } as Record<string, unknown>,
+      },
+      {
+        external_id:          `${SOURCE}_connect_fund`,
+        source:               SOURCE,
+        title:                'Access — Connect Fund',
+        funder:               'Access — The Foundation for Social Investment',
+        funder_type:          'trust_foundation',
+        description:          'The Connect Fund supports the social investment market in England — funding intermediaries and infrastructure that help charities and social enterprises become investment ready. Grants to organisations that strengthen the market rather than direct social investments.',
+        amount_min:           10000,
+        amount_max:           250000,
+        deadline:             null,
+        is_rolling:           false,
+        is_local:             false,
+        sectors:              ['social investment', 'capacity building', 'social enterprise'],
+        eligibility_criteria: [
+          'Social investment intermediary, infrastructure body or capacity-building org',
+          'England-based or England-focused activity',
+          'Project must strengthen the social investment ecosystem',
+        ],
+        apply_url:            `${BASE}/what-we-do/programmes-and-funds/connect-fund`,
+        raw_data:             { note: 'Static seed — open in periodic rounds.' } as Record<string, unknown>,
       },
     ])
   } catch (err) {
@@ -3039,25 +3051,30 @@ async function crawlEastEndCF(): Promise<CrawlResult> {
 }
 
 // ── Source 76 — Birmingham & Black Country Community Foundation ───────────────
+// Standalone bbbcf.org.uk has shut down — funding now runs as a sub-programme
+// of Heart of England CF. Kept as a slim source pointer so the cron stays
+// happy and search still surfaces a "Birmingham & Black Country" hit.
+// (HoECF crawler is the canonical source for the fund itself.)
 async function crawlBirminghamCF(): Promise<CrawlResult> {
   const SOURCE = 'birmingham_cf'
-  const BASE   = 'https://www.bbbcf.org.uk'
   try {
-    const html  = await fetchHtml(`${BASE}/grants/`)
-    const root  = parseHTML(html)
-    const grants: ScrapedGrant[] = []
-    for (const card of root.querySelectorAll('article, .grant, .fund, .grant-item')) {
-      const titleEl = card.querySelector('h2 a, h3 a, h2, h3')
-      const title   = titleEl?.text?.trim()
-      if (!title || title.length < 5) continue
-      const href = card.querySelector('a')?.getAttribute('href') ?? ''
-      const url  = href.startsWith('http') ? href : `${BASE}${href}`
-      const desc = card.querySelector('p')?.text?.trim() ?? ''
-      const { min, max } = parseAmountRange(desc + ' ' + title)
-      grants.push({ external_id: `birmingham_cf_${slugify(href || title)}`, source: SOURCE, title, funder: 'Birmingham & Black Country Community Foundation', funder_type: 'community_foundation', description: desc || 'Grant from Birmingham & Black Country Community Foundation.', amount_min: min, amount_max: max, deadline: null, is_rolling: true, is_local: true, sectors: ['community', 'social welfare', 'diversity'], eligibility_criteria: ['Organisations in Birmingham or Black Country'], apply_url: url || null, raw_data: { title, href } as Record<string, unknown> })
-    }
-    if (grants.length > 0) return await upsertGrants(SOURCE, grants)
-    return await upsertGrants(SOURCE, [{ external_id: `${SOURCE}_open`, source: SOURCE, title: 'Birmingham & Black Country Community Foundation — Open Grants', funder: 'Birmingham & Black Country Community Foundation', funder_type: 'community_foundation', description: 'Birmingham & Black Country Community Foundation supports charitable organisations working across Birmingham, Sandwell, Dudley, Wolverhampton and Walsall.', amount_min: 500, amount_max: 25000, deadline: null, is_rolling: true, is_local: true, sectors: ['community', 'social welfare', 'diversity', 'youth', 'health'], eligibility_criteria: ['Registered charity or voluntary group in Birmingham or Black Country'], apply_url: `${BASE}/apply/`, raw_data: { note: 'Hardcoded fallback' } as Record<string, unknown> }])
+    return await upsertGrants(SOURCE, [{
+      external_id: `${SOURCE}_redirect_hoecf`,
+      source: SOURCE,
+      title: 'Birmingham & Black Country Communities Fund (managed by Heart of England CF)',
+      funder: 'Heart of England Community Foundation',
+      funder_type: 'community_foundation',
+      description: 'The Birmingham & Black Country Communities Fund is now administered by Heart of England Community Foundation. Grants up to £3,000 for charities, community groups and social enterprises across Birmingham, Sandwell, Dudley, Wolverhampton and Walsall.',
+      amount_min: 500,
+      amount_max: 3000,
+      deadline: null,
+      is_rolling: true,
+      is_local: true,
+      sectors: ['community', 'social welfare', 'diversity', 'youth', 'health'],
+      eligibility_criteria: ['Registered charity, community group or social enterprise in Birmingham or the Black Country'],
+      apply_url: 'https://www.heartofenglandcf.org/birmingham-black-country-communities-fund/',
+      raw_data: { note: 'Redirect — original bbbcf.org.uk domain shut down; fund migrated to HoECF.' } as Record<string, unknown>,
+    }])
   } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
 }
 
@@ -3234,27 +3251,65 @@ async function crawlCadentFoundation(): Promise<CrawlResult> {
 }
 
 // ── Source 90 — Severn Trent Community Fund ───────────────────────────────────
-// stcf.org.uk — water company fund for communities in the Severn Trent area.
+// Old stcf.org.uk domain is dead — fund now lives at stwater.co.uk. Static
+// seed of the two named programmes (New Project Funding, Core Funding) plus
+// the time-limited grassroots-football round.
 async function crawlSevernTrentFund(): Promise<CrawlResult> {
   const SOURCE = 'severn_trent_fund'
-  const BASE   = 'https://www.stcf.org.uk'
+  const BASE   = 'https://www.stwater.co.uk/about-us/severn-trent-community-fund'
   try {
-    const html  = await fetchHtml(`${BASE}/`)
-    const root  = parseHTML(html)
-    const grants: ScrapedGrant[] = []
-    for (const card of root.querySelectorAll('article, .fund, .grant, .card')) {
-      const titleEl = card.querySelector('h2 a, h3 a, h2, h3')
-      const title   = titleEl?.text?.trim()
-      if (!title || title.length < 5) continue
-      const href = card.querySelector('a')?.getAttribute('href') ?? ''
-      const url  = href.startsWith('http') ? href : `${BASE}${href}`
-      const desc = card.querySelector('p')?.text?.trim() ?? ''
-      const { min, max } = parseAmountRange(desc + ' ' + title)
-      grants.push({ external_id: `severn_trent_fund_${slugify(href || title)}`, source: SOURCE, title, funder: 'Severn Trent Community Fund', funder_type: 'corporate_foundation', description: desc || 'Grant from Severn Trent Community Fund.', amount_min: min, amount_max: max, deadline: null, is_rolling: true, is_local: true, sectors: ['community', 'environment', 'water', 'social welfare'], eligibility_criteria: ['Organisations in the Severn Trent area (Midlands, parts of Wales)'], apply_url: url || null, raw_data: { title, href } as Record<string, unknown> })
-    }
-    if (grants.length > 0) return await upsertGrants(SOURCE, grants)
     return await upsertGrants(SOURCE, [
-      { external_id: `${SOURCE}_community`, source: SOURCE, title: 'Severn Trent Community Fund — Community Projects', funder: 'Severn Trent Community Fund', funder_type: 'corporate_foundation', description: "Severn Trent's community fund supports projects that improve communities and the environment across the Midlands and parts of Wales. Topics include water efficiency, community spaces, biodiversity and social welfare.", amount_min: 500, amount_max: 50000, deadline: null, is_rolling: true, is_local: true, sectors: ['community', 'environment', 'water', 'biodiversity', 'social welfare'], eligibility_criteria: ['Charities, community groups and social enterprises', 'Located in the Severn Trent supply area (Midlands, Welsh borders)'], apply_url: `${BASE}/apply/`, raw_data: { note: 'Hardcoded fallback' } as Record<string, unknown> },
+      {
+        external_id:          `${SOURCE}_new_project`,
+        source:               SOURCE,
+        title:                'Severn Trent Community Fund — New Project Funding',
+        funder:               'Severn Trent Community Fund',
+        funder_type:          'corporate_foundation',
+        description:          'Grants between £2,000 and £50,000 for projects that support community wellbeing across the Severn Trent region. Three pillars: People, Place and Environment — examples include improving access to rivers, grey-water recycling, sustainable drainage and water-efficient green spaces. Around 30 projects funded per year. Applications accepted at any time.',
+        amount_min:           2000,
+        amount_max:           50000,
+        deadline:             null,
+        is_rolling:           true,
+        is_local:             true,
+        sectors:              ['community', 'environment', 'water', 'biodiversity', 'sustainability'],
+        eligibility_criteria: ['Charity, community group, parish council or constituted organisation', 'Located in the Severn Trent supply area (Midlands, parts of Wales and South Yorkshire)', 'Project must align with People, Place or Environment themes'],
+        apply_url:            `${BASE}/new-project-funding/`,
+        raw_data:             { note: 'Static seed — current programme.' } as Record<string, unknown>,
+      },
+      {
+        external_id:          `${SOURCE}_core_funding`,
+        source:               SOURCE,
+        title:                'Severn Trent Community Fund — Core Funding',
+        funder:               'Severn Trent Community Fund',
+        funder_type:          'corporate_foundation',
+        description:          'Core funding grants of £5,000–£20,000 for one year, supporting eligible charities and community organisations with running costs and operational capacity. Two application windows per year (June and November), each open for one month.',
+        amount_min:           5000,
+        amount_max:           20000,
+        deadline:             null,
+        is_rolling:           false,
+        is_local:             true,
+        sectors:              ['community', 'social welfare', 'environment'],
+        eligibility_criteria: ['Charity or community group operating in the Severn Trent supply area', 'Apply during June or November windows'],
+        apply_url:            `${BASE}/core-funding/`,
+        raw_data:             { note: 'Static seed — June and November windows.' } as Record<string, unknown>,
+      },
+      {
+        external_id:          `${SOURCE}_kids_football_2026`,
+        source:               SOURCE,
+        title:                "Severn Trent Community Fund — Children's Football Clubs",
+        funder:               'Severn Trent Community Fund',
+        funder_type:          'corporate_foundation',
+        description:          "Time-limited 2026 round to support 80 children's football clubs across the Severn Trent region with grants of £1,000 for kit and other essential costs. Opens May 2026.",
+        amount_min:           1000,
+        amount_max:           1000,
+        deadline:             null,
+        is_rolling:           false,
+        is_local:             true,
+        sectors:              ['sport', 'youth', 'community'],
+        eligibility_criteria: ["Children's football club in the Severn Trent supply area"],
+        apply_url:            BASE + '/',
+        raw_data:             { note: 'Static seed — 2026 one-off programme.' } as Record<string, unknown>,
+      },
     ])
   } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
 }
@@ -3282,28 +3337,48 @@ async function crawlVeoliaEnvTrust(): Promise<CrawlResult> {
 }
 
 // ── Source 93 — Biffa Award ───────────────────────────────────────────────────
-// biffa-award.org.uk — landfill communities fund for nature and heritage projects.
+// biffa-award.org — landfill communities fund managed by the Royal Society of
+// Wildlife Trusts (RSWT). Static seed of the two headline schemes; the .org.uk
+// domain has shut down.
 async function crawlBiffaAward(): Promise<CrawlResult> {
   const SOURCE = 'biffa_award'
-  const BASE   = 'https://www.biffa-award.org.uk'
+  const BASE   = 'https://www.biffa-award.org'
   try {
-    const html  = await fetchHtml(`${BASE}/scheme/`)
-    const root  = parseHTML(html)
-    const grants: ScrapedGrant[] = []
-    for (const card of root.querySelectorAll('article, .scheme, .fund, .grant')) {
-      const titleEl = card.querySelector('h2 a, h3 a, h2, h3')
-      const title   = titleEl?.text?.trim()
-      if (!title || title.length < 5) continue
-      const href = card.querySelector('a')?.getAttribute('href') ?? ''
-      const url  = href.startsWith('http') ? href : `${BASE}${href}`
-      const desc = card.querySelector('p')?.text?.trim() ?? ''
-      const { min, max } = parseAmountRange(desc + ' ' + title)
-      grants.push({ external_id: `biffa_award_${slugify(href || title)}`, source: SOURCE, title, funder: 'Biffa Award', funder_type: 'corporate_foundation', description: desc || 'Capital grant from Biffa Award.', amount_min: min, amount_max: max, deadline: null, is_rolling: false, is_local: true, sectors: ['environment', 'heritage', 'community', 'conservation'], eligibility_criteria: ['Within 10 miles of a Biffa operational site', 'Registered charity or community group'], apply_url: url || null, raw_data: { title, href } as Record<string, unknown> })
-    }
-    if (grants.length > 0) return await upsertGrants(SOURCE, grants)
     return await upsertGrants(SOURCE, [
-      { external_id: `${SOURCE}_communities`, source: SOURCE, title: 'Biffa Award — Thriving Communities', funder: 'Biffa Award', funder_type: 'corporate_foundation', description: "Capital grants for community buildings, sports facilities and village halls within 10 miles of a Biffa operational facility. Grants of £20,000–£75,000 for buildings that bring communities together.", amount_min: 20000, amount_max: 75000, deadline: null, is_rolling: false, is_local: true, sectors: ['community', 'sport', 'heritage', 'facilities'], eligibility_criteria: ['Within 10 miles of a Biffa landfill or waste facility', 'Registered charity, CIC or community group', 'Capital project for community building or facility'], apply_url: `${BASE}/scheme/thriving-communities/`, raw_data: { note: 'Hardcoded fallback' } as Record<string, unknown> },
-      { external_id: `${SOURCE}_land_nature`, source: SOURCE, title: 'Biffa Award — Land of Beauty', funder: 'Biffa Award', funder_type: 'corporate_foundation', description: "Grants to improve biodiversity and access to nature in local greenspaces, nature reserves and parks within 10 miles of a Biffa site. Projects should enhance ecology, connect people with nature, or create new wildlife habitats.", amount_min: 10000, amount_max: 50000, deadline: null, is_rolling: false, is_local: true, sectors: ['environment', 'conservation', 'biodiversity', 'community'], eligibility_criteria: ['Within 10 miles of a Biffa landfill or waste facility', 'Registered charity or community land trust', 'Environmental or biodiversity project'], apply_url: `${BASE}/scheme/land-of-beauty/`, raw_data: { note: 'Hardcoded fallback' } as Record<string, unknown> },
+      {
+        external_id:          `${SOURCE}_main_grants`,
+        source:               SOURCE,
+        title:                'Biffa Award — Main Grants Scheme',
+        funder:               'Biffa Award',
+        funder_type:          'corporate_foundation',
+        description:          'Capital grants of £10,000–£75,000 for community buildings, biodiversity and heritage projects within 10 miles of a Biffa operational facility. Total project cost must be under £200,000 incl. VAT. Expressions of Interest accepted at any time. Funded by the Landfill Communities Fund and managed by the Royal Society of Wildlife Trusts.',
+        amount_min:           10000,
+        amount_max:           75000,
+        deadline:             null,
+        is_rolling:           true,
+        is_local:             true,
+        sectors:              ['community', 'environment', 'biodiversity', 'heritage', 'facilities'],
+        eligibility_criteria: ['Within 10 miles of a qualifying Biffa landfill or waste facility', 'Registered charity, CIC, parish council or community group', 'Total project cost under £200,000 incl. VAT', 'Capital project (not running costs)'],
+        apply_url:            `${BASE}/main-grants-scheme/`,
+        raw_data:             { note: 'Static seed.' } as Record<string, unknown>,
+      },
+      {
+        external_id:          `${SOURCE}_partnership_grants`,
+        source:               SOURCE,
+        title:                'Biffa Award — Partnership Grants Scheme',
+        funder:               'Biffa Award',
+        funder_type:          'corporate_foundation',
+        description:          'Larger grants of £250,000–£1,000,000 for transformational community and environmental projects that finish within one year. Current round funds work starting February 2026 and completing by February 2027.',
+        amount_min:           250000,
+        amount_max:           1000000,
+        deadline:             null,
+        is_rolling:           false,
+        is_local:             true,
+        sectors:              ['community', 'environment', 'biodiversity', 'heritage'],
+        eligibility_criteria: ['Within 10 miles of a qualifying Biffa landfill or waste facility', 'Registered charity or community body', 'Project must complete within 12 months of award'],
+        apply_url:            `${BASE}/partnership-grants-scheme/`,
+        raw_data:             { note: 'Static seed.' } as Record<string, unknown>,
+      },
     ])
   } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
 }
