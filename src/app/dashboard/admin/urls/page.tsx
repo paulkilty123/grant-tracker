@@ -2002,26 +2002,35 @@ export default function UrlAdminPage() {
   }
 
   // ── Bulk enrichment ──────────────────────────────────────────────────────────
-  async function bulkEnrich() {
+  async function bulkEnrich(scope: 'active' | 'review' = 'active') {
     if (bulkEnriching) return
     setBulkEnriching(true)
     setBulkEnrichDone(0)
     setBulkEnrichLog([])
 
-    // Fetch all active grants then filter client-side for missing who_can_apply
-    // (JSONB field filtering inside PostgREST .or() is unreliable for nested keys)
+    // Fetch grants in the requested scope, then filter client-side for missing
+    // who_can_apply (JSONB field filtering inside PostgREST .or() is unreliable
+    // for nested keys).
     const supabase = createClient()
-    const { data: rawData } = await supabase
+    let q = supabase
       .from('scraped_grants')
       .select('id, title, funder, apply_url, url_status, funder_brief, grant_sources, source, url_last_checked, is_invite_only')
-      .eq('is_active', true)
       .not('apply_url', 'is', null)
+    if (scope === 'active') {
+      q = q.eq('is_active', true)
+    } else {
+      // Needs Review queue: inactive, not hidden, not parked for later
+      q = q.eq('is_active', false).neq('url_status', 'dead').not('saved_for_later', 'is', 'true')
+    }
+    const { data: rawData } = await q
     const targets = (rawData ?? []).filter(g =>
       !g.funder_brief || !(g.funder_brief as Record<string, unknown>).who_can_apply
     )
 
     if (targets.length === 0) {
-      setBulkEnrichLog(['Nothing to enrich — all active grants already have up-to-date briefs.'])
+      setBulkEnrichLog([scope === 'review'
+        ? 'Nothing to enrich — every grant in Needs Review already has a brief.'
+        : 'Nothing to enrich — all active grants already have up-to-date briefs.'])
       setBulkEnriching(false)
       return
     }
@@ -2053,6 +2062,8 @@ export default function UrlAdminPage() {
           setNewGrants(prev => prev.map(g => g.id === grant.id ? { ...g, funder_brief: brief } : g))
           setReviewGrants(prev => prev.map(g => g.id === grant.id ? { ...g, funder_brief: brief } : g))
           setSuspiciousGrants(prev => prev.map(g => g.id === grant.id ? { ...g, funder_brief: brief } : g))
+          setRecentGrants(prev => prev.map(patch))
+          setCategoryGrants(prev => prev.map(g => g.id === grant.id ? { ...g, funder_brief: brief } : g))
           setBulkEnrichLog(prev => [...prev, `✓ ${grant.funder ?? ''} — ${grant.title}`])
         } else {
           const body = await res.json().catch(() => ({}))
@@ -2708,7 +2719,7 @@ export default function UrlAdminPage() {
             </p>
           </div>
           <button
-            onClick={bulkEnrich}
+            onClick={() => bulkEnrich('active')}
             disabled={bulkEnriching}
             className="flex items-center gap-2 rounded-lg bg-[#008080] px-4 py-2 text-sm font-medium text-white hover:bg-[#006666] disabled:opacity-50 transition-colors"
           >
@@ -3151,6 +3162,12 @@ export default function UrlAdminPage() {
               </p>
             </div>
             <div className="flex items-center gap-2">
+              <button onClick={() => bulkEnrich('review')} disabled={bulkEnriching || reviewGrants.length === 0}
+                className="flex items-center gap-1.5 rounded-full bg-[#008080] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#006666] transition-colors disabled:opacity-50">
+                {bulkEnriching
+                  ? <><RefreshCw className="h-3 w-3 animate-spin" /> Enriching {bulkEnrichDone}/{bulkEnrichTotal}</>
+                  : <><Brain className="h-3 w-3" /> Enrich all unenriched</>}
+              </button>
               <button onClick={approveAllReview} disabled={approvingAll || reviewGrants.length === 0}
                 className="rounded-full bg-forest px-4 py-1.5 text-xs font-semibold text-white hover:bg-forest/80 transition-colors disabled:opacity-50">
                 {approvingAll ? 'Approving…' : `Approve all ${reviewGrants.length}`}
