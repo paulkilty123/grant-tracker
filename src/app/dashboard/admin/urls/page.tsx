@@ -1604,6 +1604,27 @@ export default function UrlAdminPage() {
         const day = m[2].padStart(2,'0')
         if (mon) candidates.push(`${m[3]}-${mon}-${day}`)
       }
+
+      // Bare DD Month — no year — e.g. "Applications close 31 March and 30
+      // September." Infer the year: try current year first, bump to next
+      // year if that date has already passed. The negative lookahead
+      // (?!\s+\d{4}) avoids double-matching dates already captured above.
+      const currentYear = new Date().getFullYear()
+      for (const m of Array.from(timelineText.matchAll(/\b(\d{1,2})(?:st|nd|rd|th)?\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b(?!\s+\d{4})/gi))) {
+        const day = m[1].padStart(2,'0')
+        const mon = months[m[2].toLowerCase().slice(0,3)]
+        if (!mon) continue
+        const tryCurrent = `${currentYear}-${mon}-${day}`
+        candidates.push(tryCurrent >= todayISO ? tryCurrent : `${currentYear + 1}-${mon}-${day}`)
+      }
+      // Bare Month DD — no year — e.g. "Applications close September 30"
+      for (const m of Array.from(timelineText.matchAll(/\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+(\d{1,2})(?:st|nd|rd|th)?\b(?!,?\s*\d{4})/gi))) {
+        const mon = months[m[1].toLowerCase().slice(0,3)]
+        const day = m[2].padStart(2,'0')
+        if (!mon) continue
+        const tryCurrent = `${currentYear}-${mon}-${day}`
+        candidates.push(tryCurrent >= todayISO ? tryCurrent : `${currentYear + 1}-${mon}-${day}`)
+      }
       // Month YYYY only (no day) — e.g. "September 2026" — coerce to last day
       // of the month so it doesn't accidentally land on the 1st. Only used as
       // a fallback if no full date was found.
