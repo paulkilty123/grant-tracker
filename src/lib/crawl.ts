@@ -1229,34 +1229,36 @@ async function crawlSussexCF(): Promise<CrawlResult> {
       raw_data:             { page: 'main-grants' } as Record<string, unknown>,
     })
 
-    // ── Additional Grants (named funds, parse h2/h3 headings) ──
+    // ── Additional Grants — follow per-fund deep links ──
+    // Each named fund now has its own page at
+    //   /grants/how-to-apply/additional-grants/<slug>/
+    // Extract by matching anchor hrefs (more reliable than h2/h3 heading
+    // heuristics, and gives each grant its own apply_url).
     if (addHtml) {
       try {
         const root = parseHTML(addHtml)
-        const GENERIC_HEADINGS = new Set([
-          'additional grants', 'how to apply', 'grants', 'contact us', 'eligibility',
-          'further information', 'useful links', 'related pages', 'sign up',
-        ])
         const seen = new Set<string>()
-        for (const el of [...root.querySelectorAll('h2'), ...root.querySelectorAll('h3')]) {
-          const text = el.text.replace(/\s+/g, ' ').trim()
-          if (!text) continue
-          const lower = text.toLowerCase()
-          if (lower.length < 6 || lower.length > 120) continue
-          if (GENERIC_HEADINGS.has(lower)) continue
-          // Heuristic: named funds typically contain "Fund", "Trust", "Foundation" or "Grant"
-          if (!/fund|trust|foundation|grant|award|programme|bursary/i.test(lower)) continue
-          if (seen.has(lower)) continue
-          seen.add(lower)
-
-          const slug = lower.replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80)
+        const FUND_PATH = /\/grants\/how-to-apply\/additional-grants\/([a-z0-9][a-z0-9-]+)\/?$/i
+        for (const a of root.querySelectorAll('a[href]')) {
+          const href = a.getAttribute('href') ?? ''
+          const m = href.match(FUND_PATH)
+          if (!m) continue
+          const slug = m[1].toLowerCase()
+          if (seen.has(slug)) continue
+          seen.add(slug)
+          const linkText = a.text.replace(/\s+/g, ' ').trim()
+          // Title fallback: humanise slug if anchor text is empty/generic
+          const title = linkText && linkText.length > 4 && !/^read more|find out more|apply now$/i.test(linkText)
+            ? linkText
+            : slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+          const url = href.startsWith('http') ? href : `${BASE}${href.startsWith('/') ? '' : '/'}${href}`
           grants.push({
             external_id:          `sussex_cf_${slug}`,
             source:               SOURCE,
-            title:                `Sussex Community Foundation — ${text}`,
+            title:                `Sussex Community Foundation — ${title}`,
             funder:               'Sussex Community Foundation',
             funder_type:          'community_foundation',
-            description:          `${text} is one of the additional grant programmes distributed by Sussex Community Foundation alongside the main grants cycle. Administered for East Sussex, West Sussex and Brighton & Hove applicants. Check the Additional Grants page for current opening windows and guidelines.`,
+            description:          `${title} is one of the additional grant programmes distributed by Sussex Community Foundation alongside the main grants cycle. Administered for East Sussex, West Sussex and Brighton & Hove applicants. See the fund page for current opening windows, amounts and guidelines.`,
             amount_min:           null,
             amount_max:           null,
             deadline:             null,
@@ -1266,8 +1268,8 @@ async function crawlSussexCF(): Promise<CrawlResult> {
             eligibility_criteria: [
               'Voluntary or community organisation based/working in East Sussex, West Sussex or Brighton & Hove',
             ],
-            apply_url:            ADD,
-            raw_data:             { page: 'additional-grants', heading: text } as Record<string, unknown>,
+            apply_url:            url,
+            raw_data:             { page: 'additional-grants', slug } as Record<string, unknown>,
           })
         }
       } catch {
