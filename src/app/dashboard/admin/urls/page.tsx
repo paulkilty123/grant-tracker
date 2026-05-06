@@ -1563,7 +1563,14 @@ export default function UrlAdminPage() {
     // ── Extract deadline ──────────────────────────────────────────────────────
     // Handles ordinal suffixes (1st, 2nd, 3rd, 4th etc.) + bare date fallback
     // (safe to use bare dates since this field is specifically about the decision timeline)
-    if (!getReviewVal(grant.id,'deadline',null)) {
+    //
+    // Always re-runs on Detect all — earlier the block was guarded by
+    // "only if no deadline set" so re-clicking Detect all on a grant with
+    // an existing deadline did nothing. That hid valid corrections (e.g. a
+    // grant that's actually multi-round / year-round but had a single
+    // deadline pinned at insert). The user can manually reset values via
+    // the inline panel; Detect all is meant to re-evaluate from the brief.
+    {
       const months: Record<string,string> = { jan:'01',feb:'02',mar:'03',apr:'04',may:'05',jun:'06',jul:'07',aug:'08',sep:'09',oct:'10',nov:'11',dec:'12' }
       const todayISO = new Date().toISOString().slice(0,10)
       const candidates: string[] = []
