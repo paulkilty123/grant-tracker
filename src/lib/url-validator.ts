@@ -1,6 +1,24 @@
 // Shared URL validation utility — used by both the admin validate-urls route
 // and the weekly cron job. Keeping it here avoids importing across API routes.
 
+// Browser-like headers: bare 'GrantTracker/1.0' UA was 403ing on Cloudflare /
+// WAF-protected funders (Aldi, Tesco, Arts Council etc.), causing the
+// validator to mass-flag legitimate live URLs as dead. Match the same Chrome
+// header set used by crawl.ts/fetchHtml so both code paths agree.
+const BROWSER_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+  'Accept-Language': 'en-GB,en;q=0.9',
+  'Sec-Ch-Ua': '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
+  'Sec-Ch-Ua-Mobile': '?0',
+  'Sec-Ch-Ua-Platform': '"macOS"',
+  'Sec-Fetch-Dest': 'document',
+  'Sec-Fetch-Mode': 'navigate',
+  'Sec-Fetch-Site': 'none',
+  'Sec-Fetch-User': '?1',
+  'Upgrade-Insecure-Requests': '1',
+} as const
+
 const GENERIC_GRANT_WORDS = new Set([
   'trust', 'funds', 'grant', 'grants', 'charity', 'health', 'foundation',
   'community', 'national', 'lottery', 'local', 'england', 'council',
@@ -92,9 +110,7 @@ export async function deepCheckUrl(
       method: 'GET',
       signal: AbortSignal.timeout(10_000),
       redirect: 'follow',
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; GrantTracker/1.0; +https://grant-tracker-kappa.vercel.app)',
-      },
+      headers: BROWSER_HEADERS,
     })
 
     // ── Hard 404 ────────────────────────────────────────────────────────────────
@@ -247,9 +263,7 @@ export async function checkUrl(url: string, funderName?: string): Promise<'ok' |
       method: 'GET',
       signal: AbortSignal.timeout(8000),
       redirect: 'follow',
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; GrantTracker/1.0; +https://grant-tracker-kappa.vercel.app)',
-      },
+      headers: BROWSER_HEADERS,
     })
 
     // ── Hard failures ──────────────────────────────────────────────────────────
