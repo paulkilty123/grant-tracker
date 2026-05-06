@@ -262,6 +262,8 @@ export interface GrantOpportunity {
   isInviteOnly: boolean
   /** Human-readable location tag, e.g. "London", "Leeds", "Scotland", "UK" */
   locationTag?: string | null
+  /** True if the funder runs multiple application rounds / windows per year — derived from the brief's decision_timeline. Surfaces a "Multi-round" pill on the grant card. */
+  isMultiRound?: boolean
   /** Human-readable date when the grant next opens (e.g. "July 2026"). Null if open now or unknown. */
   nextOpenDate?: string | null
   /** ISO date (YYYY-MM-DD) when the grant next opens — used for "opens soon" display. */

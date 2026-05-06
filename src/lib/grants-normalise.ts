@@ -52,6 +52,22 @@ export function normaliseScrapedGrant(row: Record<string, unknown>): EnrichedGra
     isInviteOnly:         Boolean(row.is_invite_only),
     nextOpenDate:         row.next_open_date ? String(row.next_open_date) : null,
     nextOpenDateParsed:   row.next_open_date_parsed ? String(row.next_open_date_parsed) : null,
+    // Multi-round flag — derived from the brief's decision_timeline text.
+    // Signals: "X application rounds/windows", "round 1 of N", "biannual",
+    // "quarterly rounds", "two/three deadlines per year", or two distinct
+    // "Round N" labels in sequence. Used to render a "Multi-round" pill
+    // on the grant card so users know more rounds are coming.
+    isMultiRound:         (() => {
+      const tl = String(((row.funder_brief as Record<string, unknown> | null)?.decision_timeline ?? '')).toLowerCase()
+      if (!tl) return false
+      if (/\b(?:two|three|four|five|six|2|3|4|5|6)\s+(?:application\s+)?(?:rounds?|windows?|deadlines?|cycles?|cohorts?|intakes?)\b/i.test(tl)) return true
+      if (/\bmultiple\s+(?:application\s+)?(?:rounds?|windows?|deadlines?|cycles?)\b/i.test(tl)) return true
+      if (/\b(?:bi[-\s]?annual|biannual|quarterly|monthly)\s+(?:rounds?|deadlines?|cycles?|application|funding)\b/i.test(tl)) return true
+      if (/\bround\s+\d+\s+of\s+\d+\b/i.test(tl)) return true
+      if (/\bround\s+\d+\b[\s\S]*?\bround\s+\d+\b/i.test(tl)) return true
+      if (/\b(?:two|three|four)\s+(?:funding|application|grant)\s+rounds?\s+(?:per|each|a)\s+year\b/i.test(tl)) return true
+      return false
+    })(),
     fundingType:          (row.funding_type ? String(row.funding_type) : 'grant') as FundingType,
     fundingSubtype:       row.funding_subtype ? String(row.funding_subtype) as FundingSubtype : null,
     impactSectors:        Array.isArray(row.impact_sectors)       ? (row.impact_sectors       as ImpactSector[])   : undefined,

@@ -691,7 +691,14 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
               </div>
               <div>
                 <div style={{ fontSize: 10, color: '#8A8986', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3, fontFamily: 'var(--font-dm-sans)' }}>Deadline</div>
-                <div style={{ fontSize: 13, color: '#2C2C2A', fontFamily: 'var(--font-dm-sans)' }}>{deadlineDisplay}</div>
+                <div style={{ fontSize: 13, color: '#2C2C2A', fontFamily: 'var(--font-dm-sans)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                  <span>{deadlineDisplay}</span>
+                  {grant.isMultiRound && (
+                    <span title="Multiple application rounds per year — check the brief for the full schedule" style={{ fontSize: 10, fontWeight: 600, padding: '2px 6px', borderRadius: 6, background: '#F1F7E4', color: '#3B6D11', fontFamily: 'var(--font-space-grotesk)' }}>
+                      Multi-round
+                    </span>
+                  )}
+                </div>
               </div>
               <div>
                 <div style={{ fontSize: 10, color: '#8A8986', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3, fontFamily: 'var(--font-dm-sans)' }}>Eligible</div>
