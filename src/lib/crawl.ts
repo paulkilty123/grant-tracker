@@ -2402,7 +2402,7 @@ async function crawlLeedsCF(): Promise<CrawlResult> {
   const SOURCE = 'leeds_cf'
   const BASE   = 'https://www.leedscf.org.uk'
   try {
-    const html  = await fetchHtml(`${BASE}/apply-for-a-grant/`)
+    const html  = await fetchHtml(`${BASE}/open-grants/`)
     const root  = parseHTML(html)
     const grants: ScrapedGrant[] = []
 
@@ -2452,7 +2452,7 @@ async function crawlLeedsCF(): Promise<CrawlResult> {
       is_local:             true,
       sectors:              ['community', 'social welfare', 'health', 'arts', 'sport'],
       eligibility_criteria: ['Registered charity or community group in Leeds / West Yorkshire'],
-      apply_url:            `${BASE}/apply-for-a-grant/`,
+      apply_url:            `${BASE}/open-grants/`,
       raw_data:             { note: 'Hardcoded fallback' } as Record<string, unknown>,
     }])
   } catch (err) {
@@ -2981,7 +2981,7 @@ async function crawlSouthYorkshireCF(): Promise<CrawlResult> {
   const SOURCE = 'south_yorkshire_cf'
   const BASE   = 'https://www.sycf.org.uk'
   try {
-    const html  = await fetchHtml(`${BASE}/grants/`)
+    const html  = await fetchHtml(`${BASE}/apply/search-our-grants`)
     const root  = parseHTML(html)
     const grants: ScrapedGrant[] = []
     for (const card of root.querySelectorAll('article, .grant, .fund, .grant-item')) {
@@ -2995,7 +2995,7 @@ async function crawlSouthYorkshireCF(): Promise<CrawlResult> {
       grants.push({ external_id: `south_yorkshire_cf_${slugify(href || title)}`, source: SOURCE, title, funder: 'South Yorkshire Community Foundation', funder_type: 'community_foundation', description: desc || 'Grant from South Yorkshire Community Foundation.', amount_min: min, amount_max: max, deadline: null, is_rolling: true, is_local: true, sectors: ['community', 'social welfare'], eligibility_criteria: ['Organisations in South Yorkshire'], apply_url: url || null, raw_data: { title, href } as Record<string, unknown> })
     }
     if (grants.length > 0) return await upsertGrants(SOURCE, grants)
-    return await upsertGrants(SOURCE, [{ external_id: `${SOURCE}_open`, source: SOURCE, title: 'South Yorkshire Community Foundation — Open Grants', funder: 'South Yorkshire Community Foundation', funder_type: 'community_foundation', description: 'South Yorkshire Community Foundation supports voluntary and community organisations across Sheffield, Rotherham, Barnsley and Doncaster with a range of grant programmes.', amount_min: 500, amount_max: 20000, deadline: null, is_rolling: true, is_local: true, sectors: ['community', 'social welfare', 'arts', 'health'], eligibility_criteria: ['Voluntary or community group in South Yorkshire'], apply_url: `${BASE}/grants/`, raw_data: { note: 'Hardcoded fallback' } as Record<string, unknown> }])
+    return await upsertGrants(SOURCE, [{ external_id: `${SOURCE}_open`, source: SOURCE, title: 'South Yorkshire Community Foundation — Open Grants', funder: 'South Yorkshire Community Foundation', funder_type: 'community_foundation', description: 'South Yorkshire Community Foundation supports voluntary and community organisations across Sheffield, Rotherham, Barnsley and Doncaster with a range of grant programmes.', amount_min: 500, amount_max: 20000, deadline: null, is_rolling: true, is_local: true, sectors: ['community', 'social welfare', 'arts', 'health'], eligibility_criteria: ['Voluntary or community group in South Yorkshire'], apply_url: `${BASE}/apply/search-our-grants`, raw_data: { note: 'Hardcoded fallback' } as Record<string, unknown> }])
   } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
 }
 
@@ -3549,7 +3549,7 @@ async function crawlNHSCharitiesTogether(): Promise<CrawlResult> {
   const SOURCE = 'nhs_charities_together'
   const BASE   = 'https://www.nhscharitiestogether.co.uk'
   try {
-    const html  = await fetchHtml(`${BASE}/grants/`)
+    const html  = await fetchHtml(`${BASE}/about-us/our-programmes/`)
     const root  = parseHTML(html)
     const grants: ScrapedGrant[] = []
     for (const card of root.querySelectorAll('article, .grant, .fund, .card')) {
@@ -3564,7 +3564,7 @@ async function crawlNHSCharitiesTogether(): Promise<CrawlResult> {
     }
     if (grants.length > 0) return await upsertGrants(SOURCE, grants)
     return await upsertGrants(SOURCE, [
-      { external_id: `${SOURCE}_community_grants`, source: SOURCE, title: 'NHS Charities Together — Community Grants', funder: 'NHS Charities Together', funder_type: 'trust_foundation', description: "NHS Charities Together funds projects that improve the wellbeing of NHS patients, staff and volunteers across the UK. Community grants support activities that complement NHS services and promote health and wellbeing in communities.", amount_min: 5000, amount_max: 100000, deadline: null, is_rolling: false, is_local: false, sectors: ['health', 'social welfare', 'mental health', 'wellbeing', 'community'], eligibility_criteria: ['NHS charity or charitable organisation working with NHS', 'Project must improve health, wellbeing or experience of NHS patients, staff or volunteers', 'Must demonstrate NHS partnership or endorsement'], apply_url: `${BASE}/grants/`, raw_data: { note: 'Hardcoded fallback' } as Record<string, unknown> },
+      { external_id: `${SOURCE}_community_grants`, source: SOURCE, title: 'NHS Charities Together — Community Grants', funder: 'NHS Charities Together', funder_type: 'trust_foundation', description: "NHS Charities Together funds projects that improve the wellbeing of NHS patients, staff and volunteers across the UK. Community grants support activities that complement NHS services and promote health and wellbeing in communities.", amount_min: 5000, amount_max: 100000, deadline: null, is_rolling: false, is_local: false, sectors: ['health', 'social welfare', 'mental health', 'wellbeing', 'community'], eligibility_criteria: ['NHS charity or charitable organisation working with NHS', 'Project must improve health, wellbeing or experience of NHS patients, staff or volunteers', 'Must demonstrate NHS partnership or endorsement'], apply_url: `${BASE}/about-us/our-programmes/`, raw_data: { note: 'Hardcoded fallback' } as Record<string, unknown> },
     ])
   } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
 }
@@ -3631,7 +3631,7 @@ async function crawlActiveTravelEngland(): Promise<CrawlResult> {
 async function crawlUnLtd(): Promise<CrawlResult> {
   const SOURCE = 'unltd'
   try {
-    const html = await fetchHtml('https://unltd.org.uk/find-your-support/')
+    const html = await fetchHtml('https://unltd.org.uk/awards/')
     const root = parseHTML(html)
     const grants: ScrapedGrant[] = []
     root.querySelectorAll('article, .support-card, .programme-card').forEach(card => {
@@ -3668,7 +3668,7 @@ async function crawlUnLtd(): Promise<CrawlResult> {
       amount_min: 500, amount_max: 15000, deadline: null, is_rolling: true, is_local: false,
       sectors: ['social enterprise', 'entrepreneurship', 'community', 'social innovation'],
       eligibility_criteria: ['Social entrepreneurs at any stage', 'Based in the UK', 'Venture must have a primary social mission'],
-      apply_url: 'https://unltd.org.uk/find-your-support/', funding_type: 'support_programme', raw_data: {} as Record<string, unknown>,
+      apply_url: 'https://unltd.org.uk/awards/', funding_type: 'support_programme', raw_data: {} as Record<string, unknown>,
     }])
     return await upsertGrants(SOURCE, grants.slice(0, 10))
   } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
@@ -3697,7 +3697,7 @@ async function crawlSSEFellowships(): Promise<CrawlResult> {
 async function crawlNestaChallenges(): Promise<CrawlResult> {
   const SOURCE = 'nesta_challenges'
   try {
-    const html = await fetchHtml('https://www.nesta.org.uk/project/challenges/')
+    const html = await fetchHtml('https://challengeworks.org/about-challenge-prizes/our-challenge-prizes/')
     const root = parseHTML(html)
     const grants: ScrapedGrant[] = []
     root.querySelectorAll('article, .challenge-card, .project-card').forEach(card => {
@@ -3726,7 +3726,7 @@ async function crawlNestaChallenges(): Promise<CrawlResult> {
       amount_min: 50000, amount_max: 1000000, deadline: null, is_rolling: false, is_local: false,
       sectors: ['social innovation', 'health', 'climate', 'education', 'technology'],
       eligibility_criteria: ['Open competition — individuals, startups, charities, social enterprises', 'UK operations required for most challenges'],
-      apply_url: 'https://www.nesta.org.uk/project/challenges/', funding_type: 'accelerator', raw_data: {} as Record<string, unknown>,
+      apply_url: 'https://challengeworks.org/about-challenge-prizes/our-challenge-prizes/', funding_type: 'accelerator', raw_data: {} as Record<string, unknown>,
     }])
     return await upsertGrants(SOURCE, grants.slice(0, 8))
   } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
