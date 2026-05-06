@@ -1525,7 +1525,16 @@ export default function UrlAdminPage() {
   function populateFromBrief(grant: Grant) {
     const brief = grant.funder_brief as Record<string, string | null> | null
     if (!brief) return
-    const awardText   = (brief.typical_award    ?? '').toLowerCase()
+    // Source amount text from typical_award first, then fall back to
+    // what_they_fund and the grant's own description / title — many briefs
+    // generalise typical_award ("small grants, no fixed amount") even
+    // though the original description has a clear "Up to £X".
+    const awardText = [
+      brief.typical_award,
+      brief.what_they_fund,
+      (grant as Grant & { description?: string | null }).description,
+      grant.title,
+    ].filter(Boolean).join(' ').toLowerCase()
     const timelineText = (brief.decision_timeline ?? '').toLowerCase()
     const updates: Record<string, string | boolean | number | null> = {}
 
