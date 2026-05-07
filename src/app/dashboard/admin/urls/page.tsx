@@ -2116,6 +2116,37 @@ export default function UrlAdminPage() {
       structs.add('registered_charity'); structs.add('cio')
     }
 
+    // 'Must be incorporated' override: if the brief explicitly requires
+    // applicants to be a formally incorporated entity (CIO / Charitable
+    // Company / CIC / Ltd), drop unincorporated and sole-trader. Earlier
+    // rules add unincorporated whenever 'voluntary and community
+    // organisations' appears, but the same brief may then tighten with
+    // 'You must be incorporated as a CIO/Charitable Company/CIC...'
+    // Example: Access Without Limits (Duke of Edinburgh's Award).
+    const mustBeIncorporated =
+      /\b(?:must\s+be|need\s+to\s+be|have\s+to\s+be|need\s+to\s+have)\s+(?:fully\s+|properly\s+)?incorporated\b/.test(inclusionText) ||
+      /\bincorporated\s+(?:only|organi[sz]ations?\s+only|entit(?:y|ies)\s+only)\b/.test(inclusionText) ||
+      /\bunincorporated\s+(?:groups?|organi[sz]ations?|associations?|entit(?:y|ies))\s+(?:cannot|are\s+not|will\s+not|excluded|ineligible|do\s+not)/.test(`${inclusionText} ${exclusionText}`)
+    if (mustBeIncorporated) {
+      structs.delete('unincorporated')
+      structs.delete('sole_trader')
+    }
+
+    // CIC subtype refinement: if the brief specifies CIC by Guarantee
+    // (without also accepting CIC by Shares), drop cic_shares — and
+    // vice versa. The blanket CIC rule earlier adds both because most
+    // briefs just say 'CICs eligible'; the qualifier only matters when
+    // funders are explicit about which CIC subtype they accept.
+    const cicGuaranteeOnly =
+      /\b(?:cic|community\s+interest\s+compan(?:y|ies))\s+(?:limited\s+by\s+guarantee|by\s+guarantee)\b/.test(inclusionText) &&
+      !/\b(?:cic|community\s+interest\s+compan(?:y|ies))\s+(?:limited\s+by\s+shares|by\s+shares)\b/.test(inclusionText)
+    if (cicGuaranteeOnly) structs.delete('cic_shares')
+
+    const cicSharesOnly =
+      /\b(?:cic|community\s+interest\s+compan(?:y|ies))\s+(?:limited\s+by\s+shares|by\s+shares)\b/.test(inclusionText) &&
+      !/\b(?:cic|community\s+interest\s+compan(?:y|ies))\s+(?:limited\s+by\s+guarantee|by\s+guarantee)\b/.test(inclusionText)
+    if (cicSharesOnly) structs.delete('cic_guarantee')
+
     // Exclusion pass — remove structures explicitly excluded.
     // Examples: "CICs are not eligible", "no individuals", "for-profit
     // companies cannot apply".
