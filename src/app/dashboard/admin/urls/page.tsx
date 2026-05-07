@@ -1622,6 +1622,13 @@ export default function UrlAdminPage() {
     // dropped before computing min/max.
     const POOL_CUES_LEFT = /\b(?:awarded?\s+(?:a\s+)?total|totalling|total\s+(?:of|awarded|distributed|grants?|funding|funds|fund)\b|in\s+(?:the\s+)?(?:past|previous|last)\s+(?:year|years|few\s+years)|annual(?:ly\s+(?:awards?|distribut(?:es?|ed|ing)|gives?|gave|given|spen(?:ds?|t|ding))|\s+(?:budget|fund|spending|expenditure))|per\s+(?:year|annum)|each\s+year|distribut(?:es?|ed|ing)|donat(?:es?|ed|ing)|spen(?:ds?|t|ding)|gives?\s+(?:away|out)|gave\s+(?:away|out)|given\s+(?:away|out)|endowment|combined\s+(?:total|funding|budget)|annual\s+(?:income|turnover)\s+of|income\s+(?:of|cap|limit|under|below|up\s+to)|turnover\s+of|reserves\s+of)\b/i
     const POOL_CUES_RIGHT = /^[\s,()]*(?:distribut(?:es|ed|ing)\b|donat(?:es|ed|ing)\b|spen(?:ds|t|ding)\b|spread\s+across|split\s+(?:across|between|among)|shared\s+(?:across|between|among)|across\s+(?:multiple|several|all|charities|recipients|organisations|projects|grants?|funds?|programmes?)|to\s+multiple|in\s+20\d{2}(?:[\/\-]\d{2,4})?\b|in\s+total\b|annually\b|each\s+year\b|per\s+(?:year|annum)\b|altogether\b|or\s+(?:less|below|under|fewer)\b)/i
+    // Per-grant qualifiers in left-context override the pool-cues-RIGHT
+    // check. Without this, "Up to £10,000 per year" gets dropped because
+    // 'per year' looks pool-shaped — but the left 'up to' makes clear
+    // that £10,000 is the per-grant rate, not the funder's annual pool.
+    // POOL_CUES_LEFT still wins if a stronger pool verb is also present
+    // (e.g. "distributes up to £100,000 per year" → pool).
+    const PER_GRANT_LEFT_CUES = /(?:^|[\s.,;:(])(?:up\s+to|of\s+up\s+to|maximum(?:\s+of)?|max(?:\s+of)?|no\s+more\s+than|limit(?:\s+of)?|typically|typical(?:\s+(?:up\s+to|grant|award))?|grants?\s+of(?:\s+up\s+to)?|awards?\s+of(?:\s+up\s+to)?|ranges?\s+from|from)\s*$/i
     const parseAmt = (s: string): number | null => {
       const clean = s.replace(/[£$,]/g, '').trim()
       const m = clean.match(/([\d.]+)\s*([km])?/)
@@ -1658,8 +1665,12 @@ export default function UrlAdminPage() {
       if (dropFromRange.has(idx)) continue           // pool-range pair  → skip
       const leftCtx  = awardText.slice(Math.max(0, idx - 50), idx)
       const rightCtx = awardText.slice(idx + m[0].length, idx + m[0].length + 50)
-      if (POOL_CUES_LEFT.test(leftCtx))   continue   // pool cue before  → skip
-      if (POOL_CUES_RIGHT.test(rightCtx)) continue   // pool cue after   → skip
+      if (POOL_CUES_LEFT.test(leftCtx))   continue   // strong pool cue before → skip
+      // Per-grant left qualifier overrides the right-context pool check
+      // (e.g. "Up to £10,000 per year" — 'per year' is the payment rate,
+      // not a pool total).
+      const perGrantLeft = PER_GRANT_LEFT_CUES.test(leftCtx)
+      if (!perGrantLeft && POOL_CUES_RIGHT.test(rightCtx)) continue
       const v = parseAmt(m[0])
       if (v !== null) amounts.push(v)
     }
