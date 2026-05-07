@@ -428,7 +428,11 @@ export default function UrlAdminPage() {
     if (filter !== 'review') return
     const { data } = await createClient()
       .from('scraped_grants')
-      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief, grant_sources, description, funder_type, funding_type')
+      // Include every field the inline review panel reads/edits — without
+      // these, getReviewVal falls back to undefined and the form looks
+      // empty even when the DB has values (location_tag, amount_min/max,
+      // deadline, is_rolling, eligible_structures, next_open_date etc.).
+      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief, grant_sources, description, funder_type, funding_type, location_tag, amount_min, amount_max, deadline, is_rolling, eligible_structures, next_open_date, impact_sectors, target_beneficiaries')
       .eq('is_active', false)
       .neq('url_status', 'dead').not('saved_for_later', 'is', 'true')  // exclude hidden and saved-for-later
       .order('last_seen_at', { ascending: false })
