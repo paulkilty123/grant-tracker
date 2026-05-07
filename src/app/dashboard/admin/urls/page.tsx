@@ -1474,6 +1474,68 @@ export default function UrlAdminPage() {
     </div>
   )
 
+  // ── "Between rounds" — clear deadline, set next_open_date, watch listing ───
+  // For grants whose round just closed and a future round is expected but
+  // the date isn't known. Activates the grant with a between-rounds badge
+  // and adds the apply_url to the funder_watchlist so the cron alerts when
+  // the listing page changes.
+  async function markBetweenRoundsAndWatch(grant: Grant) {
+    if (!grant.apply_url) {
+      alert('No apply URL on this grant — add one first.')
+      return
+    }
+    const hint = window.prompt(
+      `Mark "${grant.title}" as between rounds.\n\nNext-open hint (e.g. "Q3 2026", "Window 2: late 2026", "TBC 2026"):`,
+      'TBC 2026',
+    )
+    if (hint === null) return
+    try {
+      // 1. Update the grant
+      const r1 = await fetch('/api/admin/update-grant', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: grant.id,
+          fields: {
+            is_active: true,
+            deadline: null,
+            is_rolling: false,
+            next_open_date: hint.trim() || null,
+            next_open_date_parsed: parseOpenDate(hint.trim() || null),
+          },
+        }),
+      })
+      if (!r1.ok) throw new Error(`update-grant ${r1.status}`)
+
+      // 2. Add to watchlist (idempotent — ignore duplicate-key 500)
+      const r2 = await fetch('/api/admin/watchlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: grant.title,
+          listing_url: grant.apply_url,
+          notes: `Auto-added when marked between rounds — ${new Date().toISOString().slice(0, 10)}.`,
+        }),
+      })
+      if (!r2.ok && r2.status !== 500) throw new Error(`watchlist ${r2.status}`)
+
+      // Local state refresh — same per-state-array pattern as
+      // enrichGrantFromManager (different state types share the same id).
+      const next = hint.trim() || null
+      const fields = { is_active: true, deadline: null, is_rolling: false, next_open_date: next }
+      setGrants(prev => prev.map(g => g.id === grant.id ? { ...g, ...fields } : g))
+      setNewGrants(prev => prev.map(g => g.id === grant.id ? { ...g, ...fields } : g))
+      setReviewGrants(prev => prev.map(g => g.id === grant.id ? { ...g, ...fields } : g))
+      setSuspiciousGrants(prev => prev.map(g => g.id === grant.id ? { ...g, ...fields } : g))
+      setRecentGrants(prev => prev.map(g => g.id === grant.id ? { ...g, ...fields } : g))
+      setCategoryGrants(prev => prev.map(g => g.id === grant.id ? { ...g, ...fields } : g))
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[markBetweenRoundsAndWatch]', err)
+      alert('Could not mark as between rounds — see console.')
+    }
+  }
+
   // ── Funder intelligence enrichment (inline) ──────────────────────────────────
   async function enrichGrantFromManager(grant: Grant) {
     if (enrichingId) return
@@ -2546,6 +2608,12 @@ export default function UrlAdminPage() {
               </button>
             </>
           )}
+          <button
+            onClick={() => markBetweenRoundsAndWatch(grant)}
+            title="Mark as between rounds, clear the deadline, and add the listing page to the watchlist for change detection"
+            className="text-xs font-semibold text-mid hover:text-forest underline underline-offset-2 transition-colors">
+            Between rounds + watch
+          </button>
           {reviewEnrichError[grant.id] && (
             <span className="text-xs text-coral-saturated">{reviewEnrichError[grant.id]}</span>
           )}
