@@ -1540,17 +1540,20 @@ export default function UrlAdminPage() {
 
     // ── Extract amounts ───────────────────────────────────────────────────────
     // Matches: £10,000 | £10k | £1m | up to £50,000 | $50,000
-    // Per-amount left-context filter: drop any £X whose ~50 chars of
-    // PRECEDING text describes a funder's total annual pool rather than a
-    // per-grant size. Catches phrasings like "awarded a total of £97,000"
-    // or "distributes £2m per year" without killing legitimate per-grant
-    // amounts that appear elsewhere in the same paragraph.
-    // Example bug: "Most grants tend to range from £100 to £300. In the
-    // past years, the Trust awarded a total of between £90,000 and
-    // £97,000." Without the filter, the detector picked £97,000 as the
-    // max grant size — an order of magnitude too high.
+    // Per-amount context filter: drop any £X whose surrounding text
+    // describes a funder's total annual pool / historical distribution
+    // rather than a per-grant size. Checks both LEFT (~50 chars before)
+    // and RIGHT (~50 chars after) context — pool cues can appear on
+    // either side of the figure.
+    // Example bugs this catches:
+    //   - "...the Trust awarded a total of between £90,000 and £97,000"
+    //     → £90k/£97k blocked by left-context "awarded a total"
+    //   - "General grants: £160,975 distributed across multiple charities
+    //     in 2023/24" → £160,975 blocked by right-context
+    //     "distributed across" / "in 20YY/YY"
     const amountRe = /[£$][\d,]+(?:\.?\d+)?(?:\s*[km](?:illion)?)?/gi
-    const POOL_CUES = /\b(?:awarded?\s+(?:a\s+)?total|totalling|total\s+(?:of|awarded|distributed|grants?|funding|funds|fund)\b|in\s+(?:the\s+)?(?:past|previous|last)\s+(?:year|years|few\s+years)|annual(?:ly\s+(?:awards?|distributes?|gives?|spends?)|\s+(?:budget|fund|spending|expenditure))|per\s+(?:year|annum)|each\s+year|distributes?|donates?|spends?|gives?\s+(?:away|out)|endowment|combined\s+(?:total|funding|budget))\b/i
+    const POOL_CUES_LEFT = /\b(?:awarded?\s+(?:a\s+)?total|totalling|total\s+(?:of|awarded|distributed|grants?|funding|funds|fund)\b|in\s+(?:the\s+)?(?:past|previous|last)\s+(?:year|years|few\s+years)|annual(?:ly\s+(?:awards?|distributes?|gives?|spends?)|\s+(?:budget|fund|spending|expenditure))|per\s+(?:year|annum)|each\s+year|distributes?|donates?|spends?|gives?\s+(?:away|out)|endowment|combined\s+(?:total|funding|budget))\b/i
+    const POOL_CUES_RIGHT = /^[\s,()]*(?:distributed\s+across|spread\s+across|split\s+(?:across|between|among)|shared\s+(?:across|between|among)|across\s+(?:multiple|several|all)|to\s+multiple|in\s+20\d{2}(?:[\/\-]\d{2,4})?\b|in\s+total\b|altogether|donated\s+across|across\s+(?:charities|recipients|organisations|projects))/i
     const parseAmt = (s: string): number | null => {
       const clean = s.replace(/[£$,]/g, '').trim()
       const m = clean.match(/([\d.]+)\s*([km])?/)
@@ -1564,8 +1567,10 @@ export default function UrlAdminPage() {
     const amounts: number[] = []
     for (const m of Array.from(awardText.matchAll(amountRe))) {
       const idx = m.index ?? 0
-      const leftCtx = awardText.slice(Math.max(0, idx - 50), idx)
-      if (POOL_CUES.test(leftCtx)) continue  // pool-total amount → skip
+      const leftCtx  = awardText.slice(Math.max(0, idx - 50), idx)
+      const rightCtx = awardText.slice(idx + m[0].length, idx + m[0].length + 50)
+      if (POOL_CUES_LEFT.test(leftCtx))   continue  // pool cue before  → skip
+      if (POOL_CUES_RIGHT.test(rightCtx)) continue  // pool cue after   → skip
       const v = parseAmt(m[0])
       if (v !== null) amounts.push(v)
     }
