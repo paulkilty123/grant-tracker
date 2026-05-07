@@ -77,19 +77,31 @@ export async function POST(req: NextRequest) {
   // Build primary content block
   const sections: string[] = []
   let fetchedFromUrl = false
+  // Diagnostic: track why the primary URL fetch failed (if it did) so we
+  // can see in Vercel logs and the response body why a brief came back as
+  // knowledge_fallback. Silent catches were hiding things like 403/timeout.
+  let primaryFetchDebug: string | null = null
 
   if (pastedContent && pastedContent.trim().length > 100) {
     sections.push(`Primary source (pasted):\n---\n${pastedContent.trim().slice(0, 10000)}\n---`)
+    primaryFetchDebug = 'used pasted content'
   } else if (grant.apply_url) {
     try {
       const fetched = await fetchPageText(grant.apply_url)
       if (fetched.length >= 200) {
         sections.push(`Primary source (${grant.apply_url}):\n---\n${fetched}\n---`)
         fetchedFromUrl = true
+        primaryFetchDebug = `ok (${fetched.length} chars after strip)`
+      } else {
+        primaryFetchDebug = `fetch returned only ${fetched.length} chars after stripping (< 200 threshold)`
+        console.warn('[enrich-grant] short fetch', grant.apply_url, primaryFetchDebug)
       }
-    } catch {
-      // Primary fetch failed — will try additional sources or fall back to knowledge-based
+    } catch (err) {
+      primaryFetchDebug = `fetch failed: ${err instanceof Error ? err.message : String(err)}`
+      console.warn('[enrich-grant] fetch error', grant.apply_url, primaryFetchDebug)
     }
+  } else {
+    primaryFetchDebug = 'no apply_url on grant'
   }
 
   // Append any additional sources (URL fetch or pasted text)
@@ -198,5 +210,5 @@ Return ONLY valid JSON in this exact shape:
 
   if (updateError) return NextResponse.json({ error: 'Failed to save brief' }, { status: 500 })
 
-  return NextResponse.json({ success: true, brief })
+  return NextResponse.json({ success: true, brief, _debug: { primaryFetch: primaryFetchDebug, fetchedFromUrl } })
 }
