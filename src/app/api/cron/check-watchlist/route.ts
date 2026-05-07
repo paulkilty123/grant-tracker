@@ -90,9 +90,20 @@ export async function GET(req: NextRequest) {
     try {
       const res = await fetch(entry.listing_url, {
         signal: AbortSignal.timeout(12000),
+        // Chrome-style headers — bare 'GrantTracker/1.0' was tripping
+        // Cloudflare/WAFs on Berkshire CF, Kent CF, Somerset CF etc. and
+        // returning 404/403, marking healthy listing pages as page_down.
+        // 'br' deliberately excluded from Accept-Encoding (Node fetch
+        // doesn't auto-decompress Brotli).
         headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; GrantTracker/1.0; +https://grant-tracker-kappa.vercel.app)',
-          'Accept': 'text/html',
+          'User-Agent':       'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+          'Accept':           'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language':  'en-GB,en;q=0.9',
+          'Accept-Encoding':  'gzip, deflate',
+          'Sec-Fetch-Dest':   'document',
+          'Sec-Fetch-Mode':   'navigate',
+          'Sec-Fetch-Site':   'none',
+          'Upgrade-Insecure-Requests': '1',
         },
       })
 
