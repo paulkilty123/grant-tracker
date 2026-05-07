@@ -1540,8 +1540,17 @@ export default function UrlAdminPage() {
 
     // ── Extract amounts ───────────────────────────────────────────────────────
     // Matches: £10,000 | £10k | £1m | up to £50,000 | $50,000
-    const amountRe = /[£$][\d,]+(?:\.?\d+)?(?:\s*[km](?:illion)?)?/g
-    const amountMatches = awardText.match(amountRe) ?? []
+    // Per-amount left-context filter: drop any £X whose ~50 chars of
+    // PRECEDING text describes a funder's total annual pool rather than a
+    // per-grant size. Catches phrasings like "awarded a total of £97,000"
+    // or "distributes £2m per year" without killing legitimate per-grant
+    // amounts that appear elsewhere in the same paragraph.
+    // Example bug: "Most grants tend to range from £100 to £300. In the
+    // past years, the Trust awarded a total of between £90,000 and
+    // £97,000." Without the filter, the detector picked £97,000 as the
+    // max grant size — an order of magnitude too high.
+    const amountRe = /[£$][\d,]+(?:\.?\d+)?(?:\s*[km](?:illion)?)?/gi
+    const POOL_CUES = /\b(?:awarded?\s+(?:a\s+)?total|totalling|total\s+(?:of|awarded|distributed|grants?|funding|funds|fund)\b|in\s+(?:the\s+)?(?:past|previous|last)\s+(?:year|years|few\s+years)|annual(?:ly\s+(?:awards?|distributes?|gives?|spends?)|\s+(?:budget|fund|spending|expenditure))|per\s+(?:year|annum)|each\s+year|distributes?|donates?|spends?|gives?\s+(?:away|out)|endowment|combined\s+(?:total|funding|budget))\b/i
     const parseAmt = (s: string): number | null => {
       const clean = s.replace(/[£$,]/g, '').trim()
       const m = clean.match(/([\d.]+)\s*([km])?/)
@@ -1552,7 +1561,14 @@ export default function UrlAdminPage() {
       if (isNaN(val) || val > 50_000_000) return null  // sanity cap
       return Math.round(val)
     }
-    const amounts = amountMatches.map(parseAmt).filter((v): v is number => v !== null)
+    const amounts: number[] = []
+    for (const m of Array.from(awardText.matchAll(amountRe))) {
+      const idx = m.index ?? 0
+      const leftCtx = awardText.slice(Math.max(0, idx - 50), idx)
+      if (POOL_CUES.test(leftCtx)) continue  // pool-total amount → skip
+      const v = parseAmt(m[0])
+      if (v !== null) amounts.push(v)
+    }
     if (amounts.length === 1) {
       if (!getReviewVal(grant.id,'amount_max',null)) updates.amount_max = amounts[0]
     } else if (amounts.length >= 2) {
