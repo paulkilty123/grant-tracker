@@ -1942,6 +1942,15 @@ export default function UrlAdminPage() {
         .forEach(s => structs.add(s))
     }
 
+    // Structural invariant: CICs are limited companies with extra rules
+    // (asset lock + community interest test). Most funders that accept
+    // "Ltd by guarantee" / "Ltd by shares" implicitly accept their CIC
+    // variants too — and several inclusion branches above forget to add
+    // them. Bring them in here. The exclusion pass below still strips
+    // CICs back out if the brief explicitly excludes them.
+    if (structs.has('ltd_guarantee')) structs.add('cic_guarantee')
+    if (structs.has('ltd_shares'))    structs.add('cic_shares')
+
     // Exclusion pass — remove structures explicitly excluded.
     // Examples: "CICs are not eligible", "no individuals", "for-profit
     // companies cannot apply".
