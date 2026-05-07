@@ -2095,6 +2095,27 @@ export default function UrlAdminPage() {
     if (structs.has('ltd_guarantee')) structs.add('cic_guarantee')
     if (structs.has('ltd_shares'))    structs.add('cic_shares')
 
+    // Charities-only override: if the brief is explicit that ONLY
+    // registered charities can apply, drop everything except
+    // registered_charity + cio (the structural invariant — CIOs are a
+    // form of registered charity). Other rules above might have ticked
+    // the broad NFP set on phrases like 'they fund mature organisations'
+    // (Albert Gubay), which is descriptive — the explicit
+    // 'Registered charities only' / 'must be a registered charity'
+    // restriction overrides those broad ticks.
+    const charitiesOnly =
+      /\bregistered\s+charit(y|ies)\s+only\b|\bcharit(y|ies)\s+only\b|\bonly\s+registered\s+charit/.test(inclusionText) ||
+      /\b(?:must\s+be|need\s+to\s+be|have\s+to\s+be)\s+(?:a\s+)?registered\s+charit/.test(inclusionText) ||
+      /\bnon[-\s]?registered\s+charit(?:y|ies)?\s+(?:cannot|can\s+not|are\s+not|will\s+not)/.test(exclusionText) ||
+      /\b(?:open\s+only\s+to|restricted\s+to|limited\s+to)\s+(?:uk\s+)?registered\s+charit/.test(inclusionText)
+    if (charitiesOnly) {
+      const keep = new Set(['registered_charity', 'cio'])
+      for (const s of Array.from(structs)) {
+        if (!keep.has(s)) structs.delete(s)
+      }
+      structs.add('registered_charity'); structs.add('cio')
+    }
+
     // Exclusion pass — remove structures explicitly excluded.
     // Examples: "CICs are not eligible", "no individuals", "for-profit
     // companies cannot apply".
