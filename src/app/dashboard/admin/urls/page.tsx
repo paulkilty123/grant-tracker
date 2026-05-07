@@ -1570,13 +1570,34 @@ export default function UrlAdminPage() {
       if (isNaN(val) || val > 50_000_000) return null  // sanity cap
       return Math.round(val)
     }
+    // Range-pair detection: "between £X and £Y annually" means BOTH £X and
+    // £Y are pool figures, but my per-amount right-context check on £X
+    // sees " and £Y annually" — the pool cue is past the partner. Detect
+    // range pairs as a unit; if the cue follows the *second* amount, drop
+    // both. Example: Sterry Family Foundation "...awards between £80,000
+    // and £100,000 annually in total." — without this, £80k slipped
+    // through and became amount_max.
+    const rangeRe = /between\s+(£[\d,]+(?:\.?\d+)?(?:\s*[km](?:illion)?)?)\s+(?:and|to|–|—|-)\s+(£[\d,]+(?:\.?\d+)?(?:\s*[km](?:illion)?)?)/gi
+    const dropFromRange = new Set<number>()
+    for (const m of Array.from(awardText.matchAll(rangeRe))) {
+      const start = m.index ?? 0
+      const xIdx  = start + m[0].indexOf(m[1])
+      const yIdx  = start + m[0].lastIndexOf(m[2])
+      const afterY = awardText.slice(yIdx + m[2].length, yIdx + m[2].length + 50)
+      if (POOL_CUES_RIGHT.test(afterY)) {
+        dropFromRange.add(xIdx)
+        dropFromRange.add(yIdx)
+      }
+    }
+
     const amounts: number[] = []
     for (const m of Array.from(awardText.matchAll(amountRe))) {
       const idx = m.index ?? 0
+      if (dropFromRange.has(idx)) continue           // pool-range pair  → skip
       const leftCtx  = awardText.slice(Math.max(0, idx - 50), idx)
       const rightCtx = awardText.slice(idx + m[0].length, idx + m[0].length + 50)
-      if (POOL_CUES_LEFT.test(leftCtx))   continue  // pool cue before  → skip
-      if (POOL_CUES_RIGHT.test(rightCtx)) continue  // pool cue after   → skip
+      if (POOL_CUES_LEFT.test(leftCtx))   continue   // pool cue before  → skip
+      if (POOL_CUES_RIGHT.test(rightCtx)) continue   // pool cue after   → skip
       const v = parseAmt(m[0])
       if (v !== null) amounts.push(v)
     }
