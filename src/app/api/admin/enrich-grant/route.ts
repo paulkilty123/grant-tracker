@@ -24,7 +24,12 @@ async function fetchPageText(url: string): Promise<string> {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
         'Accept-Language': 'en-GB,en;q=0.9',
-        'Accept-Encoding': 'gzip, deflate, br',
+        // Intentionally exclude 'br' — Node's native fetch decompresses gzip
+        // and deflate but NOT Brotli, so advertising 'br' makes some servers
+        // (e.g. greenhallfoundation.org on its WP host) return Brotli bytes
+        // we then process as garbage HTML, silently falling through to the
+        // knowledge_fallback path with all amounts/dates dropped.
+        'Accept-Encoding': 'gzip, deflate',
         'Cache-Control': 'no-cache',
         'Pragma': 'no-cache',
         'Sec-Fetch-Dest': 'document',
