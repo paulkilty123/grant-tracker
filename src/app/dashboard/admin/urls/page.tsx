@@ -1930,6 +1930,19 @@ export default function UrlAdminPage() {
       structs.add('unincorporated')
       structs.add('ltd_guarantee')
     }
+    // Generic "organisations" — many briefs say "Grants to organisations",
+    // "Open to organisations", "Organisations providing X" etc. without
+    // naming a specific structure. Tick the broad NFP org-shape set; the
+    // exclusion pass below strips structures the funder explicitly excludes.
+    // Without this, briefs that only ever say "organisations" hit zero
+    // structure rules and only ticked Sole Trader if "individuals" was
+    // mentioned (e.g. Portal Trust).
+    if (/(?:open\s+to|fund(?:s|ed|ing)?|support(?:s|ed|ing)?|grants?\s+(?:to|for)|awards?\s+(?:to|for)|eligible|invite[sd]?)\s+(?:[\w\-,'’\s]{0,80}?\s+)?organi[sz]ations?\b|\borgani[sz]ations?\s+(?:can\s+apply|may\s+apply|are\s+(?:invited|eligible|able\s+to\s+apply)|providing|delivering|working|registered|based|located|that\s+)/.test(text)) {
+      structs.add('registered_charity'); structs.add('cio')
+      structs.add('cic_guarantee'); structs.add('cic_shares')
+      structs.add('ltd_guarantee'); structs.add('cooperative')
+      structs.add('unincorporated')
+    }
     // Faith / religious groups → typically charity-shaped or unincorporated.
     if (/faith\s+(?:group|based|organi)|religious\s+(?:group|organi)|church(?:es)?|mosque|synagogue|gurdwara|temple/.test(text)) {
       structs.add('registered_charity'); structs.add('cio'); structs.add('unincorporated')
