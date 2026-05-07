@@ -1674,6 +1674,21 @@ export default function UrlAdminPage() {
       const v = parseAmt(m[0])
       if (v !== null) amounts.push(v)
     }
+
+    // Multi-year amplification: detect "£X/year for Y years" patterns and
+    // add the multi-year total (X * Y) as a derived amount. Without this
+    // the headline amount_max only reflects the per-year cap and hides
+    // the real ceiling. Example: Trusthouse "up to £50,000/year for up
+    // to 3 years" — per-year £50k is right, but a 3-year grant is worth
+    // £150k. Cap years at 2–10 to avoid misparsing nonsense.
+    const multiYearRe = /(£[\d,]+(?:\.?\d+)?(?:\s*[km](?:illion)?)?)\s*(?:\/|\s+per\s+|\s+a\s+)\s*(?:year|annum)\s+(?:for\s+|over\s+|across\s+)?(?:up\s+to\s+)?(\d+)\s+years?\b/gi
+    for (const m of Array.from(awardText.matchAll(multiYearRe))) {
+      const perYear = parseAmt(m[1])
+      const years   = parseInt(m[2], 10)
+      if (perYear !== null && years >= 2 && years <= 10) {
+        amounts.push(perYear * years)
+      }
+    }
     if (amounts.length === 1) {
       if (!getReviewVal(grant.id,'amount_max',null)) updates.amount_max = amounts[0]
     } else if (amounts.length >= 2) {
