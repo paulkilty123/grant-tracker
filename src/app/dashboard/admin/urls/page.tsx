@@ -1825,13 +1825,23 @@ export default function UrlAdminPage() {
 
   function detectLocation(grant: Grant) {
     const brief = grant.funder_brief as Record<string, string | null> | null
-    // Prefer geographic_focus from brief (most accurate), then fall back to raw text fields
-    const text = [
-      brief?.geographic_focus ?? '',
-      grant.title,
-      (grant as Grant & { description?: string }).description ?? '',
-      grant.apply_url ?? '',
-    ].join(' ').toLowerCase()
+    const geoFocus = (brief?.geographic_focus ?? '').trim()
+    // When the brief has a geographic_focus, use ONLY that field. Title /
+    // description / apply_url add noise — most relevant: 'org.uk' TLDs in
+    // apply_url match the final \buk\b fallback and tag UK-wide grants
+    // that should be regional. Example: Skinners' Company brief said
+    // 'Primarily London and Kent' but tagged as 'UK' because the
+    // apply_url 'skinners.org.uk' triggered the UK fallback before
+    // \blondon\b in the regions loop got a chance.
+    // Fall back to raw fields only when no enriched brief is available.
+    const text = (geoFocus.length > 0
+      ? geoFocus
+      : [
+          grant.title,
+          (grant as Grant & { description?: string }).description ?? '',
+          grant.apply_url ?? '',
+        ].join(' ')
+    ).toLowerCase()
 
     // eslint-disable-next-line no-console
     console.warn('[detectLocation] v3-boroughs', { id: grant.id, title: grant.title, text: text.slice(0, 400), hasBrief: !!brief, geographicFocus: brief?.geographic_focus })
