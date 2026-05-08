@@ -276,6 +276,38 @@ export interface GrantOpportunity {
   eligibilityStatus?: 'eligible' | 'likely_eligible' | 'check_required' | 'ineligible'
   /** Human-readable reason for the eligibility status */
   eligibilityReason?: string
+
+  // ── Branched-eligibility fields (read by src/lib/eligibility.ts) ────────
+  /** Income gates (apply to every opportunity type) */
+  minOrgIncome?: number | null
+  maxOrgIncome?: number | null
+  /** Beneficiary-tag overlay used by some grants for hard targeting */
+  targetBeneficiaries?: BeneficiaryGroup[]
+
+  // Investment-specific
+  siInstrumentType?: string | null
+  siRepaymentTermMonths?: number | null
+  siInterestRatePercent?: number | null
+  siSecurityRequired?: string | null
+  siMinInvestment?: number | null
+  siMaxInvestment?: number | null
+
+  // Programme-specific
+  progCohortSize?: number | null
+  progLengthWeeks?: number | null
+  progLocationMode?: 'remote' | 'in_person' | 'hybrid' | string | null
+  progLocationCity?: string | null
+  progIncludesFunding?: boolean | null
+  progFundingAmount?: number | null
+  progApplicationCycle?: string | null
+  progNextCohortStart?: string | null   // ISO date
+  /** Org stages this programme targets (when funder lists them explicitly) */
+  progStageTarget?: OrgStage[]
+
+  // In-kind-specific
+  ikSupportType?: string | null
+  ikValueEstimate?: number | null
+  ikCapacityAvailable?: string | null
 }
 
 export interface PipelineColumn {

@@ -1,4 +1,6 @@
 import type { GrantOpportunity, Organisation, LegalStructure, BeneficiaryGroup } from '@/types'
+import { runEligibilityChecks } from './eligibility'
+import type { EligibilityStatus as EligibilityStatusFromEngine, EligibilityIssue } from './eligibility'
 
 export interface MatchBreakdown {
   location:      { score: number; max: number; label: string }
@@ -9,7 +11,8 @@ export interface MatchBreakdown {
   eligibility:   { score: number; max: number; label: string }
 }
 
-export type EligibilityStatus = 'eligible' | 'likely_eligible' | 'check_required' | 'ineligible'
+export type EligibilityStatus = EligibilityStatusFromEngine
+export type { EligibilityIssue }
 
 export interface MatchResult {
   score:             number
@@ -19,6 +22,8 @@ export interface MatchResult {
   eligibilityReason: string | null
   positiveReasons:   string[]
   warnReasons:       string[]
+  /** Structured issues from the branched eligibility engine */
+  eligibilityIssues?: EligibilityIssue[]
 }
 
 // Map income bands to approximate midpoints.
@@ -1447,6 +1452,31 @@ export function computeMatchScore(
     eligibilityReason = 'Eligibility requirements are unclear — verify before applying.'
   }
 
+  // ── Branched eligibility engine ──────────────────────────────────────
+  // Type-aware checks (investment / programme / in-kind / grant) layered on
+  // top of the legacy verdict above. A blocker from the engine downgrades the
+  // verdict to 'ineligible' and tightens the score cap; a warning downgrades
+  // 'eligible' → 'check_required'. Engine 'info' issues are surfaced as warns
+  // but do not change the verdict.
+  const branchedVerdict = runEligibilityChecks(grant, org)
+  const hasBranchedBlocker = branchedVerdict.issues.some(i => i.severity === 'blocker')
+  const hasBranchedWarning = branchedVerdict.issues.some(i => i.severity === 'warning')
+
+  if (hasBranchedBlocker) {
+    eligibilityStatus = 'ineligible'
+    eligibilityReason = branchedVerdict.reason
+    score = Math.min(score, 30)
+  } else if (hasBranchedWarning && eligibilityStatus === 'eligible') {
+    eligibilityStatus = 'check_required'
+    if (!eligibilityReason) eligibilityReason = branchedVerdict.reason
+  }
+
+  // Surface engine messages in the warn list (deduped against existing warns)
+  for (const issue of branchedVerdict.issues) {
+    if (issue.severity === 'info') continue
+    if (!warns.includes(issue.message)) warns.push(issue.message)
+  }
+
   return {
     score,
     reason,
@@ -1454,6 +1484,7 @@ export function computeMatchScore(
     eligibilityReason,
     positiveReasons: positives,
     warnReasons:     warns,
+    eligibilityIssues: branchedVerdict.issues,
     breakdown: {
       location:      { score: wLocation,     max: 15,             label: 'Location' },
       themes:        { score: wThemes,       max: themesMax,      label: 'Themes & work' },

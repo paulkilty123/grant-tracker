@@ -6,7 +6,13 @@ import type {
   ImpactSector,
   LegalStructure,
   BeneficiaryGroup,
+  OrgStage,
 } from '@/types'
+
+const numOrNull = (v: unknown): number | null =>
+  typeof v === 'number' ? v : v == null ? null : Number.isFinite(Number(v)) ? Number(v) : null
+const strOrNull = (v: unknown): string | null =>
+  v == null ? null : String(v)
 
 const VALID_FUNDER_TYPES: FunderType[] = [
   'trust_foundation', 'community_foundation', 'corporate_foundation',
@@ -81,5 +87,27 @@ export function normaliseScrapedGrant(row: Record<string, unknown>): EnrichedGra
     geoScope:             Array.isArray(row.geographic_scope) ? (row.geographic_scope as string[]) : undefined,
     funderBrief:          row.funder_brief && typeof row.funder_brief === 'object' ? (row.funder_brief as Record<string, string | null>) : null,
     nicheTags:            Array.isArray(row.niche_tags) ? (row.niche_tags as string[]) : [],
+    // ── Branched-eligibility fields (consumed by src/lib/eligibility.ts) ──
+    minOrgIncome:           numOrNull(row.min_org_income),
+    maxOrgIncome:           numOrNull(row.max_org_income),
+    targetBeneficiaries:    Array.isArray(row.target_beneficiaries) ? (row.target_beneficiaries as BeneficiaryGroup[]) : undefined,
+    siInstrumentType:       strOrNull(row.si_instrument_type),
+    siRepaymentTermMonths:  numOrNull(row.si_repayment_term_months),
+    siInterestRatePercent:  numOrNull(row.si_interest_rate_percent),
+    siSecurityRequired:     strOrNull(row.si_security_required),
+    siMinInvestment:        numOrNull(row.si_min_investment),
+    siMaxInvestment:        numOrNull(row.si_max_investment),
+    progCohortSize:         numOrNull(row.prog_cohort_size),
+    progLengthWeeks:        numOrNull(row.prog_length_weeks),
+    progLocationMode:       strOrNull(row.prog_location_mode),
+    progLocationCity:       strOrNull(row.prog_location_city),
+    progIncludesFunding:    typeof row.prog_includes_funding === 'boolean' ? row.prog_includes_funding : null,
+    progFundingAmount:      numOrNull(row.prog_funding_amount),
+    progApplicationCycle:   strOrNull(row.prog_application_cycle),
+    progNextCohortStart:    row.prog_next_cohort_start ? String(row.prog_next_cohort_start) : null,
+    progStageTarget:        Array.isArray(row.prog_stage_target) ? (row.prog_stage_target as OrgStage[]) : undefined,
+    ikSupportType:          strOrNull(row.ik_support_type),
+    ikValueEstimate:        numOrNull(row.ik_value_estimate),
+    ikCapacityAvailable:    strOrNull(row.ik_capacity_available),
   }
 }
