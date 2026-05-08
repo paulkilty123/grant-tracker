@@ -42,6 +42,7 @@ export async function GET(req: NextRequest) {
     // Run after every batch so sectors/funding type are always populated.
     let classified = 0
     let classifyFailed = 0
+    let unclassifiedRemaining: number | null = null
     try {
       const supabase = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -51,6 +52,26 @@ export async function GET(req: NextRequest) {
       const r = await classifyUnclassified(supabase, 60)
       classified     = r.classified
       classifyFailed = r.failed
+
+      // Backlog visibility — count unclassified rows still active after this
+      // batch. Surfaces in Vercel logs so a quietly-failing classifier path
+      // doesn't go unnoticed (which is exactly what produced the 152-row
+      // backlog discovered on 2026-05-08).
+      const { count } = await supabase
+        .from('scraped_grants')
+        .select('id', { count: 'exact', head: true })
+        .eq('is_active', true)
+        .or('impact_sectors.is.null,impact_sectors.eq.{}')
+      unclassifiedRemaining = count ?? null
+
+      const BACKLOG_THRESHOLD = 10
+      if (unclassifiedRemaining != null && unclassifiedRemaining > BACKLOG_THRESHOLD) {
+        console.warn(
+          `[crawl-grants] CLASSIFY_BACKLOG ${unclassifiedRemaining} active rows still unclassified after batch=${batch ?? 'all'} ` +
+          `(classified=${classified}, failed=${classifyFailed}). ` +
+          `Threshold=${BACKLOG_THRESHOLD}. If this persists, investigate the classifier path.`
+        )
+      }
     } catch (err) {
       console.error('[crawl-grants] Post-crawl classify failed:', err)
     }
@@ -59,7 +80,7 @@ export async function GET(req: NextRequest) {
       success: true,
       batch: batch ?? 'all',
       totalUpserted: total,
-      classify: { classified, failed: classifyFailed },
+      classify: { classified, failed: classifyFailed, unclassifiedRemaining },
       results: active,
     })
   } catch (err) {
