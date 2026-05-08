@@ -6,15 +6,67 @@
 //
 // GET  /api/admin/classify-grants          — return current stats
 // POST /api/admin/classify-grants          — classify a batch
-//   Body: { offset?: number; limit?: number; force?: boolean }
+//   Body: { offset?: number; limit?: number; force?: boolean; loop?: boolean }
+//   loop=true  → run batches until done or ~270s (then return progress).
+//                Use this to clear a backlog in one request.
 //   Returns: { classified, failed, total, done, nextOffset }
 //
 // Auth: ADMIN_SECRET bearer token or authenticated admin session
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { classifyBatch, validate, type GrantInput } from '@/lib/classify'
+
+// Single classify pass — fetches `limit` unclassified rows, runs Claude, writes
+// updates. Returns `done: true` when no rows remained (last page).
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function classifyOnce(supabase: SupabaseClient<any>, limit: number): Promise<{ classified: number; failed: number; done: boolean }> {
+  const { data: grantsRaw, error } = await supabase
+    .from('scraped_grants')
+    .select('id, title, funder, description, impact_sectors')
+    .eq('is_active', true)
+    .or('impact_sectors.is.null,impact_sectors.eq.{}')
+    .order('id')
+    .limit(limit)
+
+  if (error || !grantsRaw || grantsRaw.length === 0) {
+    return { classified: 0, failed: 0, done: true }
+  }
+
+  let classified = 0
+  let failed     = 0
+  try {
+    const results = await classifyBatch(grantsRaw as GrantInput[])
+    const byId: Record<string, ReturnType<typeof validate>> = {}
+    for (const r of results) {
+      if (r?.id) byId[r.id] = validate(r)
+    }
+    const updates = grantsRaw
+      .filter(g => byId[g.id])
+      .map(g => {
+        const r = byId[g.id]
+        const patch: Record<string, unknown> = {
+          impact_sectors: r.impact_sectors,
+          funding_type:   r.funding_type,
+          niche_tags:     r.niche_tags,
+        }
+        if (r.eligible_structures.length > 0)   patch.eligible_structures = r.eligible_structures
+        if (r.target_beneficiaries.length > 0)  patch.target_beneficiaries = r.target_beneficiaries
+        return supabase.from('scraped_grants').update(patch).eq('id', g.id)
+      })
+    const updateResults = await Promise.all(updates)
+    const writeErrors   = updateResults.filter(r => r.error)
+    classified = grantsRaw.length - writeErrors.length
+    failed     = writeErrors.length
+  } catch (err) {
+    console.error('[classify-grants] Batch failed:', err)
+    failed = grantsRaw.length
+  }
+
+  // done when fewer rows than requested (last page of unclassified)
+  return { classified, failed, done: grantsRaw.length < limit }
+}
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300  // 5 minutes — batches of 20 × Claude calls
@@ -62,16 +114,53 @@ export async function GET(req: NextRequest) {
 }
 
 // ── POST — classify a batch of grants ─────────────────────────────────────────
-// Body: { offset?: number; limit?: number; force?: boolean }
+// Body: { offset?: number; limit?: number; force?: boolean; loop?: boolean }
 export async function POST(req: NextRequest) {
   if (!await isAuthorised(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const body = await req.json().catch(() => ({})) as { offset?: number; limit?: number; force?: boolean; nicheOnly?: boolean }
+  const body = await req.json().catch(() => ({})) as { offset?: number; limit?: number; force?: boolean; nicheOnly?: boolean; loop?: boolean }
   const offset = body.offset ?? 0
   const limit  = body.limit  ?? 20  // 20 grants = 1 Claude call
   const force  = body.force  ?? false
+  const loop   = body.loop   ?? false
 
   const supabase = getAdminClient()
+
+  // Loop mode — run batches until done or close to maxDuration. Used to clear
+  // a backlog in one request rather than 8 sequential POSTs.
+  if (loop && !force && !body.nicheOnly) {
+    const startedAt = Date.now()
+    const SOFT_TIMEOUT_MS = 270_000  // 270s — leaves headroom under maxDuration=300
+    let totalClassified = 0
+    let totalFailed     = 0
+    let iterations      = 0
+
+    while (Date.now() - startedAt < SOFT_TIMEOUT_MS) {
+      const result = await classifyOnce(supabase, limit)
+      iterations++
+      totalClassified += result.classified
+      totalFailed     += result.failed
+      if (result.done) {
+        return NextResponse.json({
+          mode: 'loop',
+          iterations,
+          classified: totalClassified,
+          failed:     totalFailed,
+          done:       true,
+          elapsedMs:  Date.now() - startedAt,
+        })
+      }
+    }
+    return NextResponse.json({
+      mode: 'loop',
+      iterations,
+      classified: totalClassified,
+      failed:     totalFailed,
+      done:       false,
+      elapsedMs:  Date.now() - startedAt,
+      note:       'soft-timeout reached; re-run loop to continue',
+    })
+  }
 
   // ── Count total remaining (for progress reporting) ───────────────────────────
   let totalRemaining = 0

@@ -6,6 +6,24 @@
 // auto-activate: live rows go back to url_status='unchecked' so they reappear
 // in Needs Review.
 //
+// ── Diagnostic signature ─────────────────────────────────────────────────────
+// When investigating "dead" rows in scraped_grants, check url_last_checked first:
+//
+//   url_last_checked IS NULL  AND url_status = 'dead'
+//     → Manual hide via the admin UI's removeGrant({ mode: 'dead' }) or
+//       batchDelete from the Review tab. The validate-urls cron always writes
+//       both fields together, so this combination can ONLY come from manual
+//       admin action. Use THIS endpoint to re-validate.
+//
+//   url_last_checked IS NOT NULL AND url_status = 'dead'
+//     → The validator caught it. Inspect url_quality_issues for the reason
+//       (http_404, redirect_to_homepage, funder_missing, soft_404_*, etc.).
+//
+//   url_status IN ('unchecked','ok') AND is_active = false
+//     → Either fresh from the scraper (default insert is is_active=false →
+//       Needs Review) or deactivated by expire-grants (deadline passed).
+// ─────────────────────────────────────────────────────────────────────────────
+//
 // GET /api/admin/rescue-dead-urls?source=<source>&dryRun=true|false&limit=N
 //
 // Auth: ADMIN_SECRET bearer token, or admin session.

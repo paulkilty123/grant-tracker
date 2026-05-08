@@ -287,18 +287,20 @@ export async function classifyUnclassified(
 ): Promise<{ classified: number; failed: number }> {
   if (limit <= 0) return { classified: 0, failed: 0 }
 
+  // Filter for unclassified at the DB layer — older unclassified rows would
+  // otherwise be permanently skipped if the newest `limit*3` rows happen to be
+  // mostly already-classified. Catches both NULL and empty-array {} cases.
   const { data: grantsRaw, error } = await supabase
     .from('scraped_grants')
     .select('id, title, funder, description, impact_sectors')
     .eq('is_active', true)
-    .order('created_at', { ascending: false })   // newest first — most likely to be unclassified
-    .limit(limit * 3)                             // over-fetch so we can filter unclassified
+    .or('impact_sectors.is.null,impact_sectors.eq.{}')
+    .order('first_seen_at', { ascending: false })
+    .limit(limit)
 
   if (error || !grantsRaw) return { classified: 0, failed: 0 }
 
   const unclassified = grantsRaw
-    .filter(g => !Array.isArray(g.impact_sectors) || g.impact_sectors.length === 0)
-    .slice(0, limit)
 
   if (unclassified.length === 0) return { classified: 0, failed: 0 }
 
