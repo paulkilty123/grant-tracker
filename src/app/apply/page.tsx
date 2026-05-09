@@ -58,7 +58,7 @@ export default function ApplyPage() {
             What Grant Tracker <span style={{ color: '#8ECB3C' }}>does.</span>
           </h2>
           <p style={{ fontSize: 16, color: '#5F5E5A', lineHeight: 1.65, marginBottom: 16 }}>
-            Grant Tracker finds relevant funding for your organisation, filters out the noise, and helps you manage applications from first sight to submission. It&apos;s built to replace the spreadsheet you&apos;ve been meaning to update, the three browser tabs you keep forgetting to check, and the nagging feeling you&apos;re missing something you should have seen.
+            Grant Tracker finds the funding your work needs: grants, programmes, social investment, and in-kind support, from foundations, government, and corporate funders. It filters out the noise and helps you manage applications from first sight to submission. It&apos;s built to replace the spreadsheet you&apos;ve been meaning to update, the three browser tabs you keep forgetting to check, and the nagging feeling you&apos;re missing something you should have seen.
           </p>
           <p style={{ fontSize: 16, color: '#5F5E5A', lineHeight: 1.65 }}>
             It&apos;s designed specifically for the UK social impact sector: charities, CICs, social enterprises, co-operatives, and the people doing fundraising work alongside everything else.
