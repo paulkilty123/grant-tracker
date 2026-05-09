@@ -65,6 +65,25 @@ export default function ApplyPage() {
           </p>
         </section>
 
+        {/* WHAT'S THERE NOW */}
+        <section style={{ padding: '0 0 56px' }}>
+          <h2 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.15, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 20 }}>
+            What&apos;s <span style={{ color: '#8ECB3C' }}>there now.</span>
+          </h2>
+          <p style={{ fontSize: 16, color: '#5F5E5A', lineHeight: 1.65, marginBottom: 16 }}>
+            600+ live funding opportunities in the catalogue right now, growing each week as new ones come in and old ones expire. They include grants, programmes, social investment and in-kind support, covering UK foundations, government, lottery, and corporate funders.
+          </p>
+          <p style={{ fontSize: 16, color: '#5F5E5A', lineHeight: 1.65, marginBottom: 16 }}>
+            When you add your organisation profile, Grant Tracker matches you against the catalogue and scores each opportunity for fit. The matching engine checks eligibility against the things that actually disqualify you: legal structure, geography, organisation size. Ineligible opportunities are flagged so you don&apos;t waste time chasing them.
+          </p>
+          <p style={{ fontSize: 16, color: '#5F5E5A', lineHeight: 1.65, marginBottom: 16 }}>
+            Once you find something worth applying for, you can move it into a pipeline view with five stages, from identified through to won or declined, and set deadlines that show up on a calendar. If a deadline is coming up, you&apos;ll see it.
+          </p>
+          <p style={{ fontSize: 16, color: '#5F5E5A', lineHeight: 1.65 }}>
+            The product is working but not finished. There are rough edges in the catalogue (some funders are better-covered than others), in the matching (it gets some things wrong, particularly for less common organisation shapes), and places where the design needs polish. The founding cohort exists in part to find these and tell me about them.
+          </p>
+        </section>
+
         {/* WHO I'M LOOKING FOR */}
         <section style={{ padding: '0 0 56px' }}>
           <h2 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.15, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 20 }}>
