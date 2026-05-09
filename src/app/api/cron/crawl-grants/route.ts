@@ -76,11 +76,40 @@ export async function GET(req: NextRequest) {
       console.error('[crawl-grants] Post-crawl classify failed:', err)
     }
 
+    // ── Crawl errors visibility ───────────────────────────────────────────
+    // Counts unresolved entries in crawl_errors and surfaces a WARN line
+    // when sources are persistently failing. Mirrors the CLASSIFY_BACKLOG
+    // pattern so silent-failing crawlers don't go unnoticed.
+    let unresolvedErrors: number | null = null
+    try {
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        { auth: { persistSession: false } },
+      )
+      const { count } = await supabase
+        .from('crawl_errors')
+        .select('id', { count: 'exact', head: true })
+        .is('resolved_at', null)
+      unresolvedErrors = count ?? null
+
+      const ERROR_THRESHOLD = 5
+      if (unresolvedErrors != null && unresolvedErrors > ERROR_THRESHOLD) {
+        console.warn(
+          `[crawl-grants] CRAWL_ERRORS_UNRESOLVED ${unresolvedErrors} sources have unresolved errors after batch=${batch ?? 'all'}. ` +
+          `Threshold=${ERROR_THRESHOLD}. Inspect crawl_errors WHERE resolved_at IS NULL.`
+        )
+      }
+    } catch (err) {
+      console.error('[crawl-grants] crawl_errors count failed:', err)
+    }
+
     return NextResponse.json({
       success: true,
       batch: batch ?? 'all',
       totalUpserted: total,
       classify: { classified, failed: classifyFailed, unclassifiedRemaining },
+      crawlErrors: { unresolved: unresolvedErrors },
       results: active,
     })
   } catch (err) {

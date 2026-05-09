@@ -4355,5 +4355,55 @@ export async function crawlAllSources(batch?: BatchNum): Promise<CrawlResult[]> 
     }
   } catch { /* crawl_logs table may not exist yet — ignore */ }
 
+  // ── Persist errors + clear resolutions to crawl_errors ─────────────────────
+  // Logs each failed source as a structured row, and marks any prior unresolved
+  // errors as resolved when the same source runs cleanly in this batch.
+  // Best-effort: never let logging failures break the crawl response.
+  try {
+    await logCrawlOutcomes(results, batch)
+  } catch (err) {
+    console.error('[crawlAllSources] crawl_errors logging failed:', err)
+  }
+
   return results
+}
+
+// ── crawl_errors logging ────────────────────────────────────────────────────
+function classifyCrawlError(msg: string): 'fetch_failed' | 'parse_failed' | 'upsert_failed' | 'crawl_failed' {
+  const m = msg.toLowerCase()
+  if (/enotfound|econn|timeout|getaddrinfo|fetch failed|http\s*[345]\d{2}|aborted|network/.test(m)) return 'fetch_failed'
+  if (/parse|json|selector|next data|cheerio|html/.test(m)) return 'parse_failed'
+  if (/upsert|database|supabase|postgres|duplicate|constraint/.test(m)) return 'upsert_failed'
+  return 'crawl_failed'
+}
+
+async function logCrawlOutcomes(results: CrawlResult[], batch?: BatchNum): Promise<void> {
+  const supabase = adminClient()
+
+  const failures = results.filter(r =>
+    r.error && r.error !== 'skipped' && r.error !== 'disabled'
+  )
+  const cleanRuns = results.filter(r =>
+    !r.error  // ran and succeeded (skipped/disabled don't count as a clean run)
+  )
+
+  if (failures.length > 0) {
+    await supabase.from('crawl_errors').insert(
+      failures.map(f => ({
+        source:     f.source,
+        error_type: classifyCrawlError(f.error!),
+        error_msg:  f.error!.slice(0, 500),
+        context:    { fetched: f.fetched, upserted: f.upserted, batch: batch ?? null },
+      }))
+    )
+  }
+
+  if (cleanRuns.length > 0) {
+    const cleanSources = cleanRuns.map(r => r.source)
+    await supabase
+      .from('crawl_errors')
+      .update({ resolved_at: new Date().toISOString() })
+      .is('resolved_at', null)
+      .in('source', cleanSources)
+  }
 }
