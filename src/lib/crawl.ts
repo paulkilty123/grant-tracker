@@ -1012,7 +1012,7 @@ async function crawlHeartOfEnglandCF(): Promise<CrawlResult> {
         is_local:             true,
         sectors:              ['community', 'social welfare', 'health'],
         eligibility_criteria: ['Charity, community group or social enterprise in Coventry, Solihull or Warwickshire'],
-        apply_url:            `${BASE}/available-grants/`,
+        apply_url:            `${BASE}/coventry-solihull-warwickshire-fund/`,
         raw_data:             { note: 'Static seed.' } as Record<string, unknown>,
       },
       {
@@ -1029,26 +1029,11 @@ async function crawlHeartOfEnglandCF(): Promise<CrawlResult> {
         is_local:             true,
         sectors:              ['community', 'environment', 'youth', 'sport'],
         eligibility_criteria: ['Charity or community group in West Midlands', 'Project should benefit communities near IM Properties development sites'],
-        apply_url:            `${BASE}/available-grants/`,
+        apply_url:            `${BASE}/im-properties-stratford-46-community-fund/`,
         raw_data:             { note: 'Static seed.' } as Record<string, unknown>,
       },
-      {
-        external_id:          `${SOURCE}_community_energy_warks`,
-        source:               SOURCE,
-        title:                'Community Energy Warwickshire Fund',
-        funder:               'Heart of England Community Foundation',
-        funder_type:          'community_foundation',
-        description:          'Grants up to £2,000 for community projects across Warwickshire that reduce energy use, improve sustainability or address fuel poverty. Targets local groups taking practical action on the cost-of-living and climate.',
-        amount_min:           250,
-        amount_max:           2000,
-        deadline:             null,
-        is_rolling:           true,
-        is_local:             true,
-        sectors:              ['environment', 'community', 'sustainability', 'fuel poverty'],
-        eligibility_criteria: ['Charity or community group in Warwickshire', 'Project addresses energy efficiency, sustainability or fuel poverty'],
-        apply_url:            `${BASE}/available-grants/`,
-        raw_data:             { note: 'Static seed.' } as Record<string, unknown>,
-      },
+      // Community Energy Warwickshire Fund removed 2026-05-09 — no longer
+      // listed on /available-grants/. Existing DB row needs admin deactivation.
     ])
   } catch (err) {
     return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
