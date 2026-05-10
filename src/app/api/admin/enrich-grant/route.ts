@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import Anthropic from '@anthropic-ai/sdk'
+import { syncLocationFields } from '@/lib/funder-brief'
 
 export const maxDuration = 45 // seconds — requires Vercel Pro
 
@@ -161,12 +162,15 @@ Write a structured "funder brief" as JSON. Rules:
 - If information is not explicitly stated, make a reasonable inference from context (e.g. if a funder supports "charities and community groups", infer the likely structures). Do not explain the inference — just state the conclusion naturally
 - If a field is genuinely impossible to infer, use null — do not write placeholder text explaining what is unknown
 - Avoid phrases like "not specified", "unclear from", "the source does not", "information not available"
+- The three location fields (geographic_focus, location_tag, is_local) MUST be internally consistent. If geographic_focus says "Somerset only", location_tag must be "Somerset" and is_local must be true. If geographic_focus says "UK-wide", location_tag must be "UK" and is_local must be false.
 
 Return ONLY valid JSON in this exact shape:
 {
   "what_they_fund": "What kinds of projects, causes, or organisations they support",
   "who_can_apply": "Who is eligible — legal structures, organisation types, any income caps or stage restrictions. Write as direct guidance: e.g. 'Open to registered charities, CICs and community groups. No minimum income requirement stated.'",
   "geographic_focus": "Geographic coverage — UK-wide, England only, specific regions, counties or cities. Be specific if restricted.",
+  "location_tag": "Short pill label for the geographic scope (max 30 chars): a UK county, city, region, borough name, or country. Examples: 'Somerset', 'Leeds', 'London', 'Coventry & Warwickshire', 'Scotland', 'England & Wales'. Use 'UK' for genuinely UK-wide funders. No qualifiers or parentheticals — keep it short.",
+  "is_local": true/false (JSON boolean). True if the funder serves a specific sub-national area (county, region, city, borough). False if UK-wide, England-wide, Scotland-wide, or covers most of the UK.",
   "priorities": "Current funding priorities or themes they care about most",
   "strong_application": "What makes a strong or successful application to this funder",
   "exclusions": "What they explicitly will NOT fund or who cannot apply",
@@ -178,7 +182,7 @@ Return ONLY valid JSON in this exact shape:
   "source": "${fetchedFromUrl ? 'live_fetch' : 'knowledge_fallback'}"
 }`
 
-  let brief: Record<string, string | null>
+  let brief: Record<string, unknown>
   try {
     const msg = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
@@ -193,8 +197,12 @@ Return ONLY valid JSON in this exact shape:
     return NextResponse.json({ error: 'Failed to generate summary' }, { status: 500 })
   }
 
-  // Save brief + persist any additional sources so bulk re-enrich can reuse them
+  // Save brief + sync structured location fields the LLM derived alongside the
+  // narrative geographic_focus (closes the wiring gap that left location_tag
+  // pointing to "UK" while the brief correctly said "Somerset only").
   const updatePayload: Record<string, unknown> = { funder_brief: brief }
+  syncLocationFields(brief, updatePayload)
+
   if (additionalSources && additionalSources.length > 0) {
     // Only persist sources that have meaningful content (url or pasted text)
     const sourcesToSave = additionalSources.filter(s =>

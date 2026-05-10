@@ -12,6 +12,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { syncLocationFields } from '@/lib/funder-brief'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
@@ -157,12 +158,15 @@ Write a structured "funder brief" as JSON. Rules:
 - Each field should be 1–3 sentences max
 - If information is not explicitly stated, make a reasonable inference from context. Do not explain the inference — just state the conclusion naturally
 - If a field is genuinely impossible to infer, use null
+- The three location fields (geographic_focus, location_tag, is_local) MUST be internally consistent. If geographic_focus says "Somerset only", location_tag must be "Somerset" and is_local must be true. If geographic_focus says "UK-wide", location_tag must be "UK" and is_local must be false.
 
 Return ONLY valid JSON in this exact shape:
 {
   "what_they_fund": "...",
   "who_can_apply": "...",
   "geographic_focus": "...",
+  "location_tag": "Short pill label for the geographic scope (max 30 chars). Examples: 'Somerset', 'Leeds', 'London', 'Coventry & Warwickshire', 'Scotland', 'England & Wales'. Use 'UK' for genuinely UK-wide funders. No qualifiers or parentheticals.",
+  "is_local": true/false (JSON boolean). True for sub-national scope, false for UK-wide / country-wide.",
   "priorities": "...",
   "strong_application": "...",
   "exclusions": "...",
@@ -185,7 +189,12 @@ Return ONLY valid JSON in this exact shape:
       if (!jsonMatch) throw new Error('No JSON in response')
       const brief = JSON.parse(jsonMatch[0])
 
-      await supabase.from('scraped_grants').update({ funder_brief: brief }).eq('id', g.id)
+      // Sync structured location fields the LLM derived alongside the
+      // narrative brief — closes the wiring gap that left location_tag
+      // stale after enrichment.
+      const updatePayload: Record<string, unknown> = { funder_brief: brief }
+      syncLocationFields(brief, updatePayload)
+      await supabase.from('scraped_grants').update(updatePayload).eq('id', g.id)
       results.push({
         id: g.id as string,
         funder: g.funder as string,
