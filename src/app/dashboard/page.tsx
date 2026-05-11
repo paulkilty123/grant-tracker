@@ -101,14 +101,44 @@ export default async function DashboardPage() {
 
     if (grantRows && grantRows.length > 0) {
       const orgStructure = typedOrg.legal_structure
+      // Mirror Find Funding's profile prefill (search/page.tsx:1336-1340):
+      // when the org has impact_sectors / primary_location set, those become
+      // active filters by default. The dashboard headline must apply the
+      // same filters or it'll over-count (we saw 523 vs Find Funding's 345
+      // because sector + location filters weren't being applied here).
+      const orgSectors = new Set((typedOrg.impact_sectors ?? []) as string[])
+      const orgLocation = (typedOrg.primary_location ?? '').toLowerCase().trim()
+      // UK-wide / nation-wide scopes always pass the location check (a
+      // London charity should still see UK-wide funders). Mirrors
+      // search/page.tsx:2113.
+      const BROAD_LOCATION = new Set(['uk', 'uk-wide', 'england', 'nationwide', 'national', 'uk wide', 'all uk'])
+
       scoredAll = grantRows
         .map(row => {
           const g = normaliseScrapedGrant(row as Record<string, unknown>)
+          const ge = g as ReturnType<typeof normaliseScrapedGrant> & { impactSectors?: string[]; geoScope?: string[] }
           const ft = (g.fundingType ?? 'grant') as string
           if (!CANONICAL_TYPES.has(ft)) return null
-          // Structure eligibility — mirror Find Funding's literal .includes
+
+          // Structure eligibility — literal .includes on eligible_structures
           const es = g.eligibleStructures
           if (orgStructure && es && es.length > 0 && !es.includes(orgStructure)) return null
+
+          // Sector intersection — only fires when both sides have sectors set
+          if (orgSectors.size > 0 && ge.impactSectors && ge.impactSectors.length > 0) {
+            if (!ge.impactSectors.some((s: string) => orgSectors.has(s))) return null
+          }
+
+          // Location — only fires when both sides have location set; broad
+          // scopes (UK-wide etc.) always pass
+          if (orgLocation && ge.geoScope && ge.geoScope.length > 0) {
+            const passes = ge.geoScope.some((s: string) => {
+              const sl = s.toLowerCase()
+              return BROAD_LOCATION.has(sl) || sl.includes(orgLocation) || orgLocation.includes(sl)
+            })
+            if (!passes) return null
+          }
+
           // Score within the matched set (used for top-4 + quality buckets)
           const result = computeMatchScore(g, typedOrg)
           return {
