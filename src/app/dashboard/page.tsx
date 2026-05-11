@@ -651,41 +651,74 @@ export default async function DashboardPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 mb-8">
             {/* LEFT — Worth your attention */}
             <div className="lg:col-span-5 card rounded-xl p-6">
-              {/* Stat block — single label/number/qualifier unit instead of
-                  the previous separate context line + dash-and-number h3.
-                  The "of N total matches" qualifier sits inline next to the
-                  number on a shared baseline so the eye reads
-                  actionable→total in one sweep. */}
+              {/* Stat block — label on its own line, then a baseline-aligned
+                  pair of [N matches] (large) and [of M total] (small grey).
+                  Number and unit are bound together as the headline; the
+                  "of M total" sits as the qualifier. */}
               <div className="rounded-lg mb-5" style={{ background: '#F0EDE2', padding: 16 }}>
                 <p style={{ fontSize: 11, fontWeight: 500, letterSpacing: '0.5px', color: '#5F5E5A', textTransform: 'uppercase', fontFamily: 'var(--font-space-grotesk)', marginBottom: 6 }}>
                   Worth your attention
                 </p>
-                <div className="flex items-baseline" style={{ gap: 12 }}>
+                <div className="flex items-baseline flex-wrap" style={{ gap: 10 }}>
                   <span style={{ fontSize: 36, fontWeight: 500, color: '#2C2C2A', fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.02em', lineHeight: 1 }}>
-                    {actionableCount}
+                    {actionableCount} matches
                   </span>
                   <span style={{ fontSize: 13, color: '#5F5E5A', fontFamily: 'var(--font-space-grotesk)' }}>
-                    of {totalMatchCount} total matches
+                    of {totalMatchCount} total
                   </span>
                 </div>
               </div>
 
-              {/* Quality breakdown — 3 columns + stacked bar (Weak excluded) */}
-              <div className="grid grid-cols-3 gap-2 mb-3">
-                {qualityCols.map(q => (
-                  <div key={q.key}>
-                    <p className="text-xs" style={{ color: '#5F5E5A' }}>{q.label}</p>
-                    <p className="text-xl font-bold text-charcoal mt-0.5" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-                      {q.count}
-                    </p>
-                  </div>
-                ))}
-              </div>
-              <div className="flex h-2 rounded-full overflow-hidden mb-4" style={{ background: '#F0EDE2' }}>
-                {qualityCols.filter(q => q.count > 0).map(q => (
-                  <div key={q.key} style={{ flexGrow: q.count, background: q.colour }} />
-                ))}
-              </div>
+              {/* Relevance breakdown — actionable group + capped lower-relevance
+                  segment. The lower segment's width is capped at 25% so the
+                  actionable matches always dominate the visual even when the
+                  catalogue has many low-score rows (e.g. 251 of 345 here would
+                  otherwise dominate). */}
+              {(() => {
+                const weak = qualityCounts.weak
+                const totalForBar = actionableCount + weak
+                const weakRatio = totalForBar > 0 ? weak / totalForBar : 0
+                // Cap the lower segment at 25% of the bar; below the cap, scales naturally
+                const cappedWeakRatio   = Math.min(weakRatio, 0.25)
+                const actionableRatio   = 1 - cappedWeakRatio
+                const showLower = weak > 0
+                return (
+                  <>
+                    {/* Label row — actionable group (3 equal cols) + lower-relevance */}
+                    <div className="flex mb-3" style={{ gap: 4 }}>
+                      <div className="grid grid-cols-3 gap-2" style={{ flexGrow: actionableRatio * 100, flexBasis: 0 }}>
+                        {qualityCols.map(q => (
+                          <div key={q.key}>
+                            <p className="text-xs" style={{ color: '#5F5E5A' }}>{q.label}</p>
+                            <p className="text-xl font-bold text-charcoal mt-0.5" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+                              {q.count}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                      {showLower && (
+                        <div style={{ flexGrow: cappedWeakRatio * 100, flexBasis: 0, opacity: 0.6 }}>
+                          <p className="text-xs" style={{ color: '#5F5E5A', lineHeight: 1.2 }}>Less relevant</p>
+                          <p className="font-bold text-charcoal mt-0.5" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 15 }}>
+                            {weak}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                    {/* Bar — same flex ratios as label row above */}
+                    <div className="flex h-2 mb-4" style={{ gap: 4 }}>
+                      <div className="flex rounded-full overflow-hidden" style={{ flexGrow: actionableRatio * 100, flexBasis: 0, background: '#F0EDE2' }}>
+                        {qualityCols.filter(q => q.count > 0).map(q => (
+                          <div key={q.key} style={{ flexGrow: q.count, background: q.colour }} />
+                        ))}
+                      </div>
+                      {showLower && (
+                        <div className="rounded-full" style={{ flexGrow: cappedWeakRatio * 100, flexBasis: 0, background: '#D3D1C7' }} />
+                      )}
+                    </div>
+                  </>
+                )
+              })()}
 
               {/* Browse-all link — discoverable but not styled as a primary CTA.
                   No URL params: takes the user to the unfiltered Find Funding
