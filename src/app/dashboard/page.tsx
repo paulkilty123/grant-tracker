@@ -750,47 +750,91 @@ export default async function DashboardPage() {
         )
       })()}
 
-      {/* Pipeline + Upcoming deadlines (moved below matches per dashboard reorder 2026-05-11) */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+      {/* Pipeline + Upcoming deadlines (moved below matches per dashboard reorder 2026-05-11)
+          Custom grid (2fr / 1.1fr) gives deadlines a bit more width so funder
+          names like "Company of Actuaries Charitable Trust" render in full. */}
+      <div className="grid grid-cols-1 gap-5 mb-8" style={{ gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1.1fr)' }}>
 
-        {/* Pipeline Overview */}
-        <div className="md:col-span-2 card rounded-xl">
+        {/* Pipeline Overview — 4 active stages + Declined as footer line.
+            Declined is closed state, not active state; reduced visual weight
+            so it doesn't compete with the active workflow tiles for attention.
+            Won standardised to currency (with "—" fallback when value=0)
+            so all four active tiles use the same metric format. */}
+        <div className="card rounded-xl">
           <div className="flex items-center justify-between mb-5">
             <h3 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Pipeline</h3>
             <a href="/dashboard/pipeline" className="text-xs font-semibold hover:underline" style={{ color: '#8ECB3C', fontFamily: 'var(--font-space-grotesk)' }}>View pipeline →</a>
           </div>
 
-          {/* Tonal ladder — each tile carries label + amount + count in one.
-              The earlier separate count row had mismatched vocab (Leads /
-              Pending / Archived) that didn't map to the stage names;
-              consolidating inside the tile also matches the spec §7.2
-              Pipeline card pattern and mirrors the Pipeline full-page view. */}
-          <a href="/dashboard/pipeline" className="flex rounded-xl overflow-hidden hover:opacity-95 transition-opacity" style={{ height: 160 }}>
-            {stageValues.map(s => {
-              const maxVal = Math.max(...stageValues.map(x => x.value).filter(v => v > 0), 100000)
-              const FLOOR = maxVal / 12
-              const grow = Math.max(s.value, FLOOR)
+          {(() => {
+            const activeStages = stageValues.filter(s => s.id !== 'declined')
+            const declined = stageValues.find(s => s.id === 'declined')
+            const totalActiveValue = activeStages.reduce((sum, s) => sum + s.value, 0)
+            const hasAnyActivity = activeStages.some(s => s.count > 0) || (declined?.count ?? 0) > 0
+
+            // Empty state: zero activity across all stages → CTA back to Find
+            // Funding rather than five empty £0 tiles (which felt broken on
+            // day-one for new cohort members).
+            if (!hasAnyActivity) {
               return (
-                <div key={s.id} className="flex flex-col justify-between px-4 py-3.5"
-                  style={{ flexGrow: grow, flexShrink: 0, flexBasis: 110, background: s.bg, minWidth: 110, overflow: 'hidden' }}>
-                  <span className="text-[10px] font-bold uppercase tracking-widest truncate"
-                    style={{ color: s.labelCol }}>
-                    {s.label}
+                <a href="/dashboard/search"
+                  className="flex flex-col items-center justify-center text-center gap-2 rounded-xl px-6 py-10 hover:bg-[#F5F1E8] transition-colors"
+                  style={{ background: '#FAFAF7', border: '1.5px dashed rgba(99,153,34,0.35)', minHeight: 160 }}>
+                  <p className="text-base font-semibold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+                    Nothing in your pipeline yet
+                  </p>
+                  <p className="text-sm" style={{ color: '#5F5E5A' }}>
+                    Save a match to start tracking applications.
+                  </p>
+                  <span className="mt-2 text-xs font-semibold inline-flex items-center gap-1.5" style={{ color: '#3B6D11', fontFamily: 'var(--font-space-grotesk)' }}>
+                    Find your first match <ArrowRight className="w-3.5 h-3.5" />
                   </span>
-                  <div>
-                    <span className="block font-display font-bold leading-none truncate"
-                      style={{ color: s.valCol, fontSize: 'clamp(18px, 2.2vw, 30px)' }}>
-                      {s.value > 0 ? formatCurrency(s.value) : (s.count > 0 ? s.count : '—')}
-                    </span>
-                    <span className="block text-[10px] font-semibold mt-1.5 truncate"
-                      style={{ color: s.countCol }}>
-                      {s.count > 0 ? (s.count === 1 ? '1 opportunity' : s.count + ' opportunities') : 'None yet'}
-                    </span>
-                  </div>
-                </div>
+                </a>
               )
-            })}
-          </a>
+            }
+
+            return (
+              <>
+                <a href="/dashboard/pipeline" className="flex rounded-xl overflow-hidden hover:opacity-95 transition-opacity" style={{ height: 160 }}>
+                  {activeStages.map(s => {
+                    const maxVal = Math.max(...activeStages.map(x => x.value).filter(v => v > 0), 100000)
+                    const FLOOR = maxVal / 12
+                    const grow = Math.max(s.value, FLOOR)
+                    return (
+                      <div key={s.id} className="flex flex-col justify-between px-4 py-3.5"
+                        style={{ flexGrow: grow, flexShrink: 0, flexBasis: 110, background: s.bg, minWidth: 110, overflow: 'hidden' }}>
+                        <span className="text-[10px] font-bold uppercase tracking-widest truncate" style={{ color: s.labelCol }}>
+                          {s.label}
+                        </span>
+                        <div>
+                          <span className="block font-display font-bold leading-none truncate"
+                            style={{ color: s.valCol, fontSize: 'clamp(18px, 2.2vw, 30px)' }}>
+                            {s.value > 0 ? formatCurrency(s.value) : '—'}
+                          </span>
+                          <span className="block text-[10px] font-semibold mt-1.5 truncate" style={{ color: s.countCol }}>
+                            {s.count > 0 ? (s.count === 1 ? '1 opportunity' : s.count + ' opportunities') : 'None yet'}
+                          </span>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </a>
+
+                {/* Footer line — total active + declined (when present) */}
+                <div className="mt-3 pt-3 flex items-center justify-between flex-wrap gap-2 text-xs" style={{ borderTop: '0.5px solid rgba(0,0,0,0.08)', color: '#5F5E5A' }}>
+                  <span style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+                    Total in pipeline: <span className="font-semibold text-charcoal">{totalActiveValue > 0 ? formatCurrency(totalActiveValue) : '—'}</span>
+                  </span>
+                  {declined && declined.count > 0 && (
+                    <span style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+                      <span className="font-semibold" style={{ color: '#993C1D' }}>{declined.value > 0 ? formatCurrency(declined.value) : declined.count}</span> declined
+                      <span className="ml-1">· {declined.count === 1 ? '1 opportunity' : `${declined.count} opportunities`}</span>
+                    </span>
+                  )}
+                </div>
+              </>
+            )
+          })()}
         </div>
 
         {/* This week's deadlines */}
@@ -801,25 +845,31 @@ export default async function DashboardPage() {
 
           {alerts.length === 0 ? (
             <div className="text-center py-6 text-mid">
-              <p className="text-sm">No upcoming deadlines</p>
-              <p className="text-xs mt-1">Save a grant to start tracking</p>
+              <p className="text-sm">No deadlines yet.</p>
+              <p className="text-xs mt-1">They&rsquo;ll appear here as you save opportunities.</p>
             </div>
           ) : (
             <div className="space-y-1">
               {alerts.map(row => {
                 const dateObj = formatDeadlineDate(row.deadline)
                 const d = row.daysUntil
+                // Urgency styling: anything within 30 days reads red on both
+                // the date numerals and the pill. Beyond 30d stays neutral
+                // grey so the eye lands first on the imminent items.
+                const isUrgent = d <= 30
                 const pillLabel = d < 0 ? 'Overdue' : d === 0 ? 'Today' : d === 1 ? 'Tomorrow' : `${d}d`
-                const pillCls   = d <= 7
+                const pillCls = isUrgent
                   ? 'bg-[#FAECE7] text-[#993C1D]'
                   : 'bg-transparent text-[#5F5E5A] border border-[rgba(23,52,4,0.20)]'
+                const dayCol   = isUrgent ? '#993C1D' : '#2C2C2A'
+                const monthCol = isUrgent ? '#993C1D' : '#5F5E5A'
                 return (
                   <a key={row.id} href={row.href}
                     className="flex items-center gap-3 py-2.5 border-b border-warm last:border-0 hover:bg-[#FAFAF7] -mx-2 px-2 rounded-md transition-colors">
                     {dateObj ? (
                       <div className="flex flex-col items-center flex-shrink-0 w-9 text-center">
-                        <span className="text-[9px] font-bold text-mid uppercase">{dateObj.month}</span>
-                        <span className="text-lg font-bold text-charcoal leading-none">{dateObj.day}</span>
+                        <span className="text-[9px] font-bold uppercase" style={{ color: monthCol }}>{dateObj.month}</span>
+                        <span className="text-lg font-bold leading-none" style={{ color: dayCol }}>{dateObj.day}</span>
                       </div>
                     ) : (
                       <div className="w-9 flex-shrink-0" />
