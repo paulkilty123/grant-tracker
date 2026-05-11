@@ -731,7 +731,7 @@ export default async function DashboardPage() {
               </a>
 
               {/* By funding type — actionable subset (score ≥ 50) only */}
-              <p className="text-sm font-bold uppercase tracking-wider text-mid mb-3" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+              <p className="font-bold uppercase mb-3" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#5F5E5A', fontSize: 15, letterSpacing: '0.06em' }}>
                 By funding type
               </p>
               <div className="space-y-3">
