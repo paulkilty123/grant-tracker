@@ -684,12 +684,15 @@ export default async function DashboardPage() {
                 const showLower = weak > 0
                 return (
                   <>
-                    {/* Label row — actionable group (3 equal cols) + lower-relevance */}
+                    {/* Label row — actionable group uses auto-sized columns
+                        so labels stay on one line each (Strong/Good narrow,
+                        Worth exploring wider). Equal-width grid wrapped
+                        "Worth exploring" onto two lines — auto sizing fixes. */}
                     <div className="flex mb-3" style={{ gap: 4 }}>
-                      <div className="grid grid-cols-3 gap-2" style={{ flexGrow: actionableRatio * 100, flexBasis: 0 }}>
+                      <div className="flex" style={{ flexGrow: actionableRatio * 100, flexBasis: 0, columnGap: 20 }}>
                         {qualityCols.map(q => (
                           <div key={q.key}>
-                            <p className="text-xs" style={{ color: '#5F5E5A' }}>{q.label}</p>
+                            <p className="text-xs whitespace-nowrap" style={{ color: '#5F5E5A' }}>{q.label}</p>
                             <p className="text-xl font-bold text-charcoal mt-0.5" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
                               {q.count}
                             </p>
