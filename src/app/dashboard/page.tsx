@@ -808,29 +808,27 @@ export default async function DashboardPage() {
 
             return (
               <>
-                <a href="/dashboard/pipeline" className="flex rounded-xl overflow-hidden hover:opacity-95 transition-opacity" style={{ height: 160 }}>
-                  {activeStages.map(s => {
-                    const maxVal = Math.max(...activeStages.map(x => x.value).filter(v => v > 0), 100000)
-                    const FLOOR = maxVal / 12
-                    const grow = Math.max(s.value, FLOOR)
-                    return (
-                      <div key={s.id} className="flex flex-col justify-between px-4 py-3.5"
-                        style={{ flexGrow: grow, flexShrink: 0, flexBasis: 110, background: s.bg, minWidth: 110, overflow: 'hidden' }}>
-                        <span className="text-[10px] font-bold uppercase tracking-widest truncate" style={{ color: s.labelCol }}>
-                          {s.label}
+                {/* Equal-width grid with gaps. Each tile is its own rounded
+                    card; the outer link covers the whole grid (clicking any
+                    tile or the gap takes the user to /dashboard/pipeline). */}
+                <a href="/dashboard/pipeline" className="grid grid-cols-4 gap-3 hover:opacity-95 transition-opacity" style={{ height: 160 }}>
+                  {activeStages.map(s => (
+                    <div key={s.id} className="flex flex-col justify-between px-4 py-3.5 rounded-xl"
+                      style={{ background: s.bg, overflow: 'hidden' }}>
+                      <span className="text-[10px] font-bold uppercase tracking-widest truncate" style={{ color: s.labelCol }}>
+                        {s.label}
+                      </span>
+                      <div>
+                        <span className="block font-display font-bold leading-none truncate"
+                          style={{ color: s.valCol, fontSize: 'clamp(18px, 2.2vw, 30px)' }}>
+                          {s.value > 0 ? formatCurrency(s.value) : '—'}
                         </span>
-                        <div>
-                          <span className="block font-display font-bold leading-none truncate"
-                            style={{ color: s.valCol, fontSize: 'clamp(18px, 2.2vw, 30px)' }}>
-                            {s.value > 0 ? formatCurrency(s.value) : '—'}
-                          </span>
-                          <span className="block text-[10px] font-semibold mt-1.5 truncate" style={{ color: s.countCol }}>
-                            {s.count > 0 ? (s.count === 1 ? '1 opportunity' : s.count + ' opportunities') : 'None yet'}
-                          </span>
-                        </div>
+                        <span className="block text-[10px] font-semibold mt-1.5 truncate" style={{ color: s.countCol }}>
+                          {s.count > 0 ? (s.count === 1 ? '1 opportunity' : s.count + ' opportunities') : 'None yet'}
+                        </span>
                       </div>
-                    )
-                  })}
+                    </div>
+                  ))}
                 </a>
 
                 {/* Footer line — declined (with coral marker) on the left,
