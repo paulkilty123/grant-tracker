@@ -67,10 +67,25 @@ export default async function DashboardPage() {
     savedCount = count ?? 0
   }
 
-  // ── Matched Opportunities (used in both states) ──────────────────────────
-  // Limit bumped 500 → 1000 so the new dashboard panel reflects the full
-  // active catalogue (~582 today) plus headroom for growth without silently
-  // undercounting.
+  // ── Matched Opportunities — definition aligned with Find Funding's
+  // crossTabCounts (src/app/dashboard/search/page.tsx:2108). A "match" is
+  // a pure FILTER, not a scored result. Same row that surfaces in Find
+  // Funding surfaces here. Score is then computed within the matched set
+  // for the top-4 sort and the strong/good/partial/weak bucketing.
+  //
+  // Filter rules (mirror Find Funding):
+  //   - Active row, URL not dead, deadline rolling/null/future
+  //   - Funding type ∈ { grant, programme, investment, in_kind }
+  //     (accelerator + blended_finance excluded — too low-volume to be
+  //     useful on the dashboard, would clutter the per-type bars)
+  //   - Structure eligibility: pass if eligible_structures is empty OR
+  //     contains the user's legal_structure (literal .includes match)
+  //
+  // Earlier iteration mistakenly used `score > 0` as the membership test,
+  // which returned every row in the catalogue (the matching engine scores
+  // everything) and bucketed catalogue noise as "weak" matches. Headline
+  // count was 580 vs Find Funding's 345 — fixed by aligning definitions.
+  const CANONICAL_TYPES = new Set(['grant', 'programme', 'investment', 'in_kind'])
   const today = new Date().toISOString().split('T')[0]
   type ScoredGrant = { grant: ReturnType<typeof normaliseScrapedGrant>; score: number; lastSeenAt: string | null }
   let scoredAll: ScoredGrant[] = []
@@ -85,17 +100,17 @@ export default async function DashboardPage() {
       .limit(1000)
 
     if (grantRows && grantRows.length > 0) {
+      const orgStructure = typedOrg.legal_structure
       scoredAll = grantRows
         .map(row => {
           const g = normaliseScrapedGrant(row as Record<string, unknown>)
+          const ft = (g.fundingType ?? 'grant') as string
+          if (!CANONICAL_TYPES.has(ft)) return null
+          // Structure eligibility — mirror Find Funding's literal .includes
+          const es = g.eligibleStructures
+          if (orgStructure && es && es.length > 0 && !es.includes(orgStructure)) return null
+          // Score within the matched set (used for top-4 + quality buckets)
           const result = computeMatchScore(g, typedOrg)
-          // "Match" excludes hard-blocker ineligible rows (structure mismatch,
-          // location mismatch, etc.). Per branched-eligibility engine these
-          // are capped at 30, so they'd appear in the Weak bucket otherwise —
-          // but the dashboard's "your matches" total should reflect what the
-          // user could actually apply to, not what the catalogue contains.
-          if (result.score <= 0) return null
-          if (result.eligibilityStatus === 'ineligible') return null
           return {
             grant: g,
             score: result.score,
@@ -109,8 +124,8 @@ export default async function DashboardPage() {
   const totalMatchCount = scoredAll.length
 
   // ── Quality buckets — Strong ≥85, Good 70–84, Partial 50–69, Weak <50.
-  // Verify distribution against live data post-deploy and adjust if any
-  // bucket holds >70% of matches (likely candidate: Good).
+  // Computed within the matched set (not the catalogue), so "Weak" reflects
+  // genuinely-weak fits the user could still apply to, not catalogue noise.
   function qualityBucket(score: number): 'strong' | 'good' | 'partial' | 'weak' {
     if (score >= 85) return 'strong'
     if (score >= 70) return 'good'
@@ -120,7 +135,7 @@ export default async function DashboardPage() {
   const qualityCounts = { strong: 0, good: 0, partial: 0, weak: 0 }
   for (const m of scoredAll) qualityCounts[qualityBucket(m.score)]++
 
-  // ── By funding type — counts within the matched set
+  // ── By funding type — counts within the matched set, canonical 4 only
   const typeCounts: Record<string, number> = {}
   for (const m of scoredAll) {
     const ft = m.grant.fundingType ?? 'grant'
