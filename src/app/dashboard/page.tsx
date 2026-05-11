@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getDeadlineAlerts, formatCurrency } from '@/lib/utils'
 import type { PipelineItem, Organisation } from '@/types'
-import { Award, TrendingUp, Users, Rocket, GraduationCap, Gift, ArrowRight, CalendarDays, Check, Sparkles, Bookmark, ListChecks, UserPlus } from 'lucide-react'
+import { Award, TrendingUp, Users, Rocket, GraduationCap, Gift, ArrowRight, CalendarDays, Check, Sparkles, Bookmark, ListChecks, UserPlus, ChevronDown } from 'lucide-react'
 import { computeMatchScore } from '@/lib/matching'
 import { normaliseScrapedGrant } from '@/lib/grants-normalise'
 
@@ -294,9 +294,14 @@ export default async function DashboardPage() {
     })
     .sort((a, b) => a.daysUntil - b.daysUntil)
 
-  const alerts: DlRow[] = [...pipelineRows, ...catalogueRows]
+  const allAlerts: DlRow[] = [...pipelineRows, ...catalogueRows]
     .sort((a, b) => a.daysUntil - b.daysUntil)
-    .slice(0, 3)
+  // Count within the next 90 days for the header ("4 in next 90 days").
+  // Excludes overdue rows (daysUntil < 0) since they're not "upcoming".
+  const alertsCount90d = allAlerts.filter(a => a.daysUntil >= 0 && a.daysUntil <= 90).length
+  // Scrollable container shows up to 8 items; first 2 visible without
+  // scroll, rest accessible via scroll-within-the-panel.
+  const alerts: DlRow[] = allAlerts.slice(0, 8)
 
   // ── Greeting ─────────────────────────────────────────────────────────────
   const rawName: string =
@@ -828,17 +833,21 @@ export default async function DashboardPage() {
                   })}
                 </a>
 
-                {/* Footer line — total active + declined (when present) */}
+                {/* Footer line — declined (with coral marker) on the left,
+                    total in pipeline on the right. Order matches mockup. */}
                 <div className="mt-3 pt-3 flex items-center justify-between flex-wrap gap-2 text-xs" style={{ borderTop: '0.5px solid rgba(0,0,0,0.08)', color: '#5F5E5A' }}>
+                  {declined && declined.count > 0 ? (
+                    <span className="inline-flex items-center gap-2" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+                      <span className="inline-block flex-shrink-0" style={{ width: 10, height: 10, background: '#F0997B', borderRadius: 2 }} />
+                      <span>
+                        <span className="font-semibold" style={{ color: '#2C2C2A' }}>{declined.value > 0 ? formatCurrency(declined.value) : declined.count}</span> declined
+                        <span className="ml-1">· {declined.count === 1 ? '1 opportunity' : `${declined.count} opportunities`}</span>
+                      </span>
+                    </span>
+                  ) : <span />}
                   <span style={{ fontFamily: 'var(--font-space-grotesk)' }}>
                     Total in pipeline: <span className="font-semibold text-charcoal">{totalActiveValue > 0 ? formatCurrency(totalActiveValue) : '—'}</span>
                   </span>
-                  {declined && declined.count > 0 && (
-                    <span style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-                      <span className="font-semibold" style={{ color: '#993C1D' }}>{declined.value > 0 ? formatCurrency(declined.value) : declined.count}</span> declined
-                      <span className="ml-1">· {declined.count === 1 ? '1 opportunity' : `${declined.count} opportunities`}</span>
-                    </span>
-                  )}
                 </div>
               </>
             )
@@ -847,8 +856,13 @@ export default async function DashboardPage() {
 
         {/* This week's deadlines */}
         <div className="card rounded-xl">
-          <div className="flex items-center justify-between mb-5">
+          <div className="flex items-baseline justify-between mb-4 gap-3 flex-wrap">
             <h3 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Upcoming deadlines</h3>
+            {alertsCount90d > 0 && (
+              <span className="text-xs" style={{ color: '#5F5E5A', fontFamily: 'var(--font-space-grotesk)' }}>
+                {alertsCount90d} in next 90 days
+              </span>
+            )}
           </div>
 
           {alerts.length === 0 ? (
@@ -857,44 +871,63 @@ export default async function DashboardPage() {
               <p className="text-xs mt-1">They&rsquo;ll appear here as you save opportunities.</p>
             </div>
           ) : (
-            <div className="space-y-1">
-              {alerts.map(row => {
-                const dateObj = formatDeadlineDate(row.deadline)
-                const d = row.daysUntil
-                // Urgency styling: anything within 30 days reads red on both
-                // the date numerals and the pill. Beyond 30d stays neutral
-                // grey so the eye lands first on the imminent items.
-                const isUrgent = d <= 30
-                const pillLabel = d < 0 ? 'Overdue' : d === 0 ? 'Today' : d === 1 ? 'Tomorrow' : `${d}d`
-                const pillCls = isUrgent
-                  ? 'bg-[#FAECE7] text-[#993C1D]'
-                  : 'bg-transparent text-[#5F5E5A] border border-[rgba(23,52,4,0.20)]'
-                const dayCol   = isUrgent ? '#993C1D' : '#2C2C2A'
-                const monthCol = isUrgent ? '#993C1D' : '#5F5E5A'
-                return (
-                  <a key={row.id} href={row.href}
-                    className="flex items-center gap-3 py-2.5 border-b border-warm last:border-0 hover:bg-[#FAFAF7] -mx-2 px-2 rounded-md transition-colors">
-                    {dateObj ? (
-                      <div className="flex flex-col items-center flex-shrink-0 w-9 text-center">
-                        <span className="text-[9px] font-bold uppercase" style={{ color: monthCol }}>{dateObj.month}</span>
-                        <span className="text-lg font-bold leading-none" style={{ color: dayCol }}>{dateObj.day}</span>
-                      </div>
-                    ) : (
-                      <div className="w-9 flex-shrink-0" />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-charcoal truncate">{row.name}</p>
-                      <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wide ${pillCls}`}>
-                          {pillLabel}
-                        </span>
-                        {row.amountStr && <span className="text-[10px] text-mid">{row.amountStr}</span>}
-                      </div>
-                    </div>
-                  </a>
-                )
-              })}
-            </div>
+            <>
+              {/* Scrollable list — ~2 rows visible by default; container caps
+                  at 108px so the user scrolls within the panel to see more.
+                  Fade gradient overlays the bottom edge as scroll affordance,
+                  plus a "scroll for more" hint when there are >2 rows. */}
+              <div className="relative">
+                <div className="space-y-1 overflow-y-auto pr-1" style={{ maxHeight: 108 }}>
+                  {alerts.map(row => {
+                    const dateObj = formatDeadlineDate(row.deadline)
+                    const d = row.daysUntil
+                    // Urgency: ≤30d → red numerals + red pill. Beyond stays grey.
+                    const isUrgent = d <= 30
+                    const pillLabel = d < 0 ? 'Overdue' : d === 0 ? 'Today' : d === 1 ? 'Tomorrow' : `${d}d`
+                    const pillCls = isUrgent
+                      ? 'bg-[#FAECE7] text-[#993C1D]'
+                      : 'bg-transparent text-[#5F5E5A] border border-[rgba(23,52,4,0.20)]'
+                    const dayCol   = isUrgent ? '#993C1D' : '#2C2C2A'
+                    const monthCol = isUrgent ? '#993C1D' : '#5F5E5A'
+                    return (
+                      <a key={row.id} href={row.href}
+                        className="flex items-center gap-3 py-2.5 border-b border-warm last:border-0 hover:bg-[#FAFAF7] -mx-2 px-2 rounded-md transition-colors">
+                        {dateObj ? (
+                          <div className="flex flex-col items-center flex-shrink-0 w-9 text-center">
+                            <span className="text-[9px] font-bold uppercase" style={{ color: monthCol }}>{dateObj.month}</span>
+                            <span className="text-lg font-bold leading-none" style={{ color: dayCol }}>{dateObj.day}</span>
+                          </div>
+                        ) : (
+                          <div className="w-9 flex-shrink-0" />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-charcoal truncate">{row.name}</p>
+                          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wide ${pillCls}`}>
+                              {pillLabel}
+                            </span>
+                            {row.amountStr && <span className="text-[10px] text-mid">{row.amountStr}</span>}
+                          </div>
+                        </div>
+                      </a>
+                    )
+                  })}
+                </div>
+                {alerts.length > 2 && (
+                  <div className="pointer-events-none absolute left-0 right-0 bottom-0" style={{
+                    height: 32,
+                    background: 'linear-gradient(180deg, rgba(255,255,255,0) 0%, #FFFFFF 100%)',
+                  }} />
+                )}
+              </div>
+
+              {alerts.length > 2 && (
+                <div className="mt-1 flex items-center justify-center text-xs gap-1" style={{ color: '#8A8986' }}>
+                  <ChevronDown className="w-3 h-3" />
+                  <span>scroll for more</span>
+                </div>
+              )}
+            </>
           )}
 
           <div className="mt-4 pt-3" style={{ borderTop: '0.5px solid rgba(0,0,0,0.08)' }}>
