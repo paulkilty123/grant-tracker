@@ -807,7 +807,7 @@ export default async function DashboardPage() {
         <div className="card rounded-xl">
           <div className="flex items-center justify-between mb-5">
             <h3 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Pipeline</h3>
-            <a href="/dashboard/pipeline" className="text-xs font-semibold hover:underline" style={{ color: '#8ECB3C', fontFamily: 'var(--font-space-grotesk)' }}>View pipeline →</a>
+            <a href="/dashboard/pipeline" className="text-xs font-semibold hover:underline" style={{ color: '#3B6D11', fontFamily: 'var(--font-space-grotesk)' }}>View pipeline →</a>
           </div>
 
           {(() => {
@@ -888,7 +888,7 @@ export default async function DashboardPage() {
           <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
             <h3 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Upcoming deadlines</h3>
             <a href="/dashboard/deadlines"
-              className="text-xs font-semibold hover:underline" style={{ color: '#8ECB3C', fontFamily: 'var(--font-space-grotesk)' }}>
+              className="text-xs font-semibold hover:underline" style={{ color: '#3B6D11', fontFamily: 'var(--font-space-grotesk)' }}>
               View all deadlines →
             </a>
           </div>
