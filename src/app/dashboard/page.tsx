@@ -68,6 +68,9 @@ export default async function DashboardPage() {
   }
 
   // ── Matched Opportunities (used in both states) ──────────────────────────
+  // Limit bumped 500 → 1000 so the new dashboard panel reflects the full
+  // active catalogue (~582 today) plus headroom for growth without silently
+  // undercounting.
   const today = new Date().toISOString().split('T')[0]
   type ScoredGrant = { grant: ReturnType<typeof normaliseScrapedGrant>; score: number; lastSeenAt: string | null }
   let scoredAll: ScoredGrant[] = []
@@ -79,17 +82,23 @@ export default async function DashboardPage() {
       .neq('url_status', 'dead')
       .or(`is_rolling.eq.true,deadline.is.null,deadline.gte.${today}`)
       .order('last_seen_at', { ascending: false })
-      .limit(500)
+      .limit(1000)
 
     if (grantRows && grantRows.length > 0) {
       scoredAll = grantRows
         .map(row => {
           const g = normaliseScrapedGrant(row as Record<string, unknown>)
-          const score = computeMatchScore(g, typedOrg).score
-          if (score <= 0) return null
+          const result = computeMatchScore(g, typedOrg)
+          // "Match" excludes hard-blocker ineligible rows (structure mismatch,
+          // location mismatch, etc.). Per branched-eligibility engine these
+          // are capped at 30, so they'd appear in the Weak bucket otherwise —
+          // but the dashboard's "your matches" total should reflect what the
+          // user could actually apply to, not what the catalogue contains.
+          if (result.score <= 0) return null
+          if (result.eligibilityStatus === 'ineligible') return null
           return {
             grant: g,
-            score,
+            score: result.score,
             lastSeenAt: (row as Record<string, unknown>).last_seen_at as string | null,
           }
         })
@@ -98,6 +107,28 @@ export default async function DashboardPage() {
     }
   }
   const totalMatchCount = scoredAll.length
+
+  // ── Quality buckets — Strong ≥85, Good 70–84, Partial 50–69, Weak <50.
+  // Verify distribution against live data post-deploy and adjust if any
+  // bucket holds >70% of matches (likely candidate: Good).
+  function qualityBucket(score: number): 'strong' | 'good' | 'partial' | 'weak' {
+    if (score >= 85) return 'strong'
+    if (score >= 70) return 'good'
+    if (score >= 50) return 'partial'
+    return 'weak'
+  }
+  const qualityCounts = { strong: 0, good: 0, partial: 0, weak: 0 }
+  for (const m of scoredAll) qualityCounts[qualityBucket(m.score)]++
+
+  // ── By funding type — counts within the matched set
+  const typeCounts: Record<string, number> = {}
+  for (const m of scoredAll) {
+    const ft = m.grant.fundingType ?? 'grant'
+    typeCounts[ft] = (typeCounts[ft] ?? 0) + 1
+  }
+
+  // Top 4 matches for the right column (replaces the old daily-rotation 3)
+  const topMatches = scoredAll.slice(0, 4)
 
   // Daily rotation: take top-30 universe, seeded-shuffle, slice 3.
   const topPool = scoredAll.slice(0, 30)
@@ -523,7 +554,7 @@ export default async function DashboardPage() {
   return (
     <div>
       {/* Greeting */}
-      <div className="mb-7">
+      <div className="mb-6">
         <h2 className="text-3xl font-bold text-charcoal mb-1.5" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.02em' }}>
           {greetingTime}, {displayName}.
         </h2>
@@ -532,7 +563,127 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      {/* This week's deadlines + Pipeline */}
+      {/* ─────────────────────────────────────────────────────────────────────
+          Your matches summary + Top matches for you
+          Two-column hero. Left column shows the catalogue scoped to the user
+          (total + quality breakdown + per-type bars). Right column shows the
+          four highest-scoring matches as a vertical list. Funding-type colour
+          mapping per CLAUDE.md palette: lime grants, gold in-kind, coral
+          programmes, blue investment.
+          ──────────────────────────────────────────────────────────────────── */}
+      {totalMatchCount > 0 && (() => {
+        const qualityCols = [
+          { key: 'strong',  label: 'Strong',  count: qualityCounts.strong,  colour: '#639922' },
+          { key: 'good',    label: 'Good',    count: qualityCounts.good,    colour: '#8ECB3C' },
+          { key: 'partial', label: 'Partial', count: qualityCounts.partial, colour: '#C0DD97' },
+          { key: 'weak',    label: 'Weak',    count: qualityCounts.weak,    colour: '#EFE9D8' },
+        ]
+        const TYPE_BAR: Record<string, { label: string; colour: string; pillBg: string; pillFg: string }> = {
+          grant:           { label: 'Grants',      colour: '#639922', pillBg: '#F1F7E4', pillFg: '#3B6D11' },
+          in_kind:         { label: 'In-kind',     colour: '#EF9F27', pillBg: '#FAEEDA', pillFg: '#854F0B' },
+          programme:       { label: 'Programmes',  colour: '#D85A30', pillBg: '#FAECE7', pillFg: '#993C1D' },
+          investment:      { label: 'Investment',  colour: '#85B7EB', pillBg: '#E6F1FB', pillFg: '#0C447C' },
+          accelerator:     { label: 'Accelerator', colour: '#D85A30', pillBg: '#FAECE7', pillFg: '#993C1D' },
+          blended_finance: { label: 'Blended',     colour: '#85B7EB', pillBg: '#E6F1FB', pillFg: '#0C447C' },
+        }
+        const typeBars = Object.entries(typeCounts)
+          .map(([key, count]) => ({ key, count, ...(TYPE_BAR[key] ?? TYPE_BAR.grant) }))
+          .sort((a, b) => b.count - a.count)
+        const maxTypeCount = Math.max(1, ...typeBars.map(t => t.count))
+
+        return (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 mb-8">
+            {/* LEFT — Your matches */}
+            <div className="lg:col-span-5 card rounded-xl p-6">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-mid mb-1" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+                Your matches
+              </p>
+              <div className="text-5xl font-bold text-charcoal mb-6" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.025em', lineHeight: 1 }}>
+                {totalMatchCount}
+              </div>
+
+              {/* Quality breakdown — 4 columns + stacked bar */}
+              <div className="grid grid-cols-4 gap-2 mb-3">
+                {qualityCols.map(q => (
+                  <div key={q.key}>
+                    <p className="text-xs" style={{ color: '#5F5E5A' }}>{q.label}</p>
+                    <p className="text-xl font-bold text-charcoal mt-0.5" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+                      {q.count}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              <div className="flex h-2 rounded-full overflow-hidden mb-6" style={{ background: '#F0EDE2' }}>
+                {qualityCols.filter(q => q.count > 0).map(q => (
+                  <div key={q.key} style={{ flexGrow: q.count, background: q.colour }} />
+                ))}
+              </div>
+
+              {/* By funding type */}
+              <p className="text-[10px] font-bold uppercase tracking-widest text-mid mb-3" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+                By funding type
+              </p>
+              <div className="space-y-3">
+                {typeBars.map(t => (
+                  <div key={t.key} className="flex items-center gap-3">
+                    <span className="text-sm flex-shrink-0" style={{ color: '#2C2C2A', width: 100 }}>{t.label}</span>
+                    <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: '#F0EDE2' }}>
+                      <div className="h-full rounded-full" style={{ width: `${(t.count / maxTypeCount) * 100}%`, background: t.colour }} />
+                    </div>
+                    <span className="text-sm font-semibold text-charcoal flex-shrink-0 text-right" style={{ fontFamily: 'var(--font-space-grotesk)', width: 40 }}>
+                      {t.count}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* RIGHT — Top matches for you */}
+            <div className="lg:col-span-7 card rounded-xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+                  Top matches for you
+                </h3>
+                <a href="/dashboard/search" className="text-xs font-semibold hover:underline" style={{ color: '#3B6D11', fontFamily: 'var(--font-space-grotesk)' }}>
+                  See all {totalMatchCount} matches →
+                </a>
+              </div>
+              <div className="space-y-2">
+                {topMatches.map(m => {
+                  const ft = m.grant.fundingType ?? 'grant'
+                  const cfg = TYPE_BAR[ft] ?? TYPE_BAR.grant
+                  const pct = Math.round(m.score)
+                  const amt = m.grant.amountMin || m.grant.amountMax
+                    ? (m.grant.amountMin && m.grant.amountMax && m.grant.amountMin !== m.grant.amountMax
+                        ? `${formatCurrency(m.grant.amountMin)}–${formatCurrency(m.grant.amountMax)}`
+                        : formatCurrency(m.grant.amountMax || m.grant.amountMin || 0))
+                    : 'Amount on application'
+                  return (
+                    <a key={m.grant.id} href={`/dashboard/search?grant=${encodeURIComponent(m.grant.id)}`}
+                      className="relative flex items-center gap-3 rounded-lg pl-5 pr-4 py-3.5 hover:bg-[#F5F1E8] transition-colors overflow-hidden group"
+                      style={{ background: '#FAFAF7' }}>
+                      <div className="absolute top-2 bottom-2 left-0 w-[3px] rounded-r" style={{ background: cfg.colour }} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[15px] font-semibold text-charcoal truncate" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+                          {m.grant.title}
+                        </p>
+                        <p className="text-xs mt-0.5 truncate" style={{ color: '#5F5E5A' }}>
+                          {m.grant.funder} · {amt}
+                        </p>
+                      </div>
+                      <span className="flex-shrink-0 text-xs font-bold px-2.5 py-1 rounded-full" style={{ background: cfg.pillBg, color: cfg.pillFg, fontFamily: 'var(--font-space-grotesk)' }}>
+                        {pct}%
+                      </span>
+                    </a>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* Pipeline + Upcoming deadlines (moved below matches per dashboard reorder 2026-05-11) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
 
         {/* Pipeline Overview */}
@@ -630,79 +781,6 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* New matches */}
-      {matchedGrants.length > 0 && (
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>New matches</h3>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {matchedGrants.map(g => {
-              const typeConfig: Record<string, { label: string; bg: string; fg: string }> = {
-                grant:      { label: 'Grant',      bg: '#F1F7E4', fg: '#3B6D11' },
-                programme:  { label: 'Programme',  bg: '#FAECE7', fg: '#993C1D' },
-                investment: { label: 'Investment', bg: '#E6F1FB', fg: '#0C447C' },
-                in_kind:    { label: 'In-Kind',    bg: '#FAEEDA', fg: '#854F0B' },
-              }
-              const t = typeConfig[g.fundingType] ?? typeConfig.grant
-              return (
-                <a key={g.id}
-                  href={g.searchHref}
-                  className="bg-white rounded-xl p-5 flex flex-col hover:-translate-y-0.5 transition-all group"
-                  style={{ border: '1px solid rgba(23,52,4,0.08)', boxShadow: '0 2px 10px rgba(26,46,43,0.04)' }}>
-                  <div className="mb-3">
-                    <span className="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-md uppercase tracking-wider"
-                      style={{ background: t.bg, color: t.fg }}>
-                      {t.label}
-                    </span>
-                  </div>
-                  {/* Name */}
-                  <h4 className="text-[15px] font-semibold text-charcoal leading-snug mb-0.5 line-clamp-2" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-                    {g.title}
-                  </h4>
-                  {/* Funder — always shown */}
-                  <p className="text-xs mb-3 truncate" style={{ color: '#5F5E5A' }}>{g.funder || '\u00a0'}</p>
-                  {/* Amount */}
-                  <p className="text-[13px] font-semibold text-charcoal mb-3" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{g.amountStr}</p>
-                  {/* Match score + bar */}
-                  <div className="mt-auto pt-3" style={{ borderTop: '1px solid rgba(23,52,4,0.06)' }}>
-                    {(() => {
-                      const isStrong = g.scorePct >= 85
-                      const isPartial = g.scorePct >= 60
-                      const barColour = isStrong ? '#8ECB3C' : isPartial ? '#5A9080' : '#9A9A9A'
-                      const pctColour = isStrong ? '#3F6814' : isPartial ? '#2D6B5E' : '#5F5E5A'
-                      const label = isStrong ? 'Strong match' : isPartial ? 'Good match' : 'Partial match'
-                      return (
-                        <>
-                          <div className="flex items-baseline justify-between mb-1.5">
-                            <span className="text-[11px]" style={{ color: '#5F5E5A' }}>{label}</span>
-                            <span className="text-sm font-bold" style={{ color: pctColour, fontFamily: 'var(--font-space-grotesk)' }}>{g.scorePct}%</span>
-                          </div>
-                          <div className="h-[5px] rounded-sm overflow-hidden" style={{ background: 'rgba(23,52,4,0.06)' }}>
-                            <div className="h-full" style={{ width: `${g.scorePct}%`, background: barColour, borderRadius: 3 }} />
-                          </div>
-                        </>
-                      )
-                    })()}
-                  </div>
-                </a>
-              )
-            })}
-            {/* View-all card — 4th slot */}
-            <a href="/dashboard/search"
-              className="flex flex-col items-center justify-center text-center gap-3 rounded-xl p-6 hover:-translate-y-0.5 transition-all"
-              style={{ border: '1.5px dashed rgba(99,153,34,0.45)', background: 'transparent', minHeight: 220 }}>
-              <div className="flex items-center justify-center w-12 h-12 rounded-xl" style={{ background: '#F5F1E8' }}>
-                <ArrowRight className="w-5 h-5" style={{ color: '#173404' }} />
-              </div>
-              <div>
-                <p className="text-base font-semibold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.005em' }}>See all matches</p>
-                <p className="text-sm mt-1" style={{ color: '#5F5E5A' }}>Browse your full list →</p>
-              </div>
-            </a>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
