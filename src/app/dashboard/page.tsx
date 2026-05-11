@@ -179,8 +179,8 @@ export default async function DashboardPage() {
     typeCounts[ft] = (typeCounts[ft] ?? 0) + 1
   }
 
-  // Top 4 matches for the right column (replaces the old daily-rotation 3)
-  const topMatches = scoredAll.slice(0, 4)
+  // Top 3 matches for the right column — three cards with full breathing room
+  const topMatches = scoredAll.slice(0, 3)
 
   // Daily rotation: take top-30 universe, seeded-shuffle, slice 3.
   const topPool = scoredAll.slice(0, 30)
@@ -294,9 +294,12 @@ export default async function DashboardPage() {
     })
     .sort((a, b) => a.daysUntil - b.daysUntil)
 
+  // Scrollable deadlines list — show up to 15 in the 108px panel. Pipeline
+  // items rank first (they're the user's own commitments), catalogue rows
+  // fill remaining slots. Two visible at a time, rest scrolls.
   const alerts: DlRow[] = [...pipelineRows, ...catalogueRows]
     .sort((a, b) => a.daysUntil - b.daysUntil)
-    .slice(0, 3)
+    .slice(0, 15)
 
   // ── Greeting ─────────────────────────────────────────────────────────────
   const rawName: string =
@@ -648,9 +651,9 @@ export default async function DashboardPage() {
         const maxTypeCount = Math.max(1, ...typeBars.map(t => t.count))
 
         return (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 mb-8">
-            {/* LEFT — Worth your attention */}
-            <div className="lg:col-span-5 card rounded-xl p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-8">
+            {/* LEFT — Worth your attention (50%) */}
+            <div className="card rounded-xl p-6">
               {/* Stat block — label on its own line, then a baseline-aligned
                   pair of [N matches] (large) and [of M total] (small grey).
                   Number and unit are bound together as the headline; the
@@ -749,11 +752,11 @@ export default async function DashboardPage() {
               </div>
             </div>
 
-            {/* RIGHT — Top matches for you. flex-col + flex-1 on the matches
-                container so the 4 cards stretch to fill the panel height
-                (otherwise the right panel was shorter than the left one with
-                visible whitespace below the 4th card). */}
-            <div className="lg:col-span-7 card rounded-xl p-6 flex flex-col">
+            {/* RIGHT — Top matches for you (50%). flex-col + flex-1 on the
+                matches container so the 3 cards stretch to fill the panel
+                height (matches the left panel's height; each card gets full
+                breathing room). */}
+            <div className="card rounded-xl p-6 flex flex-col">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
                   Top matches for you
@@ -797,26 +800,28 @@ export default async function DashboardPage() {
 
                   return (
                     <a key={m.grant.id} href={`/dashboard/search?grant=${encodeURIComponent(m.grant.id)}`}
-                      className="relative flex items-center gap-3 rounded-lg pl-5 pr-4 py-3.5 hover:bg-[#F5F1E8] hover:translate-x-0.5 transition-all overflow-hidden group flex-1"
+                      className="relative flex flex-col justify-center gap-2 rounded-lg pl-5 pr-4 py-4 hover:bg-[#F5F1E8] hover:translate-x-0.5 transition-all overflow-hidden group flex-1"
                       style={{ background: '#FAFAF7' }}>
                       <div className="absolute top-2 bottom-2 left-0 w-[3px] rounded-r" style={{ background: cfg.colour }} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[15px] font-semibold text-charcoal truncate" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+                      {/* Top row — title + percentage pill */}
+                      <div className="flex items-center gap-3 min-w-0">
+                        <p className="flex-1 text-[15px] font-semibold text-charcoal truncate" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
                           {m.grant.title}
                         </p>
-                        <div className="flex items-center gap-1.5 mt-1 flex-wrap text-xs">
-                          <span className="font-semibold uppercase px-1.5 py-0.5 rounded" style={{ background: cfg.pillBg, color: cfg.pillFg, fontSize: 10, letterSpacing: '0.04em', fontFamily: 'var(--font-space-grotesk)' }}>
-                            {cfg.label.replace(/s$/, '')}
-                          </span>
-                          <span style={{ color: '#5F5E5A' }} className="truncate">
-                            {m.grant.funder} · {amt}
-                            {deadlineNode && <> · {deadlineNode}</>}
-                          </span>
-                        </div>
+                        <span className="flex-shrink-0 text-xs font-bold px-2.5 py-1 rounded-full" style={{ background: cfg.pillBg, color: cfg.pillFg, fontFamily: 'var(--font-space-grotesk)' }}>
+                          {pct}%
+                        </span>
                       </div>
-                      <span className="flex-shrink-0 text-xs font-bold px-2.5 py-1 rounded-full" style={{ background: cfg.pillBg, color: cfg.pillFg, fontFamily: 'var(--font-space-grotesk)' }}>
-                        {pct}%
-                      </span>
+                      {/* Second row — type chip + funder · amount [· deadline] */}
+                      <div className="flex items-center gap-1.5 flex-wrap text-xs min-w-0">
+                        <span className="font-semibold uppercase px-1.5 py-0.5 rounded flex-shrink-0" style={{ background: cfg.pillBg, color: cfg.pillFg, fontSize: 10, letterSpacing: '0.04em', fontFamily: 'var(--font-space-grotesk)' }}>
+                          {cfg.label.replace(/s$/, '')}
+                        </span>
+                        <span style={{ color: '#5F5E5A' }} className="truncate min-w-0">
+                          {m.grant.funder} · {amt}
+                          {deadlineNode && <> · {deadlineNode}</>}
+                        </span>
+                      </div>
                     </a>
                   )
                 })}
@@ -826,10 +831,10 @@ export default async function DashboardPage() {
         )
       })()}
 
-      {/* Pipeline + Upcoming deadlines (moved below matches per dashboard reorder 2026-05-11)
-          Custom grid (2fr / 1.1fr) gives deadlines a bit more width so funder
-          names like "Company of Actuaries Charitable Trust" render in full. */}
-      <div className="grid grid-cols-1 gap-5 mb-8" style={{ gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1.1fr)' }}>
+      {/* Pipeline (60%) + Upcoming deadlines (40%). Pipeline gets more space
+          because it's the more information-dense panel — four stage tiles +
+          declined footer + total. Deadlines is a compact scrollable list. */}
+      <div className="grid grid-cols-1 gap-5 mb-8" style={{ gridTemplateColumns: 'minmax(0, 3fr) minmax(0, 2fr)' }}>
 
         {/* Pipeline Overview — 4 active stages + Declined as footer line.
             Declined is closed state, not active state; reduced visual weight
@@ -915,14 +920,16 @@ export default async function DashboardPage() {
           })()}
         </div>
 
-        {/* This week's deadlines */}
-        <div className="card rounded-xl">
-          <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+        {/* Upcoming deadlines (40%) — count in header, two deadlines visible
+            in a 108px scrollable list, view-all link in footer. */}
+        <div className="card rounded-xl flex flex-col">
+          <div className="flex items-center gap-2 mb-4">
             <h3 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Upcoming deadlines</h3>
-            <a href="/dashboard/deadlines"
-              className="text-xs font-semibold hover:underline" style={{ color: '#3B6D11', fontFamily: 'var(--font-space-grotesk)' }}>
-              View all deadlines →
-            </a>
+            {alerts.length > 0 && (
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-md" style={{ background: '#F0EDE2', color: '#5F5E5A', fontFamily: 'var(--font-space-grotesk)' }}>
+                {alerts.length}
+              </span>
+            )}
           </div>
 
           {alerts.length === 0 ? (
@@ -931,42 +938,54 @@ export default async function DashboardPage() {
               <p className="text-xs mt-1">They&rsquo;ll appear here as you save opportunities.</p>
             </div>
           ) : (
-            <div className="space-y-1">
-              {alerts.map(row => {
-                const dateObj = formatDeadlineDate(row.deadline)
-                const d = row.daysUntil
-                // Urgency: ≤30d → red numerals + red pill. Beyond stays grey.
-                const isUrgent = d <= 30
-                const pillLabel = d < 0 ? 'Overdue' : d === 0 ? 'Today' : d === 1 ? 'Tomorrow' : `${d}d`
-                const pillCls = isUrgent
-                  ? 'bg-[#FAECE7] text-[#993C1D]'
-                  : 'bg-transparent text-[#5F5E5A] border border-[rgba(23,52,4,0.20)]'
-                const dayCol   = isUrgent ? '#993C1D' : '#2C2C2A'
-                const monthCol = isUrgent ? '#993C1D' : '#5F5E5A'
-                return (
-                  <a key={row.id} href={row.href}
-                    className="flex items-center gap-3 py-2.5 border-b border-warm last:border-0 hover:bg-[#FAFAF7] -mx-2 px-2 rounded-md transition-colors">
-                    {dateObj ? (
-                      <div className="flex flex-col items-center flex-shrink-0 w-9 text-center">
-                        <span className="text-[9px] font-bold uppercase" style={{ color: monthCol }}>{dateObj.month}</span>
-                        <span className="text-lg font-bold leading-none" style={{ color: dayCol }}>{dateObj.day}</span>
+            <>
+              {/* Scrollable list — max-height 108px shows roughly two rows;
+                  the third row peeks under to signal more on scroll. */}
+              <div className="overflow-y-auto pr-1 -mr-1" style={{ maxHeight: 108 }}>
+                {alerts.map(row => {
+                  const dateObj = formatDeadlineDate(row.deadline)
+                  const d = row.daysUntil
+                  // Urgency: ≤30d → red numerals + red pill. Beyond stays grey.
+                  const isUrgent = d <= 30
+                  const pillLabel = d < 0 ? 'Overdue' : d === 0 ? 'Today' : d === 1 ? 'Tomorrow' : `${d}d`
+                  const pillCls = isUrgent
+                    ? 'bg-[#FAECE7] text-[#993C1D]'
+                    : 'bg-transparent text-[#5F5E5A] border border-[rgba(23,52,4,0.20)]'
+                  const dayCol   = isUrgent ? '#993C1D' : '#2C2C2A'
+                  const monthCol = isUrgent ? '#993C1D' : '#5F5E5A'
+                  return (
+                    <a key={row.id} href={row.href}
+                      className="flex items-center gap-3 py-2.5 border-b border-warm last:border-0 hover:bg-[#FAFAF7] -mx-2 px-2 rounded-md transition-colors">
+                      {dateObj ? (
+                        <div className="flex flex-col items-center flex-shrink-0 w-9 text-center">
+                          <span className="text-[9px] font-bold uppercase" style={{ color: monthCol }}>{dateObj.month}</span>
+                          <span className="text-lg font-bold leading-none" style={{ color: dayCol }}>{dateObj.day}</span>
+                        </div>
+                      ) : (
+                        <div className="w-9 flex-shrink-0" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-charcoal truncate">{row.name}</p>
+                        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wide ${pillCls}`}>
+                            {pillLabel}
+                          </span>
+                          {row.amountStr && <span className="text-[10px] text-mid">{row.amountStr}</span>}
+                        </div>
                       </div>
-                    ) : (
-                      <div className="w-9 flex-shrink-0" />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-charcoal truncate">{row.name}</p>
-                      <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wide ${pillCls}`}>
-                          {pillLabel}
-                        </span>
-                        {row.amountStr && <span className="text-[10px] text-mid">{row.amountStr}</span>}
-                      </div>
-                    </div>
-                  </a>
-                )
-              })}
-            </div>
+                    </a>
+                  )
+                })}
+              </div>
+
+              {/* View-all footer */}
+              <div className="mt-3 pt-3 flex justify-end" style={{ borderTop: '0.5px solid rgba(0,0,0,0.08)' }}>
+                <a href="/dashboard/deadlines"
+                  className="text-xs font-semibold hover:underline" style={{ color: '#3B6D11', fontFamily: 'var(--font-space-grotesk)' }}>
+                  View all deadlines →
+                </a>
+              </div>
+            </>
           )}
         </div>
       </div>
