@@ -1215,6 +1215,11 @@ export default function SearchPage() {
   // pinned to the very top of the results list. Read once at mount — we
   // don't need to react to URL changes within the page.
   const pinnedGrantId   = searchParams.get('grant')
+  // Dashboard "See all N →" link sets ?actionable=1 to scope to the
+  // strong/good/worth-exploring subset (score ≥ 50). Browse-all link sets
+  // no param — full unfiltered view. Keeps dashboard count and Find Funding
+  // count exactly equal in both modes.
+  const actionableOnly  = searchParams.get('actionable') === '1'
   const [welcomeDismissed, setWelcomeDismissed] = useState(false)
 
   const [query, setQuery]               = useState('')       // committed AI-search query (subtitle, session restore)
@@ -1894,6 +1899,12 @@ export default function SearchPage() {
           return true
         }))
     }
+    // Actionable filter (?actionable=1 from dashboard "See all N →" link).
+    // Mirrors the filter applied in crossTabCounts above so headline tab
+    // counts and the visible list stay consistent.
+    if (actionableOnly) {
+      withScores.splice(0, withScores.length, ...withScores.filter(d => d.score >= 50))
+    }
     // on it immediately. Falls through silently if the id isn't in the list
     // (e.g. grant has since been filtered out).
     if (pinnedGrantId) {
@@ -1929,6 +1940,7 @@ export default function SearchPage() {
     activeTab,
     programmeHasCash,
     pinnedGrantId,
+    actionableOnly,
   ])
 
   async function runAISearch(searchQuery: string, isSmartMatch = false, includeOrgContext = false) {
@@ -2153,11 +2165,19 @@ export default function SearchPage() {
         if (eligible && eligible.length > 0 && !eligible.includes(org.legal_structure as LegalStructure)) return
       }
 
+      // Actionable filter (?actionable=1 from dashboard "See all N →" link).
+      // Only count rows scoring ≥ 50 so the tab badges sum to the same number
+      // the dashboard headlined as "Worth your attention".
+      if (actionableOnly && org) {
+        const score = computeMatchScore(g, org).score
+        if (score < 50) return
+      }
+
       counts[gType]++
     })
 
     return counts
-  }, [allGrants, filterQuery, amountMin, amountMax, activeSectors, locationFilter, profileFilterOn, org])
+  }, [allGrants, filterQuery, amountMin, amountMax, activeSectors, locationFilter, profileFilterOn, org, actionableOnly])
 
   const TYPE_TABS = [
     { id: 'grant'      as const, label: 'Grants',      icon: <Landmark size={17} strokeWidth={2} />,  count: crossTabCounts.grant ?? 0 },

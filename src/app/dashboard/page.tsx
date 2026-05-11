@@ -154,10 +154,9 @@ export default async function DashboardPage() {
   const totalMatchCount = scoredAll.length
 
   // ── Quality buckets — Strong ≥80, Good 70–79, Partial 50–69, Weak <50.
-  // Aligned with Find Funding's tier labels (search/page.tsx:522) so the
-  // same score produces the same label across both surfaces. Earlier
-  // iteration used 85+ for Strong which buried obvious 80–84 strong fits
-  // (e.g. user observed 7+ visibly-strong grants showing as Good).
+  // Aligned with Find Funding's tier labels (search/page.tsx:522).
+  // The dashboard surfaces strong+good+partial as "Worth your attention"
+  // (the actionable subset) while keeping Weak in the wider browse pool.
   function qualityBucket(score: number): 'strong' | 'good' | 'partial' | 'weak' {
     if (score >= 80) return 'strong'
     if (score >= 70) return 'good'
@@ -166,10 +165,16 @@ export default async function DashboardPage() {
   }
   const qualityCounts = { strong: 0, good: 0, partial: 0, weak: 0 }
   for (const m of scoredAll) qualityCounts[qualityBucket(m.score)]++
+  // "Worth your attention" — strong+good+partial. Excludes weak (still in
+  // the wider 345 total but pushed to "Browse all" rather than promoted).
+  const actionableCount = qualityCounts.strong + qualityCounts.good + qualityCounts.partial
 
-  // ── By funding type — counts within the matched set, canonical 4 only
+  // ── By funding type — counts the ACTIONABLE subset (score ≥ 50).
+  // Per-type bars need to mirror what's actually surfaced as worth-attention,
+  // not the wider 345 total. The 4 bars sum to actionableCount.
   const typeCounts: Record<string, number> = {}
   for (const m of scoredAll) {
+    if (m.score < 50) continue
     const ft = m.grant.fundingType ?? 'grant'
     typeCounts[ft] = (typeCounts[ft] ?? 0) + 1
   }
@@ -619,11 +624,15 @@ export default async function DashboardPage() {
           programmes, blue investment.
           ──────────────────────────────────────────────────────────────────── */}
       {totalMatchCount > 0 && (() => {
+        // Three-bucket breakdown of the actionable subset (Worth your attention).
+        // "Worth exploring" is the renamed Partial — same 50–69 score band,
+        // friendlier label that frames it as a deliberate choice rather than a
+        // weakness. Weak (<50) is excluded from the breakdown but counted in
+        // the wider 345 total accessible via "Browse all".
         const qualityCols = [
-          { key: 'strong',  label: 'Strong',  count: qualityCounts.strong,  colour: '#639922' },
-          { key: 'good',    label: 'Good',    count: qualityCounts.good,    colour: '#8ECB3C' },
-          { key: 'partial', label: 'Partial', count: qualityCounts.partial, colour: '#C0DD97' },
-          { key: 'weak',    label: 'Weak',    count: qualityCounts.weak,    colour: '#EFE9D8' },
+          { key: 'strong',  label: 'Strong',          count: qualityCounts.strong,  colour: '#639922' },
+          { key: 'good',    label: 'Good',            count: qualityCounts.good,    colour: '#8ECB3C' },
+          { key: 'partial', label: 'Worth exploring', count: qualityCounts.partial, colour: '#C0DD97' },
         ]
         const TYPE_BAR: Record<string, { label: string; colour: string; pillBg: string; pillFg: string }> = {
           grant:           { label: 'Grants',      colour: '#639922', pillBg: '#F1F7E4', pillFg: '#3B6D11' },
@@ -640,17 +649,21 @@ export default async function DashboardPage() {
 
         return (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 mb-8">
-            {/* LEFT — Your matches */}
+            {/* LEFT — Worth your attention */}
             <div className="lg:col-span-5 card rounded-xl p-6">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-mid mb-1" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-                Your matches
+              {/* Context line — total catalogue match. Must equal what
+                  Find Funding shows when user clicks "Browse all" below. */}
+              <p className="text-xs mb-1" style={{ color: '#5F5E5A' }}>
+                {totalMatchCount} opportunities match your profile
               </p>
-              <div className="text-5xl font-bold text-charcoal mb-6" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.025em', lineHeight: 1 }}>
-                {totalMatchCount}
-              </div>
+              {/* Headline — actionable subset (strong+good+worth exploring). */}
+              <h3 className="text-charcoal mb-6" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.025em' }}>
+                <span className="text-xl font-semibold" style={{ color: '#5F5E5A' }}>Worth your attention — </span>
+                <span className="text-5xl font-bold" style={{ lineHeight: 1 }}>{actionableCount}</span>
+              </h3>
 
-              {/* Quality breakdown — 4 columns + stacked bar */}
-              <div className="grid grid-cols-4 gap-2 mb-3">
+              {/* Quality breakdown — 3 columns + stacked bar (Weak excluded) */}
+              <div className="grid grid-cols-3 gap-2 mb-3">
                 {qualityCols.map(q => (
                   <div key={q.key}>
                     <p className="text-xs" style={{ color: '#5F5E5A' }}>{q.label}</p>
@@ -660,13 +673,20 @@ export default async function DashboardPage() {
                   </div>
                 ))}
               </div>
-              <div className="flex h-2 rounded-full overflow-hidden mb-6" style={{ background: '#F0EDE2' }}>
+              <div className="flex h-2 rounded-full overflow-hidden mb-4" style={{ background: '#F0EDE2' }}>
                 {qualityCols.filter(q => q.count > 0).map(q => (
                   <div key={q.key} style={{ flexGrow: q.count, background: q.colour }} />
                 ))}
               </div>
 
-              {/* By funding type */}
+              {/* Browse-all link — discoverable but not styled as a primary CTA.
+                  No URL params: takes the user to the unfiltered Find Funding
+                  view so the totals on both pages match exactly. */}
+              <a href="/dashboard/search" className="text-xs underline mb-6 inline-block hover:text-charcoal transition-colors" style={{ color: '#5F5E5A', fontFamily: 'var(--font-space-grotesk)' }}>
+                Browse all {totalMatchCount} matches →
+              </a>
+
+              {/* By funding type — actionable subset (score ≥ 50) only */}
               <p className="text-[10px] font-bold uppercase tracking-widest text-mid mb-3" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
                 By funding type
               </p>
@@ -691,8 +711,8 @@ export default async function DashboardPage() {
                 <h3 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
                   Top matches for you
                 </h3>
-                <a href="/dashboard/search" className="text-xs font-semibold hover:underline" style={{ color: '#3B6D11', fontFamily: 'var(--font-space-grotesk)' }}>
-                  See all {totalMatchCount} matches →
+                <a href="/dashboard/search?actionable=1" className="text-xs font-semibold hover:underline" style={{ color: '#3B6D11', fontFamily: 'var(--font-space-grotesk)' }}>
+                  See all {actionableCount} →
                 </a>
               </div>
               <div className="space-y-2">
