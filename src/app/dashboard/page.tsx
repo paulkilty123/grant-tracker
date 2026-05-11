@@ -651,16 +651,24 @@ export default async function DashboardPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 mb-8">
             {/* LEFT — Worth your attention */}
             <div className="lg:col-span-5 card rounded-xl p-6">
-              {/* Context line — total catalogue match. Must equal what
-                  Find Funding shows when user clicks "Browse all" below. */}
-              <p className="text-xs mb-1" style={{ color: '#5F5E5A' }}>
-                {totalMatchCount} opportunities match your profile
-              </p>
-              {/* Headline — actionable subset (strong+good+worth exploring). */}
-              <h3 className="text-charcoal mb-6" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.025em' }}>
-                <span className="text-xl font-semibold" style={{ color: '#5F5E5A' }}>Worth your attention — </span>
-                <span className="text-5xl font-bold" style={{ lineHeight: 1 }}>{actionableCount}</span>
-              </h3>
+              {/* Stat block — single label/number/qualifier unit instead of
+                  the previous separate context line + dash-and-number h3.
+                  The "of N total matches" qualifier sits inline next to the
+                  number on a shared baseline so the eye reads
+                  actionable→total in one sweep. */}
+              <div className="rounded-lg mb-5" style={{ background: '#F0EDE2', padding: 16 }}>
+                <p style={{ fontSize: 11, fontWeight: 500, letterSpacing: '0.5px', color: '#5F5E5A', textTransform: 'uppercase', fontFamily: 'var(--font-space-grotesk)', marginBottom: 6 }}>
+                  Worth your attention
+                </p>
+                <div className="flex items-baseline" style={{ gap: 12 }}>
+                  <span style={{ fontSize: 36, fontWeight: 500, color: '#2C2C2A', fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.02em', lineHeight: 1 }}>
+                    {actionableCount}
+                  </span>
+                  <span style={{ fontSize: 13, color: '#5F5E5A', fontFamily: 'var(--font-space-grotesk)' }}>
+                    of {totalMatchCount} total matches
+                  </span>
+                </div>
+              </div>
 
               {/* Quality breakdown — 3 columns + stacked bar (Weak excluded) */}
               <div className="grid grid-cols-3 gap-2 mb-3">
@@ -693,11 +701,11 @@ export default async function DashboardPage() {
               <div className="space-y-3">
                 {typeBars.map(t => (
                   <div key={t.key} className="flex items-center gap-3">
-                    <span className="text-sm flex-shrink-0" style={{ color: '#2C2C2A', width: 100 }}>{t.label}</span>
+                    <span className="flex-shrink-0" style={{ color: '#2C2C2A', width: 100, fontSize: 13 }}>{t.label}</span>
                     <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: '#F0EDE2' }}>
                       <div className="h-full rounded-full" style={{ width: `${(t.count / maxTypeCount) * 100}%`, background: t.colour }} />
                     </div>
-                    <span className="text-sm font-semibold text-charcoal flex-shrink-0 text-right" style={{ fontFamily: 'var(--font-space-grotesk)', width: 40 }}>
+                    <span className="font-semibold text-charcoal flex-shrink-0 text-right" style={{ fontFamily: 'var(--font-space-grotesk)', width: 40, fontSize: 13 }}>
                       {t.count}
                     </span>
                   </div>
