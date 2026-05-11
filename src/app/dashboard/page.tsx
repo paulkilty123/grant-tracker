@@ -749,8 +749,11 @@ export default async function DashboardPage() {
               </div>
             </div>
 
-            {/* RIGHT — Top matches for you */}
-            <div className="lg:col-span-7 card rounded-xl p-6">
+            {/* RIGHT — Top matches for you. flex-col + flex-1 on the matches
+                container so the 4 cards stretch to fill the panel height
+                (otherwise the right panel was shorter than the left one with
+                visible whitespace below the 4th card). */}
+            <div className="lg:col-span-7 card rounded-xl p-6 flex flex-col">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
                   Top matches for you
@@ -759,7 +762,7 @@ export default async function DashboardPage() {
                   See all {actionableCount} →
                 </a>
               </div>
-              <div className="space-y-2">
+              <div className="flex-1 flex flex-col gap-2">
                 {topMatches.map(m => {
                   const ft = m.grant.fundingType ?? 'grant'
                   const cfg = TYPE_BAR[ft] ?? TYPE_BAR.grant
@@ -769,18 +772,47 @@ export default async function DashboardPage() {
                         ? `${formatCurrency(m.grant.amountMin)}–${formatCurrency(m.grant.amountMax)}`
                         : formatCurrency(m.grant.amountMax || m.grant.amountMin || 0))
                     : 'Amount on application'
+
+                  // Deadline string for the meta line. Rolling/null gracefully
+                  // handled. ≤30d shows in coral, beyond 30d in grey, format
+                  // collapses to "Nd" when imminent and "DD MMM" beyond.
+                  let deadlineNode: React.ReactNode = null
+                  if (m.grant.isRolling) {
+                    deadlineNode = <span style={{ color: '#5F5E5A' }}>Rolling</span>
+                  } else if (m.grant.deadline) {
+                    const parts = m.grant.deadline.split('-').map(Number)
+                    if (parts.length === 3) {
+                      const dueDate = new Date(parts[0], parts[1] - 1, parts[2])
+                      const daysLeft = Math.round((dueDate.getTime() - Date.now()) / 86400000)
+                      let txt: string
+                      if (daysLeft < 0)        txt = 'Overdue'
+                      else if (daysLeft === 0) txt = 'Today'
+                      else if (daysLeft === 1) txt = 'Tomorrow'
+                      else if (daysLeft <= 30) txt = `${daysLeft}d left`
+                      else txt = dueDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+                      const urgent = daysLeft <= 30
+                      deadlineNode = <span style={{ color: urgent ? '#993C1D' : '#5F5E5A', fontWeight: urgent ? 600 : 400 }}>{txt}</span>
+                    }
+                  }
+
                   return (
                     <a key={m.grant.id} href={`/dashboard/search?grant=${encodeURIComponent(m.grant.id)}`}
-                      className="relative flex items-center gap-3 rounded-lg pl-5 pr-4 py-3.5 hover:bg-[#F5F1E8] transition-colors overflow-hidden group"
+                      className="relative flex items-center gap-3 rounded-lg pl-5 pr-4 py-3.5 hover:bg-[#F5F1E8] hover:translate-x-0.5 transition-all overflow-hidden group flex-1"
                       style={{ background: '#FAFAF7' }}>
                       <div className="absolute top-2 bottom-2 left-0 w-[3px] rounded-r" style={{ background: cfg.colour }} />
                       <div className="flex-1 min-w-0">
                         <p className="text-[15px] font-semibold text-charcoal truncate" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
                           {m.grant.title}
                         </p>
-                        <p className="text-xs mt-0.5 truncate" style={{ color: '#5F5E5A' }}>
-                          {m.grant.funder} · {amt}
-                        </p>
+                        <div className="flex items-center gap-1.5 mt-1 flex-wrap text-xs">
+                          <span className="font-semibold uppercase px-1.5 py-0.5 rounded" style={{ background: cfg.pillBg, color: cfg.pillFg, fontSize: 10, letterSpacing: '0.04em', fontFamily: 'var(--font-space-grotesk)' }}>
+                            {cfg.label.replace(/s$/, '')}
+                          </span>
+                          <span style={{ color: '#5F5E5A' }} className="truncate">
+                            {m.grant.funder} · {amt}
+                            {deadlineNode && <> · {deadlineNode}</>}
+                          </span>
+                        </div>
                       </div>
                       <span className="flex-shrink-0 text-xs font-bold px-2.5 py-1 rounded-full" style={{ background: cfg.pillBg, color: cfg.pillFg, fontFamily: 'var(--font-space-grotesk)' }}>
                         {pct}%
