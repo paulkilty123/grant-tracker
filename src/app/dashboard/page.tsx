@@ -920,16 +920,22 @@ export default async function DashboardPage() {
           })()}
         </div>
 
-        {/* Upcoming deadlines (40%) — count in header, two deadlines visible
-            in a 108px scrollable list, view-all link in footer. */}
+        {/* Upcoming deadlines (40%) — title + count + view-all in header,
+            three deadlines visible in a ~170px scrollable list. */}
         <div className="card rounded-xl flex flex-col">
-          <div className="flex items-center gap-2 mb-4">
-            <h3 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Upcoming deadlines</h3>
-            {alerts.length > 0 && (
-              <span className="text-xs font-semibold px-2 py-0.5 rounded-md" style={{ background: '#F0EDE2', color: '#5F5E5A', fontFamily: 'var(--font-space-grotesk)' }}>
-                {alerts.length}
-              </span>
-            )}
+          <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+            <div className="flex items-center gap-2">
+              <h3 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Upcoming deadlines</h3>
+              {alerts.length > 0 && (
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-md" style={{ background: '#F0EDE2', color: '#5F5E5A', fontFamily: 'var(--font-space-grotesk)' }}>
+                  {alerts.length}
+                </span>
+              )}
+            </div>
+            <a href="/dashboard/deadlines"
+              className="text-xs font-semibold hover:underline" style={{ color: '#3B6D11', fontFamily: 'var(--font-space-grotesk)' }}>
+              View all deadlines →
+            </a>
           </div>
 
           {alerts.length === 0 ? (
@@ -939,9 +945,9 @@ export default async function DashboardPage() {
             </div>
           ) : (
             <>
-              {/* Scrollable list — max-height 108px shows roughly two rows;
-                  the third row peeks under to signal more on scroll. */}
-              <div className="overflow-y-auto pr-1 -mr-1" style={{ maxHeight: 108 }}>
+              {/* Scrollable list — max-height ~170px shows three rows;
+                  the fourth peeks under to signal more on scroll. */}
+              <div className="overflow-y-auto pr-1 -mr-1" style={{ maxHeight: 170 }}>
                 {alerts.map(row => {
                   const dateObj = formatDeadlineDate(row.deadline)
                   const d = row.daysUntil
@@ -976,14 +982,6 @@ export default async function DashboardPage() {
                     </a>
                   )
                 })}
-              </div>
-
-              {/* View-all footer */}
-              <div className="mt-3 pt-3 flex justify-end" style={{ borderTop: '0.5px solid rgba(0,0,0,0.08)' }}>
-                <a href="/dashboard/deadlines"
-                  className="text-xs font-semibold hover:underline" style={{ color: '#3B6D11', fontFamily: 'var(--font-space-grotesk)' }}>
-                  View all deadlines →
-                </a>
               </div>
             </>
           )}
