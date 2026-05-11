@@ -153,11 +153,13 @@ export default async function DashboardPage() {
   }
   const totalMatchCount = scoredAll.length
 
-  // ── Quality buckets — Strong ≥85, Good 70–84, Partial 50–69, Weak <50.
-  // Computed within the matched set (not the catalogue), so "Weak" reflects
-  // genuinely-weak fits the user could still apply to, not catalogue noise.
+  // ── Quality buckets — Strong ≥80, Good 70–79, Partial 50–69, Weak <50.
+  // Aligned with Find Funding's tier labels (search/page.tsx:522) so the
+  // same score produces the same label across both surfaces. Earlier
+  // iteration used 85+ for Strong which buried obvious 80–84 strong fits
+  // (e.g. user observed 7+ visibly-strong grants showing as Good).
   function qualityBucket(score: number): 'strong' | 'good' | 'partial' | 'weak' {
-    if (score >= 85) return 'strong'
+    if (score >= 80) return 'strong'
     if (score >= 70) return 'good'
     if (score >= 50) return 'partial'
     return 'weak'
