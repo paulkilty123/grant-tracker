@@ -254,6 +254,68 @@ export type MCPRegion = typeof MCP_REGIONS[number]
 export const MCP_FUNDING_TYPES: MCPFundingType[] = ['grant', 'programme', 'investment', 'in_kind']
 
 // ──────────────────────────────────────────────────────────────────────────
+// Filter expansion — spec tokens → DB-side filter values
+// Used by search_funding_and_support to translate canonical agent-facing
+// tokens into the values that match scraped_grants rows.
+// ──────────────────────────────────────────────────────────────────────────
+
+// Region → location_tag substring patterns. The search OR-matches these
+// case-insensitively. Mirrors REGION_KEYWORDS used in display direction.
+// `uk_wide` is special: when in the user's filter list, the search also
+// includes UK-tagged rows for any other region they specified (UK-wide
+// opportunities should always surface for a region-specific query unless
+// the user explicitly excludes them).
+export const REGION_DB_PATTERNS: Record<MCPRegion, string[]> = {
+  uk_wide:              ['uk', 'uk-wide', 'uk wide', 'nationwide'],
+  england:              ['england'],
+  scotland:             ['scotland', 'glasgow', 'edinburgh', 'aberdeen', 'dundee'],
+  wales:                ['wales', 'cardiff', 'swansea'],
+  northern_ireland:     ['northern ireland', 'belfast', 'n. ireland', 'n ireland'],
+  london:               ['london', 'hackney', 'camden', 'southwark', 'lambeth', 'barnet', 'brent', 'tower hamlets', 'islington', 'haringey'],
+  north_west:           ['north west', 'north-west', 'manchester', 'liverpool', 'cumbria', 'lancashire'],
+  north_east:           ['north east', 'north-east', 'newcastle', 'tyne', 'durham', 'northumberland'],
+  yorkshire_and_humber: ['yorkshire', 'humber', 'leeds', 'sheffield', 'bradford'],
+  midlands:             ['midlands', 'birmingham', 'coventry', 'worcestershire', 'warwickshire', 'nottingham', 'leicester'],
+  south_east:           ['south east', 'south-east', 'sussex', 'kent', 'surrey', 'berkshire', 'brighton', 'chichester', 'worthing', 'essex'],
+  south_west:           ['south west', 'south-west', 'somerset', 'devon', 'cornwall', 'bristol', 'gloucester', 'dorset', 'wiltshire'],
+}
+
+// User-facing beneficiary token → DB-side tokens that should match.
+// Inverse of BENEFICIARY_CANONICALISATION: when the user says
+// "people_in_poverty", the search needs to match rows tagged with either
+// "people_in_poverty" OR the unmerged "low_income".
+export const BENEFICIARY_REVERSE_MAP: Record<string, string[]> = {
+  young_people:             ['young_people'],
+  children:                 ['children'],
+  people_in_poverty:        ['people_in_poverty', 'low_income'],
+  mental_health:            ['mental_health', 'mental_health_conditions'],
+  disabled_people:          ['disabled_people'],
+  older_people:             ['older_people'],
+  women_girls:              ['women_girls'],
+  families:                 ['families'],
+  refugees_migrants:        ['refugees_migrants'],
+  homeless:                 ['homeless'],
+  rural_communities:        ['rural_communities'],
+  lgbtq:                    ['lgbtq'],
+  ethnic_minorities:        ['ethnic_minorities'],
+  justice_involved:         ['justice_involved', 'ex_offenders'],
+  carers:                   ['carers'],
+  care_experienced:         ['care_experienced'],
+  domestic_abuse_survivors: ['domestic_abuse_survivors'],
+  veterans:                 ['veterans'],
+}
+
+// User-facing funding_type → DB funding_type values. Mirror of the
+// mapFundingType() coercion: programme search should also match DB rows
+// tagged accelerator; investment search should also match blended_finance.
+export const FUNDING_TYPE_DB_EXPANSIONS: Record<MCPFundingType, string[]> = {
+  grant:      ['grant'],
+  programme:  ['programme', 'accelerator'],
+  investment: ['investment', 'blended_finance'],
+  in_kind:    ['in_kind'],
+}
+
+// ──────────────────────────────────────────────────────────────────────────
 // Taxonomy labels (consumed by get_taxonomy tool — spec §4.4)
 // ──────────────────────────────────────────────────────────────────────────
 

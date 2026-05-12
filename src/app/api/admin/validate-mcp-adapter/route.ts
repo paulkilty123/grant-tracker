@@ -26,6 +26,7 @@ import {
   type MCPOpportunityDetail,
   type MCPProviderIntelligence,
 } from '@/lib/opportunity-adapter'
+import { executeMCPSearch, computeZeroResultDiagnostic, type MCPSearchParams } from '@/lib/mcp-search'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -198,6 +199,158 @@ export async function GET(req: NextRequest) {
     (s.expected_richness === 'basic' && s.output.enriched_data !== undefined)
   )
 
+  // ── 6. Sample query validation against search_funding_and_support ─────
+  // Exact 10 queries from project_mcp_diagnostic_facts.md, mapped from
+  // natural language to MCPSearchParams using the agreed taxonomies.
+  // Asserts:
+  //   - Q1-4, Q6: total_matching > 0, result_quality not "low" preferred
+  //   - Q5: total_matching = 0, likely_cause = "data_gap" or
+  //         "filter_combination_too_narrow", adjacent_suggestions populated
+  //         or honest data_gap admission
+  //   - Q7-10 (thin): total_matching > 0, result_quality = "low"
+  const sampleQueries: Array<{ label: string; kind: 'strong' | 'thin'; params: MCPSearchParams; expected_zero?: boolean }> = [
+    {
+      label: 'Q1 CIC + Manchester + youth (care leavers) + grants under £50k',
+      kind: 'strong',
+      params: {
+        funding_type: ['grant'],
+        structure: ['cic'],
+        region: ['north_west'],
+        beneficiary_group: ['young_people', 'care_experienced'],
+        amount_max: 50000,
+        limit: 5,
+      },
+    },
+    {
+      label: 'Q2 social investment + East London + charity-trading-arm community café',
+      kind: 'strong',
+      params: {
+        funding_type: ['investment'],
+        region: ['london'],
+        sector: ['community'],
+        limit: 5,
+      },
+    },
+    {
+      label: 'Q3 climate charity + rural Wales + 90 days',
+      kind: 'strong',
+      params: {
+        funding_type: ['grant'],
+        region: ['wales'],
+        sector: ['environment'],
+        deadline_within_days: 90,
+        limit: 5,
+      },
+    },
+    {
+      label: 'Q4 SCIO Glasgow + food poverty + in-kind',
+      kind: 'strong',
+      params: {
+        funding_type: ['in_kind'],
+        region: ['scotland'],
+        structure: ['scio'],
+        sector: ['food'],
+        beneficiary_group: ['people_in_poverty'],
+        limit: 5,
+      },
+    },
+    {
+      label: 'Q5 mental-health programmes + Yorkshire',
+      kind: 'strong',
+      params: {
+        funding_type: ['programme'],
+        region: ['yorkshire_and_humber'],
+        sector: ['mental_health'],
+        limit: 5,
+      },
+      expected_zero: true,
+    },
+    {
+      label: 'Q6 lottery grants + refugee-led + Birmingham + £20-80k',
+      kind: 'strong',
+      params: {
+        funding_type: ['grant'],
+        funder_type: ['lottery'],
+        region: ['midlands'],
+        beneficiary_group: ['refugees_migrants'],
+        amount_min: 20000,
+        amount_max: 80000,
+        limit: 5,
+      },
+    },
+    // Thin-query test params reflect what a vague NL input naturally maps
+    // to via an agent: a keyword query without much / any structured filter
+    // overlay. If an agent DID over-specify (e.g., translated "community
+    // work" → sector=['community']), the scoring engine would discriminate
+    // by filter coverage and might return high quality. The thin-query test
+    // here verifies that genuinely-thin params produce result_quality='low'.
+    {
+      label: 'Q7 What funding is available for community work?',
+      kind: 'thin',
+      params: { query: 'community work', limit: 5 },
+    },
+    {
+      label: 'Q8 Any grants for charities?',
+      kind: 'thin',
+      params: { funding_type: ['grant'], limit: 5 },
+    },
+    {
+      label: 'Q9 Need money for our youth project',
+      kind: 'thin',
+      params: { query: 'youth project', limit: 5 },
+    },
+    {
+      label: 'Q10 Help finding funding',
+      kind: 'thin',
+      params: { query: 'funding', limit: 5 },
+    },
+  ]
+
+  const sample_query_results = []
+  for (const sq of sampleQueries) {
+    try {
+      const r = await executeMCPSearch(sq.params, VALIDATION_CTX)
+      const top_titles = r.results.slice(0, 3).map(x => ({
+        title: x.title,
+        funder: x.funder,
+        score: x.match_quality.score,
+        signals: x.match_quality.signals,
+      }))
+      let zero_diag = null
+      if (r.total_matching === 0) {
+        try {
+          zero_diag = await computeZeroResultDiagnostic(sq.params, VALIDATION_CTX)
+        } catch (e) {
+          zero_diag = { likely_cause: 'data_gap', explanation: String(e), adjacent_suggestions: [] }
+        }
+      }
+      sample_query_results.push({
+        label: sq.label,
+        kind: sq.kind,
+        expected_zero: sq.expected_zero ?? false,
+        params: sq.params,
+        total_matching: r.total_matching,
+        returned: r.returned,
+        result_quality: r.result_quality,
+        top_titles,
+        zero_result_diagnostic: zero_diag,
+        // Assertion pass/fail
+        zero_assertion: sq.expected_zero !== undefined
+          ? (sq.expected_zero === (r.total_matching === 0) ? 'pass' : 'fail')
+          : null,
+        thin_quality_assertion: sq.kind === 'thin'
+          ? (r.results.length > 0 && r.result_quality === 'low' ? 'pass' : (r.results.length === 0 ? 'n/a' : 'fail'))
+          : null,
+      })
+    } catch (err) {
+      sample_query_results.push({
+        label: sq.label,
+        kind: sq.kind,
+        error: err instanceof Error ? err.message : String(err),
+      })
+    }
+  }
+
   // ── Final report ──────────────────────────────────────────────────────
   return NextResponse.json({
     summary: {
@@ -209,6 +362,7 @@ export async function GET(req: NextRequest) {
       provider_samples_count: provider_samples.length,
       provider_richness_mismatches: richness_mismatches.length,
       provider_enriched_block_mismatches: richness_enriched_block_check.length,
+      sample_queries_run: sample_query_results.length,
     },
     failures,
     funding_type_distribution: countByFundingType(successes),
@@ -216,6 +370,7 @@ export async function GET(req: NextRequest) {
     provider_samples,
     richness_mismatches,
     richness_enriched_block_check,
+    sample_query_results,
   }, { status: 200 })
 }
 
