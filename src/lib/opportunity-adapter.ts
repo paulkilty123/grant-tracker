@@ -657,6 +657,14 @@ export function toMCPProviderIntelligence(
   }
 
   if (data_richness === 'enriched' && funder_row) {
+    // NOTE: funder_row.notes is DELIBERATELY NOT projected into enriched_data.
+    // The notes column contains curated editorial commentary (e.g. "Sunset
+    // 2024: pivoted from grant-making to advocacy") which is closer in
+    // character to insider intelligence than to "is this a fit" data. The
+    // funder_brief split principle (spec §4.3 + at-a-glance "Funder_brief
+    // field split") applies: this content stays app-only. If future
+    // maintainers want to expose notes, do it as an explicit spec change,
+    // not by extending this projection.
     result.enriched_data = {
       sectors_funded: funder_row.sector_tags ?? [],
       typical_amount_range: {
