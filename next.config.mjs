@@ -15,5 +15,12 @@ const nextConfig = {
       dynamic: 0,
     },
   },
+  // Include the MCP ToS markdown in the deployed bundle so route handlers
+  // (issuance flow, /mcp/terms page) can fs.readFile it at runtime.
+  outputFileTracingIncludes: {
+    '/api/mcp/keys/issue': ['./docs/legal/mcp-tos.md'],
+    '/mcp/terms':          ['./docs/legal/mcp-tos.md'],
+    '/dashboard/mcp/keys/new': ['./docs/legal/mcp-tos.md'],
+  },
 }
 export default nextConfig

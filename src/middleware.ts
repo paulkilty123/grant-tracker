@@ -53,7 +53,7 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   const isAuthPage = pathname.startsWith('/auth')
-  const isPublicPage = pathname === '/' || pathname === '/apply' || pathname === '/cohort-signup-7k9m2x' || pathname === '/privacy' || pathname === '/terms'
+  const isPublicPage = pathname === '/' || pathname === '/apply' || pathname === '/cohort-signup-7k9m2x' || pathname === '/privacy' || pathname === '/terms' || pathname === '/mcp' || pathname === '/mcp/terms'
   const isApiRoute = pathname.startsWith('/api/')
   // Next-generated metadata routes must be reachable for crawlers (WhatsApp,
   // Slack, LinkedIn, Twitter, Facebook) to fetch the OG / Twitter image.
