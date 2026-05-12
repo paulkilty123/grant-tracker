@@ -802,10 +802,19 @@ export function toMCPProviderIntelligence(
   const brief = projectFunderBriefForMCP(representative_brief)
   const data_richness: 'enriched' | 'basic' = funder_row ? 'enriched' : 'basic'
 
-  // Provider type — prefer funders.funder_type when enriched, else infer from
-  // the most common scraped_grants.funder_type across active opportunities
-  let provider_type = funder_row?.funder_type ?? ''
-  if (!provider_type && active_opportunities.length > 0) {
+  // Provider type — always use the scraper-emitted taxonomy from
+  // scraped_grants.funder_type (the 16-value taxonomy returned by
+  // get_taxonomy {funder_types}). This is consistent with what agents
+  // get when they introspect via get_taxonomy.
+  //
+  // The funders table has its own 8-value funder_type taxonomy
+  // (major_trust, social_investment, crowdfunding, etc.) — that's not
+  // exposed here because (a) it's a parallel taxonomy that doesn't appear
+  // in get_taxonomy, (b) it would surprise agents who see `provider.type:
+  // "major_trust"` but can't find it in the funder_types taxonomy list.
+  // The funders-table classification still drives the enriched_data block.
+  let provider_type = ''
+  if (active_opportunities.length > 0) {
     const typeCounts = new Map<string, number>()
     for (const o of active_opportunities) {
       if (o.funder_type) typeCounts.set(o.funder_type, (typeCounts.get(o.funder_type) ?? 0) + 1)

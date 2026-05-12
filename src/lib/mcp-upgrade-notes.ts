@@ -22,7 +22,7 @@ type ToolKey = keyof RawNotes['tools']
 const REQUIRED: Record<ToolKey, string[]> = {
   search_funding_and_support: ['standard', 'zero_result'],
   get_opportunity_detail:     ['standard'],
-  get_provider_intelligence:  [],   // wire when step 8 ships
+  get_provider_intelligence:  ['enriched', 'basic'],
   get_taxonomy:               ['standard'],
 }
 

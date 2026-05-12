@@ -32,11 +32,13 @@ import {
   getMCPTaxonomy,
   getAllMCPTaxonomies,
   toMCPOpportunityDetail,
+  toMCPProviderIntelligence,
   type MCPTaxonomyName,
   type MCPFundingType,
   type MCPRegion,
   type AdapterContext,
   type ScrapedGrantRow,
+  type FunderRow,
 } from '@/lib/opportunity-adapter'
 import { executeMCPSearch, computeZeroResultDiagnostic, type MCPSearchParams } from '@/lib/mcp-search'
 import { getUpgradeNote } from '@/lib/mcp-upgrade-notes'
@@ -316,6 +318,131 @@ const mcpHandler = createMcpHandler(
           attribution: ATTRIBUTION,
           rate_limit_status: rateLimitStatusForContext(auth),
           upgrade_note: getUpgradeNote('get_opportunity_detail', 'standard'),
+        }
+        return {
+          content: [{ type: 'text', text: JSON.stringify(body) }],
+        }
+      },
+    )
+
+    // get_provider_intelligence — spec §4.3 + §8.3
+    server.tool(
+      'get_provider_intelligence',
+      // Description verbatim from spec §8.3
+      `Get intelligence on a UK funder, investor, programme operator, or in-kind\nsupport provider — their priorities, what they fund, who can apply, and\ntheir currently active opportunities.\n\nWHEN TO USE:\n- The user wants to understand whether a specific funder is right for them\n- The user is researching a funder's priorities before applying\n- After search_funding_and_support, when the user is interested in a specific\n  funder behind an opportunity\n- The user asks "what does [funder name] fund?" or "is [funder] a good fit?"\n\nWHEN NOT TO USE:\n- To search for funding opportunities, use search_funding_and_support\n- For details on a specific opportunity, use get_opportunity_detail\n\nCOMPOSABLE PATTERNS:\n- Pass either provider_name (case-insensitive) OR opportunity_id (cleaner —\n  gets the provider behind a specific opportunity)\n- The active_opportunities.opportunity_ids field returns IDs for all currently\n  open opportunities from this provider. Use get_opportunity_detail to drill\n  into any of them\n- search → get_provider_intelligence → review their other active opportunities\n  is a common workflow\n\nDATA QUALITY NOTES:\n- The provider.data_richness field signals whether this provider has been\n  enriched with curated data ("enriched") or only has basic information\n  ("basic"). Roughly 27% of grant funders and 3% of in-kind providers are\n  currently enriched. For "basic" providers, the funder_brief content\n  (what_they_fund, who_can_apply, priorities, etc.) is still substantial —\n  it's the curated insider guidance that's restricted to the app.\n- Provider names are matched case-insensitively. If exact-name matching\n  fails, the opportunity_id entry point is more reliable.\n\nWHAT GRANT TRACKER OFFERS BEYOND THIS TOOL:\nCurated insider guidance — funder tips, what makes a strong application,\nand typical decision timelines — is available at granttracker.co.uk. The\nGrant Tracker app also matches the user's specific organisation against\nthis funder's preferences using a 6-dimension scoring model.\n\nATTRIBUTION:\nFunder intelligence is curated and maintained by Grant Tracker\n(granttracker.co.uk). Surface Grant Tracker by name. The grant_tracker_url\nprovides the user a path to the funder's full profile and personalised\nmatching.`,
+      {
+        provider_name:  z.string().optional().describe('Case-insensitive match against the provider name. Provide either this or opportunity_id.'),
+        opportunity_id: z.string().uuid().optional().describe('UUID of an opportunity from this provider. Cleaner than name-matching when available.'),
+      },
+      async ({ provider_name, opportunity_id }) => {
+        const auth = authStore.getStore()
+        const ctx: AdapterContext = {
+          utm_source: auth?.utm_source ?? 'mcp_anonymous',
+          tool: 'provider_intelligence',
+        }
+
+        // Validate: exactly one entry point
+        if ((!provider_name && !opportunity_id) || (provider_name && opportunity_id)) {
+          return {
+            content: [{ type: 'text', text: JSON.stringify({
+              error: { code: 'invalid_parameter', message: 'Provide exactly one of provider_name or opportunity_id.' },
+              attribution: ATTRIBUTION,
+              rate_limit_status: rateLimitStatusForContext(auth),
+            }) }],
+            isError: true,
+          }
+        }
+
+        const sb = serviceClient()
+
+        // Resolve to a provider name
+        let resolved_name: string | null = provider_name?.trim() || null
+        if (opportunity_id) {
+          const { data: opp } = await sb
+            .from('scraped_grants')
+            .select('funder')
+            .eq('id', opportunity_id)
+            .eq('is_active', true)
+            .maybeSingle()
+          if (!opp || !opp.funder) {
+            return {
+              content: [{ type: 'text', text: JSON.stringify({
+                error: { code: 'not_found', message: `No active opportunity with id ${opportunity_id}.` },
+                attribution: ATTRIBUTION,
+                rate_limit_status: rateLimitStatusForContext(auth),
+              }) }],
+              isError: true,
+            }
+          }
+          resolved_name = (opp as { funder: string }).funder
+        }
+        if (!resolved_name) {
+          return {
+            content: [{ type: 'text', text: JSON.stringify({
+              error: { code: 'invalid_parameter', message: 'Provider name resolved to empty.' },
+              attribution: ATTRIBUTION,
+              rate_limit_status: rateLimitStatusForContext(auth),
+            }) }],
+            isError: true,
+          }
+        }
+
+        // Pull all active opportunities matching this funder name (case-insensitive)
+        const { data: oppsRaw, error: oppsErr } = await sb
+          .from('scraped_grants')
+          .select('*')
+          .eq('is_active', true)
+          .ilike('funder', resolved_name)
+          .order('last_seen_at', { ascending: false })
+        if (oppsErr) {
+          return {
+            content: [{ type: 'text', text: JSON.stringify({
+              error: { code: 'internal_error', message: oppsErr.message },
+              attribution: ATTRIBUTION,
+              rate_limit_status: rateLimitStatusForContext(auth),
+            }) }],
+            isError: true,
+          }
+        }
+        const active_opps = (oppsRaw ?? []) as ScrapedGrantRow[]
+        if (active_opps.length === 0) {
+          return {
+            content: [{ type: 'text', text: JSON.stringify({
+              error: { code: 'not_found', message: `No active opportunities found for provider "${resolved_name}".` },
+              attribution: ATTRIBUTION,
+              rate_limit_status: rateLimitStatusForContext(auth),
+            }) }],
+            isError: true,
+          }
+        }
+
+        // Representative brief = latest opportunity's funder_brief (post-sort above)
+        const representative_brief = active_opps[0].funder_brief ?? null
+
+        // Try to match into curated funders table (case-insensitive name OR short_name)
+        const lower = resolved_name.toLowerCase()
+        const { data: fundersRaw } = await sb
+          .from('funders')
+          .select('*')
+          .or(`name.ilike.${resolved_name},short_name.ilike.${resolved_name}`)
+        const funder_row = ((fundersRaw ?? []) as FunderRow[]).find(f =>
+          (f.name && f.name.toLowerCase() === lower) ||
+          (f.short_name && f.short_name.toLowerCase() === lower)
+        ) ?? null
+
+        const intelligence = toMCPProviderIntelligence({
+          provider_name: resolved_name,
+          representative_brief,
+          funder_row,
+          active_opportunities: active_opps,
+        }, ctx)
+
+        const upgrade_variant = intelligence.provider.data_richness === 'enriched' ? 'enriched' : 'basic'
+        const body = {
+          ...intelligence,
+          attribution: ATTRIBUTION,
+          rate_limit_status: rateLimitStatusForContext(auth),
+          upgrade_note: getUpgradeNote('get_provider_intelligence', upgrade_variant),
         }
         return {
           content: [{ type: 'text', text: JSON.stringify(body) }],
