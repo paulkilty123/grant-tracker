@@ -296,6 +296,60 @@ export function expandStructureTokens(spec_tokens: string[]): string[] {
   return Array.from(expanded)
 }
 
+// Beneficiary canonicalisation — DB has two columns (target_beneficiaries
+// and beneficiary_tags) with overlapping vocab. We expose a unified
+// 18-value canonical list. See spec §4.4 working hypothesis.
+//
+// Merge map: DB tokens on the left, canonical MCP token on the right.
+// Canonical labels chosen for dignity (people_in_poverty over low_income)
+// and current sector language (justice_involved over ex_offenders).
+export const BENEFICIARY_CANONICALISATION: Record<string, string> = {
+  // direct merges
+  low_income:               'people_in_poverty',
+  mental_health_conditions: 'mental_health',
+  ex_offenders:             'justice_involved',
+  // pass-throughs (explicit so unknown tokens get caught)
+  young_people:              'young_people',
+  children:                  'children',
+  people_in_poverty:         'people_in_poverty',
+  mental_health:             'mental_health',
+  disabled_people:           'disabled_people',
+  older_people:              'older_people',
+  women_girls:               'women_girls',
+  families:                  'families',
+  refugees_migrants:         'refugees_migrants',
+  homeless:                  'homeless',
+  rural_communities:         'rural_communities',
+  lgbtq:                     'lgbtq',
+  ethnic_minorities:         'ethnic_minorities',
+  justice_involved:          'justice_involved',
+  carers:                    'carers',
+  care_experienced:          'care_experienced',
+  domestic_abuse_survivors:  'domestic_abuse_survivors',
+  veterans:                  'veterans',
+}
+
+// Excluded from v1 output (per F3 resolution):
+//   general_public — too broad to be a useful filter
+//   neurodivergent — too sparse (1 row), revisit when catalogue grows
+const BENEFICIARY_EXCLUSIONS = new Set<string>(['general_public', 'neurodivergent'])
+
+export const MCP_BENEFICIARIES = Array.from(new Set(Object.values(BENEFICIARY_CANONICALISATION)))
+
+// Normalise + dedupe a union of target_beneficiaries + beneficiary_tags
+// into the canonical MCP vocabulary. Unknown tokens pass through (logged
+// for review post-launch); excluded tokens are dropped.
+export function canonicaliseBeneficiaries(db_tokens: string[]): string[] {
+  const out = new Set<string>()
+  for (const raw of db_tokens) {
+    const t = raw.toLowerCase()
+    if (BENEFICIARY_EXCLUSIONS.has(t)) continue
+    const mapped = BENEFICIARY_CANONICALISATION[t]
+    out.add(mapped ?? t)
+  }
+  return Array.from(out)
+}
+
 // DB location_tag → array of MCPRegion values it falls into. A row tagged
 // "London & Essex" yields ['london']; UK-wide rows yield ['uk_wide'] only
 // (search tool can choose to include uk_wide rows in any regional query).
@@ -513,10 +567,10 @@ export function toMCPOpportunityDetail(
       what_they_fund: brief.what_they_fund,
       priorities: brief.priorities,
       sectors: row.impact_sectors ?? [],
-      beneficiary_groups: Array.from(new Set([
+      beneficiary_groups: canonicaliseBeneficiaries([
         ...(row.target_beneficiaries ?? []),
         ...(row.beneficiary_tags ?? []),
-      ])),
+      ]),
     },
     application: {
       process_summary: deriveProcessSummary(row, deadline),
