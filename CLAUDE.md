@@ -121,7 +121,7 @@ Without this filter, non-UUID legacy IDs cause a Postgres cast error, the query 
 
 | File | Purpose |
 |------|---------|
-| `src/lib/matching.ts` | 5-dimension match scoring (max 100). Structure mismatch caps at 44. IDF-weighted sector scoring. |
+| `src/lib/matching.ts` | 6-dimension match scoring (max 100): location, themes, beneficiaries (optional), grantSize, funderType, eligibility. Structure mismatch caps at 44. IDF-weighted sector scoring. |
 | `src/lib/grants-normalise.ts` | Converts `scraped_grants` DB rows → `EnrichedGrant`. Note: `id = external_id ?? id` (UUID) |
 | `src/lib/utils.ts` | `getDeadlineAlerts`, `formatDeadline`, `formatRange`, `PIPELINE_STAGES` |
 | `src/lib/pipeline.ts` | `createPipelineItem`, `updatePipelineItem`, `updatePipelineStage`, `deletePipelineItem` |
