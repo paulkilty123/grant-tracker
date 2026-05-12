@@ -21,7 +21,7 @@ type ToolKey = keyof RawNotes['tools']
 // is null/missing — prevents shipping a tool with an empty upgrade_note.
 const REQUIRED: Record<ToolKey, string[]> = {
   search_funding_and_support: ['standard', 'zero_result'],
-  get_opportunity_detail:     [],   // wire when step 7 ships
+  get_opportunity_detail:     ['standard'],
   get_provider_intelligence:  [],   // wire when step 8 ships
   get_taxonomy:               ['standard'],
 }

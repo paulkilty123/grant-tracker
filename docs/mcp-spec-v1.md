@@ -239,7 +239,7 @@ When `total_matching` is 0:
 - `explanation` provides natural-language reasoning the agent can surface to the user
 - `adjacent_suggestions` returns 3-5 opportunities with most-but-not-all filters matched, with the loosened filter named
 
-Example: For "mental_health programmes in Yorkshire" (which currently returns 0 in the catalogue), the response would include `likely_cause: "data_gap"`, explanation noting no programmes are tagged mental_health in Yorkshire, and adjacent suggestions showing UK-wide mental_health programmes with `loosened_filter: "region"`.
+Example: For "mental_health programmes in Yorkshire" (which currently returns 0 in the catalogue because no programmes anywhere are tagged mental_health), the response would include `likely_cause: "filter_combination_too_narrow"` (region relaxation yields 0 since mental_health programmes don't exist UK-wide either, but sector relaxation yields 5 UK-wide programmes in the requested geography), explanation noting `Relaxing sector surfaces 5 candidates.`, and adjacent suggestions with `loosened_filter: "sector"`. Note: the earlier draft of this example assumed UK-wide mental_health programmes existed and would surface via region relaxation — they don't, and the implementation correctly walks the priority order until a relaxation produces results. Updated 2026-05-12 post-step-6 validation.
 
 **Confidence: locked on structure; working hypothesis on the `likely_cause` enum values (may need refinement based on real query patterns).**
 
