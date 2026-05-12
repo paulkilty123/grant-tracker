@@ -253,6 +253,147 @@ export type MCPRegion = typeof MCP_REGIONS[number]
 
 export const MCP_FUNDING_TYPES: MCPFundingType[] = ['grant', 'programme', 'investment', 'in_kind']
 
+// ──────────────────────────────────────────────────────────────────────────
+// Taxonomy labels (consumed by get_taxonomy tool — spec §4.4)
+// ──────────────────────────────────────────────────────────────────────────
+
+export const SECTOR_LABELS: Record<MCPSector, string> = {
+  sport:           'Sport & Physical Activity',
+  heritage:        'Heritage & Culture',
+  social_economy:  'Co-ops & Community Ownership',
+  creative:        'Arts & Creative Industries',
+  community:       'Community Development',
+  education:       'Education & Skills',
+  employment:      'Employment & Livelihoods',
+  health:          'Health & Wellbeing',
+  mental_health:   'Mental Health',
+  housing:         'Housing & Homelessness',
+  environment:     'Environment & Climate',
+  food:            'Food & Agriculture',
+  tech:            'Tech for Good',
+  justice:         'Justice & Rights',
+}
+
+export const REGION_LABELS: Record<MCPRegion, string> = {
+  uk_wide:              'UK-wide',
+  england:              'England',
+  scotland:             'Scotland',
+  wales:                'Wales',
+  northern_ireland:     'Northern Ireland',
+  london:               'London',
+  north_west:           'North West',
+  north_east:           'North East',
+  yorkshire_and_humber: 'Yorkshire and the Humber',
+  midlands:             'Midlands',
+  south_east:           'South East',
+  south_west:           'South West',
+}
+
+// Agent-facing structure tokens — the labels the get_taxonomy tool returns.
+// The adapter's expandStructureTokens() maps these to DB-canonical values
+// at filter time (cic → cic_guarantee + cic_shares; etc.). Agents work in
+// these tokens; the granular DB values are an implementation detail.
+export const STRUCTURE_LABELS: Record<string, string> = {
+  registered_charity: 'Registered Charity',
+  cic:                'Community Interest Company (CIC)',
+  scio:               'SCIO (Scottish Charitable Incorporated Organisation)',
+  cio:                'Charitable Incorporated Organisation (CIO)',
+  social_enterprise:  'Social Enterprise',
+  community_group:    'Community Group / Unincorporated',
+  ltd_guarantee:      'Company Limited by Guarantee',
+  ltd_shares:         'Company Limited by Shares',
+  unincorporated:     'Unincorporated Association',
+  cooperative:        'Co-operative',
+  sole_trader:        'Sole Trader',
+  llp:                'Limited Liability Partnership',
+  not_registered:     'Not Yet Registered',
+}
+export const MCP_STRUCTURES = Object.keys(STRUCTURE_LABELS)
+
+export const FUNDING_TYPE_LABELS: Record<MCPFundingType, string> = {
+  grant:      'Grant',
+  programme:  'Programme',
+  investment: 'Social Investment',
+  in_kind:    'In-Kind Support',
+}
+
+// Scraper-emitted funder taxonomy (16 values, see spec §4.4 notes).
+// Used both by get_taxonomy and by funderTypeLabel() in projections.
+export const FUNDER_TYPE_LABELS: Record<string, string> = {
+  trust_foundation:     'Trust / Foundation',
+  community_foundation: 'Community Foundation',
+  government:           'Government',
+  corporate:            'Corporate',
+  corporate_foundation: 'Corporate Foundation',
+  lottery:              'Lottery',
+  local_authority:      'Local Authority',
+  capacity_builder:     'Capacity Builder',
+  charity:              'Charity',
+  competition:          'Competition',
+  crowdfund_match:      'Crowdfund Match',
+  foundation:           'Foundation',
+  housing_association:  'Housing Association',
+  loan:                 'Social Loan',
+  other:                'Other',
+  trust:                'Trust',
+}
+
+export const BENEFICIARY_LABELS: Record<string, string> = {
+  young_people:             'Young people',
+  children:                 'Children',
+  people_in_poverty:        'People in poverty',
+  mental_health:            'People with mental health conditions',
+  disabled_people:          'Disabled people',
+  older_people:             'Older people',
+  women_girls:              'Women and girls',
+  families:                 'Families',
+  refugees_migrants:        'Refugees and migrants',
+  homeless:                 'People experiencing homelessness',
+  rural_communities:        'Rural communities',
+  lgbtq:                    'LGBTQ+ people',
+  ethnic_minorities:        'People from ethnic minorities',
+  justice_involved:         'Justice-involved people',
+  carers:                   'Carers',
+  care_experienced:         'Care-experienced people',
+  domestic_abuse_survivors: 'Domestic abuse survivors',
+  veterans:                 'Veterans',
+}
+
+export const MCP_FUNDER_TYPES = Object.keys(FUNDER_TYPE_LABELS)
+
+export interface MCPTaxonomyEntry { id: string; label: string }
+export type MCPTaxonomyName =
+  | 'sectors' | 'regions' | 'structures'
+  | 'funding_types' | 'beneficiary_groups' | 'funder_types'
+
+export function getMCPTaxonomy(name: MCPTaxonomyName): MCPTaxonomyEntry[] {
+  switch (name) {
+    case 'sectors':
+      return MCP_SECTORS.map(id => ({ id, label: SECTOR_LABELS[id] }))
+    case 'regions':
+      return MCP_REGIONS.map(id => ({ id, label: REGION_LABELS[id] }))
+    case 'structures':
+      return MCP_STRUCTURES.map(id => ({ id, label: STRUCTURE_LABELS[id] }))
+    case 'funding_types':
+      return MCP_FUNDING_TYPES.map(id => ({ id, label: FUNDING_TYPE_LABELS[id] }))
+    case 'beneficiary_groups':
+      return MCP_BENEFICIARIES.map(id => ({ id, label: BENEFICIARY_LABELS[id] ?? id }))
+    case 'funder_types':
+      return MCP_FUNDER_TYPES.map(id => ({ id, label: FUNDER_TYPE_LABELS[id] }))
+  }
+}
+
+export function getAllMCPTaxonomies(): Record<MCPTaxonomyName, MCPTaxonomyEntry[]> {
+  return {
+    sectors:            getMCPTaxonomy('sectors'),
+    regions:            getMCPTaxonomy('regions'),
+    structures:         getMCPTaxonomy('structures'),
+    funding_types:      getMCPTaxonomy('funding_types'),
+    beneficiary_groups: getMCPTaxonomy('beneficiary_groups'),
+    funder_types:       getMCPTaxonomy('funder_types'),
+  }
+}
+
 // DB funding_type → MCP enum. accelerator/blended_finance coerced to nearest cousin
 // (2 active rows total, see spec §appendix). Unknown DB values return null.
 export function mapFundingType(db_type: string | null): MCPFundingType | null {
@@ -303,12 +444,11 @@ export function expandStructureTokens(spec_tokens: string[]): string[] {
 // Merge map: DB tokens on the left, canonical MCP token on the right.
 // Canonical labels chosen for dignity (people_in_poverty over low_income)
 // and current sector language (justice_involved over ex_offenders).
+// Canonical pass-throughs come first (defines the get_taxonomy order via
+// Set-dedup downstream); merge entries follow at the bottom and dedupe
+// to no-ops in MCP_BENEFICIARIES.
 export const BENEFICIARY_CANONICALISATION: Record<string, string> = {
-  // direct merges
-  low_income:               'people_in_poverty',
-  mental_health_conditions: 'mental_health',
-  ex_offenders:             'justice_involved',
-  // pass-throughs (explicit so unknown tokens get caught)
+  // canonical pass-throughs (order matches BENEFICIARY_LABELS)
   young_people:              'young_people',
   children:                  'children',
   people_in_poverty:         'people_in_poverty',
@@ -327,6 +467,10 @@ export const BENEFICIARY_CANONICALISATION: Record<string, string> = {
   care_experienced:          'care_experienced',
   domestic_abuse_survivors:  'domestic_abuse_survivors',
   veterans:                  'veterans',
+  // merges (DB token → canonical) — values already in the set above
+  low_income:                'people_in_poverty',
+  mental_health_conditions:  'mental_health',
+  ex_offenders:              'justice_involved',
 }
 
 // Excluded from v1 output (per F3 resolution):
@@ -334,6 +478,11 @@ export const BENEFICIARY_CANONICALISATION: Record<string, string> = {
 //   neurodivergent — too sparse (1 row), revisit when catalogue grows
 const BENEFICIARY_EXCLUSIONS = new Set<string>(['general_public', 'neurodivergent'])
 
+// Canonical 18-value list in author-declared order (matches BENEFICIARY_LABELS).
+// Derived via Set-dedup over Object.values; the BENEFICIARY_CANONICALISATION
+// key order above is arranged so canonical pass-throughs come first → they
+// land in the Set in canonical order. Merge keys (low_income → people_in_poverty
+// etc.) come after and dedupe to no-ops.
 export const MCP_BENEFICIARIES = Array.from(new Set(Object.values(BENEFICIARY_CANONICALISATION)))
 
 // Normalise + dedupe a union of target_beneficiaries + beneficiary_tags
@@ -471,25 +620,6 @@ function clipBriefDescription(brief: RawFunderBrief | null | undefined): string 
   const text = brief?.what_they_fund ?? brief?.priorities ?? ''
   if (!text) return ''
   return text.length > 280 ? text.slice(0, 277) + '...' : text
-}
-
-const FUNDER_TYPE_LABELS: Record<string, string> = {
-  trust_foundation:     'Trust / Foundation',
-  community_foundation: 'Community Foundation',
-  government:           'Government',
-  corporate:            'Corporate',
-  corporate_foundation: 'Corporate Foundation',
-  lottery:              'Lottery',
-  local_authority:      'Local Authority',
-  capacity_builder:     'Capacity Builder',
-  charity:              'Charity',
-  competition:          'Competition',
-  crowdfund_match:      'Crowdfund Match',
-  foundation:           'Foundation',
-  housing_association:  'Housing Association',
-  loan:                 'Social Loan',
-  other:                'Other',
-  trust:                'Trust',
 }
 
 function funderTypeLabel(funder_type: string | null): string {

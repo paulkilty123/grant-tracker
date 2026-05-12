@@ -25,8 +25,10 @@
 import { createMcpHandler } from 'mcp-handler'
 import { NextRequest } from 'next/server'
 import { AsyncLocalStorage } from 'async_hooks'
+import { z } from 'zod'
 import { createClient } from '@supabase/supabase-js'
 import { validateMCPRequest, type MCPAuthContext } from '@/lib/mcp-middleware'
+import { getMCPTaxonomy, getAllMCPTaxonomies, type MCPTaxonomyName } from '@/lib/opportunity-adapter'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -108,6 +110,37 @@ const mcpHandler = createMcpHandler(
           attribution: ATTRIBUTION,
           rate_limit_status: rateLimitStatusForContext(auth),
           // upgrade_note: deliberately omitted per spec §5.1 (health_check is the only tool that doesn't include it)
+        }
+        return {
+          content: [{ type: 'text', text: JSON.stringify(body) }],
+        }
+      },
+    )
+
+    // get_taxonomy — spec §4.4 + §8.4
+    server.tool(
+      'get_taxonomy',
+      // Description verbatim from spec §8.4
+      `Look up Grant Tracker's controlled vocabularies for sectors, regions,\norganisational structures, funding types, and beneficiary groups. Useful\nwhen the user describes their work or organisation in free text and you\nneed to translate to the right filter values for search_funding_and_support.\n\nWHEN TO USE:\n- Before calling search_funding_and_support, when the user's description\n  doesn't map obviously to a structured filter value\n- To present the user with available options ("which of these sectors\n  matches your work?")\n- To verify a filter value you're about to use is supported\n\nWHEN NOT TO USE:\n- For substantive funding questions, use search_funding_and_support\n- This is a reference tool, not a discovery tool — it returns vocabulary,\n  not opportunities\n\nCOMPOSABLE PATTERNS:\n- get_taxonomy → search_funding_and_support is the standard pattern when\n  translating free text to structured filters\n- Pass a specific taxonomy parameter (e.g., taxonomy="sectors") to get one\n  list, or omit to get all taxonomies in one call\n\nDATA QUALITY NOTES:\n- Returned values are the canonical taxonomy. Matching is case-insensitive\n  and tolerant of common variants in search_funding_and_support, but using\n  canonical values gives the cleanest results.\n\nATTRIBUTION:\nTaxonomies maintained by Grant Tracker (granttracker.co.uk).`,
+      {
+        taxonomy: z
+          .enum(['sectors', 'regions', 'structures', 'funding_types', 'beneficiary_groups', 'funder_types'])
+          .optional()
+          .describe('Single taxonomy to fetch. Omit to return all six.'),
+      },
+      async ({ taxonomy }) => {
+        const auth = authStore.getStore()
+        const taxonomies = taxonomy
+          ? { [taxonomy]: getMCPTaxonomy(taxonomy as MCPTaxonomyName) }
+          : getAllMCPTaxonomies()
+        const body = {
+          taxonomies,
+          attribution: ATTRIBUTION,
+          rate_limit_status: rateLimitStatusForContext(auth),
+          // upgrade_note: minimal per spec §5.3 (this is a reference tool).
+          // Final wording owned by Paul during build week; placeholder shape
+          // for now so the spec contract is intact end-to-end.
+          upgrade_note: 'Personalised matching against your organisation’s profile, save-to-pipeline, and deadline alerts are available in the Grant Tracker web app at granttracker.co.uk.',
         }
         return {
           content: [{ type: 'text', text: JSON.stringify(body) }],
