@@ -233,7 +233,7 @@ function PipelineCard({
 
 // ── Detail Modal ──────────────────────────────
 
-function PipelineModal({
+export function PipelineModal({
   item,
   onClose,
   onSave,

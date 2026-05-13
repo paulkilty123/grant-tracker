@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { CalendarClock, CalendarCheck, ExternalLink, ArrowRight, Calendar, AlarmClock, ChevronDown, ChevronUp, Send, ChevronLeft, ChevronRight, Info, Plus, X as XIcon, Check, Landmark, Rocket, TrendingUp, Gift, Pencil, type LucideIcon } from 'lucide-react'
+import { CalendarClock, CalendarCheck, ExternalLink, ArrowRight, Calendar, CalendarDays, AlarmClock, ChevronDown, ChevronUp, Send, ChevronLeft, ChevronRight, Info, Plus, X as XIcon, Check, Landmark, Rocket, TrendingUp, Gift, Pencil, CheckCircle2, Users, MapPin, Star, DollarSign, Lightbulb, AlertTriangle, type LucideIcon } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { getDeadlineAlerts, formatDeadline, formatRange, PIPELINE_STAGES } from '@/lib/utils'
-import { updatePipelineStage, updatePipelineItem, createPipelineItem } from '@/lib/pipeline'
+import { updatePipelineStage, updatePipelineItem, createPipelineItem, deletePipelineItem } from '@/lib/pipeline'
+import { PipelineModal } from '@/app/dashboard/pipeline/page'
 import { recordInteraction } from '@/lib/interactions'
 import { usePlausible } from 'next-plausible'
 import { normaliseScrapedGrant, type EnrichedGrant } from '@/lib/grants-normalise'
@@ -583,6 +584,361 @@ function TypeChip({ type }: { type: string }) {
   )
 }
 
+// ── Eligible-structure label map (mirrors Find Funding) ──────────────────────
+const STRUCTURE_LABELS: Record<string, string> = {
+  cic: 'CIC', cic_guarantee: 'CIC (Guarantee)', cic_shares: 'CIC (Shares)',
+  charity: 'Charity', registered_charity: 'Charity',
+  charitable_incorporated_organisation: 'CIO', cio: 'CIO',
+  social_enterprise: 'Social Enterprise',
+  community_interest_company: 'CIC',
+  ltd_company: 'Ltd Company',
+  company_ltd_guarantee: 'Ltd by Guarantee', ltd_guarantee: 'Ltd by Guarantee',
+  community_benefit_society: 'Comm. Benefit Society',
+  coop: 'Co-operative', cooperative: 'Co-operative',
+  unincorporated: 'Unincorporated',
+  voluntary_organisation: 'Voluntary Org',
+  sole_trader: 'Sole Trader',
+  partnership: 'Partnership',
+  public_sector: 'Public Sector',
+  school: 'School',
+}
+
+// ── Grant Preview Modal (saved + match rows) ─────────────────────────────────
+function GrantPreviewModal({
+  grant,
+  onClose,
+  onAddToPipeline,
+  onSetDeadline,
+  inPipeline,
+  saving,
+}: {
+  grant: EnrichedGrant
+  onClose: () => void
+  onAddToPipeline: () => void
+  onSetDeadline: (deadline: string) => void
+  inPipeline: boolean
+  saving: boolean
+}) {
+  const UI_FONT   = 'var(--font-space-grotesk)'
+  const BODY_FONT = 'var(--font-dm-sans, Plus Jakarta Sans, sans-serif)'
+  const [deadlineValue, setDeadlineValue] = useState('')
+  const [insightsExpanded, setInsightsExpanded] = useState(false)
+  const [insightsHover, setInsightsHover] = useState(false)
+
+  const brief = grant.funderBrief ?? null
+  const fundingType = grant.fundingType ?? 'grant'
+  const amtStr      = formatRange(grant.amountMin || null, grant.amountMax || null) ?? ''
+  const dlLabel     = grant.deadline ? formatDeadline(grant.deadline) : null
+  const typicalAwardText = brief
+    ? (brief.typical_award ?? ((grant.amountMin || grant.amountMax) ? formatRange(grant.amountMin || null, grant.amountMax || null) : null))
+    : null
+  const stripTitle = fundingType === 'investment' ? 'About this impact investor'
+    : fundingType === 'programme' ? 'About this programme'
+    : fundingType === 'in_kind'   ? 'About this in-kind partner'
+    : 'About this grant'
+  const stripSub = brief ? 'What they fund, who qualifies, tips for applying' : 'Eligibility, who qualifies, and more'
+
+  const PAL = {
+    green: { bg: '#F1F7E4', stroke: '#3B6D11' },
+    coral: { bg: '#FAECE7', stroke: '#993C1D' },
+    amber: { bg: '#FAEEDA', stroke: '#854F0B' },
+  } as const
+
+  const briefBlocks: { Icon: LucideIcon; pal: keyof typeof PAL; label: string; text: string }[] = brief ? ([
+    brief.what_they_fund     ? { Icon: CheckCircle2, pal: 'green' as const, label: 'What they fund',     text: brief.what_they_fund     } : null,
+    brief.who_can_apply      ? { Icon: Users,        pal: 'green' as const, label: 'Who can apply',      text: brief.who_can_apply      } : null,
+    brief.geographic_focus   ? { Icon: MapPin,       pal: 'amber' as const, label: 'Geographic focus',   text: brief.geographic_focus   } : null,
+    brief.priorities         ? { Icon: TrendingUp,   pal: 'coral' as const, label: 'Current priorities', text: brief.priorities         } : null,
+    brief.strong_application ? { Icon: Star,         pal: 'green' as const, label: 'Strong application', text: brief.strong_application } : null,
+    typicalAwardText         ? { Icon: DollarSign,   pal: 'green' as const, label: 'Typical award',      text: typicalAwardText         } : null,
+    brief.decision_timeline  ? { Icon: CalendarDays, pal: 'amber' as const, label: 'Decision timeline',  text: brief.decision_timeline  } : null,
+    brief.funder_tips        ? { Icon: Lightbulb,    pal: 'coral' as const, label: 'Insider tips',       text: brief.funder_tips        } : null,
+  ].filter((b): b is { Icon: LucideIcon; pal: keyof typeof PAL; label: string; text: string } => b !== null)) : []
+
+  const DASH = '0.5px dashed rgba(0,0,0,0.08)'
+  const lastRow = briefBlocks.length > 0 ? Math.floor((briefBlocks.length - 1) / 2) * 2 : 0
+
+  function handleSetDeadlineClick() {
+    if (!deadlineValue) return
+    onSetDeadline(deadlineValue)
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-5"
+      style={{ background: 'rgba(23,52,4,0.40)', overflowY: 'auto' }}
+      onClick={onClose}>
+      <div style={{ width: '100%', maxWidth: 640, maxHeight: '90vh', background: '#fff', borderRadius: 16,
+        overflow: 'hidden', display: 'flex', flexDirection: 'column',
+        boxShadow: '0 20px 60px rgba(23,52,4,0.25)' }}
+        onClick={e => e.stopPropagation()}>
+
+        {/* Header */}
+        <div style={{ padding: '20px 24px 16px', borderBottom: '0.5px solid rgba(0,0,0,0.08)',
+          display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14, flexShrink: 0 }}>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
+              <TypeChip type={fundingType} />
+              {grant.eligibilityStatus === 'eligible' && (
+                <span style={{ fontFamily: UI_FONT, fontSize: 11, padding: '2px 8px', borderRadius: 999, fontWeight: 500,
+                  background: '#F1F7E4', color: '#3B6D11' }}>Eligible</span>
+              )}
+              {grant.eligibilityStatus === 'check_required' && (
+                <span style={{ fontFamily: UI_FONT, fontSize: 11, padding: '2px 8px', borderRadius: 999, fontWeight: 500,
+                  background: '#FAEEDA', color: '#854F0B' }}>Check required</span>
+              )}
+            </div>
+            <h3 style={{ fontFamily: UI_FONT, fontSize: 19, fontWeight: 600, letterSpacing: '-0.01em',
+              margin: '0 0 4px', color: '#2C2C2A', lineHeight: 1.25 }}>
+              {grant.title}
+            </h3>
+            {grant.funder && grant.funder !== grant.title && (
+              <p style={{ fontFamily: BODY_FONT, fontSize: 13, color: '#5F5E5A', margin: 0 }}>{grant.funder}</p>
+            )}
+          </div>
+          <button onClick={onClose}
+            style={{ width: 30, height: 30, borderRadius: 8, background: '#F1F0EA', border: 'none',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#5F5E5A', cursor: 'pointer', flexShrink: 0 }}
+            onMouseEnter={e => { e.currentTarget.style.background = '#E5E2D7' }}
+            onMouseLeave={e => { e.currentTarget.style.background = '#F1F0EA' }}>
+            <XIcon size={14} strokeWidth={2.5} />
+          </button>
+        </div>
+
+        {/* Scrollable body */}
+        <div style={{ flex: 1, overflowY: 'auto' }}>
+
+          {/* Amount & deadline strip */}
+          {(amtStr || dlLabel) && (
+            <div style={{ display: 'grid', gridTemplateColumns: amtStr && dlLabel ? '1fr 1fr' : '1fr',
+              padding: '16px 24px', gap: 16, borderBottom: '0.5px solid rgba(0,0,0,0.06)', background: '#FAFAF7' }}>
+              {amtStr && (
+                <div>
+                  <p style={{ fontFamily: UI_FONT, fontSize: 10, fontWeight: 500, letterSpacing: '0.08em',
+                    textTransform: 'uppercase', color: '#8A8986', margin: '0 0 4px' }}>Grant amount</p>
+                  <p style={{ fontFamily: UI_FONT, fontSize: 18, fontWeight: 600, color: '#854F0B', margin: 0 }}>{amtStr}</p>
+                </div>
+              )}
+              {dlLabel && (
+                <div>
+                  <p style={{ fontFamily: UI_FONT, fontSize: 10, fontWeight: 500, letterSpacing: '0.08em',
+                    textTransform: 'uppercase', color: '#8A8986', margin: '0 0 4px' }}>Deadline</p>
+                  <p style={{ fontFamily: UI_FONT, fontSize: 14, fontWeight: 500, color: '#2C2C2A', margin: 0,
+                    display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Calendar size={13} strokeWidth={2} style={{ color: '#5F5E5A' }} />
+                    {dlLabel}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* About */}
+          {grant.description && (
+            <div style={{ padding: '18px 24px', borderBottom: '0.5px solid rgba(0,0,0,0.06)' }}>
+              <p style={{ fontFamily: UI_FONT, fontSize: 10, fontWeight: 500, letterSpacing: '0.08em',
+                textTransform: 'uppercase', color: '#8A8986', margin: '0 0 8px' }}>About this grant</p>
+              <p style={{ fontFamily: BODY_FONT, fontSize: 13.5, lineHeight: 1.55, color: '#2C2C2A', margin: 0 }}>
+                {grant.description}
+              </p>
+            </div>
+          )}
+
+          {/* Impact sectors */}
+          {grant.impactSectors && grant.impactSectors.length > 0 && (
+            <div style={{ padding: '16px 24px', borderBottom: '0.5px solid rgba(0,0,0,0.06)' }}>
+              <p style={{ fontFamily: UI_FONT, fontSize: 10, fontWeight: 500, letterSpacing: '0.08em',
+                textTransform: 'uppercase', color: '#8A8986', margin: '0 0 10px' }}>Impact sectors</p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {grant.impactSectors.map(s => (
+                  <span key={s} style={{ fontFamily: BODY_FONT, fontSize: 12, padding: '4px 10px', borderRadius: 999,
+                    background: '#F1F7E4', color: '#3B6D11', fontWeight: 500 }}>{s}</span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Set / change deadline */}
+          {!inPipeline && (
+            <div style={{ padding: '16px 24px', borderBottom: '0.5px solid rgba(0,0,0,0.06)' }}>
+              <p style={{ fontFamily: UI_FONT, fontSize: 10, fontWeight: 500, letterSpacing: '0.08em',
+                textTransform: 'uppercase', color: '#8A8986', margin: '0 0 8px' }}>Add a deadline</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                <DatePickerInput value={deadlineValue} onChange={setDeadlineValue} />
+                <button onClick={handleSetDeadlineClick} disabled={!deadlineValue || saving}
+                  style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, padding: '7px 14px', border: 'none', borderRadius: 8,
+                    cursor: deadlineValue && !saving ? 'pointer' : 'not-allowed',
+                    background: deadlineValue ? '#8ECB3C' : '#F0EFEB', color: deadlineValue ? '#173404' : '#8A8986' }}>
+                  {saving ? '…' : 'Set date & save to pipeline'}
+                </button>
+              </div>
+              <p style={{ fontFamily: BODY_FONT, fontSize: 11.5, color: '#8A8986', margin: '8px 0 0' }}>
+                Setting a deadline saves this opportunity to your pipeline.
+              </p>
+            </div>
+          )}
+
+          {/* More detail — collapsible */}
+          {(brief || grant.eligibilityCriteria?.length || grant.eligibleStructures?.length) && (
+            <>
+              {!insightsExpanded ? (
+                <button
+                  onClick={() => setInsightsExpanded(true)}
+                  onMouseEnter={() => setInsightsHover(true)}
+                  onMouseLeave={() => setInsightsHover(false)}
+                  style={{
+                    width: '100%', display: 'flex', alignItems: 'center', gap: 12,
+                    padding: '14px 22px 14px 19px',
+                    background: insightsHover ? '#F1F7E4' : '#fff',
+                    borderLeft: '3px solid #8ECB3C',
+                    borderRight: 'none', borderTop: 'none', borderBottom: 'none',
+                    cursor: 'pointer', textAlign: 'left',
+                    transition: 'background-color 160ms ease',
+                    fontFamily: BODY_FONT,
+                  }}
+                >
+                  <Info size={16} strokeWidth={2} style={{ color: insightsHover ? '#639922' : '#173404', flexShrink: 0, transition: 'color 160ms ease' }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: '#2C2C2A' }}>{stripTitle}</div>
+                    <div style={{ fontSize: 11, marginTop: 1, color: '#5F5E5A' }}>{stripSub}</div>
+                  </div>
+                  <ChevronDown size={14} strokeWidth={2.5} style={{ color: '#5F5E5A', flexShrink: 0 }} />
+                </button>
+              ) : (
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center',
+                    padding: '12px 22px', background: '#F1F7E4', borderBottom: '0.5px dashed rgba(57,109,17,0.2)' }}>
+                    <button onClick={() => setInsightsExpanded(false)}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: BODY_FONT,
+                        fontSize: 11, fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase',
+                        color: '#3B6D11', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}>
+                      <ChevronUp size={12} strokeWidth={2.5} />
+                      Hide insights
+                    </button>
+                  </div>
+
+                  {brief && briefBlocks.length > 0 ? (
+                    <>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', background: '#fff' }}>
+                        {briefBlocks.map((b, i) => {
+                          const Icon = b.Icon
+                          return (
+                            <div key={i} style={{
+                              padding: '16px 22px',
+                              borderBottom: i >= lastRow ? 'none' : DASH,
+                              borderRight: i % 2 === 0 ? DASH : 'none',
+                            }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                                <div style={{ width: 26, height: 26, borderRadius: 7, background: PAL[b.pal].bg,
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                  <Icon size={13} style={{ color: PAL[b.pal].stroke }} />
+                                </div>
+                                <p style={{ fontFamily: BODY_FONT, fontSize: 11, fontWeight: 500, letterSpacing: '0.08em',
+                                  textTransform: 'uppercase', color: '#2C2C2A', margin: 0 }}>{b.label}</p>
+                              </div>
+                              <p style={{ fontFamily: BODY_FONT, fontSize: 13, lineHeight: 1.55, color: '#5F5E5A', margin: 0 }}>{b.text}</p>
+                            </div>
+                          )
+                        })}
+                      </div>
+                      {brief.exclusions && (
+                        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start',
+                          padding: '16px 22px', background: '#FAEEDA', borderTop: '0.5px solid rgba(186,117,23,0.2)' }}>
+                          <div style={{ width: 26, height: 26, borderRadius: 7, background: '#FAC775',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <AlertTriangle size={13} style={{ color: '#854F0B' }} />
+                          </div>
+                          <div>
+                            <p style={{ fontFamily: BODY_FONT, fontSize: 11, fontWeight: 500, letterSpacing: '0.08em',
+                              textTransform: 'uppercase', color: '#412402', margin: '0 0 4px' }}>Exclusions</p>
+                            <p style={{ fontFamily: BODY_FONT, fontSize: 13, lineHeight: 1.55, color: '#854F0B', margin: 0 }}>{brief.exclusions}</p>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div style={{ padding: '18px 22px' }}>
+                      {grant.eligibilityCriteria && grant.eligibilityCriteria.length > 0 && (
+                        <div style={{ marginBottom: 16 }}>
+                          <p style={{ fontFamily: BODY_FONT, fontSize: 10, fontWeight: 500, letterSpacing: '0.08em',
+                            textTransform: 'uppercase', color: '#8A8986', margin: '0 0 10px' }}>Eligibility criteria</p>
+                          <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            {grant.eligibilityCriteria.map((c, i) => (
+                              <li key={i} style={{ display: 'flex', gap: 10, fontFamily: BODY_FONT, fontSize: 13, color: '#5F5E5A' }}>
+                                <CheckCircle2 size={14} style={{ flexShrink: 0, marginTop: 2, color: '#639922' }} />
+                                <span style={{ lineHeight: 1.45 }}>{c}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {grant.eligibleStructures && grant.eligibleStructures.length > 0 && (
+                        <div>
+                          <p style={{ fontFamily: BODY_FONT, fontSize: 10, fontWeight: 500, letterSpacing: '0.08em',
+                            textTransform: 'uppercase', color: '#8A8986', margin: '0 0 8px' }}>Eligible organisations</p>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                            {grant.eligibleStructures.map(s => (
+                              <span key={s} style={{ fontFamily: BODY_FONT, fontSize: 11, fontWeight: 500, padding: '4px 10px',
+                                borderRadius: 9999, background: 'rgba(142,203,60,0.12)', color: '#639922' }}>
+                                {STRUCTURE_LABELS[s] ?? s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+
+        </div>
+
+        {/* Footer actions */}
+        <div style={{ padding: '14px 22px', borderTop: '0.5px solid rgba(0,0,0,0.08)', background: '#FAFAF7',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', flexShrink: 0 }}>
+          <a href={`/dashboard/grants/${grant.id}`}
+            style={{ fontFamily: UI_FONT, fontSize: 12.5, fontWeight: 500, color: '#5F5E5A',
+              textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#173404' }}
+            onMouseLeave={e => { e.currentTarget.style.color = '#5F5E5A' }}>
+            View full detail →
+          </a>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            {grant.applyUrl && (
+              <a href={grant.applyUrl} target="_blank" rel="noopener noreferrer"
+                style={{ fontFamily: UI_FONT, fontSize: 12.5, fontWeight: 500,
+                  background: '#173404', color: '#F1F7E4', padding: '8px 14px', borderRadius: 8,
+                  textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                Apply now <ExternalLink size={11} />
+              </a>
+            )}
+            {!inPipeline && (
+              <button onClick={onAddToPipeline} disabled={saving}
+                style={{ fontFamily: UI_FONT, fontSize: 12.5, fontWeight: 500,
+                  background: saving ? '#F5F1E8' : '#8ECB3C',
+                  color: saving ? '#8A8986' : '#173404',
+                  padding: '8px 14px', borderRadius: 8, border: 'none',
+                  cursor: saving ? 'not-allowed' : 'pointer',
+                  display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                <Plus size={11} /> Add to Pipeline
+              </button>
+            )}
+            {inPipeline && (
+              <span style={{ fontFamily: UI_FONT, fontSize: 11.5, fontWeight: 500,
+                color: '#3B6D11', background: '#F1F7E4', padding: '6px 10px', borderRadius: 8,
+                display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                <Check size={11} strokeWidth={2.5} /> In pipeline
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function DeadlinesPage() {
   const plausible = usePlausible()
@@ -616,6 +972,11 @@ export default function DeadlinesPage() {
   const [savedInputs,      setSavedInputs]      = useState<Record<string,string>>({})
   const [savingSaved,      setSavingSaved]      = useState<string | null>(null)
   const [savedSuccesses,   setSavedSuccesses]   = useState<Set<string>>(new Set())
+
+  // Row-click modal state
+  const [previewPipelineItem, setPreviewPipelineItem] = useState<PipelineItem | null>(null)
+  const [previewGrant,        setPreviewGrant]        = useState<EnrichedGrant | null>(null)
+  const [previewSaving,       setPreviewSaving]       = useState(false)
 
   // Calendar
   const now = new Date()
@@ -1053,9 +1414,14 @@ export default function DeadlinesPage() {
         </div>
 
         {/* Body */}
-        <a
-          href={row.kind === 'pipeline' ? '/dashboard/pipeline' : `/dashboard/grants/${row.grant.id}`}
-          style={{ minWidth: 0, color: 'inherit', textDecoration: 'none', display: 'block' }}>
+        <button
+          type="button"
+          onClick={() => {
+            if (row.kind === 'pipeline') setPreviewPipelineItem(row.alert.item)
+            else setPreviewGrant(row.grant)
+          }}
+          style={{ minWidth: 0, color: 'inherit', background: 'transparent', border: 'none', padding: 0,
+            textAlign: 'left', cursor: 'pointer', font: 'inherit' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 4, flexWrap: 'wrap' }}>
             <span style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 14.5, color: '#2C2C2A', letterSpacing: '-0.005em' }}>
               {title}
@@ -1067,7 +1433,7 @@ export default function DeadlinesPage() {
             {funder && amtStr && <span style={{ opacity: 0.5 }}>·</span>}
             {amtStr && <span style={{ color: '#639922', fontFamily: UI_FONT, fontWeight: 500, fontSize: 12.5 }}>{amtStr}</span>}
           </div>
-        </a>
+        </button>
 
         {/* Actions */}
         {actions}
@@ -1171,13 +1537,15 @@ export default function DeadlinesPage() {
                         }}
                           onMouseEnter={e => { e.currentTarget.style.background = '#FAFAF7' }}
                           onMouseLeave={e => { e.currentTarget.style.background = '' }}>
-                          <a href="/dashboard/pipeline" style={{ color: 'inherit', textDecoration: 'none', display: 'block', minWidth: 0 }}>
+                          <button type="button" onClick={() => setPreviewPipelineItem(item)}
+                            style={{ color: 'inherit', background: 'transparent', border: 'none', padding: 0,
+                              textAlign: 'left', cursor: 'pointer', font: 'inherit', minWidth: 0 }}>
                             <div style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 14, color: '#2C2C2A', marginBottom: 2 }}>{item.grant_name}</div>
                             <div style={{ fontFamily: BODY_FONT, fontSize: 12.5, color: '#8A8986' }}>
                               {item.funder_name !== item.grant_name && <span>{item.funder_name} &middot; </span>}
                               {amtStr && <span style={{ color: '#639922', fontFamily: UI_FONT, fontWeight: 500 }}>{amtStr}</span>}
                             </div>
-                          </a>
+                          </button>
                           <DatePickerInput value={val}
                             onChange={v => setDeadlineInputs(prev => ({ ...prev, [item.id]: v }))} />
                           {success ? (
@@ -1208,13 +1576,15 @@ export default function DeadlinesPage() {
                         }}
                           onMouseEnter={e => { e.currentTarget.style.background = '#FAFAF7' }}
                           onMouseLeave={e => { e.currentTarget.style.background = '' }}>
-                          <a href={`/dashboard/grants/${g.id}`} style={{ color: 'inherit', textDecoration: 'none', display: 'block', minWidth: 0 }}>
+                          <button type="button" onClick={() => setPreviewGrant(g)}
+                            style={{ color: 'inherit', background: 'transparent', border: 'none', padding: 0,
+                              textAlign: 'left', cursor: 'pointer', font: 'inherit', minWidth: 0 }}>
                             <div style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 14, color: '#2C2C2A', marginBottom: 2 }}>{g.title}</div>
                             <div style={{ fontFamily: BODY_FONT, fontSize: 12.5, color: '#8A8986' }}>
                               {g.funder && g.funder !== g.title && <span>{g.funder} &middot; </span>}
                               {amtStr && <span style={{ color: '#639922', fontFamily: UI_FONT, fontWeight: 500 }}>{amtStr}</span>}
                             </div>
-                          </a>
+                          </button>
                           <DatePickerInput value={val}
                             onChange={v => setSavedInputs(prev => ({ ...prev, [g.id]: v }))} />
                           {success ? (
@@ -1410,6 +1780,56 @@ export default function DeadlinesPage() {
           onClose={() => setAddOpen(false)}
           onSaved={() => { setAddOpen(false); loadData(); showToast('Deadline added!') }} />
       )}
+
+      {/* Pipeline-row preview modal (reuses Pipeline page's edit modal) */}
+      {previewPipelineItem && (
+        <PipelineModal
+          item={previewPipelineItem}
+          onClose={() => setPreviewPipelineItem(null)}
+          onSave={async (id, updates) => {
+            await updatePipelineItem(id, updates)
+            await loadData()
+            showToast('Saved')
+          }}
+          onDelete={async (id) => {
+            await deletePipelineItem(id)
+            setPreviewPipelineItem(null)
+            await loadData()
+            showToast('Deleted')
+          }}
+          onMove={(id, stage) => { handleStageChange(id, stage) }}
+        />
+      )}
+
+      {/* Saved/match-row preview modal */}
+      {previewGrant && (() => {
+        const g = previewGrant
+        const inPipeline = matchState[g.id] === 'pipeline'
+        return (
+          <GrantPreviewModal
+            grant={g}
+            inPipeline={inPipeline}
+            saving={previewSaving}
+            onClose={() => setPreviewGrant(null)}
+            onAddToPipeline={async () => {
+              setPreviewSaving(true)
+              try {
+                await handlePipelineMatch(g)
+                setPreviewGrant(null)
+                showToast('Added to pipeline')
+              } finally { setPreviewSaving(false) }
+            }}
+            onSetDeadline={async (dl) => {
+              setPreviewSaving(true)
+              try {
+                await handleSetSavedDeadline(g, dl)
+                setPreviewGrant(null)
+                showToast('Deadline set & saved to pipeline')
+              } finally { setPreviewSaving(false) }
+            }}
+          />
+        )
+      })()}
 
       {toast && (
         <div className="fixed bottom-6 right-6 px-5 py-3 rounded-xl shadow-lg text-sm z-50"
