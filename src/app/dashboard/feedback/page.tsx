@@ -136,7 +136,6 @@ export default function FeedbackPage() {
     if (!isValid()) return
     setStatus('sending')
     try {
-      const { data: { user } } = await supabase.auth.getUser()
       let msg = message
       let extra: Record<string, string> = {}
 
@@ -148,12 +147,16 @@ export default function FeedbackPage() {
         extra = { url: funderUrl.trim(), why: funderWhy.trim() }
       }
 
-      const { error } = await supabase.from('feedback').insert({
-        type: activeTab, message: msg, extra,
-        user_id: user?.id ?? null,
-        email:   user?.email ?? null,
+      // Submit via API route so the server-side handler can send a
+      // notification email via Resend (RESEND_API_KEY isn't exposed
+      // client-side). The route uses the user's auth cookie to attach
+      // user_id and email.
+      const res = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: activeTab, message: msg, extra }),
       })
-      if (error) throw error
+      if (!res.ok) throw new Error('Submission failed')
       setStatus('sent')
       resetForm()
     } catch {
