@@ -577,9 +577,14 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
   })()
 
   // ── Subtype label for meta Type cell ──
+  // Only set when we actually have a subtype — we used to fall back to the
+  // funding-type pill label, but that meant some cards showed "Unrestricted"
+  // (real subtype) while others showed "Grant" (just the broad type). The
+  // mix read as data inconsistency. Now the Type cell only renders when we
+  // know the subtype.
   const subtypeLbl = grant.fundingSubtype && SUBTYPE_LABELS[grant.fundingSubtype]
     ? SUBTYPE_LABELS[grant.fundingSubtype]
-    : ftPill?.label ?? null
+    : null
 
   // ── Insights strip aria-label ──
   const stripAriaLabel = grant.fundingType === 'investment' ? 'About this impact investor'
@@ -712,14 +717,12 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                   {qualifies && <span style={{ color: '#639922', fontSize: 11 }}>✓</span>}
                 </div>
               </div>
-              <div>
-                <div style={{ fontSize: 10, color: '#8A8986', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3, fontFamily: 'var(--font-dm-sans)' }}>Type</div>
-                {subtypeLbl ? (
+              {subtypeLbl && (
+                <div>
+                  <div style={{ fontSize: 10, color: '#8A8986', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3, fontFamily: 'var(--font-dm-sans)' }}>Type</div>
                   <span style={{ fontSize: 11, background: '#F1F7E4', color: '#3B6D11', padding: '2px 8px', borderRadius: 9999, fontWeight: 500, fontFamily: 'var(--font-dm-sans)', display: 'inline-block' }}>{subtypeLbl}</span>
-                ) : (
-                  <div style={{ fontSize: 13, color: '#2C2C2A', fontFamily: 'var(--font-dm-sans)' }}>—</div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
 
           </div>{/* end content-col */}
