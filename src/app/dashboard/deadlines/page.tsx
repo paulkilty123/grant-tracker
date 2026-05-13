@@ -1053,7 +1053,9 @@ export default function DeadlinesPage() {
         </div>
 
         {/* Body */}
-        <div style={{ minWidth: 0 }}>
+        <a
+          href={row.kind === 'pipeline' ? '/dashboard/pipeline' : `/dashboard/grants/${row.grant.id}`}
+          style={{ minWidth: 0, color: 'inherit', textDecoration: 'none', display: 'block' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 4, flexWrap: 'wrap' }}>
             <span style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 14.5, color: '#2C2C2A', letterSpacing: '-0.005em' }}>
               {title}
@@ -1065,7 +1067,7 @@ export default function DeadlinesPage() {
             {funder && amtStr && <span style={{ opacity: 0.5 }}>·</span>}
             {amtStr && <span style={{ color: '#639922', fontFamily: UI_FONT, fontWeight: 500, fontSize: 12.5 }}>{amtStr}</span>}
           </div>
-        </div>
+        </a>
 
         {/* Actions */}
         {actions}
@@ -1169,13 +1171,13 @@ export default function DeadlinesPage() {
                         }}
                           onMouseEnter={e => { e.currentTarget.style.background = '#FAFAF7' }}
                           onMouseLeave={e => { e.currentTarget.style.background = '' }}>
-                          <div>
+                          <a href="/dashboard/pipeline" style={{ color: 'inherit', textDecoration: 'none', display: 'block', minWidth: 0 }}>
                             <div style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 14, color: '#2C2C2A', marginBottom: 2 }}>{item.grant_name}</div>
                             <div style={{ fontFamily: BODY_FONT, fontSize: 12.5, color: '#8A8986' }}>
                               {item.funder_name !== item.grant_name && <span>{item.funder_name} &middot; </span>}
                               {amtStr && <span style={{ color: '#639922', fontFamily: UI_FONT, fontWeight: 500 }}>{amtStr}</span>}
                             </div>
-                          </div>
+                          </a>
                           <DatePickerInput value={val}
                             onChange={v => setDeadlineInputs(prev => ({ ...prev, [item.id]: v }))} />
                           {success ? (
@@ -1206,13 +1208,13 @@ export default function DeadlinesPage() {
                         }}
                           onMouseEnter={e => { e.currentTarget.style.background = '#FAFAF7' }}
                           onMouseLeave={e => { e.currentTarget.style.background = '' }}>
-                          <div>
+                          <a href={`/dashboard/grants/${g.id}`} style={{ color: 'inherit', textDecoration: 'none', display: 'block', minWidth: 0 }}>
                             <div style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 14, color: '#2C2C2A', marginBottom: 2 }}>{g.title}</div>
                             <div style={{ fontFamily: BODY_FONT, fontSize: 12.5, color: '#8A8986' }}>
                               {g.funder && g.funder !== g.title && <span>{g.funder} &middot; </span>}
                               {amtStr && <span style={{ color: '#639922', fontFamily: UI_FONT, fontWeight: 500 }}>{amtStr}</span>}
                             </div>
-                          </div>
+                          </a>
                           <DatePickerInput value={val}
                             onChange={v => setSavedInputs(prev => ({ ...prev, [g.id]: v }))} />
                           {success ? (
