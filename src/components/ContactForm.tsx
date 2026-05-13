@@ -31,11 +31,53 @@ export default function ContactForm() {
 
   if (status === 'sent') {
     return (
-      <div className="border border-warm bg-sage/10 p-8 text-center">
-        <div className="text-3xl mb-3">✓</div>
-        <p className="font-serif text-lg font-bold text-forest mb-1">Message received</p>
-        <p className="text-sm text-mid">We&apos;ll get back to you at {sentTo}.</p>
-        <button onClick={() => setStatus('idle')} className="text-xs text-sage underline mt-4 block mx-auto">
+      <div
+        className="p-8 text-center rounded-xl"
+        style={{
+          background: '#F1F7E4',
+          border: '0.5px solid rgba(57,109,17,0.18)',
+          boxShadow: '0 1px 3px rgba(23,52,4,0.04)',
+        }}
+      >
+        <div
+          className="mx-auto mb-4 flex items-center justify-center"
+          style={{ width: 48, height: 48, borderRadius: '50%', background: '#8ECB3C' }}
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#173404" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        </div>
+        <h3
+          className="mb-1"
+          style={{
+            fontFamily: 'var(--font-space-grotesk)',
+            fontSize: 20,
+            fontWeight: 600,
+            letterSpacing: '-0.01em',
+            color: '#173404',
+          }}
+        >
+          Message received
+        </h3>
+        <p style={{ fontFamily: 'var(--font-plus-jakarta, Plus Jakarta Sans, sans-serif)', fontSize: 14, color: '#3B6D11', margin: 0 }}>
+          We&apos;ll get back to you at <span style={{ fontWeight: 500 }}>{sentTo}</span>.
+        </p>
+        <button
+          onClick={() => setStatus('idle')}
+          className="mt-5 block mx-auto"
+          style={{
+            fontFamily: 'var(--font-space-grotesk)',
+            fontSize: 12.5,
+            fontWeight: 500,
+            color: '#3B6D11',
+            background: 'transparent',
+            border: 'none',
+            padding: '6px 12px',
+            borderRadius: 8,
+            cursor: 'pointer',
+            textDecoration: 'underline',
+          }}
+        >
           Send another message
         </button>
       </div>
