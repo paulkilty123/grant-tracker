@@ -693,9 +693,9 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
               <div>
                 <div style={{ fontSize: 10, color: '#8A8986', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3, fontFamily: 'var(--font-dm-sans)' }}>Amount</div>
                 <div style={{ fontSize: 13, color: '#3B6D11', fontWeight: 500, fontFamily: 'var(--font-dm-sans)' }}>{
-                  grant.fundingType === 'in_kind' && !grant.amountMin && !grant.amountMax
-                    ? 'In-kind'
-                    : (formatRange(grant.amountMin, grant.amountMax) || '—')
+                  !grant.amountMin && !grant.amountMax && grant.fundingType === 'in_kind'    ? 'In-kind'
+                : !grant.amountMin && !grant.amountMax && grant.fundingType === 'programme'  ? 'Programme only'
+                : (formatRange(grant.amountMin, grant.amountMax) || '—')
                 }</div>
               </div>
               <div>
