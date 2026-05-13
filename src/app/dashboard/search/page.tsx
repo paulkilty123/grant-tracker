@@ -692,7 +692,11 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? 10 : 16, paddingTop: 12, borderTop: '0.5px solid rgba(0,0,0,0.06)' }}>
               <div>
                 <div style={{ fontSize: 10, color: '#8A8986', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3, fontFamily: 'var(--font-dm-sans)' }}>Amount</div>
-                <div style={{ fontSize: 13, color: '#3B6D11', fontWeight: 500, fontFamily: 'var(--font-dm-sans)' }}>{formatRange(grant.amountMin, grant.amountMax) || '—'}</div>
+                <div style={{ fontSize: 13, color: '#3B6D11', fontWeight: 500, fontFamily: 'var(--font-dm-sans)' }}>{
+                  grant.fundingType === 'in_kind' && !grant.amountMin && !grant.amountMax
+                    ? 'In-kind'
+                    : (formatRange(grant.amountMin, grant.amountMax) || '—')
+                }</div>
               </div>
               <div>
                 <div style={{ fontSize: 10, color: '#8A8986', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3, fontFamily: 'var(--font-dm-sans)' }}>Deadline</div>
