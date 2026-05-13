@@ -984,6 +984,42 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
           amber: { bg: '#FAEEDA', stroke: '#854F0B' },
         } as const
 
+        // Opportunity-type-aware labels for fields whose wording differs per
+        // type. Same icons, colours, and grid structure — only the label text
+        // changes. Fields with universal wording ("Who can apply",
+        // "Geographic focus", "Current priorities", "Insider tips",
+        // "Exclusions") stay hardcoded below.
+        const ft: FundingType = (grant.fundingType as FundingType | undefined) ?? 'grant'
+        const LBL = (key: 'what_they_fund' | 'strong_application' | 'typical_award' | 'decision_timeline'): string => {
+          const map: Record<typeof key, Record<FundingType, string>> = {
+            what_they_fund: {
+              grant:      'What they fund',
+              programme:  'What they offer',
+              investment: 'What they invest in',
+              in_kind:    'What they offer',
+            },
+            strong_application: {
+              grant:      'Strong application',
+              programme:  'Strong application',
+              investment: 'Strong pitch',
+              in_kind:    'Strong request',
+            },
+            typical_award: {
+              grant:      'Typical award',
+              programme:  'Typical funding',
+              investment: 'Typical ticket size',
+              in_kind:    'Typical support value',
+            },
+            decision_timeline: {
+              grant:      'Decision timeline',
+              programme:  'Selection timeline',
+              investment: 'Decision timeline',
+              in_kind:    'Decision timeline',
+            },
+          }
+          return map[key][ft] ?? map[key].grant
+        }
+
         const Section = ({ icon: Icon, pal, label, text }: {
           icon: React.ElementType
           pal: keyof typeof PAL
@@ -1007,14 +1043,14 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
             {brief ? (() => {
               const DASH = '0.5px dashed rgba(0,0,0,0.08)'
               const blocks: { Icon: React.ElementType; pal: keyof typeof PAL; label: string; text: string }[] = [
-                brief.what_they_fund     ? { Icon: CheckCircle2, pal: 'green' as const, label: 'What they fund',     text: brief.what_they_fund }    : null,
-                brief.who_can_apply      ? { Icon: Users,        pal: 'green' as const, label: 'Who can apply',      text: brief.who_can_apply }      : null,
-                brief.geographic_focus   ? { Icon: MapPin,       pal: 'amber' as const, label: 'Geographic focus',   text: brief.geographic_focus }   : null,
-                brief.priorities         ? { Icon: TrendingUp,   pal: 'coral' as const, label: 'Current priorities', text: brief.priorities }         : null,
-                brief.strong_application ? { Icon: Star,         pal: 'green' as const, label: 'Strong application', text: brief.strong_application } : null,
-                typicalAwardText         ? { Icon: DollarSign,   pal: 'green' as const, label: 'Typical award',      text: typicalAwardText }         : null,
-                brief.decision_timeline  ? { Icon: CalendarDays, pal: 'amber' as const, label: 'Decision timeline',  text: brief.decision_timeline }  : null,
-                brief.funder_tips        ? { Icon: Lightbulb,    pal: 'coral' as const, label: 'Insider tips',       text: brief.funder_tips }        : null,
+                brief.what_they_fund     ? { Icon: CheckCircle2, pal: 'green' as const, label: LBL('what_they_fund'),     text: brief.what_they_fund }    : null,
+                brief.who_can_apply      ? { Icon: Users,        pal: 'green' as const, label: 'Who can apply',           text: brief.who_can_apply }      : null,
+                brief.geographic_focus   ? { Icon: MapPin,       pal: 'amber' as const, label: 'Geographic focus',        text: brief.geographic_focus }   : null,
+                brief.priorities         ? { Icon: TrendingUp,   pal: 'coral' as const, label: 'Current priorities',      text: brief.priorities }         : null,
+                brief.strong_application ? { Icon: Star,         pal: 'green' as const, label: LBL('strong_application'), text: brief.strong_application } : null,
+                typicalAwardText         ? { Icon: DollarSign,   pal: 'green' as const, label: LBL('typical_award'),      text: typicalAwardText }         : null,
+                brief.decision_timeline  ? { Icon: CalendarDays, pal: 'amber' as const, label: LBL('decision_timeline'),  text: brief.decision_timeline }  : null,
+                brief.funder_tips        ? { Icon: Lightbulb,    pal: 'coral' as const, label: 'Insider tips',            text: brief.funder_tips }        : null,
               ].filter((b): b is NonNullable<typeof b> => b !== null)
 
               const lastRow = Math.floor((blocks.length - 1) / 2) * 2
