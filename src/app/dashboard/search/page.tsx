@@ -2522,7 +2522,7 @@ export default function SearchPage() {
 
       {/* ── Funding type tabs — horizontal: badge LEFT, label+count RIGHT ── */}
       {activeView === 'browse' && (
-        <div className="flex gap-2 mb-5">
+        <div className="flex gap-2 mb-5 overflow-x-auto -mx-1 px-1">
           {TYPE_TABS.map(tab => {
             const isActive = activeTab === tab.id
             // Active badge: light sage bg + dark icon (matches categorical inactive tint logic)
@@ -2536,7 +2536,7 @@ export default function SearchPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className="flex-1 flex flex-row items-center gap-3 px-4 py-3.5 rounded-xl transition-colors outline-none"
+                className="flex-1 min-w-[160px] flex flex-row items-center gap-3 px-4 py-3.5 rounded-xl transition-colors outline-none"
                 style={isActive ? {
                   background: tab.id === 'grant' ? '#F1F7E4' : tab.id === 'programme' ? '#FAECE7' : tab.id === 'investment' ? '#E6F1FB' : '#FAEEDA',
                   border: `1px solid ${tab.id === 'grant' ? 'rgba(99,153,34,0.35)' : tab.id === 'programme' ? 'rgba(153,60,29,0.3)' : tab.id === 'investment' ? 'rgba(12,68,124,0.3)' : 'rgba(133,79,11,0.3)'}`,
