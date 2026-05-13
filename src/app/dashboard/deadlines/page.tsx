@@ -467,7 +467,7 @@ function DayAlertsSheet({ alerts, onSelect, onClose }: {
 
 
 // ── Inline date picker ──────────────────────────────────────────────────────
-function DatePickerInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+function DatePickerInput({ value, onChange, popoverSide = 'right' }: { value: string; onChange: (v: string) => void; popoverSide?: 'left' | 'right' }) {
   const [open, setOpen]         = useState(false)
   const [viewYear, setViewYear]   = useState(() => value ? parseInt(value.split('-')[0]) : new Date().getFullYear())
   const [viewMonth, setViewMonth] = useState(() => value ? parseInt(value.split('-')[1]) - 1 : new Date().getMonth())
@@ -507,7 +507,7 @@ function DatePickerInput({ value, onChange }: { value: string; onChange: (v: str
         <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayStr}</span>
       </button>
       {open && (
-        <div style={{ position: 'absolute', top: 'calc(100% + 4px)', right: 0, zIndex: 300,
+        <div style={{ position: 'absolute', top: 'calc(100% + 4px)', ...(popoverSide === 'left' ? { left: 0 } : { right: 0 }), zIndex: 300,
           background: '#fff', border: '0.5px solid rgba(0,0,0,0.12)', borderRadius: 10,
           boxShadow: '0 8px 24px rgba(0,0,0,0.12)', padding: 10, width: 196 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
@@ -716,7 +716,7 @@ function GrantPreviewModal({
                 <div>
                   <p style={{ fontFamily: UI_FONT, fontSize: 10, fontWeight: 500, letterSpacing: '0.08em',
                     textTransform: 'uppercase', color: '#8A8986', margin: '0 0 4px' }}>Grant amount</p>
-                  <p style={{ fontFamily: UI_FONT, fontSize: 18, fontWeight: 600, color: '#854F0B', margin: 0 }}>{amtStr}</p>
+                  <p style={{ fontFamily: UI_FONT, fontSize: 18, fontWeight: 600, color: '#3B6D11', margin: 0 }}>{amtStr}</p>
                 </div>
               )}
               {dlLabel && (
@@ -764,7 +764,7 @@ function GrantPreviewModal({
               <p style={{ fontFamily: UI_FONT, fontSize: 10, fontWeight: 500, letterSpacing: '0.08em',
                 textTransform: 'uppercase', color: '#8A8986', margin: '0 0 8px' }}>Add a deadline</p>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                <DatePickerInput value={deadlineValue} onChange={setDeadlineValue} />
+                <DatePickerInput value={deadlineValue} onChange={setDeadlineValue} popoverSide="left" />
                 <button onClick={handleSetDeadlineClick} disabled={!deadlineValue || saving}
                   style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, padding: '7px 14px', border: 'none', borderRadius: 8,
                     cursor: deadlineValue && !saving ? 'pointer' : 'not-allowed',
@@ -897,14 +897,7 @@ function GrantPreviewModal({
 
         {/* Footer actions */}
         <div style={{ padding: '14px 22px', borderTop: '0.5px solid rgba(0,0,0,0.08)', background: '#FAFAF7',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', flexShrink: 0 }}>
-          <a href={`/dashboard/grants/${grant.id}`}
-            style={{ fontFamily: UI_FONT, fontSize: 12.5, fontWeight: 500, color: '#5F5E5A',
-              textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}
-            onMouseEnter={e => { e.currentTarget.style.color = '#173404' }}
-            onMouseLeave={e => { e.currentTarget.style.color = '#5F5E5A' }}>
-            View full detail →
-          </a>
+          display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10, flexWrap: 'wrap', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             {grant.applyUrl && (
               <a href={grant.applyUrl} target="_blank" rel="noopener noreferrer"
