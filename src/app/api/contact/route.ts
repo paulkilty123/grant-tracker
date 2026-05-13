@@ -48,10 +48,15 @@ export async function POST(req: NextRequest) {
 
     // Notify Paul via Resend. Best-effort — if email send fails we still
     // return 200 because the submission is safely stored in the DB.
-    if (process.env.RESEND_API_KEY) {
+    // Surface diagnostic info in the response so we can debug delivery
+    // problems without poking around in server logs.
+    let emailStatus: { sent: boolean; reason?: string; id?: string } = { sent: false }
+    if (!process.env.RESEND_API_KEY) {
+      emailStatus = { sent: false, reason: 'RESEND_API_KEY not set' }
+    } else {
       try {
         const resend = new Resend(process.env.RESEND_API_KEY)
-        await resend.emails.send({
+        const { data, error } = await resend.emails.send({
           from: FROM_EMAIL,
           to: NOTIFY_TO,
           replyTo: trimmedEmail,
@@ -64,13 +69,17 @@ export async function POST(req: NextRequest) {
             <p style="font-size: 12px; color: #888;">Sent via the contact form on granttracker.co.uk. Reply to this email to respond directly to the sender.</p>
           `,
         })
+        if (error) {
+          emailStatus = { sent: false, reason: error.message ?? JSON.stringify(error) }
+        } else {
+          emailStatus = { sent: true, id: data?.id }
+        }
       } catch (emailErr) {
-        // Log but don't fail the request — DB row is the source of truth.
-        console.error('[contact] email send failed:', emailErr)
+        emailStatus = { sent: false, reason: emailErr instanceof Error ? emailErr.message : 'unknown' }
       }
     }
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true, email: emailStatus, from: FROM_EMAIL, to: NOTIFY_TO })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Submission failed'
     return NextResponse.json({ error: message }, { status: 500 })
