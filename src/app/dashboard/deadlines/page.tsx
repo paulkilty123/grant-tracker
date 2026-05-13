@@ -758,27 +758,29 @@ function GrantPreviewModal({
             </div>
           )}
 
-          {/* Set / change deadline — always available */}
-          <div style={{ padding: '16px 24px', borderBottom: '0.5px solid rgba(0,0,0,0.06)' }}>
-            <p style={{ fontFamily: UI_FONT, fontSize: 10, fontWeight: 500, letterSpacing: '0.08em',
-              textTransform: 'uppercase', color: '#8A8986', margin: '0 0 8px' }}>
-              {inPipeline && grant.deadline ? 'Change deadline' : 'Add a deadline'}
-            </p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-              <DatePickerInput value={deadlineValue} onChange={setDeadlineValue} popoverSide="left" />
-              <button onClick={handleSetDeadlineClick} disabled={!deadlineValue || saving}
-                style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, padding: '7px 14px', border: 'none', borderRadius: 8,
-                  cursor: deadlineValue && !saving ? 'pointer' : 'not-allowed',
-                  background: deadlineValue ? '#8ECB3C' : '#F0EFEB', color: deadlineValue ? '#173404' : '#8A8986' }}>
-                {saving ? '…' : inPipeline ? 'Update deadline' : 'Set date & save to pipeline'}
-              </button>
-            </div>
-            {!inPipeline && (
+          {/* Add a deadline — only when no fixed funder deadline, or grant is rolling */}
+          {(!grant.deadline || grant.isRolling) && (
+            <div style={{ padding: '16px 24px', borderBottom: '0.5px solid rgba(0,0,0,0.06)' }}>
+              <p style={{ fontFamily: UI_FONT, fontSize: 10, fontWeight: 500, letterSpacing: '0.08em',
+                textTransform: 'uppercase', color: '#8A8986', margin: '0 0 8px' }}>Add a deadline</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                <DatePickerInput value={deadlineValue} onChange={setDeadlineValue} popoverSide="left" />
+                <button onClick={handleSetDeadlineClick} disabled={!deadlineValue || saving}
+                  style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, padding: '7px 14px', border: 'none', borderRadius: 8,
+                    cursor: deadlineValue && !saving ? 'pointer' : 'not-allowed',
+                    background: deadlineValue ? '#8ECB3C' : '#F0EFEB', color: deadlineValue ? '#173404' : '#8A8986' }}>
+                  {saving ? '…' : inPipeline ? 'Set deadline' : 'Set date & save to pipeline'}
+                </button>
+              </div>
               <p style={{ fontFamily: BODY_FONT, fontSize: 11.5, color: '#8A8986', margin: '8px 0 0' }}>
-                Setting a deadline saves this opportunity to your pipeline.
+                {grant.isRolling
+                  ? 'This funder accepts rolling applications. Set your own target submission date.'
+                  : inPipeline
+                    ? 'Pick the date you want to submit by.'
+                    : 'Setting a deadline saves this opportunity to your pipeline.'}
               </p>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* More detail — collapsible */}
           {(brief || grant.eligibilityCriteria?.length || grant.eligibleStructures?.length) && (
@@ -970,9 +972,33 @@ export default function DeadlinesPage() {
 
   // Row-click modal state
   const [previewPipelineItem,        setPreviewPipelineItem]        = useState<PipelineItem | null>(null)  // → full PipelineModal (Scheduled rows)
-  const [previewPipelineForDeadline, setPreviewPipelineForDeadline] = useState<PipelineItem | null>(null)  // → GrantPreviewModal (Needs-a-deadline rows)
+  const [previewPipelineForDeadline, setPreviewPipelineForDeadline] = useState<{ item: PipelineItem; enriched: EnrichedGrant | null } | null>(null)  // → GrantPreviewModal (Needs-a-deadline rows)
   const [previewGrant,               setPreviewGrant]               = useState<EnrichedGrant | null>(null)
   const [previewSaving,              setPreviewSaving]              = useState(false)
+
+  // Open the rich modal for a Needs-a-deadline pipeline row, kicking off an
+  // async catalogue lookup so the description / sectors / funder brief panels
+  // can populate. The modal opens immediately with sparse data; enriched
+  // fields fade in when the lookup resolves.
+  async function openPipelineForDeadline(item: PipelineItem) {
+    setPreviewPipelineForDeadline({ item, enriched: null })
+    if (!item.grant_url) return
+    try {
+      const supabase = createClient()
+      const candidates = [item.grant_url, item.grant_url.replace(/\/$/, ''), item.grant_url + '/']
+      const { data } = await supabase
+        .from('grants_with_funder')
+        .select('*')
+        .in('apply_url', candidates)
+        .limit(1)
+      if (data && data[0]) {
+        const enriched = normaliseScrapedGrant(data[0] as Record<string, unknown>)
+        setPreviewPipelineForDeadline(prev => prev && prev.item.id === item.id ? { item: prev.item, enriched } : prev)
+      }
+    } catch {
+      // Lookup is best-effort — sparse modal is fine fallback.
+    }
+  }
 
   // Calendar
   const now = new Date()
@@ -1533,7 +1559,7 @@ export default function DeadlinesPage() {
                         }}
                           onMouseEnter={e => { e.currentTarget.style.background = '#FAFAF7' }}
                           onMouseLeave={e => { e.currentTarget.style.background = '' }}>
-                          <button type="button" onClick={() => setPreviewPipelineForDeadline(item)}
+                          <button type="button" onClick={() => openPipelineForDeadline(item)}
                             style={{ color: 'inherit', background: 'transparent', border: 'none', padding: 0,
                               textAlign: 'left', cursor: 'pointer', font: 'inherit', minWidth: 0 }}>
                             <div style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 14, color: '#2C2C2A', marginBottom: 2 }}>{item.grant_name}</div>
@@ -1799,25 +1825,35 @@ export default function DeadlinesPage() {
 
       {/* Needs-a-deadline pipeline-row preview modal (rich modal, pipeline-item-backed) */}
       {previewPipelineForDeadline && (() => {
-        const item = previewPipelineForDeadline
+        const { item, enriched } = previewPipelineForDeadline
+        // Pipeline-item fields win for id (callback target) and deadline
+        // (we want the pipeline's deadline state, not the catalogue's, to
+        // drive picker visibility). Enriched catalogue fields fill the
+        // descriptive panels when the lookup resolved.
         const adapted: EnrichedGrant = {
           id: item.id,
-          title: item.grant_name,
-          funder: item.funder_name,
-          funderType: item.funder_type,
-          fundingType: itemFundingType(item) as FundingType,
-          description: '',
-          amountMin: item.amount_min ?? 0,
-          amountMax: item.amount_max ?? item.amount_requested ?? 0,
+          title: enriched?.title ?? item.grant_name,
+          funder: enriched?.funder ?? item.funder_name,
+          funderType: enriched?.funderType ?? item.funder_type,
+          fundingType: enriched?.fundingType ?? (itemFundingType(item) as FundingType),
+          description: enriched?.description ?? '',
+          amountMin: enriched?.amountMin ?? item.amount_min ?? 0,
+          amountMax: enriched?.amountMax ?? item.amount_max ?? item.amount_requested ?? 0,
           deadline: item.deadline,
-          isRolling: false,
-          isLocal: false,
-          sectors: [],
-          eligibilityCriteria: [],
-          applyUrl: item.grant_url,
-          isInviteOnly: false,
-          source: 'manual',
-        }
+          isRolling: enriched?.isRolling ?? false,
+          isLocal: enriched?.isLocal ?? false,
+          sectors: enriched?.sectors ?? [],
+          impactSectors: enriched?.impactSectors,
+          nicheTags: enriched?.nicheTags,
+          beneficiaryGroups: enriched?.beneficiaryGroups,
+          eligibilityCriteria: enriched?.eligibilityCriteria ?? [],
+          eligibleStructures: enriched?.eligibleStructures,
+          applyUrl: enriched?.applyUrl ?? item.grant_url,
+          isInviteOnly: enriched?.isInviteOnly ?? false,
+          source: enriched?.source ?? 'manual',
+          funderBrief: enriched?.funderBrief,
+          eligibilityStatus: enriched?.eligibilityStatus,
+        } as EnrichedGrant
         return (
           <GrantPreviewModal
             grant={adapted}
