@@ -586,16 +586,16 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
     ? SUBTYPE_LABELS[grant.fundingSubtype]
     : null
 
-  // ── Insights strip aria-label ──
-  const stripAriaLabel = grant.fundingType === 'investment' ? 'About this impact investor'
-    : grant.fundingType === 'programme' ? 'About this programme provider'
-    : grant.fundingType === 'in_kind'   ? 'About this in-kind partner'
-    : 'About this funder'
-
-  const stripTitle = grant.fundingType === 'investment' ? 'About this impact investor'
-    : grant.fundingType === 'programme' ? 'About this programme provider'
-    : grant.fundingType === 'in_kind'   ? 'About this in-kind partner'
-    : 'About this funder'
+  // ── Insights strip label ──
+  // Opportunity-type-specific. Mirrors the type chip vocabulary
+  // (GRANT / PROGRAMME / INVESTMENT / IN-KIND) in sentence case.
+  // Same label used for visible title and aria-label, in both
+  // collapsed and expanded states.
+  const insightsTypeWord = grant.fundingType === 'investment' ? 'Investment'
+    : grant.fundingType === 'programme' ? 'Programme'
+    : grant.fundingType === 'in_kind'   ? 'In-kind'
+    : 'Grant'
+  const insightsLabel = `${insightsTypeWord} insights`
 
   // ── Sector pills (up to 3 + overflow) ──
   const allSectors: string[] = (grant as EnrichedGrant).impactSectors?.length
@@ -906,26 +906,32 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
 
       </div>{/* end card-body */}
 
-      {/* ── Funder insights strip ── */}
-      {!insightsExpanded && (!!(grant as EnrichedGrant).funderBrief || grant.eligibilityCriteria?.length > 0 || (grant as EnrichedGrant).impactSectors?.length || grant.sectors?.length) && (
+      {/* ── Insights toggle strip ──
+          Single header used in both collapsed and expanded states. Click anywhere
+          on it to toggle. The chevron rotates: right when collapsed, up when
+          expanded. Background goes pale-green when expanded (replacing the old
+          centered "HIDE INSIGHTS" caps bar). */}
+      {(!!(grant as EnrichedGrant).funderBrief || grant.eligibilityCriteria?.length > 0 || (grant as EnrichedGrant).impactSectors?.length || grant.sectors?.length) && (
         <button
           onClick={() => setInsightsExpanded(v => !v)}
           onMouseEnter={() => setInsightsHover(true)}
           onMouseLeave={() => setInsightsHover(false)}
-          aria-label={stripAriaLabel}
+          aria-label={insightsLabel}
+          aria-expanded={insightsExpanded}
           style={{
             width: '100%', display: 'flex', alignItems: 'center', gap: 12,
             padding: '13px 20px 13px 17px',
-            background: insightsHover ? '#F1F7E4' : '#fff',
+            background: insightsExpanded || insightsHover ? '#F1F7E4' : '#fff',
             borderTop: '0.5px solid rgba(0,0,0,0.06)',
             borderLeft: '3px solid #8ECB3C',
-            borderRight: 'none', borderBottom: 'none',
+            borderRight: 'none',
+            borderBottom: insightsExpanded ? '0.5px dashed rgba(57,109,17,0.2)' : 'none',
             cursor: 'pointer', textAlign: 'left',
             transition: 'background-color 160ms ease',
           }}
         >
           <svg
-            style={{ color: insightsHover ? '#639922' : '#173404', flexShrink: 0, transition: 'color 160ms ease' }}
+            style={{ color: insightsHover || insightsExpanded ? '#639922' : '#173404', flexShrink: 0, transition: 'color 160ms ease' }}
             width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
           >
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -935,14 +941,14 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
           </svg>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 13, fontWeight: 500, fontFamily: 'var(--font-dm-sans)', color: '#2C2C2A' }}>
-              {stripTitle}
+              {insightsLabel}
             </div>
             <div style={{ fontSize: 11, fontFamily: 'var(--font-dm-sans)', marginTop: 1, color: '#5F5E5A' }}>
               {(grant as EnrichedGrant).funderBrief ? 'What they fund, who qualifies, tips for applying' : 'Eligibility, who qualifies, and more'}
             </div>
           </div>
           <svg
-            style={{ color: '#5F5E5A', flexShrink: 0 }}
+            style={{ color: insightsExpanded ? '#3B6D11' : '#5F5E5A', flexShrink: 0, transition: 'transform 160ms ease, color 160ms ease', transform: insightsExpanded ? 'rotate(-90deg)' : 'rotate(0deg)' }}
             width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
           >
             <polyline points="9 18 15 12 9 6"/>
@@ -982,17 +988,6 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
 
         return (
           <div style={{ background: '#fff', borderRadius: '0 0 14px 14px', overflow: 'hidden' }}>
-
-            {/* fi-head — collapse link */}
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '12px 22px', background: '#F1F7E4', borderBottom: '0.5px dashed rgba(57,109,17,0.2)' }}>
-              <button
-                onClick={() => setInsightsExpanded(false)}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-dm-sans)', fontSize: 11, fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#3B6D11', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
-              >
-                <ChevronDown style={{ width: 12, height: 12, transform: 'rotate(180deg)' }} />
-                Hide insights
-              </button>
-            </div>
 
             {brief ? (() => {
               const DASH = '0.5px dashed rgba(0,0,0,0.08)'
