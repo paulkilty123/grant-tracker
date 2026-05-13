@@ -878,7 +878,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                 {/* Feedback buttons — always in header */}
                 {org?.owner_id && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontSize: 10, color: '#8A8986', fontFamily: 'var(--font-dm-sans)', whiteSpace: 'nowrap' }}>Improve your matches</span>
+                    <span style={{ fontSize: 13, color: '#8A8986', fontFamily: 'var(--font-dm-sans)', whiteSpace: 'nowrap' }}>Improve your matches</span>
                     <MatchFeedbackBlock grantId={grant.id} userId={org.owner_id} matchScore={score} compact />
                   </div>
                 )}
