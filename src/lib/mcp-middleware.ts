@@ -23,6 +23,13 @@ export interface MCPAuthContext {
    * grant_tracker_url. Spec §7.2/§7.3.
    */
   utm_source: string
+  /**
+   * Live rate-limit status populated by the step 3 enforcement layer
+   * (src/lib/mcp-rate-limit.ts). When undefined, callers fall back to
+   * static maxima from spec §6.3. Tools should always prefer this when
+   * present so the response reflects live counters.
+   */
+  rate_limit_status?: { remaining_hour: number; remaining_day: number | null }
 }
 
 function getServiceClient() {

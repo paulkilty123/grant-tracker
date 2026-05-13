@@ -23,11 +23,12 @@
 // maxima from spec §6.3 — the response shape stays stable.
 
 import { createMcpHandler } from 'mcp-handler'
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { AsyncLocalStorage } from 'async_hooks'
 import { z } from 'zod'
 import { createClient } from '@supabase/supabase-js'
 import { validateMCPRequest, type MCPAuthContext } from '@/lib/mcp-middleware'
+import { enforceRateLimits } from '@/lib/mcp-rate-limit'
 import {
   getMCPTaxonomy,
   getAllMCPTaxonomies,
@@ -57,9 +58,13 @@ const ATTRIBUTION = {
   license: 'Free to surface to end users with attribution',
 } as const
 
-// Per-tier rate limits from spec §6.3. Step 3 will return live remaining
-// counts instead of these static maxima — response shape unchanged.
+// Reads live rate-limit status from the auth context if step 3 populated
+// it, otherwise falls back to the static maxima from spec §6.3. The fallback
+// is used in two cases: (a) Upstash env vars missing locally (dev), or
+// (b) defensive — should never happen in production since handle() always
+// runs enforceRateLimits.
 function rateLimitStatusForContext(ctx: MCPAuthContext | undefined) {
+  if (ctx?.rate_limit_status) return ctx.rate_limit_status
   const state = ctx?.state ?? 'anonymous'
   if (state === 'authenticated') {
     return { remaining_hour: 100, remaining_day: 1000 }
@@ -465,9 +470,45 @@ const mcpHandler = createMcpHandler(
 
 async function handle(req: NextRequest): Promise<Response> {
   const authCtx = await validateMCPRequest(req)
-  // STEP 3 HOOK: rate-limit enforcement goes here (Redis-backed). If over
-  // limit, return spec §5.4 rate_limit_exceeded error before invoking the
-  // MCP handler.
+
+  // Rate-limit enforcement (spec §6.3 + §6.4). Returns live remaining
+  // counts that tool handlers surface in rate_limit_status. When blocked,
+  // returns spec §5.4 rate_limit_exceeded error with Retry-After header.
+  const rl = await enforceRateLimits(authCtx)
+  authCtx.rate_limit_status = rl.status
+
+  if (!rl.allowed) {
+    const retrySeconds = rl.retry_after ?? 60
+    const which: string = rl.which_limit ?? 'unknown'
+    const message = (() => {
+      if (which === 'anon_hourly') {
+        return 'Anonymous request limit reached. Get a free API key at granttracker.co.uk/mcp to continue.'
+      }
+      if (which === 'key_hourly') {
+        return `Hourly rate limit reached on this API key. Retry after ${retrySeconds} seconds.`
+      }
+      if (which === 'key_daily') {
+        return `Daily rate limit reached on this API key. Retry after ${retrySeconds} seconds.`
+      }
+      if (which === 'ip_hourly') {
+        return `Per-IP rate limit reached (1,000/hr). Retry after ${retrySeconds} seconds.`
+      }
+      return `Rate limit reached. Retry after ${retrySeconds} seconds.`
+    })()
+    return NextResponse.json({
+      error: {
+        code: 'rate_limit_exceeded',
+        message,
+        details: { which_limit: which },
+      },
+      attribution: ATTRIBUTION,
+      rate_limit_status: rl.status,
+    }, {
+      status: 429,
+      headers: { 'Retry-After': String(retrySeconds) },
+    })
+  }
+
   return authStore.run(authCtx, () => mcpHandler(req))
 }
 
