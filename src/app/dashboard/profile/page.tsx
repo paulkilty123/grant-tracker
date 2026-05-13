@@ -1085,11 +1085,15 @@ function FocusCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
   const primaryBeneficiary = BENEFICIARY_OPTIONS.find(o => o.value === beneficiaries[0])
   const secondaryBeneficiaries = beneficiaries.slice(1).map(b => BENEFICIARY_OPTIONS.find(o => o.value === b)).filter(Boolean)
 
-  const pillStyle = (kind: 'sector' | 'beneficiary', isPrimary: boolean): React.CSSProperties => ({
+  // Same green family across sectors AND beneficiaries — weight variation
+  // (forest fill for primary, pale-green for secondary) carries the rank.
+  // Sector-vs-beneficiary is identified by the section heading above each
+  // group; coral was reading as an error state, not a category.
+  const pillStyle = (_kind: 'sector' | 'beneficiary', isPrimary: boolean): React.CSSProperties => ({
     fontFamily: UI, fontWeight: 500, fontSize: 12.5, padding: '4px 10px', borderRadius: 20,
     display: 'inline-flex', alignItems: 'center', gap: 5,
-    background: kind === 'sector' ? T.greenBg : T.coralBg,
-    color: kind === 'sector' ? T.greenText : T.coralText,
+    background: isPrimary ? T.greenDeep : T.greenBg,
+    color:      isPrimary ? '#F1F7E4'   : T.greenText,
   })
 
   return (
@@ -1258,7 +1262,7 @@ function FocusCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {secondaryBeneficiaries.map(b => b && (
                   <span key={b.value} style={pillStyle('beneficiary', false)}>
-                    <span style={{ width: 5, height: 5, borderRadius: '50%', background: T.coralText }} />
+                    <span style={{ width: 5, height: 5, borderRadius: '50%', background: T.greenText }} />
                     {b.label}
                   </span>
                 ))}
