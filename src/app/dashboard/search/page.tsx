@@ -943,16 +943,31 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
             <div style={{ fontSize: 13, fontWeight: 500, fontFamily: 'var(--font-dm-sans)', color: '#2C2C2A' }}>
               {insightsLabel}
             </div>
-            <div style={{ fontSize: 11, fontFamily: 'var(--font-dm-sans)', marginTop: 1, color: '#5F5E5A' }}>
-              {(grant as EnrichedGrant).funderBrief ? 'What they fund, who qualifies, tips for applying' : 'Eligibility, who qualifies, and more'}
-            </div>
+            {!insightsExpanded && (
+              <div style={{ fontSize: 11, fontFamily: 'var(--font-dm-sans)', marginTop: 1, color: '#5F5E5A' }}>
+                {(grant as EnrichedGrant).funderBrief ? 'What they fund, who qualifies, tips for applying' : 'Eligibility, who qualifies, and more'}
+              </div>
+            )}
           </div>
-          <svg
-            style={{ color: insightsExpanded ? '#3B6D11' : '#5F5E5A', flexShrink: 0, transition: 'transform 160ms ease, color 160ms ease', transform: insightsExpanded ? 'rotate(-90deg)' : 'rotate(0deg)' }}
-            width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+          {/* Circled down-chevron — matches the match-score row's affordance.
+              Rotates 180° to point up when expanded. Decorative div (not a
+              nested button) since the outer strip is already the click target. */}
+          <div
+            aria-hidden="true"
+            style={{
+              width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
+              border: '0.5px solid rgba(99,153,34,0.40)',
+              background: 'transparent',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: insightsExpanded ? '#3B6D11' : '#173404',
+              transform: insightsExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+              transition: 'transform 0.25s ease, color 160ms ease',
+            }}
           >
-            <polyline points="9 18 15 12 9 6"/>
-          </svg>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="2,4 6,8 10,4" />
+            </svg>
+          </div>
         </button>
       )}
 
