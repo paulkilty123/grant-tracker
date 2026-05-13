@@ -1530,7 +1530,7 @@ export default function DeadlinesPage() {
                         }}
                           onMouseEnter={e => { e.currentTarget.style.background = '#FAFAF7' }}
                           onMouseLeave={e => { e.currentTarget.style.background = '' }}>
-                          <button type="button" onClick={() => setPreviewPipelineItem(item)}
+                          <button type="button" onClick={() => setEditItem(item)}
                             style={{ color: 'inherit', background: 'transparent', border: 'none', padding: 0,
                               textAlign: 'left', cursor: 'pointer', font: 'inherit', minWidth: 0 }}>
                             <div style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 14, color: '#2C2C2A', marginBottom: 2 }}>{item.grant_name}</div>
