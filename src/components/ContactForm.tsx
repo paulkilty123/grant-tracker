@@ -93,7 +93,7 @@ export default function ContactForm() {
           value={name}
           onChange={e => setName(e.target.value)}
           placeholder="Your name"
-          className="mt-1.5 h-11 w-full border border-warm rounded-none px-3 text-sm outline-none focus:border-charcoal bg-white transition-colors"
+          className="mt-1.5 h-11 w-full border border-warm rounded-lg px-3 text-sm outline-none focus:border-charcoal bg-white transition-colors"
         />
       </div>
       <div>
@@ -104,7 +104,7 @@ export default function ContactForm() {
           onChange={e => setEmail(e.target.value)}
           placeholder="you@organisation.org"
           required
-          className="mt-1.5 h-11 w-full border border-warm rounded-none px-3 text-sm outline-none focus:border-charcoal bg-white transition-colors"
+          className="mt-1.5 h-11 w-full border border-warm rounded-lg px-3 text-sm outline-none focus:border-charcoal bg-white transition-colors"
         />
       </div>
       <div>
@@ -115,7 +115,7 @@ export default function ContactForm() {
           placeholder="How can we help?"
           rows={5}
           required
-          className="mt-1.5 w-full min-h-[120px] border border-warm rounded-none px-3 py-2.5 text-sm outline-none focus:border-charcoal bg-white transition-colors resize-none"
+          className="mt-1.5 w-full min-h-[120px] border border-warm rounded-lg px-3 py-2.5 text-sm outline-none focus:border-charcoal bg-white transition-colors resize-none"
         />
       </div>
       {status === 'error' && (
