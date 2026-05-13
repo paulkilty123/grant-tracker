@@ -1925,8 +1925,11 @@ export default function ProfilePage() {
 
 {/* Footer */}
         <div style={{ marginTop: 32, paddingTop: 24, borderTop: `1px solid ${T.border}`, display: 'flex', gap: 20, fontFamily: UI, fontSize: 13, color: T.textTertiary }}>
-          <a href="/dashboard/settings" style={{ color: T.textSecondary, textDecoration: 'none' }}>
-            Account &amp; notifications →
+          <a href="/dashboard/account" style={{ color: T.textSecondary, textDecoration: 'none' }}>
+            Account →
+          </a>
+          <a href="/dashboard/notifications" style={{ color: T.textSecondary, textDecoration: 'none' }}>
+            Notifications →
           </a>
         </div>
 
