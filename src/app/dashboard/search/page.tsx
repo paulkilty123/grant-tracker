@@ -940,7 +940,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
             <line x1="16" y1="17" x2="8" y2="17"/>
           </svg>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 500, fontFamily: 'var(--font-dm-sans)', color: '#2C2C2A' }}>
+            <div style={{ fontSize: 15, fontWeight: 500, fontFamily: 'var(--font-dm-sans)', color: '#2C2C2A' }}>
               {insightsLabel}
             </div>
             {!insightsExpanded && (
