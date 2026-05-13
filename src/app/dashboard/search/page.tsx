@@ -663,7 +663,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
               return (
                 <>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', margin: showFunder ? '0 0 2px' : '0 0 10px' }}>
-                    <h3 style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 17, fontWeight: 500, color: '#2C2C2A', margin: 0, lineHeight: 1.3 }}>{grant.title}</h3>
+                    <h3 style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 500, color: '#2C2C2A', margin: 0, lineHeight: 1.3 }}>{grant.title}</h3>
                     {isNewThisWeek && (
                       <div style={{ border: '2px solid #173404', color: '#173404', fontSize: 12, fontWeight: 500, padding: '5px 14px', borderRadius: 5, letterSpacing: '0.08em', textTransform: 'uppercase', transform: 'rotate(-3deg)', background: '#EAF3DE', flexShrink: 0, fontFamily: 'var(--font-space-grotesk)' }}>
                         New this week
@@ -676,12 +676,12 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
             })()}
 
             {/* Description */}
-            <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 12, color: grant.description ? '#5F5E5A' : '#8A8986', lineHeight: 1.5, margin: '0 0 14px', fontStyle: grant.description ? 'normal' : 'italic' }}>
+            <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 14, color: grant.description ? '#5F5E5A' : '#8A8986', lineHeight: 1.5, margin: '0 0 14px', fontStyle: grant.description ? 'normal' : 'italic' }}>
               {grant.description
                 ? (grant.description.length > 160 && !descExpanded
                     ? <>
                         {grant.description.slice(0, 160).trimEnd()}…{''}
-                        <button onClick={e => { e.stopPropagation(); setDescExpanded(true) }} style={{ background: 'none', border: 'none', padding: 0, fontSize: 12, color: '#3B6D11', fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Show more</button>
+                        <button onClick={e => { e.stopPropagation(); setDescExpanded(true) }} style={{ background: 'none', border: 'none', padding: 0, fontSize: 14, color: '#3B6D11', fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Show more</button>
                       </>
                     : grant.description)
                 : <>Full details on the funder&apos;s website.{''}{grant.applyUrl && <a href={grant.applyUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#3B6D11', fontWeight: 500, textDecoration: 'none' }}>Visit site ↗</a>}</>
