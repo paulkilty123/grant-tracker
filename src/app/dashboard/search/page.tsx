@@ -739,14 +739,14 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
 
                 {/* In pipeline status pill */}
                 {state === 'pipeline' && (
-                  <div style={{ fontSize: 11, background: '#F1F7E4', color: '#3B6D11', padding: '5px 10px', borderRadius: 9999, fontWeight: 500, textAlign: 'center', fontFamily: 'var(--font-dm-sans)' }}>
+                  <div style={{ fontSize: 13, background: '#F1F7E4', color: '#3B6D11', padding: '6px 12px', borderRadius: 9999, fontWeight: 500, textAlign: 'center', fontFamily: 'var(--font-dm-sans)' }}>
                     ✓ In pipeline · {stageLabel}
                   </div>
                 )}
 
                 {/* Saved status pill */}
                 {state === 'saved' && (
-                  <div style={{ fontSize: 11, background: '#F5F1E8', color: '#5F5E5A', padding: '5px 10px', borderRadius: 9999, fontWeight: 500, textAlign: 'center', fontFamily: 'var(--font-dm-sans)' }}>
+                  <div style={{ fontSize: 13, background: '#F5F1E8', color: '#5F5E5A', padding: '6px 12px', borderRadius: 9999, fontWeight: 500, textAlign: 'center', fontFamily: 'var(--font-dm-sans)' }}>
                     Saved
                   </div>
                 )}
@@ -755,7 +755,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                 {state != 'pipeline' && (
                   <button
                     onClick={() => onAddToPipeline(grant)}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, borderRadius: 10, background: '#8ECB3C', color: '#173404', border: 'none', padding: '7px 14px', fontSize: 11, fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-dm-sans)', whiteSpace: 'nowrap' }}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, borderRadius: 10, background: '#8ECB3C', color: '#173404', border: 'none', padding: '9px 14px', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-dm-sans)', whiteSpace: 'nowrap' }}
                   >
                     + Add to pipeline
                   </button>
@@ -765,7 +765,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                 {state === 'neutral' && (
                   <button
                     onClick={() => onSave?.(grant.id)}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, borderRadius: 10, background: '#fff', color: '#2C2C2A', border: '0.5px solid rgba(0,0,0,0.14)', padding: '7px 14px', fontSize: 11, fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, borderRadius: 10, background: '#fff', color: '#2C2C2A', border: '0.5px solid rgba(0,0,0,0.14)', padding: '9px 14px', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
                   >
                     Save
                   </button>
@@ -774,7 +774,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                 {/* Visit site */}
                 {grant.applyUrl && (
                   <a href={grant.applyUrl} target="_blank" rel="noopener noreferrer"
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, borderRadius: 10, background: '#fff', color: '#2C2C2A', border: '0.5px solid rgba(0,0,0,0.14)', padding: '7px 14px', fontSize: 11, fontWeight: 500, fontFamily: 'var(--font-dm-sans)', textDecoration: 'none' }}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, borderRadius: 10, background: '#fff', color: '#2C2C2A', border: '0.5px solid rgba(0,0,0,0.14)', padding: '9px 14px', fontSize: 13, fontWeight: 500, fontFamily: 'var(--font-dm-sans)', textDecoration: 'none' }}
                   >
                     Visit site ↗
                   </a>
@@ -784,7 +784,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                 {state === 'saved' && (
                   <button
                     onClick={() => onUnsave?.(grant.id)}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 10, background: 'transparent', border: 'none', color: '#5F5E5A', padding: '7px 14px', fontSize: 11, fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 10, background: 'transparent', border: 'none', color: '#5F5E5A', padding: '9px 14px', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
                   >
                     Unsave
                   </button>
@@ -794,7 +794,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                 {state === 'pipeline' && (
                   <button
                     onClick={() => onRemoveFromPipeline?.(grant)}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 10, background: '#fff', color: '#993C1D', border: '0.5px solid rgba(0,0,0,0.14)', padding: '7px 14px', fontSize: 11, fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 10, background: '#fff', color: '#993C1D', border: '0.5px solid rgba(0,0,0,0.14)', padding: '9px 14px', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
                     onMouseEnter={e => { e.currentTarget.style.background = '#FAECE7' }}
                     onMouseLeave={e => { e.currentTarget.style.background = '#fff' }}
                   >
