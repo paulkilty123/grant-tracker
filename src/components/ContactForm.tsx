@@ -7,6 +7,9 @@ export default function ContactForm() {
   const [email,   setEmail]   = useState('')
   const [message, setMessage] = useState('')
   const [status,  setStatus]  = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  // Captured at submit time so the success message still shows the email
+  // after we clear the form inputs below.
+  const [sentTo,  setSentTo]  = useState('')
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -18,6 +21,7 @@ export default function ContactForm() {
         body: JSON.stringify({ name, email, message }),
       })
       if (!res.ok) throw new Error('Failed')
+      setSentTo(email)
       setStatus('sent')
       setName(''); setEmail(''); setMessage('')
     } catch {
@@ -30,7 +34,7 @@ export default function ContactForm() {
       <div className="border border-warm bg-sage/10 p-8 text-center">
         <div className="text-3xl mb-3">✓</div>
         <p className="font-serif text-lg font-bold text-forest mb-1">Message received</p>
-        <p className="text-sm text-mid">We&apos;ll get back to you at {email}.</p>
+        <p className="text-sm text-mid">We&apos;ll get back to you at {sentTo}.</p>
         <button onClick={() => setStatus('idle')} className="text-xs text-sage underline mt-4 block mx-auto">
           Send another message
         </button>
