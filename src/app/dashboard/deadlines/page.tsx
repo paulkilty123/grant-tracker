@@ -5,7 +5,7 @@ import { CalendarClock, CalendarCheck, ExternalLink, ArrowRight, Calendar, Calen
 import { createClient } from '@/lib/supabase/client'
 import { getDeadlineAlerts, formatDeadline, formatRange, PIPELINE_STAGES } from '@/lib/utils'
 import { updatePipelineStage, updatePipelineItem, createPipelineItem, deletePipelineItem } from '@/lib/pipeline'
-import { PipelineModal } from '@/app/dashboard/pipeline/page'
+import { PipelineModal } from '@/components/PipelineModal'
 import { recordInteraction } from '@/lib/interactions'
 import { usePlausible } from 'next-plausible'
 import { normaliseScrapedGrant, type EnrichedGrant } from '@/lib/grants-normalise'
