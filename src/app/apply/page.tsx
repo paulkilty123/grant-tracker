@@ -71,7 +71,7 @@ export default function ApplyPage() {
             What&apos;s <span style={{ color: '#8ECB3C' }}>there now.</span>
           </h2>
           <p style={{ fontSize: 16, color: '#5F5E5A', lineHeight: 1.65, marginBottom: 16 }}>
-            600+ live funding opportunities in the catalogue right now, growing each week as new ones come in and old ones expire. They include grants, programmes, social investment and in-kind support, covering UK foundations, government, lottery, and corporate funders.
+            550+ live funding opportunities in the catalogue right now, growing each week as new ones come in and old ones expire. They include grants, programmes, social investment and in-kind support, covering UK foundations, government, lottery, and corporate funders.
           </p>
           <p style={{ fontSize: 16, color: '#5F5E5A', lineHeight: 1.65, marginBottom: 16 }}>
             When you add your organisation profile, Grant Tracker matches you against the catalogue and scores each opportunity for fit. The matching engine checks eligibility against the things that actually disqualify you: legal structure, geography, organisation size. Ineligible opportunities are flagged so you don&apos;t waste time chasing them.
