@@ -281,6 +281,11 @@ interface DisplayGrant {
   eligibilityReason?: string | null
   positiveReasons?: string[]
   warnReasons?: string[]
+  /** Net sort boost from this user's prior feedback on this grant.
+   *  Positive = liked/thumbs-upped (ranks above its raw score).
+   *  Negative = disliked/thumbs-downed (ranks below).
+   *  Surfaced on the card so users can see why a lower-% grant ranks above a higher-% one. */
+  feedbackBoost?: number
 }
 
 // ── Score colour gradient ─────────────────────────────────────────────────────
@@ -385,7 +390,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
   isInPipeline?: boolean
   pipelineStage?: string
 }) {
-  const { grant, score, displayScore, reason, isAiScore, breakdown, eligibilityStatus, eligibilityReason, positiveReasons, warnReasons } = item
+  const { grant, score, displayScore, reason, isAiScore, breakdown, eligibilityStatus, eligibilityReason, positiveReasons, warnReasons, feedbackBoost } = item
   const [descExpanded, setDescExpanded] = useState(false)
   const [insightsExpanded, setInsightsExpanded] = useState(false)
   const [whyExpanded, setWhyExpanded] = useState(false)
@@ -860,6 +865,24 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                     <div style={{ height: '100%', background: tierHue.ring, borderRadius: 2, width: `${displayScore}%` }} />
                   </div>
                 </div>
+                {feedbackBoost && feedbackBoost !== 0 && (
+                  <span
+                    title={feedbackBoost > 0
+                      ? `Your previous thumbs-up promotes this match (+${feedbackBoost} in ranking). The displayed % is the raw match.`
+                      : `Your previous thumbs-down demotes this match (${feedbackBoost} in ranking). The displayed % is the raw match.`
+                    }
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 4,
+                      padding: '3px 8px', borderRadius: 999, flexShrink: 0,
+                      fontFamily: 'var(--font-space-grotesk)', fontSize: 11, fontWeight: 500,
+                      background: feedbackBoost > 0 ? '#EAF3DE' : '#FAECE7',
+                      color: feedbackBoost > 0 ? '#3B6D11' : '#993C1D',
+                      border: `0.5px solid ${feedbackBoost > 0 ? '#C0DD97' : '#F0997B'}`,
+                    }}
+                  >
+                    {feedbackBoost > 0 ? '↑ Boosted by your feedback' : '↓ Down-ranked by your feedback'}
+                  </span>
+                )}
                 {/* Chevron — rotates in place */}
                 <button
                   aria-expanded={isExpanded}
@@ -1882,13 +1905,14 @@ export default function SearchPage() {
         const grantInteractions = interactions.get(grant.id) ?? new Set()
         const displayScore = match.score
         let score = match.score
-        if (grantInteractions.has('liked'))    score = Math.min(100, score + LIKE_SCORE_BOOST)
-        if (grantInteractions.has('disliked')) score = Math.max(0,   score - DISLIKE_SCORE_PENALTY)
+        let feedbackBoost = 0
+        if (grantInteractions.has('liked'))    { score = Math.min(100, score + LIKE_SCORE_BOOST);     feedbackBoost += LIKE_SCORE_BOOST }
+        if (grantInteractions.has('disliked')) { score = Math.max(0,   score - DISLIKE_SCORE_PENALTY); feedbackBoost -= DISLIKE_SCORE_PENALTY }
         // Match-block feedback — higher weight, more deliberate signal
         const mfb = matchFeedbackMap.get(grant.id)
-        if (mfb?.direction === 'up')   score = Math.min(100, score + FB_UP_SCORE_BOOST)
-        if (mfb?.direction === 'down') score = Math.max(0,   score - FB_DOWN_SCORE_PENALTY)
-        return { grant, score, displayScore, reason: match.reason, isAiScore: false, breakdown: match.breakdown, eligibilityStatus: match.eligibilityStatus, eligibilityReason: match.eligibilityReason, positiveReasons: match.positiveReasons, warnReasons: match.warnReasons }
+        if (mfb?.direction === 'up')   { score = Math.min(100, score + FB_UP_SCORE_BOOST);     feedbackBoost += FB_UP_SCORE_BOOST }
+        if (mfb?.direction === 'down') { score = Math.max(0,   score - FB_DOWN_SCORE_PENALTY); feedbackBoost -= FB_DOWN_SCORE_PENALTY }
+        return { grant, score, displayScore, reason: match.reason, isAiScore: false, breakdown: match.breakdown, eligibilityStatus: match.eligibilityStatus, eligibilityReason: match.eligibilityReason, positiveReasons: match.positiveReasons, warnReasons: match.warnReasons, feedbackBoost }
       }
       return { grant, score: 0, displayScore: 0, reason: '', isAiScore: false }
     })
