@@ -1588,9 +1588,14 @@ export default function UrlAdminPage() {
   }
 
 
-  function populateFromBrief(grant: Grant) {
+  // Pure computation — returns the structured-field updates derivable from
+  // the grant's funder_brief (amount_min/max, deadline, is_rolling,
+  // next_open_date). Doesn't touch React state. Used by both the
+  // interactive populateFromBrief wrapper (stages drafts for review) and
+  // the bulk-enrich path (commits direct to DB without the staging dance).
+  function computeBriefUpdates(grant: Grant): Record<string, string | boolean | number | null> {
     const brief = grant.funder_brief as Record<string, string | null> | null
-    if (!brief) return
+    if (!brief) return {}
     // Source amount text from typical_award first, then fall back to
     // what_they_fund and the grant's own description / title — many briefs
     // generalise typical_award ("small grants, no fixed amount") even
@@ -1836,6 +1841,13 @@ export default function UrlAdminPage() {
         }
       }
     }
+    return updates
+  }
+
+  // Interactive wrapper — runs the brief computation and stages the result
+  // as draft edits in the review form. Used by the "Detect all" button.
+  function populateFromBrief(grant: Grant) {
+    const updates = computeBriefUpdates(grant)
     if (Object.keys(updates).length > 0) {
       setReviewEdits(s => ({ ...s, [grant.id]: { ...(s[grant.id] ?? {}), ...updates } }))
     }
@@ -2250,6 +2262,10 @@ export default function UrlAdminPage() {
         setGrants(prev => prev.map(patch))
         setRecentGrants(prev => prev.map(patch))
         setCategoryGrants(prev => prev.map(g => g.id === grant.id ? { ...g, funder_brief: json.brief } : g))
+        // Auto-fire Detect all so the structured fields (amounts, deadline,
+        // rolling, location, eligibility) populate as draft edits. User
+        // still clicks Save to commit — preserves the human review step.
+        detectAll({ ...grant, funder_brief: json.brief })
       } else {
         setReviewEnrichError(e => ({ ...e, [grant.id]: json.error ?? `Error ${res.status}` }))
       }
@@ -2325,6 +2341,45 @@ export default function UrlAdminPage() {
           setSuspiciousGrants(prev => prev.map(g => g.id === grant.id ? { ...g, funder_brief: brief } : g))
           setRecentGrants(prev => prev.map(patch))
           setCategoryGrants(prev => prev.map(g => g.id === grant.id ? { ...g, funder_brief: brief } : g))
+
+          // Auto-detect-and-save: derive structured fields from the new
+          // brief and commit them directly to the DB. Skips the staging
+          // step that the single-enrich flow uses, because bulk has no
+          // opportunity for human review per row. Best-effort — log
+          // failure but continue the loop.
+          const updatedGrant = { ...grant, funder_brief: brief } as Grant
+          const detected = computeBriefUpdates(updatedGrant)
+          if (Object.keys(detected).length > 0) {
+            const fields: Record<string, unknown> = {}
+            if (detected.amount_min   !== undefined) fields.amount_min   = detected.amount_min   || null
+            if (detected.amount_max   !== undefined) fields.amount_max   = detected.amount_max   || null
+            if (detected.deadline     !== undefined) fields.deadline     = detected.deadline     || null
+            if (detected.is_rolling   !== undefined) fields.is_rolling   = detected.is_rolling
+            if (detected.next_open_date !== undefined) {
+              const v = String(detected.next_open_date ?? '').trim() || null
+              fields.next_open_date        = v
+              fields.next_open_date_parsed = parseOpenDate(v)
+            }
+            try {
+              const detectRes = await fetch('/api/admin/update-grant', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: grant.id, fields }),
+              })
+              if (detectRes.ok) {
+                const mergeFields = (g: Grant) => g.id === grant.id ? { ...g, ...fields } as Grant : g
+                setGrants(prev => prev.map(mergeFields))
+                setReviewGrants(prev => prev.map(mergeFields))
+                setRecentGrants(prev => prev.map(mergeFields))
+                setBulkEnrichLog(prev => [...prev, `  ↳ detected: ${Object.keys(fields).join(', ')}`])
+              } else {
+                setBulkEnrichLog(prev => [...prev, `  ↳ detect-save failed: ${detectRes.status}`])
+              }
+            } catch {
+              setBulkEnrichLog(prev => [...prev, `  ↳ detect-save error`])
+            }
+          }
+
           setBulkEnrichLog(prev => [...prev, `✓ ${grant.funder ?? ''} — ${grant.title}`])
         } else {
           const body = await res.json().catch(() => ({}))
