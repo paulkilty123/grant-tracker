@@ -3,7 +3,7 @@
 // Returns SHA256 hashes + byte lengths of both the server-side ADMIN_SECRET
 // env var and the bearer token sent in the Authorization header. Never returns
 // the values themselves. Brute-forcing SHA256 of a 64-char secret is
-// computationally infeasible, so exposing the hash is safe — but DELETE this
+// computationally infeasible, so exposing the hash is safe. DELETE this
 // endpoint once the mismatch is identified.
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -13,6 +13,22 @@ export const dynamic = 'force-dynamic'
 
 function sha256(s: string): string {
   return createHash('sha256').update(s, 'utf8').digest('hex')
+}
+
+// charCode-based zero-width detection so the source file stays plain ASCII
+// (avoids git classifying the file as binary because of literal control chars
+// in the source).
+function hasZeroWidthOrBom(s: string): boolean {
+  for (let i = 0; i < s.length; i++) {
+    const c = s.charCodeAt(i)
+    if (
+      (c >= 0x200B && c <= 0x200F) ||  // ZWSP, ZWNJ, ZWJ, LRM, RLM
+      (c >= 0x202A && c <= 0x202E) ||  // bidi embedding markers
+      (c >= 0x2060 && c <= 0x2069) ||  // word-joiner, isolates
+       c === 0xFEFF                     // BOM
+    ) return true
+  }
+  return false
 }
 
 function invisibleChars(s: string): string[] {
@@ -25,11 +41,8 @@ function invisibleChars(s: string): string[] {
   if (s.endsWith(' ')) flags.push('trailing-space')
   if (s.startsWith('"') || s.endsWith('"')) flags.push('wrapped-in-double-quotes')
   if (s.startsWith("'") || s.endsWith("'")) flags.push('wrapped-in-single-quotes')
-  // Control chars 0x00-0x1F and 0x7F (DEL)
   if (/[\x00-\x1F\x7F]/.test(s)) flags.push('control-chars')
-  // Zero-width chars, BOM, RLM/LRM and related invisible spacing
-  if (/[​-‏‪-‮⁠-⁩﻿]/.test(s)) flags.push('zero-width-or-bom')
-  // Non-ASCII anything else (rare cause but worth surfacing)
+  if (hasZeroWidthOrBom(s)) flags.push('zero-width-or-bom')
   if (/[^\x20-\x7E]/.test(s)) flags.push('non-ascii')
   return flags.length === 0 ? ['clean'] : flags
 }
@@ -41,7 +54,7 @@ export async function GET(req: NextRequest) {
   const tokenAfterStrip = auth.replace('Bearer ', '').trim()
 
   return NextResponse.json({
-    note: 'Temporary auth-diag endpoint. Compare env vs token hashes — if equal, auth would pass on the main endpoint. DELETE this file after debugging.',
+    note: 'Temporary auth-diag endpoint. Compare env vs token hashes. If both_sha256_equal is true, auth would pass on the main endpoint. DELETE this file after debugging.',
     env: {
       ADMIN_SECRET_present: envSecret.length > 0,
       length_chars:         envSecret.length,
