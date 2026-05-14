@@ -585,7 +585,7 @@ export default function LandingPage() {
             </div>
             <div className="lg:pb-2">
               <p className="text-[#5F5E5A] text-base leading-relaxed max-w-sm">
-                Discover grants, programmes, investment and in-kind support, all suited to your setup and impact priorities.
+                Find better matches faster, build a stronger pipeline, and win more of what you apply for.
               </p>
             </div>
           </motion.div>
