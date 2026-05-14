@@ -227,7 +227,12 @@ export async function POST(req: NextRequest) {
     // array_length(impact_sectors) <= 1 OR array_length(target_beneficiaries) <= 1.
     // PostgREST doesn't expose array_length operators cleanly, and the dataset
     // is small enough (~600 active + 90 review) to filter client-side.
-    query = query.limit(1000)
+    // Exclude dead URLs and grants explicitly parked (saved_for_later) so we
+    // don't waste Claude tokens re-classifying rows that aren't surfaced.
+    query = query
+      .neq('url_status', 'dead')
+      .not('saved_for_later', 'is', true)
+      .limit(1000)
   } else if (force) {
     // Force mode: paginate through ALL grants using offset
     query = query.range(offset, offset + limit - 1)
