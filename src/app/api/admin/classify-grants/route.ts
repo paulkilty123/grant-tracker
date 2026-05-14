@@ -207,9 +207,11 @@ export async function POST(req: NextRequest) {
   }
 
   // ── Fetch batch ──────────────────────────────────────────────────────────────
+  // target_beneficiaries is read by the shallow_only post-filter; including
+  // it here so the filter can correctly evaluate ≤1 on both arrays.
   let query = supabase
     .from('scraped_grants')
-    .select('id, title, funder, description, impact_sectors, funder_brief')
+    .select('id, title, funder, description, impact_sectors, target_beneficiaries, funder_brief')
     .order('id')
 
   // Active filter: ON unless include_review explicitly requests is_active=false rows
