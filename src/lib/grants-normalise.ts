@@ -66,12 +66,16 @@ export function normaliseScrapedGrant(row: Record<string, unknown>): EnrichedGra
     isMultiRound:         (() => {
       const tl = String(((row.funder_brief as Record<string, unknown> | null)?.decision_timeline ?? '')).toLowerCase()
       if (!tl) return false
-      if (/\b(?:two|three|four|five|six|2|3|4|5|6)\s+(?:application\s+)?(?:rounds?|windows?|deadlines?|cycles?|cohorts?|intakes?)\b/i.test(tl)) return true
+      if (/\b(?:two|three|four|five|six|2|3|4|5|6)\s+(?:application\s+)?(?:rounds?|windows?|deadlines?|cycles?|cohorts?|intakes?|board\s+meetings?)\b/i.test(tl)) return true
       if (/\bmultiple\s+(?:application\s+)?(?:rounds?|windows?|deadlines?|cycles?)\b/i.test(tl)) return true
       if (/\b(?:bi[-\s]?annual|biannual|quarterly|monthly)\s+(?:rounds?|deadlines?|cycles?|application|funding)\b/i.test(tl)) return true
       if (/\bround\s+\d+\s+of\s+\d+\b/i.test(tl)) return true
       if (/\bround\s+\d+\b[\s\S]*?\bround\s+\d+\b/i.test(tl)) return true
       if (/\b(?:two|three|four)\s+(?:funding|application|grant)\s+rounds?\s+(?:per|each|a)\s+year\b/i.test(tl)) return true
+      // Board-meeting schedules with multi-month lists, e.g. "Board meetings
+      // in December, March, and June" — a common phrasing for trusts that
+      // batch decisions across a fixed annual calendar.
+      if (/\bboard\s+meetings?\s+(?:in|each|move\s+to)\s+(?:january|february|march|april|may|june|july|august|september|october|november|december)/i.test(tl)) return true
       return false
     })(),
     fundingType:          (row.funding_type ? String(row.funding_type) : 'grant') as FundingType,
