@@ -259,13 +259,24 @@ export async function POST(req: NextRequest) {
 
   let classified = 0
   let failed = 0
+  let budgetExceeded = false
 
-  // Chunk into sub-batches sized at `limit` (default 20). Haiku's 4096-token
-  // output cap means we can't safely classify more than ~25 grants in a single
-  // call. For grant_ids runs of hundreds of IDs, this loops internally so the
-  // caller only needs to send one request.
-  const CHUNK_SIZE = Math.max(1, Math.min(limit, 25))
+  // Time budget: return gracefully before Vercel kills the function at 300s.
+  // The new (longer) classifier prompt pushes each chunk to ~20-30s — fewer
+  // chunks fit per invocation than the old prompt allowed. Stop accepting
+  // new chunks at 240s so the response body actually gets sent.
+  const startedAt = Date.now()
+  const TIME_BUDGET_MS = 240_000
+
+  // Chunk into sub-batches sized at `limit` (default 20). Smaller chunks mean
+  // faster individual Claude calls and finer-grained progress under the time
+  // budget. Cap at 15 since the new prompt is expensive per row.
+  const CHUNK_SIZE = Math.max(1, Math.min(limit, 15))
   for (let i = 0; i < grants.length; i += CHUNK_SIZE) {
+    if (Date.now() - startedAt > TIME_BUDGET_MS) {
+      budgetExceeded = true
+      break
+    }
     const chunk = grants.slice(i, i + CHUNK_SIZE)
     if (chunk.length === 0) break
     try {
@@ -320,8 +331,10 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // done when we got fewer rows than requested (last page)
-  const done = grantsRaw.length < limit
+  // done when we got fewer rows than requested (last page) AND didn't bail
+  // early on the time budget — if we bailed, the caller should re-run to
+  // pick up the remaining shallow rows.
+  const done = !budgetExceeded && grantsRaw.length < limit
 
   return NextResponse.json({
     classified,
@@ -330,5 +343,8 @@ export async function POST(req: NextRequest) {
     total:   force ? grantsRaw.length : totalRemaining,
     done,
     nextOffset: force ? offset + grantsRaw.length : 0,  // normal mode doesn't use offset
+    budget_exceeded: budgetExceeded,
+    in_scope:        grants.length,
+    elapsed_ms:      Date.now() - startedAt,
   })
 }
