@@ -130,6 +130,10 @@ export async function GET(req: NextRequest) {
 //   include_review?: boolean  — when true, also pulls is_active=false rows in
 //                               the Needs Review queue. Default false (existing
 //                               behaviour: active-only).
+//   shallow_only?: boolean    — server-side selector: re-classifies grants
+//                               with <=1 impact_sector OR <=1 target_beneficiary.
+//                               Skips the ID-list paste entirely. Combine with
+//                               include_review for the full back-catalogue pass.
 export async function POST(req: NextRequest) {
   if (!await isAuthorised(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -141,6 +145,7 @@ export async function POST(req: NextRequest) {
     loop?: boolean;
     grant_ids?: string[];        // Explicit ID list — re-classifies these regardless of current tag state
     include_review?: boolean;    // When using grant_ids OR force, also pull is_active=false rows in Needs Review queue
+    shallow_only?: boolean;      // Server-side filter for shallow-tagged grants — see above
   }
   const offset       = body.offset ?? 0
   const limit        = body.limit  ?? 20  // 20 grants = 1 Claude call
@@ -148,6 +153,7 @@ export async function POST(req: NextRequest) {
   const loop         = body.loop   ?? false
   const grantIds     = Array.isArray(body.grant_ids) ? body.grant_ids.filter(s => typeof s === 'string') : []
   const includeReview = body.include_review ?? false
+  const shallowOnly   = body.shallow_only ?? false
 
   const supabase = getAdminClient()
 
@@ -216,6 +222,12 @@ export async function POST(req: NextRequest) {
     // Explicit ID mode: re-classify exactly this list (e.g. the 6-grant test
     // batch, or a targeted re-run on a known-shallow subset).
     query = query.in('id', grantIds)
+  } else if (shallowOnly) {
+    // Shallow-only mode: fetch all in-scope rows; we post-filter in JS for
+    // array_length(impact_sectors) <= 1 OR array_length(target_beneficiaries) <= 1.
+    // PostgREST doesn't expose array_length operators cleanly, and the dataset
+    // is small enough (~600 active + 90 review) to filter client-side.
+    query = query.limit(1000)
   } else if (force) {
     // Force mode: paginate through ALL grants using offset
     query = query.range(offset, offset + limit - 1)
@@ -235,7 +247,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ classified: 0, failed: 0, total: 0, done: true, nextOffset: offset })
   }
 
-  const grants = grantsRaw
+  // Post-filter for shallow_only mode (PostgREST can't express array_length).
+  // A grant is "shallow" if either sectors or beneficiaries has <=1 entry.
+  const grants = shallowOnly
+    ? grantsRaw.filter((g: Record<string, unknown>) => {
+        const s = Array.isArray(g.impact_sectors)       ? g.impact_sectors.length       : 0
+        const b = Array.isArray(g.target_beneficiaries) ? g.target_beneficiaries.length : 0
+        return s <= 1 || b <= 1
+      })
+    : grantsRaw
 
   let classified = 0
   let failed = 0
