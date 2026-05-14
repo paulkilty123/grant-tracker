@@ -162,7 +162,67 @@ Write a structured "funder brief" as JSON. Rules:
 - If information is not explicitly stated, make a reasonable inference from context (e.g. if a funder supports "charities and community groups", infer the likely structures). Do not explain the inference — just state the conclusion naturally
 - If a field is genuinely impossible to infer, use null — do not write placeholder text explaining what is unknown
 - Avoid phrases like "not specified", "unclear from", "the source does not", "information not available"
-- The three location fields (geographic_focus, location_tag, is_local) MUST be internally consistent. If geographic_focus says "Somerset only", location_tag must be "Somerset" and is_local must be true. If geographic_focus says "UK-wide", location_tag must be "UK" and is_local must be false.
+- The three location fields (geographic_focus, location_tag, is_local) MUST be internally consistent — see the LOCATION FIELDS section below.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+LOCATION FIELDS — derive carefully
+
+Workflow: write \`geographic_focus\` first based on the source content,
+then DERIVE \`location_tag\` and \`is_local\` from what you just wrote.
+Never leave \`location_tag\` null when \`geographic_focus\` is populated —
+those two fields must always agree.
+
+DERIVATION TABLE — find your geographic_focus pattern in the left column,
+copy the location_tag / is_local from the right.
+
+| geographic_focus says…                                  | location_tag         | is_local |
+|---------------------------------------------------------|----------------------|----------|
+| "UK-wide" / "across the UK" / "United Kingdom only"     | UK                   | false    |
+| "England only" / "England-wide"                         | England              | false    |
+| "Scotland only" / "Scotland-wide"                       | Scotland             | false    |
+| "Wales only" / "Wales-wide"                             | Wales                | false    |
+| "Northern Ireland only"                                 | Northern Ireland     | false    |
+| "Somerset only" / "Kent only" (any single county)       | Somerset / Kent      | true     |
+| "Greater Manchester (all ten boroughs)"                 | Greater Manchester   | true     |
+| "Tyne & Wear and Northumberland"                        | Tyne & Wear and Northumberland | true |
+| "South Yorkshire region only" (cities listed)           | South Yorkshire      | true     |
+| "Nine London boroughs: Barnet, Brent…" (multiple)       | London               | true     |
+| "London Borough of Bromley and adjacent boroughs"       | Bromley              | true     |
+| "Parish of Newbottle, Sunderland only"                  | Sunderland           | true     |
+
+CRITICAL DISTINCTION — preference vs restriction:
+
+A "preference for" or "examples in" a region is NOT a restriction.
+- "UK-wide, with a strong preference for the Midlands" → location_tag: UK, is_local: false
+- "UK-wide, with offices in Bath, Brighton, Bristol" → location_tag: UK, is_local: false
+- "UK-wide, but Sussex-based organisations preferred" → location_tag: UK, is_local: false
+
+A specific catchment IS a restriction.
+- "Sussex only" → location_tag: Sussex, is_local: true
+- "limited to Surrey" → location_tag: Surrey, is_local: true
+- "Bromley and adjacent boroughs" → location_tag: Bromley, is_local: true
+
+MULTI-AREA RULES:
+
+- Multiple London boroughs: tag as "London" (not "South London" / "East London")
+  unless the brief uses that exact compound label.
+- Multiple counties under an umbrella region (Yorkshire, Tyne & Wear): use
+  the umbrella name.
+- Don't tag the funder's HEAD OFFICE location — tag where APPLICANTS can be based.
+
+COMMON ERRORS TO AVOID:
+
+- Writing a regional geographic_focus but leaving location_tag null or "UK".
+  This silently breaks the matching engine.
+- Tagging UK-wide funders as regional just because they have a head office
+  somewhere ("UK-wide, based in Cambridge" → tag "UK", NOT "Cambridge").
+- Tagging at organisation level instead of grant level.
+
+FINAL CHECK before returning the JSON:
+Re-read your \`geographic_focus\` value. Run it through the derivation table.
+Does \`location_tag\` match? Does \`is_local\` match? If not, fix them now.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Return ONLY valid JSON in this exact shape:
 {
