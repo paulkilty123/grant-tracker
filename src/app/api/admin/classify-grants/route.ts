@@ -240,11 +240,18 @@ export async function POST(req: NextRequest) {
   let classified = 0
   let failed = 0
 
-  if (grants.length > 0) {
+  // Chunk into sub-batches sized at `limit` (default 20). Haiku's 4096-token
+  // output cap means we can't safely classify more than ~25 grants in a single
+  // call. For grant_ids runs of hundreds of IDs, this loops internally so the
+  // caller only needs to send one request.
+  const CHUNK_SIZE = Math.max(1, Math.min(limit, 25))
+  for (let i = 0; i < grants.length; i += CHUNK_SIZE) {
+    const chunk = grants.slice(i, i + CHUNK_SIZE)
+    if (chunk.length === 0) break
     try {
       // Derive optional what_they_fund + priorities from funder_brief so the
       // classifier can use the curated brief content as primary signal.
-      const enrichedBatch = grants.map((g: Record<string, unknown>) => {
+      const enrichedBatch = chunk.map((g: Record<string, unknown>) => {
         const fb = g.funder_brief as Record<string, unknown> | null
         return {
           ...g,
@@ -261,7 +268,7 @@ export async function POST(req: NextRequest) {
       }
 
       // Write to Supabase in parallel
-      const updates = grants
+      const updates = chunk
         .filter(g => byId[g.id])
         .map(g => {
           const r = byId[g.id]
@@ -284,12 +291,12 @@ export async function POST(req: NextRequest) {
 
       const updateResults = await Promise.all(updates)
       const writeErrors   = updateResults.filter(r => r.error)
-      classified += grants.length - writeErrors.length
+      classified += chunk.length - writeErrors.length
       failed     += writeErrors.length
 
     } catch (err) {
-      console.error('[classify-grants] Batch failed:', err)
-      failed += grants.length
+      console.error('[classify-grants] Chunk failed:', err)
+      failed += chunk.length
     }
   }
 
