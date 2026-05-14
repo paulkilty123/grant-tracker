@@ -1564,6 +1564,12 @@ export default function UrlAdminPage() {
         setSuspiciousGrants(prev => prev.map(g => g.id === grant.id ? { ...g, funder_brief: brief } : g))
         setRecentGrants(prev => prev.map(patch))
         setCategoryGrants(prev => prev.map(g => g.id === grant.id ? { ...g, funder_brief: brief } : g))
+        // Auto-fire Detect all so structured fields (amounts, deadline,
+        // rolling, location, eligibility) populate as draft edits. User
+        // still clicks Save to commit. Mirrors the same call in
+        // enrichGrantFromManagerWithSources — both single-enrich entry
+        // points now behave the same way.
+        detectAll({ ...grant, funder_brief: brief })
       } else {
         // Surface the API error so we don't silently fail with no feedback —
         // most common cause is the funder URL being unfetchable + no
