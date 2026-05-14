@@ -24,7 +24,7 @@ import { classifyBatch, validate, type GrantInput } from '@/lib/classify'
 async function classifyOnce(supabase: SupabaseClient<any>, limit: number): Promise<{ classified: number; failed: number; done: boolean }> {
   const { data: grantsRaw, error } = await supabase
     .from('scraped_grants')
-    .select('id, title, funder, description, impact_sectors')
+    .select('id, title, funder, description, impact_sectors, funder_brief')
     .eq('is_active', true)
     .or('impact_sectors.is.null,impact_sectors.eq.{}')
     .order('id')
@@ -37,7 +37,15 @@ async function classifyOnce(supabase: SupabaseClient<any>, limit: number): Promi
   let classified = 0
   let failed     = 0
   try {
-    const results = await classifyBatch(grantsRaw as GrantInput[])
+    const enrichedBatch = grantsRaw.map((g: Record<string, unknown>) => {
+      const fb = g.funder_brief as Record<string, unknown> | null
+      return {
+        ...g,
+        what_they_fund: typeof fb?.what_they_fund === 'string' ? fb.what_they_fund : undefined,
+        priorities:     typeof fb?.priorities     === 'string' ? fb.priorities     : undefined,
+      }
+    })
+    const results = await classifyBatch(enrichedBatch as GrantInput[])
     const byId: Record<string, ReturnType<typeof validate>> = {}
     for (const r of results) {
       if (r?.id) byId[r.id] = validate(r)
@@ -114,21 +122,39 @@ export async function GET(req: NextRequest) {
 }
 
 // ── POST — classify a batch of grants ─────────────────────────────────────────
-// Body: { offset?: number; limit?: number; force?: boolean; loop?: boolean }
+// Body options:
+//   offset?, limit?, force?, loop?, nicheOnly?  — existing flags
+//   grant_ids?: string[]      — explicit ID list (overrides force/normal mode);
+//                               classifies exactly these IDs regardless of
+//                               current tag state. Used for targeted re-runs.
+//   include_review?: boolean  — when true, also pulls is_active=false rows in
+//                               the Needs Review queue. Default false (existing
+//                               behaviour: active-only).
 export async function POST(req: NextRequest) {
   if (!await isAuthorised(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const body = await req.json().catch(() => ({})) as { offset?: number; limit?: number; force?: boolean; nicheOnly?: boolean; loop?: boolean }
-  const offset = body.offset ?? 0
-  const limit  = body.limit  ?? 20  // 20 grants = 1 Claude call
-  const force  = body.force  ?? false
-  const loop   = body.loop   ?? false
+  const body = await req.json().catch(() => ({})) as {
+    offset?: number;
+    limit?: number;
+    force?: boolean;
+    nicheOnly?: boolean;
+    loop?: boolean;
+    grant_ids?: string[];        // Explicit ID list — re-classifies these regardless of current tag state
+    include_review?: boolean;    // When using grant_ids OR force, also pull is_active=false rows in Needs Review queue
+  }
+  const offset       = body.offset ?? 0
+  const limit        = body.limit  ?? 20  // 20 grants = 1 Claude call
+  const force        = body.force  ?? false
+  const loop         = body.loop   ?? false
+  const grantIds     = Array.isArray(body.grant_ids) ? body.grant_ids.filter(s => typeof s === 'string') : []
+  const includeReview = body.include_review ?? false
 
   const supabase = getAdminClient()
 
   // Loop mode — run batches until done or close to maxDuration. Used to clear
   // a backlog in one request rather than 8 sequential POSTs.
-  if (loop && !force && !body.nicheOnly) {
+  // Skipped when grant_ids is set (explicit ID lists are always single-batch).
+  if (loop && !force && !body.nicheOnly && grantIds.length === 0) {
     const startedAt = Date.now()
     const SOFT_TIMEOUT_MS = 270_000  // 270s — leaves headroom under maxDuration=300
     let totalClassified = 0
@@ -177,11 +203,20 @@ export async function POST(req: NextRequest) {
   // ── Fetch batch ──────────────────────────────────────────────────────────────
   let query = supabase
     .from('scraped_grants')
-    .select('id, title, funder, description, impact_sectors')
-    .eq('is_active', true)
+    .select('id, title, funder, description, impact_sectors, funder_brief')
     .order('id')
 
-  if (force) {
+  // Active filter: ON unless include_review explicitly requests is_active=false rows
+  // (used when re-classifying the Needs Review queue in the same run).
+  if (!includeReview) {
+    query = query.eq('is_active', true)
+  }
+
+  if (grantIds.length > 0) {
+    // Explicit ID mode: re-classify exactly this list (e.g. the 6-grant test
+    // batch, or a targeted re-run on a known-shallow subset).
+    query = query.in('id', grantIds)
+  } else if (force) {
     // Force mode: paginate through ALL grants using offset
     query = query.range(offset, offset + limit - 1)
   } else if (body.nicheOnly) {
@@ -207,7 +242,17 @@ export async function POST(req: NextRequest) {
 
   if (grants.length > 0) {
     try {
-      const results = await classifyBatch(grants as GrantInput[])
+      // Derive optional what_they_fund + priorities from funder_brief so the
+      // classifier can use the curated brief content as primary signal.
+      const enrichedBatch = grants.map((g: Record<string, unknown>) => {
+        const fb = g.funder_brief as Record<string, unknown> | null
+        return {
+          ...g,
+          what_they_fund: typeof fb?.what_they_fund === 'string' ? fb.what_they_fund : undefined,
+          priorities:     typeof fb?.priorities     === 'string' ? fb.priorities     : undefined,
+        }
+      })
+      const results = await classifyBatch(enrichedBatch as GrantInput[])
 
       // Map id → validated classification
       const byId: Record<string, ReturnType<typeof validate>> = {}

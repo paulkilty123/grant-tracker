@@ -38,6 +38,12 @@ export interface GrantInput {
   title: string
   funder: string
   description: string
+  // Optional enriched fields — pass when available. Higher signal than the
+  // raw scraped description for sector breadth, since the brief is curated.
+  // The classifier prompt instructs the model to prefer these when present
+  // and to fall back to description-only when both are missing.
+  what_they_fund?: string
+  priorities?: string
 }
 
 export interface ClassificationResult {
@@ -52,11 +58,19 @@ export interface ClassificationResult {
 // ── Claude Haiku classification ────────────────────────────────────────────────
 export async function classifyBatch(grants: GrantInput[]): Promise<ClassificationResult[]> {
   const apiKey = process.env.ANTHROPIC_API_KEY!
+  // Input shape: title + funder + description are always present. When the
+  // grant has been enriched, what_they_fund + priorities carry curated
+  // multi-sector signal that the raw description usually doesn't (active
+  // catalogue descriptions average 251 chars; briefs are 500-1500+).
   const inputData = grants.map(g => ({
     id: g.id,
     title: g.title ?? '',
     funder: g.funder ?? '',
-    description: (g.description ?? '').slice(0, 500),
+    description: (g.description ?? '').slice(0, 1500),
+    ...(g.what_they_fund && g.what_they_fund.trim().length > 0
+      ? { what_they_fund: g.what_they_fund.trim().slice(0, 2000) } : {}),
+    ...(g.priorities && g.priorities.trim().length > 0
+      ? { priorities: g.priorities.trim().slice(0, 2000) } : {}),
   }))
 
   const prompt = `You are classifying UK funding opportunities for a grant database.
@@ -67,17 +81,77 @@ OUTPUT FORMAT — return ONLY a JSON array, no markdown, no explanation:
 [
   {
     "id": "<copy id field exactly>",
-    "impact_sectors": ["<1 to 4 sector values>"],
+    "impact_sectors": ["<2 to 4 sector values, OR 1 if genuinely single-purpose>"],
     "funding_type": "<exactly one funding type value>",
     "eligible_structures": ["<legal structure values, or empty array []>"],
-    "target_beneficiaries": ["<1 to 4 beneficiary group values>"],
+    "target_beneficiaries": ["<2 to 4 beneficiary group values, OR 1 if genuinely single-audience>"],
     "niche_tags": ["<0 to 4 sub-sector specialism tags, or empty array []>"]
   }
 ]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-IMPACT SECTOR TAXONOMY — choose 1 to 4 that best describe this grant.
-Use the most specific sector available — do NOT default to 'health' when 'mental_health' or 'disability' is more accurate.
+TAGGING DEPTH — CRITICAL
+
+Most UK funders operate across multiple sectors and serve multiple beneficiary
+groups. The default expectation is 2 to 4 sector tags and 2 to 4 beneficiary
+tags per grant. Return only 1 tag when the grant is genuinely single-purpose.
+
+When in doubt, INCLUDE the sector or beneficiary rather than omit it.
+Downstream matching is sensitive to depth, not just precision: a grant tagged
+with 4 accurate sectors matches multi-sector organisations correctly; a grant
+tagged with only 1 sector misses many obvious-fit organisations.
+
+GENUINELY SINGLE-PURPOSE — return 1 tag only when one of these applies:
+- A sport-only grant (e.g. "Sport England — Active Together" → ["sport"])
+- A heritage-only grant (e.g. "Historic England — Repair Grants" → ["heritage"])
+- A grant explicitly scoped to a single beneficiary group AND a single sector
+  (e.g. "Veterans Mental Health Trust — Counselling Bursary"
+   → impact_sectors ["mental_health"] + target_beneficiaries ["veterans"])
+
+If the grant fits any of those patterns, single-sector is correct.
+Otherwise — and this is the common case — default to 2 to 4 tags.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FUNDER-NAME BIAS WARNING — READ BEFORE TAGGING
+
+A funder's name often contains a sector word that is NOT a complete description
+of what they fund. Treat the funder name as one signal among many; rely on
+what_they_fund and priorities for actual scope.
+
+PATTERNS THAT TYPICALLY UNDER-TAG IF YOU RELY ON FUNDER NAME ALONE:
+
+- "Community Foundation" / "Community Trust" (Heart of England CF, Quartet CF,
+  City Bridge Trust, Northern Ireland CF): fund across many sectors —
+  community, education, mental_health, employment, environment, etc. — not
+  just \`community\`. Multi-sector by design.
+
+- "Family Trust" / "Family Foundation" / "Family Charitable" (Sainsbury Family,
+  Garfield Weston, Kelly Family): usually multi-sector — arts, education,
+  environment, social welfare. Don't tag only \`families\` as beneficiary either.
+
+- "Arts Foundation" / "Music Trust" / "Theatre Trust" (Rayne, similar):
+  often fund creative + young_people + community + education combined. The
+  "arts" name does not make the grant scope arts-only.
+
+- "Children's Trust" / "Childhood Foundation": usually fund education +
+  young_people + community + mental_health. Not just \`young_people\`.
+
+PATTERNS WHERE FUNDER NAME IS USUALLY CORRECT (single-tag often appropriate):
+
+- "Sport England" / "Football Foundation" / dedicated sport bodies:
+  \`["sport"]\` is genuinely the scope.
+- "Historic England" / "Heritage Lottery Fund": \`["heritage"]\` is the scope.
+- Single-cause campaigns: still check the brief for breadth before committing.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+IMPACT SECTOR TAXONOMY — assign every sector that applies to this grant.
+
+Specificity rule: when more than one sector in the same family is relevant,
+prefer the more specific. For health: tag \`mental_health\` and/or \`disability\`
+when applicable, optionally with \`health\` as a secondary. For arts: prefer
+\`creative\`. This applies WITHIN a sector family — it does NOT mean reducing
+the overall count of sectors. A grant can be tagged
+\`creative, mental_health, young_people\` simultaneously when all three apply.
 
 young_people   children, young people, youth, under-25s, schools, families, early years
 community      community development, civic engagement, volunteering, neighbourhoods, local groups
@@ -193,7 +267,11 @@ digital_literacy    digital skills, online inclusion, basic digital, internet ac
 Return ONLY tags from the lists above, exactly as written. Return [] if none apply clearly.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-TARGET BENEFICIARIES — who does this grant primarily serve? Choose 1 to 4.
+TARGET BENEFICIARIES — who does this grant primarily serve?
+DEFAULT: 2 to 4 groups (most funders serve multiple demographics). Single
+group is correct ONLY if the grant is genuinely targeting one demographic
+(e.g. a veterans-only mental health fund, a women-only enterprise fund).
+
 Use "general_public" ONLY if the grant genuinely has no specific beneficiary focus.
 
 children            children under 16, early years, nursery, primary school
@@ -216,8 +294,77 @@ rural_communities   rural communities, isolated communities, village halls
 general_public      no specific group — open to all / general community benefit
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+WORKED EXAMPLES
+
+Example 1 — Community foundation (multi-sector):
+  Funder: Heart of England Community Foundation
+  Title:  General Grants
+  what_they_fund: "Local charities and community groups across Birmingham,
+                  Coventry, and Warwickshire working in education, health,
+                  mental wellbeing, employment, environment and community
+                  development. Annual grants up to £10k."
+  priorities:     "Disadvantaged communities; education and skills; mental
+                  wellbeing for young people; environmental projects."
+  CORRECT:
+    impact_sectors:       ["community", "education", "health", "mental_health"]
+    target_beneficiaries: ["children", "young_people", "people_in_poverty", "general_public"]
+  COMMON ERROR: tagging only ["community"] from the funder name.
+
+Example 2 — Family trust (multi-sector):
+  Funder: Sainsbury Family Charitable Trusts
+  what_they_fund: "Arts and heritage, the environment, education, science and
+                  learning, and social change."
+  CORRECT:
+    impact_sectors:       ["creative", "environment", "education", "heritage"]
+    target_beneficiaries: ["children", "families", "general_public"]
+  COMMON ERROR: tagging only ["creative"] or only ["families"].
+
+Example 3 — Arts foundation (multi-sector — counters "Arts" name bias):
+  Funder: Rayne Foundation
+  what_they_fund: "Independent grant-making trust funding arts, mental health,
+                  education and social welfare projects across the UK."
+  priorities:     "Vulnerable and disadvantaged people; supporting practice and
+                  research in the arts; mental wellbeing of young people."
+  CORRECT:
+    impact_sectors:       ["creative", "mental_health", "education", "community"]
+    target_beneficiaries: ["children", "young_people", "mental_health", "people_in_poverty"]
+  COMMON ERROR: tagging only ["creative"] from "Arts Foundation" in the name.
+
+Example 4 — Genuinely single-purpose (single sector IS correct):
+  Funder: Sport England
+  Title:  Active Together Grant
+  what_they_fund: "Grassroots sport projects across England."
+  priorities:     "Physical activity participation, particularly among
+                  under-represented groups."
+  CORRECT:
+    impact_sectors:       ["sport"]
+    target_beneficiaries: ["young_people", "general_public"]
+  NOTE: Sport is genuinely the scope. Don't over-correct by adding sectors that
+  aren't in the brief. Single sector + multi-beneficiary is the right shape.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 GRANTS TO CLASSIFY:
 ${JSON.stringify(inputData, null, 2)}
+
+Each grant in the input may have:
+- title, funder, description (always present; description may be short or sparse)
+- what_they_fund, priorities (when available, from a curated funder brief —
+  prefer these as the PRIMARY source of truth for sector breadth)
+
+If what_they_fund and priorities are both absent, fall back to title +
+description alone — degraded signal but still classify. Don't refuse.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FINAL CHECK BEFORE RETURNING:
+
+Count the sectors you've tagged on each grant.
+- If you tagged only 1, ask whether the grant is genuinely single-purpose
+  (like Sport England) or whether you missed adjacent sectors that the brief
+  mentions. Re-read what_they_fund and priorities for second-order sectors.
+- If you tagged 4, ask whether all four are genuinely relevant or whether
+  you've stretched the scope.
+
+Same check for beneficiaries — most grants serve 2+ groups.
 
 Return ONLY the JSON array. No markdown fences. No other text.`
 
@@ -292,7 +439,7 @@ export async function classifyUnclassified(
   // mostly already-classified. Catches both NULL and empty-array {} cases.
   const { data: grantsRaw, error } = await supabase
     .from('scraped_grants')
-    .select('id, title, funder, description, impact_sectors')
+    .select('id, title, funder, description, impact_sectors, funder_brief')
     .eq('is_active', true)
     .or('impact_sectors.is.null,impact_sectors.eq.{}')
     .order('first_seen_at', { ascending: false })
@@ -311,7 +458,18 @@ export async function classifyUnclassified(
   for (let i = 0; i < unclassified.length; i += BATCH_SIZE) {
     const batch = unclassified.slice(i, i + BATCH_SIZE)
     try {
-      const results = await classifyBatch(batch as GrantInput[])
+      // Derive optional enriched fields from funder_brief before classifying.
+      // Improves multi-sector signal for enriched grants; falls back to
+      // description-only when brief is absent.
+      const enrichedBatch = batch.map(g => {
+        const fb = g.funder_brief as Record<string, unknown> | null
+        return {
+          ...g,
+          what_they_fund: typeof fb?.what_they_fund === 'string' ? fb.what_they_fund : undefined,
+          priorities:     typeof fb?.priorities     === 'string' ? fb.priorities     : undefined,
+        }
+      })
+      const results = await classifyBatch(enrichedBatch as GrantInput[])
       const byId: Record<string, ReturnType<typeof validate>> = {}
       for (const r of results) {
         if (r?.id) byId[r.id] = validate(r)
