@@ -266,7 +266,7 @@ const LONDON_BOROUGHS = [
  * in ~16% of the catalogue).
  */
 function classifyLocationTag(tag: string | null | undefined): {
-  kind: 'national' | 'england' | 'scotland' | 'wales' | 'ni' | 'regional' | 'unknown'
+  kind: 'national' | 'england' | 'scotland' | 'wales' | 'ni' | 'regional' | 'multi' | 'unknown'
   label: string
 } {
   if (!tag) return { kind: 'unknown', label: '' }
@@ -279,6 +279,10 @@ function classifyLocationTag(tag: string | null | undefined): {
   if (t === 'wales')                                           return { kind: 'wales',    label: 'Wales' }
   if (t === 'northern ireland' || t === 'ni')                  return { kind: 'ni',       label: 'Northern Ireland' }
   if (t === 'international')                                   return { kind: 'national', label: 'International' }
+  // Sentinel for grants that fund a set of specific, non-contiguous areas
+  // (utility networks, infrastructure corridors, pre-set delivery areas).
+  // No single region tag is correct — neither penalise nor over-reward.
+  if (t === 'selected areas' || t === 'multiple areas')        return { kind: 'multi',     label: 'Selected areas' }
   return { kind: 'regional', label: tag.trim() }
 }
 
@@ -533,6 +537,12 @@ export function computeMatchScore(
     if (tagClass.kind === 'national') {
       // UK-wide grant — open to all, give a modest positive signal
       locationScore = 12
+    } else if (tagClass.kind === 'multi') {
+      // Grant funds a set of specific, non-contiguous areas — no single
+      // region tag applies. Stay neutral: don't penalise (no mismatch cap)
+      // and don't over-reward. Prompt the user to verify eligibility.
+      locationScore = 10
+      reasons.push('Funds specific areas — check eligibility in Grant insights')
     } else if (tagClass.kind === 'england' || tagClass.kind === 'scotland' ||
                tagClass.kind === 'wales'   || tagClass.kind === 'ni') {
       // Nation-restricted grant. Match against the org's inferred country.
