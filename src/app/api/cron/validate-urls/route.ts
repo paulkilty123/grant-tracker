@@ -9,7 +9,11 @@ import { checkUrl, deepCheckUrl } from '@/lib/url-validator'
 import { SEED_GRANTS } from '@/lib/grants'
 
 export const dynamic    = 'force-dynamic'
-export const maxDuration = 60
+export const maxDuration = 300
+
+// Stop launching new batches past this point so the function returns a clean
+// summary instead of being killed mid-write by the platform timeout.
+const TIME_BUDGET_MS = 270_000
 
 function getAdminClient() {
   return createClient(
@@ -18,18 +22,25 @@ function getAdminClient() {
   )
 }
 
+// Processes items in parallel batches. When `deadline` is supplied, stops
+// launching new batches once the wall-clock deadline passes — leaving the
+// remaining items unprocessed (count returned via `skipped`).
 async function inBatches<T, R>(
   items: T[],
   size: number,
-  fn: (item: T) => Promise<R>
-): Promise<R[]> {
+  fn: (item: T) => Promise<R>,
+  deadline?: number,
+): Promise<{ results: R[]; skipped: number }> {
   const results: R[] = []
   for (let i = 0; i < items.length; i += size) {
+    if (deadline && Date.now() > deadline) {
+      return { results, skipped: items.length - i }
+    }
     const batch = items.slice(i, i + size)
     const batchResults = await Promise.all(batch.map(fn))
     results.push(...batchResults)
   }
-  return results
+  return { results, skipped: 0 }
 }
 
 export async function GET(req: NextRequest) {
@@ -43,15 +54,20 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  const supabase = getAdminClient()
-  const ranAt    = new Date().toISOString()
+  const supabase  = getAdminClient()
+  const ranAt     = new Date().toISOString()
+  const startedAt = Date.now()
 
   // ── 1. Fetch all active scraped grants with a URL ─────────────────────────
+  // Order by url_last_checked ascending (nulls first) so never-checked and
+  // stalest rows are processed first. A partial run then clears the backlog
+  // instead of re-checking already-fresh rows.
   const { data: grants, error } = await supabase
     .from('scraped_grants')
     .select('id, title, apply_url, funder')
     .eq('is_active', true)
     .not('apply_url', 'is', null)
+    .order('url_last_checked', { ascending: true, nullsFirst: true })
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
@@ -64,7 +80,7 @@ export async function GET(req: NextRequest) {
   const deactivated: { id: string; title: string }[] = []
 
   // ── 2. Deep-check each grant URL (quality + liveness) ─────────────────────
-  await inBatches(grants ?? [], 15, async (grant) => {
+  const scrapedRun = await inBatches(grants ?? [], 15, async (grant) => {
     const result = await deepCheckUrl(
       grant.apply_url as string,
       (grant.funder as string) ?? '',
@@ -102,13 +118,13 @@ export async function GET(req: NextRequest) {
         .eq('id', grant.id)
       okScraped++
     }
-  })
+  }, startedAt + TIME_BUDGET_MS)
 
   // ── 3. Check SEED_GRANTS URLs ─────────────────────────────────────────────
   const seedWithUrl = SEED_GRANTS.filter(g => g.applyUrl)
   const deadSeedGrants: { id: string; title: string; funder: string; url: string }[] = []
 
-  await inBatches(seedWithUrl, 10, async (grant) => {
+  const seedRun = await inBatches(seedWithUrl, 10, async (grant) => {
     const status = await checkUrl(grant.applyUrl as string, grant.funder)
     if (status === 'dead') {
       deadSeedGrants.push({
@@ -118,20 +134,25 @@ export async function GET(req: NextRequest) {
         url:    grant.applyUrl as string,
       })
     }
-  })
+  }, startedAt + TIME_BUDGET_MS)
 
   // ── 4. Return summary ─────────────────────────────────────────────────────
   return NextResponse.json({
     ranAt,
+    elapsedMs:      Date.now() - startedAt,
+    budgetExceeded: scrapedRun.skipped > 0 || seedRun.skipped > 0,
     scraped: {
+      total:       (grants ?? []).length,
       checked:     checkedScraped,
+      skipped:     scrapedRun.skipped,
       ok:          okScraped,
       deactivated: deactivatedCount,
       closed:      closedCount,
       grants:      deactivated,
     },
     seed: {
-      checked: seedWithUrl.length,
+      checked: seedWithUrl.length - seedRun.skipped,
+      skipped: seedRun.skipped,
       dead:    deadSeedGrants.length,
       grants:  deadSeedGrants,
     },
