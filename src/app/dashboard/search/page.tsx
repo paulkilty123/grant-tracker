@@ -873,11 +873,11 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                     }
                     style={{
                       display: 'inline-flex', alignItems: 'center', gap: 4,
-                      padding: '3px 8px', borderRadius: 999, flexShrink: 0,
-                      fontFamily: 'var(--font-space-grotesk)', fontSize: 11, fontWeight: 500,
-                      background: feedbackBoost > 0 ? '#EAF3DE' : '#FAECE7',
-                      color: feedbackBoost > 0 ? '#3B6D11' : '#993C1D',
-                      border: `0.5px solid ${feedbackBoost > 0 ? '#C0DD97' : '#F0997B'}`,
+                      padding: '4px 9px', borderRadius: 999, flexShrink: 0,
+                      fontFamily: 'var(--font-space-grotesk)', fontSize: 11, fontWeight: 600,
+                      background: feedbackBoost > 0 ? '#639922' : '#D85A30',
+                      color: '#fff',
+                      border: 'none',
                     }}
                   >
                     {feedbackBoost > 0 ? '↑ Boosted by your feedback' : '↓ Down-ranked by your feedback'}
