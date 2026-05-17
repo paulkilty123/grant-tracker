@@ -4,6 +4,20 @@
 
 export type FundingType = 'grant' | 'programme' | 'investment' | 'in_kind'
 
+// ── Org context (structured profile + manual enrichment) ──────────────────────
+
+export interface OrgContext {
+  id:                string
+  name:              string
+  mission:           string | null
+  impactSectors:     string[]
+  beneficiaryGroups: string[]
+  primaryLocation:   string | null
+  legalStructure:    string | null
+  /** Free-text manual enrichment — evidence-bank-lite. */
+  evidenceNotes:     string
+}
+
 export const FUNDING_TYPE_LABELS: Record<FundingType, string> = {
   grant:      'Grant',
   programme:  'Programme',

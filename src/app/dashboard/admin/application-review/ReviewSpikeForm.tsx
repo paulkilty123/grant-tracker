@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import {
   type FundingType, type ReviewQuestion, type ReviewRequest, type ReviewResult,
+  type OrgContext,
   FUNDING_TYPE_LABELS,
 } from './types'
 import ReviewResults from './ReviewResults'
@@ -12,7 +13,7 @@ const EMPTY_QUESTION: ReviewQuestion = { question: '', wordLimit: null, draftAns
 const labelCls = 'block text-xs font-semibold uppercase tracking-wide text-mid mb-1.5'
 const inputCls = 'w-full rounded-lg border border-warm bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:border-[#8ECB3C]'
 
-export default function ReviewSpikeForm() {
+export default function ReviewSpikeForm({ org }: { org: OrgContext | null }) {
   const [grantName, setGrantName]     = useState('')
   const [funder, setFunder]           = useState('')
   const [fundingType, setFundingType] = useState<FundingType>('grant')
@@ -22,6 +23,30 @@ export default function ReviewSpikeForm() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError]           = useState<string | null>(null)
   const [result, setResult]         = useState<ReviewResult | null>(null)
+
+  // Org enrichment ("About your organisation") — evidence-bank-lite.
+  const [evidenceNotes, setEvidenceNotes] = useState(org?.evidenceNotes ?? '')
+  const [savingNotes, setSavingNotes]     = useState(false)
+  const [notesSaved, setNotesSaved]       = useState(false)
+
+  async function saveEvidenceNotes() {
+    if (!org) return
+    setSavingNotes(true)
+    setNotesSaved(false)
+    try {
+      const res = await fetch('/api/admin/save-evidence-notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orgId: org.id, evidenceNotes }),
+      })
+      if (res.ok) {
+        setNotesSaved(true)
+        setTimeout(() => setNotesSaved(false), 2500)
+      }
+    } finally {
+      setSavingNotes(false)
+    }
+  }
 
   function updateQuestion(idx: number, patch: Partial<ReviewQuestion>) {
     setQuestions(qs => qs.map((q, i) => (i === idx ? { ...q, ...patch } : q)))
@@ -74,9 +99,54 @@ export default function ReviewSpikeForm() {
         Application review
       </h1>
       <p className="text-sm text-mid mt-1 mb-6">
-        Spike — admin only. Paste an application&apos;s questions and your draft answers to get
-        criterion-referenced feedback. Part of the application-builder Phase 0 test.
+        Spike — admin only. Paste an application&apos;s questions, generate a draft from your org
+        profile, then review it. Part of the application-builder Phase 0 test.
       </p>
+
+      {/* Your organisation */}
+      <div className="rounded-xl border border-warm bg-cream/40 p-4 mb-6">
+        <p className="text-xs font-semibold uppercase tracking-wide text-mid mb-2">Your organisation</p>
+        {org ? (
+          <>
+            <p className="text-sm font-medium text-charcoal">{org.name || '(unnamed)'}</p>
+            <p className="text-xs text-mid mt-0.5">
+              {[
+                org.primaryLocation,
+                org.legalStructure?.replace(/_/g, ' '),
+                org.impactSectors.map(s => s.replace(/_/g, ' ')).join(', '),
+              ].filter(Boolean).join(' · ')}
+            </p>
+            {org.mission && <p className="text-xs text-mid mt-1 leading-relaxed">{org.mission}</p>}
+            <label className={labelCls + ' mt-3'}>About your organisation</label>
+            <p className="text-xs text-light mb-1.5">
+              The structured profile above is thin for drafting. Add programmes, outcomes,
+              track record, partnerships — anything a strong application would draw on. Saved
+              to your profile and reused across reviews.
+            </p>
+            <textarea
+              className={inputCls + ' min-h-[120px]'}
+              value={evidenceNotes}
+              onChange={e => setEvidenceNotes(e.target.value)}
+              placeholder="e.g. We run a weekly dads-and-kids club reaching 60 families a year in Lewisham. In 2025, 84% of attendees reported improved confidence. We partner with two local primary schools…"
+            />
+            <div className="mt-2 flex items-center gap-3">
+              <button
+                onClick={saveEvidenceNotes}
+                disabled={savingNotes}
+                className="rounded-lg border border-charcoal/30 bg-white px-3 py-1.5 text-xs font-medium text-charcoal disabled:opacity-40"
+              >
+                {savingNotes ? 'Saving…' : 'Save org notes'}
+              </button>
+              {notesSaved && <span className="text-xs text-sage">Saved</span>}
+            </div>
+          </>
+        ) : (
+          <p className="text-sm text-mid">
+            No organisation profile found for your account. Draft generation needs an org —
+            complete onboarding first, or use review-only below.
+          </p>
+        )}
+      </div>
 
       {/* Context */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
