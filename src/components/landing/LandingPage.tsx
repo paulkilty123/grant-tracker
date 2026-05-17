@@ -382,7 +382,7 @@ export default function LandingPage() {
             {/* Headline */}
             <h1
               className="font-bold leading-[1.05] text-[#2C2C2A] mb-10"
-              style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: 'clamp(48px, 6.5vw, 88px)', letterSpacing: '-0.04em' }}
+              style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: 'clamp(52px, 9vw, 88px)', letterSpacing: '-0.04em' }}
             >
               Funding,<br/>
               <span style={{ color: '#8ECB3C' }}>matched</span><br/>
