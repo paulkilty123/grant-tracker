@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import ReviewSpikeForm from './ReviewSpikeForm'
-import type { OrgContext } from './types'
+import type { OrgContext, PipelineGrantOption } from './types'
 
 // Application-review spike — application-builder Phase 0 (review-only standalone).
 // Admin-only. Access is gated to this allowlist; cohort-member emails are added
@@ -40,5 +40,22 @@ export default async function ApplicationReviewPage() {
       }
     : null
 
-  return <ReviewSpikeForm org={orgContext} />
+  // Load the org's pipeline grants for the picker.
+  let pipelineGrants: PipelineGrantOption[] = []
+  if (orgContext) {
+    const { data: rows } = await supabase
+      .from('pipeline_items')
+      .select('id, grant_name, funder_name, grant_url, stage')
+      .eq('org_id', orgContext.id)
+      .order('created_at', { ascending: false })
+    pipelineGrants = (rows ?? []).map(r => ({
+      id:         r.id,
+      grantName:  r.grant_name ?? '',
+      funderName: r.funder_name ?? '',
+      grantUrl:   r.grant_url ?? null,
+      stage:      r.stage ?? '',
+    }))
+  }
+
+  return <ReviewSpikeForm org={orgContext} pipelineGrants={pipelineGrants} />
 }

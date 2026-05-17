@@ -66,7 +66,23 @@ function orgProfileBlock(org: Record<string, unknown>, evidenceNotes: string): s
     : block
 }
 
-function buildPrompt(req: DraftRequest, org: Record<string, unknown>): string {
+// Builds a funder-context block from a matched catalogue grant.
+function buildFunderContext(g: Record<string, unknown>): string {
+  const fb  = (g.funder_brief ?? {}) as Record<string, unknown>
+  const arr = (v: unknown) => Array.isArray(v) ? (v as unknown[]).join(', ') : ''
+  return [
+    typeof g.description === 'string'   ? `Summary: ${g.description}` : '',
+    typeof fb.what_they_fund === 'string' ? `What they fund: ${fb.what_they_fund}` : '',
+    typeof fb.priorities === 'string'   ? `Priorities: ${fb.priorities}` : '',
+    typeof fb.who_can_apply === 'string' ? `Who can apply: ${fb.who_can_apply}` : '',
+    arr(g.eligibility_criteria)         ? `Eligibility: ${arr(g.eligibility_criteria)}` : '',
+    arr(g.impact_sectors)               ? `Sectors: ${arr(g.impact_sectors)}` : '',
+    (g.amount_min || g.amount_max)      ? `Funding range: ${g.amount_min ?? '?'} to ${g.amount_max ?? '?'}` : '',
+    g.deadline                          ? `Deadline: ${g.deadline}` : '',
+  ].filter(Boolean).join('\n')
+}
+
+function buildPrompt(req: DraftRequest, org: Record<string, unknown>, funderContext: string): string {
   const hasCriteria = req.assessmentCriteria.trim().length > 0
   const questionsBlock = req.questions.map((q, i) => (
     `Q${i + 1}. ${q.question}  [Word limit: ${q.wordLimit ?? 'none stated — use a sensible length'}]`
@@ -82,6 +98,9 @@ Funder: ${req.funder || 'not specified'}
 ${hasCriteria
   ? `Published assessment criteria:\n${req.assessmentCriteria}`
   : `No assessment criteria supplied — write to what a funder of this type typically weights.`}
+${funderContext
+  ? `\nWhat the catalogue knows about this funder (use it to frame the draft to the funder's priorities — it is NOT licence to invent facts about the applicant):\n${funderContext}`
+  : ''}
 
 THE APPLICANT ORGANISATION
 ${orgProfileBlock(org, req.evidenceNotes)}
@@ -166,6 +185,7 @@ export async function POST(req: NextRequest) {
     assessmentCriteria: asString(body.assessmentCriteria),
     orgId:              body.orgId,
     evidenceNotes:      asString(body.evidenceNotes),
+    grantUrl:           typeof body.grantUrl === 'string' && body.grantUrl ? body.grantUrl : null,
     questions:          questions.map(q => ({ question: q.question.trim(), wordLimit: q.wordLimit ?? null })),
   }
 
@@ -176,6 +196,18 @@ export async function POST(req: NextRequest) {
       .eq('id', request.orgId).eq('owner_id', user.id)
   } catch (err) {
     console.error('[generate-draft] failed to persist evidence_notes:', err)
+  }
+
+  // Pull catalogue context for the picked grant (matched by apply_url).
+  // Manually-added pipeline grants won't match — the draft proceeds without it.
+  let funderContext = ''
+  if (request.grantUrl) {
+    const { data: cg } = await admin
+      .from('scraped_grants')
+      .select('description, funder_brief, eligibility_criteria, impact_sectors, amount_min, amount_max, deadline')
+      .eq('apply_url', request.grantUrl)
+      .maybeSingle()
+    if (cg) funderContext = buildFunderContext(cg)
   }
 
   let text: string
@@ -190,7 +222,7 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         model:      'claude-sonnet-4-6',
         max_tokens: 16000,
-        messages:   [{ role: 'user', content: buildPrompt(request, org) }],
+        messages:   [{ role: 'user', content: buildPrompt(request, org, funderContext) }],
       }),
     })
     if (!res.ok) {

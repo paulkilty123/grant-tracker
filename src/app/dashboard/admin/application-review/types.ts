@@ -42,6 +42,16 @@ export interface ReviewRequest {
   questions:          ReviewQuestion[]
 }
 
+// ── Pipeline grant picker ─────────────────────────────────────────────────────
+
+export interface PipelineGrantOption {
+  id:         string
+  grantName:  string
+  funderName: string
+  grantUrl:   string | null
+  stage:      string
+}
+
 // ── Draft generation ──────────────────────────────────────────────────────────
 
 export interface DraftQuestion {
@@ -56,6 +66,8 @@ export interface DraftRequest {
   assessmentCriteria: string
   orgId:              string
   evidenceNotes:      string
+  /** apply_url of the picked pipeline grant — used to pull catalogue context. */
+  grantUrl:           string | null
   questions:          DraftQuestion[]
 }
 

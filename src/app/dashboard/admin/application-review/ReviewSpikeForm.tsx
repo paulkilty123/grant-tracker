@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import {
   type FundingType, type ReviewQuestion, type ReviewRequest, type ReviewResult,
-  type OrgContext, type DraftRequest, type DraftResult,
+  type OrgContext, type DraftRequest, type DraftResult, type PipelineGrantOption,
   FUNDING_TYPE_LABELS,
 } from './types'
 import ReviewResults from './ReviewResults'
@@ -13,12 +13,30 @@ const EMPTY_QUESTION: ReviewQuestion = { question: '', wordLimit: null, draftAns
 const labelCls = 'block text-xs font-semibold uppercase tracking-wide text-mid mb-1.5'
 const inputCls = 'w-full rounded-lg border border-warm bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:border-[#8ECB3C]'
 
-export default function ReviewSpikeForm({ org }: { org: OrgContext | null }) {
+export default function ReviewSpikeForm(
+  { org, pipelineGrants }: { org: OrgContext | null; pipelineGrants: PipelineGrantOption[] },
+) {
   const [grantName, setGrantName]     = useState('')
   const [funder, setFunder]           = useState('')
   const [fundingType, setFundingType] = useState<FundingType>('grant')
   const [criteria, setCriteria]       = useState('')
   const [questions, setQuestions]     = useState<ReviewQuestion[]>([{ ...EMPTY_QUESTION }])
+
+  // Pipeline grant picker.
+  const [pickedId, setPickedId] = useState('')
+  const [grantUrl, setGrantUrl] = useState<string | null>(null)
+
+  function pickGrant(id: string) {
+    setPickedId(id)
+    const item = pipelineGrants.find(p => p.id === id)
+    if (item) {
+      setGrantName(item.grantName)
+      setFunder(item.funderName)
+      setGrantUrl(item.grantUrl)
+    } else {
+      setGrantUrl(null)
+    }
+  }
 
   const [submitting, setSubmitting] = useState(false)
   const [error, setError]           = useState<string | null>(null)
@@ -71,6 +89,7 @@ export default function ReviewSpikeForm({ org }: { org: OrgContext | null }) {
       assessmentCriteria: criteria.trim(),
       orgId: org.id,
       evidenceNotes,
+      grantUrl,
       questions: entries.map(x => ({ question: x.q.question.trim(), wordLimit: x.q.wordLimit })),
     }
     try {
@@ -205,6 +224,25 @@ export default function ReviewSpikeForm({ org }: { org: OrgContext | null }) {
           </p>
         )}
       </div>
+
+      {/* Pipeline grant picker */}
+      {pipelineGrants.length > 0 && (
+        <div className="mb-4">
+          <label className={labelCls}>Choose a grant from your pipeline</label>
+          <select className={inputCls} value={pickedId} onChange={e => pickGrant(e.target.value)}>
+            <option value="">— enter manually —</option>
+            {pipelineGrants.map(p => (
+              <option key={p.id} value={p.id}>
+                {p.grantName}{p.funderName ? ` — ${p.funderName}` : ''}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-light mt-1">
+            Picking a grant fills the name and funder below, and lets the draft draw on its
+            catalogue data. You can still edit the fields by hand.
+          </p>
+        </div>
+      )}
 
       {/* Context */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
