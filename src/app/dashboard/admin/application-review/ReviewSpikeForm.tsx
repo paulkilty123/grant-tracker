@@ -110,14 +110,17 @@ export default function ReviewSpikeForm(
 
   async function generateDraft() {
     if (!org) return
+    const entries = questions
+      .map((q, i) => ({ q, i }))
+      .filter(x => x.q.question.trim())
+    // No questions is allowed when a grant is picked — the engine then drafts a
+    // proposal against standard sections from the catalogue data.
+    const proposalMode = entries.length === 0
+    if (proposalMode && !grantUrl) return
     setGenerating(true)
     setDraftError(null)
     setStrengthSummary(null)
     setResult(null)
-    const entries = questions
-      .map((q, i) => ({ q, i }))
-      .filter(x => x.q.question.trim())
-    if (entries.length === 0) { setGenerating(false); return }
     const payload: DraftRequest = {
       grantName: grantName.trim(),
       funder: funder.trim(),
@@ -140,17 +143,26 @@ export default function ReviewSpikeForm(
         return
       }
       const draft = json as DraftResult
-      const newQuestions = questions.map((q, i) => {
-        const slot = entries.findIndex(e => e.i === i)
-        return slot >= 0 && draft.answers[slot]
-          ? { ...q, draftAnswer: draft.answers[slot].draftAnswer }
-          : q
-      })
       const notes: Record<number, string> = {}
-      entries.forEach((e, slot) => {
-        if (draft.answers[slot]) notes[e.i] = draft.answers[slot].toPersonalise
-      })
-      setQuestions(newQuestions)
+      if (proposalMode) {
+        // The engine substituted standard proposal sections — rebuild the list.
+        const rebuilt = draft.answers.map(a => ({
+          question: a.question, wordLimit: null as number | null, draftAnswer: a.draftAnswer,
+        }))
+        draft.answers.forEach((a, i) => { notes[i] = a.toPersonalise })
+        if (rebuilt.length > 0) setQuestions(rebuilt)
+      } else {
+        const newQuestions = questions.map((q, i) => {
+          const slot = entries.findIndex(e => e.i === i)
+          return slot >= 0 && draft.answers[slot]
+            ? { ...q, draftAnswer: draft.answers[slot].draftAnswer }
+            : q
+        })
+        entries.forEach((e, slot) => {
+          if (draft.answers[slot]) notes[e.i] = draft.answers[slot].toPersonalise
+        })
+        setQuestions(newQuestions)
+      }
       setPersonalise(notes)
       setStrengthSummary(draft.strengthSummary)
     } catch (err) {
@@ -170,7 +182,7 @@ export default function ReviewSpikeForm(
 
   const readyQuestions = questions.filter(q => q.question.trim() && q.draftAnswer.trim())
   const canSubmit = readyQuestions.length > 0 && !submitting
-  const canGenerate = !!org && questions.some(q => q.question.trim()) && !generating
+  const canGenerate = !!org && (questions.some(q => q.question.trim()) || !!grantUrl) && !generating
 
   async function submit() {
     setSubmitting(true)
@@ -419,6 +431,8 @@ export default function ReviewSpikeForm(
       </div>
       <p className="mt-2 text-xs text-light">
         Generate a first draft from your org profile, edit each answer, then review it.
+        With no questions added, picking a pipeline grant generates a proposal-style draft
+        from the grant&apos;s catalogue data alone.
       </p>
 
       {draftError && (

@@ -40,6 +40,18 @@ function adminClient() {
   )
 }
 
+// Standard funding-proposal sections used when the user supplies no questions
+// but has picked a pipeline grant — the draft becomes a proposal from the
+// catalogue + org data alone.
+const DEFAULT_PROPOSAL_SECTIONS = [
+  { question: 'About your organisation: who you are, your mission, and the work you do', wordLimit: null },
+  { question: 'The need: the problem or need your proposed work addresses, with evidence', wordLimit: null },
+  { question: 'Your proposed project: what you will do, who it is for, and over what period', wordLimit: null },
+  { question: 'Outcomes and evaluation: the difference it will make and how you will measure it', wordLimit: null },
+  { question: 'Budget and use of funds: what the funding would be spent on', wordLimit: null },
+  { question: 'Why this funder: how the work aligns with this funder’s priorities', wordLimit: null },
+]
+
 const FRAMING: Record<FundingType, string> = {
   grant:      'a grant application — structured answers addressing the funder\'s questions and assessment criteria',
   programme:  'a programme or accelerator application — emphasise the leader, motivation, growth potential and what the applicant wants from the cohort',
@@ -67,19 +79,30 @@ function orgProfileBlock(org: Record<string, unknown>, evidenceNotes: string): s
     : block
 }
 
-// Builds a funder-context block from a matched catalogue grant.
+// Builds a funder-context block from a matched catalogue grant. Uses the full
+// draft-relevant set of funder_brief fields — strong_application and funder_tips
+// especially, which directly shape how a strong draft should be written.
 function buildFunderContext(g: Record<string, unknown>): string {
   const fb  = (g.funder_brief ?? {}) as Record<string, unknown>
   const arr = (v: unknown) => Array.isArray(v) ? (v as unknown[]).join(', ') : ''
+  const str = (v: unknown) => typeof v === 'string' ? v : ''
   return [
-    typeof g.description === 'string'   ? `Summary: ${g.description}` : '',
-    typeof fb.what_they_fund === 'string' ? `What they fund: ${fb.what_they_fund}` : '',
-    typeof fb.priorities === 'string'   ? `Priorities: ${fb.priorities}` : '',
-    typeof fb.who_can_apply === 'string' ? `Who can apply: ${fb.who_can_apply}` : '',
-    arr(g.eligibility_criteria)         ? `Eligibility: ${arr(g.eligibility_criteria)}` : '',
-    arr(g.impact_sectors)               ? `Sectors: ${arr(g.impact_sectors)}` : '',
-    (g.amount_min || g.amount_max)      ? `Funding range: ${g.amount_min ?? '?'} to ${g.amount_max ?? '?'}` : '',
-    g.deadline                          ? `Deadline: ${g.deadline}` : '',
+    str(g.description)         ? `Summary: ${str(g.description)}` : '',
+    str(fb.what_they_fund)     ? `What they fund: ${str(fb.what_they_fund)}` : '',
+    str(fb.priorities)         ? `Priorities: ${str(fb.priorities)}` : '',
+    str(fb.who_can_apply)      ? `Who can apply: ${str(fb.who_can_apply)}` : '',
+    str(fb.exclusions)         ? `What they will NOT fund: ${str(fb.exclusions)}` : '',
+    str(fb.strong_application) ? `What makes a strong application here: ${str(fb.strong_application)}` : '',
+    str(fb.funder_tips)        ? `Funder tips: ${str(fb.funder_tips)}` : '',
+    str(fb.how_to_apply)       ? `How to apply: ${str(fb.how_to_apply)}` : '',
+    str(fb.typical_award)      ? `Typical award: ${str(fb.typical_award)}` : '',
+    str(fb.geographic_focus)   ? `Geographic focus: ${str(fb.geographic_focus)}` : '',
+    str(fb.award_history)      ? `Recent awards: ${str(fb.award_history)}` : '',
+    arr(g.eligibility_criteria)   ? `Eligibility: ${arr(g.eligibility_criteria)}` : '',
+    arr(g.impact_sectors)         ? `Sectors: ${arr(g.impact_sectors)}` : '',
+    arr(g.target_beneficiaries)   ? `Target beneficiaries: ${arr(g.target_beneficiaries)}` : '',
+    (g.amount_min || g.amount_max) ? `Funding range: ${g.amount_min ?? '?'} to ${g.amount_max ?? '?'}` : '',
+    g.deadline                    ? `Deadline: ${g.deadline}` : '',
   ].filter(Boolean).join('\n')
 }
 
@@ -155,11 +178,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
   }
 
-  const questions = Array.isArray(body.questions)
+  const rawQuestions = Array.isArray(body.questions)
     ? body.questions.filter(q => q?.question?.trim())
     : []
-  if (questions.length === 0) {
-    return NextResponse.json({ error: 'At least one question is required' }, { status: 400 })
+  const hasGrantUrl = typeof body.grantUrl === 'string' && !!body.grantUrl.trim()
+  // No questions is allowed when a pipeline grant is picked — the draft is then
+  // a proposal built against standard sections from the catalogue + org data.
+  if (rawQuestions.length === 0 && !hasGrantUrl) {
+    return NextResponse.json(
+      { error: 'Add at least one question, or pick a pipeline grant to draft a proposal from its catalogue data' },
+      { status: 400 },
+    )
   }
   if (!body.orgId) {
     return NextResponse.json({ error: 'An organisation profile is required to generate a draft' }, { status: 400 })
@@ -187,7 +216,9 @@ export async function POST(req: NextRequest) {
     orgId:              body.orgId,
     evidenceNotes:      asString(body.evidenceNotes),
     grantUrl:           typeof body.grantUrl === 'string' && body.grantUrl ? body.grantUrl : null,
-    questions:          questions.map(q => ({ question: q.question.trim(), wordLimit: q.wordLimit ?? null })),
+    questions:          rawQuestions.length > 0
+                          ? rawQuestions.map(q => ({ question: q.question.trim(), wordLimit: q.wordLimit ?? null }))
+                          : DEFAULT_PROPOSAL_SECTIONS,
   }
 
   // Persist the enrichment the user generated with — side effect, non-fatal.
@@ -205,7 +236,7 @@ export async function POST(req: NextRequest) {
   if (request.grantUrl) {
     const { data: cg } = await admin
       .from('scraped_grants')
-      .select('description, funder_brief, eligibility_criteria, impact_sectors, amount_min, amount_max, deadline')
+      .select('description, funder_brief, eligibility_criteria, impact_sectors, target_beneficiaries, amount_min, amount_max, deadline')
       .eq('apply_url', request.grantUrl)
       .maybeSingle()
     if (cg) funderContext = buildFunderContext(cg)
