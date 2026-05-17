@@ -361,12 +361,12 @@ export default function ReviewSpikeForm(
         </div>
         <label className="mt-2 inline-flex items-center gap-2 cursor-pointer">
           <span className="rounded-lg border border-charcoal/30 bg-white px-3 py-1.5 text-sm font-medium text-charcoal">
-            Upload PDF
+            Upload file
           </span>
-          <span className="text-xs text-light">Upload the application form as a PDF (not .docx — save to PDF first)</span>
+          <span className="text-xs text-light">Upload the application form as a PDF or Word .docx</span>
           <input
             type="file"
-            accept="application/pdf,.pdf"
+            accept="application/pdf,.pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             className="hidden"
             disabled={fetchingUrl}
             onChange={e => { const f = e.target.files?.[0]; if (f) uploadApplicationPdf(f); e.target.value = '' }}

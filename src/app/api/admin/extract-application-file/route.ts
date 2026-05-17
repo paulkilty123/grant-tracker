@@ -7,6 +7,7 @@
 // Returns: ExtractedApplication
 
 import { NextRequest, NextResponse } from 'next/server'
+import mammoth from 'mammoth'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import type {
   ExtractedApplication, DraftQuestion,
@@ -57,14 +58,43 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'ANTHROPIC_API_KEY not configured' }, { status: 500 })
   }
 
-  let fileBase64: string
+  let body: { fileBase64?: string; fileName?: string }
   try {
-    fileBase64 = String((await req.json()).fileBase64 ?? '')
+    body = await req.json()
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
   }
+  const fileBase64 = String(body.fileBase64 ?? '')
+  const fileName   = String(body.fileName ?? '')
   if (!fileBase64) {
     return NextResponse.json({ error: 'fileBase64 is required' }, { status: 400 })
+  }
+  const isPdf  = /\.pdf$/i.test(fileName)
+  const isDocx = /\.docx$/i.test(fileName)
+  if (!isPdf && !isDocx) {
+    return failed('Upload a PDF or .docx file. Legacy .doc is not supported — save it as .docx or PDF.')
+  }
+
+  // PDF → Claude native document block. .docx → text extracted with mammoth
+  // (Claude has no native .docx support), then passed as plain text.
+  let content: unknown
+  if (isPdf) {
+    content = [
+      { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: fileBase64 } },
+      { type: 'text', text: EXTRACT_PROMPT },
+    ]
+  } else {
+    let docText: string
+    try {
+      const r = await mammoth.extractRawText({ buffer: Buffer.from(fileBase64, 'base64') })
+      docText = (r.value ?? '').trim()
+    } catch {
+      return failed('Could not read the Word document. Save it as a PDF and try again.')
+    }
+    if (docText.length < 50) {
+      return failed('The document had almost no text in it. Paste the questions manually.')
+    }
+    content = `${EXTRACT_PROMPT}\n\nDocument text:\n---\n${docText.slice(0, 16000)}\n---`
   }
 
   let text: string
@@ -79,13 +109,7 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         model:      'claude-sonnet-4-6',
         max_tokens: 4096,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: fileBase64 } },
-            { type: 'text', text: EXTRACT_PROMPT },
-          ],
-        }],
+        messages:   [{ role: 'user', content }],
       }),
     })
     if (!res.ok) {
