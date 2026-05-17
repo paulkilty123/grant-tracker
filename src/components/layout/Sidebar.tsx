@@ -22,6 +22,7 @@ import {
   MessageSquare,
   LogOut,
   ChevronUp,
+  FilePenLine,
 } from 'lucide-react'
 
 interface Props {
@@ -72,6 +73,7 @@ const ADMIN_NAV = [
   { href: '/dashboard/admin/users',        label: 'Users',               Icon: Users         },
   { href: '/dashboard/admin/corporate',    label: 'Partner Manager',     Icon: Building2     },
   { href: '/dashboard/admin/intelligence', label: 'Funder Intelligence', Icon: Sparkles      },
+  { href: '/dashboard/admin/application-review', label: 'Application Review', Icon: FilePenLine },
 ]
 
 export default function Sidebar({ org, userEmail }: Props) {
