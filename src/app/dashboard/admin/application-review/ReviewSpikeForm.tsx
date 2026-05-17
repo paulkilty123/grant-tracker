@@ -483,7 +483,7 @@ export default function ReviewSpikeForm(
         </div>
       )}
 
-      {result && <ReviewResults result={result} />}
+      {result && <ReviewResults result={result} questions={questions} />}
     </div>
   )
 }
