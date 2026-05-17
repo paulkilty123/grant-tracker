@@ -5,6 +5,7 @@ import {
   type FundingType, type ReviewQuestion, type ReviewRequest, type ReviewResult,
   FUNDING_TYPE_LABELS,
 } from './types'
+import ReviewResults from './ReviewResults'
 
 const EMPTY_QUESTION: ReviewQuestion = { question: '', wordLimit: null, draftAnswer: '' }
 
@@ -168,12 +169,7 @@ export default function ReviewSpikeForm() {
         </div>
       )}
 
-      {/* Placeholder result rendering — task 41 replaces this with the proper display. */}
-      {result && (
-        <pre className="mt-5 overflow-auto rounded-lg border border-warm bg-white p-4 text-xs text-charcoal">
-          {JSON.stringify(result, null, 2)}
-        </pre>
-      )}
+      {result && <ReviewResults result={result} />}
     </div>
   )
 }
