@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import {
   type FundingType, type ReviewQuestion, type ReviewRequest, type ReviewResult,
-  type OrgContext,
+  type OrgContext, type DraftRequest, type DraftResult,
   FUNDING_TYPE_LABELS,
 } from './types'
 import ReviewResults from './ReviewResults'
@@ -29,6 +29,12 @@ export default function ReviewSpikeForm({ org }: { org: OrgContext | null }) {
   const [savingNotes, setSavingNotes]     = useState(false)
   const [notesSaved, setNotesSaved]       = useState(false)
 
+  // Draft generation.
+  const [generating, setGenerating]           = useState(false)
+  const [draftError, setDraftError]           = useState<string | null>(null)
+  const [strengthSummary, setStrengthSummary] = useState<string[] | null>(null)
+  const [personalise, setPersonalise]         = useState<Record<number, string>>({})
+
   async function saveEvidenceNotes() {
     if (!org) return
     setSavingNotes(true)
@@ -48,6 +54,57 @@ export default function ReviewSpikeForm({ org }: { org: OrgContext | null }) {
     }
   }
 
+  async function generateDraft() {
+    if (!org) return
+    setGenerating(true)
+    setDraftError(null)
+    setStrengthSummary(null)
+    setResult(null)
+    const entries = questions
+      .map((q, i) => ({ q, i }))
+      .filter(x => x.q.question.trim())
+    if (entries.length === 0) { setGenerating(false); return }
+    const payload: DraftRequest = {
+      grantName: grantName.trim(),
+      funder: funder.trim(),
+      fundingType,
+      assessmentCriteria: criteria.trim(),
+      orgId: org.id,
+      evidenceNotes,
+      questions: entries.map(x => ({ question: x.q.question.trim(), wordLimit: x.q.wordLimit })),
+    }
+    try {
+      const res = await fetch('/api/admin/generate-draft', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const json = await res.json()
+      if (!res.ok) {
+        setDraftError(json.error ?? `Request failed (${res.status})`)
+        return
+      }
+      const draft = json as DraftResult
+      const newQuestions = questions.map((q, i) => {
+        const slot = entries.findIndex(e => e.i === i)
+        return slot >= 0 && draft.answers[slot]
+          ? { ...q, draftAnswer: draft.answers[slot].draftAnswer }
+          : q
+      })
+      const notes: Record<number, string> = {}
+      entries.forEach((e, slot) => {
+        if (draft.answers[slot]) notes[e.i] = draft.answers[slot].toPersonalise
+      })
+      setQuestions(newQuestions)
+      setPersonalise(notes)
+      setStrengthSummary(draft.strengthSummary)
+    } catch (err) {
+      setDraftError(err instanceof Error ? err.message : 'Request failed')
+    } finally {
+      setGenerating(false)
+    }
+  }
+
   function updateQuestion(idx: number, patch: Partial<ReviewQuestion>) {
     setQuestions(qs => qs.map((q, i) => (i === idx ? { ...q, ...patch } : q)))
   }
@@ -58,6 +115,7 @@ export default function ReviewSpikeForm({ org }: { org: OrgContext | null }) {
 
   const readyQuestions = questions.filter(q => q.question.trim() && q.draftAnswer.trim())
   const canSubmit = readyQuestions.length > 0 && !submitting
+  const canGenerate = !!org && questions.some(q => q.question.trim()) && !generating
 
   async function submit() {
     setSubmitting(true)
@@ -179,6 +237,20 @@ export default function ReviewSpikeForm({ org }: { org: OrgContext | null }) {
         />
       </div>
 
+      {/* What makes this a strong application — shown after draft generation */}
+      {strengthSummary && strengthSummary.length > 0 && (
+        <div className="rounded-xl border border-warm bg-green-pale-1 p-5 mb-5">
+          <p className="text-xs font-semibold uppercase tracking-wide text-sage mb-2">
+            What makes this a strong application
+          </p>
+          <ul className="list-disc list-inside space-y-1">
+            {strengthSummary.map((angle, i) => (
+              <li key={i} className="text-sm text-charcoal leading-relaxed">{angle}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {/* Questions */}
       <div className="space-y-4">
         {questions.map((q, idx) => (
@@ -209,8 +281,13 @@ export default function ReviewSpikeForm({ org }: { org: OrgContext | null }) {
               className={inputCls + ' min-h-[120px]'}
               value={q.draftAnswer}
               onChange={e => updateQuestion(idx, { draftAnswer: e.target.value })}
-              placeholder="Your draft answer to this question"
+              placeholder="Your draft answer — or generate one below, then edit it here"
             />
+            {personalise[idx] && (
+              <p className="mt-2 rounded-lg bg-amber-pale px-3 py-2 text-xs text-[#854F0B] leading-relaxed">
+                <span className="font-semibold">To personalise: </span>{personalise[idx]}
+              </p>
+            )}
           </div>
         ))}
       </div>
@@ -219,7 +296,15 @@ export default function ReviewSpikeForm({ org }: { org: OrgContext | null }) {
         + Add question
       </button>
 
-      <div className="mt-6 flex items-center gap-3">
+      <div className="mt-6 flex flex-wrap items-center gap-3">
+        <button
+          onClick={generateDraft}
+          disabled={!canGenerate}
+          className="rounded-lg border border-[#173404] bg-white px-5 py-2.5 text-sm font-semibold text-[#173404] disabled:opacity-40 disabled:cursor-not-allowed"
+          style={{ fontFamily: 'var(--font-space-grotesk)' }}
+        >
+          {generating ? 'Generating…' : 'Generate draft answers'}
+        </button>
         <button
           onClick={submit}
           disabled={!canSubmit}
@@ -228,11 +313,19 @@ export default function ReviewSpikeForm({ org }: { org: OrgContext | null }) {
         >
           {submitting ? 'Reviewing…' : 'Review draft'}
         </button>
-        {readyQuestions.length === 0 && (
-          <span className="text-xs text-light">Add at least one question with a draft answer.</span>
+        {!org && (
+          <span className="text-xs text-light">Draft generation needs an org profile.</span>
         )}
       </div>
+      <p className="mt-2 text-xs text-light">
+        Generate a first draft from your org profile, edit each answer, then review it.
+      </p>
 
+      {draftError && (
+        <div className="mt-5 rounded-lg border border-[#F0997B] bg-[#FAECE7] px-4 py-3 text-sm text-[#993C1D]">
+          {draftError}
+        </div>
+      )}
       {error && (
         <div className="mt-5 rounded-lg border border-[#F0997B] bg-[#FAECE7] px-4 py-3 text-sm text-[#993C1D]">
           {error}
