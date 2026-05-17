@@ -4,6 +4,7 @@ import { useState } from 'react'
 import {
   type FundingType, type ReviewQuestion, type ReviewRequest, type ReviewResult,
   type OrgContext, type DraftRequest, type DraftResult, type PipelineGrantOption,
+  type ExtractedApplication,
   FUNDING_TYPE_LABELS,
 } from './types'
 import ReviewResults from './ReviewResults'
@@ -25,6 +26,41 @@ export default function ReviewSpikeForm(
   // Pipeline grant picker.
   const [pickedId, setPickedId] = useState('')
   const [grantUrl, setGrantUrl] = useState<string | null>(null)
+
+  // Application-guidelines URL extractor.
+  const [guidelinesUrl, setGuidelinesUrl] = useState('')
+  const [fetchingUrl, setFetchingUrl]     = useState(false)
+  const [fetchNote, setFetchNote]         = useState<string | null>(null)
+
+  async function fetchGuidelines() {
+    if (!guidelinesUrl.trim()) return
+    setFetchingUrl(true)
+    setFetchNote(null)
+    try {
+      const res = await fetch('/api/admin/extract-application', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: guidelinesUrl.trim() }),
+      })
+      const json = await res.json()
+      if (!res.ok) {
+        setFetchNote(json.error ?? `Request failed (${res.status})`)
+        return
+      }
+      const ex = json as ExtractedApplication
+      setFetchNote(ex.note)
+      if (ex.questions.length > 0) {
+        setQuestions(ex.questions.map(q => ({
+          question: q.question, wordLimit: q.wordLimit, draftAnswer: '',
+        })))
+      }
+      if (ex.assessmentCriteria) setCriteria(ex.assessmentCriteria)
+    } catch (err) {
+      setFetchNote(err instanceof Error ? err.message : 'Request failed')
+    } finally {
+      setFetchingUrl(false)
+    }
+  }
 
   function pickGrant(id: string) {
     setPickedId(id)
@@ -263,6 +299,31 @@ export default function ReviewSpikeForm(
             ))}
           </select>
         </div>
+      </div>
+
+      {/* Application guidelines URL */}
+      <div className="mb-5">
+        <label className={labelCls}>Application guidelines URL</label>
+        <div className="flex gap-2">
+          <input
+            className={inputCls}
+            value={guidelinesUrl}
+            onChange={e => setGuidelinesUrl(e.target.value)}
+            placeholder="https://… the page with the application questions"
+          />
+          <button
+            onClick={fetchGuidelines}
+            disabled={fetchingUrl || !guidelinesUrl.trim()}
+            className="rounded-lg border border-charcoal/30 bg-white px-4 py-2 text-sm font-medium text-charcoal whitespace-nowrap disabled:opacity-40"
+          >
+            {fetchingUrl ? 'Fetching…' : 'Fetch'}
+          </button>
+        </div>
+        <p className="text-xs text-light mt-1">
+          Pulls the questions and criteria from the page into the form below. If the page
+          blocks automated access, paste them manually instead.
+        </p>
+        {fetchNote && <p className="text-xs text-mid mt-1.5">{fetchNote}</p>}
       </div>
 
       {/* Assessment criteria */}

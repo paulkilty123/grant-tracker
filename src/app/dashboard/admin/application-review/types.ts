@@ -44,6 +44,16 @@ export interface ReviewRequest {
   questions:          ReviewQuestion[]
 }
 
+// ── Application-guidelines URL extraction ─────────────────────────────────────
+
+export interface ExtractedApplication {
+  /** False when the page could not be fetched or had no application content. */
+  fetched:            boolean
+  note:               string
+  questions:          DraftQuestion[]
+  assessmentCriteria: string
+}
+
 // ── Pipeline grant picker ─────────────────────────────────────────────────────
 
 export interface PipelineGrantOption {
