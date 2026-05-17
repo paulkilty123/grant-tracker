@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { createClient as createServerClient } from '@/lib/supabase/server'
+import { captureContributedCriteria } from '@/lib/contributed-criteria'
 import type {
   ReviewRequest, ReviewResult, FundingType, QuestionFeedback,
 } from '@/app/dashboard/admin/application-review/types'
@@ -141,6 +142,7 @@ export async function POST(req: NextRequest) {
     fundingType:        (['grant', 'programme', 'investment', 'in_kind'] as FundingType[])
                           .includes(body.fundingType) ? body.fundingType : 'grant',
     assessmentCriteria: asString(body.assessmentCriteria),
+    grantUrl:           typeof body.grantUrl === 'string' && body.grantUrl ? body.grantUrl : null,
     questions,
   }
 
@@ -221,8 +223,9 @@ export async function POST(req: NextRequest) {
 
   // Persist for the validation round's audit. Non-fatal — a storage failure
   // must not block returning the review to the user.
+  const admin = adminClient()
   try {
-    await adminClient().from('application_reviews').insert({
+    await admin.from('application_reviews').insert({
       user_id:    user.id,
       user_email: user.email,
       request,
@@ -231,6 +234,9 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error('[review-application] failed to persist review:', err)
   }
+
+  // Capture pasted criteria onto the catalogue grant (non-live holding pen).
+  await captureContributedCriteria(admin, request.grantUrl, request.assessmentCriteria)
 
   return NextResponse.json(result)
 }

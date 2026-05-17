@@ -39,6 +39,8 @@ export interface ReviewRequest {
   fundingType:        FundingType
   /** Funder's published assessment criteria, pasted freeform. Empty = none. */
   assessmentCriteria: string
+  /** apply_url of the picked pipeline grant, if any — used for criteria capture. */
+  grantUrl:           string | null
   questions:          ReviewQuestion[]
 }
 

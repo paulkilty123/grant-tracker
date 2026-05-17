@@ -145,6 +145,7 @@ export default function ReviewSpikeForm(
       funder: funder.trim(),
       fundingType,
       assessmentCriteria: criteria.trim(),
+      grantUrl,
       questions: readyQuestions.map(q => ({
         question: q.question.trim(),
         wordLimit: q.wordLimit,

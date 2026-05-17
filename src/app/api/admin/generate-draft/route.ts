@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { createClient as createServerClient } from '@/lib/supabase/server'
+import { captureContributedCriteria } from '@/lib/contributed-criteria'
 import type {
   DraftRequest, DraftResult, DraftAnswer, FundingType,
 } from '@/app/dashboard/admin/application-review/types'
@@ -209,6 +210,9 @@ export async function POST(req: NextRequest) {
       .maybeSingle()
     if (cg) funderContext = buildFunderContext(cg)
   }
+
+  // Capture pasted criteria onto the catalogue grant (non-live holding pen).
+  await captureContributedCriteria(admin, request.grantUrl, request.assessmentCriteria)
 
   let text: string
   try {
