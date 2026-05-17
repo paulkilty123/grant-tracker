@@ -6,6 +6,7 @@
 // POST /api/admin/review-application   Body: ReviewRequest   Returns: ReviewResult
 
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import type {
   ReviewRequest, ReviewResult, FundingType, QuestionFeedback,
@@ -19,14 +20,26 @@ const REVIEW_SPIKE_ALLOWLIST = [
   'paulkilty1@gmail.com',
 ]
 
-async function isAuthorised(): Promise<boolean> {
+// Returns the authenticated user when their email is on the allowlist, else null.
+async function getAllowlistedUser(): Promise<{ id: string; email: string } | null> {
   try {
     const supabase = await createServerClient()
     const { data: { user } } = await supabase.auth.getUser()
-    return !!user?.email && REVIEW_SPIKE_ALLOWLIST.includes(user.email)
+    if (user?.email && REVIEW_SPIKE_ALLOWLIST.includes(user.email)) {
+      return { id: user.id, email: user.email }
+    }
+    return null
   } catch {
-    return false
+    return null
   }
+}
+
+function adminClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false } },
+  )
 }
 
 const FRAMING: Record<FundingType, string> = {
@@ -100,7 +113,8 @@ function asString(v: unknown): string {
 }
 
 export async function POST(req: NextRequest) {
-  if (!await isAuthorised()) {
+  const user = await getAllowlistedUser()
+  if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
   const apiKey = process.env.ANTHROPIC_API_KEY
@@ -203,6 +217,19 @@ export async function POST(req: NextRequest) {
         wordCountNote:    typeof r.wordCountNote === 'string' ? r.wordCountNote : null,
       }
     }),
+  }
+
+  // Persist for the validation round's audit. Non-fatal — a storage failure
+  // must not block returning the review to the user.
+  try {
+    await adminClient().from('application_reviews').insert({
+      user_id:    user.id,
+      user_email: user.email,
+      request,
+      result,
+    })
+  } catch (err) {
+    console.error('[review-application] failed to persist review:', err)
   }
 
   return NextResponse.json(result)
