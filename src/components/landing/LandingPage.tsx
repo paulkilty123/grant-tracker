@@ -308,7 +308,7 @@ export default function LandingPage() {
             GrantTracker
           </a>
           {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-10">
+          <nav className="hidden lg:flex items-center gap-6 xl:gap-8">
             {navLinks.map((link) => {
               const sectionId = link.href.replace('#', '')
               const isActive = activeSection === sectionId
@@ -331,7 +331,7 @@ export default function LandingPage() {
             })}
           </nav>
           {/* Desktop CTAs */}
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden lg:flex items-center gap-5">
             <Link href="/auth/login" className="text-[#2C2C2A] font-semibold text-base hover:opacity-80 transition-opacity no-underline" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>
               Sign in
             </Link>
@@ -340,7 +340,7 @@ export default function LandingPage() {
             </Link>
           </div>
           {/* Mobile */}
-          <div className="flex md:hidden items-center gap-3">
+          <div className="flex lg:hidden items-center gap-3">
             <Link href={COHORT_URL} onClick={trackCohortApply} className="bg-[#8ECB3C] text-[#173404] px-4 py-2 rounded-[10px] text-sm font-bold hover:opacity-90 transition-all no-underline">Apply to join</Link>
             <button onClick={() => setMobileOpen(o => !o)} className="p-1 text-[#2C2C2A]" aria-label="Toggle menu">
               {mobileOpen ? <X size={22} /> : <Menu size={22} />}
@@ -351,7 +351,7 @@ export default function LandingPage() {
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
-            className="border-t border-slate-100 bg-white px-6 pb-6 md:hidden"
+            className="border-t border-slate-100 bg-white px-6 pb-6 lg:hidden"
           >
             <div className="flex flex-col gap-4 pt-4">
               {navLinks.map(link => (
@@ -368,7 +368,7 @@ export default function LandingPage() {
 
       {/* HERO */}
       <section className="relative overflow-hidden" style={{ background: '#FAFAF7', minHeight: '100vh' }}>
-        <div className="relative z-10 mx-auto max-w-7xl px-6 md:px-8 grid lg:grid-cols-2 gap-16 lg:gap-12 items-start" style={{ paddingTop: 'clamp(80px, 14vw, 128px)', paddingBottom: 'clamp(40px, 8vw, 80px)' }}>
+        <div className="relative z-10 mx-auto max-w-7xl px-6 md:px-8 grid lg:grid-cols-2 gap-16 lg:gap-12 items-start" style={{ paddingTop: 'clamp(104px, 14vw, 128px)', paddingBottom: 'clamp(40px, 8vw, 80px)' }}>
 
           {/* Left: text */}
           <motion.div {...fadeUp(0)} className="flex flex-col justify-start">
