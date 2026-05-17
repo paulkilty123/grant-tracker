@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   type FundingType, type ReviewQuestion, type ReviewRequest, type ReviewResult,
   type OrgContext, type DraftRequest, type DraftResult, type PipelineGrantOption,
-  type ExtractedApplication,
+  type ExtractedApplication, type DraftSnapshot, type SavedDraft,
   FUNDING_TYPE_LABELS,
 } from './types'
 import ReviewResults from './ReviewResults'
@@ -99,9 +99,68 @@ export default function ReviewSpikeForm(
     }
   }
 
+  // ── Saved drafts ────────────────────────────────────────────────────────────
+  async function loadDraftsList() {
+    try {
+      const res = await fetch('/api/admin/application-drafts')
+      if (res.ok) setSavedDrafts(((await res.json()).drafts ?? []) as SavedDraft[])
+    } catch { /* non-fatal */ }
+  }
+
+  useEffect(() => { loadDraftsList() }, [])
+
+  async function saveDraft() {
+    setSavingDraft(true)
+    setDraftSaved(false)
+    const snapshot: DraftSnapshot = {
+      grantName, funder, fundingType, criteria, guidelinesUrl, grantUrl, pickedId,
+      questions, personalise, strengthSummary, result,
+    }
+    try {
+      const res = await fetch('/api/admin/application-drafts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: draftId, title: grantName.trim() || 'Untitled draft', state: snapshot }),
+      })
+      const json = await res.json()
+      if (res.ok && json.id) {
+        setDraftId(json.id)
+        setDraftSaved(true)
+        setTimeout(() => setDraftSaved(false), 2500)
+        loadDraftsList()
+      }
+    } finally {
+      setSavingDraft(false)
+    }
+  }
+
+  function openDraft(id: string) {
+    const d = savedDrafts.find(x => x.id === id)
+    if (!d) return
+    const s = d.state
+    setGrantName(s.grantName ?? '')
+    setFunder(s.funder ?? '')
+    setFundingType(s.fundingType ?? 'grant')
+    setCriteria(s.criteria ?? '')
+    setGuidelinesUrl(s.guidelinesUrl ?? '')
+    setGrantUrl(s.grantUrl ?? null)
+    setPickedId(s.pickedId ?? '')
+    setQuestions(s.questions?.length ? s.questions : [{ ...EMPTY_QUESTION }])
+    setPersonalise(s.personalise ?? {})
+    setStrengthSummary(s.strengthSummary ?? null)
+    setResult(s.result ?? null)
+    setDraftId(id)
+  }
+
   const [submitting, setSubmitting] = useState(false)
   const [error, setError]           = useState<string | null>(null)
   const [result, setResult]         = useState<ReviewResult | null>(null)
+
+  // Saved drafts.
+  const [draftId, setDraftId]         = useState<string | null>(null)
+  const [savedDrafts, setSavedDrafts] = useState<SavedDraft[]>([])
+  const [savingDraft, setSavingDraft] = useState(false)
+  const [draftSaved, setDraftSaved]   = useState(false)
 
   // Org enrichment ("About your organisation") — evidence-bank-lite.
   const [evidenceNotes, setEvidenceNotes] = useState(org?.evidenceNotes ?? '')
@@ -249,10 +308,32 @@ export default function ReviewSpikeForm(
       <h1 className="text-2xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
         Application review
       </h1>
-      <p className="text-sm text-mid mt-1 mb-6">
+      <p className="text-sm text-mid mt-1 mb-5">
         Spike — admin only. Paste an application&apos;s questions, generate a draft from your org
         profile, then review it. Part of the application-builder Phase 0 test.
       </p>
+
+      {/* Saved drafts */}
+      <div className="flex flex-wrap items-center gap-3 mb-6">
+        <select
+          className={inputCls + ' max-w-xs'}
+          value={draftId ?? ''}
+          onChange={e => { if (e.target.value) openDraft(e.target.value) }}
+        >
+          <option value="">Open a saved draft…</option>
+          {savedDrafts.map(d => (
+            <option key={d.id} value={d.id}>{d.title}</option>
+          ))}
+        </select>
+        <button
+          onClick={saveDraft}
+          disabled={savingDraft}
+          className="rounded-lg border border-charcoal/30 bg-white px-4 py-2 text-sm font-medium text-charcoal disabled:opacity-40"
+        >
+          {savingDraft ? 'Saving…' : draftId ? 'Save draft' : 'Save as new draft'}
+        </button>
+        {draftSaved && <span className="text-xs text-sage">Saved</span>}
+      </div>
 
       {/* Your organisation */}
       <div className="rounded-xl border border-warm bg-cream/40 p-4 mb-6">

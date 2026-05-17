@@ -44,6 +44,30 @@ export interface ReviewRequest {
   questions:          ReviewQuestion[]
 }
 
+// ── Saved drafts ──────────────────────────────────────────────────────────────
+
+/** A snapshot of the whole spike form, for save/reload. */
+export interface DraftSnapshot {
+  grantName:       string
+  funder:          string
+  fundingType:     FundingType
+  criteria:        string
+  guidelinesUrl:   string
+  grantUrl:        string | null
+  pickedId:        string
+  questions:       ReviewQuestion[]
+  personalise:     Record<number, string>
+  strengthSummary: string[] | null
+  result:          ReviewResult | null
+}
+
+export interface SavedDraft {
+  id:        string
+  title:     string
+  updatedAt: string
+  state:     DraftSnapshot
+}
+
 // ── Application-guidelines URL extraction ─────────────────────────────────────
 
 export interface ExtractedApplication {
