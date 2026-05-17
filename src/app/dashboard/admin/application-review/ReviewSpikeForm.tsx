@@ -32,6 +32,16 @@ export default function ReviewSpikeForm(
   const [fetchingUrl, setFetchingUrl]     = useState(false)
   const [fetchNote, setFetchNote]         = useState<string | null>(null)
 
+  function applyExtracted(ex: ExtractedApplication) {
+    setFetchNote(ex.note)
+    if (ex.questions.length > 0) {
+      setQuestions(ex.questions.map(q => ({
+        question: q.question, wordLimit: q.wordLimit, draftAnswer: '',
+      })))
+    }
+    if (ex.assessmentCriteria) setCriteria(ex.assessmentCriteria)
+  }
+
   async function fetchGuidelines() {
     if (!guidelinesUrl.trim()) return
     setFetchingUrl(true)
@@ -43,20 +53,35 @@ export default function ReviewSpikeForm(
         body: JSON.stringify({ url: guidelinesUrl.trim() }),
       })
       const json = await res.json()
-      if (!res.ok) {
-        setFetchNote(json.error ?? `Request failed (${res.status})`)
-        return
-      }
-      const ex = json as ExtractedApplication
-      setFetchNote(ex.note)
-      if (ex.questions.length > 0) {
-        setQuestions(ex.questions.map(q => ({
-          question: q.question, wordLimit: q.wordLimit, draftAnswer: '',
-        })))
-      }
-      if (ex.assessmentCriteria) setCriteria(ex.assessmentCriteria)
+      if (!res.ok) setFetchNote(json.error ?? `Request failed (${res.status})`)
+      else applyExtracted(json as ExtractedApplication)
     } catch (err) {
       setFetchNote(err instanceof Error ? err.message : 'Request failed')
+    } finally {
+      setFetchingUrl(false)
+    }
+  }
+
+  async function uploadApplicationPdf(file: File) {
+    setFetchingUrl(true)
+    setFetchNote(null)
+    try {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload  = () => resolve(String(reader.result).split(',')[1] ?? '')
+        reader.onerror = () => reject(new Error('Could not read the file'))
+        reader.readAsDataURL(file)
+      })
+      const res = await fetch('/api/admin/extract-application-file', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileBase64: base64, fileName: file.name }),
+      })
+      const json = await res.json()
+      if (!res.ok) setFetchNote(json.error ?? `Upload failed (${res.status})`)
+      else applyExtracted(json as ExtractedApplication)
+    } catch (err) {
+      setFetchNote(err instanceof Error ? err.message : 'Upload failed')
     } finally {
       setFetchingUrl(false)
     }
@@ -313,9 +338,12 @@ export default function ReviewSpikeForm(
         </div>
       </div>
 
-      {/* Application guidelines URL */}
+      {/* Application questions — fetch from URL, upload a PDF, or add manually */}
       <div className="mb-5">
-        <label className={labelCls}>Application guidelines URL</label>
+        <label className={labelCls}>Application questions</label>
+        <p className="text-xs text-light mb-2">
+          Fetch from a URL, upload the application form as a PDF, or add them manually below.
+        </p>
         <div className="flex gap-2">
           <input
             className={inputCls}
@@ -328,14 +356,23 @@ export default function ReviewSpikeForm(
             disabled={fetchingUrl || !guidelinesUrl.trim()}
             className="rounded-lg border border-charcoal/30 bg-white px-4 py-2 text-sm font-medium text-charcoal whitespace-nowrap disabled:opacity-40"
           >
-            {fetchingUrl ? 'Fetching…' : 'Fetch'}
+            {fetchingUrl ? 'Working…' : 'Fetch'}
           </button>
         </div>
-        <p className="text-xs text-light mt-1">
-          Pulls the questions and criteria from the page into the form below. If the page
-          blocks automated access, paste them manually instead.
-        </p>
-        {fetchNote && <p className="text-xs text-mid mt-1.5">{fetchNote}</p>}
+        <label className="mt-2 inline-flex items-center gap-2 cursor-pointer">
+          <span className="rounded-lg border border-charcoal/30 bg-white px-3 py-1.5 text-sm font-medium text-charcoal">
+            Upload PDF
+          </span>
+          <span className="text-xs text-light">Upload the application form as a PDF (not .docx — save to PDF first)</span>
+          <input
+            type="file"
+            accept="application/pdf,.pdf"
+            className="hidden"
+            disabled={fetchingUrl}
+            onChange={e => { const f = e.target.files?.[0]; if (f) uploadApplicationPdf(f); e.target.value = '' }}
+          />
+        </label>
+        {fetchNote && <p className="text-xs text-mid mt-2">{fetchNote}</p>}
       </div>
 
       {/* Assessment criteria */}
