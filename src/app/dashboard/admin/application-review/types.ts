@@ -42,7 +42,38 @@ export interface ReviewRequest {
   questions:          ReviewQuestion[]
 }
 
-// ── Output (what the engine returns, what the display renders) ────────────────
+// ── Draft generation ──────────────────────────────────────────────────────────
+
+export interface DraftQuestion {
+  question:  string
+  wordLimit: number | null
+}
+
+export interface DraftRequest {
+  grantName:          string
+  funder:             string
+  fundingType:        FundingType
+  assessmentCriteria: string
+  orgId:              string
+  evidenceNotes:      string
+  questions:          DraftQuestion[]
+}
+
+export interface DraftAnswer {
+  question:    string
+  draftAnswer: string
+  /** Consolidated note — what the user needs to personalise or add. */
+  toPersonalise: string
+}
+
+export interface DraftResult {
+  fundingType: FundingType
+  /** "What makes this a strong application" — 2-3 strategic angles. */
+  strengthSummary: string[]
+  answers: DraftAnswer[]
+}
+
+// ── Output (what the review engine returns, what the display renders) ─────────
 
 export interface QuestionFeedback {
   question:         string
