@@ -337,6 +337,29 @@ function isRelevantForAudience(applicants: string[]): boolean {
   return !allExcluded
 }
 
+// GOV.UK Find a Grant uses a fixed location vocabulary on grantLocation:
+//   'National' (UK-wide), 'International', the four nations, and English
+//   macro-regions ('Midlands', 'North West England', ...). Derive a structured
+//   location_tag from it — the matching engine needs the tag, not is_local.
+const GOVUK_NATIONS = new Set(['England', 'Scotland', 'Wales', 'Northern Ireland'])
+
+function deriveGovUkLocation(locations: string[]): { tag: string; isLocal: boolean } {
+  const locs = locations.map(l => l.trim()).filter(Boolean)
+  if (locs.length === 0) return { tag: 'UK', isLocal: false }
+  // Any UK-wide / international signal → treat as open UK-wide.
+  if (locs.some(l => l === 'National' || l === 'International')) return { tag: 'UK', isLocal: false }
+  const nations = locs.filter(l => GOVUK_NATIONS.has(l))
+  const regions = locs.filter(l => !GOVUK_NATIONS.has(l))
+  // All four nations and nothing else → UK-wide.
+  if (nations.length === 4 && regions.length === 0) return { tag: 'UK', isLocal: false }
+  // Exactly one nation, nothing else → that nation.
+  if (nations.length === 1 && regions.length === 0) return { tag: nations[0], isLocal: false }
+  // A single specific region → regional.
+  if (locs.length === 1) return { tag: locs[0], isLocal: true }
+  // Multiple regions / a mix → no single clean tag.
+  return { tag: 'Selected areas', isLocal: false }
+}
+
 function normaliseFindAGrant(g: Record<string, unknown>): ScrapedGrant | null {
   const label       = String(g.label ?? g.id ?? Math.random())
   const locations   = Array.isArray(g.grantLocation)    ? g.grantLocation    as string[] : []
@@ -344,6 +367,8 @@ function normaliseFindAGrant(g: Record<string, unknown>): ScrapedGrant | null {
 
   // Skip grants that are only for local authorities, businesses, research institutes etc.
   if (!isRelevantForAudience(applicants)) return null
+
+  const loc = deriveGovUkLocation(locations)
 
   return {
     external_id:          `gov_uk_${label}`,
@@ -356,7 +381,8 @@ function normaliseFindAGrant(g: Record<string, unknown>): ScrapedGrant | null {
     amount_max:           typeof g.grantMaximumAward === 'number' ? g.grantMaximumAward : null,
     deadline:             parseDeadline(g.grantApplicationCloseDate),
     is_rolling:           false,
-    is_local:             locations.length > 0 && !locations.includes('All of United Kingdom'),
+    is_local:             loc.isLocal,
+    location_tag:         loc.tag,
     sectors:              [],
     eligibility_criteria: applicants,
     apply_url:            `https://www.find-government-grants.service.gov.uk/grants/${label}`,
