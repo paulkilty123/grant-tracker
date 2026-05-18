@@ -1099,8 +1099,19 @@ async function crawlFoundationScotland(): Promise<CrawlResult> {
       const area      = cardText.match(/Area:\s*([^\n]+)/)?.[1]?.trim() ?? ''
       const isNational = /all of scotland|scotland.wide|national/i.test(area)
 
-      // Description: first <p> in the card
-      const desc = card.querySelector('p')?.text?.trim() ?? ''
+      // Description: try multiple selectors. Foundation Scotland's card markup
+      // changed at some point and the original `p` selector stopped matching —
+      // 13 of 14 active rows ended up with empty description. Fall back through
+      // common card-description class names then the first <p>. Worst case
+      // (none match) is identical to the previous behaviour.
+      const desc = (
+        card.querySelector('.card-description')?.text?.trim() ||
+        card.querySelector('.excerpt')?.text?.trim() ||
+        card.querySelector('.summary')?.text?.trim() ||
+        card.querySelector('.description')?.text?.trim() ||
+        card.querySelector('p')?.text?.trim() ||
+        ''
+      )
 
       grants.push({
         external_id:          `foundation_scotland_${slug}`,
