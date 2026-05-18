@@ -42,7 +42,7 @@ import {
   type FunderRow,
 } from '@/lib/opportunity-adapter'
 import { executeMCPSearch, computeZeroResultDiagnostic, type MCPSearchParams } from '@/lib/mcp-search'
-import { getUpgradeNote } from '@/lib/mcp-upgrade-notes'
+import { getUpgradeNote, getErrorVariantNote } from '@/lib/mcp-upgrade-notes'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -495,6 +495,7 @@ async function handle(req: NextRequest): Promise<Response> {
       }
       return `Rate limit reached. Retry after ${retrySeconds} seconds.`
     })()
+    const upgrade_note = getErrorVariantNote('rate_limit_exceeded')
     return NextResponse.json({
       error: {
         code: 'rate_limit_exceeded',
@@ -503,6 +504,7 @@ async function handle(req: NextRequest): Promise<Response> {
       },
       attribution: ATTRIBUTION,
       rate_limit_status: rl.status,
+      ...(upgrade_note ? { upgrade_note } : {}),
     }, {
       status: 429,
       headers: { 'Retry-After': String(retrySeconds) },

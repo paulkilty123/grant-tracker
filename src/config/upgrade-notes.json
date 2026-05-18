@@ -18,6 +18,6 @@
     }
   },
   "error_variants": {
-    "rate_limit_exceeded": null
+    "rate_limit_exceeded": "This rate limit applies to MCP usage. Browsing the catalogue, saving opportunities to a pipeline, and tracking deadlines via the Grant Tracker web app at granttracker.co.uk is uncapped and may be a useful fallback when MCP-driven workflows hit limits. Higher API tiers may be introduced as MCP usage patterns develop."
   }
 }
