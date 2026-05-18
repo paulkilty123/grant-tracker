@@ -2923,6 +2923,22 @@ async function crawlCommunityOwnershipFund(): Promise<CrawlResult> {
 
 // ── Source 71 — Creative Scotland ─────────────────────────────────────────────
 // creativescotland.com — Scotland's main arts and creative industries funder.
+//
+// The page selectors (article, .fund, .funding-option, .card) are broad and
+// match nav/info elements as well as actual grant cards. We guard with an
+// explicit junk-title blocklist below — 7 known nav-page titles that
+// previously landed in the catalogue (deactivated 2026-05-18). If new junk
+// titles emerge, add them here. Selectors could be tightened post-launch.
+const CREATIVE_SCOTLAND_JUNK_TITLES: RegExp[] = [
+  /^funding programmes$/i,
+  /^about our funding$/i,
+  /^archived funds$/i,
+  /^other sources of support$/i,
+  /^help with your application$/i,
+  /^awards listings$/i,
+  /^funding and development programme deadlines$/i,
+]
+
 async function crawlCreativeScotland(): Promise<CrawlResult> {
   const SOURCE = 'creative_scotland'
   const BASE   = 'https://www.creativescotland.com'
@@ -2935,6 +2951,7 @@ async function crawlCreativeScotland(): Promise<CrawlResult> {
       const titleEl = card.querySelector('h2 a, h3 a, h2, h3')
       const title   = titleEl?.text?.trim()
       if (!title || title.length < 5) continue
+      if (CREATIVE_SCOTLAND_JUNK_TITLES.some(p => p.test(title))) continue
 
       const href = card.querySelector('a')?.getAttribute('href') ?? ''
       const url  = href.startsWith('http') ? href : `${BASE}${href}`

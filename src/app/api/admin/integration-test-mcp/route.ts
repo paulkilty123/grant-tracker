@@ -230,31 +230,51 @@ export async function GET(req: NextRequest) {
   // Workflow 2 — zero-result with adjacents (Q5 mental_health × Yorkshire)
   // ─────────────────────────────────────────────────────────────────────
   {
+    // Q5 was originally a guaranteed zero-result query (mental_health × programmes
+    // × Yorkshire). After the 2026-05-14 classifier improvements at least one
+    // mental_health programme now exists in the catalogue, so this can flip
+    // between zero-result and results-present as the catalogue evolves.
+    // The test asserts CORRECT BEHAVIOUR on either branch and drills whichever
+    // id is available (adjacent or actual result) through get_opportunity_detail.
     const t = await mcpCall(origin, 'tools/call', {
       name: 'search_funding_and_support',
       arguments: { funding_type: ['programme'], sector: ['mental_health'], region: ['yorkshire_and_humber'] },
     }, { bearer: testKey ?? undefined })
     const total = t.tool_payload?.total_matching as number | undefined
-    const zd = t.tool_payload?.zero_result_diagnostic as { likely_cause?: string; adjacent_suggestions?: unknown[] } | undefined
-    if (total === 0 && zd && Array.isArray(zd.adjacent_suggestions) && zd.adjacent_suggestions.length >= 1) {
-      tests.push(pass('w2a: Q5 zero-result includes zero_result_diagnostic with adjacents', { likely_cause: zd.likely_cause, adjacents: zd.adjacent_suggestions.length }))
-      // Walk the first adjacent through get_opportunity_detail
-      const firstAdj = zd.adjacent_suggestions[0] as Record<string, unknown>
-      const adjId = firstAdj.opportunity_id as string | undefined
-      if (adjId) {
-        const t2 = await mcpCall(origin, 'tools/call', {
-          name: 'get_opportunity_detail', arguments: { opportunity_id: adjId },
-        }, { bearer: testKey ?? undefined })
-        if (t2.tool_payload?.opportunity_id === adjId) {
-          tests.push(pass('w2b: adjacent_suggestion id can be drilled via get_opportunity_detail'))
-        } else {
-          tests.push(fail('w2b: adjacent_suggestion id can be drilled', 'detail call did not return matching id', t2.tool_payload))
-        }
+    let drillId: string | null = null
+    if (total === 0) {
+      const zd = t.tool_payload?.zero_result_diagnostic as { likely_cause?: string; adjacent_suggestions?: Array<Record<string, unknown>> } | undefined
+      if (zd && Array.isArray(zd.adjacent_suggestions) && zd.adjacent_suggestions.length >= 1) {
+        tests.push(pass('w2a: Q5 zero-result branch — diagnostic + ≥1 adjacent present', { likely_cause: zd.likely_cause, adjacents: zd.adjacent_suggestions.length }))
+        drillId = (zd.adjacent_suggestions[0].opportunity_id as string | undefined) ?? null
       } else {
-        tests.push(fail('w2b: adjacent_suggestion id can be drilled', 'no opportunity_id on adjacent'))
+        tests.push(fail('w2a: Q5 zero-result branch — diag/adjacents missing', `has_diag=${!!zd}, adj_count=${zd?.adjacent_suggestions?.length}`, t.tool_payload))
+      }
+    } else if ((total ?? 0) >= 1) {
+      const results = t.tool_payload?.results as Array<{ opportunity_id?: string; match_quality?: object }> | undefined
+      const first = results?.[0]
+      if (results && first?.opportunity_id && first?.match_quality) {
+        tests.push(pass('w2a: Q5 results branch — ≥1 result with match_quality (catalogue evolved; mental_health programmes now present)', { total, top_id: first.opportunity_id }))
+        drillId = first.opportunity_id
+      } else {
+        tests.push(fail('w2a: Q5 results branch — missing opportunity_id or match_quality', '', t.tool_payload))
       }
     } else {
-      tests.push(fail('w2a: Q5 zero-result with adjacents', `total=${total}, has_diag=${!!zd}, adj_count=${zd?.adjacent_suggestions?.length}`, t.tool_payload))
+      tests.push(fail('w2a: Q5 unexpected response shape', `total=${total}`, t.tool_payload))
+    }
+
+    // w2b drills whichever id w2a surfaced — both branches deliver a stable id
+    if (drillId) {
+      const t2 = await mcpCall(origin, 'tools/call', {
+        name: 'get_opportunity_detail', arguments: { opportunity_id: drillId },
+      }, { bearer: testKey ?? undefined })
+      if (t2.tool_payload?.opportunity_id === drillId) {
+        tests.push(pass('w2b: surfaced id (adjacent OR actual result) drills via get_opportunity_detail'))
+      } else {
+        tests.push(fail('w2b: surfaced id drills', 'detail call did not return matching id', t2.tool_payload))
+      }
+    } else {
+      tests.push(fail('w2b: surfaced id drills', 'no id from w2a to drill'))
     }
   }
 
