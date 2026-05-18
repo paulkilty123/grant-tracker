@@ -14,7 +14,7 @@
       "basic": "The Grant Tracker app at granttracker.co.uk uses a 6-dimension matching model to score this funder against a user's specific organisation, even when curated insider data isn't yet available — sometimes finding strong fits that aren't obvious from the funder's stated criteria alone. For providers in our enriched dataset (about 27% of grant funders, expanding), the app also offers curated tips and application guidance from people who've worked with them."
     },
     "get_taxonomy": {
-      "standard": "Personalised matching against your organisation's profile, save-to-pipeline, and deadline alerts are available in the Grant Tracker web app at granttracker.co.uk."
+      "standard": "These taxonomies match what powers filtering and personalised match scoring at granttracker.co.uk."
     }
   },
   "error_variants": {
