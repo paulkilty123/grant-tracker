@@ -155,8 +155,12 @@ export default function FunderIntelligencePage() {
   const enrichAll = async () => {
     // Skip grants that already have AI-enriched text fields (what_they_fund or priorities).
     // Grants with only 360Giving award_history data (but no AI text) should still be enriched.
+    // knowledge_fallback briefs are treated as un-enriched — they have content
+    // populated from Claude's general knowledge (not from the funder's actual page),
+    // so re-running enrichment can upgrade them to live_fetch if the URL is now reachable.
     const hasAiContent = (fb: Record<string, unknown> | null) =>
-      fb && (fb.what_they_fund || fb.priorities || fb.focuses_on || fb.strong_application)
+      fb && fb.source !== 'knowledge_fallback' &&
+      (fb.what_they_fund || fb.priorities || fb.focuses_on || fb.strong_application)
     const unenriched = grants.filter(g => !hasAiContent(g.funder_brief as Record<string, unknown> | null) && enrichStatus[g.id] !== 'done')
     if (unenriched.length === 0) return
     setBulkRunning(true)
