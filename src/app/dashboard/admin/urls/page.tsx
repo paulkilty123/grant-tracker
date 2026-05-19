@@ -1639,8 +1639,20 @@ export default function UrlAdminPage() {
     // (e.g. "open to charities with annual income of £250,000 or less"),
     // not a grant amount. Both are non-applicant amounts and should be
     // dropped before computing min/max.
-    const POOL_CUES_LEFT = /\b(?:awarded?\s+(?:a\s+)?total|totalling|total\s+(?:of|awarded|distributed|grants?|funding|funds|fund)\b|in\s+(?:the\s+)?(?:past|previous|last)\s+(?:year|years|few\s+years)|annual(?:ly\s+(?:awards?|distribut(?:es?|ed|ing)|gives?|gave|given|spen(?:ds?|t|ding))|\s+(?:budget|fund|spending|expenditure))|per\s+(?:year|annum)|each\s+year|distribut(?:es?|ed|ing)|donat(?:es?|ed|ing)|spen(?:ds?|t|ding)|gives?\s+(?:away|out)|gave\s+(?:away|out)|given\s+(?:away|out)|endowment|combined\s+(?:total|funding|budget)|annual\s+(?:income|turnover|expenditure|spending|spend|revenue|budget)\s*(?:[<>≤≥]|of\b)|(?:income|turnover|expenditure|spending|spend|revenue|reserves|budget)\s*(?:[<>≤≥]|\b(?:of|cap|limit|under|below|over|above|up\s+to|less\s+than|more\s+than|exceeding)\b))/i
-    const POOL_CUES_RIGHT = /^[\s,()]*(?:distribut(?:es|ed|ing)\b|donat(?:es|ed|ing)\b|spen(?:ds|t|ding)\b|spread\s+across|split\s+(?:across|between|among)|shared\s+(?:across|between|among)|across\s+(?:multiple|several|all|charities|recipients|organisations|projects|grants?|funds?|programmes?)|to\s+multiple|in\s+20\d{2}(?:[\/\-]\d{2,4})?\b|in\s+total\b|annually\b|each\s+year\b|per\s+(?:year|annum)\b|altogether\b|or\s+(?:less|below|under|fewer)\b)/i
+    // "launch the £4m … Programme" pattern: when the amount is announced as
+    // the size of a *named* fund/programme (left cue "launch/announcing
+    // the"), it's the pool, not a per-grant amount. Example bug this catches:
+    // "We're proud to launch the £4m Stronger Futures Programme 3.0" — £4m
+    // was previously slipping through and becoming amount_max even though
+    // typical_award correctly said £80k–£200k per grant.
+    const POOL_CUES_LEFT = /\b(?:awarded?\s+(?:a\s+)?total|totalling|total\s+(?:of|awarded|distributed|grants?|funding|funds|fund)\b|in\s+(?:the\s+)?(?:past|previous|last)\s+(?:year|years|few\s+years)|annual(?:ly\s+(?:awards?|distribut(?:es?|ed|ing)|gives?|gave|given|spen(?:ds?|t|ding))|\s+(?:budget|fund|spending|expenditure))|per\s+(?:year|annum)|each\s+year|distribut(?:es?|ed|ing)|donat(?:es?|ed|ing)|spen(?:ds?|t|ding)|gives?\s+(?:away|out)|gave\s+(?:away|out)|given\s+(?:away|out)|endowment|combined\s+(?:total|funding|budget)|(?:launch(?:ing|ed)?|announc(?:ing|ed))\s+(?:our\s+|the\s+|a\s+|new\s+|with\s+)|annual\s+(?:income|turnover|expenditure|spending|spend|revenue|budget)\s*(?:[<>≤≥]|of\b)|(?:income|turnover|expenditure|spending|spend|revenue|reserves|budget)\s*(?:[<>≤≥]|\b(?:of|cap|limit|under|below|over|above|up\s+to|less\s+than|more\s+than|exceeding)\b))/i
+    // Right-context "[programme/fund/scheme name]" pattern: when 1–4 lowercase
+    // words follow the amount and end in "Programme/Fund/Scheme/Initiative/Pool",
+    // the amount is the size of that named container, not a per-grant figure.
+    // Requires ≥1 intermediate word so "£10,000 fund" alone (where 'fund' is
+    // just the funder noun) doesn't get dropped — only "£4m Stronger Futures
+    // Programme" / "£2m Climate Action Fund" style.
+    const POOL_CUES_RIGHT = /^[\s,()]*(?:distribut(?:es|ed|ing)\b|donat(?:es|ed|ing)\b|spen(?:ds|t|ding)\b|spread\s+across|split\s+(?:across|between|among)|shared\s+(?:across|between|among)|across\s+(?:multiple|several|all|charities|recipients|organisations|projects|grants?|funds?|programmes?)|to\s+multiple|in\s+20\d{2}(?:[\/\-]\d{2,4})?\b|in\s+total\b|annually\b|each\s+year\b|per\s+(?:year|annum)\b|altogether\b|or\s+(?:less|below|under|fewer)\b|\s+[a-z]+(?:\s+[a-z]+){1,3}\s+(?:programme|scheme|initiative|pool|total\s+budget|prize\s+pool)\b)/i
     // Per-grant qualifiers in left-context override the pool-cues-RIGHT
     // check. Without this, "Up to £10,000 per year" gets dropped because
     // 'per year' looks pool-shaped — but the left 'up to' makes clear
@@ -1751,7 +1763,13 @@ export default function UrlAdminPage() {
       //   "Grants panel takes place in June 2026"       → June 2026 dropped
       //   "Decision announced by 30 September"          → 30 September dropped
       //   "Successful projects begin July 2026"         → July 2026 dropped
-      const NON_APP_DATE_CUES = /\b(?:complet(?:ed?|ion|ing)\b|report(?:s|ing)?\s+(?:due|submitted|by|deadline)|submitted\s+(?:by|on)\b|panel\s+(?:meets?|takes?\s+place|sits?|review|date|decision)|decision\s+(?:by|on|date|made|announced|expected)|announced?\s+(?:by|on|in|at)\b|results?\s+(?:by|on|announced|in|available)|paid\s+(?:out|by)\b|awarded\s+(?:by|on|in)\b|projects?\s+(?:should\s+|must\s+|will\s+|need\s+to\s+|are\s+expected\s+to\s+)?(?:begin|start|commence|run\s+(?:from|until))|delivery\s+(?:by|begins?|ends?|period)|grant\s+period|funding\s+(?:ends?|begins?|period)|notified\s+(?:by|on))/i
+      // announce[a-z]* is intentionally broad (any "announce/announced/
+      // announcement/announcing" form anywhere in the ~60-char left context).
+      // Caught a bug where "decisions will be announced week commencing
+      // 8 June 2026" survived the earlier stricter "announced (by|on|in|at)"
+      // pattern — the date is when decisions are announced, not the
+      // application deadline.
+      const NON_APP_DATE_CUES = /\b(?:complet(?:ed?|ion|ing)\b|report(?:s|ing)?\s+(?:due|submitted|by|deadline)|submitted\s+(?:by|on)\b|panel\s+(?:meets?|takes?\s+place|sits?|review|date|decision)|decision\s+(?:by|on|date|made|announced|expected)|announce[a-z]*\b|results?\s+(?:by|on|announced|in|available)|paid\s+(?:out|by)\b|awarded\s+(?:by|on|in)\b|projects?\s+(?:should\s+|must\s+|will\s+|need\s+to\s+|are\s+expected\s+to\s+)?(?:begin|start|commence|run\s+(?:from|until))|delivery\s+(?:by|begins?|ends?|period)|grant\s+period|funding\s+(?:ends?|begins?|period)|notified\s+(?:by|on))/i
       const isNonAppDate = (idx: number) => {
         const leftCtx = timelineText.slice(Math.max(0, idx - 60), idx)
         return NON_APP_DATE_CUES.test(leftCtx)
