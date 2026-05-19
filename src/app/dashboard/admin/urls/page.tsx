@@ -2349,9 +2349,17 @@ export default function UrlAdminPage() {
       q = q.eq('is_active', false).neq('url_status', 'dead').not('saved_for_later', 'is', 'true')
     }
     const { data: rawData } = await q
-    const targets = (rawData ?? []).filter(g =>
-      !g.funder_brief || !(g.funder_brief as Record<string, unknown>).who_can_apply
-    )
+    // Treat knowledge_fallback briefs as unenriched — the LLM filled fields
+    // from training memory because the live page couldn't be fetched at the
+    // time. Re-running enrichment may now succeed against the live URL and
+    // upgrade source='knowledge_fallback' → 'live_fetch'. Mirrors the
+    // hasAiContent logic on the Intelligence page.
+    const targets = (rawData ?? []).filter(g => {
+      const fb = g.funder_brief as Record<string, unknown> | null
+      if (!fb) return true
+      if (fb.source === 'knowledge_fallback') return true
+      return !fb.who_can_apply
+    })
 
     if (targets.length === 0) {
       setBulkEnrichLog([scope === 'review'
