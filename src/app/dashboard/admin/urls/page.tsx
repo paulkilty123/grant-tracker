@@ -1948,9 +1948,19 @@ export default function UrlAdminPage() {
     // eslint-disable-next-line no-console
     console.warn('[detectLocation] v3-boroughs', { id: grant.id, title: grant.title, text: text.slice(0, 400), hasBrief: !!brief, geographicFocus: brief?.geographic_focus })
 
-    // UK-wide signals — check FIRST so a brief that mentions individual
-    // nations as examples (e.g. "UK-wide, delivered across England, Wales
-    // and Scotland") doesn't get tagged as the last-mentioned nation.
+    // Global / international signals — check BEFORE UK / nations / London
+    // so a brief like "Global. Award ceremonies held in London, Boston,
+    // Singapore..." (Earthshot Prize) doesn't get tagged "London" from
+    // the host-city mention. Funders genuinely international in scope —
+    // Earthshot, Stavros Niarchos, Open Society — should tag as 'Global'.
+    if (/\b(?:global(?:ly)?|worldwide|internationally|international\s+(?:funder|foundation|prize|programme|fund|charity|organisation)|across\s+(?:the\s+)?(?:world|globe)|across\s+\d+\s+countries|operates\s+(?:internationally|globally)|open\s+to\s+(?:organisations?\s+)?globally|(?:in|across)\s+(?:multiple|many|over\s+\d+|hundreds\s+of)\s+countries)\b/.test(text)) {
+      setReviewField(grant.id, 'location_tag', 'Global'); return
+    }
+
+    // UK-wide signals — check FIRST (after Global) so a brief that mentions
+    // individual nations as examples (e.g. "UK-wide, delivered across
+    // England, Wales and Scotland") doesn't get tagged as the last-mentioned
+    // nation.
     if (/\buk[-\s]?wide\b|\bukwide\b|\bunited\s+kingdom\b|\bnationwide\b|\bnational\s+(?:programme|fund|scheme|charity)\b|\bacross\s+the\s+uk\b|\bthroughout\s+the\s+uk\b/.test(text)) {
       setReviewField(grant.id, 'location_tag', 'UK'); return
     }
