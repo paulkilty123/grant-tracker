@@ -2989,52 +2989,20 @@ async function crawlCreativeScotland(): Promise<CrawlResult> {
       })
     }
 
-    if (grants.length > 0) return await upsertGrants(SOURCE, grants)
-
-    return await upsertGrants(SOURCE, [
-      {
-        external_id:          `${SOURCE}_open_fund`,
-        source:               SOURCE,
-        title:                'Creative Scotland — Open Fund for Individuals',
-        funder:               'Creative Scotland',
-        funder_type:          'government',
-        description:          'Supports creative practitioners and artists based in Scotland to develop their creative practice, reach new audiences and develop their career. Grants of £1,000–£50,000.',
-        amount_min:           1000,
-        amount_max:           50000,
-        deadline:             null,
-        is_rolling:           true,
-        is_local:             true,
-        sectors:              ['arts', 'culture', 'creative industries'],
-        eligibility_criteria: [
-          'Individual artist or creative practitioner based in Scotland',
-          'Scottish citizen or resident with right to work/remain',
-          'Project must take place in Scotland or benefit Scottish arts',
-        ],
-        apply_url:            `${BASE}/funding/apply-for-funding/`,
-        raw_data:             { programme: 'open_fund_individuals' } as Record<string, unknown>,
-      },
-      {
-        external_id:          `${SOURCE}_open_fund_orgs`,
-        source:               SOURCE,
-        title:                'Creative Scotland — Open Fund for Organisations',
-        funder:               'Creative Scotland',
-        funder_type:          'government',
-        description:          'Supports creative organisations, companies and collectives in Scotland. Funds projects, activities, productions and initiatives that develop creativity and reach audiences. Grants of £1,000–£150,000.',
-        amount_min:           1000,
-        amount_max:           150000,
-        deadline:             null,
-        is_rolling:           true,
-        is_local:             true,
-        sectors:              ['arts', 'culture', 'creative industries', 'heritage'],
-        eligibility_criteria: [
-          'Organisation based in Scotland',
-          'Creative or arts focus',
-          'Project must take place in Scotland or benefit Scottish arts scene',
-        ],
-        apply_url:            `${BASE}/funding/apply-for-funding/`,
-        raw_data:             { programme: 'open_fund_organisations' } as Record<string, unknown>,
-      },
-    ])
+    // Removed fallback emit-two-hardcoded-Open-Fund-rows behaviour (2026-05-19).
+    // Reasons:
+    //   1. The hardcoded apply_url (/funding/apply-for-funding/) now 404s —
+    //      Creative Scotland restructured their site.
+    //   2. The fallback rows are duplicates of a richer manual row already in
+    //      the catalogue ("Creative Scotland — Open Fund", source='manual',
+    //      apply_url=https://www.creativescotland.com/funding, url_status='ok').
+    //   3. The fallback was re-creating dead-URL rows in Needs Review on every
+    //      nightly crawl, regardless of admin deactivation (scraper-revert
+    //      pattern per feedback_scraped_field_fixes_revert.md).
+    // If the main scrape returns 0 grants, return 0 — the manual canonical
+    // row covers Creative Scotland minimum coverage. Fix the main scrape's
+    // card-selector drift separately (same pattern as Foundation Scotland).
+    return await upsertGrants(SOURCE, grants)
   } catch (err) {
     return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) }
   }
