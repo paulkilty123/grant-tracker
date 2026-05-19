@@ -291,6 +291,41 @@ function classifyLocationTag(tag: string | null | undefined): {
  * Substring match in either direction — handles both "London" ↔ "London, UK"
  * and "Tyne & Wear" ↔ "Newcastle, Tyne & Wear".
  */
+/**
+ * County / region → constituent towns and cities. Lets a grant tagged with a
+ * county ("Sussex") match an org that entered a town within it ("Brighton and
+ * Hove"). Not exhaustive — covers the counties and city-regions that appear as
+ * catalogue location tags, with their principal towns. Counties without an
+ * entry fall back to string matching only.
+ */
+const REGION_HIERARCHY: Record<string, string[]> = {
+  'sussex':            ['brighton', 'hove', 'lewes', 'eastbourne', 'worthing', 'crawley', 'hastings', 'bexhill', 'chichester', 'horsham', 'rother', 'wealden', 'arun', 'adur', 'mid sussex', 'east sussex', 'west sussex'],
+  'east sussex':       ['brighton', 'hove', 'lewes', 'eastbourne', 'hastings', 'bexhill', 'rother', 'wealden'],
+  'west sussex':       ['worthing', 'crawley', 'chichester', 'horsham', 'arun', 'adur', 'mid sussex'],
+  'kent':              ['canterbury', 'maidstone', 'dover', 'margate', 'ramsgate', 'ashford', 'tunbridge wells', 'tonbridge', 'gravesend', 'dartford', 'folkestone', 'sevenoaks', 'chatham', 'gillingham', 'medway'],
+  'surrey':            ['guildford', 'woking', 'epsom', 'reigate', 'redhill', 'camberley', 'staines', 'leatherhead', 'dorking', 'farnham'],
+  'essex':             ['chelmsford', 'colchester', 'southend', 'basildon', 'harlow', 'brentwood', 'braintree', 'clacton'],
+  'norfolk':           ['norwich', 'great yarmouth', 'kings lynn', "king's lynn", 'thetford', 'dereham'],
+  'suffolk':           ['ipswich', 'lowestoft', 'bury st edmunds', 'felixstowe', 'haverhill'],
+  'devon':             ['exeter', 'plymouth', 'torquay', 'paignton', 'barnstaple', 'newton abbot', 'tiverton'],
+  'cornwall':          ['truro', 'falmouth', 'penzance', 'newquay', 'st austell', 'camborne', 'redruth', 'bodmin'],
+  'somerset':          ['taunton', 'bridgwater', 'yeovil', 'wells', 'frome', 'glastonbury'],
+  'dorset':            ['bournemouth', 'poole', 'weymouth', 'dorchester', 'bridport'],
+  'oxfordshire':       ['oxford', 'banbury', 'bicester', 'witney', 'abingdon', 'didcot'],
+  'gloucestershire':   ['gloucester', 'cheltenham', 'stroud', 'cirencester', 'tewkesbury'],
+  'lancashire':        ['preston', 'blackpool', 'blackburn', 'burnley', 'lancaster', 'lytham', 'chorley'],
+  'cumbria':           ['carlisle', 'kendal', 'barrow', 'workington', 'penrith', 'whitehaven'],
+  'yorkshire':         ['leeds', 'sheffield', 'bradford', 'york', 'hull', 'huddersfield', 'wakefield', 'doncaster', 'rotherham', 'barnsley', 'harrogate', 'scarborough', 'halifax', 'north yorkshire', 'south yorkshire', 'west yorkshire', 'east yorkshire'],
+  'south yorkshire':   ['sheffield', 'doncaster', 'rotherham', 'barnsley'],
+  'west yorkshire':    ['leeds', 'bradford', 'wakefield', 'huddersfield', 'halifax', 'kirklees', 'calderdale'],
+  'north yorkshire':   ['york', 'harrogate', 'scarborough', 'ripon', 'northallerton'],
+  'east yorkshire':    ['hull', 'beverley', 'bridlington'],
+  'greater manchester':['manchester', 'salford', 'bolton', 'stockport', 'oldham', 'rochdale', 'bury', 'wigan', 'tameside', 'trafford'],
+  'merseyside':        ['liverpool', 'birkenhead', 'st helens', 'southport', 'bootle', 'wirral'],
+  'tyne and wear':     ['newcastle', 'sunderland', 'gateshead', 'south shields', 'north shields', 'washington', 'whitley bay'],
+  'west midlands':     ['birmingham', 'coventry', 'wolverhampton', 'dudley', 'walsall', 'solihull', 'west bromwich'],
+}
+
 function orgMatchesRegionalTag(tagLabel: string, orgLocation: string): boolean {
   const tagLower = tagLabel.toLowerCase().trim()
   const orgLower = orgLocation.toLowerCase()
@@ -299,7 +334,12 @@ function orgMatchesRegionalTag(tagLabel: string, orgLocation: string): boolean {
   if (orgLower.includes(tagLower) || tagLower.includes(orgLower.split(',')[0].trim())) return true
   // Handle compound tags like "Tyne & Wear", "Coventry & Warwickshire" — split and match any part
   const parts = tagLower.split(/\s*&\s*|\s+and\s+/).map(p => p.trim()).filter(p => p.length >= 3)
-  return parts.some(p => orgLower.includes(p))
+  if (parts.some(p => orgLower.includes(p))) return true
+  // Region hierarchy — the org's town sits within the tagged county/region
+  // (e.g. grant tagged "Sussex", org entered "Brighton and Hove").
+  const children = REGION_HIERARCHY[tagLower]
+  if (children && children.some(town => orgLower.includes(town))) return true
+  return false
 }
 
 /**
@@ -1349,10 +1389,15 @@ export function computeMatchScore(
     score = Math.min(score, 45)
   }
 
-  // Cap total score for local grants outside the org's area — a strong sector
-  // match shouldn't make a Somerset grant look relevant to a London org.
+  // Cap total score for grants restricted to an area outside the org's — a
+  // strong sector match shouldn't make a Somerset grant look relevant to a
+  // London org. For orgs whose geographic_reach is local or regional, a
+  // wrong-area grant is pure noise (they can't deliver there), so bury it
+  // hard — well below the Weak-match band — rather than leaving it at ~44%.
   if (locationMismatch) {
-    score = Math.min(score, 44)
+    const reach    = (org.geographic_reach ?? '').toLowerCase()
+    const localOrg = reach === 'local' || reach === 'regional'
+    score = Math.min(score, localOrg ? 15 : 44)
   }
 
   // Cap total score when the grant is in a specialist domain the org doesn't
