@@ -303,6 +303,10 @@ export default function UrlAdminPage() {
   const [bulkEnrichDone, setBulkEnrichDone]   = useState(0)
   const [bulkEnrichTotal, setBulkEnrichTotal] = useState(0)
   const [bulkEnrichLog, setBulkEnrichLog]     = useState<string[]>([])
+  const [bulkDetecting, setBulkDetecting]     = useState(false)
+  const [bulkDetectDone, setBulkDetectDone]   = useState(0)
+  const [bulkDetectTotal, setBulkDetectTotal] = useState(0)
+  const [bulkDetectLog, setBulkDetectLog]     = useState<string[]>([])
 
   // ── Auth check ───────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -2454,6 +2458,87 @@ export default function UrlAdminPage() {
     setBulkEnriching(false)
   }
 
+  // Re-runs the Detect-from-brief pipeline on every row currently in the
+  // Needs Review queue WITHOUT touching enrichment. For rows that already
+  // have a funder_brief but never went through Detect (or pre-date a
+  // detector improvement like the negative-context filter), this populates
+  // amount/deadline/location/next_open_date from the existing brief. No
+  // Claude calls — just JS regex + a Supabase write per row.
+  async function bulkDetectReview() {
+    if (bulkDetecting) return
+    setBulkDetecting(true)
+    setBulkDetectDone(0)
+    setBulkDetectLog([])
+
+    const supabase = createClient()
+    const { data: rawData } = await supabase
+      .from('scraped_grants')
+      .select('id, title, funder, apply_url, url_status, funder_brief, grant_sources, source, url_last_checked, is_invite_only, description, amount_min, amount_max, deadline, is_rolling, next_open_date, location_tag, eligible_structures, impact_sectors, target_beneficiaries, funder_type, funding_type, first_seen_at')
+      .eq('is_active', false)
+      .neq('url_status', 'dead')
+      .not('saved_for_later', 'is', 'true')
+      .not('funder_brief', 'is', null)
+
+    const targets = rawData ?? []
+    if (targets.length === 0) {
+      setBulkDetectLog(['Nothing to detect — no rows with a brief in the queue.'])
+      setBulkDetecting(false)
+      return
+    }
+
+    setBulkDetectTotal(targets.length)
+    let done = 0
+    let written = 0
+    let skipped = 0
+
+    for (const grant of targets) {
+      const detected = computeBriefUpdates(grant as Grant)
+      // Skip rows where Detect found nothing to change.
+      if (Object.keys(detected).length === 0) {
+        skipped++
+        done++
+        setBulkDetectDone(done)
+        setBulkDetectLog(prev => [...prev, `· ${grant.title} — no change`])
+        continue
+      }
+
+      const fields: Record<string, unknown> = {}
+      if (detected.amount_min     !== undefined) fields.amount_min     = detected.amount_min     || null
+      if (detected.amount_max     !== undefined) fields.amount_max     = detected.amount_max     || null
+      if (detected.deadline       !== undefined) fields.deadline       = detected.deadline       || null
+      if (detected.is_rolling     !== undefined) fields.is_rolling     = detected.is_rolling
+      if (detected.next_open_date !== undefined) {
+        const v = String(detected.next_open_date ?? '').trim() || null
+        fields.next_open_date        = v
+        fields.next_open_date_parsed = parseOpenDate(v)
+      }
+
+      try {
+        const res = await fetch('/api/admin/update-grant', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: grant.id, fields }),
+        })
+        if (res.ok) {
+          const merge = (g: Grant) => g.id === grant.id ? { ...g, ...fields } as Grant : g
+          setGrants(prev => prev.map(merge))
+          setReviewGrants(prev => prev.map(merge))
+          written++
+          setBulkDetectLog(prev => [...prev, `✓ ${grant.funder ?? ''} — ${grant.title}: ${Object.keys(fields).join(', ')}`])
+        } else {
+          setBulkDetectLog(prev => [...prev, `✗ ${grant.title}: ${res.status}`])
+        }
+      } catch {
+        setBulkDetectLog(prev => [...prev, `✗ ${grant.title}: network error`])
+      }
+      done++
+      setBulkDetectDone(done)
+    }
+
+    setBulkDetectLog(prev => [...prev, `── done: ${written} updated, ${skipped} no-change`])
+    setBulkDetecting(false)
+  }
+
   // ── Reusable row actions (scraped grants only) ─────────────────────────────────
   function RowActions({ grant }: { grant: Grant }) {
     return confirmDeleteId === grant.id ? (
@@ -3124,6 +3209,20 @@ export default function UrlAdminPage() {
             ))}
           </div>
         )}
+        {bulkDetecting && bulkDetectTotal > 0 && (
+          <div className="mt-3">
+            <div className="h-2 overflow-hidden rounded-full bg-warm/60">
+              <div className="h-full bg-[#3B6D11] transition-all" style={{ width: `${Math.round((bulkDetectDone / bulkDetectTotal) * 100)}%` }} />
+            </div>
+          </div>
+        )}
+        {bulkDetectLog.length > 0 && (
+          <div className="mt-3 max-h-40 overflow-y-auto rounded-lg bg-warm/40 p-3">
+            {bulkDetectLog.map((line, i) => (
+              <p key={i} className={`text-xs font-mono ${line.startsWith('✓') ? 'text-forest' : line.startsWith('✗') ? 'text-coral-saturated' : 'text-mid'}`}>{line}</p>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Filter tabs + search */}
@@ -3541,11 +3640,18 @@ export default function UrlAdminPage() {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <button onClick={() => bulkEnrich('review')} disabled={bulkEnriching || reviewGrants.length === 0}
+              <button onClick={() => bulkEnrich('review')} disabled={bulkEnriching || bulkDetecting || reviewGrants.length === 0}
                 className="flex items-center gap-1.5 rounded-full bg-[#008080] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#006666] transition-colors disabled:opacity-50">
                 {bulkEnriching
                   ? <><RefreshCw className="h-3 w-3 animate-spin" /> Enriching {bulkEnrichDone}/{bulkEnrichTotal}</>
                   : <><Brain className="h-3 w-3" /> Enrich all unenriched</>}
+              </button>
+              <button onClick={bulkDetectReview} disabled={bulkEnriching || bulkDetecting || reviewGrants.length === 0}
+                title="Re-run Detect on every row's existing brief — extracts amount, deadline, location etc. without calling Claude."
+                className="flex items-center gap-1.5 rounded-full bg-[#3B6D11] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#2E5410] transition-colors disabled:opacity-50">
+                {bulkDetecting
+                  ? <><RefreshCw className="h-3 w-3 animate-spin" /> Detecting {bulkDetectDone}/{bulkDetectTotal}</>
+                  : <><Sparkles className="h-3 w-3" /> Detect all</>}
               </button>
               <button onClick={approveAllReview} disabled={approvingAll || reviewGrants.length === 0}
                 className="rounded-full bg-forest px-4 py-1.5 text-xs font-semibold text-white hover:bg-forest/80 transition-colors disabled:opacity-50">
