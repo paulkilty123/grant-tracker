@@ -42,6 +42,11 @@ export default function FunderIntelligencePage() {
   const [brief, setBrief] = useState<Record<string, Record<string, string | null>>>({})
   const [bulkRunning, setBulkRunning] = useState(false)
   const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number } | null>(null)
+  const [reclassifyOpen, setReclassifyOpen] = useState(false)
+  const [reclassifyText, setReclassifyText] = useState('')
+  const [reclassifyRunning, setReclassifyRunning] = useState(false)
+  const [reclassifyProgress, setReclassifyProgress] = useState<{ batch: number; total: number; classified: number; failed: number } | null>(null)
+  const [reclassifyLog, setReclassifyLog] = useState<string[]>([])
   const [search, setSearch] = useState('')
   const [editingUrl, setEditingUrl] = useState<Record<string, string | null>>({}) // grantId → draft URL or null
   const [savingUrl, setSavingUrl] = useState<Record<string, boolean>>({})
@@ -176,6 +181,38 @@ export default function FunderIntelligencePage() {
     setBulkProgress(null)
   }
 
+  const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi
+  const parsedIds = Array.from(new Set((reclassifyText.match(UUID_RE) ?? []).map(s => s.toLowerCase())))
+
+  const runReclassify = async () => {
+    if (parsedIds.length === 0 || reclassifyRunning) return
+    setReclassifyRunning(true)
+    setReclassifyLog([])
+    const BATCH = 50
+    const batches: string[][] = []
+    for (let i = 0; i < parsedIds.length; i += BATCH) batches.push(parsedIds.slice(i, i + BATCH))
+    let totalClassified = 0
+    let totalFailed = 0
+    for (let i = 0; i < batches.length; i++) {
+      setReclassifyProgress({ batch: i + 1, total: batches.length, classified: totalClassified, failed: totalFailed })
+      try {
+        const res = await fetch('/api/admin/classify-grants', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ grant_ids: batches[i], limit: 15 }),
+        })
+        const json = await res.json()
+        totalClassified += json.classified ?? 0
+        totalFailed     += json.failed ?? 0
+        setReclassifyLog(l => [...l, `batch ${i + 1}/${batches.length}: classified=${json.classified ?? 0} failed=${json.failed ?? 0} elapsed=${json.elapsed_ms ?? '?'}ms`])
+      } catch (err) {
+        setReclassifyLog(l => [...l, `batch ${i + 1}/${batches.length}: ERROR ${(err as Error).message}`])
+      }
+    }
+    setReclassifyProgress({ batch: batches.length, total: batches.length, classified: totalClassified, failed: totalFailed })
+    setReclassifyRunning(false)
+  }
+
   // Scroll to highlighted grant when loaded from needs review approval
   useEffect(() => {
     if (highlightId && !loading && highlightRef.current) {
@@ -301,6 +338,60 @@ export default function FunderIntelligencePage() {
           <p className="text-[10px] font-bold text-[#5F5E5A] uppercase tracking-wider mb-1">Needs enrichment</p>
           <p className="text-2xl font-bold" style={{ color: '#FF7043' }}>{grants.length - enrichedCount}</p>
         </div>
+      </div>
+
+      {/* Re-classify by ID list — collapsed by default */}
+      <div className="mb-5 bg-white border border-[#E8E0D1]" style={{ borderRadius: 12 }}>
+        <button
+          onClick={() => setReclassifyOpen(o => !o)}
+          className="w-full flex items-center justify-between gap-2 px-4 py-3 text-sm font-semibold text-[#1C1C2E] hover:bg-[#F5F1E8] transition-colors"
+          style={{ borderRadius: 12 }}>
+          <span className="flex items-center gap-2">
+            <Brain className="w-4 h-4" style={{ color: '#008080' }} />
+            Re-classify by ID list
+          </span>
+          <span className="text-xs font-normal text-[#5F5E5A]">
+            {reclassifyOpen ? 'hide' : 'show'}
+          </span>
+        </button>
+        {reclassifyOpen && (
+          <div className="px-4 pb-4 pt-1 border-t border-[#E8E0D1]">
+            <p className="text-xs text-[#5F5E5A] mb-2">
+              Paste grant IDs (UUIDs) — any format: newline, comma, JSON array. Runs the AI classifier on each ID and overwrites sectors / structures / beneficiaries / niche / funding type. Empty arrays from the classifier will clear stale broad tags.
+            </p>
+            <textarea
+              value={reclassifyText}
+              onChange={e => setReclassifyText(e.target.value)}
+              placeholder="007e7f00-876d-4a11-ab7f-79bd6e159bf0&#10;011655cc-3391-43d4-8fdb-bbdfda4479ab&#10;..."
+              rows={6}
+              className="w-full px-3 py-2 text-xs font-mono border border-[#E8E0D1] bg-[#FAFAF7] outline-none focus:border-[#008080] transition-colors"
+              style={{ borderRadius: 8 }}
+              disabled={reclassifyRunning}
+            />
+            <div className="flex items-center gap-3 mt-2">
+              <button
+                onClick={runReclassify}
+                disabled={reclassifyRunning || parsedIds.length === 0}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white transition-opacity disabled:opacity-50"
+                style={{ borderRadius: 9999, backgroundColor: '#008080' }}>
+                <Zap className="w-3.5 h-3.5" />
+                {reclassifyRunning && reclassifyProgress
+                  ? `Re-classifying ${reclassifyProgress.batch}/${reclassifyProgress.total}…`
+                  : `Re-classify ${parsedIds.length || 0} ID${parsedIds.length === 1 ? '' : 's'}`}
+              </button>
+              {reclassifyProgress && !reclassifyRunning && (
+                <span className="text-xs text-[#5F5E5A]">
+                  Done — classified {reclassifyProgress.classified}, failed {reclassifyProgress.failed}
+                </span>
+              )}
+            </div>
+            {reclassifyLog.length > 0 && (
+              <pre className="mt-3 px-3 py-2 text-[11px] font-mono text-[#5F5E5A] bg-[#FAFAF7] border border-[#E8E0D1] overflow-x-auto" style={{ borderRadius: 8 }}>
+                {reclassifyLog.join('\n')}
+              </pre>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Filter tabs + search */}
