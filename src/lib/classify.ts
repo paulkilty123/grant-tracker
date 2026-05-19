@@ -184,24 +184,54 @@ investment  Repayable finance: loans, patient capital, social investment, blende
 in_kind     Non-cash support only: software credits, ad grants, free workspace, pro bono services, tax relief
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-ELIGIBLE STRUCTURES — legal structures explicitly stated as eligible.
-Return [] if the description does not explicitly restrict or list eligible types.
+ELIGIBLE STRUCTURES — legal structures the source EXPLICITLY lists as eligible.
+Return [] when the source does not name specific legal structures.
 
 Valid values: cic_guarantee, cic_shares, cio, registered_charity,
               ltd_guarantee, ltd_shares, llp, cooperative,
               unincorporated, sole_trader, not_registered
 
-Common mappings:
-"registered charities only / charities only"         → ["registered_charity", "cio"]
-"CICs / Community Interest Companies"                → ["cic_guarantee", "cic_shares"]
-"social enterprises (broad / open to CICs and Ltds)" → ["cic_guarantee","cic_shares","ltd_guarantee","ltd_shares","cooperative"]
-"any incorporated organisation"                      → ["cic_guarantee","cic_shares","cio","registered_charity","ltd_guarantee","ltd_shares","llp","cooperative"]
-"charities and social enterprises"                   → ["registered_charity","cio","cic_guarantee","cic_shares","ltd_guarantee","ltd_shares","cooperative"]
-"Ltd companies / limited companies"                  → ["ltd_guarantee","ltd_shares"]
-"co-operatives / community benefit societies / CBS"  → ["cooperative"]
-"Innovate UK / UKRI / SBRI / R&D grants"            → ["ltd_guarantee","ltd_shares","cic_guarantee","cic_shares","cooperative","registered_charity","cio"]
-"individuals / sole traders / freelancers"           → ["sole_trader","unincorporated"]
-"open to all / organisations / no restriction stated" → []
+DEFAULT BIAS: TIGHT.
+When uncertain whether a type is included, EXCLUDE it. Only tag a structure
+when the source explicitly names it, names a clear synonym, or uses a phrase
+from the mapping table below.
+
+HARD RULES — apply before consulting the mapping table:
+
+1. If the source says "registered" (e.g. "registered charities", "registered
+   organisations") and does NOT also say one of {"or unregistered",
+   "constituted or unconstituted", "any group", "all organisations",
+   "open to all"}, the result MUST NOT include "unincorporated" or
+   "not_registered".
+
+2. If the source restricts to charity status ("registered charities only",
+   "charity status required", "must have a charity number"), do NOT include
+   ltd_shares, llp, cic_shares, sole_trader, not_registered, or unincorporated.
+
+3. The empty array [] is the correct answer when the source does not name
+   structures. Do NOT guess from funder type or sector.
+
+4. Cap at 5 structures unless the source EXPLICITLY indicates broader scope
+   via wording like "any organisation", "any incorporated organisation",
+   "all legal structures", or by listing ≥5 distinct categories itself.
+
+Common mappings (apply only after the hard rules above):
+"registered charities only / charities only / charity status required"
+                                                    → ["registered_charity", "cio"]
+"registered charities and community organisations"  → ["registered_charity","cio","ltd_guarantee"]
+"registered charities and social enterprises"       → ["registered_charity","cio","cic_guarantee","ltd_guarantee"]
+"CICs / Community Interest Companies"               → ["cic_guarantee", "cic_shares"]
+"social enterprises (broad / open to CICs and Ltds)" → ["cic_guarantee","cic_shares","ltd_guarantee","cooperative"]
+"any incorporated organisation"                     → ["cic_guarantee","cic_shares","cio","registered_charity","ltd_guarantee","ltd_shares","llp","cooperative"]
+"Ltd companies / limited companies"                 → ["ltd_guarantee","ltd_shares"]
+"co-operatives / community benefit societies / CBS" → ["cooperative"]
+"Innovate UK / UKRI / SBRI / R&D grants"            → ["ltd_guarantee","ltd_shares","cic_guarantee","cic_shares"]
+"individuals / sole traders / freelancers"          → ["sole_trader","unincorporated"]
+"constituted and unconstituted groups (explicit)"   → ["registered_charity","cio","cic_guarantee","ltd_guarantee","cooperative","unincorporated","not_registered"]
+"open to all / organisations / no restriction stated / silent on structure" → []
+
+If the source is silent on legal structure, the correct answer is [], not a
+guessed list. An empty array is normal and expected for most grants.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 NICHE TAGS — optional sub-sector specialism within the broad impact sector.

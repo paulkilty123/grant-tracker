@@ -315,10 +315,14 @@ export async function POST(req: NextRequest) {
             funding_type:   r.funding_type,
             niche_tags:     r.niche_tags,
           }
-          if (r.eligible_structures.length > 0) {
+          // Explicit ID mode is a re-classify pass — the caller wants the new
+          // value to take precedence even when it's []. Normal mode preserves
+          // existing values when Claude returns no structures (treat empty as
+          // "no signal" rather than "I confirm none").
+          if (grantIds.length > 0 || r.eligible_structures.length > 0) {
             patch.eligible_structures = r.eligible_structures
           }
-          if (r.target_beneficiaries.length > 0) {
+          if (grantIds.length > 0 || r.target_beneficiaries.length > 0) {
             patch.target_beneficiaries = r.target_beneficiaries
           }
           return supabase
