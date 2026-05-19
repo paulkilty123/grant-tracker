@@ -1241,6 +1241,7 @@ async function crawlSussexCF(): Promise<CrawlResult> {
       deadline:             null,
       is_rolling:           false,
       is_local:             true,
+      location_tag:         'Sussex',
       sectors:              ['community', 'social welfare'],
       eligibility_criteria: [
         'Voluntary or community organisation based/working in East Sussex, West Sussex or Brighton & Hove',
@@ -1286,6 +1287,7 @@ async function crawlSussexCF(): Promise<CrawlResult> {
             deadline:             null,
             is_rolling:           false,
             is_local:             true,
+            location_tag:         'Sussex',
             sectors:              ['community', 'social welfare'],
             eligibility_criteria: [
               'Voluntary or community organisation based/working in East Sussex, West Sussex or Brighton & Hove',
