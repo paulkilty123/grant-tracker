@@ -1769,7 +1769,12 @@ export default function UrlAdminPage() {
       // 8 June 2026" survived the earlier stricter "announced (by|on|in|at)"
       // pattern — the date is when decisions are announced, not the
       // application deadline.
-      const NON_APP_DATE_CUES = /\b(?:complet(?:ed?|ion|ing)\b|report(?:s|ing)?\s+(?:due|submitted|by|deadline)|submitted\s+(?:by|on)\b|panel\s+(?:meets?|takes?\s+place|sits?|review|date|decision)|decision\s+(?:by|on|date|made|announced|expected)|announce[a-z]*\b|results?\s+(?:by|on|announced|in|available)|paid\s+(?:out|by)\b|awarded\s+(?:by|on|in)\b|projects?\s+(?:should\s+|must\s+|will\s+|need\s+to\s+|are\s+expected\s+to\s+)?(?:begin|start|commence|run\s+(?:from|until))|delivery\s+(?:by|begins?|ends?|period)|grant\s+period|funding\s+(?:ends?|begins?|period)|notified\s+(?:by|on))/i
+      //
+      // Event-date cues (final|pitch|ceremony|gala|showcase|interview|
+      // shortlist) catch the "EASI26 Final on 18 May 2026" / "finalists
+      // pitch at the gala on 30 June" pattern where the date is an event,
+      // not the application deadline.
+      const NON_APP_DATE_CUES = /\b(?:complet(?:ed?|ion|ing)\b|report(?:s|ing)?\s+(?:due|submitted|by|deadline)|submitted\s+(?:by|on)\b|panel\s+(?:meets?|takes?\s+place|sits?|review|date|decision)|decision\s+(?:by|on|date|made|announced|expected)|announce[a-z]*\b|results?\s+(?:by|on|announced|in|available)|paid\s+(?:out|by)\b|awarded\s+(?:by|on|in)\b|projects?\s+(?:should\s+|must\s+|will\s+|need\s+to\s+|are\s+expected\s+to\s+)?(?:begin|start|commence|run\s+(?:from|until))|delivery\s+(?:by|begins?|ends?|period)|grant\s+period|funding\s+(?:ends?|begins?|period)|notified\s+(?:by|on)|(?:event|final|finals?|ceremony|conference|summit|launch\s+event|gala|celebration|reception|showcase|presentation|workshop|symposium)\s+(?:on|at|in|date|takes?\s+place)?\b|pitch(?:es|ed|ing)?\s+(?:at|on|in|to)\b|finalists?\s+(?:pitch|present|attend|notified|interview|meet)|shortlist(?:ed|ing)?\s+(?:by|on|in|candidates?)|interview(?:s|ed|ing)?\s+(?:on|in|held|by)|winners?\s+(?:announced|notified|selected|named))/i
       const isNonAppDate = (idx: number) => {
         const leftCtx = timelineText.slice(Math.max(0, idx - 60), idx)
         return NON_APP_DATE_CUES.test(leftCtx)
