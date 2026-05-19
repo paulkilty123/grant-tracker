@@ -1957,7 +1957,17 @@ export default function UrlAdminPage() {
       setReviewField(grant.id, 'location_tag', 'Global'); return
     }
 
-    // UK-wide signals — check FIRST (after Global) so a brief that mentions
+    // Europe / pan-European signals — check AFTER Global, BEFORE UK so a
+    // brief like "18 European countries across Central, Eastern and Western
+    // Europe" (Civitates) tags as 'Europe' rather than falling through to
+    // a single-nation match on "Western"/"Eastern" partials or being left
+    // null. Covers: pan-European foundations (Civitates, European Climate
+    // Foundation, European Cultural Foundation), EU-wide programmes.
+    if (/\b(?:europe[-\s]?wide|pan[-\s]?european|across\s+europe|throughout\s+europe|european\s+(?:countries|funder|foundation|fund|programme|prize|charity|initiative|union|commission|cultural|democracy|climate)|\d+\s+european\s+countries|in\s+europe\b|european\s+ngos?|european\s+cultural\s+ecosystem|cross[-\s]?border\s+european)\b/.test(text)) {
+      setReviewField(grant.id, 'location_tag', 'Europe'); return
+    }
+
+    // UK-wide signals — check after Global + Europe so a brief that mentions
     // individual nations as examples (e.g. "UK-wide, delivered across
     // England, Wales and Scotland") doesn't get tagged as the last-mentioned
     // nation.
