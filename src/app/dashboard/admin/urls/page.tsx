@@ -1859,6 +1859,13 @@ export default function UrlAdminPage() {
       } else if (unique.length > 0) {
         updates.deadline = unique[unique.length - 1]
         if (updates.is_rolling === undefined) updates.is_rolling = false
+      } else if (timelineText.length > 0 && /\b(20\d{2}|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\b/i.test(timelineText)) {
+        // The brief has a decision_timeline that mentions dates, but every
+        // candidate got filtered as a non-application date (completion,
+        // report-due, panel/decision, announcement). Clear any stale deadline
+        // from a previous Detect run on a richer brief — keeps the form
+        // honest about what the current evidence supports.
+        updates.deadline = null
       }
 
       // Rolling cue overrides anything we picked above. If the timeline
