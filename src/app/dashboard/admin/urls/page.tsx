@@ -1874,7 +1874,10 @@ export default function UrlAdminPage() {
       if (hasRollingCue) {
         updates.is_rolling = true
         // Don't carry forward a fixed deadline if the timeline says rolling.
-        if (updates.deadline) delete updates.deadline
+        // Setting to null (not delete) so the DB row clears its stale
+        // value — `delete` only affects this-run draft state, not the
+        // persisted deadline from a previous Detect run.
+        updates.deadline = null
       }
 
       // ── "Next opens" cue ────────────────────────────────────────────────
@@ -1896,8 +1899,10 @@ export default function UrlAdminPage() {
             : `TBC ${fragMatch[3]}`
           updates.next_open_date = value
           // Currently between rounds: not rolling, no fixed deadline.
+          // Setting to null (not delete) so the DB row clears its stale
+          // value — `delete` only affects this-run draft state.
           updates.is_rolling = false
-          if (updates.deadline) delete updates.deadline
+          updates.deadline = null
         }
       }
     }
@@ -1910,7 +1915,10 @@ export default function UrlAdminPage() {
     // the placeholder; we still defensively clear deadline.
     const openStatus = (brief.open_status ?? '').toString().toLowerCase().trim()
     if (openStatus === 'closed' || openStatus === 'between_rounds') {
-      if (updates.deadline) delete updates.deadline
+      // Setting to null (not delete) so the DB row clears its stale value
+      // — `delete` only affects this-run draft state, not the persisted
+      // deadline left by a previous Detect run.
+      updates.deadline = null
       updates.is_rolling = false
       // Leave a placeholder so the admin sees the closed state in the form
       // even when the brief didn't include a "next opens" cue.
