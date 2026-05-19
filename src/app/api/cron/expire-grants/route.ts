@@ -17,6 +17,20 @@ const MONTHS: Record<string, number> = {
   jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12,
 }
 
+// Negative-context cues — when any phrase below appears in the ~60 chars
+// before a date, that date is NOT an application deadline (it's a
+// project-completion, report-due, panel/decision, announcement, or
+// grant-period date). Mirrors NON_APP_DATE_CUES in the admin Detect
+// button (src/app/dashboard/admin/urls/page.tsx) — keep the two in sync.
+//
+// Without this, rolling cron over a brief like "Application deadline is
+// 11 May 2026. Funding decisions will be announced week commencing
+// 8 June 2026. All funded activities must be completed by 31 March
+// 2028." would pull all three dates as candidates and roll the deadline
+// to 8 June (the announcement) instead of correctly expiring or rolling
+// to next year's 11 May.
+const NON_APP_DATE_CUES = /\b(?:complet(?:ed?|ion|ing)\b|report(?:s|ing)?\s+(?:due|submitted|by|deadline)|submitted\s+(?:by|on)\b|panel\s+(?:meets?|takes?\s+place|sits?|review|date|decision)|decision\s+(?:by|on|date|made|announced|expected)|announce[a-z]*\b|results?\s+(?:by|on|announced|in|available)|paid\s+(?:out|by)\b|awarded\s+(?:by|on|in)\b|projects?\s+(?:should\s+|must\s+|will\s+|need\s+to\s+|are\s+expected\s+to\s+)?(?:begin|start|commence|run\s+(?:from|until))|delivery\s+(?:by|begins?|ends?|period)|grant\s+period|funding\s+(?:ends?|begins?|period)|notified\s+(?:by|on))/i
+
 // Returns the next future deadline (ISO YYYY-MM-DD) parsed from a
 // recurrence-style timeline string, or null if fewer than 2 distinct dates
 // can be parsed (single-shot grants shouldn't silently roll forward).
@@ -25,10 +39,16 @@ function parseNextRoundDeadline(timelineText: string, todayISO: string): string 
   const text = timelineText.toLowerCase()
   const dayMonths: Array<{ day: number; month: number }> = []
 
+  const isNonAppDate = (idx: number) => {
+    const leftCtx = text.slice(Math.max(0, idx - 60), idx)
+    return NON_APP_DATE_CUES.test(leftCtx)
+  }
+
   // Pattern A: "1 April" / "1st April 2026"
   for (const m of Array.from(text.matchAll(
     /\b(\d{1,2})(?:st|nd|rd|th)?\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b/gi
   ))) {
+    if (isNonAppDate(m.index ?? 0)) continue
     const day = parseInt(m[1], 10)
     const month = MONTHS[m[2].toLowerCase().slice(0, 3)]
     if (month && day >= 1 && day <= 31) dayMonths.push({ day, month })
@@ -37,6 +57,7 @@ function parseNextRoundDeadline(timelineText: string, todayISO: string): string 
   for (const m of Array.from(text.matchAll(
     /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+(\d{1,2})(?:st|nd|rd|th)?\b/gi
   ))) {
+    if (isNonAppDate(m.index ?? 0)) continue
     const month = MONTHS[m[1].toLowerCase().slice(0, 3)]
     const day = parseInt(m[2], 10)
     if (month && day >= 1 && day <= 31) dayMonths.push({ day, month })
