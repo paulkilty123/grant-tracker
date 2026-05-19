@@ -38,9 +38,11 @@ interface Props {
   userId: string
   matchScore: number
   compact?: boolean
+  /** Fired when the user taps a direction — 'down' dismisses the grant, 'up' restores it. */
+  onDirectionChange?: (dir: 'up' | 'down') => void
 }
 
-export function MatchFeedbackBlock({ grantId, userId, matchScore, compact = false }: Props) {
+export function MatchFeedbackBlock({ grantId, userId, matchScore, compact = false, onDirectionChange }: Props) {
   const [direction, setDirection]             = useState<'up' | 'down' | null>(null)
   const [selectedReasons, setSelectedReasons] = useState<string[]>([])
   const [freeText, setFreeText]               = useState('')
@@ -88,6 +90,7 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore, compact = fals
       setShowTextInput(false)
     }
     setDirection(dir)
+    onDirectionChange?.(dir)
     await save(dir, nextReasons, nextText)
   }
 
@@ -225,6 +228,12 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore, compact = fals
           </button>
         </div>
       </div>
+
+      {!isUp && (
+        <div style={{ marginTop: 8, fontSize: 12, color: '#8A8986', fontFamily: 'var(--font-space-grotesk)' }}>
+          Removed from your matches — you won&apos;t see this one again.
+        </div>
+      )}
 
       <div style={{ marginTop: 12, paddingTop: 12, borderTop: '0.5px solid rgba(99,153,34,0.2)' }}>
         <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 12.5, color: '#3B6D11', fontWeight: 500, marginBottom: 10 }}>

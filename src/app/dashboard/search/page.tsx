@@ -906,7 +906,13 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                 {org?.owner_id && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span style={{ fontSize: 13, color: '#8A8986', fontFamily: 'var(--font-dm-sans)', whiteSpace: 'nowrap' }}>Improve your matches</span>
-                    <MatchFeedbackBlock grantId={grant.id} userId={org.owner_id} matchScore={score} compact />
+                    <MatchFeedbackBlock
+                      grantId={grant.id}
+                      userId={org.owner_id}
+                      matchScore={score}
+                      compact
+                      onDirectionChange={d => (d === 'down' ? onDismiss(grant.id) : onUndismiss(grant.id))}
+                    />
                   </div>
                 )}
               </div>
@@ -1576,16 +1582,13 @@ export default function SearchPage() {
     setTimeout(() => setToast(null), 3000)
   }
 
+  // Thumbs-down ("Not for us") records the dismiss to the DB but deliberately
+  // does NOT update the interactions state — keeping the card and its feedback
+  // reasons UI in place for the rest of the session so the user can still say
+  // why. The grant is filtered out of matches on the next page load.
   async function handleDismiss(grantId: string) {
     if (!org) return
     await recordInteraction(org.id, grantId, 'dismissed')
-    setInteractions(prev => {
-      const next = new Map(prev)
-      const s = new Set(next.get(grantId) ?? [])
-      s.add('dismissed')
-      next.set(grantId, s)
-      return next
-    })
   }
 
   async function handleUndismiss(grantId: string) {
