@@ -1735,8 +1735,33 @@ export default function UrlAdminPage() {
       const todayISO = new Date().toISOString().slice(0,10)
       const candidates: string[] = []
 
+      // Negative-context cues — when any phrase below appears in the ~60
+      // chars before a date, that date is NOT an application deadline.
+      // Drops project-completion, report-due, panel/decision, announcement,
+      // and grant-period dates. Mirrors POOL_CUES_LEFT from the amount
+      // extractor.
+      //
+      // Example bugs this catches:
+      //   "Projects must be completed by 19 March 2027" → 19 March 2027 dropped
+      //   "End of Grant Reports due 16 April 2027"      → 16 April 2027 dropped
+      //   "Grants panel takes place in June 2026"       → June 2026 dropped
+      //   "Decision announced by 30 September"          → 30 September dropped
+      //   "Successful projects begin July 2026"         → July 2026 dropped
+      const NON_APP_DATE_CUES = /\b(?:complet(?:ed?|ion|ing)\b|report(?:s|ing)?\s+(?:due|submitted|by|deadline)|submitted\s+(?:by|on)\b|panel\s+(?:meets?|takes?\s+place|sits?|review|date|decision)|decision\s+(?:by|on|date|made|announced|expected)|announced?\s+(?:by|on|in|at)\b|results?\s+(?:by|on|announced|in|available)|paid\s+(?:out|by)\b|awarded\s+(?:by|on|in)\b|projects?\s+(?:should\s+|must\s+|will\s+|need\s+to\s+|are\s+expected\s+to\s+)?(?:begin|start|commence|run\s+(?:from|until))|delivery\s+(?:by|begins?|ends?|period)|grant\s+period|funding\s+(?:ends?|begins?|period)|notified\s+(?:by|on))/i
+      const isNonAppDate = (idx: number) => {
+        const leftCtx = timelineText.slice(Math.max(0, idx - 60), idx)
+        return NON_APP_DATE_CUES.test(leftCtx)
+      }
+      // pushCandidate respects the negative-context filter. Callers compute
+      // the absolute index of the match within `timelineText` and pass it in.
+      const pushCandidate = (idx: number, iso: string) => {
+        if (!isNonAppDate(idx)) candidates.push(iso)
+      }
+
       // Multi-round list: e.g. '2026 deadlines are: 27 February, 1 May, 6 July...'
       // Collects every round in the list and flags the grant as rolling.
+      // List items inherit the "deadlines are:" cue from the list header
+      // and are exempt from the negative-context filter.
       const deadlineListRe = /(\d{4})\s+deadlines?\s*(?:are|for)?[^:]*:\s*([\d\w\s,]+)/i
       const mList = timelineText.match(deadlineListRe)
       if (mList) {
@@ -1756,13 +1781,13 @@ export default function UrlAdminPage() {
       for (const m of Array.from(timelineText.matchAll(/(\d{1,2})(?:st|nd|rd|th)?\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+(\d{4})/gi))) {
         const day = m[1].padStart(2,'0')
         const mon = months[m[2].toLowerCase().slice(0,3)]
-        if (mon) candidates.push(`${m[3]}-${mon}-${day}`)
+        if (mon) pushCandidate(m.index ?? 0, `${m[3]}-${mon}-${day}`)
       }
       // Bare Month DD YYYY (US style)
       for (const m of Array.from(timelineText.matchAll(/(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+(\d{1,2})(?:st|nd|rd|th)?,?\s*(\d{4})/gi))) {
         const mon = months[m[1].toLowerCase().slice(0,3)]
         const day = m[2].padStart(2,'0')
-        if (mon) candidates.push(`${m[3]}-${mon}-${day}`)
+        if (mon) pushCandidate(m.index ?? 0, `${m[3]}-${mon}-${day}`)
       }
 
       // Bare DD Month — no year — e.g. "Applications close 31 March and 30
@@ -1775,7 +1800,7 @@ export default function UrlAdminPage() {
         const mon = months[m[2].toLowerCase().slice(0,3)]
         if (!mon) continue
         const tryCurrent = `${currentYear}-${mon}-${day}`
-        candidates.push(tryCurrent >= todayISO ? tryCurrent : `${currentYear + 1}-${mon}-${day}`)
+        pushCandidate(m.index ?? 0, tryCurrent >= todayISO ? tryCurrent : `${currentYear + 1}-${mon}-${day}`)
       }
       // Bare Month DD — no year — e.g. "Applications close September 30"
       for (const m of Array.from(timelineText.matchAll(/\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+(\d{1,2})(?:st|nd|rd|th)?\b(?!,?\s*\d{4})/gi))) {
@@ -1783,7 +1808,7 @@ export default function UrlAdminPage() {
         const day = m[2].padStart(2,'0')
         if (!mon) continue
         const tryCurrent = `${currentYear}-${mon}-${day}`
-        candidates.push(tryCurrent >= todayISO ? tryCurrent : `${currentYear + 1}-${mon}-${day}`)
+        pushCandidate(m.index ?? 0, tryCurrent >= todayISO ? tryCurrent : `${currentYear + 1}-${mon}-${day}`)
       }
       // Month YYYY only (no day) — e.g. "September 2026" — coerce to last day
       // of the month so it doesn't accidentally land on the 1st. Only used as
@@ -1794,7 +1819,7 @@ export default function UrlAdminPage() {
           if (!mon) continue
           const yr = m[2]
           const lastDay = new Date(parseInt(yr), parseInt(mon), 0).getDate()
-          candidates.push(`${yr}-${mon}-${String(lastDay).padStart(2,'0')}`)
+          pushCandidate(m.index ?? 0, `${yr}-${mon}-${String(lastDay).padStart(2,'0')}`)
         }
       }
 
@@ -1847,6 +1872,24 @@ export default function UrlAdminPage() {
         }
       }
     }
+
+    // ── open_status — drives final overrides ────────────────────────────────
+    // The enrichment prompt now emits open_status: 'open' | 'closed' |
+    // 'between_rounds' | 'unknown'. When the source page explicitly says
+    // the fund is closed, any deadline we extracted is stale — clear it.
+    // For between_rounds, the next_open_date logic above usually handles
+    // the placeholder; we still defensively clear deadline.
+    const openStatus = (brief.open_status ?? '').toString().toLowerCase().trim()
+    if (openStatus === 'closed' || openStatus === 'between_rounds') {
+      if (updates.deadline) delete updates.deadline
+      updates.is_rolling = false
+      // Leave a placeholder so the admin sees the closed state in the form
+      // even when the brief didn't include a "next opens" cue.
+      if (openStatus === 'closed' && !updates.next_open_date) {
+        updates.next_open_date = 'TBC — fund currently closed'
+      }
+    }
+
     return updates
   }
 
