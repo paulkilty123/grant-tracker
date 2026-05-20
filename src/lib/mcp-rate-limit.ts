@@ -86,6 +86,11 @@ export type RateLimitName = 'key_hourly' | 'key_daily' | 'anon_hourly' | 'ip_hou
 export interface RateLimitStatus {
   remaining_hour: number
   remaining_day:  number | null
+  // Unix ms timestamp when the hourly window's previous-bucket contribution
+  // fully ages out — i.e. when remaining_hour is guaranteed monotonic again.
+  // Agents that need precise pacing should key off this rather than diffing
+  // remaining_hour across calls (sliding-window estimator can vary ±1).
+  reset_at_hour:  number
 }
 
 export interface RateLimitResult {
@@ -99,10 +104,11 @@ export interface RateLimitResult {
 // Static maxima from spec §6.3 — used in the dev-fallback path so the
 // response shape stays stable when Upstash isn't configured.
 function staticStatus(ctx: MCPAuthContext): RateLimitStatus {
+  const reset_at_hour = Date.now() + 3_600_000
   if (ctx.state === 'authenticated') {
-    return { remaining_hour: 100, remaining_day: 1000 }
+    return { remaining_hour: 100, remaining_day: 1000, reset_at_hour }
   }
-  return { remaining_hour: 10, remaining_day: null }
+  return { remaining_hour: 10, remaining_day: null, reset_at_hour }
 }
 
 function retryAfterSeconds(reset: number): number {
@@ -132,7 +138,7 @@ export async function enforceRateLimits(ctx: MCPAuthContext): Promise<RateLimitR
     ])
     const remaining_hour = Math.max(0, Math.min(kh.remaining, ih.remaining))
     const remaining_day  = Math.max(0, kd.remaining)
-    const status: RateLimitStatus = { remaining_hour, remaining_day }
+    const status: RateLimitStatus = { remaining_hour, remaining_day, reset_at_hour: kh.reset }
 
     if (!kh.success) return { allowed: false, status, retry_after: retryAfterSeconds(kh.reset), which_limit: 'key_hourly', enforced: true }
     if (!kd.success) return { allowed: false, status, retry_after: retryAfterSeconds(kd.reset), which_limit: 'key_daily',  enforced: true }
@@ -146,7 +152,7 @@ export async function enforceRateLimits(ctx: MCPAuthContext): Promise<RateLimitR
     limiters.ipHourly.limit(ip),
   ])
   const remaining_hour = Math.max(0, Math.min(ah.remaining, ih.remaining))
-  const status: RateLimitStatus = { remaining_hour, remaining_day: null }
+  const status: RateLimitStatus = { remaining_hour, remaining_day: null, reset_at_hour: ah.reset }
 
   if (!ah.success) return { allowed: false, status, retry_after: retryAfterSeconds(ah.reset), which_limit: 'anon_hourly', enforced: true }
   if (!ih.success) return { allowed: false, status, retry_after: retryAfterSeconds(ih.reset), which_limit: 'ip_hourly',   enforced: true }

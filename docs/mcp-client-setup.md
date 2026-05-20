@@ -89,7 +89,7 @@ Once any client is connected, walk through these to confirm end-to-end works:
 4. **Drill into one** — *"Tell me more about the first result."* — agent calls `get_opportunity_detail` with the `opportunity_id` from step 3.
 5. **Funder context** — *"What else does that funder offer?"* — agent calls `get_provider_intelligence({opportunity_id: ...})`. Response should list `active_opportunities.by_type` counts.
 6. **Zero-result honesty** — *"Find mental-health programmes in Yorkshire."* — agent should return zero with `zero_result_diagnostic` and offer `adjacent_suggestions`.
-7. **Rate-limit observability** — agent's responses should all include a `rate_limit_status` field; values count down with usage.
+7. **Rate-limit observability** — agent's responses should all include a `rate_limit_status` field with `remaining_hour`, `remaining_day`, and `reset_at_hour`. `remaining_hour` is a sliding-window estimate and can vary by ±1 between calls; see spec §6.4.
 
 ---
 

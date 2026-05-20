@@ -557,7 +557,15 @@ Error codes used:
 
 ### 6.4 Rate limit headers and fields
 
-All responses include `rate_limit_status` field with `remaining_hour` and `remaining_day`. Rate-limit-exceeded responses include `Retry-After` HTTP header.
+All responses include a `rate_limit_status` field:
+
+- `remaining_hour: number` — approximate requests remaining in the current hour window.
+- `remaining_day: number | null` — approximate requests remaining in the current day window. `null` for anonymous traffic (no daily limit).
+- `reset_at_hour: number` — Unix milliseconds timestamp when the hourly window's previous-bucket contribution fully ages out.
+
+Rate-limit-exceeded responses (HTTP 429) include a `Retry-After` HTTP header in seconds and a `details.which_limit` field naming the counter that blocked (`key_hourly`, `key_daily`, `anon_hourly`, `ip_hourly`).
+
+**On reading `remaining_hour`:** the value uses a sliding-window estimator. It typically decreases by 1 per call but can stay flat or vary by ±1 between consecutive calls as the previous window's weighted contribution ages out. Treat it as an estimate suitable for pacing decisions, not a strict monotonic counter. Use `reset_at_hour` if precise timing matters; rely on 429 responses for hard limit enforcement.
 
 ### 6.5 Terms of Service
 

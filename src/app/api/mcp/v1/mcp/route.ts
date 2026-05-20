@@ -66,10 +66,11 @@ const ATTRIBUTION = {
 function rateLimitStatusForContext(ctx: MCPAuthContext | undefined) {
   if (ctx?.rate_limit_status) return ctx.rate_limit_status
   const state = ctx?.state ?? 'anonymous'
+  const reset_at_hour = Date.now() + 3_600_000
   if (state === 'authenticated') {
-    return { remaining_hour: 100, remaining_day: 1000 }
+    return { remaining_hour: 100, remaining_day: 1000, reset_at_hour }
   }
-  return { remaining_hour: 10, remaining_day: null }
+  return { remaining_hour: 10, remaining_day: null, reset_at_hour }
 }
 
 function serviceClient() {
