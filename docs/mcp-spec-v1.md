@@ -963,7 +963,7 @@ Recommended order for Claude Code:
 
 Distribute to a small group of trusted users (founding cohort members, select social impact contacts, internal team). Goals:
 
-- Verify multi-client compatibility (test from Claude, ChatGPT, Gemini)
+- Run the Claude Desktop smoke test sheet (`docs/mcp-smoke-test-sheet.md`). ChatGPT/Gemini smoke testing dropped 2026-05-20 alongside the directory-submission decision — the server stays cross-client-compatible for developers who self-configure, but it isn't actively QA'd against those clients.
 - Surface bugs and edge cases that aren't caught in integration testing
 - Gather initial qualitative feedback on tool descriptions and response shapes
 - Stress-test rate limiting and error handling
@@ -978,12 +978,11 @@ MCP launches alongside or shortly after Grant Tracker's main public launch. Anno
 
 ### 12.3 Distribution channels
 
-- **Claude:** Submit to the MCP directory (where Kindora is featured). This is the strongest consumer distribution channel.
-- **ChatGPT:** Submit to ChatGPT Apps directory.
-- **Gemini:** Less consumer-facing distribution; primary path is via developers configuring MCP in Gemini CLI or API.
+- **Claude:** Submit to the MCP directory (where Kindora is featured). This is the strongest consumer distribution channel and the only directory the v1 launch targets.
+- **ChatGPT & Gemini:** No directory submissions. The MCP server remains compatible for developers who self-configure (see `docs/mcp-client-setup.md`), but consumer directory listings on those platforms aren't pursued in v1. Decision recorded 2026-05-20 — primary reasons: dropping the extra surface area lets us focus QA effort on Claude, and ChatGPT/Gemini directory ROI is less proven for a UK-vertical tool. Revisit post-launch if there's demand signal.
 - **Direct outreach:** CAST, SEUK, Impact Hub network, and similar institutional contacts who may want to point their members at the MCP.
 
-Be honest in launch comms: "available in Claude, ChatGPT, and Gemini via MCP" is accurate, but actual reach will be Claude-dominant initially.
+Be honest in launch comms: "available in the Claude MCP directory; supported for developers self-configuring in any MCP-compatible client".
 
 **Confidence: locked on plan; working hypothesis on timing precision (soft launch and public launch dates may shift by ±3 days depending on build progress).**
 

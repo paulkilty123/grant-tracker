@@ -1,15 +1,16 @@
 # MCP Directory Submission Copy
 
-Final copy for the three directory submissions (Claude / ChatGPT / Gemini), held until multi-client testing clears. Drafted 2026-05-18.
+Final copy for the Claude MCP directory submission. Drafted 2026-05-18.
 
-**Sequencing:** submissions wait for the manual multi-client smoke plan (`docs/mcp-client-setup.md`) to pass on each client. If a client surfaces a real compatibility issue, fix it before listing your name against the offer.
+**Sequencing:** submission waits for the Claude Desktop smoke test (`docs/mcp-smoke-test-sheet.md`) to pass clean.
+
+**Status 2026-05-20:** dropped ChatGPT and Gemini directory submissions — the MCP server itself still works across all three clients for developers who self-configure (see `docs/mcp-client-setup.md`), but the directory listings are Claude-only. ChatGPT/Gemini submission drafts retained at the bottom of this file under "Archived" in case the decision is revisited.
 
 **Standing notes:**
 
-- All three intentionally avoid a hardcoded catalogue count (e.g. "450+ opportunities"). Directory listings sit for months; counts go stale fast. Breadth signal comes from "grants + accelerator programmes + social investment + in-kind support" — already more than most competitors offer, and stable as the catalogue grows.
-- All three soften the coverage claim to "a UK-focused, curated funding catalogue" rather than "the UK's most comprehensive". The latter is a comparative claim that needs SQL-verified validation vs My Funding Central / Funds Online / Charity Excellence — that comparison hasn't been done, so the softer phrasing is what's defensible. See `feedback_coverage_claim_honesty_check.md`.
-- "Five tools" appears in the Gemini draft. If a sixth tool ships post-launch (search-by-funder, get-similar-opportunities, etc.), rephrase to capability-language: *"tools for searching opportunities, fetching detail, provider intelligence, taxonomy, and health checks"* — describes capability without committing to count.
-- The "Free API key required — get yours at granttracker.co.uk/mcp" line is standardised across all three so the friction is visible upfront.
+- Avoid a hardcoded catalogue count (e.g. "450+ opportunities"). Directory listings sit for months; counts go stale fast. Breadth signal comes from "grants + accelerator programmes + social investment + in-kind support" — already more than most competitors offer, and stable as the catalogue grows.
+- Coverage claim softened to "a UK-focused, curated funding catalogue" rather than "the UK's most comprehensive". The latter is a comparative claim that needs SQL-verified validation vs My Funding Central / Funds Online / Charity Excellence — that comparison hasn't been done, so the softer phrasing is what's defensible. See `feedback_coverage_claim_honesty_check.md`.
+- The "Free API key required — get yours at granttracker.co.uk/mcp" line is the upfront-friction disclosure.
 
 ---
 
@@ -27,7 +28,11 @@ Final copy for the three directory submissions (Claude / ChatGPT / Gemini), held
 
 ---
 
-## ChatGPT Apps (broader consumer audience)
+## Archived — dropped 2026-05-20
+
+The two drafts below are retained as reference. The decision to skip the ChatGPT and Gemini directory submissions was about distribution focus, not server compatibility — the MCP endpoint still works for developers connecting from those clients via the patterns in `docs/mcp-client-setup.md`.
+
+### ChatGPT Apps (broader consumer audience) — ARCHIVED
 
 > **Find UK funding for your charity or social enterprise — without leaving ChatGPT**
 >
@@ -41,7 +46,7 @@ Final copy for the three directory submissions (Claude / ChatGPT / Gemini), held
 
 ---
 
-## Gemini (developer-leaning)
+### Gemini (developer-leaning) — ARCHIVED
 
 > **Grant Tracker MCP — UK funding discovery via Model Context Protocol**
 >

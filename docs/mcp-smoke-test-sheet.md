@@ -1,6 +1,8 @@
 # Grant Tracker MCP — Smoke Test Sheet
 
-**Date:** ____________   **Client:** ☐ Claude Desktop  ☐ ChatGPT  ☐ Gemini  ☐ curl   **Key:** `gt_mcp_…________`
+**Date:** ____________   **Client:** ☐ Claude Desktop  ☐ curl   **Key:** `gt_mcp_…________`
+
+> Claude Desktop is the only client v1 QA's against. ChatGPT/Gemini directory submissions dropped 2026-05-20; the server still works for developers self-configuring those clients but isn't actively smoke-tested there.
 
 Run the prompts in order in a single conversation. Tick the box if the response matches "Expect". Note anything off in **Notes**.
 

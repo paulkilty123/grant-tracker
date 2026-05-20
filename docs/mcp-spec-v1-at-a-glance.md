@@ -77,7 +77,7 @@ Adapter → auth → rate limiting → `health_check` → `get_taxonomy` → `se
 
 ## Distribution honesty
 
-Claude is the strongest distribution channel for v1. ChatGPT and Gemini get additional reach through the same MCP server, but consumer discovery on those platforms is less direct. Launch comms: "available in Claude, ChatGPT, and Gemini via MCP" is accurate; actual reach will be Claude-dominant initially.
+Claude is the only directory v1 targets (decided 2026-05-20). The MCP server remains compatible with ChatGPT and Gemini for developers who self-configure, but no consumer-directory submissions are made on those platforms. Launch comms: "available in the Claude MCP directory; supported for developers self-configuring in any MCP-compatible client".
 
 ## The competitive picture (as of 12 May 2026)
 
