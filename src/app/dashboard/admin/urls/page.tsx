@@ -1913,13 +1913,28 @@ export default function UrlAdminPage() {
       // is currently between rounds (not rolling, not a one-shot deadline).
       // Capture the time hint (e.g. "Spring 2026", "September 2026", "2026")
       // into next_open_date so the card can render an "Opens X" state.
-      const nextOpenCueRe = /(?:next\s+(?:application\s+|funding\s+|grant\s+|funding\s+round\s+|grant\s+round\s+)?(?:round|window|cohort|intake|cycle|programme|eoi|application)?\s*(?:opens?|reopens?|will\s+(?:open|re-?open)|is\s+expected\s+to\s+(?:open|re-?open))|applications?\s+(?:will\s+)?(?:open|reopen)\s+(?:again\s+)?(?:in|on)?)[^.]{0,150}/i
-      const nextOpenMatch = timelineText.match(nextOpenCueRe)
+      // Scan decision_timeline AND how_to_apply — many funders put the
+      // "next round opens X" sentence in how_to_apply (e.g. Sylvia
+      // Waddilove: "Summer 2026 round opens August 2026"), not in the
+      // decision timeline. Kept separate from `timelineText` so date
+      // extraction above stays bounded to decision_timeline.
+      const opensCueText = [brief.decision_timeline, brief.how_to_apply]
+        .filter(Boolean).join(' ').toLowerCase()
+      const nextOpenCueRe = /(?:next\s+(?:application\s+|funding\s+|grant\s+|funding\s+round\s+|grant\s+round\s+)?(?:round|window|cohort|intake|cycle|programme|eoi|application)?\s*(?:opens?|reopens?|will\s+(?:open|re-?open)|is\s+expected\s+to\s+(?:open|re-?open))|applications?\s+(?:will\s+)?(?:open|reopen)\s+(?:again\s+)?(?:in|on)?|(?:spring|summer|autumn|fall|winter|q[1-4]|jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+20\d{2}\s+(?:application\s+)?(?:round|window|cohort|intake|cycle)\s+(?:is\s+(?:due\s+to\s+)?)?(?:opens?|reopens?|due\s+to\s+open|will\s+open|expected\s+to\s+open))[^.]{0,150}/i
+      const nextOpenMatch = opensCueText.match(nextOpenCueRe)
       if (nextOpenMatch) {
-        const snippet = nextOpenMatch[0]
+        // When the match leads with the round NAME ("Summer 2026 round
+        // opens August 2026"), the date the admin actually wants is the
+        // one AFTER "opens" — not the round-name prefix. Trim to the
+        // post-"opens"/"reopens" / "due to open" tail before scanning.
+        const rawSnippet = nextOpenMatch[0]
+        const openVerbMatch = rawSnippet.match(/\b(?:reopens?|opens?|due\s+to\s+open|will\s+open|expected\s+to\s+open)\b/i)
+        const snippet = openVerbMatch
+          ? rawSnippet.slice(rawSnippet.indexOf(openVerbMatch[0]) + openVerbMatch[0].length)
+          : rawSnippet
         // Look for a season/qualifier/quarter/month + year, then bare year as fallback.
         const fragRe = /\b(early|mid|late|spring|summer|autumn|fall|winter|q[1-4]|jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+(20\d{2})\b|\b(20\d{2})\b/i
-        const fragMatch = snippet.match(fragRe)
+        const fragMatch = snippet.match(fragRe) ?? rawSnippet.match(fragRe)
         if (fragMatch) {
           const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()
           const value = (fragMatch[1] && fragMatch[2])
@@ -1948,10 +1963,15 @@ export default function UrlAdminPage() {
       // deadline left by a previous Detect run.
       updates.deadline = null
       updates.is_rolling = false
-      // Leave a placeholder so the admin sees the closed state in the form
-      // even when the brief didn't include a "next opens" cue.
-      if (openStatus === 'closed' && !updates.next_open_date) {
-        updates.next_open_date = 'TBC — fund currently closed'
+      // Leave a placeholder so the admin sees the closed/between-rounds
+      // state in the form even when the brief didn't include a parseable
+      // "next opens" cue. Without this, a between_rounds open_status
+      // produced no visible signal in the form unless decision_timeline
+      // happened to contain an opens-cue with an extractable date.
+      if (!updates.next_open_date) {
+        updates.next_open_date = openStatus === 'between_rounds'
+          ? 'TBC — between rounds'
+          : 'TBC — fund currently closed'
       }
     }
 
