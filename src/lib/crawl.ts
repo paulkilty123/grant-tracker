@@ -660,6 +660,7 @@ async function crawlArtsCouncil(): Promise<CrawlResult> {
         is_local:             false,
         sectors:              ['arts', 'culture', 'heritage'],
         eligibility_criteria: [],
+        location_tag:         'England',
         apply_url:            url || null,
         raw_data:             { title, href, desc } as Record<string, unknown>,
       })
@@ -712,6 +713,7 @@ async function crawlForeverManchester(): Promise<CrawlResult> {
         is_local:             true,
         sectors:              ['community', 'social welfare'],
         eligibility_criteria: ['Greater Manchester based organisations'],
+        location_tag:         'Manchester',
         apply_url:            url || null,
         raw_data:             { title, descRaw, href } as Record<string, unknown>,
       })
@@ -763,6 +765,7 @@ async function crawlTwoRidingsCF(): Promise<CrawlResult> {
         is_local:             true,
         sectors:              ['community', 'social welfare', 'environment'],
         eligibility_criteria: ['North & East Yorkshire based organisations'],
+        location_tag:         'Yorkshire',
         apply_url:            url || null,
         raw_data:             { title, desc, href } as Record<string, unknown>,
       })
@@ -866,6 +869,7 @@ async function crawlSportEngland(): Promise<CrawlResult> {
         is_local:             false,
         sectors:              ['sport', 'physical activity', 'health'],
         eligibility_criteria: [],
+        location_tag:         'England',
         apply_url:            url || null,
         raw_data:             { title, desc, href } as Record<string, unknown>,
       })
@@ -986,6 +990,7 @@ async function crawlCFNI(): Promise<CrawlResult> {
         is_local:             true,
         sectors:              ['community', 'social welfare'],
         eligibility_criteria: ['Northern Ireland based organisations'],
+        location_tag:         'Northern Ireland',
         apply_url:            url || null,
         raw_data:             { title, desc, href, deadline } as Record<string, unknown>,
       })
@@ -1127,6 +1132,7 @@ async function crawlFoundationScotland(): Promise<CrawlResult> {
         is_local:             !isNational,
         sectors:              ['community', 'social welfare', 'environment'],
         eligibility_criteria: area ? [`Area: ${area}`] : ['Scotland based organisations'],
+        location_tag:         'Scotland',
         apply_url:            url || null,
         raw_data:             { title, sizeRaw, area, desc } as Record<string, unknown>,
       })
@@ -1576,6 +1582,7 @@ async function crawlTyneWearCF(): Promise<CrawlResult> {
           is_local:             true,
           sectors,
           eligibility_criteria: location ? [`Located in: ${location}`] : [],
+          location_tag:         'Tyne & Wear, Northumberland',
           apply_url:            url,
           raw_data:             { slug, location } as Record<string, unknown>,
         } as ScrapedGrant
@@ -3030,10 +3037,10 @@ async function crawlSouthYorkshireCF(): Promise<CrawlResult> {
       const url  = href.startsWith('http') ? href : `${BASE}${href}`
       const desc = card.querySelector('p')?.text?.trim() ?? ''
       const { min, max } = parseAmountRange(desc + ' ' + title)
-      grants.push({ external_id: `south_yorkshire_cf_${slugify(href || title)}`, source: SOURCE, title, funder: 'South Yorkshire Community Foundation', funder_type: 'community_foundation', description: desc || 'Grant from South Yorkshire Community Foundation.', amount_min: min, amount_max: max, deadline: null, is_rolling: true, is_local: true, sectors: ['community', 'social welfare'], eligibility_criteria: ['Organisations in South Yorkshire'], apply_url: url || null, raw_data: { title, href } as Record<string, unknown> })
+      grants.push({ external_id: `south_yorkshire_cf_${slugify(href || title)}`, source: SOURCE, title, funder: 'South Yorkshire Community Foundation', funder_type: 'community_foundation', description: desc || 'Grant from South Yorkshire Community Foundation.', amount_min: min, amount_max: max, deadline: null, is_rolling: true, is_local: true, sectors: ['community', 'social welfare'], eligibility_criteria: ['Organisations in South Yorkshire'], location_tag: 'South Yorkshire', apply_url: url || null, raw_data: { title, href } as Record<string, unknown> })
     }
     if (grants.length > 0) return await upsertGrants(SOURCE, grants)
-    return await upsertGrants(SOURCE, [{ external_id: `${SOURCE}_open`, source: SOURCE, title: 'South Yorkshire Community Foundation — Open Grants', funder: 'South Yorkshire Community Foundation', funder_type: 'community_foundation', description: 'South Yorkshire Community Foundation supports voluntary and community organisations across Sheffield, Rotherham, Barnsley and Doncaster with a range of grant programmes.', amount_min: 500, amount_max: 20000, deadline: null, is_rolling: true, is_local: true, sectors: ['community', 'social welfare', 'arts', 'health'], eligibility_criteria: ['Voluntary or community group in South Yorkshire'], apply_url: `${BASE}/apply/search-our-grants`, raw_data: { note: 'Hardcoded fallback' } as Record<string, unknown> }])
+    return await upsertGrants(SOURCE, [{ external_id: `${SOURCE}_open`, source: SOURCE, title: 'South Yorkshire Community Foundation — Open Grants', funder: 'South Yorkshire Community Foundation', funder_type: 'community_foundation', description: 'South Yorkshire Community Foundation supports voluntary and community organisations across Sheffield, Rotherham, Barnsley and Doncaster with a range of grant programmes.', amount_min: 500, amount_max: 20000, deadline: null, is_rolling: true, is_local: true, sectors: ['community', 'social welfare', 'arts', 'health'], eligibility_criteria: ['Voluntary or community group in South Yorkshire'], location_tag: 'South Yorkshire', apply_url: `${BASE}/apply/search-our-grants`, raw_data: { note: 'Hardcoded fallback' } as Record<string, unknown> }])
   } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
 }
 
@@ -3106,12 +3113,12 @@ async function crawlSportWales(): Promise<CrawlResult> {
       const url  = href.startsWith('http') ? href : `${BASE}${href}`
       const desc = card.querySelector('p')?.text?.trim() ?? ''
       const { min, max } = parseAmountRange(desc + ' ' + title)
-      grants.push({ external_id: `sport_wales_${slugify(href || title)}`, source: SOURCE, title, funder: 'Sport Wales', funder_type: 'government', description: desc || 'Funding from Sport Wales.', amount_min: min, amount_max: max, deadline: null, is_rolling: true, is_local: true, sectors: ['sport', 'physical activity', 'health'], eligibility_criteria: ['Sports clubs and organisations based in Wales'], apply_url: url || null, raw_data: { title, href } as Record<string, unknown> })
+      grants.push({ external_id: `sport_wales_${slugify(href || title)}`, source: SOURCE, title, funder: 'Sport Wales', funder_type: 'government', description: desc || 'Funding from Sport Wales.', amount_min: min, amount_max: max, deadline: null, is_rolling: true, is_local: true, sectors: ['sport', 'physical activity', 'health'], eligibility_criteria: ['Sports clubs and organisations based in Wales'], location_tag: 'Wales', apply_url: url || null, raw_data: { title, href } as Record<string, unknown> })
     }
     if (grants.length > 0) return await upsertGrants(SOURCE, grants)
     return await upsertGrants(SOURCE, [
-      { external_id: `${SOURCE}_small_grants`, source: SOURCE, title: 'Sport Wales — Small Grants', funder: 'Sport Wales', funder_type: 'government', description: 'Sport Wales funds sports clubs and organisations in Wales to increase participation, develop talent and improve infrastructure. Small grants support grassroots activity.', amount_min: 300, amount_max: 5000, deadline: null, is_rolling: true, is_local: true, sectors: ['sport', 'physical activity', 'health', 'youth'], eligibility_criteria: ['Sports clubs and community organisations in Wales', 'Must increase participation or improve facilities'], apply_url: `${BASE}/funding/`, raw_data: { note: 'Hardcoded fallback' } as Record<string, unknown> },
-      { external_id: `${SOURCE}_facilities`, source: SOURCE, title: 'Sport Wales — Facilities Investment Programme', funder: 'Sport Wales', funder_type: 'government', description: 'Capital investment programme supporting the development of community sports facilities across Wales. Grants for new builds, refurbishment and equipment.', amount_min: 10000, amount_max: 150000, deadline: null, is_rolling: false, is_local: true, sectors: ['sport', 'physical activity', 'facilities', 'community'], eligibility_criteria: ['Sports clubs, local authorities, education bodies in Wales', 'Facility must be for community use'], apply_url: `${BASE}/funding/facilities/`, raw_data: { note: 'Hardcoded fallback' } as Record<string, unknown> },
+      { external_id: `${SOURCE}_small_grants`, source: SOURCE, title: 'Sport Wales — Small Grants', funder: 'Sport Wales', funder_type: 'government', description: 'Sport Wales funds sports clubs and organisations in Wales to increase participation, develop talent and improve infrastructure. Small grants support grassroots activity.', amount_min: 300, amount_max: 5000, deadline: null, is_rolling: true, is_local: true, sectors: ['sport', 'physical activity', 'health', 'youth'], eligibility_criteria: ['Sports clubs and community organisations in Wales', 'Must increase participation or improve facilities'], location_tag: 'Wales', apply_url: `${BASE}/funding/`, raw_data: { note: 'Hardcoded fallback' } as Record<string, unknown> },
+      { external_id: `${SOURCE}_facilities`, source: SOURCE, title: 'Sport Wales — Facilities Investment Programme', funder: 'Sport Wales', funder_type: 'government', description: 'Capital investment programme supporting the development of community sports facilities across Wales. Grants for new builds, refurbishment and equipment.', amount_min: 10000, amount_max: 150000, deadline: null, is_rolling: false, is_local: true, sectors: ['sport', 'physical activity', 'facilities', 'community'], eligibility_criteria: ['Sports clubs, local authorities, education bodies in Wales', 'Facility must be for community use'], location_tag: 'Wales', apply_url: `${BASE}/funding/facilities/`, raw_data: { note: 'Hardcoded fallback' } as Record<string, unknown> },
     ])
   } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
 }
@@ -3276,6 +3283,7 @@ async function crawlSevernTrentFund(): Promise<CrawlResult> {
         title:                'Severn Trent Community Fund — New Project Funding',
         funder:               'Severn Trent Community Fund',
         funder_type:          'corporate_foundation',
+        location_tag:         'Severn Trent region',
         description:          'Grants between £2,000 and £50,000 for projects that support community wellbeing across the Severn Trent region. Three pillars: People, Place and Environment — examples include improving access to rivers, grey-water recycling, sustainable drainage and water-efficient green spaces. Around 30 projects funded per year. Applications accepted at any time.',
         amount_min:           2000,
         amount_max:           50000,
@@ -3293,6 +3301,7 @@ async function crawlSevernTrentFund(): Promise<CrawlResult> {
         title:                'Severn Trent Community Fund — Core Funding',
         funder:               'Severn Trent Community Fund',
         funder_type:          'corporate_foundation',
+        location_tag:         'Severn Trent region',
         description:          'Core funding grants of £5,000–£20,000 for one year, supporting eligible charities and community organisations with running costs and operational capacity. Two application windows per year (June and November), each open for one month.',
         amount_min:           5000,
         amount_max:           20000,
@@ -3310,6 +3319,7 @@ async function crawlSevernTrentFund(): Promise<CrawlResult> {
         title:                "Severn Trent Community Fund — Children's Football Clubs",
         funder:               'Severn Trent Community Fund',
         funder_type:          'corporate_foundation',
+        location_tag:         'Severn Trent region',
         description:          "Time-limited 2026 round to support 80 children's football clubs across the Severn Trent region with grants of £1,000 for kit and other essential costs. Opens May 2026.",
         amount_min:           1000,
         amount_max:           1000,
@@ -3439,8 +3449,8 @@ async function crawlSportScotland(): Promise<CrawlResult> {
   const SOURCE = 'sport_scotland'
   try {
     return await upsertGrants(SOURCE, [
-      { external_id: `${SOURCE}_facilities`, source: SOURCE, title: 'sportscotland — Facilities Investment', funder: 'sportscotland', funder_type: 'government', description: 'sportscotland funds development of sport facilities across Scotland, from grassroots clubs to national performance venues. Capital grants for sports halls, pitches, changing facilities and equipment.', amount_min: 10000, amount_max: 500000, deadline: null, is_rolling: true, is_local: true, sectors: ['sport', 'physical activity', 'facilities', 'community'], eligibility_criteria: ['Sports clubs, local authorities and education bodies in Scotland', 'Facility must be for community or club use', 'Must demonstrate impact on participation or performance'], apply_url: 'https://sportscotland.org.uk/funding/', raw_data: {} as Record<string, unknown> },
-      { external_id: `${SOURCE}_clubs`, source: SOURCE, title: 'sportscotland — Club and Community Sport Fund', funder: 'sportscotland', funder_type: 'government', description: 'Supports grassroots sports clubs and community organisations in Scotland to grow participation, improve governance and develop coaches and volunteers.', amount_min: 1000, amount_max: 50000, deadline: null, is_rolling: true, is_local: true, sectors: ['sport', 'physical activity', 'community', 'youth', 'volunteers'], eligibility_criteria: ['Sports clubs and community organisations in Scotland', 'Must be affiliated to a governing body or sport organisation'], apply_url: 'https://sportscotland.org.uk/funding/club-funding/', raw_data: {} as Record<string, unknown> },
+      { external_id: `${SOURCE}_facilities`, source: SOURCE, title: 'sportscotland — Facilities Investment', funder: 'sportscotland', funder_type: 'government', location_tag: 'Scotland', description: 'sportscotland funds development of sport facilities across Scotland, from grassroots clubs to national performance venues. Capital grants for sports halls, pitches, changing facilities and equipment.', amount_min: 10000, amount_max: 500000, deadline: null, is_rolling: true, is_local: true, sectors: ['sport', 'physical activity', 'facilities', 'community'], eligibility_criteria: ['Sports clubs, local authorities and education bodies in Scotland', 'Facility must be for community or club use', 'Must demonstrate impact on participation or performance'], apply_url: 'https://sportscotland.org.uk/funding/', raw_data: {} as Record<string, unknown> },
+      { external_id: `${SOURCE}_clubs`, source: SOURCE, title: 'sportscotland — Club and Community Sport Fund', funder: 'sportscotland', funder_type: 'government', location_tag: 'Scotland', description: 'Supports grassroots sports clubs and community organisations in Scotland to grow participation, improve governance and develop coaches and volunteers.', amount_min: 1000, amount_max: 50000, deadline: null, is_rolling: true, is_local: true, sectors: ['sport', 'physical activity', 'community', 'youth', 'volunteers'], eligibility_criteria: ['Sports clubs and community organisations in Scotland', 'Must be affiliated to a governing body or sport organisation'], apply_url: 'https://sportscotland.org.uk/funding/club-funding/', raw_data: {} as Record<string, unknown> },
     ])
   } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
 }
@@ -3486,8 +3496,8 @@ async function crawlLocalTrust(): Promise<CrawlResult> {
   const SOURCE = 'local_trust'
   try {
     return await upsertGrants(SOURCE, [
-      { external_id: `${SOURCE}_big_local`, source: SOURCE, title: 'Local Trust — Big Local', funder: 'Local Trust', funder_type: 'lottery', description: "Big Local brings together funding and support to help communities that don't often get investment. £1 million per area to spend over at least 10 years, decided entirely by local residents. Not currently open to new areas but associated programmes and learning resources are available.", amount_min: 10000, amount_max: 1000000, deadline: null, is_rolling: false, is_local: true, sectors: ['community', 'social welfare', 'economic development', 'place-based'], eligibility_criteria: ['Residents of a Big Local area', 'Must be in an area already selected for Big Local (check map)', 'Decisions made by local Big Local Partnership'], apply_url: 'https://localtrust.org.uk/big-local/', raw_data: {} as Record<string, unknown> },
-      { external_id: `${SOURCE}_place_based_social_action`, source: SOURCE, title: 'Local Trust — Place-Based Social Action Fund', funder: 'Local Trust', funder_type: 'lottery', description: 'Funds organisations and partnerships that are building community power and place-based social action in under-invested communities across England. Focus on communities taking control of their own futures.', amount_min: 25000, amount_max: 150000, deadline: null, is_rolling: false, is_local: true, sectors: ['community', 'social welfare', 'place-based', 'community power', 'social action'], eligibility_criteria: ['Organisations working in under-invested communities in England', 'Must demonstrate community-led approach', 'Check Local Trust website for current open programmes'], apply_url: 'https://localtrust.org.uk/big-local/', raw_data: {} as Record<string, unknown> },
+      { external_id: `${SOURCE}_big_local`, source: SOURCE, title: 'Local Trust — Big Local', funder: 'Local Trust', funder_type: 'lottery', location_tag: 'England', description: "Big Local brings together funding and support to help communities that don't often get investment. £1 million per area to spend over at least 10 years, decided entirely by local residents. Not currently open to new areas but associated programmes and learning resources are available.", amount_min: 10000, amount_max: 1000000, deadline: null, is_rolling: false, is_local: true, sectors: ['community', 'social welfare', 'economic development', 'place-based'], eligibility_criteria: ['Residents of a Big Local area', 'Must be in an area already selected for Big Local (check map)', 'Decisions made by local Big Local Partnership'], apply_url: 'https://localtrust.org.uk/big-local/', raw_data: {} as Record<string, unknown> },
+      { external_id: `${SOURCE}_place_based_social_action`, source: SOURCE, title: 'Local Trust — Place-Based Social Action Fund', funder: 'Local Trust', funder_type: 'lottery', location_tag: 'England', description: 'Funds organisations and partnerships that are building community power and place-based social action in under-invested communities across England. Focus on communities taking control of their own futures.', amount_min: 25000, amount_max: 150000, deadline: null, is_rolling: false, is_local: true, sectors: ['community', 'social welfare', 'place-based', 'community power', 'social action'], eligibility_criteria: ['Organisations working in under-invested communities in England', 'Must demonstrate community-led approach', 'Check Local Trust website for current open programmes'], apply_url: 'https://localtrust.org.uk/big-local/', raw_data: {} as Record<string, unknown> },
     ])
   } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
 }
@@ -3574,8 +3584,8 @@ async function crawlHistoricEngland(): Promise<CrawlResult> {
   const SOURCE = 'historic_england'
   try {
     return await upsertGrants(SOURCE, [
-      { external_id: `${SOURCE}_listed_places`, source: SOURCE, title: 'Historic England — Listed Places of Worship Grant Scheme', funder: 'Historic England', funder_type: 'government', description: 'Grants to help listed places of worship in England recover VAT costs on approved repair and maintenance work. Administered by the Listed Places of Worship Grant Scheme on behalf of DCMS.', amount_min: 500, amount_max: 100000, deadline: null, is_rolling: true, is_local: true, sectors: ['heritage', 'faith', 'conservation', 'community'], eligibility_criteria: ['Listed place of worship in England', 'Work must be approved repair and maintenance (not new construction)', 'Building must be actively used for worship'], apply_url: 'https://historicengland.org.uk/advice/planning/consents/grants/', raw_data: {} as Record<string, unknown> },
-      { external_id: `${SOURCE}_heritage_at_risk`, source: SOURCE, title: 'Historic England — Heritage at Risk Grants', funder: 'Historic England', funder_type: 'government', description: 'Emergency and project grants for heritage assets on the Historic England Heritage at Risk Register. Helps bring endangered listed buildings, scheduled monuments and protected wreck sites back to good condition and viable use.', amount_min: 10000, amount_max: 500000, deadline: null, is_rolling: false, is_local: true, sectors: ['heritage', 'conservation', 'community', 'tourism'], eligibility_criteria: ['Asset must be on the Historic England Heritage at Risk Register', 'Applicant must have control of the asset or owner consent', 'England only'], apply_url: 'https://historicengland.org.uk/advice/heritage-at-risk/', raw_data: {} as Record<string, unknown> },
+      { external_id: `${SOURCE}_listed_places`, source: SOURCE, title: 'Historic England — Listed Places of Worship Grant Scheme', funder: 'Historic England', funder_type: 'government', location_tag: 'England', description: 'Grants to help listed places of worship in England recover VAT costs on approved repair and maintenance work. Administered by the Listed Places of Worship Grant Scheme on behalf of DCMS.', amount_min: 500, amount_max: 100000, deadline: null, is_rolling: true, is_local: true, sectors: ['heritage', 'faith', 'conservation', 'community'], eligibility_criteria: ['Listed place of worship in England', 'Work must be approved repair and maintenance (not new construction)', 'Building must be actively used for worship'], apply_url: 'https://historicengland.org.uk/advice/planning/consents/grants/', raw_data: {} as Record<string, unknown> },
+      { external_id: `${SOURCE}_heritage_at_risk`, source: SOURCE, title: 'Historic England — Heritage at Risk Grants', funder: 'Historic England', funder_type: 'government', location_tag: 'England', description: 'Emergency and project grants for heritage assets on the Historic England Heritage at Risk Register. Helps bring endangered listed buildings, scheduled monuments and protected wreck sites back to good condition and viable use.', amount_min: 10000, amount_max: 500000, deadline: null, is_rolling: false, is_local: true, sectors: ['heritage', 'conservation', 'community', 'tourism'], eligibility_criteria: ['Asset must be on the Historic England Heritage at Risk Register', 'Applicant must have control of the asset or owner consent', 'England only'], apply_url: 'https://historicengland.org.uk/advice/heritage-at-risk/', raw_data: {} as Record<string, unknown> },
     ])
   } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
 }
