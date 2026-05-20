@@ -1,14 +1,12 @@
 ---
-version: "v1-draft-2026-05-12"
-last_updated: "2026-05-12"
-status: "DRAFT — placeholder content; final text to be supplied by Paul before public launch"
+version: "v1-2026-05-20"
+last_updated: "2026-05-20"
+status: "Live"
 ---
 
 # Grant Tracker MCP — Terms of Service
 
-> **DRAFT.** This document is structurally complete but the legal text is placeholder content. Final wording to be finalised before public launch. The `version` field in the frontmatter is stored against each issued API key at the moment of issuance, and is what gets compared during kill-switch / breach-of-terms enforcement. Update the `version` whenever the substantive terms change.
-
-By generating an API key for the Grant Tracker MCP server, you agree to the following terms.
+By generating an API key for the Grant Tracker MCP server, you agree to the following terms. The `version` field in this document's frontmatter is recorded against each issued key at the moment of issuance and is what governs the key.
 
 ## 1. Attribution
 
@@ -59,6 +57,10 @@ You agree to indemnify Grant Tracker against any claims, damages, or liabilities
 
 Grant Tracker may update these terms. The `version` field in this document's frontmatter is bumped each time the substantive terms change. Keys issued under previous versions remain bound to the version they accepted at the time of issuance, but Grant Tracker may require re-acceptance of updated terms for continued use.
 
----
+## 8. Contact
 
-*Final version, contact details, governing-law clause, and any other jurisdictional content to be inserted before public launch.*
+For questions about these terms, key issuance, or revocation, email hello@granttracker.co.uk.
+
+## 9. Governing law
+
+These terms are governed by the laws of England and Wales. Any disputes will be subject to the exclusive jurisdiction of the courts of England and Wales.
