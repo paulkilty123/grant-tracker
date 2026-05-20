@@ -93,7 +93,7 @@ export async function GET(req: NextRequest) {
   // Find every grant whose deadline has passed
   const { data: candidates, error: fetchErr } = await supabase
     .from('scraped_grants')
-    .select('id, external_id, title, deadline, funder_brief')
+    .select('id, external_id, title, deadline, next_open_date, funder_brief')
     .eq('is_active', true)
     .eq('is_rolling', false)
     .not('deadline', 'is', null)
@@ -102,8 +102,7 @@ export async function GET(req: NextRequest) {
   if (fetchErr) return NextResponse.json({ error: fetchErr.message }, { status: 500 })
 
   const rolled: Array<{ id: string; title: string; old: string; next: string }> = []
-  const toExpireIds: string[] = []
-  const expiredOut: Array<{ id: string; title: string; deadline: string }> = []
+  const betweenRoundsOut: Array<{ id: string; title: string; deadline: string }> = []
 
   for (const g of candidates ?? []) {
     const brief = g.funder_brief as Record<string, unknown> | null
@@ -123,12 +122,26 @@ export async function GET(req: NextRequest) {
           old: g.deadline as string,
           next: nextDate,
         })
-      } else {
-        toExpireIds.push(g.id as string)
+        continue
       }
-    } else {
-      toExpireIds.push(g.id as string)
-      expiredOut.push({
+      // fallthrough to between-rounds on update error
+    }
+
+    // No clean roll possible — mark as "between rounds" instead of deactivating.
+    // Keep is_active=true so the row stays in the catalogue (end users see a
+    // 'Closed — next round TBC' placeholder rather than the row vanishing) and
+    // stays OUT of the admin Needs Review queue (which is reserved for genuinely
+    // new arrivals). Admins review these via a dedicated "Between rounds" tab.
+    const existingNextOpen = (g.next_open_date as string | null) ?? null
+    const { error: updErr2 } = await supabase
+      .from('scraped_grants')
+      .update({
+        deadline: null,
+        next_open_date: existingNextOpen ?? 'Closed — next round TBC',
+      })
+      .eq('id', g.id)
+    if (!updErr2) {
+      betweenRoundsOut.push({
         id: g.external_id as string,
         title: g.title as string,
         deadline: g.deadline as string,
@@ -136,15 +149,11 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  if (toExpireIds.length > 0) {
-    await supabase.from('scraped_grants').update({ is_active: false }).in('id', toExpireIds)
-  }
-
   return NextResponse.json({
-    success:      true,
-    expiredCount: expiredOut.length,
-    rolledCount:  rolled.length,
-    expired:      expiredOut,
+    success:           true,
+    betweenRoundsCount: betweenRoundsOut.length,
+    rolledCount:       rolled.length,
+    betweenRounds:     betweenRoundsOut,
     rolled,
   })
 }

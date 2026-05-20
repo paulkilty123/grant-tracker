@@ -46,7 +46,7 @@ type CategoryGrant = Grant & {
 }
 
 type Stats = { total: number; withUrl: number; ok: number; dead: number; unchecked: number; noUrl: number; seedTotal?: number; newCount?: number; reviewCount?: number; suspiciousCount?: number }
-type Filter = 'dead' | 'unchecked' | 'no_url' | 'all' | 'seed' | 'new' | 'category' | 'review' | 'suspicious' | 'url_issues' | 'saved' | 'recent'
+type Filter = 'dead' | 'unchecked' | 'no_url' | 'all' | 'seed' | 'new' | 'category' | 'review' | 'suspicious' | 'url_issues' | 'saved' | 'recent' | 'between_rounds'
 type SuspiciousGrant = Grant & { url_quality_score: number | null; url_quality_issues: string[] }
 type DeadSeedGrant = { id: string; title: string; funder: string; url: string }
 type NewGrant = Grant & { first_seen_at: string }
@@ -240,6 +240,7 @@ export default function UrlAdminPage() {
   const [newSources, setNewSources]           = useState<Set<string>>(new Set())
   const [reviewGrants, setReviewGrants]       = useState<Grant[]>([])
   const [recentGrants, setRecentGrants]       = useState<Grant[]>([])
+  const [betweenRoundsGrants, setBetweenRoundsGrants] = useState<Grant[]>([])
   const [expandedReviewId, setExpandedReviewId] = useState<string | null>(null)
   const [reviewEdits, setReviewEdits]           = useState<Record<string, Record<string, string | boolean | number | null>>>({})
   const [reviewPublishing, setReviewPublishing] = useState<Record<string, boolean>>({})
@@ -358,7 +359,7 @@ export default function UrlAdminPage() {
 
   // ── Load scraped grants (URL health views) ───────────────────────────────────
   const loadGrants = useCallback(async () => {
-    if (filter === 'seed' || filter === 'new' || filter === 'category' || filter === 'review' || filter === 'suspicious') return
+    if (filter === 'seed' || filter === 'new' || filter === 'category' || filter === 'review' || filter === 'suspicious' || filter === 'between_rounds') return
     // url_issues = dead + unchecked + no_url combined
     if (filter === 'url_issues') {
       const { data, error } = await createClient()
@@ -473,6 +474,24 @@ export default function UrlAdminPage() {
       .order('first_seen_at', { ascending: false })
       .limit(300)
     setRecentGrants((data ?? []) as Grant[])
+  }, [filter])
+
+  // ── Load between-rounds grants ──────────────────────────────────────────────
+  // Active rows where the expire-grants cron has cleared the deadline and set
+  // next_open_date='Closed — next round TBC' (or admin set their own placeholder).
+  // These are intentionally OUT of Needs Review — reviewed on the admin's
+  // schedule, not driven by nightly cron firings.
+  const loadBetweenRoundsGrants = useCallback(async () => {
+    if (filter !== 'between_rounds') return
+    const { data } = await createClient()
+      .from('scraped_grants')
+      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief, grant_sources, description, location_tag, amount_min, amount_max, deadline, is_rolling, next_open_date, eligible_structures, funder_type, funding_type, first_seen_at, impact_sectors, target_beneficiaries')
+      .eq('is_active', true)
+      .is('deadline', null)
+      .not('next_open_date', 'is', null)
+      .order('next_open_date_parsed', { ascending: true, nullsFirst: false })
+      .limit(500)
+    setBetweenRoundsGrants((data ?? []) as Grant[])
   }, [filter])
 
   // ── Load suspicious grants (low quality score) ───────────────────────────────
@@ -732,6 +751,10 @@ export default function UrlAdminPage() {
   useEffect(() => {
     if (authorised && filter === 'suspicious') loadSuspiciousGrants()
   }, [authorised, filter, loadSuspiciousGrants])
+
+  useEffect(() => {
+    if (authorised && filter === 'between_rounds') loadBetweenRoundsGrants()
+  }, [authorised, filter, loadBetweenRoundsGrants])
 
   // ── Clear selection when switching tabs ──────────────────────────────────────
   useEffect(() => { setSelectedIds(new Set()) }, [filter])
@@ -3286,13 +3309,14 @@ export default function UrlAdminPage() {
       {/* Filter tabs + search */}
       <div className="mb-4 flex flex-wrap items-center gap-2">
         {([
-          { key: 'review',     label: `Needs Review${stats?.reviewCount ? ` (${stats.reviewCount})` : ''}`, urgent: (stats?.reviewCount ?? 0) > 0 },
-          { key: 'saved',      label: 'Saved for Later', urgent: false },
-          { key: 'all',        label: 'All grants' },
-          { key: 'recent',     label: 'Recently activated' },
-          { key: 'new',        label: `New this week${stats ? ` (${stats.newCount ?? 0})` : ''}` },
-          { key: 'category',   label: 'By Category' },
-          { key: 'url_issues', label: `URL Issues${stats ? ` (${(stats.dead ?? 0) + (stats.unchecked ?? 0) + (stats.noUrl ?? 0)})` : ''}` },
+          { key: 'review',         label: `Needs Review${stats?.reviewCount ? ` (${stats.reviewCount})` : ''}`, urgent: (stats?.reviewCount ?? 0) > 0 },
+          { key: 'between_rounds', label: 'Between rounds' },
+          { key: 'saved',          label: 'Saved for Later', urgent: false },
+          { key: 'all',            label: 'All grants' },
+          { key: 'recent',         label: 'Recently activated' },
+          { key: 'new',            label: `New this week${stats ? ` (${stats.newCount ?? 0})` : ''}` },
+          { key: 'category',       label: 'By Category' },
+          { key: 'url_issues',     label: `URL Issues${stats ? ` (${(stats.dead ?? 0) + (stats.unchecked ?? 0) + (stats.noUrl ?? 0)})` : ''}` },
         ] as const).map(tab => (
           <button key={tab.key}
             onClick={() => { setFilter(tab.key); setSearch(''); setCategorySearch(''); setFundingTypeTab('all') }}
@@ -3683,6 +3707,82 @@ export default function UrlAdminPage() {
       {/* ── Review queue ──────────────────────────────────────────────────────── */}
       {filter === 'saved' && (
         <SavedForLaterTab />
+      )}
+
+      {filter === 'between_rounds' && (
+        <div className="rounded-xl border border-warm bg-white overflow-hidden shadow-card">
+          <div className="border-b border-warm bg-cream px-5 py-3">
+            <p className="text-sm font-semibold text-charcoal">
+              {betweenRoundsGrants.length} grant{betweenRoundsGrants.length !== 1 ? 's' : ''} between rounds
+            </p>
+            <p className="text-xs text-mid mt-0.5">
+              Active rows where the application deadline has passed and the next round isn't known. End users see <strong>&ldquo;Closed — next round TBC&rdquo;</strong>. Review on your schedule: click the funder URL to check for an updated deadline, then edit inline (Detect/save) to set a fresh date, or use &ldquo;Send back to Needs Review&rdquo; for full re-triage. Hard-hide via the row actions if the fund is genuinely done.
+            </p>
+          </div>
+          {betweenRoundsGrants.length === 0 ? (
+            <div className="py-16 text-center">
+              <CheckCircle className="mx-auto mb-3 h-8 w-8 text-sage" />
+              <p className="text-mid text-sm">Nothing between rounds.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-warm bg-warm/30 text-left text-xs font-semibold text-mid uppercase tracking-wider">
+                    <th className="px-5 py-3">Grant / Funder</th>
+                    <th className="px-3 py-3">Next opens</th>
+                    <th className="px-3 py-3">URL</th>
+                    <th className="px-3 py-3 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-warm/60">
+                  {betweenRoundsGrants
+                    .filter(g => {
+                      if (!search.trim()) return true
+                      const s = search.toLowerCase()
+                      return g.title.toLowerCase().includes(s) || (g.funder ?? '').toLowerCase().includes(s)
+                    })
+                    .map(grant => {
+                      const g = grant as Grant & { next_open_date?: string | null }
+                      return (
+                        <tr key={grant.id} className="hover:bg-cream/50 transition-colors">
+                          <td className="px-5 py-3 max-w-[320px]">
+                            <p className="font-medium text-charcoal leading-snug line-clamp-2">{grant.title}</p>
+                            <p className="text-xs text-mid mt-0.5">{grant.funder ?? '—'}</p>
+                          </td>
+                          <td className="px-3 py-3 text-xs text-charcoal align-top">
+                            {g.next_open_date ?? '—'}
+                          </td>
+                          <td className="px-3 py-3 align-top">
+                            {grant.apply_url && (
+                              <a href={grant.apply_url} target="_blank" rel="noopener noreferrer" className="text-[11px] text-forest underline break-all">
+                                {grant.apply_url.replace(/^https?:\/\//, '').slice(0, 40)}
+                                <ExternalLink className="inline h-3 w-3 ml-0.5 -mt-0.5" />
+                              </a>
+                            )}
+                          </td>
+                          <td className="px-3 py-3 text-right align-top whitespace-nowrap">
+                            <button
+                              onClick={async () => {
+                                await fetch('/api/admin/update-grant', {
+                                  method: 'PATCH',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ id: grant.id, fields: { is_active: false } }),
+                                })
+                                setBetweenRoundsGrants(prev => prev.filter(x => x.id !== grant.id))
+                              }}
+                              className="rounded-full border border-warm bg-white px-3 py-1 text-xs font-medium text-charcoal hover:border-amber-400 hover:bg-amber-50 transition-colors">
+                              Send to Needs Review
+                            </button>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       )}
 
       {filter === 'review' && (
