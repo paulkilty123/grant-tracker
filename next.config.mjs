@@ -21,8 +21,15 @@ const nextConfig = {
     outputFileTracingIncludes: {
       '/api/mcp/keys/issue':       ['./docs/legal/mcp-tos.md'],
       '/mcp/terms':                ['./docs/legal/mcp-tos.md'],
-      '/dashboard/mcp/keys/new':   ['./docs/legal/mcp-tos.md'],
+      '/mcp/keys/new':             ['./docs/legal/mcp-tos.md'],
     },
+  },
+  async redirects() {
+    return [
+      { source: '/dashboard/mcp/keys',     destination: '/mcp/keys',     permanent: true },
+      { source: '/dashboard/mcp/keys/new', destination: '/mcp/keys/new', permanent: true },
+      { source: '/dashboard/mcp/:path*',   destination: '/mcp/:path*',   permanent: true },
+    ]
   },
 }
 export default nextConfig

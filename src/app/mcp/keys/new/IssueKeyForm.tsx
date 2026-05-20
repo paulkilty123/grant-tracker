@@ -111,7 +111,7 @@ export function IssueKeyForm({ tosVersion, tosStatus }: Props) {
         </div>
 
         <button
-          onClick={() => router.push('/dashboard/mcp/keys')}
+          onClick={() => router.push('/mcp/keys')}
           className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity"
           style={{ background: '#173404', color: '#FAF7F2', fontFamily: 'var(--font-space-grotesk)' }}
         >
@@ -175,7 +175,7 @@ export function IssueKeyForm({ tosVersion, tosStatus }: Props) {
         />
       </div>
 
-      <div className="rounded-xl border border-warm p-5" style={{ background: '#FAFAF7' }}>
+      <div className="rounded-xl border border-warm p-5" style={{ background: 'white' }}>
         <p className="text-sm font-semibold text-charcoal mb-2" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
           Terms of Service
         </p>

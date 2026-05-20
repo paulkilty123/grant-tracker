@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic'
 export default async function MCPLandingPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  const ctaHref = user ? '/dashboard/mcp/keys/new' : '/auth/login?next=/dashboard/mcp/keys/new'
+  const ctaHref = user ? '/mcp/keys/new' : '/auth/login?next=/mcp/keys/new'
 
   return (
     <div style={{ background: '#FAFAF7', minHeight: '100vh', fontFamily: 'var(--font-plus-jakarta, Plus Jakarta Sans, sans-serif)', color: '#2C2C2A' }}>
