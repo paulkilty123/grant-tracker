@@ -2247,8 +2247,12 @@ export default function UrlAdminPage() {
       structs.add('ltd_guarantee'); structs.add('ltd_shares')
       structs.add('cooperative'); structs.add('unincorporated')
     }
-    // Co-operatives
-    if (/co.operative|community\s+benefit\s+society|\bcbs\b/.test(text)) {
+    // Co-operatives + CBSs. "Registered society" / "registered societies"
+    // is the legal umbrella under the 2014 Co-operative and Community
+    // Benefit Societies Act — both co-ops and CBSs register under it, so
+    // when a brief lists "registered societies" alongside charities/CICs
+    // (e.g. Sylvia Waddilove), tick the cooperative box.
+    if (/co.operative|community\s+benefit\s+society|\bcbs\b|\bregistered\s+societ(?:y|ies)\b/.test(text)) {
       structs.add('cooperative')
     }
     // Ltd companies — only when explicit
