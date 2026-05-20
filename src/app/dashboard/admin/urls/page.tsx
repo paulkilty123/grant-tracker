@@ -2322,14 +2322,17 @@ export default function UrlAdminPage() {
     // vice versa. The blanket CIC rule earlier adds both because most
     // briefs just say 'CICs eligible'; the qualifier only matters when
     // funders are explicit about which CIC subtype they accept.
+    // Accept plural "CICs limited by guarantee" too — without `s?` the
+    // refinement misses every brief that uses plural phrasing
+    // (e.g. Sylvia Waddilove: "CICs limited by guarantee").
     const cicGuaranteeOnly =
-      /\b(?:cic|community\s+interest\s+compan(?:y|ies))\s+(?:limited\s+by\s+guarantee|by\s+guarantee)\b/.test(inclusionText) &&
-      !/\b(?:cic|community\s+interest\s+compan(?:y|ies))\s+(?:limited\s+by\s+shares|by\s+shares)\b/.test(inclusionText)
+      /\b(?:cics?|community\s+interest\s+compan(?:y|ies))\s+(?:limited\s+by\s+guarantee|by\s+guarantee)\b/.test(inclusionText) &&
+      !/\b(?:cics?|community\s+interest\s+compan(?:y|ies))\s+(?:limited\s+by\s+shares|by\s+shares)\b/.test(inclusionText)
     if (cicGuaranteeOnly) structs.delete('cic_shares')
 
     const cicSharesOnly =
-      /\b(?:cic|community\s+interest\s+compan(?:y|ies))\s+(?:limited\s+by\s+shares|by\s+shares)\b/.test(inclusionText) &&
-      !/\b(?:cic|community\s+interest\s+compan(?:y|ies))\s+(?:limited\s+by\s+guarantee|by\s+guarantee)\b/.test(inclusionText)
+      /\b(?:cics?|community\s+interest\s+compan(?:y|ies))\s+(?:limited\s+by\s+shares|by\s+shares)\b/.test(inclusionText) &&
+      !/\b(?:cics?|community\s+interest\s+compan(?:y|ies))\s+(?:limited\s+by\s+guarantee|by\s+guarantee)\b/.test(inclusionText)
     if (cicSharesOnly) structs.delete('cic_guarantee')
 
     // Exclusion pass — remove structures explicitly excluded.
