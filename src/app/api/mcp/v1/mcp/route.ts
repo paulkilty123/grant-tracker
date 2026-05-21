@@ -111,6 +111,7 @@ const mcpHandler = createMcpHandler(
       // Description verbatim from spec §8.5
       `Check Grant Tracker MCP server availability and version. Returns server\nstatus and the timestamp of the most recent catalogue update.\n\nUse this for diagnostic purposes only. Not relevant for user-facing\nfunding queries.`,
       {},  // no parameters
+      { title: 'Health check', readOnlyHint: true },
       async () => {
         const auth = authStore.getStore()
         let catalogue: { last_updated: string | null; active_opportunities: number }
@@ -147,6 +148,7 @@ const mcpHandler = createMcpHandler(
           .optional()
           .describe('Single taxonomy to fetch. Omit to return all six.'),
       },
+      { title: 'Browse taxonomies', readOnlyHint: true },
       async ({ taxonomy }) => {
         const auth = authStore.getStore()
         const taxonomies = taxonomy
@@ -185,6 +187,7 @@ const mcpHandler = createMcpHandler(
         limit:                    z.number().int().min(1).max(50).optional().describe('Max 50, default 20.'),
         offset:                   z.number().int().min(0).optional().describe('For pagination, default 0.'),
       },
+      { title: 'Search UK funding', readOnlyHint: true },
       async (raw) => {
         const auth = authStore.getStore()
         const ctx: AdapterContext = {
@@ -277,6 +280,7 @@ const mcpHandler = createMcpHandler(
         opportunity_id:         z.string().uuid().describe('UUID of the opportunity (from a search result).'),
         include_funder_summary: z.boolean().optional().describe('Include the inline brief funder section. Default true.'),
       },
+      { title: 'Funding opportunity detail', readOnlyHint: true },
       async ({ opportunity_id, include_funder_summary }) => {
         const auth = authStore.getStore()
         const ctx: AdapterContext = {
@@ -340,6 +344,7 @@ const mcpHandler = createMcpHandler(
         provider_name:  z.string().optional().describe('Case-insensitive match against the provider name. Provide either this or opportunity_id.'),
         opportunity_id: z.string().uuid().optional().describe('UUID of an opportunity from this provider. Cleaner than name-matching when available.'),
       },
+      { title: 'Funder intelligence', readOnlyHint: true },
       async ({ provider_name, opportunity_id }) => {
         const auth = authStore.getStore()
         const ctx: AdapterContext = {
