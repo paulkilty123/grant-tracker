@@ -54,6 +54,16 @@ export async function middleware(request: NextRequest) {
 
   const isAuthPage = pathname.startsWith('/auth')
   const isPublicPage = pathname === '/' || pathname === '/apply' || pathname === '/cohort-signup-7k9m2x' || pathname === '/privacy' || pathname === '/terms' || pathname === '/mcp' || pathname === '/mcp/terms'
+  // OAuth 2.0 + DCR endpoints — discovery, registration, token exchange,
+  // revocation. The consent screen at /oauth/authorize is intentionally
+  // auth-gated (user must be logged in to consent) and not in this list.
+  const isOAuthPublic =
+    pathname === '/.well-known/oauth-authorization-server' ||
+    pathname === '/.well-known/oauth-protected-resource' ||
+    pathname.startsWith('/.well-known/oauth-protected-resource/') ||
+    pathname === '/oauth/register' ||
+    pathname === '/oauth/token' ||
+    pathname === '/oauth/revoke'
   const isApiRoute = pathname.startsWith('/api/')
   // Next-generated metadata routes must be reachable for crawlers (WhatsApp,
   // Slack, LinkedIn, Twitter, Facebook) to fetch the OG / Twitter image.
@@ -70,7 +80,7 @@ export async function middleware(request: NextRequest) {
     pathname === '/sitemap.xml'
 
   // Redirect unauthenticated users to login
-  if (!user && !isAuthPage && !isPublicPage && !isApiRoute && !isMetadataRoute) {
+  if (!user && !isAuthPage && !isPublicPage && !isApiRoute && !isMetadataRoute && !isOAuthPublic) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth/login'
     return NextResponse.redirect(url)
