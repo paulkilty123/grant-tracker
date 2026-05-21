@@ -38,7 +38,7 @@ The two drafts below are retained as reference. The decision to skip the ChatGPT
 >
 > Grant Tracker is a UK-focused, curated funding catalogue covering grants, accelerator programmes, social investment, and in-kind support. Ask ChatGPT what's available for your work, what's closing this month, or whether a specific funder is a good fit for your organisation.
 >
-> Built specifically for UK charities, CICs, community interest companies, and social enterprises. Each result includes funder details, eligibility hints, and direct application links.
+> Built specifically for UK charities, CICs, and social enterprises. Each result includes funder details, eligibility hints, and direct application links.
 >
 > For deeper personalised matching against your organisation, deadline tracking, and a curated library of insider application guidance, visit granttracker.co.uk.
 >
