@@ -482,10 +482,12 @@ const WWW_AUTHENTICATE_VALUE =
   'Bearer realm="grant-tracker-mcp", ' +
   'resource_metadata="https://www.granttracker.co.uk/.well-known/oauth-protected-resource"'
 
-function unauthorisedResponse(reason: 'invalid_token' | 'revoked_token'): NextResponse {
-  const message = reason === 'revoked_token'
-    ? 'Token has been revoked. Re-authorise via OAuth or use a new API key.'
-    : 'Token is invalid or expired. Re-authorise via OAuth or use a new API key.'
+function unauthorisedResponse(reason: 'invalid_token' | 'revoked_token' | 'no_credentials'): NextResponse {
+  const message = (() => {
+    if (reason === 'revoked_token')   return 'Token has been revoked. Re-authorise via OAuth or use a new API key.'
+    if (reason === 'invalid_token')   return 'Token is invalid or expired. Re-authorise via OAuth or use a new API key.'
+    return 'Authorization required. MCP clients should follow the OAuth flow advertised in WWW-Authenticate; developers can use a Grant Tracker MCP key from granttracker.co.uk/mcp.'
+  })()
   return NextResponse.json({
     error: {
       code:    'auth_required',
@@ -502,13 +504,15 @@ function unauthorisedResponse(reason: 'invalid_token' | 'revoked_token'): NextRe
 async function handle(req: NextRequest): Promise<Response> {
   const authCtx = await validateMCPRequest(req)
 
-  // OAuth-aware 401: when the client presented credentials that failed
-  // validation, send a WWW-Authenticate challenge pointing at the RS
-  // metadata so the client can initiate (or re-initiate) the OAuth flow.
-  // Anonymous (no Authorization header) keeps the existing rate-limited
-  // free-tier behaviour — we don't 401 those.
-  if (authCtx.state === 'invalid')  return unauthorisedResponse('invalid_token')
-  if (authCtx.state === 'revoked')  return unauthorisedResponse('revoked_token')
+  // OAuth-aware 401: every unauthenticated request gets a challenge
+  // pointing at the RS metadata. The anonymous free-tier was removed
+  // 2026-05-21 because Claude Desktop's connector probe needs a 401 +
+  // WWW-Authenticate to discover OAuth — a 200 response with anonymous
+  // rate-limit headers caused Desktop to silently skip OAuth and stay
+  // anonymous. Trade-off: callers must either OAuth or use a gt_mcp_ key.
+  if (authCtx.state === 'anonymous') return unauthorisedResponse('no_credentials')
+  if (authCtx.state === 'invalid')   return unauthorisedResponse('invalid_token')
+  if (authCtx.state === 'revoked')   return unauthorisedResponse('revoked_token')
 
   // Rate-limit enforcement (spec §6.3 + §6.4). Returns live remaining
   // counts that tool handlers surface in rate_limit_status. When blocked,

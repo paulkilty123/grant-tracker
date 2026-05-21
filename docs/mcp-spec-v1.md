@@ -516,54 +516,56 @@ Error codes used:
 - `rate_limit_exceeded` — quota hit, includes `Retry-After` header
 - `invalid_parameter` — bad input, includes which parameter and why in details
 - `not_found` — opportunity_id or provider_name doesn't match anything
-- `auth_required` — anonymous quota exhausted, prompts for API key
+- `auth_required` — request had no usable credentials, or the credentials were invalid/revoked. Returned with HTTP 401 + `WWW-Authenticate: Bearer resource_metadata="…/.well-known/oauth-protected-resource"`. `details.reason` is one of `no_credentials`, `invalid_token`, `revoked_token`.
 - `internal_error` — server-side issue
 
 ---
 
 ## 6. Auth and rate limiting
 
-### 6.1 API key model
+### 6.1 Auth paths
 
-- Free API key required for sustained use
-- Self-serve signup at granttracker.co.uk/mcp
-- Email verification, no approval queue
-- Optional org name and use-case description at signup (for understanding adoption patterns)
-- Key issued immediately on verification
-- ToS-bound at key issuance (see 6.5)
-- Kill switch: keys can be revoked
+Two coexisting credential types, distinguished by token prefix:
 
-### 6.2 Anonymous fallback
+- **OAuth 2.0 + DCR access tokens** (`gt_oat_…`) — the canonical path for MCP clients (Claude Desktop, claude.ai, Anthropic Connectors Directory). Discoverable via `/.well-known/oauth-authorization-server` + `/.well-known/oauth-protected-resource`. Public clients with PKCE; scope `read` only in v1. See `src/lib/mcp-oauth.ts` and the OAuth routes under `/oauth/*`.
+- **Bearer API keys** (`gt_mcp_…`) — the developer-self-configuration path. Self-serve issuance at `granttracker.co.uk/mcp/keys/new`, ToS-bound (see 6.5), revocable. Free, no approval queue.
 
-- 10 requests per hour per IP for unauthenticated requests
-- Beyond limit, returns `auth_required` error with message: "Anonymous request limit reached. Get a free API key at granttracker.co.uk/mcp to continue."
-- Purpose: enables agent installs to "just work" on first use, allows curious users to try a few queries before being asked for a key
+Anonymous access is **not supported** on the MCP endpoint as of 2026-05-21. The previous 10/hr/IP anonymous fallback was removed because Anthropic Connectors Directory clients (Claude Desktop) need a 401 + `WWW-Authenticate` challenge on first probe to discover OAuth — a 200 anonymous response causes them to silently skip OAuth. Every unauthenticated request returns HTTP 401 with `details.reason: "no_credentials"`.
+
+### 6.2 OAuth discovery flow
+
+1. Client probes `/api/mcp/v1/mcp` with no `Authorization` header.
+2. Server returns HTTP 401 + `WWW-Authenticate: Bearer resource_metadata="https://www.granttracker.co.uk/.well-known/oauth-protected-resource"`.
+3. Client fetches RS metadata → finds `authorization_servers: ["https://www.granttracker.co.uk"]`.
+4. Client fetches `/.well-known/oauth-authorization-server` → finds `authorization_endpoint`, `token_endpoint`, `registration_endpoint`.
+5. Client POSTs DCR to `/oauth/register` with its `client_name` + `redirect_uris` (must be public https — Claude.ai surfaces use `https://claude.ai/api/mcp/auth_callback`).
+6. Client opens a browser to `/oauth/authorize?…` with PKCE S256 challenge + state.
+7. User approves on the consent screen → server issues a 10-min single-use code → redirects back.
+8. Client exchanges code at `/oauth/token` with the PKCE verifier → receives `gt_oat_…` access token (1 h) + `gt_ort_…` refresh token (30 d).
+9. Client retries the original MCP request with `Authorization: Bearer gt_oat_…` → server returns 200.
 
 ### 6.3 Rate limit tiers
 
-**Authenticated (per API key):**
+**Authenticated (shared bucket for both OAuth and bearer-key paths):**
 
 - 100 requests per hour
 - 1,000 requests per day
 - Burst tolerance: rolling average rather than strict per-hour cap
+- Bucket identifier: `key_hash` for bearer keys; `oauth:<client_id>:<user_id>` for OAuth (stable across refresh rotation)
 
-**Anonymous (per IP):**
+**Tertiary abuse protection (per IP, regardless of credentials):**
 
-- 10 requests per hour (see 6.2)
-
-**Tertiary abuse protection (per IP, regardless of keys):**
-
-- 1,000 requests per hour per IP, regardless of how many keys are used from that IP
+- 1,000 requests per hour per IP, regardless of how many keys/tokens are used from that IP
 
 ### 6.4 Rate limit headers and fields
 
-All responses include a `rate_limit_status` field:
+All authenticated responses include a `rate_limit_status` field:
 
 - `remaining_hour: number` — approximate requests remaining in the current hour window.
-- `remaining_day: number | null` — approximate requests remaining in the current day window. `null` for anonymous traffic (no daily limit).
+- `remaining_day: number` — approximate requests remaining in the current day window.
 - `reset_at_hour: number` — Unix milliseconds timestamp when the hourly window's previous-bucket contribution fully ages out.
 
-Rate-limit-exceeded responses (HTTP 429) include a `Retry-After` HTTP header in seconds and a `details.which_limit` field naming the counter that blocked (`key_hourly`, `key_daily`, `anon_hourly`, `ip_hourly`).
+Rate-limit-exceeded responses (HTTP 429) include a `Retry-After` HTTP header in seconds and a `details.which_limit` field naming the counter that blocked (`key_hourly`, `key_daily`, `ip_hourly`). Note `anon_hourly` is no longer used; the underlying limiter still exists but no requests now route into it.
 
 **On reading `remaining_hour`:** the value uses a sliding-window estimator. It typically decreases by 1 per call but can stay flat or vary by ±1 between consecutive calls as the previous window's weighted contribution ages out. Treat it as an estimate suitable for pacing decisions, not a strict monotonic counter. Use `reset_at_hour` if precise timing matters; rely on 429 responses for hard limit enforcement.
 
@@ -604,7 +606,7 @@ All Grant Tracker URLs include:
 ?utm_source={agent_channel}&utm_medium=mcp&utm_campaign={campaign}&utm_content={tool_name}
 ```
 
-- `utm_source` — set per API key (see 7.3). For anonymous fallback, set to `mcp_anonymous`.
+- `utm_source` — set per credential (see 7.3). Bearer-key requests use the `utm_source` baked into the key record; OAuth requests use `mcp_oauth`.
 - `utm_medium` — always `mcp`
 - `utm_campaign` — defaults to `v1_launch`, configurable for campaign-specific tracking
 - `utm_content` — the tool name that generated the URL (e.g., `search`, `opportunity_detail`, `provider_intelligence`)
@@ -613,13 +615,13 @@ All Grant Tracker URLs include:
 
 `utm_source` is baked into each API key server-side. Recommended segmentation for launch:
 
-- `claude_mcp` — keys issued for the Claude MCP directory listing
-- `chatgpt_mcp` — keys issued for ChatGPT Apps directory
-- `gemini_mcp` — keys issued for Gemini Apps directory or developer integrations
-- `developer_mcp` — keys issued via self-serve to individual developers
-- `mcp_anonymous` — anonymous fallback fallback (no key)
+- `mcp_oauth` — all OAuth-authenticated requests (Anthropic Connectors Directory etc.)
+- `claude_mcp` — bearer keys issued for the Claude MCP directory listing (legacy/dev path; OAuth is preferred for end users)
+- `chatgpt_mcp` — bearer keys issued for ChatGPT Apps directory
+- `gemini_mcp` — bearer keys issued for Gemini Apps directory or developer integrations
+- `developer_mcp` — bearer keys issued via self-serve to individual developers
 
-User-Agent header inspection serves as fallback signal for unauthenticated traffic.
+Anonymous attribution was removed 2026-05-21 with the anonymous tier — see §6.1.
 
 ### 7.4 Bridge page quality bar
 
@@ -854,8 +856,8 @@ funding queries.
 - All four funding types (grants, programmes, investment, in-kind)
 - Match-quality signal: numeric score + matched-signals list
 - Honest 0-result handling with `likely_cause` and `adjacent_suggestions`
-- API key auth with anonymous fallback
-- Per-key rate limits (100/hr, 1,000/day)
+- OAuth 2.0 + DCR (canonical) **and** bearer API keys (developer path); no anonymous tier
+- Per-credential rate limits (100/hr, 1,000/day) shared across both auth paths
 - Per-IP abuse protection (1,000/hr)
 - UTM parameters on all Grant Tracker URLs
 - Per-API-key channel attribution
@@ -931,7 +933,7 @@ Recommended order for Claude Code:
 
 1. **Adapter** — `src/lib/opportunity-adapter.ts`. Translates `scraped_grants` to the v4 opportunity shape. Validates against real data before downstream work depends on it.
 
-2. **Auth layer** — API key issuance flow on granttracker.co.uk, validation middleware on MCP server. Includes anonymous fallback handling.
+2. **Auth layer** — bearer-key issuance flow on granttracker.co.uk, OAuth 2.0 + DCR (`/oauth/register|authorize|token|revoke` + the two `.well-known` discovery docs), and the prefix-routing validation middleware on the MCP server.
 
 3. **Rate limiting** — Redis setup, per-key and per-IP enforcement, burst tolerance via rolling average.
 

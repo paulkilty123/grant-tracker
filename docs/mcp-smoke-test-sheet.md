@@ -1,8 +1,10 @@
 # Grant Tracker MCP — Smoke Test Sheet
 
-**Date:** ____________   **Client:** ☐ Claude Desktop  ☐ curl   **Key:** `gt_mcp_…________`
+**Date:** ____________   **Client:** ☐ Claude Desktop  ☐ curl   **Auth:** ☐ OAuth (consent screen)  ☐ Bearer key `gt_mcp_…________`
 
 > Claude Desktop is the only client v1 QA's against. ChatGPT/Gemini directory submissions dropped 2026-05-20; the server still works for developers self-configuring those clients but isn't actively smoke-tested there.
+>
+> Anonymous tier removed 2026-05-21 — every unauthenticated request now returns 401 + `WWW-Authenticate` so Anthropic Directory clients can discover OAuth. If a smoke test step returns `auth_required` with `details.reason: "no_credentials"`, the client lost or never picked up its credential — re-add the connector.
 
 Run the prompts in order in a single conversation. Tick the box if the response matches "Expect". Note anything off in **Notes**.
 
@@ -45,7 +47,9 @@ Run the prompts in order in a single conversation. Tick the box if the response 
 ---
 
 ### Failure quick triage
-- **401 `auth_required`** → key wrong or missing.
+- **401 `auth_required` (`reason: no_credentials`)** → connector has no token. For OAuth: re-add the connector so Desktop runs DCR + consent. For dev: pass a `gt_mcp_…` bearer.
+- **401 `auth_required` (`reason: invalid_token` / `revoked_token`)** → token expired or revoked. OAuth: refresh or re-consent. Bearer: get a new key.
+- **No consent screen appeared at install** → Desktop didn't see the 401 challenge. Check `WWW-Authenticate` is on the 401 (see §6.2 of spec) and the RS metadata returns 200.
 - **429 + `Retry-After`** → rate-limit; check `details.which_limit`.
 - **Tool never appears** → client doesn't speak Streamable HTTP, or SDK <1.26.
 - **"Server not found"** → must be `https://www.granttracker.co.uk/...` (apex 307s and some clients drop POST).
