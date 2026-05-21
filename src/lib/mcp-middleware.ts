@@ -10,17 +10,30 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { hashApiKey, type ApiKeyRecord } from './mcp-auth'
+import {
+  OAUTH_ACCESS_TOKEN_PREFIX,
+  resolveAccessToken,
+  type ResolvedAccessToken,
+} from './mcp-oauth'
 
 export type MCPAuthState = 'authenticated' | 'anonymous' | 'invalid' | 'revoked'
 
 export interface MCPAuthContext {
   state: MCPAuthState
+  /** Set only on the bearer-key path (gt_mcp_…). Null for OAuth and anonymous. */
   key: ApiKeyRecord | null
+  /**
+   * Set only on the OAuth path (gt_oat_…). Null for bearer-key and anonymous.
+   * Carries the resolved user / client / scope so tool handlers can do
+   * per-user behaviour without re-querying the tokens table.
+   */
+  oauth: ResolvedAccessToken | null
   ip: string
   /**
    * Per-API-key utm_source from the key record, or 'mcp_anonymous' for
-   * unauthenticated requests. Used by the adapter when building
-   * grant_tracker_url. Spec §7.2/§7.3.
+   * unauthenticated requests, or 'mcp_oauth' for OAuth-authenticated
+   * requests. Used by the adapter when building grant_tracker_url. Spec
+   * §7.2/§7.3.
    */
   utm_source: string
   /**
@@ -64,15 +77,33 @@ export async function validateMCPRequest(req: NextRequest): Promise<MCPAuthConte
   const authHeader = req.headers.get('authorization')
 
   if (!authHeader || !authHeader.toLowerCase().startsWith('bearer ')) {
-    return { state: 'anonymous', key: null, ip, utm_source: 'mcp_anonymous' }
+    return { state: 'anonymous', key: null, oauth: null, ip, utm_source: 'mcp_anonymous' }
   }
 
-  const rawKey = authHeader.slice(7).trim()
-  if (!rawKey.startsWith('gt_mcp_')) {
-    return { state: 'invalid', key: null, ip, utm_source: 'mcp_anonymous' }
+  const rawToken = authHeader.slice(7).trim()
+
+  // ── OAuth path: gt_oat_… access tokens ──────────────────────────────────
+  if (rawToken.startsWith(OAUTH_ACCESS_TOKEN_PREFIX)) {
+    let resolved: ResolvedAccessToken | null
+    try {
+      resolved = await resolveAccessToken(rawToken)
+    } catch {
+      return { state: 'invalid', key: null, oauth: null, ip, utm_source: 'mcp_anonymous' }
+    }
+    if (!resolved) {
+      // Could be revoked, expired, or never-existed — we don't distinguish.
+      // The tool handler returns 401 + WWW-Authenticate either way.
+      return { state: 'invalid', key: null, oauth: null, ip, utm_source: 'mcp_anonymous' }
+    }
+    return { state: 'authenticated', key: null, oauth: resolved, ip, utm_source: 'mcp_oauth' }
   }
 
-  const hash = hashApiKey(rawKey)
+  // ── Bearer-key path: gt_mcp_… developer keys ────────────────────────────
+  if (!rawToken.startsWith('gt_mcp_')) {
+    return { state: 'invalid', key: null, oauth: null, ip, utm_source: 'mcp_anonymous' }
+  }
+
+  const hash = hashApiKey(rawToken)
   const supabase = getServiceClient()
   const { data } = await supabase
     .from('api_keys')
@@ -81,11 +112,11 @@ export async function validateMCPRequest(req: NextRequest): Promise<MCPAuthConte
     .maybeSingle()
 
   if (!data) {
-    return { state: 'invalid', key: null, ip, utm_source: 'mcp_anonymous' }
+    return { state: 'invalid', key: null, oauth: null, ip, utm_source: 'mcp_anonymous' }
   }
   const key = data as ApiKeyRecord
   if (key.status === 'revoked') {
-    return { state: 'revoked', key, ip, utm_source: 'mcp_anonymous' }
+    return { state: 'revoked', key, oauth: null, ip, utm_source: 'mcp_anonymous' }
   }
 
   // Fire-and-forget last_used_at update — failure doesn't block the request
@@ -95,7 +126,7 @@ export async function validateMCPRequest(req: NextRequest): Promise<MCPAuthConte
     .eq('id', key.id)
     .then(() => undefined, () => undefined)
 
-  return { state: 'authenticated', key, ip, utm_source: key.utm_source }
+  return { state: 'authenticated', key, oauth: null, ip, utm_source: key.utm_source }
 }
 
 /**

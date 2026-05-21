@@ -28,6 +28,11 @@ export const OAUTH_REFRESH_TOKEN_PREFIX = 'gt_ort_'
 export const REGISTER_MAX_CLIENTS_PER_IP = 20
 export const CLIENT_UNUSED_EXPIRY_DAYS = 60
 
+// Lifetimes for the authorize / token flow
+export const AUTH_CODE_LIFETIME_SEC      = 10 * 60       // 10 minutes (RFC 6749 §4.1.2 "short")
+export const ACCESS_TOKEN_LIFETIME_SEC   = 60 * 60       // 1 hour
+export const REFRESH_TOKEN_LIFETIME_SEC  = 30 * 24 * 60 * 60   // 30 days
+
 // ──────────────────────────────────────────────────────────────────────────
 // Rate limit — per-IP on /oauth/register (separate from MCP rate limit).
 // 5/hour, sliding window. Falls back to "always allow" if Upstash env vars
@@ -264,5 +269,396 @@ export async function getClient(clientId: string): Promise<RegisteredClient | nu
     token_endpoint_auth_method: data.token_endpoint_auth_method,
     software_id:                data.software_id ?? undefined,
     software_version:           data.software_version ?? undefined,
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Authorize-time validation + code issuance
+//
+// validateAuthorizeRequest centralises the param checks for /oauth/authorize.
+// It returns a discriminated union so the route can:
+//   - render an in-app error when the redirect_uri can't be trusted
+//     (unknown client_id, redirect_uri mismatch) — we never bounce in that
+//     case because it would amount to an open redirect
+//   - bounce back to redirect_uri with error= when the redirect_uri is OK
+//     but other params are wrong (per RFC 6749 §4.1.2.1)
+//   - on success, return the validated, narrowed params
+// ──────────────────────────────────────────────────────────────────────────
+
+export interface ValidatedAuthorizeParams {
+  client:                RegisteredClient
+  redirect_uri:          string
+  scope:                 'read'
+  state:                 string | null
+  code_challenge:        string
+  code_challenge_method: 'S256'
+  resource:              string | null
+}
+
+export type AuthorizeValidation =
+  | { ok: true;  params: ValidatedAuthorizeParams }
+  | { ok: false; kind: 'fatal';    error: string; description: string }
+  | { ok: false; kind: 'redirect'; redirect_uri: string; state: string | null; error: string; description: string }
+
+interface AuthorizeRequestInput {
+  client_id?:             string | null
+  redirect_uri?:          string | null
+  response_type?:         string | null
+  scope?:                 string | null
+  state?:                 string | null
+  code_challenge?:        string | null
+  code_challenge_method?: string | null
+  resource?:              string | null
+}
+
+export async function validateAuthorizeRequest(input: AuthorizeRequestInput): Promise<AuthorizeValidation> {
+  // 1. client_id present + active. Fatal on failure — never trust an
+  //    attacker-supplied redirect_uri when the client lookup hasn't
+  //    succeeded.
+  if (!input.client_id) {
+    return { ok: false, kind: 'fatal', error: 'invalid_client', description: 'Missing client_id.' }
+  }
+  let client: RegisteredClient | null
+  try {
+    client = await getClient(input.client_id)
+  } catch (e) {
+    return { ok: false, kind: 'fatal', error: 'server_error', description: e instanceof Error ? e.message : 'Client lookup failed.' }
+  }
+  if (!client) {
+    return { ok: false, kind: 'fatal', error: 'invalid_client', description: 'Unknown or inactive client_id.' }
+  }
+
+  // 2. redirect_uri must exactly match one registered for the client.
+  if (!input.redirect_uri) {
+    return { ok: false, kind: 'fatal', error: 'invalid_redirect_uri', description: 'Missing redirect_uri.' }
+  }
+  if (!client.redirect_uris.includes(input.redirect_uri)) {
+    return { ok: false, kind: 'fatal', error: 'invalid_redirect_uri', description: 'redirect_uri does not match any registered URI for this client.' }
+  }
+  const redirect_uri = input.redirect_uri
+  const state = input.state ?? null
+
+  // 3. From here, all errors can be bounced via redirect_uri.
+  if (input.response_type !== 'code') {
+    return { ok: false, kind: 'redirect', redirect_uri, state, error: 'unsupported_response_type', description: 'response_type must be "code".' }
+  }
+  const scope = (input.scope ?? 'read').trim() || 'read'
+  if (scope.split(/\s+/).some(s => s !== 'read')) {
+    return { ok: false, kind: 'redirect', redirect_uri, state, error: 'invalid_scope', description: "Only the 'read' scope is supported." }
+  }
+  if (!input.code_challenge) {
+    return { ok: false, kind: 'redirect', redirect_uri, state, error: 'invalid_request', description: 'code_challenge is required (PKCE).' }
+  }
+  // We accept missing code_challenge_method ONLY if the caller is explicit
+  // that they want S256 — we don't allow 'plain' silently.
+  const method = input.code_challenge_method ?? 'S256'
+  if (method !== 'S256') {
+    return { ok: false, kind: 'redirect', redirect_uri, state, error: 'invalid_request', description: 'code_challenge_method must be S256.' }
+  }
+  // resource is optional in v1; if present, must match our canonical resource
+  if (input.resource && input.resource !== OAUTH_RESOURCE) {
+    return { ok: false, kind: 'redirect', redirect_uri, state, error: 'invalid_target', description: `resource must be ${OAUTH_RESOURCE}.` }
+  }
+
+  return {
+    ok: true,
+    params: {
+      client,
+      redirect_uri,
+      scope: 'read',
+      state,
+      code_challenge:        input.code_challenge,
+      code_challenge_method: 'S256',
+      resource:              input.resource ?? null,
+    },
+  }
+}
+
+/**
+ * Build an absolute redirect URL that carries OAuth params on the query
+ * string. Preserves any pre-existing query the client put on its redirect_uri.
+ */
+export function buildRedirect(redirect_uri: string, params: Record<string, string | null | undefined>): string {
+  const u = new URL(redirect_uri)
+  for (const [k, v] of Object.entries(params)) {
+    if (v != null && v !== '') u.searchParams.set(k, v)
+  }
+  return u.toString()
+}
+
+/**
+ * Issue an authorization code. Hashes the raw code with sha256 and inserts
+ * the row bound to user / client / PKCE / redirect_uri / scope / resource
+ * with a 10-minute TTL. Returns the raw code (caller passes it to the
+ * client via redirect_uri).
+ */
+export async function issueAuthorizationCode(args: {
+  user_id:               string
+  client_id:             string
+  redirect_uri:          string
+  scope:                 'read'
+  code_challenge:        string
+  code_challenge_method: 'S256'
+  resource:              string | null
+}): Promise<string> {
+  const raw_code  = randomBytes(32).toString('hex')
+  const code_hash = hashSecret(raw_code)
+  const sb        = oauthServiceClient()
+  const expires_at = new Date(Date.now() + AUTH_CODE_LIFETIME_SEC * 1000).toISOString()
+  const { error } = await sb.from('oauth_codes').insert({
+    code_hash,
+    client_id:             args.client_id,
+    user_id:               args.user_id,
+    redirect_uri:          args.redirect_uri,
+    scope:                 args.scope,
+    code_challenge:        args.code_challenge,
+    code_challenge_method: args.code_challenge_method,
+    resource:              args.resource,
+    expires_at,
+  })
+  if (error) throw new Error(`issueAuthorizationCode: ${error.message}`)
+  return raw_code
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Token issuance & validation
+// ──────────────────────────────────────────────────────────────────────────
+
+/**
+ * base64url-encode a buffer (RFC 4648 §5) — no padding, +/ replaced with -_.
+ */
+function base64url(buf: Buffer): string {
+  return buf.toString('base64').replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_')
+}
+
+/**
+ * PKCE S256 verifier check: BASE64URL(SHA256(code_verifier)) == code_challenge.
+ * Constant-time comparison so we don't leak the challenge via timing.
+ */
+export function verifyPkceS256(code_verifier: string, code_challenge: string): boolean {
+  const expected = base64url(createHash('sha256').update(code_verifier, 'utf8').digest())
+  if (expected.length !== code_challenge.length) return false
+  let diff = 0
+  for (let i = 0; i < expected.length; i++) {
+    diff |= expected.charCodeAt(i) ^ code_challenge.charCodeAt(i)
+  }
+  return diff === 0
+}
+
+export type TokenIssueError =
+  | { error: 'invalid_grant'; description: string }
+  | { error: 'invalid_request'; description: string }
+  | { error: 'invalid_client'; description: string }
+  | { error: 'server_error'; description: string }
+
+export interface ConsumedCode {
+  user_id:  string
+  scope:    string
+  resource: string | null
+}
+
+/**
+ * Atomically validate + mark-used the authorization code. Enforces:
+ *  - the code exists and is unused (used_at is null)
+ *  - not expired (expires_at > now)
+ *  - bound to the same client_id and redirect_uri as the request
+ *  - PKCE: BASE64URL(SHA256(code_verifier)) == stored code_challenge
+ *
+ * Single-use is enforced via an UPDATE … WHERE used_at IS NULL guard so two
+ * concurrent /token calls can't both succeed with the same code.
+ */
+export async function consumeAuthorizationCode(args: {
+  raw_code:      string
+  client_id:     string
+  redirect_uri:  string
+  code_verifier: string
+}): Promise<{ ok: true; data: ConsumedCode } | { ok: false; err: TokenIssueError }> {
+  const code_hash = hashSecret(args.raw_code)
+  const sb        = oauthServiceClient()
+
+  // Mark the code used in a single statement and return the row. If used_at
+  // is already non-null the UPDATE matches zero rows and we treat it as
+  // invalid_grant (already used).
+  const { data: updated, error: updateErr } = await sb
+    .from('oauth_codes')
+    .update({ used_at: new Date().toISOString() })
+    .eq('code_hash', code_hash)
+    .is('used_at', null)
+    .select('client_id, user_id, redirect_uri, scope, code_challenge, code_challenge_method, resource, expires_at')
+    .maybeSingle()
+
+  if (updateErr) {
+    return { ok: false, err: { error: 'server_error', description: updateErr.message } }
+  }
+  if (!updated) {
+    return { ok: false, err: { error: 'invalid_grant', description: 'Authorization code is invalid or has already been used.' } }
+  }
+
+  // Expiry check (read after update; if expired we still treat the code
+  // as consumed — no recourse).
+  if (new Date(updated.expires_at).getTime() < Date.now()) {
+    return { ok: false, err: { error: 'invalid_grant', description: 'Authorization code has expired.' } }
+  }
+
+  if (updated.client_id !== args.client_id) {
+    return { ok: false, err: { error: 'invalid_grant', description: 'Authorization code was issued to a different client.' } }
+  }
+  if (updated.redirect_uri !== args.redirect_uri) {
+    return { ok: false, err: { error: 'invalid_grant', description: 'redirect_uri does not match the value used at /authorize.' } }
+  }
+
+  if (updated.code_challenge_method !== 'S256') {
+    return { ok: false, err: { error: 'invalid_grant', description: 'Unsupported PKCE method on stored code.' } }
+  }
+  if (!verifyPkceS256(args.code_verifier, updated.code_challenge)) {
+    return { ok: false, err: { error: 'invalid_grant', description: 'PKCE code_verifier does not match the stored challenge.' } }
+  }
+
+  return {
+    ok: true,
+    data: {
+      user_id:  updated.user_id,
+      scope:    updated.scope,
+      resource: updated.resource,
+    },
+  }
+}
+
+export interface IssuedTokens {
+  access_token:  string
+  refresh_token: string
+  expires_in:    number
+  scope:         string
+}
+
+/**
+ * Issue a fresh access + refresh token pair. Hashes both before storing.
+ * Returns the raw values for the client.
+ */
+export async function issueTokens(args: {
+  user_id:   string
+  client_id: string
+  scope:     string
+  resource:  string | null
+}): Promise<IssuedTokens> {
+  const sb = oauthServiceClient()
+  const raw_access  = OAUTH_ACCESS_TOKEN_PREFIX  + randomBytes(32).toString('hex')
+  const raw_refresh = OAUTH_REFRESH_TOKEN_PREFIX + randomBytes(32).toString('hex')
+  const access_expires_at  = new Date(Date.now() + ACCESS_TOKEN_LIFETIME_SEC  * 1000).toISOString()
+  const refresh_expires_at = new Date(Date.now() + REFRESH_TOKEN_LIFETIME_SEC * 1000).toISOString()
+
+  const { error } = await sb.from('oauth_tokens').insert({
+    access_token_hash:  hashSecret(raw_access),
+    refresh_token_hash: hashSecret(raw_refresh),
+    token_prefix:       OAUTH_ACCESS_TOKEN_PREFIX,
+    client_id:          args.client_id,
+    user_id:            args.user_id,
+    scope:              args.scope,
+    resource:           args.resource,
+    access_expires_at,
+    refresh_expires_at,
+  })
+  if (error) throw new Error(`issueTokens: ${error.message}`)
+  return { access_token: raw_access, refresh_token: raw_refresh, expires_in: ACCESS_TOKEN_LIFETIME_SEC, scope: args.scope }
+}
+
+/**
+ * Consume a refresh token, atomically rotating it. The old token is revoked
+ * (revoked_at set) and a fresh access+refresh pair is issued. Returns the
+ * new tokens or an error if the refresh is invalid / revoked / expired /
+ * client-mismatched.
+ */
+export async function consumeRefreshToken(args: {
+  raw_refresh: string
+  client_id:   string
+}): Promise<{ ok: true; data: IssuedTokens } | { ok: false; err: TokenIssueError }> {
+  if (!args.raw_refresh.startsWith(OAUTH_REFRESH_TOKEN_PREFIX)) {
+    return { ok: false, err: { error: 'invalid_grant', description: 'Refresh token format is unrecognised.' } }
+  }
+  const refresh_hash = hashSecret(args.raw_refresh)
+  const sb           = oauthServiceClient()
+
+  // Single-statement rotation: revoke the old row only if not already revoked.
+  const { data: rotated, error: rotErr } = await sb
+    .from('oauth_tokens')
+    .update({ revoked_at: new Date().toISOString() })
+    .eq('refresh_token_hash', refresh_hash)
+    .is('revoked_at', null)
+    .select('client_id, user_id, scope, resource, refresh_expires_at')
+    .maybeSingle()
+
+  if (rotErr) {
+    return { ok: false, err: { error: 'server_error', description: rotErr.message } }
+  }
+  if (!rotated) {
+    return { ok: false, err: { error: 'invalid_grant', description: 'Refresh token is invalid or has been revoked.' } }
+  }
+  if (rotated.refresh_expires_at && new Date(rotated.refresh_expires_at).getTime() < Date.now()) {
+    return { ok: false, err: { error: 'invalid_grant', description: 'Refresh token has expired.' } }
+  }
+  if (rotated.client_id !== args.client_id) {
+    return { ok: false, err: { error: 'invalid_grant', description: 'Refresh token was issued to a different client.' } }
+  }
+
+  const tokens = await issueTokens({
+    user_id:   rotated.user_id,
+    client_id: rotated.client_id,
+    scope:     rotated.scope,
+    resource:  rotated.resource,
+  })
+  return { ok: true, data: tokens }
+}
+
+/**
+ * Revoke a token (RFC 7009). Accepts either an access or refresh token —
+ * sets revoked_at on the matching row. Idempotent; missing-row is not an
+ * error (RFC requires we not leak token validity).
+ */
+export async function revokeToken(raw: string): Promise<void> {
+  const sb   = oauthServiceClient()
+  const hash = hashSecret(raw)
+  const now  = new Date().toISOString()
+  // Match either the access or refresh hash; either kind revokes the whole row.
+  await sb
+    .from('oauth_tokens')
+    .update({ revoked_at: now })
+    .or(`access_token_hash.eq.${hash},refresh_token_hash.eq.${hash}`)
+    .is('revoked_at', null)
+}
+
+export interface ResolvedAccessToken {
+  user_id:  string
+  scope:    string
+  resource: string | null
+  client_id: string
+}
+
+/**
+ * Look up an access token by its raw value. Returns the bound user/scope
+ * if active (not revoked, not expired). Used by the MCP middleware to
+ * authenticate gt_oat_* requests.
+ */
+export async function resolveAccessToken(raw: string): Promise<ResolvedAccessToken | null> {
+  if (!raw.startsWith(OAUTH_ACCESS_TOKEN_PREFIX)) return null
+  const sb   = oauthServiceClient()
+  const hash = hashSecret(raw)
+  const { data } = await sb
+    .from('oauth_tokens')
+    .select('user_id, scope, resource, client_id, access_expires_at, revoked_at')
+    .eq('access_token_hash', hash)
+    .maybeSingle()
+  if (!data) return null
+  if (data.revoked_at) return null
+  if (new Date(data.access_expires_at).getTime() < Date.now()) return null
+  // Fire-and-forget last_used_at
+  sb.from('oauth_tokens')
+    .update({ last_used_at: new Date().toISOString() })
+    .eq('access_token_hash', hash)
+    .then(() => undefined, () => undefined)
+  return {
+    user_id:   data.user_id,
+    scope:     data.scope,
+    resource:  data.resource,
+    client_id: data.client_id,
   }
 }

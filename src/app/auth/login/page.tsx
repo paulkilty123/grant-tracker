@@ -40,6 +40,16 @@ function LoginForm() {
   const urlError        = searchParams.get('error')
   const urlErrorMessage = urlError ? (URL_ERROR_MESSAGES[urlError] ?? URL_ERROR_MESSAGES['auth_error']) : null
 
+  // Same-origin path: leading slash, not "//", not protocol-relative.
+  // Rejects absolute URLs, javascript: schemes, network paths, etc.
+  function safeNext(raw: string | null): string | null {
+    if (!raw) return null
+    if (raw.length > 2048) return null
+    if (!raw.startsWith('/')) return null
+    if (raw.startsWith('//') || raw.startsWith('/\\')) return null
+    return raw
+  }
+
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
@@ -49,6 +59,14 @@ function LoginForm() {
     if (error) {
       setError(friendlyError(error.message))
       setLoading(false)
+      return
+    }
+    const next = safeNext(searchParams.get('next'))
+    if (next) {
+      // Caller wants to resume a specific flow (e.g. /oauth/authorize).
+      // Skip onboarding routing and bounce straight there.
+      router.push(next)
+      router.refresh()
       return
     }
     try {

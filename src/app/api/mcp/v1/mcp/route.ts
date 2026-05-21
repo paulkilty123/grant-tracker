@@ -474,8 +474,41 @@ const mcpHandler = createMcpHandler(
 // server-sent-events channel back. Both methods route through the same
 // handler; the SDK chooses the right behaviour by method.
 
+// RS metadata pointer for the WWW-Authenticate challenge. RFC 9728 + MCP
+// spec: a 401 response advertises the protected-resource metadata URL so
+// an OAuth-aware client can discover the authorization server and start
+// the flow.
+const WWW_AUTHENTICATE_VALUE =
+  'Bearer realm="grant-tracker-mcp", ' +
+  'resource_metadata="https://www.granttracker.co.uk/.well-known/oauth-protected-resource"'
+
+function unauthorisedResponse(reason: 'invalid_token' | 'revoked_token'): NextResponse {
+  const message = reason === 'revoked_token'
+    ? 'Token has been revoked. Re-authorise via OAuth or use a new API key.'
+    : 'Token is invalid or expired. Re-authorise via OAuth or use a new API key.'
+  return NextResponse.json({
+    error: {
+      code:    'auth_required',
+      message,
+      details: { reason },
+    },
+    attribution: ATTRIBUTION,
+  }, {
+    status: 401,
+    headers: { 'WWW-Authenticate': WWW_AUTHENTICATE_VALUE },
+  })
+}
+
 async function handle(req: NextRequest): Promise<Response> {
   const authCtx = await validateMCPRequest(req)
+
+  // OAuth-aware 401: when the client presented credentials that failed
+  // validation, send a WWW-Authenticate challenge pointing at the RS
+  // metadata so the client can initiate (or re-initiate) the OAuth flow.
+  // Anonymous (no Authorization header) keeps the existing rate-limited
+  // free-tier behaviour — we don't 401 those.
+  if (authCtx.state === 'invalid')  return unauthorisedResponse('invalid_token')
+  if (authCtx.state === 'revoked')  return unauthorisedResponse('revoked_token')
 
   // Rate-limit enforcement (spec §6.3 + §6.4). Returns live remaining
   // counts that tool handlers surface in rate_limit_status. When blocked,

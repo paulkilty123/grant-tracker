@@ -55,15 +55,19 @@ export async function middleware(request: NextRequest) {
   const isAuthPage = pathname.startsWith('/auth')
   const isPublicPage = pathname === '/' || pathname === '/apply' || pathname === '/cohort-signup-7k9m2x' || pathname === '/privacy' || pathname === '/terms' || pathname === '/mcp' || pathname === '/mcp/terms'
   // OAuth 2.0 + DCR endpoints — discovery, registration, token exchange,
-  // revocation. The consent screen at /oauth/authorize is intentionally
-  // auth-gated (user must be logged in to consent) and not in this list.
+  // revocation. /oauth/authorize is also listed here because it does its own
+  // auth gate inside the page (logged-out users are redirected to
+  // /auth/login?next=<full URL> so consent resumes after sign-in). Leaving it
+  // off this list would short-circuit to /auth/login with no `next` and lose
+  // the OAuth request state.
   const isOAuthPublic =
     pathname === '/.well-known/oauth-authorization-server' ||
     pathname === '/.well-known/oauth-protected-resource' ||
     pathname.startsWith('/.well-known/oauth-protected-resource/') ||
     pathname === '/oauth/register' ||
     pathname === '/oauth/token' ||
-    pathname === '/oauth/revoke'
+    pathname === '/oauth/revoke' ||
+    pathname === '/oauth/authorize'
   const isApiRoute = pathname.startsWith('/api/')
   // Next-generated metadata routes must be reachable for crawlers (WhatsApp,
   // Slack, LinkedIn, Twitter, Facebook) to fetch the OG / Twitter image.

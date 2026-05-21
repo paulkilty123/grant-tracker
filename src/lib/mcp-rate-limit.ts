@@ -129,8 +129,15 @@ export async function enforceRateLimits(ctx: MCPAuthContext): Promise<RateLimitR
 
   const ip = ctx.ip || 'unknown'
 
-  if (ctx.state === 'authenticated' && ctx.key) {
-    const id = ctx.key.key_hash
+  // Authenticated path: either a bearer key (ctx.key) or an OAuth access
+  // token (ctx.oauth). Both share the same per-identifier hourly/daily
+  // buckets. We use the key_hash for bearer-key requests and a stable
+  // oauth:<client>:<user> string for OAuth — picking the token hash would
+  // reset the bucket every refresh, letting clients escape limits.
+  if (ctx.state === 'authenticated' && (ctx.key || ctx.oauth)) {
+    const id = ctx.key
+      ? ctx.key.key_hash
+      : `oauth:${ctx.oauth!.client_id}:${ctx.oauth!.user_id}`
     const [kh, kd, ih] = await Promise.all([
       limiters.keyHourly.limit(id),
       limiters.keyDaily.limit(id),
