@@ -9,22 +9,20 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { createClient as createServerClient } from '@/lib/supabase/server'
+import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
+import { mergeGrantUpdate } from '@/lib/grant-merge'
 
 export const dynamic  = 'force-dynamic'
 export const maxDuration = 300  // 5 min — batches of 10 × Claude calls
 
-const ADMIN_EMAIL = 'paulkilty1@gmail.com'
+// Bump when the audit prompt below changes materially.
+const AUDIT_VERSION     = 'v1'
+const PROVENANCE_SOURCE = `ai_audit:eligibility:${AUDIT_VERSION}`
 
 async function isAuthorised(req: NextRequest): Promise<boolean> {
-  const auth  = req.headers.get('authorization') ?? ''
-  const token = auth.replace('Bearer ', '').trim()
-  if (token && token === process.env.ADMIN_SECRET) return true
-  try {
-    const supabase = await createServerClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    return user?.email === ADMIN_EMAIL
-  } catch { return false }
+  if (isAdminBearerToken(req.headers.get('authorization'))) return true
+  const auth = await requireAdmin()
+  return auth.ok
 }
 
 function getAdminClient() {
@@ -164,11 +162,19 @@ ${JSON.stringify(inputData, null, 0)}`
       })
 
       if (apply && r.corrected_criteria?.length > 0) {
-        const { error: ue } = await db
-          .from('scraped_grants')
-          .update({ eligibility_criteria: r.corrected_criteria })
-          .eq('id', r.id)
-        if (!ue) updated++
+        try {
+          // eligibility_criteria is untracked by provenance — passes through.
+          await mergeGrantUpdate({
+            id:     r.id,
+            fields: { eligibility_criteria: r.corrected_criteria },
+            source: PROVENANCE_SOURCE,
+            pinned: false,
+            db,
+          })
+          updated++
+        } catch (err) {
+          console.error('[audit-eligibility] write failed:', err)
+        }
       }
     }
   }

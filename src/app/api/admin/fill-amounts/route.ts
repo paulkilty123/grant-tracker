@@ -5,21 +5,19 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { createClient as createServerClient } from '@/lib/supabase/server'
+import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
+import { mergeGrantUpdate } from '@/lib/grant-merge'
 
 export const dynamic = 'force-dynamic'
 
-const ADMIN_EMAIL = 'paulkilty1@gmail.com'
+// Bump when the regex parser below changes materially.
+const DETECT_VERSION    = 'v1'
+const PROVENANCE_SOURCE = `ai_detect:fill_amounts:${DETECT_VERSION}`
 
 async function isAuthorised(req: NextRequest): Promise<boolean> {
-  const auth = req.headers.get('authorization') ?? ''
-  const token = auth.replace('Bearer ', '').trim()
-  if (token && token === process.env.ADMIN_SECRET) return true
-  try {
-    const supabase = await createServerClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    return user?.email === ADMIN_EMAIL
-  } catch { return false }
+  if (isAdminBearerToken(req.headers.get('authorization'))) return true
+  const auth = await requireAdmin()
+  return auth.ok
 }
 
 function adminClient() {
@@ -111,10 +109,19 @@ export async function POST(req: NextRequest) {
     })
 
     if (!dryRun) {
-      await supabase
-        .from('scraped_grants')
-        .update(update)
-        .eq('id', grant.id)
+      try {
+        await mergeGrantUpdate({
+          id:     grant.id,
+          fields: update,
+          source: PROVENANCE_SOURCE,
+          pinned: false,
+          db:     supabase,
+        })
+      } catch (err) {
+        console.error('[fill-amounts] write failed:', err)
+        skipped++
+        continue
+      }
     }
     filled++
   }

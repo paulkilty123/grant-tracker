@@ -10,22 +10,20 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { createClient as createServerClient } from '@/lib/supabase/server'
+import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
+import { mergeGrantUpdate } from '@/lib/grant-merge'
 
 export const dynamic    = 'force-dynamic'
 export const maxDuration = 300
 
-const ADMIN_EMAIL = 'paulkilty1@gmail.com'
+// Bump when the deadline-extraction prompt below changes materially.
+const DETECT_VERSION    = 'v1'
+const PROVENANCE_SOURCE = `ai_detect:fill_deadlines:${DETECT_VERSION}`
 
 async function isAuthorised(req: NextRequest): Promise<boolean> {
-  const auth  = req.headers.get('authorization') ?? ''
-  const token = auth.replace('Bearer ', '').trim()
-  if (token && token === process.env.ADMIN_SECRET) return true
-  try {
-    const supabase = await createServerClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    return user?.email === ADMIN_EMAIL
-  } catch { return false }
+  if (isAdminBearerToken(req.headers.get('authorization'))) return true
+  const auth = await requireAdmin()
+  return auth.ok
 }
 
 function getAdminClient() {
@@ -184,17 +182,31 @@ ${JSON.stringify(inputData, null, 0)}`
   const fetchFailed = pageTexts.filter(t => t === null).length
 
   for (const r of results) {
-    if (!r.deadline) { noDate++; continue }
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/
-    if (!dateRegex.test(r.deadline) || r.deadline < today) { noDate++; continue }
+    const found = r.deadline && dateRegex.test(r.deadline) && r.deadline >= today
 
-    const { error: ue } = await db
-      .from('scraped_grants')
-      .update({ deadline: r.deadline, is_rolling: false })
-      .eq('id', r.id)
+    // No-date branch is explicit (not a skip) so the merger can record
+    // "fill_deadlines tried and found nothing" as provenance — closes the
+    // detect-only-adds anti-pattern for future filters that re-evaluate
+    // rows with existing deadlines.
+    const fields: Record<string, unknown> = found
+      ? { deadline: r.deadline, is_rolling: false }
+      : { deadline: null }
 
-    if (!ue) updated++
-    else noDate++
+    try {
+      await mergeGrantUpdate({
+        id:     r.id,
+        fields,
+        source: PROVENANCE_SOURCE,
+        pinned: false,
+        db,
+      })
+      if (found) updated++
+      else       noDate++
+    } catch (err) {
+      console.error('[fill-deadlines] write failed:', err)
+      noDate++
+    }
   }
 
   const done = grants.length < limit
