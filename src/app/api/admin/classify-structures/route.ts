@@ -9,22 +9,20 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { createClient as createServerClient } from '@/lib/supabase/server'
+import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
+import { mergeGrantUpdate } from '@/lib/grant-merge'
 
 export const dynamic   = 'force-dynamic'
 export const maxDuration = 300
 
-const ADMIN_EMAIL = 'paulkilty1@gmail.com'
+// Bump when the structures prompt below changes materially.
+const STRUCTURES_VERSION = 'v1'
+const PROVENANCE_SOURCE  = `ai_classifier:structures:${STRUCTURES_VERSION}`
 
 async function isAuthorised(req: NextRequest): Promise<boolean> {
-  const auth  = req.headers.get('authorization') ?? ''
-  const token = auth.replace('Bearer ', '').trim()
-  if (token && token === process.env.ADMIN_SECRET) return true
-  try {
-    const supabase = await createServerClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    return user?.email === ADMIN_EMAIL
-  } catch { return false }
+  if (isAdminBearerToken(req.headers.get('authorization'))) return true
+  const auth = await requireAdmin()
+  return auth.ok
 }
 
 function getAdminClient() {
@@ -180,13 +178,20 @@ ${JSON.stringify(inputData, null, 0)}`
       continue
     }
 
-    const { error: ue } = await db
-      .from('scraped_grants')
-      .update({ eligible_structures: validStructures })
-      .eq('id', r.id)
-
-    if (!ue) updated++
-    else skipped++
+    try {
+      const result = await mergeGrantUpdate({
+        id:     r.id,
+        fields: { eligible_structures: validStructures },
+        source: PROVENANCE_SOURCE,
+        pinned: false,
+        db,
+      })
+      if (result.applied.includes('eligible_structures')) updated++
+      else skipped++
+    } catch (err) {
+      console.error('[classify-structures] write failed:', err)
+      skipped++
+    }
   }
 
   const done = grants.length < limit

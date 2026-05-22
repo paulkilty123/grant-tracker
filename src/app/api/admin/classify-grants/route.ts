@@ -15,8 +15,14 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
-import { createClient as createServerClient } from '@/lib/supabase/server'
 import { classifyBatch, validate, type GrantInput } from '@/lib/classify'
+import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
+import { mergeGrantUpdate } from '@/lib/grant-merge'
+
+// Bump when the classifier prompt changes materially (in `src/lib/classify.ts`).
+// Stamped on every field this route writes via the provenance merger.
+const CLASSIFIER_VERSION = 'v1'
+const PROVENANCE_SOURCE  = `ai_classifier:${CLASSIFIER_VERSION}`
 
 // Single classify pass — fetches `limit` unclassified rows, runs Claude, writes
 // updates. Returns `done: true` when no rows remained (last page).
@@ -61,10 +67,12 @@ async function classifyOnce(supabase: SupabaseClient<any>, limit: number): Promi
         }
         if (r.eligible_structures.length > 0)   patch.eligible_structures = r.eligible_structures
         if (r.target_beneficiaries.length > 0)  patch.target_beneficiaries = r.target_beneficiaries
-        return supabase.from('scraped_grants').update(patch).eq('id', g.id)
+        return mergeGrantUpdate({ id: g.id, fields: patch, source: PROVENANCE_SOURCE, pinned: false, db: supabase })
+          .then(() => ({ ok: true as const }))
+          .catch(err => { console.error('[classify-grants/loop] write failed:', err); return { ok: false as const } })
       })
     const updateResults = await Promise.all(updates)
-    const writeErrors   = updateResults.filter(r => r.error)
+    const writeErrors   = updateResults.filter(r => !r.ok)
     classified = grantsRaw.length - writeErrors.length
     failed     = writeErrors.length
   } catch (err) {
@@ -79,18 +87,11 @@ async function classifyOnce(supabase: SupabaseClient<any>, limit: number): Promi
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300  // 5 minutes — batches of 20 × Claude calls
 
-const ADMIN_EMAIL = 'paulkilty1@gmail.com'
-
 // ── Auth ──────────────────────────────────────────────────────────────────────
 async function isAuthorised(req: NextRequest): Promise<boolean> {
-  const auth = req.headers.get('authorization') ?? ''
-  const token = auth.replace('Bearer ', '').trim()
-  if (token && token === process.env.ADMIN_SECRET) return true
-  try {
-    const supabase = await createServerClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    return user?.email === ADMIN_EMAIL
-  } catch { return false }
+  if (isAdminBearerToken(req.headers.get('authorization'))) return true
+  const auth = await requireAdmin()
+  return auth.ok
 }
 
 function getAdminClient() {
@@ -305,7 +306,7 @@ export async function POST(req: NextRequest) {
         if (r?.id) byId[r.id] = validate(r)
       }
 
-      // Write to Supabase in parallel
+      // Write to Supabase in parallel — through the merger so provenance is stamped.
       const updates = chunk
         .filter(g => byId[g.id])
         .map(g => {
@@ -325,14 +326,13 @@ export async function POST(req: NextRequest) {
           if (grantIds.length > 0 || r.target_beneficiaries.length > 0) {
             patch.target_beneficiaries = r.target_beneficiaries
           }
-          return supabase
-            .from('scraped_grants')
-            .update(patch)
-            .eq('id', g.id)
+          return mergeGrantUpdate({ id: g.id, fields: patch, source: PROVENANCE_SOURCE, pinned: false, db: supabase })
+            .then(() => ({ ok: true as const }))
+            .catch(err => { console.error('[classify-grants] write failed:', err); return { ok: false as const } })
         })
 
       const updateResults = await Promise.all(updates)
-      const writeErrors   = updateResults.filter(r => r.error)
+      const writeErrors   = updateResults.filter(r => !r.ok)
       classified += chunk.length - writeErrors.length
       failed     += writeErrors.length
 
