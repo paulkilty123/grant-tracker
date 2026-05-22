@@ -41,6 +41,7 @@
 
 import { createClient }  from '@supabase/supabase-js'
 import { parse as parseHTML } from 'node-html-parser'
+import { mergeGrantUpdate, stampNewGrant } from '@/lib/grant-merge'
 
 function adminClient() {
   return createClient(
@@ -2020,7 +2021,8 @@ function sanitiseGrant(g: ScrapedGrant): ScrapedGrant | null {
 // ── DB upsert ─────────────────────────────────────────────────────────────────
 // New grants (never seen before) land with is_active: false so an admin can
 // review them in the "Needs Review" tab before they go live.
-// Re-scraped existing grants update metadata but preserve their is_active value.
+// Re-scraped existing grants flow through mergeGrantUpdate so admin-pinned
+// fields, trust-laddered AI classifier output, etc. are preserved.
 async function upsertGrants(source: string, grants: ScrapedGrant[]): Promise<CrawlResult> {
   if (grants.length === 0) return { source, fetched: 0, upserted: 0 }
   const supabase = adminClient()
@@ -2032,54 +2034,69 @@ async function upsertGrants(source: string, grants: ScrapedGrant[]): Promise<Cra
   const ids = valid.map(g => g.external_id)
   const { data: existing } = await supabase
     .from('scraped_grants')
-    .select('external_id')
+    .select('id, external_id, amount_min, amount_max, deadline, next_open_date')
     .in('external_id', ids)
-  const existingIds = new Set((existing ?? []).map((r: { external_id: string }) => r.external_id))
+  const existingByExtId = new Map(
+    (existing ?? []).map((r: { id: string; external_id: string; amount_min: number | null; amount_max: number | null; deadline: string | null; next_open_date: string | null }) =>
+      [r.external_id, r]
+    )
+  )
 
   const now = new Date().toISOString()
+  const provenanceSource = `scraper:${source}`
 
-  // ── 1. Update existing grants (preserve is_active and manually-edited fields) ──
-  // amount_min, amount_max, deadline, next_open_date are preserved if already set —
-  // these can be edited by the admin in Grant Manager and must not be overwritten
-  // by the crawler's scraped values (which are often null for manually-added grants).
-  const toUpdate = valid.filter(g => existingIds.has(g.external_id))
-  if (toUpdate.length > 0) {
-    // Fetch current values of the manually-editable fields so we can preserve them
-    const externalIds = toUpdate.map(g => g.external_id)
-    const { data: currentRows } = await supabase
-      .from('scraped_grants')
-      .select('external_id, amount_min, amount_max, deadline, next_open_date')
-      .in('external_id', externalIds)
-    const currentByExtId = new Map(
-      (currentRows ?? []).map((r: { external_id: string; amount_min: number | null; amount_max: number | null; deadline: string | null; next_open_date: string | null }) =>
-        [r.external_id, r]
-      )
-    )
-    const updateRows = toUpdate.map(g => {
-      const current = currentByExtId.get(g.external_id)
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { is_active: _drop, ...rest } = g as typeof g & { is_active: boolean }
-      return {
-        ...rest,
-        last_seen_at: now,
-        // Preserve manually-set values: only use the crawled value if the DB currently has null
-        amount_min:    current?.amount_min  ?? rest.amount_min,
-        amount_max:    current?.amount_max  ?? rest.amount_max,
-        deadline:      current?.deadline    ?? rest.deadline,
-        next_open_date: current?.next_open_date ?? (rest as Record<string, unknown>).next_open_date ?? null,
-      }
-    })
-    for (let i = 0; i < updateRows.length; i += 50) {
-      await supabase
-        .from('scraped_grants')
-        .upsert(updateRows.slice(i, i + 50), { onConflict: 'external_id' })
+  // Fields that ScrapedGrant carries which are tracked-by-provenance. Other
+  // ScrapedGrant fields (sectors, eligibility_criteria, raw_data, external_id,
+  // source) are untracked and flow through the merger as-is.
+  const TRACKED_SCRAPER_FIELDS = [
+    'title','funder','funder_type','description','amount_min','amount_max',
+    'deadline','is_rolling','is_local','apply_url','funding_type','location_tag',
+  ] as const
+
+  // ── 1. Update existing grants — merger handles per-field decisions ──────────
+  // Admin-pinned values are preserved by the merger via the `pinned` flag.
+  //
+  // TODO[provenance-cleanup-2026-05-29]: remove the legacy preserve-logic below.
+  // For amount_min/max/deadline, if the DB already has a non-null value we
+  // *don't* send the scraper's value to the merger. This was the pre-provenance
+  // protection against scraper overwriting admin edits; the backfill couldn't
+  // reconstruct pin state, so keeping it for a week protects pre-migration
+  // admin edits that backfilled as pinned=false. After 2026-05-29, any
+  // pre-migration value that mattered will either have been re-touched by an
+  // admin (and thus pinned for real) or have stayed at the scraper's current
+  // value anyway. Grep for `provenance-cleanup-2026-05-29` to find the
+  // companion guard inside the for-loop below.
+  const toUpdate = valid.filter(g => existingByExtId.has(g.external_id))
+  for (const g of toUpdate) {
+    const current = existingByExtId.get(g.external_id)!
+    const fields: Record<string, unknown> = { last_seen_at: now }
+
+    for (const field of TRACKED_SCRAPER_FIELDS) {
+      const value = (g as unknown as Record<string, unknown>)[field]
+      if (value === undefined) continue
+      // TODO[provenance-cleanup-2026-05-29]: drop this guard once pre-migration
+      // admin edits have been organically re-touched / lost. See block comment
+      // above the for-loop for the rationale.
+      if (
+        (field === 'amount_min' || field === 'amount_max' || field === 'deadline')
+        && (current as Record<string, unknown>)[field] != null
+      ) continue
+      fields[field] = value
     }
+
+    // raw_data passes through untracked
+    if (g.raw_data !== undefined) fields.raw_data = g.raw_data
+    // Don't touch is_active on re-scrape
+
+    await mergeGrantUpdate({ id: current.id, fields, source: provenanceSource, pinned: false, db: supabase })
   }
 
   // ── 2. Insert new grants with is_active: false (pending admin review) ──────
+  // Stamp initial provenance for every populated tracked field with the
+  // scraper as the source.
   const toInsert = valid
-    .filter(g => !existingIds.has(g.external_id))
-    .map(g => ({ ...g, last_seen_at: now, is_active: false }))
+    .filter(g => !existingByExtId.has(g.external_id))
+    .map(g => stampNewGrant({ ...g, last_seen_at: now, is_active: false }, provenanceSource))
   if (toInsert.length > 0) {
     for (let i = 0; i < toInsert.length; i += 50) {
       await supabase

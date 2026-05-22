@@ -1,22 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { createClient as createServerClient } from '@/lib/supabase/server'
+import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
+import { mergeGrantUpdate, mergeGrantUpdateBatch } from '@/lib/grant-merge'
 
 export const dynamic = 'force-dynamic'
 
-const ADMIN_EMAIL = 'paulkilty1@gmail.com'
+type Caller = { source: string; pinned: boolean }
 
-async function isAuthorised(req: NextRequest): Promise<boolean> {
-  const auth = req.headers.get('authorization') ?? ''
-  const token = auth.replace('Bearer ', '').trim()
-  if (token && token === process.env.ADMIN_SECRET) return true
-  try {
-    const supabase = await createServerClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    return user?.email === ADMIN_EMAIL
-  } catch {
-    return false
+async function resolveCaller(req: NextRequest): Promise<Caller | null> {
+  if (isAdminBearerToken(req.headers.get('authorization'))) {
+    // Internal/system caller (cron, ops script). Allow optional override via
+    // body.provenance_source so e.g. expire-grants can attribute as itself.
+    return { source: 'system:admin_api', pinned: false }
   }
+  const auth = await requireAdmin()
+  if (!auth.ok) return null
+  return { source: `admin:${auth.user.email}`, pinned: true }
 }
 
 function getAdminClient() {
@@ -27,18 +26,23 @@ function getAdminClient() {
 }
 
 // PATCH /api/admin/update-grant
-// Body: { id: string, fields: Record<string, unknown> }
-//   OR: { ids: string[], fields: Record<string, unknown> }  ← batch update
-// Updates any set of columns on scraped_grants row(s) using the service role key (bypasses RLS).
+// Body: { id: string,    fields: Record<string, unknown>, provenance_source?: string, pinned?: boolean }
+//   OR: { ids: string[], fields: Record<string, unknown>, provenance_source?: string, pinned?: boolean }
+//
+// `provenance_source` lets system callers override the default 'system:admin_api'
+// stamp (e.g. an internal route stamping itself as 'ai_audit:eligibility:v1').
+// Admin (user-session) callers always stamp as 'admin:<email>' and pinned=true,
+// regardless of any provenance_source in the body.
 export async function PATCH(req: NextRequest) {
-  if (!await isAuthorised(req)) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
-  }
+  const caller = await resolveCaller(req)
+  if (!caller) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
   const body = await req.json() as {
     id?: string
     ids?: string[]
     fields: Record<string, unknown>
+    provenance_source?: string
+    pinned?: boolean
   }
   const { fields } = body
 
@@ -46,41 +50,52 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'fields is required' }, { status: 400 })
   }
 
+  // Caller resolution: admin-session callers always win (can't be downgraded).
+  // System bearer-token callers may override via provenance_source.
+  const isAdminSession = caller.source.startsWith('admin:')
+  const source = isAdminSession ? caller.source : (body.provenance_source ?? caller.source)
+  const pinned = isAdminSession ? true : (body.pinned ?? caller.pinned)
+
   const db = getAdminClient()
 
-  // Batch update (array of ids)
+  // Batch update
   if (Array.isArray(body.ids) && body.ids.length > 0) {
-    const { error } = await db
-      .from('scraped_grants')
-      .update(fields)
-      .in('id', body.ids)
-    if (error) {
-      console.error('update-grant batch error:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    try {
+      const r = await mergeGrantUpdateBatch({ ids: body.ids, fields, source, pinned, db })
+      return NextResponse.json({
+        ok: true,
+        updated: r.perGrant.filter(g => g.applied.length > 0).length,
+        totalApplied: r.totalApplied,
+        totalRejected: r.totalRejected,
+        rejected: r.perGrant.filter(g => g.rejected.length > 0).map(g => ({ id: g.id, rejected: g.rejected })),
+      })
+    } catch (err) {
+      console.error('update-grant batch error:', err)
+      return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 })
     }
-    return NextResponse.json({ ok: true, updated: body.ids.length })
   }
 
   // Single update
   if (!body.id) {
     return NextResponse.json({ error: 'id or ids is required' }, { status: 400 })
   }
-  const { data, error } = await db
-    .from('scraped_grants')
-    .update(fields)
-    .eq('id', body.id)
-    .select('id')
 
-  if (error) {
-    console.error('update-grant error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  try {
+    const r = await mergeGrantUpdate({ id: body.id, fields, source, pinned, db })
+    return NextResponse.json({
+      ok: true,
+      applied: r.applied,
+      rejected: r.rejected,
+    })
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    // Match the previous 404 behaviour for missing-row errors
+    if (msg.includes('no scraped_grants row for id')) {
+      return NextResponse.json({
+        error: `No grant found with id "${body.id}" — it may be a seed grant that hasn't been promoted yet.`,
+      }, { status: 404 })
+    }
+    console.error('update-grant error:', err)
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
-
-  // Detect 0-row updates (id didn't match any row in the DB)
-  if (!data || data.length === 0) {
-    console.error('update-grant: no rows matched id', body.id)
-    return NextResponse.json({ error: `No grant found with id "${body.id}" — it may be a seed grant that hasn't been promoted yet.` }, { status: 404 })
-  }
-
-  return NextResponse.json({ ok: true })
 }
