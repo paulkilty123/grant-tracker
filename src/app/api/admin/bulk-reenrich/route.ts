@@ -10,24 +10,22 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { createClient as createServerClient } from '@/lib/supabase/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { syncLocationFields } from '@/lib/funder-brief'
+import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
+import { mergeGrantUpdate } from '@/lib/grant-merge'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
 
-const ADMIN_EMAIL = 'paulkilty1@gmail.com'
+// Bump when the bulk re-enrich prompt below changes materially.
+const RERUN_VERSION     = 'v1'
+const PROVENANCE_SOURCE = `ai_enrich:rerun:${RERUN_VERSION}`
 
 async function isAuthorised(req: NextRequest): Promise<boolean> {
-  const auth = req.headers.get('authorization') ?? ''
-  const token = auth.replace('Bearer ', '').trim()
-  if (token && token === process.env.ADMIN_SECRET) return true
-  try {
-    const supabase = await createServerClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    return user?.email === ADMIN_EMAIL
-  } catch { return false }
+  if (isAdminBearerToken(req.headers.get('authorization'))) return true
+  const auth = await requireAdmin()
+  return auth.ok
 }
 
 function getAdminClient() {
@@ -194,13 +192,22 @@ Return ONLY valid JSON in this exact shape:
       // stale after enrichment.
       const updatePayload: Record<string, unknown> = { funder_brief: brief }
       syncLocationFields(brief, updatePayload)
-      await supabase.from('scraped_grants').update(updatePayload).eq('id', g.id)
+      const mergeResult = await mergeGrantUpdate({
+        id:     g.id as string,
+        fields: updatePayload,
+        source: PROVENANCE_SOURCE,
+        pinned: false,
+        db:     supabase,
+      })
+      const rejectedNote = mergeResult.rejected.length > 0
+        ? ` (rejected: ${mergeResult.rejected.map(r => r.field).join(',')})`
+        : ''
       results.push({
         id: g.id as string,
         funder: g.funder as string,
         outcome: 'enriched',
         source: 'live_fetch',
-        reason: `${fetched.length} chars`,
+        reason: `${fetched.length} chars${rejectedNote}`,
       })
     } catch (e) {
       results.push({

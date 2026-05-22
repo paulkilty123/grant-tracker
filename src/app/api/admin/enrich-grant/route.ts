@@ -2,8 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import Anthropic from '@anthropic-ai/sdk'
 import { syncLocationFields } from '@/lib/funder-brief'
+import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
+import { mergeGrantUpdate } from '@/lib/grant-merge'
 
 export const maxDuration = 45 // seconds — requires Vercel Pro
+
+// Bump when the enrichment prompt below changes materially.
+const ENRICH_VERSION    = 'v1'
+const PROVENANCE_SOURCE = `ai_enrich:${ENRICH_VERSION}`
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -13,6 +19,12 @@ const supabase = createClient(
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY!,
 })
+
+async function isAuthorised(req: NextRequest): Promise<boolean> {
+  if (isAdminBearerToken(req.headers.get('authorization'))) return true
+  const auth = await requireAdmin()
+  return auth.ok
+}
 
 // Fetch page text with realistic browser headers, strip HTML tags
 async function fetchPageText(url: string): Promise<string> {
@@ -59,6 +71,10 @@ async function fetchPageText(url: string): Promise<string> {
 }
 
 export async function POST(req: NextRequest) {
+  if (!await isAuthorised(req)) {
+    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+  }
+
   const { grantId, pastedContent, additionalSources } = await req.json() as {
     grantId: string
     pastedContent?: string
@@ -265,19 +281,31 @@ Return ONLY valid JSON in this exact shape:
   syncLocationFields(brief, updatePayload)
 
   if (additionalSources && additionalSources.length > 0) {
-    // Only persist sources that have meaningful content (url or pasted text)
+    // Only persist sources that have meaningful content (url or pasted text).
+    // grant_sources is untracked by provenance — flows through the merger as-is.
     const sourcesToSave = additionalSources.filter(s =>
       (s.url ?? '').trim().length > 5 || (s.text ?? '').trim().length > 50
     )
     if (sourcesToSave.length > 0) updatePayload.grant_sources = sourcesToSave
   }
 
-  const { error: updateError } = await supabase
-    .from('scraped_grants')
-    .update(updatePayload)
-    .eq('id', grantId)
-
-  if (updateError) return NextResponse.json({ error: 'Failed to save brief' }, { status: 500 })
-
-  return NextResponse.json({ success: true, brief, _debug: { primaryFetch: primaryFetchDebug, fetchedFromUrl } })
+  try {
+    const result = await mergeGrantUpdate({
+      id:     grantId,
+      fields: updatePayload,
+      source: PROVENANCE_SOURCE,
+      pinned: false,
+      db:     supabase,
+    })
+    return NextResponse.json({
+      success:  true,
+      brief,
+      applied:  result.applied,
+      rejected: result.rejected,
+      _debug:   { primaryFetch: primaryFetchDebug, fetchedFromUrl },
+    })
+  } catch (err) {
+    console.error('[enrich-grant] write failed:', err)
+    return NextResponse.json({ error: 'Failed to save brief' }, { status: 500 })
+  }
 }
