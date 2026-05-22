@@ -9,8 +9,13 @@
 // admin intervention.
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { mergeGrantUpdate } from '@/lib/grant-merge'
 
 export const dynamic = 'force-dynamic'
+
+// Bump if the roll-forward parser or between-rounds behaviour changes materially.
+const EXPIRE_VERSION    = 'v1'
+const PROVENANCE_SOURCE = `system:expire_grants:${EXPIRE_VERSION}`
 
 const MONTHS: Record<string, number> = {
   jan: 1, feb: 2, mar: 3, apr: 4,  may: 5,  jun: 6,
@@ -110,21 +115,30 @@ export async function GET(req: NextRequest) {
     const nextDate = tl ? parseNextRoundDeadline(tl, today) : null
 
     if (nextDate && nextDate > today) {
-      // Multi-round grant — advance the deadline instead of deactivating
-      const { error: updErr } = await supabase
-        .from('scraped_grants')
-        .update({ deadline: nextDate })
-        .eq('id', g.id)
-      if (!updErr) {
-        rolled.push({
-          id: g.external_id as string,
-          title: g.title as string,
-          old: g.deadline as string,
-          next: nextDate,
+      // Multi-round grant — advance the deadline instead of deactivating.
+      try {
+        const r = await mergeGrantUpdate({
+          id:     g.id as string,
+          fields: { deadline: nextDate },
+          source: PROVENANCE_SOURCE,
+          pinned: false,
+          db:     supabase,
         })
+        if (r.applied.includes('deadline')) {
+          rolled.push({
+            id: g.external_id as string,
+            title: g.title as string,
+            old: g.deadline as string,
+            next: nextDate,
+          })
+          continue
+        }
+        // Rejected (admin pin or higher trust held the deadline) — leave as-is.
+        // The next scraper run will refresh content; admin's pinned deadline wins.
         continue
+      } catch {
+        // fallthrough to between-rounds on write error
       }
-      // fallthrough to between-rounds on update error
     }
 
     // No clean roll possible — mark as "between rounds" instead of deactivating.
@@ -133,19 +147,26 @@ export async function GET(req: NextRequest) {
     // stays OUT of the admin Needs Review queue (which is reserved for genuinely
     // new arrivals). Admins review these via a dedicated "Between rounds" tab.
     const existingNextOpen = (g.next_open_date as string | null) ?? null
-    const { error: updErr2 } = await supabase
-      .from('scraped_grants')
-      .update({
-        deadline: null,
-        next_open_date: existingNextOpen ?? 'Closed — next round TBC',
+    try {
+      const r = await mergeGrantUpdate({
+        id:     g.id as string,
+        fields: {
+          deadline:       null,
+          next_open_date: existingNextOpen ?? 'Closed — next round TBC',
+        },
+        source: PROVENANCE_SOURCE,
+        pinned: false,
+        db:     supabase,
       })
-      .eq('id', g.id)
-    if (!updErr2) {
-      betweenRoundsOut.push({
-        id: g.external_id as string,
-        title: g.title as string,
-        deadline: g.deadline as string,
-      })
+      if (r.applied.length > 0) {
+        betweenRoundsOut.push({
+          id: g.external_id as string,
+          title: g.title as string,
+          deadline: g.deadline as string,
+        })
+      }
+    } catch (err) {
+      console.error('[expire-grants] write failed:', err)
     }
   }
 

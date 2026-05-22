@@ -68,10 +68,14 @@ const TRUST_BY_TYPE: Record<string, number> = {
   ai_classifier:    60,
   ai_enrich:        60,
   ai_audit:         60,
+  // `system` sits above scraper because system routes carry authoritative
+  // lifecycle knowledge (e.g. expire-grants knows today's date; admin_api
+  // bearer-token callers are internal scripts with the admin secret).
+  // Below AI sources because AI reads content and system doesn't.
+  system:           50,
   manual_extract:   50,
   scraper:          40,
   ai_detect:        30,
-  system:           30,
   seed:             25,
   discovery:        25,
   unknown:          10,
