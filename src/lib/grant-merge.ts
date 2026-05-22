@@ -287,12 +287,15 @@ export async function mergeGrantUpdateBatch(opts: {
 // the initial field_provenance jsonb in-process (no merger round-trip needed
 // because there's nothing to merge against). Returns the row augmented with
 // field_provenance ready for direct INSERT.
+//
+// pipeline_state for new rows is derived from the row's is_active flag and
+// the source family — see deriveInitialPipelineState() below.
 
 export function stampNewGrant<T extends Record<string, unknown>>(
   row: T,
   source: ProvenanceSource,
   opts: { pinned?: boolean } = {},
-): T & { field_provenance: FieldProvenance } {
+): T & { field_provenance: FieldProvenance; pipeline_state: PipelineState } {
   const now = new Date().toISOString()
   const baseEntry: ProvenanceEntry = { source, set_at: now, pinned: opts.pinned ?? false }
   const prov: FieldProvenance = {}
@@ -301,5 +304,82 @@ export function stampNewGrant<T extends Record<string, unknown>>(
       prov[field] = baseEntry
     }
   }
-  return { ...row, field_provenance: prov }
+  return {
+    ...row,
+    field_provenance: prov,
+    pipeline_state:   deriveInitialPipelineState(row, source),
+  }
+}
+
+// ── Pipeline state machine ────────────────────────────────────────────────────
+// Explicit 4-state lifecycle. See migrations/007_pipeline_state.sql.
+// State transitions are computed by transitionPipelineState() and stamped by
+// each write path alongside its content fields.
+
+export const PIPELINE_STATES = ['captured', 'tagged', 'published', 'archived'] as const
+export type PipelineState = typeof PIPELINE_STATES[number]
+
+const AI_SOURCE_PREFIXES = ['ai_classifier:', 'ai_enrich:', 'ai_audit:', 'ai_detect:', '360giving:']
+
+function isAiSource(source: string): boolean {
+  return AI_SOURCE_PREFIXES.some(p => source.startsWith(p))
+}
+
+// Initial state for a brand-new row at INSERT time.
+//   - promote-grant / promote-all-seeds set is_active=true → 'published'
+//   - scraper / discovery / 360giving inserts set is_active=false → 'captured'
+//     (even if from 360giving, since the row hasn't been admin-reviewed yet)
+function deriveInitialPipelineState<T extends Record<string, unknown>>(
+  row: T,
+  _source: ProvenanceSource,
+): PipelineState {
+  if (row.is_active === true) return 'published'
+  // url_status='dead' on an INSERT is unusual but treat as archived for consistency
+  if (row.url_status === 'dead') return 'archived'
+  return 'captured'
+}
+
+// Action-based state transitions for existing rows. Called from write paths
+// that mutate state (admin save, classifier run, etc.).
+//
+// The function is pure — callers decide whether to include `pipeline_state`
+// in the merger fields list (passing it as an untracked field flows through
+// without provenance stamping).
+
+export type StateTransitionInput = {
+  current: PipelineState
+  source:  ProvenanceSource
+  fields:  Record<string, unknown>  // the write being applied
+}
+
+export function transitionPipelineState({ current, source, fields }: StateTransitionInput): PipelineState {
+  // Explicit admin archive: is_active=false + url_status='dead' → archived
+  if (fields.is_active === false && fields.url_status === 'dead') return 'archived'
+
+  // Admin un-archive / approve: is_active=true takes the row to published
+  // regardless of previous state.
+  if (fields.is_active === true) return 'published'
+
+  // Admin de-publish without archive: is_active=false but URL not dead.
+  // Send back to tagged if it had AI processing, otherwise captured.
+  if (fields.is_active === false && current === 'published') {
+    return 'captured'  // conservative — re-publishing always requires explicit approval
+  }
+
+  // AI source touching a captured row promotes it to tagged.
+  if (current === 'captured' && isAiSource(source)) return 'tagged'
+
+  // No transition triggered — preserve current state.
+  return current
+}
+
+// Helper: read the current pipeline_state from a row fetch result so a write
+// path can compute the next state without an extra round-trip.
+export function readPipelineState(row: unknown): PipelineState {
+  if (!row || typeof row !== 'object') return 'captured'
+  const v = (row as Record<string, unknown>).pipeline_state
+  if (typeof v === 'string' && (PIPELINE_STATES as readonly string[]).includes(v)) {
+    return v as PipelineState
+  }
+  return 'captured'
 }
