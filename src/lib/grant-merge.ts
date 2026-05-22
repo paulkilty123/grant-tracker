@@ -189,9 +189,11 @@ export async function mergeGrantUpdate(opts: MergeGrantOptions): Promise<MergeGr
     return { applied: Object.keys(untrackedFields), rejected: [] }
   }
 
-  // Fetch current values + provenance for tracked fields
+  // Fetch current values + provenance + pipeline_state.
+  // pipeline_state is always selected so the auto-transition below can decide
+  // if the row's state should change as a side effect of this write.
   const trackedCols = Object.keys(trackedFields)
-  const selectCols  = [...trackedCols, 'field_provenance'].join(', ')
+  const selectCols  = [...trackedCols, 'field_provenance', 'pipeline_state'].join(', ')
   const { data: current, error: fetchErr } = await db
     .from('scraped_grants')
     .select(selectCols)
@@ -229,12 +231,30 @@ export async function mergeGrantUpdate(opts: MergeGrantOptions): Promise<MergeGr
     }
   }
 
-  // Nothing actually changing
-  if (applied.length === 0) return { applied, rejected }
+  // Auto-transition pipeline_state. Skip if the caller passed an explicit
+  // pipeline_state (escape hatch for admin overrides via SQL or ops scripts).
+  const currentState = readPipelineState(currentRow)
+  let nextState: PipelineState | null = null
+  if (!('pipeline_state' in fields)) {
+    const computed = transitionPipelineState({
+      current: currentState,
+      source,
+      fields,
+      anyTrackedWritten,
+    })
+    if (computed !== currentState) nextState = computed
+  }
+
+  // Nothing actually changing (no fields applied AND no state transition)
+  if (applied.length === 0 && nextState === null) return { applied, rejected }
 
   // Only include field_provenance in the update if a tracked field changed
   const updatePayload: Record<string, unknown> = { ...valuesToWrite }
   if (anyTrackedWritten) updatePayload.field_provenance = nextProv
+  if (nextState !== null) {
+    updatePayload.pipeline_state = nextState
+    applied.push('pipeline_state')
+  }
 
   const { error: updateErr } = await db
     .from('scraped_grants')
@@ -347,12 +367,13 @@ function deriveInitialPipelineState<T extends Record<string, unknown>>(
 // without provenance stamping).
 
 export type StateTransitionInput = {
-  current: PipelineState
-  source:  ProvenanceSource
-  fields:  Record<string, unknown>  // the write being applied
+  current:            PipelineState
+  source:             ProvenanceSource
+  fields:             Record<string, unknown>  // the write being applied
+  anyTrackedWritten?: boolean                  // did at least one tracked field actually get written by the merger?
 }
 
-export function transitionPipelineState({ current, source, fields }: StateTransitionInput): PipelineState {
+export function transitionPipelineState({ current, source, fields, anyTrackedWritten }: StateTransitionInput): PipelineState {
   // Explicit admin archive: is_active=false + url_status='dead' → archived
   if (fields.is_active === false && fields.url_status === 'dead') return 'archived'
 
@@ -361,13 +382,16 @@ export function transitionPipelineState({ current, source, fields }: StateTransi
   if (fields.is_active === true) return 'published'
 
   // Admin de-publish without archive: is_active=false but URL not dead.
-  // Send back to tagged if it had AI processing, otherwise captured.
   if (fields.is_active === false && current === 'published') {
     return 'captured'  // conservative — re-publishing always requires explicit approval
   }
 
-  // AI source touching a captured row promotes it to tagged.
-  if (current === 'captured' && isAiSource(source)) return 'tagged'
+  // AI source successfully writing a tracked field on a captured row → tagged.
+  // Requires anyTrackedWritten so a rejected AI write (admin-pinned, etc.)
+  // doesn't promote the state — the row didn't actually get tagged.
+  if (current === 'captured' && isAiSource(source) && anyTrackedWritten === true) {
+    return 'tagged'
+  }
 
   // No transition triggered — preserve current state.
   return current

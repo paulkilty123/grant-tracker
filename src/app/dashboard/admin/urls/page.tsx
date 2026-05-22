@@ -322,7 +322,7 @@ export default function UrlAdminPage() {
     const [{ data }, { count: newCount }, { count: reviewCount }, { count: suspiciousCount }, { data: ftData }] = await Promise.all([
       createClient().from('scraped_grants').select('url_status, apply_url').eq('is_active', true),
       createClient().from('scraped_grants').select('id', { count: 'exact', head: true }).eq('is_active', true).gte('first_seen_at', sevenDaysAgo),
-      createClient().from('scraped_grants').select('id', { count: 'exact', head: true }).eq('is_active', false).neq('url_status', 'dead').not('saved_for_later', 'is', 'true'),
+      createClient().from('scraped_grants').select('id', { count: 'exact', head: true }).in('pipeline_state', ['captured', 'tagged']).not('saved_for_later', 'is', 'true'),
       createClient().from('scraped_grants').select('id', { count: 'exact', head: true }).eq('is_active', true).not('url_quality_score', 'is', null).lt('url_quality_score', 60),
       createClient().from('scraped_grants').select('funding_type').eq('is_active', true),
     ])
@@ -437,9 +437,11 @@ export default function UrlAdminPage() {
       // these, getReviewVal falls back to undefined and the form looks
       // empty even when the DB has values (location_tag, amount_min/max,
       // deadline, is_rolling, eligible_structures, next_open_date etc.).
-      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief, grant_sources, description, funder_type, funding_type, location_tag, amount_min, amount_max, deadline, is_rolling, eligible_structures, next_open_date, impact_sectors, target_beneficiaries')
-      .eq('is_active', false)
-      .neq('url_status', 'dead').not('saved_for_later', 'is', 'true')  // exclude hidden and saved-for-later
+      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief, grant_sources, description, funder_type, funding_type, location_tag, amount_min, amount_max, deadline, is_rolling, eligible_structures, next_open_date, impact_sectors, target_beneficiaries, pipeline_state')
+      // captured = new arrival, no AI processing; tagged = AI classifier has run.
+      // Both belong in Needs Review until the admin publishes or archives.
+      .in('pipeline_state', ['captured', 'tagged'])
+      .not('saved_for_later', 'is', 'true')
       .order('last_seen_at', { ascending: false })
       .limit(500)
     const grants = (data ?? []) as Grant[]
