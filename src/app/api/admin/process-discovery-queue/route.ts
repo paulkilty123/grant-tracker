@@ -8,23 +8,19 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { createClient as createServerClient } from '@/lib/supabase/server'
+import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
+import { stampNewGrant, mergeGrantUpdate } from '@/lib/grant-merge'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
 
-const ADMIN_EMAIL = 'paulkilty1@gmail.com'
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY!
+const PROVENANCE_SOURCE = 'discovery:gemini'
 
 async function isAuthorised(req: NextRequest): Promise<boolean> {
-  const auth = req.headers.get('authorization') ?? ''
-  const token = auth.replace('Bearer ', '').trim()
-  if (token && token === process.env.ADMIN_SECRET) return true
-  try {
-    const supabase = await createServerClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    return user?.email === ADMIN_EMAIL
-  } catch { return false }
+  if (isAdminBearerToken(req.headers.get('authorization'))) return true
+  const auth = await requireAdmin()
+  return auth.ok
 }
 
 function getAdminClient() {
@@ -235,13 +231,39 @@ export async function POST(req: NextRequest) {
       },
     }
 
-    const { error: insertErr } = await db
+    // Look up existing row by external_id to decide insert-vs-merge.
+    const { data: existingRow } = await db
       .from('scraped_grants')
-      .upsert(grantRow, { onConflict: 'external_id' })
+      .select('id')
+      .eq('external_id', externalId)
+      .maybeSingle()
 
-    if (insertErr) {
-      await db.from('discovery_queue').update({ status: 'pending', notes: `Insert error: ${insertErr.message}` }).eq('id', item.id)
-      results.push({ id: item.id, title: item.title, status: 'failed', reason: insertErr.message })
+    let writeErr: Error | null = null
+    if (existingRow) {
+      // Same external_id seen before — route through merger so admin pins hold.
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { external_id: _drop, ...patch } = grantRow
+        await mergeGrantUpdate({
+          id: existingRow.id as string,
+          fields: patch,
+          source: PROVENANCE_SOURCE,
+          pinned: false,
+          db,
+        })
+      } catch (e) {
+        writeErr = e instanceof Error ? e : new Error(String(e))
+      }
+    } else {
+      // New row — stamp provenance and insert.
+      const stamped = stampNewGrant(grantRow, PROVENANCE_SOURCE, { pinned: false })
+      const { error: insertErr } = await db.from('scraped_grants').insert(stamped)
+      if (insertErr) writeErr = new Error(insertErr.message)
+    }
+
+    if (writeErr) {
+      await db.from('discovery_queue').update({ status: 'pending', notes: `Write error: ${writeErr.message}` }).eq('id', item.id)
+      results.push({ id: item.id, title: item.title, status: 'failed', reason: writeErr.message })
       continue
     }
 

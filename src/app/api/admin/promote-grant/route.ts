@@ -1,24 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { createClient as createServerClient } from '@/lib/supabase/server'
 import { SEED_GRANTS } from '@/lib/grants'
 import { parseOpenDate } from '@/lib/parse-open-date'
+import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
+import { stampNewGrant } from '@/lib/grant-merge'
 
 export const dynamic = 'force-dynamic'
 
-const ADMIN_EMAIL = 'paulkilty1@gmail.com'
-
-async function isAuthorised(req: NextRequest): Promise<boolean> {
-  const auth = req.headers.get('authorization') ?? ''
-  const token = auth.replace('Bearer ', '').trim()
-  if (token && token === process.env.ADMIN_SECRET) return true
-  try {
-    const supabase = await createServerClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    return user?.email === ADMIN_EMAIL
-  } catch {
-    return false
+// Caller resolution: admin session → admin:<email> pinned (they typed it).
+// Bearer token → system:admin_api unpinned (script context).
+async function resolveCaller(req: NextRequest): Promise<{ source: string; pinned: boolean } | null> {
+  if (isAdminBearerToken(req.headers.get('authorization'))) {
+    return { source: 'system:admin_api', pinned: false }
   }
+  const auth = await requireAdmin()
+  if (!auth.ok) return null
+  return { source: `admin:${auth.user.email}`, pinned: true }
 }
 
 function getAdminClient() {
@@ -33,9 +30,8 @@ function getAdminClient() {
 //   2. Add a manual grant    →  { manual: true, title, funder, funder_type, apply_url, is_invite_only,
 //                                 description, amount_min, amount_max, deadline, is_rolling, sectors }
 export async function POST(req: NextRequest) {
-  if (!await isAuthorised(req)) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
-  }
+  const caller = await resolveCaller(req)
+  if (!caller) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
   const body = await req.json() as {
     seedId?: string
@@ -97,8 +93,16 @@ export async function POST(req: NextRequest) {
     row.eligibility_criteria = seedData.eligibilityCriteria ?? []
   }
 
+  // Provenance: manual entries get the admin's identity (or system:admin_api
+  // for bearer-token callers); seed promotions are seed:promoted.
+  const isManual = !!manual
+  const provSource = isManual ? caller.source             : 'seed:promoted'
+  const provPinned = isManual ? caller.pinned             : false
+
+  const stamped = stampNewGrant(row, provSource, { pinned: provPinned })
+
   const db = getAdminClient()
-  const { data, error } = await db.from('scraped_grants').insert(row).select('id').single()
+  const { data, error } = await db.from('scraped_grants').insert(stamped).select('id').single()
 
   if (error) {
     console.error('promote-grant insert error:', error)

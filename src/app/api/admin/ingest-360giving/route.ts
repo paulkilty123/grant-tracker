@@ -20,23 +20,21 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { createClient as createServerClient } from '@/lib/supabase/server'
+import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
+import { stampNewGrant, mergeGrantUpdate } from '@/lib/grant-merge'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 120
 
-const ADMIN_EMAIL = 'paulkilty1@gmail.com'
+// Bump if the 360Giving feed structure or buildFunderBrief() changes materially.
+const INGEST_VERSION    = 'v1'
+const PROVENANCE_SOURCE = `360giving:daily_status:${INGEST_VERSION}`
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 async function isAuthorised(req: NextRequest): Promise<boolean> {
-  const auth = req.headers.get('authorization') ?? ''
-  const token = auth.replace('Bearer ', '').trim()
-  if (token && token === process.env.ADMIN_SECRET) return true
-  try {
-    const supabase = await createServerClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    return user?.email === ADMIN_EMAIL
-  } catch { return false }
+  if (isAdminBearerToken(req.headers.get('authorization'))) return true
+  const auth = await requireAdmin()
+  return auth.ok
 }
 
 function adminClient() {
@@ -262,10 +260,13 @@ export async function POST(req: NextRequest) {
                 last_enriched: brief.last_enriched,
               }
               if (!dryRun) {
-                await supabase
-                  .from('scraped_grants')
-                  .update({ funder_brief: merged })
-                  .eq('id', grant.id)
+                await mergeGrantUpdate({
+                  id:     grant.id as string,
+                  fields: { funder_brief: merged },
+                  source: PROVENANCE_SOURCE,
+                  pinned: false,
+                  db:     supabase,
+                })
               }
               fundersEnriched++
             }
@@ -317,11 +318,36 @@ export async function POST(req: NextRequest) {
             }
 
             if (!dryRun) {
-              const { error } = await supabase
+              // Look up by external_id — discover path is meant for new funders,
+              // but if the same prefix already exists treat it as an enrich-style
+              // merge (avoid clobbering admin-pinned fields).
+              const { data: existingRow } = await supabase
                 .from('scraped_grants')
-                .upsert(newGrant, { onConflict: 'external_id' })
-              if (!error) newEntriesCreated++
-              else errors.push(`Insert ${pub.name}: ${error.message}`)
+                .select('id')
+                .eq('external_id', newGrant.external_id)
+                .maybeSingle()
+
+              if (existingRow) {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                const { external_id: _drop, ...patch } = newGrant
+                try {
+                  await mergeGrantUpdate({
+                    id: existingRow.id as string,
+                    fields: patch,
+                    source: PROVENANCE_SOURCE,
+                    pinned: false,
+                    db: supabase,
+                  })
+                  newEntriesCreated++
+                } catch (e) {
+                  errors.push(`Insert ${pub.name}: ${e instanceof Error ? e.message : String(e)}`)
+                }
+              } else {
+                const stamped = stampNewGrant(newGrant, PROVENANCE_SOURCE, { pinned: false })
+                const { error } = await supabase.from('scraped_grants').insert(stamped)
+                if (!error) newEntriesCreated++
+                else errors.push(`Insert ${pub.name}: ${error.message}`)
+              }
             } else {
               newEntriesCreated++
             }

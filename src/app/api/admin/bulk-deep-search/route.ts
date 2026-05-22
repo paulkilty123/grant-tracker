@@ -7,23 +7,19 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { createClient as createServerClient } from '@/lib/supabase/server'
+import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
+import { stampNewGrant, mergeGrantUpdate } from '@/lib/grant-merge'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300 // 5 minutes — multiple searches take time
 
-const ADMIN_EMAIL = 'paulkilty1@gmail.com'
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY!
+const PROVENANCE_SOURCE = 'discovery:deep_search'
 
 async function isAuthorised(req: NextRequest): Promise<boolean> {
-  const auth = req.headers.get('authorization') ?? ''
-  const token = auth.replace('Bearer ', '').trim()
-  if (token && token === process.env.ADMIN_SECRET) return true
-  try {
-    const supabase = await createServerClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    return user?.email === ADMIN_EMAIL
-  } catch { return false }
+  if (isAdminBearerToken(req.headers.get('authorization'))) return true
+  const auth = await requireAdmin()
+  return auth.ok
 }
 
 function getAdminClient() {
@@ -255,12 +251,36 @@ export async function POST(req: NextRequest) {
         raw_data: { notes: g.notes, search_query: query },
       }
 
-      const { error } = await db
+      // Look up by external_id to choose insert-vs-merge.
+      const { data: existingRow } = await db
         .from('scraped_grants')
-        .upsert(row, { onConflict: 'external_id' })
+        .select('id')
+        .eq('external_id', row.external_id)
+        .maybeSingle()
 
-      if (error) {
-        skipped.push(`${g.title} (DB error: ${error.message})`)
+      let writeErr: Error | null = null
+      if (existingRow) {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { external_id: _drop, ...patch } = row
+          await mergeGrantUpdate({
+            id: existingRow.id as string,
+            fields: patch,
+            source: PROVENANCE_SOURCE,
+            pinned: false,
+            db,
+          })
+        } catch (e) {
+          writeErr = e instanceof Error ? e : new Error(String(e))
+        }
+      } else {
+        const stamped = stampNewGrant(row, PROVENANCE_SOURCE, { pinned: false })
+        const { error } = await db.from('scraped_grants').insert(stamped)
+        if (error) writeErr = new Error(error.message)
+      }
+
+      if (writeErr) {
+        skipped.push(`${g.title} (DB error: ${writeErr.message})`)
       } else {
         imported++
         existingTitles.push(titleLower) // Prevent dups in later queries

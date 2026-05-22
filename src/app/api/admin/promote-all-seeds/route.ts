@@ -1,24 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { createClient as createServerClient } from '@/lib/supabase/server'
 import { SEED_GRANTS } from '@/lib/grants'
+import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
+import { stampNewGrant } from '@/lib/grant-merge'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
-const ADMIN_EMAIL = 'paulkilty1@gmail.com'
+const PROVENANCE_SOURCE = 'seed:bulk-promote'
 
 async function isAuthorised(req: NextRequest): Promise<boolean> {
-  const auth = req.headers.get('authorization') ?? ''
-  const token = auth.replace('Bearer ', '').trim()
-  if (token && token === process.env.ADMIN_SECRET) return true
-  try {
-    const supabase = await createServerClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    return user?.email === ADMIN_EMAIL
-  } catch {
-    return false
-  }
+  if (isAdminBearerToken(req.headers.get('authorization'))) return true
+  const auth = await requireAdmin()
+  return auth.ok
 }
 
 function getAdminClient() {
@@ -78,10 +72,13 @@ export async function POST(req: NextRequest) {
     url_status:           g.applyUrl ? 'unchecked' : null,
   }))
 
+  // Stamp provenance on every row before insert.
+  const stampedRows = rows.map(r => stampNewGrant(r, PROVENANCE_SOURCE, { pinned: false }))
+
   // Insert in batches of 50 to avoid request size limits
   let inserted = 0
-  for (let i = 0; i < rows.length; i += 50) {
-    const batch = rows.slice(i, i + 50)
+  for (let i = 0; i < stampedRows.length; i += 50) {
+    const batch = stampedRows.slice(i, i + 50)
     const { error } = await db.from('scraped_grants').insert(batch)
     if (error) {
       console.error(`Batch ${i}–${i + batch.length} error:`, error)
