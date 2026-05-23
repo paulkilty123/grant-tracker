@@ -117,6 +117,191 @@ const FUNDING_TYPE_OPTIONS: { value: string; label: string }[] = [
   { value: 'in_kind',    label: 'In-Kind' },
 ]
 
+const IMPACT_SECTOR_OPTIONS: { value: string; label: string }[] = [
+  { value: 'community',         label: 'Community' },
+  { value: 'young_people',      label: 'Young People' },
+  { value: 'health',            label: 'Health' },
+  { value: 'mental_health',     label: 'Mental Health' },
+  { value: 'education',         label: 'Education' },
+  { value: 'employment',        label: 'Employment' },
+  { value: 'creative',          label: 'Arts & Culture' },
+  { value: 'environment',       label: 'Environment' },
+  { value: 'housing',           label: 'Housing' },
+  { value: 'food',              label: 'Food' },
+  { value: 'sport',             label: 'Sport' },
+  { value: 'heritage',          label: 'Heritage' },
+  { value: 'disability',        label: 'Disability' },
+  { value: 'older_people',      label: 'Older People' },
+  { value: 'women',             label: 'Women & Gender' },
+  { value: 'justice',           label: 'Justice & Rights' },
+  { value: 'tech',              label: 'Technology' },
+  { value: 'financial',         label: 'Financial Inclusion' },
+  { value: 'international',     label: 'International' },
+  { value: 'social_economy',    label: 'Social Economy' },
+  { value: 'social_innovation', label: 'Social Innovation' },
+]
+
+const BENEFICIARY_OPTIONS: { value: string; label: string }[] = [
+  { value: 'children',           label: 'Children (under 16)' },
+  { value: 'young_people',       label: 'Young People (16-25)' },
+  { value: 'older_people',       label: 'Older People (65+)' },
+  { value: 'families',           label: 'Families' },
+  { value: 'women_girls',        label: 'Women & Girls' },
+  { value: 'men_boys',           label: 'Men & Boys' },
+  { value: 'lgbtq',              label: 'LGBTQ+' },
+  { value: 'ethnic_minorities',  label: 'Ethnic Minorities' },
+  { value: 'refugees_migrants',  label: 'Refugees & Migrants' },
+  { value: 'disabled_people',    label: 'Disabled People' },
+  { value: 'mental_health',      label: 'Mental Health' },
+  { value: 'homeless',           label: 'Homeless People' },
+  { value: 'veterans',           label: 'Veterans' },
+  { value: 'ex_offenders',       label: 'Ex-Offenders' },
+  { value: 'people_in_poverty',  label: 'People in Poverty' },
+  { value: 'rural_communities',  label: 'Rural Communities' },
+  { value: 'general_public',     label: 'General Public' },
+]
+
+// Extra terms the brief might use that aren't in the tag label. Used by
+// suggestTags() to catch obvious classifier misses. Lowercase; whole-substring
+// matching against the brief blob — keep terms generic enough that false
+// positives are rare. When you add a new sector/beneficiary, add synonyms
+// here too or detection drops to label-only.
+const SECTOR_SYNONYMS: Record<string, string[]> = {
+  community:         ['community', 'neighbourhood', 'grassroots'],
+  young_people:      ['young people', 'youth', 'teenager', 'adolescent', 'under 25', '16-25', 'children and young'],
+  health:            ['health', 'healthcare', 'wellbeing', 'illness', 'medical'],
+  mental_health:     ['mental health', 'mental wellbeing', 'depression', 'anxiety', 'psychological'],
+  education:         ['education', 'school', 'learning', 'training', 'literacy'],
+  employment:        ['employment', 'jobs', 'work', 'career', 'workforce', 'employability'],
+  creative:          ['arts', 'culture', 'creative', 'music', 'theatre', 'cultural', 'performing arts', 'visual arts'],
+  environment:       ['environment', 'climate', 'green', 'sustainability', 'biodiversity', 'nature', 'ecology', 'carbon'],
+  housing:           ['housing', 'homeless', 'tenancy', 'accommodation'],
+  food:              ['food', 'nutrition', 'hunger', 'food bank', 'food poverty'],
+  sport:             ['sport', 'physical activity', 'recreation', 'exercise', 'fitness'],
+  heritage:          ['heritage', 'historic', 'museum', 'monument', 'archaeology'],
+  disability:        ['disability', 'disabled', 'special needs', 'sen', 'accessibility'],
+  older_people:      ['older people', '65+', 'elderly', 'pensioner', 'ageing', 'aging'],
+  women:             ['women', 'girls', 'female', 'gender equality', 'gender'],
+  justice:           ['justice', 'rights', 'criminal justice', 'human rights', 'equality', 'discrimination'],
+  tech:              ['technology', 'digital', 'tech', 'innovation', 'software'],
+  financial:         ['financial inclusion', 'poverty', 'debt', 'financial', 'cost of living', 'destitution'],
+  international:     ['international', 'global', 'overseas', 'developing countries'],
+  social_economy:    ['social enterprise', 'social economy', 'cic', 'community interest', 'social business'],
+  social_innovation: ['social innovation', 'systems change', 'social impact'],
+}
+
+const BENEFICIARY_SYNONYMS: Record<string, string[]> = {
+  children:           ['children', 'kids', 'child', 'under 16', 'pupil'],
+  young_people:       ['young people', 'youth', '16-25', 'teenager', 'young adult'],
+  older_people:       ['older people', '65+', 'elderly', 'pensioner', 'senior'],
+  families:           ['families', 'parent', 'family'],
+  women_girls:        ['women', 'girls', 'female', 'mother'],
+  men_boys:           ['men', 'boys', 'male', 'father'],
+  lgbtq:              ['lgbtq', 'lgbt', 'gay', 'lesbian', 'queer', 'trans', 'bisexual'],
+  ethnic_minorities:  ['ethnic', 'minorit', 'global majority', 'bame', 'racialised', 'black, asian'],
+  refugees_migrants:  ['refugee', 'asylum seeker', 'migrant', 'displaced'],
+  disabled_people:    ['disabled', 'disability', 'special needs', 'sen', 'autism', 'neurodivergent'],
+  mental_health:      ['mental health', 'mental illness', 'depression', 'anxiety'],
+  homeless:           ['homeless', 'rough sleep', 'housing crisis'],
+  veterans:           ['veteran', 'armed forces', 'ex-service', 'military'],
+  ex_offenders:       ['ex-offender', 'prisoner', 'ex-prisoner', 'criminal justice', 'rehabilitation'],
+  people_in_poverty:  ['poverty', 'low income', 'deprivation', 'destitution', 'hardship'],
+  rural_communities:  ['rural', 'countryside', 'village'],
+  general_public:     ['general public', 'open to all', 'anyone'],
+}
+
+// ── Tag suggestion (disagreement check between current tags + brief text) ────
+// Returns { missing, extra }:
+//   missing — options whose label or synonym appears in the brief but is NOT
+//             in the current value list. "AI may have missed this."
+//   extra   — options that ARE tagged but whose label/synonyms aren't found
+//             anywhere in the brief. "Verify this is right."
+// Pure text-match — no API calls, runs on every render. Cheap.
+
+function buildBriefText(grant: GrantEditorGrant): string {
+  const brief = grant.funder_brief ?? {}
+  return [
+    brief.what_they_fund,
+    brief.who_can_apply,
+    brief.priorities,
+    brief.strong_application,
+    brief.exclusions,
+    brief.funder_tips,
+    grant.description,
+    grant.title,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
+}
+
+function suggestTags(
+  options: { value: string; label: string }[],
+  currentValues: string[],
+  briefText: string,
+  synonyms: Record<string, string[]> = {},
+): { missing: string[]; extra: string[] } {
+  if (!briefText) return { missing: [], extra: [] }
+  const missing: string[] = []
+  const extra:   string[] = []
+  for (const opt of options) {
+    const terms = [opt.label.toLowerCase(), ...(synonyms[opt.value] ?? [])]
+    const mentioned = terms.some(t => briefText.includes(t))
+    const tagged    = currentValues.includes(opt.value)
+    if (mentioned && !tagged) missing.push(opt.value)
+    if (tagged && !mentioned) extra.push(opt.value)
+  }
+  return { missing, extra }
+}
+
+function labelFor(options: { value: string; label: string }[], value: string): string {
+  return options.find(o => o.value === value)?.label ?? value
+}
+
+function TagSuggestions({
+  options,
+  missing,
+  extra,
+  onAdd,
+}: {
+  options: { value: string; label: string }[]
+  missing: string[]
+  extra:   string[]
+  onAdd:   (value: string) => void
+}) {
+  if (missing.length === 0 && extra.length === 0) return null
+  return (
+    <div className="mt-1.5 space-y-1">
+      {missing.length > 0 && (
+        <div className="flex items-baseline gap-1.5 flex-wrap text-[11px]">
+          <span className="text-amber-700 font-medium">Brief mentions:</span>
+          {missing.map(v => (
+            <button
+              key={v}
+              type="button"
+              onClick={() => onAdd(v)}
+              className="underline underline-offset-2 text-amber-700 hover:text-amber-900"
+              title={`Add ${labelFor(options, v)} (click to tag)`}
+            >
+              {labelFor(options, v)}
+            </button>
+          ))}
+          <span className="text-light">— click to add</span>
+        </div>
+      )}
+      {extra.length > 0 && (
+        <div className="flex items-baseline gap-1.5 flex-wrap text-[11px]">
+          <span className="text-mid font-medium">Tagged but not obvious in brief:</span>
+          {extra.map(v => (
+            <span key={v} className="text-mid italic">{labelFor(options, v)}</span>
+          ))}
+          <span className="text-light">— verify</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Provenance helpers ───────────────────────────────────────────────────────
 
 function relTime(iso: string): string {
@@ -313,6 +498,28 @@ export function GrantEditor(props: GrantEditorProps) {
     return grant.eligible_structures ?? []
   })()
 
+  // impact_sectors + target_beneficiaries: same JSON-string pattern.
+  const sectorsValue: string[] = (() => {
+    const v = getVal('impact_sectors', null)
+    if (v != null) {
+      try { return JSON.parse(String(v)) as string[] } catch { return [] }
+    }
+    return grant.impact_sectors ?? []
+  })()
+  const beneficiariesValue: string[] = (() => {
+    const v = getVal('target_beneficiaries', null)
+    if (v != null) {
+      try { return JSON.parse(String(v)) as string[] } catch { return [] }
+    }
+    return grant.target_beneficiaries ?? []
+  })()
+
+  // Tag-suggestion: cross-check current chip values against brief text.
+  // Surfaces classifier misses and over-tags so the admin can verify in seconds.
+  const briefText        = buildBriefText(grant)
+  const sectorSugg       = suggestTags(IMPACT_SECTOR_OPTIONS, sectorsValue,       briefText, SECTOR_SYNONYMS)
+  const beneficiarySugg  = suggestTags(BENEFICIARY_OPTIONS,   beneficiariesValue, briefText, BENEFICIARY_SYNONYMS)
+
   return (
     <div className="mx-3 mb-1 rounded-xl border border-forest/20 bg-[#f0fdf9] p-4">
       {/* Header */}
@@ -481,6 +688,42 @@ export function GrantEditor(props: GrantEditorProps) {
               options={STRUCTURE_OPTIONS}
               value={structuresValue}
               onChange={next => setVal('eligible_structures', JSON.stringify(next))}
+            />
+          </div>
+
+          {/* Impact sectors — chip checkboxes + brief-vs-tags disagreement check */}
+          <div className="mt-3 pt-3 border-t border-forest/10">
+            <FieldLabel field="impact_sectors" grant={grant}>
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-forest">Impact sectors</span>
+            </FieldLabel>
+            <ChipMultiSelect
+              options={IMPACT_SECTOR_OPTIONS}
+              value={sectorsValue}
+              onChange={next => setVal('impact_sectors', JSON.stringify(next))}
+            />
+            <TagSuggestions
+              options={IMPACT_SECTOR_OPTIONS}
+              missing={sectorSugg.missing}
+              extra={sectorSugg.extra}
+              onAdd={v => setVal('impact_sectors', JSON.stringify([...sectorsValue, v]))}
+            />
+          </div>
+
+          {/* Target beneficiaries — chip checkboxes + disagreement check */}
+          <div className="mt-3 pt-3 border-t border-forest/10">
+            <FieldLabel field="target_beneficiaries" grant={grant}>
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-forest">Target beneficiaries</span>
+            </FieldLabel>
+            <ChipMultiSelect
+              options={BENEFICIARY_OPTIONS}
+              value={beneficiariesValue}
+              onChange={next => setVal('target_beneficiaries', JSON.stringify(next))}
+            />
+            <TagSuggestions
+              options={BENEFICIARY_OPTIONS}
+              missing={beneficiarySugg.missing}
+              extra={beneficiarySugg.extra}
+              onAdd={v => setVal('target_beneficiaries', JSON.stringify([...beneficiariesValue, v]))}
             />
           </div>
         </div>

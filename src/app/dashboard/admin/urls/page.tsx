@@ -681,6 +681,11 @@ export default function UrlAdminPage() {
         fields.eligible_structures = structs
       } catch { /* ignore */ }
     }
+    // impact_sectors + target_beneficiaries — same JSON-string pattern as
+    // eligible_structures. publishReviewGrant already persisted these;
+    // saveGrantEdits used to silently drop them. Bug fixed 2026-05-23.
+    if (edits.impact_sectors       !== undefined) { try { fields.impact_sectors       = JSON.parse(String(edits.impact_sectors))       } catch { /* ignore */ } }
+    if (edits.target_beneficiaries !== undefined) { try { fields.target_beneficiaries = JSON.parse(String(edits.target_beneficiaries)) } catch { /* ignore */ } }
     if (Object.keys(fields).length > 0) {
       // Browser anon client is blocked by RLS — go through the admin API
       // (service-role key) so the update actually lands.
