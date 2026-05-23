@@ -394,7 +394,7 @@ export default function UrlAdminPage() {
 
     let query = createClient()
       .from('scraped_grants')
-      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funding_type, funder_type, funder_brief, grant_sources, description, location_tag, amount_min, amount_max, deadline, is_rolling, eligible_structures')
+      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funding_type, funder_type, funder_brief, grant_sources, description, location_tag, amount_min, amount_max, deadline, is_rolling, eligible_structures, next_open_date, impact_sectors, target_beneficiaries, field_provenance')
       .eq('is_active', true)
       .order('url_last_checked', { ascending: true, nullsFirst: true })
       .limit(2000)
@@ -2688,7 +2688,7 @@ export default function UrlAdminPage() {
     const supabase = createClient()
     const { data: rawData } = await supabase
       .from('scraped_grants')
-      .select('id, title, funder, apply_url, url_status, funder_brief, grant_sources, source, url_last_checked, is_invite_only, description, amount_min, amount_max, deadline, is_rolling, next_open_date, location_tag, eligible_structures, impact_sectors, target_beneficiaries, funder_type, funding_type, first_seen_at')
+      .select('id, title, funder, apply_url, url_status, funder_brief, grant_sources, source, url_last_checked, is_invite_only, description, amount_min, amount_max, deadline, is_rolling, next_open_date, location_tag, eligible_structures, impact_sectors, target_beneficiaries, funder_type, funding_type, first_seen_at, field_provenance')
       .eq('is_active', false)
       .neq('url_status', 'dead')
       .not('saved_for_later', 'is', 'true')
