@@ -382,7 +382,7 @@ export default function UrlAdminPage() {
     if (filter === 'url_issues') {
       const { data, error } = await createClient()
         .from('scraped_grants')
-        .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funding_type, funder_type, funder_brief, grant_sources, description, location_tag, amount_min, amount_max, deadline, is_rolling, eligible_structures')
+        .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funding_type, funder_type, funder_brief, grant_sources, description, location_tag, amount_min, amount_max, deadline, is_rolling, eligible_structures, next_open_date, impact_sectors, target_beneficiaries, field_provenance')
         .eq('is_active', true)
         .or('url_status.eq.dead,and(url_status.eq.unchecked,apply_url.not.is.null),apply_url.is.null')
         .order('url_status', { ascending: true })
