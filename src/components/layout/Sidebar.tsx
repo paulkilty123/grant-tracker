@@ -14,7 +14,6 @@ import {
   User,
   Activity,
   ClipboardList,
-  Sparkles,
   Menu,
   X,
   Building2,
@@ -67,12 +66,15 @@ const MAIN_NAV = [
   // Notifications slots in here (bell icon, unread badge) when the inbox ships in v1.1
 ]
 
+// Funder Intelligence retired as a separate nav entry — its worklist
+// (Needs Enrichment) and editor (GrantEditor) now live inside Grant Manager.
+// The page itself stays accessible at /dashboard/admin/intelligence for now
+// in case anything still links to it; full removal is a follow-up.
 const ADMIN_NAV = [
   { href: '/dashboard/admin',              label: 'Grant Health',        Icon: Activity      },
   { href: '/dashboard/admin/urls',         label: 'Grant Manager',       Icon: ClipboardList },
   { href: '/dashboard/admin/users',        label: 'Users',               Icon: Users         },
   { href: '/dashboard/admin/corporate',    label: 'Partner Manager',     Icon: Building2     },
-  { href: '/dashboard/admin/intelligence', label: 'Funder Intelligence', Icon: Sparkles      },
   { href: '/dashboard/admin/application-review', label: 'Application Review', Icon: FilePenLine },
 ]
 
@@ -123,8 +125,7 @@ export default function Sidebar({ org, userEmail }: Props) {
   ) => {
     const isActive =
       pathname === href ||
-      (href != '/dashboard' && href != '/dashboard/admin' && pathname.startsWith(href)) ||
-      (href === '/dashboard/admin/intelligence' && pathname.startsWith('/dashboard/admin/watchlist'))
+      (href != '/dashboard' && href != '/dashboard/admin' && pathname.startsWith(href))
 
     return (
       <Link

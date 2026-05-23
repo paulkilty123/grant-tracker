@@ -14,6 +14,8 @@ import { parseOpenDate } from '@/lib/parse-open-date'
 import { SUBTYPES_BY_FUNDING_TYPE, SUBTYPE_LABELS } from '@/lib/funding-subtypes'
 import type { FundingType } from '@/types'
 import { GrantEditor } from '@/components/admin/GrantEditor'
+import { useToast } from '@/components/ui/Toast'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 
 const ADMIN_EMAIL = 'paulkilty1@gmail.com'
 
@@ -50,8 +52,8 @@ type CategoryGrant = Grant & {
   is_seed: boolean
 }
 
-type Stats = { total: number; withUrl: number; ok: number; dead: number; unchecked: number; noUrl: number; seedTotal?: number; newCount?: number; reviewCount?: number; suspiciousCount?: number; capturedCount?: number }
-type Filter = 'dead' | 'unchecked' | 'no_url' | 'all' | 'seed' | 'new' | 'category' | 'review' | 'suspicious' | 'url_issues' | 'saved' | 'recent' | 'between_rounds' | 'captured'
+type Stats = { total: number; withUrl: number; ok: number; dead: number; unchecked: number; noUrl: number; seedTotal?: number; newCount?: number; reviewCount?: number; suspiciousCount?: number; capturedCount?: number; needsEnrichmentCount?: number }
+type Filter = 'dead' | 'unchecked' | 'no_url' | 'all' | 'seed' | 'new' | 'category' | 'review' | 'suspicious' | 'url_issues' | 'saved' | 'recent' | 'between_rounds' | 'captured' | 'needs_enrichment'
 type SuspiciousGrant = Grant & { url_quality_score: number | null; url_quality_issues: string[] }
 type DeadSeedGrant = { id: string; title: string; funder: string; url: string }
 type NewGrant = Grant & { first_seen_at: string }
@@ -218,6 +220,8 @@ function SavedForLaterTab() {
 
 export default function UrlAdminPage() {
   const router = useRouter()
+  const toast  = useToast()
+  const [confirmApproveAll, setConfirmApproveAll] = useState(false)
   const [authorised, setAuthorised] = useState<boolean | null>(null)
   const [stats, setStats]           = useState<Stats | null>(null)
   const [grants, setGrants]         = useState<Grant[]>([])
@@ -245,6 +249,7 @@ export default function UrlAdminPage() {
   const [newSources, setNewSources]           = useState<Set<string>>(new Set())
   const [reviewGrants, setReviewGrants]       = useState<Grant[]>([])
   const [capturedGrants, setCapturedGrants]   = useState<Grant[]>([])
+  const [needsEnrichmentGrants, setNeedsEnrichmentGrants] = useState<Grant[]>([])
   const [recentGrants, setRecentGrants]       = useState<Grant[]>([])
   const [betweenRoundsGrants, setBetweenRoundsGrants] = useState<Grant[]>([])
   const [expandedReviewId, setExpandedReviewId] = useState<string | null>(null)
@@ -325,13 +330,16 @@ export default function UrlAdminPage() {
   // ── Load stats ───────────────────────────────────────────────────────────────
   const loadStats = useCallback(async () => {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-    const [{ data }, { count: newCount }, { count: reviewCount }, { count: suspiciousCount }, { count: capturedCount }, { data: ftData }] = await Promise.all([
+    const [{ data }, { count: newCount }, { count: reviewCount }, { count: suspiciousCount }, { count: capturedCount }, { count: needsEnrichmentCount }, { data: ftData }] = await Promise.all([
       createClient().from('scraped_grants').select('url_status, apply_url').eq('is_active', true),
       createClient().from('scraped_grants').select('id', { count: 'exact', head: true }).eq('is_active', true).gte('first_seen_at', sevenDaysAgo),
       createClient().from('scraped_grants').select('id', { count: 'exact', head: true }).in('pipeline_state', ['captured', 'tagged']).not('saved_for_later', 'is', 'true'),
       createClient().from('scraped_grants').select('id', { count: 'exact', head: true }).eq('is_active', true).not('url_quality_score', 'is', null).lt('url_quality_score', 60),
       // Captured-only count (untagged) — distinguishes from tagged (AI processed) for the new "Captured" tab.
       createClient().from('scraped_grants').select('id', { count: 'exact', head: true }).eq('pipeline_state', 'captured').not('saved_for_later', 'is', 'true'),
+      // Needs enrichment: published grants without a funder_brief.
+      // Replaces the main Funder Intelligence worklist now that it's folded into Grant Manager.
+      createClient().from('scraped_grants').select('id', { count: 'exact', head: true }).eq('pipeline_state', 'published').is('funder_brief', null),
       createClient().from('scraped_grants').select('funding_type').eq('is_active', true),
     ])
     if (!data) return
@@ -354,6 +362,7 @@ export default function UrlAdminPage() {
       reviewCount: reviewCount ?? 0,
       suspiciousCount: suspiciousCount ?? 0,
       capturedCount: capturedCount ?? 0,
+      needsEnrichmentCount: needsEnrichmentCount ?? 0,
     })
   }, [])
 
@@ -500,6 +509,36 @@ export default function UrlAdminPage() {
     })
   }, [filter])
 
+  // ── Load needs-enrichment grants ────────────────────────────────────────────
+  // Published grants without a funder_brief. Replaces the main worklist of
+  // the retired Funder Intelligence page. Admins enrich from here to fill
+  // the brief; the merger stamps ai_enrich:v1 provenance on the result.
+  const loadNeedsEnrichmentGrants = useCallback(async () => {
+    if (filter !== 'needs_enrichment') return
+    const { data } = await createClient()
+      .from('scraped_grants')
+      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief, grant_sources, description, funder_type, funding_type, location_tag, amount_min, amount_max, deadline, is_rolling, eligible_structures, next_open_date, impact_sectors, target_beneficiaries, pipeline_state, field_provenance')
+      .eq('pipeline_state', 'published')
+      .is('funder_brief', null)
+      .order('last_seen_at', { ascending: false })
+      .limit(500)
+    const grants = (data ?? []) as Grant[]
+    setNeedsEnrichmentGrants(grants)
+    setReviewSources(prev => {
+      const next = { ...prev }
+      for (const g of grants) {
+        if (g.grant_sources && g.grant_sources.length > 0 && !next[g.id]) {
+          next[g.id] = g.grant_sources.map(s => ({
+            label: s.label ?? '',
+            url: s.url ?? '',
+            text: s.text ?? '',
+          }))
+        }
+      }
+      return next
+    })
+  }, [filter])
+
   // ── Load recently-activated grants (last 21 days, for review sweep) ─────────
   // Surfaced as the "Recently activated" tab so the admin can spot-check
   // grants that may have lost manual edits to the historical publish bug.
@@ -549,21 +588,34 @@ export default function UrlAdminPage() {
   }, [filter])
 
   // ── Approve all pending review grants ─────────────────────────────────────────
-  async function approveAllReview() {
-    if (!confirm(`Approve all ${reviewGrants.length} pending grants and make them live?`)) return
+  // The button opens a ConfirmDialog (replaces the old native confirm()).
+  // The dialog's onConfirm calls approveAllReviewConfirmed() below.
+  function approveAllReview() {
+    if (reviewGrants.length === 0) return
+    setConfirmApproveAll(true)
+  }
+  async function approveAllReviewConfirmed() {
+    setConfirmApproveAll(false)
     setApprovingAll(true)
+    const total = reviewGrants.length
     try {
       // Batch approve in groups of 50 to avoid URL length limits
       const ids = reviewGrants.map(g => g.id)
       for (let i = 0; i < ids.length; i += 50) {
-        await fetch('/api/admin/update-grant', {
+        const res = await fetch('/api/admin/update-grant', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ids: ids.slice(i, i + 50), fields: { is_active: true } }),
         })
+        if (!res.ok) {
+          toast.error(`Batch ${i}–${i + 50} failed (${res.status})`)
+        }
       }
       setReviewGrants([])
       await loadStats()
+      toast.success(`Published ${total} grant${total !== 1 ? 's' : ''}`)
+    } catch (err) {
+      toast.error(`Approve-all failed: ${err instanceof Error ? err.message : String(err)}`)
     } finally {
       setApprovingAll(false)
     }
@@ -641,7 +693,7 @@ export default function UrlAdminPage() {
         const err = await res.json().catch(() => ({}))
         console.error('saveGrantEdits failed:', err)
         setReviewPublishing(s => ({ ...s, [grant.id]: false }))
-        alert(`Save failed: ${err.error ?? res.statusText}`)
+        toast.error(`Save failed: ${err.error ?? res.statusText}`)
         return
       }
       // Reflect edits in every list-state that might hold this grant so the
@@ -701,7 +753,7 @@ export default function UrlAdminPage() {
           const err = await res.json().catch(() => ({}))
           console.error('publishReviewGrant edits failed:', err)
           setReviewPublishing(s => ({ ...s, [grant.id]: false }))
-          alert(`Save failed: ${err.error ?? res.statusText}`)
+          toast.error(`Save failed: ${err.error ?? res.statusText}`)
           return
         }
         const merge = (g: Grant) => g.id === grant.id ? { ...g, ...fields } as Grant : g
@@ -799,6 +851,10 @@ export default function UrlAdminPage() {
   useEffect(() => {
     if (authorised && filter === 'captured') loadCapturedGrants()
   }, [authorised, filter, loadCapturedGrants])
+
+  useEffect(() => {
+    if (authorised && filter === 'needs_enrichment') loadNeedsEnrichmentGrants()
+  }, [authorised, filter, loadNeedsEnrichmentGrants])
 
   // ── Clear selection when switching tabs ──────────────────────────────────────
   useEffect(() => { setSelectedIds(new Set()) }, [filter])
@@ -907,7 +963,7 @@ export default function UrlAdminPage() {
       await loadStats()
       await loadGrants()
     } catch (err) {
-      alert(`Validation failed — ${err instanceof Error ? err.message : String(err)}`)
+      toast.error(`Validation failed — ${err instanceof Error ? err.message : String(err)}`)
     } finally {
       setRunning(false)
       setValidationProgress(null)
@@ -962,7 +1018,7 @@ export default function UrlAdminPage() {
       if (filter === 'suspicious') await loadSuspiciousGrants()
       await loadGrants()
     } catch (err) {
-      alert(`Audit failed — ${err instanceof Error ? err.message : String(err)}`)
+      toast.error(`Audit failed — ${err instanceof Error ? err.message : String(err)}`)
     } finally {
       setAuditing(false)
     }
@@ -1003,7 +1059,7 @@ export default function UrlAdminPage() {
 
       setClassifyResult({ classified: totalClassified, failed: totalFailed })
     } catch (err) {
-      alert(`Classification failed — ${err instanceof Error ? err.message : String(err)}`)
+      toast.error(`Classification failed — ${err instanceof Error ? err.message : String(err)}`)
     } finally {
       setClassifying(false)
       setClassifyProgress(null)
@@ -1424,6 +1480,7 @@ export default function UrlAdminPage() {
     if (filter === 'category') await loadCategoryGrants()
     if (filter === 'review')     await loadReviewGrants()
     if (filter === 'captured')   await loadCapturedGrants()
+    if (filter === 'needs_enrichment') await loadNeedsEnrichmentGrants()
     if (filter === 'new')        await loadNewGrants()
     if (filter === 'suspicious') await loadSuspiciousGrants()
   }
@@ -3185,6 +3242,7 @@ export default function UrlAdminPage() {
         {([
           { key: 'review',         label: `Needs Review${stats?.reviewCount ? ` (${stats.reviewCount})` : ''}`, urgent: (stats?.reviewCount ?? 0) > 0 },
           { key: 'captured',       label: `Captured${stats?.capturedCount ? ` (${stats.capturedCount})` : ''}` },
+          { key: 'needs_enrichment', label: `Needs Enrichment${stats?.needsEnrichmentCount ? ` (${stats.needsEnrichmentCount})` : ''}` },
           { key: 'between_rounds', label: 'Between rounds' },
           { key: 'saved',          label: 'Saved for Later', urgent: false },
           { key: 'all',            label: 'All grants' },
@@ -3892,6 +3950,94 @@ export default function UrlAdminPage() {
                       <tr>
                         <td colSpan={4} className="px-0 pb-2">
                           {renderReviewPanel(grant, 'review')}
+                        </td>
+                      </tr>
+                    )}
+                    </React.Fragment>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Needs Enrichment tab ──────────────────────────────────────────── */}
+      {/* Published grants without a funder_brief. Replaces the main worklist
+          of the retired Funder Intelligence page. Use Enrich (single) or
+          "Enrich all unenriched" (bulk) to fill briefs; the merger stamps
+          ai_enrich:v1 provenance on the result. */}
+      {filter === 'needs_enrichment' && (
+        <div className="rounded-xl border border-warm bg-white overflow-hidden shadow-card">
+          <div className="flex items-center justify-between border-b border-warm bg-[#F1F7E4] px-5 py-3">
+            <div>
+              <p className="text-sm font-semibold text-[#173404]">
+                {needsEnrichmentGrants.length} published grant{needsEnrichmentGrants.length !== 1 ? 's' : ''} missing a funder brief
+              </p>
+              <p className="text-xs text-sage mt-0.5">
+                Funder brief is the intelligence panel users see on each grant page (what they fund, who can apply, typical award, etc.). Enrich now to lift match quality and user trust.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button onClick={() => bulkEnrich('active')} disabled={bulkEnriching || bulkDetecting || needsEnrichmentGrants.length === 0}
+                className="flex items-center gap-1.5 rounded-full bg-[#008080] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#006666] transition-colors disabled:opacity-50">
+                {bulkEnriching
+                  ? <><RefreshCw className="h-3 w-3 animate-spin" /> Enriching {bulkEnrichDone}/{bulkEnrichTotal}</>
+                  : <><Brain className="h-3 w-3" /> Enrich all unenriched</>}
+              </button>
+            </div>
+          </div>
+          {needsEnrichmentGrants.length === 0 ? (
+            <div className="py-16 text-center">
+              <CheckCircle className="mx-auto mb-3 h-8 w-8 text-sage" />
+              <p className="text-mid text-sm">Every published grant has a funder brief — nice work.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-warm bg-warm/30 text-left text-xs font-semibold text-mid uppercase tracking-wider">
+                    <th className="px-5 py-3">Grant / Funder</th>
+                    <th className="px-5 py-3">Description</th>
+                    <th className="px-5 py-3">URL</th>
+                    <th className="px-5 py-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-warm/60">
+                  {needsEnrichmentGrants.map(grant => (
+                    <React.Fragment key={grant.id}>
+                    <tr className="hover:bg-cream/50 transition-colors">
+                      <td className="px-5 py-3 max-w-[200px]">
+                        <p className="font-medium text-charcoal leading-snug line-clamp-2">{grant.title}</p>
+                        <p className="text-xs text-mid mt-0.5">{grant.funder}</p>
+                        <span className="inline-block mt-1 rounded-full bg-warm px-2 py-0.5 text-[10px] text-mid">{grant.source}</span>
+                      </td>
+                      <td className="px-5 py-3 max-w-[280px]">
+                        <p className="text-xs text-mid line-clamp-3">
+                          {grant.description ?? <span className="italic text-light">No description</span>}
+                        </p>
+                      </td>
+                      <td className="px-5 py-3 max-w-[220px]">
+                        <UrlCell grant={grant} />
+                      </td>
+                      <td className="px-5 py-3 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button onClick={() => enrichGrantFromManager(grant)} disabled={!!enrichingId}
+                            className="flex items-center gap-1 rounded-full bg-[#008080] px-3 py-1 text-xs font-semibold text-white hover:bg-[#006666] transition-colors disabled:opacity-40">
+                            {enrichingId === grant.id ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Brain className="h-3 w-3" />}
+                            {enrichingId === grant.id ? 'Enriching…' : 'Enrich'}
+                          </button>
+                          <button onClick={() => setExpandedReviewId(expandedReviewId === grant.id ? null : grant.id)}
+                            className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${expandedReviewId === grant.id ? 'bg-forest text-white' : 'bg-forest/10 text-forest hover:bg-forest hover:text-white'}`}>
+                            {expandedReviewId === grant.id ? 'Close' : 'Review'}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                    {expandedReviewId === grant.id && (
+                      <tr>
+                        <td colSpan={4} className="px-0 pb-2">
+                          {renderReviewPanel(grant, 'approved')}
                         </td>
                       </tr>
                     )}
@@ -4707,6 +4853,18 @@ export default function UrlAdminPage() {
           </div>
         </div>
       )}
+
+      {/* Confirm dialog for "Approve all" bulk action — replaces native confirm() */}
+      <ConfirmDialog
+        open={confirmApproveAll}
+        title="Approve all pending grants?"
+        message={`This will publish ${reviewGrants.length} grant${reviewGrants.length !== 1 ? 's' : ''} to the live catalogue. They'll appear in user matches immediately.`}
+        confirmLabel={`Approve ${reviewGrants.length}`}
+        cancelLabel="Cancel"
+        busy={approvingAll}
+        onConfirm={approveAllReviewConfirmed}
+        onCancel={() => setConfirmApproveAll(false)}
+      />
     </div>
   )
 }
