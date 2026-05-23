@@ -13,6 +13,7 @@ import { SEED_GRANTS } from '@/lib/grants'
 import { parseOpenDate } from '@/lib/parse-open-date'
 import { SUBTYPES_BY_FUNDING_TYPE, SUBTYPE_LABELS } from '@/lib/funding-subtypes'
 import type { FundingType } from '@/types'
+import { GrantEditor } from '@/components/admin/GrantEditor'
 
 const ADMIN_EMAIL = 'paulkilty1@gmail.com'
 
@@ -38,6 +39,10 @@ type Grant = {
   deadline?: string | null
   is_rolling?: boolean
   eligible_structures?: string[] | null
+  next_open_date?: string | null
+  impact_sectors?: string[] | null
+  target_beneficiaries?: string[] | null
+  field_provenance?: import('@/lib/grant-merge').FieldProvenance | null
 }
 
 type CategoryGrant = Grant & {
@@ -45,8 +50,8 @@ type CategoryGrant = Grant & {
   is_seed: boolean
 }
 
-type Stats = { total: number; withUrl: number; ok: number; dead: number; unchecked: number; noUrl: number; seedTotal?: number; newCount?: number; reviewCount?: number; suspiciousCount?: number }
-type Filter = 'dead' | 'unchecked' | 'no_url' | 'all' | 'seed' | 'new' | 'category' | 'review' | 'suspicious' | 'url_issues' | 'saved' | 'recent' | 'between_rounds'
+type Stats = { total: number; withUrl: number; ok: number; dead: number; unchecked: number; noUrl: number; seedTotal?: number; newCount?: number; reviewCount?: number; suspiciousCount?: number; capturedCount?: number }
+type Filter = 'dead' | 'unchecked' | 'no_url' | 'all' | 'seed' | 'new' | 'category' | 'review' | 'suspicious' | 'url_issues' | 'saved' | 'recent' | 'between_rounds' | 'captured'
 type SuspiciousGrant = Grant & { url_quality_score: number | null; url_quality_issues: string[] }
 type DeadSeedGrant = { id: string; title: string; funder: string; url: string }
 type NewGrant = Grant & { first_seen_at: string }
@@ -239,6 +244,7 @@ export default function UrlAdminPage() {
   const [newGrants, setNewGrants]             = useState<NewGrant[]>([])
   const [newSources, setNewSources]           = useState<Set<string>>(new Set())
   const [reviewGrants, setReviewGrants]       = useState<Grant[]>([])
+  const [capturedGrants, setCapturedGrants]   = useState<Grant[]>([])
   const [recentGrants, setRecentGrants]       = useState<Grant[]>([])
   const [betweenRoundsGrants, setBetweenRoundsGrants] = useState<Grant[]>([])
   const [expandedReviewId, setExpandedReviewId] = useState<string | null>(null)
@@ -319,11 +325,13 @@ export default function UrlAdminPage() {
   // ── Load stats ───────────────────────────────────────────────────────────────
   const loadStats = useCallback(async () => {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-    const [{ data }, { count: newCount }, { count: reviewCount }, { count: suspiciousCount }, { data: ftData }] = await Promise.all([
+    const [{ data }, { count: newCount }, { count: reviewCount }, { count: suspiciousCount }, { count: capturedCount }, { data: ftData }] = await Promise.all([
       createClient().from('scraped_grants').select('url_status, apply_url').eq('is_active', true),
       createClient().from('scraped_grants').select('id', { count: 'exact', head: true }).eq('is_active', true).gte('first_seen_at', sevenDaysAgo),
       createClient().from('scraped_grants').select('id', { count: 'exact', head: true }).in('pipeline_state', ['captured', 'tagged']).not('saved_for_later', 'is', 'true'),
       createClient().from('scraped_grants').select('id', { count: 'exact', head: true }).eq('is_active', true).not('url_quality_score', 'is', null).lt('url_quality_score', 60),
+      // Captured-only count (untagged) — distinguishes from tagged (AI processed) for the new "Captured" tab.
+      createClient().from('scraped_grants').select('id', { count: 'exact', head: true }).eq('pipeline_state', 'captured').not('saved_for_later', 'is', 'true'),
       createClient().from('scraped_grants').select('funding_type').eq('is_active', true),
     ])
     if (!data) return
@@ -345,6 +353,7 @@ export default function UrlAdminPage() {
       newCount:    newCount ?? 0,
       reviewCount: reviewCount ?? 0,
       suspiciousCount: suspiciousCount ?? 0,
+      capturedCount: capturedCount ?? 0,
     })
   }, [])
 
@@ -437,7 +446,7 @@ export default function UrlAdminPage() {
       // these, getReviewVal falls back to undefined and the form looks
       // empty even when the DB has values (location_tag, amount_min/max,
       // deadline, is_rolling, eligible_structures, next_open_date etc.).
-      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief, grant_sources, description, funder_type, funding_type, location_tag, amount_min, amount_max, deadline, is_rolling, eligible_structures, next_open_date, impact_sectors, target_beneficiaries, pipeline_state')
+      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief, grant_sources, description, funder_type, funding_type, location_tag, amount_min, amount_max, deadline, is_rolling, eligible_structures, next_open_date, impact_sectors, target_beneficiaries, pipeline_state, field_provenance')
       // captured = new arrival, no AI processing; tagged = AI classifier has run.
       // Both belong in Needs Review until the admin publishes or archives.
       .in('pipeline_state', ['captured', 'tagged'])
@@ -462,6 +471,35 @@ export default function UrlAdminPage() {
     })
   }, [filter])
 
+  // ── Load captured (untagged) grants ─────────────────────────────────────────
+  // pipeline_state='captured' = arrived but no AI classifier / enricher has
+  // touched it yet. Worklist for "run classify-grants on the backlog."
+  const loadCapturedGrants = useCallback(async () => {
+    if (filter !== 'captured') return
+    const { data } = await createClient()
+      .from('scraped_grants')
+      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief, grant_sources, description, funder_type, funding_type, location_tag, amount_min, amount_max, deadline, is_rolling, eligible_structures, next_open_date, impact_sectors, target_beneficiaries, pipeline_state, field_provenance')
+      .eq('pipeline_state', 'captured')
+      .not('saved_for_later', 'is', 'true')
+      .order('first_seen_at', { ascending: false })
+      .limit(500)
+    const grants = (data ?? []) as Grant[]
+    setCapturedGrants(grants)
+    setReviewSources(prev => {
+      const next = { ...prev }
+      for (const g of grants) {
+        if (g.grant_sources && g.grant_sources.length > 0 && !next[g.id]) {
+          next[g.id] = g.grant_sources.map(s => ({
+            label: s.label ?? '',
+            url: s.url ?? '',
+            text: s.text ?? '',
+          }))
+        }
+      }
+      return next
+    })
+  }, [filter])
+
   // ── Load recently-activated grants (last 21 days, for review sweep) ─────────
   // Surfaced as the "Recently activated" tab so the admin can spot-check
   // grants that may have lost manual edits to the historical publish bug.
@@ -470,7 +508,7 @@ export default function UrlAdminPage() {
     const since = new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString()
     const { data } = await createClient()
       .from('scraped_grants')
-      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief, grant_sources, description, location_tag, amount_min, amount_max, deadline, is_rolling, eligible_structures, funder_type, funding_type, first_seen_at, impact_sectors, target_beneficiaries')
+      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief, grant_sources, description, location_tag, amount_min, amount_max, deadline, is_rolling, eligible_structures, funder_type, funding_type, first_seen_at, impact_sectors, target_beneficiaries, field_provenance')
       .eq('is_active', true)
       .gte('first_seen_at', since)
       .order('first_seen_at', { ascending: false })
@@ -487,7 +525,7 @@ export default function UrlAdminPage() {
     if (filter !== 'between_rounds') return
     const { data } = await createClient()
       .from('scraped_grants')
-      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief, grant_sources, description, location_tag, amount_min, amount_max, deadline, is_rolling, next_open_date, eligible_structures, funder_type, funding_type, first_seen_at, impact_sectors, target_beneficiaries')
+      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief, grant_sources, description, location_tag, amount_min, amount_max, deadline, is_rolling, next_open_date, eligible_structures, funder_type, funding_type, first_seen_at, impact_sectors, target_beneficiaries, field_provenance')
       .eq('is_active', true)
       .is('deadline', null)
       .not('next_open_date', 'is', null)
@@ -688,7 +726,7 @@ export default function UrlAdminPage() {
     const [{ data, error }, { data: allData }] = await Promise.all([
       createClient()
         .from('scraped_grants')
-        .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_type, funding_type, funder_brief, grant_sources, description, location_tag, amount_min, amount_max, deadline, is_rolling, eligible_structures')
+        .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_type, funding_type, funder_brief, grant_sources, description, location_tag, amount_min, amount_max, deadline, is_rolling, eligible_structures, field_provenance')
         .eq('is_active', true)
         .order('funder', { ascending: true, nullsFirst: false })
         .limit(5000),
@@ -757,6 +795,10 @@ export default function UrlAdminPage() {
   useEffect(() => {
     if (authorised && filter === 'between_rounds') loadBetweenRoundsGrants()
   }, [authorised, filter, loadBetweenRoundsGrants])
+
+  useEffect(() => {
+    if (authorised && filter === 'captured') loadCapturedGrants()
+  }, [authorised, filter, loadCapturedGrants])
 
   // ── Clear selection when switching tabs ──────────────────────────────────────
   useEffect(() => { setSelectedIds(new Set()) }, [filter])
@@ -1381,6 +1423,7 @@ export default function UrlAdminPage() {
     await loadGrants()
     if (filter === 'category') await loadCategoryGrants()
     if (filter === 'review')     await loadReviewGrants()
+    if (filter === 'captured')   await loadCapturedGrants()
     if (filter === 'new')        await loadNewGrants()
     if (filter === 'suspicious') await loadSuspiciousGrants()
   }
@@ -2879,229 +2922,31 @@ export default function UrlAdminPage() {
   // Shared Review & Edit panel — used in Needs Review tab AND inline on approved grants
   function renderReviewPanel(grant: Grant, mode: 'review' | 'approved') {
     return (
-      <div className="mx-3 mb-1 rounded-xl border border-forest/20 bg-[#f0fdf9] p-4">
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-forest">
-            {mode === 'review' ? 'Review & edit before publishing' : 'Review & edit fields'}
-          </p>
-          <button onClick={() => detectAll(grant)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-full text-white transition-colors" style={{ backgroundColor: '#173404' }}>
-            <Sparkles className="w-3 h-3" /> Detect all
-          </button>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs mb-3">
-          <div><label className="text-mid block mb-0.5">Funder type</label>
-            <select value={String(getReviewVal(grant.id,'funder_type',grant.funder_type??'') )} onChange={e=>setReviewField(grant.id,'funder_type',e.target.value)} className="form-select text-xs py-1 w-full">
-              {['trust_foundation','community_foundation','corporate_foundation','local_authority','corporate','lottery','government','capacity_builder','competition','loan','other'].map(v=><option key={v} value={v}>{v.replace(/_/g,' ').replace(/\w/g,c=>c.toUpperCase())}</option>)}
-            </select></div>
-          <div><label className="text-mid block mb-0.5">Funding type</label>
-            <select value={String(getReviewVal(grant.id,'funding_type',grant.funding_type??'grant'))} onChange={e=>setReviewField(grant.id,'funding_type',e.target.value)} className="form-select text-xs py-1 w-full">
-              {['grant','programme','investment','in_kind'].map(v=><option key={v} value={v}>{v.replace(/_/g,' ').replace(/\w/g,c=>c.toUpperCase())}</option>)}
-            </select></div>
-          <div><label className="text-mid block mb-0.5">Location tag</label>
-            <input type="text" value={String(getReviewVal(grant.id,'location_tag',grant.location_tag ?? ''))} onChange={e=>setReviewField(grant.id,'location_tag',e.target.value)} className="form-input text-xs py-1 w-full" placeholder="e.g. UK, London, Sussex" /></div>
-          <div><label className="text-mid block mb-0.5">Amount min (£)</label>
-            <input type="number" value={String(getReviewVal(grant.id,'amount_min',grant.amount_min ?? ''))} onChange={e=>setReviewField(grant.id,'amount_min',e.target.value)} className="form-input text-xs py-1 w-full" placeholder="e.g. 5000" /></div>
-          <div><label className="text-mid block mb-0.5">Amount max (£)</label>
-            <input type="number" value={String(getReviewVal(grant.id,'amount_max',grant.amount_max ?? ''))} onChange={e=>setReviewField(grant.id,'amount_max',e.target.value)} className="form-input text-xs py-1 w-full" placeholder="e.g. 50000" /></div>
-          <div><label className="text-mid block mb-0.5">Deadline</label>
-            <input
-              type="text"
-              value={String(getReviewVal(grant.id,'deadline',grant.deadline ?? ''))}
-              onChange={e=>{
-                setReviewField(grant.id,'deadline',e.target.value)
-                // Typing a deadline implies the grant isn't rolling — clear the
-                // rolling flag automatically so the two states stay consistent.
-                if (e.target.value.trim()) {
-                  setReviewField(grant.id,'is_rolling',false)
-                  setReviewField(grant.id,'next_open_date','')
-                }
-              }}
-              className="form-input text-xs py-1 w-full"
-              placeholder="YYYY-MM-DD"
-            /></div>
-        </div>
-        {/* Next opens — only shown if the grant is currently between rounds */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs mb-3">
-          <div className="sm:col-span-2"><label className="text-mid block mb-0.5">Next opens (between rounds)</label>
-            <input
-              type="text"
-              value={String(getReviewVal(grant.id,'next_open_date',(grant as Grant & { next_open_date?: string|null }).next_open_date ?? ''))}
-              onChange={e=>{
-                setReviewField(grant.id,'next_open_date',e.target.value)
-                // If the next-open marker is set, the grant isn't rolling and
-                // shouldn't carry an old deadline — clear both for consistency.
-                if (e.target.value.trim()) {
-                  setReviewField(grant.id,'deadline','')
-                  setReviewField(grant.id,'is_rolling',false)
-                }
-              }}
-              className="form-input text-xs py-1 w-full"
-              placeholder="e.g. TBC 2026 / September 2026 / Q3 2026"
-            />
-          </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mb-3">
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id={`rolling-${mode}-${grant.id}`}
-              checked={Boolean(getReviewVal(grant.id,'is_rolling',grant.is_rolling ?? false))}
-              onChange={e=>{
-                setReviewField(grant.id,'is_rolling',e.target.checked)
-                // Marking as rolling implies no deadline — clear it so
-                // the two states stay consistent.
-                if (e.target.checked) {
-                  setReviewField(grant.id,'deadline','')
-                }
-              }}
-              className="h-3.5 w-3.5 accent-forest"
-            />
-            <label htmlFor={`rolling-${mode}-${grant.id}`} className="text-xs text-mid cursor-pointer">Rolling deadline</label>
-          </div>
-          <div className="flex items-center gap-2">
-            <input type="checkbox" id={`invite-${mode}-${grant.id}`} checked={Boolean(getReviewVal(grant.id,'is_invite_only',grant.is_invite_only))} onChange={e=>setReviewField(grant.id,'is_invite_only',e.target.checked)} className="h-3.5 w-3.5 accent-forest" />
-            <label htmlFor={`invite-${mode}-${grant.id}`} className="text-xs text-mid cursor-pointer">Invite only</label>
-          </div>
-          <button onClick={() => detectLocation(grant)}
-            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full border border-forest/30 text-forest hover:bg-forest/10 transition-colors">
-            <MapPin className="w-3 h-3" /> Detect location
-          </button>
-        </div>
-
-        {/* Eligibility — who can apply */}
-        <div className="mt-3 pt-3 border-t border-forest/10">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-forest">Eligible structures</p>
-            <button onClick={() => detectEligibility(grant)}
-              className="flex items-center gap-1 text-xs font-semibold text-forest hover:text-sage transition-colors">
-              <Sparkles className="w-3 h-3" /> Detect
-            </button>
-          </div>
-          {(() => {
-            const current: string[] = (() => { const v = getReviewVal(grant.id,'eligible_structures',null); if(v){try{return JSON.parse(String(v))}catch{return[]}} return grant.eligible_structures??[] })()
-            return (
-              <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-                {STRUCTURE_OPTIONS.map(opt => (
-                  <label key={opt.value} className="flex items-center gap-1.5 cursor-pointer">
-                    <input type="checkbox" checked={current.includes(opt.value)} className="h-3.5 w-3.5 accent-forest"
-                      onChange={e => { const next = e.target.checked ? [...current.filter(s=>s!==opt.value),opt.value] : current.filter(s=>s!==opt.value); setReviewField(grant.id,'eligible_structures',JSON.stringify(next)) }} />
-                    <span className="text-xs text-mid">{opt.label}</span>
-                  </label>
-                ))}
-              </div>
-            )
-          })()}
-        </div>
-        <div className="flex items-center gap-3 pt-3 border-t border-forest/10">
-          <button onClick={() => enrichGrantFromManager(grant)} disabled={!!enrichingId}
-            className="flex items-center gap-1.5 rounded-full border border-forest/40 px-3 py-1.5 text-xs font-semibold text-forest hover:bg-forest/10 transition-colors disabled:opacity-40">
-            <Sparkles className="w-3 h-3" />{enrichingId === grant.id ? 'Enriching…' : grant.funder_brief ? 'Re-enrich' : 'Enrich'}
-          </button>
-          {grant.funder_brief && (
-            <>
-              <span className="text-xs text-sage font-medium">✓ Enriched</span>
-              <button onClick={() => populateFromBrief(grant)}
-                className="text-xs font-semibold text-amber-600 hover:text-amber-700 underline underline-offset-2 transition-colors">
-                Populate fields
-              </button>
-            </>
-          )}
-          <button
-            onClick={() => markBetweenRoundsAndWatch(grant)}
-            title="Mark as between rounds, clear the deadline, and add the listing page to the watchlist for change detection"
-            className="text-xs font-semibold text-mid hover:text-forest underline underline-offset-2 transition-colors">
-            Between rounds + watch
-          </button>
-          {reviewEnrichError[grant.id] && (
-            <span className="text-xs text-coral-saturated">{reviewEnrichError[grant.id]}</span>
-          )}
-          <button onClick={() => setReviewSourcesOpen(o => ({ ...o, [grant.id]: !o[grant.id] }))}
-            className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold border rounded-full transition-colors"
-            style={{ borderColor: reviewSourcesOpen[grant.id] ? '#173404' : '#E8E0D1', color: reviewSourcesOpen[grant.id] ? '#173404' : '#5F5E5A', backgroundColor: reviewSourcesOpen[grant.id] ? 'rgba(31,92,82,0.08)' : 'white' }}>
-            <BookOpen className="w-3 h-3" />
-            {(reviewSources[grant.id]?.length ?? 0) > 0 ? `${reviewSources[grant.id].length} source${reviewSources[grant.id].length > 1 ? 's' : ''}` : 'Sources'}
-          </button>
-        </div>
-        {reviewSourcesOpen[grant.id] && (
-          <div className="mt-2 p-3 rounded-lg border border-[#E8E0D1] bg-[#faf8f5] space-y-2">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold text-charcoal">Additional sources</p>
-              <div className="flex items-center gap-2">
-                <button onClick={() => addReviewSource(grant.id)}
-                  className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-white rounded-full" style={{ backgroundColor: '#173404' }}>
-                  <PlusCircle className="w-3 h-3" />Add source
-                </button>
-                {(reviewSources[grant.id]?.length ?? 0) > 0 && (
-                  <button onClick={() => enrichGrantFromManagerWithSources(grant, reviewSources[grant.id] ?? [])} disabled={!!enrichingId}
-                    className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-white rounded-full disabled:opacity-40" style={{ backgroundColor: '#8ECB3C', color: '#2C2C2A' }}>
-                    <Sparkles className="w-3 h-3" />{enrichingId === grant.id ? 'Enriching…' : 'Enrich with sources'}
-                  </button>
-                )}
-              </div>
-            </div>
-            {(reviewSources[grant.id] ?? []).length === 0 && <p className="text-xs text-light italic">Add a URL or paste content to improve enrichment quality.</p>}
-            {(reviewSources[grant.id] ?? []).map((src, idx) => (
-              <div key={idx} className="bg-white border border-[#E8E0D1] p-2 rounded-lg space-y-1.5">
-                <div className="flex items-center gap-2">
-                  <input type="text" placeholder="Label (optional)" value={src.label} onChange={e=>updateReviewSource(grant.id,idx,'label',e.target.value)}
-                    className="flex-1 text-xs border border-[#E8E0D1] rounded px-2 py-1 outline-none focus:border-forest" />
-                  <button onClick={()=>removeReviewSource(grant.id,idx)} className="text-light hover:text-coral-saturated transition-colors"><X className="w-3 h-3" /></button>
-                </div>
-                <input type="url" placeholder="URL (fetched automatically)" value={src.url} onChange={e=>updateReviewSource(grant.id,idx,'url',e.target.value)}
-                  className="w-full text-xs border border-[#E8E0D1] rounded px-2 py-1 outline-none focus:border-forest" />
-                <textarea placeholder="Or paste content directly…" value={src.text} onChange={e=>updateReviewSource(grant.id,idx,'text',e.target.value)} rows={2}
-                  className="w-full text-xs border border-[#E8E0D1] rounded px-2 py-1 outline-none focus:border-forest resize-none" />
-              </div>
-            ))}
-          </div>
-        )}
-        {/* Funder brief preview */}
-        {grant.funder_brief && (() => {
-          const brief = grant.funder_brief as Record<string, string | null>
-          const LABELS: Record<string, string> = {
-            what_they_fund: 'What they fund',
-            who_can_apply: 'Who can apply',
-            geographic_focus: 'Geographic focus',
-            priorities: 'Priorities',
-            strong_application: 'Strong application',
-            exclusions: 'Exclusions',
-            typical_award: 'Typical award',
-            decision_timeline: 'Decision timeline',
-            funder_tips: 'Tips',
-          }
-          const entries = Object.entries(LABELS)
-            .filter(([k]) => brief[k])
-            .map(([k, label]) => ({ label, value: brief[k]! }))
-          if (entries.length === 0) return null
-          return (
-            <div className="mt-3 pt-3 border-t border-forest/10 space-y-2">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-forest">Funder intelligence</p>
-              {entries.map(({ label, value }) => (
-                <div key={label}>
-                  <p className="text-[10px] font-semibold text-mid uppercase tracking-wide">{label}</p>
-                  <p className="text-xs text-charcoal leading-relaxed">{value}</p>
-                </div>
-              ))}
-            </div>
-          )
-        })()}
-        <div className="flex items-center gap-3 pt-3 border-t border-forest/10">
-          <div className="flex-1" />
-          <button onClick={() => { setReviewEdits(s => { const n = { ...s }; delete n[grant.id]; return n }); setExpandedReviewId(null) }} className="rounded-full border border-warm px-3 py-1.5 text-xs font-semibold text-mid hover:border-charcoal transition-colors">Cancel</button>
-          {mode === 'review' ? (
-            <button onClick={() => publishReviewGrant(grant)} disabled={reviewPublishing[grant.id]}
-              className="rounded-full bg-forest px-4 py-1.5 text-xs font-semibold text-white hover:bg-sage transition-colors disabled:opacity-40">
-              {reviewPublishing[grant.id] ? 'Publishing…' : '✓ Confirm & Publish'}
-            </button>
-          ) : (
-            <button onClick={() => saveGrantEdits(grant)} disabled={reviewPublishing[grant.id]}
-              className="rounded-full bg-forest px-4 py-1.5 text-xs font-semibold text-white hover:bg-sage transition-colors disabled:opacity-40">
-              {reviewPublishing[grant.id] ? 'Saving…' : '✓ Save changes'}
-            </button>
-          )}
-        </div>
-      </div>
+      <GrantEditor
+        grant={grant as Parameters<typeof GrantEditor>[0]['grant']}
+        mode={mode === 'review' ? 'review' : 'edit'}
+        getVal={(field, fallback) => getReviewVal(grant.id, field, fallback)}
+        setVal={(field, value)    => setReviewField(grant.id, field, value)}
+        sources={reviewSources[grant.id] ?? []}
+        sourcesOpen={!!reviewSourcesOpen[grant.id]}
+        onToggleSources={() => setReviewSourcesOpen(o => ({ ...o, [grant.id]: !o[grant.id] }))}
+        onAddSource={()       => addReviewSource(grant.id)}
+        onUpdateSource={(idx, f, v) => updateReviewSource(grant.id, idx, f, v)}
+        onRemoveSource={(idx) => removeReviewSource(grant.id, idx)}
+        onDetectAll={()           => detectAll(grant)}
+        onDetectLocation={()      => detectLocation(grant)}
+        onDetectEligibility={()   => detectEligibility(grant)}
+        onPopulateFromBrief={()   => populateFromBrief(grant)}
+        enrichingNow={enrichingId === grant.id}
+        enrichError={reviewEnrichError[grant.id] ?? null}
+        onEnrich={()                    => enrichGrantFromManager(grant)}
+        onEnrichWithSources={()         => enrichGrantFromManagerWithSources(grant, reviewSources[grant.id] ?? [])}
+        onMarkBetweenRoundsAndWatch={() => markBetweenRoundsAndWatch(grant)}
+        publishing={!!reviewPublishing[grant.id]}
+        onCancel={() => { setReviewEdits(s => { const n = { ...s }; delete n[grant.id]; return n }); setExpandedReviewId(null) }}
+        onSave={()    => saveGrantEdits(grant)}
+        onPublish={() => publishReviewGrant(grant)}
+      />
     )
   }
 
@@ -3339,6 +3184,7 @@ export default function UrlAdminPage() {
       <div className="mb-4 flex flex-wrap items-center gap-2">
         {([
           { key: 'review',         label: `Needs Review${stats?.reviewCount ? ` (${stats.reviewCount})` : ''}`, urgent: (stats?.reviewCount ?? 0) > 0 },
+          { key: 'captured',       label: `Captured${stats?.capturedCount ? ` (${stats.capturedCount})` : ''}` },
           { key: 'between_rounds', label: 'Between rounds' },
           { key: 'saved',          label: 'Saved for Later', urgent: false },
           { key: 'all',            label: 'All grants' },
@@ -3959,6 +3805,102 @@ export default function UrlAdminPage() {
             </div>
             )
           })()}
+        </div>
+      )}
+
+      {/* ── Captured (untagged) tab ────────────────────────────────────────── */}
+      {/* Grants in pipeline_state='captured' — arrived but no AI classifier or
+          enricher has touched them yet. This is the worklist for "run the
+          classifier on the backlog." Once AI processes them, they transition
+          to 'tagged' and disappear from this tab (but still appear in Needs
+          Review, which shows both captured + tagged). */}
+      {filter === 'captured' && (
+        <div className="rounded-xl border border-warm bg-white overflow-hidden shadow-card">
+          <div className="flex items-center justify-between border-b border-warm bg-[#F5F1E8] px-5 py-3">
+            <div>
+              <p className="text-sm font-semibold text-charcoal">
+                {capturedGrants.length} grant{capturedGrants.length !== 1 ? 's' : ''} captured, awaiting AI processing
+              </p>
+              <p className="text-xs text-mid mt-0.5">
+                No AI classifier or enricher has touched these yet. Bulk-enrich or bulk-detect to move them into <em>tagged</em>; review and publish from there.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button onClick={() => bulkEnrich('review')} disabled={bulkEnriching || bulkDetecting || capturedGrants.length === 0}
+                className="flex items-center gap-1.5 rounded-full bg-[#008080] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#006666] transition-colors disabled:opacity-50">
+                {bulkEnriching
+                  ? <><RefreshCw className="h-3 w-3 animate-spin" /> Enriching {bulkEnrichDone}/{bulkEnrichTotal}</>
+                  : <><Brain className="h-3 w-3" /> Enrich all unenriched</>}
+              </button>
+            </div>
+          </div>
+          {capturedGrants.length === 0 ? (
+            <div className="py-16 text-center">
+              <CheckCircle className="mx-auto mb-3 h-8 w-8 text-sage" />
+              <p className="text-mid text-sm">No captured grants — classifier has caught up.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-warm bg-warm/30 text-left text-xs font-semibold text-mid uppercase tracking-wider">
+                    <th className="px-5 py-3">Grant / Funder</th>
+                    <th className="px-5 py-3">Description</th>
+                    <th className="px-5 py-3">URL</th>
+                    <th className="px-5 py-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-warm/60">
+                  {capturedGrants.map(grant => (
+                    <React.Fragment key={grant.id}>
+                    <tr className="hover:bg-cream/50 transition-colors">
+                      <td className="px-5 py-3 max-w-[200px]">
+                        <p className="font-medium text-charcoal leading-snug line-clamp-2">{grant.title}</p>
+                        <p className="text-xs text-mid mt-0.5">{grant.funder}</p>
+                        <span className="inline-block mt-1 rounded-full bg-warm px-2 py-0.5 text-[10px] text-mid">{grant.source}</span>
+                      </td>
+                      <td className="px-5 py-3 max-w-[280px]">
+                        <p className="text-xs text-mid line-clamp-3">
+                          {grant.description ?? <span className="italic text-light">No description</span>}
+                        </p>
+                      </td>
+                      <td className="px-5 py-3 max-w-[220px]">
+                        <UrlCell grant={grant} />
+                      </td>
+                      <td className="px-5 py-3 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button onClick={() => enrichGrantFromManager(grant)} disabled={!!enrichingId}
+                            className="flex items-center gap-1 rounded-full bg-[#008080] px-3 py-1 text-xs font-semibold text-white hover:bg-[#006666] transition-colors disabled:opacity-40">
+                            {enrichingId === grant.id ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Brain className="h-3 w-3" />}
+                            {enrichingId === grant.id ? 'Enriching…' : 'Enrich'}
+                          </button>
+                          <button onClick={() => setExpandedReviewId(expandedReviewId === grant.id ? null : grant.id)}
+                            className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${expandedReviewId === grant.id ? 'bg-forest text-white' : 'bg-forest/10 text-forest hover:bg-forest hover:text-white'}`}>
+                            {expandedReviewId === grant.id ? 'Close' : 'Review'}
+                          </button>
+                          <button onClick={async () => {
+                            await fetch('/api/admin/update-grant', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: grant.id, fields: { saved_for_later: true } }) })
+                            setCapturedGrants(prev => prev.filter(g => g.id !== grant.id))
+                          }}
+                            className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-600 hover:bg-amber-500 hover:text-white transition-colors">
+                            Save for later
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                    {expandedReviewId === grant.id && (
+                      <tr>
+                        <td colSpan={4} className="px-0 pb-2">
+                          {renderReviewPanel(grant, 'review')}
+                        </td>
+                      </tr>
+                    )}
+                    </React.Fragment>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 
