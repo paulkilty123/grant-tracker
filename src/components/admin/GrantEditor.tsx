@@ -235,6 +235,15 @@ function buildBriefText(grant: GrantEditorGrant): string {
     .toLowerCase()
 }
 
+// Word-boundary match — avoids false positives like "men" matching the "men"
+// inside "employment", or "sport" matching inside "support". Uses \b on
+// alphanumeric edges; works correctly with hyphens and apostrophes since
+// those are non-word characters in JS regex.
+function termMatches(briefText: string, term: string): boolean {
+  const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return new RegExp(`\\b${escaped}\\b`, 'i').test(briefText)
+}
+
 function suggestTags(
   options: { value: string; label: string }[],
   currentValues: string[],
@@ -246,7 +255,7 @@ function suggestTags(
   const extra:   string[] = []
   for (const opt of options) {
     const terms = [opt.label.toLowerCase(), ...(synonyms[opt.value] ?? [])]
-    const mentioned = terms.some(t => briefText.includes(t))
+    const mentioned = terms.some(t => termMatches(briefText, t))
     const tagged    = currentValues.includes(opt.value)
     if (mentioned && !tagged) missing.push(opt.value)
     if (tagged && !mentioned) extra.push(opt.value)
