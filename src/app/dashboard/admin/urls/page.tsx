@@ -16,6 +16,7 @@ import type { FundingType } from '@/types'
 import { GrantEditor } from '@/components/admin/GrantEditor'
 import { useToast } from '@/components/ui/Toast'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { IMPACT_SECTOR_OPTIONS, BENEFICIARY_OPTIONS, labelFor } from '@/lib/tag-suggestions'
 
 const ADMIN_EMAIL = 'paulkilty1@gmail.com'
 
@@ -52,8 +53,23 @@ type CategoryGrant = Grant & {
   is_seed: boolean
 }
 
-type Stats = { total: number; withUrl: number; ok: number; dead: number; unchecked: number; noUrl: number; seedTotal?: number; newCount?: number; reviewCount?: number; suspiciousCount?: number; capturedCount?: number; needsEnrichmentCount?: number }
-type Filter = 'dead' | 'unchecked' | 'no_url' | 'all' | 'seed' | 'new' | 'category' | 'review' | 'suspicious' | 'url_issues' | 'saved' | 'recent' | 'between_rounds' | 'captured' | 'needs_enrichment'
+type Stats = { total: number; withUrl: number; ok: number; dead: number; unchecked: number; noUrl: number; seedTotal?: number; newCount?: number; reviewCount?: number; suspiciousCount?: number; capturedCount?: number; needsEnrichmentCount?: number; tagAuditCount?: number }
+type Filter = 'dead' | 'unchecked' | 'no_url' | 'all' | 'seed' | 'new' | 'category' | 'review' | 'suspicious' | 'url_issues' | 'saved' | 'recent' | 'between_rounds' | 'captured' | 'needs_enrichment' | 'tag_audit'
+
+// Audit row shape mirrors the server response from /api/admin/audit-tag-agreement.
+type TagAuditRow = {
+  id: string
+  title: string
+  funder: string | null
+  source: string
+  brief_chars: number
+  brief_thin: boolean
+  sector_missing: string[]
+  sector_extra: string[]
+  beneficiary_missing: string[]
+  beneficiary_extra: string[]
+  score: number
+}
 type SuspiciousGrant = Grant & { url_quality_score: number | null; url_quality_issues: string[] }
 type DeadSeedGrant = { id: string; title: string; funder: string; url: string }
 type NewGrant = Grant & { first_seen_at: string }
@@ -250,6 +266,10 @@ export default function UrlAdminPage() {
   const [reviewGrants, setReviewGrants]       = useState<Grant[]>([])
   const [capturedGrants, setCapturedGrants]   = useState<Grant[]>([])
   const [needsEnrichmentGrants, setNeedsEnrichmentGrants] = useState<Grant[]>([])
+  const [tagAuditRows, setTagAuditRows]       = useState<TagAuditRow[]>([])
+  const [tagAuditLoading, setTagAuditLoading] = useState(false)
+  const [tagAuditError, setTagAuditError]     = useState<string | null>(null)
+  const [tagAuditGrants, setTagAuditGrants]   = useState<Record<string, Grant>>({})
   const [recentGrants, setRecentGrants]       = useState<Grant[]>([])
   const [betweenRoundsGrants, setBetweenRoundsGrants] = useState<Grant[]>([])
   const [expandedReviewId, setExpandedReviewId] = useState<string | null>(null)
@@ -538,6 +558,38 @@ export default function UrlAdminPage() {
       return next
     })
   }, [filter])
+
+  // ── Load tag-audit rows from the bulk scan API ──────────────────────────────
+  // Calls /api/admin/audit-tag-agreement which runs suggestTags() server-side
+  // over every published grant and returns a ranked worklist of disagreements.
+  const loadTagAudit = useCallback(async () => {
+    if (filter !== 'tag_audit') return
+    setTagAuditLoading(true)
+    setTagAuditError(null)
+    try {
+      const res = await fetch('/api/admin/audit-tag-agreement?limit=200&min_score=1')
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const json = await res.json() as { rows: TagAuditRow[] }
+      setTagAuditRows(json.rows)
+    } catch (err) {
+      setTagAuditError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setTagAuditLoading(false)
+    }
+  }, [filter])
+
+  // Lazy-load the full Grant row when the user clicks Review on an audit row.
+  // The audit API only returns the disagreement summary; the GrantEditor needs
+  // the full row (provenance, all fields, etc.) to render properly.
+  const fetchGrantForAudit = useCallback(async (id: string) => {
+    if (tagAuditGrants[id]) return
+    const { data } = await createClient()
+      .from('scraped_grants')
+      .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief, grant_sources, description, funder_type, funding_type, location_tag, amount_min, amount_max, deadline, is_rolling, eligible_structures, next_open_date, impact_sectors, target_beneficiaries, pipeline_state, field_provenance')
+      .eq('id', id)
+      .maybeSingle()
+    if (data) setTagAuditGrants(prev => ({ ...prev, [id]: data as Grant }))
+  }, [tagAuditGrants])
 
   // ── Load recently-activated grants (last 21 days, for review sweep) ─────────
   // Surfaced as the "Recently activated" tab so the admin can spot-check
@@ -860,6 +912,10 @@ export default function UrlAdminPage() {
   useEffect(() => {
     if (authorised && filter === 'needs_enrichment') loadNeedsEnrichmentGrants()
   }, [authorised, filter, loadNeedsEnrichmentGrants])
+
+  useEffect(() => {
+    if (authorised && filter === 'tag_audit') loadTagAudit()
+  }, [authorised, filter, loadTagAudit])
 
   // ── Clear selection when switching tabs ──────────────────────────────────────
   useEffect(() => { setSelectedIds(new Set()) }, [filter])
@@ -3248,6 +3304,7 @@ export default function UrlAdminPage() {
           { key: 'review',         label: `Needs Review${stats?.reviewCount ? ` (${stats.reviewCount})` : ''}`, urgent: (stats?.reviewCount ?? 0) > 0 },
           { key: 'captured',       label: `Captured${stats?.capturedCount ? ` (${stats.capturedCount})` : ''}` },
           { key: 'needs_enrichment', label: `Needs Enrichment${stats?.needsEnrichmentCount ? ` (${stats.needsEnrichmentCount})` : ''}` },
+          { key: 'tag_audit',      label: 'Tag Audit' },
           { key: 'between_rounds', label: 'Between rounds' },
           { key: 'saved',          label: 'Saved for Later', urgent: false },
           { key: 'all',            label: 'All grants' },
@@ -4044,6 +4101,142 @@ export default function UrlAdminPage() {
                         <td colSpan={4} className="px-0 pb-2">
                           {renderReviewPanel(grant, 'approved')}
                         </td>
+                      </tr>
+                    )}
+                    </React.Fragment>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Tag Audit tab ──────────────────────────────────────────────────── */}
+      {/* Bulk disagreement scan across the published catalogue. The
+          /api/admin/audit-tag-agreement route runs suggestTags() over every
+          published grant with a substantial brief and ranks them worst-first.
+          Click Review on any row to lazy-load the full grant + open the
+          GrantEditor inline. Fix in seconds, save, the audit refreshes on
+          next visit. */}
+      {filter === 'tag_audit' && (
+        <div className="rounded-xl border border-warm bg-white overflow-hidden shadow-card">
+          <div className="flex items-center justify-between border-b border-warm bg-[#FAECE7] px-5 py-3">
+            <div>
+              <p className="text-sm font-semibold text-[#993C1D]">
+                {tagAuditLoading
+                  ? 'Scanning catalogue…'
+                  : `${tagAuditRows.length} grant${tagAuditRows.length !== 1 ? 's' : ''} with tagging disagreements`}
+              </p>
+              <p className="text-xs text-coral-saturated mt-0.5">
+                Rows where the funder brief mentions sectors / beneficiaries the AI didn&apos;t tag (or vice versa).
+                Pure text-match, no AI calls — refreshes when you re-open the tab.
+              </p>
+            </div>
+            <button
+              onClick={loadTagAudit}
+              disabled={tagAuditLoading}
+              className="flex items-center gap-1.5 rounded-full border border-[#993C1D] px-3 py-1.5 text-xs font-semibold text-[#993C1D] hover:bg-coral-pale transition-colors disabled:opacity-40"
+            >
+              <RefreshCw className={`h-3 w-3 ${tagAuditLoading ? 'animate-spin' : ''}`} />
+              {tagAuditLoading ? 'Scanning' : 'Rescan'}
+            </button>
+          </div>
+          {tagAuditError && (
+            <div className="px-5 py-3 text-xs text-coral-saturated bg-coral-pale border-b border-warm">
+              Error: {tagAuditError}
+            </div>
+          )}
+          {tagAuditLoading ? (
+            <div className="py-16 text-center text-sm text-mid">Scanning… (this can take a few seconds)</div>
+          ) : tagAuditRows.length === 0 ? (
+            <div className="py-16 text-center">
+              <CheckCircle className="mx-auto mb-3 h-8 w-8 text-sage" />
+              <p className="text-mid text-sm">No tagging disagreements — the catalogue looks clean.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-warm bg-warm/30 text-left text-xs font-semibold text-mid uppercase tracking-wider">
+                    <th className="px-5 py-3 w-16 text-center">Score</th>
+                    <th className="px-5 py-3">Grant / Funder</th>
+                    <th className="px-5 py-3">Disagreements</th>
+                    <th className="px-5 py-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-warm/60">
+                  {tagAuditRows.map(row => (
+                    <React.Fragment key={row.id}>
+                    <tr className="hover:bg-cream/50 transition-colors">
+                      <td className="px-5 py-3 w-16 text-center">
+                        <span
+                          className="inline-flex items-center justify-center min-w-[28px] h-6 rounded-full text-xs font-bold"
+                          style={{
+                            background: row.score >= 4 ? '#D85A30' : row.score >= 2 ? '#F0997B' : '#F5F1E8',
+                            color:      row.score >= 4 ? '#FFFFFF' : row.score >= 2 ? '#993C1D' : '#5F5E5A',
+                          }}
+                        >
+                          {row.score}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3 max-w-[260px]">
+                        <p className="font-medium text-charcoal leading-snug line-clamp-2">{row.title}</p>
+                        <p className="text-xs text-mid mt-0.5">{row.funder}</p>
+                        <span className="inline-block mt-1 rounded-full bg-warm px-2 py-0.5 text-[10px] text-mid">{row.source}</span>
+                      </td>
+                      <td className="px-5 py-3 max-w-[400px] text-xs space-y-1">
+                        {row.sector_missing.length > 0 && (
+                          <p>
+                            <span className="text-amber-700 font-semibold">Sectors missing:</span>{' '}
+                            <span className="text-mid">{row.sector_missing.map(v => labelFor(IMPACT_SECTOR_OPTIONS, v)).join(', ')}</span>
+                          </p>
+                        )}
+                        {row.sector_extra.length > 0 && (
+                          <p>
+                            <span className="text-mid font-semibold">Sectors verify:</span>{' '}
+                            <span className="text-mid italic">{row.sector_extra.map(v => labelFor(IMPACT_SECTOR_OPTIONS, v)).join(', ')}</span>
+                          </p>
+                        )}
+                        {row.beneficiary_missing.length > 0 && (
+                          <p>
+                            <span className="text-amber-700 font-semibold">Beneficiaries missing:</span>{' '}
+                            <span className="text-mid">{row.beneficiary_missing.map(v => labelFor(BENEFICIARY_OPTIONS, v)).join(', ')}</span>
+                          </p>
+                        )}
+                        {row.beneficiary_extra.length > 0 && (
+                          <p>
+                            <span className="text-mid font-semibold">Beneficiaries verify:</span>{' '}
+                            <span className="text-mid italic">{row.beneficiary_extra.map(v => labelFor(BENEFICIARY_OPTIONS, v)).join(', ')}</span>
+                          </p>
+                        )}
+                      </td>
+                      <td className="px-5 py-3 text-right">
+                        <button
+                          onClick={() => {
+                            if (expandedReviewId === row.id) {
+                              setExpandedReviewId(null)
+                            } else {
+                              setExpandedReviewId(row.id)
+                              fetchGrantForAudit(row.id)
+                            }
+                          }}
+                          className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${expandedReviewId === row.id ? 'bg-forest text-white' : 'bg-forest/10 text-forest hover:bg-forest hover:text-white'}`}
+                        >
+                          {expandedReviewId === row.id ? 'Close' : 'Review'}
+                        </button>
+                      </td>
+                    </tr>
+                    {expandedReviewId === row.id && tagAuditGrants[row.id] && (
+                      <tr>
+                        <td colSpan={4} className="px-0 pb-2">
+                          {renderReviewPanel(tagAuditGrants[row.id], 'approved')}
+                        </td>
+                      </tr>
+                    )}
+                    {expandedReviewId === row.id && !tagAuditGrants[row.id] && (
+                      <tr>
+                        <td colSpan={4} className="px-5 py-4 text-center text-xs text-mid">Loading grant…</td>
                       </tr>
                     )}
                     </React.Fragment>
