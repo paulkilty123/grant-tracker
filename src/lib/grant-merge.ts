@@ -84,7 +84,16 @@ const TRUST_BY_TYPE: Record<string, number> = {
 export function trustOf(source: string, backfilled?: boolean): number {
   const type = source.split(':', 1)[0]
   const base = TRUST_BY_TYPE[type] ?? 10
-  return backfilled ? Math.max(0, base - 5) : base
+  if (!backfilled) return base
+  // Phase A backfill stamped admin:legacy on every row where the original
+  // `source` column was 'manual'. In practice those rows weren't deliberately
+  // admin-edited — they carried default-ish AI-classifier tags or seed values.
+  // Treating admin:legacy as full admin authority (trust 95) blocks legitimate
+  // classifier corrections (e.g. v2 prompt rollout). Drop to scraper level
+  // so real ai_* runs can override; real admin edits (admin:<email>) keep
+  // their full trust because they aren't tagged backfilled=true.
+  if (source === 'admin:legacy') return 35
+  return Math.max(0, base - 5)
 }
 
 // ── Per-field merge decision ──────────────────────────────────────────────────
