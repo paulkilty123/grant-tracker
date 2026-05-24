@@ -21,7 +21,11 @@ import { mergeGrantUpdate } from '@/lib/grant-merge'
 
 // Bump when the classifier prompt changes materially (in `src/lib/classify.ts`).
 // Stamped on every field this route writes via the provenance merger.
-const CLASSIFIER_VERSION = 'v1'
+// v2 (2026-05-24): added SECONDARY-OUTCOME crossover rule + crossover examples
+// for sport/heritage/innovation bodies, after Tag Audit showed systematic
+// under-tagging of specialist funders with multi-cause briefs (Sport Wales
+// tagged sport-only when brief mentions community/youth/health crossover).
+const CLASSIFIER_VERSION = 'v2'
 const PROVENANCE_SOURCE  = `ai_classifier:${CLASSIFIER_VERSION}`
 
 // Single classify pass — fetches `limit` unclassified rows, runs Claude, writes

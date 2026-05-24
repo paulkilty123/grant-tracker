@@ -68,6 +68,7 @@ type TagAuditRow = {
   sector_extra: string[]
   beneficiary_missing: string[]
   beneficiary_extra: string[]
+  tag_count: number
   score: number
 }
 type SuspiciousGrant = Grant & { url_quality_score: number | null; url_quality_issues: string[] }
@@ -4160,6 +4161,7 @@ export default function UrlAdminPage() {
                 <thead>
                   <tr className="border-b border-warm bg-warm/30 text-left text-xs font-semibold text-mid uppercase tracking-wider">
                     <th className="px-5 py-3 w-16 text-center">Score</th>
+                    <th className="px-5 py-3 w-16 text-center" title="Current impact_sectors + target_beneficiaries count. Low tag_count + high missing = likely under-tagged.">Tags</th>
                     <th className="px-5 py-3">Grant / Funder</th>
                     <th className="px-5 py-3">Disagreements</th>
                     <th className="px-5 py-3 text-right">Actions</th>
@@ -4173,11 +4175,21 @@ export default function UrlAdminPage() {
                         <span
                           className="inline-flex items-center justify-center min-w-[28px] h-6 rounded-full text-xs font-bold"
                           style={{
-                            background: row.score >= 4 ? '#D85A30' : row.score >= 2 ? '#F0997B' : '#F5F1E8',
-                            color:      row.score >= 4 ? '#FFFFFF' : row.score >= 2 ? '#993C1D' : '#5F5E5A',
+                            // Weighted score scale: missing*2 + extras*0.5. Thresholds tuned 2026-05-24.
+                            background: row.score >= 12 ? '#D85A30' : row.score >= 6 ? '#F0997B' : '#F5F1E8',
+                            color:      row.score >= 12 ? '#FFFFFF' : row.score >= 6 ? '#993C1D' : '#5F5E5A',
                           }}
                         >
                           {row.score}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3 w-16 text-center">
+                        <span
+                          className="text-xs font-semibold"
+                          style={{ color: row.tag_count <= 3 ? '#993C1D' : row.tag_count <= 6 ? '#5F5E5A' : '#3B6D11' }}
+                          title="Current tag count (sectors + beneficiaries). Low count with high score usually means real under-tagging worth fixing."
+                        >
+                          {row.tag_count}
                         </span>
                       </td>
                       <td className="px-5 py-3 max-w-[260px]">
@@ -4229,14 +4241,14 @@ export default function UrlAdminPage() {
                     </tr>
                     {expandedReviewId === row.id && tagAuditGrants[row.id] && (
                       <tr>
-                        <td colSpan={4} className="px-0 pb-2">
+                        <td colSpan={5} className="px-0 pb-2">
                           {renderReviewPanel(tagAuditGrants[row.id], 'approved')}
                         </td>
                       </tr>
                     )}
                     {expandedReviewId === row.id && !tagAuditGrants[row.id] && (
                       <tr>
-                        <td colSpan={4} className="px-5 py-4 text-center text-xs text-mid">Loading grant…</td>
+                        <td colSpan={5} className="px-5 py-4 text-center text-xs text-mid">Loading grant…</td>
                       </tr>
                     )}
                     </React.Fragment>

@@ -136,12 +136,38 @@ PATTERNS THAT TYPICALLY UNDER-TAG IF YOU RELY ON FUNDER NAME ALONE:
 - "Children's Trust" / "Childhood Foundation": usually fund education +
   young_people + community + mental_health. Not just \`young_people\`.
 
-PATTERNS WHERE FUNDER NAME IS USUALLY CORRECT (single-tag often appropriate):
+PATTERNS WHERE FUNDER NAME IS USUALLY CORRECT — BUT WATCH FOR CROSSOVER:
 
-- "Sport England" / "Football Foundation" / dedicated sport bodies:
-  \`["sport"]\` is genuinely the scope.
-- "Historic England" / "Heritage Lottery Fund": \`["heritage"]\` is the scope.
+The primary sector from the funder name is mandatory, but check the brief
+for SECONDARY OUTCOMES the funder explicitly names. If present, tag them too.
+
+- "Sport England" / "Sport Wales" / "Football Foundation" / dedicated sport bodies:
+  \`["sport"]\` is the primary. Add secondaries when the brief explicitly names
+  the outcome they're driving via sport:
+    • "sport for young people / youth sport / school sport" → also tag \`young_people\` sector + \`young_people\` beneficiary
+    • "sport for health / physical activity for wellbeing" → also tag \`health\` (and \`mental_health\` if named)
+    • "community sport / grassroots sport / local clubs" → also tag \`community\`
+    • "disability sport / parasport / wheelchair sport" → also tag \`disability\`
+  Don't add a crossover sector unless the brief explicitly names it. Sport-only
+  briefs (e.g. an elite-athlete bursary) stay \`["sport"]\`.
+
+- "Historic England" / "Heritage Lottery Fund" / dedicated heritage bodies:
+  \`["heritage"]\` is the primary. Same crossover rule:
+    • "heritage skills / heritage training" → also tag \`education\`
+    • "community heritage / local heritage groups" → also tag \`community\`
+    • "industrial heritage with regeneration" → also tag \`employment\` / \`community\`
+
+- "Nesta" / "innovation foundations": \`["social_innovation"]\` plus \`["tech"]\`
+  whenever the brief mentions technology, digital, AI, R&D, prize competitions,
+  or innovation challenges. Nesta's challenges are inherently tech-adjacent.
+
 - Single-cause campaigns: still check the brief for breadth before committing.
+
+SECONDARY-OUTCOME RULE (general): When a brief uses the form
+"X for / through / via Y" or "X serving Z" or "X to improve Y", tag both the
+primary (X) and the secondary (Y, Z). This is the most common cause of
+under-tagging — the model assumes the funder's name caps the scope when the
+brief actually describes a wider intent.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 IMPACT SECTOR TAXONOMY — assign every sector that applies to this grant.

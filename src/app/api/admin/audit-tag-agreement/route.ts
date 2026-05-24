@@ -57,7 +57,8 @@ export type TagAuditRow = {
   sector_extra:           string[]   // sector option values the row is tagged with but the brief doesn't mention
   beneficiary_missing:    string[]
   beneficiary_extra:      string[]
-  score:                  number     // total disagreement count; thin briefs always score 0
+  tag_count:              number     // current number of impact_sectors + target_beneficiaries combined
+  score:                  number     // weighted disagreement: missing*2 + extras*0.5 (missing dominates because it's more often actionable; extras are noisier — many funders have core programmes the brief doesn't literally mention by sector name)
 }
 
 export async function GET(req: NextRequest) {
@@ -100,8 +101,17 @@ export async function GET(req: NextRequest) {
     const sectorSugg      = thin ? { missing: [], extra: [] } : suggestTags(IMPACT_SECTOR_OPTIONS, sectorsValue,       brief, SECTOR_SYNONYMS)
     const beneficiarySugg = thin ? { missing: [], extra: [] } : suggestTags(BENEFICIARY_OPTIONS,   beneficiariesValue, brief, BENEFICIARY_SYNONYMS)
 
-    const score = sectorSugg.missing.length + sectorSugg.extra.length
-                + beneficiarySugg.missing.length + beneficiarySugg.extra.length
+    // Weighted score: missing matters more than extras.
+    // Rationale per audit 2026-05-24: "verify" (extras) is the noisier
+    // signal — major funders often have core programmes the brief doesn't
+    // literally name (Nesta has 'social_innovation' core but the brief
+    // doesn't say "social innovation"). "Missing" is more often a real
+    // under-tag worth fixing (Sport Wales tagged sport-only but the brief
+    // mentions community/youth/health crossover).
+    const missingCount = sectorSugg.missing.length + beneficiarySugg.missing.length
+    const extraCount   = sectorSugg.extra.length   + beneficiarySugg.extra.length
+    const score        = Math.round(missingCount * 2 + extraCount * 0.5)
+    const tagCount     = sectorsValue.length + beneficiariesValue.length
 
     // Apply filters
     if (thin && !includeThin) continue
@@ -118,6 +128,7 @@ export async function GET(req: NextRequest) {
       sector_extra:        sectorSugg.extra,
       beneficiary_missing: beneficiarySugg.missing,
       beneficiary_extra:   beneficiarySugg.extra,
+      tag_count:           tagCount,
       score,
     })
   }
