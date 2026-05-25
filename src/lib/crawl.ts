@@ -2034,12 +2034,10 @@ async function upsertGrants(source: string, grants: ScrapedGrant[]): Promise<Cra
   const ids = valid.map(g => g.external_id)
   const { data: existing } = await supabase
     .from('scraped_grants')
-    .select('id, external_id, amount_min, amount_max, deadline, next_open_date')
+    .select('id, external_id')
     .in('external_id', ids)
   const existingByExtId = new Map(
-    (existing ?? []).map((r: { id: string; external_id: string; amount_min: number | null; amount_max: number | null; deadline: string | null; next_open_date: string | null }) =>
-      [r.external_id, r]
-    )
+    (existing ?? []).map((r: { id: string; external_id: string }) => [r.external_id, r])
   )
 
   const now = new Date().toISOString()
@@ -2055,17 +2053,8 @@ async function upsertGrants(source: string, grants: ScrapedGrant[]): Promise<Cra
 
   // ── 1. Update existing grants — merger handles per-field decisions ──────────
   // Admin-pinned values are preserved by the merger via the `pinned` flag.
-  //
-  // TODO[provenance-cleanup-2026-05-29]: remove the legacy preserve-logic below.
-  // For amount_min/max/deadline, if the DB already has a non-null value we
-  // *don't* send the scraper's value to the merger. This was the pre-provenance
-  // protection against scraper overwriting admin edits; the backfill couldn't
-  // reconstruct pin state, so keeping it for a week protects pre-migration
-  // admin edits that backfilled as pinned=false. After 2026-05-29, any
-  // pre-migration value that mattered will either have been re-touched by an
-  // admin (and thus pinned for real) or have stayed at the scraper's current
-  // value anyway. Grep for `provenance-cleanup-2026-05-29` to find the
-  // companion guard inside the for-loop below.
+  // Trust ladder respects admin > AI > scraper. Same-source writes can clear
+  // (fixes detect-only-adds anti-pattern).
   const toUpdate = valid.filter(g => existingByExtId.has(g.external_id))
   for (const g of toUpdate) {
     const current = existingByExtId.get(g.external_id)!
@@ -2074,13 +2063,6 @@ async function upsertGrants(source: string, grants: ScrapedGrant[]): Promise<Cra
     for (const field of TRACKED_SCRAPER_FIELDS) {
       const value = (g as unknown as Record<string, unknown>)[field]
       if (value === undefined) continue
-      // TODO[provenance-cleanup-2026-05-29]: drop this guard once pre-migration
-      // admin edits have been organically re-touched / lost. See block comment
-      // above the for-loop for the rationale.
-      if (
-        (field === 'amount_min' || field === 'amount_max' || field === 'deadline')
-        && (current as Record<string, unknown>)[field] != null
-      ) continue
       fields[field] = value
     }
 
