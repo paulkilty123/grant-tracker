@@ -105,6 +105,12 @@ export interface MCPMatchQuality {
 
 // Search result tier — match_quality omitted; computed separately by the
 // search tool with knowledge of the query context.
+//
+// apply_url: the funder's own application page. This is the PRIMARY citation
+// per result — what users click to apply or independently verify the source.
+// Renamed from `url` 2026-05-26 because the generic name caused Claude to
+// default to grant_tracker_url (which it could find by name) instead of the
+// funder URL (which it couldn't, despite the description telling it to).
 export interface MCPOpportunitySummary {
   opportunity_id: string
   title: string
@@ -114,7 +120,7 @@ export interface MCPOpportunitySummary {
   deadline: MCPDeadline
   geographic_scope: string
   eligibility_summary: string
-  url: string
+  apply_url: string
   grant_tracker_url: string
 }
 
@@ -143,7 +149,7 @@ export interface MCPOpportunityDetail {
   }
   application: {
     process_summary: string
-    url: string
+    apply_url: string
   }
   funder_summary: {
     name: string
@@ -722,7 +728,7 @@ export function toMCPOpportunitySummary(row: ScrapedGrantRow, ctx: AdapterContex
     deadline,
     geographic_scope: deriveGeographicScope(row),
     eligibility_summary: deriveEligibilitySummary(row),
-    url: row.apply_url ?? '',
+    apply_url: row.apply_url ?? '',
     grant_tracker_url: buildGrantTrackerUrl(row.id, ctx),
   }
 }
@@ -766,7 +772,7 @@ export function toMCPOpportunityDetail(
     },
     application: {
       process_summary: deriveProcessSummary(row, deadline),
-      url: row.apply_url ?? '',
+      apply_url: row.apply_url ?? '',
     },
     funder_summary: include_funder_summary ? {
       name: row.funder ?? '',

@@ -185,8 +185,8 @@ The workhorse discovery tool. Returns a list of matching opportunities.
     "score": "number (0-100)",
     "signals": ["string"]
   },
-  "url": "string (funder's site)",
-  "grant_tracker_url": "string (with UTM)"
+  "apply_url": "string (funder's site — primary citation per result)",
+  "grant_tracker_url": "string (with UTM — secondary, for save-to-pipeline)"
 }
 ```
 
@@ -292,7 +292,7 @@ Given an opportunity ID, return everything `search` didn't.
   },
   "application": {
     "process_summary": "string",
-    "url": "string"
+    "apply_url": "string"
   },
   "funder_summary": {
     "name": "string",
@@ -474,7 +474,7 @@ Every response from every tool includes:
 Five layers, designed so that no single layer is enforceable but the combination makes attribution robust:
 
 1. **Structured `attribution` object** on every response with `source`, `source_url`, `data_provenance`, `license`
-2. **Both URLs per result**: `grant_tracker_url` primary, `url` (funder's direct site) secondary. Grant Tracker URL is presented first in the response object
+2. **Both URLs per result**: `apply_url` (funder's direct site) is the PRIMARY citation per result; `grant_tracker_url` is the secondary "save to pipeline / curated context" pointer. Reversed from the original spec on 2026-05-26 after the H1 first-encounter test showed that leading with grant_tracker_url breaks the audit-grade pitch (every citation funnels through Grant Tracker, user can't reach the funder directly).
 3. **`upgrade_note` field** on every response, factual content mentioning Grant Tracker by name
 4. **Tool descriptions** state attribution expectation explicitly (see Section 8)
 5. **UTM parameters** on all Grant Tracker URLs (see 7.2)
@@ -591,12 +591,12 @@ ToS drafting is a pre-launch dependency (see Section 10).
 
 Every result includes two URLs:
 
-- `grant_tracker_url` — link to the opportunity's page on granttracker.co.uk (with UTM)
-- `url` — link to the funder's direct page (no UTM)
+- `apply_url` — link to the funder's direct page (no UTM). **Primary citation per result.**
+- `grant_tracker_url` — link to the opportunity's page on granttracker.co.uk (with UTM). **Secondary** "save to pipeline / Grant Tracker context" pointer.
 
-Grant Tracker URL is the primary link. When the agent surfaces a URL to the user, the Grant Tracker URL should be presented first. The funder's URL is secondary, for users who want to go direct to the funder.
+Reversed from the original spec on 2026-05-26 after the H1 first-encounter test confirmed that leading with grant_tracker_url breaks the audit-grade pitch — every citation funnels through Grant Tracker so the user can't independently verify or reach the funder directly. The audit-grade quality bar requires the funder URL to be the primary citation.
 
-The same applies to provider intelligence: `grant_tracker_url` (Grant Tracker's funder profile page) is primary, `funder_url` (funder's own site) is secondary.
+The same applies to provider intelligence: `links.funder_url` (funder's own site) is primary; `links.grant_tracker_url` (Grant Tracker's funder profile) is secondary.
 
 ### 7.2 UTM parameter convention
 
