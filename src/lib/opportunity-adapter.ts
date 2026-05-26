@@ -277,12 +277,12 @@ export const REGION_DB_PATTERNS: Record<MCPRegion, string[]> = {
   scotland:             ['scotland', 'glasgow', 'edinburgh', 'aberdeen', 'dundee'],
   wales:                ['wales', 'cardiff', 'swansea'],
   northern_ireland:     ['northern ireland', 'belfast', 'n. ireland', 'n ireland'],
-  london:               ['london', 'hackney', 'camden', 'southwark', 'lambeth', 'barnet', 'brent', 'tower hamlets', 'islington', 'haringey'],
+  london:               ['london', 'barking and dagenham', 'barnet', 'bexley', 'brent', 'bromley', 'camden', 'city of london', 'croydon', 'ealing', 'enfield', 'greenwich', 'hackney', 'hammersmith', 'haringey', 'harrow', 'havering', 'hillingdon', 'hounslow', 'islington', 'kensington', 'kingston upon thames', 'lambeth', 'lewisham', 'merton', 'newham', 'redbridge', 'richmond', 'southwark', 'sutton', 'tower hamlets', 'waltham forest', 'wandsworth', 'westminster'],
   north_west:           ['north west', 'north-west', 'manchester', 'liverpool', 'cumbria', 'lancashire'],
   north_east:           ['north east', 'north-east', 'newcastle', 'tyne', 'durham', 'northumberland'],
   yorkshire_and_humber: ['yorkshire', 'humber', 'leeds', 'sheffield', 'bradford'],
   midlands:             ['midlands', 'birmingham', 'coventry', 'worcestershire', 'warwickshire', 'nottingham', 'leicester'],
-  south_east:           ['south east', 'south-east', 'sussex', 'kent', 'surrey', 'berkshire', 'brighton', 'chichester', 'worthing', 'essex'],
+  south_east:           ['south east', 'south-east', 'sussex', 'kent', 'surrey', 'berkshire', 'brighton', 'chichester', 'worthing', 'essex', 'lewes', 'rye', 'crawley', 'gatwick', 'eastbourne', 'hastings', 'horsham'],
   south_west:           ['south west', 'south-west', 'somerset', 'devon', 'cornwall', 'bristol', 'gloucester', 'dorset', 'wiltshire'],
 }
 
@@ -576,12 +576,12 @@ const REGION_KEYWORDS: { region: MCPRegion; patterns: RegExp[] }[] = [
   { region: 'scotland',             patterns: [/\bscotland\b/i, /\bglasgow\b/i, /\bedinburgh\b/i, /\baberdeen\b/i, /\bdundee\b/i] },
   { region: 'wales',                patterns: [/\bwales\b/i, /\bcardiff\b/i, /\bswansea\b/i] },
   { region: 'northern_ireland',     patterns: [/\bnorthern ireland\b/i, /\bbelfast\b/i, /\bn\.? ?ireland\b/i] },
-  { region: 'london',               patterns: [/\blondon\b/i, /\b(hackney|camden|southwark|lambeth|barnet|brent|tower hamlets|islington|haringey)\b/i] },
+  { region: 'london',               patterns: [/\blondon\b/i, /\b(barking and dagenham|barnet|bexley|brent|bromley|camden|city of london|croydon|ealing|enfield|greenwich|hackney|hammersmith|haringey|harrow|havering|hillingdon|hounslow|islington|kensington|kingston upon thames|lambeth|lewisham|merton|newham|redbridge|richmond|southwark|sutton|tower hamlets|waltham forest|wandsworth|westminster)\b/i] },
   { region: 'north_west',           patterns: [/\bnorth[- ]west\b/i, /\bmanchester\b/i, /\bliverpool\b/i, /\bcumbria\b/i, /\blancashire\b/i] },
   { region: 'north_east',           patterns: [/\bnorth[- ]east\b/i, /\bnewcastle\b/i, /\btyne\b/i, /\bdurham\b/i, /\bnorthumberland\b/i] },
   { region: 'yorkshire_and_humber', patterns: [/\byorkshire\b/i, /\bhumber\b/i, /\bleeds\b/i, /\bsheffield\b/i, /\bbradford\b/i] },
   { region: 'midlands',             patterns: [/\bmidlands\b/i, /\bbirmingham\b/i, /\bcoventry\b/i, /\bworcestershire\b/i, /\bwarwickshire\b/i, /\bnottingham\b/i, /\bleicester\b/i] },
-  { region: 'south_east',           patterns: [/\bsouth[- ]east\b/i, /\bsussex\b/i, /\bkent\b/i, /\bsurrey\b/i, /\bberkshire\b/i, /\bbrighton\b/i, /\bchichester\b/i, /\bworthing\b/i, /\bessex\b/i] },
+  { region: 'south_east',           patterns: [/\bsouth[- ]east\b/i, /\bsussex\b/i, /\bkent\b/i, /\bsurrey\b/i, /\bberkshire\b/i, /\bbrighton\b/i, /\bchichester\b/i, /\bworthing\b/i, /\bessex\b/i, /\blewes\b/i, /\brye\b/i, /\bcrawley\b/i, /\bgatwick\b/i, /\beastbourne\b/i, /\bhastings\b/i, /\bhorsham\b/i] },
   { region: 'south_west',           patterns: [/\bsouth[- ]west\b/i, /\bsomerset\b/i, /\bdevon\b/i, /\bcornwall\b/i, /\bbristol\b/i, /\bgloucester\b/i, /\bdorset\b/i, /\bwiltshire\b/i] },
 ]
 
