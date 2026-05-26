@@ -191,11 +191,43 @@ export async function mergeGrantUpdate(opts: MergeGrantOptions): Promise<MergeGr
     else                   untrackedFields[k] = v
   }
 
-  // If only untracked fields, skip the round-trip and write directly
+  // Untracked-only update path. Even though no tracked field is changing,
+  // we still need to compute the pipeline_state auto-transition based on
+  // the untracked fields (is_active, url_status). Without this, Hide /
+  // publish / deactivate actions — which all pass ONLY untracked fields —
+  // silently bypass the state machine, leaving rows in inconsistent states
+  // (e.g. is_active=false + url_status='dead' + pipeline_state='tagged'
+  // instead of 'archived'). Bug fixed 2026-05-26.
   if (Object.keys(trackedFields).length === 0) {
-    const { error } = await db.from('scraped_grants').update(untrackedFields).eq('id', id)
+    const writePayload: Record<string, unknown> = { ...untrackedFields }
+    const applied = Object.keys(untrackedFields)
+
+    // Skip transition if caller passed pipeline_state explicitly (admin override).
+    if (!('pipeline_state' in fields)) {
+      const { data: current, error: fetchErr } = await db
+        .from('scraped_grants')
+        .select('pipeline_state')
+        .eq('id', id)
+        .maybeSingle()
+      if (fetchErr) throw new Error(`mergeGrantUpdate (untracked) fetch: ${fetchErr.message}`)
+      if (!current)  throw new Error(`mergeGrantUpdate (untracked): no row for id ${id}`)
+
+      const currentState = readPipelineState(current as Record<string, unknown>)
+      const computed = transitionPipelineState({
+        current: currentState,
+        source,
+        fields,
+        anyTrackedWritten: false,
+      })
+      if (computed !== currentState) {
+        writePayload.pipeline_state = computed
+        applied.push('pipeline_state')
+      }
+    }
+
+    const { error } = await db.from('scraped_grants').update(writePayload).eq('id', id)
     if (error) throw new Error(`mergeGrantUpdate (untracked): ${error.message}`)
-    return { applied: Object.keys(untrackedFields), rejected: [] }
+    return { applied, rejected: [] }
   }
 
   // Fetch current values + provenance + pipeline_state.
