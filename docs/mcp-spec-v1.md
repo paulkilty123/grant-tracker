@@ -175,9 +175,10 @@ The workhorse discovery tool. Returns a list of matching opportunities.
     "typical": "string | null"
   },
   "deadline": {
-    "type": "fixed | rolling | closed",
-    "date": "ISO date | null",
-    "days_until": "number | null"
+    "type": "fixed | rolling | between_rounds | closed",
+    "date": "ISO date | null (fixed: deadline; between_rounds: next opens; closed: last cycle's deadline)",
+    "days_until": "number | null",
+    "next_open_text": "string | null (free-form e.g. 'Spring 2027'; set only on between_rounds)"
   },
   "geographic_scope": "string",
   "eligibility_summary": "string",

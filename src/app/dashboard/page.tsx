@@ -95,7 +95,7 @@ export default async function DashboardPage() {
       .select('*')
       .eq('is_active', true)
       .neq('url_status', 'dead')
-      .or(`is_rolling.eq.true,deadline.is.null,deadline.gte.${today}`)
+      .or(`is_rolling.eq.true,deadline.is.null,deadline.gte.${today},next_open_date_parsed.gte.${today}`)
       .order('last_seen_at', { ascending: false })
       .limit(1000)
 

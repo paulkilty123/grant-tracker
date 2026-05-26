@@ -176,8 +176,11 @@ function buildBaseQuery(sb: SupabaseClient, params: MCPSearchParams) {
   } else if (params.include_rolling === false) {
     q = q.gte('deadline', TODAY())
   } else {
-    // Default: future-or-rolling-or-null
-    q = q.or(`is_rolling.eq.true,deadline.is.null,deadline.gte.${TODAY()}`)
+    // Default: future-or-rolling-or-null, or between-rounds with a known
+    // future next open date. The between-rounds branch (v1.1 adapter) surfaces
+    // annual-cycle funds in their closed periods so users see "Next opens X"
+    // instead of either silent exclusion or false "open now" framing.
+    q = q.or(`is_rolling.eq.true,deadline.is.null,deadline.gte.${TODAY()},next_open_date_parsed.gte.${TODAY()}`)
   }
 
   // Funder type — exact match against the scraper-emitted column

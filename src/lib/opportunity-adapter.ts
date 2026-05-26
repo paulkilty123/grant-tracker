@@ -38,6 +38,8 @@ export interface ScrapedGrantRow {
   beneficiary_tags: string[] | null
   eligibility_criteria: string[] | null
   funder_brief: RawFunderBrief | null
+  next_open_date: string | null              // free-form text e.g. "Spring 2027"
+  next_open_date_parsed: string | null       // YYYY-MM-DD — populated when text resolves to a specific date
 }
 
 export interface FunderRow {
@@ -93,9 +95,30 @@ export interface MCPAmount {
 }
 
 export interface MCPDeadline {
-  type: 'fixed' | 'rolling' | 'closed'
+  // 'fixed'          — a future deadline; surface "closes X" / "X days remaining"
+  // 'rolling'        — no fixed deadline, apply any time
+  // 'between_rounds' — annual/recurring fund currently closed; date is when the
+  //                    NEXT round opens. Set when last cycle's deadline is past
+  //                    but next_open_date_parsed is in the future. Surface
+  //                    honestly as "Currently closed — next opens [date]".
+  // 'closed'         — fund's most-recent cycle closed AND no known next round.
+  type: 'fixed' | 'rolling' | 'between_rounds' | 'closed'
+  // For fixed:          the deadline date (YYYY-MM-DD)
+  // For rolling:        null
+  // For between_rounds: the next opening date (YYYY-MM-DD, may be a 1st-of-month estimate)
+  // For closed:         the last cycle's deadline date
   date: string | null
+  // Days from today.
+  // Fixed:          positive (deadline ahead)
+  // Rolling:        null
+  // Between_rounds: positive (days until next opens)
+  // Closed:         negative (days past the last deadline)
   days_until: number | null
+  // Only set on type='between_rounds'. The free-form admin-side description of
+  // the next opening, e.g. "Spring 2027" or "February 2027". When the parsed
+  // date is a placeholder (1st-of-month estimate), this is the source of truth
+  // for what the agent should surface to the user.
+  next_open_text?: string | null
 }
 
 export interface MCPMatchQuality {
@@ -627,20 +650,54 @@ export function projectFunderBriefForMCP(
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
+// Parse a YYYY-MM-DD string to a Date object + days-from-today. Returns null
+// if not parseable. Today is zeroed to start-of-day so day diffs are stable.
+function daysFromToday(yyyymmdd: string | null): { date: Date; days: number } | null {
+  if (!yyyymmdd) return null
+  const parts = yyyymmdd.split('-').map(Number)
+  if (parts.length !== 3 || parts.some(isNaN)) return null
+  const date = new Date(parts[0], parts[1] - 1, parts[2])
+  if (isNaN(date.getTime())) return null
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const days = Math.round((date.getTime() - today.getTime()) / 86_400_000)
+  return { date, days }
+}
+
 function deriveDeadline(row: ScrapedGrantRow): MCPDeadline {
   // Rolling takes precedence per spec §4.1
   if (row.is_rolling) return { type: 'rolling', date: null, days_until: null }
-  if (!row.deadline) return { type: 'rolling', date: null, days_until: null }
-  const parts = row.deadline.split('-').map(Number)
-  if (parts.length !== 3 || parts.some(isNaN)) return { type: 'rolling', date: null, days_until: null }
-  const date = new Date(parts[0], parts[1] - 1, parts[2])
-  if (isNaN(date.getTime())) return { type: 'rolling', date: null, days_until: null }
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const ms = date.getTime() - today.getTime()
-  const days = Math.round(ms / 86_400_000)
-  if (days < 0) return { type: 'closed', date: row.deadline, days_until: days }
-  return { type: 'fixed', date: row.deadline, days_until: days }
+
+  const deadlineParsed   = daysFromToday(row.deadline)
+  const nextOpenParsed   = daysFromToday(row.next_open_date_parsed)
+  const nextOpenIsFuture = nextOpenParsed !== null && nextOpenParsed.days >= 0
+
+  // Case 1: future deadline → fund is currently open
+  if (deadlineParsed && deadlineParsed.days >= 0) {
+    return { type: 'fixed', date: row.deadline, days_until: deadlineParsed.days }
+  }
+
+  // Case 2: between rounds — past or null deadline, but next round is known
+  //         and in the future. Honest "currently closed, next opens X" framing.
+  if (nextOpenIsFuture) {
+    return {
+      type: 'between_rounds',
+      date: row.next_open_date_parsed,
+      days_until: nextOpenParsed.days,
+      next_open_text: row.next_open_date,
+    }
+  }
+
+  // Case 3: past deadline, no future next round known → genuinely closed
+  if (deadlineParsed && deadlineParsed.days < 0) {
+    return { type: 'closed', date: row.deadline, days_until: deadlineParsed.days }
+  }
+
+  // Case 4: no deadline, no rolling flag, no next round → treat as rolling.
+  // This branch preserves existing behaviour for rows where the catalogue has
+  // no deadline information at all. Such rows should ideally be either rolling
+  // or have next_open_date_parsed set; until then they surface as rolling.
+  return { type: 'rolling', date: null, days_until: null }
 }
 
 function deriveGeographicScope(row: ScrapedGrantRow): string {

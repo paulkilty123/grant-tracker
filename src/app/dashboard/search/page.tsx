@@ -1436,7 +1436,7 @@ export default function SearchPage() {
         .select('*')
         .eq('is_active', true)
         .neq('url_status', 'dead')
-        .or(`is_rolling.eq.true,deadline.is.null,deadline.gte.${today}`)
+        .or(`is_rolling.eq.true,deadline.is.null,deadline.gte.${today},next_open_date_parsed.gte.${today}`)
         .order('last_seen_at', { ascending: false })
         .limit(1500)
       if (scraped) {
@@ -1773,8 +1773,13 @@ export default function SearchPage() {
     const queryTokens = filterQuery ? filterQuery.split(/\s+/).filter(t => t.length > 0) : []
 
     const filtered = allGrants.filter(g => {
-      // Always strip expired deadlines — never show grants whose closing date has passed
-      if (!g.isRolling && g.deadline && g.deadline < todayStr) return false
+      // Always strip expired deadlines — never show grants whose closing date has passed.
+      // Exception: between-rounds rows (past deadline but known future next_open_date_parsed)
+      // surface honestly as "Currently closed — next opens [date]" per v1.1 adapter.
+      if (!g.isRolling && g.deadline && g.deadline < todayStr) {
+        const nextOpen = (g as { nextOpenDateParsed?: string | null }).nextOpenDateParsed
+        if (!nextOpen || nextOpen < todayStr) return false
+      }
 
       // Pinned-from-dashboard escape hatch. When the page was opened with
       // ?grant=<id>, that grant MUST survive the filter gate regardless of
@@ -2188,7 +2193,11 @@ export default function SearchPage() {
 
   // Category counts (used for badges on the toggle)
   const allGrants_raw = allGrants.filter(g => {
-    if (!g.isRolling && g.deadline && g.deadline < new Date().toISOString().split('T')[0]) return false
+    const todayStr = new Date().toISOString().split('T')[0]
+    if (!g.isRolling && g.deadline && g.deadline < todayStr) {
+      const nextOpen = (g as { nextOpenDateParsed?: string | null }).nextOpenDateParsed
+      if (!nextOpen || nextOpen < todayStr) return false
+    }
     return true
   })
   const grantsCount     = allGrants_raw.filter(g => GRANT_TYPES.includes((g as GrantOpportunity & { fundingType?: FundingType }).fundingType ?? 'grant')).length
@@ -2206,7 +2215,10 @@ export default function SearchPage() {
     const counts: Record<string, number> = { grant: 0, programme: 0, investment: 0, in_kind: 0 }
 
     allGrants.forEach(g => {
-      if (!g.isRolling && g.deadline && g.deadline < todayStr) return
+      if (!g.isRolling && g.deadline && g.deadline < todayStr) {
+        const nextOpen = (g as { nextOpenDateParsed?: string | null }).nextOpenDateParsed
+        if (!nextOpen || nextOpen < todayStr) return
+      }
 
       const gType = (g as GrantOpportunity & { fundingType?: FundingType }).fundingType ?? 'grant'
       if (!(gType in counts)) return
