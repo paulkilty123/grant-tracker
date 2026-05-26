@@ -230,6 +230,25 @@ export default function FunderIntelligencePage() {
   function setEditField(grantId: string, field: string, value: string | boolean | number | null) {
     setEditState(s => ({ ...s, [grantId]: { ...(s[grantId] ?? {}), [field]: value } }))
   }
+  // Server-side update helper — routes through /api/admin/update-grant so writes
+  // go through mergeGrantUpdate (field provenance + pipeline_state transition).
+  // Direct supabase .update() calls were causing publish/edit actions to skip
+  // the pipeline_state auto-transition, leaving rows stuck in 'tagged' state
+  // (Needs Review count didn't decrement after publish — bug fixed 2026-05-26).
+  async function patchGrant(id: string, fields: Record<string, unknown>): Promise<boolean> {
+    const res = await fetch('/api/admin/update-grant', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, fields }),
+    })
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}))
+      console.error('patchGrant error:', json.error ?? `HTTP ${res.status}`)
+      return false
+    }
+    return true
+  }
+
   async function saveEdits(grant: GrantRow) {
     const edits = editState[grant.id] ?? {}
     if (Object.keys(edits).length === 0) return
@@ -242,7 +261,7 @@ export default function FunderIntelligencePage() {
     if (edits.deadline       !== undefined) fields.deadline       = edits.deadline || null
     if (edits.is_rolling     !== undefined) fields.is_rolling     = edits.is_rolling
     if (edits.location_tag   !== undefined) fields.location_tag   = edits.location_tag || null
-    await createClient().from('scraped_grants').update(fields).eq('id', grant.id)
+    await patchGrant(grant.id, fields)
     setGrants(gs => gs.map(g => g.id === grant.id ? { ...g, ...fields } as GrantRow : g))
     setEditState(s => ({ ...s, [grant.id]: {} }))
     setEditSaving(s => ({ ...s, [grant.id]: false }))
@@ -250,7 +269,7 @@ export default function FunderIntelligencePage() {
   async function publishGrant(grant: GrantRow) {
     await saveEdits(grant)
     setPublishSaving(s => ({ ...s, [grant.id]: true }))
-    await createClient().from('scraped_grants').update({ is_active: true, url_status: 'ok' }).eq('id', grant.id)
+    await patchGrant(grant.id, { is_active: true, url_status: 'ok' })
     setGrants(gs => gs.map(g => g.id === grant.id ? { ...g, is_active: true, url_status: 'ok' } as unknown as GrantRow : g))
     setPublishSaving(s => ({ ...s, [grant.id]: false }))
     // Dismiss highlight by clearing URL param
