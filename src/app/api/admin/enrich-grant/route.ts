@@ -3,12 +3,16 @@ import { createClient } from '@supabase/supabase-js'
 import Anthropic from '@anthropic-ai/sdk'
 import { syncLocationFields } from '@/lib/funder-brief'
 import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
-import { mergeGrantUpdate } from '@/lib/grant-merge'
+import { mergeGrantUpdate, type ProvenanceEntry } from '@/lib/grant-merge'
+
+type Citation = NonNullable<ProvenanceEntry['citation']>
 
 export const maxDuration = 45 // seconds — requires Vercel Pro
 
 // Bump when the enrichment prompt below changes materially.
-const ENRICH_VERSION    = 'v1'
+// v2 (2026-05-27): citation + confidence per field, structured _deadline_cycle
+// extraction. See docs/pipeline-v1-spec.md §4 and §6.
+const ENRICH_VERSION    = 'v2'
 const PROVENANCE_SOURCE = `ai_enrich:${ENRICH_VERSION}`
 
 const supabase = createClient(
@@ -181,6 +185,39 @@ Write a structured "funder brief" as JSON. Rules:
 - The three location fields (geographic_focus, location_tag, is_local) MUST be internally consistent — see the LOCATION FIELDS section below.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CITATIONS — required for every field
+
+For every field you populate, return a matching entry in the \`_citations\` object with:
+- "snippet": 50-300 chars verbatim from the source content above, showing the exact text that supports your value. Copy-paste, do not paraphrase.
+- "confidence": EXACTLY ONE OF "high" | "med" | "low":
+    - "high" — the snippet states the value explicitly and verbatim
+    - "med"  — the value is implied by the snippet but requires light inference
+    - "low"  — value inferred from broader context or training knowledge, snippet may be partial or missing
+- "reason": REQUIRED when confidence is "low". Brief explanation (e.g. "no source phrase found", "inferred from general charity context")
+
+If no source phrase supports a value, set the value to null and set the citation to:
+{"snippet": "", "confidence": "low", "reason": "no_source_found"}
+
+Do not fabricate snippets. If you can't find supporting text, use "low" with reason="no_source_found".
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DEADLINE CYCLE — extract when cycle language is present
+
+If the source mentions a recurring cycle of application deadlines (e.g. "two deadlines per year in May and October", "three Board meetings — applications close 8 May, 31 August, 11 December", "annual round closing 30 November"), populate the top-level \`_deadline_cycle\` field as an array:
+
+[
+  {"day": 8,  "month": 5,  "label": "Round 1 EOI"},  // label optional
+  {"day": 31, "month": 8,  "label": "Round 2 EOI"},
+  {"day": 11, "month": 12, "label": "Round 3 EOI"}
+]
+
+Rules:
+- Only populate when the source explicitly states recurring dates with day-of-month + month name (or DD/MM format)
+- Do NOT populate from project-completion dates, decision dates, or strategy periods (e.g. "2025-2027" is NOT a cycle)
+- If you populate \`_deadline_cycle\`, also add an entry to \`_citations\` with key "_deadline_cycle" containing the verbatim source phrase
+- If no recurring cycle is stated, omit \`_deadline_cycle\` entirely (do not return [] or null)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 LOCATION FIELDS — derive carefully
 
 Workflow: write \`geographic_focus\` first based on the source content,
@@ -256,14 +293,37 @@ Return ONLY valid JSON in this exact shape:
   "how_to_apply": "Key steps in the application process",
   "funder_tips": "Any insider tips, preferences, or advice for applicants",
   "last_enriched": "${new Date().toISOString().split('T')[0]}",
-  "source": "${fetchedFromUrl ? 'live_fetch' : 'knowledge_fallback'}"
-}`
+  "source": "${fetchedFromUrl ? 'live_fetch' : 'knowledge_fallback'}",
+  "_deadline_cycle": [
+    {"day": 8, "month": 5, "label": "EOI"}
+  ],
+  "_citations": {
+    "what_they_fund":    {"snippet": "verbatim source phrase 50-300 chars", "confidence": "high"},
+    "who_can_apply":     {"snippet": "...", "confidence": "high"},
+    "geographic_focus":  {"snippet": "...", "confidence": "high"},
+    "location_tag":      {"snippet": "...", "confidence": "high"},
+    "is_local":          {"snippet": "...", "confidence": "high"},
+    "priorities":        {"snippet": "...", "confidence": "med"},
+    "strong_application":{"snippet": "...", "confidence": "med"},
+    "exclusions":        {"snippet": "...", "confidence": "high"},
+    "typical_award":     {"snippet": "...", "confidence": "high"},
+    "decision_timeline": {"snippet": "...", "confidence": "high"},
+    "open_status":       {"snippet": "...", "confidence": "high"},
+    "how_to_apply":      {"snippet": "...", "confidence": "med"},
+    "funder_tips":       {"snippet": "...", "confidence": "low", "reason": "inferred from general charity context"},
+    "_deadline_cycle":   {"snippet": "...", "confidence": "high"}
+  }
+}
+
+NOTE: _deadline_cycle and its _citations entry are ONLY present when a recurring cycle is stated. Omit both if no cycle.`
 
   let brief: Record<string, unknown>
   try {
     const msg = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 2048,
+      // v2: brief + per-field citations + optional cycle ~doubles output.
+      // 4096 gives generous headroom; Haiku 4.5 supports up to 8k.
+      max_tokens: 4096,
       messages: [{ role: 'user', content: prompt }],
     })
     const text = msg.content[0].type === 'text' ? msg.content[0].text : ''
@@ -288,11 +348,35 @@ Return ONLY valid JSON in this exact shape:
     return NextResponse.json({ error: `Anthropic API: ${msg}` }, { status: 500 })
   }
 
-  // Save brief + sync structured location fields the LLM derived alongside the
-  // narrative geographic_focus (closes the wiring gap that left location_tag
-  // pointing to "UK" while the brief correctly said "Somerset only").
-  const updatePayload: Record<string, unknown> = { funder_brief: brief }
-  syncLocationFields(brief, updatePayload)
+  // v2: extract citations + structured cycle from the brief blob.
+  // _citations stays inside the brief jsonb (the review UI reads per-sub-field
+  // citations from there). _deadline_cycle moves to its own scraped_grants
+  // column (canonical home for the cycle parser).
+  const briefCitations  = (brief._citations as Record<string, Citation> | undefined) ?? {}
+  const cycleFromBrief  = Array.isArray(brief._deadline_cycle) ? brief._deadline_cycle : null
+
+  const briefToSave: Record<string, unknown> = { ...brief }
+  delete briefToSave._deadline_cycle  // canonical home is the column, not the blob
+
+  const updatePayload: Record<string, unknown> = { funder_brief: briefToSave }
+  syncLocationFields(briefToSave, updatePayload)
+  if (cycleFromBrief && cycleFromBrief.length > 0) {
+    updatePayload.deadline_cycle = cycleFromBrief
+  }
+
+  // Per-field citation map for the merger — only for fields written to
+  // scraped_grants columns. Citations for funder_brief sub-fields live
+  // inside the brief jsonb, not in field_provenance.
+  const citationsForMerger: Record<string, Citation> = {}
+  if (briefCitations.location_tag && updatePayload.location_tag != null) {
+    citationsForMerger.location_tag = briefCitations.location_tag
+  }
+  if (briefCitations.is_local && 'is_local' in updatePayload) {
+    citationsForMerger.is_local = briefCitations.is_local
+  }
+  if (briefCitations._deadline_cycle && updatePayload.deadline_cycle) {
+    citationsForMerger.deadline_cycle = briefCitations._deadline_cycle
+  }
 
   if (additionalSources && additionalSources.length > 0) {
     // Only persist sources that have meaningful content (url or pasted text).
@@ -305,18 +389,24 @@ Return ONLY valid JSON in this exact shape:
 
   try {
     const result = await mergeGrantUpdate({
-      id:     grantId,
-      fields: updatePayload,
-      source: PROVENANCE_SOURCE,
-      pinned: false,
-      db:     supabase,
+      id:        grantId,
+      fields:    updatePayload,
+      source:    PROVENANCE_SOURCE,
+      pinned:    false,
+      citations: Object.keys(citationsForMerger).length > 0 ? citationsForMerger : undefined,
+      db:        supabase,
     })
     return NextResponse.json({
       success:  true,
       brief,
       applied:  result.applied,
       rejected: result.rejected,
-      _debug:   { primaryFetch: primaryFetchDebug, fetchedFromUrl },
+      _debug:   {
+        primaryFetch:     primaryFetchDebug,
+        fetchedFromUrl,
+        citationsApplied: Object.keys(citationsForMerger),
+        cycleExtracted:   cycleFromBrief !== null,
+      },
     })
   } catch (err) {
     console.error('[enrich-grant] write failed:', err)

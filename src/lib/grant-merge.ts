@@ -178,6 +178,10 @@ export type MergeGrantOptions = {
   source: ProvenanceSource
   pinned?: boolean
   db: SupabaseClient
+  // Pipeline v1 — optional per-field citations stamped into field_provenance.
+  // Required for AI sources writing tracked fields; ignored if no citation
+  // present for a given field (legacy callers continue to work unchanged).
+  citations?: Record<string, NonNullable<ProvenanceEntry['citation']>>
 }
 
 export type MergeGrantResult = {
@@ -186,7 +190,7 @@ export type MergeGrantResult = {
 }
 
 export async function mergeGrantUpdate(opts: MergeGrantOptions): Promise<MergeGrantResult> {
-  const { id, fields, source, pinned = false, db } = opts
+  const { id, fields, source, pinned = false, db, citations } = opts
 
   if (Object.keys(fields).length === 0) {
     return { applied: [], rejected: [] }
@@ -256,7 +260,6 @@ export async function mergeGrantUpdate(opts: MergeGrantOptions): Promise<MergeGr
   const currentProv = (currentRow.field_provenance ?? {}) as FieldProvenance
 
   const now = new Date().toISOString()
-  const newProv: ProvenanceEntry = { source, set_at: now, pinned }
 
   const valuesToWrite: Record<string, unknown> = { ...untrackedFields }
   const nextProv: FieldProvenance = { ...currentProv }
@@ -265,11 +268,19 @@ export async function mergeGrantUpdate(opts: MergeGrantOptions): Promise<MergeGr
   let anyTrackedWritten = false
 
   for (const [field, newValue] of Object.entries(trackedFields)) {
+    // Per-field provenance so each tracked field can carry its own citation.
+    // Citations are looked up in the caller-supplied `citations` map; absent
+    // entries leave the provenance citation-less (back-compat for legacy callers).
+    const fieldCitation = citations?.[field]
+    const fieldProv: ProvenanceEntry = {
+      source, set_at: now, pinned,
+      ...(fieldCitation ? { citation: fieldCitation } : {}),
+    }
     const decision = mergeFieldUpdate(
       currentRow[field],
       currentProv[field],
       newValue,
-      newProv,
+      fieldProv,
     )
     if (decision.write) {
       valuesToWrite[field] = decision.value
