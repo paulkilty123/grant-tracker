@@ -18,6 +18,8 @@ import { requireAdmin } from '@/lib/auth/require-admin'
 import type { Organisation } from '@/types'
 
 export const maxDuration = 60  // 16 orgs × ~600 grants × matcher per pair
+export const dynamic    = 'force-dynamic'
+export const revalidate = 0
 
 // Service-role client — bypasses RLS so we can read every cohort org.
 // Authorisation is enforced before this client is used (requireAdmin below).
