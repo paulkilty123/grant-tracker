@@ -36,6 +36,7 @@ export const TRACKED_FIELDS = [
   'target_beneficiaries',
   'is_invite_only',
   'funder_brief',
+  'deadline_cycle',   // v1 — structured cycle dates, replaces prose-parsed cycles in expire-grants cron
 ] as const
 
 export type TrackedField = typeof TRACKED_FIELDS[number]
@@ -56,6 +57,14 @@ export type ProvenanceEntry = {
   pinned: boolean
   backfilled?: boolean
   previous?: { source: string; value: unknown }
+  // Pipeline v1 — citation + confidence per AI-written field.
+  // Populated by enrich/classify prompts; required for tracked AI sources.
+  citation?: {
+    snippet:         string                  // 50-300 chars verbatim from source
+    snippet_offset?: number                  // byte offset in fetched page text
+    confidence:      'high' | 'med' | 'low'
+    reason?:         string                  // required when confidence='low'
+  }
 }
 
 export type FieldProvenance = Record<string, ProvenanceEntry>
@@ -377,7 +386,18 @@ export function stampNewGrant<T extends Record<string, unknown>>(
 // State transitions are computed by transitionPipelineState() and stamped by
 // each write path alongside its content fields.
 
-export const PIPELINE_STATES = ['captured', 'tagged', 'published', 'archived'] as const
+// Pipeline v1 expansion — 'tagged' kept for legacy rows; new writes use
+// 'tagged_awaiting_review'. See docs/pipeline-v1-spec.md §3.
+export const PIPELINE_STATES = [
+  'captured',
+  'enriched',
+  'tagged',                    // legacy — pre-v1 terminal-pre-review state
+  'tagged_awaiting_review',    // v1 — citations populated, ready for founder review
+  'published',
+  'archived',
+  'rejected',                  // v1 — soft-rejected with rejection_reason
+  'between_rounds_scheduled',  // v1 — closed now, future cycle date pending promotion
+] as const
 export type PipelineState = typeof PIPELINE_STATES[number]
 
 const AI_SOURCE_PREFIXES = ['ai_classifier:', 'ai_enrich:', 'ai_audit:', 'ai_detect:', '360giving:']
