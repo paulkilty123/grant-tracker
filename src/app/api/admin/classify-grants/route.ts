@@ -21,11 +21,11 @@ import { mergeGrantUpdate } from '@/lib/grant-merge'
 
 // Bump when the classifier prompt changes materially (in `src/lib/classify.ts`).
 // Stamped on every field this route writes via the provenance merger.
-// v2 (2026-05-24): added SECONDARY-OUTCOME crossover rule + crossover examples
-// for sport/heritage/innovation bodies, after Tag Audit showed systematic
-// under-tagging of specialist funders with multi-cause briefs (Sport Wales
-// tagged sport-only when brief mentions community/youth/health crossover).
-const CLASSIFIER_VERSION = 'v2'
+// v3 (2026-05-27): per-field citations (snippet + confidence) returned for
+// impact_sectors, funding_type, eligible_structures, target_beneficiaries.
+// Citations flow through the merger into field_provenance for review UI.
+// v2 (2026-05-24): added SECONDARY-OUTCOME crossover rule.
+const CLASSIFIER_VERSION = 'v3'
 const PROVENANCE_SOURCE  = `ai_classifier:${CLASSIFIER_VERSION}`
 
 // Single classify pass — fetches `limit` unclassified rows, runs Claude, writes
@@ -71,7 +71,23 @@ async function classifyOnce(supabase: SupabaseClient<any>, limit: number): Promi
         }
         if (r.eligible_structures.length > 0)   patch.eligible_structures = r.eligible_structures
         if (r.target_beneficiaries.length > 0)  patch.target_beneficiaries = r.target_beneficiaries
-        return mergeGrantUpdate({ id: g.id, fields: patch, source: PROVENANCE_SOURCE, pinned: false, db: supabase })
+
+        // v3 — per-field citations stamped into field_provenance by the merger.
+        // Only include citations for fields actually being written.
+        const citations: Record<string, { snippet: string; confidence: 'high' | 'med' | 'low'; reason?: string }> = {}
+        if (r._citations?.impact_sectors)       citations.impact_sectors       = r._citations.impact_sectors
+        if (r._citations?.funding_type)         citations.funding_type         = r._citations.funding_type
+        if (r._citations?.eligible_structures && r.eligible_structures.length > 0)   citations.eligible_structures  = r._citations.eligible_structures
+        if (r._citations?.target_beneficiaries && r.target_beneficiaries.length > 0) citations.target_beneficiaries = r._citations.target_beneficiaries
+
+        return mergeGrantUpdate({
+          id:        g.id,
+          fields:    patch,
+          source:    PROVENANCE_SOURCE,
+          pinned:    false,
+          citations: Object.keys(citations).length > 0 ? citations : undefined,
+          db:        supabase,
+        })
           .then(() => ({ ok: true as const }))
           .catch(err => { console.error('[classify-grants/loop] write failed:', err); return { ok: false as const } })
       })

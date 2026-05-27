@@ -2,6 +2,11 @@
 // Used by: /api/admin/classify-grants (manual) and /api/cron/crawl-grants (post-crawl)
 
 import { SupabaseClient } from '@supabase/supabase-js'
+import { mergeGrantUpdate } from './grant-merge'
+
+// Stamped by classifyUnclassified (cron path). Keep in sync with the route's
+// CLASSIFIER_VERSION in src/app/api/admin/classify-grants/route.ts.
+const CLASSIFIER_PROVENANCE_SOURCE = 'ai_classifier:v3'
 
 // ── Taxonomy validation sets ───────────────────────────────────────────────────
 export const VALID_SECTORS = new Set([
@@ -46,6 +51,12 @@ export interface GrantInput {
   priorities?: string
 }
 
+export interface ClassificationCitation {
+  snippet: string
+  confidence: 'high' | 'med' | 'low'
+  reason?: string
+}
+
 export interface ClassificationResult {
   id: string
   impact_sectors: string[]
@@ -53,6 +64,14 @@ export interface ClassificationResult {
   eligible_structures: string[]
   target_beneficiaries: string[]
   niche_tags: string[]
+  // v3 — per-field citations (source phrase + confidence). Optional for
+  // backwards compatibility; legacy v2 responses without _citations still parse.
+  _citations?: {
+    impact_sectors?:       ClassificationCitation
+    funding_type?:         ClassificationCitation
+    eligible_structures?:  ClassificationCitation
+    target_beneficiaries?: ClassificationCitation
+  }
 }
 
 // ── Claude Haiku classification ────────────────────────────────────────────────
@@ -85,9 +104,26 @@ OUTPUT FORMAT — return ONLY a JSON array, no markdown, no explanation:
     "funding_type": "<exactly one funding type value>",
     "eligible_structures": ["<legal structure values, or empty array []>"],
     "target_beneficiaries": ["<2 to 4 beneficiary group values, OR 1 if genuinely single-audience>"],
-    "niche_tags": ["<0 to 4 sub-sector specialism tags, or empty array []>"]
+    "niche_tags": ["<0 to 4 sub-sector specialism tags, or empty array []>"],
+    "_citations": {
+      "impact_sectors":       {"snippet": "50-300 chars verbatim from what_they_fund/priorities/description that supports the sector set", "confidence": "high"},
+      "funding_type":         {"snippet": "verbatim phrase indicating the funding modality", "confidence": "high"},
+      "eligible_structures":  {"snippet": "verbatim phrase naming structures (charity, CIC, etc.) or 'no_source_found'", "confidence": "high"},
+      "target_beneficiaries": {"snippet": "verbatim phrase naming beneficiary groups", "confidence": "high"}
+    }
   }
 ]
+
+CITATIONS — required for the four tracked tag fields above. Each citation:
+- "snippet": 50-300 chars verbatim from the input fields (what_they_fund / priorities / description). Copy-paste, do not paraphrase.
+- "confidence": "high" (snippet explicitly names the tags), "med" (tags implied by phrasing), or "low" (inferred from broader context or training knowledge).
+- "reason": REQUIRED when confidence is "low". Brief explanation (e.g. "inferred from funder name", "no source phrase found").
+
+When a tag field is empty (e.g. eligible_structures = []), set the citation to {"snippet": "", "confidence": "low", "reason": "no_source_found"}.
+
+Single citation per field = the STRONGEST source phrase supporting the entire array (not one citation per tag). Pick the snippet that most clearly justifies the breadth and depth of tags chosen.
+
+Do not fabricate snippets. If no source phrase supports the tags, use "low" with reason="no_source_found".
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 TAGGING DEPTH — CRITICAL
@@ -433,7 +469,9 @@ Return ONLY the JSON array. No markdown fences. No other text.`
     },
     body: JSON.stringify({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 4096,
+      // v3: per-field citations roughly double per-grant output (~1100 chars
+      // vs ~300). At a 20-grant batch that's ~5500 tokens; 8192 gives headroom.
+      max_tokens: 8192,
       messages: [{ role: 'user', content: prompt }],
     }),
   })
@@ -478,7 +516,10 @@ export function validate(raw: ClassificationResult) {
     ? ((raw as ClassificationResult).niche_tags as string[]).slice(0, 4)
     : []
 
-  return { impact_sectors, funding_type, eligible_structures, target_beneficiaries, niche_tags }
+  // v3 — preserve citations if present. Optional for backwards compat.
+  const _citations = raw._citations ?? undefined
+
+  return { impact_sectors, funding_type, eligible_structures, target_beneficiaries, niche_tags, _citations }
 }
 
 // ── Classify up to `limit` unclassified active grants ─────────────────────────
@@ -533,20 +574,45 @@ export async function classifyUnclassified(
 
       const updates = batch
         .filter(g => byId[g.id])
-        .map(g => {
+        .map(async g => {
           const r = byId[g.id]
+          const effectiveBeneficiaries = r.target_beneficiaries.length > 0
+            ? r.target_beneficiaries
+            : ['general_public']
           const patch: Record<string, unknown> = {
-            impact_sectors: r.impact_sectors,
-            funding_type:   r.funding_type,
-            target_beneficiaries: r.target_beneficiaries.length > 0 ? r.target_beneficiaries : ['general_public'],
+            impact_sectors:       r.impact_sectors,
+            funding_type:         r.funding_type,
+            target_beneficiaries: effectiveBeneficiaries,
           }
           if (r.eligible_structures.length > 0) patch.eligible_structures = r.eligible_structures
-          if (r.niche_tags.length > 0) patch.niche_tags = r.niche_tags
-          return supabase.from('scraped_grants').update(patch).eq('id', g.id)
+          if (r.niche_tags.length > 0)          patch.niche_tags          = r.niche_tags
+
+          // v3 — per-field citations through the merger (Phase A miss: this
+          // path previously did a direct supabase.update bypassing provenance).
+          const citations: Record<string, { snippet: string; confidence: 'high' | 'med' | 'low'; reason?: string }> = {}
+          if (r._citations?.impact_sectors)       citations.impact_sectors       = r._citations.impact_sectors
+          if (r._citations?.funding_type)         citations.funding_type         = r._citations.funding_type
+          if (r._citations?.eligible_structures && r.eligible_structures.length > 0)   citations.eligible_structures  = r._citations.eligible_structures
+          if (r._citations?.target_beneficiaries && effectiveBeneficiaries.length > 0) citations.target_beneficiaries = r._citations.target_beneficiaries
+
+          try {
+            await mergeGrantUpdate({
+              id:        g.id,
+              fields:    patch,
+              source:    CLASSIFIER_PROVENANCE_SOURCE,
+              pinned:    false,
+              citations: Object.keys(citations).length > 0 ? citations : undefined,
+              db:        supabase,
+            })
+            return { ok: true as const }
+          } catch (err) {
+            console.error('[classifyUnclassified] merge failed:', err)
+            return { ok: false as const }
+          }
         })
 
       const results2 = await Promise.all(updates)
-      const errs = results2.filter(r => r.error)
+      const errs = results2.filter(r => !r.ok)
       classified += batch.length - errs.length
       failed     += errs.length
     } catch {
