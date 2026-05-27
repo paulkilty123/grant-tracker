@@ -106,6 +106,10 @@ export interface CrawlResult {
   fetched:   number
   upserted:  number
   error?:    string
+  // Pipeline v1 Phase 3: scrape-time historical-deadline rejections (visible
+  // in crawl logs so we can monitor scraper hygiene without surfacing them
+  // in the NR queue).
+  rejectedHistorical?: number
 }
 
 // ── Shared HTTP helper ────────────────────────────────────────────────────────
@@ -2076,9 +2080,30 @@ async function upsertGrants(source: string, grants: ScrapedGrant[]): Promise<Cra
   // ── 2. Insert new grants with is_active: false (pending admin review) ──────
   // Stamp initial provenance for every populated tracked field with the
   // scraper as the source.
+  //
+  // Pipeline v1 Phase 3: scrape-time temporal validity check.
+  // If the captured deadline is already 7+ days past, the round has clearly
+  // closed — insert with pipeline_state='rejected' + rejection_reason so the
+  // row doesn't enter the founder's NR queue. 7-day grace handles scraper-lag
+  // where pages get crawled within a week of the deadline. Rows without a
+  // deadline (rolling or undated) pass through unfiltered — those are handled
+  // by the sweep step downstream.
+  let rejectedHistorical = 0
   const toInsert = valid
     .filter(g => !existingByExtId.has(g.external_id))
-    .map(g => stampNewGrant({ ...g, last_seen_at: now, is_active: false }, provenanceSource))
+    .map(g => {
+      const stamped = stampNewGrant({ ...g, last_seen_at: now, is_active: false }, provenanceSource)
+      const verdict = classifyDeadlineAtScrape(g.deadline)
+      if (verdict.state === 'rejected') {
+        rejectedHistorical++
+        return {
+          ...stamped,
+          pipeline_state:   'rejected',
+          rejection_reason: verdict.reason,
+        }
+      }
+      return stamped
+    })
   if (toInsert.length > 0) {
     for (let i = 0; i < toInsert.length; i += 50) {
       await supabase
@@ -2087,7 +2112,26 @@ async function upsertGrants(source: string, grants: ScrapedGrant[]): Promise<Cra
     }
   }
 
-  return { source, fetched: grants.length, upserted: valid.length }
+  return { source, fetched: grants.length, upserted: valid.length, rejectedHistorical }
+}
+
+// ── Scrape-time temporal validity ─────────────────────────────────────────────
+// Pipeline v1 Phase 3. See docs/pipeline-v1-spec.md §5.
+const SCRAPE_GRACE_DAYS = 7
+
+function classifyDeadlineAtScrape(deadline: string | null | undefined): {
+  state:   'captured' | 'rejected'
+  reason?: 'historical_deadline'
+} {
+  if (!deadline) return { state: 'captured' }  // rolling / undated handled downstream
+
+  const todayMs    = Date.parse(new Date().toISOString().slice(0, 10) + 'T00:00:00Z')
+  const deadlineMs = Date.parse(deadline.length === 10 ? deadline + 'T00:00:00Z' : deadline)
+  if (isNaN(deadlineMs)) return { state: 'captured' }  // unparseable → let through, manual review
+
+  const graceMs = SCRAPE_GRACE_DAYS * 24 * 60 * 60 * 1000
+  if (deadlineMs >= todayMs - graceMs) return { state: 'captured' }
+  return { state: 'rejected', reason: 'historical_deadline' }
 }
 
 // ── Source 46 — Garfield Weston Foundation ────────────────────────────────────
