@@ -911,20 +911,20 @@ export function computeMatchScore(
       if (nicheBonus >= 4) reasons.push(`Specialist ${nicheIntersection[0].replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())} focus — matches ${org.name}'s specialism`)
     } else {
       // ── Specialism conflict ─────────────────────────────────────────────────
-      // The org has DECLARED specialisms (niche_tags), the grant has DECLARED a
-      // specialism, and they don't overlap. The sector match is real but
-      // coincidental — a music grant for a STEM/crafts org will fully match on
-      // "creative" sector even though the org doesn't do music.
+      // Both sides have DECLARED specialisms (niche_tags) AND they don't
+      // overlap. The sector match is real but coincidental — e.g. a music
+      // grant for a theatre company fully matches "creative" sector but
+      // the actual practice is different.
       //
-      // Dampen multiplicatively (not additive) so a high sector score doesn't
-      // overrun the cap. Scaled by org commitment: an org with 1 niche tag
-      // might just have partial profile data; an org with 2+ is clearly
-      // declaring a specialism boundary.
-      const orgCommitment = Math.min(1, orgNicheTags.length / 2)   // 1 → 0.5, 2+ → 1.0
-      const dampen        = 0.35 * orgCommitment                   // 17.5%–35% reduction
-      const reduced       = Math.round(themesScore * (1 - dampen))
+      // Flat 55% dampen on themes. A single niche tag is still a deliberate
+      // declaration of specialism, so we don't soften the penalty based on
+      // tag count — what matters is that the org said "we do X" and the
+      // grant said "we fund Y" and X ≠ Y. Floor at 8/25 so grant stays
+      // visible (admin or user can override) but ranks well below
+      // specialism-aligned matches.
+      const reduced = Math.round(themesScore * 0.45)
       if (reduced < themesScore) {
-        themesScore = Math.max(8, reduced)  // floor 8/25 — grant stays visible but ranks well below specialism-aligned matches
+        themesScore = Math.max(8, reduced)
         const grantNiche = grantNicheTags[0].replace(/_/g, ' ')
         const orgNiche   = orgNicheTags[0].replace(/_/g, ' ')
         reasons.push(`Different specialism (${grantNiche} vs ${orgNiche}) — ranked lower than specialism-aligned matches`)
