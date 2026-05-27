@@ -9,14 +9,24 @@
 // This is an audit/review tool, not a user-facing surface — intended for
 // pre-launch cohort sweep and ongoing match-quality checks.
 
-import { createClient } from '@/lib/supabase/server'
+import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { redirect } from 'next/navigation'
 import { AlertTriangle, CheckCircle } from 'lucide-react'
 import { computeMatchScore } from '@/lib/matching'
 import { normaliseScrapedGrant } from '@/lib/grants-normalise'
+import { requireAdmin } from '@/lib/auth/require-admin'
 import type { Organisation } from '@/types'
 
 export const maxDuration = 60  // 16 orgs × ~600 grants × matcher per pair
+
+// Service-role client — bypasses RLS so we can read every cohort org.
+// Authorisation is enforced before this client is used (requireAdmin below).
+function serviceClient() {
+  return createServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  )
+}
 
 const SCORE_BAND = (score: number) => {
   if (score >= 80) return { label: 'Good',    bg: '#F1F7E4', text: '#3B6D11', border: '#8ECB3C' }
@@ -46,9 +56,12 @@ function arr(v: unknown): string[] {
 }
 
 export default async function CohortMatchAuditPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/auth/login')
+  // Admin gate first — service-role client below bypasses RLS so this MUST
+  // be locked down.
+  const auth = await requireAdmin()
+  if (!auth.ok) redirect('/auth/login')
+
+  const supabase = serviceClient()
 
   // ── Load cohort orgs (everything with a non-null name) ─────────────────────
   const { data: orgs } = await supabase
