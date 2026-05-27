@@ -1369,9 +1369,7 @@ export function computeMatchScore(
                         || grant.fundingType === 'investment'
                         || grant.fundingType === 'programme'
 
-  // DIAG: sentinel value 37 (was 35) — if you see T x/37 in cohort audit,
-  // matching.ts is live; if still T x/25, the build is stuck on the deleted .js.
-  const themesMax       = isOrgCentredType ? 50 : 37
+  const themesMax       = isOrgCentredType ? 50 : 35
   const beneficiaryMax  = isOrgCentredType ?  5 : 20
 
   const wLocation     = Math.round(locationScore     * 15 / 20)
