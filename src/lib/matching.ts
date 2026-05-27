@@ -916,13 +916,12 @@ export function computeMatchScore(
       // grant for a theatre company fully matches "creative" sector but
       // the actual practice is different.
       //
-      // Flat 55% dampen on themes. A single niche tag is still a deliberate
-      // declaration of specialism, so we don't soften the penalty based on
-      // tag count — what matters is that the org said "we do X" and the
-      // grant said "we fund Y" and X ≠ Y. Floor at 8/25 so grant stays
-      // visible (admin or user can override) but ranks well below
-      // specialism-aligned matches.
-      const reduced = Math.round(themesScore * 0.45)
+      // Cap raw themes at 25 FIRST (the normal visual max), THEN apply the
+      // dampen. Without the pre-cap, raw scores >55 (e.g. perfect 3-sector
+      // overlap with high IDF) round back to 25 after multiplication and
+      // the dampen silently disappears.
+      const cappedThemes = Math.min(25, themesScore)
+      const reduced      = Math.round(cappedThemes * 0.45)
       if (reduced < themesScore) {
         themesScore = Math.max(8, reduced)
         const grantNiche = grantNicheTags[0].replace(/_/g, ' ')
