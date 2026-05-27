@@ -14,8 +14,29 @@ import { mergeGrantUpdate } from '@/lib/grant-merge'
 export const dynamic = 'force-dynamic'
 
 // Bump if the roll-forward parser or between-rounds behaviour changes materially.
-const EXPIRE_VERSION    = 'v1'
+// v2 (2026-05-27): prefer structured deadline_cycle column when populated;
+// fall back to prose parser only for legacy rows without deadline_cycle.
+const EXPIRE_VERSION    = 'v2'
 const PROVENANCE_SOURCE = `system:expire_grants:${EXPIRE_VERSION}`
+
+// ── Cycle math — Pipeline v1 ──────────────────────────────────────────────────
+// Structured-column reader. Mirrors src/app/api/admin/sweep/route.ts:nextCycleDate.
+type CycleEntry = { day: number; month: number; label?: string }
+
+function nextCycleDateFromColumn(cycle: CycleEntry[] | null | undefined, todayISO: string): string | null {
+  if (!cycle || cycle.length === 0) return null
+  const today        = new Date(`${todayISO}T00:00:00Z`)
+  const currentYear  = today.getUTCFullYear()
+  let earliest: Date | null = null
+  for (const { day, month } of cycle) {
+    if (!Number.isInteger(day) || day < 1 || day > 31) continue
+    if (!Number.isInteger(month) || month < 1 || month > 12) continue
+    let candidate = new Date(Date.UTC(currentYear, month - 1, day))
+    if (candidate <= today) candidate = new Date(Date.UTC(currentYear + 1, month - 1, day))
+    if (!earliest || candidate < earliest) earliest = candidate
+  }
+  return earliest ? earliest.toISOString().slice(0, 10) : null
+}
 
 const MONTHS: Record<string, number> = {
   jan: 1, feb: 2, mar: 3, apr: 4,  may: 5,  jun: 6,
@@ -98,7 +119,7 @@ export async function GET(req: NextRequest) {
   // Find every grant whose deadline has passed
   const { data: candidates, error: fetchErr } = await supabase
     .from('scraped_grants')
-    .select('id, external_id, title, deadline, next_open_date, funder_brief')
+    .select('id, external_id, title, deadline, next_open_date, funder_brief, deadline_cycle')
     .eq('is_active', true)
     .eq('is_rolling', false)
     .not('deadline', 'is', null)
@@ -111,8 +132,15 @@ export async function GET(req: NextRequest) {
 
   for (const g of candidates ?? []) {
     const brief = g.funder_brief as Record<string, unknown> | null
-    const tl = brief?.decision_timeline as string | undefined
-    const nextDate = tl ? parseNextRoundDeadline(tl, today) : null
+    const tl    = brief?.decision_timeline as string | undefined
+    // v2: prefer structured deadline_cycle column when populated.
+    // Falls back to the legacy prose parser only when the column is null
+    // (existing un-backfilled rows). Once Phase 4 auto-chain has run across
+    // the catalogue, every row with a cycle should have the column set.
+    const cycleFromColumn = g.deadline_cycle as CycleEntry[] | null | undefined
+    const nextDate = cycleFromColumn && cycleFromColumn.length > 0
+      ? nextCycleDateFromColumn(cycleFromColumn, today)
+      : (tl ? parseNextRoundDeadline(tl, today) : null)
 
     if (nextDate && nextDate > today) {
       // Multi-round grant — advance the deadline instead of deactivating.
