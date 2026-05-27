@@ -910,12 +910,25 @@ export function computeMatchScore(
       themesScore = Math.min(25, themesScore + nicheBonus)
       if (nicheBonus >= 4) reasons.push(`Specialist ${nicheIntersection[0].replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())} focus — matches ${org.name}'s specialism`)
     } else {
-      // Grant has a clear specialism the org doesn't share — gentle nudge down
-      // (max -3) so the org still sees it, but it ranks lower than a specialist org.
-      // Only applies when the org HAS niche tags (meaning it's a specialist org
-      // in a different niche, not an org that simply hasn't filled in sub-sectors).
-      const nichemiss = Math.min(5, grantNicheTags.length * 2)  // stronger niche penalty when grant is specialist
-      themesScore = Math.max(0, themesScore - nichemiss)
+      // ── Specialism conflict ─────────────────────────────────────────────────
+      // The org has DECLARED specialisms (niche_tags), the grant has DECLARED a
+      // specialism, and they don't overlap. The sector match is real but
+      // coincidental — a music grant for a STEM/crafts org will fully match on
+      // "creative" sector even though the org doesn't do music.
+      //
+      // Dampen multiplicatively (not additive) so a high sector score doesn't
+      // overrun the cap. Scaled by org commitment: an org with 1 niche tag
+      // might just have partial profile data; an org with 2+ is clearly
+      // declaring a specialism boundary.
+      const orgCommitment = Math.min(1, orgNicheTags.length / 2)   // 1 → 0.5, 2+ → 1.0
+      const dampen        = 0.35 * orgCommitment                   // 17.5%–35% reduction
+      const reduced       = Math.round(themesScore * (1 - dampen))
+      if (reduced < themesScore) {
+        themesScore = Math.max(8, reduced)  // floor 8/25 — grant stays visible but ranks well below specialism-aligned matches
+        const grantNiche = grantNicheTags[0].replace(/_/g, ' ')
+        const orgNiche   = orgNicheTags[0].replace(/_/g, ' ')
+        reasons.push(`Different specialism (${grantNiche} vs ${orgNiche}) — ranked lower than specialism-aligned matches`)
+      }
     }
   }
 
