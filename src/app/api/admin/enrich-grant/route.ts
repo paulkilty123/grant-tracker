@@ -268,10 +268,24 @@ Return ONLY valid JSON in this exact shape:
     })
     const text = msg.content[0].type === 'text' ? msg.content[0].text : ''
     const jsonMatch = text.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) throw new Error('No JSON in response')
-    brief = JSON.parse(jsonMatch[0])
-  } catch {
-    return NextResponse.json({ error: 'Failed to generate summary' }, { status: 500 })
+    if (!jsonMatch) {
+      console.error('[enrich-grant] no JSON in model response', { grantId, textPreview: text.slice(0, 300), stopReason: msg.stop_reason })
+      return NextResponse.json({
+        error: `Model returned no JSON (stop: ${msg.stop_reason ?? 'unknown'}). First 200 chars: ${text.slice(0, 200)}`,
+      }, { status: 500 })
+    }
+    try {
+      brief = JSON.parse(jsonMatch[0])
+    } catch (parseErr) {
+      console.error('[enrich-grant] JSON parse failed', { grantId, jsonPreview: jsonMatch[0].slice(0, 300), err: parseErr })
+      return NextResponse.json({
+        error: `Model returned invalid JSON: ${parseErr instanceof Error ? parseErr.message : String(parseErr)}`,
+      }, { status: 500 })
+    }
+  } catch (err) {
+    console.error('[enrich-grant] Anthropic call failed', { grantId, err })
+    const msg = err instanceof Error ? err.message : String(err)
+    return NextResponse.json({ error: `Anthropic API: ${msg}` }, { status: 500 })
   }
 
   // Save brief + sync structured location fields the LLM derived alongside the
