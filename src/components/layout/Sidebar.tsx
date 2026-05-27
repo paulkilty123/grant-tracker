@@ -75,6 +75,7 @@ const ADMIN_NAV = [
   { href: '/dashboard/admin',              label: 'Grant Health',        Icon: Activity      },
   { href: '/dashboard/admin/urls',         label: 'Grant Manager',       Icon: ClipboardList },
   { href: '/dashboard/admin/quality',      label: 'Tagging Quality',     Icon: BarChart3     },
+  { href: '/dashboard/admin/cohort-match-audit', label: 'Cohort Matches', Icon: User          },
   { href: '/dashboard/admin/users',        label: 'Users',               Icon: Users         },
   { href: '/dashboard/admin/corporate',    label: 'Partner Manager',     Icon: Building2     },
   { href: '/dashboard/admin/application-review', label: 'Application Review', Icon: FilePenLine },
