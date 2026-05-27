@@ -55,6 +55,10 @@
     {
       "path": "/api/admin/golden-queries",
       "schedule": "30 5 * * 1"
+    },
+    {
+      "path": "/api/cron/process-pipeline-queue",
+      "schedule": "*/5 * * * *"
     }
   ]
 }
