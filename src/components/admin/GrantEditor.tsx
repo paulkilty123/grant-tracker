@@ -217,22 +217,52 @@ function sourceLabel(source: string): string {
   return type
 }
 
+// Pipeline v1 Phase 5 — confidence colour ramp for citation chips.
+// Discrete 3-level scheme keeps the visual hierarchy clear at a glance:
+// HIGH (sage)   → glance and accept
+// MED  (amber)  → spot-check the snippet
+// LOW  (coral)  → must read the snippet + reason before approving
+const CONFIDENCE_STYLES = {
+  high: { bg: '#EAF3DE', fg: '#3B6D11', border: '#8ECB3C66', label: 'HIGH' },
+  med:  { bg: '#FAEEDA', fg: '#854F0B', border: '#EF9F2766', label: 'MED'  },
+  low:  { bg: '#FAECE7', fg: '#993C1D', border: '#D85A3066', label: 'LOW'  },
+} as const
+
+function ConfidenceChip({ citation }: { citation: NonNullable<ProvenanceEntry['citation']> }) {
+  const style = CONFIDENCE_STYLES[citation.confidence] ?? CONFIDENCE_STYLES.low
+  const titleParts = [`Confidence: ${citation.confidence.toUpperCase()}`]
+  if (citation.snippet) titleParts.push(`\nCited source phrase:\n"${citation.snippet}"`)
+  if (citation.reason)  titleParts.push(`\nReason: ${citation.reason}`)
+  return (
+    <span
+      className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider cursor-help"
+      style={{ background: style.bg, color: style.fg, border: `1px solid ${style.border}` }}
+      title={titleParts.join('\n')}
+    >
+      {style.label}
+    </span>
+  )
+}
+
 function ProvBadge({ entry }: { entry: ProvenanceEntry | undefined }) {
   if (!entry) return null
   const pinned = entry.pinned === true
   return (
-    <span
-      className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded"
-      style={{
-        background:    pinned ? '#F1F7E4' : '#F5F1E8',
-        color:         pinned ? '#3B6D11' : '#5F5E5A',
-        border:        `1px solid ${pinned ? '#8ECB3C44' : '#E8E0D1'}`,
-      }}
-      title={`Source: ${entry.source}${entry.backfilled ? ' (backfilled)' : ''}\nSet: ${entry.set_at}${pinned ? '\nPinned by admin — survives scraper runs' : ''}`}
-    >
-      {pinned && '📌 '}
-      {sourceLabel(entry.source)}
-      <span className="text-light"> · {relTime(entry.set_at)}</span>
+    <span className="inline-flex items-center gap-1 flex-wrap">
+      {entry.citation && <ConfidenceChip citation={entry.citation} />}
+      <span
+        className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded"
+        style={{
+          background:    pinned ? '#F1F7E4' : '#F5F1E8',
+          color:         pinned ? '#3B6D11' : '#5F5E5A',
+          border:        `1px solid ${pinned ? '#8ECB3C44' : '#E8E0D1'}`,
+        }}
+        title={`Source: ${entry.source}${entry.backfilled ? ' (backfilled)' : ''}\nSet: ${entry.set_at}${pinned ? '\nPinned by admin — survives scraper runs' : ''}`}
+      >
+        {pinned && '📌 '}
+        {sourceLabel(entry.source)}
+        <span className="text-light"> · {relTime(entry.set_at)}</span>
+      </span>
     </span>
   )
 }
@@ -398,13 +428,50 @@ export function GrantEditor(props: GrantEditorProps) {
   const sectorSugg       = suggestTags(IMPACT_SECTOR_OPTIONS, sectorsValue,       briefText, SECTOR_SYNONYMS)
   const beneficiarySugg  = suggestTags(BENEFICIARY_OPTIONS,   beneficiariesValue, briefText, BENEFICIARY_SYNONYMS)
 
+  // Pipeline v1 Phase 5 — row-level confidence summary.
+  // Aggregates citations from row-column field_provenance + funder_brief
+  // sub-field citations. Gives an at-a-glance read of "how much should I
+  // scrutinise this row".
+  const confidenceSummary = (() => {
+    let high = 0, med = 0, low = 0
+    const prov = grant.field_provenance ?? {}
+    for (const entry of Object.values(prov)) {
+      const c = entry?.citation?.confidence
+      if (c === 'high') high++
+      else if (c === 'med') med++
+      else if (c === 'low') low++
+    }
+    const briefCitations = (grant.funder_brief as Record<string, unknown> | null | undefined)?._citations as Record<string, { confidence: 'high' | 'med' | 'low' }> | undefined
+    if (briefCitations) {
+      for (const c of Object.values(briefCitations)) {
+        if (c?.confidence === 'high') high++
+        else if (c?.confidence === 'med') med++
+        else if (c?.confidence === 'low') low++
+      }
+    }
+    return { high, med, low, total: high + med + low }
+  })()
+
   return (
     <div className="mx-3 mb-1 rounded-xl border border-forest/20 bg-[#f0fdf9] p-4">
       {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-forest">
-          {mode === 'review' ? 'Review & edit before publishing' : 'Review & edit fields'}
-        </p>
+      <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
+        <div className="flex items-center gap-3 flex-wrap">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-forest">
+            {mode === 'review' ? 'Review & edit before publishing' : 'Review & edit fields'}
+          </p>
+          {confidenceSummary.total > 0 && (
+            <div
+              className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2 py-1 rounded-full"
+              style={{ background: '#FFFFFF', border: '1px solid #E8E0D1', color: '#5F5E5A' }}
+              title={`Citation coverage across ${confidenceSummary.total} AI-written field${confidenceSummary.total === 1 ? '' : 's'}.\nHIGH: AI quoted source verbatim — accept on glance.\nMED: implied, light inference — spot-check.\nLOW: inferred or no source — read snippet + reason before approving.`}
+            >
+              <span style={{ color: CONFIDENCE_STYLES.high.fg }}>● {confidenceSummary.high} high</span>
+              {confidenceSummary.med > 0 && <span style={{ color: CONFIDENCE_STYLES.med.fg }}>● {confidenceSummary.med} med</span>}
+              {confidenceSummary.low > 0 && <span style={{ color: CONFIDENCE_STYLES.low.fg }}>● {confidenceSummary.low} low</span>}
+            </div>
+          )}
+        </div>
         <button
           type="button"
           onClick={onDetectAll}
@@ -728,7 +795,7 @@ export function GrantEditor(props: GrantEditorProps) {
 
       {/* Funder brief preview */}
       {grant.funder_brief && (() => {
-        const brief = grant.funder_brief
+        const brief = grant.funder_brief as Record<string, unknown>
         const LABELS: Record<string, string> = {
           what_they_fund:     'What they fund',
           who_can_apply:      'Who can apply',
@@ -740,9 +807,13 @@ export function GrantEditor(props: GrantEditorProps) {
           decision_timeline:  'Decision timeline',
           funder_tips:        'Tips',
         }
+        // Pipeline v1 — per-sub-field citations live INSIDE the brief blob
+        // (funder_brief._citations). Surface alongside each sub-field so the
+        // admin can spot-check a snippet without leaving the row.
+        const briefCitations = (brief._citations as Record<string, NonNullable<ProvenanceEntry['citation']>> | null | undefined) ?? {}
         const entries = Object.entries(LABELS)
           .filter(([k]) => brief[k])
-          .map(([k, label]) => ({ label, value: brief[k]! }))
+          .map(([k, label]) => ({ key: k, label, value: brief[k] as string, citation: briefCitations[k] }))
         if (entries.length === 0) return null
         return (
           <div className="mt-3 pt-3 border-t border-forest/10 space-y-2">
@@ -750,9 +821,12 @@ export function GrantEditor(props: GrantEditorProps) {
               <p className="text-[10px] font-semibold uppercase tracking-wider text-forest">Funder intelligence</p>
               <ProvBadge entry={grant.field_provenance?.funder_brief} />
             </div>
-            {entries.map(({ label, value }) => (
-              <div key={label}>
-                <p className="text-[10px] font-semibold text-mid uppercase tracking-wide">{label}</p>
+            {entries.map(({ key, label, value, citation }) => (
+              <div key={key}>
+                <div className="flex items-center gap-2 mb-0.5">
+                  <p className="text-[10px] font-semibold text-mid uppercase tracking-wide">{label}</p>
+                  {citation && <ConfidenceChip citation={citation} />}
+                </div>
                 <p className="text-xs text-charcoal leading-relaxed">{value}</p>
               </div>
             ))}
