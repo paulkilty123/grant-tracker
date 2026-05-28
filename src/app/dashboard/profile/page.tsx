@@ -1085,6 +1085,7 @@ function AboutCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
 interface FocusDraft {
   impactSectors: ImpactSector[]
   nicheTags: string[]
+  excludedNicheTags: string[]
   beneficiaryGroups: BeneficiaryGroup[]
 }
 
@@ -1110,6 +1111,7 @@ function FocusCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
     setDraft({
       impactSectors:    sectors,
       nicheTags:        ((org.niche_tags as string[]) ?? []).filter(t => valid.has(t)),
+      excludedNicheTags:((org.excluded_niche_tags as string[]) ?? []).filter(t => valid.has(t)),
       beneficiaryGroups:(org.beneficiary_groups as BeneficiaryGroup[]) ?? [],
     })
     setEditing(true); onEditStart()
@@ -1122,9 +1124,10 @@ function FocusCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
     try {
       const valid = validNicheTagsFor(draft.impactSectors)
       await updateOrganisation(orgId, {
-        impact_sectors:    draft.impactSectors,
-        niche_tags:        draft.nicheTags.filter(t => valid.has(t)),
-        beneficiary_groups:draft.beneficiaryGroups,
+        impact_sectors:      draft.impactSectors,
+        niche_tags:          draft.nicheTags.filter(t => valid.has(t)),
+        excluded_niche_tags: draft.excludedNicheTags.filter(t => valid.has(t)),
+        beneficiary_groups:  draft.beneficiaryGroups,
       })
       setEditing(false); setDraft(null); onEditEnd(); onSaved()
     } catch (e) { setSaveError(e instanceof Error ? e.message : 'Save failed') }
@@ -1145,20 +1148,40 @@ function FocusCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
         if (cur.length >= 4) return prev
         return { ...prev, impactSectors: [...cur, s] }
       }
-      // removing a sector — clear its niche tags too
+      // removing a sector — clear both its included and excluded niche tags too
       const removedTags = (NICHE_TAGS_BY_SECTOR[s] ?? []).map(t => t.value)
-      return { ...prev, impactSectors: cur.filter(x => x !== s), nicheTags: prev.nicheTags.filter(t => !removedTags.includes(t)) }
+      return {
+        ...prev,
+        impactSectors:     cur.filter(x => x !== s),
+        nicheTags:         prev.nicheTags.filter(t => !removedTags.includes(t)),
+        excludedNicheTags: prev.excludedNicheTags.filter(t => !removedTags.includes(t)),
+      }
     })
   }
   function makePrimarySector(s: ImpactSector) {
     setDraft(prev => prev ? { ...prev, impactSectors: [s, ...prev.impactSectors.filter(x => x !== s)] } : prev)
   }
-  function toggleNicheTag(tag: string) {
+  // Tri-state cycle on click: neutral → include → exclude → neutral.
+  // include & exclude are mutually exclusive (one tag can't be both).
+  function cycleNicheTag(tag: string) {
     setDraft(prev => {
       if (!prev) return prev
-      return prev.nicheTags.includes(tag)
-        ? { ...prev, nicheTags: prev.nicheTags.filter(t => t !== tag) }
-        : { ...prev, nicheTags: [...prev.nicheTags, tag] }
+      const isIncluded = prev.nicheTags.includes(tag)
+      const isExcluded = prev.excludedNicheTags.includes(tag)
+      if (!isIncluded && !isExcluded) {
+        // neutral → include
+        return { ...prev, nicheTags: [...prev.nicheTags, tag] }
+      }
+      if (isIncluded) {
+        // include → exclude
+        return {
+          ...prev,
+          nicheTags:         prev.nicheTags.filter(t => t !== tag),
+          excludedNicheTags: [...prev.excludedNicheTags, tag],
+        }
+      }
+      // exclude → neutral
+      return { ...prev, excludedNicheTags: prev.excludedNicheTags.filter(t => t !== tag) }
     })
   }
   function toggleBeneficiary(b: BeneficiaryGroup) {
@@ -1239,9 +1262,13 @@ function FocusCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
             </div>
           </div>
 
-          {/* Sub-tag panel */}
+          {/* Sub-tag panel — tri-state chips. Click cycles:
+              neutral (off-white) → include (green) → exclude (red strikethrough) → neutral */}
           {draft.impactSectors.filter(s => NICHE_TAGS_BY_SECTOR[s]).length > 0 && (
             <div style={{ background: '#F5F1E8', borderLeft: '3px solid #8ECB3C', borderRadius: 8, padding: '12px 14px' }}>
+              <div style={{ fontFamily: BODY, fontSize: 11, color: T.textTertiary, marginBottom: 10, lineHeight: 1.4 }}>
+                Click once to mark as a specialism. Click again to exclude (we won't show grants targeting it). Click a third time to reset.
+              </div>
               {draft.impactSectors.filter(s => NICHE_TAGS_BY_SECTOR[s]).map(sector => {
                 const opts = NICHE_TAGS_BY_SECTOR[sector]!
                 const sLabel = IMPACT_SECTOR_OPTIONS.find(o => o.value === sector)?.label ?? sector
@@ -1252,20 +1279,27 @@ function FocusCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 5 }}>
                       {opts.map(opt => {
-                        const selected = draft.nicheTags.includes(opt.value)
+                        const isIncluded = draft.nicheTags.includes(opt.value)
+                        const isExcluded = draft.excludedNicheTags.includes(opt.value)
+                        const borderCol = isIncluded ? '#8ECB3C' : isExcluded ? '#D85A30' : '#D9D4C7'
+                        const bgCol     = isIncluded ? '#EEF8D8' : isExcluded ? '#FAECE7' : '#FEFCF8'
+                        const txtCol    = isIncluded ? '#3A6B0E' : isExcluded ? '#993C1D' : T.textSecondary
                         return (
                           <button
                             key={opt.value}
-                            onClick={() => toggleNicheTag(opt.value)}
+                            onClick={() => cycleNicheTag(opt.value)}
+                            title={isIncluded ? 'Specialism — click to exclude' : isExcluded ? 'Excluded — click to reset' : 'Click to mark as specialism'}
                             style={{
                               fontSize: 11, fontFamily: BODY, padding: '5px 8px', borderRadius: 6,
-                              border: `1.5px solid ${selected ? '#8ECB3C' : '#D9D4C7'}`,
-                              background: selected ? '#EEF8D8' : '#FEFCF8',
-                              color: selected ? '#3A6B0E' : T.textSecondary,
-                              cursor: 'pointer', fontWeight: selected ? 600 : 400,
+                              border: `1.5px solid ${borderCol}`,
+                              background: bgCol,
+                              color: txtCol,
+                              cursor: 'pointer', fontWeight: (isIncluded || isExcluded) ? 600 : 400,
                               textAlign: 'left' as const, lineHeight: 1.3,
+                              textDecoration: isExcluded ? 'line-through' : 'none',
                             }}
                           >
+                            {isExcluded && <span style={{ marginRight: 4 }}>✕</span>}
                             {opt.label}
                           </button>
                         )

@@ -159,6 +159,8 @@ export interface Organisation {
   impact_sectors: ImpactSector[]
   /** Sub-sector specialisation tags — finer-grained than impact_sectors (e.g. "music", "theatre") */
   niche_tags: string[]
+  /** Sub-sector tags the org explicitly does NOT want grants for, even within their selected sectors. Hard-caps match score on overlapping grants. */
+  excluded_niche_tags: string[]
   /** Does the org have a formal asset lock? (CIC guarantee = yes, CIC shares = partial, Ltd = no) */
   has_asset_lock: boolean | null
   /** Years the org has been actively trading */

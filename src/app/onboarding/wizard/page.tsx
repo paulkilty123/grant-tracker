@@ -764,6 +764,7 @@ export default function OnboardingWizardPage() {
         impact_sectors:               state.impactSectors,
         beneficiary_groups:           state.beneficiaryGroups,
         niche_tags:                   state.nicheTags.filter(t => validNicheTagsFor(state.impactSectors).has(t)),
+        excluded_niche_tags:          [],
         annual_income_band:           state.annualIncomeBand || null,
         primary_location:             state.primaryLocation.trim() || null,
         geographic_reach:             state.geographicReach || null,

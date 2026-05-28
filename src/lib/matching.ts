@@ -1429,6 +1429,22 @@ export function computeMatchScore(
     score = Math.min(score, SIZE_FLOOR_SCORE_CAP)
   }
 
+  // Cap total score when the grant's niche tags overlap with the org's
+  // EXPLICIT exclusion list. Devi feedback 2026-05-28: an arts org may want
+  // "creative" sector but explicitly NOT music or performing arts. Hard floor
+  // mirrors the size-floor pattern. amountMax==0 in grant => no effect on this
+  // path, only the niche-tag set matters. Skips when the exclusion list is
+  // empty (the common case for orgs that haven't opted in).
+  if (Array.isArray(org.excluded_niche_tags) && org.excluded_niche_tags.length > 0) {
+    const orgExcluded = new Set(org.excluded_niche_tags.map(t => t.toLowerCase()))
+    const grantNiche  = (grant.nicheTags ?? []).map(t => t.toLowerCase())
+    const conflict    = grantNiche.find(t => orgExcluded.has(t))
+    if (conflict) {
+      score = Math.min(score, SIZE_FLOOR_SCORE_CAP)
+      reasons.push(`Excluded by your specialism filter: ${conflict.replace(/_/g, ' ')}`)
+    }
+  }
+
   // Cap total score for grants restricted to an area outside the org's — a
   // strong sector match shouldn't make a Somerset grant look relevant to a
   // London org. For orgs whose geographic_reach is local or regional, a

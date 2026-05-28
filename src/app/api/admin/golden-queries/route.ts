@@ -66,6 +66,7 @@ function makeOrg(overrides: Partial<Organisation>): Organisation {
     also_individual_practitioner: false,
     impact_sectors: [],
     niche_tags: [],
+    excluded_niche_tags: [],
     has_asset_lock: true,
     years_trading: 5,
     org_stage: 'early',
