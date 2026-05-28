@@ -831,10 +831,14 @@ export default async function DashboardPage() {
         )
       })()}
 
-      {/* Pipeline (60%) + Upcoming deadlines (40%). Pipeline gets more space
-          because it's the more information-dense panel — four stage tiles +
-          declined footer + total. Deadlines is a compact scrollable list. */}
-      <div className="grid grid-cols-1 gap-5 mb-8" style={{ gridTemplateColumns: 'minmax(0, 3fr) minmax(0, 2fr)' }}>
+      {/* Pipeline (60%) + Upcoming deadlines (40%) side-by-side on tablet+
+          (md, ≥768px). Below that they stack vertically — narrow screens
+          (e.g. iPhone 13SE @ 375px) can't fit both panels without one
+          overflowing off-screen. Reported by David 2026-05-28.
+          Pipeline gets more space because it's the information-dense panel —
+          four stage tiles + declined footer + total. Deadlines is a compact
+          scrollable list. */}
+      <div className="grid grid-cols-1 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] gap-5 mb-8">
 
         {/* Pipeline Overview — 4 active stages + Declined as footer line.
             Declined is closed state, not active state; reduced visual weight
