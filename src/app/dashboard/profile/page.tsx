@@ -117,7 +117,7 @@ const IMPACT_SECTOR_OPTIONS: { value: ImpactSector; label: string }[] = [
   { value: 'food',              label: 'Food & Agriculture' },
   { value: 'international',     label: 'International & Fair Trade' },
   { value: 'social_economy',    label: 'Co-ops & Community Ownership' },
-  { value: 'social_innovation', label: 'Innovation & Systems Change' },
+  { value: 'social_innovation', label: 'Social Innovation & Systems Change' },
 ]
 
 const NICHE_TAGS_BY_SECTOR: Partial<Record<ImpactSector, { value: string; label: string }[]>> = {
