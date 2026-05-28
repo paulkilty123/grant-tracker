@@ -51,6 +51,7 @@ type CardId = 'about' | 'focus' | 'location' | 'funding' | 'story'
 const FIELD_TO_CARD: Record<string, CardId> = {
   'Impact sector':     'focus',
   'Who you serve':     'focus',
+  'Specialisms':       'focus',   // niche tags live in the focus/sectors editor
   'Location':          'location',
   'Legal structure':   'about',
   'Annual income':     'about',
