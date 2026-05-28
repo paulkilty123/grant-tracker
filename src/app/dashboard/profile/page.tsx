@@ -215,6 +215,7 @@ function computeCompleteness(org: Organisation): CompletenessResult {
     { label: 'Who you serve',    filled: (org.beneficiary_groups?.length ?? 0) > 0,           impact: 'high'   },
     { label: 'Location',         filled: !!org.primary_location,                              impact: 'high'   },
     { label: 'Legal structure',  filled: !!org.legal_structure,                               impact: 'high'   },
+    { label: 'Specialisms',      filled: (org.niche_tags?.length ?? 0) > 0,                   impact: 'medium' },
     { label: 'Annual income',    filled: !!org.annual_income_band,                            impact: 'medium' },
     { label: 'Grant size range', filled: !!(org.min_grant_target || org.max_grant_target),    impact: 'medium' },
     { label: 'Mission statement',filled: !!org.mission,                                       impact: 'medium' },
@@ -1605,7 +1606,7 @@ function StoryCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
             {saveError && <p style={{ fontFamily: BODY, fontSize: 13, color: '#B91C1C' }}>{saveError}</p>}
           </>
         ) : hasMission ? (
-          <p style={{ fontFamily: BODY, fontSize: 15, color: T.textPrimary, lineHeight: 1.65, margin: 0 }}>
+          <p style={{ fontFamily: BODY, fontSize: 15, color: T.textPrimary, lineHeight: 1.65, margin: 0, whiteSpace: 'pre-wrap' }}>
             {org.mission}
           </p>
         ) : (
