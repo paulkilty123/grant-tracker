@@ -911,7 +911,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                       userId={org.owner_id}
                       matchScore={score}
                       compact
-                      onDirectionChange={d => (d === 'down' ? onDismiss(grant.id) : onUndismiss(grant.id))}
+                      onDirectionChange={d => { if (d === 'up') onUndismiss(grant.id) }}
                     />
                   </div>
                 )}

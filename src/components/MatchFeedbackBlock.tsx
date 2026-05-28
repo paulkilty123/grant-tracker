@@ -231,7 +231,7 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore, compact = fals
 
       {!isUp && (
         <div style={{ marginTop: 8, fontSize: 12, color: '#8A8986', fontFamily: 'var(--font-space-grotesk)' }}>
-          Removed from your matches — you won&apos;t see this one again.
+          Captured. Tap a reason below so we can show fewer like this.
         </div>
       )}
 
