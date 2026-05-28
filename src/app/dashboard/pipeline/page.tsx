@@ -587,7 +587,24 @@ export default function PipelinePage() {
               onDragLeave={onColDragLeave}
               onDrop={e => onColDrop(e, stage.id as PipelineStage)}
             >
-              <div className="flex items-center justify-between mb-3 pb-2.5" style={{ borderBottom: `1px solid ${dividerCol}` }}>
+              <div
+                className="flex items-center justify-between mb-3 pb-2.5"
+                style={{
+                  borderBottom: `1px solid ${dividerCol}`,
+                  position: 'sticky',
+                  top: 0,
+                  zIndex: 1,
+                  background: STAGE_BG_HEX[stage.id],
+                  paddingTop: 6,
+                  // Negative margins to bleed the sticky header to the column
+                  // padding edge while stuck, so the column bg under the
+                  // header doesn't peek out at the sides.
+                  marginLeft: -14,
+                  marginRight: -14,
+                  paddingLeft: 14,
+                  paddingRight: 14,
+                }}
+              >
                 <span className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5" style={{ color: headerCol }}>
                   {STAGE_ICONS[stage.id]}{stage.label}
                 </span>
