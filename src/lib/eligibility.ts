@@ -136,21 +136,30 @@ function sharedChecks(opp: GrantOpportunity, org: Organisation): EligibilityIssu
     })
   }
 
-  // Income cap (data-driven via min_org_income / max_org_income)
+  // Income cap (data-driven via min_org_income / max_org_income).
+  // Two-tier severity. Soft mismatch (10–50% over the cap or under the floor)
+  // stays as warning — funders sometimes bend, worth surfacing for verify.
+  // Significant mismatch (>50% over the cap or under half the floor) is a
+  // blocker — caps the total match score at 30 so it drops out of top/other
+  // results. Devi feedback 2026-05-28: £20k-target IoI was seeing high-%
+  // matches for grants requiring ≥£100k income because the warning didn't
+  // cap the score.
   const mid = incomeMidpoint(org.annual_income_band)
   if (mid !== null) {
     if (opp.maxOrgIncome != null && mid > opp.maxOrgIncome * 1.1) {
+      const ratio = mid / opp.maxOrgIncome
       out.push({
         code: 'org_income_above_cap',
-        severity: 'warning',
-        message: `Your income band (${org.annual_income_band}) likely exceeds this funder's cap of £${opp.maxOrgIncome.toLocaleString()}.`,
+        severity: ratio > 1.5 ? 'blocker' : 'warning',
+        message: `Your income band (${org.annual_income_band}) ${ratio > 1.5 ? 'exceeds' : 'likely exceeds'} this funder's cap of £${opp.maxOrgIncome.toLocaleString()}.`,
       })
     }
     if (opp.minOrgIncome != null && mid < opp.minOrgIncome * 0.9) {
+      const ratio = mid / opp.minOrgIncome
       out.push({
         code: 'org_income_below_floor',
-        severity: 'warning',
-        message: `Your income band (${org.annual_income_band}) is below this funder's minimum of £${opp.minOrgIncome.toLocaleString()}.`,
+        severity: ratio < 0.5 ? 'blocker' : 'warning',
+        message: `Your income band (${org.annual_income_band}) is ${ratio < 0.5 ? 'well below' : 'below'} this funder's minimum of £${opp.minOrgIncome.toLocaleString()}.`,
       })
     }
   }
