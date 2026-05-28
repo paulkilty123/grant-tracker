@@ -1266,8 +1266,21 @@ function FocusCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
               neutral (off-white) → include (green) → exclude (red strikethrough) → neutral */}
           {draft.impactSectors.filter(s => NICHE_TAGS_BY_SECTOR[s]).length > 0 && (
             <div style={{ background: '#F5F1E8', borderLeft: '3px solid #8ECB3C', borderRadius: 8, padding: '12px 14px' }}>
-              <div style={{ fontFamily: BODY, fontSize: 11, color: T.textTertiary, marginBottom: 10, lineHeight: 1.4 }}>
-                Click once to mark as a specialism. Click again to exclude (we won't show grants targeting it). Click a third time to reset.
+              <div style={{
+                fontFamily: UI,
+                fontSize: 12.5,
+                fontWeight: 500,
+                color: T.textPrimary,
+                marginBottom: 14,
+                padding: '10px 12px',
+                background: 'rgba(255,255,255,0.75)',
+                borderLeft: '3px solid #639922',
+                borderRadius: 4,
+                lineHeight: 1.5,
+              }}>
+                <strong style={{ color: '#3B6D11', fontWeight: 700, letterSpacing: '0.01em' }}>Tip</strong>
+                <span style={{ color: '#3B6D11' }}> · </span>
+                Click once to mark as a specialism. Click again to <strong>exclude</strong> (we won&apos;t show grants targeting it). Click a third time to reset.
               </div>
               {draft.impactSectors.filter(s => NICHE_TAGS_BY_SECTOR[s]).map(sector => {
                 const opts = NICHE_TAGS_BY_SECTOR[sector]!
