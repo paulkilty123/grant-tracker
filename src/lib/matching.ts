@@ -1081,6 +1081,27 @@ export function computeMatchScore(
   // Amounts still appear in the UI breakdown for reference only.
   const grantSizeScore = 10
 
+  // ── 4a. Grant size — hard floor (below-target exclusion) ────────────────
+  // If the org has stated a minimum target and the grant's maximum payout is
+  // less than half of that, drop the grant out of "top" / "other" surfaces.
+  // Devi (IoI) feedback 2026-05-28: £20k target was matching grants down to
+  // £250, wasting review time. We don't delete the row — score is capped at
+  // 35 so the grant is still browsable from search but never surfaces as a
+  // top match. amountMax==0 means "amount unknown" and is left alone.
+  const SIZE_FLOOR_RATIO  = 0.5
+  const SIZE_FLOOR_SCORE_CAP = 35
+  let sizeFloorTriggered = false
+  if (
+    typeof org.min_grant_target === 'number' && org.min_grant_target > 0 &&
+    grant.amountMax > 0 &&
+    grant.amountMax < org.min_grant_target * SIZE_FLOOR_RATIO
+  ) {
+    sizeFloorTriggered = true
+    reasons.push(
+      `Grant maxes out at £${grant.amountMax.toLocaleString('en-GB')}, well below your £${org.min_grant_target.toLocaleString('en-GB')} minimum target`,
+    )
+  }
+
     // ── 5. Funder type preference + funding type affinity (max 15) ────────
   let funderTypeScore = 8 // neutral base
 
@@ -1399,6 +1420,13 @@ export function computeMatchScore(
   // strong the location/sector match is, a structure mismatch is a deal-breaker.
   if (structureMismatch) {
     score = Math.min(score, 45)
+  }
+
+  // Cap total score when grant size is materially below the org's stated
+  // minimum target. Below the 60% "Other matches" floor, so won't surface in
+  // newsletter top/other or in dashboard top matches; still browsable.
+  if (sizeFloorTriggered) {
+    score = Math.min(score, SIZE_FLOOR_SCORE_CAP)
   }
 
   // Cap total score for grants restricted to an area outside the org's — a
