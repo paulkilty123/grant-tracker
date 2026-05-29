@@ -184,6 +184,7 @@ interface WizardState {
   maxGrantTarget:   string
   fundingTypes:     FundingType[]
   nicheTags:        string[]
+  excludedNicheTags: string[]
 }
 
 const EMPTY_STATE: WizardState = {
@@ -193,6 +194,34 @@ const EMPTY_STATE: WizardState = {
   minGrantTarget: '', maxGrantTarget: '',
   fundingTypes: ['grant', 'programme', 'investment', 'in_kind'],
   nicheTags: [],
+  excludedNicheTags: [],
+}
+
+/** Derive the three boolean eligibility flags from the legal structure.
+ *  The wizard previously hardcoded these to false/null, which made every
+ *  charity and CIC look like they had no asset lock and hadn't declared a
+ *  social mission — confusing the eligibility engine. This function fills
+ *  the obvious cases; ambiguous structures fall back to null/false. */
+function deriveEligibilityFlags(s: LegalStructure | ''): {
+  has_asset_lock:           boolean | null
+  social_mission_declared:  boolean
+  articles_restrict_profit: boolean
+} {
+  switch (s) {
+    case 'registered_charity':
+    case 'cio':
+      return { has_asset_lock: true,  social_mission_declared: true,  articles_restrict_profit: true  }
+    case 'cic_guarantee':
+      return { has_asset_lock: true,  social_mission_declared: true,  articles_restrict_profit: true  }
+    case 'cic_shares':
+      return { has_asset_lock: true,  social_mission_declared: true,  articles_restrict_profit: false }
+    case 'cooperative':
+      return { has_asset_lock: true,  social_mission_declared: true,  articles_restrict_profit: true  }
+    case 'ltd_guarantee':
+      return { has_asset_lock: false, social_mission_declared: false, articles_restrict_profit: false }
+    default:
+      return { has_asset_lock: null,  social_mission_declared: false, articles_restrict_profit: false }
+  }
 }
 
 /* ═══════════════════════════════════════════════
@@ -594,6 +623,11 @@ export default function OnboardingWizardPage() {
             const valid = validNicheTagsFor(sectors)
             return ((org.niche_tags as string[]) ?? []).filter(t => valid.has(t))
           })(),
+          excludedNicheTags: (() => {
+            const sectors = ((org.impact_sectors as ImpactSector[]) ?? []).slice(0, 4)
+            const valid = validNicheTagsFor(sectors)
+            return ((org.excluded_niche_tags as string[]) ?? []).filter(t => valid.has(t))
+          })(),
         })
       }
       setLoading(false)
@@ -714,7 +748,14 @@ export default function OnboardingWizardPage() {
       const cur = [...prev.impactSectors]
       const idx = cur.indexOf(s)
       if (idx === -1) { if (cur.length >= 4) return prev; return { ...prev, impactSectors: [...cur, s] } }
-      return { ...prev, impactSectors: cur.filter(x => x !== s) }
+      // Removing a sector — clear both its included AND excluded niche tags.
+      const removedTags = (NICHE_TAGS_BY_SECTOR[s] ?? []).map(t => t.value)
+      return {
+        ...prev,
+        impactSectors:     cur.filter(x => x !== s),
+        nicheTags:         prev.nicheTags.filter(t => !removedTags.includes(t)),
+        excludedNicheTags: prev.excludedNicheTags.filter(t => !removedTags.includes(t)),
+      }
     })
   }
   function makePrimarySector(s: ImpactSector) {
@@ -731,11 +772,24 @@ export default function OnboardingWizardPage() {
   function makePrimaryBeneficiary(b: BeneficiaryGroup) {
     setState(prev => ({ ...prev, beneficiaryGroups: [b, ...prev.beneficiaryGroups.filter(x => x !== b)] }))
   }
-  function toggleNicheTag(tag: string) {
+  // Tri-state cycle on click: neutral → include → exclude → neutral.
+  // include and exclude are mutually exclusive — one tag can't be both.
+  // Mirrors the profile editor so the onboarding experience matches.
+  function cycleNicheTag(tag: string) {
     setState(prev => {
-      const cur = prev.nicheTags
-      if (cur.includes(tag)) return { ...prev, nicheTags: cur.filter(x => x !== tag) }
-      return { ...prev, nicheTags: [...cur, tag] }
+      const isIncluded = prev.nicheTags.includes(tag)
+      const isExcluded = prev.excludedNicheTags.includes(tag)
+      if (!isIncluded && !isExcluded) {
+        return { ...prev, nicheTags: [...prev.nicheTags, tag] }
+      }
+      if (isIncluded) {
+        return {
+          ...prev,
+          nicheTags:         prev.nicheTags.filter(t => t !== tag),
+          excludedNicheTags: [...prev.excludedNicheTags, tag],
+        }
+      }
+      return { ...prev, excludedNicheTags: prev.excludedNicheTags.filter(t => t !== tag) }
     })
   }
   function toggleFundingType(t: FundingType) {
@@ -751,6 +805,14 @@ export default function OnboardingWizardPage() {
     setSaving(true); setSaveError(null)
     try {
       const today = new Date().toISOString().split('T')[0]
+      // Derive the eligibility flags from the legal structure rather than
+      // hardcoding to false/null. Charities and CICs were being saved with
+      // has_asset_lock=null + social_mission_declared=false, which made the
+      // eligibility engine treat them more cautiously than the legal form
+      // implies. deriveEligibilityFlags() returns sensible defaults per
+      // structure; users can still override on the profile editor.
+      const eligibilityFlags = deriveEligibilityFlags(state.legalStructure)
+      const validNiche = validNicheTagsFor(state.impactSectors)
       const payload = {
         name:                         state.name.trim() || 'My Organisation',
         charity_number:               null,
@@ -758,13 +820,13 @@ export default function OnboardingWizardPage() {
         org_type:                     legalStructureToOrgType(state.legalStructure) as 'cic' | 'registered_charity' | 'social_enterprise' | 'community_group' | 'other',
         legal_structure:              state.legalStructure || null,
         org_stage:                    null,
-        social_mission_declared:      false,
-        articles_restrict_profit:     false,
+        social_mission_declared:      eligibilityFlags.social_mission_declared,
+        articles_restrict_profit:     eligibilityFlags.articles_restrict_profit,
         also_individual_practitioner: false,
         impact_sectors:               state.impactSectors,
         beneficiary_groups:           state.beneficiaryGroups,
-        niche_tags:                   state.nicheTags.filter(t => validNicheTagsFor(state.impactSectors).has(t)),
-        excluded_niche_tags:          [],
+        niche_tags:                   state.nicheTags.filter(t => validNiche.has(t)),
+        excluded_niche_tags:          state.excludedNicheTags.filter(t => validNiche.has(t)),
         annual_income_band:           state.annualIncomeBand || null,
         primary_location:             state.primaryLocation.trim() || null,
         geographic_reach:             state.geographicReach || null,
@@ -782,7 +844,7 @@ export default function OnboardingWizardPage() {
         funder_type_preferences:      [],
         funding_type_preferences:     state.fundingTypes,
         funding_subtype_preferences:  [],
-        has_asset_lock:               null,
+        has_asset_lock:               eligibilityFlags.has_asset_lock,
         years_trading:                null,
         owner_id:                     userId,
         alerts_enabled:               true,
@@ -959,9 +1021,10 @@ export default function OnboardingWizardPage() {
         <StepSectors
           impactSectors={state.impactSectors}
           nicheTags={state.nicheTags}
+          excludedNicheTags={state.excludedNicheTags}
           toggleSector={toggleSector}
           makePrimarySector={makePrimarySector}
-          toggleNicheTag={toggleNicheTag}
+          cycleNicheTag={cycleNicheTag}
           onBack={() => setStep(extracted ? 'review' : 'manual')}
           onContinue={() => setStep('beneficiaries')}
           canContinue={sectorsValid}
@@ -1512,12 +1575,13 @@ function validNicheTagsFor(sectors: ImpactSector[]): Set<string> {
    Step 3a — Sectors + sub-tags
    ═══════════════════════════════════════════════ */
 
-function StepSectors({ impactSectors, nicheTags, toggleSector, makePrimarySector, toggleNicheTag, onBack, onContinue, canContinue }: {
+function StepSectors({ impactSectors, nicheTags, excludedNicheTags, toggleSector, makePrimarySector, cycleNicheTag, onBack, onContinue, canContinue }: {
   impactSectors: ImpactSector[]
   nicheTags: string[]
+  excludedNicheTags: string[]
   toggleSector: (s: ImpactSector) => void
   makePrimarySector: (s: ImpactSector) => void
-  toggleNicheTag: (tag: string) => void
+  cycleNicheTag: (tag: string) => void
   onBack: () => void; onContinue: () => void; canContinue: boolean
 }) {
   const sectorMax = impactSectors.length >= 4
@@ -1597,7 +1661,8 @@ function StepSectors({ impactSectors, nicheTags, toggleSector, makePrimarySector
         </div>
       )}
 
-      {/* Sub-tag panel — shown when any selected sector has sub-tags */}
+      {/* Sub-tag panel — tri-state chips, mirrors the profile editor.
+          Click cycles: neutral → include (green) → exclude (coral strikethrough) → neutral */}
       {nicheSectors.length > 0 && (
         <div style={{
           background: '#F5F1E8',
@@ -1606,6 +1671,23 @@ function StepSectors({ impactSectors, nicheTags, toggleSector, makePrimarySector
           padding: '12px 14px',
           marginBottom: 20,
         }}>
+          {/* Tip callout — explains the tri-state cycle */}
+          <div style={{
+            fontFamily: 'var(--font-space-grotesk)',
+            fontSize: 12.5,
+            fontWeight: 500,
+            color: T.textPrimary,
+            marginBottom: 14,
+            padding: '10px 12px',
+            background: 'rgba(255,255,255,0.75)',
+            borderLeft: '3px solid #639922',
+            borderRadius: 4,
+            lineHeight: 1.5,
+          }}>
+            <strong style={{ color: '#3B6D11', fontWeight: 700, letterSpacing: '0.01em' }}>Tip</strong>
+            <span style={{ color: '#3B6D11' }}> · </span>
+            Click once to mark as a specialism. Click again to <strong>exclude</strong> (we won&apos;t show grants targeting it). Click a third time to reset.
+          </div>
           {nicheSectors.map(sector => {
             const opts = NICHE_TAGS_BY_SECTOR[sector]!
             const label = IMPACT_SECTORS.find(o => o.value === sector)?.label ?? sector
@@ -1616,26 +1698,33 @@ function StepSectors({ impactSectors, nicheTags, toggleSector, makePrimarySector
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 5 }}>
                   {opts.map(opt => {
-                    const selected = nicheTags.includes(opt.value)
+                    const isIncluded = nicheTags.includes(opt.value)
+                    const isExcluded = excludedNicheTags.includes(opt.value)
+                    const borderCol = isIncluded ? '#8ECB3C' : isExcluded ? '#D85A30' : '#D9D4C7'
+                    const bgCol     = isIncluded ? '#EEF8D8' : isExcluded ? '#FAECE7' : '#FEFCF8'
+                    const txtCol    = isIncluded ? '#3A6B0E' : isExcluded ? '#993C1D' : T.textSecondary
                     return (
                       <button
                         key={opt.value}
-                        onClick={() => toggleNicheTag(opt.value)}
+                        onClick={() => cycleNicheTag(opt.value)}
+                        title={isIncluded ? 'Specialism — click to exclude' : isExcluded ? 'Excluded — click to reset' : 'Click to mark as specialism'}
                         style={{
                           fontSize: 11,
                           fontFamily: 'var(--font-dm-sans)',
                           padding: '5px 8px',
                           borderRadius: 6,
-                          border: selected ? '1.5px solid #8ECB3C' : '1.5px solid #D9D4C7',
-                          background: selected ? '#EEF8D8' : '#FEFCF8',
-                          color: selected ? '#3A6B0E' : T.textSecondary,
+                          border: `1.5px solid ${borderCol}`,
+                          background: bgCol,
+                          color: txtCol,
                           cursor: 'pointer',
-                          fontWeight: selected ? 600 : 400,
+                          fontWeight: (isIncluded || isExcluded) ? 600 : 400,
                           transition: 'all 0.12s',
                           textAlign: 'left' as const,
                           lineHeight: 1.3,
+                          textDecoration: isExcluded ? 'line-through' : 'none',
                         }}
                       >
+                        {isExcluded && <span style={{ marginRight: 4 }}>✕</span>}
                         {opt.label}
                       </button>
                     )
