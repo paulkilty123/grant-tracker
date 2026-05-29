@@ -68,7 +68,11 @@ export async function POST(req: NextRequest) {
     apply_url,
     is_invite_only,
     source:     'manual',
-    is_active:  true,
+    // Manual additions land in Needs Review (is_active=false) so the admin
+    // can verify + AI-enrich before they go live to users. Seed promotions
+    // stay active because they've already been audited as part of the seed
+    // dataset. Per memory rule [catalogue-addition-needs-review-gate].
+    is_active:  manual ? false : true,
     url_status: apply_url ? 'unchecked' : null,
   }
 

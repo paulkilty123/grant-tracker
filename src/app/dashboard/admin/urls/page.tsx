@@ -1640,9 +1640,9 @@ export default function UrlAdminPage() {
     setShowAddModal(false)
     setAddForm(BLANK_FORM)
     setSearch('')
-    // Switch to "All grants" so the new entry is immediately visible
-    // (useEffect on filter change will call loadGrants automatically)
-    setFilter('all')
+    // Manual additions land in Needs Review (is_active=false), so jump
+    // straight to that filter — admin can verify + activate from there.
+    setFilter('review')
     await loadStats()
   }
 
@@ -4820,8 +4820,8 @@ export default function UrlAdminPage() {
             {/* Modal header */}
             <div className="sticky top-0 flex items-center justify-between border-b border-warm bg-white px-6 py-4 z-10">
               <div>
-                <h3 className="font-display text-lg font-bold text-charcoal">Add New Funder</h3>
-                <p className="text-xs text-mid mt-0.5">Manually add a grant to the database</p>
+                <h3 className="font-display text-lg font-bold text-charcoal">Add a Grant</h3>
+                <p className="text-xs text-mid mt-0.5">Lands in Needs Review for verification — won&apos;t appear in user matches until activated</p>
               </div>
               <button onClick={() => { setShowAddModal(false); setFetchUrl(''); setFetchError(null); setFetchedFrom(null) }}
                 className="rounded-full border border-warm p-2 text-mid hover:border-forest hover:text-forest transition-colors">
@@ -5056,7 +5056,7 @@ export default function UrlAdminPage() {
               <button onClick={addGrant} disabled={addSaving}
                 className="flex items-center gap-2 rounded-full bg-forest px-6 py-2 text-sm font-semibold text-white disabled:opacity-60 hover:bg-forest/90 transition-colors">
                 {addSaving ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-                {addSaving ? 'Saving…' : 'Add to database'}
+                {addSaving ? 'Saving…' : 'Add to Needs Review'}
               </button>
             </div>
 
