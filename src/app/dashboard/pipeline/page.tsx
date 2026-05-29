@@ -192,30 +192,33 @@ function PipelineCard({
 
       {/* Details affordance — signals the card is clickable for notes, contact,
           and progress fields. Notes feature was discoverable only by accident
-          before this row. Devi feedback. Icons are dimmed when the field is
-          empty (signals "add me"), full opacity when set (signals "exists"). */}
+          before this row. Devi feedback. Empty fields get a medium grey icon
+          (still readable, signals "add me"). Filled fields get forest-green
+          (signals "this is set"). */}
       {(() => {
         const hasNotes    = !!(item.notes && String(item.notes).trim().length > 0)
         const hasContact  = !!(item.contact_name || item.contact_email)
         const hasProgress = item.application_progress != null && item.application_progress > 0
         const anyFilled   = hasNotes || hasContact || hasProgress
+        const emptyColor  = '#8A8986'   // light text — visible but subordinate
+        const filledColor = '#3B6D11'   // forest green
         return (
           <div
             className="mt-2.5 pt-2 flex items-center justify-between"
             style={{ borderTop: '0.5px dashed rgba(0,0,0,0.10)' }}
           >
-            <div className="flex items-center gap-2.5" style={{ color: '#8A8986' }}>
-              <span title={hasNotes ? 'Notes added' : 'Click card to add notes'} style={{ opacity: hasNotes ? 1 : 0.35 }}>
-                <StickyNote size={11} strokeWidth={2} />
+            <div className="flex items-center gap-2.5">
+              <span title={hasNotes ? 'Notes added' : 'Click card to add notes'} style={{ color: hasNotes ? filledColor : emptyColor, display: 'inline-flex' }}>
+                <StickyNote size={12} strokeWidth={hasNotes ? 2.25 : 1.75} />
               </span>
-              <span title={hasContact ? 'Contact details added' : 'Click card to add contact'} style={{ opacity: hasContact ? 1 : 0.35 }}>
-                <UserIcon size={11} strokeWidth={2} />
+              <span title={hasContact ? 'Contact details added' : 'Click card to add contact'} style={{ color: hasContact ? filledColor : emptyColor, display: 'inline-flex' }}>
+                <UserIcon size={12} strokeWidth={hasContact ? 2.25 : 1.75} />
               </span>
-              <span title={hasProgress ? `Writing progress: ${item.application_progress}%` : 'Click card to track writing progress'} style={{ opacity: hasProgress ? 1 : 0.35 }}>
-                <BarChart3 size={11} strokeWidth={2} />
+              <span title={hasProgress ? `Writing progress: ${item.application_progress}%` : 'Click card to track writing progress'} style={{ color: hasProgress ? filledColor : emptyColor, display: 'inline-flex' }}>
+                <BarChart3 size={12} strokeWidth={hasProgress ? 2.25 : 1.75} />
               </span>
             </div>
-            <span className="text-[10px]" style={{ color: '#8A8986', fontStyle: anyFilled ? 'normal' : 'italic' }}>
+            <span className="text-[10px] font-medium" style={{ color: anyFilled ? '#3B6D11' : '#5F5E5A' }}>
               {anyFilled ? 'Click to edit' : 'Click to add details'}
             </span>
           </div>
