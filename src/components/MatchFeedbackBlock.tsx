@@ -299,30 +299,36 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore, compact = fals
           </div>
         )}
 
-        {/* "Done — remove this" button. Only on thumbs-down: explicit dismiss
-            after the user has had a chance to pick reasons. Pending save is
-            flushed by handleDone before unmount. */}
-        {!isUp && onDoneAndRemove && (
-          <div style={{ marginTop: 14, display: 'flex', justifyContent: 'flex-end' }}>
-            <button
-              onClick={handleDone}
-              style={{
-                background: '#173404',
-                color: '#F1F7E4',
-                border: 'none',
-                borderRadius: 18,
-                padding: '7px 18px',
-                fontFamily: 'var(--font-space-grotesk)',
-                fontSize: 12.5,
-                fontWeight: 600,
-                cursor: 'pointer',
-                letterSpacing: '0.01em',
-              }}
-            >
-              Done — remove this
-            </button>
-          </div>
-        )}
+        {/* Dismiss button. Only on thumbs-down. Label adapts based on whether
+            the user has supplied any reasons — "Skip and remove" when the
+            chip + free-text state is empty (lowers friction for impatient
+            users), "Save and remove" once at least one reason or free-text
+            character is present (signals reasons are captured). */}
+        {!isUp && onDoneAndRemove && (() => {
+          const hasReasons   = selectedReasons.length > 0 || freeText.trim().length > 0
+          const buttonLabel  = hasReasons ? 'Save and remove' : 'Skip and remove'
+          return (
+            <div style={{ marginTop: 14, display: 'flex', justifyContent: 'flex-end' }}>
+              <button
+                onClick={handleDone}
+                style={{
+                  background: '#173404',
+                  color: '#F1F7E4',
+                  border: 'none',
+                  borderRadius: 18,
+                  padding: '7px 18px',
+                  fontFamily: 'var(--font-space-grotesk)',
+                  fontSize: 12.5,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  letterSpacing: '0.01em',
+                }}
+              >
+                {buttonLabel}
+              </button>
+            </div>
+          )
+        })()}
       </div>
     </div>
   )
