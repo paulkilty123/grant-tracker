@@ -13,7 +13,7 @@ import { getOrganisationByOwner } from '@/lib/organisations'
 import { usePlausible } from 'next-plausible'
 import { PIPELINE_STAGES, formatDeadline, formatRange, cn } from '@/lib/utils'
 import type { PipelineItem, PipelineStage, Organisation } from '@/types'
-import { Sparkles, Loader2, Link, ArrowRight, Calendar, AlarmClock, X as XIcon, GripVertical } from 'lucide-react'
+import { Sparkles, Loader2, Link, ArrowRight, Calendar, AlarmClock, X as XIcon, GripVertical, StickyNote, User as UserIcon, BarChart3 } from 'lucide-react'
 import { PipelineModal, STAGE_ICONS, getWritingStage } from '@/components/PipelineModal'
 
 const STAGE_BG_HEX: Record<string, string> = {
@@ -189,6 +189,38 @@ function PipelineCard({
               : 'Closed'}
         </p>
       )}
+
+      {/* Details affordance — signals the card is clickable for notes, contact,
+          and progress fields. Notes feature was discoverable only by accident
+          before this row. Devi feedback. Icons are dimmed when the field is
+          empty (signals "add me"), full opacity when set (signals "exists"). */}
+      {(() => {
+        const hasNotes    = !!(item.notes && String(item.notes).trim().length > 0)
+        const hasContact  = !!(item.contact_name || item.contact_email)
+        const hasProgress = item.application_progress != null && item.application_progress > 0
+        const anyFilled   = hasNotes || hasContact || hasProgress
+        return (
+          <div
+            className="mt-2.5 pt-2 flex items-center justify-between"
+            style={{ borderTop: '0.5px dashed rgba(0,0,0,0.10)' }}
+          >
+            <div className="flex items-center gap-2.5" style={{ color: '#8A8986' }}>
+              <span title={hasNotes ? 'Notes added' : 'Click card to add notes'} style={{ opacity: hasNotes ? 1 : 0.35 }}>
+                <StickyNote size={11} strokeWidth={2} />
+              </span>
+              <span title={hasContact ? 'Contact details added' : 'Click card to add contact'} style={{ opacity: hasContact ? 1 : 0.35 }}>
+                <UserIcon size={11} strokeWidth={2} />
+              </span>
+              <span title={hasProgress ? `Writing progress: ${item.application_progress}%` : 'Click card to track writing progress'} style={{ opacity: hasProgress ? 1 : 0.35 }}>
+                <BarChart3 size={11} strokeWidth={2} />
+              </span>
+            </div>
+            <span className="text-[10px]" style={{ color: '#8A8986', fontStyle: anyFilled ? 'normal' : 'italic' }}>
+              {anyFilled ? 'Click to edit' : 'Click to add details'}
+            </span>
+          </div>
+        )
+      })()}
     </div>
   )
 }
