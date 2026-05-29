@@ -218,8 +218,11 @@ function PipelineCard({
                 <BarChart3 size={12} strokeWidth={hasProgress ? 2.25 : 1.75} />
               </span>
             </div>
-            <span className="text-[10px] font-medium" style={{ color: anyFilled ? '#3B6D11' : '#5F5E5A' }}>
-              {anyFilled ? 'Click to edit' : 'Click to add details'}
+            <span
+              className="text-[10px] font-medium"
+              style={{ color: anyFilled ? '#3B6D11' : '#5F5E5A', whiteSpace: 'nowrap', lineHeight: 1 }}
+            >
+              {anyFilled ? 'Click to edit' : 'Add details'}
             </span>
           </div>
         )
