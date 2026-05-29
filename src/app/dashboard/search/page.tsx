@@ -912,6 +912,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                       matchScore={score}
                       compact
                       onDirectionChange={d => { if (d === 'up') onUndismiss(grant.id) }}
+                      onDoneAndRemove={() => onDismiss(grant.id)}
                     />
                   </div>
                 )}

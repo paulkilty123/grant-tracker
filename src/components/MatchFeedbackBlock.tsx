@@ -38,11 +38,14 @@ interface Props {
   userId: string
   matchScore: number
   compact?: boolean
-  /** Fired when the user taps a direction — 'down' dismisses the grant, 'up' restores it. */
+  /** Fired when the user taps a direction — 'up' restores a previously-dismissed grant. */
   onDirectionChange?: (dir: 'up' | 'down') => void
+  /** Fired when the user clicks "Done — remove this" after a thumbs-down. Pending
+   *  reason save is flushed first so reasons captured up to this point are persisted. */
+  onDoneAndRemove?: () => void
 }
 
-export function MatchFeedbackBlock({ grantId, userId, matchScore, compact = false, onDirectionChange }: Props) {
+export function MatchFeedbackBlock({ grantId, userId, matchScore, compact = false, onDirectionChange, onDoneAndRemove }: Props) {
   const [direction, setDirection]             = useState<'up' | 'down' | null>(null)
   const [selectedReasons, setSelectedReasons] = useState<string[]>([])
   const [freeText, setFreeText]               = useState('')
@@ -133,6 +136,18 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore, compact = fals
     setShowTextInput(false)
     setCollapsed(false)
     setShowSaved(false)
+  }
+
+  // Flush any pending debounced save, then trigger the parent to dismiss the
+  // grant card. Used by the "Done — remove this" button on the thumbs-down
+  // chip view. Without flushing, a chip the user just tapped could be lost
+  // because debounce hadn't fired before unmount.
+  async function handleDone() {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    if (direction) {
+      await save(direction, selectedReasons, freeText)
+    }
+    onDoneAndRemove?.()
   }
 
   const divider: React.CSSProperties = {
@@ -281,6 +296,31 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore, compact = fals
                 lineHeight: 1.5, outline: 'none',
               }}
             />
+          </div>
+        )}
+
+        {/* "Done — remove this" button. Only on thumbs-down: explicit dismiss
+            after the user has had a chance to pick reasons. Pending save is
+            flushed by handleDone before unmount. */}
+        {!isUp && onDoneAndRemove && (
+          <div style={{ marginTop: 14, display: 'flex', justifyContent: 'flex-end' }}>
+            <button
+              onClick={handleDone}
+              style={{
+                background: '#173404',
+                color: '#F1F7E4',
+                border: 'none',
+                borderRadius: 18,
+                padding: '7px 18px',
+                fontFamily: 'var(--font-space-grotesk)',
+                fontSize: 12.5,
+                fontWeight: 600,
+                cursor: 'pointer',
+                letterSpacing: '0.01em',
+              }}
+            >
+              Done — remove this
+            </button>
           </div>
         )}
       </div>
