@@ -372,7 +372,7 @@ function StalenessBadge({ lastVerifiedAt }: { lastVerifiedAt?: string }) {
 }
 
 // ── Grant Card ───────────────────────────────────────────────────────────────
-function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline, onRemoveFromPipeline, onDismiss, onUndismiss, onLike, onDislike, onSave, onUnsave, showIfDismissed, isInPipeline, pipelineStage }: {
+function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline, onRemoveFromPipeline, onDismiss, onUndismiss, onLike, onDislike, onSave, onUnsave, onMarkApplied, showIfDismissed, isInPipeline, pipelineStage }: {
   item: DisplayGrant
   hasOrg: boolean
   hasSearch: boolean
@@ -386,6 +386,8 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
   onDislike: (grantId: string) => void
   onSave?: (grantId: string) => void
   onUnsave?: (grantId: string) => void
+  /** Open the "already applied" outcome flow for this grant. */
+  onMarkApplied?: (g: GrantOpportunity) => void
   showIfDismissed?: boolean
   isInPipeline?: boolean
   pipelineStage?: string
@@ -401,6 +403,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
   const isLiked      = interactions.has('liked')
   const isDisliked   = interactions.has('disliked')
   const isSaved      = interactions.has('saved')
+  const isApplied    = interactions.has('applied')
 
 
   // "New this week" badge — show if added within last 7 days
@@ -424,6 +427,12 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
       </div>
     )
   }
+
+  // Already applied — drop from the matches list. The grant lives in the
+  // user's pipeline (we created a row at the right stage when they marked
+  // it), so they manage it from there. Mirrors the dismissed pattern but
+  // without a restore link — that decision is now anchored in pipeline.
+  if (isApplied) return null
 
   // Deadline days remaining
   const daysLeft = (() => {
@@ -787,6 +796,18 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                   >
                     Visit site ↗
                   </a>
+                )}
+
+                {/* "Already applied" — subtle text link, only when the grant
+                    isn't already in pipeline. Skips the four-click pipeline
+                    detour Devi flagged. */}
+                {state !== 'pipeline' && onMarkApplied && (
+                  <button
+                    onClick={() => onMarkApplied(grant)}
+                    style={{ background: 'transparent', border: 'none', color: '#5F5E5A', fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-space-grotesk)', padding: '2px 4px', textAlign: isMobile ? 'left' : 'center', textDecoration: 'underline', textUnderlineOffset: 3, textDecorationColor: 'rgba(0,0,0,0.18)' }}
+                  >
+                    I&apos;ve already applied
+                  </button>
                 )}
 
                 {/* Unsave */}
@@ -1322,6 +1343,14 @@ export default function SearchPage() {
   const [interactions, setInteractions] = useState<Map<string, Set<InteractionAction>>>(new Map())
   const [matchFeedbackMap, setMatchFeedbackMap] = useState<Map<string, StoredFeedback>>(new Map())
   const [showDismissed, setShowDismissed] = useState(false)
+  // "Already applied" outcome flow — null when closed; otherwise tracks the
+  // grant being marked + which step (outcome picker → optional decline reasons).
+  const [appliedFlow, setAppliedFlow] = useState<{
+    grant:    GrantOpportunity
+    step:     'outcome' | 'declined-reasons'
+    reasons:  string[]
+    freeText: string
+  } | null>(null)
   const [scrapedGrants, setScrapedGrants] = useState<EnrichedGrant[]>([])
   const [grantsLoaded, setGrantsLoaded]   = useState(false)
   const [amountMin, setAmountMin]         = useState('')
@@ -1734,6 +1763,63 @@ export default function SearchPage() {
       showToast('Removed from pipeline')
     } catch {
       showToast('Failed to remove — please try again')
+    }
+  }
+
+  /** Persist an "already applied" mark: writes a grant_interaction with
+   *  action='applied' (excludes the grant from future matches) AND creates
+   *  a pipeline_items row at the corresponding stage so the user keeps a
+   *  record. For 'declined', captures structured reasons + free text into
+   *  the pipeline_items.notes field. Devi #5. */
+  async function handleMarkApplied(
+    grant:    GrantOpportunity,
+    outcome:  'pending' | 'won' | 'declined',
+    reasons?: { tags: string[]; freeText: string },
+  ) {
+    if (!org) { showToast('Complete your profile first to mark grants'); return }
+    try {
+      const stage = outcome === 'pending' ? 'submitted' : outcome
+      const notesText = reasons && (reasons.tags.length > 0 || reasons.freeText.trim().length > 0)
+        ? [
+            reasons.tags.length > 0 ? `Decline reasons: ${reasons.tags.join(', ')}` : '',
+            reasons.freeText.trim(),
+          ].filter(Boolean).join('\n')
+        : null
+      await createPipelineItem({
+        org_id:               org.id,
+        grant_name:           grant.title,
+        funder_name:          grant.funder,
+        funder_type:          (['trust_foundation','local_authority','housing_association','corporate','lottery','government','other'].includes(grant.funderType ?? '') ? grant.funderType as 'trust_foundation'|'local_authority'|'housing_association'|'corporate'|'lottery'|'government'|'other' : 'other'),
+        amount_min:           grant.amountMin ?? null,
+        amount_max:           grant.amountMax ?? null,
+        amount_requested:     grant.amountMax ?? null,
+        deadline:             grant.isRolling ? null : grant.deadline,
+        stage,
+        notes:                notesText,
+        application_progress: outcome === 'pending' ? 100 : null,
+        is_urgent:            false,
+        contact_name:         null,
+        contact_email:        null,
+        grant_url:            grant.applyUrl ?? null,
+        outcome_date:         outcome === 'pending' ? null : new Date().toISOString().slice(0, 10),
+        outcome_notes:        null,
+        created_by:           userId,
+      })
+      await recordInteraction(org.id, grant.id, 'applied')
+      setInteractions(prev => {
+        const next = new Map(prev)
+        const s = new Set(next.get(grant.id) ?? [])
+        s.add('applied')
+        next.set(grant.id, s)
+        return next
+      })
+      showToast(
+        outcome === 'declined' ? 'Recorded — won\'t show again' :
+        outcome === 'won'      ? 'Nice. Logged as a win.' :
+        'Marked as already applied',
+      )
+    } catch {
+      showToast('Failed to save — please try again')
     }
   }
 
@@ -2999,6 +3085,7 @@ export default function SearchPage() {
                 onUndismiss={handleUndismiss}
                 onLike={handleLike}
                 onDislike={handleDislike}
+                onMarkApplied={(g) => setAppliedFlow({ grant: g, step: 'outcome', reasons: [], freeText: '' })}
                 onSave={handleSave}
                 onUnsave={handleUnsave}
                 showIfDismissed={showDismissed}
@@ -3059,6 +3146,7 @@ export default function SearchPage() {
                 onUndismiss={handleUndismiss}
                 onLike={handleLike}
                 onDislike={handleDislike}
+                onMarkApplied={(g) => setAppliedFlow({ grant: g, step: 'outcome', reasons: [], freeText: '' })}
                   onSave={handleSave}
                 onUnsave={handleUnsave}
               />
@@ -3077,6 +3165,133 @@ export default function SearchPage() {
         )
       })()}
 
+
+      {/* "Already applied" outcome modal — opens when user clicks the small
+          link on a grant card. Two-step: outcome picker → optional declined
+          reasons. Closes after save. */}
+      {appliedFlow && (() => {
+        const DECLINE_CHIPS = [
+          { value: 'not_strong_enough', label: 'Not strong enough case' },
+          { value: 'got_no_feedback',   label: 'Got no feedback' },
+          { value: 'funder_didnt_fit',  label: 'Funder focus didn\'t fit' },
+          { value: 'eligibility_miss',  label: 'Eligibility I missed' },
+          { value: 'timing_off',        label: 'Timing was off' },
+          { value: 'something_else',    label: 'Something else' },
+        ]
+        const close = () => setAppliedFlow(null)
+        const grant = appliedFlow.grant
+        const isOutcomeStep  = appliedFlow.step === 'outcome'
+        const isReasonsStep  = appliedFlow.step === 'declined-reasons'
+        const hasSomethingElse = appliedFlow.reasons.includes('something_else')
+        return (
+          <div
+            onClick={close}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(23,52,4,0.42)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 60, fontFamily: 'var(--font-dm-sans)' }}
+          >
+            <div
+              onClick={e => e.stopPropagation()}
+              style={{ width: '100%', maxWidth: 460, background: '#fff', borderRadius: 14, padding: '22px 24px', boxShadow: '0 12px 40px rgba(23,52,4,0.18)' }}
+            >
+              <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 12, fontWeight: 600, color: '#3B6D11', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+                Already applied
+              </div>
+              <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 17, fontWeight: 700, color: '#173404', lineHeight: 1.3, marginBottom: 18 }}>
+                {grant.title}
+              </div>
+
+              {isOutcomeStep && (
+                <>
+                  <p style={{ fontSize: 14, color: '#2C2C2A', marginBottom: 14 }}>How did it go?</p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+                    <button
+                      onClick={async () => { await handleMarkApplied(grant, 'pending'); close() }}
+                      style={{ textAlign: 'left', padding: '12px 16px', borderRadius: 10, border: '1px solid rgba(0,0,0,0.12)', background: '#fff', cursor: 'pointer', fontSize: 14, fontFamily: 'var(--font-dm-sans)', color: '#2C2C2A' }}
+                    >
+                      <strong>Awaiting decision</strong>
+                      <div style={{ fontSize: 12, color: '#5F5E5A', marginTop: 2 }}>Submitted, no outcome yet</div>
+                    </button>
+                    <button
+                      onClick={async () => { await handleMarkApplied(grant, 'won'); close() }}
+                      style={{ textAlign: 'left', padding: '12px 16px', borderRadius: 10, border: '1px solid #8ECB3C', background: '#F1F7E4', cursor: 'pointer', fontSize: 14, fontFamily: 'var(--font-dm-sans)', color: '#173404' }}
+                    >
+                      <strong>Won</strong>
+                      <div style={{ fontSize: 12, color: '#3B6D11', marginTop: 2 }}>Funded — congratulations</div>
+                    </button>
+                    <button
+                      onClick={() => setAppliedFlow(prev => prev ? { ...prev, step: 'declined-reasons' } : prev)}
+                      style={{ textAlign: 'left', padding: '12px 16px', borderRadius: 10, border: '1px solid rgba(216,90,48,0.4)', background: '#FAECE7', cursor: 'pointer', fontSize: 14, fontFamily: 'var(--font-dm-sans)', color: '#993C1D' }}
+                    >
+                      <strong>Declined</strong>
+                      <div style={{ fontSize: 12, color: '#993C1D', marginTop: 2 }}>Tell me what didn&apos;t work (helps train your matches)</div>
+                    </button>
+                  </div>
+                  <div style={{ marginTop: 16, textAlign: 'right' }}>
+                    <button onClick={close} style={{ background: 'transparent', border: 'none', color: '#8A8986', fontSize: 13, cursor: 'pointer', fontFamily: 'var(--font-space-grotesk)' }}>Cancel</button>
+                  </div>
+                </>
+              )}
+
+              {isReasonsStep && (
+                <>
+                  <p style={{ fontSize: 14, color: '#2C2C2A', marginBottom: 14 }}>What didn&apos;t work? <span style={{ color: '#8A8986' }}>(optional)</span></p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
+                    {DECLINE_CHIPS.map(chip => {
+                      const selected = appliedFlow.reasons.includes(chip.value)
+                      return (
+                        <button
+                          key={chip.value}
+                          onClick={() => setAppliedFlow(prev => {
+                            if (!prev) return prev
+                            return {
+                              ...prev,
+                              reasons: selected ? prev.reasons.filter(r => r !== chip.value) : [...prev.reasons, chip.value],
+                            }
+                          })}
+                          style={{
+                            padding: '6px 12px', borderRadius: 18, fontSize: 12.5, fontWeight: 500,
+                            border: `0.5px solid ${selected ? '#173404' : 'rgba(23,52,4,0.18)'}`,
+                            background: selected ? '#173404' : '#fff',
+                            color: selected ? '#fff' : '#2C2C2A',
+                            cursor: 'pointer', fontFamily: 'var(--font-space-grotesk)',
+                          }}
+                        >
+                          {chip.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  {hasSomethingElse && (
+                    <textarea
+                      value={appliedFlow.freeText}
+                      onChange={e => setAppliedFlow(prev => prev ? { ...prev, freeText: e.target.value } : prev)}
+                      placeholder="Tell us more..."
+                      rows={2}
+                      style={{ width: '100%', boxSizing: 'border-box', border: '0.5px solid rgba(99,153,34,0.3)', borderRadius: 10, padding: '10px 14px', fontFamily: 'var(--font-dm-sans)', fontSize: 13, color: '#2C2C2A', resize: 'vertical', lineHeight: 1.5, outline: 'none', marginBottom: 14 }}
+                    />
+                  )}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
+                    <button
+                      onClick={() => setAppliedFlow(prev => prev ? { ...prev, step: 'outcome', reasons: [], freeText: '' } : prev)}
+                      style={{ background: 'transparent', border: 'none', color: '#8A8986', fontSize: 13, cursor: 'pointer', fontFamily: 'var(--font-space-grotesk)' }}
+                    >
+                      ← Back
+                    </button>
+                    <button
+                      onClick={async () => {
+                        await handleMarkApplied(grant, 'declined', { tags: appliedFlow.reasons, freeText: appliedFlow.freeText })
+                        close()
+                      }}
+                      style={{ background: '#173404', color: '#F1F7E4', border: 'none', borderRadius: 18, padding: '8px 20px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-space-grotesk)' }}
+                    >
+                      {appliedFlow.reasons.length > 0 || appliedFlow.freeText.trim().length > 0 ? 'Save and remove' : 'Skip and remove'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )
+      })()}
 
       {toast && (
         <div className="fixed bottom-6 right-6 bg-charcoal text-white px-5 py-3.5 shadow-card-lg text-sm z-50">
