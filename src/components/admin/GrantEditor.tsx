@@ -14,7 +14,7 @@
 // State shape is identical to the previous inline editor so saveGrantEdits
 // and publishReviewGrant continue to work unchanged.
 
-import { Sparkles, MapPin, BookOpen, PlusCircle, X } from 'lucide-react'
+import { Sparkles, MapPin, BookOpen, PlusCircle, X, RefreshCw } from 'lucide-react'
 import { TRACKED_FIELDS, type FieldProvenance, type ProvenanceEntry } from '@/lib/grant-merge'
 import {
   IMPACT_SECTOR_OPTIONS,
@@ -76,6 +76,9 @@ export type GrantEditorProps = {
 
   // Enrichment
   enrichingNow:                boolean
+  /** True while Detect all is running the LLM classifier — fills sectors,
+   *  niche tags and beneficiaries. Drives the Detect-all button spinner. */
+  classifyingNow?:             boolean
   enrichError:                 string | null
   onEnrich:                    () => void
   onEnrichWithSources:         () => void
@@ -392,7 +395,7 @@ export function GrantEditor(props: GrantEditorProps) {
     sources, sourcesOpen,
     onToggleSources, onAddSource, onUpdateSource, onRemoveSource,
     onDetectAll, onDetectLocation, onDetectEligibility, onPopulateFromBrief,
-    enrichingNow, enrichError,
+    enrichingNow, classifyingNow, enrichError,
     onEnrich, onEnrichWithSources, onMarkBetweenRoundsAndWatch,
     publishing, onCancel, onSave, onPublish,
   } = props
@@ -475,10 +478,14 @@ export function GrantEditor(props: GrantEditorProps) {
         <button
           type="button"
           onClick={onDetectAll}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-full text-white transition-colors"
+          disabled={classifyingNow}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-full text-white transition-colors disabled:opacity-70"
           style={{ backgroundColor: '#173404' }}
         >
-          <Sparkles className="w-3 h-3" /> Detect all
+          {classifyingNow
+            ? (<><RefreshCw className="w-3 h-3 animate-spin" /> Classifying…</>)
+            : (<><Sparkles className="w-3 h-3" /> Detect all</>)
+          }
         </button>
       </div>
 

@@ -330,6 +330,10 @@ export default function UrlAdminPage() {
 
   // Funder intelligence enrichment (inline, from Grant Manager)
   const [enrichingId, setEnrichingId] = useState<string | null>(null)
+  // Set when Detect all is running classify-grants for a specific row.
+  // Drives the button spinner. Independent of enrichingId because enrich
+  // and classify can overlap with each other (enrich auto-fires detectAll).
+  const [classifyingId, setClassifyingId] = useState<string | null>(null)
 
   // Bulk enrichment
   const [bulkEnriching, setBulkEnriching]     = useState(false)
@@ -2534,10 +2538,49 @@ export default function UrlAdminPage() {
 
 
 
-  function detectAll(grant: Grant) {
+  async function detectAll(grant: Grant) {
+    // ── Phase 1: sync draft edits ─────────────────────────────────────
+    // These set local draft state — admin reviews then hits Save.
     detectEligibility(grant)
     detectLocation(grant)
     if (grant.funder_brief) populateFromBrief(grant)
+
+    // ── Phase 2: classifier-driven fields (writes to DB via merger) ───
+    // impact_sectors / niche_tags / target_beneficiaries are AI-ranked
+    // rather than keyword-matched. Calling /api/admin/classify-grants
+    // produces 1-4 sectors per grant with confidence and writes them
+    // through the field provenance merger (source: ai_classifier:v3).
+    // After it completes we refetch the row so the editor shows the new
+    // values without a page reload.
+    if (!grant.funder_brief || classifyingId) return
+    setClassifyingId(grant.id)
+    try {
+      const res = await fetch('/api/admin/classify-grants', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ grant_ids: [grant.id], force: true }),
+      })
+      if (res.ok) {
+        const supa = createClient()
+        const { data: fresh } = await supa
+          .from('scraped_grants')
+          .select('*')
+          .eq('id', grant.id)
+          .single()
+        if (fresh) {
+          const freshAsGrant = fresh as Grant
+          const patchGrant = (g: Grant) => g.id === grant.id ? { ...g, ...freshAsGrant } : g
+          setReviewGrants(prev => prev.map(patchGrant))
+          setGrants(prev => prev.map(patchGrant))
+          setRecentGrants(prev => prev.map(patchGrant))
+          setCategoryGrants(prev => prev.map(g => g.id === grant.id ? { ...g, ...freshAsGrant } : g))
+        }
+      }
+    } catch (err) {
+      console.error('[detectAll] classify failed:', err)
+    } finally {
+      setClassifyingId(null)
+    }
   }
 
   const IMPACT_SECTOR_OPTIONS = [
@@ -3057,6 +3100,7 @@ export default function UrlAdminPage() {
         onDetectEligibility={()   => detectEligibility(grant)}
         onPopulateFromBrief={()   => populateFromBrief(grant)}
         enrichingNow={enrichingId === grant.id}
+        classifyingNow={classifyingId === grant.id}
         enrichError={reviewEnrichError[grant.id] ?? null}
         onEnrich={()                    => enrichGrantFromManager(grant)}
         onEnrichWithSources={()         => enrichGrantFromManagerWithSources(grant, reviewSources[grant.id] ?? [])}
