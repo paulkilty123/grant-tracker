@@ -2558,7 +2558,10 @@ export default function UrlAdminPage() {
       const res = await fetch('/api/admin/classify-grants', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ grant_ids: [grant.id], force: true }),
+        // include_review: true is critical — the endpoint defaults to
+        // is_active=true filter, which silently excludes Needs Review rows
+        // (the entire reason we're calling this from the editor).
+        body: JSON.stringify({ grant_ids: [grant.id], force: true, include_review: true }),
       })
       if (res.ok) {
         const supa = createClient()
