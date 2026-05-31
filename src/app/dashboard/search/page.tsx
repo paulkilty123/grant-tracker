@@ -1406,11 +1406,16 @@ export default function SearchPage() {
       const saved = sessionStorage.getItem('grantSearch')
       if (saved) {
         const { query: q, aiResults: r, activeType: t, smartMatched: sm, liveResults: lr, liveSmartMatched: lsm, activeView: av } = JSON.parse(saved)
-        // Only restore query if there are also AI results to go with it
-        if (r && q) { setQuery(q); setInputValue(q) }
-        if (r)   setAiResults(r)
+        // Only restore AI results + query together. Restoring aiResults alone
+        // (when query is empty) leaves the page in a stale state showing
+        // "N results for ''" while the tab badges still show profile-matched
+        // counts — David hit this 2026-05-31.
+        if (r && q) {
+          setQuery(q); setInputValue(q)
+          setAiResults(r)
+          if (sm) setSmartMatched(sm)
+        }
         if (t)   setActiveType(t)
-        if (sm)  setSmartMatched(sm)
         if (lr)  setLiveResults(lr)
         if (lsm) setLiveSmartMatched(lsm)
         if (av)  setActiveView(
