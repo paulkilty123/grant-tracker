@@ -218,7 +218,12 @@ function deriveEligibilityFlags(s: LegalStructure | ''): {
     case 'cooperative':
       return { has_asset_lock: true,  social_mission_declared: true,  articles_restrict_profit: true  }
     case 'ltd_guarantee':
-      return { has_asset_lock: false, social_mission_declared: false, articles_restrict_profit: false }
+      // Ltd-by-guarantee orgs on Grant Tracker are overwhelmingly social
+      // enterprises with mission-locked articles (often charities-in-waiting
+      // or CIC-equivalents structurally). Default to all three true so they
+      // aren't silently excluded from non-charity funding; user can untick
+      // if their articles don't include these locks.
+      return { has_asset_lock: true,  social_mission_declared: true,  articles_restrict_profit: true  }
     default:
       return { has_asset_lock: null,  social_mission_declared: false, articles_restrict_profit: false }
   }
