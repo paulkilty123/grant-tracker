@@ -958,10 +958,6 @@ interface AboutDraft {
   name: string; legalStructure: LegalStructure | ''
   annualIncomeBand: string; yearsTrading: string
   orgStage: OrgStage | ''; charityNumber: string
-  // Single toggle that maps to three DB flags (asset_lock, social_mission,
-  // profit_restrict). When true, derive from legal_structure on save; when
-  // false, all three save as false.
-  missionLed: boolean
 }
 
 function AboutCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd, triggerOpen, onTriggered, hasIncomplete }: {
@@ -987,7 +983,6 @@ function AboutCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
       yearsTrading:               org.years_trading != null ? String(org.years_trading) : '',
       orgStage:                   (org.org_stage as OrgStage) ?? '',
       charityNumber:              org.charity_number ?? org.cic_number ?? '',
-      missionLed: !!(org.has_asset_lock || org.social_mission_declared || org.articles_restrict_profit),
     })
     setEditing(true)
     onEditStart()
@@ -1006,13 +1001,12 @@ function AboutCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
         years_trading:                draft.yearsTrading ? parseInt(draft.yearsTrading) : null,
         org_stage:                    draft.orgStage || undefined,
         charity_number:               draft.charityNumber.trim() || null,
-        // Derive the three eligibility flags from the single mission-led
-        // toggle + legal structure. cic_shares stays profit-distributable
-        // even when mission-led; all other social structures get all three.
-        ...(draft.missionLed
-              ? deriveEligibilityFlagsFromStructure(draft.legalStructure)
-              : { has_asset_lock: false, social_mission_declared: false, articles_restrict_profit: false }
-           ),
+        // Eligibility flags (asset_lock / social_mission / profit_restrict)
+        // are silently derived from legal_structure — the eligibility engine
+        // doesn't meaningfully consume them yet, so there's no value in
+        // asking the user. cic_shares correctly keeps profit-distributable;
+        // most other social structures get all three true.
+        ...deriveEligibilityFlagsFromStructure(draft.legalStructure),
       })
       setEditing(false); setDraft(null); onEditEnd(); onSaved()
     } catch (e) {
@@ -1092,27 +1086,6 @@ function AboutCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
             />
           </FieldRow>
 
-          {/* Single mission-led toggle — derives asset_lock, social mission,
-              and profit-restriction flags from legal_structure on save. Used
-              by the eligibility engine to unlock non-charity funding
-              (programmes, social investment, in-kind). */}
-          <div style={{ paddingTop: 12, borderTop: `1px solid ${T.border}`, marginTop: 8 }}>
-            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={draft.missionLed}
-                onChange={e => setDraft(p => ({ ...p!, missionLed: e.target.checked }))}
-                style={{ width: 16, height: 16, accentColor: T.lime, cursor: 'pointer', marginTop: 2, flexShrink: 0 }}
-              />
-              <span style={{ fontFamily: BODY, fontSize: 13.5, color: T.textSecondary, lineHeight: 1.5 }}>
-                <strong style={{ color: T.textPrimary }}>We are a mission-led organisation</strong> — our governing documents commit our assets and profits to a social or charitable purpose.
-              </span>
-            </label>
-            <p style={{ fontFamily: BODY, fontSize: 12, color: T.textTertiary, marginTop: 8, marginBottom: 0, lineHeight: 1.5, paddingLeft: 26 }}>
-              Unlocks non-charity funding (programmes, social investment, in-kind support). Applies to almost all charities, CICs, co-ops and ltd-by-guarantee social enterprises.
-            </p>
-          </div>
-
           {saveError && <p style={{ fontFamily: BODY, fontSize: 13, color: '#B91C1C', marginTop: 4 }}>{saveError}</p>}
         </>
       ) : (
@@ -1137,17 +1110,6 @@ function AboutCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
               <span style={{ fontSize: 13, color: T.textTertiary }}>{org.charity_number ?? org.cic_number}</span>
             </FieldRow>
           )}
-          <FieldRow label="Mission-led">
-            {(org.has_asset_lock || org.social_mission_declared || org.articles_restrict_profit) ? (
-              <span style={{ fontFamily: UI, fontSize: 12, color: T.greenMid, background: T.greenBg, padding: '3px 10px', borderRadius: 999, fontWeight: 500 }}>
-                Yes
-              </span>
-            ) : (org.has_asset_lock === null || org.has_asset_lock === undefined) ? (
-              <AddLink label="Confirm mission-led status" onClick={startEdit} />
-            ) : (
-              <span style={{ fontFamily: UI, fontSize: 12, color: T.textTertiary }}>Not declared</span>
-            )}
-          </FieldRow>
         </>
       )}
     </CardShell>
