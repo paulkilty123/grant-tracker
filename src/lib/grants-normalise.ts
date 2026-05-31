@@ -6,7 +6,6 @@ import type {
   ImpactSector,
   LegalStructure,
   BeneficiaryGroup,
-  OrgStage,
 } from '@/types'
 
 const numOrNull = (v: unknown): number | null =>
@@ -109,7 +108,11 @@ export function normaliseScrapedGrant(row: Record<string, unknown>): EnrichedGra
     progFundingAmount:      numOrNull(row.prog_funding_amount),
     progApplicationCycle:   strOrNull(row.prog_application_cycle),
     progNextCohortStart:    row.prog_next_cohort_start ? String(row.prog_next_cohort_start) : null,
-    progStageTarget:        Array.isArray(row.prog_stage_target) ? (row.prog_stage_target as OrgStage[]) : undefined,
+    // No prog_stage_target column exists on scraped_grants, so this stays
+    // undefined and eligibility.ts's org_stage_mismatch check is dormant. Add
+    // the column (+ classifier write) before reading it — don't reinstate a
+    // read of a phantom column.
+    progStageTarget:        undefined,
     ikSupportType:          strOrNull(row.ik_support_type),
     ikValueEstimate:        numOrNull(row.ik_value_estimate),
     ikCapacityAvailable:    strOrNull(row.ik_capacity_available),

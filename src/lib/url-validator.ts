@@ -222,6 +222,20 @@ export async function deepCheckUrl(
       qualityScore -= 30
     }
 
+    // ── Bare-domain landing ─────────────────────────────────────────────────────
+    // A grant URL that is (or lands on) a bare domain root is almost never a
+    // specific opportunity — it's a funder homepage. The redirect-to-homepage
+    // check above only fires when the ORIGINAL url had depth >= 2, so a url that
+    // was already a bare domain sails through every content check. Penalise it.
+    try {
+      const landing = new URL(finalUrl || url)
+      const landingDepth = landing.pathname.replace(/\/$/, '').split('/').filter(Boolean).length
+      if (landingDepth === 0) {
+        issues.push('bare_domain')
+        qualityScore -= 30
+      }
+    } catch { /* ignore */ }
+
     // ── Very short page ─────────────────────────────────────────────────────────
     if (html.length < 2000) {
       issues.push('very_short_page')
