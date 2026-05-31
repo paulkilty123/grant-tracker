@@ -1084,22 +1084,25 @@ export function computeMatchScore(
 
   // ── 4a. Grant size — hard floor (below-target exclusion) ────────────────
   // If the org has stated a minimum target and the grant's maximum payout is
-  // less than half of that, drop the grant out of "top" / "other" surfaces.
-  // Devi (IoI) feedback 2026-05-28: £20k target was matching grants down to
-  // £250, wasting review time. We don't delete the row — score is capped at
-  // 35 so the grant is still browsable from search but never surfaces as a
-  // top match. amountMax==0 means "amount unknown" and is left alone.
-  const SIZE_FLOOR_RATIO  = 0.5
+  // below that minimum, drop the grant out of "top" / "actionable" surfaces.
+  // The score cap (35) means the grant is still browsable from Find Funding
+  // but never appears in dashboard "Worth your attention" or deadline matches.
+  // amountMax==0 means "amount unknown" and is left alone.
+  //
+  // Originally used a 0.5 leniency factor (Devi 2026-05-28 — £20k target was
+  // matching £250 grants). David 2026-05-31 — £10k target was still matching a
+  // £6k grant (60% of min, just above the 0.5 threshold). Tightened to a
+  // strict floor: if the user says £10k min, we respect £10k min.
   const SIZE_FLOOR_SCORE_CAP = 35
   let sizeFloorTriggered = false
   if (
     typeof org.min_grant_target === 'number' && org.min_grant_target > 0 &&
     grant.amountMax > 0 &&
-    grant.amountMax < org.min_grant_target * SIZE_FLOOR_RATIO
+    grant.amountMax < org.min_grant_target
   ) {
     sizeFloorTriggered = true
     reasons.push(
-      `Grant maxes out at £${grant.amountMax.toLocaleString('en-GB')}, well below your £${org.min_grant_target.toLocaleString('en-GB')} minimum target`,
+      `Grant maxes out at £${grant.amountMax.toLocaleString('en-GB')}, below your £${org.min_grant_target.toLocaleString('en-GB')} minimum target`,
     )
   }
 
