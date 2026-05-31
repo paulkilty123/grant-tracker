@@ -63,7 +63,6 @@ function makeOrg(overrides: Partial<Organisation>): Organisation {
     legal_structure: 'registered_charity' as LegalStructure,
     social_mission_declared: true,
     articles_restrict_profit: true,
-    also_individual_practitioner: false,
     impact_sectors: [],
     niche_tags: [],
     excluded_niche_tags: [],

@@ -42,7 +42,6 @@ export async function POST() {
     org_stage:                    null,
     social_mission_declared:      false,
     articles_restrict_profit:     false,
-    also_individual_practitioner: false,
     impact_sectors:               [],
     niche_tags:                   [],
     has_asset_lock:               null,

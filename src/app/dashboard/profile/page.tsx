@@ -962,7 +962,6 @@ interface AboutDraft {
   // profit_restrict). When true, derive from legal_structure on save; when
   // false, all three save as false.
   missionLed: boolean
-  alsoIndividualPractitioner: boolean
 }
 
 function AboutCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd, triggerOpen, onTriggered, hasIncomplete }: {
@@ -988,7 +987,6 @@ function AboutCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
       yearsTrading:               org.years_trading != null ? String(org.years_trading) : '',
       orgStage:                   (org.org_stage as OrgStage) ?? '',
       charityNumber:              org.charity_number ?? org.cic_number ?? '',
-      alsoIndividualPractitioner: org.also_individual_practitioner ?? false,
       missionLed: !!(org.has_asset_lock || org.social_mission_declared || org.articles_restrict_profit),
     })
     setEditing(true)
@@ -1008,7 +1006,6 @@ function AboutCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
         years_trading:                draft.yearsTrading ? parseInt(draft.yearsTrading) : null,
         org_stage:                    draft.orgStage || undefined,
         charity_number:               draft.charityNumber.trim() || null,
-        also_individual_practitioner: draft.alsoIndividualPractitioner,
         // Derive the three eligibility flags from the single mission-led
         // toggle + legal structure. cic_shares stays profit-distributable
         // even when mission-led; all other social structures get all three.
@@ -1094,12 +1091,6 @@ function AboutCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
               placeholder="Optional"
             />
           </FieldRow>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8, borderTop: `1px solid ${T.border}`, marginTop: 4 }}>
-            <span style={{ fontFamily: UI, fontSize: 13.5, color: T.textSecondary, fontWeight: 500 }}>
-              I&apos;m an individual practitioner (not an organisation)
-            </span>
-            <Toggle enabled={draft.alsoIndividualPractitioner} onToggle={() => setDraft(p => ({ ...p!, alsoIndividualPractitioner: !p!.alsoIndividualPractitioner }))} />
-          </div>
 
           {/* Single mission-led toggle — derives asset_lock, social mission,
               and profit-restriction flags from legal_structure on save. Used
@@ -1144,13 +1135,6 @@ function AboutCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
           {(org.charity_number || org.cic_number) && (
             <FieldRow label="Registration number">
               <span style={{ fontSize: 13, color: T.textTertiary }}>{org.charity_number ?? org.cic_number}</span>
-            </FieldRow>
-          )}
-          {org.also_individual_practitioner && (
-            <FieldRow label="">
-              <span style={{ fontFamily: UI, fontSize: 13, color: T.textSecondary, background: T.cream, padding: '3px 10px', borderRadius: 10 }}>
-                Individual practitioner
-              </span>
             </FieldRow>
           )}
           <FieldRow label="Mission-led">

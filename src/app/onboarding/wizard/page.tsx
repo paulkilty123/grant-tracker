@@ -827,7 +827,6 @@ export default function OnboardingWizardPage() {
         org_stage:                    null,
         social_mission_declared:      eligibilityFlags.social_mission_declared,
         articles_restrict_profit:     eligibilityFlags.articles_restrict_profit,
-        also_individual_practitioner: false,
         impact_sectors:               state.impactSectors,
         beneficiary_groups:           state.beneficiaryGroups,
         niche_tags:                   state.nicheTags.filter(t => validNiche.has(t)),

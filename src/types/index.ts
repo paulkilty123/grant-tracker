@@ -153,8 +153,6 @@ export interface Organisation {
   social_mission_declared: boolean
   /** Do articles of association restrict dividends / state social purpose? */
   articles_restrict_profit: boolean
-  /** User is both an individual practitioner AND an org — show both grant types */
-  also_individual_practitioner: boolean
   /** 1–3 impact sectors from the 14-sector taxonomy */
   impact_sectors: ImpactSector[]
   /** Sub-sector specialisation tags — finer-grained than impact_sectors (e.g. "music", "theatre") */
