@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { getOrganisationsByOwner, updateOrganisation, deleteOrganisation } from '@/lib/organisations'
 import { Pencil, Plus, ChevronDown, RotateCcw, Globe, Check, X, Star, Trash2, AlertTriangle } from 'lucide-react'
-import type { Organisation, LegalStructure, OrgStage, ImpactSector, FundingType, BeneficiaryGroup } from '@/types'
+import type { Organisation, LegalStructure, OrgStage, ImpactSector, FundingType, FunderType, BeneficiaryGroup } from '@/types'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import ClearProfileButton from '@/app/dashboard/admin/ClearProfileButton'
 
@@ -301,6 +301,48 @@ const FUNDING_TYPE_OPTIONS: { value: FundingType; label: string }[] = [
   { value: 'investment', label: 'Social Investment' },
   { value: 'in_kind',    label: 'In-Kind Support' },
 ]
+
+// Funder type preferences — multi-select picker on the profile editor.
+// Used by the matcher's funder type dimension (max 8). Org-level preference;
+// each grant carries its own single funder_type.
+const FUNDER_TYPE_OPTIONS: { value: FunderType; label: string }[] = [
+  { value: 'trust_foundation',     label: 'Trust / Foundation' },
+  { value: 'community_foundation', label: 'Community Foundation' },
+  { value: 'corporate_foundation', label: 'Corporate Foundation' },
+  { value: 'corporate',            label: 'Corporate Direct' },
+  { value: 'lottery',              label: 'Lottery' },
+  { value: 'government',           label: 'Government' },
+  { value: 'local_authority',      label: 'Local Authority' },
+  { value: 'housing_association',  label: 'Housing Association' },
+  { value: 'capacity_builder',     label: 'Capacity Builder' },
+  { value: 'competition',          label: 'Competition / Award' },
+  { value: 'loan',                 label: 'Social Loan' },
+  { value: 'crowdfund_match',      label: 'Crowdfund Match' },
+  { value: 'other',                label: 'Other' },
+]
+
+/** Derive the three eligibility flags from a legal structure. Mirrors the
+ *  onboarding wizard helper so the profile editor uses the same logic when
+ *  the user clicks "Auto-fill from structure" on the About card. */
+function deriveEligibilityFlagsFromStructure(s: LegalStructure | ''): {
+  has_asset_lock:           boolean | null
+  social_mission_declared:  boolean
+  articles_restrict_profit: boolean
+} {
+  switch (s) {
+    case 'registered_charity':
+    case 'cio':
+    case 'cic_guarantee':
+    case 'cooperative':
+      return { has_asset_lock: true,  social_mission_declared: true,  articles_restrict_profit: true  }
+    case 'cic_shares':
+      return { has_asset_lock: true,  social_mission_declared: true,  articles_restrict_profit: false }
+    case 'ltd_guarantee':
+      return { has_asset_lock: false, social_mission_declared: false, articles_restrict_profit: false }
+    default:
+      return { has_asset_lock: null,  social_mission_declared: false, articles_restrict_profit: false }
+  }
+}
 
 /* ═══════════════════════════════════════════════
    Completeness logic
@@ -912,6 +954,9 @@ interface AboutDraft {
   name: string; legalStructure: LegalStructure | ''
   annualIncomeBand: string; yearsTrading: string
   orgStage: OrgStage | ''; charityNumber: string
+  hasAssetLock:           boolean | null
+  socialMissionDeclared:  boolean
+  articlesRestrictProfit: boolean
   alsoIndividualPractitioner: boolean
 }
 
@@ -939,6 +984,9 @@ function AboutCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
       orgStage:                   (org.org_stage as OrgStage) ?? '',
       charityNumber:              org.charity_number ?? org.cic_number ?? '',
       alsoIndividualPractitioner: org.also_individual_practitioner ?? false,
+      hasAssetLock:               org.has_asset_lock,
+      socialMissionDeclared:      org.social_mission_declared ?? false,
+      articlesRestrictProfit:     org.articles_restrict_profit ?? false,
     })
     setEditing(true)
     onEditStart()
@@ -951,13 +999,16 @@ function AboutCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
     setSaving(true); setSaveError(null)
     try {
       await updateOrganisation(orgId, {
-        name:                       draft.name.trim() || undefined,
-        legal_structure:            draft.legalStructure || undefined,
-        annual_income_band:         draft.annualIncomeBand || undefined,
-        years_trading:              draft.yearsTrading ? parseInt(draft.yearsTrading) : null,
-        org_stage:                  draft.orgStage || undefined,
-        charity_number:             draft.charityNumber.trim() || null,
+        name:                         draft.name.trim() || undefined,
+        legal_structure:              draft.legalStructure || undefined,
+        annual_income_band:           draft.annualIncomeBand || undefined,
+        years_trading:                draft.yearsTrading ? parseInt(draft.yearsTrading) : null,
+        org_stage:                    draft.orgStage || undefined,
+        charity_number:               draft.charityNumber.trim() || null,
         also_individual_practitioner: draft.alsoIndividualPractitioner,
+        has_asset_lock:               draft.hasAssetLock,
+        social_mission_declared:      draft.socialMissionDeclared,
+        articles_restrict_profit:     draft.articlesRestrictProfit,
       })
       setEditing(false); setDraft(null); onEditEnd(); onSaved()
     } catch (e) {
@@ -1042,6 +1093,71 @@ function AboutCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
             </span>
             <Toggle enabled={draft.alsoIndividualPractitioner} onToggle={() => setDraft(p => ({ ...p!, alsoIndividualPractitioner: !p!.alsoIndividualPractitioner }))} />
           </div>
+
+          {/* Eligibility flags — used by the eligibility engine to match
+              non-charity funding (programmes, social investment, in-kind
+              that accept CICs / co-ops / ltd-by-guarantee). */}
+          <div style={{ paddingTop: 12, borderTop: `1px solid ${T.border}`, marginTop: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 8 }}>
+              <span style={{ fontFamily: UI, fontSize: 13.5, color: T.textPrimary, fontWeight: 600 }}>
+                Eligibility (governing documents)
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  const f = deriveEligibilityFlagsFromStructure(draft.legalStructure)
+                  setDraft(p => ({
+                    ...p!,
+                    hasAssetLock:           f.has_asset_lock,
+                    socialMissionDeclared:  f.social_mission_declared,
+                    articlesRestrictProfit: f.articles_restrict_profit,
+                  }))
+                }}
+                style={{ fontFamily: UI, fontSize: 12, color: T.greenMid, background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+              >
+                Auto-fill from structure
+              </button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={draft.hasAssetLock === true}
+                  onChange={e => setDraft(p => ({ ...p!, hasAssetLock: e.target.checked }))}
+                  style={{ width: 16, height: 16, accentColor: T.lime, cursor: 'pointer' }}
+                />
+                <span style={{ fontFamily: BODY, fontSize: 13.5, color: T.textSecondary }}>
+                  Our governing documents include an <strong>asset lock</strong> (assets dedicated to social purpose, can&apos;t be distributed to owners on dissolution)
+                </span>
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={draft.socialMissionDeclared}
+                  onChange={e => setDraft(p => ({ ...p!, socialMissionDeclared: e.target.checked }))}
+                  style={{ width: 16, height: 16, accentColor: T.lime, cursor: 'pointer' }}
+                />
+                <span style={{ fontFamily: BODY, fontSize: 13.5, color: T.textSecondary }}>
+                  Our governing documents declare a <strong>social or charitable mission</strong>
+                </span>
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={draft.articlesRestrictProfit}
+                  onChange={e => setDraft(p => ({ ...p!, articlesRestrictProfit: e.target.checked }))}
+                  style={{ width: 16, height: 16, accentColor: T.lime, cursor: 'pointer' }}
+                />
+                <span style={{ fontFamily: BODY, fontSize: 13.5, color: T.textSecondary }}>
+                  Our articles <strong>restrict profit distribution</strong> to owners / shareholders
+                </span>
+              </label>
+            </div>
+            <p style={{ fontFamily: BODY, fontSize: 12, color: T.textTertiary, marginTop: 8, marginBottom: 0, lineHeight: 1.5 }}>
+              These three flags unlock non-charity funding (programmes, social investment, in-kind support). If you&apos;re unsure, click <em>Auto-fill from structure</em> — for most CICs, charities and co-ops, all three apply.
+            </p>
+          </div>
+
           {saveError && <p style={{ fontFamily: BODY, fontSize: 13, color: '#B91C1C', marginTop: 4 }}>{saveError}</p>}
         </>
       ) : (
@@ -1073,6 +1189,26 @@ function AboutCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
               </span>
             </FieldRow>
           )}
+          <FieldRow label="Eligibility">
+            {(org.has_asset_lock === null || org.has_asset_lock === undefined) && !org.social_mission_declared && !org.articles_restrict_profit ? (
+              <AddLink label="Add eligibility flags" onClick={startEdit} />
+            ) : (
+              <span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: 6 }}>
+                {org.has_asset_lock === true && (
+                  <span style={{ fontFamily: UI, fontSize: 12, color: T.greenMid, background: T.greenBg, padding: '3px 9px', borderRadius: 999, fontWeight: 500 }}>Asset lock</span>
+                )}
+                {org.social_mission_declared && (
+                  <span style={{ fontFamily: UI, fontSize: 12, color: T.greenMid, background: T.greenBg, padding: '3px 9px', borderRadius: 999, fontWeight: 500 }}>Social mission</span>
+                )}
+                {org.articles_restrict_profit && (
+                  <span style={{ fontFamily: UI, fontSize: 12, color: T.greenMid, background: T.greenBg, padding: '3px 9px', borderRadius: 999, fontWeight: 500 }}>Profit restricted</span>
+                )}
+                {!org.has_asset_lock && !org.social_mission_declared && !org.articles_restrict_profit && (
+                  <span style={{ fontFamily: UI, fontSize: 12, color: T.textTertiary }}>None declared</span>
+                )}
+              </span>
+            )}
+          </FieldRow>
         </>
       )}
     </CardShell>
@@ -1524,6 +1660,7 @@ function LocationCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEdit
 interface FundingDraft {
   minGrantTarget: string; maxGrantTarget: string
   fundingTypePreferences: FundingType[]
+  funderTypePreferences:  FunderType[]
 }
 
 function FundingCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd, triggerOpen, onTriggered, hasIncomplete }: {
@@ -1545,6 +1682,7 @@ function FundingCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditE
       minGrantTarget:        org.min_grant_target != null ? String(org.min_grant_target) : '',
       maxGrantTarget:        org.max_grant_target != null ? String(org.max_grant_target) : '',
       fundingTypePreferences:(org.funding_type_preferences as FundingType[]) ?? ['grant', 'programme', 'investment', 'in_kind'],
+      funderTypePreferences: (org.funder_type_preferences as FunderType[]) ?? [],
     })
     setEditing(true); onEditStart()
   }
@@ -1558,6 +1696,7 @@ function FundingCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditE
         min_grant_target:          draft.minGrantTarget ? parseInt(draft.minGrantTarget.replace(/[^0-9]/g, '')) : null,
         max_grant_target:          draft.maxGrantTarget ? parseInt(draft.maxGrantTarget.replace(/[^0-9]/g, '')) : null,
         funding_type_preferences:  draft.fundingTypePreferences,
+        funder_type_preferences:   draft.funderTypePreferences,
       })
       setEditing(false); setDraft(null); onEditEnd(); onSaved()
     } catch (e) { setSaveError(e instanceof Error ? e.message : 'Save failed') }
@@ -1576,12 +1715,26 @@ function FundingCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditE
     })
   }
 
+  function toggleFunderType(t: FunderType) {
+    setDraft(prev => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        funderTypePreferences: prev.funderTypePreferences.includes(t)
+          ? prev.funderTypePreferences.filter(x => x !== t)
+          : [...prev.funderTypePreferences, t],
+      }
+    })
+  }
+
   const minFmt = fmtThousands(org.min_grant_target)
   const maxFmt = fmtThousands(org.max_grant_target)
   const sizeLabel = minFmt && maxFmt ? `${minFmt} – ${maxFmt}` : minFmt || maxFmt || null
 
   const ftLabels = ((org.funding_type_preferences as FundingType[]) ?? [])
     .map(t => FUNDING_TYPE_OPTIONS.find(o => o.value === t)?.label).filter(Boolean)
+  const funderLabels = ((org.funder_type_preferences as FunderType[]) ?? [])
+    .map(t => FUNDER_TYPE_OPTIONS.find(o => o.value === t)?.label).filter(Boolean)
 
   return (
     <CardShell
@@ -1643,6 +1796,34 @@ function FundingCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditE
               })}
             </div>
           </FieldRow>
+          <FieldRow label="Funder types">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6 }}>
+                {FUNDER_TYPE_OPTIONS.map(opt => {
+                  const selected = draft.funderTypePreferences.includes(opt.value)
+                  return (
+                    <button
+                      key={opt.value}
+                      onClick={() => toggleFunderType(opt.value)}
+                      style={{
+                        fontFamily: UI, fontWeight: selected ? 600 : 400, fontSize: 13,
+                        padding: '7px 11px', borderRadius: 8, cursor: 'pointer',
+                        border: `1.5px solid ${selected ? T.greenMid : T.borderStrong}`,
+                        background: selected ? T.greenBg : T.white, color: selected ? T.greenText : T.textSecondary,
+                        textAlign: 'left' as const, transition: 'all 0.12s',
+                      }}
+                    >
+                      {selected && <Check size={12} style={{ display: 'inline', marginRight: 6 }} />}
+                      {opt.label}
+                    </button>
+                  )
+                })}
+              </div>
+              <p style={{ fontFamily: BODY, fontSize: 12, color: T.textTertiary, marginTop: 4, marginBottom: 0, lineHeight: 1.5 }}>
+                Leave empty for no preference. Pick the funder organisation types you want to receive matches from.
+              </p>
+            </div>
+          </FieldRow>
           {saveError && <p style={{ fontFamily: BODY, fontSize: 13, color: '#B91C1C' }}>{saveError}</p>}
         </>
       ) : (
@@ -1661,6 +1842,21 @@ function FundingCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditE
               </div>
             ) : <AddLink label="Add funding types" onClick={startEdit} />}
           </FieldRow>
+          <FieldRow label="Funder types">
+            {funderLabels.length > 0 ? (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {funderLabels.map(label => (
+                  <span key={label} style={{ fontFamily: UI, fontWeight: 500, fontSize: 12.5, padding: '4px 10px', borderRadius: 12, background: T.cream, color: T.creamText }}>
+                    {label}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <span style={{ fontFamily: BODY, fontSize: 13, color: T.textTertiary }}>
+                No preference (showing all funder types)
+              </span>
+            )}
+          </FieldRow>
         </>
       )}
     </CardShell>
@@ -1677,10 +1873,12 @@ function StoryCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
 }) {
   const [editing, setEditing] = useState(false)
   const [mission, setMission] = useState('')
+  const [themesText, setThemesText] = useState('')
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
 
   const hasMission = !!org.mission?.trim()
+  const hasThemes  = (org.themes?.length ?? 0) > 0
 
   useEffect(() => {
     if (triggerOpen && !editing) { startEdit(); onTriggered?.() }
@@ -1688,6 +1886,7 @@ function StoryCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
 
   function startEdit() {
     setMission(org.mission ?? '')
+    setThemesText((org.themes ?? []).join(', '))
     setEditing(true); onEditStart()
   }
   function cancel() { setEditing(false); setSaveError(null); onEditEnd() }
@@ -1695,7 +1894,11 @@ function StoryCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
   async function save() {
     setSaving(true); setSaveError(null)
     try {
-      await updateOrganisation(orgId, { mission: mission.trim() || null })
+      const themesArr = themesText.split(',').map(s => s.trim()).filter(Boolean)
+      await updateOrganisation(orgId, {
+        mission: mission.trim() || null,
+        themes:  themesArr,
+      })
       setEditing(false); onEditEnd(); onSaved()
     } catch (e) { setSaveError(e instanceof Error ? e.message : 'Save failed') }
     finally { setSaving(false) }
@@ -1744,19 +1947,50 @@ function StoryCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
       <div style={{ padding: '0 24px 22px', display: 'flex', flexDirection: 'column', gap: 14 }}>
         {editing ? (
           <>
-            <textarea
-              value={mission}
-              onChange={e => setMission(e.target.value)}
-              rows={5}
-              style={{ ...inputStyle(), resize: 'vertical', lineHeight: 1.6 }}
-              placeholder="Describe what your organisation does, who you serve, and the change you want to see…"
-            />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <label style={{ fontFamily: UI, fontSize: 12.5, fontWeight: 600, color: T.textSecondary, letterSpacing: '0.01em' }}>
+                Mission
+              </label>
+              <textarea
+                value={mission}
+                onChange={e => setMission(e.target.value)}
+                rows={5}
+                style={{ ...inputStyle(), resize: 'vertical', lineHeight: 1.6 }}
+                placeholder="Describe what your organisation does, who you serve, and the change you want to see…"
+              />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <label style={{ fontFamily: UI, fontSize: 12.5, fontWeight: 600, color: T.textSecondary, letterSpacing: '0.01em' }}>
+                Themes (free-text keywords)
+              </label>
+              <textarea
+                value={themesText}
+                onChange={e => setThemesText(e.target.value)}
+                rows={2}
+                style={{ ...inputStyle(), resize: 'vertical', lineHeight: 1.6, minHeight: 56 }}
+                placeholder="e.g. makerspace, fabrication, intergenerational learning, place-based"
+              />
+              <p style={{ fontFamily: BODY, fontSize: 12, color: T.textTertiary, margin: 0, lineHeight: 1.5 }}>
+                Comma-separated keywords that describe your work in your own words. Useful when your sectors don&apos;t fully capture what you do (e.g. a specific method, audience, or angle).
+              </p>
+            </div>
             {saveError && <p style={{ fontFamily: BODY, fontSize: 13, color: '#B91C1C' }}>{saveError}</p>}
           </>
         ) : hasMission ? (
-          <p style={{ fontFamily: BODY, fontSize: 15, color: T.textPrimary, lineHeight: 1.65, margin: 0, whiteSpace: 'pre-wrap' }}>
-            {org.mission}
-          </p>
+          <>
+            <p style={{ fontFamily: BODY, fontSize: 15, color: T.textPrimary, lineHeight: 1.65, margin: 0, whiteSpace: 'pre-wrap' }}>
+              {org.mission}
+            </p>
+            {hasThemes && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
+                {(org.themes ?? []).map(t => (
+                  <span key={t} style={{ fontFamily: UI, fontWeight: 500, fontSize: 12.5, padding: '3px 10px', borderRadius: 12, background: T.cream, color: T.textSecondary }}>
+                    {t}
+                  </span>
+                ))}
+              </div>
+            )}
+          </>
         ) : (
           <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start', padding: '4px 0 8px' }}>
             <div style={{
