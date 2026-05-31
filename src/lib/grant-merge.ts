@@ -37,6 +37,8 @@ export const TRACKED_FIELDS = [
   'is_invite_only',
   'funder_brief',
   'deadline_cycle',   // v1 — structured cycle dates, replaces prose-parsed cycles in expire-grants cron
+  'min_org_income',   // org-income / turnover floor — feeds eligibility.ts income check
+  'max_org_income',   // org-income / turnover cap — feeds eligibility.ts income check
 ] as const
 
 export type TrackedField = typeof TRACKED_FIELDS[number]
@@ -83,6 +85,11 @@ const TRUST_BY_TYPE: Record<string, number> = {
   // Below AI sources because AI reads content and system doesn't.
   system:           50,
   manual_extract:   50,
+  // Deterministic regex extraction over already-stored text (e.g. income gate).
+  // Above scraper so a daily crawl can't clobber a verified value, below ai_enrich
+  // so a richer LLM read can still improve it. NOT ai_detect (30) — that sits
+  // below the scraper and would silently revert on the next crawl.
+  ai_extract:       50,
   scraper:          40,
   ai_detect:        30,
   seed:             25,
