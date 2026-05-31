@@ -691,6 +691,16 @@ export function computeMatchScore(
   const orgImpactSectors   = Array.from(new Set((org.impact_sectors  ?? []).map(normalizeSector)))
   const grantImpactSectors = Array.from(new Set((grant.impactSectors ?? []).map(normalizeSector)))
 
+  // Generalist-grant signal: a grant carrying 4+ sectors where the org overlaps
+  // on 2+ is acting as a multi-theme generalist (e.g. Swire Charitable Trust:
+  // Life Chances + Restoring Nature + Neglected Neighbourhoods, tagged across
+  // 4+ sectors). For those, the primary-domain vetoes — structured, title and
+  // funder-brief — must NOT fire, because the org's natural application would
+  // target a non-primary theme they already cover. Single source of truth used
+  // by all three veto paths below. Discovered via Devi/Swire 2026-05-31.
+  const sectorOverlapCount = grantImpactSectors.filter(s => orgImpactSectors.includes(s)).length
+  const isGeneralistGrant  = grantImpactSectors.length >= 4 && sectorOverlapCount >= 2
+
   // Build a rank-weight lookup for the org's sectors based on array position.
   // Position 0 = primary sector (weight 1.0), position 1 = secondary (0.6), etc.
   // This map is used in both the structured IDF path and the depth boost below.
@@ -736,15 +746,7 @@ export function computeMatchScore(
     const grantPrimaryDomains = grantImpactSectors.filter(s => PRIMARY_DOMAINS.includes(s))
     if (grantPrimaryDomains.length > 0) {
       const orgCoversDomain = grantPrimaryDomains.some(s => orgImpactSectors.includes(s))
-      // Generalist-grant override: a grant carrying 4+ sectors where the org
-      // already overlaps on 2+ is functioning as a generalist trust where the
-      // primary-domain sector is one of several themes, not the defining lane.
-      // Without this, Swire-style trusts (Life Chances + Restoring Nature +
-      // Neglected Neighbourhoods → tagged education+community+young_people+
-      // employment+environment) get vetoed for any org that doesn't also do
-      // environment — even though the org's natural application would target
-      // a different theme entirely. Discovered via Devi/Swire 2026-05-31.
-      const isGeneralistGrant = grantImpactSectors.length >= 4 && intersection.length >= 2
+      // See generalist-grant comment near the top of this fn.
       if (!orgCoversDomain && !isGeneralistGrant) {
         primaryDomainMismatch = true
         themesScore = Math.min(themesScore, 5)
@@ -961,7 +963,7 @@ export function computeMatchScore(
           orgThemeStrings.some(theme => theme.includes(t)) ||
           orgMissionLower.includes(t)
         )
-        if (!orgCovers) {
+        if (!orgCovers && !isGeneralistGrant) {
           primaryDomainMismatch = true
           themesScore = Math.min(themesScore, 5)
         }
@@ -986,7 +988,7 @@ export function computeMatchScore(
           orgThemeStrings2.some(theme => theme.includes(t)) ||
           orgMissionLower2.includes(t)
         )
-        if (!orgCovers) {
+        if (!orgCovers && !isGeneralistGrant) {
           primaryDomainMismatch = true
           themesScore = Math.min(themesScore, 5)
         }
