@@ -263,12 +263,15 @@ function investmentChecks(opp: GrantOpportunity, org: Organisation): Eligibility
   const out: EligibilityIssue[] = []
   const mid = incomeMidpoint(org.annual_income_band)
 
-  // Minimum investment relative to income — too-large debt service risk
-  if (opp.siMinInvestment != null && mid != null && opp.siMinInvestment > mid * 0.5) {
+  // Minimum investment relative to income — too-large debt service risk.
+  // si_min_investment is ~100% null, but the scraper puts the ticket floor into
+  // amount_min for investment products, so fall back to it (no data write needed).
+  const minTicket = opp.siMinInvestment ?? opp.amountMin
+  if (minTicket != null && mid != null && minTicket > mid * 0.5) {
     out.push({
       code: 'si_min_investment_too_large',
       severity: 'warning',
-      message: `Minimum investment (£${opp.siMinInvestment.toLocaleString()}) is large relative to your income (~£${mid.toLocaleString()}). Repayment may be challenging.`,
+      message: `Minimum investment (£${minTicket.toLocaleString()}) is large relative to your income (~£${mid.toLocaleString()}). Repayment may be challenging.`,
     })
   }
 

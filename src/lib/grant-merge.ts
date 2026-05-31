@@ -39,6 +39,12 @@ export const TRACKED_FIELDS = [
   'deadline_cycle',   // v1 — structured cycle dates, replaces prose-parsed cycles in expire-grants cron
   'min_org_income',   // org-income / turnover floor — feeds eligibility.ts income check
   'max_org_income',   // org-income / turnover cap — feeds eligibility.ts income check
+  'si_min_investment',        // investment ticket floor (mostly null; engine falls back to amount_min)
+  'si_max_investment',        // investment ticket ceiling (informational)
+  'si_repayment_term_months', // repayment term (catalogue values are all ranges — left null)
+  'si_interest_rate_percent', // feeds eligibility.ts charity_repayable_finance
+  'si_security_required',     // feeds eligibility.ts si_security_vs_asset_lock
+  'si_instrument_type',       // instrument kind (informational)
 ] as const
 
 export type TrackedField = typeof TRACKED_FIELDS[number]

@@ -5,6 +5,7 @@ import { syncLocationFields } from '@/lib/funder-brief'
 import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
 import { mergeGrantUpdate, type ProvenanceEntry } from '@/lib/grant-merge'
 import { extractIncomeGate } from '@/lib/extract-income-gate'
+import { extractInvestmentTerms } from '@/lib/extract-investment-terms'
 
 type Citation = NonNullable<ProvenanceEntry['citation']>
 
@@ -20,6 +21,11 @@ const PROVENANCE_SOURCE = `ai_enrich:${ENRICH_VERSION}`
 // under its own source/trust (ai_extract = 50) so a verified gate survives the
 // daily crawl. Re-derived on every enrich so a removed gate clears itself.
 const INCOME_SOURCE = 'ai_extract:income:v1'
+
+// Deterministic social-investment terms parse — same trust tier as the income
+// gate. Only runs for funding_type='investment'. Writes si_security_required +
+// si_interest_rate_percent resolved-or-null so a removed term self-clears.
+const INVESTMENT_SOURCE = 'ai_extract:investment:v1'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -95,7 +101,7 @@ export async function POST(req: NextRequest) {
   // Load grant
   const { data: grant, error } = await supabase
     .from('scraped_grants')
-    .select('id, title, funder, apply_url, description, eligibility_criteria, funder_brief')
+    .select('id, title, funder, apply_url, description, eligibility_criteria, funder_brief, funding_type, amount_min, amount_max')
     .eq('id', grantId)
     .single()
 
@@ -438,11 +444,56 @@ NOTE: _deadline_cycle and its _citations entry are ONLY present when a recurring
       db:        supabase,
     })
 
+    // Social-investment terms — only for investment products. Writes the two
+    // verdict-driving fields resolved-or-null (self-clearing); ticket / term are
+    // deliberately left untouched (engine falls back to amount_min; terms are
+    // all ranges). See extract-investment-terms.ts.
+    let investmentApplied: string[] = []
+    let investmentRejected: typeof incomeResult.rejected = []
+    let investmentDebug: Record<string, unknown> | null = null
+    if (grant.funding_type === 'investment') {
+      const invTerms = extractInvestmentTerms({
+        description: typeof grant.description === 'string' ? grant.description : null,
+        eligibilityCriteria: Array.isArray(grant.eligibility_criteria)
+          ? (grant.eligibility_criteria as string[])
+          : typeof grant.eligibility_criteria === 'string' ? [grant.eligibility_criteria] : null,
+        whoCanApply:  typeof briefToSave.who_can_apply === 'string' ? briefToSave.who_can_apply : null,
+        exclusions:   typeof briefToSave.exclusions === 'string' ? briefToSave.exclusions : null,
+        typicalAward: typeof briefToSave.typical_award === 'string' ? briefToSave.typical_award : null,
+        amountMin: typeof grant.amount_min === 'number' ? grant.amount_min : null,
+        amountMax: typeof grant.amount_max === 'number' ? grant.amount_max : null,
+      })
+      const invFields: Record<string, unknown> = {
+        si_security_required:     invTerms.securityRequired ?? null,
+        si_interest_rate_percent: invTerms.interestRatePercent ?? null,
+      }
+      const invCitations: Record<string, Citation> = {}
+      if (invTerms.securityCitation) invCitations.si_security_required = invTerms.securityCitation
+      if (invTerms.interestCitation) invCitations.si_interest_rate_percent = invTerms.interestCitation
+      const invResult = await mergeGrantUpdate({
+        id:        grantId,
+        fields:    invFields,
+        source:    INVESTMENT_SOURCE,
+        pinned:    false,
+        citations: Object.keys(invCitations).length > 0 ? invCitations : undefined,
+        db:        supabase,
+      })
+      investmentApplied = invResult.applied
+      investmentRejected = invResult.rejected
+      investmentDebug = {
+        securityRequired:   invTerms.securityRequired ?? null,
+        interestRatePercent: invTerms.interestRatePercent ?? null,
+        ticketConflict:     invTerms.ticketConflict ?? null,
+        termRangePresent:   invTerms.termRangePresent ?? false,
+        notes:              invTerms.notes,
+      }
+    }
+
     return NextResponse.json({
       success:  true,
       brief,
-      applied:  [...result.applied, ...incomeResult.applied],
-      rejected: [...result.rejected, ...incomeResult.rejected],
+      applied:  [...result.applied, ...incomeResult.applied, ...investmentApplied],
+      rejected: [...result.rejected, ...incomeResult.rejected, ...investmentRejected],
       _debug:   {
         primaryFetch:     primaryFetchDebug,
         fetchedFromUrl,
@@ -453,6 +504,7 @@ NOTE: _deadline_cycle and its _citations entry are ONLY present when a recurring
           max:               incomeGate.maxOrgIncome ?? null,
           gateLanguagePresent: incomeGate.gateLanguagePresent,
         },
+        investmentTerms: investmentDebug,
       },
     })
   } catch (err) {
