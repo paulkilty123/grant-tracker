@@ -304,21 +304,35 @@ const FUNDING_TYPE_OPTIONS: { value: FundingType; label: string }[] = [
 
 // Funder type preferences — multi-select picker on the profile editor.
 // Used by the matcher's funder type dimension (max 8). Org-level preference;
-// each grant carries its own single funder_type.
-const FUNDER_TYPE_OPTIONS: { value: FunderType; label: string }[] = [
-  { value: 'trust_foundation',     label: 'Trust / Foundation' },
-  { value: 'community_foundation', label: 'Community Foundation' },
-  { value: 'corporate_foundation', label: 'Corporate Foundation' },
-  { value: 'corporate',            label: 'Corporate Direct' },
-  { value: 'lottery',              label: 'Lottery' },
-  { value: 'government',           label: 'Government' },
-  { value: 'local_authority',      label: 'Local Authority' },
-  { value: 'housing_association',  label: 'Housing Association' },
-  { value: 'capacity_builder',     label: 'Capacity Builder' },
-  { value: 'competition',          label: 'Competition / Award' },
-  { value: 'loan',                 label: 'Social Loan' },
-  { value: 'crowdfund_match',      label: 'Crowdfund Match' },
-  { value: 'other',                label: 'Other' },
+// each grant carries its own single funder_type. Descriptions surface as
+// native tooltips on hover.
+const FUNDER_TYPE_OPTIONS: { value: FunderType; label: string; description: string }[] = [
+  { value: 'trust_foundation',     label: 'Trust / Foundation',
+    description: 'Independent grant-making trusts and foundations (e.g. Esmée Fairbairn, Lloyds Bank Foundation, Garfield Weston). The bulk of UK charitable funding sits here.' },
+  { value: 'community_foundation', label: 'Community Foundation',
+    description: 'Place-based funders that pool donations from local donors and grant within a specific geography (e.g. London Community Foundation, Foundation Scotland, Quartet Community Foundation).' },
+  { value: 'corporate_foundation', label: 'Corporate Foundation',
+    description: 'Charitable foundations established by a company but legally separate from it (e.g. Aviva Foundation, Co-op Foundation, Lloyds Bank Foundation).' },
+  { value: 'corporate',            label: 'Corporate Direct',
+    description: 'Funding given directly by a company itself rather than through its foundation — e.g. employee-volunteering grants, community partnership funds, sponsorship.' },
+  { value: 'lottery',              label: 'Lottery',
+    description: 'National Lottery distributors: National Lottery Community Fund, Heritage Fund, Arts Council, Sport England (lottery-funded streams).' },
+  { value: 'government',           label: 'Government',
+    description: 'Central UK government departments and arms-length bodies — DCMS, DLUHC, UKRI, devolved nations governments.' },
+  { value: 'local_authority',      label: 'Local Authority',
+    description: 'Councils — borough, county, city or unitary — distributing grants from their own budgets or passing through national funding streams.' },
+  { value: 'housing_association',  label: 'Housing Association',
+    description: 'Registered providers of social housing that fund community initiatives in or around their estates (e.g. Peabody, Clarion Futures, Notting Hill Genesis).' },
+  { value: 'capacity_builder',     label: 'Capacity Builder',
+    description: 'Infrastructure charities that provide pro-bono or in-kind support — strategy advice, marketing, tech, leadership development — instead of cash (e.g. Pilotlight, Superhighways, CAST, NPC).' },
+  { value: 'competition',          label: 'Competition / Award',
+    description: 'Prize-based funding, pitch competitions, innovation challenges, awards (e.g. Nesta challenges, AccelerateHer, The Hub Award).' },
+  { value: 'loan',                 label: 'Social Loan',
+    description: 'Repayable social finance — interest-free or low-interest loans aimed at social-purpose orgs (e.g. Key Fund, Social Investment Business).' },
+  { value: 'crowdfund_match',      label: 'Crowdfund Match',
+    description: 'Funders that match money you raise via crowdfunding platforms — typically pound-for-pound up to a cap (e.g. Crowdfunder match funds, council match programmes).' },
+  { value: 'other',                label: 'Other',
+    description: 'Any funder type that doesn’t fit the categories above.' },
 ]
 
 /** Derive the three eligibility flags from a legal structure. Mirrors the
@@ -1706,6 +1720,7 @@ function FundingCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditE
                     <button
                       key={opt.value}
                       onClick={() => toggleFunderType(opt.value)}
+                      title={opt.description}
                       style={{
                         fontFamily: UI, fontWeight: selected ? 600 : 400, fontSize: 13,
                         padding: '7px 11px', borderRadius: 8, cursor: 'pointer',
@@ -1721,7 +1736,7 @@ function FundingCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditE
                 })}
               </div>
               <p style={{ fontFamily: BODY, fontSize: 12, color: T.textTertiary, marginTop: 4, marginBottom: 0, lineHeight: 1.5 }}>
-                Leave empty for no preference. Pick the funder organisation types you want to receive matches from.
+                Leave empty for no preference. Hover any option for a definition.
               </p>
             </div>
           </FieldRow>
