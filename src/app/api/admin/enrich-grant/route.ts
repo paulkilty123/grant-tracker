@@ -4,6 +4,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { syncLocationFields } from '@/lib/funder-brief'
 import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
 import { mergeGrantUpdate, type ProvenanceEntry } from '@/lib/grant-merge'
+import { extractIncomeGate } from '@/lib/extract-income-gate'
 
 type Citation = NonNullable<ProvenanceEntry['citation']>
 
@@ -14,6 +15,11 @@ export const maxDuration = 45 // seconds — requires Vercel Pro
 // extraction. See docs/pipeline-v1-spec.md §4 and §6.
 const ENRICH_VERSION    = 'v2'
 const PROVENANCE_SOURCE = `ai_enrich:${ENRICH_VERSION}`
+
+// Deterministic org-income gate parse runs alongside the LLM brief but writes
+// under its own source/trust (ai_extract = 50) so a verified gate survives the
+// daily crawl. Re-derived on every enrich so a removed gate clears itself.
+const INCOME_SOURCE = 'ai_extract:income:v1'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -358,6 +364,20 @@ NOTE: _deadline_cycle and its _citations entry are ONLY present when a recurring
   const briefToSave: Record<string, unknown> = { ...brief }
   delete briefToSave._deadline_cycle  // canonical home is the column, not the blob
 
+  // Deterministic org-income gate parse over the stored text + fresh brief.
+  // Reads grant.description / eligibility_criteria (original scrape) plus the
+  // brief's who_can_apply / exclusions / typical_award so band language phrased
+  // either way is caught. Written separately below under INCOME_SOURCE.
+  const incomeGate = extractIncomeGate({
+    description: typeof grant.description === 'string' ? grant.description : null,
+    eligibilityCriteria: Array.isArray(grant.eligibility_criteria)
+      ? (grant.eligibility_criteria as string[])
+      : typeof grant.eligibility_criteria === 'string' ? [grant.eligibility_criteria] : null,
+    whoCanApply:  typeof briefToSave.who_can_apply === 'string' ? briefToSave.who_can_apply : null,
+    exclusions:   typeof briefToSave.exclusions === 'string' ? briefToSave.exclusions : null,
+    typicalAward: typeof briefToSave.typical_award === 'string' ? briefToSave.typical_award : null,
+  })
+
   const updatePayload: Record<string, unknown> = { funder_brief: briefToSave }
   syncLocationFields(briefToSave, updatePayload)
   if (cycleFromBrief && cycleFromBrief.length > 0) {
@@ -396,16 +416,43 @@ NOTE: _deadline_cycle and its _citations entry are ONLY present when a recurring
       citations: Object.keys(citationsForMerger).length > 0 ? citationsForMerger : undefined,
       db:        supabase,
     })
+
+    // Org-income gate, written under its own source/trust. Always write
+    // resolved-or-null so a gate removed from the text clears the prior value
+    // (same-source clear) rather than leaving a stale figure behind.
+    const incomeFields: Record<string, unknown> = {
+      min_org_income: incomeGate.minOrgIncome ?? null,
+      max_org_income: incomeGate.maxOrgIncome ?? null,
+    }
+    const incomeCitations: Record<string, Citation> = {}
+    if (incomeGate.citation) {
+      if (incomeGate.maxOrgIncome !== undefined) incomeCitations.max_org_income = incomeGate.citation
+      if (incomeGate.minOrgIncome !== undefined) incomeCitations.min_org_income = incomeGate.citation
+    }
+    const incomeResult = await mergeGrantUpdate({
+      id:        grantId,
+      fields:    incomeFields,
+      source:    INCOME_SOURCE,
+      pinned:    false,
+      citations: Object.keys(incomeCitations).length > 0 ? incomeCitations : undefined,
+      db:        supabase,
+    })
+
     return NextResponse.json({
       success:  true,
       brief,
-      applied:  result.applied,
-      rejected: result.rejected,
+      applied:  [...result.applied, ...incomeResult.applied],
+      rejected: [...result.rejected, ...incomeResult.rejected],
       _debug:   {
         primaryFetch:     primaryFetchDebug,
         fetchedFromUrl,
         citationsApplied: Object.keys(citationsForMerger),
         cycleExtracted:   cycleFromBrief !== null,
+        incomeGate: {
+          min:               incomeGate.minOrgIncome ?? null,
+          max:               incomeGate.maxOrgIncome ?? null,
+          gateLanguagePresent: incomeGate.gateLanguagePresent,
+        },
       },
     })
   } catch (err) {
