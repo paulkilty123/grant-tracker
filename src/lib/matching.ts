@@ -736,7 +736,16 @@ export function computeMatchScore(
     const grantPrimaryDomains = grantImpactSectors.filter(s => PRIMARY_DOMAINS.includes(s))
     if (grantPrimaryDomains.length > 0) {
       const orgCoversDomain = grantPrimaryDomains.some(s => orgImpactSectors.includes(s))
-      if (!orgCoversDomain) {
+      // Generalist-grant override: a grant carrying 4+ sectors where the org
+      // already overlaps on 2+ is functioning as a generalist trust where the
+      // primary-domain sector is one of several themes, not the defining lane.
+      // Without this, Swire-style trusts (Life Chances + Restoring Nature +
+      // Neglected Neighbourhoods → tagged education+community+young_people+
+      // employment+environment) get vetoed for any org that doesn't also do
+      // environment — even though the org's natural application would target
+      // a different theme entirely. Discovered via Devi/Swire 2026-05-31.
+      const isGeneralistGrant = grantImpactSectors.length >= 4 && intersection.length >= 2
+      if (!orgCoversDomain && !isGeneralistGrant) {
         primaryDomainMismatch = true
         themesScore = Math.min(themesScore, 5)
       }
