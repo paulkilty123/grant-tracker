@@ -958,9 +958,10 @@ interface AboutDraft {
   name: string; legalStructure: LegalStructure | ''
   annualIncomeBand: string; yearsTrading: string
   orgStage: OrgStage | ''; charityNumber: string
-  hasAssetLock:           boolean | null
-  socialMissionDeclared:  boolean
-  articlesRestrictProfit: boolean
+  // Single toggle that maps to three DB flags (asset_lock, social_mission,
+  // profit_restrict). When true, derive from legal_structure on save; when
+  // false, all three save as false.
+  missionLed: boolean
   alsoIndividualPractitioner: boolean
 }
 
@@ -988,9 +989,7 @@ function AboutCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
       orgStage:                   (org.org_stage as OrgStage) ?? '',
       charityNumber:              org.charity_number ?? org.cic_number ?? '',
       alsoIndividualPractitioner: org.also_individual_practitioner ?? false,
-      hasAssetLock:               org.has_asset_lock,
-      socialMissionDeclared:      org.social_mission_declared ?? false,
-      articlesRestrictProfit:     org.articles_restrict_profit ?? false,
+      missionLed: !!(org.has_asset_lock || org.social_mission_declared || org.articles_restrict_profit),
     })
     setEditing(true)
     onEditStart()
@@ -1010,9 +1009,13 @@ function AboutCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
         org_stage:                    draft.orgStage || undefined,
         charity_number:               draft.charityNumber.trim() || null,
         also_individual_practitioner: draft.alsoIndividualPractitioner,
-        has_asset_lock:               draft.hasAssetLock,
-        social_mission_declared:      draft.socialMissionDeclared,
-        articles_restrict_profit:     draft.articlesRestrictProfit,
+        // Derive the three eligibility flags from the single mission-led
+        // toggle + legal structure. cic_shares stays profit-distributable
+        // even when mission-led; all other social structures get all three.
+        ...(draft.missionLed
+              ? deriveEligibilityFlagsFromStructure(draft.legalStructure)
+              : { has_asset_lock: false, social_mission_declared: false, articles_restrict_profit: false }
+           ),
       })
       setEditing(false); setDraft(null); onEditEnd(); onSaved()
     } catch (e) {
@@ -1098,67 +1101,24 @@ function AboutCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
             <Toggle enabled={draft.alsoIndividualPractitioner} onToggle={() => setDraft(p => ({ ...p!, alsoIndividualPractitioner: !p!.alsoIndividualPractitioner }))} />
           </div>
 
-          {/* Eligibility flags — used by the eligibility engine to match
-              non-charity funding (programmes, social investment, in-kind
-              that accept CICs / co-ops / ltd-by-guarantee). */}
+          {/* Single mission-led toggle — derives asset_lock, social mission,
+              and profit-restriction flags from legal_structure on save. Used
+              by the eligibility engine to unlock non-charity funding
+              (programmes, social investment, in-kind). */}
           <div style={{ paddingTop: 12, borderTop: `1px solid ${T.border}`, marginTop: 8 }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 8 }}>
-              <span style={{ fontFamily: UI, fontSize: 13.5, color: T.textPrimary, fontWeight: 600 }}>
-                Eligibility (governing documents)
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={draft.missionLed}
+                onChange={e => setDraft(p => ({ ...p!, missionLed: e.target.checked }))}
+                style={{ width: 16, height: 16, accentColor: T.lime, cursor: 'pointer', marginTop: 2, flexShrink: 0 }}
+              />
+              <span style={{ fontFamily: BODY, fontSize: 13.5, color: T.textSecondary, lineHeight: 1.5 }}>
+                <strong style={{ color: T.textPrimary }}>We are a mission-led organisation</strong> — our governing documents commit our assets and profits to a social or charitable purpose.
               </span>
-              <button
-                type="button"
-                onClick={() => {
-                  const f = deriveEligibilityFlagsFromStructure(draft.legalStructure)
-                  setDraft(p => ({
-                    ...p!,
-                    hasAssetLock:           f.has_asset_lock,
-                    socialMissionDeclared:  f.social_mission_declared,
-                    articlesRestrictProfit: f.articles_restrict_profit,
-                  }))
-                }}
-                style={{ fontFamily: UI, fontSize: 12, color: T.greenMid, background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
-              >
-                Auto-fill from structure
-              </button>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={draft.hasAssetLock === true}
-                  onChange={e => setDraft(p => ({ ...p!, hasAssetLock: e.target.checked }))}
-                  style={{ width: 16, height: 16, accentColor: T.lime, cursor: 'pointer' }}
-                />
-                <span style={{ fontFamily: BODY, fontSize: 13.5, color: T.textSecondary }}>
-                  Our governing documents include an <strong>asset lock</strong> (assets dedicated to social purpose, can&apos;t be distributed to owners on dissolution)
-                </span>
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={draft.socialMissionDeclared}
-                  onChange={e => setDraft(p => ({ ...p!, socialMissionDeclared: e.target.checked }))}
-                  style={{ width: 16, height: 16, accentColor: T.lime, cursor: 'pointer' }}
-                />
-                <span style={{ fontFamily: BODY, fontSize: 13.5, color: T.textSecondary }}>
-                  Our governing documents declare a <strong>social or charitable mission</strong>
-                </span>
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={draft.articlesRestrictProfit}
-                  onChange={e => setDraft(p => ({ ...p!, articlesRestrictProfit: e.target.checked }))}
-                  style={{ width: 16, height: 16, accentColor: T.lime, cursor: 'pointer' }}
-                />
-                <span style={{ fontFamily: BODY, fontSize: 13.5, color: T.textSecondary }}>
-                  Our articles <strong>restrict profit distribution</strong> to owners / shareholders
-                </span>
-              </label>
-            </div>
-            <p style={{ fontFamily: BODY, fontSize: 12, color: T.textTertiary, marginTop: 8, marginBottom: 0, lineHeight: 1.5 }}>
-              These three flags unlock non-charity funding (programmes, social investment, in-kind support). If you&apos;re unsure, click <em>Auto-fill from structure</em> — for most CICs, charities and co-ops, all three apply.
+            </label>
+            <p style={{ fontFamily: BODY, fontSize: 12, color: T.textTertiary, marginTop: 8, marginBottom: 0, lineHeight: 1.5, paddingLeft: 26 }}>
+              Unlocks non-charity funding (programmes, social investment, in-kind support). Applies to almost all charities, CICs, co-ops and ltd-by-guarantee social enterprises.
             </p>
           </div>
 
@@ -1193,24 +1153,15 @@ function AboutCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
               </span>
             </FieldRow>
           )}
-          <FieldRow label="Eligibility">
-            {(org.has_asset_lock === null || org.has_asset_lock === undefined) && !org.social_mission_declared && !org.articles_restrict_profit ? (
-              <AddLink label="Add eligibility flags" onClick={startEdit} />
-            ) : (
-              <span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: 6 }}>
-                {org.has_asset_lock === true && (
-                  <span style={{ fontFamily: UI, fontSize: 12, color: T.greenMid, background: T.greenBg, padding: '3px 9px', borderRadius: 999, fontWeight: 500 }}>Asset lock</span>
-                )}
-                {org.social_mission_declared && (
-                  <span style={{ fontFamily: UI, fontSize: 12, color: T.greenMid, background: T.greenBg, padding: '3px 9px', borderRadius: 999, fontWeight: 500 }}>Social mission</span>
-                )}
-                {org.articles_restrict_profit && (
-                  <span style={{ fontFamily: UI, fontSize: 12, color: T.greenMid, background: T.greenBg, padding: '3px 9px', borderRadius: 999, fontWeight: 500 }}>Profit restricted</span>
-                )}
-                {!org.has_asset_lock && !org.social_mission_declared && !org.articles_restrict_profit && (
-                  <span style={{ fontFamily: UI, fontSize: 12, color: T.textTertiary }}>None declared</span>
-                )}
+          <FieldRow label="Mission-led">
+            {(org.has_asset_lock || org.social_mission_declared || org.articles_restrict_profit) ? (
+              <span style={{ fontFamily: UI, fontSize: 12, color: T.greenMid, background: T.greenBg, padding: '3px 10px', borderRadius: 999, fontWeight: 500 }}>
+                Yes
               </span>
+            ) : (org.has_asset_lock === null || org.has_asset_lock === undefined) ? (
+              <AddLink label="Confirm mission-led status" onClick={startEdit} />
+            ) : (
+              <span style={{ fontFamily: UI, fontSize: 12, color: T.textTertiary }}>Not declared</span>
             )}
           </FieldRow>
         </>
