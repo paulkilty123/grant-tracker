@@ -1,6 +1,7 @@
 import type { GrantOpportunity, Organisation, LegalStructure, BeneficiaryGroup } from '@/types'
 import { runEligibilityChecks } from './eligibility'
 import type { EligibilityStatus as EligibilityStatusFromEngine, EligibilityIssue } from './eligibility'
+import { extractIncomeGate } from './extract-income-gate'
 
 export interface MatchBreakdown {
   location:      { score: number; max: number; label: string }
@@ -1580,6 +1581,33 @@ export function computeMatchScore(
   } else if (hasBranchedWarning && eligibilityStatus === 'eligible') {
     eligibilityStatus = 'check_required'
     if (!eligibilityReason) eligibilityReason = branchedVerdict.reason
+  }
+
+  // ── Income-gate evidence downgrade ───────────────────────────────────
+  // When the text states an org-income / turnover gate we couldn't resolve to
+  // a value, both min/maxOrgIncome are null, so the branched engine's income
+  // check never fires and an otherwise-eligible verdict silently over-passes.
+  // Downgrade eligible → check_required, but ONLY on hard evidence (gate
+  // language present) so we don't flood the ~90% of rows that have no gate.
+  // Guarded behind the cheap null/status checks so the regex pass only runs on
+  // the small "eligible + unresolved income" subset.
+  if (eligibilityStatus === 'eligible' && grant.minOrgIncome == null && grant.maxOrgIncome == null) {
+    // funderBrief lives on EnrichedGrant; the matcher types grant as the base
+    // GrantOpportunity, so read it via a local structural cast (no import cycle).
+    const brief = (grant as { funderBrief?: Record<string, string | null> | null }).funderBrief
+    const incomeGate = extractIncomeGate({
+      description:         grant.description,
+      eligibilityCriteria: grant.eligibilityCriteria,
+      whoCanApply:        brief?.who_can_apply ?? null,
+      exclusions:         brief?.exclusions ?? null,
+      typicalAward:       brief?.typical_award ?? null,
+    })
+    if (incomeGate.gateLanguagePresent) {
+      eligibilityStatus = 'check_required'
+      if (!eligibilityReason) {
+        eligibilityReason = 'This funder sets an organisation-income limit we could not confirm — check your income is within range before applying.'
+      }
+    }
   }
 
   // Surface engine messages in the warn list (deduped against existing warns)
