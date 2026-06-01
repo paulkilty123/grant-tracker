@@ -2663,12 +2663,16 @@ export default function UrlAdminPage() {
     let q = supabase
       .from('scraped_grants')
       .select('id, title, funder, apply_url, url_status, funder_brief, grant_sources, source, url_last_checked, is_invite_only')
-      .not('apply_url', 'is', null)
     if (scope === 'active') {
-      q = q.eq('is_active', true)
+      // Active catalogue: only rows with a primary URL to re-fetch.
+      q = q.eq('is_active', true).not('apply_url', 'is', null)
     } else {
-      // Needs Review queue: inactive, not hidden, not parked for later
-      q = q.eq('is_active', false).neq('url_status', 'dead').not('saved_for_later', 'is', 'true')
+      // Needs Review queue: mirror loadReviewGrants — driven by pipeline_state,
+      // NOT is_active (captured rows are often still active). apply_url is not
+      // required: enrich-grant falls back to grant_sources / knowledge when null.
+      q = q
+        .in('pipeline_state', ['captured', 'enriched', 'tagged', 'tagged_awaiting_review'])
+        .not('saved_for_later', 'is', 'true')
     }
     const { data: rawData } = await q
     // Treat knowledge_fallback briefs as unenriched — the LLM filled fields
@@ -2792,8 +2796,7 @@ export default function UrlAdminPage() {
     const { data: rawData } = await supabase
       .from('scraped_grants')
       .select('id, title, funder, apply_url, url_status, funder_brief, grant_sources, source, url_last_checked, is_invite_only, description, amount_min, amount_max, deadline, is_rolling, next_open_date, location_tag, eligible_structures, impact_sectors, target_beneficiaries, funder_type, funding_type, first_seen_at, field_provenance')
-      .eq('is_active', false)
-      .neq('url_status', 'dead')
+      .in('pipeline_state', ['captured', 'enriched', 'tagged', 'tagged_awaiting_review'])
       .not('saved_for_later', 'is', 'true')
       .not('funder_brief', 'is', null)
 
