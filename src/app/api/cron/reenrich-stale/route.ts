@@ -36,6 +36,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
 
 export const dynamic     = 'force-dynamic'
 export const maxDuration = 270
@@ -142,11 +143,47 @@ type Candidate = {
 export async function GET(req: NextRequest) {
   const auth       = req.headers.get('authorization')
   const cronSecret = process.env.CRON_SECRET
-  if (cronSecret && auth !== `Bearer ${cronSecret}`) {
+
+  // Three auth paths:
+  //   1. Vercel cron → Bearer ${CRON_SECRET}
+  //   2. Manual admin curl → Bearer ${ADMIN_SECRET}
+  //   3. Manual admin via browser button → admin session cookie
+  // Paths 2 + 3 (collectively "admin manual triggers") bypass the cron-
+  // enabled gate below so manual batches run even when the scheduled cron
+  // is disabled.
+  const isCronCaller = !!(cronSecret && auth === `Bearer ${cronSecret}`)
+  const isAdminCaller = !isCronCaller && (
+    isAdminBearerToken(auth) || (await requireAdmin()).ok
+  )
+  if (!isCronCaller && !isAdminCaller) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  // Cron-enabled gate. Default is DISABLED — automated cron runs are a no-op
+  // until REENRICH_CRON_ENABLED=true is set in Vercel env. This is the gate
+  // Paul controls to time the first full sweep against the live catalogue.
+  // The first sweep will flag ~20-40% of rows for tag review (classifier
+  // prompt + taxonomy have evolved since most rows were originally tagged);
+  // we don't want that volume happening unsupervised during submission week.
+  // Manual admin triggers (isAdminCaller=true) always run regardless.
+  if (isCronCaller && process.env.REENRICH_CRON_ENABLED !== 'true') {
+    return NextResponse.json({
+      success: true,
+      skipped: true,
+      reason:  'reenrich cron disabled — set REENRICH_CRON_ENABLED=true to enable automated runs. Admin manual triggers still execute.',
+    })
+  }
+
   const db = adminClient()
+
+  // Manual triggers can pass ?limit=N to control batch size (capped at 50 to
+  // prevent runaway). Scheduled cron always uses the hard-coded BATCH_LIMIT.
+  const url = new URL(req.url)
+  const limitParam = url.searchParams.get('limit')
+  const requestedLimit = limitParam ? parseInt(limitParam, 10) : BATCH_LIMIT
+  const effectiveLimit = isAdminCaller && Number.isFinite(requestedLimit)
+    ? Math.min(Math.max(1, requestedLimit), 50)
+    : BATCH_LIMIT
 
   // Compute stale cutoff as ISO date for the SQL comparison
   const cutoff = new Date()
@@ -156,7 +193,7 @@ export async function GET(req: NextRequest) {
   // Pull candidates — over-fetch (3x batch limit) since some will be filtered
   // out by the admin-touch guard in JS. Order by last_enriched ASC NULLS FIRST
   // so we always work the oldest first.
-  const overFetch = BATCH_LIMIT * 3
+  const overFetch = effectiveLimit * 3
   const { data: rows, error: fetchErr } = await db
     .from('scraped_grants')
     .select('id, title, funder, funder_brief, field_provenance')
@@ -203,7 +240,7 @@ export async function GET(req: NextRequest) {
       continue
     }
     eligible.push(row)
-    if (eligible.length >= BATCH_LIMIT) break
+    if (eligible.length >= effectiveLimit) break
   }
 
   if (eligible.length === 0) {

@@ -350,6 +350,8 @@ export default function UrlAdminPage() {
   const [bulkDetectDone, setBulkDetectDone]   = useState(0)
   const [bulkDetectTotal, setBulkDetectTotal] = useState(0)
   const [bulkDetectLog, setBulkDetectLog]     = useState<string[]>([])
+  const [reenrichRunning, setReenrichRunning] = useState(false)
+  const [reenrichResult, setReenrichResult]   = useState<string | null>(null)
 
   // ── Auth check ───────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -2824,6 +2826,51 @@ export default function UrlAdminPage() {
   // Needs Review queue WITHOUT touching enrichment. For rows that already
   // have a funder_brief but never went through Detect (or pre-date a
   // detector improvement like the negative-context filter), this populates
+  // Manual trigger for the reenrich-stale cron. The cron's automatic daily
+  // run is disabled until REENRICH_CRON_ENABLED=true is set in Vercel env
+  // (gate inside the route); this button bypasses that gate so admin can
+  // run controlled batches of the first catalogue-wide sweep before the
+  // schedule takes over. Defaults to 6 rows per run (matches BATCH_LIMIT);
+  // admin can pass a custom limit via the prompt.
+  async function runManualReenrichBatch() {
+    if (reenrichRunning) return
+    const limitStr = window.prompt('Re-enrich how many rows? (1-50; cron default is 6)', '6')
+    if (limitStr == null) return
+    const limit = Math.max(1, Math.min(50, parseInt(limitStr, 10) || 6))
+    setReenrichRunning(true)
+    setReenrichResult(null)
+    try {
+      // Admin session cookie authenticates — no bearer token needed (the
+      // cron route accepts session auth via requireAdmin when not called
+      // with a Bearer header).
+      const res  = await fetch(`/api/cron/reenrich-stale?limit=${limit}`, {
+        method: 'GET',
+        credentials: 'same-origin',
+      })
+      const json = await res.json()
+      if (res.ok) {
+        const processed       = json.processed       ?? 0
+        const succeeded       = json.succeeded       ?? 0
+        const failed          = json.failed          ?? 0
+        const materially      = json.materially_changed ?? 0
+        const flagged         = json.flagged_for_review  ?? 0
+        const skipped         = json.skipped_admin_touch ?? 0
+        setReenrichResult(
+          `Processed ${processed} • succeeded ${succeeded} • failed ${failed} • ` +
+          `material change ${materially} (flagged ${flagged}) • skipped admin-touch ${skipped}`
+        )
+        await loadStats()
+        if (filter === 'tag_review' || filter === 'review') await loadReviewGrants()
+      } else {
+        setReenrichResult(`Error ${res.status}: ${json?.error ?? 'unknown'}`)
+      }
+    } catch (err) {
+      setReenrichResult(`Network error: ${err instanceof Error ? err.message : String(err)}`)
+    } finally {
+      setReenrichRunning(false)
+    }
+  }
+
   // amount/deadline/location/next_open_date from the existing brief. No
   // Claude calls — just JS regex + a Supabase write per row.
   async function bulkDetectReview() {
@@ -3906,6 +3953,31 @@ export default function UrlAdminPage() {
               </button>
             </div>
           </div>
+
+          {/* Tag Review only: manual re-enrich trigger. The scheduled cron is
+              disabled until catalogue tag-state is caught up; admin runs
+              controlled batches here. */}
+          {filter === 'tag_review' && (
+            <div className="flex items-center justify-between border-b border-warm bg-blue-50/40 px-5 py-2.5">
+              <div className="text-xs text-blue-900/80">
+                <span className="font-semibold">First-sweep mode:</span> the daily cron is paused. Run a controlled batch when you&rsquo;re ready to review the next set of tag changes.
+              </div>
+              <div className="flex items-center gap-2">
+                {reenrichResult && (
+                  <span className="text-xs text-blue-700">{reenrichResult}</span>
+                )}
+                <button
+                  onClick={runManualReenrichBatch}
+                  disabled={reenrichRunning}
+                  className="flex items-center gap-1.5 rounded-full bg-blue-700 px-4 py-1.5 text-xs font-semibold text-white hover:bg-blue-800 transition-colors disabled:opacity-50"
+                >
+                  {reenrichRunning
+                    ? <><RefreshCw className="h-3 w-3 animate-spin" /> Running batch…</>
+                    : <><RefreshCw className="h-3 w-3" /> Run re-enrich batch</>}
+                </button>
+              </div>
+            </div>
+          )}
           {reviewGrants.length === 0 ? (
             <div className="py-16 text-center">
               <CheckCircle className="mx-auto mb-3 h-8 w-8 text-sage" />
