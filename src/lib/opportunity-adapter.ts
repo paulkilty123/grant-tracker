@@ -532,18 +532,29 @@ export function getAllMCPTaxonomies(): Record<MCPTaxonomyName, MCPTaxonomyEntry[
   }
 }
 
-// DB funding_type → MCP enum. accelerator/blended_finance coerced to nearest cousin
-// (2 active rows total, see spec §appendix). Unknown DB values return null.
-export function mapFundingType(db_type: string | null): MCPFundingType | null {
-  if (!db_type) return null
+// DB funding_type → MCP enum. accelerator / blended_finance / support_programme
+// coerced to nearest cousin. Unknown DB values fall through to 'grant' (the
+// most generic canonical type) and emit a console warning — never null, never
+// throw. Returning null from this function previously triggered AdapterError
+// in toMCPOpportunitySummary, which crashed any unfiltered "find me grants"
+// query the moment ONE row in the catalogue had a drift-typed value.
+// Defensive coercion + warning is the right shape: keep the system serving,
+// surface the drift in logs so it can be cleaned up.
+export function mapFundingType(db_type: string | null): MCPFundingType {
+  if (!db_type) return 'grant'
   switch (db_type) {
-    case 'grant':            return 'grant'
-    case 'programme':        return 'programme'
-    case 'investment':       return 'investment'
-    case 'in_kind':          return 'in_kind'
-    case 'accelerator':      return 'programme'      // closest cousin
-    case 'blended_finance':  return 'investment'     // closest cousin
-    default:                 return null             // legacy values (capacity_building, etc.) dropped
+    case 'grant':              return 'grant'
+    case 'programme':          return 'programme'
+    case 'investment':         return 'investment'
+    case 'in_kind':            return 'in_kind'
+    case 'accelerator':        return 'programme'    // closest cousin
+    case 'blended_finance':    return 'investment'   // closest cousin
+    case 'support_programme':  return 'programme'    // non-canonical scraper value (UnLtd row 2026-06-02)
+    default:
+      // Drift — log and fall back to the most generic canonical type. Keeps
+      // the response stream serving while the offending row gets cleaned up.
+      console.warn(`[mapFundingType] unmapped funding_type "${db_type}" — coerced to 'grant'. Normalise the row in scraped_grants.`)
+      return 'grant'
   }
 }
 
@@ -813,10 +824,10 @@ export function toMCPOpportunitySummary(row: ScrapedGrantRow, ctx: AdapterContex
   if (!row.id || !UUID_RE.test(row.id)) {
     throw new AdapterError(`opportunity_id is not a valid UUID: "${row.id}"`, row.id ?? undefined)
   }
+  // mapFundingType is now defensive — never returns null, falls back to 'grant'
+  // with a logged warning on unknown values. Throw removed 2026-06-02 after
+  // the support_programme row crashed unfiltered "find me grants" queries.
   const funding_type = mapFundingType(row.funding_type)
-  if (!funding_type) {
-    throw new AdapterError(`unmapped funding_type: "${row.funding_type}"`, row.id)
-  }
   const deadline = deriveDeadline(row)
   return {
     opportunity_id: row.id,
