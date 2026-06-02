@@ -294,19 +294,45 @@ export const MCP_FUNDING_TYPES: MCPFundingType[] = ['grant', 'programme', 'inves
 // includes UK-tagged rows for any other region they specified (UK-wide
 // opportunities should always surface for a region-specific query unless
 // the user explicitly excludes them).
+// Each English sub-region's pattern list ALSO includes 'england' so that
+// England-wide rows (location_tag = 'England', 'England & ...', etc.) surface
+// for sub-region queries — these national funders are the most-expected
+// catalogue rows for any English applicant. Wales/Scotland/NI aren't
+// subdivided in MCP_REGIONS, so their parent matching is direct.
+//
+// 'great britain' is in uk_wide because the literal substring 'uk' doesn't
+// appear in 'Great Britain'; without it, that row would be invisible to all
+// regional queries.
 export const REGION_DB_PATTERNS: Record<MCPRegion, string[]> = {
-  uk_wide:              ['uk', 'uk-wide', 'uk wide', 'nationwide'],
+  uk_wide:              ['uk', 'uk-wide', 'uk wide', 'nationwide', 'great britain'],
   england:              ['england'],
   scotland:             ['scotland', 'glasgow', 'edinburgh', 'aberdeen', 'dundee'],
   wales:                ['wales', 'cardiff', 'swansea'],
   northern_ireland:     ['northern ireland', 'belfast', 'n. ireland', 'n ireland'],
-  london:               ['london', 'barking and dagenham', 'barnet', 'bexley', 'brent', 'bromley', 'camden', 'city of london', 'croydon', 'ealing', 'enfield', 'greenwich', 'hackney', 'hammersmith', 'haringey', 'harrow', 'havering', 'hillingdon', 'hounslow', 'islington', 'kensington', 'kingston upon thames', 'lambeth', 'lewisham', 'merton', 'newham', 'redbridge', 'richmond', 'southwark', 'sutton', 'tower hamlets', 'waltham forest', 'wandsworth', 'westminster'],
-  north_west:           ['north west', 'north-west', 'manchester', 'liverpool', 'cumbria', 'lancashire'],
-  north_east:           ['north east', 'north-east', 'newcastle', 'tyne', 'durham', 'northumberland'],
-  yorkshire_and_humber: ['yorkshire', 'humber', 'leeds', 'sheffield', 'bradford'],
-  midlands:             ['midlands', 'birmingham', 'coventry', 'worcestershire', 'warwickshire', 'nottingham', 'leicester'],
-  south_east:           ['south east', 'south-east', 'sussex', 'kent', 'surrey', 'berkshire', 'brighton', 'chichester', 'worthing', 'essex', 'lewes', 'rye', 'crawley', 'gatwick', 'eastbourne', 'hastings', 'horsham'],
-  south_west:           ['south west', 'south-west', 'somerset', 'devon', 'cornwall', 'bristol', 'gloucester', 'dorset', 'wiltshire'],
+  london:               ['london', 'england', 'barking and dagenham', 'barnet', 'bexley', 'brent', 'bromley', 'camden', 'city of london', 'croydon', 'ealing', 'enfield', 'greenwich', 'hackney', 'hammersmith', 'haringey', 'harrow', 'havering', 'hillingdon', 'hounslow', 'islington', 'kensington', 'kingston upon thames', 'lambeth', 'lewisham', 'merton', 'newham', 'redbridge', 'richmond', 'southwark', 'sutton', 'tower hamlets', 'waltham forest', 'wandsworth', 'westminster'],
+  north_west:           ['north west', 'north-west', 'england', 'manchester', 'liverpool', 'cumbria', 'lancashire'],
+  north_east:           ['north east', 'north-east', 'england', 'newcastle', 'tyne', 'durham', 'northumberland'],
+  yorkshire_and_humber: ['yorkshire', 'humber', 'england', 'leeds', 'sheffield', 'bradford'],
+  midlands:             ['midlands', 'england', 'birmingham', 'coventry', 'worcestershire', 'warwickshire', 'nottingham', 'leicester'],
+  south_east:           ['south east', 'south-east', 'england', 'sussex', 'kent', 'surrey', 'berkshire', 'brighton', 'chichester', 'worthing', 'essex', 'lewes', 'rye', 'crawley', 'gatwick', 'eastbourne', 'hastings', 'horsham'],
+  south_west:           ['south west', 'south-west', 'england', 'somerset', 'devon', 'cornwall', 'bristol', 'gloucester', 'dorset', 'wiltshire'],
+}
+
+// Parent-country map used by computeMatchQuality (scoring path) so that
+// English sub-region queries also credit England-wide rows with a
+// geographic_match signal. Mirrors the inheritance baked into
+// REGION_DB_PATTERNS — without this, England rows surface (filter passes
+// them) but rank low because the scoring check denies the signal.
+//
+// Scotland/Wales/NI have no sub-regions in MCP_REGIONS — no inheritance.
+export const PARENT_REGION_OF_SUB: Partial<Record<MCPRegion, MCPRegion>> = {
+  london:               'england',
+  north_west:           'england',
+  north_east:           'england',
+  yorkshire_and_humber: 'england',
+  midlands:             'england',
+  south_east:           'england',
+  south_west:           'england',
 }
 
 // User-facing beneficiary token → DB-side tokens that should match.
@@ -594,7 +620,7 @@ export function canonicaliseBeneficiaries(db_tokens: string[]): string[] {
 // "London & Essex" yields ['london']; UK-wide rows yield ['uk_wide'] only
 // (search tool can choose to include uk_wide rows in any regional query).
 const REGION_KEYWORDS: { region: MCPRegion; patterns: RegExp[] }[] = [
-  { region: 'uk_wide',              patterns: [/\buk\b/i, /\buk[- ]wide\b/i, /\bnationwide\b/i, /\ball uk\b/i] },
+  { region: 'uk_wide',              patterns: [/\buk\b/i, /\buk[- ]wide\b/i, /\bnationwide\b/i, /\ball uk\b/i, /\bgreat britain\b/i] },
   { region: 'england',              patterns: [/\bengland\b/i] },
   { region: 'scotland',             patterns: [/\bscotland\b/i, /\bglasgow\b/i, /\bedinburgh\b/i, /\baberdeen\b/i, /\bdundee\b/i] },
   { region: 'wales',                patterns: [/\bwales\b/i, /\bcardiff\b/i, /\bswansea\b/i] },

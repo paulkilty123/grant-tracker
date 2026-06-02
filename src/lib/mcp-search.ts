@@ -8,6 +8,7 @@ import {
   expandStructureTokens,
   mapLocationTagToRegions,
   REGION_DB_PATTERNS,
+  PARENT_REGION_OF_SUB,
   BENEFICIARY_REVERSE_MAP,
   FUNDING_TYPE_DB_EXPANSIONS,
   type ScrapedGrantRow,
@@ -235,9 +236,20 @@ export function computeMatchQuality(row: ScrapedGrantRow, params: MCPSearchParam
     // is implicitly UK-applicable). Without this, results legitimately
     // surfaced from null-location queries score zero on geographic_match
     // and result_quality looks worse than it should.
-    const rowRegions = row.location_tag ? mapLocationTagToRegions(row.location_tag) : ['uk_wide']
+    const rowRegions: MCPRegion[] = row.location_tag ? mapLocationTagToRegions(row.location_tag) : ['uk_wide']
     const rowIsUkWide = rowRegions.includes('uk_wide' as MCPRegion)
-    if (rowIsUkWide || params.region.some(r => rowRegions.includes(r))) {
+    // Expand requested regions with parent country (e.g. south_east → +england)
+    // so English sub-region queries credit England-wide rows with a
+    // geographic_match. Mirrors REGION_DB_PATTERNS filter inheritance — a row
+    // that passes the filter must also rank correctly. Without this fix,
+    // England-tagged rows surface for sub-region queries but rank below
+    // local rows because they lack the geographic signal.
+    const expandedUserRegions = new Set<MCPRegion>(params.region)
+    for (const r of params.region) {
+      const parent = PARENT_REGION_OF_SUB[r]
+      if (parent) expandedUserRegions.add(parent)
+    }
+    if (rowIsUkWide || rowRegions.some(rr => expandedUserRegions.has(rr))) {
       signals.push('geographic_match')
     }
   }
