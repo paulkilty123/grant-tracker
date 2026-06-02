@@ -42,6 +42,67 @@ async function isAuthorised(req: NextRequest): Promise<boolean> {
   return auth.ok
 }
 
+// ── Stale-date detector ──────────────────────────────────────────────────────
+// Scans brief text fields for month-year date phrases (e.g. "expected
+// December 2025", "next round opens autumn 2025", "as of January 2026") and
+// flags any whose date is more than 30 days in the past. Catches the Growth
+// Catalyst / Smart Grants failure mode: enrichment captured correct content
+// at the time but the page itself was stale.
+//
+// Positive context (staleness signals): expect / next / opens / closes / as of
+// / shortly / soon / TBC / upcoming / launching / will launch.
+// Negative context (historical, not stale): since / from / founded / established
+// / operating since / started / launched in / first awarded.
+const STALE_MONTHS: Record<string, number> = {
+  jan: 1, january: 1, feb: 2, february: 2, mar: 3, march: 3,
+  apr: 4, april: 4, may: 5, jun: 6, june: 6, jul: 7, july: 7,
+  aug: 8, august: 8, sep: 9, sept: 9, september: 9, oct: 10, october: 10,
+  nov: 11, november: 11, dec: 12, december: 12,
+}
+const STALE_CONTEXT_RE = /\b(?:expect(?:ed|ing)?|next round|round (?:opens?|closes?|closing)|opens?(?:\s+(?:in|on))?|opening|closes?|closing|as of|by|shortly|soon|upcoming|will (?:launch|open|close)|launching|launched|due to (?:open|close|launch)|new round)\b/i
+const HISTORICAL_CONTEXT_RE = /\b(?:since|from|founded|established|operating since|running since|in operation since|started|launched in|first awarded|distributed since|set up in|incorporated|created in)\b/i
+
+function detectStaleDates(
+  text: string,
+  today: Date,
+): Array<{ phrase: string; matched_date: string }> {
+  if (!text || text.length < 10) return []
+  const stale: Array<{ phrase: string; matched_date: string }> = []
+  const cutoff = new Date(today)
+  cutoff.setDate(cutoff.getDate() - 30) // 30-day grace
+
+  // Match "{month} {year}" in either order, with optional weasel words between
+  const re = /\b(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sept?(?:ember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+(\d{4})\b/gi
+  let m: RegExpExecArray | null
+  while ((m = re.exec(text))) {
+    const monthKey = m[1].toLowerCase()
+    const month = STALE_MONTHS[monthKey] ?? STALE_MONTHS[monthKey.slice(0, 3)]
+    const year = parseInt(m[2], 10)
+    if (!month || year < 2020 || year > 2050) continue
+
+    // Last day of the named month — "October 2025" only becomes stale once
+    // we're past the whole month.
+    const parsed = new Date(Date.UTC(year, month, 0))
+    if (parsed >= cutoff) continue
+
+    // Inspect surrounding context (60 chars before, 30 after) for positive
+    // staleness signals vs negative historical signals.
+    const ctxStart = Math.max(0, m.index - 60)
+    const ctxEnd   = Math.min(text.length, m.index + m[0].length + 30)
+    const context  = text.slice(ctxStart, ctxEnd)
+    if (HISTORICAL_CONTEXT_RE.test(context)) continue
+    if (!STALE_CONTEXT_RE.test(context)) continue
+
+    const phraseStart = Math.max(0, m.index - 30)
+    const phraseEnd   = Math.min(text.length, m.index + m[0].length + 25)
+    stale.push({
+      phrase:       text.slice(phraseStart, phraseEnd).trim(),
+      matched_date: `${year}-${String(month).padStart(2, '0')}`,
+    })
+  }
+  return stale
+}
+
 // Fetch page text with realistic browser headers, strip HTML tags
 async function fetchPageText(url: string): Promise<string> {
   const controller = new AbortController()
@@ -366,6 +427,33 @@ NOTE: _deadline_cycle and its _citations entry are ONLY present when a recurring
   // column (canonical home for the cycle parser).
   const briefCitations  = (brief._citations as Record<string, Citation> | undefined) ?? {}
   const cycleFromBrief  = Array.isArray(brief._deadline_cycle) ? brief._deadline_cycle : null
+
+  // ── Stale-date detector ──────────────────────────────────────────────────
+  // Scan brief text fields for past-dated phrases in stale contexts (e.g.
+  // "expected December 2025", "next round opens autumn 2025"). Flag the
+  // brief with _stale_dates and lower citation confidence on affected fields.
+  // The downstream check-stale-rounds cron can pick this up, and admin
+  // review UI surfaces it via the citation confidence.
+  const today = new Date()
+  const staleFields: Array<{ field: string; phrase: string; matched_date: string }> = []
+  const SCAN_FIELDS = ['decision_timeline', 'how_to_apply', 'typical_award', 'open_status', 'priorities', 'who_can_apply'] as const
+  for (const fieldName of SCAN_FIELDS) {
+    const value = brief[fieldName]
+    if (typeof value !== 'string') continue
+    const hits = detectStaleDates(value, today)
+    for (const h of hits) {
+      staleFields.push({ field: fieldName, phrase: h.phrase, matched_date: h.matched_date })
+      const existing = briefCitations[fieldName]
+      if (existing) {
+        existing.confidence = 'low'
+        existing.reason = `stale_date_in_value: ${h.matched_date}`
+      }
+    }
+  }
+  if (staleFields.length > 0) {
+    brief._stale_dates = staleFields
+    console.warn('[enrich-grant] stale-date detector flagged', grantId, staleFields)
+  }
 
   const briefToSave: Record<string, unknown> = { ...brief }
   delete briefToSave._deadline_cycle  // canonical home is the column, not the blob
