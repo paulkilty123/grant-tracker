@@ -1,6 +1,20 @@
 // search_funding_and_support — query construction, scoring, 0-result diagnostic.
 // Spec §4.1, §5.3. Spec §4.4 region/sector/structure expansions live in
 // opportunity-adapter.ts; this module composes them into a search flow.
+//
+// Search flow (v2 — score-driven ranking, 2026-06-02):
+//   1. buildBaseQuery applies all hard filters (WHERE clauses)
+//   2. executeMCPSearch fetches all passing rows up to FETCH_CAP
+//   3. computeMatchQuality scores every fetched row
+//   4. Rows are sorted by score DESC (deterministic id tiebreaker)
+//   5. offset + limit slice is applied in JS over the sorted set
+//
+// History: v1 applied .range() (LIMIT/OFFSET) at the DB layer with NO ORDER BY,
+// then scored the heap-order sample post-fetch. computeMatchQuality was
+// decorative — score never determined what surfaced. Diagnosed 2026-06-02 when
+// the live "Brighton arts festival" capture missed ACE Project Grants (heap
+// position 62, default limit 20). Third filter-vs-rank silent exclusion bug
+// in two days; see feedback_filter_vs_rank_silent_exclusion memory.
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import {
@@ -26,6 +40,27 @@ import {
 // accumulate per-matching-keyword. State here in code so the constant is
 // reviewable and easy to tune via data later.
 export const KEYWORD_BOOST_POINTS = 7
+
+// Maximum rows to fetch into JS for scoring + ranking. Sized to cover the
+// entire active+ok catalogue (599 rows as of 2026-06-02 audit). Bump when
+// the catalogue approaches this number — currently CLAUDE.md targets 1,500.
+// While total <= FETCH_CAP, the score-then-slice path guarantees that the
+// returned top-N is the genuine top-N by score across every passing row.
+// Above this cap, rows beyond FETCH_CAP by Postgres heap order are silently
+// invisible — same class as the bug v2 fixes but at the cap boundary. Worth
+// monitoring; current safety margin is comfortable.
+export const FETCH_CAP = 600
+
+// Column projection used by buildBaseQuery. Replaces `select('*')` to drop
+// admin-only large jsonb columns (field_provenance, raw_data, grant_sources,
+// deadline_cycle, pipeline_v1 fields) that the MCP scoring/summary paths
+// don't read. Trims per-row payload roughly in half.
+const SEARCH_SELECT_COLS =
+  'id, external_id, source, title, funder, funder_type, funding_type, ' +
+  'description, amount_min, amount_max, deadline, is_rolling, is_active, ' +
+  'url_status, apply_url, last_seen_at, location_tag, eligible_structures, ' +
+  'impact_sectors, target_beneficiaries, beneficiary_tags, ' +
+  'eligibility_criteria, funder_brief, next_open_date, next_open_date_parsed'
 
 // ──────────────────────────────────────────────────────────────────────────
 // Input shape — mirrors the tool's parameter schema in spec §4.1
@@ -84,7 +119,7 @@ const TODAY = (): string => new Date().toISOString().slice(0, 10)
 function buildBaseQuery(sb: SupabaseClient, params: MCPSearchParams) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let q: any = sb.from('scraped_grants')
-    .select('*', { count: 'exact' })
+    .select(SEARCH_SELECT_COLS, { count: 'exact' })
     .eq('is_active', true)
     .neq('url_status', 'dead')
 
@@ -350,19 +385,38 @@ export async function executeMCPSearch(
   ctx: AdapterContext,
 ): Promise<MCPSearchResults> {
   const sb = serviceClient()
-  let q = buildBaseQuery(sb, params)
-  const limit = Math.min(Math.max(params.limit ?? 20, 1), 50)
-  const offset = Math.max(params.offset ?? 0, 0)
-  q = q.range(offset, offset + limit - 1)
+  // Build the base WHERE-clause query, then fetch ALL passing rows up to
+  // FETCH_CAP. No .range() at the DB layer — ordering is computed in JS
+  // post-scoring so that the returned top-N is the genuine top-N by score
+  // rather than the heap-order top-N. See v2 history note at module top.
+  const q = buildBaseQuery(sb, params).limit(FETCH_CAP)
 
   const { data, count, error } = await q
   if (error) throw new Error(`search query failed: ${error.message}`)
 
   const rows = (data ?? []) as ScrapedGrantRow[]
-  const results: MCPOpportunity[] = rows.map(row => ({
+  // Score every fetched row, build the summary alongside (cheap — both share
+  // the same row data and adapter context). The MCPOpportunity shape pairs
+  // them together for downstream sort + slice.
+  const scored: MCPOpportunity[] = rows.map(row => ({
     ...toMCPOpportunitySummary(row, ctx),
     match_quality: computeMatchQuality(row, params),
   }))
+
+  // Sort by score descending. Deterministic tiebreaker on opportunity_id so
+  // identical-score rows return in the same order across runs (matters for
+  // pagination consistency and for debugging).
+  scored.sort((a, b) => {
+    if (b.match_quality.score !== a.match_quality.score) {
+      return b.match_quality.score - a.match_quality.score
+    }
+    return a.opportunity_id.localeCompare(b.opportunity_id)
+  })
+
+  // Apply pagination over the sorted set.
+  const limit  = Math.min(Math.max(params.limit ?? 20, 1), 50)
+  const offset = Math.max(params.offset ?? 0, 0)
+  const results = scored.slice(offset, offset + limit)
 
   return {
     results,
