@@ -335,6 +335,27 @@ export const PARENT_REGION_OF_SUB: Partial<Record<MCPRegion, MCPRegion>> = {
   south_west:           'england',
 }
 
+// Region LABEL patterns — the canonical regional label itself, used by the
+// graduated geographic scoring in computeMatchQuality. Distinct from
+// REGION_DB_PATTERNS (which also includes sub-places like 'sussex', 'brighton'
+// for filter inheritance). A row whose location_tag matches the LABEL pattern
+// gets the top geographic score (1.0); a row whose tag is a sub-place inside
+// the region gets 0.9; a parent-country tag gets 0.8; uk_wide gets 0.5.
+export const REGION_LABEL_PATTERNS: Record<MCPRegion, string[]> = {
+  uk_wide:              ['uk', 'uk-wide', 'uk wide', 'nationwide', 'great britain'],
+  england:              ['england'],
+  scotland:             ['scotland'],
+  wales:                ['wales'],
+  northern_ireland:     ['northern ireland', 'n. ireland', 'n ireland'],
+  london:               ['london'],
+  north_west:           ['north west', 'north-west'],
+  north_east:           ['north east', 'north-east'],
+  yorkshire_and_humber: ['yorkshire', 'humber'],
+  midlands:             ['midlands'],
+  south_east:           ['south east', 'south-east'],
+  south_west:           ['south west', 'south-west'],
+}
+
 // User-facing beneficiary token → DB-side tokens that should match.
 // Inverse of BENEFICIARY_CANONICALISATION: when the user says
 // "people_in_poverty", the search needs to match rows tagged with either

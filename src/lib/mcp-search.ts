@@ -22,6 +22,7 @@ import {
   expandStructureTokens,
   mapLocationTagToRegions,
   REGION_DB_PATTERNS,
+  REGION_LABEL_PATTERNS,
   PARENT_REGION_OF_SUB,
   BENEFICIARY_REVERSE_MAP,
   FUNDING_TYPE_DB_EXPANSIONS,
@@ -35,11 +36,25 @@ import {
   type MCPRegion,
 } from './opportunity-adapter'
 
-// Per the explicit F4 + step-6 guidance: single fixed boost, applied once
-// if any keyword from the query matches title OR funder name. Does NOT
-// accumulate per-matching-keyword. State here in code so the constant is
-// reviewable and easy to tune via data later.
+// LEGACY — superseded by the graduated keyword token model (see KEYWORD_*
+// constants below and computeMatchQuality). Retained as exported for
+// backward compatibility with any caller that imports it.
 export const KEYWORD_BOOST_POINTS = 7
+
+// Keyword token scoring (v3 — graduated, replaces the legacy +7 binary boost).
+// Each matched token contributes KEYWORD_TOKEN_BOOST to a per-row fractional
+// boost, capped at KEYWORD_BOOST_MAX. Tokens are filtered by length and a
+// short stopword list so noise words don't dominate ranking. Haystack is
+// title + funder + funder_brief.what_they_fund (depth lifts rows whose brief
+// is rich without penalising rows whose brief is sparse).
+const KEYWORD_TOKEN_BOOST = 0.05
+const KEYWORD_BOOST_MAX   = 0.20
+const KEYWORD_MIN_LENGTH  = 3
+const STOPWORDS = new Set([
+  'the','and','for','with','from','our','your','that','this','have','will',
+  'what','where','who','when','about','please','help','find','need','want',
+  'looking','seeking',
+])
 
 // Maximum rows to fetch into JS for scoring + ranking. Sized to cover the
 // entire active+ok catalogue (599 rows as of 2026-06-02 audit). Bump when
@@ -243,83 +258,152 @@ function buildBaseQuery(sb: SupabaseClient, params: MCPSearchParams) {
 // Match-quality scoring
 // ──────────────────────────────────────────────────────────────────────────
 
-// Per F4 + step-6 guidance:
-//   - Six signals, equal weight
-//   - Signal "applicable" = query specified that dimension as a filter
-//   - score = (matched_signals / applicable_signals) × 90 + keyword_boost
-//   - keyword_boost = 7 if any keyword from query matches title OR funder,
-//     applied once, non-accumulating
-//   - When applicable = 0 (thin query), score = keyword_boost only
-//   - Capped at 100
+// Scoring formula v3 (graduated — 2026-06-02 redesign):
 //
-// This produces:
-//   - Strong queries with all filters matched: ~97 (3 of 3 signals + boost)
-//   - Strong queries with partial match: ~67
-//   - Thin queries (0 filters): 0 or 7 (boost only)
-// which is what makes result_quality discriminate sensibly.
+// Each applicable signal contributes a fractional value 0.0–1.0 (not binary).
+//   S1 sector_match     — coverage × specificity blend on impact_sectors overlap
+//   S2 geographic_match — 1.0 exact-label / 0.9 within-region / 0.8 parent-country / 0.5 uk_wide
+//   S3 amount_in_range  — 1.0 fits / 0.8 contains user range / 0.6 partial / 0.5 null info / 0.0 no overlap
+//   S4 structure_eligible — 1.0 explicit / 0.7 unrestricted (empty array) / 0.0 excluded
+//   S5 funder_alignment — binary 1.0 / 0.0 (closed taxonomy, no gradation needed)
+//   S6 beneficiary_match — same blend as S1 on combined target_beneficiaries + beneficiary_tags
+//
+// Aggregate: signal_avg = sum(applicable Sn) / applicable_count
+// Score: round(signal_avg × 90 + K × 100), capped at 100, where K is the
+// per-token keyword boost (0.0–0.2).
+//
+// Thin queries (applicable = 0): score = round(K × 100), 0–20 range.
+//
+// Replaces the v2 formula (matched/applicable × 90 + binary boost) which
+// produced flat 90s across 30–90 rows for two-filter queries because every
+// passing row received the same binary signal count. See the
+// filter_vs_rank_silent_exclusion memory's third instance for diagnosis.
+
+// ── Per-signal helpers (graduated) ──────────────────────────────────────────
+
+// Coverage × specificity blend used by S1 (sectors) and S6 (beneficiaries).
+// Rewards rows where the user's request covers most/all of the row's tags
+// (specificity) AND most/all of the user's tags are in the row (coverage).
+function tagOverlapScore(userTags: string[], rowTags: string[]): number {
+  if (userTags.length === 0 || rowTags.length === 0) return 0
+  const userSet = new Set(userTags)
+  const intersection = rowTags.filter(t => userSet.has(t)).length
+  if (intersection === 0) return 0
+  const coverage    = intersection / userTags.length
+  const specificity = intersection / rowTags.length
+  return 0.5 * coverage + 0.5 * specificity
+}
+
+// Geographic tier score for a single (rowTag, userRegion) pair. Aggregated
+// across multiple user regions by taking the maximum.
+function geoSignalValue(rowTag: string | null, userRegion: MCPRegion): number {
+  if (!rowTag) return 0.5  // null treated as uk_wide
+  const rowTagLower = rowTag.toLowerCase()
+  // 1.0 — row tag is the user region's canonical label (e.g. 'south east')
+  const labelPatterns = REGION_LABEL_PATTERNS[userRegion] ?? []
+  if (labelPatterns.some(p => rowTagLower.includes(p))) return 1.0
+  // 0.9 — row tag classifies into the user's region but isn't the label
+  // (e.g. 'Sussex' / 'Brighton' for a south_east query)
+  const rowRegions = mapLocationTagToRegions(rowTag)
+  if (rowRegions.includes(userRegion)) return 0.9
+  // 0.8 — parent-country inheritance (e.g. 'England' for a south_east query)
+  const parent = PARENT_REGION_OF_SUB[userRegion]
+  if (parent && rowRegions.includes(parent)) return 0.8
+  // 0.5 — uk_wide / nationwide / great britain
+  if (rowRegions.includes('uk_wide' as MCPRegion)) return 0.5
+  return 0.0
+}
+
+// Amount fit. Returns 1.0 when the row range nests inside the user range
+// (perfect fit), 0.8 when the row range envelops the user range (covers it
+// and more), 0.6 for partial overlap, 0.5 when both row bounds are null
+// (no info), 0.0 otherwise.
+function amountFitScore(
+  rowMinRaw: number | null, rowMaxRaw: number | null,
+  reqMinRaw: number | undefined, reqMaxRaw: number | undefined,
+): number {
+  if (rowMinRaw === null && rowMaxRaw === null) return 0.5
+  const rowMin = rowMinRaw ?? 0
+  const rowMax = rowMaxRaw ?? Number.MAX_SAFE_INTEGER
+  const reqMin = reqMinRaw ?? 0
+  const reqMax = reqMaxRaw ?? Number.MAX_SAFE_INTEGER
+  const overlaps = rowMax >= reqMin && rowMin <= reqMax
+  if (!overlaps) return 0.0
+  const rowNested = rowMin >= reqMin && rowMax <= reqMax
+  if (rowNested) return 1.0
+  const rowEnvelops = rowMin <= reqMin && rowMax >= reqMax
+  if (rowEnvelops) return 0.8
+  return 0.6
+}
+
+// Keyword token boost. Tokenises the query on whitespace, filters stopwords
+// and very-short tokens, counts hits against (title + funder + brief.what_they_fund).
+// Cap at KEYWORD_BOOST_MAX so a single noise word can't dominate.
+function keywordTokenBoost(query: string | undefined, row: ScrapedGrantRow): number {
+  if (!query || query.trim().length === 0) return 0
+  const tokens = query.trim().toLowerCase()
+    .split(/\s+/)
+    .filter(t => t.length >= KEYWORD_MIN_LENGTH && !STOPWORDS.has(t))
+  if (tokens.length === 0) return 0
+  const whatTheyFund = typeof row.funder_brief?.what_they_fund === 'string'
+    ? row.funder_brief.what_they_fund
+    : ''
+  const haystack = [row.title ?? '', row.funder ?? '', whatTheyFund]
+    .join(' ').toLowerCase()
+  const matched = tokens.filter(t => haystack.includes(t)).length
+  return Math.min(KEYWORD_BOOST_MAX, matched * KEYWORD_TOKEN_BOOST)
+}
+
+// ── Match quality (graduated) ──────────────────────────────────────────────
+
 export function computeMatchQuality(row: ScrapedGrantRow, params: MCPSearchParams): MCPMatchQuality {
   const signals: MCPSignal[] = []
   let applicable = 0
+  let signalSum  = 0
 
   if (params.sector?.length) {
     applicable++
-    if ((row.impact_sectors ?? []).some(s => params.sector!.includes(s))) {
-      signals.push('sector_match')
-    }
+    const s = tagOverlapScore(params.sector, row.impact_sectors ?? [])
+    signalSum += s
+    if (s > 0) signals.push('sector_match')
   }
 
   if (params.region?.length) {
     applicable++
-    // Null location_tag is treated as uk_wide for scoring — consistent with
-    // search behaviour (null-location rows surface for any region query)
-    // and with the catalogue convention (a row with no specific region tag
-    // is implicitly UK-applicable). Without this, results legitimately
-    // surfaced from null-location queries score zero on geographic_match
-    // and result_quality looks worse than it should.
-    const rowRegions: MCPRegion[] = row.location_tag ? mapLocationTagToRegions(row.location_tag) : ['uk_wide']
-    const rowIsUkWide = rowRegions.includes('uk_wide' as MCPRegion)
-    // Expand requested regions with parent country (e.g. south_east → +england)
-    // so English sub-region queries credit England-wide rows with a
-    // geographic_match. Mirrors REGION_DB_PATTERNS filter inheritance — a row
-    // that passes the filter must also rank correctly. Without this fix,
-    // England-tagged rows surface for sub-region queries but rank below
-    // local rows because they lack the geographic signal.
-    const expandedUserRegions = new Set<MCPRegion>(params.region)
-    for (const r of params.region) {
-      const parent = PARENT_REGION_OF_SUB[r]
-      if (parent) expandedUserRegions.add(parent)
-    }
-    if (rowIsUkWide || rowRegions.some(rr => expandedUserRegions.has(rr))) {
-      signals.push('geographic_match')
-    }
+    // Score across all user-requested regions; take the strongest tier.
+    const s = Math.max(...params.region.map(r => geoSignalValue(row.location_tag, r as MCPRegion)))
+    signalSum += s
+    if (s > 0) signals.push('geographic_match')
   }
 
   if (params.amount_min !== undefined || params.amount_max !== undefined) {
     applicable++
-    const rowMin = row.amount_min ?? 0
-    const rowMax = row.amount_max ?? Number.MAX_SAFE_INTEGER
-    const reqMin = params.amount_min ?? 0
-    const reqMax = params.amount_max ?? Number.MAX_SAFE_INTEGER
-    if (rowMax >= reqMin && rowMin <= reqMax) {
-      signals.push('amount_in_range')
-    }
+    const s = amountFitScore(row.amount_min ?? null, row.amount_max ?? null, params.amount_min, params.amount_max)
+    signalSum += s
+    if (s > 0) signals.push('amount_in_range')
   }
 
   if (params.structure?.length) {
     applicable++
     const dbStructures = expandStructureTokens(params.structure)
     const es = row.eligible_structures ?? []
-    // Empty eligible_structures = no restriction; treat as matching
-    if (es.length === 0 || es.some(s => dbStructures.includes(s))) {
-      signals.push('structure_eligible')
+    let s: number
+    if (es.some(x => dbStructures.includes(x))) {
+      s = 1.0   // explicit match
+    } else if (es.length === 0) {
+      s = 0.7   // no restriction (catch-all)
+    } else {
+      s = 0.0   // excluded — filter would have removed
     }
+    signalSum += s
+    if (s > 0) signals.push('structure_eligible')
   }
 
   if (params.funder_type?.length) {
     applicable++
-    if (row.funder_type && params.funder_type.includes(row.funder_type)) {
-      signals.push('funder_alignment')
-    }
+    const s = row.funder_type && params.funder_type.includes(row.funder_type) ? 1.0 : 0.0
+    signalSum += s
+    if (s > 0) signals.push('funder_alignment')
   }
 
   if (params.beneficiary_group?.length) {
@@ -328,30 +412,15 @@ export function computeMatchQuality(row: ScrapedGrantRow, params: MCPSearchParam
       params.beneficiary_group.flatMap(b => BENEFICIARY_REVERSE_MAP[b] ?? [b])
     ))
     const rowBens = [...(row.target_beneficiaries ?? []), ...(row.beneficiary_tags ?? [])]
-    if (rowBens.some(b => dbBens.includes(b))) {
-      signals.push('beneficiary_match')
-    }
+    const s = tagOverlapScore(dbBens, rowBens)
+    signalSum += s
+    if (s > 0) signals.push('beneficiary_match')
   }
 
-  // Keyword boost — single fixed bonus if any query keyword appears in title/funder
-  let keyword_boost = 0
-  if (params.query && params.query.trim().length > 0) {
-    const kw = params.query.trim().toLowerCase()
-    if (
-      (row.title?.toLowerCase().includes(kw)) ||
-      (row.funder?.toLowerCase().includes(kw))
-    ) {
-      keyword_boost = KEYWORD_BOOST_POINTS
-    }
-  }
-
-  let score: number
-  if (applicable > 0) {
-    score = Math.round((signals.length / applicable) * 90) + keyword_boost
-  } else {
-    score = keyword_boost
-  }
-  score = Math.min(100, score)
+  const k = keywordTokenBoost(params.query, row)
+  const score = applicable === 0
+    ? Math.min(100, Math.round(k * 100))
+    : Math.min(100, Math.round((signalSum / applicable) * 90 + k * 100))
 
   return { score, signals }
 }
@@ -360,19 +429,21 @@ export function computeMatchQuality(row: ScrapedGrantRow, params: MCPSearchParam
 // Result-quality wrapper signal (spec §4.1)
 // ──────────────────────────────────────────────────────────────────────────
 
-// Per F5 starting numbers (working hypothesis — refine post-launch with usage).
-//   "high":  ≥75% of results score ≥ 80
-//   "mixed": ≥40% of results score ≥ 60
-//   "low":   otherwise
-// For thin queries every score will be 0 or 7 → "low", matching the spec's
-// intent of telling the agent "Grant Tracker is returning broad matches
-// because no precise matches exist."
+// Re-calibrated 2026-06-02 alongside the graduated scoring rewrite. Under v2
+// flat-90 scoring, every result scored 90 for two-filter queries → always "high"
+// → wrapper was decorative. Under v3 graduated scoring, scores spread genuinely,
+// so the thresholds shift down:
+//   "high":  ≥ 50% of returned score ≥ 75   (most results are strong fits)
+//   "mixed": ≥ 50% of returned score ≥ 50   (typical default for sound queries)
+//   "low":   otherwise                       (broad/thin matches)
+// Thin queries (no structured filters) score 0–20 → consistently "low",
+// matching the spec's intent.
 export function computeResultQuality(results: MCPOpportunity[]): 'high' | 'mixed' | 'low' {
   if (results.length === 0) return 'low'
-  const highCount = results.filter(r => r.match_quality.score >= 80).length
-  const midCount  = results.filter(r => r.match_quality.score >= 60).length
-  if (highCount / results.length >= 0.75) return 'high'
-  if (midCount  / results.length >= 0.40) return 'mixed'
+  const highCount = results.filter(r => r.match_quality.score >= 75).length
+  const midCount  = results.filter(r => r.match_quality.score >= 50).length
+  if (highCount / results.length >= 0.5) return 'high'
+  if (midCount  / results.length >= 0.5) return 'mixed'
   return 'low'
 }
 
