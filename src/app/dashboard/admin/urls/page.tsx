@@ -53,8 +53,14 @@ type CategoryGrant = Grant & {
   is_seed: boolean
 }
 
-type Stats = { total: number; withUrl: number; ok: number; dead: number; unchecked: number; noUrl: number; seedTotal?: number; newCount?: number; reviewCount?: number; suspiciousCount?: number; capturedCount?: number; needsEnrichmentCount?: number; tagAuditCount?: number }
-type Filter = 'dead' | 'unchecked' | 'no_url' | 'all' | 'seed' | 'new' | 'category' | 'review' | 'suspicious' | 'url_issues' | 'saved' | 'recent' | 'between_rounds' | 'captured' | 'needs_enrichment' | 'tag_audit'
+type Stats = { total: number; withUrl: number; ok: number; dead: number; unchecked: number; noUrl: number; seedTotal?: number; newCount?: number; reviewCount?: number; tagReviewCount?: number; suspiciousCount?: number; capturedCount?: number; needsEnrichmentCount?: number; tagAuditCount?: number }
+type Filter = 'dead' | 'unchecked' | 'no_url' | 'all' | 'seed' | 'new' | 'category' | 'review' | 'tag_review' | 'suspicious' | 'url_issues' | 'saved' | 'recent' | 'between_rounds' | 'captured' | 'needs_enrichment' | 'tag_audit'
+
+// Re-classify chain provenance marker — set by /api/cron/reenrich-stale on
+// rows where the matcher-relevant fields changed during re-classification.
+// Used to route those rows to the dedicated "Tag review" tab instead of the
+// standard "Needs Review" queue (which is for new content arrivals).
+const RECLASSIFY_SOURCE = 'system:reenrich_chain:v1'
 
 // Audit row shape mirrors the server response from /api/admin/audit-tag-agreement.
 type TagAuditRow = {
@@ -355,10 +361,22 @@ export default function UrlAdminPage() {
   // ── Load stats ───────────────────────────────────────────────────────────────
   const loadStats = useCallback(async () => {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-    const [{ data }, { count: newCount }, { count: reviewCount }, { count: suspiciousCount }, { count: capturedCount }, { count: needsEnrichmentCount }, { data: ftData }] = await Promise.all([
+    const [{ data }, { count: newCount }, { count: reviewCount }, { count: tagReviewCount }, { count: suspiciousCount }, { count: capturedCount }, { count: needsEnrichmentCount }, { data: ftData }] = await Promise.all([
       createClient().from('scraped_grants').select('url_status, apply_url').eq('is_active', true),
       createClient().from('scraped_grants').select('id', { count: 'exact', head: true }).eq('is_active', true).gte('first_seen_at', sevenDaysAgo),
-      createClient().from('scraped_grants').select('id', { count: 'exact', head: true }).in('pipeline_state', ['captured', 'enriched', 'tagged', 'tagged_awaiting_review']).not('saved_for_later', 'is', 'true'),
+      // Standard NR: new content arrivals. Exclude rows flagged by the
+      // re-classify chain (those go to the "Tag review" tab) by checking
+      // field_provenance.pipeline_state.source is null OR != reclassify marker.
+      createClient().from('scraped_grants').select('id', { count: 'exact', head: true })
+        .in('pipeline_state', ['captured', 'enriched', 'tagged', 'tagged_awaiting_review'])
+        .not('saved_for_later', 'is', 'true')
+        .or(`field_provenance->pipeline_state->>source.is.null,field_provenance->pipeline_state->>source.neq.${RECLASSIFY_SOURCE}`),
+      // Tag review: rows flagged by the re-classify chain where matcher-
+      // relevant fields changed. Only the reclassify marker rows.
+      createClient().from('scraped_grants').select('id', { count: 'exact', head: true })
+        .eq('pipeline_state', 'tagged_awaiting_review')
+        .eq('field_provenance->pipeline_state->>source', RECLASSIFY_SOURCE)
+        .not('saved_for_later', 'is', 'true'),
       createClient().from('scraped_grants').select('id', { count: 'exact', head: true }).eq('is_active', true).not('url_quality_score', 'is', null).lt('url_quality_score', 60),
       // Captured-only count (untagged) — distinguishes from tagged (AI processed) for the new "Captured" tab.
       createClient().from('scraped_grants').select('id', { count: 'exact', head: true }).eq('pipeline_state', 'captured').not('saved_for_later', 'is', 'true'),
@@ -385,6 +403,7 @@ export default function UrlAdminPage() {
       seedTotal:   0,
       newCount:    newCount ?? 0,
       reviewCount: reviewCount ?? 0,
+      tagReviewCount: tagReviewCount ?? 0,
       suspiciousCount: suspiciousCount ?? 0,
       capturedCount: capturedCount ?? 0,
       needsEnrichmentCount: needsEnrichmentCount ?? 0,
@@ -402,7 +421,7 @@ export default function UrlAdminPage() {
 
   // ── Load scraped grants (URL health views) ───────────────────────────────────
   const loadGrants = useCallback(async () => {
-    if (filter === 'seed' || filter === 'new' || filter === 'category' || filter === 'review' || filter === 'suspicious' || filter === 'between_rounds') return
+    if (filter === 'seed' || filter === 'new' || filter === 'category' || filter === 'review' || filter === 'tag_review' || filter === 'suspicious' || filter === 'between_rounds') return
     // url_issues = dead + unchecked + no_url combined
     if (filter === 'url_issues') {
       const { data, error } = await createClient()
@@ -472,19 +491,36 @@ export default function UrlAdminPage() {
   }, [])
 
   // ── Load review queue (inactive grants awaiting approval) ─────────────────────
+  // Shared between 'review' (new content arrivals) and 'tag_review' (existing
+  // rows re-classified by the reenrich-stale cron with material tag changes).
+  // Both surface in the same render UI; the SQL differs to keep the queues
+  // separate.
   const loadReviewGrants = useCallback(async () => {
-    if (filter !== 'review') return
-    const { data } = await createClient()
+    if (filter !== 'review' && filter !== 'tag_review') return
+    let query = createClient()
       .from('scraped_grants')
       // Include every field the inline review panel reads/edits — without
       // these, getReviewVal falls back to undefined and the form looks
       // empty even when the DB has values (location_tag, amount_min/max,
       // deadline, is_rolling, eligible_structures, next_open_date etc.).
       .select('id, title, funder, apply_url, url_status, url_last_checked, source, is_invite_only, funder_brief, grant_sources, description, funder_type, funding_type, location_tag, amount_min, amount_max, deadline, is_rolling, eligible_structures, next_open_date, impact_sectors, target_beneficiaries, pipeline_state, field_provenance')
-      // captured = new arrival, no AI processing; tagged = AI classifier has run.
-      // Both belong in Needs Review until the admin publishes or archives.
-      .in('pipeline_state', ['captured', 'enriched', 'tagged', 'tagged_awaiting_review'])
       .not('saved_for_later', 'is', 'true')
+    if (filter === 'tag_review') {
+      // Only rows flagged by the re-classify chain.
+      query = query
+        .eq('pipeline_state', 'tagged_awaiting_review')
+        .eq('field_provenance->pipeline_state->>source', RECLASSIFY_SOURCE)
+    } else {
+      // Standard NR: captured / enriched / tagged / tagged_awaiting_review,
+      // BUT exclude rows flagged by the re-classify chain (those go to the
+      // Tag review tab). Include rows whose pipeline_state provenance has
+      // no source set (legacy / standard new arrivals) or a non-reclassify
+      // source.
+      query = query
+        .in('pipeline_state', ['captured', 'enriched', 'tagged', 'tagged_awaiting_review'])
+        .or(`field_provenance->pipeline_state->>source.is.null,field_provenance->pipeline_state->>source.neq.${RECLASSIFY_SOURCE}`)
+    }
+    const { data } = await query
       .order('last_seen_at', { ascending: false })
       .limit(500)
     const grants = (data ?? []) as Grant[]
@@ -895,7 +931,7 @@ export default function UrlAdminPage() {
   }, [authorised, filter, loadCategoryGrants])
 
   useEffect(() => {
-    if (authorised && filter === 'review') loadReviewGrants()
+    if (authorised && (filter === 'review' || filter === 'tag_review')) loadReviewGrants()
   }, [authorised, filter, loadReviewGrants])
 
   useEffect(() => {
@@ -1486,9 +1522,13 @@ export default function UrlAdminPage() {
       }
     }
 
-    // When saving from the Needs Review tab, also approve the grant (set is_active: true)
-    // so it goes live immediately — the user has reviewed & confirmed the details.
-    const isReviewApproval = filter === 'review'
+    // When saving from the Needs Review tab OR the Tag review tab, also
+    // approve the row (set is_active=true) so it goes live immediately. For
+    // tag_review rows is_active is already true so this is a no-op; the
+    // pipeline_state flip back to 'published' is what resolves the queue
+    // entry. The save fields below take care of pipeline_state via the
+    // updateGrant merger path.
+    const isReviewApproval = filter === 'review' || filter === 'tag_review'
     const result = await updateGrant(grantId, {
       title:            form.title.trim(),
       funder:           form.funder.trim(),
@@ -1544,7 +1584,7 @@ export default function UrlAdminPage() {
     await loadStats()
     await loadGrants()
     if (filter === 'category') await loadCategoryGrants()
-    if (filter === 'review')     await loadReviewGrants()
+    if (filter === 'review' || filter === 'tag_review') await loadReviewGrants()
     if (filter === 'captured')   await loadCapturedGrants()
     if (filter === 'needs_enrichment') await loadNeedsEnrichmentGrants()
     if (filter === 'new')        await loadNewGrants()
@@ -3353,6 +3393,7 @@ export default function UrlAdminPage() {
       <div className="mb-4 flex flex-wrap items-center gap-2">
         {([
           { key: 'review',         label: `Needs Review${stats?.reviewCount ? ` (${stats.reviewCount})` : ''}`, urgent: (stats?.reviewCount ?? 0) > 0 },
+          { key: 'tag_review',     label: `Tag Review${stats?.tagReviewCount ? ` (${stats.tagReviewCount})` : ''}`, urgent: (stats?.tagReviewCount ?? 0) > 0 },
           { key: 'captured',       label: `Captured${stats?.capturedCount ? ` (${stats.capturedCount})` : ''}` },
           { key: 'needs_enrichment', label: `Needs Enrichment${stats?.needsEnrichmentCount ? ` (${stats.needsEnrichmentCount})` : ''}` },
           { key: 'tag_audit',      label: 'Tag Audit' },
@@ -3831,16 +3872,18 @@ export default function UrlAdminPage() {
         </div>
       )}
 
-      {filter === 'review' && (
+      {(filter === 'review' || filter === 'tag_review') && (
         <div className="rounded-xl border border-warm bg-white overflow-hidden shadow-card">
           {/* Header with bulk actions */}
-          <div className="flex items-center justify-between border-b border-warm bg-amber-50 px-5 py-3">
+          <div className={`flex items-center justify-between border-b border-warm px-5 py-3 ${filter === 'tag_review' ? 'bg-blue-50' : 'bg-amber-50'}`}>
             <div>
-              <p className="text-sm font-semibold text-amber-800">
-                {reviewGrants.length} grant{reviewGrants.length !== 1 ? 's' : ''} pending review
+              <p className={`text-sm font-semibold ${filter === 'tag_review' ? 'text-blue-800' : 'text-amber-800'}`}>
+                {reviewGrants.length} {filter === 'tag_review' ? 'live row' : 'grant'}{reviewGrants.length !== 1 ? 's' : ''} {filter === 'tag_review' ? 'with classifier tag changes' : 'pending review'}
               </p>
-              <p className="text-xs text-amber-600 mt-0.5">
-                These were scraped automatically and are not yet visible to users. Approve the ones that look legitimate.
+              <p className={`text-xs mt-0.5 ${filter === 'tag_review' ? 'text-blue-600' : 'text-amber-600'}`}>
+                {filter === 'tag_review'
+                  ? 'These rows are LIVE in the catalogue. The re-enrich cron found that their classifier tags changed during refresh — verify the new tags or revert. Existing tags still drive matching until you save.'
+                  : 'These were scraped automatically and are not yet visible to users. Approve the ones that look legitimate.'}
               </p>
             </div>
             <div className="flex items-center gap-2">
