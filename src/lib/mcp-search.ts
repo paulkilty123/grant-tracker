@@ -189,12 +189,17 @@ function buildBaseQuery(sb: SupabaseClient, params: MCPSearchParams) {
     q = q.in('funder_type', params.funder_type)
   }
 
-  // Free-text query — keyword match across title, funder, description.
-  // Escape % and _ to avoid wildcard injection.
-  if (params.query && params.query.trim().length > 0) {
-    const kw = params.query.trim().toLowerCase().replace(/[%_]/g, m => '\\' + m)
-    q = q.or(`title.ilike.%${kw}%,funder.ilike.%${kw}%,description.ilike.%${kw}%`)
-  }
+  // Free-text query is intentionally NOT a filter. It applies as a scoring
+  // boost in computeMatchQuality only (see KEYWORD_BOOST_POINTS). Applying
+  // it as a hard ILIKE filter silently excluded rows whose marketing copy
+  // didn't contain the exact keyword Claude inferred from the user's
+  // question — e.g. ACE Project Grants ("open access programme for arts,
+  // libraries and museums projects") excluded from a "Brighton arts festival"
+  // query because its description doesn't say "festival" or "participatory".
+  // Same architectural class as the region inheritance bug fixed in
+  // commit 26e5cca6 — a soft signal must not be implemented as a hard
+  // exclusion. Tool description updated correspondingly so Claude passes
+  // intent-words as ranking hints, not filter values.
 
   return q
 }
