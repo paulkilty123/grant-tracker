@@ -17,8 +17,11 @@ export function formatCurrency(amount: number): string {
   return `£${amount.toLocaleString()}`
 }
 
-export function formatRange(min: number | null, max: number | null): string {
-  if (!min && !max) return 'Amount on application'
+export function formatRange(min: number | null, max: number | null, undisclosed = false): string {
+  // Affirmative non-disclosure (funder publishes no fixed amount) reads
+  // differently from "we don't know yet" — say so honestly rather than
+  // implying the figure appears on application.
+  if (!min && !max) return undisclosed ? 'Amount not disclosed' : 'Amount on application'
   if (!min)  return `Up to ${formatCurrency(max!)}`
   if (!max)  return `From ${formatCurrency(min)}`
   if (min === max) return formatCurrency(min)

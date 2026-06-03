@@ -25,6 +25,7 @@ export interface ScrapedGrantRow {
   description: string | null
   amount_min: number | null
   amount_max: number | null
+  amount_undisclosed: boolean | null         // funder affirmatively discloses no fixed amount
   deadline: string | null                    // YYYY-MM-DD
   is_rolling: boolean | null
   is_active: boolean | null
@@ -92,6 +93,13 @@ export interface MCPAmount {
   max: number | null
   currency: 'GBP'
   typical: string | null
+  // true  → funder affirmatively discloses no fixed per-grant amount (aggregate
+  //         fund only / "not specified"). Surface honestly as "amount not
+  //         disclosed — check with funder", NOT as a £0 or fabricated range.
+  // false → amount simply not in our catalogue yet (unknown/unextracted).
+  // The agent should treat these differently: undisclosed is a property of the
+  // funder; the false-but-null case is a gap on our side.
+  undisclosed: boolean
 }
 
 export interface MCPDeadline {
@@ -839,6 +847,7 @@ export function toMCPOpportunitySummary(row: ScrapedGrantRow, ctx: AdapterContex
       max: row.amount_max,
       currency: 'GBP',
       typical: row.funder_brief?.typical_award ?? null,
+      undisclosed: Boolean(row.amount_undisclosed),
     },
     deadline,
     geographic_scope: deriveGeographicScope(row),

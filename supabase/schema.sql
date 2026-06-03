@@ -518,6 +518,7 @@ create table public.scraped_grants (
   description text,
   amount_min integer,
   amount_max integer,
+  amount_undisclosed boolean not null default false,
   deadline date,
   is_rolling boolean default false,
   is_local boolean default false,
@@ -778,7 +779,8 @@ create or replace view public.grants_with_funder as
     f.typical_min AS funder_typical_min,
     f.typical_max AS funder_typical_max,
     f.is_rolling AS funder_is_rolling,
-    g.funding_subtype
+    g.funding_subtype,
+    g.amount_undisclosed
    FROM public.scraped_grants g
      LEFT JOIN public.funders f ON lower(g.funder) = lower(f.name) OR lower(g.funder) = lower(f.short_name);
 

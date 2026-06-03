@@ -241,6 +241,11 @@ export interface GrantOpportunity {
   description: string
   amountMin: number
   amountMax: number
+  /** True when the funder affirmatively discloses no fixed per-grant amount
+   * (aggregate fund only / "not specified"). Distinct from amountMin/Max == 0
+   * meaning "unknown/unextracted" — this is a confirmed absence, surfaced as
+   * "Amount not disclosed" rather than "Amount on application". */
+  amountUndisclosed?: boolean
   deadline: string | null   // human-readable or ISO
   isRolling: boolean
   isLocal: boolean

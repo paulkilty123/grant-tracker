@@ -47,6 +47,7 @@ export function normaliseScrapedGrant(row: Record<string, unknown>): EnrichedGra
     description:          String(row.description ?? ''),
     amountMin:            typeof row.amount_min  === 'number' ? row.amount_min  : 0,
     amountMax:            typeof row.amount_max  === 'number' ? row.amount_max  : 0,
+    amountUndisclosed:    Boolean(row.amount_undisclosed),
     deadline:             row.deadline ? String(row.deadline) : null,
     isRolling:            Boolean(row.is_rolling),
     isLocal:              Boolean(row.is_local),

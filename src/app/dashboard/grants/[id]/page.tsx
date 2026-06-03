@@ -184,7 +184,7 @@ export default async function GrantDetailPage({
           <div>
             <p className="text-[10px] text-light uppercase tracking-wider font-semibold mb-1">Grant amount</p>
             <p className="font-display text-2xl font-bold text-gold">
-              {formatRange(grant.amount_min as number | null, grant.amount_max as number | null)}
+              {formatRange(grant.amount_min as number | null, grant.amount_max as number | null, Boolean(grant.amount_undisclosed))}
             </p>
           </div>
           <div>

@@ -26,6 +26,7 @@ export const TRACKED_FIELDS = [
   'description',
   'amount_min',
   'amount_max',
+  'amount_undisclosed',   // affirmative "funder discloses no fixed amount" flag — pinned admin writes only
   'deadline',
   'is_rolling',
   'next_open_date',

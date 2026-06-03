@@ -72,7 +72,7 @@ export const FETCH_CAP = 600
 // don't read. Trims per-row payload roughly in half.
 const SEARCH_SELECT_COLS =
   'id, external_id, source, title, funder, funder_type, funding_type, ' +
-  'description, amount_min, amount_max, deadline, is_rolling, is_active, ' +
+  'description, amount_min, amount_max, amount_undisclosed, deadline, is_rolling, is_active, ' +
   'url_status, apply_url, last_seen_at, location_tag, eligible_structures, ' +
   'impact_sectors, target_beneficiaries, beneficiary_tags, ' +
   'eligibility_criteria, funder_brief, next_open_date, next_open_date_parsed'
