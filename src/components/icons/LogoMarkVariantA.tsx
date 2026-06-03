@@ -1,11 +1,11 @@
-// Logo test variant A — rounded-square container with white pulse line and
-// green dot. Larger silhouette suited to app-icon / Connectors-Directory tile.
+// Logo test variant A — "Pulse Track". Rounded-square container with pulse
+// line and green dot. Paths from designer export (web-package/pulse-track).
 type Props = { size?: number; className?: string; variant?: 'default' | 'onInk' | 'onGreen' }
 
 const palettes = {
-  default: { container: '#1A1A18', stroke: '#FFFFFF', accent: '#8ECB3C' },
-  onInk:   { container: '#FFFFFF', stroke: '#1A1A18', accent: '#8ECB3C' },
-  onGreen: { container: '#173404', stroke: '#FFFFFF', accent: '#FFFFFF' },
+  default: { container: '#171717', stroke: '#FFFFFF', accent: '#7BC043' },
+  onInk:   { container: '#FFFFFF', stroke: '#171717', accent: '#7BC043' },
+  onGreen: { container: '#FFFFFF', stroke: '#171717', accent: '#7BC043' },
 }
 
 const LogoMarkVariantA = ({ size = 28, className, variant = 'default' }: Props) => {
@@ -13,22 +13,23 @@ const LogoMarkVariantA = ({ size = 28, className, variant = 'default' }: Props) 
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
+      viewBox="0 0 64 64"
       width={size}
       height={size}
       className={className}
+      fill="none"
       aria-hidden="true"
     >
-      <rect x="0.5" y="0.5" width="23" height="23" rx="5" ry="5" fill={c.container} />
+      <rect x="4" y="4" width="56" height="56" rx="14" fill={c.container} />
       <path
-        d="M 4 13.5 L 7.5 13.5 L 9.2 16.5 L 11.5 5 L 13.6 13.5 L 16 13.5"
-        fill="none"
+        d="M10 38 L20 38 L26 46 L34 18 L40 32 L48 32"
         stroke={c.stroke}
-        strokeWidth="1.8"
+        strokeWidth="4.5"
         strokeLinecap="round"
         strokeLinejoin="round"
+        fill="none"
       />
-      <circle cx="17.6" cy="13.5" r="1.8" fill={c.accent} />
+      <circle cx="48" cy="32" r="5" fill={c.accent} />
     </svg>
   )
 }

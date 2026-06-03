@@ -1,11 +1,11 @@
-// Logo test variant C — pulse line with green dot, no container. Smallest
-// visual footprint, reads as "live signal" alongside the wordmark.
+// Logo test variant C — "Pulse Bare". Pulse line with green dot, no container.
+// Paths from designer export (web-package/pulse-bare).
 type Props = { size?: number; className?: string; variant?: 'default' | 'onInk' | 'onGreen' }
 
 const palettes = {
-  default: { stroke: '#1A1A18', accent: '#8ECB3C' },
-  onInk:   { stroke: '#FFFFFF', accent: '#8ECB3C' },
-  onGreen: { stroke: '#173404', accent: '#FFFFFF' },
+  default: { stroke: '#171717', accent: '#7BC043' },
+  onInk:   { stroke: '#FFFFFF', accent: '#7BC043' },
+  onGreen: { stroke: '#FFFFFF', accent: '#7BC043' },
 }
 
 const LogoMarkVariantC = ({ size = 28, className, variant = 'default' }: Props) => {
@@ -13,21 +13,22 @@ const LogoMarkVariantC = ({ size = 28, className, variant = 'default' }: Props) 
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
+      viewBox="0 0 64 64"
       width={size}
       height={size}
       className={className}
+      fill="none"
       aria-hidden="true"
     >
       <path
-        d="M 3 14 L 7.5 14 L 9.4 17.3 L 12 5.5 L 14.4 14 L 17.4 14"
-        fill="none"
+        d="M4 36 L16 36 L23 46 L33 12 L40 33 L56 33"
         stroke={c.stroke}
-        strokeWidth="2.4"
+        strokeWidth="5"
         strokeLinecap="round"
         strokeLinejoin="round"
+        fill="none"
       />
-      <circle cx="19" cy="14" r="2.2" fill={c.accent} />
+      <circle cx="56" cy="33" r="5.5" fill={c.accent} />
     </svg>
   )
 }

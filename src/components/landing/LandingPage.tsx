@@ -34,6 +34,27 @@ function LogoSwitcher({ size, variant }: SwitchProps) {
   return <LogoMark size={size} variant={variant} />
 }
 
+// Debug chip — only renders when ?logo=A|B|C is active. Confirms the URL
+// switch fired regardless of CDN cache state. Remove once a variant is picked.
+function LogoVariantChip() {
+  const choice = useLogoVariant()
+  if (choice === 'default') return null
+  const label = choice === 'A' ? 'Pulse Track (A)' : choice === 'B' ? 'Check Loop (B)' : 'Pulse Bare (C)'
+  return (
+    <div
+      className="fixed z-[60] top-3 right-3 px-3 py-1.5 rounded-full text-xs font-semibold shadow-md"
+      style={{
+        background: '#173404',
+        color: '#F1F7E4',
+        fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif',
+        letterSpacing: '0.02em',
+      }}
+    >
+      LOGO TEST · {label}
+    </div>
+  )
+}
+
 /* ─── helpers ─── */
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 24 },
@@ -319,6 +340,8 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-cream">
+
+      <LogoVariantChip />
 
       {/* NAVBAR */}
       <motion.nav
