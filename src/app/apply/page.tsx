@@ -71,7 +71,7 @@ export default function ApplyPage() {
             What&apos;s <span style={{ color: '#8ECB3C' }}>there now.</span>
           </h2>
           <p style={{ fontSize: 16, color: '#5F5E5A', lineHeight: 1.65, marginBottom: 16 }}>
-            550+ live funding opportunities in the catalogue right now, growing each week as new ones come in and old ones expire. They include grants, programmes, social investment and in-kind support, covering UK foundations, government, lottery, and corporate funders.
+            600+ live funding opportunities in the catalogue right now, growing each week as new ones come in and old ones expire. They include grants, programmes, social investment and in-kind support, covering UK foundations, government, lottery, and corporate funders.
           </p>
           <p style={{ fontSize: 16, color: '#5F5E5A', lineHeight: 1.65, marginBottom: 16 }}>
             When you add your organisation profile, Grant Tracker matches you against the catalogue and scores each opportunity for fit. The matching engine checks eligibility against the things that actually disqualify you: legal structure, geography, organisation size. Ineligible opportunities are flagged so you don&apos;t waste time chasing them.
@@ -128,7 +128,7 @@ export default function ApplyPage() {
             <ul style={{ listStyle: 'none', margin: '20px 0 0', padding: 0 }}>
               {[
                 { title: 'Free access during beta.', body: 'Full product, no limits, no payment details required.' },
-                { title: 'Free for six months after paid signups open.', body: 'Six months of full access on me, as a thank you for being here first.' },
+                { title: 'Free for six months.', body: 'Six months of full access on me, as a thank you for being here first.' },
                 { title: 'A permanent founding rate.', body: 'After your free six months, cohort members lock in a price significantly below the standard subscription, for as long as you stay with Grant Tracker.' },
                 { title: 'A direct line to me.', body: "When something’s not working, when you have an idea, when you want to talk to someone who can actually change the product, that’s me." },
               ].map((item, i) => (
