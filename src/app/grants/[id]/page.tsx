@@ -5,7 +5,6 @@ import { formatRange } from '@/lib/utils'
 import { notFound } from 'next/navigation'
 import LogoMark from '@/components/icons/LogoMark'
 import {
-  Award, Rocket, GraduationCap, TrendingUp, Users, GitMerge, Gift, Landmark,
   MapPin, Bell, RefreshCw, Calendar, AlertTriangle, CheckCircle, ShieldAlert,
   Bookmark, ExternalLink,
 } from 'lucide-react'
@@ -17,9 +16,10 @@ import {
 //
 // Field set: Q1-confirmed superset (title, funder, type labels, amounts,
 // deadline, description, eligibility_criteria, eligible_structures,
-// impact_sectors, apply_url, source + last_checked footer). Explicitly
-// excludes funder_brief (account-holder value), field_provenance, and any
-// admin/operational fields.
+// impact_sectors, apply_url, last-verified footer). Explicitly excludes
+// funder_brief (account-holder value), field_provenance, source slug
+// (internal operational metadata — leaks "catalogue-seed", "manual_ingest_*"
+// etc.), and any other admin/operational fields.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const FUNDER_LABELS: Record<string, string> = {
@@ -36,35 +36,38 @@ const FUNDER_LABELS: Record<string, string> = {
   other:               'Other',
 }
 
-const TYPE_COLOURS: Record<string, string> = {
-  lottery:             'bg-green-50 text-green-700',
-  trust_foundation:    'bg-sage/10 text-forest',
-  community_foundation:'bg-sage/10 text-forest',
-  corporate_foundation:'bg-sage/10 text-forest',
-  capacity_builder:    'bg-emerald-50 text-emerald-700',
-  foundation:          'bg-sage/10 text-forest',
-  corporate:           'bg-amber-50 text-amber-700',
-  local_authority:     'bg-amber-pale text-amber-deep',
-  housing_association: 'bg-teal-50 text-teal-700',
-  government:          'bg-coral-pale text-coral-deep',
+// Funding-type chip — brand palette per CLAUDE.md spec table.
+// Out-of-spec values (accelerator, diversity_fund, etc.) collapse to 'Other'.
+const FT_BRAND: Record<string, { bg: string; text: string; dot: string; label: string }> = {
+  grant:             { bg: '#F1F7E4', text: '#3B6D11', dot: '#97C459', label: 'Grant' },
+  programme:         { bg: '#FAECE7', text: '#993C1D', dot: '#F0997B', label: 'Programme' },
+  support_programme: { bg: '#FAECE7', text: '#993C1D', dot: '#F0997B', label: 'Programme' },
+  accelerator:       { bg: '#FAECE7', text: '#993C1D', dot: '#F0997B', label: 'Programme' },
+  social_investment: { bg: '#E6F1FB', text: '#0C447C', dot: '#85B7EB', label: 'Investment' },
+  loan:              { bg: '#E6F1FB', text: '#0C447C', dot: '#85B7EB', label: 'Investment' },
+  equity:            { bg: '#E6F1FB', text: '#0C447C', dot: '#85B7EB', label: 'Investment' },
+  blended_finance:   { bg: '#E6F1FB', text: '#0C447C', dot: '#85B7EB', label: 'Investment' },
+  in_kind:           { bg: '#FAEEDA', text: '#854F0B', dot: '#EF9F27', label: 'In-Kind' },
+  'in-kind':         { bg: '#FAEEDA', text: '#854F0B', dot: '#EF9F27', label: 'In-Kind' },
+}
+const FT_OTHER = { bg: '#F5F1E8', text: '#5F5E5A', dot: '#8A8986', label: 'Other' }
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+
+// Humanise an ISO date or timestamp → "21 Aug 2026". Free-text values that
+// don't match an ISO prefix (e.g. "Summer 2026", "24 June 2026") pass through
+// unchanged — next_open_date in particular is often free-form.
+function humaniseDate(input: string | null | undefined): string | null {
+  if (!input) return null
+  const s = String(input).trim()
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  if (!m) return s
+  const day = parseInt(m[3], 10)
+  const month = MONTHS_SHORT[parseInt(m[2], 10) - 1]
+  return `${day} ${month} ${m[1]}`
 }
 
-function sourceLabel(source: string): string {
-  if (source.startsWith('gov_uk'))            return 'GOV.UK Find a Grant'
-  if (source === 'tnlcf')                     return 'National Lottery Community Fund'
-  if (source === 'ukri')                      return 'UKRI'
-  if (source === 'gla')                       return 'Greater London Authority'
-  if (source === 'arts_council')              return 'Arts Council England'
-  if (source === 'sport_england')             return 'Sport England'
-  if (source === 'heritage_fund')             return 'National Heritage Fund'
-  if (source === 'bbc_cin')                   return 'BBC Children in Need'
-  if (source === 'paul_hamlyn_foundation')    return 'Paul Hamlyn Foundation'
-  if (source === 'esmee_fairbairn')           return 'Esmée Fairbairn Foundation'
-  if (source === 'henry_smith')               return 'Henry Smith Foundation'
-  return source.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
-}
-
-// ── Row lookup — mirrors dashboard page; tries external_id then UUID ─────────
 async function loadGrant(rawId: string) {
   const id = decodeURIComponent(rawId)
   const supabase = await createClient()
@@ -76,7 +79,6 @@ async function loadGrant(rawId: string) {
     .maybeSingle()
   if (byExternal) return { row: byExternal, externalId: id }
 
-  // UUID fallback for rows seeded without an external_id
   const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
   if (UUID_RE.test(id)) {
     const { data: byUuid } = await supabase
@@ -89,7 +91,7 @@ async function loadGrant(rawId: string) {
   return null
 }
 
-// ── Metadata — for SEO and link previews when shared ─────────────────────────
+// ── Metadata ─────────────────────────────────────────────────────────────────
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const result = await loadGrant(id)
@@ -124,26 +126,11 @@ export default async function PublicGrantPage({
   const eligibility: string[] = Array.isArray(grant.eligibility_criteria) ? grant.eligibility_criteria : []
   const funderType            = String(grant.funder_type ?? 'other')
   const typeLabel             = FUNDER_LABELS[funderType] ?? funderType.replace(/_/g, ' ')
-  const typeColour            = TYPE_COLOURS[funderType] ?? 'bg-gray-50 text-gray-600'
-  const lastSeen              = grant.last_seen_at ? String(grant.last_seen_at).split('T')[0] : 'Unknown'
+  const lastSeenISO           = grant.last_seen_at ? String(grant.last_seen_at).split('T')[0] : null
+  const lastSeenHuman         = humaniseDate(lastSeenISO) ?? 'recently'
 
-  type FTBadge = { Icon: React.ComponentType<{ className?: string }>; label: string; cls: string }
-  const FUNDING_TYPE_BADGES: Record<string, FTBadge> = {
-    grant:              { Icon: Award,         label: 'Grant',             cls: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
-    accelerator:        { Icon: Rocket,        label: 'Accelerator',       cls: 'bg-orange-50 text-orange-700 border border-orange-200' },
-    support_programme:  { Icon: GraduationCap, label: 'Support Programme', cls: 'bg-blue-pale text-blue-deep border border-blue-mid' },
-    programme:          { Icon: GraduationCap, label: 'Support Programme', cls: 'bg-blue-pale text-blue-deep border border-blue-mid' },
-    social_investment:  { Icon: TrendingUp,    label: 'Social Investment', cls: 'bg-cyan-50 text-cyan-700 border border-cyan-200' },
-    loan:               { Icon: TrendingUp,    label: 'Loan',              cls: 'bg-cyan-50 text-cyan-700 border border-cyan-200' },
-    equity:             { Icon: TrendingUp,    label: 'Equity',            cls: 'bg-cyan-50 text-cyan-700 border border-cyan-200' },
-    diversity_fund:     { Icon: Users,         label: 'Diversity Fund',    cls: 'bg-violet-50 text-violet-700 border border-violet-200' },
-    blended_finance:    { Icon: GitMerge,      label: 'Blended Finance',   cls: 'bg-teal-50 text-teal-700 border border-teal-200' },
-    in_kind:            { Icon: Gift,          label: 'In-Kind Support',   cls: 'bg-amber-pale text-amber-deep border border-amber-mid' },
-    'in-kind':          { Icon: Gift,          label: 'In-Kind Support',   cls: 'bg-amber-pale text-amber-deep border border-amber-mid' },
-    'tax-relief':       { Icon: Landmark,      label: 'Tax Relief',        cls: 'bg-stone-100 text-stone-700 border border-stone-300' },
-  }
   const rawFundingType = grant.funding_type ? String(grant.funding_type) : 'grant'
-  const fundingTypeBadge: FTBadge = FUNDING_TYPE_BADGES[rawFundingType] ?? FUNDING_TYPE_BADGES['grant']
+  const ft             = FT_BRAND[rawFundingType] ?? FT_OTHER
 
   const impactSectors: string[]      = Array.isArray(grant.impact_sectors)     ? grant.impact_sectors     : []
   const eligibleStructures: string[] = Array.isArray(grant.eligible_structures) ? grant.eligible_structures : []
@@ -170,17 +157,17 @@ export default async function PublicGrantPage({
     justice: 'Justice & Equality', financial: 'Financial Inclusion', international: 'International',
   }
 
-  const deadlinePassed = !grant.is_rolling && grant.deadline && new Date(grant.deadline) < new Date()
-  const deadlineColour = grant.is_rolling ? 'text-sage'
-    : deadlinePassed ? 'text-coral-saturated'
-    : 'text-charcoal'
+  const deadlineISO     = grant.deadline ? String(grant.deadline) : null
+  const deadlineHuman   = humaniseDate(deadlineISO)
+  const deadlinePassed  = !grant.is_rolling && deadlineISO && new Date(deadlineISO) < new Date()
+  const nextOpenHuman   = humaniseDate(grant.next_open_date ? String(grant.next_open_date) : null)
 
   const signupReturn = `/auth/signup?return=${encodeURIComponent(`/grants/${externalId}`)}`
 
   return (
     <div className="min-h-screen bg-cream flex flex-col">
 
-      {/* Top bar — minimal context anchor for visitors arriving from outside the app */}
+      {/* Top bar */}
       <header className="border-b border-warm bg-white">
         <div className="max-w-5xl mx-auto flex items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-center gap-2 text-lg font-bold text-charcoal no-underline" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>
@@ -189,7 +176,16 @@ export default async function PublicGrantPage({
           </Link>
           <div className="flex items-center gap-4 text-sm">
             <Link href="/auth/login" className="text-mid hover:text-charcoal no-underline">Sign in</Link>
-            <Link href="/auth/signup" className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-forest text-cream font-semibold no-underline hover:opacity-90" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>
+            <Link
+              href="/auth/signup"
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg no-underline hover:opacity-90"
+              style={{
+                background: '#173404',
+                color: '#F1F7E4',
+                fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif',
+                fontWeight: 600,
+              }}
+            >
               Find funding for your org →
             </Link>
           </div>
@@ -200,29 +196,46 @@ export default async function PublicGrantPage({
       <main className="flex-1 max-w-2xl w-full mx-auto px-6 py-8">
 
         {/* Card */}
-        <div className="bg-white rounded-2xl border border-warm p-6 mb-4">
+        <div className="bg-white rounded-xl border border-warm p-6 mb-4">
 
           {/* Header */}
           <div className="flex items-start gap-4 mb-5">
-            <div className="w-12 h-12 rounded-xl bg-sage/20 flex items-center justify-center text-sage font-bold text-xl flex-shrink-0">
+            <div
+              className="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl flex-shrink-0"
+              style={{ background: '#F1F7E4', color: '#3B6D11', fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}
+            >
               {String(grant.funder ?? '?')[0]}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-2 mb-1">
-                <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${typeColour}`}>
+                {/* Funder-type — neutral chip */}
+                <span
+                  className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full"
+                  style={{ background: '#F5F1E8', color: '#5F5E5A', fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}
+                >
                   {typeLabel}
                 </span>
                 {grant.is_local && (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-green-50 text-green-700">
+                  <span
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full"
+                    style={{ background: '#F1F7E4', color: '#3B6D11', fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}
+                  >
                     <MapPin className="w-3 h-3" />Local
                   </span>
                 )}
-                <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${fundingTypeBadge.cls}`}>
-                  <fundingTypeBadge.Icon className="w-3 h-3" />
-                  {fundingTypeBadge.label}
+                {/* Funding-type — brand-palette chip with dot indicator */}
+                <span
+                  className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-0.5 rounded-full"
+                  style={{ background: ft.bg, color: ft.text, fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}
+                >
+                  <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: ft.dot }} />
+                  {ft.label}
                 </span>
               </div>
-              <h1 className="text-2xl font-bold text-forest leading-tight" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>
+              <h1
+                className="text-2xl font-bold leading-tight"
+                style={{ color: '#173404', fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}
+              >
                 {grant.title}
               </h1>
               <p className="text-mid text-base mt-1">{grant.funder}</p>
@@ -230,51 +243,67 @@ export default async function PublicGrantPage({
           </div>
 
           {/* Key metrics */}
-          <div className="grid grid-cols-2 gap-4 p-4 bg-warm/40 rounded-xl mb-5">
+          <div className="grid grid-cols-2 gap-4 p-4 rounded-xl mb-5" style={{ background: '#F5F1E8' }}>
             <div>
-              <p className="text-[10px] text-light uppercase tracking-wider font-semibold mb-1">Amount</p>
-              <p className="text-2xl font-bold text-gold" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>
+              <p className="text-[10px] uppercase tracking-wider font-semibold mb-1" style={{ color: '#8A8986' }}>Amount</p>
+              <p
+                className="text-2xl font-bold"
+                style={{ color: '#173404', fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}
+              >
                 {formatRange(grant.amount_min as number | null, grant.amount_max as number | null, Boolean(grant.amount_undisclosed))}
               </p>
             </div>
             <div>
-              <p className="text-[10px] text-light uppercase tracking-wider font-semibold mb-1">Deadline</p>
-              <p className={`text-sm font-semibold mt-1 inline-flex items-center gap-1.5 ${deadlineColour}`}>
+              <p className="text-[10px] uppercase tracking-wider font-semibold mb-1" style={{ color: '#8A8986' }}>Deadline</p>
+              <p
+                className="text-sm font-semibold mt-1 inline-flex items-center gap-1.5"
+                style={{
+                  color: grant.is_rolling ? '#3B6D11' : deadlinePassed ? '#D85A30' : '#2C2C2A',
+                  fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif',
+                }}
+              >
                 {grant.is_rolling
                   ? <><RefreshCw className="w-3.5 h-3.5" />Rolling — apply any time</>
-                  : grant.deadline
+                  : deadlineHuman
                     ? deadlinePassed
-                      ? <><AlertTriangle className="w-3.5 h-3.5" />Deadline passed ({String(grant.deadline)})</>
-                      : <><Calendar className="w-3.5 h-3.5" />{String(grant.deadline)}</>
+                      ? <><AlertTriangle className="w-3.5 h-3.5" />Deadline passed ({deadlineHuman})</>
+                      : <><Calendar className="w-3.5 h-3.5" />{deadlineHuman}</>
                     : 'Check funder site for deadline'
                 }
               </p>
             </div>
           </div>
 
-          {/* Next Open Date badge */}
-          {grant.next_open_date && (
+          {/* Next Open Date */}
+          {nextOpenHuman && (
             <div className="mb-4">
-              <span className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 border border-blue-200 text-xs font-semibold px-3 py-1.5 rounded-lg">
-                <Bell className="w-3.5 h-3.5" />Opens {String(grant.next_open_date)}
+              <span
+                className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg"
+                style={{ background: '#E6F1FB', color: '#0C447C', fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}
+              >
+                <Bell className="w-3.5 h-3.5" />Opens {nextOpenHuman}
               </span>
             </div>
           )}
 
           {/* Description */}
           <div className="mb-5">
-            <h2 className="text-xs font-semibold text-light uppercase tracking-wider mb-2.5">About this opportunity</h2>
+            <h2 className="text-xs font-semibold uppercase tracking-wider mb-2.5" style={{ color: '#8A8986', fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>
+              About this opportunity
+            </h2>
             <p className="text-mid leading-relaxed whitespace-pre-line">{grant.description}</p>
           </div>
 
           {/* Eligibility criteria */}
           {eligibility.length > 0 && (
             <div className="mb-5 pt-4 border-t border-warm">
-              <h2 className="text-xs font-semibold text-light uppercase tracking-wider mb-2.5">Eligibility criteria</h2>
+              <h2 className="text-xs font-semibold uppercase tracking-wider mb-2.5" style={{ color: '#8A8986', fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>
+                Eligibility criteria
+              </h2>
               <ul className="space-y-2">
                 {eligibility.map((c, i) => (
                   <li key={i} className="flex gap-2.5 text-sm text-mid">
-                    <span className="text-sage flex-shrink-0 mt-0.5 font-bold">✓</span>
+                    <span className="flex-shrink-0 mt-0.5 font-bold" style={{ color: '#3B6D11' }}>✓</span>
                     <span>{c}</span>
                   </li>
                 ))}
@@ -285,10 +314,16 @@ export default async function PublicGrantPage({
           {/* Impact sectors */}
           {impactSectors.length > 0 && (
             <div className="mb-5 pt-4 border-t border-warm">
-              <h2 className="text-xs font-semibold text-light uppercase tracking-wider mb-2.5">Impact sectors</h2>
+              <h2 className="text-xs font-semibold uppercase tracking-wider mb-2.5" style={{ color: '#8A8986', fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>
+                Impact sectors
+              </h2>
               <div className="flex flex-wrap gap-2">
                 {impactSectors.map(s => (
-                  <span key={s} className="inline-block text-xs font-semibold px-2.5 py-1 rounded-md bg-violet-50 text-violet-700 capitalize">
+                  <span
+                    key={s}
+                    className="inline-block text-xs font-semibold px-2.5 py-1 rounded-md capitalize"
+                    style={{ background: '#F1F7E4', color: '#3B6D11', fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}
+                  >
                     {IMPACT_SECTOR_LABELS[s] ?? s}
                   </span>
                 ))}
@@ -299,18 +334,25 @@ export default async function PublicGrantPage({
           {/* Eligible structures */}
           {eligibleStructures.length > 0 && (
             <div className="mb-5 pt-4 border-t border-warm">
-              <h2 className="text-xs font-semibold text-light uppercase tracking-wider mb-2.5 inline-flex items-center gap-1.5">
-                <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+              <h2
+                className="text-xs font-semibold uppercase tracking-wider mb-2.5 inline-flex items-center gap-1.5"
+                style={{ color: '#8A8986', fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}
+              >
+                <CheckCircle className="w-3.5 h-3.5" style={{ color: '#3B6D11' }} />
                 Eligible organisation types
               </h2>
               <div className="flex flex-wrap gap-2">
                 {eligibleStructures.map(s => (
-                  <span key={s} className="inline-block text-xs font-semibold px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <span
+                    key={s}
+                    className="inline-block text-xs font-semibold px-2.5 py-1 rounded-md border"
+                    style={{ background: '#F1F7E4', color: '#3B6D11', borderColor: '#97C459', fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}
+                  >
                     {STRUCTURE_LABELS[s] ?? s}
                   </span>
                 ))}
               </div>
-              <p className="text-xs text-light mt-2 inline-flex items-center gap-1">
+              <p className="text-xs mt-2 inline-flex items-center gap-1" style={{ color: '#8A8986' }}>
                 <ShieldAlert className="w-3 h-3" />
                 Only the organisation types listed above are eligible to apply.
               </p>
@@ -320,46 +362,70 @@ export default async function PublicGrantPage({
           {/* Legacy free-text sectors fallback */}
           {impactSectors.length === 0 && sectors.length > 0 && (
             <div className="mb-5 pt-4 border-t border-warm">
-              <h2 className="text-xs font-semibold text-light uppercase tracking-wider mb-2.5">Sectors</h2>
+              <h2 className="text-xs font-semibold uppercase tracking-wider mb-2.5" style={{ color: '#8A8986', fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>
+                Sectors
+              </h2>
               <div className="flex flex-wrap gap-2">
                 {sectors.map(s => (
-                  <span key={s} className="inline-block text-xs font-semibold px-2.5 py-1 rounded-md bg-amber-pale text-amber-deep capitalize">{s}</span>
+                  <span
+                    key={s}
+                    className="inline-block text-xs font-semibold px-2.5 py-1 rounded-md capitalize"
+                    style={{ background: '#F5F1E8', color: '#5F5E5A', fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}
+                  >
+                    {s}
+                  </span>
                 ))}
               </div>
             </div>
           )}
 
-          {/* CTAs */}
+          {/* CTAs — flipped per Paul 2026-06-04. Save is primary lime (this page
+              is GrantTracker's funnel surface; Save is the conversion); Apply
+              is secondary outline (trust signal, still visible). */}
           <div className="pt-4 border-t border-warm flex flex-wrap gap-3 items-center">
+            <Link
+              href={signupReturn}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg no-underline hover:opacity-90"
+              style={{
+                background: '#8ECB3C',
+                color: '#173404',
+                fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif',
+                fontWeight: 600,
+                fontSize: 14,
+              }}
+            >
+              <Bookmark className="w-3.5 h-3.5" />
+              Save and track at GrantTracker
+            </Link>
             {grant.apply_url && (
               <a
                 href={String(grant.apply_url)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-lime text-forest font-semibold text-sm no-underline hover:opacity-90"
-                style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg no-underline transition-colors"
+                style={{
+                  background: '#FFFFFF',
+                  color: '#2C2C2A',
+                  border: '1px solid #2C2C2A',
+                  fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif',
+                  fontWeight: 600,
+                  fontSize: 14,
+                }}
               >
                 Apply on funder site
                 <ExternalLink className="w-3.5 h-3.5" />
               </a>
             )}
-            <Link
-              href={signupReturn}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-charcoal/20 text-charcoal font-semibold text-sm no-underline hover:bg-warm/50"
-              style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}
-            >
-              <Bookmark className="w-3.5 h-3.5" />
-              Save and track at GrantTracker
-            </Link>
           </div>
         </div>
 
-        {/* Footer attribution */}
-        <p className="text-xs text-light text-center">
-          Source: {sourceLabel(String(grant.source))} · Last checked: {lastSeen}
+        {/* Footer — trust line, no internal source slug */}
+        <p className="text-xs text-center" style={{ color: '#8A8986' }}>
+          Last verified {lastSeenHuman} · GrantTracker catalogue
         </p>
-        <p className="text-xs text-light text-center mt-3">
-          GrantTracker maintains a curated, URL-validated UK funding catalogue. <Link href="/" className="text-sage no-underline hover:underline">Learn more</Link>.
+        <p className="text-xs text-center mt-3" style={{ color: '#8A8986' }}>
+          GrantTracker maintains a curated, URL-validated UK funding catalogue.{' '}
+          <Link href="/" className="no-underline hover:underline" style={{ color: '#3B6D11' }}>Learn more</Link>.
         </p>
       </main>
     </div>
