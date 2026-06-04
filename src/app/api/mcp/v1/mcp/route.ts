@@ -524,9 +524,6 @@ async function handle(req: NextRequest): Promise<Response> {
     const retrySeconds = rl.retry_after ?? 60
     const which: string = rl.which_limit ?? 'unknown'
     const message = (() => {
-      if (which === 'anon_hourly') {
-        return 'Anonymous request limit reached. Get a free API key at granttracker.co.uk/mcp to continue.'
-      }
       if (which === 'key_hourly') {
         return `Hourly rate limit reached on this API key. Retry after ${retrySeconds} seconds.`
       }
@@ -534,7 +531,7 @@ async function handle(req: NextRequest): Promise<Response> {
         return `Daily rate limit reached on this API key. Retry after ${retrySeconds} seconds.`
       }
       if (which === 'ip_hourly') {
-        return `Per-IP rate limit reached (1,000/hr). Retry after ${retrySeconds} seconds.`
+        return `Per-IP rate limit reached (5,000/hr). Retry after ${retrySeconds} seconds.`
       }
       return `Rate limit reached. Retry after ${retrySeconds} seconds.`
     })()
