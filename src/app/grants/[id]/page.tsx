@@ -6,7 +6,7 @@ import { notFound } from 'next/navigation'
 import LogoMark from '@/components/icons/LogoMark'
 import {
   MapPin, Bell, RefreshCw, Calendar, AlertTriangle, CheckCircle, ShieldAlert,
-  Bookmark, ExternalLink,
+  ExternalLink,
 } from 'lucide-react'
 
 // ── Public bridge page ───────────────────────────────────────────────────────
@@ -394,8 +394,8 @@ export default async function PublicGrantPage({
                 fontSize: 14,
               }}
             >
-              <Bookmark className="w-3.5 h-3.5" />
-              Save and track at GrantTracker
+              <CheckCircle className="w-3.5 h-3.5" />
+              Check your eligibility — free
             </Link>
             {grant.apply_url && (
               <a
