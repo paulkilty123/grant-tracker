@@ -53,7 +53,15 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   const isAuthPage = pathname.startsWith('/auth')
-  const isPublicPage = pathname === '/' || pathname === '/apply' || pathname === '/cohort-signup-7k9m2x' || pathname === '/privacy' || pathname === '/terms' || pathname === '/mcp' || pathname === '/mcp/terms'
+  const isPublicPage =
+    pathname === '/' ||
+    pathname === '/apply' ||
+    pathname === '/cohort-signup-7k9m2x' ||
+    pathname === '/privacy' ||
+    pathname === '/terms' ||
+    pathname === '/mcp' ||
+    pathname === '/mcp/terms' ||
+    pathname.startsWith('/grants/')  // Public bridge pages for MCP-returned URLs (read-only catalogue view)
   // OAuth 2.0 + DCR endpoints — discovery, registration, token exchange,
   // revocation. /oauth/authorize is also listed here because it does its own
   // auth gate inside the page (logged-out users are redirected to
