@@ -1,3 +1,6 @@
+// Canonical Grant Tracker brand mark — "Pulse Bare". Paths from designer
+// export (web-package/pulse-bare/pulse-bare.svg). Pulse-line silhouette
+// with green accent dot; reads as "live signal" alongside the wordmark.
 type LogoMarkProps = {
   size?: number
   className?: string
@@ -5,9 +8,9 @@ type LogoMarkProps = {
 }
 
 const palettes = {
-  default: { dark: '#1A1A18', muted: '#D1D1CE', accent: '#8ECB3C' },
-  onInk: { dark: '#FFFFFF', muted: '#3A3A38', accent: '#8ECB3C' },
-  onGreen: { dark: '#173404', muted: '#B7E07A', accent: '#FFFFFF' },
+  default: { stroke: '#171717', accent: '#7BC043' },
+  onInk:   { stroke: '#FFFFFF', accent: '#7BC043' },
+  onGreen: { stroke: '#FFFFFF', accent: '#7BC043' },
 }
 
 const LogoMark = ({ size = 28, className, variant = 'default' }: LogoMarkProps) => {
@@ -15,16 +18,22 @@ const LogoMark = ({ size = 28, className, variant = 'default' }: LogoMarkProps) 
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
+      viewBox="0 0 64 64"
       width={size}
       height={size}
       className={className}
+      fill="none"
       aria-hidden="true"
     >
-      <circle cx="7" cy="7" r="4.2" fill={c.dark} />
-      <circle cx="17" cy="7" r="4.2" fill={c.muted} />
-      <circle cx="7" cy="17" r="4.2" fill={c.muted} />
-      <circle cx="17" cy="17" r="4.2" fill={c.accent} />
+      <path
+        d="M4 36 L16 36 L23 46 L33 12 L40 33 L56 33"
+        stroke={c.stroke}
+        strokeWidth="5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+      <circle cx="56" cy="33" r="5.5" fill={c.accent} />
     </svg>
   )
 }
