@@ -530,7 +530,7 @@ function CardShell({
           <div style={{ padding: isMobile ? '16px 20px 0' : '20px 32px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
               <LogoMark size={26} />
-              <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 20, color: T.textPrimary, letterSpacing: '-0.02em' }}>
+              <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 20, color: T.textPrimary, letterSpacing: '-0.025em' }}>
                 GrantTracker
               </span>
             </span>
