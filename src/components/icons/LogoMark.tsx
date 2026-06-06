@@ -1,6 +1,14 @@
-// Canonical Grant Tracker brand mark — "Pulse Bare". Paths from designer
-// export (web-package/pulse-bare/pulse-bare.svg). Pulse-line silhouette
-// with green accent dot; reads as "live signal" alongside the wordmark.
+// Canonical Grant Tracker brand mark — "growth beside you". Two pills:
+// short pill (left) + tall pill (right), rx=13, viewBox 100x100. Geometry
+// from designer export (Downloads/grant_tracker_icons.html, 2026-06-06).
+//
+// Variant mapping:
+//   default — light surfaces (landing nav, bridge-page top bar). Forest
+//             short pill + green tall pill, transparent background.
+//   onInk   — dark forest surfaces (footer). Cream short pill + green
+//             tall pill — the "tile interior" dropping onto the dark bg.
+//   onGreen — green-tinted surfaces. Inverse: forest short pill + cream
+//             tall pill.
 type LogoMarkProps = {
   size?: number
   className?: string
@@ -8,9 +16,9 @@ type LogoMarkProps = {
 }
 
 const palettes = {
-  default: { stroke: '#171717', accent: '#7BC043' },
-  onInk:   { stroke: '#FFFFFF', accent: '#7BC043' },
-  onGreen: { stroke: '#FFFFFF', accent: '#7BC043' },
+  default: { short: '#173404', tall: '#7CC242' },
+  onInk:   { short: '#F5F1E8', tall: '#7CC242' },
+  onGreen: { short: '#173404', tall: '#F5F1E8' },
 }
 
 const LogoMark = ({ size = 28, className, variant = 'default' }: LogoMarkProps) => {
@@ -18,22 +26,15 @@ const LogoMark = ({ size = 28, className, variant = 'default' }: LogoMarkProps) 
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 64 64"
+      viewBox="0 0 100 100"
       width={size}
       height={size}
       className={className}
-      fill="none"
-      aria-hidden="true"
+      role="img"
+      aria-label="Grant Tracker"
     >
-      <path
-        d="M4 36 L16 36 L23 46 L33 12 L40 33 L56 33"
-        stroke={c.stroke}
-        strokeWidth="5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-      />
-      <circle cx="56" cy="33" r="5.5" fill={c.accent} />
+      <rect x="20" y="46" width="26" height="42" rx="13" fill={c.short} />
+      <rect x="56" y="18" width="26" height="70" rx="13" fill={c.tall} />
     </svg>
   )
 }
