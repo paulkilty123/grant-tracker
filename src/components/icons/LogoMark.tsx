@@ -2,6 +2,12 @@
 // short pill (left) + tall pill (right), rx=13, viewBox 100x100. Geometry
 // from designer export (Downloads/grant_tracker_icons.html, 2026-06-06).
 //
+// Pills are shifted down by 4 units from the rendered designer values so
+// the bottom sits at y=92 — matching the designer's intent per the spec
+// comment in the source HTML, and producing a flush bottom alignment
+// with the GrantTracker wordmark baseline when used in a flex items-
+// center row.
+//
 // Variant mapping:
 //   default — light surfaces (landing nav, bridge-page top bar). Forest
 //             short pill + green tall pill, transparent background.
@@ -33,8 +39,8 @@ const LogoMark = ({ size = 28, className, variant = 'default' }: LogoMarkProps) 
       role="img"
       aria-label="Grant Tracker"
     >
-      <rect x="20" y="46" width="26" height="42" rx="13" fill={c.short} />
-      <rect x="56" y="18" width="26" height="70" rx="13" fill={c.tall} />
+      <rect x="20" y="50" width="26" height="42" rx="13" fill={c.short} />
+      <rect x="56" y="22" width="26" height="70" rx="13" fill={c.tall} />
     </svg>
   )
 }
