@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
+import LogoMark from '@/components/icons/LogoMark'
 
 export const metadata = {
   title: 'Privacy policy — Grant Tracker',
@@ -16,7 +17,8 @@ export default function PrivacyPage() {
       {/* NAV */}
       <nav style={{ background: 'white', borderBottom: '0.5px solid rgba(23,52,4,0.08)', padding: '18px 0' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Link href="/" className="no-underline" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Link href="/" className="no-underline" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <LogoMark size={22} />
             <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 18, color: '#173404', letterSpacing: '-0.02em' }}>GrantTracker</span>
           </Link>
           <Link href="/" className="no-underline" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: UI, fontSize: 13, fontWeight: 600, color: '#173404' }}>

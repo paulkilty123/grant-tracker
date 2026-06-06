@@ -20,6 +20,7 @@ import {
   issueAuthorizationCode,
   type ValidatedAuthorizeParams,
 } from '@/lib/mcp-oauth'
+import LogoMark from '@/components/icons/LogoMark'
 
 export const dynamic = 'force-dynamic'
 
@@ -128,8 +129,9 @@ function PortalNav() {
   return (
     <nav style={{ background: 'white', borderBottom: '0.5px solid rgba(23,52,4,0.08)', padding: '18px 0' }}>
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Link href="/mcp" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 22, letterSpacing: '-0.03em', color: '#2C2C2A', textDecoration: 'none' }}>
-          GrantTracker
+        <Link href="/mcp" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
+          <LogoMark size={28} />
+          <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 22, letterSpacing: '-0.03em', color: '#2C2C2A' }}>GrantTracker</span>
         </Link>
         <div style={{ display: 'flex', gap: 18 }}>
           <Link href="/mcp" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13, color: '#5F5E5A', textDecoration: 'none' }}>

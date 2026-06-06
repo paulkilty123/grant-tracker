@@ -21,16 +21,17 @@ export default async function Image() {
           fontFamily: 'sans-serif',
         }}
       >
-        {/* Wordmark */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 999,
-              background: '#8ECB3C',
-            }}
-          />
+        {/* Wordmark — two-pill mark + GrantTracker. Two-pill geometry mirrors
+            LogoMark.tsx (cream short pill + green tall pill on the forest
+            background that this image already provides). Pills sized for
+            a 48px icon-height equivalent; bottom-aligned. */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 5, height: 48 }}>
+            {/* short pill (left) */}
+            <div style={{ width: 14, height: 24, borderRadius: 7, background: '#F5F1E8' }} />
+            {/* tall pill (right) */}
+            <div style={{ width: 14, height: 40, borderRadius: 7, background: '#7CC242' }} />
+          </div>
           <span
             style={{
               fontSize: 32,

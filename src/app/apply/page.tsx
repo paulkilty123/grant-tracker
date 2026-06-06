@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Script from 'next/script'
 import { ArrowLeft } from 'lucide-react'
+import LogoMark from '@/components/icons/LogoMark'
 
 export const metadata = {
   title: 'Apply to join the founding cohort — Grant Tracker',
@@ -18,7 +19,10 @@ export default function ApplyPage() {
       {/* NAV */}
       <nav style={{ background: 'white', borderBottom: '0.5px solid rgba(23,52,4,0.08)', padding: '18px 0' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Link href="/" style={{ fontFamily: UI, fontWeight: 700, fontSize: 24, letterSpacing: '-0.03em', color: '#2C2C2A', textDecoration: 'none' }}>GrantTracker</Link>
+          <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
+            <LogoMark size={30} />
+            <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 24, letterSpacing: '-0.03em', color: '#2C2C2A' }}>GrantTracker</span>
+          </Link>
           <Link href="/" style={{ fontFamily: UI, fontSize: 13.5, color: '#5F5E5A', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
             <ArrowLeft size={14} /> Back to home
           </Link>

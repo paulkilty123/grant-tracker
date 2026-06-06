@@ -1,5 +1,5 @@
 import React from 'react'
-import RadioWaveIcon from '@/components/icons/RadioWaveIcon'
+import LogoMark from '@/components/icons/LogoMark'
 
 interface LogoProps {
   /** 'light' = for dark backgrounds (sidebar, auth dark panel)
@@ -11,13 +11,17 @@ interface LogoProps {
 
 export default function Logo({ variant = 'dark', size = 'md' }: LogoProps) {
   const textSize = size === 'sm' ? 'text-[18px]' : size === 'lg' ? 'text-[26px]' : 'text-[22px]'
-  const iconSize = size === 'sm' ? 'w-6 h-6' : size === 'lg' ? 'w-9 h-9' : 'w-7 h-7'
-  const color = variant === 'light' ? 'text-white' : 'text-[#3A3A4A]'
+  const iconSize = size === 'sm' ? 22 : size === 'lg' ? 32 : 28
+  const color = variant === 'light' ? 'text-[#F5F1E8]' : 'text-[#2C2C2A]'
+  const markVariant = variant === 'light' ? 'onInk' : 'default'
 
   return (
     <span className={`inline-flex items-center gap-1.5 ${color}`}>
-      <RadioWaveIcon className={iconSize} />
-      <span className={`font-serif font-normal tracking-tight leading-none ${textSize}`}>
+      <LogoMark size={iconSize} variant={markVariant} />
+      <span
+        className={`font-bold tracking-tight leading-none ${textSize}`}
+        style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}
+      >
         GrantTracker
       </span>
     </span>

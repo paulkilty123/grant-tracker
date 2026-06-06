@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Organisation } from '@/types'
 import { cn } from '@/lib/utils'
+import LogoMark from '@/components/icons/LogoMark'
 import {
   LayoutDashboard,
   Search,
@@ -201,9 +202,9 @@ export default function Sidebar({ org, userEmail }: Props) {
         className="flex items-center justify-between px-3 pb-[18px] mb-2"
         style={{ borderBottom: `0.5px solid ${SB.divider}` }}
       >
-        <Link href="/dashboard" className="no-underline flex items-baseline gap-0">
-          <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 500, letterSpacing: '-0.02em', color: SB.textBright }}>Grant</span>
-          <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 500, letterSpacing: '-0.02em', color: SB.icon }}>Tracker</span>
+        <Link href="/dashboard" className="no-underline flex items-center gap-1.5">
+          <LogoMark size={24} variant="onInk" />
+          <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 500, letterSpacing: '-0.02em', color: SB.textBright }}>GrantTracker</span>
         </Link>
         <button className="md:hidden" style={{ color: SB.icon }} onClick={() => setMobileOpen(false)}>
           <X className="h-5 w-5" />

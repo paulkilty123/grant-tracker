@@ -12,6 +12,7 @@ import { computeMatchScore } from '@/lib/matching'
 import { normaliseScrapedGrant } from '@/lib/grants-normalise'
 import type { LegalStructure, ImpactSector, BeneficiaryGroup, FundingType } from '@/types'
 import Button from '@/components/ui/Button'
+import LogoMark from '@/components/icons/LogoMark'
 
 /* ═══════════════════════════════════════════════
    Design tokens — 1:1 from reference HTML :root
@@ -527,8 +528,11 @@ function CardShell({
         }}>
           {/* Card header */}
           <div style={{ padding: isMobile ? '16px 20px 0' : '20px 32px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 20, color: T.textPrimary, letterSpacing: '-0.02em' }}>
-              GrantTracker
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <LogoMark size={26} />
+              <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 20, color: T.textPrimary, letterSpacing: '-0.02em' }}>
+                GrantTracker
+              </span>
             </span>
             <StepDots active={step} />
           </div>
