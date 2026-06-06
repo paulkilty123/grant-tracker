@@ -305,7 +305,7 @@ export default function LandingPage() {
       >
         <div className="flex items-center justify-between px-6 md:px-8 py-5 max-w-7xl mx-auto">
           {/* Logo */}
-          <a href="/" className="flex items-center gap-2 text-2xl font-bold text-[#2C2C2A] tracking-tight no-underline" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>
+          <a href="/" className="flex items-center gap-1.5 text-2xl font-bold text-[#2C2C2A] tracking-tight no-underline" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>
             <LogoMark size={30} />
             GrantTracker
           </a>
@@ -1152,7 +1152,7 @@ export default function LandingPage() {
       <footer className="px-6 py-8" style={{ background: '#0F2502' }}>
         <div className="mx-auto max-w-6xl">
           <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between" style={{ paddingBottom: '20px', borderBottom: '0.5px solid rgba(192,221,151,0.15)', marginBottom: '20px' }}>
-            <a href="/" className="flex items-center gap-2 no-underline">
+            <a href="/" className="flex items-center gap-1.5 no-underline">
               <LogoMark size={22} variant="onInk" />
               <span className="text-lg font-bold" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#FFFFFF', letterSpacing: '-0.02em' }}>GrantTracker</span>
             </a>

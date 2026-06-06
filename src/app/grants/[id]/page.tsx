@@ -170,7 +170,7 @@ export default async function PublicGrantPage({
       {/* Top bar — wordmark sizing + container matched to LandingPage nav */}
       <header className="border-b border-warm bg-white">
         <div className="flex items-center justify-between px-6 md:px-8 py-5 max-w-7xl mx-auto">
-          <Link href="/" className="flex items-center gap-2 text-2xl font-bold text-[#2C2C2A] tracking-tight no-underline" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>
+          <Link href="/" className="flex items-center gap-1.5 text-2xl font-bold text-[#2C2C2A] tracking-tight no-underline" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>
             <LogoMark size={30} />
             GrantTracker
           </Link>
