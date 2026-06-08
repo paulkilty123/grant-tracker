@@ -651,6 +651,46 @@ export function expandSectorTokens(spec_tokens: string[]): string[] {
   return Array.from(expanded)
 }
 
+// Region label/synonym normalisation — agents and reviewers routinely pass
+// display labels ("South East", "London") or hyphenated variants instead of
+// the canonical snake_case tokens. Without this they aren't a REGION_DB_PATTERNS
+// key, so the region filter collapses to uk_wide/null only and silently
+// under-returns (same silent-exclusion class as the sector "arts" miss; region
+// is a more-used filter). Mirrors expandSectorTokens. Canonical MCP_REGIONS
+// tokens and unknown tokens pass through untouched.
+const normaliseRegionKey = (s: string): string =>
+  s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+
+const REGION_TOKEN_SET: Set<string> = new Set(MCP_REGIONS)
+
+// normalised label/variant → canonical MCPRegion token
+export const REGION_LABEL_ALIASES: Record<string, MCPRegion> = {
+  // canonical display labels (REGION_LABELS, normalised)
+  'uk wide': 'uk_wide', 'england': 'england', 'scotland': 'scotland',
+  'wales': 'wales', 'northern ireland': 'northern_ireland', 'london': 'london',
+  'north west': 'north_west', 'north east': 'north_east',
+  'yorkshire and the humber': 'yorkshire_and_humber', 'midlands': 'midlands',
+  'south east': 'south_east', 'south west': 'south_west',
+  // common variants / abbreviations
+  'uk': 'uk_wide', 'united kingdom': 'uk_wide', 'nationwide': 'uk_wide',
+  'national': 'uk_wide', 'great britain': 'uk_wide', 'gb': 'uk_wide',
+  'greater london': 'london',
+  'yorkshire': 'yorkshire_and_humber', 'yorkshire and humber': 'yorkshire_and_humber',
+  'yorks and humber': 'yorkshire_and_humber', 'humber': 'yorkshire_and_humber',
+  'east midlands': 'midlands', 'west midlands': 'midlands', 'the midlands': 'midlands',
+  'ni': 'northern_ireland', 'n ireland': 'northern_ireland',
+}
+
+export function normaliseRegionTokens(tokens: string[]): string[] {
+  const out = new Set<string>()
+  for (const t of tokens) {
+    if (REGION_TOKEN_SET.has(t)) { out.add(t); continue }      // already canonical
+    const alias = REGION_LABEL_ALIASES[normaliseRegionKey(t)]
+    out.add(alias ?? t)                                        // map label→token, else pass through
+  }
+  return Array.from(out)
+}
+
 // Beneficiary canonicalisation — DB has two columns (target_beneficiaries
 // and beneficiary_tags) with overlapping vocab. We expose a unified
 // 18-value canonical list. See spec §4.4 working hypothesis.

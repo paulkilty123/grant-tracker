@@ -21,6 +21,7 @@ import {
   toMCPOpportunitySummary,
   expandStructureTokens,
   expandSectorTokens,
+  normaliseRegionTokens,
   mapLocationTagToRegions,
   REGION_DB_PATTERNS,
   REGION_LABEL_PATTERNS,
@@ -192,9 +193,12 @@ function buildBaseQuery(sb: SupabaseClient, params: MCPSearchParams) {
   // include uk_wide. Spec: UK-wide should surface for region-specific queries
   // (matches dashboard behaviour). We include uk_wide patterns automatically.
   if (params.region?.length) {
-    const regions = params.region.includes('uk_wide')
-      ? params.region
-      : [...params.region, 'uk_wide']
+    // Normalise display labels / variants → canonical tokens first
+    // ("South East"→south_east) so a label doesn't collapse to uk_wide/null.
+    const normRegions = normaliseRegionTokens(params.region)
+    const regions = normRegions.includes('uk_wide')
+      ? normRegions
+      : [...normRegions, 'uk_wide']
     const patterns = Array.from(new Set(
       regions.flatMap(r => REGION_DB_PATTERNS[r as MCPRegion] ?? [])
     ))
@@ -374,7 +378,8 @@ export function computeMatchQuality(row: ScrapedGrantRow, params: MCPSearchParam
   if (params.region?.length) {
     applicable++
     // Score across all user-requested regions; take the strongest tier.
-    const s = Math.max(...params.region.map(r => geoSignalValue(row.location_tag, r as MCPRegion)))
+    // Normalise labels→tokens so the scorer matches the (normalised) filter.
+    const s = Math.max(...normaliseRegionTokens(params.region).map(r => geoSignalValue(row.location_tag, r as MCPRegion)))
     signalSum += s
     if (s > 0) signals.push('geographic_match')
   }

@@ -112,7 +112,7 @@ async function getCatalogueFreshness(): Promise<{ last_updated: string | null; a
 // the extra fields clear mcp-handler's narrower {name,version} serverInfo type).
 const MCP_SERVER_INFO = {
   name: 'grant-tracker-mcp',
-  version: '1.2.0',
+  version: '1.3.0',
   websiteUrl: 'https://www.granttracker.co.uk',
   icons: [
     { src: 'https://www.granttracker.co.uk/favicon.svg', mimeType: 'image/svg+xml', sizes: ['any'] },
@@ -141,7 +141,7 @@ const mcpHandler = createMcpHandler(
         }
         const body = {
           status,
-          version: '1.2.0',
+          version: '1.3.0',
           catalogue,
           timestamp: new Date().toISOString(),
           attribution: ATTRIBUTION,
