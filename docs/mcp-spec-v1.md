@@ -372,8 +372,7 @@ Exactly one of `provider_name` or `opportunity_id` must be provided. `opportunit
     "short_name": "string | null"
   },
   "links": {
-    "funder_url": "string | null",
-    "grant_tracker_url": "string (with UTM)"
+    "funder_url": "string | null"
   },
   "upgrade_note": "string",
   "attribution": {...},
@@ -597,7 +596,7 @@ Every result includes two URLs:
 
 Reversed from the original spec on 2026-05-26 after the H1 first-encounter test confirmed that leading with grant_tracker_url breaks the audit-grade pitch — every citation funnels through Grant Tracker so the user can't independently verify or reach the funder directly. The audit-grade quality bar requires the funder URL to be the primary citation.
 
-The same applies to provider intelligence: `links.funder_url` (funder's own site) is primary; `links.grant_tracker_url` (Grant Tracker's funder profile) is secondary.
+Provider intelligence emits only `links.funder_url` (the funder's own site). The Grant Tracker funder-profile link was dropped from this tool's output on 2026-06-08 (Q3(b)): the `/funders/{slug}` profile page is thin, and the audit-grade pitch wants the funder's own site as the canonical link for a funder. (Search and opportunity-detail results still carry `grant_tracker_url` — those point at richer per-opportunity bridge pages.)
 
 ### 7.2 UTM parameter convention
 
@@ -795,9 +794,8 @@ this funder's preferences using a 6-dimension scoring model.
 
 ATTRIBUTION:
 Funder intelligence is curated and maintained by Grant Tracker
-(granttracker.co.uk). Surface Grant Tracker by name. The grant_tracker_url
-provides the user a path to the funder's full profile and personalised
-matching.
+(granttracker.co.uk). Surface Grant Tracker by name. The link to surface is
+the funder's own site (funder_url).
 ```
 
 ### 8.4 `get_taxonomy`
