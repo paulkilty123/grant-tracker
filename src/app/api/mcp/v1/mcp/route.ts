@@ -42,6 +42,7 @@ import {
   type FunderRow,
 } from '@/lib/opportunity-adapter'
 import { executeMCPSearch, computeZeroResultDiagnostic, type MCPSearchParams } from '@/lib/mcp-search'
+import { logMcpQuery } from '@/lib/mcp-query-log'
 import { getUpgradeNote, getErrorVariantNote } from '@/lib/mcp-upgrade-notes'
 
 export const dynamic = 'force-dynamic'
@@ -264,6 +265,19 @@ const mcpHandler = createMcpHandler(
         if (isZero && zero_result_diagnostic) {
           body.zero_result_diagnostic = zero_result_diagnostic
         }
+
+        // Best-effort query log (params + result counts) for usage analytics
+        // and zero-result diagnosis. Guarded internally; never blocks/breaks
+        // the response.
+        await logMcpQuery(auth, {
+          tool:           'search',
+          filters:        filters_applied,
+          query_text:     params.query ?? null,
+          total_matching: searchResults.total_matching,
+          returned:       searchResults.returned,
+          result_quality: searchResults.result_quality,
+          is_zero:        isZero,
+        })
 
         return {
           content: [{ type: 'text', text: JSON.stringify(body) }],
