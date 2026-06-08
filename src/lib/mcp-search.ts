@@ -20,6 +20,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import {
   toMCPOpportunitySummary,
   expandStructureTokens,
+  expandSectorTokens,
   mapLocationTagToRegions,
   REGION_DB_PATTERNS,
   REGION_LABEL_PATTERNS,
@@ -151,9 +152,11 @@ function buildBaseQuery(sb: SupabaseClient, params: MCPSearchParams) {
     q = q.in('funding_type', dbTypes)
   }
 
-  // Sector — array overlap against impact_sectors
+  // Sector — array overlap against impact_sectors. Expand natural-language
+  // tokens to canonical first (arts→creative, climate→environment, …) so a
+  // synonym doesn't silently zero the result set.
   if (params.sector?.length) {
-    q = q.overlaps('impact_sectors', params.sector)
+    q = q.overlaps('impact_sectors', expandSectorTokens(params.sector))
   }
 
   // Structure — expand cic→[cic_guarantee,cic_shares] etc.; array overlap
@@ -363,7 +366,7 @@ export function computeMatchQuality(row: ScrapedGrantRow, params: MCPSearchParam
 
   if (params.sector?.length) {
     applicable++
-    const s = tagOverlapScore(params.sector, row.impact_sectors ?? [])
+    const s = tagOverlapScore(expandSectorTokens(params.sector), row.impact_sectors ?? [])
     signalSum += s
     if (s > 0) signals.push('sector_match')
   }

@@ -591,6 +591,66 @@ export function expandStructureTokens(spec_tokens: string[]): string[] {
   return Array.from(expanded)
 }
 
+// Sector token expansion — natural-language sector words an agent might pass
+// without first calling get_taxonomy. Mirrors expandStructureTokens so a query
+// like sector:["arts"] resolves to canonical "creative" instead of silently
+// zeroing (the same silent-exclusion class as the youth-tag miss; "arts grants"
+// is a top reviewer query). Canonical tokens identity-map; everything else
+// points at one or more of the 14 canonical sectors (see MCP_SECTORS /
+// SECTOR_LABELS). Multi-target maps fan out — overlap matching means a broader
+// hit, never a wrong exclusion. Unknown tokens pass through untouched.
+export const SECTOR_EXPANSIONS: Record<string, string[]> = {
+  // canonical pass-throughs
+  sport: ['sport'], heritage: ['heritage'], social_economy: ['social_economy'],
+  creative: ['creative'], community: ['community'], education: ['education'],
+  employment: ['employment'], health: ['health'], mental_health: ['mental_health'],
+  housing: ['housing'], environment: ['environment'], food: ['food'],
+  tech: ['tech'], justice: ['justice'],
+  // arts & creative (the reported miss)
+  arts: ['creative'], art: ['creative'], arts_culture: ['creative'],
+  music: ['creative'], film: ['creative'], theatre: ['creative'],
+  theater: ['creative'], dance: ['creative'], creative_arts: ['creative'],
+  culture: ['creative', 'heritage'],
+  // heritage
+  museums: ['heritage'], history: ['heritage'],
+  // sport
+  sports: ['sport'], physical_activity: ['sport'], recreation: ['sport'],
+  // tech
+  digital: ['tech'], technology: ['tech'], tech_for_good: ['tech'],
+  // environment
+  climate: ['environment'], sustainability: ['environment'], green: ['environment'],
+  nature: ['environment'], conservation: ['environment'], environmental: ['environment'],
+  biodiversity: ['environment'],
+  // housing
+  homelessness: ['housing'], homeless: ['housing'],
+  // employment / education
+  jobs: ['employment'], work: ['employment'], livelihoods: ['employment'],
+  skills: ['education', 'employment'], training: ['education', 'employment'],
+  schools: ['education'], learning: ['education'],
+  // health
+  wellbeing: ['health'], healthcare: ['health'], public_health: ['health'],
+  'mental-health': ['mental_health'], mental_wellbeing: ['mental_health'],
+  // food
+  hunger: ['food'], food_poverty: ['food'], agriculture: ['food'], farming: ['food'],
+  // justice & rights
+  crime: ['justice'], criminal_justice: ['justice'], human_rights: ['justice'],
+  rights: ['justice'], equality: ['justice'], advocacy: ['justice'],
+  // social economy
+  enterprise: ['social_economy'], social_enterprise: ['social_economy'],
+  cooperative: ['social_economy'], 'co-op': ['social_economy'],
+  community_ownership: ['social_economy'],
+}
+
+export function expandSectorTokens(spec_tokens: string[]): string[] {
+  const expanded = new Set<string>()
+  for (const t of spec_tokens) {
+    const mapped = SECTOR_EXPANSIONS[t.toLowerCase()]
+    if (mapped) mapped.forEach(m => expanded.add(m))
+    else expanded.add(t)
+  }
+  return Array.from(expanded)
+}
+
 // Beneficiary canonicalisation — DB has two columns (target_beneficiaries
 // and beneficiary_tags) with overlapping vocab. We expose a unified
 // 18-value canonical list. See spec §4.4 working hypothesis.
