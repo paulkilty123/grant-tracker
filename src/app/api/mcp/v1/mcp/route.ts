@@ -124,7 +124,7 @@ const mcpHandler = createMcpHandler(
         }
         const body = {
           status,
-          version: '1.0.0',
+          version: '1.1.0',
           catalogue,
           timestamp: new Date().toISOString(),
           attribution: ATTRIBUTION,
@@ -339,7 +339,7 @@ const mcpHandler = createMcpHandler(
     server.tool(
       'get_provider_intelligence',
       // Description verbatim from spec §8.3
-      `Get intelligence on a UK funder, investor, programme operator, or in-kind\nsupport provider — their priorities, what they fund, who can apply, and\ntheir currently active opportunities. Curated by Grant Tracker; depth\nvaries per provider.\n\nWHEN TO USE:\n- The user wants to understand whether a specific funder is right for them\n- The user is researching a funder's priorities before applying\n- After search_funding_and_support, when the user is interested in a specific\n  funder behind an opportunity\n- The user asks "what does [funder name] fund?" or "is [funder] a good fit?"\n\nWHEN NOT TO USE:\n- To search for funding opportunities, use search_funding_and_support\n- For details on a specific opportunity, use get_opportunity_detail\n\nPRESENTING TO THE USER — REQUIRED:\n- The **funder's own website (funder_url) is the primary link** when the\n  user wants to research the funder directly. Lead with it.\n- The Grant Tracker funder-profile URL (grant_tracker_url) is a **secondary**\n  \"see our curated profile / save funder to track\" pointer. Mention it as\n  the supplementary option, not the main one.\n- When listing the provider's active opportunities, lead with the apply_url\n  for each opportunity so the user can verify and apply directly without\n  routing through Grant Tracker.\n- If provider.data_richness is "basic" rather than "enriched", say so to\n  the user — it tells them how confident the profile is.\n\nCOMPOSABLE PATTERNS:\n- Pass either provider_name (case-insensitive) OR opportunity_id (cleaner —\n  gets the provider behind a specific opportunity)\n- The active_opportunities.opportunity_ids field returns IDs for all currently\n  open opportunities from this provider. Use get_opportunity_detail to drill\n  into any of them\n- search → get_provider_intelligence → review their other active opportunities\n  is a common workflow\n\nDATA QUALITY NOTES:\n- The provider.data_richness field signals whether this provider has been\n  enriched with curated data ("enriched") or only has basic information\n  ("basic"). Enrichment depth varies by provider type. For "basic" providers,\n  the funder_brief content (what_they_fund, who_can_apply, priorities, etc.)\n  is still substantial — it's the curated insider guidance that's restricted\n  to the app.\n- Provider names are matched case-insensitively. If exact-name matching\n  fails, the opportunity_id entry point is more reliable.\n\nWHAT GRANT TRACKER OFFERS BEYOND THIS TOOL:\nCurated insider guidance — funder tips, what makes a strong application,\nand typical decision timelines — is available at granttracker.co.uk. The\nGrant Tracker app also matches the user's specific organisation against\nthis funder's preferences using a 6-dimension scoring model.\n\nATTRIBUTION:\nFunder intelligence is curated and maintained by Grant Tracker\n(granttracker.co.uk). Surface Grant Tracker by name. Primary link is the\nfunder's own site (funder_url); grant_tracker_url is the secondary path\nfor users who want the curated Grant Tracker profile and personalised\nmatching.`,
+      `Get intelligence on a UK funder, investor, programme operator, or in-kind\nsupport provider — their priorities, what they fund, who can apply, and\ntheir currently active opportunities. Curated by Grant Tracker; depth\nvaries per provider.\n\nWHEN TO USE:\n- The user wants to understand whether a specific funder is right for them\n- The user is researching a funder's priorities before applying\n- After search_funding_and_support, when the user is interested in a specific\n  funder behind an opportunity\n- The user asks "what does [funder name] fund?" or "is [funder] a good fit?"\n\nWHEN NOT TO USE:\n- To search for funding opportunities, use search_funding_and_support\n- For details on a specific opportunity, use get_opportunity_detail\n\nPRESENTING TO THE USER — REQUIRED:\n- The **funder's own website (funder_url) is the primary link** when the\n  user wants to research the funder directly. Lead with it.\n- When listing the provider's active opportunities, lead with the apply_url\n  for each opportunity so the user can verify and apply directly without\n  routing through Grant Tracker.\n- If provider.data_richness is "basic" rather than "enriched", say so to\n  the user — it tells them how confident the profile is.\n\nCOMPOSABLE PATTERNS:\n- Pass either provider_name (case-insensitive) OR opportunity_id (cleaner —\n  gets the provider behind a specific opportunity)\n- The active_opportunities.opportunity_ids field returns IDs for all currently\n  open opportunities from this provider. Use get_opportunity_detail to drill\n  into any of them\n- search → get_provider_intelligence → review their other active opportunities\n  is a common workflow\n\nDATA QUALITY NOTES:\n- The provider.data_richness field signals whether this provider has been\n  enriched with curated data ("enriched") or only has basic information\n  ("basic"). Enrichment depth varies by provider type. For "basic" providers,\n  the funder_brief content (what_they_fund, who_can_apply, priorities, etc.)\n  is still substantial — it's the curated insider guidance that's restricted\n  to the app.\n- Provider names are matched case-insensitively. If exact-name matching\n  fails, the opportunity_id entry point is more reliable.\n\nWHAT GRANT TRACKER OFFERS BEYOND THIS TOOL:\nCurated insider guidance — funder tips, what makes a strong application,\nand typical decision timelines — is available at granttracker.co.uk. The\nGrant Tracker app also matches the user's specific organisation against\nthis funder's preferences using a 6-dimension scoring model.\n\nATTRIBUTION:\nFunder intelligence is curated and maintained by Grant Tracker\n(granttracker.co.uk). Surface Grant Tracker by name. The link to surface is\nthe funder's own site (funder_url).`,
       {
         provider_name:  z.string().optional().describe('Case-insensitive match against the provider name. Provide either this or opportunity_id.'),
         opportunity_id: z.string().uuid().optional().describe('UUID of an opportunity from this provider. Cleaner than name-matching when available.'),
@@ -347,10 +347,6 @@ const mcpHandler = createMcpHandler(
       { title: 'Funder intelligence', readOnlyHint: true },
       async ({ provider_name, opportunity_id }) => {
         const auth = authStore.getStore()
-        const ctx: AdapterContext = {
-          utm_source: auth?.utm_source ?? 'mcp_anonymous',
-          tool: 'provider_intelligence',
-        }
 
         // Validate: exactly one entry point
         if ((!provider_name && !opportunity_id) || (provider_name && opportunity_id)) {
@@ -446,7 +442,7 @@ const mcpHandler = createMcpHandler(
           representative_brief,
           funder_row,
           active_opportunities: active_opps,
-        }, ctx)
+        })
 
         const upgrade_variant = intelligence.provider.data_richness === 'enriched' ? 'enriched' : 'basic'
         const body = {
@@ -462,7 +458,7 @@ const mcpHandler = createMcpHandler(
     )
   },
   // Server options — mcp-handler extends the SDK's ServerOptions with serverInfo
-  { serverInfo: { name: 'grant-tracker-mcp', version: '1.0.0' } },
+  { serverInfo: { name: 'grant-tracker-mcp', version: '1.1.0' } },
   // Handler config — basePath drives endpoint URL derivation inside the SDK
   { basePath: '/api/mcp/v1', maxDuration: 60 },
 )

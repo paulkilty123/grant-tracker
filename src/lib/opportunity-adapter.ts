@@ -226,7 +226,6 @@ export interface MCPProviderIntelligence {
   }
   links: {
     funder_url: string | null
-    grant_tracker_url: string
   }
 }
 
@@ -256,17 +255,15 @@ function utmQuery(ctx: AdapterContext): string {
 
 export function buildGrantTrackerUrl(opportunity_id: string, ctx: AdapterContext): string {
   const base = ctx.base_url ?? DEFAULT_BASE_URL
-  return `${base}/dashboard/grants/${opportunity_id}?${utmQuery(ctx)}`
+  // Public bridge page (src/app/grants/[id]) — renders logged-out, no auth wall.
+  // Was /dashboard/grants/{id} (authed app route), which bounced MCP users who
+  // weren't signed in to a login screen and broke the conversion bridge.
+  return `${base}/grants/${opportunity_id}?${utmQuery(ctx)}`
 }
 
-export function buildGrantTrackerProviderUrl(provider_name: string, ctx: AdapterContext): string {
-  const base = ctx.base_url ?? DEFAULT_BASE_URL
-  const slug = provider_name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-  return `${base}/funders/${slug}?${utmQuery(ctx)}`
-}
+// buildGrantTrackerProviderUrl removed with Q3(b): provider-intelligence no
+// longer emits a grant_tracker_url, so the /funders/{slug} builder had no
+// remaining caller.
 
 // ──────────────────────────────────────────────────────────────────────────
 // Taxonomies and mappings
@@ -926,7 +923,6 @@ export interface ProviderIntelligenceInputs {
 
 export function toMCPProviderIntelligence(
   inputs: ProviderIntelligenceInputs,
-  ctx: AdapterContext,
 ): MCPProviderIntelligence {
   const { provider_name, representative_brief, funder_row, active_opportunities } = inputs
   const brief = projectFunderBriefForMCP(representative_brief)
@@ -982,8 +978,10 @@ export function toMCPProviderIntelligence(
       opportunity_ids,
     },
     links: {
+      // Q3(b): grant_tracker_url dropped from provider-intelligence output.
+      // The funder profile page (/funders/{slug}) is thin and the audit-grade
+      // pitch wants the funder's own site as the canonical link here.
       funder_url: funder_row?.website ?? null,
-      grant_tracker_url: buildGrantTrackerProviderUrl(provider_name, ctx),
     },
   }
 

@@ -183,7 +183,7 @@ export async function GET(req: NextRequest) {
       representative_brief: representative?.funder_brief ?? null,
       funder_row,
       active_opportunities: opps,
-    }, VALIDATION_CTX)
+    })
     provider_samples.push({
       input_name: name,
       expected_richness: expected,
