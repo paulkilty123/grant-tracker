@@ -2,17 +2,10 @@
 // Production design polish to come; v1 ships functional.
 
 import Link from 'next/link'
-import { ArrowRight, Key, BookOpen, FileText } from 'lucide-react'
-import { createClient } from '@/lib/supabase/server'
+import { ArrowRight, Plug, BookOpen, FileText } from 'lucide-react'
 import LogoMark from '@/components/icons/LogoMark'
 
-export const dynamic = 'force-dynamic'
-
-export default async function MCPLandingPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  const ctaHref = user ? '/mcp/keys/new' : '/auth/login?next=/mcp/keys/new'
-
+export default function MCPLandingPage() {
   return (
     <div style={{ background: '#FAFAF7', minHeight: '100vh', fontFamily: 'var(--font-plus-jakarta, Plus Jakarta Sans, sans-serif)', color: '#2C2C2A' }}>
       <nav style={{ background: 'white', borderBottom: '0.5px solid rgba(23,52,4,0.08)', padding: '18px 0' }}>
@@ -40,10 +33,10 @@ export default async function MCPLandingPage() {
 
         <div style={{ display: 'flex', gap: 12, marginBottom: 48, flexWrap: 'wrap' }}>
           <Link
-            href={ctaHref}
+            href="#connect"
             style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 22px', fontSize: 15, fontWeight: 600, borderRadius: 10, background: '#8ECB3C', color: '#173404', fontFamily: 'var(--font-space-grotesk)', textDecoration: 'none', boxShadow: '0 2px 8px rgba(132,204,22,0.25)' }}
           >
-            Get a free API key
+            How to connect
             <ArrowRight size={16} />
           </Link>
           <Link
@@ -55,23 +48,19 @@ export default async function MCPLandingPage() {
         </div>
 
         <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', marginBottom: 40 }}>
-          <Feature icon={<Key size={18} />} title="Free API key" body="Self-serve. Bound to a Grant Tracker account. Generated in under a minute." />
+          <Feature icon={<Plug size={18} />} title="One-click connect" body="Add as a custom connector in your AI client and sign in with OAuth 2.0 — nothing to paste or manage." />
           <Feature icon={<BookOpen size={18} />} title="Five tools" body="search_funding_and_support, get_opportunity_detail, get_provider_intelligence, get_taxonomy, health_check." />
           <Feature icon={<FileText size={18} />} title="UK-specialised" body="Eligibility-aware scoring across the four funding types — grants, programmes, investment, in-kind." />
         </div>
 
         {/* ── Connect ───────────────────────────────────────────────────── */}
-        <section style={{ borderTop: '0.5px solid rgba(23,52,4,0.08)', paddingTop: 32, marginBottom: 36 }}>
+        <section id="connect" style={{ borderTop: '0.5px solid rgba(23,52,4,0.08)', paddingTop: 32, marginBottom: 36 }}>
           <h2 style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, fontSize: 22, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 14 }}>Connect</h2>
           <p style={{ fontSize: 15, lineHeight: 1.6, color: '#5F5E5A', marginBottom: 10 }}>
             <strong style={{ color: '#2C2C2A' }}>In Claude, ChatGPT, Gemini, or any MCP-compatible client:</strong> add a custom connector pointing at the remote MCP server URL below, then sign in to Grant Tracker and authorise access. Authentication uses OAuth 2.0 with Dynamic Client Registration and PKCE — you don&apos;t paste a client ID or secret; the client registers itself.
           </p>
-          <pre style={{ background: '#F1F7E4', border: '0.5px solid rgba(23,52,4,0.12)', borderRadius: 8, padding: '12px 14px', fontSize: 13, color: '#173404', overflowX: 'auto', margin: '0 0 16px' }}>https://www.granttracker.co.uk/api/mcp/v1/mcp</pre>
-          <p style={{ fontSize: 15, lineHeight: 1.6, color: '#5F5E5A', marginBottom: 10 }}>
-            <strong style={{ color: '#2C2C2A' }}>For developers calling the API directly:</strong> generate a free key at <Link href="/mcp/keys/new" style={{ color: '#3B6D11', fontWeight: 600, textDecoration: 'none' }}>granttracker.co.uk/mcp/keys/new</Link> and send it as a bearer token:
-          </p>
-          <pre style={{ background: '#F1F7E4', border: '0.5px solid rgba(23,52,4,0.12)', borderRadius: 8, padding: '12px 14px', fontSize: 13, color: '#173404', overflowX: 'auto', margin: '0 0 12px' }}>Authorization: Bearer gt_mcp_…</pre>
-          <p style={{ fontSize: 13, color: '#8A8986', lineHeight: 1.6 }}>Transport: Streamable HTTP (JSON-RPC). The server is read-only.</p>
+          <pre style={{ background: '#F1F7E4', border: '0.5px solid rgba(23,52,4,0.12)', borderRadius: 8, padding: '12px 14px', fontSize: 13, color: '#173404', overflowX: 'auto', margin: '0 0 12px' }}>https://www.granttracker.co.uk/api/mcp/v1/mcp</pre>
+          <p style={{ fontSize: 13, color: '#8A8986', lineHeight: 1.6 }}>Transport: Streamable HTTP (JSON-RPC). Authentication is OAuth 2.0. The server is read-only.</p>
         </section>
 
         {/* ── Tools ─────────────────────────────────────────────────────── */}
