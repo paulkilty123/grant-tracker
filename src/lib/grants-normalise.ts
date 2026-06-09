@@ -27,6 +27,9 @@ export interface EnrichedGrant extends GrantOpportunity {
   funderCategory?: string       // funders.funder_type (our 8-category taxonomy)
   geoScope?: string[]           // funders.geographic_scope
   funderBrief?: Record<string, string | null> | null  // AI-generated funder intelligence
+  /** Raw scraped_grants.id (catalogue UUID). `id` above is external_id ?? id,
+   *  so this is the only reliable key for event payloads / DB joins. */
+  uuid?: string | null
 }
 
 /**
@@ -41,6 +44,7 @@ export function normaliseScrapedGrant(row: Record<string, unknown>): EnrichedGra
     ? (rawType as FunderType) : 'other'
   return {
     id:                   String(row.external_id ?? row.id),
+    uuid:                 row.id ? String(row.id) : null,
     title:                String(row.title ?? ''),
     funder:               String(row.funder ?? 'Unknown funder'),
     funderType,

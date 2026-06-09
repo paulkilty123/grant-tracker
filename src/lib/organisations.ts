@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/client'
+import { emitClientEvent } from '@/lib/events/client'
 import type { Organisation } from '@/types'
 
 export async function getOrganisation(orgId: string): Promise<Organisation | null> {
@@ -51,6 +52,11 @@ export async function updateOrganisation(
     .eq('id', id)
 
   if (error) throw error
+  // Capture layer — field names only, never values (no PII in payloads).
+  const fieldsChanged = Object.keys(updates)
+  if (fieldsChanged.length > 0) {
+    emitClientEvent(id, 'profile_updated', { fields_changed: fieldsChanged })
+  }
 }
 
 export async function getOrganisationsByOwner(userId: string): Promise<Organisation[]> {

@@ -648,6 +648,26 @@ export default function AccountPage() {
         </div>
       </section>
 
+      {/* ── Your data ── */}
+      <section style={{ marginBottom: 36 }}>
+        <SectionHeader title="Your data" desc="What you build here is yours to keep." />
+        <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, padding: isMobile ? '16px 18px' : '20px 22px', display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', gap: isMobile ? 12 : 20 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontFamily: UI, fontWeight: 600, fontSize: 14.5, color: T.textPrimary, marginBottom: 2 }}>Export your data</div>
+            <div style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, lineHeight: 1.5 }}>
+              Everything you do here builds your organisation&apos;s profile. It&apos;s yours, it persists beyond beta, and you can export it any time. Downloads your profile, pipeline, and saved opportunities as JSON.
+            </div>
+          </div>
+          <a
+            href="/api/export"
+            download
+            style={{ fontFamily: UI, fontWeight: 600, fontSize: 13, color: '#173404', background: '#fff', border: '1px solid #2C2C2A', padding: '8px 16px', borderRadius: 8, textDecoration: 'none', whiteSpace: 'nowrap' }}
+          >
+            Download JSON
+          </a>
+        </div>
+      </section>
+
       {/* ── Danger zone ── */}
       <section style={{ marginTop: 48, paddingTop: 32, borderTop: `1px solid ${T.border}` }}>
         <div style={{ fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textSecondary, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 14 }}>

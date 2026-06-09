@@ -33,7 +33,7 @@ export default function PrivacyPage() {
           Privacy policy
         </h1>
         <p style={{ marginTop: 12, marginBottom: 40, fontSize: 14, color: '#5F5E5A' }}>
-          <strong style={{ color: '#2C2C2A' }}>Last updated:</strong> 4 June 2026
+          <strong style={{ color: '#2C2C2A' }}>Last updated:</strong> 9 June 2026
         </p>
 
         <div style={{ fontSize: 16, lineHeight: 1.65, color: '#2C2C2A' }}>
@@ -60,6 +60,7 @@ export default function PrivacyPage() {
           <p><strong>Profile data.</strong> When you complete your organisation profile, you may provide additional information including your organisation type, sectors and beneficiaries you serve, geographic focus, and information about your funding history. This data is used to match you with relevant funding opportunities.</p>
           <p><strong>Application data.</strong> If you apply to join the founding cohort, we collect the responses you provide on the application form, including your contact details and the information you share about your organisation and fundraising context.</p>
           <p><strong>Usage data.</strong> We collect aggregate, anonymised data about how the service is used, such as which pages are visited and which features are most useful. We use this to improve the service. We do not use this data to identify individual users.</p>
+          <p><strong>Activity data.</strong> We record the actions you take in the service against your organisation&apos;s profile: the searches you run, the opportunities you view, save, or dismiss, changes to your funding pipeline, updates to your profile, and your use of application-building features. See &ldquo;How your activity builds your organisation&apos;s profile&rdquo; below for what this is used for and the promises that come with it.</p>
           <p><strong>Communications data.</strong> If you email us or respond to our messages, we keep a record of the correspondence.</p>
           <p>We do not knowingly collect data from children, and the service is not directed at people under 18.</p>
 
@@ -69,6 +70,26 @@ export default function PrivacyPage() {
           <p>To communicate with you. This includes responding to your questions, sending occasional product updates, and contacting you for monthly cohort check-ins if you are a founding cohort member.</p>
           <p>To improve the service. We use anonymised usage data to understand which features are working and where the product needs to improve.</p>
           <p>To comply with our legal obligations. This includes responding to lawful requests from regulators and authorities, and maintaining records where required by law.</p>
+
+          <Heading>How your activity builds your organisation&apos;s profile</Heading>
+          <p>
+            Everything you do in Grant Tracker builds a picture of your organisation and what it is looking for. We record activity such as the searches you run, the opportunities you view, save, or dismiss, the funding pipeline you build and update, and your use of application-building features. When you connect an AI agent through our MCP server, the queries it makes on your behalf are recorded in the same way.
+          </p>
+          <p>We use this activity data for three things:</p>
+          <ul style={{ paddingLeft: 22, margin: '8px 0 16px' }}>
+            <li style={{ marginBottom: 8 }}>To improve how we match your organisation with relevant funding.</li>
+            <li style={{ marginBottom: 8 }}>To personalise the service to your organisation over time.</li>
+            <li>To produce aggregate, anonymised insights about the UK funding landscape, such as where demand outstrips available funding. These insights never identify your organisation, and we never share one organisation&apos;s specifics with another.</li>
+          </ul>
+          <p>
+            <strong>The lawful basis</strong> for this processing is legitimate interests: improving the product and personalising it for you. We have considered the impact on you and believe this is proportionate. You can object at any time by emailing us.
+          </p>
+          <p>
+            <strong>Retention.</strong> Activity data is kept while your account is active. If you close your account, it is deleted or anonymised within 30 days, in line with the rest of your data.
+          </p>
+          <p>
+            <strong>The promise that comes with it.</strong> The profile your activity builds is yours. It persists beyond beta, and you can export your organisation&apos;s data as JSON at any time from your account page. We never log your passwords or private correspondence in activity data, and free-text content is limited to what you typed as a search query.
+          </p>
 
           <Heading>Legal basis for processing</Heading>
           <p>Under UK GDPR, we rely on the following legal bases:</p>

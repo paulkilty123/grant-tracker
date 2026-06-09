@@ -43,6 +43,7 @@ import {
 } from '@/lib/opportunity-adapter'
 import { executeMCPSearch, computeZeroResultDiagnostic, type MCPSearchParams } from '@/lib/mcp-search'
 import { logMcpQuery } from '@/lib/mcp-query-log'
+import { emitEvent } from '@/lib/events/emit'
 import { getUpgradeNote, getErrorVariantNote } from '@/lib/mcp-upgrade-notes'
 
 export const dynamic = 'force-dynamic'
@@ -120,8 +121,64 @@ const MCP_SERVER_INFO = {
   ],
 }
 
+// ── Capture layer ───────────────────────────────────────────────────────────
+// Wraps a tool handler so every call emits mcp_tool_called (tool name, full
+// arguments, result count where derivable, duration). The MCP is the richest
+// intent surface — argument capture must be complete. Guarded internally;
+// never blocks or breaks a tool response.
+function withCapture(
+  toolName: string,
+  handler: (...args: unknown[]) => Promise<unknown>,
+): (...args: unknown[]) => Promise<unknown> {
+  return async (...args: unknown[]) => {
+    const started = Date.now()
+    const result = await handler(...args)
+    try {
+      const auth = authStore.getStore()
+      // Derive a result count from the JSON body where one exists.
+      let resultCount: number | null = null
+      try {
+        const text = (result as { content?: { text?: unknown }[] })?.content?.[0]?.text
+        if (typeof text === 'string') {
+          const parsed = JSON.parse(text) as { total_matching?: unknown; results?: unknown }
+          if (typeof parsed.total_matching === 'number') resultCount = parsed.total_matching
+          else if (Array.isArray(parsed.results)) resultCount = parsed.results.length
+        }
+      } catch { /* count stays null */ }
+      const rawArgs =
+        args[0] && typeof args[0] === 'object' && !Array.isArray(args[0])
+          ? (args[0] as Record<string, unknown>)
+          : {}
+      await emitEvent({ surface: 'mcp', orgId: null, userId: null }, 'mcp_tool_called', {
+        tool_name:    toolName,
+        arguments:    rawArgs,
+        result_count: resultCount,
+        duration_ms:  Date.now() - started,
+        channel:      auth?.utm_source ?? 'mcp_anonymous',
+        auth_state:   auth?.state ?? 'anonymous',
+      })
+    } catch (err) {
+      console.error('[events] mcp_tool_called capture failed:', err)
+    }
+    return result
+  }
+}
+
 const mcpHandler = createMcpHandler(
   (server) => {
+    // Capture layer: intercept tool registration so every handler — current
+    // and future — is wrapped with mcp_tool_called instrumentation. Done at
+    // runtime so the typed registrations below stay untouched.
+    const originalTool = (server.tool as (...a: unknown[]) => unknown).bind(server)
+    ;(server as unknown as { tool: (...a: unknown[]) => unknown }).tool = (...toolArgs: unknown[]) => {
+      const name = toolArgs[0] as string
+      const last = toolArgs.length - 1
+      if (typeof toolArgs[last] === 'function') {
+        toolArgs[last] = withCapture(name, toolArgs[last] as (...a: unknown[]) => Promise<unknown>)
+      }
+      return originalTool(...toolArgs)
+    }
+
     // health_check — spec §4.5 + §8.5
     server.tool(
       'health_check',

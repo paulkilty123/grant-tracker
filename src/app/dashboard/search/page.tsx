@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Search, ChevronDown, Layers, DollarSign, Rocket, Building2, SlidersHorizontal, MapPin, Users, GraduationCap, TrendingUp, GitMerge, Gift, Landmark, CalendarDays, RefreshCw, Bookmark, PlusCircle, Activity, Info, Target, Star, CheckCircle2, XCircle, Lightbulb, AlertTriangle, Sparkles, ExternalLink, ClipboardList, EyeOff, Eye } from 'lucide-react'
 import { SEED_GRANTS } from '@/lib/grants'
@@ -23,6 +23,8 @@ import { usePlausible } from 'next-plausible'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import { SUBTYPE_LABELS } from '@/lib/funding-subtypes'
 import { normaliseScrapedGrant, type EnrichedGrant } from '@/lib/grants-normalise'
+import { emitClientEvent } from '@/lib/events/client'
+import { toCatalogueUuid } from '@/lib/events/taxonomy'
 import type { InteractionAction } from '@/lib/interactions'
 import type { SearchHistoryItem } from '@/lib/searchHistory'
 
@@ -1539,6 +1541,11 @@ export default function SearchPage() {
         localStorage.setItem(lsKey, JSON.stringify(data))
       } catch { /* ignore storage errors */ }
       if (org) {
+        emitClientEvent(org.id, 'search_executed', {
+          query_text: q,
+          filters: { mode: 'live', sectors: liveSelectedSectors, location: locationFilter || null },
+          result_count: (data as LiveSearchResponse).grants?.length ?? 0,
+        })
         await saveSearchHistory({
           orgId: org.id,
           query: q,
@@ -1592,7 +1599,7 @@ export default function SearchPage() {
   async function handleLiveAddToPipeline(grant: LiveGrant) {
     if (!org) { showToast('Complete your profile first to track grants'); return }
     try {
-      await createPipelineItem({
+      const added = await createPipelineItem({
         org_id: org.id,
         grant_name: grant.title,
         funder_name: grant.funder,
@@ -1606,6 +1613,8 @@ export default function SearchPage() {
         created_by: userId,
       })
       plausible('pipeline_added')
+      // Live-search grants are off-catalogue — no opportunity UUID exists.
+      emitClientEvent(org.id, 'pipeline_added', { opportunity_id: null, pipeline_item_id: added.id })
       showToast(`"${grant.title}" added to pipeline!`)
     } catch {
       showToast('Failed to add — please try again')
@@ -1624,6 +1633,8 @@ export default function SearchPage() {
   async function handleDismiss(grantId: string) {
     if (!org) return
     await recordInteraction(org.id, grantId, 'dismissed')
+    const uuid = catalogueUuidFor(grantId)
+    if (uuid) emitClientEvent(org.id, 'opportunity_dismissed', { opportunity_id: uuid, reason: null })
   }
 
   async function handleUndismiss(grantId: string) {
@@ -1641,6 +1652,8 @@ export default function SearchPage() {
   async function handleSave(grantId: string) {
     if (!org) return
     await recordInteraction(org.id, grantId, 'saved')
+    const uuid = catalogueUuidFor(grantId)
+    if (uuid) emitClientEvent(org.id, 'opportunity_saved', { opportunity_id: uuid })
     plausible('grant_saved')
     setInteractions(prev => {
       const next = new Map(prev)
@@ -1742,6 +1755,10 @@ export default function SearchPage() {
         created_by:           userId,
       })
       plausible('pipeline_added')
+      emitClientEvent(org.id, 'pipeline_added', {
+        opportunity_id: catalogueUuidFor(grant.id),
+        pipeline_item_id: added.id,
+      })
       setPipelinedIds(prev => new Map(prev).set(grant.title, { id: added.id, stage: 'identified' }))
       // Automatically clear 'saved' when promoted to pipeline
       if (interactions.get(grant.id)?.has('saved')) {
@@ -2119,6 +2136,56 @@ export default function SearchPage() {
     pinnedGrantId,
     actionableOnly,
   ])
+
+  // ── Capture layer ──────────────────────────────────────────────────────────
+  // Resolve a grant's catalogue UUID for event payloads. Normalised ids are
+  // external_id ?? uuid, so the uuid field carried by the normaliser is the
+  // only reliable key; falls back to the id itself when it is already a UUID.
+  function catalogueUuidFor(grantId: string): string | null {
+    const g = allGrants.find(x => x.id === grantId) as EnrichedGrant | undefined
+    return toCatalogueUuid(grantId, g?.uuid)
+  }
+
+  // Debounced search_executed + results_shown. Fires once the filter state
+  // settles (not per keystroke), deduped on a signature of query + shown ids
+  // so re-renders and sort flips don't re-emit identical events.
+  const lastEmitSigRef = useRef('')
+  useEffect(() => {
+    if (!org || !grantsLoaded) return
+    const t = setTimeout(() => {
+      const effectiveQuery = (filterQuery || query).trim()
+      const shown = displayGrants
+        .slice(0, 30)
+        .map(d => toCatalogueUuid(d.grant.id, (d.grant as EnrichedGrant).uuid))
+        .filter((u): u is string => u !== null)
+      const sig = `${effectiveQuery}|${shown.join(',')}`
+      if (sig === lastEmitSigRef.current) return
+      lastEmitSigRef.current = sig
+      if (effectiveQuery) {
+        emitClientEvent(org.id, 'search_executed', {
+          query_text: effectiveQuery,
+          filters: {
+            tab: activeTab,
+            type: activeType,
+            sectors: Array.from(activeSectors),
+            amount_min: amountMin || null,
+            amount_max: amountMax || null,
+            deadline: deadlineFilter,
+            funding_type: activeFundingType,
+            location: locationFilter || null,
+          },
+          result_count: displayGrants.length,
+        })
+      }
+      if (shown.length > 0) {
+        emitClientEvent(org.id, 'results_shown', {
+          opportunity_ids: shown,
+          context: effectiveQuery ? 'search' : 'matches',
+        })
+      }
+    }, 1200)
+    return () => clearTimeout(t)
+  }, [org, grantsLoaded, displayGrants, filterQuery, query, activeTab, activeType, activeSectors, amountMin, amountMax, deadlineFilter, activeFundingType, locationFilter])
 
   async function runAISearch(searchQuery: string, isSmartMatch = false, includeOrgContext = false) {
     setAiLoading(true)

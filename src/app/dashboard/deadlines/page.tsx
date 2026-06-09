@@ -7,6 +7,8 @@ import { getDeadlineAlerts, formatDeadline, formatRange, PIPELINE_STAGES } from 
 import { updatePipelineStage, updatePipelineItem, createPipelineItem, deletePipelineItem } from '@/lib/pipeline'
 import { PipelineModal } from '@/components/PipelineModal'
 import { recordInteraction } from '@/lib/interactions'
+import { emitClientEvent } from '@/lib/events/client'
+import { toCatalogueUuid } from '@/lib/events/taxonomy'
 import { usePlausible } from 'next-plausible'
 import { normaliseScrapedGrant, type EnrichedGrant } from '@/lib/grants-normalise'
 import { computeMatchScore } from '@/lib/matching'
@@ -1102,15 +1104,21 @@ export default function DeadlinesPage() {
   }
 
   async function handleStageChange(id: string, stage: PipelineStage) {
+    const beforeStage = alerts.find(a => a.item.id === id)?.item.stage
     setAlerts(prev => prev.map(a => a.item.id === id ? { ...a, item: { ...a.item, stage } } : a))
     await updatePipelineStage(id, stage)
+    if (beforeStage && beforeStage !== stage) {
+      emitClientEvent(orgId, 'pipeline_stage_changed', {
+        opportunity_id: null, pipeline_item_id: id, from_stage: beforeStage, to_stage: stage,
+      })
+    }
     showToast(`Moved to ${PIPELINE_STAGES.find(s => s.id === stage)?.label}`)
   }
 
   async function handleSetSavedDeadline(grant: EnrichedGrant, deadline: string) {
     if (!deadline) return
     setSavingSaved(grant.id)
-    await createPipelineItem({
+    const added = await createPipelineItem({
       org_id: orgId,
       grant_name: grant.title,
       funder_name: grant.funder || 'Unknown',
@@ -1131,6 +1139,10 @@ export default function DeadlinesPage() {
       created_by: userId,
     })
     plausible('pipeline_added')
+    emitClientEvent(orgId, 'pipeline_added', {
+      opportunity_id: toCatalogueUuid(grant.id, grant.uuid),
+      pipeline_item_id: added.id,
+    })
     setSavingSaved(null)
     setSavedSuccesses(prev => new Set(prev).add(grant.id))
     setTimeout(() => {
@@ -1142,6 +1154,9 @@ export default function DeadlinesPage() {
   async function handleSaveMatch(grantId: string) {
     setMatchActioning(prev => ({ ...prev, [grantId]: 'saving' }))
     await recordInteraction(orgId, grantId, 'saved')
+    const matched = matchRows.find(m => m.grant.id === grantId)?.grant
+    const uuid = toCatalogueUuid(grantId, matched?.uuid)
+    if (uuid) emitClientEvent(orgId, 'opportunity_saved', { opportunity_id: uuid })
     plausible('grant_saved')
     setMatchActioning(prev => ({ ...prev, [grantId]: 'done' }))
     setTimeout(() => {
@@ -1153,7 +1168,7 @@ export default function DeadlinesPage() {
   async function handlePipelineMatch(grant: EnrichedGrant) {
     const id = grant.id
     setMatchActioning(prev => ({ ...prev, [id]: 'pipelining' }))
-    await createPipelineItem({
+    const added = await createPipelineItem({
       org_id: orgId,
       grant_name: grant.title,
       funder_name: grant.funder,
@@ -1174,6 +1189,10 @@ export default function DeadlinesPage() {
       created_by: userId,
     })
     plausible('pipeline_added')
+    emitClientEvent(orgId, 'pipeline_added', {
+      opportunity_id: toCatalogueUuid(grant.id, grant.uuid),
+      pipeline_item_id: added.id,
+    })
     setMatchActioning(prev => ({ ...prev, [id]: 'done' }))
     setTimeout(() => {
       setMatchState(prev => ({ ...prev, [id]: 'pipeline' }))

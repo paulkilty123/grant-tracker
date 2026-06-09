@@ -2,6 +2,7 @@ import React from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { formatRange } from '@/lib/utils'
 import { notFound } from 'next/navigation'
+import ViewTracker from '@/components/ViewTracker'
 import AddToPipelineButton from './AddToPipelineButton'
 import FlagGrantButton from './FlagGrantButton'
 import {
@@ -143,6 +144,8 @@ export default async function GrantDetailPage({
 
   return (
     <div className="max-w-2xl">
+      {/* Capture layer — opportunity_viewed fires client-side on mount */}
+      <ViewTracker opportunityId={String(grant.id)} source="detail_page" />
 
       {/* Breadcrumb */}
       <div className="mb-5 flex items-center gap-2 text-sm">
@@ -291,7 +294,7 @@ export default async function GrantDetailPage({
               Apply now →
             </a>
           )}
-          <AddToPipelineButton grant={{
+          <AddToPipelineButton opportunityUuid={String(grant.id)} grant={{
             external_id: externalId,
             title:       String(grant.title ?? ''),
             funder:      String(grant.funder ?? ''),

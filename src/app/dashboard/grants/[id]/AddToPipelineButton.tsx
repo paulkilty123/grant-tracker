@@ -5,6 +5,7 @@ import { usePlausible } from 'next-plausible'
 import { createClient } from '@/lib/supabase/client'
 import { createPipelineItem } from '@/lib/pipeline'
 import { getOrganisationByOwner } from '@/lib/organisations'
+import { emitClientEvent } from '@/lib/events/client'
 import type { FunderType } from '@/types'
 
 interface Props {
@@ -19,6 +20,8 @@ interface Props {
     is_rolling: boolean
     apply_url: string | null
   }
+  /** Catalogue UUID (scraped_grants.id) — carried for capture events. */
+  opportunityUuid?: string | null
 }
 
 const VALID_FUNDER_TYPES: FunderType[] = [
@@ -29,7 +32,7 @@ const VALID_FUNDER_TYPES: FunderType[] = [
   'competition', 'loan', 'crowdfund_match', 'other',
 ]
 
-export default function AddToPipelineButton({ grant }: Props) {
+export default function AddToPipelineButton({ grant, opportunityUuid }: Props) {
   const plausible = usePlausible()
   const [state, setState] = useState<'idle' | 'loading' | 'done' | 'error' | 'noorg'>('idle')
 
@@ -47,7 +50,7 @@ export default function AddToPipelineButton({ grant }: Props) {
       const funderType: FunderType = VALID_FUNDER_TYPES.includes(rawType as FunderType)
         ? (rawType as FunderType) : 'other'
 
-      await createPipelineItem({
+      const added = await createPipelineItem({
         org_id:               org.id,
         grant_name:           grant.title,
         funder_name:          grant.funder,
@@ -68,6 +71,10 @@ export default function AddToPipelineButton({ grant }: Props) {
         created_by:           user.id,
       })
       plausible('pipeline_added')
+      emitClientEvent(org.id, 'pipeline_added', {
+        opportunity_id: opportunityUuid ?? null,
+        pipeline_item_id: added.id,
+      })
       setState('done')
     } catch {
       setState('error')

@@ -10,6 +10,7 @@ import {
   deletePipelineItem,
 } from '@/lib/pipeline'
 import { getOrganisationByOwner } from '@/lib/organisations'
+import { emitClientEvent } from '@/lib/events/client'
 import { usePlausible } from 'next-plausible'
 import { PIPELINE_STAGES, formatDeadline, formatRange, cn } from '@/lib/utils'
 import type { PipelineItem, PipelineStage, Organisation } from '@/types'
@@ -316,6 +317,8 @@ function AddModal({
       created_by: userId,
     })
     plausible('pipeline_added')
+    // Manual adds have no catalogue link — opportunity_id is null by design.
+    emitClientEvent(orgId, 'pipeline_added', { opportunity_id: null, pipeline_item_id: newItem.id })
     onAdd(newItem)
     setSaving(false)
     onClose()
@@ -521,19 +524,34 @@ export default function PipelinePage() {
     // Optimistic update
     setItems(prev => prev.map(i => i.id === id ? { ...i, stage: stageId } : i))
     await updatePipelineStage(id, stageId)
+    emitClientEvent(item.org_id, 'pipeline_stage_changed', {
+      opportunity_id: null, pipeline_item_id: id, from_stage: item.stage, to_stage: stageId,
+    })
     const stageName = PIPELINE_STAGES.find(s => s.id === stageId)?.label ?? stageId
     showToast(`Moved to ${stageName}`)
   }
 
   async function handleMove(id: string, stage: PipelineStage) {
+    const beforeItem = items.find(i => i.id === id)
     setItems(prev => prev.map(i => i.id === id ? { ...i, stage } : i))
     await updatePipelineStage(id, stage)
+    if (beforeItem && beforeItem.stage !== stage) {
+      emitClientEvent(beforeItem.org_id, 'pipeline_stage_changed', {
+        opportunity_id: null, pipeline_item_id: id, from_stage: beforeItem.stage, to_stage: stage,
+      })
+    }
     showToast(`Moved to ${PIPELINE_STAGES.find(s => s.id === stage)?.label}`)
   }
 
   async function handleSave(id: string, updates: Partial<PipelineItem>) {
+    const before = items.find(i => i.id === id)
     setItems(prev => prev.map(i => i.id === id ? { ...i, ...updates } : i))
     await updatePipelineItem(id, updates as any)
+    if (before && updates.stage && updates.stage !== before.stage) {
+      emitClientEvent(before.org_id, 'pipeline_stage_changed', {
+        opportunity_id: null, pipeline_item_id: id, from_stage: before.stage, to_stage: updates.stage,
+      })
+    }
     showToast('Saved!')
   }
 
