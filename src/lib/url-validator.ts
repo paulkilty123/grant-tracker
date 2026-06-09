@@ -143,7 +143,16 @@ export async function deepCheckUrl(
     // ── Content checks ──────────────────────────────────────────────────────────
     const contentType = res.headers.get('content-type') ?? ''
     if (!contentType.includes('text/html')) {
-      // PDFs, images, etc. — can't inspect but not dead
+      // Image/video/audio destinations are never a valid grant page — e.g. a
+      // funder page that 301s to a banner image (Rank "Time to Shine" -> a PNG).
+      // Flag as wrong_page so the row is marked url_status='unchecked' (hidden
+      // from default search, kept for a human to fix) rather than surfaced as a
+      // live link. PDFs / other documents can be legitimate funder guidance, so
+      // leave those ok-but-flagged.
+      if (/^\s*(image|video|audio)\//i.test(contentType)) {
+        return { status: 'wrong_page', qualityScore: 0, issues: ['non_page_content_type'] }
+      }
+      // PDFs, etc. — can't inspect but not dead
       return { status: 'ok', qualityScore: 40, issues: ['not_html'] }
     }
 
@@ -319,6 +328,9 @@ export async function checkUrl(url: string, funderName?: string): Promise<'ok' |
     // ── Content checks ─────────────────────────────────────────────────────────
     try {
       const contentType = res.headers.get('content-type') ?? ''
+      // Image/video/audio destination = broken link (page replaced by/redirected
+      // to a non-page asset). Treat as dead, same class as the Rank PNG case.
+      if (/^\s*(image|video|audio)\//i.test(contentType)) return 'dead'
       if (contentType.includes('text/html')) {
         const buf = await res.arrayBuffer()
         const html = new TextDecoder().decode(new Uint8Array(buf).slice(0, 30720))
