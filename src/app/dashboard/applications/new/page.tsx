@@ -379,7 +379,7 @@ export default function NewApplicationPage() {
 
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             <button onClick={handleCreate} disabled={creating} style={primaryBtn(creating)}>
-              {creating ? 'Setting up…' : 'Looks right, build the scaffolds'}
+              {creating ? 'Setting up…' : 'Looks right, build the guides'}
             </button>
             <button onClick={() => { setStep('setup'); setError(null) }} style={ghostBtn()}>
               Back

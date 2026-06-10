@@ -162,6 +162,18 @@ export default function ApplicationWorkspacePage() {
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // Autosave evidence: idle -> saving -> saved (fades back to idle)
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle')
+  const savedFadeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Edit questions after creation (the parse is correctable at any time)
+  const [editQsOpen, setEditQsOpen] = useState(false)
+  const [editDrafts, setEditDrafts] = useState<{ id: string; question_text: string; word_limit: number | null }[]>([])
+  const [editSaving, setEditSaving] = useState(false)
+
+  // Supplied guidelines: view + remove
+  const [guidelinesViewOpen, setGuidelinesViewOpen] = useState(false)
+
   function showToast(msg: string) {
     setToast(msg)
     setTimeout(() => setToast(null), 2600)
@@ -268,13 +280,81 @@ export default function ApplicationWorkspacePage() {
       })
       const data = await res.json()
       if (!res.ok) { setGuidelinesError(data?.error ?? 'Could not add the guidance'); return }
-      setApp(prev => (prev ? { ...prev, supplied_guidelines: 'added' } : prev))
+      // Hold the real stored text locally so View shows what is actually used.
+      if (guidelinesText.trim()) {
+        setApp(prev => (prev ? { ...prev, supplied_guidelines: guidelinesText.trim() } : prev))
+      } else {
+        const supabase = createClient()
+        const { data: row } = await supabase
+          .from('applications')
+          .select('supplied_guidelines')
+          .eq('id', app.id)
+          .maybeSingle()
+        setApp(prev => (prev ? { ...prev, supplied_guidelines: row?.supplied_guidelines ?? 'added' } : prev))
+      }
       setGuidelinesOpen(false)
-      showToast('Guidance added. Scaffolds and drafts will use it')
+      setGuidelinesText('')
+      setGuidelinesUrl('')
+      showToast('Guidance added. Guides and drafts will use it')
     } catch {
       setGuidelinesError('Could not add the guidance, please try again')
     } finally {
       setGuidelinesBusy(false)
+    }
+  }
+
+  // ── Edit questions after creation: fix the parse at any time ──
+  function openEditQuestions() {
+    if (!app) return
+    setEditDrafts(app.questions.map(q => ({ id: q.id, question_text: q.question_text, word_limit: q.word_limit })))
+    setEditQsOpen(true)
+  }
+
+  async function saveEditedQuestions() {
+    if (!app || editSaving) return
+    const kept = editDrafts.filter(d => d.question_text.trim())
+    if (kept.length === 0) { showToast('Keep at least one question'); return }
+    const removedWithAnswers = app.questions.filter(
+      q => q.user_answer.trim() && !kept.some(d => d.id === q.id),
+    )
+    if (removedWithAnswers.length > 0 &&
+        !window.confirm(`${removedWithAnswers.length} removed ${removedWithAnswers.length === 1 ? 'question has' : 'questions have'} written answers that will be deleted. Continue?`)) {
+      return
+    }
+    setEditSaving(true)
+    try {
+      const byId = new Map(app.questions.map(q => [q.id, q]))
+      const updated: ApplicationQuestion[] = kept.map(d => {
+        const existing = byId.get(d.id)
+        if (existing) {
+          return {
+            ...existing,
+            question_text: d.question_text.trim(),
+            word_limit: d.word_limit && d.word_limit > 0 ? Math.round(d.word_limit) : null,
+          }
+        }
+        return {
+          id: d.id,
+          question_text: d.question_text.trim(),
+          word_limit: d.word_limit && d.word_limit > 0 ? Math.round(d.word_limit) : null,
+          scaffold: null,
+          mapped_content: [],
+          gaps: [],
+          user_answer: '',
+          answer_banked: false,
+        }
+      })
+      const supabase = createClient()
+      const { error } = await supabase
+        .from('applications')
+        .update({ questions: updated, updated_at: new Date().toISOString() })
+        .eq('id', app.id)
+      if (error) { showToast('Could not save the questions'); return }
+      setApp(prev => (prev ? { ...prev, questions: updated } : prev))
+      setEditQsOpen(false)
+      showToast('Questions updated. Rebuild the guides to cover new or reworded ones')
+    } finally {
+      setEditSaving(false)
     }
   }
 
@@ -378,15 +458,23 @@ export default function ApplicationWorkspacePage() {
     }
   }
 
-  // ── Persist question edits (debounced) ──
+  // ── Persist question edits (debounced, with visible save state) ──
   const persistQuestions = useCallback((questions: ApplicationQuestion[]) => {
     if (saveTimer.current) clearTimeout(saveTimer.current)
+    if (savedFadeTimer.current) clearTimeout(savedFadeTimer.current)
+    setSaveState('saving')
     saveTimer.current = setTimeout(async () => {
       const supabase = createClient()
-      await supabase
+      const { error } = await supabase
         .from('applications')
         .update({ questions, updated_at: new Date().toISOString() })
         .eq('id', appId)
+      if (error) {
+        setSaveState('idle')
+        return
+      }
+      setSaveState('saved')
+      savedFadeTimer.current = setTimeout(() => setSaveState('idle'), 2000)
     }, 900)
   }, [appId])
 
@@ -633,7 +721,12 @@ export default function ApplicationWorkspacePage() {
           </h1>
           <p style={{ fontFamily: BODY, fontSize: 13.5, color: T.textSecondary, margin: '4px 0 0' }}>
             {app.funder_name && app.grant_name ? `${app.funder_name} · ` : ''}
-            {app.questions.length} questions · {answeredCount} answered
+            {app.questions.length} questions · {answeredCount} of {app.questions.length} written
+            {saveState !== 'idle' && (
+              <span style={{ fontFamily: UI, fontSize: 12, color: saveState === 'saved' ? T.greenMid : T.textTertiary, marginLeft: 8 }}>
+                {saveState === 'saving' ? 'Saving…' : 'Saved'}
+              </span>
+            )}
           </p>
         </div>
         <div style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap' }}>
@@ -655,6 +748,13 @@ export default function ApplicationWorkspacePage() {
             borderRadius: 8, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6,
           }}>
             <FileText size={14} /> Import a past application
+          </button>
+          <button onClick={openEditQuestions} style={{
+            fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textPrimary,
+            background: T.white, border: `1px solid ${T.textPrimary}`, padding: '8px 14px',
+            borderRadius: 8, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6,
+          }}>
+            <PenLine size={14} /> Edit questions
           </button>
           {!app.pipeline_item_id && (
             <button onClick={trackInPipeline} disabled={pipelining} style={{
@@ -756,6 +856,17 @@ export default function ApplicationWorkspacePage() {
         </div>
       )}
 
+      {/* ── No funder linked: say so honestly ── */}
+      {!app.opportunity_id && (
+        <div style={{ background: T.cream, borderRadius: 12, padding: '11px 18px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 9 }}>
+          <FileText size={14} color={T.textTertiary} style={{ flexShrink: 0 }} />
+          <span style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary }}>
+            No funder linked. Guides build from your profile and library only, and there is no
+            eligibility check, so read the funder&apos;s criteria yourself.
+          </span>
+        </div>
+      )}
+
       {/* ── What Grant Tracker knows about this funder (shown, not counted) ── */}
       {app.opportunity_id && briefData !== null && !app.supplied_guidelines && (() => {
         const heldKeys = BRIEF_FIELD_ORDER.filter(k => briefData[k])
@@ -780,8 +891,8 @@ export default function ApplicationWorkspacePage() {
               <span style={{ display: 'block', fontFamily: BODY, fontSize: 12, color: T.textSecondary, marginTop: 2 }}>
                 {thin
                   ? heldKeys.length === 0
-                    ? 'Nothing held yet. Scaffolds and drafts will be generic for this funder unless you add their guidance.'
-                    : `Limited: ${heldKeys.map(k => BRIEF_FIELD_LABELS[k].toLowerCase()).join(', ')}. Adding their guidance will sharpen scaffolds and drafts.`
+                    ? 'Nothing held yet. Guides and drafts will be generic for this funder unless you add their guidance.'
+                    : `Limited: ${heldKeys.map(k => BRIEF_FIELD_LABELS[k].toLowerCase()).join(', ')}. Adding their guidance will sharpen guides and drafts.`
                   : 'Open it to read what the builder is working from, and compare it with the funder’s own page.'}
               </span>
             </span>
@@ -880,11 +991,42 @@ export default function ApplicationWorkspacePage() {
         )
       })()}
       {app.supplied_guidelines && (
-        <div style={{ background: T.paleGreen, borderRadius: 12, padding: '11px 18px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 9 }}>
-          <FileText size={14} color={T.greenMid} />
-          <span style={{ fontFamily: BODY, fontSize: 12.5, color: T.sage }}>
-            The funder&apos;s guidance you supplied is being used to shape scaffolds and drafts.
-          </span>
+        <div style={{ background: T.paleGreen, borderRadius: 12, marginBottom: 16, overflow: 'hidden' }}>
+          <div style={{ padding: '11px 18px', display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap' }}>
+            <FileText size={14} color={T.greenMid} style={{ flexShrink: 0 }} />
+            <span style={{ flex: 1, fontFamily: BODY, fontSize: 12.5, color: T.sage, minWidth: 180 }}>
+              The funder&apos;s guidance you supplied is being used to shape guides and drafts.
+            </span>
+            <button
+              onClick={() => setGuidelinesViewOpen(o => !o)}
+              style={{ fontFamily: UI, fontWeight: 600, fontSize: 12, color: T.sage, background: 'transparent', border: 'none', cursor: 'pointer', padding: '2px 6px' }}
+            >
+              {guidelinesViewOpen ? 'Hide' : 'View'}
+            </button>
+            <button
+              onClick={async () => {
+                const supabase = createClient()
+                const { error } = await supabase
+                  .from('applications')
+                  .update({ supplied_guidelines: null, supplied_guidelines_source: null, updated_at: new Date().toISOString() })
+                  .eq('id', app.id)
+                if (error) { showToast('Could not remove the guidance'); return }
+                setApp(prev => (prev ? { ...prev, supplied_guidelines: null, supplied_guidelines_source: null } : prev))
+                setGuidelinesViewOpen(false)
+                showToast('Guidance removed')
+              }}
+              style={{ fontFamily: UI, fontWeight: 600, fontSize: 12, color: T.textSecondary, background: 'transparent', border: 'none', cursor: 'pointer', padding: '2px 6px' }}
+            >
+              Remove
+            </button>
+          </div>
+          {guidelinesViewOpen && (
+            <div style={{ borderTop: '1px solid rgba(59,109,17,0.15)', padding: '12px 18px', maxHeight: 260, overflowY: 'auto' }}>
+              <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.textPrimary, margin: 0, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                {app.supplied_guidelines}
+              </p>
+            </div>
+          )}
         </div>
       )}
 
@@ -902,7 +1044,7 @@ export default function ApplicationWorkspacePage() {
             <Sparkles size={20} />
           </div>
           <h2 style={{ fontFamily: UI, fontWeight: 600, fontSize: 17, color: T.textPrimary, margin: '0 0 6px' }}>
-            {generating ? 'Building your scaffolds' : 'Ready to build your scaffolds'}
+            {generating ? 'Building your guides' : 'Ready to build your guides'}
           </h2>
           <p style={{ fontFamily: BODY, fontSize: 13.5, color: T.textSecondary, margin: '0 auto 16px', lineHeight: 1.6, maxWidth: 460 }}>
             {generating
@@ -910,7 +1052,7 @@ export default function ApplicationWorkspacePage() {
                 ? `${streamedCount} of ${app.questions.length} done. Finished cards are ready below while the rest build.`
                 : 'Reading your profile, your content blocks and the funder context. The first card lands in a few seconds.'
               : blockCount === 0
-                ? 'Your content library is empty, so scaffolds and drafts will be mostly gaps. Import a past application first (button above) and the builder works from your real material.'
+                ? 'Your content library is empty, so guides and drafts will be mostly gaps. Import a past application first (button above) and the builder works from your real material.'
                 : 'For each question: what a strong answer covers, your own content mapped in, and what is missing. You write the answers, in your voice.'}
           </p>
           {genError && (
@@ -923,7 +1065,7 @@ export default function ApplicationWorkspacePage() {
               style={primaryBtn(gateBlocksGeneration)}
               title={gateBlocksGeneration ? 'Resolve or acknowledge the eligibility warning first' : undefined}
             >
-              Build the scaffolds
+              Build the guides
             </button>
           )}
           {generating && (
@@ -943,13 +1085,13 @@ export default function ApplicationWorkspacePage() {
         <div style={{ background: T.paleGreen, borderRadius: 12, padding: '12px 18px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <Sparkles size={15} color={T.greenMid} style={{ flexShrink: 0 }} />
           <span style={{ flex: 1, fontFamily: BODY, fontSize: 13, color: T.sage, minWidth: 200 }}>
-            Your library grew since these scaffolds were built. Rebuild them to map your new material in.
+            Your library grew since these guides were built. Rebuild them to map your new material in.
           </span>
           <button onClick={generate} style={{
             fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.greenDeep,
             background: T.lime, border: 'none', padding: '7px 14px', borderRadius: 8, cursor: 'pointer',
           }}>
-            Rebuild the scaffolds
+            Rebuild the guides
           </button>
         </div>
       )}
@@ -992,7 +1134,7 @@ export default function ApplicationWorkspacePage() {
       {hasScaffolds && (
         <div style={{ marginTop: 18 }}>
           <button onClick={generate} disabled={generating} style={ghostBtn()}>
-            {generating ? 'Rebuilding…' : 'Rebuild the scaffolds'}
+            {generating ? 'Rebuilding…' : 'Rebuild the guides'}
           </button>
         </div>
       )}
@@ -1029,6 +1171,87 @@ export default function ApplicationWorkspacePage() {
                 {bankSaving ? 'Banking…' : 'Bank it'}
               </button>
               <button onClick={() => setBankingFor(null)} style={ghostBtn()}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Edit questions modal ── */}
+      {editQsOpen && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+          onClick={() => setEditQsOpen(false)}
+        >
+          <div
+            style={{
+              background: T.white, borderRadius: 12, padding: '22px 24px', width: '100%', maxWidth: 640,
+              maxHeight: '86vh', overflowY: 'auto', boxShadow: '0 16px 64px rgba(26,46,43,0.18)',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+              <h3 style={{ fontFamily: UI, fontWeight: 600, fontSize: 16.5, color: T.textPrimary, margin: 0 }}>
+                Edit questions
+              </h3>
+              <button onClick={() => setEditQsOpen(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', color: T.textTertiary }}>
+                <XIcon size={16} />
+              </button>
+            </div>
+            <p style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, margin: '0 0 14px', lineHeight: 1.55 }}>
+              Fix the wording, word limits, add or remove questions. Answers stay with their
+              questions; reworded questions keep their current guide until you rebuild.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 12 }}>
+              {editDrafts.map((d, i) => (
+                <div key={d.id} style={{ border: `1px solid ${T.border}`, borderRadius: 10, padding: '11px 13px', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                  <span style={{
+                    fontFamily: UI, fontWeight: 700, fontSize: 12, color: T.sage, background: T.paleGreen,
+                    width: 24, height: 24, borderRadius: 999, display: 'flex', alignItems: 'center',
+                    justifyContent: 'center', flexShrink: 0, marginTop: 4,
+                  }}>
+                    {i + 1}
+                  </span>
+                  <textarea
+                    value={d.question_text}
+                    onChange={e => setEditDrafts(ds => ds.map((x, j) => (j === i ? { ...x, question_text: e.target.value } : x)))}
+                    rows={Math.min(4, Math.max(1, Math.ceil(d.question_text.length / 80)))}
+                    style={{
+                      flex: 1, fontFamily: BODY, fontSize: 14, color: T.textPrimary, border: 'none',
+                      padding: '4px 0', resize: 'vertical', lineHeight: 1.5, outline: 'none', background: 'transparent',
+                    }}
+                  />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                    <input
+                      type="number"
+                      value={d.word_limit ?? ''}
+                      onChange={e => setEditDrafts(ds => ds.map((x, j) => (j === i ? { ...x, word_limit: e.target.value ? Number(e.target.value) : null } : x)))}
+                      placeholder="none"
+                      aria-label="Word limit"
+                      style={{ ...inputStyle(), width: 72, padding: '6px 8px', fontSize: 13, textAlign: 'center' }}
+                    />
+                    <span style={{ fontFamily: UI, fontSize: 11.5, color: T.textTertiary }}>words</span>
+                    <button
+                      onClick={() => setEditDrafts(ds => ds.filter((_, j) => j !== i))}
+                      aria-label="Remove question"
+                      style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: T.textTertiary, padding: 4 }}
+                    >
+                      <XIcon size={14} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => setEditDrafts(ds => [...ds, { id: crypto.randomUUID(), question_text: '', word_limit: null }])}
+              style={{ ...ghostBtn(), paddingLeft: 0, marginBottom: 14 }}
+            >
+              + Add a question
+            </button>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={saveEditedQuestions} disabled={editSaving} style={primaryBtn(editSaving)}>
+                {editSaving ? 'Saving…' : 'Save questions'}
+              </button>
+              <button onClick={() => setEditQsOpen(false)} style={ghostBtn()}>Cancel</button>
             </div>
           </div>
         </div>
@@ -1196,7 +1419,7 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, reviewing, 
               onChange={e => onAnswerChange(e.target.value)}
               rows={hasScaffold ? 16 : 5}
               readOnly={drafting}
-              placeholder={hasScaffold ? 'Write in your own voice, or draft a starting version below.' : 'Build the scaffolds first, or just start writing.'}
+              placeholder={hasScaffold ? 'Write in your own voice, or draft a starting version below.' : 'Build the guides first, or just start writing.'}
               style={{
                 fontFamily: BODY, fontSize: 14, color: T.textPrimary, width: '100%',
                 padding: '10px 12px', borderRadius: 8, border: `1px solid ${drafting ? T.lime : T.border}`,

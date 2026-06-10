@@ -79,7 +79,7 @@ export default function ApplicationsPage() {
             Applications
           </h1>
           <p style={{ fontFamily: BODY, fontSize: 14, color: T.textSecondary, margin: '6px 0 0', lineHeight: 1.55, maxWidth: 540 }}>
-            Paste a funder&apos;s questions and get a structured scaffold: what a strong answer covers,
+            Paste a funder&apos;s questions and get a structured guide: what a strong answer covers,
             your own content mapped in, and the gaps flagged. You write the answers in your voice.
           </p>
         </div>
