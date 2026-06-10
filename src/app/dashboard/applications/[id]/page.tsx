@@ -165,6 +165,9 @@ export default function ApplicationWorkspacePage() {
   const [importOpen, setImportOpen] = useState(false)
   const [blockCount, setBlockCount] = useState<number | null>(null)
 
+  // Accordion: exactly one question expanded at a time (spec 4.1)
+  const [openQid, setOpenQid] = useState<string | null>(null)
+
   // Header: action menus + sticky condensed bar + linked deadline
   const [menuOpen, setMenuOpen] = useState<'word' | 'more' | null>(null)
   const [stuck, setStuck] = useState(false)
@@ -224,6 +227,7 @@ export default function ApplicationWorkspacePage() {
       const { data } = await supabase.from('applications').select('*').eq('id', appId).maybeSingle()
       if (!data) { router.push('/dashboard/applications'); return }
       setApp(data as ApplicationRecord)
+      setOpenQid(((data as ApplicationRecord).questions ?? [])[0]?.id ?? null)
       document.title = `${(data as ApplicationRecord).grant_name || (data as ApplicationRecord).funder_name || 'Application'} · Grant Tracker`
       setLoaded(true)
     }
@@ -1329,6 +1333,8 @@ export default function ApplicationWorkspacePage() {
             key={q.id}
             index={idx}
             question={q}
+            open={openQid === q.id}
+            onToggle={() => setOpenQid(prev => (prev === q.id ? null : q.id))}
             drafting={draftingQid === q.id}
             draftDisabled={draftingQid !== null}
             reviewing={reviewingQid === q.id}
@@ -1657,9 +1663,11 @@ function ScoreRing({ score, stale }: { score: number | null; stale: boolean }) {
   )
 }
 
-function QuestionCard({ index, question: q, drafting, draftDisabled, reviewing, voicePrompts, replacedAnswer, onAnswerChange, onToggleGap, onBank, onDraft, onReview, onRestoreAnswer }: {
+function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisabled, reviewing, voicePrompts, replacedAnswer, onAnswerChange, onToggleGap, onBank, onDraft, onReview, onRestoreAnswer }: {
   index: number
   question: ApplicationQuestion
+  open: boolean
+  onToggle: () => void
   drafting: boolean
   draftDisabled: boolean
   reviewing: boolean
@@ -1673,16 +1681,16 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, reviewing, 
   onRestoreAnswer: () => void
 }) {
   const isMobile = useIsMobile()
-  const [collapsed, setCollapsed] = useState(false)
-  const [activeTab, setActiveTab] = useState<'guide' | 'material'>('guide')
-  const [expandedStep, setExpandedStep] = useState<number | null>(0)
+  const [showFullQ, setShowFullQ] = useState(false)
+  const [railOpen, setRailOpen] = useState(false)
   const [expandedTip, setExpandedTip] = useState<number | null>(null)
   const [expandedGap, setExpandedGap] = useState<number | null>(null)
+  const [expandedStep, setExpandedStep] = useState<number | null>(null)
+  const [materialOpen, setMaterialOpen] = useState(false)
+
   const words = wordCount(q.user_answer)
   const limit = q.word_limit
   const overLimit = limit !== null && words > limit
-  const nearLimit = limit !== null && !overLimit && words > limit * 0.9
-  const countColor = overLimit ? T.coral : nearLimit ? T.amberText : T.textTertiary
   const openGaps = q.gaps.filter(g => !g.dismissed)
   const hasScaffold = !!q.scaffold && q.scaffold.length > 0
   const placeholders = placeholderCount(q.user_answer)
@@ -1693,433 +1701,483 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, reviewing, 
   const reviewStale = !!review && answerHash(q.user_answer) !== review.answer_hash
   const showRail = hasScaffold || q.gaps.length > 0 || !!review
 
-  return (
-    <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, overflow: 'hidden' }}>
-      {/* Question header */}
+  // Question title: first sentence, remainder behind "Show full question".
+  const sentenceMatch = q.question_text.match(/^[^.?!]*[.?!]/)
+  const titleSentence = (sentenceMatch ? sentenceMatch[0] : q.question_text).trim()
+  const remainder = q.question_text.slice(titleSentence.length).trim()
+
+  // Collapsed-row status chip (spec §4.1): one chip, highest-signal first.
+  const collapsedChip = (() => {
+    if (overLimit) return { label: `${words - limit!} words over`, bg: T.coralBg, color: T.coralText }
+    if (placeholders > 0) return { label: `${placeholders} ${placeholders === 1 ? 'placeholder' : 'placeholders'}`, bg: T.amberBg, color: T.amberText }
+    if (review && !reviewStale) return { label: `✓ ${review.score % 1 === 0 ? review.score : review.score.toFixed(1)}/10`, bg: T.greenBg, color: T.greenText }
+    if (words === 0) return { label: 'Not started', bg: T.cream, color: T.textTertiary }
+    return { label: 'In progress', bg: T.paleGreen2, color: T.sage }
+  })()
+
+  if (!open) {
+    return (
       <button
-        onClick={() => setCollapsed(c => !c)}
+        onClick={onToggle}
+        aria-expanded={false}
         style={{
-          width: '100%', textAlign: 'left', display: 'flex', alignItems: 'flex-start', gap: 12,
-          padding: '16px 20px', background: 'transparent', border: 'none', cursor: 'pointer',
+          width: '100%', textAlign: 'left', background: T.white, border: `1px solid ${T.border}`,
+          borderRadius: 12, padding: '13px 18px', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', gap: 12,
         }}
-        aria-expanded={!collapsed}
       >
         <span style={{
           fontFamily: UI, fontWeight: 700, fontSize: 12, color: T.sage, background: T.paleGreen,
           width: 26, height: 26, borderRadius: 999, display: 'flex', alignItems: 'center',
-          justifyContent: 'center', flexShrink: 0, marginTop: 1,
+          justifyContent: 'center', flexShrink: 0,
         }}>
           {index + 1}
         </span>
-        <span style={{ flex: 1, fontFamily: UI, fontWeight: 600, fontSize: 15, color: T.textPrimary, lineHeight: 1.45 }}>
-          {q.question_text}
+        <span style={{
+          flex: 1, fontFamily: UI, fontWeight: 500, fontSize: 14.5, color: T.textPrimary,
+          minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+        }}>
+          {titleSentence}
         </span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+        <span style={{
+          fontFamily: UI, fontWeight: 600, fontSize: 11, padding: '3px 10px', borderRadius: 999,
+          background: collapsedChip.bg, color: collapsedChip.color, flexShrink: 0, whiteSpace: 'nowrap',
+        }}>
+          {collapsedChip.label}
+        </span>
+        <ChevronDown size={15} color={T.textTertiary} style={{ flexShrink: 0 }} />
+      </button>
+    )
+  }
+
+  return (
+    <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, overflow: 'visible' }}>
+      {/* Expanded header */}
+      <div style={{ padding: '16px 20px 0' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+          <span style={{
+            fontFamily: UI, fontWeight: 700, fontSize: 12, color: T.sage, background: T.paleGreen,
+            width: 26, height: 26, borderRadius: 999, display: 'flex', alignItems: 'center',
+            justifyContent: 'center', flexShrink: 0, marginTop: 1,
+          }}>
+            {index + 1}
+          </span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <span style={{ fontFamily: UI, fontWeight: 500, fontSize: 15.5, color: T.textPrimary, lineHeight: 1.45 }}>
+              {titleSentence}
+            </span>
+            {remainder && (
+              <div style={{ marginTop: 2 }}>
+                <span style={{
+                  fontFamily: BODY, fontSize: 12.5, color: T.textTertiary, lineHeight: 1.5,
+                  ...(showFullQ ? {} : { display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }),
+                }}>
+                  {remainder}
+                </span>
+                <button
+                  onClick={() => setShowFullQ(f => !f)}
+                  style={{
+                    fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: T.sage,
+                    background: 'transparent', border: 'none', cursor: 'pointer', padding: '1px 0 0',
+                    display: 'block',
+                  }}
+                >
+                  {showFullQ ? 'Hide full question' : 'Show full question'}
+                </button>
+              </div>
+            )}
+          </div>
+          <button onClick={onToggle} aria-label="Collapse question" style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 4, flexShrink: 0 }}>
+            <ChevronDown size={15} color={T.textTertiary} style={{ transform: 'rotate(180deg)' }} />
+          </button>
+        </div>
+
+        {/* Status chip row (spec §4.3) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', margin: '10px 0 0', paddingLeft: 38 }}>
+          {review && (
+            <span style={{
+              fontFamily: UI, fontWeight: 600, fontSize: 11, padding: '3px 10px', borderRadius: 999,
+              background: T.greenBg, color: T.greenText, opacity: reviewStale ? 0.55 : 1,
+            }}>
+              {review.score % 1 === 0 ? review.score : review.score.toFixed(1)} / 10{reviewStale ? ', answer changed' : ''}
+            </span>
+          )}
+          {limit !== null && (
+            <span style={{
+              fontFamily: UI, fontWeight: 600, fontSize: 11, padding: '3px 10px', borderRadius: 999,
+              background: overLimit ? T.coralBg : T.cream, color: overLimit ? T.coralText : T.textSecondary,
+            }}>
+              {overLimit ? `${words - limit} words over the ${limit} limit` : `${words} of ${limit} words`}
+            </span>
+          )}
+          {placeholders > 0 && (
+            <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 11, padding: '3px 10px', borderRadius: 999, background: T.amberBg, color: T.amberText }}>
+              {placeholders} {placeholders === 1 ? 'placeholder' : 'placeholders'} to fill
+            </span>
+          )}
+          {openGaps.length > 0 && (
+            <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 11, padding: '3px 10px', borderRadius: 999, background: openGaps.some(g => g.severity === 'blocking') ? T.coralBg : T.amberBg, color: openGaps.some(g => g.severity === 'blocking') ? T.coralText : T.amberText }}>
+              {openGaps.length} {openGaps.length === 1 ? 'gap' : 'gaps'} to fix
+            </span>
+          )}
           {q.answer_banked && (
-            <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 10.5, color: T.greenText, background: T.greenBg, padding: '3px 9px', borderRadius: 999 }}>
+            <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 11, padding: '3px 10px', borderRadius: 999, background: T.greenBg, color: T.greenText }}>
               In your material
             </span>
           )}
-          {limit !== null && collapsed && (
-            <span style={{ fontFamily: UI, fontWeight: 500, fontSize: 11.5, color: countColor }}>
-              {words}/{limit}
-            </span>
-          )}
-          <ChevronDown size={15} color={T.textTertiary}
-            style={{ transform: collapsed ? 'rotate(0deg)' : 'rotate(180deg)', transition: 'transform 160ms ease' }} />
-        </span>
-      </button>
+        </div>
 
-      {!collapsed && (
-        <div style={{ borderTop: `1px solid ${T.border}` }}>
-          {/* Answer first: the editor is the hero; tips to improve sit beside it */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: showRail && !isMobile ? 'minmax(0, 2fr) minmax(230px, 1fr)' : '1fr',
-            gap: 0,
-            alignItems: 'start',
-          }}>
-          <div style={{ padding: '16px 20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, gap: 8, flexWrap: 'wrap' }}>
-              <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.textSecondary }}>
-                Your answer
+        {/* Guide chips (spec §4.6): what a strong answer covers */}
+        {hasScaffold && (
+          <div style={{ margin: '10px 0 0', paddingLeft: 38 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+              <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.greenMid }}>
+                Guide
               </span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                {placeholders > 0 && (
-                  <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 11, color: T.amberText, background: T.amberBg, padding: '2px 9px', borderRadius: 999 }}>
-                    {placeholders} {placeholders === 1 ? 'placeholder' : 'placeholders'} to fill
-                  </span>
-                )}
-                <span style={{ fontFamily: UI, fontWeight: 500, fontSize: 11.5, color: countColor }}>
-                  {limit !== null
-                    ? overLimit
-                      ? `${words - limit} ${words - limit === 1 ? 'word' : 'words'} over the ${limit} limit`
-                      : `${words} of ${limit} words`
-                    : `${words} ${words === 1 ? 'word' : 'words'}`}
-                </span>
-              </span>
-            </div>
-            <textarea
-              value={q.user_answer}
-              onChange={e => onAnswerChange(e.target.value)}
-              rows={answerRows(q.user_answer, hasScaffold ? (q.user_answer.trim() ? 10 : 6) : 5)}
-              readOnly={drafting}
-              placeholder={hasScaffold ? 'Write in your own voice, or draft a starting version below.' : 'Build the guides first, or just start writing.'}
-              style={{
-                fontFamily: BODY, fontSize: 14, color: T.textPrimary, width: '100%',
-                padding: '10px 12px', borderRadius: 8, border: `1px solid ${drafting ? T.lime : T.border}`,
-                background: T.editorBg, outline: 'none', resize: 'vertical', lineHeight: 1.65,
-              }}
-            />
-            {hasScaffold && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap', marginTop: 6 }}>
+              {sortedScaffold.map((s, i) => (
                 <button
-                  onClick={onDraft}
-                  disabled={draftDisabled}
-                  title="Assembles a starting draft from your own content blocks, with placeholders where your material runs out"
+                  key={i}
+                  onClick={() => setExpandedStep(expandedStep === i ? null : i)}
+                  aria-expanded={expandedStep === i}
                   style={{
-                    ...ghostBtn(), display: 'inline-flex', alignItems: 'center', gap: 6,
-                    paddingLeft: 0, color: draftDisabled && !drafting ? T.textTertiary : T.greenMid,
-                    cursor: draftDisabled ? 'wait' : 'pointer',
+                    fontFamily: UI, fontWeight: 600, fontSize: 11.5, padding: '4px 11px', borderRadius: 999,
+                    background: expandedStep === i ? T.paleGreen : T.softGreen,
+                    color: T.sage, border: `1px solid ${expandedStep === i ? 'rgba(59,109,17,0.3)' : T.border}`,
+                    cursor: 'pointer',
                   }}
                 >
-                  <PenLine size={14} /> {drafting ? 'Assembling from your content…' : 'Draft a starting version'}
+                  {i + 1}. {s.heading}
                 </button>
-                {replacedAnswer && !drafting && (
-                  <button
-                    onClick={onRestoreAnswer}
-                    title="Bring back the answer that was here before the draft"
-                    style={{
-                      ...ghostBtn(), display: 'inline-flex', alignItems: 'center', gap: 6,
-                      color: T.textSecondary,
-                    }}
-                  >
-                    Restore previous answer
-                  </button>
-                )}
-                {q.user_answer.trim() && !q.answer_banked && !drafting && (
-                  <button
-                    onClick={onBank}
-                    style={{
-                      ...ghostBtn(), display: 'inline-flex', alignItems: 'center', gap: 6,
-                      color: T.sage,
-                    }}
-                  >
-                    <BookmarkPlus size={14} /> Save to your material
-                  </button>
-                )}
-              </div>
+              ))}
+            </div>
+            {expandedStep !== null && sortedScaffold[expandedStep] && (
+              <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary, margin: '7px 0 0', lineHeight: 1.55 }}>
+                {sortedScaffold[expandedStep].guidance}
+              </p>
             )}
-            {!hasScaffold && q.user_answer.trim() && !q.answer_banked && (
+          </div>
+        )}
+      </div>
+
+      {/* Editor + rail */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: showRail && !isMobile ? 'minmax(0, 2fr) minmax(230px, 1fr)' : '1fr',
+        gap: 0,
+        alignItems: 'start',
+        marginTop: 12,
+        borderTop: `1px solid ${T.border}`,
+      }}>
+        <div style={{ padding: '14px 20px 16px' }}>
+          <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.textSecondary, marginBottom: 8 }}>
+            Your answer
+          </div>
+          <textarea
+            value={q.user_answer}
+            onChange={e => onAnswerChange(e.target.value)}
+            rows={answerRows(q.user_answer, hasScaffold ? (q.user_answer.trim() ? 10 : 6) : 5)}
+            readOnly={drafting}
+            placeholder={hasScaffold ? 'Write in your own voice, or draft a starting version below.' : 'Build the guides first, or just start writing.'}
+            style={{
+              fontFamily: BODY, fontSize: 14, color: T.textPrimary, width: '100%',
+              padding: '10px 12px', borderRadius: 8, border: `1px solid ${drafting ? T.lime : T.border}`,
+              background: T.editorBg, outline: 'none', resize: 'vertical', lineHeight: 1.65,
+            }}
+          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap', marginTop: 6 }}>
+            {hasScaffold && (
               <button
-                onClick={onBank}
+                onClick={onDraft}
+                disabled={draftDisabled}
+                title="Assembles a starting draft from your own material, with placeholders where it runs out"
                 style={{
                   ...ghostBtn(), display: 'inline-flex', alignItems: 'center', gap: 6,
-                  paddingLeft: 0, marginTop: 6, color: T.sage,
+                  paddingLeft: 0, color: draftDisabled && !drafting ? T.textTertiary : T.greenMid,
+                  cursor: draftDisabled ? 'wait' : 'pointer',
                 }}
+              >
+                <PenLine size={14} /> {drafting ? 'Assembling from your material…' : 'Draft a starting version'}
+              </button>
+            )}
+            {replacedAnswer && !drafting && (
+              <button
+                onClick={onRestoreAnswer}
+                title="Bring back the answer that was here before the draft"
+                style={{ ...ghostBtn(), display: 'inline-flex', alignItems: 'center', gap: 6, color: T.textSecondary }}
+              >
+                Restore previous answer
+              </button>
+            )}
+            {q.user_answer.trim() && !q.answer_banked && !drafting && (
+              <button
+                onClick={onBank}
+                style={{ ...ghostBtn(), display: 'inline-flex', alignItems: 'center', gap: 6, color: T.sage, ...(hasScaffold ? {} : { paddingLeft: 0 }) }}
               >
                 <BookmarkPlus size={14} /> Save to your material
               </button>
             )}
-            {voicePrompts.length > 0 && (
-              <div style={{ background: T.paleGreen, borderRadius: 8, padding: '10px 13px', marginTop: 8 }}>
-                <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.sage, marginBottom: 5 }}>
-                  Make it yours
-                </div>
-                <ul style={{ margin: 0, paddingLeft: 16 }}>
-                  {voicePrompts.map((p, i) => (
-                    <li key={i} style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary, lineHeight: 1.55 }}>{p}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
           </div>
-
-          {/* Tips to improve rail: score + tips + gaps in one place. Scroll
-              backstop keeps the rail from ever stretching past the editor. */}
-          {showRail && (
-            <div style={{
-              padding: '16px 18px',
-              borderLeft: isMobile ? 'none' : `1px solid ${T.border}`,
-              borderTop: isMobile ? `1px solid ${T.border}` : 'none',
-              background: T.softGreen,
-              maxHeight: isMobile ? undefined : 560,
-              overflowY: isMobile ? undefined : 'auto',
-            }}>
-              <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.greenMid, marginBottom: 10 }}>
-                Tips to improve
+          {voicePrompts.length > 0 && (
+            <div style={{ background: T.paleGreen, borderRadius: 8, padding: '10px 13px', marginTop: 8 }}>
+              <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.sage, marginBottom: 5 }}>
+                Make it yours
               </div>
+              <ul style={{ margin: 0, paddingLeft: 16 }}>
+                {voicePrompts.map((p, i) => (
+                  <li key={i} style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary, lineHeight: 1.55 }}>{p}</li>
+                ))}
+              </ul>
+            </div>
+          )}
 
-              {/* Score + check action */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                <ScoreRing score={review ? review.score : null} stale={reviewStale} />
-                <div style={{ minWidth: 0 }}>
-                  {review && !reviewStale && (
-                    <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 12, color: T.textSecondary, display: 'block' }}>
-                      out of 10
-                    </span>
-                  )}
-                  {reviewStale && (
-                    <span style={{ fontFamily: BODY, fontSize: 11.5, color: T.textTertiary, display: 'block', lineHeight: 1.4 }}>
-                      Answer changed since this check
-                    </span>
-                  )}
-                  <button
-                    onClick={onReview}
-                    disabled={reviewing || !q.user_answer.trim()}
-                    style={{
-                      fontFamily: UI, fontWeight: 600, fontSize: 12, marginTop: 3,
-                      color: !q.user_answer.trim() ? T.textTertiary : T.sage,
-                      background: 'transparent', border: 'none', padding: 0,
-                      cursor: reviewing || !q.user_answer.trim() ? 'default' : 'pointer',
-                      textAlign: 'left',
-                    }}
-                  >
-                    {reviewing ? 'Checking…' : review ? 'Check again' : 'Check this answer'}
-                  </button>
-                </div>
-              </div>
-
-              {/* Strengths: one line each */}
-              {review && review.strengths.length > 0 && (
-                <div style={{ marginBottom: 10 }}>
-                  {review.strengths.map((s, i) => (
-                    <div key={i} style={{ display: 'flex', gap: 7, alignItems: 'flex-start', marginBottom: 4 }}>
-                      <CheckCircle2 size={13} color={T.greenMid} style={{ flexShrink: 0, marginTop: 2 }} />
-                      <span style={{
-                        fontFamily: BODY, fontSize: 12, color: T.sage, lineHeight: 1.45,
-                        display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
-                      }}>
-                        {s}
-                      </span>
+          {/* Your material (spec keeps it adjacent to the guide) */}
+          {q.mapped_content.length > 0 && (
+            <div style={{ marginTop: 12 }}>
+              <button
+                onClick={() => setMaterialOpen(o => !o)}
+                aria-expanded={materialOpen}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 7, background: 'transparent',
+                  border: 'none', cursor: 'pointer', padding: 0,
+                }}
+              >
+                <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.greenMid }}>
+                  Your material
+                </span>
+                <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 10, color: T.greenText, background: T.greenBg, padding: '1px 7px', borderRadius: 999 }}>
+                  {q.mapped_content.length}
+                </span>
+                <ChevronDown size={12} color={T.textTertiary}
+                  style={{ transform: materialOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 140ms ease' }} />
+              </button>
+              {materialOpen && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
+                  {q.mapped_content.map((m, i) => (
+                    <div key={i} style={{ background: T.paleGreen, borderRadius: 8, padding: '10px 12px' }}>
+                      <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.textPrimary, margin: '0 0 4px', lineHeight: 1.5, fontStyle: 'italic' }}>
+                        &ldquo;{m.excerpt}&rdquo;
+                      </p>
+                      <span style={{ fontFamily: UI, fontSize: 11, color: T.sage }}>{m.relevance_note}</span>
                     </div>
                   ))}
                 </div>
               )}
+            </div>
+          )}
+        </div>
 
-              {/* Tips: headline rows, detail expands on tap (one at a time) */}
-              {review && review.tips.length > 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginBottom: q.gaps.length > 0 ? 14 : 0 }}>
-                  {review.tips.map((tip, i) => {
-                    const structured = typeof tip !== 'string'
-                    // Legacy string tips (pre-structured reviews): first few
-                    // words become the headline rather than a blank "Tip N".
-                    const headline = structured
-                      ? tip.headline
-                      : `${tip.split(/\s+/).slice(0, 8).join(' ')}${tip.split(/\s+/).length > 8 ? '…' : ''}`
-                    const detail = structured ? tip.detail : tip
-                    const open = expandedTip === i
-                    return (
-                      <div key={i}>
-                        <button
-                          onClick={() => setExpandedTip(open ? null : i)}
-                          aria-expanded={open}
-                          style={{
-                            width: '100%', display: 'flex', gap: 7, alignItems: 'flex-start', textAlign: 'left',
-                            background: 'transparent', border: 'none', cursor: 'pointer', padding: '3px 0',
-                          }}
-                        >
-                          <span style={{
-                            fontFamily: UI, fontWeight: 700, fontSize: 9.5, color: T.amberText,
-                            background: T.amberBg, width: 16, height: 16, borderRadius: 999,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2,
-                          }}>
-                            {i + 1}
-                          </span>
-                          <span style={{ flex: 1, fontFamily: UI, fontWeight: 600, fontSize: 12, color: T.textPrimary, lineHeight: 1.45 }}>
-                            {headline}
-                          </span>
-                          <ChevronDown size={12} color={T.textTertiary}
-                            style={{ flexShrink: 0, marginTop: 3, transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 140ms ease' }} />
-                        </button>
-                        {open && (
-                          <p style={{ fontFamily: BODY, fontSize: 12, color: T.textSecondary, margin: '1px 0 6px 23px', lineHeight: 1.5 }}>
-                            {detail}
-                          </p>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-              {!review && (
-                <p style={{ fontFamily: BODY, fontSize: 11.5, color: T.textTertiary, margin: '0 0 12px', lineHeight: 1.5 }}>
-                  Scores your answer against this funder&apos;s priorities and tells you exactly
-                  what to change.
-                </p>
-              )}
+        {/* Tips rail: score + next best fix, expandable to everything (spec §4.5) */}
+        {showRail && (
+          <div style={{
+            padding: '14px 18px 16px',
+            borderLeft: isMobile ? 'none' : `1px solid ${T.border}`,
+            borderTop: isMobile ? `1px solid ${T.border}` : 'none',
+            background: T.softGreen,
+            position: isMobile ? 'static' : 'sticky',
+            top: 76,
+          }}>
+            <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.greenMid, marginBottom: 10 }}>
+              Tips to improve
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+              <ScoreRing score={review ? review.score : null} stale={reviewStale} />
+              <div style={{ minWidth: 0 }}>
+                {review && !reviewStale && (
+                  <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 12, color: T.textSecondary, display: 'block' }}>
+                    out of 10
+                  </span>
+                )}
+                {reviewStale && (
+                  <span style={{ fontFamily: BODY, fontSize: 11.5, color: T.textTertiary, display: 'block', lineHeight: 1.4 }}>
+                    Answer changed since this check
+                  </span>
+                )}
+                <button
+                  onClick={onReview}
+                  disabled={reviewing || !q.user_answer.trim()}
+                  style={{
+                    fontFamily: UI, fontWeight: 600, fontSize: 12, marginTop: 3,
+                    color: !q.user_answer.trim() ? T.textTertiary : T.sage,
+                    background: 'transparent', border: 'none', padding: 0,
+                    cursor: reviewing || !q.user_answer.trim() ? 'default' : 'pointer',
+                    textAlign: 'left',
+                  }}
+                >
+                  {reviewing ? 'Checking…' : review ? 'Check again' : 'Check this answer'}
+                </button>
+              </div>
+            </div>
 
-              {/* Open gaps, tickable */}
-              {q.gaps.length > 0 && (
-                <>
-                  <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: openGaps.some(g => g.severity === 'blocking') ? T.coral : T.amberText, marginBottom: 3 }}>
-                    Gaps
+            {!review && (
+              <p style={{ fontFamily: BODY, fontSize: 11.5, color: T.textTertiary, margin: '0 0 10px', lineHeight: 1.5 }}>
+                Scores your answer against this funder&apos;s priorities and tells you exactly
+                what to change.
+              </p>
+            )}
+
+            {/* Next best fix: the top-ranked tip in full */}
+            {review && review.tips.length > 0 && (() => {
+              const top = review.tips[0]
+              const structured = typeof top !== 'string'
+              const headline = structured ? top.headline : `${top.split(/\s+/).slice(0, 8).join(' ')}${top.split(/\s+/).length > 8 ? '…' : ''}`
+              const detail = structured ? top.detail : top
+              return (
+                <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 8, padding: '10px 12px', marginBottom: 8 }}>
+                  <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 10, letterSpacing: '0.05em', textTransform: 'uppercase', color: T.amberText, marginBottom: 3 }}>
+                    Next best fix
                   </div>
-                  <p style={{ fontFamily: BODY, fontSize: 10.5, color: T.textTertiary, margin: '0 0 7px', lineHeight: 1.4 }}>
-                    Spotted when the guides were built. Tick off anything your answer now covers.
-                  </p>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                    {q.gaps.map((g, i) => {
-                      const open = expandedGap === i
-                      const info = gapIsInformational(g.gap_type)
-                      const sevColor = info ? T.textTertiary : g.severity === 'blocking' ? T.coral : T.amberText
+                  <p style={{ fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.textPrimary, margin: '0 0 3px', lineHeight: 1.4 }}>{headline}</p>
+                  <p style={{ fontFamily: BODY, fontSize: 12, color: T.textSecondary, margin: 0, lineHeight: 1.5 }}>{detail}</p>
+                </div>
+              )
+            })()}
+
+            {/* Summary + open everything */}
+            {(review || q.gaps.length > 0) && !railOpen && (
+              <button
+                onClick={() => setRailOpen(true)}
+                style={{ ...ghostBtn(), paddingLeft: 0, fontSize: 12, color: T.sage }}
+              >
+                {[
+                  review && review.tips.length > 1 ? `${review.tips.length - 1} more ${review.tips.length - 1 === 1 ? 'tip' : 'tips'}` : null,
+                  openGaps.length > 0 ? `${openGaps.length} ${openGaps.length === 1 ? 'gap' : 'gaps'}` : null,
+                ].filter(Boolean).join(' · ') || 'Details'}{' '}· Open tips and gaps
+              </button>
+            )}
+
+            {railOpen && (
+              <>
+                {/* Strengths, full text */}
+                {review && review.strengths.length > 0 && (
+                  <div style={{ marginBottom: 10 }}>
+                    {review.strengths.map((s, i) => (
+                      <div key={i} style={{ display: 'flex', gap: 7, alignItems: 'flex-start', marginBottom: 4 }}>
+                        <CheckCircle2 size={13} color={T.greenMid} style={{ flexShrink: 0, marginTop: 2 }} />
+                        <span style={{ fontFamily: BODY, fontSize: 12, color: T.sage, lineHeight: 1.45 }}>{s}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {/* Remaining tips */}
+                {review && review.tips.length > 1 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginBottom: q.gaps.length > 0 ? 12 : 0 }}>
+                    {review.tips.slice(1).map((tip, i) => {
+                      const structured = typeof tip !== 'string'
+                      const headline = structured ? tip.headline : `${tip.split(/\s+/).slice(0, 8).join(' ')}${tip.split(/\s+/).length > 8 ? '…' : ''}`
+                      const detail = structured ? tip.detail : tip
+                      const tOpen = expandedTip === i
                       return (
-                        <div key={i} style={{ opacity: g.dismissed ? 0.45 : 1 }}>
-                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 7 }}>
-                            <button
-                              onClick={() => onToggleGap(i)}
-                              aria-label={g.dismissed ? 'Restore gap' : 'Tick off gap'}
-                              title={g.dismissed ? 'Restore' : 'Tick off'}
-                              style={{
-                                width: 14, height: 14, borderRadius: 5, flexShrink: 0, marginTop: 3,
-                                border: `1.5px solid ${sevColor}`,
-                                background: g.dismissed ? sevColor : 'transparent',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                cursor: 'pointer', padding: 0,
-                              }}
-                            >
-                              {g.dismissed && <Check size={10} color="#fff" />}
-                            </button>
-                            <button
-                              onClick={() => setExpandedGap(open ? null : i)}
-                              aria-expanded={open}
-                              style={{
-                                flex: 1, display: 'flex', alignItems: 'flex-start', gap: 6, textAlign: 'left',
-                                background: 'transparent', border: 'none', cursor: 'pointer', padding: '1px 0',
-                              }}
-                            >
-                              <span style={{
-                                flex: 1, fontFamily: UI, fontWeight: 600, fontSize: 11.5, lineHeight: 1.45,
-                                color: info ? T.textTertiary : g.severity === 'blocking' ? T.coralText : T.textSecondary,
-                                textDecoration: g.dismissed ? 'line-through' : 'none',
-                              }}>
-                                {!info && (
-                                  <span style={{
-                                    fontFamily: UI, fontWeight: 700, fontSize: 9.5, letterSpacing: '0.04em',
-                                    textTransform: 'uppercase', marginRight: 6, padding: '1px 6px', borderRadius: 999,
-                                    color: g.severity === 'blocking' ? T.coralText : T.amberText,
-                                    background: g.severity === 'blocking' ? T.coralBg : T.amberBg,
-                                  }}>
-                                    {g.severity === 'blocking' ? 'Fix' : 'Strengthen'}
-                                  </span>
-                                )}
-                                {gapLabel(g.gap_type)}
-                              </span>
-                              <ChevronDown size={11} color={T.textTertiary}
-                                style={{ flexShrink: 0, marginTop: 3, transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 140ms ease' }} />
-                            </button>
-                          </div>
-                          {open && (
-                            <p style={{ fontFamily: BODY, fontSize: 11.5, color: T.textSecondary, margin: '1px 0 5px 21px', lineHeight: 1.5 }}>
-                              {g.description}
+                        <div key={i}>
+                          <button
+                            onClick={() => setExpandedTip(tOpen ? null : i)}
+                            aria-expanded={tOpen}
+                            style={{
+                              width: '100%', display: 'flex', gap: 7, alignItems: 'flex-start', textAlign: 'left',
+                              background: 'transparent', border: 'none', cursor: 'pointer', padding: '3px 0',
+                            }}
+                          >
+                            <span style={{
+                              fontFamily: UI, fontWeight: 700, fontSize: 9.5, color: T.amberText,
+                              background: T.amberBg, width: 16, height: 16, borderRadius: 999,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2,
+                            }}>
+                              {i + 2}
+                            </span>
+                            <span style={{ flex: 1, fontFamily: UI, fontWeight: 600, fontSize: 12, color: T.textPrimary, lineHeight: 1.45 }}>
+                              {headline}
+                            </span>
+                            <ChevronDown size={12} color={T.textTertiary}
+                              style={{ flexShrink: 0, marginTop: 3, transform: tOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 140ms ease' }} />
+                          </button>
+                          {tOpen && (
+                            <p style={{ fontFamily: BODY, fontSize: 12, color: T.textSecondary, margin: '1px 0 6px 23px', lineHeight: 1.5 }}>
+                              {detail}
                             </p>
                           )}
                         </div>
                       )
                     })}
                   </div>
-                </>
-              )}
-            </div>
-          )}
-          </div>
-
-          {/* Guidance below the writing: Guide / Your material / Gaps tabs */}
-          {hasScaffold && (
-            <div style={{ borderTop: `1px solid ${T.border}`, background: T.softGreen }}>
-              <div style={{ display: 'flex', gap: 2, padding: '10px 20px 0' }}>
-                {([
-                  { key: 'guide' as const,    label: 'Guide',         count: null },
-                  { key: 'material' as const, label: 'Your material', count: q.mapped_content.length || null },
-                ]).map(tab => (
-                  <button
-                    key={tab.key}
-                    onClick={() => setActiveTab(tab.key)}
-                    style={{
-                      fontFamily: UI, fontWeight: 600, fontSize: 12.5,
-                      color: activeTab === tab.key ? T.greenDeep : T.textTertiary,
-                      background: activeTab === tab.key ? T.white : 'transparent',
-                      border: activeTab === tab.key ? `1px solid ${T.border}` : '1px solid transparent',
-                      borderBottom: activeTab === tab.key ? `1px solid ${T.white}` : '1px solid transparent',
-                      borderRadius: '8px 8px 0 0', padding: '7px 14px', cursor: 'pointer',
-                      display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: -1,
-                    }}
-                  >
-                    {tab.label}
-                    {tab.count !== null && (
-                      <span style={{
-                        fontFamily: UI, fontWeight: 700, fontSize: 10,
-                        color: T.greenText, background: T.greenBg,
-                        padding: '1px 7px', borderRadius: 999,
-                      }}>
-                        {tab.count}
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-              <div style={{ background: T.white, borderTop: `1px solid ${T.border}`, padding: '14px 20px 16px' }}>
-
-                {activeTab === 'guide' && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    {sortedScaffold.map((s, i) => (
-                      <div key={i}>
-                        <button
-                          onClick={() => setExpandedStep(expandedStep === i ? null : i)}
-                          aria-expanded={expandedStep === i}
-                          style={{
-                            width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 9,
-                            background: 'transparent', border: 'none', cursor: 'pointer', padding: '5px 0',
-                          }}
-                        >
-                          <span style={{
-                            fontFamily: UI, fontWeight: 700, fontSize: 11, color: T.sage,
-                            background: T.paleGreen, width: 20, height: 20, borderRadius: 999,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                          }}>
-                            {i + 1}
-                          </span>
-                          <span style={{ flex: 1, fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textPrimary }}>
-                            {s.heading}
-                          </span>
-                          <ChevronDown size={13} color={T.textTertiary}
-                            style={{ transform: expandedStep === i ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 140ms ease' }} />
-                        </button>
-                        {expandedStep === i && (
-                          <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary, margin: '2px 0 6px 29px', lineHeight: 1.55 }}>
-                            {s.guidance}
-                          </p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
                 )}
-
-                {activeTab === 'material' && (
-                  q.mapped_content.length > 0 ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      {q.mapped_content.map((m, i) => (
-                        <div key={i} style={{ background: T.paleGreen, borderRadius: 8, padding: '10px 12px' }}>
-                          <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.textPrimary, margin: '0 0 4px', lineHeight: 1.5, fontStyle: 'italic' }}>
-                            &ldquo;{m.excerpt}&rdquo;
-                          </p>
-                          <span style={{ fontFamily: UI, fontSize: 11, color: T.sage }}>{m.relevance_note}</span>
-                        </div>
-                      ))}
+                {/* Gaps */}
+                {q.gaps.length > 0 && (
+                  <>
+                    <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: openGaps.some(g => g.severity === 'blocking') ? T.coral : T.amberText, marginBottom: 3 }}>
+                      Gaps
                     </div>
-                  ) : (
-                    <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.textTertiary, margin: 0 }}>
-                      Nothing from your material maps to this question yet. Import a past application
-                      or add blocks to your reusable content, then rebuild the scaffolds.
+                    <p style={{ fontFamily: BODY, fontSize: 10.5, color: T.textTertiary, margin: '0 0 7px', lineHeight: 1.4 }}>
+                      Spotted when the guides were built. Tick off anything your answer now covers.
                     </p>
-                  )
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      {q.gaps.map((g, i) => {
+                        const gOpen = expandedGap === i
+                        const info = gapIsInformational(g.gap_type)
+                        const sevColor = info ? T.textTertiary : g.severity === 'blocking' ? T.coral : T.amberText
+                        return (
+                          <div key={i} style={{ opacity: g.dismissed ? 0.45 : 1 }}>
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 7 }}>
+                              <button
+                                onClick={() => onToggleGap(i)}
+                                aria-label={g.dismissed ? 'Restore gap' : 'Tick off gap'}
+                                title={g.dismissed ? 'Restore' : 'Tick off'}
+                                style={{
+                                  width: 14, height: 14, borderRadius: 5, flexShrink: 0, marginTop: 3,
+                                  border: `1.5px solid ${sevColor}`,
+                                  background: g.dismissed ? sevColor : 'transparent',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  cursor: 'pointer', padding: 0,
+                                }}
+                              >
+                                {g.dismissed && <Check size={10} color="#fff" />}
+                              </button>
+                              <button
+                                onClick={() => setExpandedGap(gOpen ? null : i)}
+                                aria-expanded={gOpen}
+                                style={{
+                                  flex: 1, display: 'flex', alignItems: 'flex-start', gap: 6, textAlign: 'left',
+                                  background: 'transparent', border: 'none', cursor: 'pointer', padding: '1px 0',
+                                }}
+                              >
+                                <span style={{
+                                  flex: 1, fontFamily: UI, fontWeight: 600, fontSize: 11.5, lineHeight: 1.45,
+                                  color: info ? T.textTertiary : g.severity === 'blocking' ? T.coralText : T.textSecondary,
+                                  textDecoration: g.dismissed ? 'line-through' : 'none',
+                                }}>
+                                  {!info && (
+                                    <span style={{
+                                      fontFamily: UI, fontWeight: 700, fontSize: 9.5, letterSpacing: '0.04em',
+                                      textTransform: 'uppercase', marginRight: 6, padding: '1px 6px', borderRadius: 999,
+                                      color: g.severity === 'blocking' ? T.coralText : T.amberText,
+                                      background: g.severity === 'blocking' ? T.coralBg : T.amberBg,
+                                    }}>
+                                      {g.severity === 'blocking' ? 'Fix' : 'Strengthen'}
+                                    </span>
+                                  )}
+                                  {gapLabel(g.gap_type)}
+                                </span>
+                                <ChevronDown size={11} color={T.textTertiary}
+                                  style={{ flexShrink: 0, marginTop: 3, transform: gOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 140ms ease' }} />
+                              </button>
+                            </div>
+                            {gOpen && (
+                              <p style={{ fontFamily: BODY, fontSize: 11.5, color: T.textSecondary, margin: '1px 0 5px 21px', lineHeight: 1.5 }}>
+                                {g.description}
+                              </p>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </>
                 )}
-
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+                <button onClick={() => setRailOpen(false)} style={{ ...ghostBtn(), paddingLeft: 0, fontSize: 11.5, color: T.textTertiary, marginTop: 6 }}>
+                  Show less
+                </button>
+              </>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
