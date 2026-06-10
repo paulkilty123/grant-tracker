@@ -68,9 +68,15 @@ export interface Gap {
   dismissed?: boolean       // user can tick off / dismiss in the workspace
 }
 
+export interface ReviewTip {
+  headline: string          // imperative, a few words: the what
+  detail: string            // 1-3 sentences: the why and how
+}
+
 export interface AnswerReview {
   score: number             // 0-10, one decimal
-  tips: string[]            // ordered by impact, written to the user
+  /** Ordered by impact. Strings only in reviews saved before tips were structured. */
+  tips: (ReviewTip | string)[]
   strengths: string[]
   reviewed_at: string
   answer_hash: string       // hash of the answer that was reviewed (staleness)
@@ -166,7 +172,10 @@ export type GenerationResult = z.infer<typeof GenerationResultSchema>
 // Review step (Sonnet): one answer scored with improvement tips.
 export const ReviewResultSchema = z.object({
   score: z.number().min(0).max(10),
-  tips: z.array(z.string().min(1)).min(1).max(4),
+  tips: z.array(z.object({
+    headline: z.string().min(1),
+    detail: z.string().min(1),
+  })).min(1).max(4),
   strengths: z.array(z.string()).max(2),
 })
 export type ReviewResult = z.infer<typeof ReviewResultSchema>

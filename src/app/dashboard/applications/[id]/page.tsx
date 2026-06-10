@@ -1016,6 +1016,7 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, reviewing, 
   const [collapsed, setCollapsed] = useState(false)
   const [activeTab, setActiveTab] = useState<'guide' | 'material'>('guide')
   const [expandedStep, setExpandedStep] = useState<number | null>(0)
+  const [expandedTip, setExpandedTip] = useState<number | null>(null)
   const words = wordCount(q.user_answer)
   const limit = q.word_limit
   const overLimit = limit !== null && words > limit
@@ -1073,8 +1074,9 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, reviewing, 
           {/* Answer first: the editor is the hero; tips to improve sit beside it */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: showRail && !isMobile ? 'minmax(0, 1fr) 250px' : '1fr',
+            gridTemplateColumns: showRail && !isMobile ? 'minmax(0, 2fr) minmax(230px, 1fr)' : '1fr',
             gap: 0,
+            alignItems: 'start',
           }}>
           <div style={{ padding: '16px 20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, gap: 8, flexWrap: 'wrap' }}>
@@ -1096,7 +1098,7 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, reviewing, 
             <textarea
               value={q.user_answer}
               onChange={e => onAnswerChange(e.target.value)}
-              rows={hasScaffold ? 8 : 5}
+              rows={hasScaffold ? 16 : 5}
               readOnly={drafting}
               placeholder={hasScaffold ? 'Write in your own voice, or draft a starting version below.' : 'Build the scaffolds first, or just start writing.'}
               style={{
@@ -1199,31 +1201,62 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, reviewing, 
                 </div>
               </div>
 
-              {/* Strengths + tips from the last check */}
+              {/* Strengths: one line each */}
               {review && review.strengths.length > 0 && (
                 <div style={{ marginBottom: 10 }}>
                   {review.strengths.map((s, i) => (
                     <div key={i} style={{ display: 'flex', gap: 7, alignItems: 'flex-start', marginBottom: 4 }}>
                       <CheckCircle2 size={13} color={T.greenMid} style={{ flexShrink: 0, marginTop: 2 }} />
-                      <span style={{ fontFamily: BODY, fontSize: 12, color: T.sage, lineHeight: 1.5 }}>{s}</span>
+                      <span style={{
+                        fontFamily: BODY, fontSize: 12, color: T.sage, lineHeight: 1.45,
+                        display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                      }}>
+                        {s}
+                      </span>
                     </div>
                   ))}
                 </div>
               )}
+
+              {/* Tips: headline rows, detail expands on tap (one at a time) */}
               {review && review.tips.length > 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginBottom: q.gaps.length > 0 ? 14 : 0 }}>
-                  {review.tips.map((tip, i) => (
-                    <div key={i} style={{ display: 'flex', gap: 7, alignItems: 'flex-start' }}>
-                      <span style={{
-                        fontFamily: UI, fontWeight: 700, fontSize: 9.5, color: T.amberText,
-                        background: T.amberBg, width: 16, height: 16, borderRadius: 999,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2,
-                      }}>
-                        {i + 1}
-                      </span>
-                      <span style={{ fontFamily: BODY, fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>{tip}</span>
-                    </div>
-                  ))}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginBottom: q.gaps.length > 0 ? 14 : 0 }}>
+                  {review.tips.map((tip, i) => {
+                    const structured = typeof tip !== 'string'
+                    const headline = structured ? tip.headline : `Tip ${i + 1}`
+                    const detail = structured ? tip.detail : tip
+                    const open = expandedTip === i
+                    return (
+                      <div key={i}>
+                        <button
+                          onClick={() => setExpandedTip(open ? null : i)}
+                          aria-expanded={open}
+                          style={{
+                            width: '100%', display: 'flex', gap: 7, alignItems: 'flex-start', textAlign: 'left',
+                            background: 'transparent', border: 'none', cursor: 'pointer', padding: '3px 0',
+                          }}
+                        >
+                          <span style={{
+                            fontFamily: UI, fontWeight: 700, fontSize: 9.5, color: T.amberText,
+                            background: T.amberBg, width: 16, height: 16, borderRadius: 999,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2,
+                          }}>
+                            {i + 1}
+                          </span>
+                          <span style={{ flex: 1, fontFamily: UI, fontWeight: 600, fontSize: 12, color: T.textPrimary, lineHeight: 1.45 }}>
+                            {headline}
+                          </span>
+                          <ChevronDown size={12} color={T.textTertiary}
+                            style={{ flexShrink: 0, marginTop: 3, transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 140ms ease' }} />
+                        </button>
+                        {open && (
+                          <p style={{ fontFamily: BODY, fontSize: 12, color: T.textSecondary, margin: '1px 0 6px 23px', lineHeight: 1.5 }}>
+                            {detail}
+                          </p>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
               )}
               {!review && (

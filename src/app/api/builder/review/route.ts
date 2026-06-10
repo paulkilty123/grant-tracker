@@ -31,12 +31,14 @@ SCORING (0-10, one decimal allowed). Calibrate honestly:
 - 0-3: barely an answer, or empty boilerplate.
 - Unfilled [ADD: ...] placeholders cap the score at 6: the answer is honest but incomplete.
 
-TIPS (1-4, ordered by impact): specific and actionable, written TO the applicant in plain UK English. Reference the funder's stated priorities or criteria where supplied. Never tell them to invent facts; where evidence is missing, tell them WHAT evidence to add.
-STRENGTHS (0-2): only genuine ones, named briefly.
+TIPS (1-4, ordered by impact). Each tip has two parts:
+- headline: an imperative instruction in at most 8 words ("Add a local need figure").
+- detail: 1-3 sentences on why and how, written TO the applicant in plain UK English. Reference the funder's stated priorities or criteria where supplied. Never tell them to invent facts; where evidence is missing, tell them WHAT evidence to add.
+STRENGTHS (0-2): genuine ones only, each at most 12 words.
 
 Never use an em dash anywhere. No buzzwords.
 
-Return ONLY JSON: {"score": 7.5, "tips": ["..."], "strengths": ["..."]} with no markdown fences.`
+Return ONLY JSON: {"score": 7.5, "tips": [{"headline": "...", "detail": "..."}], "strengths": ["..."]} with no markdown fences.`
 
 export async function POST(req: NextRequest) {
   const user = await getBuilderUser()
