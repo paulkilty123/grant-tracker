@@ -273,60 +273,89 @@ export async function POST(req: NextRequest) {
       }
 
       try {
-        const results = await Promise.all(chunks.map((c, i) => runChunk(c, i)))
+        // Chunk offsets: chunk i's questions start at this global index.
+        const chunkOffsets: number[] = []
+        {
+          let acc = 0
+          for (const c of chunks) { chunkOffsets.push(acc); acc += c.length }
+        }
 
-        // ── Validate each chunk + merge in order (stream-then-validate) ──
-        let inputTokens = 0
-        let outputTokens = 0
-        const allGenerated: (GeneratedQuestion | undefined)[] = []
-        for (const r of results) {
-          inputTokens += r.inputTokens
-          outputTokens += r.outputTokens
-          let cleaned = r.text.trim()
+        const validateChunkText = (text: string): GeneratedQuestion[] => {
+          let cleaned = text.trim()
             .replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/, '').trim()
           if (!cleaned.startsWith('{')) {
             const match = cleaned.match(/\{[\s\S]*\}/)
             cleaned = match ? match[0] : cleaned
           }
-          let chunkQuestions: GeneratedQuestion[] = []
           try {
             // Hard design rule: no em dashes in product copy, enforced
             // deterministically on the model output.
             const parsed = JSON.parse(cleaned.replace(/\s*—\s*/g, ', '))
             const result = GenerationResultSchema.safeParse(parsed)
-            if (result.success) chunkQuestions = result.data.questions
-          } catch { /* chunk failed validation — its questions stay unscaffolded */ }
-          allGenerated.push(...chunkQuestions)
+            if (result.success) return result.data.questions
+          } catch { /* chunk failed validation */ }
+          return []
         }
 
-        if (allGenerated.filter(Boolean).length === 0) {
+        // PERSIST PER CHUNK: a broken stream or closed tab must never lose
+        // completed work. Each chunk's scaffolds are merged into a shared
+        // snapshot and written to the database as soon as the chunk
+        // validates; the writes are chained so they never race.
+        const merged: ApplicationQuestion[] = questions.map(q => ({ ...q }))
+        let persistChain: Promise<void> = Promise.resolve()
+        let inputTokens = 0
+        let outputTokens = 0
+        let validatedChunks = 0
+        let failedChunks = 0
+
+        const persistSnapshot = (): void => {
+          const snapshot = merged.map(q => ({ ...q }))
+          persistChain = persistChain.then(async () => {
+            await supabase
+              .from('applications')
+              .update({ questions: snapshot, status: 'in_progress', updated_at: new Date().toISOString() })
+              .eq('id', app.id)
+          }).catch(err => {
+            console.error('[builder] chunk persist failed:', err)
+          })
+        }
+
+        await Promise.all(chunks.map((c, i) =>
+          runChunk(c, i)
+            .then(r => {
+              inputTokens += r.inputTokens
+              outputTokens += r.outputTokens
+              const chunkQuestions = validateChunkText(r.text)
+              if (chunkQuestions.length === 0) { failedChunks++; return }
+              validatedChunks++
+              const offset = chunkOffsets[i]
+              chunkQuestions.forEach((gen, j) => {
+                const target = merged[offset + j]
+                if (!target) return
+                merged[offset + j] = {
+                  ...target,
+                  scaffold: gen.scaffold,
+                  mapped_content: gen.mapped_content,
+                  gaps: gen.gaps.map(g => ({ ...g, dismissed: false })),
+                }
+              })
+              persistSnapshot()
+            })
+            .catch(err => {
+              // One chunk failing must not kill the others.
+              failedChunks++
+              console.error(`[builder] chunk ${i} failed:`, err)
+            }),
+        ))
+        await persistChain
+
+        if (validatedChunks === 0) {
           send({ t: 'error', message: 'The scaffold came back malformed. Try generating again' })
           controller.close()
           return
         }
-
-        // Merge generated scaffolds onto the stored questions by order
-        // (each chunk returns its questions in the order given).
-        const merged: ApplicationQuestion[] = questions.map((q, i) => {
-          const gen = allGenerated[i]
-          if (!gen) return q
-          return {
-            ...q,
-            scaffold: gen.scaffold,
-            mapped_content: gen.mapped_content,
-            gaps: gen.gaps.map(g => ({ ...g, dismissed: false })),
-          }
-        })
-
-        const { error: saveError } = await supabase
-          .from('applications')
-          .update({ questions: merged, status: 'in_progress', updated_at: new Date().toISOString() })
-          .eq('id', app.id)
-
-        if (saveError) {
-          send({ t: 'error', message: `Could not save the scaffolds: ${saveError.message}` })
-          controller.close()
-          return
+        if (failedChunks > 0) {
+          send({ t: 'warning', message: `${failedChunks === 1 ? 'One group of questions' : 'Some questions'} did not build. Use Rebuild the scaffolds to fill them in` })
         }
 
         // ── Capture events (cost instrumentation is first-class) ──

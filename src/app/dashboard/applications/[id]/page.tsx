@@ -130,6 +130,12 @@ export default function ApplicationWorkspacePage() {
   // Guided drafts (one at a time) + per-question voice prompts (session-only)
   const [draftingQid, setDraftingQid] = useState<string | null>(null)
   const [voicePrompts, setVoicePrompts] = useState<Record<string, string[]>>({})
+  // Answers replaced by a draft, recoverable until the user edits again
+  const [replacedAnswers, setReplacedAnswers] = useState<Record<string, string>>({})
+
+  // Eligibility gate failure state (the gate must never vanish silently)
+  const [gateError, setGateError] = useState<string | null>(null)
+  const [proceeding, setProceeding] = useState(false)
 
   // Per-answer checks (score + tips)
   const [reviewingQid, setReviewingQid] = useState<string | null>(null)
@@ -175,25 +181,45 @@ export default function ApplicationWorkspacePage() {
     load()
   }, [appId, router])
 
-  // ── Eligibility gate: auto-run when an opportunity is linked and unchecked ──
-  useEffect(() => {
-    if (!app || !app.opportunity_id || app.eligibility_result || gateLoading) return
+  // ── Eligibility gate: auto-run when an opportunity is linked and unchecked.
+  // A failed check must never vanish silently: it sets gateError + retry. ──
+  const runGate = useCallback((applicationId: string) => {
     setGateLoading(true)
+    setGateError(null)
     fetch('/api/builder/eligibility', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ application_id: app.id }),
+      body: JSON.stringify({ application_id: applicationId }),
     })
-      .then(r => r.json())
-      .then((snap: EligibilitySnapshot | { error?: string }) => {
-        if ('overall_status' in snap) {
+      .then(async r => {
+        const snap = await r.json() as EligibilitySnapshot & { error?: string }
+        if (r.ok && 'overall_status' in snap) {
           setApp(prev => (prev ? { ...prev, eligibility_result: snap } : prev))
+        } else {
+          setGateError(snap?.error ?? 'The eligibility check did not complete')
         }
       })
-      .catch(() => {})
+      .catch(() => setGateError('The eligibility check did not complete'))
       .finally(() => setGateLoading(false))
+  }, [])
+
+  useEffect(() => {
+    if (!app || !app.opportunity_id || app.eligibility_result || gateLoading || gateError) return
+    runGate(app.id)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [app?.id, app?.opportunity_id, app?.eligibility_result])
+
+  // ── Leaving mid-stream cancels the work: warn first ──
+  const streamActive = generating || draftingQid !== null
+  useEffect(() => {
+    if (!streamActive) return
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+      e.returnValue = ''
+    }
+    window.addEventListener('beforeunload', onBeforeUnload)
+    return () => window.removeEventListener('beforeunload', onBeforeUnload)
+  }, [streamActive])
 
   // ── Content-library size: drives the import nudge ──
   useEffect(() => {
@@ -276,7 +302,13 @@ export default function ApplicationWorkspacePage() {
   // ── Guided draft: composition from their blocks, streamed into the editor ──
   async function draftAnswer(q: ApplicationQuestion) {
     if (!app || draftingQid) return
-    if (q.user_answer.trim() && !window.confirm('Replace your current answer with a fresh starting draft?')) return
+    const previousAnswer = q.user_answer.trim()
+    if (previousAnswer && !window.confirm('Replace your current answer with a fresh starting draft? You can restore the previous answer afterwards.')) return
+    if (previousAnswer) {
+      // Keep the replaced answer recoverable: the debounced save would
+      // otherwise overwrite it within a second of the draft starting.
+      setReplacedAnswers(prev => ({ ...prev, [q.id]: previousAnswer }))
+    }
     setDraftingQid(q.id)
     try {
       const res = await fetch('/api/builder/draft', {
@@ -325,14 +357,25 @@ export default function ApplicationWorkspacePage() {
   }
 
   async function proceedAnyway() {
-    if (!app) return
-    const res = await fetch('/api/builder/eligibility', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ application_id: app.id, proceed: true }),
-    })
-    const snap = await res.json()
-    if (res.ok) setApp(prev => (prev ? { ...prev, eligibility_result: snap } : prev))
+    if (!app || proceeding) return
+    setProceeding(true)
+    try {
+      const res = await fetch('/api/builder/eligibility', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ application_id: app.id, proceed: true }),
+      })
+      const snap = await res.json()
+      if (res.ok) {
+        setApp(prev => (prev ? { ...prev, eligibility_result: snap } : prev))
+      } else {
+        showToast(snap?.error ?? 'Could not record that, please try again')
+      }
+    } catch {
+      showToast('Could not record that, please try again')
+    } finally {
+      setProceeding(false)
+    }
   }
 
   // ── Persist question edits (debounced) ──
@@ -432,6 +475,8 @@ export default function ApplicationWorkspacePage() {
             }
           } else if (evt.t === 'done' && evt.questions) {
             setApp(prev => (prev ? { ...prev, questions: evt.questions!, status: 'in_progress' } : prev))
+          } else if (evt.t === 'warning') {
+            showToast(evt.message ?? 'Some questions did not build')
           } else if (evt.t === 'error') {
             setGenError(evt.message ?? 'Generation failed')
           }
@@ -471,10 +516,16 @@ export default function ApplicationWorkspacePage() {
           questions: prev.questions.map(q => q.id === bankingFor.id ? { ...q, answer_banked: true } : q),
         } : prev)
         showToast('Banked. It will be mapped into your next application')
+        setBankingFor(null)
+      } else {
+        // Keep the modal open so nothing is lost; surface the reason.
+        const data = await res.json().catch(() => ({})) as { error?: string }
+        showToast(data?.error ?? 'Could not bank the answer, please try again')
       }
+    } catch {
+      showToast('Could not bank the answer, please try again')
     } finally {
       setBankSaving(false)
-      setBankingFor(null)
     }
   }
 
@@ -560,10 +611,18 @@ export default function ApplicationWorkspacePage() {
   return (
     <div style={{ maxWidth: 980 }}>
       {/* Header */}
-      <Link href="/dashboard/applications" style={{
-        fontFamily: UI, fontWeight: 500, fontSize: 13, color: T.textSecondary,
-        textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 14,
-      }}>
+      <Link
+        href="/dashboard/applications"
+        onClick={e => {
+          if (streamActive && !window.confirm('Still building. Leave now and the work in progress stops?')) {
+            e.preventDefault()
+          }
+        }}
+        style={{
+          fontFamily: UI, fontWeight: 500, fontSize: 13, color: T.textSecondary,
+          textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 14,
+        }}
+      >
         <ArrowLeft size={14} /> Applications
       </Link>
 
@@ -626,6 +685,21 @@ export default function ApplicationWorkspacePage() {
               <Loader2 size={14} className="animate-spin" /> Checking your eligibility before you spend any time writing…
             </div>
           )}
+          {gateError && !gateLoading && (
+            <div style={{ background: T.amberBg, borderRadius: 12, padding: '13px 18px', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <AlertTriangle size={15} color={T.amberText} style={{ flexShrink: 0 }} />
+              <span style={{ flex: 1, fontFamily: BODY, fontSize: 13, color: T.amberText, minWidth: 200 }}>
+                {gateError}. You can still build, but check the funder&apos;s criteria yourself.
+              </span>
+              <button onClick={() => runGate(app.id)} style={{
+                fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.amberText,
+                background: 'transparent', border: `1px solid rgba(133,79,11,0.35)`,
+                padding: '6px 13px', borderRadius: 8, cursor: 'pointer',
+              }}>
+                Try again
+              </button>
+            </div>
+          )}
           {gate && blockers.length > 0 && (
             <div style={{ background: T.coralBg, border: `1px solid rgba(216,90,48,0.25)`, borderRadius: 12, padding: '16px 20px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
@@ -646,12 +720,13 @@ export default function ApplicationWorkspacePage() {
                   <span style={{ fontFamily: BODY, fontSize: 12.5, color: T.coralText }}>
                     Applications that miss requirements like this are usually rejected in days.
                   </span>
-                  <button onClick={proceedAnyway} style={{
+                  <button onClick={proceedAnyway} disabled={proceeding} style={{
                     fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.coralText,
                     background: 'transparent', border: `1px solid rgba(153,60,29,0.35)`,
-                    padding: '6px 12px', borderRadius: 8, cursor: 'pointer',
+                    padding: '6px 12px', borderRadius: 8,
+                    cursor: proceeding ? 'wait' : 'pointer', opacity: proceeding ? 0.6 : 1,
                   }}>
-                    I understand, continue anyway
+                    {proceeding ? 'Recording…' : 'I understand, continue anyway'}
                   </button>
                 </div>
               ) : (
@@ -890,6 +965,18 @@ export default function ApplicationWorkspacePage() {
             draftDisabled={draftingQid !== null}
             reviewing={reviewingQid === q.id}
             voicePrompts={voicePrompts[q.id] ?? []}
+            replacedAnswer={replacedAnswers[q.id] ?? null}
+            onRestoreAnswer={() => {
+              const prev = replacedAnswers[q.id]
+              if (!prev) return
+              updateQuestion(q.id, { user_answer: prev })
+              setReplacedAnswers(map => {
+                const next = { ...map }
+                delete next[q.id]
+                return next
+              })
+              showToast('Previous answer restored')
+            }}
             onAnswerChange={text => updateQuestion(q.id, { user_answer: text })}
             onToggleGap={gapIdx => {
               const gaps = q.gaps.map((g, i) => (i === gapIdx ? { ...g, dismissed: !g.dismissed } : g))
@@ -1005,18 +1092,20 @@ function ScoreRing({ score, stale }: { score: number | null; stale: boolean }) {
   )
 }
 
-function QuestionCard({ index, question: q, drafting, draftDisabled, reviewing, voicePrompts, onAnswerChange, onToggleGap, onBank, onDraft, onReview }: {
+function QuestionCard({ index, question: q, drafting, draftDisabled, reviewing, voicePrompts, replacedAnswer, onAnswerChange, onToggleGap, onBank, onDraft, onReview, onRestoreAnswer }: {
   index: number
   question: ApplicationQuestion
   drafting: boolean
   draftDisabled: boolean
   reviewing: boolean
   voicePrompts: string[]
+  replacedAnswer: string | null
   onAnswerChange: (text: string) => void
   onToggleGap: (gapIdx: number) => void
   onBank: () => void
   onDraft: () => void
   onReview: () => void
+  onRestoreAnswer: () => void
 }) {
   const isMobile = useIsMobile()
   const [collapsed, setCollapsed] = useState(false)
@@ -1128,6 +1217,18 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, reviewing, 
                 >
                   <PenLine size={14} /> {drafting ? 'Assembling from your content…' : 'Draft a starting version'}
                 </button>
+                {replacedAnswer && !drafting && (
+                  <button
+                    onClick={onRestoreAnswer}
+                    title="Bring back the answer that was here before the draft"
+                    style={{
+                      ...ghostBtn(), display: 'inline-flex', alignItems: 'center', gap: 6,
+                      color: T.textSecondary,
+                    }}
+                  >
+                    Restore previous answer
+                  </button>
+                )}
                 {q.user_answer.trim() && !q.answer_banked && !drafting && (
                   <button
                     onClick={onBank}
