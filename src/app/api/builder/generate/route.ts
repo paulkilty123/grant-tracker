@@ -43,7 +43,7 @@ For each question you produce three things:
 
 2. MAPPED CONTENT — verbatim excerpts from the organisation's own content blocks or profile that belong in this answer. Quote their words exactly as written; never paraphrase, polish, or extend them. Each mapped excerpt carries the block id it came from and a one-line note on where it fits.
 
-3. GAPS — what their material does not cover that this answer needs. severity "blocking" = an eligibility or required-evidence hole; severity "weakens" = a strong application would have this. gap_type is a short snake_case label (e.g. "no_outcome_figures", "missing_budget_detail").
+3. GAPS — what their material does not cover that this answer needs. severity "blocking" = an eligibility or required-evidence hole; severity "weakens" = a strong application would have this. gap_type is a short snake_case label (e.g. "no_outcome_figures", "missing_budget_detail") and is shown to the user as the gap's title, so make it readable when the underscores become spaces. description is AT MOST two sentences: what is missing and what to add.
 
 THE RULES, in priority order:
 - NEVER FABRICATE. Use only the supplied organisation content and profile. If their material does not cover something, that is a GAP — flag it, never fill it. Do not invent numbers, partners, outcomes, or history.

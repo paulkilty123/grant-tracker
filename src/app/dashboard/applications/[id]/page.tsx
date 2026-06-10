@@ -34,6 +34,12 @@ function placeholderCount(s: string): number {
   return (s.match(/\[ADD:[^\]]*\]/gi) ?? []).length
 }
 
+/** "no_consultation_evidence" -> "No consultation evidence" */
+function humaniseGapType(t: string): string {
+  const s = t.replace(/_/g, ' ').trim()
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : 'Gap'
+}
+
 interface StreamedQuestion {
   question_text?: string
   scaffold?: { heading: string; guidance: string; suggested_order: number }[]
@@ -1017,6 +1023,7 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, reviewing, 
   const [activeTab, setActiveTab] = useState<'guide' | 'material'>('guide')
   const [expandedStep, setExpandedStep] = useState<number | null>(0)
   const [expandedTip, setExpandedTip] = useState<number | null>(null)
+  const [expandedGap, setExpandedGap] = useState<number | null>(null)
   const words = wordCount(q.user_answer)
   const limit = q.word_limit
   const overLimit = limit !== null && words > limit
@@ -1159,13 +1166,16 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, reviewing, 
             )}
           </div>
 
-          {/* Tips to improve rail: score + tips + gaps in one place */}
+          {/* Tips to improve rail: score + tips + gaps in one place. Scroll
+              backstop keeps the rail from ever stretching past the editor. */}
           {showRail && (
             <div style={{
               padding: '16px 18px',
               borderLeft: isMobile ? 'none' : `1px solid ${T.border}`,
               borderTop: isMobile ? `1px solid ${T.border}` : 'none',
               background: '#FBFDF7',
+              maxHeight: isMobile ? undefined : 560,
+              overflowY: isMobile ? undefined : 'auto',
             }}>
               <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.greenMid, marginBottom: 10 }}>
                 Tips to improve
@@ -1272,35 +1282,53 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, reviewing, 
                   <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: openGaps.some(g => g.severity === 'blocking') ? T.coral : T.amberText, marginBottom: 7 }}>
                     Gaps
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                    {q.gaps.map((g, i) => (
-                      <button
-                        key={i}
-                        onClick={() => onToggleGap(i)}
-                        style={{
-                          display: 'flex', alignItems: 'flex-start', gap: 7, textAlign: 'left',
-                          background: 'transparent', border: 'none', cursor: 'pointer', padding: '1px 0',
-                          opacity: g.dismissed ? 0.45 : 1,
-                        }}
-                        title={g.dismissed ? 'Restore' : 'Tick off'}
-                      >
-                        <span style={{
-                          width: 14, height: 14, borderRadius: 4, flexShrink: 0, marginTop: 2,
-                          border: `1.5px solid ${g.severity === 'blocking' ? T.coral : T.amberText}`,
-                          background: g.dismissed ? (g.severity === 'blocking' ? T.coral : T.amberText) : 'transparent',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        }}>
-                          {g.dismissed && <Check size={10} color="#fff" />}
-                        </span>
-                        <span style={{
-                          fontFamily: BODY, fontSize: 11.5, lineHeight: 1.45,
-                          color: g.severity === 'blocking' ? T.coralText : T.textSecondary,
-                          textDecoration: g.dismissed ? 'line-through' : 'none',
-                        }}>
-                          {g.description}
-                        </span>
-                      </button>
-                    ))}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    {q.gaps.map((g, i) => {
+                      const open = expandedGap === i
+                      return (
+                        <div key={i} style={{ opacity: g.dismissed ? 0.45 : 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 7 }}>
+                            <button
+                              onClick={() => onToggleGap(i)}
+                              aria-label={g.dismissed ? 'Restore gap' : 'Tick off gap'}
+                              title={g.dismissed ? 'Restore' : 'Tick off'}
+                              style={{
+                                width: 14, height: 14, borderRadius: 4, flexShrink: 0, marginTop: 3,
+                                border: `1.5px solid ${g.severity === 'blocking' ? T.coral : T.amberText}`,
+                                background: g.dismissed ? (g.severity === 'blocking' ? T.coral : T.amberText) : 'transparent',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                cursor: 'pointer', padding: 0,
+                              }}
+                            >
+                              {g.dismissed && <Check size={10} color="#fff" />}
+                            </button>
+                            <button
+                              onClick={() => setExpandedGap(open ? null : i)}
+                              aria-expanded={open}
+                              style={{
+                                flex: 1, display: 'flex', alignItems: 'flex-start', gap: 6, textAlign: 'left',
+                                background: 'transparent', border: 'none', cursor: 'pointer', padding: '1px 0',
+                              }}
+                            >
+                              <span style={{
+                                flex: 1, fontFamily: UI, fontWeight: 600, fontSize: 11.5, lineHeight: 1.45,
+                                color: g.severity === 'blocking' ? T.coralText : T.textSecondary,
+                                textDecoration: g.dismissed ? 'line-through' : 'none',
+                              }}>
+                                {humaniseGapType(g.gap_type)}
+                              </span>
+                              <ChevronDown size={11} color={T.textTertiary}
+                                style={{ flexShrink: 0, marginTop: 3, transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 140ms ease' }} />
+                            </button>
+                          </div>
+                          {open && (
+                            <p style={{ fontFamily: BODY, fontSize: 11.5, color: T.textSecondary, margin: '1px 0 5px 21px', lineHeight: 1.5 }}>
+                              {g.description}
+                            </p>
+                          )}
+                        </div>
+                      )
+                    })}
                   </div>
                 </>
               )}
