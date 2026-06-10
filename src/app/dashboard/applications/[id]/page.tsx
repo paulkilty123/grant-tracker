@@ -174,6 +174,13 @@ export default function ApplicationWorkspacePage() {
   // Supplied guidelines: view + remove
   const [guidelinesViewOpen, setGuidelinesViewOpen] = useState(false)
 
+  // Bring back a working document edited outside the app
+  const [returnOpen, setReturnOpen] = useState(false)
+  const [returnText, setReturnText] = useState('')
+  const [returnBusy, setReturnBusy] = useState(false)
+  const [returnError, setReturnError] = useState<string | null>(null)
+  const [returnMapped, setReturnMapped] = useState<{ question_id: string; answer: string; apply: boolean }[] | null>(null)
+
   function showToast(msg: string) {
     setToast(msg)
     setTimeout(() => setToast(null), 2600)
@@ -301,6 +308,67 @@ export default function ApplicationWorkspacePage() {
     } finally {
       setGuidelinesBusy(false)
     }
+  }
+
+  // ── Bring back a working doc: map -> review -> apply ──
+  async function mapReturnedDoc() {
+    if (!app || returnBusy) return
+    setReturnBusy(true); setReturnError(null)
+    try {
+      const res = await fetch('/api/builder/return', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ application_id: app.id, raw_text: returnText }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setReturnError(data?.error ?? 'Could not read the document'); return }
+      const mapped = (data.answers as { question_id: string; answer: string }[]).map(a => {
+        const current = app.questions.find(q => q.id === a.question_id)?.user_answer.trim() ?? ''
+        return { ...a, apply: a.answer.trim() !== current }
+      })
+      setReturnMapped(mapped)
+    } catch {
+      setReturnError('Could not read the document, please try again')
+    } finally {
+      setReturnBusy(false)
+    }
+  }
+
+  async function applyReturnedAnswers() {
+    if (!app || !returnMapped) return
+    const toApply = returnMapped.filter(a => a.apply)
+    if (toApply.length === 0) { setReturnError('Tick at least one answer to apply'); return }
+    setApp(prev => {
+      if (!prev) return prev
+      const replaced: Record<string, string> = {}
+      const questions = prev.questions.map(q => {
+        const incoming = toApply.find(a => a.question_id === q.id)
+        if (!incoming) return q
+        if (q.user_answer.trim() && q.user_answer.trim() !== incoming.answer.trim()) {
+          replaced[q.id] = q.user_answer
+        }
+        return { ...q, user_answer: incoming.answer }
+      })
+      if (Object.keys(replaced).length > 0) {
+        setReplacedAnswers(prevMap => ({ ...prevMap, ...replaced }))
+      }
+      persistQuestions(questions)
+      return { ...prev, questions }
+    })
+    // Record the round trip (best effort).
+    fetch('/api/builder/return', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        application_id: app.id,
+        matched_count: returnMapped.length,
+        applied_count: toApply.length,
+      }),
+    }).catch(() => {})
+    setReturnOpen(false)
+    setReturnMapped(null)
+    setReturnText('')
+    showToast(`${toApply.length} ${toApply.length === 1 ? 'answer' : 'answers'} updated. Previous versions are restorable per question`)
   }
 
   // ── Edit questions after creation: fix the parse at any time ──
@@ -742,6 +810,17 @@ export default function ApplicationWorkspacePage() {
           >
             <FileText size={14} /> Download working doc
           </a>
+          <button
+            onClick={() => { setReturnOpen(true); setReturnError(null) }}
+            title="Edited the working doc in Word or Google Docs? Paste it back and your answers update here"
+            style={{
+              fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textPrimary,
+              background: T.white, border: `1px solid ${T.textPrimary}`, padding: '8px 14px',
+              borderRadius: 8, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6,
+            }}
+          >
+            <ArrowLeft size={14} /> Bring back edits
+          </button>
           <button onClick={() => setImportOpen(true)} style={{
             fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textPrimary,
             background: T.white, border: `1px solid ${T.textPrimary}`, padding: '8px 14px',
@@ -1173,6 +1252,117 @@ export default function ApplicationWorkspacePage() {
               </button>
               <button onClick={() => setBankingFor(null)} style={ghostBtn()}>Cancel</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Bring back edits modal ── */}
+      {returnOpen && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+          onClick={() => { setReturnOpen(false); setReturnMapped(null) }}
+        >
+          <div
+            style={{
+              background: T.white, borderRadius: 12, padding: '22px 24px', width: '100%', maxWidth: 640,
+              maxHeight: '86vh', overflowY: 'auto', boxShadow: '0 16px 64px rgba(26,46,43,0.18)',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+              <h3 style={{ fontFamily: UI, fontWeight: 600, fontSize: 16.5, color: T.textPrimary, margin: 0 }}>
+                Bring back edits
+              </h3>
+              <button onClick={() => { setReturnOpen(false); setReturnMapped(null) }} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', color: T.textTertiary }}>
+                <XIcon size={16} />
+              </button>
+            </div>
+
+            {!returnMapped ? (
+              <>
+                <p style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, margin: '0 0 14px', lineHeight: 1.55 }}>
+                  Paste the working document you edited in Word or Google Docs, the whole thing is
+                  fine. Each answer is matched back to its question and you choose what to apply
+                  before anything changes.
+                </p>
+                <textarea
+                  value={returnText}
+                  onChange={e => setReturnText(e.target.value)}
+                  rows={10}
+                  placeholder="Paste the edited document here…"
+                  style={{ ...inputStyle(), resize: 'vertical', lineHeight: 1.6, fontSize: 13.5, marginBottom: 12 }}
+                />
+                {returnError && <p style={{ fontFamily: BODY, fontSize: 13, color: T.coralText, margin: '0 0 10px' }}>{returnError}</p>}
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button onClick={mapReturnedDoc} disabled={returnBusy} style={{
+                    fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: '#F1F7E4',
+                    background: T.greenDeep, border: 'none', padding: '9px 18px', borderRadius: 8,
+                    cursor: returnBusy ? 'wait' : 'pointer', opacity: returnBusy ? 0.7 : 1,
+                  }}>
+                    {returnBusy ? 'Matching answers…' : 'Continue'}
+                  </button>
+                  <button onClick={() => setReturnOpen(false)} style={ghostBtn()}>Cancel</button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p style={{ fontFamily: UI, fontWeight: 600, fontSize: 14, color: T.textPrimary, margin: '0 0 10px' }}>
+                  {returnMapped.filter(a => a.apply).length} of {returnMapped.length} answers selected to apply
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
+                  {returnMapped.map((a, i) => {
+                    const q = app.questions.find(x => x.id === a.question_id)
+                    if (!q) return null
+                    const unchanged = q.user_answer.trim() === a.answer.trim()
+                    return (
+                      <div key={a.question_id} style={{
+                        background: T.paleGreen, borderRadius: 8, padding: '11px 13px',
+                        display: 'flex', gap: 10, alignItems: 'flex-start',
+                        opacity: a.apply ? 1 : 0.5,
+                      }}>
+                        <button
+                          onClick={() => setReturnMapped(ms => ms!.map((m, j) => (j === i ? { ...m, apply: !m.apply } : m)))}
+                          aria-label={a.apply ? 'Skip this answer' : 'Apply this answer'}
+                          style={{
+                            width: 18, height: 18, borderRadius: 5, flexShrink: 0, marginTop: 2,
+                            border: `1.5px solid ${T.greenMid}`,
+                            background: a.apply ? T.greenMid : 'transparent',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                          }}
+                        >
+                          {a.apply && <Check size={13} color="#fff" />}
+                        </button>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 3 }}>
+                            <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textPrimary }}>
+                              {q.question_text.slice(0, 70)}{q.question_text.length > 70 ? '…' : ''}
+                            </span>
+                            {unchanged && (
+                              <span style={{ fontFamily: UI, fontWeight: 500, fontSize: 10.5, color: T.textTertiary, background: T.cream, padding: '2px 8px', borderRadius: 999 }}>
+                                No change
+                              </span>
+                            )}
+                          </div>
+                          <p style={{
+                            fontFamily: BODY, fontSize: 12.5, color: T.textSecondary, margin: 0, lineHeight: 1.5,
+                            display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                          }}>
+                            {a.answer}
+                          </p>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+                {returnError && <p style={{ fontFamily: BODY, fontSize: 13, color: T.coralText, margin: '0 0 10px' }}>{returnError}</p>}
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button onClick={applyReturnedAnswers} style={primaryBtn()}>
+                    Apply {returnMapped.filter(a => a.apply).length} {returnMapped.filter(a => a.apply).length === 1 ? 'answer' : 'answers'}
+                  </button>
+                  <button onClick={() => setReturnMapped(null)} style={ghostBtn()}>Back</button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
