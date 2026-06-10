@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Organisation } from '@/types'
@@ -87,7 +87,17 @@ export default function Sidebar({ org, userEmail }: Props) {
   const router      = useRouter()
   const [mobileOpen,   setMobileOpen]   = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  // Application builder access — cohort allowlist, checked server-side so the
+  // list never ships in the client bundle.
+  const [builderAllowed, setBuilderAllowed] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    fetch('/api/builder/access')
+      .then(r => r.json())
+      .then(d => setBuilderAllowed(!!d?.allowed))
+      .catch(() => {})
+  }, [])
 
   const profileScore = matchProfileScore(org)
   const showBadge    = org != null && profileScore > 0
@@ -220,11 +230,18 @@ export default function Sidebar({ org, userEmail }: Props) {
 
       {/* Main nav */}
       <nav className="flex flex-col gap-0.5">
-        {MAIN_NAV.map(item => navLink(
-          item.href,
-          item.label,
-          item.Icon,
-          item.href === '/dashboard/profile' ? profileBadge : undefined,
+        {MAIN_NAV.map(item => (
+          <React.Fragment key={item.href}>
+            {navLink(
+              item.href,
+              item.label,
+              item.Icon,
+              item.href === '/dashboard/profile' ? profileBadge : undefined,
+            )}
+            {/* Applications (builder) sits after Pipeline — cohort only */}
+            {item.href === '/dashboard/pipeline' && builderAllowed &&
+              navLink('/dashboard/applications', 'Applications', FilePenLine)}
+          </React.Fragment>
         ))}
       </nav>
 

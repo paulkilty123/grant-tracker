@@ -7,6 +7,7 @@ import { Pencil, Plus, ChevronDown, RotateCcw, Globe, Check, X, Star, Trash2, Al
 import type { Organisation, LegalStructure, OrgStage, ImpactSector, FundingType, FunderType, BeneficiaryGroup } from '@/types'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import ClearProfileButton from '@/app/dashboard/admin/ClearProfileButton'
+import CoreContentSection from '@/components/builder/CoreContentSection'
 
 const ADMIN_EMAIL = 'paulkilty1@gmail.com'
 
@@ -1961,7 +1962,16 @@ export default function ProfilePage() {
   const [deleting, setDeleting] = useState(false)
   const [creating, setCreating] = useState(false)
   const [newOrgName, setNewOrgName] = useState('')
+  // Application builder access (cohort allowlist, checked server-side).
+  const [builderAllowed, setBuilderAllowed] = useState(false)
   const activeOrg = orgs.find(o => o.id === activeOrgId) ?? orgs[0] ?? null
+
+  useEffect(() => {
+    fetch('/api/builder/access')
+      .then(r => r.json())
+      .then(d => setBuilderAllowed(!!d?.allowed))
+      .catch(() => {})
+  }, [])
 
   async function loadOrgs(keepActiveId?: string) {
     const supabase = createClient()
@@ -2161,6 +2171,7 @@ export default function ProfilePage() {
           <LocationCard {...cardProps('location')} />
           <FundingCard  {...cardProps('funding')} />
           <StoryCard    {...cardProps('story')} />
+          {builderAllowed && <CoreContentSection orgId={activeOrg.id} />}
         </div>
 
         {/* Delete org danger zone */}
