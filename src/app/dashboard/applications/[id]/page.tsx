@@ -34,6 +34,13 @@ function placeholderCount(s: string): number {
   return (s.match(/\[ADD:[^\]]*\]/gi) ?? []).length
 }
 
+/** Rows needed to show the whole answer (no inner scrollbar: avoids the
+ *  wheel scroll-trap, sliced last lines, and oversized empty boxes). */
+function answerRows(text: string, min: number): number {
+  const lines = text.split('\n').reduce((n, l) => n + Math.max(1, Math.ceil(l.length / 90)), 0)
+  return Math.min(40, Math.max(min, lines + 1))
+}
+
 /** "no_consultation_evidence" -> "No consultation evidence" */
 function humaniseGapType(t: string): string {
   const s = t.replace(/_/g, ' ').trim()
@@ -195,6 +202,7 @@ export default function ApplicationWorkspacePage() {
       const { data } = await supabase.from('applications').select('*').eq('id', appId).maybeSingle()
       if (!data) { router.push('/dashboard/applications'); return }
       setApp(data as ApplicationRecord)
+      document.title = `${(data as ApplicationRecord).grant_name || (data as ApplicationRecord).funder_name || 'Application'} — Grant Tracker`
       setLoaded(true)
     }
     load()
@@ -1248,8 +1256,13 @@ export default function ApplicationWorkspacePage() {
 
       {hasScaffolds && (
         <div style={{ marginTop: 18 }}>
-          <button onClick={generate} disabled={generating} style={ghostBtn()}>
-            {generating ? 'Rebuilding…' : 'Rebuild the guides'}
+          <button onClick={generate} disabled={generating} style={{
+            fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textPrimary,
+            background: T.white, border: `1px solid ${T.textPrimary}`, padding: '8px 16px',
+            borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 6,
+            cursor: generating ? 'wait' : 'pointer', opacity: generating ? 0.6 : 1,
+          }}>
+            <Sparkles size={14} /> {generating ? 'Rebuilding…' : 'Rebuild the guides'}
           </button>
         </div>
       )}
@@ -1604,7 +1617,7 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, reviewing, 
               In library
             </span>
           )}
-          {limit !== null && (
+          {limit !== null && collapsed && (
             <span style={{ fontFamily: UI, fontWeight: 500, fontSize: 11.5, color: countColor }}>
               {words}/{limit}
             </span>
@@ -1643,7 +1656,7 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, reviewing, 
             <textarea
               value={q.user_answer}
               onChange={e => onAnswerChange(e.target.value)}
-              rows={hasScaffold ? 16 : 5}
+              rows={answerRows(q.user_answer, hasScaffold ? (q.user_answer.trim() ? 10 : 6) : 5)}
               readOnly={drafting}
               placeholder={hasScaffold ? 'Write in your own voice, or draft a starting version below.' : 'Build the guides first, or just start writing.'}
               style={{
@@ -1783,7 +1796,11 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, reviewing, 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginBottom: q.gaps.length > 0 ? 14 : 0 }}>
                   {review.tips.map((tip, i) => {
                     const structured = typeof tip !== 'string'
-                    const headline = structured ? tip.headline : `Tip ${i + 1}`
+                    // Legacy string tips (pre-structured reviews): first few
+                    // words become the headline rather than a blank "Tip N".
+                    const headline = structured
+                      ? tip.headline
+                      : `${tip.split(/\s+/).slice(0, 8).join(' ')}${tip.split(/\s+/).length > 8 ? '…' : ''}`
                     const detail = structured ? tip.detail : tip
                     const open = expandedTip === i
                     return (
@@ -1833,6 +1850,7 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, reviewing, 
                     Gaps
                   </div>
                   <p style={{ fontFamily: BODY, fontSize: 10.5, color: T.textTertiary, margin: '0 0 7px', lineHeight: 1.4 }}>
+                    Spotted when the guides were built. Tick off anything your answer now covers.
                     Red needs fixing before you submit; amber would strengthen it.
                   </p>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>

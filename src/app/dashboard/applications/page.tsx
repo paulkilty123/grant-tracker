@@ -33,6 +33,7 @@ export default function ApplicationsPage() {
   }
 
   useEffect(() => {
+    document.title = 'Applications — Grant Tracker'
     async function load() {
       const access = await fetch('/api/builder/access').then(r => r.json()).catch(() => ({ allowed: false }))
       setAllowed(!!access?.allowed)
@@ -98,6 +99,18 @@ export default function ApplicationsPage() {
 
       {/* List */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 22 }}>
+        {!loaded && [0, 1, 2].map(i => (
+          <div key={i} style={{
+            background: T.white, border: `1px solid ${T.border}`, borderRadius: 12,
+            padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16,
+          }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ height: 14, width: `${52 - i * 8}%`, background: T.cream, borderRadius: 6, marginBottom: 8 }} />
+              <div style={{ height: 11, width: '30%', background: T.cream, borderRadius: 6, opacity: 0.7 }} />
+            </div>
+            <div style={{ height: 5, width: 90, background: T.cream, borderRadius: 999 }} />
+          </div>
+        ))}
         {loaded && apps.length === 0 && (
           <div style={{
             background: 'linear-gradient(135deg, #FDFCF7 0%, #F8F5EC 100%)',

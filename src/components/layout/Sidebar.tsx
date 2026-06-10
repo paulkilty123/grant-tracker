@@ -93,9 +93,17 @@ export default function Sidebar({ org, userEmail }: Props) {
   const userMenuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    // Session-cache the access check so the nav doesn't layout-shift on
+    // every page load while the fetch resolves.
+    try {
+      if (sessionStorage.getItem('gt_builder_allowed') === '1') setBuilderAllowed(true)
+    } catch { /* ignore */ }
     fetch('/api/builder/access')
       .then(r => r.json())
-      .then(d => setBuilderAllowed(!!d?.allowed))
+      .then(d => {
+        setBuilderAllowed(!!d?.allowed)
+        try { sessionStorage.setItem('gt_builder_allowed', d?.allowed ? '1' : '0') } catch { /* ignore */ }
+      })
       .catch(() => {})
   }, [])
 
@@ -251,14 +259,8 @@ export default function Sidebar({ org, userEmail }: Props) {
           {divider}
           <nav className="flex flex-col gap-0.5">
             {ADMIN_NAV.map(item => navLink(item.href, item.label, item.Icon))}
+            {navLink('/dashboard/admin/feedback', 'Match Feedback', MessageSquare)}
           </nav>
-          <Link
-            href="/dashboard/admin/feedback"
-            onClick={() => setMobileOpen(false)}
-            style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', padding: '4px 12px', display: 'block', textDecoration: 'none' }}
-          >
-            match feedback
-          </Link>
         </>
       )}
 
