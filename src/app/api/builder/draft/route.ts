@@ -135,7 +135,7 @@ ${contentBlocks.length > 0
     ? contentBlocks.map(b => `[${b.block_type}] "${b.title}"\n${b.content}`).join('\n\n---\n\n')
     : 'No content blocks. The draft will be mostly placeholders; say so in the voice prompts and suggest importing a previous application.'}
 
-${funderContext ? `THE FUNDER (verified catalogue entry)\n${funderContext}\n` : ''}${app.supplied_guidelines ? `\nTHE FUNDER'S APPLICATION GUIDANCE (supplied by the applicant, unverified; use it to angle the draft)\n${String(app.supplied_guidelines).slice(0, 12000)}\n` : ''}`
+${funderContext ? `THE FUNDER (verified catalogue entry)\n${funderContext}\n` : ''}${app.supplied_guidelines ? `\nTHE FUNDER'S APPLICATION GUIDANCE (supplied by the applicant, unverified; use it to angle the draft, and if the draft or a voice prompt refers to it, call it "the guidance you supplied", never present it as verified catalogue data)\n${String(app.supplied_guidelines).slice(0, 12000)}\n` : ''}`
 
   const started = Date.now()
 

@@ -95,6 +95,7 @@ export async function POST(req: NextRequest) {
   if (!apiKey) return NextResponse.json({ error: 'ANTHROPIC_API_KEY not configured' }, { status: 500 })
 
   let text: string
+  const started = Date.now()
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -114,8 +115,19 @@ export async function POST(req: NextRequest) {
       const err = await res.json().catch(() => ({})) as { error?: { message?: string } }
       return NextResponse.json({ error: `Could not read the document (${err.error?.message ?? res.statusText})` }, { status: 502 })
     }
-    const data = await res.json() as { content?: { type: string; text: string }[] }
+    const data = await res.json() as {
+      content?: { type: string; text: string }[]
+      usage?: { input_tokens?: number; output_tokens?: number }
+    }
     text = (data.content?.[0]?.text ?? '').trim()
+    await emitEvent({ surface: 'app', orgId: app.org_id, userId: user.id }, 'builder_parse_run', {
+      kind: 'return',
+      application_id: app.id,
+      model: RETURN_MODEL,
+      input_tokens: data.usage?.input_tokens ?? 0,
+      output_tokens: data.usage?.output_tokens ?? 0,
+      duration_ms: Date.now() - started,
+    })
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : 'Could not read the document' }, { status: 502 })
   }

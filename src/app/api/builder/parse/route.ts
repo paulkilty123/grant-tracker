@@ -8,6 +8,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getBuilderUser } from '@/lib/builder/access'
+import { emitEvent } from '@/lib/events/emit'
 import { ParseResultSchema } from '@/lib/builder/types'
 
 export const dynamic     = 'force-dynamic'
@@ -48,6 +49,7 @@ export async function POST(req: NextRequest) {
   }
 
   let text: string
+  const started = Date.now()
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -70,8 +72,19 @@ export async function POST(req: NextRequest) {
         { status: 502 },
       )
     }
-    const data = await res.json() as { content?: { type: string; text: string }[] }
+    const data = await res.json() as {
+      content?: { type: string; text: string }[]
+      usage?: { input_tokens?: number; output_tokens?: number }
+    }
     text = (data.content?.[0]?.text ?? '').trim()
+    await emitEvent({ surface: 'app', orgId: null, userId: user.id }, 'builder_parse_run', {
+      kind: 'questions',
+      application_id: null,
+      model: PARSE_MODEL,
+      input_tokens: data.usage?.input_tokens ?? 0,
+      output_tokens: data.usage?.output_tokens ?? 0,
+      duration_ms: Date.now() - started,
+    })
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Parse request failed' },

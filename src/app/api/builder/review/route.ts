@@ -167,7 +167,15 @@ ${question.user_answer.trim()}`
     answer_hash: answerHash(question.user_answer),
   }
 
-  const updated = questions.map(q => (q.id === question.id ? { ...q, review } : q))
+  // Merge-on-write: re-read so an autosave that landed during the LLM call
+  // is not overwritten by this stale snapshot.
+  const { data: freshRow } = await supabase
+    .from('applications')
+    .select('questions')
+    .eq('id', app.id)
+    .maybeSingle()
+  const freshQuestions = (freshRow?.questions ?? questions) as ApplicationQuestion[]
+  const updated = freshQuestions.map(q => (q.id === question.id ? { ...q, review } : q))
   const { error: saveError } = await supabase
     .from('applications')
     .update({ questions: updated, updated_at: new Date().toISOString() })

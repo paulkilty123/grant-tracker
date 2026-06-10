@@ -56,7 +56,8 @@ export async function POST(req: NextRequest) {
       .map(b => ({
         org_id: body.org_id,
         block_type: ((BLOCK_TYPES as readonly string[]).includes(b.block_type ?? '') ? b.block_type : 'other') as BlockType,
-        title: b.title!.trim(),
+        // Title is model-authored (content is verbatim org text): scrub em dashes.
+        title: b.title!.trim().replace(/\s*—\s*/g, ', '),
         content: b.content!.trim(),
         source: 'imported_from_application' as const,
       }))
@@ -93,6 +94,7 @@ export async function POST(req: NextRequest) {
   if (!apiKey) return NextResponse.json({ error: 'ANTHROPIC_API_KEY not configured' }, { status: 500 })
 
   let text: string
+  const started = Date.now()
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -112,8 +114,19 @@ export async function POST(req: NextRequest) {
       const err = await res.json().catch(() => ({})) as { error?: { message?: string } }
       return NextResponse.json({ error: `Import failed (${err.error?.message ?? res.statusText})` }, { status: 502 })
     }
-    const data = await res.json() as { content?: { type: string; text: string }[] }
+    const data = await res.json() as {
+      content?: { type: string; text: string }[]
+      usage?: { input_tokens?: number; output_tokens?: number }
+    }
     text = (data.content?.[0]?.text ?? '').trim()
+    await emitEvent({ surface: 'app', orgId: null, userId: user.id }, 'builder_parse_run', {
+      kind: 'import',
+      application_id: null,
+      model: IMPORT_MODEL,
+      input_tokens: data.usage?.input_tokens ?? 0,
+      output_tokens: data.usage?.output_tokens ?? 0,
+      duration_ms: Date.now() - started,
+    })
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : 'Import request failed' }, { status: 502 })
   }

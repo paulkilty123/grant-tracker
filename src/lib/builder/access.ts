@@ -21,7 +21,7 @@ export async function getBuilderUser(): Promise<BuilderUser | null> {
   try {
     const supabase = await createServerClient()
     const { data: { user } } = await supabase.auth.getUser()
-    if (user?.email && BUILDER_ALLOWLIST.includes(user.email.toLowerCase())) {
+    if (user?.email && BUILDER_ALLOWLIST.some(e => e.toLowerCase() === user.email!.toLowerCase())) {
       return { id: user.id, email: user.email }
     }
     return null

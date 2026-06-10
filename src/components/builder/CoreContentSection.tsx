@@ -145,8 +145,8 @@ export default function CoreContentSection({ orgId }: { orgId: string }) {
             <button
               onClick={() => setImportOpen(true)}
               style={{
-                fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.greenDeep,
-                background: T.lime, border: 'none', padding: '7px 14px',
+                fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textPrimary,
+                background: T.white, border: `1px solid ${T.textPrimary}`, padding: '7px 14px',
                 borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap',
               }}
             >

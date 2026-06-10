@@ -533,9 +533,32 @@ export default function ApplicationWorkspacePage() {
     setSaveState('saving')
     saveTimer.current = setTimeout(async () => {
       const supabase = createClient()
+      // Merge-on-write: server routes (generate, review, bank) may have
+      // written newer scaffold/review/banked fields since this client state
+      // loaded. Re-read and keep the server-owned fields; the client owns
+      // user_answer, question text, word limits, and gap dismissals.
+      const { data: freshRow } = await supabase
+        .from('applications')
+        .select('questions')
+        .eq('id', appId)
+        .maybeSingle()
+      const fresh = (freshRow?.questions ?? []) as ApplicationQuestion[]
+      const freshById = new Map(fresh.map(q => [q.id, q]))
+      const next = questions.map(q => {
+        const f = freshById.get(q.id)
+        if (!f) return q
+        return {
+          ...q,
+          scaffold: f.scaffold ?? q.scaffold,
+          mapped_content: (f.mapped_content?.length ? f.mapped_content : q.mapped_content),
+          gaps: (!q.scaffold && f.scaffold) ? f.gaps : q.gaps,
+          review: f.review ?? q.review,
+          answer_banked: f.answer_banked || q.answer_banked,
+        }
+      })
       const { error } = await supabase
         .from('applications')
-        .update({ questions, updated_at: new Date().toISOString() })
+        .update({ questions: next, updated_at: new Date().toISOString() })
         .eq('id', appId)
       if (error) {
         setSaveState('idle')
@@ -630,7 +653,19 @@ export default function ApplicationWorkspacePage() {
               })
             }
           } else if (evt.t === 'done' && evt.questions) {
-            setApp(prev => (prev ? { ...prev, questions: evt.questions!, status: 'in_progress' } : prev))
+            // Keep anything typed locally during generation: local
+            // user_answer wins over the server's final snapshot.
+            setApp(prev => {
+              if (!prev) return prev
+              const localById = new Map(prev.questions.map(q => [q.id, q]))
+              const questions = evt.questions!.map(q => {
+                const local = localById.get(q.id)
+                return local && local.user_answer.trim() !== q.user_answer.trim()
+                  ? { ...q, user_answer: local.user_answer }
+                  : q
+              })
+              return { ...prev, questions, status: 'in_progress' }
+            })
           } else if (evt.t === 'warning') {
             showToast(evt.message ?? 'Some questions did not build')
           } else if (evt.t === 'error') {

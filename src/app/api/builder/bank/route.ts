@@ -64,7 +64,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: insertError?.message ?? 'Could not bank the answer' }, { status: 500 })
   }
 
-  const updatedQuestions = questions.map(q =>
+  // Merge-on-write: re-read so an autosave during the insert is preserved.
+  const { data: freshRow } = await supabase
+    .from('applications')
+    .select('questions')
+    .eq('id', app.id)
+    .maybeSingle()
+  const freshQuestions = (freshRow?.questions ?? questions) as ApplicationQuestion[]
+  const updatedQuestions = freshQuestions.map(q =>
     q.id === body.question_id ? { ...q, answer_banked: true } : q)
   await supabase
     .from('applications')

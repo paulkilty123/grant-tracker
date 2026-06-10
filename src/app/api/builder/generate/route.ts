@@ -308,12 +308,33 @@ export async function POST(req: NextRequest) {
         let validatedChunks = 0
         let failedChunks = 0
 
+        // Merge-on-write: re-read the row and overlay ONLY this generation's
+        // fields (scaffold/mapped/gaps) onto the fresh questions, so answers
+        // typed (or reviews/banks landed) during the 30-90s generation window
+        // are never clobbered.
         const persistSnapshot = (): void => {
           const snapshot = merged.map(q => ({ ...q }))
           persistChain = persistChain.then(async () => {
+            const { data: freshRow } = await supabase
+              .from('applications')
+              .select('questions')
+              .eq('id', app.id)
+              .maybeSingle()
+            const fresh = (freshRow?.questions ?? []) as ApplicationQuestion[]
+            const freshById = new Map(fresh.map(q => [q.id, q]))
+            const next = snapshot.map(q => {
+              const f = freshById.get(q.id)
+              if (!f) return q
+              // Newly scaffolded this run -> take generation fields, keep
+              // everything else (user_answer, review, banked, text) fresh.
+              if (q.scaffold) {
+                return { ...f, scaffold: q.scaffold, mapped_content: q.mapped_content, gaps: q.gaps }
+              }
+              return f
+            })
             await supabase
               .from('applications')
-              .update({ questions: snapshot, status: 'in_progress', updated_at: new Date().toISOString() })
+              .update({ questions: next, status: 'in_progress', updated_at: new Date().toISOString() })
               .eq('id', app.id)
           }).catch(err => {
             console.error('[builder] chunk persist failed:', err)
@@ -380,7 +401,14 @@ export async function POST(req: NextRequest) {
           )
         }
 
-        send({ t: 'done', questions: merged })
+        // Send the final PERSISTED state, not the request-start snapshot —
+        // it carries any answers/reviews that landed mid-generation.
+        const { data: finalRow } = await supabase
+          .from('applications')
+          .select('questions')
+          .eq('id', app.id)
+          .maybeSingle()
+        send({ t: 'done', questions: (finalRow?.questions ?? merged) as ApplicationQuestion[] })
         controller.close()
       } catch (err) {
         send({ t: 'error', message: err instanceof Error ? err.message : 'Generation stream failed' })
