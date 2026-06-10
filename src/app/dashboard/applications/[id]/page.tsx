@@ -10,7 +10,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   ArrowLeft, Sparkles, AlertTriangle, CheckCircle2, ChevronDown,
-  BookmarkPlus, Check, X as XIcon, FolderKanban, Loader2, PenLine, FileText,
+  BookmarkPlus, Check, X as XIcon, FolderKanban, Loader2, PenLine, FileText, RefreshCw,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { createPipelineItem } from '@/lib/pipeline'
@@ -1282,7 +1282,7 @@ export default function ApplicationWorkspacePage() {
                 ? `${streamedCount} of ${app.questions.length} done. Finished cards are ready below while the rest build.`
                 : 'Reading your profile, your content blocks and the funder context. The first card lands in a few seconds.'
               : blockCount === 0
-                ? 'You have no saved material yet, so guides and drafts will be mostly gaps. Import a past application first (button above) and the builder works from your real material.'
+                ? 'You have no saved material yet, so guides and drafts will be mostly gaps. Import a past application first (button above) and we&apos;ll work from your real material.'
                 : 'For each question: what a strong answer covers, your own content mapped in, and what is missing. You write the answers, in your voice.'}
           </p>
           {genError && (
@@ -1395,7 +1395,7 @@ export default function ApplicationWorkspacePage() {
               </button>
             </div>
             <p style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, margin: '0 0 14px', lineHeight: 1.55 }}>
-              Saves it to your reusable content, so the builder can map it into your next application.
+              Saves it to your reusable material, so we can map it into your next application.
             </p>
             <label style={{ fontFamily: UI, fontSize: 12.5, fontWeight: 600, color: T.textSecondary, display: 'block', marginBottom: 6 }}>Type</label>
             <select value={bankType} onChange={e => setBankType(e.target.value as BlockType)} style={{ ...inputStyle(), cursor: 'pointer', marginBottom: 12 }}>
@@ -1890,6 +1890,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
                 onClick={onDraft}
                 disabled={draftDisabled}
                 title="Assembles a starting draft from your own material, with placeholders where it runs out"
+                className="gt-link"
                 style={{
                   ...ghostBtn(), display: 'inline-flex', alignItems: 'center', gap: 6,
                   paddingLeft: 0, color: draftDisabled && !drafting ? T.textTertiary : T.greenMid,
@@ -1903,6 +1904,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
               <button
                 onClick={onRestoreAnswer}
                 title="Bring back the answer that was here before the draft"
+                className="gt-link"
                 style={{ ...ghostBtn(), display: 'inline-flex', alignItems: 'center', gap: 6, color: T.textSecondary }}
               >
                 Restore previous answer
@@ -1911,6 +1913,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
             {q.user_answer.trim() && !q.answer_banked && !drafting && (
               <button
                 onClick={onBank}
+                className="gt-link"
                 style={{ ...ghostBtn(), display: 'inline-flex', alignItems: 'center', gap: 6, color: T.sage, ...(hasScaffold ? {} : { paddingLeft: 0 }) }}
               >
                 <BookmarkPlus size={14} /> Save to your material
@@ -1996,13 +1999,17 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
                   onClick={onReview}
                   disabled={reviewing || !q.user_answer.trim()}
                   style={{
-                    fontFamily: UI, fontWeight: 600, fontSize: 12, marginTop: 3,
-                    color: !q.user_answer.trim() ? T.textTertiary : T.sage,
-                    background: 'transparent', border: 'none', padding: 0,
+                    fontFamily: UI, fontWeight: 600, fontSize: 12, marginTop: 4,
+                    color: !q.user_answer.trim() ? T.textTertiary : T.textPrimary,
+                    background: T.white,
+                    border: `1px solid ${!q.user_answer.trim() ? T.borderStrong : T.textPrimary}`,
+                    padding: '5px 12px', borderRadius: 8,
                     cursor: reviewing || !q.user_answer.trim() ? 'default' : 'pointer',
-                    textAlign: 'left',
+                    opacity: reviewing ? 0.6 : 1,
+                    display: 'inline-flex', alignItems: 'center', gap: 5,
                   }}
                 >
+                  <RefreshCw size={12} style={reviewing ? { animation: 'spin 1s linear infinite' } : undefined} />
                   {reviewing ? 'Checking…' : review ? 'Check again' : 'Check this answer'}
                 </button>
               </div>
@@ -2019,7 +2026,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
             {review && review.tips.length > 0 && (() => {
               const top = review.tips[0]
               const structured = typeof top !== 'string'
-              const headline = structured ? top.headline : `${top.split(/\s+/).slice(0, 8).join(' ')}${top.split(/\s+/).length > 8 ? '…' : ''}`
+              const headline = structured ? top.headline : (top.match(/^[^.?!]*[.?!]?/)?.[0] ?? top).trim()
               const detail = structured ? top.detail : top
               return (
                 <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 8, padding: '10px 12px', marginBottom: 8 }}>
@@ -2036,6 +2043,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
             {(review || q.gaps.length > 0) && !railOpen && (
               <button
                 onClick={() => setRailOpen(true)}
+                className="gt-link"
                 style={{ ...ghostBtn(), paddingLeft: 0, fontSize: 12, color: T.sage }}
               >
                 {[
@@ -2063,7 +2071,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginBottom: q.gaps.length > 0 ? 12 : 0 }}>
                     {review.tips.slice(1).map((tip, i) => {
                       const structured = typeof tip !== 'string'
-                      const headline = structured ? tip.headline : `${tip.split(/\s+/).slice(0, 8).join(' ')}${tip.split(/\s+/).length > 8 ? '…' : ''}`
+                      const headline = structured ? tip.headline : (tip.match(/^[^.?!]*[.?!]?/)?.[0] ?? tip).trim()
                       const detail = structured ? tip.detail : tip
                       const tOpen = expandedTip === i
                       return (
@@ -2170,7 +2178,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
                     </div>
                   </>
                 )}
-                <button onClick={() => setRailOpen(false)} style={{ ...ghostBtn(), paddingLeft: 0, fontSize: 11.5, color: T.textTertiary, marginTop: 6 }}>
+                <button onClick={() => setRailOpen(false)} className="gt-link" style={{ ...ghostBtn(), paddingLeft: 0, fontSize: 11.5, color: T.textTertiary, marginTop: 6 }}>
                   Show less
                 </button>
               </>

@@ -546,3 +546,7 @@
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+/* Builder link-style actions: hover affordance (spec §7.1) */
+.gt-link { cursor: pointer; }
+.gt-link:hover { text-decoration: underline; }

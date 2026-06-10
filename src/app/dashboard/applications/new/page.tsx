@@ -58,6 +58,7 @@ export default function NewApplicationPage() {
   const [picked, setPicked] = useState<PickedOpportunity | null>(null)
   const [funderName, setFunderName] = useState('')
   const [grantName, setGrantName] = useState('')
+  const [showManual, setShowManual] = useState(false)
   const [rawText, setRawText] = useState('')
   const [parsing, setParsing] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -149,7 +150,7 @@ export default function NewApplicationPage() {
   }
 
   return (
-    <div style={{ maxWidth: 760 }}>
+    <div style={{ maxWidth: 760, marginInline: 'auto' }}>
       {/* Breadcrumb + stepper */}
       <Link href="/dashboard/applications" style={{
         fontFamily: UI, fontWeight: 500, fontSize: 13, color: T.textSecondary,
@@ -176,12 +177,12 @@ export default function NewApplicationPage() {
           {/* Funder / opportunity card */}
           <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, padding: '20px 24px' }}>
             <h2 style={{ fontFamily: UI, fontWeight: 600, fontSize: 16, color: T.textPrimary, margin: '0 0 4px' }}>
-              Who is this application to?
+              Who are you applying to?
             </h2>
             <p style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, margin: '0 0 14px', lineHeight: 1.55 }}>
-              Link a funder from the catalogue and the builder uses everything Grant Tracker knows
-              about them: priorities, exclusions, what a strong application covers. It also checks
-              your eligibility before you spend any time writing.
+              Choose a funder from the catalogue and we&apos;ll use everything Grant Tracker knows
+              about them: priorities, exclusions, what a strong application covers. We&apos;ll also
+              check your eligibility before you spend any time writing.
             </p>
 
             {picked ? (
@@ -231,22 +232,35 @@ export default function NewApplicationPage() {
                     ))}
                   </div>
                 )}
-                <div style={{ display: 'flex', gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
-                  <div style={{ flex: 1, minWidth: 200 }}>
-                    <label style={{ fontFamily: UI, fontSize: 12.5, fontWeight: 600, color: T.textSecondary, display: 'block', marginBottom: 6 }}>
-                      Or enter the funder yourself
-                    </label>
-                    <input value={funderName} onChange={e => setFunderName(e.target.value)}
-                      placeholder="Funder name" style={inputStyle()} />
+                {!showManual ? (
+                  <button
+                    onClick={() => setShowManual(true)}
+                    style={{
+                      fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.sage,
+                      background: 'transparent', border: 'none', cursor: 'pointer',
+                      padding: 0, marginTop: 12,
+                    }}
+                  >
+                    Can&apos;t find them? Enter the funder manually
+                  </button>
+                ) : (
+                  <div style={{ display: 'flex', gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
+                    <div style={{ flex: 1, minWidth: 200 }}>
+                      <label style={{ fontFamily: UI, fontSize: 12.5, fontWeight: 600, color: T.textSecondary, display: 'block', marginBottom: 6 }}>
+                        Funder name
+                      </label>
+                      <input value={funderName} onChange={e => setFunderName(e.target.value)}
+                        placeholder="Funder name" style={inputStyle()} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 200 }}>
+                      <label style={{ fontFamily: UI, fontSize: 12.5, fontWeight: 600, color: T.textSecondary, display: 'block', marginBottom: 6 }}>
+                        Grant or fund name <span style={{ fontWeight: 400, color: T.textTertiary }}>(optional)</span>
+                      </label>
+                      <input value={grantName} onChange={e => setGrantName(e.target.value)}
+                        placeholder="e.g. Awards for All" style={inputStyle()} />
+                    </div>
                   </div>
-                  <div style={{ flex: 1, minWidth: 200 }}>
-                    <label style={{ fontFamily: UI, fontSize: 12.5, fontWeight: 600, color: T.textSecondary, display: 'block', marginBottom: 6 }}>
-                      Grant or fund name <span style={{ fontWeight: 400, color: T.textTertiary }}>(optional)</span>
-                    </label>
-                    <input value={grantName} onChange={e => setGrantName(e.target.value)}
-                      placeholder="e.g. Awards for All" style={inputStyle()} />
-                  </div>
-                </div>
+                )}
               </div>
             )}
           </div>
@@ -258,7 +272,7 @@ export default function NewApplicationPage() {
             </h2>
             <p style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, margin: '0 0 14px', lineHeight: 1.55 }}>
               Copy the questions straight from the funder&apos;s form or guidance, numbering, word
-              limits and all. The builder sorts them into a checklist you can correct before
+              limits and all. We&apos;ll sort them into a checklist you can correct before
               anything else happens.
             </p>
             <textarea
