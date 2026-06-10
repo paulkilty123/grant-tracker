@@ -165,6 +165,17 @@ export default function ApplicationWorkspacePage() {
   const [importOpen, setImportOpen] = useState(false)
   const [blockCount, setBlockCount] = useState<number | null>(null)
 
+  // Header: action menus + sticky condensed bar + linked deadline
+  const [menuOpen, setMenuOpen] = useState<'word' | 'more' | null>(null)
+  const [stuck, setStuck] = useState(false)
+  const [oppDeadline, setOppDeadline] = useState<string | null>(null)
+
+  useEffect(() => {
+    const onScroll = () => setStuck(window.scrollY > 170)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
   // Funder context: what the catalogue actually holds, shown not counted
   const [briefData, setBriefData] = useState<Record<string, string> | null>(null)
   const [contextOpen, setContextOpen] = useState(false)
@@ -277,7 +288,7 @@ export default function ApplicationWorkspacePage() {
     const supabase = createClient()
     supabase
       .from('grants_with_funder')
-      .select('funder_brief')
+      .select('funder_brief, deadline, is_rolling')
       .eq('id', app.opportunity_id)
       .maybeSingle()
       .then(({ data }) => {
@@ -287,6 +298,7 @@ export default function ApplicationWorkspacePage() {
           if (typeof fb[k] === 'string' && (fb[k] as string).trim().length > 0) held[k] = (fb[k] as string).trim()
         }
         setBriefData(held)
+        setOppDeadline(!data?.is_rolling && data?.deadline ? String(data.deadline) : null)
       })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [app?.opportunity_id])
@@ -803,6 +815,85 @@ export default function ApplicationWorkspacePage() {
   const gateBlocksGeneration = blockers.length > 0 && !gate?.proceeded_anyway
   const answeredCount = (app?.questions ?? []).filter(q => q.user_answer.trim()).length
 
+  // Header actions: six buttons condensed to three controls (spec §3.2).
+  function HeaderActions({ compact }: { compact?: boolean }) {
+    const btn: React.CSSProperties = {
+      fontFamily: UI, fontWeight: 600, fontSize: compact ? 12.5 : 13, color: T.textPrimary,
+      background: T.white, border: `1px solid ${T.textPrimary}`, padding: compact ? '6px 11px' : '8px 14px',
+      borderRadius: 8, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6,
+    }
+    const item: React.CSSProperties = {
+      display: 'block', width: '100%', textAlign: 'left', fontFamily: UI, fontWeight: 500,
+      fontSize: 13, color: T.textPrimary, background: 'transparent', border: 'none',
+      padding: '9px 14px', cursor: 'pointer', textDecoration: 'none',
+    }
+    const menu: React.CSSProperties = {
+      position: 'absolute', top: '100%', right: 0, zIndex: 60, marginTop: 4, minWidth: 230,
+      background: T.white, border: `1px solid ${T.borderStrong}`, borderRadius: 10,
+      boxShadow: '0 10px 32px rgba(26,46,43,0.14)', overflow: 'hidden', padding: '4px 0',
+    }
+    return (
+      <div style={{ display: 'flex', gap: 8, flexShrink: 0, alignItems: 'center' }}>
+        {menuOpen && (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 50 }} onClick={() => setMenuOpen(null)} />
+        )}
+        <div style={{ position: 'relative' }}>
+          <button onClick={() => setMenuOpen(m => (m === 'word' ? null : 'word'))} style={btn} aria-haspopup="menu" aria-expanded={menuOpen === 'word'}>
+            <FileText size={14} /> Work in Word <ChevronDown size={12} />
+          </button>
+          {menuOpen === 'word' && (
+            <div style={menu} role="menu">
+              <a
+                href={`/api/builder/export?application_id=${app?.id}`}
+                download
+                style={item}
+                onClick={() => setMenuOpen(null)}
+              >
+                Download draft as Word doc
+              </a>
+              <button style={item} onClick={() => { setMenuOpen(null); setReturnOpen(true); setReturnError(null) }}>
+                Upload your edited draft
+              </button>
+            </div>
+          )}
+        </div>
+        <div style={{ position: 'relative' }}>
+          <button
+            onClick={() => setMenuOpen(m => (m === 'more' ? null : 'more'))}
+            style={{ ...btn, paddingLeft: compact ? 9 : 12, paddingRight: compact ? 9 : 12 }}
+            aria-label="More actions" aria-haspopup="menu" aria-expanded={menuOpen === 'more'}
+          >
+            &#8943;
+          </button>
+          {menuOpen === 'more' && (
+            <div style={menu} role="menu">
+              <button style={item} onClick={() => { setMenuOpen(null); setImportOpen(true) }}>
+                Import a past application
+              </button>
+              <button style={item} onClick={() => { setMenuOpen(null); openEditQuestions() }}>
+                Edit the question list
+              </button>
+              {!app?.pipeline_item_id && (
+                <button style={item} disabled={pipelining} onClick={() => { setMenuOpen(null); trackInPipeline() }}>
+                  {pipelining ? 'Adding to pipeline…' : 'Track in pipeline'}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+        {hasScaffolds && app?.status !== 'complete' && (
+          <button onClick={markComplete} style={{
+            fontFamily: UI, fontWeight: 600, fontSize: compact ? 12.5 : 13, color: '#F1F7E4',
+            background: T.greenDeep, border: 'none', padding: compact ? '6px 12px' : '8px 14px',
+            borderRadius: 8, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6,
+          }}>
+            <Check size={14} /> Mark complete
+          </button>
+        )}
+      </div>
+    )
+  }
+
   if (notAllowed) {
     return (
       <div style={{ maxWidth: 660 }}>
@@ -836,78 +927,76 @@ export default function ApplicationWorkspacePage() {
         <ArrowLeft size={14} /> Applications
       </Link>
 
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 18, flexWrap: 'wrap' }}>
+      {/* Sticky condensed bar */}
+      {stuck && (
+        <div style={{
+          position: 'sticky', top: 8, zIndex: 40,
+          background: T.white, border: `1px solid ${T.border}`, borderRadius: 12,
+          padding: '9px 16px', marginBottom: 12, boxShadow: '0 6px 24px rgba(26,46,43,0.10)',
+          display: 'flex', alignItems: 'center', gap: 12,
+        }}>
+          <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 14, color: T.textPrimary, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {app.grant_name || app.funder_name || 'Application'}
+          </span>
+          <span style={{ fontFamily: UI, fontSize: 12, color: T.textSecondary, whiteSpace: 'nowrap' }}>
+            {answeredCount} of {app.questions.length} written{saveState === 'saving' ? ' · saving…' : ' · autosaved'}
+          </span>
+          <HeaderActions compact />
+        </div>
+      )}
+
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 12, flexWrap: 'wrap' }}>
         <div style={{ minWidth: 0 }}>
           <h1 style={{ fontFamily: UI, fontWeight: 600, fontSize: 23, color: T.textPrimary, letterSpacing: '-0.01em', margin: 0 }}>
             {app.grant_name || app.funder_name || 'Application'}
           </h1>
-          <p style={{ fontFamily: BODY, fontSize: 13.5, color: T.textSecondary, margin: '4px 0 0' }}>
-            {app.funder_name && app.grant_name ? `${app.funder_name} · ` : ''}
-            {answeredCount} of {app.questions.length} questions written
-            {saveState !== 'idle' && (
-              <span style={{ fontFamily: UI, fontSize: 12, color: saveState === 'saved' ? T.greenMid : T.textTertiary, marginLeft: 8 }}>
-                {saveState === 'saving' ? 'Saving…' : 'Saved'}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 6 }}>
+            {app.funder_name && app.grant_name && (
+              <span style={{ fontFamily: BODY, fontSize: 13.5, color: T.textSecondary }}>{app.funder_name}</span>
+            )}
+            {gate && blockers.length === 0 && (
+              <span
+                title="Based on your profile and this funder's criteria. Always confirm on the funder's site."
+                style={{
+                  fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: T.greenText,
+                  background: T.greenBg, padding: '3px 10px', borderRadius: 999,
+                  display: 'inline-flex', alignItems: 'center', gap: 4, cursor: 'help',
+                }}
+              >
+                <Check size={11} /> {STATUS_LABELS[gate.overall_status] ?? 'Looks eligible'}
               </span>
             )}
-          </p>
+            {oppDeadline && (
+              <span style={{
+                fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: T.textSecondary,
+                background: T.cream, padding: '3px 10px', borderRadius: 999,
+              }}>
+                Deadline: {oppDeadline}
+              </span>
+            )}
+          </div>
         </div>
-        <div style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap' }}>
-          <a
-            href={`/api/builder/export?application_id=${app.id}`}
-            download
-            title="Downloads a Word document (.doc) with your answers, the guides and the open gaps, ready to edit and share"
-            style={{
-              fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textPrimary,
-              background: T.white, border: `1px solid ${T.textPrimary}`, padding: '8px 14px',
-              borderRadius: 8, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6,
-            }}
-          >
-            <FileText size={14} /> Download working doc
-          </a>
-          <button
-            onClick={() => { setReturnOpen(true); setReturnError(null) }}
-            title="Edited the working doc in Word or Google Docs? Paste it back and your answers update here"
-            style={{
-              fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textPrimary,
-              background: T.white, border: `1px solid ${T.textPrimary}`, padding: '8px 14px',
-              borderRadius: 8, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6,
-            }}
-          >
-            <ArrowLeft size={14} /> Bring back edits
-          </button>
-          <button onClick={() => setImportOpen(true)} style={{
-            fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textPrimary,
-            background: T.white, border: `1px solid ${T.textPrimary}`, padding: '8px 14px',
-            borderRadius: 8, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6,
-          }}>
-            <FileText size={14} /> Import a past application
-          </button>
-          <button onClick={openEditQuestions} style={{
-            fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textPrimary,
-            background: T.white, border: `1px solid ${T.textPrimary}`, padding: '8px 14px',
-            borderRadius: 8, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6,
-          }}>
-            <PenLine size={14} /> Edit the question list
-          </button>
-          {!app.pipeline_item_id && (
-            <button onClick={trackInPipeline} disabled={pipelining} style={{
-              fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textPrimary,
-              background: T.white, border: `1px solid ${T.textPrimary}`, padding: '8px 14px',
-              borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 6,
-              cursor: pipelining ? 'wait' : 'pointer', opacity: pipelining ? 0.6 : 1,
-            }}>
-              <FolderKanban size={14} /> {pipelining ? 'Adding…' : 'Track in pipeline'}
-            </button>
+        <HeaderActions />
+      </div>
+
+      {/* Progress row */}
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 5 }}>
+          <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.textSecondary }}>
+            {answeredCount} of {app.questions.length} questions written
+          </span>
+          {saveState !== 'idle' && (
+            <span style={{ fontFamily: UI, fontSize: 11.5, color: saveState === 'saved' ? T.greenMid : T.textTertiary }}>
+              {saveState === 'saving' ? 'Saving…' : 'Saved'}
+            </span>
           )}
-          {hasScaffolds && app.status !== 'complete' && (
-            <button onClick={markComplete} style={{
-              fontFamily: UI, fontWeight: 600, fontSize: 13, color: '#F1F7E4',
-              background: T.greenDeep, border: 'none', padding: '8px 14px',
-              borderRadius: 8, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6,
-            }}>
-              <Check size={14} /> Mark complete
-            </button>
-          )}
+        </div>
+        <div style={{ height: 6, background: T.cream, borderRadius: 999, overflow: 'hidden' }}>
+          <div style={{
+            height: '100%',
+            width: `${app.questions.length ? Math.round((answeredCount / app.questions.length) * 100) : 0}%`,
+            background: T.lime, borderRadius: 999, transition: 'width 300ms ease',
+          }} />
         </div>
       </div>
 
@@ -970,7 +1059,7 @@ export default function ApplicationWorkspacePage() {
               )}
             </div>
           )}
-          {gate && blockers.length === 0 && (
+          {gate && blockers.length === 0 && warnings.length > 0 && (
             <div style={{ background: T.paleGreen, borderRadius: 12, padding: '13px 18px', display: 'flex', alignItems: 'flex-start', gap: 9 }}>
               <CheckCircle2 size={16} color={T.greenMid} style={{ marginTop: 1, flexShrink: 0 }} />
               <div>
