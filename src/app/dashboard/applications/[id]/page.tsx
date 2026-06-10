@@ -15,6 +15,7 @@ import {
 import { createClient } from '@/lib/supabase/client'
 import { createPipelineItem } from '@/lib/pipeline'
 import { emitClientEvent } from '@/lib/events/client'
+import ImportApplicationModal from '@/components/builder/ImportApplicationModal'
 import { T, UI, BODY, inputStyle, primaryBtn, ghostBtn } from '@/components/builder/tokens'
 import {
   BLOCK_TYPES, BLOCK_TYPE_LABELS,
@@ -109,6 +110,10 @@ export default function ApplicationWorkspacePage() {
   const [draftingQid, setDraftingQid] = useState<string | null>(null)
   const [voicePrompts, setVoicePrompts] = useState<Record<string, string[]>>({})
 
+  // Import a past application — same modal as the profile content bank
+  const [importOpen, setImportOpen] = useState(false)
+  const [blockCount, setBlockCount] = useState<number | null>(null)
+
   // Funder context meter + guidelines supplement
   const [briefFields, setBriefFields] = useState<string[] | null>(null)
   const [guidelinesOpen, setGuidelinesOpen] = useState(false)
@@ -161,6 +166,18 @@ export default function ApplicationWorkspacePage() {
       .finally(() => setGateLoading(false))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [app?.id, app?.opportunity_id, app?.eligibility_result])
+
+  // ── Content-library size: drives the import nudge ──
+  useEffect(() => {
+    if (!app?.org_id) return
+    const supabase = createClient()
+    supabase
+      .from('org_core_content')
+      .select('id', { count: 'exact', head: true })
+      .eq('org_id', app.org_id)
+      .then(({ count }) => setBlockCount(count ?? 0))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [app?.org_id])
 
   // ── Funder context meter: which brief fields the catalogue holds ──
   useEffect(() => {
@@ -491,7 +508,14 @@ export default function ApplicationWorkspacePage() {
             {app.questions.length} questions · {answeredCount} answered
           </p>
         </div>
-        <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+        <div style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap' }}>
+          <button onClick={() => setImportOpen(true)} style={{
+            fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textPrimary,
+            background: T.white, border: `1px solid ${T.textPrimary}`, padding: '8px 14px',
+            borderRadius: 8, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6,
+          }}>
+            <FileText size={14} /> Import a past application
+          </button>
           {!app.pipeline_item_id && (
             <button onClick={trackInPipeline} disabled={pipelining} style={{
               fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textPrimary,
@@ -675,7 +699,9 @@ export default function ApplicationWorkspacePage() {
               ? streamedCount > 0
                 ? `${streamedCount} of ${app.questions.length} done. Finished cards are ready below while the rest build.`
                 : 'Reading your profile, your content blocks and the funder context. The first card lands in a few seconds.'
-              : 'For each question: what a strong answer covers, your own content mapped in, and what is missing. You write the answers, in your voice.'}
+              : blockCount === 0
+                ? 'Your content library is empty, so scaffolds and drafts will be mostly gaps. Import a past application first (button above) and the builder works from your real material.'
+                : 'For each question: what a strong answer covers, your own content mapped in, and what is missing. You write the answers, in your voice.'}
           </p>
           {genError && (
             <p style={{ fontFamily: BODY, fontSize: 13, color: T.coralText, margin: '0 0 12px' }}>{genError}</p>
@@ -766,6 +792,18 @@ export default function ApplicationWorkspacePage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Import past application modal */}
+      {importOpen && app && (
+        <ImportApplicationModal
+          orgId={app.org_id}
+          onClose={() => setImportOpen(false)}
+          onImported={count => {
+            setBlockCount(prev => (prev ?? 0) + count)
+            showToast(`${count} ${count === 1 ? 'block' : 'blocks'} added to your library`)
+          }}
+        />
       )}
 
       {/* Toast */}
