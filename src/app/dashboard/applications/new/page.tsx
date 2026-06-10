@@ -291,6 +291,15 @@ export default function NewApplicationPage() {
               Fix anything the parser got wrong, including word limits, then build. Word limits the
               funder stated in characters are shown as approximate words.
             </p>
+            {questions.length > 12 && (
+              <div style={{ background: T.amberBg, borderRadius: 8, padding: '10px 14px', marginBottom: 14 }}>
+                <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.amberText, margin: 0, lineHeight: 1.5 }}>
+                  That is a lot of questions. Long forms work, but the build takes longer, and form
+                  fields like addresses or registration numbers do not need scaffolds. Remove any
+                  that are not real writing questions.
+                </p>
+              </div>
+            )}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {questions.map((q, i) => (

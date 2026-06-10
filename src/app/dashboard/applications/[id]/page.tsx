@@ -28,14 +28,21 @@ function wordCount(s: string): number {
   return t ? t.split(/\s+/).length : 0
 }
 
-/** Incrementally extract complete question objects from the streaming JSON,
- *  so cards appear one by one while the model is still generating. */
-function extractStreamedQuestions(buffer: string): number {
+interface StreamedQuestion {
+  question_text?: string
+  scaffold?: { heading: string; guidance: string; suggested_order: number }[]
+  mapped_content?: { block_id: string; block_type: string; excerpt: string; relevance_note: string }[]
+  gaps?: { gap_type: string; description: string; severity: 'blocking' | 'weakens' }[]
+}
+
+/** Incrementally extract COMPLETE question objects from the streaming JSON,
+ *  so cards fill in one by one while the model is still generating. */
+function extractStreamedQuestions(buffer: string): StreamedQuestion[] {
   const start = buffer.indexOf('"questions"')
-  if (start === -1) return 0
+  if (start === -1) return []
   const arrayStart = buffer.indexOf('[', start)
-  if (arrayStart === -1) return 0
-  let count = 0
+  if (arrayStart === -1) return []
+  const out: StreamedQuestion[] = []
   let depth = 0
   let inString = false
   let escaped = false
@@ -52,10 +59,14 @@ function extractStreamedQuestions(buffer: string): number {
     if (ch === '{') { if (depth === 0) objStart = i; depth++ }
     else if (ch === '}') {
       depth--
-      if (depth === 0 && objStart !== -1) { count++; objStart = -1 }
+      if (depth === 0 && objStart !== -1) {
+        try { out.push(JSON.parse(buffer.slice(objStart, i + 1)) as StreamedQuestion) }
+        catch { /* incomplete or malformed segment — skip */ }
+        objStart = -1
+      }
     }
   }
-  return count
+  return out
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -202,7 +213,27 @@ export default function ApplicationWorkspacePage() {
           try { evt = JSON.parse(line) } catch { continue }
           if (evt.t === 'delta' && evt.text) {
             modelText += evt.text
-            setStreamedCount(extractStreamedQuestions(modelText))
+            // Progressive render: merge each COMPLETED question's scaffold
+            // onto its card the moment it finishes streaming — the first
+            // card is readable while the rest are still generating.
+            const completed = extractStreamedQuestions(modelText)
+            if (completed.length > 0) {
+              setStreamedCount(completed.length)
+              setApp(prev => {
+                if (!prev) return prev
+                const questions = prev.questions.map((q, i) => {
+                  const gen = completed[i]
+                  if (!gen || !gen.scaffold || q.scaffold) return q
+                  return {
+                    ...q,
+                    scaffold: gen.scaffold,
+                    mapped_content: gen.mapped_content ?? [],
+                    gaps: (gen.gaps ?? []).map(g => ({ ...g, dismissed: false })),
+                  }
+                })
+                return { ...prev, questions }
+              })
+            }
           } else if (evt.t === 'done' && evt.questions) {
             setApp(prev => (prev ? { ...prev, questions: evt.questions!, status: 'in_progress' } : prev))
           } else if (evt.t === 'error') {
@@ -429,7 +460,7 @@ export default function ApplicationWorkspacePage() {
       )}
 
       {/* ── Generate CTA / progress ── */}
-      {!hasScaffolds && (
+      {(!hasScaffolds || generating) && (
         <div style={{
           background: `linear-gradient(135deg, ${T.white} 0%, #FBFDF7 100%)`,
           border: `1px solid ${T.border}`, borderRadius: 12, padding: '26px 28px', marginBottom: 18,
@@ -447,8 +478,8 @@ export default function ApplicationWorkspacePage() {
           <p style={{ fontFamily: BODY, fontSize: 13.5, color: T.textSecondary, margin: '0 auto 16px', lineHeight: 1.6, maxWidth: 460 }}>
             {generating
               ? streamedCount > 0
-                ? `Question ${Math.min(streamedCount + 1, app.questions.length)} of ${app.questions.length}…`
-                : 'Reading your profile, your content blocks and the funder context…'
+                ? `${streamedCount} of ${app.questions.length} done. Finished cards are ready below while the rest build.`
+                : 'Reading your profile, your content blocks and the funder context. The first card lands in a few seconds.'
               : 'For each question: what a strong answer covers, your own content mapped in, and what is missing. You write the answers, in your voice.'}
           </p>
           {genError && (

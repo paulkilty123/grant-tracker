@@ -332,6 +332,9 @@ export async function POST(req: NextRequest) {
     headers: {
       'Content-Type': 'application/x-ndjson; charset=utf-8',
       'Cache-Control': 'no-cache',
+      // Discourage any proxy/CDN from buffering the stream — first-card
+      // latency depends on chunks reaching the browser as they generate.
+      'X-Accel-Buffering': 'no',
     },
   })
 }

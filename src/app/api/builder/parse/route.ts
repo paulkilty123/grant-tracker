@@ -22,6 +22,7 @@ Rules:
 - Keep the funder's own wording verbatim. Do not rephrase, summarise, or merge questions.
 - Word limits: when a limit is stated in words ("max 500 words", "no more than 300 words"), set word_limit to that number. When stated in characters ("2,000 characters"), convert to approximate words by dividing by 6 and rounding to the nearest 10. When no limit is stated for a question, use null.
 - Ignore page furniture: headings like "Section 2", instructions about fonts or formats, declarations and signature blocks. Only actual questions the applicant must answer.
+- Skip pure data fields: organisation name, trading name, address, postcode, website, email, phone, charity or company number, founding date, legal structure tick-boxes, bank details, contact-person fields, document uploads, and yes/no compliance confirmations. These are form fields, not questions that need a written answer. Only keep questions that ask the applicant to write something substantive about their organisation, project, beneficiaries, outcomes, or budget narrative.
 
 Return ONLY a JSON object: {"questions":[{"question_text":"...","word_limit":500},...]} — no markdown fences, no other text.`
 
