@@ -32,7 +32,7 @@ const BODY = 'var(--font-dm-sans)'
 
 const SOURCE_LABELS: Record<CoreContentBlock['source'], string> = {
   user_entered:              'Added by you',
-  banked_from_application:   'Banked from an application',
+  banked_from_application:   'Saved from an application',
   extracted_from_profile:    'From your profile',
   imported_from_application: 'Imported from a past application',
 }
@@ -126,7 +126,7 @@ export default function CoreContentSection({ orgId }: { orgId: string }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <BookOpen size={17} color={T.greenMid} />
             <h2 style={{ fontFamily: UI, fontWeight: 600, fontSize: 17, color: T.textPrimary, letterSpacing: '-0.01em' }}>
-              Reusable content
+              Your material
             </h2>
             {blocks.length > 0 && (
               <span style={{ fontFamily: UI, fontWeight: 500, fontSize: 12, color: T.greenText, background: T.greenBg, padding: '2px 9px', borderRadius: 999 }}>
@@ -135,9 +135,9 @@ export default function CoreContentSection({ orgId }: { orgId: string }) {
             )}
           </div>
           <p style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, margin: '6px 0 0', lineHeight: 1.55, maxWidth: 520 }}>
-            Your library of application-ready content. The application builder maps these blocks into
-            its scaffolds, and answers you bank from finished applications land here, so every
-            application makes the next one easier.
+            Application-ready content in your own words. We map it into your question guides, and
+            answers you save from finished applications land here, so every application makes
+            the next one easier.
           </p>
         </div>
         {!editorOpen && !importOpen && (
@@ -208,7 +208,7 @@ export default function CoreContentSection({ orgId }: { orgId: string }) {
                 value={draftContent}
                 onChange={e => setDraftContent(e.target.value)}
                 rows={6}
-                placeholder="Write it once, in your own words, with the real numbers. The builder quotes this verbatim, it never rewrites you."
+                placeholder="Write it once, in your own words, with the real numbers. We quote this verbatim, we never rewrite you."
                 style={{ ...inputStyle(), resize: 'vertical', lineHeight: 1.6 }}
               />
             </div>
@@ -246,7 +246,7 @@ export default function CoreContentSection({ orgId }: { orgId: string }) {
             borderRadius: 10, padding: '20px 22px', textAlign: 'center',
           }}>
             <p style={{ fontFamily: BODY, fontSize: 13.5, color: T.textSecondary, margin: 0, lineHeight: 1.6 }}>
-              No content blocks yet. Start with your mission or a programme description, the things
+              No material yet. Start with your mission or a programme description, the things
               you find yourself rewriting for every application.
             </p>
           </div>
