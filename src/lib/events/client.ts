@@ -20,6 +20,7 @@ export type ClientEventType = Extract<
   | 'pipeline_added'
   | 'pipeline_stage_changed'
   | 'profile_updated'
+  | 'builder_path_chosen'
 >
 
 export function emitClientEvent<T extends ClientEventType>(

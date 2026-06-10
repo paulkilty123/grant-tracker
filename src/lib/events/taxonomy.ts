@@ -110,6 +110,10 @@ export interface EventPayloads {
     method: 'pasted' | 'url'
     char_count: number
   }
+  /** Project-first fork (spec §8 phase 1): which starting point users pick. */
+  builder_path_chosen: {
+    path: 'project' | 'funder'
+  }
   /** v0.x — cost capture for the fast-model utility calls (parse paste,
    *  import split, returned-doc matching). Tier pricing needs every call. */
   builder_parse_run: {
@@ -161,6 +165,7 @@ export const EVENT_TYPES = [
   'builder_answer_drafted',
   'builder_content_imported',
   'builder_guidelines_added',
+  'builder_path_chosen',
   'builder_parse_run',
   'builder_doc_returned',
   'builder_answer_reviewed',
@@ -192,6 +197,7 @@ const REQUIRED_KEYS: Record<EventType, Record<string, Kind>> = {
   builder_answer_drafted:      { application_id: 'string', question_id: 'string', model: 'string', input_tokens: 'number', output_tokens: 'number', duration_ms: 'number' },
   builder_content_imported:    { method: 'string', block_count: 'number', block_types: 'string[]' },
   builder_guidelines_added:    { application_id: 'string', method: 'string', char_count: 'number' },
+  builder_path_chosen:         { path: 'string' },
   builder_parse_run:           { kind: 'string', application_id: 'nullable-string', model: 'string', input_tokens: 'number', output_tokens: 'number', duration_ms: 'number' },
   builder_doc_returned:        { application_id: 'string', matched_count: 'number', applied_count: 'number' },
   builder_answer_reviewed:     { application_id: 'string', question_id: 'string', score: 'number', model: 'string', input_tokens: 'number', output_tokens: 'number', duration_ms: 'number' },
