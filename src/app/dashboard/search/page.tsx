@@ -401,6 +401,10 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
   const [matchExpanded, setMatchExpanded] = useState(false)
   const isMobile = useIsMobile()
   const [insightsHover, setInsightsHover] = useState(false)
+  // Capture layer — opportunity_viewed fires once when the user opens the
+  // insights strip (the real "look at this opportunity in depth" action; the
+  // grant detail page is not reachable from this flow).
+  const viewedFiredRef = useRef(false)
   const isDismissed  = interactions.has('dismissed')
   const isLiked      = interactions.has('liked')
   const isDisliked   = interactions.has('disliked')
@@ -970,7 +974,17 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
           centered "HIDE INSIGHTS" caps bar). */}
       {(!!(grant as EnrichedGrant).funderBrief || grant.eligibilityCriteria?.length > 0 || (grant as EnrichedGrant).impactSectors?.length || grant.sectors?.length) && (
         <button
-          onClick={() => setInsightsExpanded(v => !v)}
+          onClick={() => setInsightsExpanded(v => {
+            const next = !v
+            if (next && !viewedFiredRef.current && org) {
+              const uuid = toCatalogueUuid(grant.id, (grant as EnrichedGrant).uuid)
+              if (uuid) {
+                emitClientEvent(org.id, 'opportunity_viewed', { opportunity_id: uuid, source: 'search_insights' })
+                viewedFiredRef.current = true
+              }
+            }
+            return next
+          })}
           onMouseEnter={() => setInsightsHover(true)}
           onMouseLeave={() => setInsightsHover(false)}
           aria-label={insightsLabel}
