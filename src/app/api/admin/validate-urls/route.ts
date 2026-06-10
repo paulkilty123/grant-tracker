@@ -107,7 +107,13 @@ export async function POST(req: NextRequest) {
       (grant.funder as string) ?? '',
       (grant.title as string) ?? '',
     )
-    const status = (result.status === 'dead' || result.status === 'grant_closed') ? 'dead' as const : 'ok' as const
+    // wrong_page (incl. TLS cert failures) → 'unchecked': hidden from default
+    // search and flagged for human re-check, but not killed. Matches the cron.
+    const status = (result.status === 'dead' || result.status === 'grant_closed')
+      ? 'dead' as const
+      : result.status === 'wrong_page'
+        ? 'unchecked' as const
+        : 'ok' as const
     if (status === 'dead') deadCount++
     else okCount++
     await supabase
@@ -149,7 +155,11 @@ export async function PATCH(req: NextRequest) {
   if (apply_url) {
     if (title && funder) {
       const result = await deepCheckUrl(apply_url, funder, title)
-      url_status     = (result.status === 'dead' || result.status === 'grant_closed') ? 'dead' : 'ok'
+      url_status     = (result.status === 'dead' || result.status === 'grant_closed')
+        ? 'dead'
+        : result.status === 'wrong_page'
+          ? 'unchecked'
+          : 'ok'
       qualityScore   = result.qualityScore
       qualityIssues  = result.issues
     } else {

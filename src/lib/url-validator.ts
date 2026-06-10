@@ -89,6 +89,31 @@ function isGenericPagePath(url: string): boolean {
   } catch { return false }
 }
 
+// ── TLS / certificate failure detection ────────────────────────────────────────
+// A fetch to a site with an invalid, expired, or self-signed certificate
+// throws rather than returning an HTTP status. Node/undici surface these as
+// cert error codes (UNABLE_TO_VERIFY_LEAF_SIGNATURE, CERT_HAS_EXPIRED,
+// DEPTH_ZERO_SELF_SIGNED_CERT, ERR_TLS_CERT_ALTNAME_INVALID, …) or a message
+// like "self signed certificate". These must NOT fall through to the catch-all
+// 'ok' return — the page is unreachable in a real browser (security warning),
+// so it's effectively broken for users even though the host is up.
+function isTlsCertError(combined: string): boolean {
+  return (
+    combined.includes('certificate') ||
+    combined.includes('self signed') ||
+    combined.includes('self-signed') ||
+    combined.includes('cert_has_expired') ||
+    combined.includes('altname') ||
+    combined.includes('unable_to_verify') ||
+    combined.includes('unable to verify') ||
+    combined.includes('unable_to_get_issuer') ||
+    combined.includes('depth_zero') ||
+    combined.includes('err_tls') ||
+    combined.includes('_cert_') ||
+    combined.includes('tls_cert')
+  )
+}
+
 // ── Deep URL quality check ────────────────────────────────────────────────────
 
 export type DeepCheckResult = {
@@ -272,15 +297,26 @@ export async function deepCheckUrl(
       return { status: 'dead', qualityScore: 0, issues: ['dns_failed'] }
     }
 
+    // Invalid/expired/self-signed TLS cert — browsers block the page, so it's
+    // unreachable for users. Flag as wrong_page (→ url_status='unchecked':
+    // hidden from default search, kept for a human re-check) rather than 'ok'.
+    // Deliberately NOT 'dead': cert lapses are usually transient (e.g. a
+    // Let's Encrypt renewal), and 'dead' would auto-deactivate/archive a good
+    // grant in the cron. It re-validates back to 'ok' once the cert recovers.
+    if (isTlsCertError(combined)) {
+      return { status: 'wrong_page', qualityScore: 15, issues: ['tls_cert_error'] }
+    }
+
     return { status: 'ok', qualityScore: 25, issues: ['network_error'] }
   }
 }
 
-// Returns 'ok' | 'dead'.
+// Returns 'ok' | 'dead' | 'unchecked'.
 // Catches hard 404s, soft 404s (homepage redirects), content 404s,
 // DNS failures (domain no longer exists), and wrong-page redirects
-// (content sniffing: funder name absent from page HTML).
-export async function checkUrl(url: string, funderName?: string): Promise<'ok' | 'dead'> {
+// (content sniffing: funder name absent from page HTML). TLS cert failures
+// return 'unchecked' (flag for human re-check) — never silently 'ok'.
+export async function checkUrl(url: string, funderName?: string): Promise<'ok' | 'dead' | 'unchecked'> {
   try {
     const res = await fetch(url, {
       method: 'GET',
@@ -387,6 +423,8 @@ export async function checkUrl(url: string, funderName?: string): Promise<'ok' |
     const combined = `${msg} ${cause}`.toLowerCase()
 
     if (combined.includes('enotfound')) return 'dead'
+    // TLS cert failure — unreachable in a browser. Flag (not 'ok', not 'dead').
+    if (isTlsCertError(combined)) return 'unchecked'
 
     return 'ok'
   }
