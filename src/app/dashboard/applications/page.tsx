@@ -158,7 +158,7 @@ export default function ApplicationsPage() {
                 <span style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary }}>
                   {app.funder_name && app.grant_name ? `${app.funder_name} · ` : ''}
                   {total} {total === 1 ? 'question' : 'questions'}
-                  {answered > 0 ? ` · ${answered} answered` : ''}
+                  {answered > 0 ? ` · ${answered} of ${total} written` : ''}
                 </span>
               </div>
               {total > 0 && (

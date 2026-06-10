@@ -21,8 +21,11 @@ export const T = {
   coral:         '#D85A30',
   coralBg:       '#FAECE7',
   coralText:     '#993C1D',
+  amber:         '#BA7517',   // mid amber (spec palette) — score ring 5-7 band
   amberBg:       '#FAEEDA',
   amberText:     '#854F0B',
+  editorBg:      '#FDFDFB',   // answer editor surface
+  softGreen:     '#FBFDF7',   // guide/rail tinted background
 }
 
 export const UI   = 'var(--font-space-grotesk)'

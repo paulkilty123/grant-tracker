@@ -603,7 +603,7 @@ export default function ApplicationWorkspacePage() {
           ...prev,
           questions: prev.questions.map(q => q.id === bankingFor.id ? { ...q, answer_banked: true } : q),
         } : prev)
-        showToast('Banked. It will be mapped into your next application')
+        showToast('Saved to your library. It will be mapped into your next application')
         setBankingFor(null)
       } else {
         // Keep the modal open so nothing is lost; surface the reason.
@@ -733,7 +733,7 @@ export default function ApplicationWorkspacePage() {
           <a
             href={`/api/builder/export?application_id=${app.id}`}
             download
-            title="Download a Word-compatible working document with your answers, the guides and the open gaps, ready to edit and share"
+            title="Downloads a Word document (.doc) with your answers, the guides and the open gaps, ready to edit and share"
             style={{
               fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textPrimary,
               background: T.white, border: `1px solid ${T.textPrimary}`, padding: '8px 14px',
@@ -760,7 +760,8 @@ export default function ApplicationWorkspacePage() {
             <button onClick={trackInPipeline} disabled={pipelining} style={{
               fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textPrimary,
               background: T.white, border: `1px solid ${T.textPrimary}`, padding: '8px 14px',
-              borderRadius: 8, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6,
+              borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 6,
+              cursor: pipelining ? 'wait' : 'pointer', opacity: pipelining ? 0.6 : 1,
             }}>
               <FolderKanban size={14} /> {pipelining ? 'Adding…' : 'Track in pipeline'}
             </button>
@@ -1033,7 +1034,7 @@ export default function ApplicationWorkspacePage() {
       {/* ── Generate CTA / progress ── */}
       {(!hasScaffolds || generating) && (
         <div style={{
-          background: `linear-gradient(135deg, ${T.white} 0%, #FBFDF7 100%)`,
+          background: `linear-gradient(135deg, ${T.white} 0%, ${T.softGreen} 100%)`,
           border: `1px solid ${T.border}`, borderRadius: 12, padding: '26px 28px', marginBottom: 18,
           textAlign: 'center',
         }}>
@@ -1151,7 +1152,7 @@ export default function ApplicationWorkspacePage() {
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
               <h3 style={{ fontFamily: UI, fontWeight: 600, fontSize: 16.5, color: T.textPrimary, margin: 0 }}>
-                Bank this answer
+                Save to your library
               </h3>
               <button onClick={() => setBankingFor(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', color: T.textTertiary }}>
                 <XIcon size={16} />
@@ -1168,7 +1169,7 @@ export default function ApplicationWorkspacePage() {
             <input value={bankTitle} onChange={e => setBankTitle(e.target.value)} style={{ ...inputStyle(), marginBottom: 16 }} />
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={bankAnswer} disabled={bankSaving} style={primaryBtn(bankSaving)}>
-                {bankSaving ? 'Banking…' : 'Bank it'}
+                {bankSaving ? 'Saving…' : 'Save it'}
               </button>
               <button onClick={() => setBankingFor(null)} style={ghostBtn()}>Cancel</button>
             </div>
@@ -1294,7 +1295,7 @@ function ScoreRing({ score, stale }: { score: number | null; stale: boolean }) {
   const frac = score === null ? 0 : Math.max(0, Math.min(1, score / 10))
   const colour = score === null ? 'rgba(0,0,0,0.1)'
     : score < 5 ? T.coral
-    : score < 7 ? '#BA7517'
+    : score < 7 ? T.amber
     : score < 8.5 ? T.greenMid
     : T.lime
   return (
@@ -1375,7 +1376,7 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, reviewing, 
         <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
           {q.answer_banked && (
             <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 10.5, color: T.greenText, background: T.greenBg, padding: '3px 9px', borderRadius: 999 }}>
-              Banked
+              In library
             </span>
           )}
           {limit !== null && (
@@ -1423,7 +1424,7 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, reviewing, 
               style={{
                 fontFamily: BODY, fontSize: 14, color: T.textPrimary, width: '100%',
                 padding: '10px 12px', borderRadius: 8, border: `1px solid ${drafting ? T.lime : T.border}`,
-                background: '#FDFDFB', outline: 'none', resize: 'vertical', lineHeight: 1.65,
+                background: T.editorBg, outline: 'none', resize: 'vertical', lineHeight: 1.65,
               }}
             />
             {hasScaffold && (
@@ -1460,7 +1461,7 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, reviewing, 
                       color: T.sage,
                     }}
                   >
-                    <BookmarkPlus size={14} /> Bank this as reusable content
+                    <BookmarkPlus size={14} /> Save to your library
                   </button>
                 )}
               </div>
@@ -1473,7 +1474,7 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, reviewing, 
                   paddingLeft: 0, marginTop: 6, color: T.sage,
                 }}
               >
-                <BookmarkPlus size={14} /> Bank this as reusable content
+                <BookmarkPlus size={14} /> Save to your library
               </button>
             )}
             {voicePrompts.length > 0 && (
@@ -1497,7 +1498,7 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, reviewing, 
               padding: '16px 18px',
               borderLeft: isMobile ? 'none' : `1px solid ${T.border}`,
               borderTop: isMobile ? `1px solid ${T.border}` : 'none',
-              background: '#FBFDF7',
+              background: T.softGreen,
               maxHeight: isMobile ? undefined : 560,
               overflowY: isMobile ? undefined : 'auto',
             }}>
@@ -1603,9 +1604,12 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, reviewing, 
               {/* Open gaps, tickable */}
               {q.gaps.length > 0 && (
                 <>
-                  <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: openGaps.some(g => g.severity === 'blocking') ? T.coral : T.amberText, marginBottom: 7 }}>
+                  <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: openGaps.some(g => g.severity === 'blocking') ? T.coral : T.amberText, marginBottom: 3 }}>
                     Gaps
                   </div>
+                  <p style={{ fontFamily: BODY, fontSize: 10.5, color: T.textTertiary, margin: '0 0 7px', lineHeight: 1.4 }}>
+                    Red needs fixing before you submit; amber would strengthen it.
+                  </p>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                     {q.gaps.map((g, i) => {
                       const open = expandedGap === i
@@ -1617,7 +1621,7 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, reviewing, 
                               aria-label={g.dismissed ? 'Restore gap' : 'Tick off gap'}
                               title={g.dismissed ? 'Restore' : 'Tick off'}
                               style={{
-                                width: 14, height: 14, borderRadius: 4, flexShrink: 0, marginTop: 3,
+                                width: 14, height: 14, borderRadius: 5, flexShrink: 0, marginTop: 3,
                                 border: `1.5px solid ${g.severity === 'blocking' ? T.coral : T.amberText}`,
                                 background: g.dismissed ? (g.severity === 'blocking' ? T.coral : T.amberText) : 'transparent',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -1662,7 +1666,7 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, reviewing, 
 
           {/* Guidance below the writing: Guide / Your material / Gaps tabs */}
           {hasScaffold && (
-            <div style={{ borderTop: `1px solid ${T.border}`, background: '#FBFDF7' }}>
+            <div style={{ borderTop: `1px solid ${T.border}`, background: T.softGreen }}>
               <div style={{ display: 'flex', gap: 2, padding: '10px 20px 0' }}>
                 {([
                   { key: 'guide' as const,    label: 'Guide',         count: null },
