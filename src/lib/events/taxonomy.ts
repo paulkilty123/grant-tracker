@@ -89,6 +89,27 @@ export interface EventPayloads {
     application_id: string
     block_type: string
   }
+  /** v0.x — per-question guided draft (composition from the org's own blocks). */
+  builder_answer_drafted: {
+    application_id: string
+    question_id: string
+    model: string
+    input_tokens: number
+    output_tokens: number
+    duration_ms: number
+  }
+  /** v0.x — previous application imported into the content bank. */
+  builder_content_imported: {
+    method: 'paste' | 'upload'
+    block_count: number
+    block_types: string[]
+  }
+  /** v0.x — applicant supplied funder guidance for an application. */
+  builder_guidelines_added: {
+    application_id: string
+    method: 'pasted' | 'url'
+    char_count: number
+  }
   data_exported: {
     export_type: string
   }
@@ -111,6 +132,9 @@ export const EVENT_TYPES = [
   'builder_gap_flagged',
   'builder_eligibility_warning',
   'builder_answer_banked',
+  'builder_answer_drafted',
+  'builder_content_imported',
+  'builder_guidelines_added',
   'data_exported',
 ] as const satisfies readonly EventType[]
 
@@ -136,6 +160,9 @@ const REQUIRED_KEYS: Record<EventType, Record<string, Kind>> = {
   builder_gap_flagged:         { application_id: 'string', gap_types: 'string[]' },
   builder_eligibility_warning: { application_id: 'string', opportunity_id: 'string', warning_codes: 'string[]' },
   builder_answer_banked:       { application_id: 'string', block_type: 'string' },
+  builder_answer_drafted:      { application_id: 'string', question_id: 'string', model: 'string', input_tokens: 'number', output_tokens: 'number', duration_ms: 'number' },
+  builder_content_imported:    { method: 'string', block_count: 'number', block_types: 'string[]' },
+  builder_guidelines_added:    { application_id: 'string', method: 'string', char_count: 'number' },
   data_exported:               { export_type: 'string' },
 }
 

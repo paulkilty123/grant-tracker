@@ -109,6 +109,7 @@ function userPrompt(
   org: Record<string, unknown>,
   blocks: CoreContentBlock[],
   funderContext: string,
+  suppliedGuidelines: string,
   questions: ApplicationQuestion[],
 ): string {
   const questionsBlock = questions.map((q, i) =>
@@ -121,6 +122,7 @@ THE ORGANISATION'S CONTENT BLOCKS (quote verbatim, reference by block_id)
 ${contentBlocksSection(blocks)}
 
 ${funderContext ? `THE FUNDER (verified catalogue entry — use it to angle the scaffolds, cite the field names)\n${funderContext}\n` : 'No catalogue entry is linked — scaffold to what a UK funder of this type typically weights, and say so in the guidance.\n'}
+${suppliedGuidelines ? `THE FUNDER'S APPLICATION GUIDANCE (supplied by the applicant, unverified — use it to angle the scaffolds; when citing it say "the guidance you supplied", never present it as verified catalogue data)\n${suppliedGuidelines}\n` : ''}
 THE QUESTIONS
 ${questionsBlock}`
 }
@@ -195,7 +197,13 @@ export async function POST(req: NextRequest) {
       ],
       messages: [{
         role: 'user',
-        content: userPrompt(org as Record<string, unknown>, contentBlocks, funderContext, questions),
+        content: userPrompt(
+          org as Record<string, unknown>,
+          contentBlocks,
+          funderContext,
+          app.supplied_guidelines ? String(app.supplied_guidelines).slice(0, 16000) : '',
+          questions,
+        ),
       }],
     }),
   })

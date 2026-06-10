@@ -13,6 +13,7 @@ import { ArrowLeft, Search as SearchIcon, X as XIcon, Plus, Trash2, Check } from
 import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { T, UI, BODY, inputStyle, primaryBtn, forestBtn, ghostBtn } from '@/components/builder/tokens'
+import { OUTLINE_TEMPLATE } from '@/lib/builder/types'
 
 interface PickedOpportunity {
   id: string          // scraped_grants.id (catalogue UUID)
@@ -267,6 +268,29 @@ export default function NewApplicationPage() {
               placeholder={'1. Tell us about your organisation (max 300 words)\n2. What do you want to do with this funding? (max 500 words)\n3. Who will benefit, and how do you know they need it?\n…'}
               style={{ ...inputStyle(), resize: 'vertical', lineHeight: 1.6, fontSize: 13.5 }}
             />
+            {/* Outline / EOI mode — for portal-gated forms, EOI-first funders,
+                and letter-style applications where there is nothing to paste. */}
+            <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${T.border}` }}>
+              <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary, margin: '0 0 8px', lineHeight: 1.5 }}>
+                No questions to paste? Many funders gate their form behind a portal or ask for a
+                project outline first. Start from a standard outline instead, six sections every
+                funder expects.
+              </p>
+              <button
+                onClick={() => {
+                  setQuestions(OUTLINE_TEMPLATE.map(q => ({ ...q })))
+                  setError(null)
+                  setStep('confirm')
+                }}
+                style={{
+                  fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textPrimary,
+                  background: T.white, border: `1px solid ${T.textPrimary}`, padding: '8px 16px',
+                  borderRadius: 8, cursor: 'pointer',
+                }}
+              >
+                Start from a standard outline
+              </button>
+            </div>
           </div>
 
           {error && (

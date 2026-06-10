@@ -10,7 +10,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   ArrowLeft, Sparkles, AlertTriangle, CheckCircle2, ChevronDown,
-  BookmarkPlus, Check, X as XIcon, FolderKanban, Loader2,
+  BookmarkPlus, Check, X as XIcon, FolderKanban, Loader2, PenLine, FileText,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { createPipelineItem } from '@/lib/pipeline'
@@ -26,6 +26,10 @@ import {
 function wordCount(s: string): number {
   const t = s.trim()
   return t ? t.split(/\s+/).length : 0
+}
+
+function placeholderCount(s: string): number {
+  return (s.match(/\[ADD:[^\]]*\]/gi) ?? []).length
 }
 
 interface StreamedQuestion {
@@ -101,6 +105,18 @@ export default function ApplicationWorkspacePage() {
   const [bankTitle, setBankTitle] = useState('')
   const [bankSaving, setBankSaving] = useState(false)
 
+  // Guided drafts (one at a time) + per-question voice prompts (session-only)
+  const [draftingQid, setDraftingQid] = useState<string | null>(null)
+  const [voicePrompts, setVoicePrompts] = useState<Record<string, string[]>>({})
+
+  // Funder context meter + guidelines supplement
+  const [briefFields, setBriefFields] = useState<string[] | null>(null)
+  const [guidelinesOpen, setGuidelinesOpen] = useState(false)
+  const [guidelinesText, setGuidelinesText] = useState('')
+  const [guidelinesUrl, setGuidelinesUrl] = useState('')
+  const [guidelinesBusy, setGuidelinesBusy] = useState(false)
+  const [guidelinesError, setGuidelinesError] = useState<string | null>(null)
+
   // Pipeline link
   const [pipelining, setPipelining] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
@@ -145,6 +161,100 @@ export default function ApplicationWorkspacePage() {
       .finally(() => setGateLoading(false))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [app?.id, app?.opportunity_id, app?.eligibility_result])
+
+  // ── Funder context meter: which brief fields the catalogue holds ──
+  useEffect(() => {
+    if (!app?.opportunity_id) return
+    const supabase = createClient()
+    supabase
+      .from('grants_with_funder')
+      .select('funder_brief')
+      .eq('id', app.opportunity_id)
+      .maybeSingle()
+      .then(({ data }) => {
+        const fb = (data?.funder_brief ?? {}) as Record<string, unknown>
+        const present = ['what_they_fund', 'priorities', 'exclusions', 'strong_application', 'funder_tips', 'how_to_apply']
+          .filter(k => typeof fb[k] === 'string' && (fb[k] as string).trim().length > 0)
+        setBriefFields(present)
+      })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [app?.opportunity_id])
+
+  async function submitGuidelines() {
+    if (!app) return
+    setGuidelinesBusy(true); setGuidelinesError(null)
+    try {
+      const res = await fetch('/api/builder/guidelines', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          application_id: app.id,
+          text: guidelinesText.trim() || undefined,
+          url: guidelinesText.trim() ? undefined : (guidelinesUrl.trim() || undefined),
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setGuidelinesError(data?.error ?? 'Could not add the guidance'); return }
+      setApp(prev => (prev ? { ...prev, supplied_guidelines: 'added' } : prev))
+      setGuidelinesOpen(false)
+      showToast('Guidance added. Scaffolds and drafts will use it')
+    } catch {
+      setGuidelinesError('Could not add the guidance, please try again')
+    } finally {
+      setGuidelinesBusy(false)
+    }
+  }
+
+  // ── Guided draft: composition from their blocks, streamed into the editor ──
+  async function draftAnswer(q: ApplicationQuestion) {
+    if (!app || draftingQid) return
+    if (q.user_answer.trim() && !window.confirm('Replace your current answer with a fresh starting draft?')) return
+    setDraftingQid(q.id)
+    try {
+      const res = await fetch('/api/builder/draft', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ application_id: app.id, question_id: q.id }),
+      })
+      if (!res.ok || !res.body) {
+        showToast('Draft failed, please try again')
+        return
+      }
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let lineBuffer = ''
+      let draftText = ''
+      for (;;) {
+        const { done, value } = await reader.read()
+        if (done) break
+        lineBuffer += decoder.decode(value, { stream: true })
+        const lines = lineBuffer.split('\n')
+        lineBuffer = lines.pop() ?? ''
+        for (const line of lines) {
+          if (!line.trim()) continue
+          let evt: { t: string; text?: string; draft?: string; voice_prompts?: string[]; message?: string }
+          try { evt = JSON.parse(line) } catch { continue }
+          if (evt.t === 'delta' && evt.text) {
+            draftText += evt.text
+            // Show the draft as it streams; keep the voice tail out of the editor.
+            const visible = draftText.split('---VOICE---')[0]
+            updateQuestion(q.id, { user_answer: visible })
+          } else if (evt.t === 'done') {
+            updateQuestion(q.id, { user_answer: (evt.draft ?? draftText.split('---VOICE---')[0]).trim() })
+            if (evt.voice_prompts?.length) {
+              setVoicePrompts(prev => ({ ...prev, [q.id]: evt.voice_prompts! }))
+            }
+          } else if (evt.t === 'error') {
+            showToast(evt.message ?? 'Draft failed')
+          }
+        }
+      }
+    } catch {
+      showToast('Draft failed, please try again')
+    } finally {
+      setDraftingQid(null)
+    }
+  }
 
   async function proceedAnyway() {
     if (!app) return
@@ -317,8 +427,15 @@ export default function ApplicationWorkspacePage() {
     }
   }
 
+  const completeWarnedRef = useRef(false)
   async function markComplete() {
     if (!app) return
+    const remaining = app.questions.reduce((n, q) => n + placeholderCount(q.user_answer), 0)
+    if (remaining > 0 && !completeWarnedRef.current) {
+      completeWarnedRef.current = true
+      showToast(`${remaining} [ADD: ...] ${remaining === 1 ? 'placeholder' : 'placeholders'} still to fill. Click again to complete anyway`)
+      return
+    }
     const supabase = createClient()
     await supabase
       .from('applications')
@@ -459,6 +576,84 @@ export default function ApplicationWorkspacePage() {
         </div>
       )}
 
+      {/* ── Funder context meter + guidelines supplement ── */}
+      {app.opportunity_id && briefFields !== null && !app.supplied_guidelines && (
+        <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, padding: '13px 18px', marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 9, minWidth: 0 }}>
+              <FileText size={15} color={briefFields.length >= 4 ? T.greenMid : T.amberText} style={{ flexShrink: 0 }} />
+              <span style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, lineHeight: 1.5 }}>
+                {briefFields.length >= 4
+                  ? `Good funder context: the catalogue holds ${briefFields.length} of 6 guidance fields for this funder.`
+                  : briefFields.length > 0
+                    ? `Thin funder context: the catalogue holds ${briefFields.length} of 6 guidance fields. Adding the funder's own guidance makes scaffolds and drafts sharper.`
+                    : 'No funder guidance in the catalogue yet. Adding the funder’s own guidance makes scaffolds and drafts much sharper.'}
+              </span>
+            </div>
+            {!guidelinesOpen && (
+              <button onClick={() => setGuidelinesOpen(true)} style={{
+                fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.textPrimary,
+                background: T.white, border: `1px solid ${T.textPrimary}`, padding: '6px 13px',
+                borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+              }}>
+                Add their guidance
+              </button>
+            )}
+          </div>
+          {guidelinesOpen && (
+            <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <textarea
+                value={guidelinesText}
+                onChange={e => setGuidelinesText(e.target.value)}
+                rows={5}
+                placeholder="Paste the funder's application guidance here…"
+                style={{
+                  fontFamily: BODY, fontSize: 13, color: T.textPrimary, width: '100%',
+                  padding: '9px 12px', borderRadius: 8, border: `1px solid ${T.borderStrong}`,
+                  background: T.white, outline: 'none', resize: 'vertical', lineHeight: 1.55,
+                }}
+              />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <span style={{ fontFamily: UI, fontSize: 12, color: T.textTertiary }}>or fetch from</span>
+                <input
+                  value={guidelinesUrl}
+                  onChange={e => setGuidelinesUrl(e.target.value)}
+                  placeholder="https://funder.org.uk/how-to-apply"
+                  style={{
+                    fontFamily: BODY, fontSize: 13, color: T.textPrimary, flex: 1, minWidth: 220,
+                    padding: '7px 11px', borderRadius: 8, border: `1px solid ${T.borderStrong}`,
+                    background: T.white, outline: 'none',
+                  }}
+                />
+              </div>
+              {guidelinesError && <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.coralText, margin: 0 }}>{guidelinesError}</p>}
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button onClick={submitGuidelines} disabled={guidelinesBusy} style={{
+                  fontFamily: UI, fontWeight: 600, fontSize: 13, color: '#F1F7E4',
+                  background: T.greenDeep, border: 'none', padding: '8px 16px', borderRadius: 8,
+                  cursor: guidelinesBusy ? 'wait' : 'pointer', opacity: guidelinesBusy ? 0.7 : 1,
+                }}>
+                  {guidelinesBusy ? 'Adding…' : 'Add guidance'}
+                </button>
+                <button onClick={() => setGuidelinesOpen(false)} style={ghostBtn()}>Cancel</button>
+              </div>
+              <p style={{ fontFamily: BODY, fontSize: 11.5, color: T.textTertiary, margin: 0, lineHeight: 1.5 }}>
+                Used only to shape this application. It is treated as your supplied guidance, separate
+                from the verified catalogue entry.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+      {app.supplied_guidelines && (
+        <div style={{ background: T.paleGreen, borderRadius: 12, padding: '11px 18px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 9 }}>
+          <FileText size={14} color={T.greenMid} />
+          <span style={{ fontFamily: BODY, fontSize: 12.5, color: T.sage }}>
+            The funder&apos;s guidance you supplied is being used to shape scaffolds and drafts.
+          </span>
+        </div>
+      )}
+
       {/* ── Generate CTA / progress ── */}
       {(!hasScaffolds || generating) && (
         <div style={{
@@ -514,12 +709,16 @@ export default function ApplicationWorkspacePage() {
             key={q.id}
             index={idx}
             question={q}
+            drafting={draftingQid === q.id}
+            draftDisabled={draftingQid !== null}
+            voicePrompts={voicePrompts[q.id] ?? []}
             onAnswerChange={text => updateQuestion(q.id, { user_answer: text })}
             onToggleGap={gapIdx => {
               const gaps = q.gaps.map((g, i) => (i === gapIdx ? { ...g, dismissed: !g.dismissed } : g))
               updateQuestion(q.id, { gaps })
             }}
             onBank={() => openBank(q)}
+            onDraft={() => draftAnswer(q)}
           />
         ))}
       </div>
@@ -585,12 +784,16 @@ export default function ApplicationWorkspacePage() {
 
 // ── Question card ────────────────────────────────────────────────────────────
 
-function QuestionCard({ index, question: q, onAnswerChange, onToggleGap, onBank }: {
+function QuestionCard({ index, question: q, drafting, draftDisabled, voicePrompts, onAnswerChange, onToggleGap, onBank, onDraft }: {
   index: number
   question: ApplicationQuestion
+  drafting: boolean
+  draftDisabled: boolean
+  voicePrompts: string[]
   onAnswerChange: (text: string) => void
   onToggleGap: (gapIdx: number) => void
   onBank: () => void
+  onDraft: () => void
 }) {
   const [collapsed, setCollapsed] = useState(false)
   const words = wordCount(q.user_answer)
@@ -600,6 +803,7 @@ function QuestionCard({ index, question: q, onAnswerChange, onToggleGap, onBank 
   const countColor = overLimit ? T.coral : nearLimit ? T.amberText : T.textTertiary
   const openGaps = q.gaps.filter(g => !g.dismissed)
   const hasScaffold = !!q.scaffold && q.scaffold.length > 0
+  const placeholders = placeholderCount(q.user_answer)
 
   return (
     <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, overflow: 'hidden' }}>
@@ -719,27 +923,62 @@ function QuestionCard({ index, question: q, onAnswerChange, onToggleGap, onBank 
 
           {/* Right: the user's answer */}
           <div style={{ padding: '16px 20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, gap: 8, flexWrap: 'wrap' }}>
               <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.textSecondary }}>
                 Your answer
               </span>
-              <span style={{ fontFamily: UI, fontWeight: 500, fontSize: 11.5, color: countColor }}>
-                {words} {words === 1 ? 'word' : 'words'}{limit !== null ? ` of ${limit}` : ''}
-                {overLimit ? ', over the limit' : ''}
+              <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                {placeholders > 0 && (
+                  <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 11, color: T.amberText, background: T.amberBg, padding: '2px 9px', borderRadius: 999 }}>
+                    {placeholders} to fill in
+                  </span>
+                )}
+                <span style={{ fontFamily: UI, fontWeight: 500, fontSize: 11.5, color: countColor }}>
+                  {words} {words === 1 ? 'word' : 'words'}{limit !== null ? ` of ${limit}` : ''}
+                  {overLimit ? ', over the limit' : ''}
+                </span>
               </span>
             </div>
             <textarea
               value={q.user_answer}
               onChange={e => onAnswerChange(e.target.value)}
               rows={hasScaffold ? 12 : 5}
-              placeholder={hasScaffold ? 'Write in your own voice. The scaffold on the left is your map.' : 'Build the scaffolds first, or just start writing.'}
+              readOnly={drafting}
+              placeholder={hasScaffold ? 'Write in your own voice, or draft a starting version below.' : 'Build the scaffolds first, or just start writing.'}
               style={{
                 fontFamily: BODY, fontSize: 14, color: T.textPrimary, width: '100%',
-                padding: '10px 12px', borderRadius: 8, border: `1px solid ${T.border}`,
+                padding: '10px 12px', borderRadius: 8, border: `1px solid ${drafting ? T.lime : T.border}`,
                 background: '#FDFDFB', outline: 'none', resize: 'vertical', lineHeight: 1.65,
               }}
             />
-            {q.user_answer.trim() && !q.answer_banked && (
+            {hasScaffold && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap', marginTop: 6 }}>
+                <button
+                  onClick={onDraft}
+                  disabled={draftDisabled}
+                  title="Assembles a starting draft from your own content blocks, with placeholders where your material runs out"
+                  style={{
+                    ...ghostBtn(), display: 'inline-flex', alignItems: 'center', gap: 6,
+                    paddingLeft: 0, color: draftDisabled && !drafting ? T.textTertiary : T.greenMid,
+                    cursor: draftDisabled ? 'wait' : 'pointer',
+                  }}
+                >
+                  <PenLine size={14} /> {drafting ? 'Assembling from your content…' : 'Draft a starting version'}
+                </button>
+                {q.user_answer.trim() && !q.answer_banked && !drafting && (
+                  <button
+                    onClick={onBank}
+                    style={{
+                      ...ghostBtn(), display: 'inline-flex', alignItems: 'center', gap: 6,
+                      color: T.sage,
+                    }}
+                  >
+                    <BookmarkPlus size={14} /> Bank this as reusable content
+                  </button>
+                )}
+              </div>
+            )}
+            {!hasScaffold && q.user_answer.trim() && !q.answer_banked && (
               <button
                 onClick={onBank}
                 style={{
@@ -749,6 +988,18 @@ function QuestionCard({ index, question: q, onAnswerChange, onToggleGap, onBank 
               >
                 <BookmarkPlus size={14} /> Bank this as reusable content
               </button>
+            )}
+            {voicePrompts.length > 0 && (
+              <div style={{ background: T.paleGreen, borderRadius: 8, padding: '10px 13px', marginTop: 8 }}>
+                <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.sage, marginBottom: 5 }}>
+                  Make it yours
+                </div>
+                <ul style={{ margin: 0, paddingLeft: 16 }}>
+                  {voicePrompts.map((p, i) => (
+                    <li key={i} style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary, lineHeight: 1.55 }}>{p}</li>
+                  ))}
+                </ul>
+              </div>
             )}
           </div>
         </div>

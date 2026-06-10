@@ -6,7 +6,7 @@
 // Styling mirrors the profile page's card sections (T tokens, UI/BODY fonts).
 
 import { useEffect, useState } from 'react'
-import { Plus, Pencil, Trash2, BookOpen, X as XIcon } from 'lucide-react'
+import { Plus, Pencil, Trash2, BookOpen, X as XIcon, Upload, Check } from 'lucide-react'
 import {
   getCoreContent, createCoreContentBlock, updateCoreContentBlock, deleteCoreContentBlock,
 } from '@/lib/builder/core-content'
@@ -30,9 +30,17 @@ const UI   = 'var(--font-space-grotesk)'
 const BODY = 'var(--font-dm-sans)'
 
 const SOURCE_LABELS: Record<CoreContentBlock['source'], string> = {
-  user_entered:            'Added by you',
-  banked_from_application: 'Banked from an application',
-  extracted_from_profile:  'From your profile',
+  user_entered:              'Added by you',
+  banked_from_application:   'Banked from an application',
+  extracted_from_profile:    'From your profile',
+  imported_from_application: 'Imported from a past application',
+}
+
+interface ProposedBlock {
+  block_type: BlockType
+  title: string
+  content: string
+  keep: boolean
 }
 
 function inputStyle(): React.CSSProperties {
@@ -52,6 +60,57 @@ export default function CoreContentSection({ orgId }: { orgId: string }) {
   const [draftContent, setDraftContent] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Import a previous application: paste -> proposed blocks -> review -> bank.
+  const [importOpen, setImportOpen] = useState(false)
+  const [importText, setImportText] = useState('')
+  const [importBusy, setImportBusy] = useState(false)
+  const [importError, setImportError] = useState<string | null>(null)
+  const [proposed, setProposed] = useState<ProposedBlock[] | null>(null)
+
+  async function proposeImport() {
+    setImportBusy(true); setImportError(null)
+    try {
+      const res = await fetch('/api/builder/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ raw_text: importText }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setImportError(data?.error ?? 'Import failed'); return }
+      setProposed((data.blocks as Omit<ProposedBlock, 'keep'>[]).map(b => ({ ...b, keep: true })))
+    } catch {
+      setImportError('Import failed, please try again')
+    } finally {
+      setImportBusy(false)
+    }
+  }
+
+  async function confirmImport() {
+    if (!proposed) return
+    const keep = proposed.filter(b => b.keep)
+    if (keep.length === 0) { setImportError('Keep at least one block, or cancel'); return }
+    setImportBusy(true); setImportError(null)
+    try {
+      const res = await fetch('/api/builder/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          org_id: orgId,
+          blocks: keep.map(({ block_type, title, content }) => ({ block_type, title, content })),
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setImportError(data?.error ?? 'Could not add the blocks'); return }
+      const refreshed = await getCoreContent(orgId)
+      setBlocks(refreshed)
+      setImportOpen(false); setImportText(''); setProposed(null)
+    } catch {
+      setImportError('Could not add the blocks, please try again')
+    } finally {
+      setImportBusy(false)
+    }
+  }
 
   useEffect(() => {
     getCoreContent(orgId)
@@ -128,22 +187,143 @@ export default function CoreContentSection({ orgId }: { orgId: string }) {
             application makes the next one easier.
           </p>
         </div>
-        {!editorOpen && (
-          <button
-            onClick={startNew}
-            style={{
-              fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textPrimary,
-              background: T.white, border: `1px solid ${T.textPrimary}`, padding: '7px 14px',
-              borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap',
-            }}
-          >
-            <Plus size={14} /> Add block
-          </button>
+        {!editorOpen && !importOpen && (
+          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+            <button
+              onClick={() => { setImportOpen(true); setImportError(null) }}
+              style={{
+                fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.greenDeep,
+                background: T.lime, border: 'none', padding: '7px 14px',
+                borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap',
+              }}
+            >
+              <Upload size={14} /> Import a past application
+            </button>
+            <button
+              onClick={startNew}
+              style={{
+                fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textPrimary,
+                background: T.white, border: `1px solid ${T.textPrimary}`, padding: '7px 14px',
+                borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap',
+              }}
+            >
+              <Plus size={14} /> Add block
+            </button>
+          </div>
         )}
       </div>
 
       {/* Body */}
       <div style={{ padding: '14px 24px 22px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+
+        {/* Import flow */}
+        {importOpen && (
+          <div style={{ background: T.paleGreen, borderRadius: 10, padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {!proposed ? (
+              <>
+                <div>
+                  <div style={{ fontFamily: UI, fontWeight: 600, fontSize: 14.5, color: T.textPrimary, marginBottom: 4 }}>
+                    Import a previous application
+                  </div>
+                  <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary, margin: 0, lineHeight: 1.55 }}>
+                    Paste the written answers from a past application. They get split into reusable
+                    blocks, in your words exactly as you wrote them, and you review every block
+                    before it is added.
+                  </p>
+                </div>
+                <textarea
+                  value={importText}
+                  onChange={e => setImportText(e.target.value)}
+                  rows={8}
+                  placeholder="Paste the application text here, answers and all…"
+                  style={{ ...inputStyle(), resize: 'vertical', lineHeight: 1.6, fontSize: 13.5 }}
+                />
+                {importError && <p style={{ fontFamily: BODY, fontSize: 13, color: '#993C1D', margin: 0 }}>{importError}</p>}
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button onClick={proposeImport} disabled={importBusy} style={{
+                    fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: '#F1F7E4',
+                    background: T.greenDeep, border: 'none', padding: '9px 18px', borderRadius: 8,
+                    cursor: importBusy ? 'wait' : 'pointer', opacity: importBusy ? 0.7 : 1,
+                  }}>
+                    {importBusy ? 'Splitting into blocks…' : 'Continue'}
+                  </button>
+                  <button onClick={() => { setImportOpen(false); setProposed(null) }} style={{
+                    fontFamily: UI, fontWeight: 500, fontSize: 13.5, color: T.textSecondary,
+                    background: 'transparent', border: 'none', padding: '9px 12px', cursor: 'pointer',
+                  }}>
+                    Cancel
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{ fontFamily: UI, fontWeight: 600, fontSize: 14.5, color: T.textPrimary }}>
+                  {proposed.filter(b => b.keep).length} of {proposed.length} blocks selected, check them over
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {proposed.map((b, i) => (
+                    <div key={i} style={{
+                      background: T.white, borderRadius: 8, padding: '11px 13px',
+                      display: 'flex', gap: 10, alignItems: 'flex-start',
+                      opacity: b.keep ? 1 : 0.45,
+                    }}>
+                      <button
+                        onClick={() => setProposed(ps => ps!.map((p, j) => j === i ? { ...p, keep: !p.keep } : p))}
+                        aria-label={b.keep ? 'Exclude block' : 'Include block'}
+                        style={{
+                          width: 18, height: 18, borderRadius: 5, flexShrink: 0, marginTop: 2,
+                          border: `1.5px solid ${T.greenMid}`,
+                          background: b.keep ? T.greenMid : 'transparent',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                        }}
+                      >
+                        {b.keep && <Check size={13} color="#fff" />}
+                      </button>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 3 }}>
+                          <input
+                            value={b.title}
+                            onChange={e => setProposed(ps => ps!.map((p, j) => j === i ? { ...p, title: e.target.value } : p))}
+                            style={{ fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: T.textPrimary, border: 'none', background: 'transparent', outline: 'none', flex: 1, minWidth: 140 }}
+                          />
+                          <select
+                            value={b.block_type}
+                            onChange={e => setProposed(ps => ps!.map((p, j) => j === i ? { ...p, block_type: e.target.value as BlockType } : p))}
+                            style={{ fontFamily: UI, fontSize: 11.5, color: T.greenText, background: T.greenBg, border: 'none', borderRadius: 999, padding: '3px 8px', cursor: 'pointer' }}
+                          >
+                            {BLOCK_TYPES.map(t => <option key={t} value={t}>{BLOCK_TYPE_LABELS[t]}</option>)}
+                          </select>
+                        </div>
+                        <p style={{
+                          fontFamily: BODY, fontSize: 12.5, color: T.textSecondary, margin: 0, lineHeight: 1.5,
+                          display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                        }}>
+                          {b.content}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {importError && <p style={{ fontFamily: BODY, fontSize: 13, color: '#993C1D', margin: 0 }}>{importError}</p>}
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button onClick={confirmImport} disabled={importBusy} style={{
+                    fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: T.greenDeep,
+                    background: T.lime, border: 'none', padding: '9px 18px', borderRadius: 8,
+                    cursor: importBusy ? 'wait' : 'pointer', opacity: importBusy ? 0.7 : 1,
+                  }}>
+                    {importBusy ? 'Adding…' : `Add ${proposed.filter(b => b.keep).length} blocks to your library`}
+                  </button>
+                  <button onClick={() => setProposed(null)} style={{
+                    fontFamily: UI, fontWeight: 500, fontSize: 13.5, color: T.textSecondary,
+                    background: 'transparent', border: 'none', padding: '9px 12px', cursor: 'pointer',
+                  }}>
+                    Back
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
 
         {/* Editor */}
         {editorOpen && (

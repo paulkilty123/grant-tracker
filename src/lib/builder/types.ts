@@ -41,7 +41,7 @@ export interface CoreContentBlock {
   block_type: BlockType
   title: string
   content: string
-  source: 'user_entered' | 'banked_from_application' | 'extracted_from_profile'
+  source: 'user_entered' | 'banked_from_application' | 'extracted_from_profile' | 'imported_from_application'
   created_at: string
   updated_at: string
 }
@@ -91,6 +91,8 @@ export interface ApplicationRecord {
   status: ApplicationStatus
   questions: ApplicationQuestion[]
   eligibility_result: EligibilitySnapshot | null
+  supplied_guidelines?: string | null
+  supplied_guidelines_source?: 'pasted' | 'url' | null
   created_at: string
   updated_at: string
 }
@@ -143,3 +145,27 @@ export const GenerationResultSchema = z.object({
 })
 export type GeneratedQuestion = z.infer<typeof GeneratedQuestionSchema>
 export type GenerationResult = z.infer<typeof GenerationResultSchema>
+
+// Import step (Haiku): a previous application → proposed verbatim blocks.
+export const ImportProposalSchema = z.object({
+  blocks: z.array(z.object({
+    block_type: z.enum(BLOCK_TYPES),
+    title: z.string().min(1),
+    content: z.string().min(1),
+  })).min(1),
+})
+export type ImportProposal = z.infer<typeof ImportProposalSchema>
+
+// ── Outline / EOI mode ───────────────────────────────────────────────────────
+// Standard funding-proposal sections, used when there are no questions to
+// paste (portal-gated forms, EOI-first funders, letter-style applications).
+// Descended from the Phase 0 spike's DEFAULT_PROPOSAL_SECTIONS.
+
+export const OUTLINE_TEMPLATE: { question_text: string; word_limit: number | null }[] = [
+  { question_text: 'About your organisation: who you are, your mission, and the work you do', word_limit: 300 },
+  { question_text: 'The need: the problem your work addresses, with evidence', word_limit: 300 },
+  { question_text: 'Your project: what you will do, who it is for, and over what period', word_limit: 500 },
+  { question_text: 'Outcomes: the difference it will make and how you will know', word_limit: 300 },
+  { question_text: 'Budget: what the funding would be spent on', word_limit: 250 },
+  { question_text: 'Why this funder: how the work fits their priorities', word_limit: 200 },
+]
