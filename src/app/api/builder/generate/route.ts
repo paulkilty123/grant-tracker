@@ -49,8 +49,9 @@ THE RULES, in priority order:
 - NEVER FABRICATE. Use only the supplied organisation content and profile. If their material does not cover something, that is a GAP — flag it, never fill it. Do not invent numbers, partners, outcomes, or history.
 - SCAFFOLD, NOT PROSE. Output structure, guidance and mapped excerpts. If you find yourself writing flowing sentences in the organisation's voice, stop — that is their job.
 - FUNDER-TUNED. Where funder context states priorities, exclusions or emphasis, say specifically how to angle each answer to this funder, and name the catalogue field it came from (e.g. "the funder's priorities field says...") so the claim stays auditable. Do not invent funder preferences beyond the supplied context.
+- KEEP GUIDANCE SHORT. Each scaffold section's guidance is at most two crisp sentences, written as instructions ("Name your primary beneficiaries. Add one sentence on why support is needed now, around 60 words."). No paragraphs.
 - Respect word limits in your guidance: tell the user roughly how to budget the words across sections.
-- British English. Sentence case. No em dashes. No buzzwords.
+- British English. Sentence case. NEVER use an em dash anywhere in any output; use a comma, colon, or full stop instead. No buzzwords.
 
 OUTPUT: a single JSON object, no markdown fences, exactly this shape:
 {"questions":[{"question_text":"<verbatim>","scaffold":[{"heading":"...","guidance":"...","suggested_order":1}],"mapped_content":[{"block_id":"<id or 'profile'>","block_type":"...","excerpt":"<their words, verbatim>","relevance_note":"..."}],"gaps":[{"gap_type":"...","description":"...","severity":"blocking|weakens"}]}]}
@@ -270,7 +271,10 @@ export async function POST(req: NextRequest) {
         }
         let validated: { questions: GeneratedQuestion[] } | null = null
         try {
-          const parsed = JSON.parse(cleaned)
+          // Hard design rule: no em dashes in product copy, enforced
+          // deterministically on the model output rather than trusted to
+          // the prompt.
+          const parsed = JSON.parse(cleaned.replace(/\s*—\s*/g, ', '))
           const result = GenerationResultSchema.safeParse(parsed)
           if (result.success) validated = result.data
         } catch { /* handled below */ }

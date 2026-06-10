@@ -526,6 +526,18 @@ export default function ApplicationWorkspacePage() {
           </p>
         </div>
         <div style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap' }}>
+          <a
+            href={`/api/builder/export?application_id=${app.id}`}
+            download
+            title="Download a Word-compatible working document with your answers, the guides and the open gaps, ready to edit and share"
+            style={{
+              fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textPrimary,
+              background: T.white, border: `1px solid ${T.textPrimary}`, padding: '8px 14px',
+              borderRadius: 8, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6,
+            }}
+          >
+            <FileText size={14} /> Download working doc
+          </a>
           <button onClick={() => setImportOpen(true)} style={{
             fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textPrimary,
             background: T.white, border: `1px solid ${T.textPrimary}`, padding: '8px 14px',
@@ -905,6 +917,8 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, voicePrompt
   onDraft: () => void
 }) {
   const [collapsed, setCollapsed] = useState(false)
+  const [activeTab, setActiveTab] = useState<'guide' | 'material' | 'gaps'>('guide')
+  const [expandedStep, setExpandedStep] = useState<number | null>(0)
   const words = wordCount(q.user_answer)
   const limit = q.word_limit
   const overLimit = limit !== null && words > limit
@@ -913,6 +927,9 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, voicePrompt
   const openGaps = q.gaps.filter(g => !g.dismissed)
   const hasScaffold = !!q.scaffold && q.scaffold.length > 0
   const placeholders = placeholderCount(q.user_answer)
+  const sortedScaffold = hasScaffold
+    ? q.scaffold!.slice().sort((a, b) => a.suggested_order - b.suggested_order)
+    : []
 
   return (
     <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, overflow: 'hidden' }}>
@@ -952,85 +969,8 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, voicePrompt
       </button>
 
       {!collapsed && (
-        <div style={{
-          display: 'grid', gap: 0,
-          gridTemplateColumns: hasScaffold ? 'minmax(0, 5fr) minmax(0, 6fr)' : '1fr',
-          borderTop: `1px solid ${T.border}`,
-        }}>
-          {/* Left: scaffold + mapped + gaps */}
-          {hasScaffold && (
-            <div style={{ padding: '16px 20px', borderRight: `1px solid ${T.border}`, background: '#FBFDF7' }}>
-              <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.greenMid, marginBottom: 10 }}>
-                What a strong answer covers
-              </div>
-              <ol style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {q.scaffold!.slice().sort((a, b) => a.suggested_order - b.suggested_order).map((s, i) => (
-                  <li key={i} style={{ fontFamily: BODY, fontSize: 13, color: T.textPrimary, lineHeight: 1.5 }}>
-                    <span style={{ fontFamily: UI, fontWeight: 600 }}>{s.heading}.</span>{' '}
-                    <span style={{ color: T.textSecondary }}>{s.guidance}</span>
-                  </li>
-                ))}
-              </ol>
-
-              {q.mapped_content.length > 0 && (
-                <>
-                  <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.greenMid, margin: '16px 0 8px' }}>
-                    Your content, ready to use
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {q.mapped_content.map((m, i) => (
-                      <div key={i} style={{ background: T.paleGreen, borderRadius: 8, padding: '10px 12px' }}>
-                        <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.textPrimary, margin: '0 0 4px', lineHeight: 1.5, fontStyle: 'italic' }}>
-                          &ldquo;{m.excerpt}&rdquo;
-                        </p>
-                        <span style={{ fontFamily: UI, fontSize: 11, color: T.sage }}>{m.relevance_note}</span>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
-
-              {q.gaps.length > 0 && (
-                <>
-                  <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: openGaps.some(g => g.severity === 'blocking') ? T.coral : T.amberText, margin: '16px 0 8px' }}>
-                    What&apos;s missing
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    {q.gaps.map((g, i) => (
-                      <button
-                        key={i}
-                        onClick={() => onToggleGap(i)}
-                        style={{
-                          display: 'flex', alignItems: 'flex-start', gap: 8, textAlign: 'left',
-                          background: 'transparent', border: 'none', cursor: 'pointer', padding: '2px 0',
-                          opacity: g.dismissed ? 0.45 : 1,
-                        }}
-                        title={g.dismissed ? 'Restore' : 'Tick off'}
-                      >
-                        <span style={{
-                          width: 15, height: 15, borderRadius: 4, flexShrink: 0, marginTop: 2,
-                          border: `1.5px solid ${g.severity === 'blocking' ? T.coral : T.amberText}`,
-                          background: g.dismissed ? (g.severity === 'blocking' ? T.coral : T.amberText) : 'transparent',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        }}>
-                          {g.dismissed && <Check size={11} color="#fff" />}
-                        </span>
-                        <span style={{
-                          fontFamily: BODY, fontSize: 12.5, lineHeight: 1.5,
-                          color: g.severity === 'blocking' ? T.coralText : T.textSecondary,
-                          textDecoration: g.dismissed ? 'line-through' : 'none',
-                        }}>
-                          {g.description}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-
-          {/* Right: the user's answer */}
+        <div style={{ borderTop: `1px solid ${T.border}` }}>
+          {/* Answer first: full-width editor, the writing is the hero */}
           <div style={{ padding: '16px 20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, gap: 8, flexWrap: 'wrap' }}>
               <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.textSecondary }}>
@@ -1051,7 +991,7 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, voicePrompt
             <textarea
               value={q.user_answer}
               onChange={e => onAnswerChange(e.target.value)}
-              rows={hasScaffold ? 12 : 5}
+              rows={hasScaffold ? 8 : 5}
               readOnly={drafting}
               placeholder={hasScaffold ? 'Write in your own voice, or draft a starting version below.' : 'Build the scaffolds first, or just start writing.'}
               style={{
@@ -1111,6 +1051,141 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, voicePrompt
               </div>
             )}
           </div>
+
+          {/* Guidance below the writing: Guide / Your material / Gaps tabs */}
+          {hasScaffold && (
+            <div style={{ borderTop: `1px solid ${T.border}`, background: '#FBFDF7' }}>
+              <div style={{ display: 'flex', gap: 2, padding: '10px 20px 0' }}>
+                {([
+                  { key: 'guide' as const,    label: 'Guide',         count: null },
+                  { key: 'material' as const, label: 'Your material', count: q.mapped_content.length || null },
+                  { key: 'gaps' as const,     label: 'Gaps',          count: openGaps.length || null },
+                ]).map(tab => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setActiveTab(tab.key)}
+                    style={{
+                      fontFamily: UI, fontWeight: 600, fontSize: 12.5,
+                      color: activeTab === tab.key ? T.greenDeep : T.textTertiary,
+                      background: activeTab === tab.key ? T.white : 'transparent',
+                      border: activeTab === tab.key ? `1px solid ${T.border}` : '1px solid transparent',
+                      borderBottom: activeTab === tab.key ? `1px solid ${T.white}` : '1px solid transparent',
+                      borderRadius: '8px 8px 0 0', padding: '7px 14px', cursor: 'pointer',
+                      display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: -1,
+                    }}
+                  >
+                    {tab.label}
+                    {tab.count !== null && (
+                      <span style={{
+                        fontFamily: UI, fontWeight: 700, fontSize: 10,
+                        color: tab.key === 'gaps' ? T.amberText : T.greenText,
+                        background: tab.key === 'gaps' ? T.amberBg : T.greenBg,
+                        padding: '1px 7px', borderRadius: 999,
+                      }}>
+                        {tab.count}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+              <div style={{ background: T.white, borderTop: `1px solid ${T.border}`, padding: '14px 20px 16px' }}>
+
+                {activeTab === 'guide' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    {sortedScaffold.map((s, i) => (
+                      <div key={i}>
+                        <button
+                          onClick={() => setExpandedStep(expandedStep === i ? null : i)}
+                          aria-expanded={expandedStep === i}
+                          style={{
+                            width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 9,
+                            background: 'transparent', border: 'none', cursor: 'pointer', padding: '5px 0',
+                          }}
+                        >
+                          <span style={{
+                            fontFamily: UI, fontWeight: 700, fontSize: 11, color: T.sage,
+                            background: T.paleGreen, width: 20, height: 20, borderRadius: 999,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                          }}>
+                            {i + 1}
+                          </span>
+                          <span style={{ flex: 1, fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textPrimary }}>
+                            {s.heading}
+                          </span>
+                          <ChevronDown size={13} color={T.textTertiary}
+                            style={{ transform: expandedStep === i ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 140ms ease' }} />
+                        </button>
+                        {expandedStep === i && (
+                          <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary, margin: '2px 0 6px 29px', lineHeight: 1.55 }}>
+                            {s.guidance}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {activeTab === 'material' && (
+                  q.mapped_content.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {q.mapped_content.map((m, i) => (
+                        <div key={i} style={{ background: T.paleGreen, borderRadius: 8, padding: '10px 12px' }}>
+                          <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.textPrimary, margin: '0 0 4px', lineHeight: 1.5, fontStyle: 'italic' }}>
+                            &ldquo;{m.excerpt}&rdquo;
+                          </p>
+                          <span style={{ fontFamily: UI, fontSize: 11, color: T.sage }}>{m.relevance_note}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.textTertiary, margin: 0 }}>
+                      Nothing from your library maps to this question yet. Import a past application
+                      or add blocks to your reusable content, then rebuild the scaffolds.
+                    </p>
+                  )
+                )}
+
+                {activeTab === 'gaps' && (
+                  q.gaps.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {q.gaps.map((g, i) => (
+                        <button
+                          key={i}
+                          onClick={() => onToggleGap(i)}
+                          style={{
+                            display: 'flex', alignItems: 'flex-start', gap: 8, textAlign: 'left',
+                            background: 'transparent', border: 'none', cursor: 'pointer', padding: '2px 0',
+                            opacity: g.dismissed ? 0.45 : 1,
+                          }}
+                          title={g.dismissed ? 'Restore' : 'Tick off'}
+                        >
+                          <span style={{
+                            width: 15, height: 15, borderRadius: 4, flexShrink: 0, marginTop: 2,
+                            border: `1.5px solid ${g.severity === 'blocking' ? T.coral : T.amberText}`,
+                            background: g.dismissed ? (g.severity === 'blocking' ? T.coral : T.amberText) : 'transparent',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          }}>
+                            {g.dismissed && <Check size={11} color="#fff" />}
+                          </span>
+                          <span style={{
+                            fontFamily: BODY, fontSize: 12.5, lineHeight: 1.5,
+                            color: g.severity === 'blocking' ? T.coralText : T.textSecondary,
+                            textDecoration: g.dismissed ? 'line-through' : 'none',
+                          }}>
+                            {g.description}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.textTertiary, margin: 0 }}>
+                      No gaps flagged for this question.
+                    </p>
+                  )
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -30,7 +30,7 @@ THE RULES, in priority order:
 1. THEIR SENTENCES FIRST. Reuse sentences and phrases from the organisation's content blocks and profile wherever they fit, lightly adapted for flow. Match the register of their own writing. The more of the draft that is literally their words, the better.
 2. NEVER FABRICATE. No invented numbers, partners, outcomes, names, or history. If their material does not cover something the answer needs, insert a visible placeholder in square brackets: [ADD: one sentence on X, in your words]. Placeholders are the honest seams of the draft.
 3. DELIBERATELY UNFINISHED. Draft to roughly 70-80% of the word limit; the remaining space belongs to the user. Do not polish the draft into something submission-ready.
-4. PLAIN REGISTER. UK English, sentence case, direct and warm. Banned: transformative, empower, journey, passionate, vibrant, innovative solutions, making a difference, and any phrase that smells of machine writing. Funders now screen that out.
+4. PLAIN REGISTER. UK English, sentence case, direct and warm. NEVER use an em dash anywhere; use a comma, colon, or full stop instead. Banned: transformative, empower, journey, passionate, vibrant, innovative solutions, making a difference, and any phrase that smells of machine writing. Funders now screen that out.
 5. ANSWER THE QUESTION. Use the scaffold's structure where one is supplied. Respect what the funder context says this funder weights.
 
 OUTPUT FORMAT:
@@ -207,7 +207,9 @@ ${funderContext ? `THE FUNDER (verified catalogue entry)\n${funderContext}\n` : 
           }
         }
 
-        // Split the draft from the voice prompts.
+        // Split the draft from the voice prompts. Em dashes scrubbed
+        // deterministically (hard design rule, not trusted to the prompt).
+        fullText = fullText.replace(/\s*—\s*/g, ', ')
         const markerIdx = fullText.indexOf(VOICE_MARKER)
         const draft = (markerIdx === -1 ? fullText : fullText.slice(0, markerIdx)).trim()
         let voicePrompts: string[] = []
