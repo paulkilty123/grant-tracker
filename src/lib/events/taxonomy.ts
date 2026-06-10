@@ -110,6 +110,16 @@ export interface EventPayloads {
     method: 'pasted' | 'url'
     char_count: number
   }
+  /** v0.x — per-answer review: score out of 10 + improvement tips. */
+  builder_answer_reviewed: {
+    application_id: string
+    question_id: string
+    score: number
+    model: string
+    input_tokens: number
+    output_tokens: number
+    duration_ms: number
+  }
   data_exported: {
     export_type: string
   }
@@ -135,6 +145,7 @@ export const EVENT_TYPES = [
   'builder_answer_drafted',
   'builder_content_imported',
   'builder_guidelines_added',
+  'builder_answer_reviewed',
   'data_exported',
 ] as const satisfies readonly EventType[]
 
@@ -163,6 +174,7 @@ const REQUIRED_KEYS: Record<EventType, Record<string, Kind>> = {
   builder_answer_drafted:      { application_id: 'string', question_id: 'string', model: 'string', input_tokens: 'number', output_tokens: 'number', duration_ms: 'number' },
   builder_content_imported:    { method: 'string', block_count: 'number', block_types: 'string[]' },
   builder_guidelines_added:    { application_id: 'string', method: 'string', char_count: 'number' },
+  builder_answer_reviewed:     { application_id: 'string', question_id: 'string', score: 'number', model: 'string', input_tokens: 'number', output_tokens: 'number', duration_ms: 'number' },
   data_exported:               { export_type: 'string' },
 }
 

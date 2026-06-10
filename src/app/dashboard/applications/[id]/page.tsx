@@ -18,9 +18,10 @@ import { emitClientEvent } from '@/lib/events/client'
 import ImportApplicationModal from '@/components/builder/ImportApplicationModal'
 import { T, UI, BODY, inputStyle, primaryBtn, ghostBtn } from '@/components/builder/tokens'
 import {
-  BLOCK_TYPES, BLOCK_TYPE_LABELS,
-  type ApplicationQuestion, type ApplicationRecord, type BlockType, type EligibilitySnapshot,
+  BLOCK_TYPES, BLOCK_TYPE_LABELS, answerHash,
+  type ApplicationQuestion, type ApplicationRecord, type AnswerReview, type BlockType, type EligibilitySnapshot,
 } from '@/lib/builder/types'
+import { useIsMobile } from '@/hooks/useIsMobile'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -123,6 +124,12 @@ export default function ApplicationWorkspacePage() {
   // Guided drafts (one at a time) + per-question voice prompts (session-only)
   const [draftingQid, setDraftingQid] = useState<string | null>(null)
   const [voicePrompts, setVoicePrompts] = useState<Record<string, string[]>>({})
+
+  // Per-answer checks (score + tips)
+  const [reviewingQid, setReviewingQid] = useState<string | null>(null)
+
+  // Library grew after scaffolds were built → suggest a rebuild
+  const [importedSinceBuild, setImportedSinceBuild] = useState(false)
 
   // Import a past application — same modal as the profile content bank
   const [importOpen, setImportOpen] = useState(false)
@@ -239,6 +246,27 @@ export default function ApplicationWorkspacePage() {
     }
   }
 
+  // ── Per-answer check: score out of 10 + tips to improve ──
+  async function reviewAnswer(q: ApplicationQuestion) {
+    if (!app || reviewingQid) return
+    if (!q.user_answer.trim()) { showToast('Write the answer first'); return }
+    setReviewingQid(q.id)
+    try {
+      const res = await fetch('/api/builder/review', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ application_id: app.id, question_id: q.id }),
+      })
+      const data = await res.json()
+      if (!res.ok) { showToast(data?.error ?? 'Check failed, please try again'); return }
+      updateQuestion(q.id, { review: data as AnswerReview })
+    } catch {
+      showToast('Check failed, please try again')
+    } finally {
+      setReviewingQid(null)
+    }
+  }
+
   // ── Guided draft: composition from their blocks, streamed into the editor ──
   async function draftAnswer(q: ApplicationQuestion) {
     if (!app || draftingQid) return
@@ -328,6 +356,7 @@ export default function ApplicationWorkspacePage() {
     setGenerating(true)
     setGenError(null)
     setStreamedCount(0)
+    setImportedSinceBuild(false)
     try {
       const res = await fetch('/api/builder/generate', {
         method: 'POST',
@@ -344,7 +373,11 @@ export default function ApplicationWorkspacePage() {
       const reader = res.body.getReader()
       const decoder = new TextDecoder()
       let lineBuffer = ''
-      let modelText = ''
+      // Chunked parallel generation: deltas are tagged with a chunk index;
+      // the plan event gives each chunk's question count so chunk-local
+      // positions map to global ones.
+      const chunkBuffers: string[] = ['']
+      let chunkOffsets: number[] = [0]
       for (;;) {
         const { done, value } = await reader.read()
         if (done) break
@@ -353,20 +386,33 @@ export default function ApplicationWorkspacePage() {
         lineBuffer = lines.pop() ?? ''
         for (const line of lines) {
           if (!line.trim()) continue
-          let evt: { t: string; text?: string; message?: string; questions?: ApplicationQuestion[] }
+          let evt: { t: string; c?: number; chunks?: number[]; text?: string; message?: string; questions?: ApplicationQuestion[] }
           try { evt = JSON.parse(line) } catch { continue }
-          if (evt.t === 'delta' && evt.text) {
-            modelText += evt.text
+          if (evt.t === 'plan' && Array.isArray(evt.chunks)) {
+            chunkOffsets = []
+            let acc = 0
+            for (const n of evt.chunks) { chunkOffsets.push(acc); acc += n }
+            while (chunkBuffers.length < evt.chunks.length) chunkBuffers.push('')
+          } else if (evt.t === 'delta' && evt.text) {
+            const c = evt.c ?? 0
+            while (chunkBuffers.length <= c) chunkBuffers.push('')
+            chunkBuffers[c] += evt.text
             // Progressive render: merge each COMPLETED question's scaffold
-            // onto its card the moment it finishes streaming — the first
-            // card is readable while the rest are still generating.
-            const completed = extractStreamedQuestions(modelText)
-            if (completed.length > 0) {
-              setStreamedCount(completed.length)
+            // onto its card the moment it finishes streaming, regardless of
+            // which parallel chunk it came from.
+            const completedByGlobal = new Map<number, StreamedQuestion>()
+            chunkBuffers.forEach((buf, ci) => {
+              const completed = extractStreamedQuestions(buf)
+              completed.forEach((gen, qi) => {
+                completedByGlobal.set((chunkOffsets[ci] ?? 0) + qi, gen)
+              })
+            })
+            if (completedByGlobal.size > 0) {
+              setStreamedCount(completedByGlobal.size)
               setApp(prev => {
                 if (!prev) return prev
                 const questions = prev.questions.map((q, i) => {
-                  const gen = completed[i]
+                  const gen = completedByGlobal.get(i)
                   if (!gen || !gen.scaffold || q.scaffold) return q
                   return {
                     ...q,
@@ -811,6 +857,22 @@ export default function ApplicationWorkspacePage() {
         </div>
       )}
 
+      {/* ── Rebuild nudge: library grew after scaffolds were built ── */}
+      {importedSinceBuild && hasScaffolds && !generating && (
+        <div style={{ background: T.paleGreen, borderRadius: 12, padding: '12px 18px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <Sparkles size={15} color={T.greenMid} style={{ flexShrink: 0 }} />
+          <span style={{ flex: 1, fontFamily: BODY, fontSize: 13, color: T.sage, minWidth: 200 }}>
+            Your library grew since these scaffolds were built. Rebuild them to map your new material in.
+          </span>
+          <button onClick={generate} style={{
+            fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.greenDeep,
+            background: T.lime, border: 'none', padding: '7px 14px', borderRadius: 8, cursor: 'pointer',
+          }}>
+            Rebuild the scaffolds
+          </button>
+        </div>
+      )}
+
       {/* ── Question cards ── */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         {app.questions.map((q, idx) => (
@@ -820,6 +882,7 @@ export default function ApplicationWorkspacePage() {
             question={q}
             drafting={draftingQid === q.id}
             draftDisabled={draftingQid !== null}
+            reviewing={reviewingQid === q.id}
             voicePrompts={voicePrompts[q.id] ?? []}
             onAnswerChange={text => updateQuestion(q.id, { user_answer: text })}
             onToggleGap={gapIdx => {
@@ -828,6 +891,7 @@ export default function ApplicationWorkspacePage() {
             }}
             onBank={() => openBank(q)}
             onDraft={() => draftAnswer(q)}
+            onReview={() => reviewAnswer(q)}
           />
         ))}
       </div>
@@ -884,6 +948,7 @@ export default function ApplicationWorkspacePage() {
           onClose={() => setImportOpen(false)}
           onImported={count => {
             setBlockCount(prev => (prev ?? 0) + count)
+            if (hasScaffolds) setImportedSinceBuild(true)
             showToast(`${count} ${count === 1 ? 'block' : 'blocks'} added to your library`)
           }}
         />
@@ -905,19 +970,51 @@ export default function ApplicationWorkspacePage() {
 
 // ── Question card ────────────────────────────────────────────────────────────
 
-function QuestionCard({ index, question: q, drafting, draftDisabled, voicePrompts, onAnswerChange, onToggleGap, onBank, onDraft }: {
+// Score ring: 0-10 visual, colour-coded, dimmed when the answer changed
+// since it was checked.
+function ScoreRing({ score, stale }: { score: number | null; stale: boolean }) {
+  const r = 20
+  const circ = 2 * Math.PI * r
+  const frac = score === null ? 0 : Math.max(0, Math.min(1, score / 10))
+  const colour = score === null ? 'rgba(0,0,0,0.1)'
+    : score < 5 ? T.coral
+    : score < 7 ? '#BA7517'
+    : score < 8.5 ? T.greenMid
+    : T.lime
+  return (
+    <svg width={52} height={52} viewBox="0 0 52 52" style={{ opacity: stale ? 0.45 : 1, flexShrink: 0 }}>
+      <circle cx={26} cy={26} r={r} fill="none" stroke={T.cream} strokeWidth={5} />
+      <circle
+        cx={26} cy={26} r={r} fill="none" stroke={colour} strokeWidth={5}
+        strokeLinecap="round"
+        strokeDasharray={`${circ * frac} ${circ}`}
+        transform="rotate(-90 26 26)"
+        style={{ transition: 'stroke-dasharray 500ms ease' }}
+      />
+      <text x={26} y={27} textAnchor="middle" dominantBaseline="middle"
+        style={{ fontFamily: UI, fontWeight: 700, fontSize: score === null ? 15 : 13.5, fill: score === null ? T.textTertiary : T.textPrimary }}>
+        {score === null ? '?' : score % 1 === 0 ? score : score.toFixed(1)}
+      </text>
+    </svg>
+  )
+}
+
+function QuestionCard({ index, question: q, drafting, draftDisabled, reviewing, voicePrompts, onAnswerChange, onToggleGap, onBank, onDraft, onReview }: {
   index: number
   question: ApplicationQuestion
   drafting: boolean
   draftDisabled: boolean
+  reviewing: boolean
   voicePrompts: string[]
   onAnswerChange: (text: string) => void
   onToggleGap: (gapIdx: number) => void
   onBank: () => void
   onDraft: () => void
+  onReview: () => void
 }) {
+  const isMobile = useIsMobile()
   const [collapsed, setCollapsed] = useState(false)
-  const [activeTab, setActiveTab] = useState<'guide' | 'material' | 'gaps'>('guide')
+  const [activeTab, setActiveTab] = useState<'guide' | 'material'>('guide')
   const [expandedStep, setExpandedStep] = useState<number | null>(0)
   const words = wordCount(q.user_answer)
   const limit = q.word_limit
@@ -930,6 +1027,9 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, voicePrompt
   const sortedScaffold = hasScaffold
     ? q.scaffold!.slice().sort((a, b) => a.suggested_order - b.suggested_order)
     : []
+  const review = q.review ?? null
+  const reviewStale = !!review && answerHash(q.user_answer) !== review.answer_hash
+  const showRail = hasScaffold || q.gaps.length > 0 || !!review
 
   return (
     <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, overflow: 'hidden' }}>
@@ -970,7 +1070,12 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, voicePrompt
 
       {!collapsed && (
         <div style={{ borderTop: `1px solid ${T.border}` }}>
-          {/* Answer first: full-width editor, the writing is the hero */}
+          {/* Answer first: the editor is the hero; tips to improve sit beside it */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: showRail && !isMobile ? 'minmax(0, 1fr) 250px' : '1fr',
+            gap: 0,
+          }}>
           <div style={{ padding: '16px 20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, gap: 8, flexWrap: 'wrap' }}>
               <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.textSecondary }}>
@@ -1052,6 +1157,124 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, voicePrompt
             )}
           </div>
 
+          {/* Tips to improve rail: score + tips + gaps in one place */}
+          {showRail && (
+            <div style={{
+              padding: '16px 18px',
+              borderLeft: isMobile ? 'none' : `1px solid ${T.border}`,
+              borderTop: isMobile ? `1px solid ${T.border}` : 'none',
+              background: '#FBFDF7',
+            }}>
+              <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.greenMid, marginBottom: 10 }}>
+                Tips to improve
+              </div>
+
+              {/* Score + check action */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                <ScoreRing score={review ? review.score : null} stale={reviewStale} />
+                <div style={{ minWidth: 0 }}>
+                  {review && !reviewStale && (
+                    <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 12, color: T.textSecondary, display: 'block' }}>
+                      out of 10
+                    </span>
+                  )}
+                  {reviewStale && (
+                    <span style={{ fontFamily: BODY, fontSize: 11.5, color: T.textTertiary, display: 'block', lineHeight: 1.4 }}>
+                      Answer changed since this check
+                    </span>
+                  )}
+                  <button
+                    onClick={onReview}
+                    disabled={reviewing || !q.user_answer.trim()}
+                    style={{
+                      fontFamily: UI, fontWeight: 600, fontSize: 12, marginTop: 3,
+                      color: !q.user_answer.trim() ? T.textTertiary : T.sage,
+                      background: 'transparent', border: 'none', padding: 0,
+                      cursor: reviewing || !q.user_answer.trim() ? 'default' : 'pointer',
+                      textAlign: 'left',
+                    }}
+                  >
+                    {reviewing ? 'Checking…' : review ? 'Check again' : 'Check this answer'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Strengths + tips from the last check */}
+              {review && review.strengths.length > 0 && (
+                <div style={{ marginBottom: 10 }}>
+                  {review.strengths.map((s, i) => (
+                    <div key={i} style={{ display: 'flex', gap: 7, alignItems: 'flex-start', marginBottom: 4 }}>
+                      <CheckCircle2 size={13} color={T.greenMid} style={{ flexShrink: 0, marginTop: 2 }} />
+                      <span style={{ fontFamily: BODY, fontSize: 12, color: T.sage, lineHeight: 1.5 }}>{s}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {review && review.tips.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginBottom: q.gaps.length > 0 ? 14 : 0 }}>
+                  {review.tips.map((tip, i) => (
+                    <div key={i} style={{ display: 'flex', gap: 7, alignItems: 'flex-start' }}>
+                      <span style={{
+                        fontFamily: UI, fontWeight: 700, fontSize: 9.5, color: T.amberText,
+                        background: T.amberBg, width: 16, height: 16, borderRadius: 999,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2,
+                      }}>
+                        {i + 1}
+                      </span>
+                      <span style={{ fontFamily: BODY, fontSize: 12, color: T.textSecondary, lineHeight: 1.5 }}>{tip}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {!review && (
+                <p style={{ fontFamily: BODY, fontSize: 11.5, color: T.textTertiary, margin: '0 0 12px', lineHeight: 1.5 }}>
+                  Checks your answer against the funder&apos;s priorities and scores it, with the
+                  changes that would lift it.
+                </p>
+              )}
+
+              {/* Open gaps, tickable */}
+              {q.gaps.length > 0 && (
+                <>
+                  <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: openGaps.some(g => g.severity === 'blocking') ? T.coral : T.amberText, marginBottom: 7 }}>
+                    Gaps
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                    {q.gaps.map((g, i) => (
+                      <button
+                        key={i}
+                        onClick={() => onToggleGap(i)}
+                        style={{
+                          display: 'flex', alignItems: 'flex-start', gap: 7, textAlign: 'left',
+                          background: 'transparent', border: 'none', cursor: 'pointer', padding: '1px 0',
+                          opacity: g.dismissed ? 0.45 : 1,
+                        }}
+                        title={g.dismissed ? 'Restore' : 'Tick off'}
+                      >
+                        <span style={{
+                          width: 14, height: 14, borderRadius: 4, flexShrink: 0, marginTop: 2,
+                          border: `1.5px solid ${g.severity === 'blocking' ? T.coral : T.amberText}`,
+                          background: g.dismissed ? (g.severity === 'blocking' ? T.coral : T.amberText) : 'transparent',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}>
+                          {g.dismissed && <Check size={10} color="#fff" />}
+                        </span>
+                        <span style={{
+                          fontFamily: BODY, fontSize: 11.5, lineHeight: 1.45,
+                          color: g.severity === 'blocking' ? T.coralText : T.textSecondary,
+                          textDecoration: g.dismissed ? 'line-through' : 'none',
+                        }}>
+                          {g.description}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+          </div>
+
           {/* Guidance below the writing: Guide / Your material / Gaps tabs */}
           {hasScaffold && (
             <div style={{ borderTop: `1px solid ${T.border}`, background: '#FBFDF7' }}>
@@ -1059,7 +1282,6 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, voicePrompt
                 {([
                   { key: 'guide' as const,    label: 'Guide',         count: null },
                   { key: 'material' as const, label: 'Your material', count: q.mapped_content.length || null },
-                  { key: 'gaps' as const,     label: 'Gaps',          count: openGaps.length || null },
                 ]).map(tab => (
                   <button
                     key={tab.key}
@@ -1078,8 +1300,7 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, voicePrompt
                     {tab.count !== null && (
                       <span style={{
                         fontFamily: UI, fontWeight: 700, fontSize: 10,
-                        color: tab.key === 'gaps' ? T.amberText : T.greenText,
-                        background: tab.key === 'gaps' ? T.amberBg : T.greenBg,
+                        color: T.greenText, background: T.greenBg,
                         padding: '1px 7px', borderRadius: 999,
                       }}>
                         {tab.count}
@@ -1145,44 +1366,6 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, voicePrompt
                   )
                 )}
 
-                {activeTab === 'gaps' && (
-                  q.gaps.length > 0 ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      {q.gaps.map((g, i) => (
-                        <button
-                          key={i}
-                          onClick={() => onToggleGap(i)}
-                          style={{
-                            display: 'flex', alignItems: 'flex-start', gap: 8, textAlign: 'left',
-                            background: 'transparent', border: 'none', cursor: 'pointer', padding: '2px 0',
-                            opacity: g.dismissed ? 0.45 : 1,
-                          }}
-                          title={g.dismissed ? 'Restore' : 'Tick off'}
-                        >
-                          <span style={{
-                            width: 15, height: 15, borderRadius: 4, flexShrink: 0, marginTop: 2,
-                            border: `1.5px solid ${g.severity === 'blocking' ? T.coral : T.amberText}`,
-                            background: g.dismissed ? (g.severity === 'blocking' ? T.coral : T.amberText) : 'transparent',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          }}>
-                            {g.dismissed && <Check size={11} color="#fff" />}
-                          </span>
-                          <span style={{
-                            fontFamily: BODY, fontSize: 12.5, lineHeight: 1.5,
-                            color: g.severity === 'blocking' ? T.coralText : T.textSecondary,
-                            textDecoration: g.dismissed ? 'line-through' : 'none',
-                          }}>
-                            {g.description}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.textTertiary, margin: 0 }}>
-                      No gaps flagged for this question.
-                    </p>
-                  )
-                )}
               </div>
             </div>
           )}

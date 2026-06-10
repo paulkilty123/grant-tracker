@@ -179,60 +179,68 @@ export async function POST(req: NextRequest) {
   const contentBlocks = (blocks ?? []) as CoreContentBlock[]
 
   const started = Date.now()
+  const suppliedGuidelines = app.supplied_guidelines ? String(app.supplied_guidelines).slice(0, 16000) : ''
 
-  // Anthropic streaming request. The static system prompt and the funder
-  // context carry cache_control so repeated generations hit the prompt cache.
-  const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type':      'application/json',
-      'x-api-key':         apiKey,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model:      GENERATION_MODEL,
-      max_tokens: 16000,
-      stream:     true,
-      system: [
-        { type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } },
-      ],
-      messages: [{
-        role: 'user',
-        content: userPrompt(
-          org as Record<string, unknown>,
-          contentBlocks,
-          funderContext,
-          app.supplied_guidelines ? String(app.supplied_guidelines).slice(0, 16000) : '',
-          questions,
-        ),
-      }],
-    }),
-  })
-
-  if (!anthropicRes.ok || !anthropicRes.body) {
-    const err = await anthropicRes.json().catch(() => ({})) as { error?: { message?: string } }
-    return new Response(
-      JSON.stringify({ t: 'error', message: `Generation failed (${err.error?.message ?? anthropicRes.statusText})` }) + '\n',
-      { status: 502 },
-    )
+  // ── Parallel chunked generation ──
+  // Questions are split into chunks generated CONCURRENTLY, so a 9-question
+  // application takes one chunk's wall-clock (~30s), not three. Deltas are
+  // tagged with the chunk index; the client maps chunk-local question
+  // positions to global ones via the plan event.
+  const CHUNK_SIZE = 4
+  const chunks: ApplicationQuestion[][] = []
+  for (let i = 0; i < questions.length; i += CHUNK_SIZE) {
+    chunks.push(questions.slice(i, i + CHUNK_SIZE))
   }
 
-  const upstream = anthropicRes.body
   const encoder = new TextEncoder()
-  const decoder = new TextDecoder()
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       const send = (event: Record<string, unknown>) =>
         controller.enqueue(encoder.encode(JSON.stringify(event) + '\n'))
 
-      let fullText = ''
-      let inputTokens = 0
-      let outputTokens = 0
-      let sseBuffer = ''
+      send({ t: 'plan', chunks: chunks.map(c => c.length) })
 
-      const reader = upstream.getReader()
-      try {
+      // Stream one chunk's generation, forwarding tagged deltas.
+      async function runChunk(chunkQuestions: ApplicationQuestion[], chunkIdx: number): Promise<{
+        text: string; inputTokens: number; outputTokens: number
+      }> {
+        const res = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type':      'application/json',
+            'x-api-key':         apiKey!,
+            'anthropic-version': '2023-06-01',
+          },
+          body: JSON.stringify({
+            model:      GENERATION_MODEL,
+            max_tokens: 8000,
+            stream:     true,
+            system: [
+              { type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } },
+            ],
+            messages: [{
+              role: 'user',
+              content: userPrompt(
+                org as Record<string, unknown>,
+                contentBlocks,
+                funderContext,
+                suppliedGuidelines,
+                chunkQuestions,
+              ),
+            }],
+          }),
+        })
+        if (!res.ok || !res.body) {
+          const err = await res.json().catch(() => ({})) as { error?: { message?: string } }
+          throw new Error(err.error?.message ?? res.statusText)
+        }
+        const decoder = new TextDecoder()
+        const reader = res.body.getReader()
+        let text = ''
+        let inputTokens = 0
+        let outputTokens = 0
+        let sseBuffer = ''
         for (;;) {
           const { done, value } = await reader.read()
           if (done) break
@@ -252,8 +260,8 @@ export async function POST(req: NextRequest) {
             } else if (type === 'content_block_delta') {
               const delta = (evt.delta as { type?: string; text?: string }) ?? {}
               if (delta.type === 'text_delta' && delta.text) {
-                fullText += delta.text
-                send({ t: 'delta', text: delta.text })
+                text += delta.text
+                send({ t: 'delta', c: chunkIdx, text: delta.text })
               }
             } else if (type === 'message_delta') {
               const usage = (evt.usage as { output_tokens?: number }) ?? {}
@@ -261,34 +269,46 @@ export async function POST(req: NextRequest) {
             }
           }
         }
+        return { text, inputTokens, outputTokens }
+      }
 
-        // ── Validate + persist (stream-then-validate) ──
-        let cleaned = fullText.trim()
-          .replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/, '').trim()
-        if (!cleaned.startsWith('{')) {
-          const match = cleaned.match(/\{[\s\S]*\}/)
-          cleaned = match ? match[0] : cleaned
+      try {
+        const results = await Promise.all(chunks.map((c, i) => runChunk(c, i)))
+
+        // ── Validate each chunk + merge in order (stream-then-validate) ──
+        let inputTokens = 0
+        let outputTokens = 0
+        const allGenerated: (GeneratedQuestion | undefined)[] = []
+        for (const r of results) {
+          inputTokens += r.inputTokens
+          outputTokens += r.outputTokens
+          let cleaned = r.text.trim()
+            .replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/, '').trim()
+          if (!cleaned.startsWith('{')) {
+            const match = cleaned.match(/\{[\s\S]*\}/)
+            cleaned = match ? match[0] : cleaned
+          }
+          let chunkQuestions: GeneratedQuestion[] = []
+          try {
+            // Hard design rule: no em dashes in product copy, enforced
+            // deterministically on the model output.
+            const parsed = JSON.parse(cleaned.replace(/\s*—\s*/g, ', '))
+            const result = GenerationResultSchema.safeParse(parsed)
+            if (result.success) chunkQuestions = result.data.questions
+          } catch { /* chunk failed validation — its questions stay unscaffolded */ }
+          allGenerated.push(...chunkQuestions)
         }
-        let validated: { questions: GeneratedQuestion[] } | null = null
-        try {
-          // Hard design rule: no em dashes in product copy, enforced
-          // deterministically on the model output rather than trusted to
-          // the prompt.
-          const parsed = JSON.parse(cleaned.replace(/\s*—\s*/g, ', '))
-          const result = GenerationResultSchema.safeParse(parsed)
-          if (result.success) validated = result.data
-        } catch { /* handled below */ }
 
-        if (!validated) {
-          send({ t: 'error', message: 'The scaffold came back malformed — try generating again' })
+        if (allGenerated.filter(Boolean).length === 0) {
+          send({ t: 'error', message: 'The scaffold came back malformed. Try generating again' })
           controller.close()
           return
         }
 
         // Merge generated scaffolds onto the stored questions by order
-        // (the model returns them in the order given).
+        // (each chunk returns its questions in the order given).
         const merged: ApplicationQuestion[] = questions.map((q, i) => {
-          const gen = validated!.questions[i]
+          const gen = allGenerated[i]
           if (!gen) return q
           return {
             ...q,

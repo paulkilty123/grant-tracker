@@ -68,6 +68,14 @@ export interface Gap {
   dismissed?: boolean       // user can tick off / dismiss in the workspace
 }
 
+export interface AnswerReview {
+  score: number             // 0-10, one decimal
+  tips: string[]            // ordered by impact, written to the user
+  strengths: string[]
+  reviewed_at: string
+  answer_hash: string       // hash of the answer that was reviewed (staleness)
+}
+
 export interface ApplicationQuestion {
   id: string
   question_text: string
@@ -77,6 +85,15 @@ export interface ApplicationQuestion {
   gaps: Gap[]
   user_answer: string       // theirs, always
   answer_banked: boolean
+  review?: AnswerReview | null
+}
+
+/** Tiny stable hash for staleness checks (djb2). */
+export function answerHash(s: string): string {
+  let h = 5381
+  const t = s.trim()
+  for (let i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0
+  return (h >>> 0).toString(36)
 }
 
 export type ApplicationStatus = 'draft' | 'in_progress' | 'complete'
@@ -145,6 +162,14 @@ export const GenerationResultSchema = z.object({
 })
 export type GeneratedQuestion = z.infer<typeof GeneratedQuestionSchema>
 export type GenerationResult = z.infer<typeof GenerationResultSchema>
+
+// Review step (Sonnet): one answer scored with improvement tips.
+export const ReviewResultSchema = z.object({
+  score: z.number().min(0).max(10),
+  tips: z.array(z.string().min(1)).min(1).max(4),
+  strengths: z.array(z.string()).max(2),
+})
+export type ReviewResult = z.infer<typeof ReviewResultSchema>
 
 // Import step (Haiku): a previous application → proposed verbatim blocks.
 export const ImportProposalSchema = z.object({
