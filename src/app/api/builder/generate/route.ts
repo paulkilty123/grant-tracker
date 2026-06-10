@@ -376,7 +376,7 @@ export async function POST(req: NextRequest) {
           return
         }
         if (failedChunks > 0) {
-          send({ t: 'warning', message: `${failedChunks === 1 ? 'One group of questions' : 'Some questions'} did not build. Use Rebuild the guides to fill them in` })
+          send({ t: 'warning', message: `${failedChunks === 1 ? 'One group of questions' : 'Some questions'} did not build. Use Regenerate question guides to fill them in` })
         }
 
         // ── Capture events (cost instrumentation is first-class) ──

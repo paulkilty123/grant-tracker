@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
   const question = questions.find(q => q.id === body.question_id)
   if (!question) return NextResponse.json({ error: 'Question not found' }, { status: 404 })
   if (!question.user_answer.trim()) {
-    return NextResponse.json({ error: 'Write the answer before saving it to your library' }, { status: 400 })
+    return NextResponse.json({ error: 'Write the answer before saving it to your material' }, { status: 400 })
   }
 
   const title = body.title?.trim()

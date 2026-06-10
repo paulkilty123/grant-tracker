@@ -12,6 +12,47 @@ import { getOrganisationByOwner } from '@/lib/organisations'
 import { T, UI, BODY } from '@/components/builder/tokens'
 import type { ApplicationRecord } from '@/lib/builder/types'
 
+const HOW_IT_WORKS_STEPS = [
+  { title: 'Add the questions', body: 'Paste them from the funder’s form, or import a past application.' },
+  { title: 'Get a guide', body: 'Each question gets a plan: what to cover, and which of your material fits.' },
+  { title: 'Write your answers', body: 'In your own words. We flag gaps, word limits and missing evidence.' },
+  { title: 'Check and submit', body: 'Score each answer, fix what’s flagged, then download and submit on the funder’s portal.' },
+]
+
+function HowItWorks({ withCta }: { withCta?: boolean }) {
+  return (
+    <div style={{ background: T.softGreen, border: `1px solid ${T.border}`, borderRadius: 12, padding: '20px 22px' }}>
+      <p style={{ fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textSecondary, margin: '0 0 14px' }}>
+        How it works
+      </p>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 12 }}>
+        {HOW_IT_WORKS_STEPS.map((s, i) => (
+          <div key={i} style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 10, padding: '13px 15px' }}>
+            <span style={{
+              fontFamily: UI, fontWeight: 700, fontSize: 11, color: T.sage, background: T.paleGreen,
+              width: 22, height: 22, borderRadius: 999, display: 'inline-flex', alignItems: 'center',
+              justifyContent: 'center', marginBottom: 8,
+            }}>
+              {i + 1}
+            </span>
+            <p style={{ fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: T.textPrimary, margin: '0 0 4px' }}>{s.title}</p>
+            <p style={{ fontFamily: BODY, fontSize: 12, color: T.textSecondary, margin: 0, lineHeight: 1.5 }}>{s.body}</p>
+            {withCta && i === 0 && (
+              <Link href="/dashboard/applications/new" style={{
+                fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.greenDeep, background: T.lime,
+                padding: '7px 14px', borderRadius: 8, textDecoration: 'none', display: 'inline-flex',
+                alignItems: 'center', gap: 5, marginTop: 10,
+              }}>
+                <Plus size={13} /> New application
+              </Link>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }> = {
   draft:       { bg: T.cream,      color: T.textSecondary, label: 'Draft' },
   in_progress: { bg: T.paleGreen2, color: T.sage,          label: 'In progress' },
@@ -24,6 +65,7 @@ export default function ApplicationsPage() {
   const [apps, setApps] = useState<ApplicationRecord[]>([])
   const [loaded, setLoaded] = useState(false)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [howOpen, setHowOpen] = useState(false)
 
   async function deleteApplication(id: string) {
     setApps(prev => prev.filter(a => a.id !== id))
@@ -33,7 +75,7 @@ export default function ApplicationsPage() {
   }
 
   useEffect(() => {
-    document.title = 'Applications — Grant Tracker'
+    document.title = 'Applications · Grant Tracker'
     async function load() {
       const access = await fetch('/api/builder/access').then(r => r.json()).catch(() => ({ allowed: false }))
       setAllowed(!!access?.allowed)
@@ -72,7 +114,7 @@ export default function ApplicationsPage() {
   }
 
   return (
-    <div style={{ maxWidth: 860 }}>
+    <div style={{ maxWidth: 860, marginInline: 'auto' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 6 }}>
         <div>
@@ -80,8 +122,7 @@ export default function ApplicationsPage() {
             Applications
           </h1>
           <p style={{ fontFamily: BODY, fontSize: 14, color: T.textSecondary, margin: '6px 0 0', lineHeight: 1.55, maxWidth: 540 }}>
-            Paste a funder&apos;s questions and get a structured guide: what a strong answer covers,
-            your own content mapped in, and the gaps flagged. You write the answers in your voice.
+            Turn a funder&apos;s question list into a guided draft, written in your words.
           </p>
         </div>
         <Link
@@ -111,36 +152,7 @@ export default function ApplicationsPage() {
             <div style={{ height: 5, width: 90, background: T.cream, borderRadius: 999 }} />
           </div>
         ))}
-        {loaded && apps.length === 0 && (
-          <div style={{
-            background: 'linear-gradient(135deg, #FDFCF7 0%, #F8F5EC 100%)',
-            border: `1px solid ${T.border}`, borderRadius: 12, padding: '36px 28px', textAlign: 'center',
-          }}>
-            <div style={{
-              width: 44, height: 44, borderRadius: 12, background: T.paleGreen, color: T.greenMid,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px',
-            }}>
-              <FilePenLine size={20} />
-            </div>
-            <p style={{ fontFamily: UI, fontWeight: 600, fontSize: 16, color: T.textPrimary, margin: '0 0 6px' }}>
-              Start your first application
-            </p>
-            <p style={{ fontFamily: BODY, fontSize: 13.5, color: T.textSecondary, margin: '0 auto 18px', lineHeight: 1.6, maxWidth: 420 }}>
-              The hardest part of any application is the first 10%. Paste the funder&apos;s questions
-              and the builder gives you the structure to write into.
-            </p>
-            <Link
-              href="/dashboard/applications/new"
-              style={{
-                fontFamily: UI, fontWeight: 600, fontSize: 14, color: T.greenDeep,
-                background: T.lime, padding: '10px 22px', borderRadius: 8, textDecoration: 'none',
-                display: 'inline-flex', alignItems: 'center', gap: 7,
-              }}
-            >
-              <Plus size={15} /> New application
-            </Link>
-          </div>
-        )}
+        {loaded && apps.length === 0 && <HowItWorks withCta />}
 
         {apps.map(app => {
           const status = STATUS_STYLE[app.status] ?? STATUS_STYLE.draft
@@ -170,18 +182,24 @@ export default function ApplicationsPage() {
                 </div>
                 <span style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary }}>
                   {app.funder_name && app.grant_name ? `${app.funder_name} · ` : ''}
-                  {total} {total === 1 ? 'question' : 'questions'}
-                  {answered > 0 ? ` · ${answered} of ${total} written` : ''}
+                  {answered > 0
+                    ? `${answered} of ${total} ${total === 1 ? 'question' : 'questions'} written`
+                    : `${total} ${total === 1 ? 'question' : 'questions'}`}
                 </span>
               </div>
               {total > 0 && (
-                <div style={{ width: 90, flexShrink: 0 }}>
-                  <div style={{ height: 5, background: T.cream, borderRadius: 999, overflow: 'hidden' }}>
-                    <div style={{
-                      height: '100%', width: `${Math.round((answered / total) * 100)}%`,
-                      background: T.lime, borderRadius: 999, transition: 'width 200ms ease',
-                    }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
+                  <div style={{ width: 90 }}>
+                    <div style={{ height: 5, background: T.cream, borderRadius: 999, overflow: 'hidden' }}>
+                      <div style={{
+                        height: '100%', width: `${Math.round((answered / total) * 100)}%`,
+                        background: T.lime, borderRadius: 999, transition: 'width 200ms ease',
+                      }} />
+                    </div>
                   </div>
+                  <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 11, color: T.textTertiary, width: 32 }}>
+                    {Math.round((answered / total) * 100)}%
+                  </span>
                 </div>
               )}
               {confirmDeleteId === app.id ? (
@@ -222,6 +240,22 @@ export default function ApplicationsPage() {
             </Link>
           )
         })}
+
+        {/* How it works: full strip for 1-2 applications, collapsed link for 3+ */}
+        {loaded && apps.length > 0 && apps.length <= 2 && <HowItWorks />}
+        {loaded && apps.length >= 3 && (
+          howOpen
+            ? <HowItWorks />
+            : (
+              <button onClick={() => setHowOpen(true)} style={{
+                fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.sage,
+                background: 'transparent', border: 'none', cursor: 'pointer',
+                padding: '6px 0', textAlign: 'left', alignSelf: 'flex-start',
+              }}>
+                How it works
+              </button>
+            )
+        )}
       </div>
     </div>
   )

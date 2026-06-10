@@ -96,7 +96,7 @@ export default function ImportApplicationModal({ orgId, onClose, onImported }: {
             <p style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, margin: '0 0 14px', lineHeight: 1.55 }}>
               Paste the written answers from a past application. They get split into reusable
               blocks, in your words exactly as you wrote them, and you review every block before
-              it is added to your library. Scaffolds and drafts then build from your real material.
+              it is added to your material. Guides and drafts then build from what you really wrote.
             </p>
             <textarea
               value={text}
@@ -173,7 +173,7 @@ export default function ImportApplicationModal({ orgId, onClose, onImported }: {
                 background: T.lime, border: 'none', padding: '9px 18px', borderRadius: 8,
                 cursor: busy ? 'wait' : 'pointer', opacity: busy ? 0.7 : 1,
               }}>
-                {busy ? 'Adding…' : `Add ${proposed.filter(b => b.keep).length} blocks to your library`}
+                {busy ? 'Adding…' : `Add ${proposed.filter(b => b.keep).length} blocks to your material`}
               </button>
               <button onClick={() => setProposed(null)} style={ghostBtn()}>Back</button>
             </div>

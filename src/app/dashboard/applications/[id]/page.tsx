@@ -41,10 +41,21 @@ function answerRows(text: string, min: number): number {
   return Math.min(40, Math.max(min, lines + 1))
 }
 
-/** "no_consultation_evidence" -> "No consultation evidence" */
-function humaniseGapType(t: string): string {
-  const s = t.replace(/_/g, ' ').trim()
-  return s ? s.charAt(0).toUpperCase() + s.slice(1) : 'Gap'
+/** Gap labels: "no_consultation_evidence" -> "Missing: consultation evidence";
+ *  informational *_unavailable types and unclear-comparison types get their
+ *  own patterns. */
+function gapLabel(t: string): string {
+  const s = t.replace(/_/g, ' ').trim().toLowerCase().replace(/\bco design\b/g, 'co-design')
+  if (!s) return 'Gap'
+  if (/^new vs existing/.test(s)) return 'Unclear: new or existing activity?'
+  if (/unavailable$/.test(s)) return s.charAt(0).toUpperCase() + s.slice(1)
+  if (/^(no|missing) /.test(s)) return `Missing: ${s.replace(/^(no|missing) /, '')}`
+  return s.charAt(0).toUpperCase() + s.slice(1)
+}
+
+/** Informational gaps (not the user's fault) are styled grey, not red/amber. */
+function gapIsInformational(t: string): boolean {
+  return /unavailable$/.test(t)
 }
 
 interface StreamedQuestion {
@@ -202,7 +213,7 @@ export default function ApplicationWorkspacePage() {
       const { data } = await supabase.from('applications').select('*').eq('id', appId).maybeSingle()
       if (!data) { router.push('/dashboard/applications'); return }
       setApp(data as ApplicationRecord)
-      document.title = `${(data as ApplicationRecord).grant_name || (data as ApplicationRecord).funder_name || 'Application'} — Grant Tracker`
+      document.title = `${(data as ApplicationRecord).grant_name || (data as ApplicationRecord).funder_name || 'Application'} · Grant Tracker`
       setLoaded(true)
     }
     load()
@@ -714,7 +725,7 @@ export default function ApplicationWorkspacePage() {
           ...prev,
           questions: prev.questions.map(q => q.id === bankingFor.id ? { ...q, answer_banked: true } : q),
         } : prev)
-        showToast('Saved to your library. It will be mapped into your next application')
+        showToast('Saved to your material. It will be mapped into your next application')
         setBankingFor(null)
       } else {
         // Keep the modal open so nothing is lost; surface the reason.
@@ -832,7 +843,7 @@ export default function ApplicationWorkspacePage() {
           </h1>
           <p style={{ fontFamily: BODY, fontSize: 13.5, color: T.textSecondary, margin: '4px 0 0' }}>
             {app.funder_name && app.grant_name ? `${app.funder_name} · ` : ''}
-            {app.questions.length} questions · {answeredCount} of {app.questions.length} written
+            {answeredCount} of {app.questions.length} questions written
             {saveState !== 'idle' && (
               <span style={{ fontFamily: UI, fontSize: 12, color: saveState === 'saved' ? T.greenMid : T.textTertiary, marginLeft: 8 }}>
                 {saveState === 'saving' ? 'Saving…' : 'Saved'}
@@ -876,7 +887,7 @@ export default function ApplicationWorkspacePage() {
             background: T.white, border: `1px solid ${T.textPrimary}`, padding: '8px 14px',
             borderRadius: 8, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6,
           }}>
-            <PenLine size={14} /> Edit questions
+            <PenLine size={14} /> Edit the question list
           </button>
           {!app.pipeline_item_id && (
             <button onClick={trackInPipeline} disabled={pipelining} style={{
@@ -966,6 +977,9 @@ export default function ApplicationWorkspacePage() {
                 <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: T.sage }}>
                   {STATUS_LABELS[gate.overall_status] ?? gate.overall_status}
                 </span>
+                <span style={{ display: 'block', fontFamily: BODY, fontSize: 11.5, color: T.textSecondary, marginTop: 2 }}>
+                  Based on your profile and this funder&apos;s criteria. Always confirm on the funder&apos;s site.
+                </span>
                 {warnings.length > 0 && (
                   <ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>
                     {warnings.map((w, i) => (
@@ -1016,7 +1030,7 @@ export default function ApplicationWorkspacePage() {
                   ? heldKeys.length === 0
                     ? 'Nothing held yet. Guides and drafts will be generic for this funder unless you add their guidance.'
                     : `Limited: ${heldKeys.map(k => BRIEF_FIELD_LABELS[k].toLowerCase()).join(', ')}. Adding their guidance will sharpen guides and drafts.`
-                  : 'Open it to read what the builder is working from, and compare it with the funder’s own page.'}
+                  : 'Guides are based on our summary of this funder. Check it against the funder’s site.'}
               </span>
             </span>
             {thin && !guidelinesOpen && (
@@ -1175,7 +1189,7 @@ export default function ApplicationWorkspacePage() {
                 ? `${streamedCount} of ${app.questions.length} done. Finished cards are ready below while the rest build.`
                 : 'Reading your profile, your content blocks and the funder context. The first card lands in a few seconds.'
               : blockCount === 0
-                ? 'Your content library is empty, so guides and drafts will be mostly gaps. Import a past application first (button above) and the builder works from your real material.'
+                ? 'You have no saved material yet, so guides and drafts will be mostly gaps. Import a past application first (button above) and the builder works from your real material.'
                 : 'For each question: what a strong answer covers, your own content mapped in, and what is missing. You write the answers, in your voice.'}
           </p>
           {genError && (
@@ -1208,13 +1222,13 @@ export default function ApplicationWorkspacePage() {
         <div style={{ background: T.paleGreen, borderRadius: 12, padding: '12px 18px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <Sparkles size={15} color={T.greenMid} style={{ flexShrink: 0 }} />
           <span style={{ flex: 1, fontFamily: BODY, fontSize: 13, color: T.sage, minWidth: 200 }}>
-            Your library grew since these guides were built. Rebuild them to map your new material in.
+            Your material grew since these guides were built. Rebuild them to map your new material in.
           </span>
           <button onClick={generate} style={{
             fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.greenDeep,
             background: T.lime, border: 'none', padding: '7px 14px', borderRadius: 8, cursor: 'pointer',
           }}>
-            Rebuild the guides
+            Regenerate question guides
           </button>
         </div>
       )}
@@ -1262,7 +1276,7 @@ export default function ApplicationWorkspacePage() {
             borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 6,
             cursor: generating ? 'wait' : 'pointer', opacity: generating ? 0.6 : 1,
           }}>
-            <Sparkles size={14} /> {generating ? 'Rebuilding…' : 'Rebuild the guides'}
+            <Sparkles size={14} /> {generating ? 'Regenerating…' : 'Regenerate question guides, your answers won’t change'}
           </button>
         </div>
       )}
@@ -1279,7 +1293,7 @@ export default function ApplicationWorkspacePage() {
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
               <h3 style={{ fontFamily: UI, fontWeight: 600, fontSize: 16.5, color: T.textPrimary, margin: 0 }}>
-                Save to your library
+                Save to your material
               </h3>
               <button onClick={() => setBankingFor(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', color: T.textTertiary }}>
                 <XIcon size={16} />
@@ -1504,7 +1518,7 @@ export default function ApplicationWorkspacePage() {
           onImported={count => {
             setBlockCount(prev => (prev ?? 0) + count)
             if (hasScaffolds) setImportedSinceBuild(true)
-            showToast(`${count} ${count === 1 ? 'block' : 'blocks'} added to your library`)
+            showToast(`${count} ${count === 1 ? 'block' : 'blocks'} added to your material`)
           }}
         />
       )}
@@ -1614,7 +1628,7 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, reviewing, 
         <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
           {q.answer_banked && (
             <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 10.5, color: T.greenText, background: T.greenBg, padding: '3px 9px', borderRadius: 999 }}>
-              In library
+              In your material
             </span>
           )}
           {limit !== null && collapsed && (
@@ -1644,12 +1658,15 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, reviewing, 
               <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 {placeholders > 0 && (
                   <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 11, color: T.amberText, background: T.amberBg, padding: '2px 9px', borderRadius: 999 }}>
-                    {placeholders} to fill in
+                    {placeholders} {placeholders === 1 ? 'placeholder' : 'placeholders'} to fill
                   </span>
                 )}
                 <span style={{ fontFamily: UI, fontWeight: 500, fontSize: 11.5, color: countColor }}>
-                  {words} {words === 1 ? 'word' : 'words'}{limit !== null ? ` of ${limit}` : ''}
-                  {overLimit ? ', over the limit' : ''}
+                  {limit !== null
+                    ? overLimit
+                      ? `${words - limit} ${words - limit === 1 ? 'word' : 'words'} over the ${limit} limit`
+                      : `${words} of ${limit} words`
+                    : `${words} ${words === 1 ? 'word' : 'words'}`}
                 </span>
               </span>
             </div>
@@ -1699,7 +1716,7 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, reviewing, 
                       color: T.sage,
                     }}
                   >
-                    <BookmarkPlus size={14} /> Save to your library
+                    <BookmarkPlus size={14} /> Save to your material
                   </button>
                 )}
               </div>
@@ -1712,7 +1729,7 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, reviewing, 
                   paddingLeft: 0, marginTop: 6, color: T.sage,
                 }}
               >
-                <BookmarkPlus size={14} /> Save to your library
+                <BookmarkPlus size={14} /> Save to your material
               </button>
             )}
             {voicePrompts.length > 0 && (
@@ -1838,8 +1855,8 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, reviewing, 
               )}
               {!review && (
                 <p style={{ fontFamily: BODY, fontSize: 11.5, color: T.textTertiary, margin: '0 0 12px', lineHeight: 1.5 }}>
-                  Checks your answer against the funder&apos;s priorities and scores it, with the
-                  changes that would lift it.
+                  Scores your answer against this funder&apos;s priorities and tells you exactly
+                  what to change.
                 </p>
               )}
 
@@ -1851,11 +1868,12 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, reviewing, 
                   </div>
                   <p style={{ fontFamily: BODY, fontSize: 10.5, color: T.textTertiary, margin: '0 0 7px', lineHeight: 1.4 }}>
                     Spotted when the guides were built. Tick off anything your answer now covers.
-                    Red needs fixing before you submit; amber would strengthen it.
                   </p>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                     {q.gaps.map((g, i) => {
                       const open = expandedGap === i
+                      const info = gapIsInformational(g.gap_type)
+                      const sevColor = info ? T.textTertiary : g.severity === 'blocking' ? T.coral : T.amberText
                       return (
                         <div key={i} style={{ opacity: g.dismissed ? 0.45 : 1 }}>
                           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 7 }}>
@@ -1865,8 +1883,8 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, reviewing, 
                               title={g.dismissed ? 'Restore' : 'Tick off'}
                               style={{
                                 width: 14, height: 14, borderRadius: 5, flexShrink: 0, marginTop: 3,
-                                border: `1.5px solid ${g.severity === 'blocking' ? T.coral : T.amberText}`,
-                                background: g.dismissed ? (g.severity === 'blocking' ? T.coral : T.amberText) : 'transparent',
+                                border: `1.5px solid ${sevColor}`,
+                                background: g.dismissed ? sevColor : 'transparent',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 cursor: 'pointer', padding: 0,
                               }}
@@ -1883,10 +1901,20 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, reviewing, 
                             >
                               <span style={{
                                 flex: 1, fontFamily: UI, fontWeight: 600, fontSize: 11.5, lineHeight: 1.45,
-                                color: g.severity === 'blocking' ? T.coralText : T.textSecondary,
+                                color: info ? T.textTertiary : g.severity === 'blocking' ? T.coralText : T.textSecondary,
                                 textDecoration: g.dismissed ? 'line-through' : 'none',
                               }}>
-                                {humaniseGapType(g.gap_type)}
+                                {!info && (
+                                  <span style={{
+                                    fontFamily: UI, fontWeight: 700, fontSize: 9.5, letterSpacing: '0.04em',
+                                    textTransform: 'uppercase', marginRight: 6, padding: '1px 6px', borderRadius: 999,
+                                    color: g.severity === 'blocking' ? T.coralText : T.amberText,
+                                    background: g.severity === 'blocking' ? T.coralBg : T.amberBg,
+                                  }}>
+                                    {g.severity === 'blocking' ? 'Fix' : 'Strengthen'}
+                                  </span>
+                                )}
+                                {gapLabel(g.gap_type)}
                               </span>
                               <ChevronDown size={11} color={T.textTertiary}
                                 style={{ flexShrink: 0, marginTop: 3, transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 140ms ease' }} />
@@ -1992,7 +2020,7 @@ function QuestionCard({ index, question: q, drafting, draftDisabled, reviewing, 
                     </div>
                   ) : (
                     <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.textTertiary, margin: 0 }}>
-                      Nothing from your library maps to this question yet. Import a past application
+                      Nothing from your material maps to this question yet. Import a past application
                       or add blocks to your reusable content, then rebuild the scaffolds.
                     </p>
                   )
