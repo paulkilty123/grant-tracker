@@ -1851,6 +1851,12 @@ export default function UrlAdminPage() {
     ].filter(Boolean).join(' ').toLowerCase()
     const timelineText = (brief.decision_timeline ?? '').toLowerCase()
     const updates: Record<string, string | boolean | number | null> = {}
+    // Enricher's open/closed verdict — used below to decide whether a
+    // "next opens" cue should clear an extracted deadline. A fund the
+    // enricher marked 'open' has a live round (its open-date phrasing is the
+    // current window, not a future reopening), so we must NOT null its
+    // deadline. Only between_rounds / closed funds clear the deadline.
+    const openStatus = (brief.open_status ?? '').toString().toLowerCase().trim()
 
     // ── Extract amounts ───────────────────────────────────────────────────────
     // Matches: £10,000 | £10k | £1m | up to £50,000 | $50,000
@@ -2007,7 +2013,7 @@ export default function UrlAdminPage() {
       // shortlist) catch the "EASI26 Final on 18 May 2026" / "finalists
       // pitch at the gala on 30 June" pattern where the date is an event,
       // not the application deadline.
-      const NON_APP_DATE_CUES = /\b(?:complet(?:ed?|ion|ing)\b|report(?:s|ing)?\s+(?:due|submitted|by|deadline)|submitted\s+(?:by|on)\b|panel\s+(?:meets?|takes?\s+place|sits?|review|date|decision)|decision\s+(?:by|on|date|made|announced|expected)|announce[a-z]*\b|results?\s+(?:by|on|announced|in|available)|paid\s+(?:out|by)\b|awarded\s+(?:by|on|in)\b|projects?\s+(?:should\s+|must\s+|will\s+|need\s+to\s+|are\s+expected\s+to\s+)?(?:begin|start|commence|run\s+(?:from|until))|delivery\s+(?:by|begins?|ends?|period)|grant\s+period|funding\s+(?:ends?|begins?|period)|notified\s+(?:by|on)|(?:event|final|finals?|ceremony|conference|summit|launch\s+event|gala|celebration|reception|showcase|presentation|workshop|symposium)\s+(?:on|at|in|date|takes?\s+place)?\b|pitch(?:es|ed|ing)?\s+(?:at|on|in|to)\b|finalists?\s+(?:pitch|present|attend|notified|interview|meet)|shortlist(?:ed|ing)?\s+(?:by|on|in|candidates?)|interview(?:s|ed|ing)?\s+(?:on|in|held|by)|winners?\s+(?:announced|notified|selected|named))/i
+      const NON_APP_DATE_CUES = /\b(?:complet(?:ed?|ion|ing)\b|report(?:s|ing)?\s+(?:due|submitted|by|deadline)|submitted\s+(?:by|on)\b|panel\s+(?:meets?|takes?\s+place|sits?|review|date|decision)|decision\s+(?:by|on|date|made|announced|expected)|announce[a-z]*\b|results?\s+(?:by|on|announced|in|available)|paid\s+(?:out|by)\b|awarded\s+(?:by|on|in)\b|projects?\s+(?:should\s+|must\s+|will\s+|need\s+to\s+|are\s+expected\s+to\s+)?(?:begin|start|commence|run\s+(?:from|until))|delivery\s+(?:by|begins?|ends?|period)|grant\s+period|funding\s+(?:ends?|begins?|period)|notified\s+(?:by|on)|(?:event|final|finals?|ceremony|conference|summit|launch\s+event|gala|celebration|reception|showcase|presentation|workshop|symposium)\s+(?:on|at|in|date|takes?\s+place)?\b|pitch(?:es|ed|ing)?\s+(?:at|on|in|to)\b|finalists?\s+(?:pitch|present|attend|notified|interview|meet)|shortlist(?:ed|ing)?\s+(?:by|on|in|candidates?)|interview(?:s|ed|ing)?\s+(?:on|in|held|by)|winners?\s+(?:announced|notified|selected|named)|(?:applications?\s+)?(?:opens?|opened|opening|launch(?:es|ed|ing)?|available\s+from)\s+(?:on\s+|from\s+)?$)/i
       const isNonAppDate = (idx: number) => {
         const leftCtx = timelineText.slice(Math.max(0, idx - 60), idx)
         return NON_APP_DATE_CUES.test(leftCtx)
@@ -2132,7 +2138,12 @@ export default function UrlAdminPage() {
         .filter(Boolean).join(' ').toLowerCase()
       const nextOpenCueRe = /(?:next\s+(?:application\s+|funding\s+|grant\s+|funding\s+round\s+|grant\s+round\s+)?(?:round|window|cohort|intake|cycle|programme|eoi|application)?\s*(?:opens?|reopens?|will\s+(?:open|re-?open)|is\s+expected\s+to\s+(?:open|re-?open))|applications?\s+(?:will\s+)?(?:open|reopen)\s+(?:again\s+)?(?:in|on)?|(?:spring|summer|autumn|fall|winter|q[1-4]|jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+20\d{2}\s+(?:application\s+)?(?:round|window|cohort|intake|cycle)\s+(?:is\s+(?:due\s+to\s+)?)?(?:opens?|reopens?|due\s+to\s+open|will\s+open|expected\s+to\s+open))[^.]{0,150}/i
       const nextOpenMatch = opensCueText.match(nextOpenCueRe)
-      if (nextOpenMatch) {
+      // Skip the next-opens / deadline-clearing path for funds the enricher
+      // marked 'open' — an open fund's "applications open <date>" phrasing is
+      // its current window, not a future reopening, and nulling its deadline
+      // here was wiping correctly-extracted close dates (e.g. Democratic
+      // Engagement Fund: "Applications open 22 June… deadline 31 August").
+      if (nextOpenMatch && openStatus !== 'open') {
         // When the match leads with the round NAME ("Summer 2026 round
         // opens August 2026"), the date the admin actually wants is the
         // one AFTER "opens" — not the round-name prefix. Trim to the
@@ -2166,7 +2177,6 @@ export default function UrlAdminPage() {
     // the fund is closed, any deadline we extracted is stale — clear it.
     // For between_rounds, the next_open_date logic above usually handles
     // the placeholder; we still defensively clear deadline.
-    const openStatus = (brief.open_status ?? '').toString().toLowerCase().trim()
     if (openStatus === 'closed' || openStatus === 'between_rounds') {
       // Setting to null (not delete) so the DB row clears its stale value
       // — `delete` only affects this-run draft state, not the persisted
