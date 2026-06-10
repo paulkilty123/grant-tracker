@@ -81,6 +81,20 @@ const STATUS_LABELS: Record<string, string> = {
   ineligible:      'Eligibility problems found',
 }
 
+// Funder-brief fields surfaced in the "what Grant Tracker knows" panel,
+// in reading order, with user-facing labels.
+const BRIEF_FIELD_ORDER = [
+  'what_they_fund', 'priorities', 'exclusions', 'strong_application', 'funder_tips', 'how_to_apply',
+] as const
+const BRIEF_FIELD_LABELS: Record<string, string> = {
+  what_they_fund:     'What they fund',
+  priorities:         'Their priorities',
+  exclusions:         'What they will not fund',
+  strong_application: 'What makes a strong application',
+  funder_tips:        'Tips from the funder',
+  how_to_apply:       'How to apply',
+}
+
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ApplicationWorkspacePage() {
@@ -114,8 +128,9 @@ export default function ApplicationWorkspacePage() {
   const [importOpen, setImportOpen] = useState(false)
   const [blockCount, setBlockCount] = useState<number | null>(null)
 
-  // Funder context meter + guidelines supplement
-  const [briefFields, setBriefFields] = useState<string[] | null>(null)
+  // Funder context: what the catalogue actually holds, shown not counted
+  const [briefData, setBriefData] = useState<Record<string, string> | null>(null)
+  const [contextOpen, setContextOpen] = useState(false)
   const [guidelinesOpen, setGuidelinesOpen] = useState(false)
   const [guidelinesText, setGuidelinesText] = useState('')
   const [guidelinesUrl, setGuidelinesUrl] = useState('')
@@ -179,7 +194,7 @@ export default function ApplicationWorkspacePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [app?.org_id])
 
-  // ── Funder context meter: which brief fields the catalogue holds ──
+  // ── Funder context: load the actual brief content (shown, not counted) ──
   useEffect(() => {
     if (!app?.opportunity_id) return
     const supabase = createClient()
@@ -190,9 +205,11 @@ export default function ApplicationWorkspacePage() {
       .maybeSingle()
       .then(({ data }) => {
         const fb = (data?.funder_brief ?? {}) as Record<string, unknown>
-        const present = ['what_they_fund', 'priorities', 'exclusions', 'strong_application', 'funder_tips', 'how_to_apply']
-          .filter(k => typeof fb[k] === 'string' && (fb[k] as string).trim().length > 0)
-        setBriefFields(present)
+        const held: Record<string, string> = {}
+        for (const k of BRIEF_FIELD_ORDER) {
+          if (typeof fb[k] === 'string' && (fb[k] as string).trim().length > 0) held[k] = (fb[k] as string).trim()
+        }
+        setBriefData(held)
       })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [app?.opportunity_id])
@@ -600,32 +617,85 @@ export default function ApplicationWorkspacePage() {
         </div>
       )}
 
-      {/* ── Funder context meter + guidelines supplement ── */}
-      {app.opportunity_id && briefFields !== null && !app.supplied_guidelines && (
-        <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, padding: '13px 18px', marginBottom: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 9, minWidth: 0 }}>
-              <FileText size={15} color={briefFields.length >= 4 ? T.greenMid : T.amberText} style={{ flexShrink: 0 }} />
-              <span style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, lineHeight: 1.5 }}>
-                {briefFields.length >= 4
-                  ? `Good funder context: the catalogue holds ${briefFields.length} of 6 guidance fields for this funder.`
-                  : briefFields.length > 0
-                    ? `Thin funder context: the catalogue holds ${briefFields.length} of 6 guidance fields. Adding the funder's own guidance makes scaffolds and drafts sharper.`
-                    : 'No funder guidance in the catalogue yet. Adding the funder’s own guidance makes scaffolds and drafts much sharper.'}
+      {/* ── What Grant Tracker knows about this funder (shown, not counted) ── */}
+      {app.opportunity_id && briefData !== null && !app.supplied_guidelines && (() => {
+        const heldKeys = BRIEF_FIELD_ORDER.filter(k => briefData[k])
+        const missingKeys = BRIEF_FIELD_ORDER.filter(k => !briefData[k])
+        const thin = heldKeys.length < 3
+        return (
+        <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, marginBottom: 16, overflow: 'hidden' }}>
+          {/* Header: expand to read the actual content */}
+          <button
+            onClick={() => setContextOpen(o => !o)}
+            aria-expanded={contextOpen}
+            style={{
+              width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 10,
+              padding: '13px 18px', background: 'transparent', border: 'none', cursor: 'pointer',
+            }}
+          >
+            <FileText size={15} color={thin ? T.amberText : T.greenMid} style={{ flexShrink: 0 }} />
+            <span style={{ flex: 1, minWidth: 0 }}>
+              <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: T.textPrimary }}>
+                What Grant Tracker knows about this funder
               </span>
-            </div>
-            {!guidelinesOpen && (
-              <button onClick={() => setGuidelinesOpen(true)} style={{
-                fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.textPrimary,
-                background: T.white, border: `1px solid ${T.textPrimary}`, padding: '6px 13px',
-                borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
-              }}>
+              <span style={{ display: 'block', fontFamily: BODY, fontSize: 12, color: T.textSecondary, marginTop: 2 }}>
+                {thin
+                  ? heldKeys.length === 0
+                    ? 'Nothing held yet. Scaffolds and drafts will be generic for this funder unless you add their guidance.'
+                    : `Limited: ${heldKeys.map(k => BRIEF_FIELD_LABELS[k].toLowerCase()).join(', ')}. Adding their guidance will sharpen scaffolds and drafts.`
+                  : 'Open it to read what the builder is working from, and compare it with the funder’s own page.'}
+              </span>
+            </span>
+            {thin && !guidelinesOpen && (
+              <span
+                onClick={e => { e.stopPropagation(); setGuidelinesOpen(true); setContextOpen(true) }}
+                role="button"
+                style={{
+                  fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.textPrimary,
+                  background: T.white, border: `1px solid ${T.textPrimary}`, padding: '6px 13px',
+                  borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+                }}
+              >
                 Add their guidance
-              </button>
+              </span>
             )}
-          </div>
+            <ChevronDown size={15} color={T.textTertiary}
+              style={{ flexShrink: 0, transform: contextOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 160ms ease' }} />
+          </button>
+
+          {/* Expanded: the actual brief content, field by field */}
+          {contextOpen && (
+            <div style={{ borderTop: `1px solid ${T.border}`, padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {heldKeys.map(k => (
+                <div key={k}>
+                  <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.greenMid, marginBottom: 3 }}>
+                    {BRIEF_FIELD_LABELS[k]}
+                  </div>
+                  <p style={{ fontFamily: BODY, fontSize: 13, color: T.textPrimary, margin: 0, lineHeight: 1.6, whiteSpace: 'pre-line' }}>
+                    {briefData[k]}
+                  </p>
+                </div>
+              ))}
+              {missingKeys.length > 0 && (
+                <p style={{ fontFamily: BODY, fontSize: 12, color: T.textTertiary, margin: 0, lineHeight: 1.5 }}>
+                  Not held yet: {missingKeys.map(k => BRIEF_FIELD_LABELS[k].toLowerCase()).join(', ')}.
+                </p>
+              )}
+              {!guidelinesOpen && (
+                <button
+                  onClick={() => setGuidelinesOpen(true)}
+                  style={{
+                    ...ghostBtn(), paddingLeft: 0, textAlign: 'left',
+                    color: T.sage, fontSize: 12.5, alignSelf: 'flex-start',
+                  }}
+                >
+                  Seen something on the funder&apos;s site that&apos;s missing here? Add their guidance
+                </button>
+              )}
+            </div>
+          )}
           {guidelinesOpen && (
-            <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ borderTop: `1px solid ${T.border}`, padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 10 }}>
               <textarea
                 value={guidelinesText}
                 onChange={e => setGuidelinesText(e.target.value)}
@@ -668,7 +738,8 @@ export default function ApplicationWorkspacePage() {
             </div>
           )}
         </div>
-      )}
+        )
+      })()}
       {app.supplied_guidelines && (
         <div style={{ background: T.paleGreen, borderRadius: 12, padding: '11px 18px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 9 }}>
           <FileText size={14} color={T.greenMid} />
