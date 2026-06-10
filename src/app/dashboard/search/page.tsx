@@ -3223,6 +3223,7 @@ export default function SearchPage() {
                 item={item}
                 hasOrg={!!org}
                 hasSearch={false}
+                org={org}
                 interactions={interactions.get(item.grant.id) ?? new Set()}
                 onAddToPipeline={handleAddToPipeline}
                 isInPipeline={pipelinedIds.has(item.grant.title)}
