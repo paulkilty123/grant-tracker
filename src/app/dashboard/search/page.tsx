@@ -19,7 +19,7 @@ import {
 import { saveSearchHistory, getSearchHistory, deleteSearchHistory, getWeeklySearchCount } from '@/lib/searchHistory'
 import type { GrantOpportunity, Organisation, FunderType, FundingType, ImpactSector, LegalStructure } from '@/types'
 import { MatchFeedbackBlock } from '@/components/MatchFeedbackBlock'
-import { usePlausible } from 'next-plausible'
+import { track } from '@/lib/analytics'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import { SUBTYPE_LABELS } from '@/lib/funding-subtypes'
 import { normaliseScrapedGrant, type EnrichedGrant } from '@/lib/grants-normalise'
@@ -1325,7 +1325,6 @@ function tokenMatches(token: string, text: string, wordsCache?: string[]): boole
 // ── Page ─────────────────────────────────────────────────────────────────────
 export default function SearchPage() {
   const searchParams = useSearchParams()
-  const plausible = usePlausible()
 
   // Initialise filters from URL params (used by landing page category links)
   const initSector      = searchParams.get('sector')      as ImpactSector | null
@@ -1626,7 +1625,7 @@ export default function SearchPage() {
         outcome_date: null, outcome_notes: null,
         created_by: userId,
       })
-      plausible('pipeline_added')
+      track('pipeline_added')
       // Live-search grants are off-catalogue — no opportunity UUID exists.
       emitClientEvent(org.id, 'pipeline_added', { opportunity_id: null, pipeline_item_id: added.id })
       showToast(`"${grant.title}" added to pipeline!`)
@@ -1668,7 +1667,7 @@ export default function SearchPage() {
     await recordInteraction(org.id, grantId, 'saved')
     const uuid = catalogueUuidFor(grantId)
     if (uuid) emitClientEvent(org.id, 'opportunity_saved', { opportunity_id: uuid })
-    plausible('grant_saved')
+    track('grant_saved')
     setInteractions(prev => {
       const next = new Map(prev)
       if (!next.has(grantId)) next.set(grantId, new Set())
@@ -1768,7 +1767,7 @@ export default function SearchPage() {
         outcome_notes:        null,
         created_by:           userId,
       })
-      plausible('pipeline_added')
+      track('pipeline_added')
       emitClientEvent(org.id, 'pipeline_added', {
         opportunity_id: catalogueUuidFor(grant.id),
         pipeline_item_id: added.id,

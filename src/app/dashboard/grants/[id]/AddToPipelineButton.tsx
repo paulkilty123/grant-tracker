@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { usePlausible } from 'next-plausible'
+import { track } from '@/lib/analytics'
 import { createClient } from '@/lib/supabase/client'
 import { createPipelineItem } from '@/lib/pipeline'
 import { getOrganisationByOwner } from '@/lib/organisations'
@@ -33,7 +33,6 @@ const VALID_FUNDER_TYPES: FunderType[] = [
 ]
 
 export default function AddToPipelineButton({ grant, opportunityUuid }: Props) {
-  const plausible = usePlausible()
   const [state, setState] = useState<'idle' | 'loading' | 'done' | 'error' | 'noorg'>('idle')
 
   async function handleClick() {
@@ -70,7 +69,7 @@ export default function AddToPipelineButton({ grant, opportunityUuid }: Props) {
         outcome_notes:        null,
         created_by:           user.id,
       })
-      plausible('pipeline_added')
+      track('pipeline_added')
       emitClientEvent(org.id, 'pipeline_added', {
         opportunity_id: opportunityUuid ?? null,
         pipeline_item_id: added.id,

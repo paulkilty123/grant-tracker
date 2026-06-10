@@ -6,7 +6,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Menu, X, Check, Search, Calendar, TrendingUp, Activity, Clock, Mail, MessageSquare, Bell, LayoutGrid, ArrowRight, Award, CheckCircle, BadgeCheck, Users, Rocket, Landmark, HeartHandshake, Building2, Shield, TreePine, Lightbulb } from 'lucide-react'
 import ContactForm from '@/components/ContactForm'
-import { usePlausible } from 'next-plausible'
+import { track } from '@/lib/analytics'
 import RadioWaveIcon from '@/components/icons/RadioWaveIcon'
 import LogoMark from '@/components/icons/LogoMark'
 
@@ -262,8 +262,7 @@ const SECTOR_LABELS: Record<string, string> = {
 
 /* ─── page ─── */
 export default function LandingPage() {
-  const plausible = usePlausible()
-  const trackCohortApply = () => plausible('cohort_apply_clicked')
+  const trackCohortApply = () => track('cohort_apply_clicked')
   const [mobileOpen, setMobileOpen] = useState(false)
   const [activeSection, setActiveSection] = useState<string>('')
 

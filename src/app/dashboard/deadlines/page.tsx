@@ -9,7 +9,7 @@ import { PipelineModal } from '@/components/PipelineModal'
 import { recordInteraction } from '@/lib/interactions'
 import { emitClientEvent } from '@/lib/events/client'
 import { toCatalogueUuid } from '@/lib/events/taxonomy'
-import { usePlausible } from 'next-plausible'
+import { track } from '@/lib/analytics'
 import { normaliseScrapedGrant, type EnrichedGrant } from '@/lib/grants-normalise'
 import { computeMatchScore } from '@/lib/matching'
 import type { DeadlineAlert, PipelineItem, PipelineStage, FundingType, Organisation } from '@/types'
@@ -98,7 +98,6 @@ function AddDeadlineModal({ orgId, userId, onClose, onSaved }: {
   onClose: () => void
   onSaved: () => void
 }) {
-  const plausible = usePlausible()
   const [grantName, setGrantName]         = useState('')
   const [funderName, setFunderName]       = useState('')
   const [deadline, setDeadline]           = useState('')
@@ -133,7 +132,7 @@ function AddDeadlineModal({ orgId, userId, onClose, onSaved }: {
         outcome_notes: null,
         created_by: userId,
       })
-      plausible('pipeline_added')
+      track('pipeline_added')
       onSaved()
     } finally {
       setSaving(false)
@@ -940,7 +939,6 @@ function GrantPreviewModal({
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function DeadlinesPage() {
-  const plausible = usePlausible()
   const [alerts,           setAlerts]           = useState<DeadlineAlert[]>([])
   const [noDeadlineItems,  setNoDeadlineItems]  = useState<PipelineItem[]>([])
   const [loading,          setLoading]          = useState(true)
@@ -1138,7 +1136,7 @@ export default function DeadlinesPage() {
       outcome_notes: null,
       created_by: userId,
     })
-    plausible('pipeline_added')
+    track('pipeline_added')
     emitClientEvent(orgId, 'pipeline_added', {
       opportunity_id: toCatalogueUuid(grant.id, grant.uuid),
       pipeline_item_id: added.id,
@@ -1157,7 +1155,7 @@ export default function DeadlinesPage() {
     const matched = matchRows.find(m => m.grant.id === grantId)?.grant
     const uuid = toCatalogueUuid(grantId, matched?.uuid)
     if (uuid) emitClientEvent(orgId, 'opportunity_saved', { opportunity_id: uuid })
-    plausible('grant_saved')
+    track('grant_saved')
     setMatchActioning(prev => ({ ...prev, [grantId]: 'done' }))
     setTimeout(() => {
       setMatchState(prev => ({ ...prev, [grantId]: 'saved' }))
@@ -1188,7 +1186,7 @@ export default function DeadlinesPage() {
       outcome_notes: null,
       created_by: userId,
     })
-    plausible('pipeline_added')
+    track('pipeline_added')
     emitClientEvent(orgId, 'pipeline_added', {
       opportunity_id: toCatalogueUuid(grant.id, grant.uuid),
       pipeline_item_id: added.id,

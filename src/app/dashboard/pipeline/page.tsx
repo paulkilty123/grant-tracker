@@ -11,7 +11,7 @@ import {
 } from '@/lib/pipeline'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { emitClientEvent } from '@/lib/events/client'
-import { usePlausible } from 'next-plausible'
+import { track } from '@/lib/analytics'
 import { PIPELINE_STAGES, formatDeadline, formatRange, cn } from '@/lib/utils'
 import type { PipelineItem, PipelineStage, Organisation } from '@/types'
 import { Sparkles, Loader2, Link, ArrowRight, Calendar, AlarmClock, X as XIcon, GripVertical, StickyNote, User as UserIcon, BarChart3 } from 'lucide-react'
@@ -245,7 +245,6 @@ function AddModal({
   onClose: () => void
   onAdd: (item: PipelineItem) => void
 }) {
-  const plausible = usePlausible()
   const [form, setForm] = useState({
     grant_name: '',
     funder_name: '',
@@ -316,7 +315,7 @@ function AddModal({
       outcome_notes: null,
       created_by: userId,
     })
-    plausible('pipeline_added')
+    track('pipeline_added')
     // Manual adds have no catalogue link — opportunity_id is null by design.
     emitClientEvent(orgId, 'pipeline_added', { opportunity_id: null, pipeline_item_id: newItem.id })
     onAdd(newItem)
