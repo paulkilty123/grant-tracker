@@ -6,7 +6,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { FilePenLine, Plus, ChevronRight } from 'lucide-react'
+import { FilePenLine, Plus, ChevronRight, Trash2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { T, UI, BODY } from '@/components/builder/tokens'
@@ -23,6 +23,14 @@ export default function ApplicationsPage() {
   const [allowed, setAllowed] = useState<boolean | null>(null)
   const [apps, setApps] = useState<ApplicationRecord[]>([])
   const [loaded, setLoaded] = useState(false)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+
+  async function deleteApplication(id: string) {
+    setApps(prev => prev.filter(a => a.id !== id))
+    setConfirmDeleteId(null)
+    const supabase = createClient()
+    await supabase.from('applications').delete().eq('id', id)
+  }
 
   useEffect(() => {
     async function load() {
@@ -162,6 +170,40 @@ export default function ApplicationsPage() {
                     }} />
                   </div>
                 </div>
+              )}
+              {confirmDeleteId === app.id ? (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}
+                  onClick={e => { e.preventDefault(); e.stopPropagation() }}>
+                  <button
+                    onClick={e => { e.preventDefault(); e.stopPropagation(); deleteApplication(app.id) }}
+                    style={{
+                      fontFamily: UI, fontWeight: 600, fontSize: 12, color: '#fff',
+                      background: T.coral, border: 'none', padding: '5px 12px', borderRadius: 8, cursor: 'pointer',
+                    }}
+                  >
+                    Delete
+                  </button>
+                  <button
+                    onClick={e => { e.preventDefault(); e.stopPropagation(); setConfirmDeleteId(null) }}
+                    style={{
+                      fontFamily: UI, fontWeight: 500, fontSize: 12, color: T.textSecondary,
+                      background: 'transparent', border: 'none', padding: '5px 6px', cursor: 'pointer',
+                    }}
+                  >
+                    Keep
+                  </button>
+                </span>
+              ) : (
+                <button
+                  onClick={e => { e.preventDefault(); e.stopPropagation(); setConfirmDeleteId(app.id) }}
+                  aria-label={`Delete ${app.grant_name || 'application'}`}
+                  style={{
+                    background: 'transparent', border: 'none', cursor: 'pointer',
+                    color: T.textTertiary, padding: 6, borderRadius: 6, flexShrink: 0,
+                  }}
+                >
+                  <Trash2 size={15} />
+                </button>
               )}
               <ChevronRight size={16} color={T.textTertiary} style={{ flexShrink: 0 }} />
             </Link>
