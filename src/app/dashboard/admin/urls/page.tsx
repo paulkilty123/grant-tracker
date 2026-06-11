@@ -1857,6 +1857,7 @@ export default function UrlAdminPage() {
     // current window, not a future reopening), so we must NOT null its
     // deadline. Only between_rounds / closed funds clear the deadline.
     const openStatus = (brief.open_status ?? '').toString().toLowerCase().trim()
+    const todayISO   = new Date().toISOString().slice(0, 10)
 
     // ── Extract amounts ───────────────────────────────────────────────────────
     // Matches: £10,000 | £10k | £1m | up to £50,000 | $50,000
@@ -1987,7 +1988,6 @@ export default function UrlAdminPage() {
     // the inline panel; Detect all is meant to re-evaluate from the brief.
     {
       const months: Record<string,string> = { jan:'01',feb:'02',mar:'03',apr:'04',may:'05',jun:'06',jul:'07',aug:'08',sep:'09',oct:'10',nov:'11',dec:'12' }
-      const todayISO = new Date().toISOString().slice(0,10)
       const candidates: string[] = []
 
       // Negative-context cues — when any phrase below appears in the ~60
@@ -2138,12 +2138,15 @@ export default function UrlAdminPage() {
         .filter(Boolean).join(' ').toLowerCase()
       const nextOpenCueRe = /(?:next\s+(?:application\s+|funding\s+|grant\s+|funding\s+round\s+|grant\s+round\s+)?(?:round|window|cohort|intake|cycle|programme|eoi|application)?\s*(?:opens?|reopens?|will\s+(?:open|re-?open)|is\s+expected\s+to\s+(?:open|re-?open))|applications?\s+(?:will\s+)?(?:open|reopen)\s+(?:again\s+)?(?:in|on)?|(?:spring|summer|autumn|fall|winter|q[1-4]|jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+20\d{2}\s+(?:application\s+)?(?:round|window|cohort|intake|cycle)\s+(?:is\s+(?:due\s+to\s+)?)?(?:opens?|reopens?|due\s+to\s+open|will\s+open|expected\s+to\s+open))[^.]{0,150}/i
       const nextOpenMatch = opensCueText.match(nextOpenCueRe)
-      // Skip the next-opens / deadline-clearing path for funds the enricher
-      // marked 'open' — an open fund's "applications open <date>" phrasing is
-      // its current window, not a future reopening, and nulling its deadline
-      // here was wiping correctly-extracted close dates (e.g. Democratic
-      // Engagement Fund: "Applications open 22 June… deadline 31 August").
-      if (nextOpenMatch && openStatus !== 'open') {
+      // Skip the next-opens / deadline-clearing path when the fund is clearly
+      // live: either the enricher marked it 'open', OR we extracted a concrete
+      // FUTURE deadline above. An "applications open <date>" phrase is the
+      // current window, not a future reopening, and nulling the deadline here
+      // was wiping correct close dates (Democratic Engagement Fund: open 22 Jun
+      // / close 31 Aug; Clean Air Solar Farm: open 8 Jun / close 3 Aug, where
+      // the enricher even mis-tagged open_status as 'between_rounds').
+      const hasFutureDeadline = typeof updates.deadline === 'string' && updates.deadline >= todayISO
+      if (nextOpenMatch && openStatus !== 'open' && !hasFutureDeadline) {
         // When the match leads with the round NAME ("Summer 2026 round
         // opens August 2026"), the date the admin actually wants is the
         // one AFTER "opens" — not the round-name prefix. Trim to the
@@ -2177,7 +2180,14 @@ export default function UrlAdminPage() {
     // the fund is closed, any deadline we extracted is stale — clear it.
     // For between_rounds, the next_open_date logic above usually handles
     // the placeholder; we still defensively clear deadline.
-    if (openStatus === 'closed' || openStatus === 'between_rounds') {
+    //
+    // EXCEPTION: if we extracted a concrete FUTURE deadline, trust it over the
+    // status label. The enricher mis-tags funds as 'between_rounds'/'closed'
+    // when the source page is written in future tense ("we will open on 8 June"
+    // still live after that date) — nulling a real upcoming close date here is
+    // worse than an over-eager status. A future deadline means it's open.
+    const overrideHasFutureDeadline = typeof updates.deadline === 'string' && updates.deadline >= todayISO
+    if ((openStatus === 'closed' || openStatus === 'between_rounds') && !overrideHasFutureDeadline) {
       // Setting to null (not delete) so the DB row clears its stale value
       // — `delete` only affects this-run draft state, not the persisted
       // deadline left by a previous Detect run.
