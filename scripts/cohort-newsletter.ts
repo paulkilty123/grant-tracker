@@ -530,7 +530,7 @@ const FEEDBACK_OUTRO = `No need for a long reply. A few lines is plenty, and gen
 
 const COHORT_ASK = `One last thing: I'd like to open the cohort up to some more members. If you know anyone who'd get value from Grant Tracker, let me know and I can reach out to them.`
 
-const SIGN_OFF = `Hit reply with anything. I read every one.\n\nCheers,\nPaul`
+const SIGN_OFF = `Email me with anything - questions, ideas, further feedback and general help.\n\nCheers,\nPaul`
 
 function todayDateLabel(): string {
   const d = new Date()
