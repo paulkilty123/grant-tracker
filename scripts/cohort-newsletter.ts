@@ -80,7 +80,7 @@ const SELF_TEST: CohortMember = {
 // For future sends, replace with persisted last_sent_at per user.
 const RECENCY_BASELINE = '2026-05-28'
 
-const TOP_THRESHOLD     = 80   // strong-fit floor
+// TOP_THRESHOLD removed 2026-06-11: "top matches" = top-ranked, not >=80. Tier floor is OTHER_THRESHOLD.
 const OTHER_THRESHOLD   = 60   // worth-a-look floor (also applies to Recently added)
 const RECENT_THRESHOLD  = 60
 const TOP_COUNT         = 3
@@ -268,17 +268,17 @@ function pickMatches(scored: ScoredGrant[], excluded: Set<string>, rows: Record<
   const other:  ScoredGrant[] = []
   const recent: ScoredGrant[] = []
 
-  // Top: ≥80%, up to TOP_COUNT.
+  // Top: the member's actual best matches, up to TOP_COUNT. No 80% cliff —
+  // "top" means top-ranked for them this fortnight (floor: OTHER_THRESHOLD).
   for (const s of eligible) {
     if (top.length >= TOP_COUNT) break
-    if (s.score < TOP_THRESHOLD) break          // eligible is sorted desc, can break
+    if (s.score < OTHER_THRESHOLD) break        // eligible is sorted desc, can break
     top.push(s); used.add(s.grant.id)
   }
 
-  // Other: 60-79%, up to OTHER_COUNT, exclude any already in top.
+  // Other: the next tier down, up to OTHER_COUNT, exclude any already in top.
   for (const s of eligible) {
     if (other.length >= OTHER_COUNT) break
-    if (s.score >= TOP_THRESHOLD)    continue
     if (s.score < OTHER_THRESHOLD)   break
     if (used.has(s.grant.id))        continue
     other.push(s); used.add(s.grant.id)
@@ -528,6 +528,8 @@ const FEEDBACK_QUESTIONS = [
 ]
 const FEEDBACK_OUTRO = `No need for a long reply. A few lines is plenty, and genuinely the most valuable thing you can give me right now.`
 
+const COHORT_ASK = `One last thing: I'd like to open the cohort up to some more members. If you know anyone who'd get value from Grant Tracker, let me know and I can reach out to them.`
+
 const SIGN_OFF = `Hit reply with anything. I read every one.\n\nCheers,\nPaul`
 
 function todayDateLabel(): string {
@@ -686,6 +688,8 @@ function renderTxt(draft: Draft): string {
     lines.push('')
   }
 
+  lines.push(COHORT_ASK)
+  lines.push('')
   lines.push(SIGN_OFF)
   lines.push('')
   lines.push(`---`)
@@ -904,6 +908,7 @@ function renderHtml(draft: Draft): string {
   }
 
   // Sign-off
+  parts.push(`<p style="${STYLE_P}">${esc(COHORT_ASK)}</p>`)
   parts.push(`<p style="${STYLE_P}">${esc(SIGN_OFF).replace(/\n/g, '<br>')}</p>`)
 
   // Footer
@@ -988,7 +993,9 @@ async function assembleFor(member: CohortMember, catalogue: { grants: EnrichedGr
   // Fit notes (LLM or placeholder)
   const fitNotes = new Map<string, string>()
   if (useLlm) {
-    for (const m of top)    fitNotes.set(m.grant.id, await generateFitNote('top',    org as Organisation, m.grant, m.rawRow))
+    // Top section no longer implies >=80. Keep note framing honest: only
+    // strong-claim ("strong fit") when the score actually clears 80.
+    for (const m of top)    fitNotes.set(m.grant.id, await generateFitNote(m.score >= 80 ? 'top' : 'other', org as Organisation, m.grant, m.rawRow))
     for (const m of other)  fitNotes.set(m.grant.id, await generateFitNote('other',  org as Organisation, m.grant, m.rawRow))
     for (const m of recent) fitNotes.set(m.grant.id, await generateFitNote('recent', org as Organisation, m.grant, m.rawRow))
   } else {
