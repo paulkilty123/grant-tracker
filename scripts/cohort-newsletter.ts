@@ -87,7 +87,7 @@ const TOP_COUNT         = 3
 const OTHER_COUNT       = 3
 const RECENT_COUNT      = 2
 const PIPELINE_WINDOW_DAYS = 14
-const CATALOGUE_SIZE       = 627   // for honest copy in updates section (verified 2026-06-11)
+const CATALOGUE_SIZE       = 641   // for honest copy in updates section (verified 2026-06-11)
 
 const SITE_URL     = 'https://granttracker.co.uk'
 const MATCHES_URL  = `${SITE_URL}/dashboard/search`
@@ -501,7 +501,9 @@ const WELCOME = `Thank you for being part of the founding cohort. You're one of 
 const EXPECTATIONS = `These updates will land roughly every fortnight. They'll cover what's new on the platform, your matches, your pipeline, and a question for the cohort. I'll also send the occasional email asking your view on new features.`
 
 // Second-send opener (send_first_time = false). Rewrite each fortnight.
-const SECOND_OPENER = `Thank you to everyone who replied to the first update. That feedback has shaped most of what shipped this fortnight, and it's sharpened the bigger picture too: Grant Tracker isn't here to just show you a list of opportunities. It's being built to actively work toward your funding goal, finding the right opportunities, helping you write stronger applications, and over time doing more of the legwork for you. The new Application Builder, opening to the cohort next week, is the first big step.`
+const SECOND_OPENER = `Some real progress to share from the last couple of weeks. The feedback from this group has really helped shape the functionality and ambition for Grant Tracker, so thank you. The aspiration has always been to build a tool that makes it easier to find and secure funding. To deliver on that, I want it to be a platform that helps you reach your funding goal and takes on the legwork to get there. In practice, the idea is to build a digital fundraising advisor that proactively works alongside you. One that helps you strategise, finds the right opportunities, strengthens your applications, and over time takes on more of the day-to-day work, so your time goes on the work that matters.
+
+I'm actively working on this now and will keep you updated on progress. When it's ready, you'll be the first to try it.`
 
 // Disengaged opener (replaces WELCOME + EXPECTATIONS). Used when last login
 // is older than DISENGAGEMENT_THRESHOLD_DAYS and the member isn't flagged
@@ -509,12 +511,12 @@ const SECOND_OPENER = `Thank you to everyone who replied to the first update. Th
 const DISENGAGED_CHECKIN = `Wanted to check in. I haven't seen you in Grant Tracker for a few weeks. No pressure, but it would be useful to know whether the product isn't landing right for you, or whether life just got in the way. Either is fine to say.`
 const disengagedTransition = (orgName: string) => `In the meantime, here's what's new, and a few matches that have come up for ${orgName} that might be worth a look.`
 
-const UPDATES_HEADER = `What's new on Grant Tracker`
+const UPDATES_HEADER = `New on Grant Tracker`
 
 const UPDATES_ITEMS: string[] = [
-  `Coming next week: the Application Builder. Bring in a past application, build a guided draft around the funder's actual questions, get tips to strengthen each answer, and export a working doc. It's a scaffold, not a ghostwriter. Your words, better structured. The cohort gets access first.`,
-  `Catalogue now at ${CATALOGUE_SIZE} live opportunities. 483 grants, 63 programmes, 40 investments, 39 in-kind support packages. 18 added this fortnight.`,
-  `Grant Tracker now connects to Claude. If you use Claude, you can search the catalogue straight from a conversation. Setup guide at ${SITE_URL}/mcp.`,
+  `Coming next week: the Application Builder, built on feedback from a number of you. You'll be able to bring in a past application, build a guided draft around the funder's actual questions, get tips to strengthen each answer, and export a working doc.`,
+  `Grant Tracker now connects to Claude, so you can use Claude to find grants from the Grant Tracker catalogue. I've submitted it to Anthropic to officially launch on their directory for anyone to access. More on this soon.`,
+  `And the catalogue keeps growing: 31 new opportunities added in the last two weeks, bringing it to ${CATALOGUE_SIZE} live. 495 grants, 66 programmes, 41 investments, and 39 in-kind support packages.`,
 ]
 
 const FEEDBACK_INTRO = `A few specific things I'd value your thoughts on:`
@@ -775,7 +777,7 @@ function renderHtml(draft: Draft): string {
     parts.push(`<p style="${STYLE_P}">${esc(WELCOME)}</p>`)
     parts.push(`<p style="${STYLE_P}">${esc(EXPECTATIONS)}</p>`)
   } else {
-    parts.push(`<p style="${STYLE_P}">${esc(SECOND_OPENER)}</p>`)
+    for (const para of SECOND_OPENER.split('\n\n')) parts.push(`<p style="${STYLE_P}">${esc(para)}</p>`)
   }
 
   // "What's new" renders on every send (the fortnightly promise in EXPECTATIONS).
