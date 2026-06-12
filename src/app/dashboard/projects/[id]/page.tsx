@@ -32,10 +32,16 @@ interface LinkedApp {
 }
 
 type ScoredMatch = { grant: EnrichedGrant; score: number }
-// Two-tier match list: cash routes are the main list, in-kind support is a
-// quieter strip below — segmented, not suppressed (non-grant breadth is a
-// catalogue differentiator, but it isn't funding for a costed project).
-type MatchBuckets = { cash: ScoredMatch[]; support: ScoredMatch[] }
+// Sectioned match list: cash routes grouped by type (grants lead, then
+// programmes, then investment), with in-kind support as a quieter strip
+// below — segmented, not suppressed (non-grant breadth is a catalogue
+// differentiator, but it isn't funding for a costed project).
+type MatchBuckets = {
+  grants: ScoredMatch[]
+  programmes: ScoredMatch[]
+  investment: ScoredMatch[]
+  support: ScoredMatch[]
+}
 
 const TYPE_STYLE: Record<string, { bg: string; color: string; label: string }> = {
   project:   { bg: T.paleGreen,  color: T.sage,      label: 'Project' },
@@ -43,26 +49,12 @@ const TYPE_STYLE: Record<string, { bg: string; color: string; label: string }> =
   programme: { bg: '#FAECE7',    color: '#993C1D',   label: 'Programme' },
 }
 
-// Funding-type chips — same palette as Find Funding's tabs (design system).
-const FUNDING_TYPE_STYLE: Record<string, { dot: string; bg: string; color: string; label: string }> = {
-  grant:      { dot: '#97C459', bg: '#F1F7E4', color: '#3B6D11', label: 'Grant' },
-  programme:  { dot: '#F0997B', bg: '#FAECE7', color: '#993C1D', label: 'Programme' },
-  investment: { dot: '#85B7EB', bg: '#E6F1FB', color: '#0C447C', label: 'Investment' },
-  in_kind:    { dot: '#EF9F27', bg: '#FAEEDA', color: '#854F0B', label: 'In-Kind' },
-}
-
-function FundingTypeChip({ type }: { type: string }) {
-  const s = FUNDING_TYPE_STYLE[type] ?? FUNDING_TYPE_STYLE.grant
-  return (
-    <span style={{
-      fontFamily: UI, fontWeight: 600, fontSize: 10.5, letterSpacing: '0.03em',
-      background: s.bg, color: s.color, padding: '2px 9px', borderRadius: 999,
-      display: 'inline-flex', alignItems: 'center', gap: 5,
-    }}>
-      <span style={{ width: 6, height: 6, borderRadius: 999, background: s.dot, flexShrink: 0 }} />
-      {s.label}
-    </span>
-  )
+// Funding-type section markers — same palette as Find Funding's tabs.
+const FUNDING_TYPE_STYLE: Record<string, { dot: string }> = {
+  grant:      { dot: '#97C459' },
+  programme:  { dot: '#F0997B' },
+  investment: { dot: '#85B7EB' },
+  in_kind:    { dot: '#EF9F27' },
 }
 
 const CANONICAL_TYPES = new Set(['grant', 'programme', 'investment', 'in_kind'])
@@ -226,12 +218,19 @@ export default function ProjectPage() {
         .filter((x): x is ScoredMatch => x !== null && x.score >= 55)
         .sort((a, b) => b.score - a.score)
 
-      // Cash routes (grant / programme / investment) are the main list;
+      // Grouped by funding type: grants get the most room (the primary ask),
       // in-kind support is surfaced separately, never mixed in.
-      const cash = scored.filter(m => m.grant.fundingType !== 'in_kind').slice(0, 12)
-      const support = scored.filter(m => m.grant.fundingType === 'in_kind').slice(0, 4)
-      setMatches({ cash, support })
-      emitClientEvent(o.id, 'project_match_run', { project_id: p.id, match_count: cash.length + support.length })
+      const byType = (t: string, cap: number) =>
+        scored.filter(m => (m.grant.fundingType ?? 'grant') === t).slice(0, cap)
+      const buckets: MatchBuckets = {
+        grants:     byType('grant', 8),
+        programmes: byType('programme', 4),
+        investment: byType('investment', 4),
+        support:    byType('in_kind', 4),
+      }
+      setMatches(buckets)
+      const total = buckets.grants.length + buckets.programmes.length + buckets.investment.length + buckets.support.length
+      emitClientEvent(o.id, 'project_match_run', { project_id: p.id, match_count: total })
     } finally {
       setMatching(false)
     }
@@ -521,79 +520,107 @@ export default function ProjectPage() {
           </div>
         )}
 
-        {ready && matches !== null && matches.cash.length === 0 && matches.support.length === 0 && (
-          <div style={{ background: T.cream, borderRadius: 12, padding: '18px 22px' }}>
-            <p style={{ fontFamily: BODY, fontSize: 13.5, color: T.textSecondary, margin: 0, lineHeight: 1.6 }}>
-              No strong fits in the catalogue right now. Try broadening the sectors, or check{' '}
-              <Link href="/dashboard/search" style={{ color: T.sage }}>Find Funding</Link> for the wider pool.
-            </p>
-          </div>
-        )}
-
-        {ready && matches !== null && matches.cash.length === 0 && matches.support.length > 0 && (
-          <div style={{ background: T.cream, borderRadius: 12, padding: '18px 22px' }}>
-            <p style={{ fontFamily: BODY, fontSize: 13.5, color: T.textSecondary, margin: 0, lineHeight: 1.6 }}>
-              No funding fits in the catalogue right now, though there is in-kind support below.
-              Try broadening the sectors, or check{' '}
-              <Link href="/dashboard/search" style={{ color: T.sage }}>Find Funding</Link> for the wider pool.
-            </p>
-          </div>
-        )}
-
-        {ready && matches !== null && matches.cash.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, opacity: matching ? 0.6 : 1, transition: 'opacity 150ms ease' }}>
-            {matches.cash.map(({ grant, score }) => {
-              const tier = tierLabel(score)
-              const amount = fmtAmount(grant)
-              return (
-                <div key={grant.uuid ?? grant.id} style={{
-                  background: T.white, border: `1px solid ${T.border}`, borderRadius: 12,
-                  padding: '15px 18px', display: 'flex', alignItems: 'center', gap: 14,
-                }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 2 }}>
-                      <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 14.5, color: T.textPrimary }}>
-                        {grant.title}
-                      </span>
-                      <FundingTypeChip type={(grant.fundingType ?? 'grant') as string} />
-                      <span style={{
-                        fontFamily: UI, fontWeight: 600, fontSize: 10.5, letterSpacing: '0.03em',
-                        background: tier.bg, color: tier.color, padding: '2px 9px', borderRadius: 999,
-                      }}>
-                        {tier.label} {score}%
-                      </span>
-                    </div>
-                    <span style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary }}>
-                      {grant.funder}
-                      {amount ? ` · ${amount}` : ''}
-                      {grant.deadline ? ` · Deadline ${new Date(grant.deadline).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}` : grant.isRolling ? ' · Rolling' : ''}
-                    </span>
-                  </div>
-                  <Link
-                    href={`/dashboard/applications/new?opportunity=${grant.uuid}&project=${project.id}`}
-                    style={{
-                      fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.greenDeep, background: T.lime,
-                      padding: '7px 14px', borderRadius: 8, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
-                      display: 'inline-flex', alignItems: 'center', gap: 5,
-                    }}
-                  >
-                    <Sparkles size={12} /> Start an application
-                  </Link>
+        {ready && matches !== null && (() => {
+          const cashCount = matches.grants.length + matches.programmes.length + matches.investment.length
+          const sections: { key: keyof MatchBuckets; type: string; label: string }[] = [
+            { key: 'grants',     type: 'grant',      label: 'Grants' },
+            { key: 'programmes', type: 'programme',  label: 'Programmes' },
+            { key: 'investment', type: 'investment', label: 'Investment' },
+          ]
+          return (
+            <>
+              {cashCount === 0 && (
+                <div style={{ background: T.cream, borderRadius: 12, padding: '18px 22px' }}>
+                  <p style={{ fontFamily: BODY, fontSize: 13.5, color: T.textSecondary, margin: 0, lineHeight: 1.6 }}>
+                    No funding fits in the catalogue right now{matches.support.length > 0 ? ', though there is in-kind support below' : ''}.
+                    Try broadening the sectors, or check{' '}
+                    <Link href="/dashboard/search" style={{ color: T.sage }}>Find Funding</Link> for the wider pool.
+                  </p>
                 </div>
-              )
-            })}
-          </div>
-        )}
+              )}
+
+              {cashCount > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 18, opacity: matching ? 0.6 : 1, transition: 'opacity 150ms ease' }}>
+                  {sections.map(({ key, type, label }) => {
+                    const rows = matches[key]
+                    if (rows.length === 0) return null
+                    const ts = FUNDING_TYPE_STYLE[type]
+                    return (
+                      <div key={key}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
+                          <span style={{ width: 8, height: 8, borderRadius: 999, background: ts.dot, flexShrink: 0 }} />
+                          <h3 style={{ fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: T.textPrimary, margin: 0 }}>
+                            {label}
+                          </h3>
+                          <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: T.textTertiary }}>
+                            {rows.length}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                          {rows.map(({ grant, score }) => {
+                            const tier = tierLabel(score)
+                            const amount = fmtAmount(grant)
+                            return (
+                              <div key={grant.uuid ?? grant.id} style={{
+                                background: T.white, border: `1px solid ${T.border}`, borderRadius: 12,
+                                padding: '15px 18px', display: 'flex', alignItems: 'center', gap: 14,
+                              }}>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 2 }}>
+                                    <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 14.5, color: T.textPrimary }}>
+                                      {grant.title}
+                                    </span>
+                                    <span style={{
+                                      fontFamily: UI, fontWeight: 600, fontSize: 10.5, letterSpacing: '0.03em',
+                                      background: tier.bg, color: tier.color, padding: '2px 9px', borderRadius: 999,
+                                    }}>
+                                      {tier.label} {score}%
+                                    </span>
+                                  </div>
+                                  <span style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary }}>
+                                    {grant.funder}
+                                    {amount ? ` · ${amount}` : ''}
+                                    {grant.deadline ? ` · Deadline ${new Date(grant.deadline).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}` : grant.isRolling ? ' · Rolling' : ''}
+                                  </span>
+                                </div>
+                                <Link
+                                  href={`/dashboard/applications/new?opportunity=${grant.uuid}&project=${project.id}`}
+                                  style={{
+                                    fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.greenDeep, background: T.lime,
+                                    padding: '7px 14px', borderRadius: 8, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
+                                    display: 'inline-flex', alignItems: 'center', gap: 5,
+                                  }}
+                                >
+                                  <Sparkles size={12} /> Start an application
+                                </Link>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </>
+          )
+        })()}
 
         {/* In-kind support — segmented from the funding list, quieter rows */}
         {ready && matches !== null && matches.support.length > 0 && (
           <div style={{ marginTop: 22, opacity: matching ? 0.6 : 1, transition: 'opacity 150ms ease' }}>
-            <h3 style={{ fontFamily: UI, fontWeight: 600, fontSize: 14, color: T.textPrimary, margin: '0 0 3px' }}>
-              Worth adding alongside the funding
-            </h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 3 }}>
+              <span style={{ width: 8, height: 8, borderRadius: 999, background: FUNDING_TYPE_STYLE.in_kind.dot, flexShrink: 0 }} />
+              <h3 style={{ fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: T.textPrimary, margin: 0 }}>
+                In-kind: worth adding alongside the funding
+              </h3>
+              <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: T.textTertiary }}>
+                {matches.support.length}
+              </span>
+            </div>
             <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary, margin: '0 0 10px', lineHeight: 1.5 }}>
-              In-kind support that fits this project: pro bono expertise, platforms and donated
-              services. Not cash, but it stretches whatever you raise.
+              Pro bono expertise, platforms and donated services that fit this project. Not cash,
+              but it stretches whatever you raise.
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {matches.support.map(({ grant }) => (
@@ -602,12 +629,9 @@ export default function ProjectPage() {
                   padding: '11px 16px', display: 'flex', alignItems: 'center', gap: 12,
                 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                      <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: T.textPrimary }}>
-                        {grant.title}
-                      </span>
-                      <FundingTypeChip type="in_kind" />
-                    </div>
+                    <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: T.textPrimary, display: 'block' }}>
+                      {grant.title}
+                    </span>
                     <span style={{ fontFamily: BODY, fontSize: 12, color: T.textSecondary }}>
                       {grant.funder}
                     </span>
