@@ -9,7 +9,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft, Check, ChevronRight, Sparkles } from 'lucide-react'
+import { ArrowLeft, Check, ChevronDown, ChevronRight, ChevronUp, Sparkles } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { emitClientEvent } from '@/lib/events/client'
@@ -88,6 +88,10 @@ export default function ProjectPage() {
   const [matches, setMatches] = useState<MatchBuckets | null>(null)
   const [matching, setMatching] = useState(false)
   const [showAllGaps, setShowAllGaps] = useState(false)
+  // Project fields collapse behind the completeness card once the project is
+  // matchable; a not-yet-ready project opens expanded so the core fields are
+  // in front of the user.
+  const [detailsOpen, setDetailsOpen] = useState(false)
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const matchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -113,6 +117,7 @@ export default function ProjectPage() {
       ])
       if (proj) {
         setProject(proj as Project)
+        setDetailsOpen(!readyToMatch(proj as Project))
         document.title = `${(proj as Project).name} · Grant Tracker`
       }
       setLinkedApps((apps ?? []) as LinkedApp[])
@@ -413,10 +418,17 @@ export default function ProjectPage() {
         {gaps.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 12 }}>
             {visibleGaps.map(g => (
-              <p key={String(g.key)} style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary, margin: 0 }}>
+              <button
+                key={String(g.key)}
+                onClick={() => setDetailsOpen(true)}
+                style={{
+                  fontFamily: BODY, fontSize: 12.5, color: T.textSecondary, margin: 0,
+                  background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, textAlign: 'left',
+                }}
+              >
                 <span style={{ fontFamily: UI, fontWeight: 600, color: T.amberText }}>Missing: {g.label}.</span>
                 {' '}Filling this buys {g.benefit}.
-              </p>
+              </button>
             ))}
             {gaps.length > 3 && !showAllGaps && (
               <button onClick={() => setShowAllGaps(true)} style={{
@@ -428,9 +440,26 @@ export default function ProjectPage() {
             )}
           </div>
         )}
+
+        {/* Expand/collapse tab for the project fields */}
+        <button
+          onClick={() => setDetailsOpen(o => !o)}
+          aria-expanded={detailsOpen}
+          style={{
+            fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.sage,
+            background: 'transparent', border: 'none', cursor: 'pointer',
+            padding: '12px 0 0', marginTop: 12, borderTop: `1px solid ${T.border}`,
+            width: '100%', textAlign: 'left',
+            display: 'flex', alignItems: 'center', gap: 6,
+          }}
+        >
+          {detailsOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+          {detailsOpen ? 'Hide project details' : 'Edit project details'}
+        </button>
       </div>
 
-      {/* Sections */}
+      {/* Sections (collapsed by default once the project is matchable) */}
+      {detailsOpen && (
       <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 16 }}>
         {textField(PROJECT_FIELDS.find(f => f.key === 'what_it_will_do')!)}
         {textField(PROJECT_FIELDS.find(f => f.key === 'who_benefits')!)}
@@ -480,6 +509,7 @@ export default function ProjectPage() {
         {textField(PROJECT_FIELDS.find(f => f.key === 'outreach')!)}
         {textField(PROJECT_FIELDS.find(f => f.key === 'learning')!)}
       </div>
+      )}
 
       {/* Matches */}
       <div style={{ margin: '26px 0 0' }}>
@@ -547,12 +577,12 @@ export default function ProjectPage() {
                     const ts = FUNDING_TYPE_STYLE[type]
                     return (
                       <div key={key}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
-                          <span style={{ width: 8, height: 8, borderRadius: 999, background: ts.dot, flexShrink: 0 }} />
-                          <h3 style={{ fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: T.textPrimary, margin: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 10 }}>
+                          <span style={{ width: 10, height: 10, borderRadius: 999, background: ts.dot, flexShrink: 0 }} />
+                          <h3 style={{ fontFamily: UI, fontWeight: 600, fontSize: 17, color: T.textPrimary, margin: 0, letterSpacing: '-0.01em' }}>
                             {label}
                           </h3>
-                          <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: T.textTertiary }}>
+                          <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textTertiary }}>
                             {rows.length}
                           </span>
                         </div>
@@ -609,12 +639,12 @@ export default function ProjectPage() {
         {/* In-kind support — segmented from the funding list, quieter rows */}
         {ready && matches !== null && matches.support.length > 0 && (
           <div style={{ marginTop: 22, opacity: matching ? 0.6 : 1, transition: 'opacity 150ms ease' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 3 }}>
-              <span style={{ width: 8, height: 8, borderRadius: 999, background: FUNDING_TYPE_STYLE.in_kind.dot, flexShrink: 0 }} />
-              <h3 style={{ fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: T.textPrimary, margin: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 4 }}>
+              <span style={{ width: 10, height: 10, borderRadius: 999, background: FUNDING_TYPE_STYLE.in_kind.dot, flexShrink: 0 }} />
+              <h3 style={{ fontFamily: UI, fontWeight: 600, fontSize: 16, color: T.textPrimary, margin: 0, letterSpacing: '-0.01em' }}>
                 In-kind: worth adding alongside the funding
               </h3>
-              <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: T.textTertiary }}>
+              <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textTertiary }}>
                 {matches.support.length}
               </span>
             </div>
