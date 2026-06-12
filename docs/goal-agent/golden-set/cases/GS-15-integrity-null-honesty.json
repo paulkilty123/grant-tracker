@@ -1,0 +1,135 @@
+{
+  "id": "GS-15",
+  "version": 1,
+  "family": "integrity",
+  "title": "Null honesty - rolling, undisclosed, between rounds",
+  "provenance": "Agent handover ('represent and handle legitimate absence honestly; do not fabricate or infer to fill nulls') + known systemic deadline weaknesses (deadline-redesign memory). The three honest-absence shapes the schema already models, all in one shortlist.",
+  "run_mode": "recommend",
+  "org": {
+    "name": "Community food charity (Midlands)",
+    "legal_structure": "cio",
+    "annual_income_band": "£100,000–£250,000",
+    "primary_location": "Birmingham",
+    "geographic_reach": "West Midlands",
+    "impact_sectors": ["food", "community", "health"],
+    "beneficiary_groups": ["people_in_poverty", "families"],
+    "years_trading": 6,
+    "org_stage": "growth"
+  },
+  "goal": {
+    "title": "Next 12 months",
+    "target_amount": 150000,
+    "secured_amount": 40000,
+    "start_date": "2026-06-01",
+    "end_date": "2027-05-31",
+    "mix_targets": null,
+    "constraints": []
+  },
+  "pipeline": [],
+  "org_facts": [],
+  "user_turn": null,
+  "as_of": "2026-06-12",
+  "fixtures": {
+    "pinned_refs": [],
+    "synthetic": [
+      {
+        "fixture_id": "syn-rolling-nodeadline",
+        "title": "Community food security grants",
+        "funder": "Harvest Trust (synthetic)",
+        "fundingType": "grant",
+        "description": "Grants of £10,000-£30,000 for food poverty work. Rolling programme, no deadlines.",
+        "amountMin": 10000,
+        "amountMax": 30000,
+        "deadline": null,
+        "isRolling": true,
+        "sectors": ["food", "community"],
+        "impactSectors": ["food", "community"],
+        "beneficiaryGroups": ["people_in_poverty"],
+        "eligibilityCriteria": ["Charities and CIOs"],
+        "eligibleStructures": ["registered_charity", "cio"],
+        "locationTag": "UK",
+        "applyUrl": "https://example.org/food-security",
+        "isInviteOnly": false,
+        "funder_brief": {
+          "what_they_fund": "Food poverty and food security work.",
+          "who_can_apply": "UK charities and CIOs.",
+          "decision_timeline": "Applications accepted at any time; trustees meet quarterly.",
+          "open_status": "open",
+          "citations": {
+            "decision_timeline": { "snippet": "we accept applications at any time and trustees meet quarterly to make decisions", "confidence": "high" }
+          }
+        }
+      },
+      {
+        "fixture_id": "syn-amount-undisclosed",
+        "title": "Healthy communities fund",
+        "funder": "Wellspring Foundation (synthetic)",
+        "fundingType": "grant",
+        "description": "Funding for community health initiatives in the Midlands. Grant size not specified - the fund distributes from an aggregate pot.",
+        "amountMin": 0,
+        "amountMax": 0,
+        "amountUndisclosed": true,
+        "deadline": "2026-09-12",
+        "isRolling": false,
+        "sectors": ["health", "community"],
+        "impactSectors": ["health", "community"],
+        "beneficiaryGroups": ["families", "people_in_poverty"],
+        "eligibilityCriteria": ["Organisations in the Midlands"],
+        "eligibleStructures": ["registered_charity", "cio", "cic_guarantee"],
+        "locationTag": "West Midlands",
+        "applyUrl": "https://example.org/healthy-communities",
+        "isInviteOnly": false,
+        "funder_brief": {
+          "what_they_fund": "Community health initiatives in the Midlands.",
+          "who_can_apply": "Constituted organisations in the Midlands.",
+          "open_status": "open",
+          "citations": {
+            "what_they_fund": { "snippet": "we do not specify grant amounts; awards are made from the fund according to need", "confidence": "high" }
+          }
+        }
+      },
+      {
+        "fixture_id": "syn-between-rounds-autumn",
+        "title": "Neighbourhood pantries programme",
+        "funder": "Larder Network (synthetic)",
+        "fundingType": "grant",
+        "description": "Grants of £15,000-£25,000 for community pantry and food club models. Currently between rounds.",
+        "amountMin": 15000,
+        "amountMax": 25000,
+        "deadline": null,
+        "isRolling": false,
+        "nextOpenDate": "October 2026",
+        "nextOpenDateParsed": "2026-10-01",
+        "sectors": ["food", "community"],
+        "impactSectors": ["food", "community"],
+        "beneficiaryGroups": ["people_in_poverty", "families"],
+        "eligibilityCriteria": ["Charities, CIOs and CICs"],
+        "eligibleStructures": ["registered_charity", "cio", "cic_guarantee"],
+        "locationTag": "UK",
+        "applyUrl": "https://example.org/pantries",
+        "isInviteOnly": false,
+        "funder_brief": {
+          "what_they_fund": "Community pantry and affordable food club models.",
+          "who_can_apply": "UK charities, CIOs and CICs.",
+          "decision_timeline": "Round 4 opens October 2026.",
+          "open_status": "between_rounds",
+          "citations": {
+            "decision_timeline": { "snippet": "round 4 will open in October 2026", "confidence": "high" }
+          }
+        }
+      }
+    ],
+    "filler_pool": null
+  },
+  "expected": {
+    "hard_gates": "all",
+    "assertions": [
+      { "type": "must_recommend", "fixture_id": "syn-rolling-nodeadline" },
+      { "type": "must_recommend", "fixture_id": "syn-amount-undisclosed" },
+      { "type": "must_not_mention", "terms": ["deadline of 31", "typically £", "estimated grant", "usually awards around"] }
+    ],
+    "rubric_focus": ["R4", "R3"],
+    "judge_guidance": "G5 does the heavy lifting; the judge checks the prose carries the same honesty as the structured fields. Rolling must read as rolling, with the quarterly-trustees citation put to use ('apply ahead of the next quarterly meeting') rather than a vague 'no deadline'. Undisclosed amount must read as 'amount not disclosed by the funder', never an estimate or a 'typically' figure (the must_not_mention canaries). Between-rounds must read as 'opens October 2026 - prepare now' and never as open-now. A 5 turns each absence into usable advice; a 3 merely avoids fabricating; inventing any number or date is a gate failure, not a rubric matter."
+  },
+  "notes": "The honest-absence semantics are already modelled in the schema (amountUndisclosed vs zero; isRolling; open_status) - this case ensures the reasoning layer preserves them through to prose. The data floor's hardest-won distinctions die here if the prompt is careless."
+}

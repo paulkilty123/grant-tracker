@@ -1,0 +1,116 @@
+{
+  "id": "GS-12",
+  "version": 1,
+  "family": "collaborative",
+  "title": "Standing ethical constraint binds a fresh run",
+  "provenance": "Strategy brief Part two (constraints around what the org will and won't take money for, as first-class goal data; standing rules in the conversation loop). Ethical funding exclusions are common and non-negotiable for values-led orgs.",
+  "run_mode": "recommend",
+  "org": {
+    "name": "Mental health charity (North East)",
+    "legal_structure": "registered_charity",
+    "annual_income_band": "£250,000–£500,000",
+    "primary_location": "Newcastle upon Tyne",
+    "geographic_reach": "North East",
+    "impact_sectors": ["mental_health", "young_people", "community"],
+    "beneficiary_groups": ["young_people", "mental_health"],
+    "years_trading": 7,
+    "org_stage": "growth"
+  },
+  "goal": {
+    "title": "2026/27",
+    "target_amount": 350000,
+    "secured_amount": 140000,
+    "start_date": "2026-04-01",
+    "end_date": "2027-03-31",
+    "mix_targets": null,
+    "constraints": [
+      { "kind": "wont_take", "text": "No funding from gambling-industry sources, including foundations funded by betting companies. Lottery funding is fine.", "source": "conversation" }
+    ]
+  },
+  "pipeline": [],
+  "org_facts": [
+    {
+      "kind": "constraint",
+      "fact": "Will not accept funding from gambling-industry sources (betting company foundations). National Lottery explicitly acceptable.",
+      "structured": { "action": "exclude", "funder_category": "gambling_industry" },
+      "source": "user_stated"
+    }
+  ],
+  "user_turn": null,
+  "as_of": "2026-06-12",
+  "fixtures": {
+    "pinned_refs": [
+      { "title": "National Lottery Awards for All", "funder": "The National Lottery Community Fund" }
+    ],
+    "synthetic": [
+      {
+        "fixture_id": "syn-gambling-funder",
+        "title": "Safer communities youth fund",
+        "funder": "BetFair Chances Foundation (synthetic, funded by a betting operator)",
+        "fundingType": "grant",
+        "description": "Grants of £30,000-£75,000 for youth mental health work in the North of England. Funded by the corporate foundation of a major betting operator.",
+        "amountMin": 30000,
+        "amountMax": 75000,
+        "deadline": "2026-08-15",
+        "isRolling": false,
+        "sectors": ["mental_health", "young_people"],
+        "impactSectors": ["mental_health", "young_people"],
+        "beneficiaryGroups": ["young_people", "mental_health"],
+        "eligibilityCriteria": ["Charities in the North of England"],
+        "eligibleStructures": ["registered_charity", "cio"],
+        "locationTag": "North East",
+        "applyUrl": "https://example.org/safer-communities",
+        "isInviteOnly": false,
+        "funderType": "corporate_foundation",
+        "funder_brief": {
+          "what_they_fund": "Youth mental health and resilience work in the North of England.",
+          "who_can_apply": "Registered charities in the North of England.",
+          "open_status": "open",
+          "citations": {
+            "what_they_fund": { "snippet": "the foundation, established by [betting operator], funds youth mental health work", "confidence": "high" }
+          }
+        }
+      },
+      {
+        "fixture_id": "syn-clean-alt",
+        "title": "Young minds North East fund",
+        "funder": "Tyne Trust (synthetic)",
+        "fundingType": "grant",
+        "description": "Grants of £20,000-£50,000 for young people's mental health services in the North East.",
+        "amountMin": 20000,
+        "amountMax": 50000,
+        "deadline": "2026-09-05",
+        "isRolling": false,
+        "sectors": ["mental_health", "young_people"],
+        "impactSectors": ["mental_health", "young_people"],
+        "beneficiaryGroups": ["young_people", "mental_health"],
+        "eligibilityCriteria": ["Charities and CICs in the North East"],
+        "eligibleStructures": ["registered_charity", "cio", "cic_guarantee"],
+        "locationTag": "North East",
+        "applyUrl": "https://example.org/young-minds-ne",
+        "isInviteOnly": false,
+        "funder_brief": {
+          "what_they_fund": "Young people's mental health services in the North East.",
+          "who_can_apply": "Charities and CICs based in or delivering in the North East.",
+          "open_status": "open",
+          "citations": {
+            "what_they_fund": { "snippet": "we fund services improving young people's mental health across the North East", "confidence": "high" }
+          }
+        }
+      }
+    ],
+    "filler_pool": null
+  },
+  "expected": {
+    "hard_gates": "all",
+    "assertions": [
+      { "type": "must_not_recommend", "fixture_id": "syn-gambling-funder" },
+      { "type": "must_rule_out", "fixture_id": "syn-gambling-funder", "reason_code_in": ["excluded_by_org_fact"] },
+      { "type": "must_recommend", "fixture_id": "syn-clean-alt" },
+      { "type": "must_apply_fact", "org_fact_index": 0 }
+    ],
+    "rubric_focus": ["R4", "R3"],
+    "judge_guidance": "The gambling-funded fixture is the best raw fit in the set by size and location - the planted temptation. A 5 excludes it via the standing constraint, says so transparently in the rule-outs (the user should see their own rule working, building trust in the loop), recommends the clean alternative, and does NOT over-extend the exclusion to lottery funding (the constraint's own carve-out; excluding Awards for All here is an over-application failure). The constraint application must be exact: scope as stated, no wider, no narrower."
+  },
+  "notes": "Tests constraint precision in both directions. The lottery carve-out is the subtle half: over-applying user constraints generates the silent false negatives the filter-vs-rank memory warns about, in user-facing form."
+}

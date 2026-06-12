@@ -1,0 +1,135 @@
+{
+  "id": "GS-03",
+  "version": 1,
+  "family": "cohort",
+  "title": "Brighton CIC - structure honesty and geo precision",
+  "provenance": "Active cohort member A (MCP first-encounter set): CIC limited by guarantee, Brighton & Hove, £100k-£250k, creative/disability/health, children & young people. Carries A's real signals: 20+ match_feedback rows flagging 'Wrong area' and one 'Says only registered charities on the website' flag.",
+  "run_mode": "recommend",
+  "org": {
+    "name": "Member A (Brighton creative CIC)",
+    "legal_structure": "cic_guarantee",
+    "annual_income_band": "£100,000–£250,000",
+    "primary_location": "Brighton & Hove",
+    "geographic_reach": "Sussex",
+    "impact_sectors": ["creative", "disability", "health"],
+    "beneficiary_groups": ["children", "young_people"],
+    "years_trading": 5,
+    "org_stage": "early",
+    "has_asset_lock": true
+  },
+  "goal": {
+    "title": "Year to May 2027",
+    "target_amount": 180000,
+    "secured_amount": 30000,
+    "start_date": "2026-06-01",
+    "end_date": "2027-05-31",
+    "mix_targets": null,
+    "constraints": []
+  },
+  "pipeline": [
+    { "grant_name": "Children in Need main grants", "funder_name": "BBC Children in Need", "stage": "applying", "amount_requested": 40000, "deadline": "2026-07-01" }
+  ],
+  "org_facts": [],
+  "user_turn": null,
+  "as_of": "2026-06-12",
+  "fixtures": {
+    "pinned_refs": [
+      { "title": "Sussex Community Foundation grants", "funder": "Sussex Community Foundation" }
+    ],
+    "synthetic": [
+      {
+        "fixture_id": "syn-charity-only-arts",
+        "title": "Creative Childhoods grants",
+        "funder": "Charity-Only Arts Trust (synthetic)",
+        "fundingType": "grant",
+        "description": "Grants of £10,000-£25,000 for creative work with disabled children in the South East.",
+        "amountMin": 10000,
+        "amountMax": 25000,
+        "deadline": "2026-09-01",
+        "isRolling": false,
+        "sectors": ["creative", "disability"],
+        "impactSectors": ["creative", "disability"],
+        "beneficiaryGroups": ["children", "disabled_people"],
+        "eligibilityCriteria": ["Registered charities and CIOs only"],
+        "eligibleStructures": ["registered_charity", "cio"],
+        "locationTag": "South East",
+        "applyUrl": "https://example.org/creative-childhoods",
+        "isInviteOnly": false,
+        "funder_brief": {
+          "what_they_fund": "Creative projects for disabled children in the South East of England.",
+          "who_can_apply": "Registered charities and CIOs only. CICs and other social enterprises are not eligible.",
+          "open_status": "open",
+          "citations": {
+            "who_can_apply": { "snippet": "applications are accepted from registered charities and CIOs only", "confidence": "high" }
+          }
+        }
+      },
+      {
+        "fixture_id": "syn-wrong-area-kent",
+        "title": "Kent young creatives fund",
+        "funder": "Kent Arts Foundation (synthetic)",
+        "fundingType": "grant",
+        "description": "Grants up to £15,000 for youth arts projects benefiting residents of Kent.",
+        "amountMin": 1000,
+        "amountMax": 15000,
+        "deadline": "2026-08-15",
+        "isRolling": false,
+        "sectors": ["creative", "young_people"],
+        "impactSectors": ["creative", "young_people"],
+        "beneficiaryGroups": ["young_people"],
+        "eligibilityCriteria": ["Organisations delivering in Kent"],
+        "eligibleStructures": ["registered_charity", "cio", "cic_guarantee"],
+        "locationTag": "Kent",
+        "applyUrl": "https://example.org/kent-creatives",
+        "isInviteOnly": false,
+        "funder_brief": {
+          "what_they_fund": "Youth arts projects for Kent residents.",
+          "who_can_apply": "Any constituted organisation delivering in Kent.",
+          "open_status": "open",
+          "citations": {
+            "what_they_fund": { "snippet": "projects must primarily benefit residents of Kent", "confidence": "high" }
+          }
+        }
+      },
+      {
+        "fixture_id": "syn-cic-eligible-sussex",
+        "title": "Sussex inclusive arts programme",
+        "funder": "South Downs Trust (synthetic)",
+        "fundingType": "grant",
+        "description": "Grants of £5,000-£20,000 for inclusive creative work with children and young people in Sussex. Open to charities, CICs and community groups.",
+        "amountMin": 5000,
+        "amountMax": 20000,
+        "deadline": "2026-10-01",
+        "isRolling": false,
+        "sectors": ["creative", "disability", "young_people"],
+        "impactSectors": ["creative", "disability", "young_people"],
+        "beneficiaryGroups": ["children", "young_people", "disabled_people"],
+        "eligibilityCriteria": ["Charities, CICs and constituted community groups in Sussex"],
+        "eligibleStructures": ["registered_charity", "cio", "cic_guarantee", "cic_shares", "unincorporated"],
+        "locationTag": "Sussex",
+        "applyUrl": "https://example.org/sussex-inclusive-arts",
+        "isInviteOnly": false,
+        "funder_brief": {
+          "what_they_fund": "Inclusive creative projects for children and young people across Sussex.",
+          "who_can_apply": "Registered charities, CICs and constituted community groups based in or delivering in Sussex.",
+          "open_status": "open",
+          "citations": {
+            "who_can_apply": { "snippet": "we welcome applications from registered charities, CICs and constituted community groups", "confidence": "high" }
+          }
+        }
+      }
+    ],
+    "filler_pool": "fixtures/pool-creative-national.json"
+  },
+  "expected": {
+    "hard_gates": "all",
+    "assertions": [
+      { "type": "must_recommend", "fixture_id": "syn-cic-eligible-sussex" },
+      { "type": "must_rule_out", "fixture_id": "syn-charity-only-arts", "reason_code_in": ["structure_mismatch"] },
+      { "type": "must_not_recommend", "fixture_id": "syn-wrong-area-kent" }
+    ],
+    "rubric_focus": ["R3", "R5"],
+    "judge_guidance": "Member A's lived complaints are the test: (1) charity-only opportunities recommended to a CIC, (2) geographically wrong recommendations. A 5 surfaces the CIC-eligible Sussex fixture with its who_can_apply citation, rules out the charity-only trust with the structure reason stated plainly (so A never reads that funder's website again), and does not let the Kent fund anywhere near the recommendations. Rule-out quality (R3) is the focus: 'not eligible - charities and CIOs only, per their guidance' is a 5; silently omitting it is a 3 (A would find it elsewhere and waste the research time); recommending it is a gate failure."
+  },
+  "notes": "Geo and structure are the two highest-volume real-user complaints in the feedback data. This case makes both machine-checked."
+}

@@ -1,0 +1,109 @@
+{
+  "id": "GS-13",
+  "version": 1,
+  "family": "integrity",
+  "title": "Off-goal request answered fully, related back without caging",
+  "provenance": "Strategy brief Part two (the goal is the default lens, never a cage) + Jen's feature idea (search funders by what they fund, e.g. capacity-building / a CRM) - the validated off-goal exploration use case.",
+  "run_mode": "converse",
+  "org": {
+    "name": "Heartland education charity (Jen archetype)",
+    "legal_structure": "registered_charity",
+    "annual_income_band": "£1 million–£5 million",
+    "primary_location": "Bristol",
+    "geographic_reach": "England",
+    "impact_sectors": ["education", "young_people", "community"],
+    "beneficiary_groups": ["children", "families", "people_in_poverty"],
+    "years_trading": 8,
+    "org_stage": "growth"
+  },
+  "goal": {
+    "title": "2026/27 academic year",
+    "target_amount": 1500000,
+    "secured_amount": 480000,
+    "start_date": "2026-09-01",
+    "end_date": "2027-08-31",
+    "mix_targets": { "grant": 70, "contract": 20, "corporate": 10 },
+    "constraints": []
+  },
+  "pipeline": [
+    { "grant_name": "Youth opportunity fund", "funder_name": "Large Foundation B", "stage": "applying", "amount_requested": 180000, "deadline": "2026-07-20" }
+  ],
+  "org_facts": [],
+  "user_turn": "Different question - we desperately need a proper CRM and some help implementing it. Is there any funding or support for that kind of internal capacity stuff, or is it all programme funding?",
+  "as_of": "2026-06-12",
+  "fixtures": {
+    "pinned_refs": [],
+    "synthetic": [
+      {
+        "fixture_id": "syn-capacity-grant",
+        "title": "Stronger foundations capacity grants",
+        "funder": "Infrastructure Trust (synthetic)",
+        "fundingType": "grant",
+        "description": "Grants of £5,000-£15,000 for organisational development: systems, digital infrastructure, governance. Not for programme delivery.",
+        "amountMin": 5000,
+        "amountMax": 15000,
+        "deadline": "2026-09-30",
+        "isRolling": false,
+        "sectors": ["community"],
+        "impactSectors": ["community"],
+        "beneficiaryGroups": ["general_public"],
+        "eligibilityCriteria": ["Charities with income over £100k"],
+        "eligibleStructures": ["registered_charity", "cio"],
+        "minOrgIncome": 100000,
+        "locationTag": "UK",
+        "applyUrl": "https://example.org/stronger-foundations",
+        "isInviteOnly": false,
+        "funder_brief": {
+          "what_they_fund": "Organisational development: digital systems, data infrastructure, governance capability.",
+          "who_can_apply": "UK charities with income over £100,000.",
+          "open_status": "open",
+          "citations": {
+            "what_they_fund": { "snippet": "we fund the unglamorous essentials - systems, data and governance - that make charities effective", "confidence": "high" }
+          }
+        }
+      },
+      {
+        "fixture_id": "syn-inkind-digital",
+        "title": "Digital uplift pro bono programme",
+        "funder": "TechAid (synthetic capacity builder)",
+        "fundingType": "in_kind",
+        "description": "Pro bono consulting for charities implementing CRM and data systems: 10-12 weeks of specialist volunteer support.",
+        "amountMin": 0,
+        "amountMax": 0,
+        "amountUndisclosed": true,
+        "deadline": null,
+        "isRolling": true,
+        "sectors": ["tech", "community"],
+        "impactSectors": ["tech", "community"],
+        "beneficiaryGroups": ["general_public"],
+        "eligibilityCriteria": ["UK charities and CICs"],
+        "eligibleStructures": ["registered_charity", "cio", "cic_guarantee"],
+        "locationTag": "UK",
+        "applyUrl": "https://example.org/digital-uplift",
+        "isInviteOnly": false,
+        "funderType": "capacity_builder",
+        "ikSupportType": "pro_bono_consulting",
+        "funder_brief": {
+          "what_they_fund": "Pro bono digital and data capability support for the social sector.",
+          "who_can_apply": "UK charities and CICs.",
+          "decision_timeline": "Rolling intake; matching takes four to eight weeks.",
+          "open_status": "open",
+          "citations": {
+            "what_they_fund": { "snippet": "specialist volunteers support your CRM or data project for 10-12 weeks", "confidence": "high" }
+          }
+        }
+      }
+    ],
+    "filler_pool": null
+  },
+  "expected": {
+    "hard_gates": "all",
+    "assertions": [
+      { "type": "must_recommend", "fixture_id": "syn-capacity-grant" },
+      { "type": "must_recommend", "fixture_id": "syn-inkind-digital" }
+    ],
+    "rubric_focus": ["R5", "R7"],
+    "judge_guidance": "Two failure modes, opposite directions. Caging: deflecting the question back to the £1.5m goal ('let's focus on your campaign') - the brief explicitly forbids this. Goal-amnesia: answering as a generic search with no awareness of context (e.g. proposing the capacity application in the same fortnight as the 20 July £180k deadline without comment). A 5 answers the actual question fully - both the small capacity grant and the in-kind route, with the in-kind framed honestly (value undisclosed, rolling, 4-8 week matching) - then relates back lightly: one sentence on timing relative to the goal's deadlines, not a lecture. The in-kind recommendation matters doubly: non-grant breadth is a differentiator and the cohort under-discovers it."
+  },
+  "notes": "Also quietly tests amountUndisclosed + isRolling handling (G5) on the in-kind row, in a live reasoning context rather than the dedicated GS-15."
+}

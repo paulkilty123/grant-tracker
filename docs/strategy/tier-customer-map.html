@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grant Tracker — tier ladder mapped to customers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --lime:#8ECB3C; --mid-green:#639922; --forest:#173404;
+    --pale-1:#F1F7E4; --pale-2:#EAF3DE; --pale-3:#C0DD97; --green-text:#3B6D11;
+    --cream-1:#F5F1E8; --page:#FAFAF7; --pill:#F1F0EA;
+    --text-1:#2C2C2A; --text-2:#5F5E5A; --text-3:#8A8986;
+    --coral-pale:#FAECE7; --coral:#D85A30; --coral-deep:#993C1D;
+    --blue-pale:#E6F1FB; --blue:#378ADD; --blue-deep:#0C447C;
+    --amber-pale:#FAEEDA; --amber:#BA7517; --amber-deep:#854F0B;
+    --grot:'Space Grotesk',sans-serif; --jakarta:'Plus Jakarta Sans',sans-serif;
+    --bd:0.5px solid rgba(0,0,0,0.12);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--page);font-family:var(--jakarta);color:var(--text-1);line-height:1.55;-webkit-font-smoothing:antialiased;padding:34px 26px}
+  h1,h2,h3,h4,.label,.tag,.badge,.verb{font-family:var(--grot)}
+  .wrap{max-width:1060px;margin:0 auto}
+  h1{font-weight:500;font-size:26px;letter-spacing:-0.02em;margin-bottom:5px}
+  .sub{font-size:14px;color:var(--text-2);margin-bottom:8px;max-width:800px}
+  .meta{font-size:12px;color:var(--text-3);font-family:var(--grot);margin-bottom:24px}
+  h2{font-weight:500;font-size:18px;margin:28px 0 12px}
+
+  .callout{background:var(--forest);color:#fff;border-radius:14px;padding:20px 24px;margin-bottom:22px}
+  .callout h3{font-family:var(--grot);font-weight:500;font-size:15px;color:var(--lime);margin-bottom:8px}
+  .callout p{font-size:13.5px;color:#EAF3DE;line-height:1.6;max-width:920px;margin-bottom:7px}
+  .callout p:last-child{margin-bottom:0}
+  .callout b{color:#fff;font-weight:700}
+
+  .journey{display:flex;align-items:stretch;gap:8px;margin-bottom:22px;flex-wrap:wrap}
+  .jstep{flex:1;min-width:150px;background:#fff;border:var(--bd);border-radius:12px;padding:13px 15px;position:relative}
+  .jstep .verb{font-weight:700;font-size:17px;letter-spacing:-0.01em;margin-bottom:2px}
+  .jstep .tname{font-family:var(--grot);font-weight:500;font-size:11px;color:var(--text-3);margin-bottom:6px}
+  .jstep p{font-size:11.5px;color:var(--text-2);line-height:1.45}
+  .j-find .verb{color:var(--mid-green)} .j-apply .verb{color:var(--amber-deep)}
+  .j-strat .verb{color:var(--forest)} .j-scale .verb{color:var(--blue-deep)}
+
+  .tier{background:#fff;border:var(--bd);border-radius:14px;margin-bottom:14px;overflow:hidden}
+  .tier-head{padding:15px 20px 13px;display:flex;align-items:baseline;gap:11px;flex-wrap:wrap;border-bottom:0.5px solid rgba(0,0,0,0.07)}
+  .tier-head .verb{font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.06em}
+  .tier-head h3{font-weight:500;font-size:16.5px}
+  .badge{font-weight:700;font-size:10px;letter-spacing:.05em;text-transform:uppercase;padding:3px 10px;border-radius:999px}
+  .b-now{background:var(--pale-1);color:var(--green-text)}
+  .b-launch{background:var(--forest);color:var(--lime)}
+  .b-fast{background:var(--amber-pale);color:var(--amber-deep)}
+  .b-next{background:var(--blue-pale);color:var(--blue-deep)}
+  .b-later{background:var(--pill);color:var(--text-3)}
+  .tier-head .price{margin-left:auto;font-family:var(--grot);font-weight:500;font-size:12px;color:var(--text-3)}
+  .tier-body{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0}
+  .cell{padding:14px 18px;border-right:0.5px solid rgba(0,0,0,0.06);font-size:12.5px;color:var(--text-2);line-height:1.55}
+  .cell:last-child{border-right:none}
+  .cell h4{font-weight:700;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--mid-green);margin-bottom:6px}
+  .cell b{color:var(--text-1);font-weight:600}
+  .face{display:inline-block;background:var(--pill);border-radius:999px;padding:1px 9px;font-family:var(--grot);font-weight:500;font-size:11px;color:var(--text-2);margin:2px 3px 2px 0}
+  .tier-foot{padding:11px 20px;background:var(--cream-1);font-size:12.5px;line-height:1.55;color:var(--text-2)}
+  .tier-foot b{font-family:var(--grot);font-weight:600;color:var(--text-1)}
+  .tier-foot.energy{background:var(--pale-1);color:var(--green-text)}
+  .tier-foot.energy b{color:var(--green-text)}
+  .tier-foot.warn{background:var(--coral-pale)} .tier-foot.warn b{color:var(--coral-deep)}
+
+  .note{background:var(--cream-1);border-radius:12px;padding:13px 17px;font-size:13px;color:var(--text-2);line-height:1.6;margin-bottom:11px}
+  .note b{color:var(--text-1);font-family:var(--grot);font-weight:600}
+  .note.warn{background:var(--coral-pale)} .note.warn b{color:var(--coral-deep)}
+  @media(max-width:760px){.tier-body{grid-template-columns:1fr}.cell{border-right:none;border-bottom:0.5px solid rgba(0,0,0,0.06)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Tier ladder mapped to customers</h1>
+  <p class="sub">Four tiers, each a deeper verb in the fundraising journey, each evidenced by a named cohort voice. Lined up with who it serves, their needs, the features that answer, and where your energy goes.</p>
+  <p class="meta">Companion to the strategy brief &middot; 5 June 2026 &middot; leading-candidate structure &middot; all prices placeholders pending real cost data</p>
+
+  <div class="callout">
+    <h3>The structure: one ladder, four verbs, mapped to the journey</h3>
+    <p><b>Find → Apply → Strategise → Scale.</b> Each tier is a deeper verb and a different job, not a bigger version of the same thing — and each is anchored by a real cohort voice. The strongest single feature-demand signal in the whole evidence base (the application builder, named unprompted by both David and Philomina, opposite ends of the spectrum) anchors the entry paid tier and gives the smaller-org segment its clearest, most concrete proposition.</p>
+    <p><b>Launch order is not ladder order.</b> The Companion (Strategise) launches first — its engine is the v1 reasoning core, and launching it first sets the price anchor at heartland value. The Apply tier ships shortly after, with the v1.x application builder, positioned clearly as "application help," so £25–30 reads as the apply-well tier, not as Grant Tracker's price.</p>
+  </div>
+
+  <div class="journey">
+    <div class="jstep j-find"><div class="verb">Find</div><div class="tname">Free Discovery</div><p>What exists, what fits, honestly. The front door and the funnel.</p></div>
+    <div class="jstep j-apply"><div class="verb">Apply</div><div class="tname">Application tier &middot; ~£25–30</div><p>Apply well: the framework, the workflow, the deadlines.</p></div>
+    <div class="jstep j-strat"><div class="verb">Strategise</div><div class="tname">Companion &middot; ~£65–95</div><p>The goal agent: plan, prioritise, watch, advise.</p></div>
+    <div class="jstep j-scale"><div class="verb">Scale</div><div class="tname">Team / Org &middot; ~£150–250</div><p>The team works in it; relationships managed.</p></div>
+  </div>
+
+  <h2>The tiers</h2>
+
+  <!-- FREE / FIND -->
+  <div class="tier">
+    <div class="tier-head"><span class="verb j-find" style="color:var(--mid-green)">Find</span><h3>Free Discovery</h3><span class="badge b-now">Live — opens wider late June</span><span class="price">£0 forever</span></div>
+    <div class="tier-body">
+      <div class="cell"><h4>Who it's for</h4>
+        <b>Everyone as the front door; home for the fragile end.</b> Grassroots CICs and small groups in survival or rebuild mode; overloaded, high-switch-bar orgs; and every future payer's first contact.<br>
+        <span class="face">Philomina</span><span class="face">Olympias</span><span class="face">every new user</span>
+      </div>
+      <div class="cell"><h4>Their needs (evidence)</h4>
+        Up-to-date, trustworthy opportunities ("your one is quite up to date"); honest eligibility verdicts; somewhere to save the good ones; visible deadlines; clear funding-type signposting (the loans confusion); confidence their data persists.
+      </div>
+      <div class="cell"><h4>Features that answer</h4>
+        Full search + profile matching; verdict-level eligibility flags; <b>unlimited bookmarks/saves</b> (genuinely useful, not a teaser); all funder data open incl. visible deadlines; type chips / "what you can take" filter; the MCP; the permanence + export promise.
+      </div>
+    </div>
+    <div class="tier-foot"><b>The boundary:</b> bookmarks and visible deadlines are free (saving the good ones is the user doing their own work, and hiding deadline dates would be a dark pattern). The <b>workflow</b> — pipeline stages, deadline alerts, tracking — is the Apply tier, because that's the system working for you. Cohort founding members are grandfathered into what they already have.</div>
+    <div class="tier-foot energy"><b>Your energy:</b> launch it, say the permanence line, keep data quality impeccable — then leave it alone. Near-zero cost to serve; never-converting users are the design (mission + funnel + flywheel), never the failure. Measure the paying segment separately.</div>
+  </div>
+
+  <!-- APPLY -->
+  <div class="tier">
+    <div class="tier-head"><span class="verb j-apply" style="color:var(--amber-deep)">Apply</span><h3>Application tier</h3><span class="badge b-fast">Fast-follow — ships with v1.x builder</span><span class="price">~£25–30/mo placeholder &middot; cost-bound</span></div>
+    <div class="tier-body">
+      <div class="cell"><h4>Who it's for</h4>
+        <b>Smaller orgs whose pain is the writing</b> — grassroots and stable-small (~£100k–£500k), a founder or part-time fundraiser doing the applications themselves. The segment that named this feature directly.<br>
+        <span class="face">Philomina</span><span class="face">David (the tool he asked for)</span>
+      </div>
+      <div class="cell"><h4>Their needs (evidence)</h4>
+        The blank page: "starting that first 10% is the hard part… once you start, half the work is done." Eligibility subtlety caught before weeks are wasted (the 80%-women-criteria miss). A strong application matched to the actual guidance. And a place to track what's in flight and when it's due.
+      </div>
+      <div class="cell"><h4>Features that answer</h4>
+        <b>Application builder — framework form:</b> reads the funder's guidance + the org profile, produces a structured scaffold with gap-flagging and "what a strong answer needs," for the user to write into in their own voice. Plus full pipeline (stages, tracking, history) and deadline alerts.
+      </div>
+    </div>
+    <div class="tier-foot"><b>The arithmetic that sells it:</b> one grant won that would otherwise have been missed pays for years. <b>The answer to "why not free ChatGPT?" must be on the tin:</b> the builder knows the funder's actual guidance, your verified eligibility position, and what strong applications need — with citations. Structure, not the AI slop funders now screen out. SSE is already distributing a competitor here, so the sector-channel timing matters.</div>
+    <div class="tier-foot warn"><b>The cost caveat:</b> the builder is the most inference-heavy feature on the roadmap. The framework design (structure + prompts, not full drafting) is inherently cheaper, and bounded builds-per-month keep the tail contained — but £25–30 is a target to confirm against instrumented cost once the builder exists, not a fixed promise.</div>
+  </div>
+
+  <!-- STRATEGISE / COMPANION -->
+  <div class="tier">
+    <div class="tier-head"><span class="verb j-strat" style="color:var(--forest)">Strategise</span><h3>The Companion</h3><span class="badge b-launch">The launch paid tier — your focus</span><span class="price">~£65–95/mo placeholder</span></div>
+    <div class="tier-body">
+      <div class="cell"><h4>Who it's for</h4>
+        <b>The paying heartland: £500k–£2m+ charities with a dedicated fundraising lead, and trading social enterprises / co-ops with income targets.</b> The buyer Fundin priced out at £500/mo and free tools underserve.<br>
+        <span class="face">Jen</span><span class="face">the orgs to recruit now</span>
+      </div>
+      <div class="cell"><h4>Their needs (evidence)</h4>
+        Capacity relief, not more output (the load-reduction warning); the funder deep-dive time-sink collapsed ("is this worth our time?"); the funding mix de-risked (the £20–25k multi-year gap, concentration risk); deadline vigilance; audit-grade eligibility; strategic counsel on demand.
+      </div>
+      <div class="cell"><h4>Features that answer</h4>
+        Everything in Apply, plus the goal agent: goal wizard → reasoned dashboard (pacing, gaps, risk); agent prioritisation with the why; 7-step eligibility audit with citations; funder briefs + decision timelines; selective high-signal digest; the conversation loop. The trial showcases this tier.
+      </div>
+    </div>
+    <div class="tier-foot"><b>The pitch, in their arithmetic:</b> less than half a consultant day per month; hours of funder research collapsed weekly; concentration risk watched continuously. Conversion strengthens once the application builder (shared down to the Apply tier) lands — stage expectations: reasoning-only converts modestly, the full "assistant does the work" lands at v1.x.</div>
+    <div class="tier-foot energy"><b>Your energy (the majority):</b> the v1 reasoning core IS this tier's engine — build it to the consistency bar against heartland situations. Recruit 2–3 more Jen-type orgs into the cohort now so the autumn trial test is informative. Write all paid-tier language in this buyer's terms.</div>
+  </div>
+
+  <!-- SCALE / TEAM -->
+  <div class="tier">
+    <div class="tier-head"><span class="verb j-scale" style="color:var(--blue-deep)">Scale</span><h3>Team / Organisation</h3><span class="badge b-next">v1.x+ — design now, build later</span><span class="price">~£150–250/mo placeholder</span></div>
+    <div class="tier-body">
+      <div class="cell"><h4>Who it's for</h4>
+        <b>The same heartland orgs once the team works in it</b> — fundraising teams of 2–5; the head-of-fundraising buyer with junior staff; growing orgs outgrowing Monday boards without a CRM.<br>
+        <span class="face">Jen's actual org</span><span class="face">David's team request</span>
+      </div>
+      <div class="cell"><h4>Their needs (evidence)</h4>
+        The within-org split: juniors run the functional layer (the open/easy application churn) while the leader gets the strategic layer; shared pipeline visibility; reporting deadlines and history; and, as funding goes invitation-led, the relationship/CRM layer.
+      </div>
+      <div class="cell"><h4>Features that answer</h4>
+        Multi-seat with roles (functional vs strategic views); shared pipeline + reporting + historical logs; the relationship layer with corporate partnerships as its first domain; the funder-AI-mirror as a distinctive add. The natural upgrade path — expansion revenue from existing trust.
+      </div>
+    </div>
+    <div class="tier-foot energy"><b>Your energy:</b> design only — schema headroom for seats/roles and a relationship-shaped funding category now; no build until the Companion ships and converts.</div>
+  </div>
+
+  <!-- RESERVE -->
+  <div class="tier">
+    <div class="tier-head"><span class="verb b-later" style="color:var(--text-3)">Reserve</span><h3>Consultant / Multi-org &middot; Funder side</h3><span class="badge b-later">Hedges, not plans</span><span class="price">—</span></div>
+    <div class="tier-body">
+      <div class="cell"><h4>Who they'd serve</h4>
+        Freelance fundraisers and consultancies managing several orgs (they aggregate many orgs' ability to pay); and, structurally later, funders and intermediaries — the side of the sector that actually holds budgets.
+      </div>
+      <div class="cell"><h4>When they activate</h4>
+        Consultant tier: on organic multi-org demand. Funder side: phase two (the two-sided thesis), and the structural hedge if heartland conversion underperforms — supply side rich where demand side is poor.
+      </div>
+      <div class="cell"><h4>Energy now</h4>
+        None beyond awareness. Written down so a soft autumn reads as "activate the next option," not a dead end.
+      </div>
+    </div>
+  </div>
+
+  <h2>Where the energy goes — the one-paragraph version</h2>
+  <div class="note"><b>Build for Jen, launch for everyone, give the smaller orgs the one tool they begged for.</b> The v1 reasoning core is the Companion's engine — build it to the consistency bar. Commit the application framework as early v1.x: it anchors the Apply tier and is the strongest demand signal you have. Open Free wide with the permanence promise and impeccable data, then leave it alone. Recruit the missing Jens into the cohort this summer so the trial test means something. Spec the Team tier's seats and the relationship layer as the evidenced expansion. Hold the consultant and funder options as written-down hedges.</div>
+  <div class="note warn"><b>What confirms this structure (it's the leading candidate, not yet locked):</b> instrumented cost data on the application builder (does £25–30 hold?); a stable-small voice in the cohort to validate the Apply tier's buyer; and the SSE competitor intel Philomina is forwarding. Tier gating is a launch-time decision, not a build-time blocker — so let this rest here while the build proceeds.</div>
+</div>
+</body>
+</html>

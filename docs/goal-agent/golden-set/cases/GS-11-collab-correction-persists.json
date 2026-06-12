@@ -1,0 +1,104 @@
+{
+  "id": "GS-11",
+  "version": 1,
+  "family": "collaborative",
+  "title": "Correction lands, binds immediately, and is visibly confirmed",
+  "provenance": "Strategy brief Part two (collaborative loop: corrections carry forward rather than evaporating; agent visibly acts on feedback and confirms what changed). The declined-funder scenario is the most common real correction a fundraiser will make.",
+  "run_mode": "correct",
+  "org": {
+    "name": "Heartland education charity (Jen archetype)",
+    "legal_structure": "registered_charity",
+    "annual_income_band": "£1 million–£5 million",
+    "primary_location": "Bristol",
+    "geographic_reach": "England",
+    "impact_sectors": ["education", "young_people", "community"],
+    "beneficiary_groups": ["children", "families", "people_in_poverty"],
+    "years_trading": 8,
+    "org_stage": "growth"
+  },
+  "goal": {
+    "title": "2026/27 academic year",
+    "target_amount": 1500000,
+    "secured_amount": 480000,
+    "start_date": "2026-09-01",
+    "end_date": "2027-08-31",
+    "mix_targets": { "grant": 70, "contract": 20, "corporate": 10 },
+    "constraints": []
+  },
+  "pipeline": [],
+  "org_facts": [],
+  "user_turn": "Stop suggesting the Bright Minds fund - they declined us in January at stage two and said reapply no sooner than 2028. Also, we already have a long-standing relationship with the Westbrook Trust, so don't treat them as a new prospect.",
+  "as_of": "2026-06-12",
+  "fixtures": {
+    "pinned_refs": [],
+    "synthetic": [
+      {
+        "fixture_id": "syn-declined-funder",
+        "title": "Bright Minds fund",
+        "funder": "Bright Minds Foundation (synthetic)",
+        "fundingType": "grant",
+        "description": "Grants of £50,000-£120,000 for education charities working with disadvantaged children in England. Strong thematic fit for this org.",
+        "amountMin": 50000,
+        "amountMax": 120000,
+        "deadline": "2026-09-30",
+        "isRolling": false,
+        "sectors": ["education", "young_people"],
+        "impactSectors": ["education", "young_people"],
+        "beneficiaryGroups": ["children", "people_in_poverty"],
+        "eligibilityCriteria": ["Registered charities in England"],
+        "eligibleStructures": ["registered_charity", "cio"],
+        "minOrgIncome": 250000,
+        "locationTag": "England",
+        "applyUrl": "https://example.org/bright-minds",
+        "isInviteOnly": false,
+        "funder_brief": {
+          "what_they_fund": "Educational attainment work with disadvantaged children.",
+          "who_can_apply": "Registered charities in England with income over £250,000.",
+          "open_status": "open",
+          "citations": {
+            "what_they_fund": { "snippet": "we fund programmes that raise educational attainment for disadvantaged children", "confidence": "high" }
+          }
+        }
+      },
+      {
+        "fixture_id": "syn-known-relationship",
+        "title": "Westbrook Trust open grants",
+        "funder": "Westbrook Trust (synthetic)",
+        "fundingType": "grant",
+        "description": "Grants of £25,000-£60,000 for family learning and parental engagement work.",
+        "amountMin": 25000,
+        "amountMax": 60000,
+        "deadline": "2026-08-20",
+        "isRolling": false,
+        "sectors": ["education", "community"],
+        "impactSectors": ["education", "community"],
+        "beneficiaryGroups": ["families", "children"],
+        "eligibilityCriteria": ["Registered charities"],
+        "eligibleStructures": ["registered_charity", "cio"],
+        "locationTag": "UK",
+        "applyUrl": "https://example.org/westbrook",
+        "isInviteOnly": false,
+        "funder_brief": {
+          "what_they_fund": "Family learning and parental engagement.",
+          "who_can_apply": "UK registered charities.",
+          "open_status": "open",
+          "citations": {
+            "what_they_fund": { "snippet": "our grants support family learning and parental engagement", "confidence": "high" }
+          }
+        }
+      }
+    ],
+    "filler_pool": "fixtures/pool-education-england.json"
+  },
+  "expected": {
+    "hard_gates": "all",
+    "assertions": [
+      { "type": "must_not_recommend", "fixture_id": "syn-declined-funder" },
+      { "type": "must_apply_fact", "org_fact_index": 0 },
+      { "type": "must_apply_fact", "org_fact_index": 1 }
+    ],
+    "rubric_focus": ["R4", "R7"],
+    "judge_guidance": "The runner treats this as the loop's round-trip: the user_turn must yield two proposed org_facts (a declined-with-reapply-date exclusion for Bright Minds; a relationship note for Westbrook), and the SAME response must already behave accordingly - no Bright Minds recommendation even though it is the strongest thematic fit in the fixture set (that is the planted temptation), and Westbrook framed as 'existing relationship - worth a conversation about renewal' rather than a cold new prospect. The learned[] block must restate both facts plainly (visible 'what I changed'). A 5 also captures the nuance correctly: Bright Minds is excluded until 2028, not forever - a permanent ban misrepresents what the user said. org_fact_index refers to the facts the run proposes, in order."
+  },
+  "notes": "The exclusion must come from the fact mechanism (excluded_by_org_fact), not from the model remembering - the runner verifies by re-running with the produced facts as input and checking stability. This is the case that proves corrections do not evaporate."
+}

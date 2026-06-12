@@ -1,0 +1,119 @@
+{
+  "id": "GS-01",
+  "version": 1,
+  "family": "heartland",
+  "title": "Concentration risk leads the readout",
+  "provenance": "Jen call, 3 Jun 2026 (strategy brief evidence log): pipeline concentrated in high-value high-risk £100k+ funders; explicitly wants reliable £20-25k multi-year unrestricted. The canonical Companion situation.",
+  "run_mode": "recommend",
+  "org": {
+    "name": "Heartland education charity (Jen archetype)",
+    "legal_structure": "registered_charity",
+    "annual_income_band": "£1 million–£5 million",
+    "primary_location": "Bristol",
+    "geographic_reach": "England",
+    "impact_sectors": ["education", "young_people", "community"],
+    "beneficiary_groups": ["children", "families", "people_in_poverty"],
+    "years_trading": 8,
+    "org_stage": "growth",
+    "mission": "Supports disadvantaged families to engage with their children's learning, working through schools across England."
+  },
+  "goal": {
+    "title": "2026/27 academic year",
+    "target_amount": 1500000,
+    "secured_amount": 480000,
+    "start_date": "2026-09-01",
+    "end_date": "2027-08-31",
+    "mix_targets": { "grant": 70, "contract": 20, "corporate": 10 },
+    "constraints": [
+      { "kind": "must_be", "text": "Need a larger share of multi-year unrestricted income; pipeline currently skews to single-year restricted." }
+    ]
+  },
+  "pipeline": [
+    { "grant_name": "Major national education fund - stage 2", "funder_name": "Large Foundation A", "stage": "submitted", "amount_requested": 250000, "deadline": null },
+    { "grant_name": "Youth opportunity fund", "funder_name": "Large Foundation B", "stage": "applying", "amount_requested": 180000, "deadline": "2026-07-20" },
+    { "grant_name": "Schools partnership programme", "funder_name": "Large Foundation A", "stage": "identified", "amount_requested": 150000, "deadline": "2026-09-30" }
+  ],
+  "org_facts": [],
+  "user_turn": null,
+  "as_of": "2026-06-12",
+  "fixtures": {
+    "pinned_refs": [
+      { "title": "Main open grants", "funder": "Henry Smith Foundation" },
+      { "title": "Improving Lives", "funder": "Henry Smith Foundation" }
+    ],
+    "synthetic": [
+      {
+        "fixture_id": "syn-multiyear-unrestricted",
+        "title": "Core Strength multi-year grants",
+        "funder": "Steadfast Trust (synthetic)",
+        "fundingType": "grant",
+        "description": "Three-year unrestricted core funding of £20,000-£30,000 per year for established charities improving educational outcomes for disadvantaged children in England.",
+        "amountMin": 60000,
+        "amountMax": 90000,
+        "deadline": "2026-09-15",
+        "isRolling": false,
+        "sectors": ["education", "young_people"],
+        "impactSectors": ["education", "young_people"],
+        "beneficiaryGroups": ["children", "families"],
+        "eligibilityCriteria": ["Registered charities only", "Annual income £500k-£5m", "Minimum 3 years operating"],
+        "eligibleStructures": ["registered_charity", "cio"],
+        "minOrgIncome": 500000,
+        "maxOrgIncome": 5000000,
+        "locationTag": "England",
+        "applyUrl": "https://example.org/core-strength",
+        "isInviteOnly": false,
+        "funder_brief": {
+          "what_they_fund": "Multi-year unrestricted core costs for charities improving life chances of disadvantaged children.",
+          "who_can_apply": "Registered charities and CIOs with income between £500,000 and £5 million.",
+          "decision_timeline": "Two rounds per year; decisions roughly 12 weeks after each deadline.",
+          "open_status": "open",
+          "citations": {
+            "what_they_fund": { "snippet": "we provide unrestricted core funding over three years to charities improving the life chances of disadvantaged children", "confidence": "high" },
+            "who_can_apply": { "snippet": "open to registered charities and CIOs with annual income between £500,000 and £5 million", "confidence": "high" }
+          }
+        }
+      },
+      {
+        "fixture_id": "syn-another-big-bid",
+        "title": "Transforming Futures major grants",
+        "funder": "Large Foundation C (synthetic)",
+        "fundingType": "grant",
+        "description": "Major grants of £150,000-£400,000 over three years for systemic change in education. Highly competitive; two-stage process.",
+        "amountMin": 150000,
+        "amountMax": 400000,
+        "deadline": "2026-08-31",
+        "isRolling": false,
+        "sectors": ["education"],
+        "impactSectors": ["education"],
+        "beneficiaryGroups": ["children"],
+        "eligibilityCriteria": ["Registered charities", "Income over £500k"],
+        "eligibleStructures": ["registered_charity", "cio"],
+        "minOrgIncome": 500000,
+        "locationTag": "UK",
+        "applyUrl": "https://example.org/transforming-futures",
+        "isInviteOnly": false,
+        "funder_brief": {
+          "what_they_fund": "Large multi-year grants for systemic change in education outcomes.",
+          "who_can_apply": "Registered charities with income over £500,000.",
+          "decision_timeline": "Two-stage process taking six to nine months end to end.",
+          "open_status": "open",
+          "citations": {
+            "decision_timeline": { "snippet": "applicants should expect the full two-stage process to take six to nine months", "confidence": "high" }
+          }
+        }
+      }
+    ],
+    "filler_pool": "fixtures/pool-education-england.json"
+  },
+  "expected": {
+    "hard_gates": "all",
+    "assertions": [
+      { "type": "must_flag", "flag_kind": "concentration" },
+      { "type": "must_recommend", "fixture_id": "syn-multiyear-unrestricted" },
+      { "type": "max_recommendations", "value": 5 }
+    ],
+    "rubric_focus": ["R1", "R2", "R5"],
+    "judge_guidance": "A 5 leads with the real constraint: the entire £580k pipeline sits with two funders (Large Foundation A appears twice, £400k of it) against a £1.02m gap, mostly single-year restricted, while the goal asks for multi-year unrestricted. It should recommend rebalancing toward the £20-30k multi-year unrestricted band (the synthetic Steadfast fixture is the planted right answer) BEFORE or alongside any new big bid, and explain sequencing against the existing submitted/applying items. A 2-3 produces a generic 'here are more education grants' list, recommends another £150k+ bid (syn-another-big-bid is the planted trap - recommending it without addressing concentration is the failure) or buries concentration in a footnote. Watch R5: a senior consultant would name the double-exposure to Large Foundation A specifically."
+  },
+  "notes": "The single most important case in the set: it encodes the Companion's reason to exist for the paying heartland. Henry Smith pinned refs add real catalogue shape; if absent from snapshot, the case still functions on synthetics + pool."
+}

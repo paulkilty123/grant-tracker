@@ -1,0 +1,111 @@
+{
+  "id": "GS-05",
+  "version": 1,
+  "family": "cohort",
+  "title": "Sussex micro-charity - size floor and micro-grant surfacing",
+  "provenance": "Active cohort member D (MCP set S4/T4): tiny Sussex music charity, under £10k income, young people. T4's framing was the user's own: 'most grants seem too big - what's open for organisations our size?'",
+  "run_mode": "recommend",
+  "org": {
+    "name": "Member D (Sussex youth music charity)",
+    "legal_structure": "registered_charity",
+    "annual_income_band": "Under £10,000",
+    "primary_location": "Sussex",
+    "geographic_reach": "Sussex",
+    "impact_sectors": ["creative", "young_people"],
+    "niche_tags": ["music"],
+    "beneficiary_groups": ["young_people"],
+    "years_trading": 3,
+    "org_stage": "early"
+  },
+  "goal": {
+    "title": "Next 12 months",
+    "target_amount": 15000,
+    "secured_amount": 2000,
+    "start_date": "2026-06-01",
+    "end_date": "2027-05-31",
+    "mix_targets": null,
+    "constraints": []
+  },
+  "pipeline": [],
+  "org_facts": [],
+  "user_turn": null,
+  "as_of": "2026-06-12",
+  "fixtures": {
+    "pinned_refs": [
+      { "title": "National Lottery Awards for All", "funder": "The National Lottery Community Fund" },
+      { "title": "Sussex Community Foundation grants", "funder": "Sussex Community Foundation" }
+    ],
+    "synthetic": [
+      {
+        "fixture_id": "syn-income-floor-50k",
+        "title": "Youth music partnerships fund",
+        "funder": "Crescendo Foundation (synthetic)",
+        "fundingType": "grant",
+        "description": "Grants of £30,000-£80,000 for established youth music organisations with annual income above £50,000.",
+        "amountMin": 30000,
+        "amountMax": 80000,
+        "deadline": "2026-09-30",
+        "isRolling": false,
+        "sectors": ["creative", "young_people"],
+        "impactSectors": ["creative", "young_people"],
+        "beneficiaryGroups": ["young_people"],
+        "eligibilityCriteria": ["Annual income above £50,000", "Two years of accounts"],
+        "eligibleStructures": ["registered_charity", "cio", "cic_guarantee"],
+        "minOrgIncome": 50000,
+        "locationTag": "UK",
+        "applyUrl": "https://example.org/youth-music-partnerships",
+        "isInviteOnly": false,
+        "funder_brief": {
+          "what_they_fund": "Partnership programmes by established youth music organisations.",
+          "who_can_apply": "Organisations with annual income above £50,000 and at least two years of published accounts.",
+          "open_status": "open",
+          "citations": {
+            "who_can_apply": { "snippet": "applicant organisations must have annual income above £50,000", "confidence": "high" }
+          }
+        }
+      },
+      {
+        "fixture_id": "syn-micro-grant",
+        "title": "Small sparks music grants",
+        "funder": "Quaver Trust (synthetic)",
+        "fundingType": "grant",
+        "description": "Micro-grants of £500-£3,000 for grassroots music activity with young people. Designed for very small organisations; light application.",
+        "amountMin": 500,
+        "amountMax": 3000,
+        "deadline": null,
+        "isRolling": true,
+        "sectors": ["creative", "young_people"],
+        "impactSectors": ["creative", "young_people"],
+        "beneficiaryGroups": ["young_people"],
+        "eligibilityCriteria": ["Small organisations with income under £25,000"],
+        "eligibleStructures": ["registered_charity", "cio", "cic_guarantee", "unincorporated"],
+        "maxOrgIncome": 25000,
+        "locationTag": "UK",
+        "applyUrl": "https://example.org/small-sparks",
+        "isInviteOnly": false,
+        "funder_brief": {
+          "what_they_fund": "Grassroots music-making with young people, run by very small organisations.",
+          "who_can_apply": "Organisations with annual income under £25,000.",
+          "decision_timeline": "Rolling applications; decisions within six weeks.",
+          "open_status": "open",
+          "citations": {
+            "who_can_apply": { "snippet": "we only fund organisations whose annual income is under £25,000", "confidence": "high" },
+            "decision_timeline": { "snippet": "applications are accepted on a rolling basis with decisions within six weeks", "confidence": "high" }
+          }
+        }
+      }
+    ],
+    "filler_pool": "fixtures/pool-creative-national.json"
+  },
+  "expected": {
+    "hard_gates": "all",
+    "assertions": [
+      { "type": "must_recommend", "fixture_id": "syn-micro-grant" },
+      { "type": "must_rule_out", "fixture_id": "syn-income-floor-50k", "reason_code_in": ["org_income_below_floor"] },
+      { "type": "max_recommendations", "value": 5 }
+    ],
+    "rubric_focus": ["R3", "R7", "R5"],
+    "judge_guidance": "Member D's stated stuck-point is grants being too big for them. A 5 surfaces genuinely right-sized opportunities (the micro-grant fixture; Awards for All if pinned), rules out the income-floored fund with the floor stated and cited (so D stops wondering), and keeps the whole readout proportionate to a £15k goal - recommending a punishing application burden for a £2k grant fails the consultant test. The rolling deadline on the micro-grant must be presented as rolling (G5), ideally with the six-week decision time put to use in pacing advice."
+  },
+  "notes": "Both ends of the income range coexist in the cohort (D and F under £10k, C at £1-5m); the agent must not have a single implicit org size in mind."
+}

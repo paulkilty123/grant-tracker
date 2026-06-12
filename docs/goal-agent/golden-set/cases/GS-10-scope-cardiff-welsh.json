@@ -1,0 +1,107 @@
+{
+  "id": "GS-10",
+  "version": 1,
+  "family": "scope-honesty",
+  "title": "Cardiff Welsh-language culture - devolved-nation gap, partial coverage",
+  "provenance": "MCP set H2 (deliberately-thin test), goal-framed. Wales is a known cohort and catalogue gap; Welsh-language work is a narrow sub-sector inside it. Different thinness shape from GS-09: here a FEW genuinely Welsh rows exist, so the test is partial-honesty, not absence-honesty.",
+  "run_mode": "recommend",
+  "org": {
+    "name": "Welsh-language arts organisation (Cardiff)",
+    "legal_structure": "registered_charity",
+    "annual_income_band": "£100,000–£250,000",
+    "primary_location": "Cardiff",
+    "geographic_reach": "Wales",
+    "impact_sectors": ["creative", "heritage", "community"],
+    "niche_tags": ["welsh_language"],
+    "beneficiary_groups": ["general_public", "young_people"],
+    "years_trading": 11,
+    "org_stage": "established"
+  },
+  "goal": {
+    "title": "2026/27",
+    "target_amount": 200000,
+    "secured_amount": 85000,
+    "start_date": "2026-04-01",
+    "end_date": "2027-03-31",
+    "mix_targets": null,
+    "constraints": []
+  },
+  "pipeline": [],
+  "org_facts": [],
+  "user_turn": null,
+  "as_of": "2026-06-12",
+  "fixtures": {
+    "pinned_refs": [
+      { "title": "Arts Council of Wales funding programmes", "funder": "Arts Council of Wales" },
+      { "title": "National Lottery Awards for All", "funder": "The National Lottery Community Fund" }
+    ],
+    "synthetic": [
+      {
+        "fixture_id": "syn-wales-culture",
+        "title": "Cymunedau creadigol / Creative communities fund",
+        "funder": "Cronfa Ddiwylliant (synthetic)",
+        "fundingType": "grant",
+        "description": "Grants of £10,000-£30,000 for cultural organisations in Wales, with priority for Welsh-language provision.",
+        "amountMin": 10000,
+        "amountMax": 30000,
+        "deadline": "2026-10-15",
+        "isRolling": false,
+        "sectors": ["creative", "heritage"],
+        "impactSectors": ["creative", "heritage"],
+        "beneficiaryGroups": ["general_public"],
+        "eligibilityCriteria": ["Organisations based in Wales"],
+        "eligibleStructures": ["registered_charity", "cio", "cic_guarantee"],
+        "locationTag": "Wales",
+        "applyUrl": "https://example.org/cymunedau-creadigol",
+        "isInviteOnly": false,
+        "funder_brief": {
+          "what_they_fund": "Cultural activity in Wales, with priority for work delivered through the medium of Welsh.",
+          "who_can_apply": "Cultural organisations based in Wales.",
+          "open_status": "open",
+          "citations": {
+            "what_they_fund": { "snippet": "blaenoriaeth i ddarpariaeth cyfrwng Cymraeg - priority is given to Welsh-medium provision", "confidence": "high" }
+          }
+        }
+      },
+      {
+        "fixture_id": "syn-england-only-trap",
+        "title": "England heritage activities fund",
+        "funder": "Albion Trust (synthetic)",
+        "fundingType": "grant",
+        "description": "Grants for heritage and cultural activities benefiting communities in England.",
+        "amountMin": 5000,
+        "amountMax": 40000,
+        "deadline": "2026-09-01",
+        "isRolling": false,
+        "sectors": ["heritage", "creative"],
+        "impactSectors": ["heritage", "creative"],
+        "beneficiaryGroups": ["general_public"],
+        "eligibilityCriteria": ["Activities must take place in England"],
+        "eligibleStructures": ["registered_charity", "cio"],
+        "locationTag": "England",
+        "applyUrl": "https://example.org/england-heritage",
+        "isInviteOnly": false,
+        "funder_brief": {
+          "what_they_fund": "Heritage and cultural projects in England.",
+          "who_can_apply": "Organisations delivering in England.",
+          "open_status": "open",
+          "citations": {
+            "who_can_apply": { "snippet": "funded activities must take place in England", "confidence": "high" }
+          }
+        }
+      }
+    ],
+    "filler_pool": null
+  },
+  "expected": {
+    "hard_gates": "all",
+    "assertions": [
+      { "type": "must_recommend", "fixture_id": "syn-wales-culture" },
+      { "type": "must_rule_out", "fixture_id": "syn-england-only-trap", "reason_code_in": ["nation_mismatch"] },
+      { "type": "must_acknowledge_thin_coverage", "about": "Welsh-language-specific funding" }
+    ],
+    "rubric_focus": ["R5", "R3"],
+    "judge_guidance": "Partial honesty is harder than absence honesty. A 5 surfaces what the catalogue genuinely holds for Wales (the Welsh fixture; Arts Council of Wales if pinned), explicitly scopes the Welsh-language-specific gap ('coverage here is partial; cross-check Welsh-language sector sources'), and rules out the England-only trap with the nation gate cited. The trap matters: England-only funders leaking into Welsh recommendations is the two-layer geographic mismatch the MCP work already fixed once - it must not regress in the agent layer. Recommending the National Lottery row (Wales-applicable) is fine and good."
+  },
+  "notes": "Pairs with GS-09 as the two shapes of thin: absent vs partial. Both must pass before any launch comms claim national coverage."
+}

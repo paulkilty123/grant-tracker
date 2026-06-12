@@ -1,0 +1,147 @@
+{
+  "id": "GS-06",
+  "version": 1,
+  "family": "cohort",
+  "title": "Pre-revenue CIC - stage gates and multi-funding-type mix",
+  "provenance": "Active cohort member F (MCP set T2/F3): pre-revenue CIC, financial inclusion for disabled people, open to grants and social investment. Plus the David evidence-log Aviva pattern (hidden £1m revenue minimum) as a pinned rule-out.",
+  "run_mode": "recommend",
+  "org": {
+    "name": "Member F (pre-revenue fintech-for-good CIC)",
+    "legal_structure": "cic_guarantee",
+    "annual_income_band": "Under £10,000",
+    "primary_location": "UK-wide",
+    "geographic_reach": "UK",
+    "impact_sectors": ["financial", "disability", "tech"],
+    "beneficiary_groups": ["disabled_people", "older_people", "mental_health"],
+    "years_trading": 0,
+    "org_stage": "pre_revenue",
+    "has_asset_lock": true,
+    "funding_type_preferences": ["grant", "investment", "programme"]
+  },
+  "goal": {
+    "title": "Get to first pilot",
+    "target_amount": 60000,
+    "secured_amount": 5000,
+    "start_date": "2026-06-01",
+    "end_date": "2027-06-01",
+    "mix_targets": { "grant": 60, "investment": 25, "programme": 15 },
+    "constraints": [
+      { "kind": "wont_take", "text": "No secured lending - we have no assets to secure against and an asset lock." }
+    ]
+  },
+  "pipeline": [],
+  "org_facts": [],
+  "user_turn": null,
+  "as_of": "2026-06-12",
+  "fixtures": {
+    "pinned_refs": [
+      { "title": "Aviva Financial Futures Fund", "funder": "Aviva" },
+      { "title": "UnLtd awards", "funder": "UnLtd" }
+    ],
+    "synthetic": [
+      {
+        "fixture_id": "syn-trading-years-gate",
+        "title": "Inclusive finance growth grants",
+        "funder": "Fairer Money Trust (synthetic)",
+        "fundingType": "grant",
+        "description": "Grants of £20,000-£40,000 for organisations improving financial inclusion. Minimum two years operating history required.",
+        "amountMin": 20000,
+        "amountMax": 40000,
+        "deadline": "2026-08-31",
+        "isRolling": false,
+        "sectors": ["financial", "community"],
+        "impactSectors": ["financial", "community"],
+        "beneficiaryGroups": ["people_in_poverty", "disabled_people"],
+        "eligibilityCriteria": ["Minimum two years operating history", "Charities, CICs and co-ops"],
+        "eligibleStructures": ["registered_charity", "cio", "cic_guarantee", "cooperative"],
+        "locationTag": "UK",
+        "applyUrl": "https://example.org/inclusive-finance",
+        "isInviteOnly": false,
+        "funder_brief": {
+          "what_they_fund": "Organisations widening access to fair financial services.",
+          "who_can_apply": "Charities, CICs and co-operatives with at least two years of operating history.",
+          "open_status": "open",
+          "citations": {
+            "who_can_apply": { "snippet": "applicants must have been operating for at least two years", "confidence": "high" }
+          }
+        }
+      },
+      {
+        "fixture_id": "syn-early-stage-programme",
+        "title": "Tech for good accelerator",
+        "funder": "Catalyst Collective (synthetic)",
+        "fundingType": "programme",
+        "description": "Six-month accelerator for early-stage tech-for-good ventures, including pre-revenue. Remote-first; includes £15,000 grant funding.",
+        "amountMin": 15000,
+        "amountMax": 15000,
+        "deadline": "2026-07-15",
+        "isRolling": false,
+        "sectors": ["tech", "social_innovation"],
+        "impactSectors": ["tech", "social_innovation"],
+        "beneficiaryGroups": ["general_public"],
+        "eligibilityCriteria": ["Early-stage and pre-revenue ventures welcome"],
+        "eligibleStructures": ["cic_guarantee", "cic_shares", "ltd_shares", "registered_charity"],
+        "locationTag": "UK",
+        "applyUrl": "https://example.org/tech-for-good-accelerator",
+        "isInviteOnly": false,
+        "progLocationMode": "remote",
+        "progLengthWeeks": 26,
+        "progIncludesFunding": true,
+        "progFundingAmount": 15000,
+        "progStageTarget": ["idea", "pre_revenue", "early"],
+        "funder_brief": {
+          "what_they_fund": "Early-stage technology ventures with social purpose, including pre-revenue teams.",
+          "who_can_apply": "Pre-revenue and early-stage ventures of any incorporated form.",
+          "decision_timeline": "Cohort starts October 2026; applications close 15 July.",
+          "open_status": "open",
+          "citations": {
+            "who_can_apply": { "snippet": "we welcome pre-revenue and early-stage ventures", "confidence": "high" }
+          }
+        }
+      },
+      {
+        "fixture_id": "syn-secured-loan",
+        "title": "Social enterprise secured loan fund",
+        "funder": "Anchor Capital (synthetic)",
+        "fundingType": "investment",
+        "fundingSubtype": "loan",
+        "description": "Secured loans of £50,000-£250,000 for trading social enterprises with assets.",
+        "amountMin": 50000,
+        "amountMax": 250000,
+        "deadline": null,
+        "isRolling": true,
+        "sectors": ["social_economy"],
+        "impactSectors": ["social_economy"],
+        "beneficiaryGroups": ["general_public"],
+        "eligibilityCriteria": ["Security required", "Trading history of 3+ years"],
+        "eligibleStructures": ["cic_shares", "ltd_shares", "cooperative"],
+        "locationTag": "UK",
+        "applyUrl": "https://example.org/secured-loans",
+        "isInviteOnly": false,
+        "siInstrumentType": "secured_loan",
+        "siSecurityRequired": "fixed_charge",
+        "siMinInvestment": 50000,
+        "funder_brief": {
+          "what_they_fund": "Asset-backed growth lending for established trading social enterprises.",
+          "who_can_apply": "Trading social enterprises with three or more years of accounts and assets to secure against.",
+          "open_status": "open",
+          "citations": {
+            "who_can_apply": { "snippet": "loans are secured against organisational assets", "confidence": "high" }
+          }
+        }
+      }
+    ],
+    "filler_pool": null
+  },
+  "expected": {
+    "hard_gates": "all",
+    "assertions": [
+      { "type": "must_recommend", "fixture_id": "syn-early-stage-programme" },
+      { "type": "must_rule_out", "fixture_id": "syn-trading-years-gate", "reason_code_in": ["insufficient_trading_years"] },
+      { "type": "must_not_recommend", "fixture_id": "syn-secured-loan" }
+    ],
+    "rubric_focus": ["R3", "R2", "R4"],
+    "judge_guidance": "Stage-awareness is the test. A 5 treats pre-revenue as the organising fact: surfaces the genuinely early-stage routes (the accelerator fixture; UnLtd if pinned), rules out the two-years-history fund with the gate cited, and excludes secured lending on BOTH the user's stated constraint and the structural facts (asset lock, no assets, siSecurityRequired) - ideally noting the constraint is the user's own. If the pinned Aviva ref resolves with its £1m revenue minimum, ruling it out with that citation is the exact David-pattern win the catalogue exists for. Mix reasoning (R2) should sequence: programme + micro-grants now, investment-readiness later, not all three types pushed at once."
+  },
+  "notes": "Multi-funding-type reasoning is a positioning differentiator (non-grant breadth memory); this is the case that keeps it honest at the hard end (pre-revenue, where most things are NOT eligible)."
+}

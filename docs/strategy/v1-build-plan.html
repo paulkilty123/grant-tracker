@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grant Tracker — v1 build plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --lime:#8ECB3C; --mid-green:#639922; --forest:#173404; --active-forest:#27500A;
+    --pale-1:#F1F7E4; --pale-2:#EAF3DE; --pale-3:#C0DD97; --green-text:#3B6D11; --nav-green:#97C459;
+    --cream-1:#F5F1E8; --page:#FAFAF7; --pill:#F1F0EA;
+    --text-1:#2C2C2A; --text-2:#5F5E5A; --text-3:#8A8986;
+    --coral-pale:#FAECE7; --coral:#D85A30; --coral-deep:#993C1D;
+    --blue-pale:#E6F1FB; --blue:#378ADD; --blue-deep:#0C447C;
+    --amber-pale:#FAEEDA; --amber:#BA7517; --amber-deep:#854F0B;
+    --grot:'Space Grotesk',sans-serif; --jakarta:'Plus Jakarta Sans',sans-serif;
+    --bd:0.5px solid rgba(0,0,0,0.12);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--page);font-family:var(--jakarta);color:var(--text-1);line-height:1.55;-webkit-font-smoothing:antialiased;padding:34px 26px}
+  .num,h1,h2,h3,h4,.label,.tag{font-family:var(--grot)}
+  .wrap{max-width:1000px;margin:0 auto}
+  h1{font-weight:500;font-size:26px;letter-spacing:-0.02em;margin-bottom:5px}
+  .sub{font-size:14px;color:var(--text-2);margin-bottom:8px;max-width:760px}
+  .meta{font-size:12px;color:var(--text-3);font-family:var(--grot);margin-bottom:26px}
+  h2{font-weight:500;font-size:18px;letter-spacing:-0.01em;margin:30px 0 13px;color:var(--text-1)}
+
+  .callout{background:var(--forest);color:#fff;border-radius:14px;padding:20px 24px;margin-bottom:26px}
+  .callout h3{font-family:var(--grot);font-weight:500;font-size:15px;color:var(--lime);margin-bottom:8px}
+  .callout p{font-size:13.5px;color:#EAF3DE;line-height:1.6;max-width:900px;margin-bottom:8px}
+  .callout p:last-child{margin-bottom:0}
+  .callout b{color:#fff;font-weight:700}
+
+  .legend{display:flex;gap:18px;flex-wrap:wrap;font-size:12px;color:var(--text-2);font-family:var(--grot);font-weight:500;margin-bottom:20px;align-items:center}
+  .pill{display:inline-flex;align-items:center;gap:7px;font-family:var(--grot);font-weight:500;font-size:11px;padding:3px 10px;border-radius:999px}
+  .pill .d{width:8px;height:8px;border-radius:50%}
+  .build{background:var(--pale-1);color:var(--green-text)} .build .d{background:var(--mid-green)}
+  .iter{background:var(--amber-pale);color:var(--amber-deep)} .iter .d{background:var(--amber)}
+
+  .phase{background:#fff;border:var(--bd);border-radius:14px;padding:18px 20px;margin-bottom:14px;position:relative}
+  .phase-head{display:flex;align-items:baseline;gap:11px;flex-wrap:wrap;margin-bottom:3px}
+  .phase-n{font-family:var(--grot);font-weight:700;font-size:12px;color:#fff;background:var(--forest);padding:3px 9px;border-radius:7px;flex-shrink:0}
+  .phase-title{font-family:var(--grot);font-weight:500;font-size:16px}
+  .phase-when{font-family:var(--grot);font-weight:500;font-size:11.5px;color:var(--text-3);margin-left:auto}
+  .phase-goal{font-size:13px;color:var(--text-2);margin:6px 0 12px;line-height:1.5}
+  .phase-goal b{color:var(--text-1);font-weight:600}
+  .item{display:flex;gap:11px;padding:9px 0;border-top:0.5px solid rgba(0,0,0,0.06)}
+  .item:first-of-type{border-top:none}
+  .item .ic{flex-shrink:0;margin-top:2px}
+  .item-body{flex:1}
+  .item-t{font-family:var(--grot);font-weight:500;font-size:13.5px;margin-bottom:2px}
+  .item-d{font-size:12.5px;color:var(--text-2);line-height:1.5}
+  .est{font-family:var(--grot);font-weight:500;font-size:11px;color:var(--text-3);white-space:nowrap;flex-shrink:0;text-align:right}
+
+  .note{background:var(--cream-1);border-radius:12px;padding:14px 18px;font-size:13px;color:var(--text-2);line-height:1.6;margin-bottom:12px}
+  .note b{color:var(--text-1);font-family:var(--grot);font-weight:600}
+  .note.warn{background:var(--coral-pale)} .note.warn b{color:var(--coral-deep)}
+  .note.green{background:var(--pale-1);color:var(--green-text)} .note.green b{color:var(--green-text)}
+
+  .timing{display:flex;gap:0;border-radius:12px;overflow:hidden;border:var(--bd);margin:6px 0 14px;flex-wrap:wrap}
+  .tcol{flex:1;min-width:160px;padding:14px 16px;background:#fff;border-right:0.5px solid rgba(0,0,0,0.08)}
+  .tcol .tp{font-family:var(--grot);font-weight:700;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--mid-green);margin-bottom:6px}
+  .tcol h4{font-family:var(--grot);font-weight:500;font-size:14px;margin-bottom:5px}
+  .tcol .tn{font-family:var(--grot);font-weight:700;font-size:20px;color:var(--forest);margin-bottom:5px}
+  .tcol p{font-size:12px;color:var(--text-2);line-height:1.5}
+  .out{background:#fff;border:0.5px solid rgba(0,0,0,0.14)}
+  .excl{font-size:13px;color:var(--text-2);line-height:1.7}
+  .excl b{font-family:var(--grot);font-weight:600;color:var(--text-1)}
+  .ico{display:inline-block;vertical-align:middle}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>v1 build plan</h1>
+  <p class="sub">The scoped spine that proves the core bet — the connected strategic companion, grounded in the existing engines. Sequenced for Claude Code, in dependency order.</p>
+  <p class="meta">Companion to the strategy brief &middot; 2 June 2026 &middot; timings are Code-paced, not man-hours &mdash; calibrate against your own observed velocity</p>
+
+  <div class="callout">
+    <h3>The one distinction that governs the timeline</h3>
+    <p>v1 work splits into two categories paced by completely different things. <b>Buildable work</b> (foundations, surfaces, plumbing) is where Code is genuinely fast and conventional estimates overshoot — known engineering against existing assets. <b>Quality-iteration work</b> (the reasoning core, the upload extraction) is NOT paced by coding speed — Code writes it fast, but elapsed time is the judgment loop of getting the reasoning consistently good across real situations. Code's speed advantage is large on the first and small on the second.</p>
+    <p>So the way to compress v1 is not to code faster (Code already is) — it's to keep scope ruthlessly tight, and to attack the reasoning quality early and directly, testing it with real cohort situations before building the full surfaces around it. Prove the uncertain part cheaply, then build around what works.</p>
+  </div>
+
+  <div class="legend">
+    <span class="pill build"><span class="d"></span>Buildable — Code-fast, predictable</span>
+    <span class="pill iter"><span class="d"></span>Iteration — judgment-paced, calendar time</span>
+  </div>
+
+  <!-- PHASE 1 -->
+  <div class="phase">
+    <div class="phase-head">
+      <span class="phase-n">1</span>
+      <span class="phase-title">Foundations — the durable agent layer</span>
+      <span class="phase-when">do first &middot; ~1–2 wks</span>
+    </div>
+    <div class="phase-goal">The architectural core everything reasons over. <b>Build this first because every later phase depends on it.</b> Known engineering — Code is fast and reliable here.</div>
+    <div class="item">
+      <span class="pill build ic"><span class="d"></span></span>
+      <div class="item-body"><div class="item-t">Persistent org model</div><div class="item-d">Goal, org context (programmes, capacity, history), preferences, constraints as proper tables. The single source of truth every surface reads from and writes to. The whole companion feel depends on this holding rich, accurate context.</div></div>
+      <span class="est">2–4 days</span>
+    </div>
+    <div class="item">
+      <span class="pill build ic"><span class="d"></span></span>
+      <div class="item-body"><div class="item-t">Goal + agent-state data model</div><div class="item-d">Goal schema (target, timeline, mix, milestones, constraints), plus agent-run and recommendation state so reasoning persists rather than evaporating per query.</div></div>
+      <span class="est">2–4 days</span>
+    </div>
+    <div class="item">
+      <span class="pill build ic"><span class="d"></span></span>
+      <div class="item-body"><div class="item-t">Re-grain existing data to org-level</div><div class="item-d">Where feedback/pipeline data isn't already org-scoped, re-grain it so the agent reasons per-organisation. Also: capture data + consent foundations cleanly now, so the central brain can accumulate correctly from the first user.</div></div>
+      <span class="est">2–3 days</span>
+    </div>
+  </div>
+
+  <!-- PHASE 2 -->
+  <div class="phase">
+    <div class="phase-head">
+      <span class="phase-n">2</span>
+      <span class="phase-title">Reasoning core — tested early and cheaply</span>
+      <span class="phase-when">the hard part &middot; ~4–8 wks elapsed</span>
+    </div>
+    <div class="phase-goal">The heart of v1, and the part that sets the timeline. <b>Test it with real cohort situations before building the surfaces around it</b> — this front-loads the uncertainty and tells you fast whether it hits the bar and how much iteration it needs.</div>
+    <div class="item">
+      <span class="pill build ic"><span class="d"></span></span>
+      <div class="item-body"><div class="item-t">Orchestration scaffold</div><div class="item-d">Wire the org model + the existing matcher/eligibility outputs into a reasoning pass. Code writes this quickly — it's plumbing on top of engines you already have.</div></div>
+      <span class="est">3–5 days</span>
+    </div>
+    <div class="item">
+      <span class="pill iter ic"><span class="d"></span></span>
+      <div class="item-body"><div class="item-t">Reasoning quality — the iteration loop</div><div class="item-d">Get recommendations to the MCP-capture bar consistently: lead with the real constraint, sequence, rule out with reasons, firm-on-facts / transparent-on-judgment. Paced by your evaluation against real cases, not by coding. This is where elapsed time lives.</div></div>
+      <span class="est">weeks, not days</span>
+    </div>
+    <div class="item">
+      <span class="pill iter ic"><span class="d"></span></span>
+      <div class="item-body"><div class="item-t">Collaborative loop</div><div class="item-d">Challenge / correct / add-context / the visible "what I've learned," updating the persistent model. Start with interrogation + factual correction + constraint-adding; the honest-disagreement nuance can follow. Also iteration-paced (getting the behaviour right).</div></div>
+      <span class="est">part of the loop</span>
+    </div>
+    <div class="item">
+      <span class="pill build ic"><span class="d"></span></span>
+      <div class="item-body"><div class="item-t">Cost controls — in from the start</div><div class="item-d">Prompt caching, model-tiering, per-user cost instrumentation, background cost caps. Known patterns. The instrumentation is what later lets you set the tier prices against real cost-to-serve.</div></div>
+      <span class="est">3–5 days</span>
+    </div>
+  </div>
+
+  <!-- PHASE 3 -->
+  <div class="phase">
+    <div class="phase-head">
+      <span class="phase-n">3</span>
+      <span class="phase-title">Onboarding — goal capture</span>
+      <span class="phase-when">after reasoning works &middot; ~1–2 wks</span>
+    </div>
+    <div class="phase-goal">Two paths converging on a defined goal. The wizard is fast; the upload extraction is the single most finicky build in v1.</div>
+    <div class="item">
+      <span class="pill build ic"><span class="d"></span></span>
+      <div class="item-body"><div class="item-t">10-minute goal wizard</div><div class="item-d">Target, timeline, secured income, programmes, rough mix, constraints. Straightforward form against the goal schema. Code-fast.</div></div>
+      <span class="est">2–4 days</span>
+    </div>
+    <div class="item">
+      <span class="pill iter ic"><span class="d"></span></span>
+      <div class="item-body"><div class="item-t">Strategy upload + extraction</div><div class="item-d">Read a strategy doc, extract goal fields with audit-grade citations, user reviews. The hardest sub-part of v1 — reliable extraction from messy real documents needs an iteration loop, like the catalogue parse pipeline. Code can write it fast; getting citation accuracy reliable is the calendar time.</div></div>
+      <span class="est">1–2 wks elapsed</span>
+    </div>
+  </div>
+
+  <!-- PHASE 4 -->
+  <div class="phase">
+    <div class="phase-head">
+      <span class="phase-n">4</span>
+      <span class="phase-title">Surfaces — built around proven reasoning</span>
+      <span class="phase-when">once reasoning is good &middot; ~2–3 wks</span>
+    </div>
+    <div class="phase-goal">Extends your existing frontend and brand system — <b>not built from scratch</b>. The mockups already specify these, so it's implementation against a spec. Code-fast.</div>
+    <div class="item">
+      <span class="pill build ic"><span class="d"></span></span>
+      <div class="item-body"><div class="item-t">Goal dashboard</div><div class="item-d">Goal frame, recommended-actions feed, risk panel, mix-vs-plan. The home surface — "where am I and what's next." Per the dashboard mockup.</div></div>
+      <span class="est">4–6 days</span>
+    </div>
+    <div class="item">
+      <span class="pill build ic"><span class="d"></span></span>
+      <div class="item-body"><div class="item-t">Agent view in find-funding + pipeline</div><div class="item-d">The re-prioritised view with the fit/prioritise sort toggle, and pipeline items carrying the agent's reasoning. Wraps the existing surfaces rather than replacing them.</div></div>
+      <span class="est">4–6 days</span>
+    </div>
+    <div class="item">
+      <span class="pill build ic"><span class="d"></span></span>
+      <div class="item-body"><div class="item-t">Contextual conversation surface</div><div class="item-d">Challenge/correct attached to recommendations (not a chat-first home). Conversation grounded in structure. Per the conversation mockup.</div></div>
+      <span class="est">3–5 days</span>
+    </div>
+  </div>
+
+  <!-- PHASE 5 -->
+  <div class="phase">
+    <div class="phase-head">
+      <span class="phase-n">5</span>
+      <span class="phase-title">Proactive layer + trial mechanism</span>
+      <span class="phase-when">last &middot; ~1 wk</span>
+    </div>
+    <div class="phase-goal">What turns episodic use into a companion, plus the conversion bridge.</div>
+    <div class="item">
+      <span class="pill build ic"><span class="d"></span></span>
+      <div class="item-body"><div class="item-t">Email digest — proactive reach-out</div><div class="item-d">Selective, reasoned, source-cited, actionable. Triggering logic + reasoning-into-email. The mechanism that keeps the agent useful to users who can't log in often. Quality of signal-vs-noise matters more than the plumbing.</div></div>
+      <span class="est">3–5 days</span>
+    </div>
+    <div class="item">
+      <span class="pill build ic"><span class="d"></span></span>
+      <div class="item-body"><div class="item-t">Time-boxed agent trial</div><div class="item-d">Access control + the ~14-day window. Discovery stays free forever; the trial is the bridge from free to paid. Small but real. Note: the trial makes the first-run experience the conversion engine — first-7–14-day time-to-value is the biggest predictor.</div></div>
+      <span class="est">2–3 days</span>
+    </div>
+  </div>
+
+  <h2>What v1 deliberately excludes</h2>
+  <p class="excl"><b>Application builder</b> and <b>CRM / relationship layer</b> — pulled forward by cohort evidence toward "v1.x soon," but not v1; they belong in the fuller companion tier as they arrive. <b>Team functions</b> (segment 7, org tier) and <b>multi-org</b> (segment 6, consultant tier) — later, tier-defining. <b>The central brain</b> — not buildable until data accumulates; v1's only job toward it is capturing the data + consent foundations cleanly (in phase 1). <b>Contracts as a funding type</b> — deferred to the SEUK conversation; keep the taxonomy clean enough to add it later. <b>Live web search in the user-facing agent</b> — kept in the backend pipeline (cost + the unverified-data trust problem).</p>
+
+  <h2>Timeline shape, Code-paced</h2>
+  <div class="timing">
+    <div class="tcol"><div class="tp">Buildable spine</div><div class="tn">~3–5 wks</div><p>Foundations, surfaces, onboarding wizard, email, trial, cost controls. Where Code is fast and estimates overshoot. Steady solo work; faster in concentrated bursts.</p></div>
+    <div class="tcol"><div class="tp">Reasoning iteration</div><div class="tn">~4–8 wks</div><p>The reasoning core + upload extraction to consistently-good. Judgment-paced, overlaps the build. The variable that sets short vs long end.</p></div>
+    <div class="tcol out"><div class="tp">v1 elapsed (overlapping)</div><div class="tn">~6–12 wks</div><p>Focused solo work. The range is driven almost entirely by reasoning-quality iteration, not building. Calibrate against your own Code velocity.</p></div>
+  </div>
+
+  <div class="note warn"><b>The honest risk.</b> "Good enough to demo" and "good enough to consistently justify a paid companion" are different bars. The MCP captures cleared the first; v1 has to clear the second, in a richer assembled-context setting. Closing that gap is the reasoning-iteration work, and it tends to take longer than expected even when the code is fast — because it's paced by getting it right, not getting it written.</div>
+  <div class="note green"><b>The levers you control.</b> Faster: ruthless scope discipline (resist pulling the execution layers forward); reuse the existing engines (v1 wraps, doesn't rebuild); test the reasoning early with the cohort before building surfaces. Slower: reasoning proving hard to make consistent; the upload extraction fighting you; scope creep; and the never-finished data-fidelity work the agent quality keeps depending on.</div>
+  <div class="note"><b>Why this sequence.</b> Foundations first (everything depends on them) → reasoning core tested cheaply and early (front-load the uncertainty, validate the core bet before investing in surfaces) → onboarding and surfaces built around what's proven to work → proactive + trial last (they make it a companion and bridge to paid, but need the rest in place first). Feed Code scoped increments in this order rather than building broad and shallow.</div>
+</div>
+</body>
+</html>

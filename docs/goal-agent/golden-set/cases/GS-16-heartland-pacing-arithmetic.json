@@ -1,0 +1,51 @@
+{
+  "id": "GS-16",
+  "version": 1,
+  "family": "heartland",
+  "title": "Pacing arithmetic - correct numbers, honest risk, useful questions only",
+  "provenance": "v1 build plan Phase 4 dashboard semantics (goal frame, pacing, gap, risk) running on Phase 2 reasoning; G6 arithmetic-fidelity gate's home case. Mid-year position chosen so the pacing judgment is genuinely borderline rather than obviously fine or obviously doomed.",
+  "run_mode": "recommend",
+  "org": {
+    "name": "Housing support charity (South West)",
+    "legal_structure": "registered_charity",
+    "annual_income_band": "£500,000–£1 million",
+    "primary_location": "Plymouth",
+    "geographic_reach": "South West",
+    "impact_sectors": ["housing", "community", "employment"],
+    "beneficiary_groups": ["homeless", "people_in_poverty", "young_people"],
+    "years_trading": 14,
+    "org_stage": "established"
+  },
+  "goal": {
+    "title": "Financial year 2026/27",
+    "target_amount": 600000,
+    "secured_amount": 240000,
+    "start_date": "2026-04-01",
+    "end_date": "2027-03-31",
+    "mix_targets": { "grant": 65, "contract": 35 },
+    "constraints": []
+  },
+  "pipeline": [
+    { "grant_name": "Homelessness prevention grant", "funder_name": "A national homelessness funder", "stage": "submitted", "amount_requested": 120000, "deadline": null },
+    { "grant_name": "Young people's housing pathway", "funder_name": "A regional trust", "stage": "applying", "amount_requested": 60000, "deadline": "2026-07-15" },
+    { "grant_name": "Employability partnership", "funder_name": "A local authority", "stage": "identified", "amount_requested": 80000, "deadline": "2026-09-01" }
+  ],
+  "org_facts": [],
+  "user_turn": null,
+  "as_of": "2026-06-12",
+  "fixtures": {
+    "pinned_refs": [],
+    "synthetic": [],
+    "filler_pool": "fixtures/pool-housing-southwest.json"
+  },
+  "expected": {
+    "hard_gates": "all",
+    "assertions": [
+      { "type": "must_flag", "flag_kind": "pacing" },
+      { "type": "max_recommendations", "value": 5 }
+    ],
+    "rubric_focus": ["R1", "R2", "R4"],
+    "judge_guidance": "The pack computes: £360k gap, 9.6 months remaining, £260k in pipeline (£120k submitted + £60k applying + £80k identified) - unweighted pipeline covers 72% of the gap, which is borderline-thin once realistic conversion is considered. A 5 (a) uses ONLY the pack's numbers, verbatim (G6 catches drift, the judge catches rhetorical inflation like 'barely a third covered'); (b) marks the conversion-rate reasoning as judgment, since the pack has no win-rate data for this org; (c) flags pacing at the right temperature - watchful, not alarmist; (d) asks at most two questions, and only ones that change recommendations (e.g. the expected decision date on the £120k submitted bid, which moves the whole risk picture; asking for the org's mission statement fails question-utility). Recommendations should fill the conversion shortfall with right-sized candidates from the pool, sequenced against the July and September deadlines already in flight."
+  },
+  "notes": "The question-utility test (value-before-effort: every ask must earn itself) gets its only dedicated coverage here; the judge_guidance carries it because question quality is unassertable deterministically."
+}

@@ -1,0 +1,88 @@
+{
+  "id": "GS-07",
+  "version": 1,
+  "family": "heartland",
+  "title": "Mixed-income rebalance - core vs project fragmentation",
+  "provenance": "Emma, The Paper Birds (evidence log, 31 May 2026): part-time fundraiser; mix of grants, partnerships, commissioned work; core-vs-project balance 'feels fragmented'; the time sink is managing the process, not finding. Capacity relief is the value, not more options.",
+  "run_mode": "recommend",
+  "org": {
+    "name": "Emma archetype (touring theatre company)",
+    "legal_structure": "registered_charity",
+    "annual_income_band": "£250,000–£500,000",
+    "primary_location": "Leeds",
+    "geographic_reach": "UK",
+    "impact_sectors": ["creative", "education", "mental_health"],
+    "niche_tags": ["theatre"],
+    "beneficiary_groups": ["young_people", "general_public"],
+    "years_trading": 15,
+    "org_stage": "established"
+  },
+  "goal": {
+    "title": "2026/27 season",
+    "target_amount": 400000,
+    "secured_amount": 195000,
+    "start_date": "2026-04-01",
+    "end_date": "2027-03-31",
+    "mix_targets": { "grant": 50, "corporate": 15, "contract": 35 },
+    "constraints": [
+      { "kind": "note", "text": "Secured income is almost all project-restricted; core costs are the recurring squeeze." }
+    ]
+  },
+  "pipeline": [
+    { "grant_name": "Project grant - autumn tour", "funder_name": "Arts Council England", "stage": "submitted", "amount_requested": 60000, "deadline": null },
+    { "grant_name": "Schools wellbeing commission", "funder_name": "A multi-academy trust", "stage": "applying", "amount_requested": 35000, "deadline": "2026-07-31" },
+    { "grant_name": "Corporate partnership renewal", "funder_name": "Regional employer", "stage": "identified", "amount_requested": 20000, "deadline": null }
+  ],
+  "org_facts": [],
+  "user_turn": null,
+  "as_of": "2026-06-12",
+  "fixtures": {
+    "pinned_refs": [
+      { "title": "Backbone unrestricted grants", "funder": "Esmée Fairbairn Foundation" }
+    ],
+    "synthetic": [
+      {
+        "fixture_id": "syn-core-costs-fund",
+        "title": "Resilient organisations fund",
+        "funder": "Keystone Trust (synthetic)",
+        "fundingType": "grant",
+        "description": "Unrestricted grants of £15,000-£40,000 per year over two years for established arts organisations. Explicitly for core costs.",
+        "amountMin": 30000,
+        "amountMax": 80000,
+        "deadline": "2026-09-20",
+        "isRolling": false,
+        "sectors": ["creative"],
+        "impactSectors": ["creative"],
+        "beneficiaryGroups": ["general_public"],
+        "eligibilityCriteria": ["Established arts organisations, 5+ years", "Income £100k-£1m"],
+        "eligibleStructures": ["registered_charity", "cio", "cic_guarantee"],
+        "minOrgIncome": 100000,
+        "maxOrgIncome": 1000000,
+        "locationTag": "UK",
+        "applyUrl": "https://example.org/resilient-orgs",
+        "isInviteOnly": false,
+        "funder_brief": {
+          "what_they_fund": "Unrestricted core funding for established arts organisations.",
+          "who_can_apply": "Arts organisations with five or more years of history and income between £100,000 and £1 million.",
+          "decision_timeline": "One round per year; decisions by December.",
+          "open_status": "open",
+          "citations": {
+            "what_they_fund": { "snippet": "grants are unrestricted and intended to support core organisational costs", "confidence": "high" }
+          }
+        }
+      }
+    ],
+    "filler_pool": "fixtures/pool-creative-national.json"
+  },
+  "expected": {
+    "hard_gates": "all",
+    "assertions": [
+      { "type": "must_recommend", "fixture_id": "syn-core-costs-fund" },
+      { "type": "must_flag", "flag_kind": "mix" },
+      { "type": "max_recommendations", "value": 4 }
+    ],
+    "rubric_focus": ["R1", "R7", "R4"],
+    "judge_guidance": "The constraint to lead with is the restricted/unrestricted imbalance (the user's own note), not the headline gap. A 5 names it, points the recommendation set at core-cost/unrestricted routes (the Keystone fixture is planted; Esmée if pinned), and keeps total asks small - this user is part-time and the brief's load-reduction warning applies doubly. The mix flag should reflect the contract-heavy target vs grant-heavy reality, marked as judgment where it goes beyond the arithmetic. A response that ignores the existing pipeline (e.g. recommends things colliding with the 31 July commission deadline) loses R2/R7 credit. Note max_recommendations is tightened to 4 for this case: proportionality to a part-time fundraiser's capacity IS the test."
+  },
+  "notes": "Validates mix-vs-plan reasoning against the segment-3 pattern (coordination pain, not discovery pain). The tightened recommendation cap is deliberate and case-specific."
+}

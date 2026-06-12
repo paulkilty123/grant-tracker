@@ -1,0 +1,83 @@
+{
+  "id": "GS-04",
+  "version": 1,
+  "family": "cohort",
+  "title": "Newham £700k charity - London depth with honest cycle framing",
+  "provenance": "Active cohort member B (MCP set H3, the hardest-to-win London query): Newham registered charity, ~£700k, creative education with children in low-income areas. H3's sharpest sub-test carried over: between-rounds funders framed honestly.",
+  "run_mode": "recommend",
+  "org": {
+    "name": "Member B (Newham creative education charity)",
+    "legal_structure": "registered_charity",
+    "annual_income_band": "£500,000–£1 million",
+    "primary_location": "Newham, London",
+    "geographic_reach": "London",
+    "impact_sectors": ["education", "creative", "community"],
+    "beneficiary_groups": ["children", "families", "people_in_poverty"],
+    "years_trading": 12,
+    "org_stage": "established"
+  },
+  "goal": {
+    "title": "Financial year 2026/27",
+    "target_amount": 750000,
+    "secured_amount": 310000,
+    "start_date": "2026-04-01",
+    "end_date": "2027-03-31",
+    "mix_targets": { "grant": 80, "corporate": 20 },
+    "constraints": []
+  },
+  "pipeline": [
+    { "grant_name": "Arts-based learning programme", "funder_name": "Arts Council England", "stage": "submitted", "amount_requested": 90000, "deadline": null },
+    { "grant_name": "Community learning fund", "funder_name": "A London borough trust", "stage": "applying", "amount_requested": 45000, "deadline": "2026-07-10" }
+  ],
+  "org_facts": [],
+  "user_turn": null,
+  "as_of": "2026-06-12",
+  "fixtures": {
+    "pinned_refs": [
+      { "title": "Ellerdale Trust", "funder": "London Community Foundation" },
+      { "title": "National Lottery Awards for All", "funder": "The National Lottery Community Fund" }
+    ],
+    "synthetic": [
+      {
+        "fixture_id": "syn-between-rounds-london",
+        "title": "East London children's opportunities fund",
+        "funder": "Docklands Trust (synthetic)",
+        "fundingType": "grant",
+        "description": "Grants of £20,000-£50,000 for education and creative work with children in East London boroughs including Newham.",
+        "amountMin": 20000,
+        "amountMax": 50000,
+        "deadline": null,
+        "isRolling": false,
+        "nextOpenDate": "September 2026",
+        "nextOpenDateParsed": "2026-09-01",
+        "sectors": ["education", "creative"],
+        "impactSectors": ["education", "creative"],
+        "beneficiaryGroups": ["children", "people_in_poverty"],
+        "eligibilityCriteria": ["Registered charities working in East London"],
+        "eligibleStructures": ["registered_charity", "cio"],
+        "locationTag": "London",
+        "applyUrl": "https://example.org/east-london-children",
+        "isInviteOnly": false,
+        "funder_brief": {
+          "what_they_fund": "Education and creative opportunities for children in East London.",
+          "who_can_apply": "Registered charities working in East London boroughs.",
+          "decision_timeline": "Annual round; next round opens September 2026.",
+          "open_status": "between_rounds",
+          "citations": {
+            "decision_timeline": { "snippet": "our next funding round will open in September 2026", "confidence": "high" }
+          }
+        }
+      }
+    ],
+    "filler_pool": "fixtures/pool-london-children.json"
+  },
+  "expected": {
+    "hard_gates": "all",
+    "assertions": [
+      { "type": "must_flag", "flag_kind": "pacing" }
+    ],
+    "rubric_focus": ["R2", "R3", "R1"],
+    "judge_guidance": "Two things distinguish a 5. First, honest cycle framing: the between-rounds Docklands fixture (and Ellerdale if the pinned snapshot carries a closed cycle) may appear ONLY as a 'prepare for September' sequencing item with the reopen date cited - presenting it as open-now is a G5 failure; omitting it entirely loses sequencing credit, because preparing for a strong September round is exactly what a consultant would schedule in June. Second, pacing: £440k gap, 9.5 months remaining, £90k pending with Arts Council - the narrative should put the arithmetic to work (what needs to be in motion by when), not just list opportunities. London depth pressure is real here: filler pool is deliberately rich, so selection discipline (R7 implicitly) also shows."
+  },
+  "notes": "Successor to MCP H3. If the Ellerdale pinned ref resolves with cycle data, assert on it in v2 of this case; the synthetic guarantees the between-rounds behaviour is always tested regardless of snapshot state."
+}

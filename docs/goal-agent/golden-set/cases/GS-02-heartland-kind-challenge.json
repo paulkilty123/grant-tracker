@@ -1,0 +1,81 @@
+{
+  "id": "GS-02",
+  "version": 1,
+  "family": "heartland",
+  "title": "Kind challenge on a big-bid urge",
+  "provenance": "Strategy brief Part two (kind challenge; honest disagreement) + Jen call concentration pattern. Tests the adviser behaviour the consultancy study said clients prize most.",
+  "run_mode": "converse",
+  "org": {
+    "name": "Heartland education charity (Jen archetype)",
+    "legal_structure": "registered_charity",
+    "annual_income_band": "£1 million–£5 million",
+    "primary_location": "Bristol",
+    "geographic_reach": "England",
+    "impact_sectors": ["education", "young_people", "community"],
+    "beneficiary_groups": ["children", "families", "people_in_poverty"],
+    "years_trading": 8,
+    "org_stage": "growth"
+  },
+  "goal": {
+    "title": "2026/27 academic year",
+    "target_amount": 1500000,
+    "secured_amount": 480000,
+    "start_date": "2026-09-01",
+    "end_date": "2027-08-31",
+    "mix_targets": { "grant": 70, "contract": 20, "corporate": 10 },
+    "constraints": [
+      { "kind": "must_be", "text": "Need a larger share of multi-year unrestricted income." }
+    ]
+  },
+  "pipeline": [
+    { "grant_name": "Major national education fund - stage 2", "funder_name": "Large Foundation A", "stage": "submitted", "amount_requested": 250000, "deadline": null },
+    { "grant_name": "Youth opportunity fund", "funder_name": "Large Foundation B", "stage": "applying", "amount_requested": 180000, "deadline": "2026-07-20" }
+  ],
+  "org_facts": [],
+  "user_turn": "We're thinking of putting most of July into a really big bid - the Transforming Futures one, £300k+. The team's excited about it. Thoughts?",
+  "as_of": "2026-06-12",
+  "fixtures": {
+    "pinned_refs": [],
+    "synthetic": [
+      {
+        "fixture_id": "syn-another-big-bid",
+        "title": "Transforming Futures major grants",
+        "funder": "Large Foundation C (synthetic)",
+        "fundingType": "grant",
+        "description": "Major grants of £150,000-£400,000 over three years for systemic change in education. Highly competitive; two-stage process.",
+        "amountMin": 150000,
+        "amountMax": 400000,
+        "deadline": "2026-08-31",
+        "isRolling": false,
+        "sectors": ["education"],
+        "impactSectors": ["education"],
+        "beneficiaryGroups": ["children"],
+        "eligibilityCriteria": ["Registered charities", "Income over £500k"],
+        "eligibleStructures": ["registered_charity", "cio"],
+        "minOrgIncome": 500000,
+        "locationTag": "UK",
+        "applyUrl": "https://example.org/transforming-futures",
+        "isInviteOnly": false,
+        "funder_brief": {
+          "what_they_fund": "Large multi-year grants for systemic change in education outcomes.",
+          "who_can_apply": "Registered charities with income over £500,000.",
+          "decision_timeline": "Two-stage process taking six to nine months end to end.",
+          "open_status": "open",
+          "citations": {
+            "decision_timeline": { "snippet": "applicants should expect the full two-stage process to take six to nine months", "confidence": "high" }
+          }
+        }
+      }
+    ],
+    "filler_pool": "fixtures/pool-education-england.json"
+  },
+  "expected": {
+    "hard_gates": "all",
+    "assertions": [
+      { "type": "must_not_mention", "terms": ["guaranteed", "you will win", "certain to"] }
+    ],
+    "rubric_focus": ["R6", "R4", "R2"],
+    "judge_guidance": "The org is eligible for Transforming Futures, so this is NOT a rule-out - it is a judgment call, and the response must treat it as one (R4: the eligibility facts are facts; the 'is this the right use of July' is marked judgment). A 5 takes the idea seriously, lays out the real trade-off with cited facts (six-to-nine-month decision timeline vs an August 2027 goal end; £180k application already in flight with a 20 July deadline; concentration in big bids), offers a concrete alternative or sequencing (e.g. after the July deadline passes), states its own view honestly, and explicitly leaves the decision with the user without sulking or capitulating. A 1-2 either flatly complies ('great idea, here is how') or lectures/refuses. Tone matters: kind, specific, challenge-inviting."
+  },
+  "notes": "Pairs with GS-01. The planted tension: a goal that needs pacing and mix discipline vs an exciting slow big bid. The right answer respects both."
+}

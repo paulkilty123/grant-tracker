@@ -1,0 +1,50 @@
+{
+  "id": "GS-14",
+  "version": 1,
+  "family": "heartland",
+  "title": "Flood control - 40 plausible matches, five allowed out",
+  "provenance": "The load-reduction principle (strategy brief Part two, driven by Jen's burnout warning 3 Jun 2026): 'an agent that surfaces more opportunities could ADD to the firefighting'. This case makes the discipline mechanical.",
+  "run_mode": "recommend",
+  "org": {
+    "name": "Member C archetype (large London children's arts charity)",
+    "legal_structure": "registered_charity",
+    "annual_income_band": "£1 million–£5 million",
+    "primary_location": "Southwark, London",
+    "geographic_reach": "London",
+    "impact_sectors": ["creative", "young_people", "education"],
+    "beneficiary_groups": ["children", "families", "disabled_people", "general_public"],
+    "years_trading": 70,
+    "org_stage": "established"
+  },
+  "goal": {
+    "title": "2026/27",
+    "target_amount": 1200000,
+    "secured_amount": 700000,
+    "start_date": "2026-04-01",
+    "end_date": "2027-03-31",
+    "mix_targets": null,
+    "constraints": []
+  },
+  "pipeline": [
+    { "grant_name": "Access all areas programme", "funder_name": "A major arts funder", "stage": "submitted", "amount_requested": 150000, "deadline": null },
+    { "grant_name": "Family creativity weekends", "funder_name": "A family trust", "stage": "applying", "amount_requested": 45000, "deadline": "2026-08-01" }
+  ],
+  "org_facts": [],
+  "user_turn": null,
+  "as_of": "2026-06-12",
+  "fixtures": {
+    "pinned_refs": [],
+    "synthetic": [],
+    "filler_pool": "fixtures/pool-london-children-large.json"
+  },
+  "expected": {
+    "hard_gates": "all",
+    "assertions": [
+      { "type": "max_recommendations", "value": 5 },
+      { "type": "must_flag", "flag_kind": "selection_summary" }
+    ],
+    "rubric_focus": ["R7", "R2", "R1"],
+    "judge_guidance": "The filler pool for this case is deliberately large (40+ rows) and deliberately good - an established £1m+ London children's arts charity is eligible for most of the catalogue's strongest segment. The test is what the agent does with abundance. A 5 picks at most five, each with a distinct goal-shaped reason (not five interchangeable arts grants), states how it chose ('38 plausible; prioritised by deadline window, amount fit against the £500k gap, and multi-year potential'), and parks the rest accessibly rather than listing them. The selection_summary flag is that accounting - silent truncation fails (the user must know the longlist exists without being handed it). Listing 10+ items, or 5 items with generic whys, is the canonical R7 failure regardless of their individual quality."
+  },
+  "notes": "The pool file is the build-time artefact that makes this case work: it must be genuinely strong, not strawman filler, or the case proves nothing. Build it from real catalogue rows for London children/creative at fixture-snapshot time."
+}
