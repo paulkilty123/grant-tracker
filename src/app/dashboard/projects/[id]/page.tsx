@@ -32,11 +32,37 @@ interface LinkedApp {
 }
 
 type ScoredMatch = { grant: EnrichedGrant; score: number }
+// Two-tier match list: cash routes are the main list, in-kind support is a
+// quieter strip below — segmented, not suppressed (non-grant breadth is a
+// catalogue differentiator, but it isn't funding for a costed project).
+type MatchBuckets = { cash: ScoredMatch[]; support: ScoredMatch[] }
 
 const TYPE_STYLE: Record<string, { bg: string; color: string; label: string }> = {
   project:   { bg: T.paleGreen,  color: T.sage,      label: 'Project' },
   campaign:  { bg: T.amberBg,    color: T.amberText, label: 'Campaign' },
   programme: { bg: '#FAECE7',    color: '#993C1D',   label: 'Programme' },
+}
+
+// Funding-type chips — same palette as Find Funding's tabs (design system).
+const FUNDING_TYPE_STYLE: Record<string, { dot: string; bg: string; color: string; label: string }> = {
+  grant:      { dot: '#97C459', bg: '#F1F7E4', color: '#3B6D11', label: 'Grant' },
+  programme:  { dot: '#F0997B', bg: '#FAECE7', color: '#993C1D', label: 'Programme' },
+  investment: { dot: '#85B7EB', bg: '#E6F1FB', color: '#0C447C', label: 'Investment' },
+  in_kind:    { dot: '#EF9F27', bg: '#FAEEDA', color: '#854F0B', label: 'In-Kind' },
+}
+
+function FundingTypeChip({ type }: { type: string }) {
+  const s = FUNDING_TYPE_STYLE[type] ?? FUNDING_TYPE_STYLE.grant
+  return (
+    <span style={{
+      fontFamily: UI, fontWeight: 600, fontSize: 10.5, letterSpacing: '0.03em',
+      background: s.bg, color: s.color, padding: '2px 9px', borderRadius: 999,
+      display: 'inline-flex', alignItems: 'center', gap: 5,
+    }}>
+      <span style={{ width: 6, height: 6, borderRadius: 999, background: s.dot, flexShrink: 0 }} />
+      {s.label}
+    </span>
+  )
 }
 
 const CANONICAL_TYPES = new Set(['grant', 'programme', 'investment', 'in_kind'])
@@ -67,7 +93,7 @@ export default function ProjectPage() {
   const [linkedApps, setLinkedApps] = useState<LinkedApp[]>([])
   const [loaded, setLoaded] = useState(false)
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle')
-  const [matches, setMatches] = useState<ScoredMatch[] | null>(null)
+  const [matches, setMatches] = useState<MatchBuckets | null>(null)
   const [matching, setMatching] = useState(false)
   const [showAllGaps, setShowAllGaps] = useState(false)
 
@@ -199,10 +225,13 @@ export default function ProjectPage() {
         })
         .filter((x): x is ScoredMatch => x !== null && x.score >= 55)
         .sort((a, b) => b.score - a.score)
-        .slice(0, 12)
 
-      setMatches(scored)
-      emitClientEvent(o.id, 'project_match_run', { project_id: p.id, match_count: scored.length })
+      // Cash routes (grant / programme / investment) are the main list;
+      // in-kind support is surfaced separately, never mixed in.
+      const cash = scored.filter(m => m.grant.fundingType !== 'in_kind').slice(0, 12)
+      const support = scored.filter(m => m.grant.fundingType === 'in_kind').slice(0, 4)
+      setMatches({ cash, support })
+      emitClientEvent(o.id, 'project_match_run', { project_id: p.id, match_count: cash.length + support.length })
     } finally {
       setMatching(false)
     }
@@ -492,7 +521,7 @@ export default function ProjectPage() {
           </div>
         )}
 
-        {ready && matches !== null && matches.length === 0 && (
+        {ready && matches !== null && matches.cash.length === 0 && matches.support.length === 0 && (
           <div style={{ background: T.cream, borderRadius: 12, padding: '18px 22px' }}>
             <p style={{ fontFamily: BODY, fontSize: 13.5, color: T.textSecondary, margin: 0, lineHeight: 1.6 }}>
               No strong fits in the catalogue right now. Try broadening the sectors, or check{' '}
@@ -501,9 +530,19 @@ export default function ProjectPage() {
           </div>
         )}
 
-        {ready && matches !== null && matches.length > 0 && (
+        {ready && matches !== null && matches.cash.length === 0 && matches.support.length > 0 && (
+          <div style={{ background: T.cream, borderRadius: 12, padding: '18px 22px' }}>
+            <p style={{ fontFamily: BODY, fontSize: 13.5, color: T.textSecondary, margin: 0, lineHeight: 1.6 }}>
+              No funding fits in the catalogue right now, though there is in-kind support below.
+              Try broadening the sectors, or check{' '}
+              <Link href="/dashboard/search" style={{ color: T.sage }}>Find Funding</Link> for the wider pool.
+            </p>
+          </div>
+        )}
+
+        {ready && matches !== null && matches.cash.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, opacity: matching ? 0.6 : 1, transition: 'opacity 150ms ease' }}>
-            {matches.map(({ grant, score }) => {
+            {matches.cash.map(({ grant, score }) => {
               const tier = tierLabel(score)
               const amount = fmtAmount(grant)
               return (
@@ -516,6 +555,7 @@ export default function ProjectPage() {
                       <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 14.5, color: T.textPrimary }}>
                         {grant.title}
                       </span>
+                      <FundingTypeChip type={(grant.fundingType ?? 'grant') as string} />
                       <span style={{
                         fontFamily: UI, fontWeight: 600, fontSize: 10.5, letterSpacing: '0.03em',
                         background: tier.bg, color: tier.color, padding: '2px 9px', borderRadius: 999,
@@ -542,6 +582,48 @@ export default function ProjectPage() {
                 </div>
               )
             })}
+          </div>
+        )}
+
+        {/* In-kind support — segmented from the funding list, quieter rows */}
+        {ready && matches !== null && matches.support.length > 0 && (
+          <div style={{ marginTop: 22, opacity: matching ? 0.6 : 1, transition: 'opacity 150ms ease' }}>
+            <h3 style={{ fontFamily: UI, fontWeight: 600, fontSize: 14, color: T.textPrimary, margin: '0 0 3px' }}>
+              Worth adding alongside the funding
+            </h3>
+            <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary, margin: '0 0 10px', lineHeight: 1.5 }}>
+              In-kind support that fits this project: pro bono expertise, platforms and donated
+              services. Not cash, but it stretches whatever you raise.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {matches.support.map(({ grant }) => (
+                <div key={grant.uuid ?? grant.id} style={{
+                  background: T.softGreen, border: `1px solid ${T.border}`, borderRadius: 10,
+                  padding: '11px 16px', display: 'flex', alignItems: 'center', gap: 12,
+                }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                      <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: T.textPrimary }}>
+                        {grant.title}
+                      </span>
+                      <FundingTypeChip type="in_kind" />
+                    </div>
+                    <span style={{ fontFamily: BODY, fontSize: 12, color: T.textSecondary }}>
+                      {grant.funder}
+                    </span>
+                  </div>
+                  <Link
+                    href={`/dashboard/applications/new?opportunity=${grant.uuid}&project=${project.id}`}
+                    style={{
+                      fontFamily: UI, fontWeight: 600, fontSize: 12, color: T.sage,
+                      textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
+                    }}
+                  >
+                    Start an application
+                  </Link>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
