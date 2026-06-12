@@ -9,7 +9,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft, Check, ChevronDown, ChevronRight, ChevronUp, Sparkles } from 'lucide-react'
+import { ArrowLeft, Check, ChevronDown, ChevronRight, ChevronUp, ExternalLink, Sparkles } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { emitClientEvent } from '@/lib/events/client'
@@ -31,7 +31,7 @@ interface LinkedApp {
   questions: { user_answer?: string | null }[] | null
 }
 
-type ScoredMatch = { grant: EnrichedGrant; score: number }
+type ScoredMatch = { grant: EnrichedGrant; score: number; positives: string[]; warns: string[] }
 // Sectioned match list: cash routes grouped by type (grants lead, then
 // programmes, then investment), with in-kind support as a quieter strip
 // below — segmented, not suppressed (non-grant breadth is a catalogue
@@ -66,6 +66,93 @@ function tierLabel(score: number): { label: string; bg: string; color: string } 
   return { label: 'Partial', bg: T.cream, color: T.textSecondary }
 }
 
+// "Should I apply?" panel — the assessment view behind each match row.
+// All data is already client-side (brief + scorer reasons), zero extra fetches.
+function MatchDetail({ m }: { m: ScoredMatch }) {
+  const brief = m.grant.funderBrief
+  const briefField = (label: string, v?: string | null) =>
+    v?.trim() ? (
+      <div key={label}>
+        <p style={{ fontFamily: UI, fontWeight: 600, fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase', color: T.textTertiary, margin: '0 0 3px' }}>
+          {label}
+        </p>
+        <p style={{ fontFamily: BODY, fontSize: 13, color: T.textPrimary, margin: 0, lineHeight: 1.6 }}>
+          {v}
+        </p>
+      </div>
+    ) : null
+  const briefFields = [
+    briefField('What they fund', brief?.what_they_fund),
+    briefField('Who can apply', brief?.who_can_apply),
+    briefField('Exclusions', brief?.exclusions),
+    briefField('Decision timeline', brief?.decision_timeline),
+  ].filter(Boolean)
+  const hasBrief = briefFields.length > 0
+
+  return (
+    <div style={{ borderTop: `1px solid ${T.border}`, marginTop: 13, paddingTop: 14, display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {m.positives.length > 0 && (
+        <div>
+          <p style={{ fontFamily: UI, fontWeight: 600, fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase', color: T.sage, margin: '0 0 5px' }}>
+            Why this matched your project
+          </p>
+          {m.positives.slice(0, 4).map((r, i) => (
+            <p key={i} style={{ fontFamily: BODY, fontSize: 13, color: T.textPrimary, margin: '0 0 3px', lineHeight: 1.55, display: 'flex', gap: 7 }}>
+              <span style={{ width: 6, height: 6, borderRadius: 999, background: T.lime, flexShrink: 0, marginTop: 7 }} />
+              <span>{r}</span>
+            </p>
+          ))}
+        </div>
+      )}
+      {m.warns.length > 0 && (
+        <div>
+          <p style={{ fontFamily: UI, fontWeight: 600, fontSize: 11.5, letterSpacing: '0.04em', textTransform: 'uppercase', color: T.amberText, margin: '0 0 5px' }}>
+            Worth checking
+          </p>
+          {m.warns.slice(0, 3).map((r, i) => (
+            <p key={i} style={{ fontFamily: BODY, fontSize: 13, color: T.textPrimary, margin: '0 0 3px', lineHeight: 1.55, display: 'flex', gap: 7 }}>
+              <span style={{ width: 6, height: 6, borderRadius: 999, background: FUNDING_TYPE_STYLE.in_kind.dot, flexShrink: 0, marginTop: 7 }} />
+              <span>{r}</span>
+            </p>
+          ))}
+        </div>
+      )}
+      {hasBrief && briefFields}
+      {!hasBrief && m.grant.description?.trim() && (
+        briefField('About', m.grant.description.length > 480 ? `${m.grant.description.slice(0, 480)}…` : m.grant.description)
+      )}
+      {!hasBrief && !m.grant.description?.trim() && (
+        <p style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, margin: 0, lineHeight: 1.55 }}>
+          No funder brief for this one yet. Check the funder&apos;s own page before applying.
+        </p>
+      )}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+        {m.grant.applyUrl && (
+          <a
+            href={m.grant.applyUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={e => e.stopPropagation()}
+            style={{
+              fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.sage,
+              textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5,
+            }}
+          >
+            Visit the funder&apos;s site <ExternalLink size={12} />
+          </a>
+        )}
+        <Link
+          href={`/dashboard/grants/${m.grant.id}`}
+          onClick={e => e.stopPropagation()}
+          style={{ fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.textSecondary, textDecoration: 'none' }}
+        >
+          Full details
+        </Link>
+      </div>
+    </div>
+  )
+}
+
 function fmtAmount(g: EnrichedGrant): string | null {
   if (g.amountMax > 0 && g.amountMin > 0 && g.amountMax !== g.amountMin)
     return `£${g.amountMin.toLocaleString('en-GB')} to £${g.amountMax.toLocaleString('en-GB')}`
@@ -92,6 +179,10 @@ export default function ProjectPage() {
   // matchable; a not-yet-ready project opens expanded so the core fields are
   // in front of the user.
   const [detailsOpen, setDetailsOpen] = useState(false)
+  // One expanded match at a time; expands fire opportunity_viewed once per
+  // grant per page view (the matched -> assessed funnel signal).
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+  const viewedIds = useRef<Set<string>>(new Set())
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const matchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -217,8 +308,8 @@ export default function ProjectPage() {
           if (projectSectors.size > 0 && ge.impactSectors && ge.impactSectors.length > 0) {
             if (!ge.impactSectors.some(s => projectSectors.has(s))) return null
           }
-          const score = computeMatchScore(g, synthetic).score
-          return { grant: g, score }
+          const result = computeMatchScore(g, synthetic)
+          return { grant: g, score: result.score, positives: result.positiveReasons, warns: result.warnReasons }
         })
         .filter((x): x is ScoredMatch => x !== null && x.score >= 55)
         .sort((a, b) => b.score - a.score)
@@ -283,6 +374,15 @@ export default function ProjectPage() {
         </p>
       </div>
     )
+  }
+
+  const toggleMatch = (m: ScoredMatch) => {
+    const id = m.grant.uuid ?? m.grant.id
+    setExpandedId(cur => (cur === id ? null : id))
+    if (org && m.grant.uuid && !viewedIds.current.has(id)) {
+      viewedIds.current.add(id)
+      emitClientEvent(org.id, 'opportunity_viewed', { opportunity_id: m.grant.uuid, source: 'project_match' })
+    }
   }
 
   const pct = projectCompleteness(project)
@@ -587,42 +687,59 @@ export default function ProjectPage() {
                           </span>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                          {rows.map(({ grant, score }) => {
+                          {rows.map(m => {
+                            const { grant, score } = m
+                            const id = grant.uuid ?? grant.id
+                            const open = expandedId === id
                             const tier = tierLabel(score)
                             const amount = fmtAmount(grant)
                             return (
-                              <div key={grant.uuid ?? grant.id} style={{
-                                background: T.white, border: `1px solid ${T.border}`, borderRadius: 12,
-                                padding: '15px 18px', display: 'flex', alignItems: 'center', gap: 14,
+                              <div key={id} style={{
+                                background: T.white, border: `1px solid ${open ? T.borderStrong : T.border}`,
+                                borderRadius: 12, padding: '15px 18px',
                               }}>
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 2 }}>
-                                    <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 14.5, color: T.textPrimary }}>
-                                      {grant.title}
-                                    </span>
-                                    <span style={{
-                                      fontFamily: UI, fontWeight: 600, fontSize: 10.5, letterSpacing: '0.03em',
-                                      background: tier.bg, color: tier.color, padding: '2px 9px', borderRadius: 999,
-                                    }}>
-                                      {tier.label} {score}%
+                                <div
+                                  onClick={() => toggleMatch(m)}
+                                  role="button"
+                                  aria-expanded={open}
+                                  style={{ display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer' }}
+                                >
+                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 2 }}>
+                                      <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 14.5, color: T.textPrimary }}>
+                                        {grant.title}
+                                      </span>
+                                      <span style={{
+                                        fontFamily: UI, fontWeight: 600, fontSize: 10.5, letterSpacing: '0.03em',
+                                        background: tier.bg, color: tier.color, padding: '2px 9px', borderRadius: 999,
+                                      }}>
+                                        {tier.label} {score}%
+                                      </span>
+                                    </div>
+                                    <span style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary }}>
+                                      {grant.funder}
+                                      {amount ? ` · ${amount}` : ''}
+                                      {grant.deadline ? ` · Deadline ${new Date(grant.deadline).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}` : grant.isRolling ? ' · Rolling' : ''}
                                     </span>
                                   </div>
-                                  <span style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary }}>
-                                    {grant.funder}
-                                    {amount ? ` · ${amount}` : ''}
-                                    {grant.deadline ? ` · Deadline ${new Date(grant.deadline).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}` : grant.isRolling ? ' · Rolling' : ''}
-                                  </span>
+                                  <Link
+                                    href={`/dashboard/applications/new?opportunity=${grant.uuid}&project=${project.id}`}
+                                    onClick={e => e.stopPropagation()}
+                                    style={{
+                                      fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.greenDeep, background: T.lime,
+                                      padding: '7px 14px', borderRadius: 8, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
+                                      display: 'inline-flex', alignItems: 'center', gap: 5,
+                                    }}
+                                  >
+                                    <Sparkles size={12} /> Start an application
+                                  </Link>
+                                  <ChevronDown
+                                    size={16}
+                                    color={T.textTertiary}
+                                    style={{ flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 150ms ease' }}
+                                  />
                                 </div>
-                                <Link
-                                  href={`/dashboard/applications/new?opportunity=${grant.uuid}&project=${project.id}`}
-                                  style={{
-                                    fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.greenDeep, background: T.lime,
-                                    padding: '7px 14px', borderRadius: 8, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
-                                    display: 'inline-flex', alignItems: 'center', gap: 5,
-                                  }}
-                                >
-                                  <Sparkles size={12} /> Start an application
-                                </Link>
+                                {open && <MatchDetail m={m} />}
                               </div>
                             )
                           })}
@@ -653,30 +770,49 @@ export default function ProjectPage() {
               but it stretches whatever you raise.
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {matches.support.map(({ grant }) => (
-                <div key={grant.uuid ?? grant.id} style={{
-                  background: T.softGreen, border: `1px solid ${T.border}`, borderRadius: 10,
-                  padding: '11px 16px', display: 'flex', alignItems: 'center', gap: 12,
-                }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: T.textPrimary, display: 'block' }}>
-                      {grant.title}
-                    </span>
-                    <span style={{ fontFamily: BODY, fontSize: 12, color: T.textSecondary }}>
-                      {grant.funder}
-                    </span>
+              {matches.support.map(m => {
+                const { grant } = m
+                const id = grant.uuid ?? grant.id
+                const open = expandedId === id
+                return (
+                  <div key={id} style={{
+                    background: T.softGreen, border: `1px solid ${open ? T.borderStrong : T.border}`,
+                    borderRadius: 10, padding: '11px 16px',
+                  }}>
+                    <div
+                      onClick={() => toggleMatch(m)}
+                      role="button"
+                      aria-expanded={open}
+                      style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}
+                    >
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: T.textPrimary, display: 'block' }}>
+                          {grant.title}
+                        </span>
+                        <span style={{ fontFamily: BODY, fontSize: 12, color: T.textSecondary }}>
+                          {grant.funder}
+                        </span>
+                      </div>
+                      <Link
+                        href={`/dashboard/applications/new?opportunity=${grant.uuid}&project=${project.id}`}
+                        onClick={e => e.stopPropagation()}
+                        style={{
+                          fontFamily: UI, fontWeight: 600, fontSize: 12, color: T.sage,
+                          textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
+                        }}
+                      >
+                        Start an application
+                      </Link>
+                      <ChevronDown
+                        size={15}
+                        color={T.textTertiary}
+                        style={{ flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 150ms ease' }}
+                      />
+                    </div>
+                    {open && <MatchDetail m={m} />}
                   </div>
-                  <Link
-                    href={`/dashboard/applications/new?opportunity=${grant.uuid}&project=${project.id}`}
-                    style={{
-                      fontFamily: UI, fontWeight: 600, fontSize: 12, color: T.sage,
-                      textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
-                    }}
-                  >
-                    Start an application
-                  </Link>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         )}
