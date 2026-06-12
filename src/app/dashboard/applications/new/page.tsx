@@ -7,7 +7,7 @@
 // point before any generation spend.
 
 import { useEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Search as SearchIcon, X as XIcon, Plus, Trash2, Check } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -48,11 +48,18 @@ function StepDot({ n, label, active, done }: { n: number; label: string; active:
   )
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 export default function NewApplicationPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [orgId, setOrgId] = useState<string | null>(null)
   const [step, setStep] = useState<'fork' | 'setup' | 'confirm'>('fork')
   const [mode, setMode] = useState<'project' | 'funder' | null>(null)
+  // Project link-through (project-first phase 3): arriving from a project's
+  // match list carries ?opportunity= and ?project=; a general proposal
+  // carries ?project= alone and goes straight to the outline.
+  const [projectId, setProjectId] = useState<string | null>(null)
 
   // ── Step 1 state ──
   const [oppQuery, setOppQuery] = useState('')
@@ -77,8 +84,33 @@ export default function NewApplicationPage() {
       if (!user) { router.push('/auth/login'); return }
       const org = await getOrganisationByOwner(user.id)
       if (org) setOrgId(org.id)
+
+      // Deep-link prefill from a project page.
+      const oppParam = searchParams.get('opportunity')
+      const projParam = searchParams.get('project')
+      if (projParam && UUID_RE.test(projParam)) setProjectId(projParam)
+      if (oppParam && UUID_RE.test(oppParam)) {
+        const { data: row } = await supabase
+          .from('grants_with_funder')
+          .select('id, title, funder')
+          .eq('id', oppParam)
+          .maybeSingle()
+        if (row) {
+          setPicked({ id: String(row.id), title: row.title as string, funder: row.funder as string })
+          setMode('funder')
+          setStep('setup')
+          return
+        }
+      }
+      if (projParam && UUID_RE.test(projParam) && !oppParam) {
+        // General proposal from a project: outline mode, skip the fork.
+        setMode('project')
+        setQuestions(OUTLINE_TEMPLATE.map(q => ({ ...q })))
+        setStep('confirm')
+      }
     }
     init()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router])
 
   // Catalogue typeahead — title/funder match over the live published view.
@@ -133,6 +165,7 @@ export default function NewApplicationPage() {
         body: JSON.stringify({
           org_id: orgId,
           opportunity_id: picked?.id ?? null,
+          project_id: projectId,
           grant_name: picked?.title ?? (grantName.trim() || null),
           funder_name: picked?.funder ?? (funderName.trim() || null),
           questions: clean,
@@ -185,10 +218,10 @@ export default function NewApplicationPage() {
             <button
               onClick={() => {
                 emitClientEvent(orgId, 'builder_path_chosen', { path: 'project' })
-                setMode('project')
-                setQuestions(OUTLINE_TEMPLATE.map(q => ({ ...q })))
-                setError(null)
-                setStep('confirm')
+                // Project-first phase 2: the project path now starts with a
+                // real Project entity (describe -> extract -> match), not a
+                // bare outline.
+                router.push('/dashboard/projects/new')
               }}
               style={{
                 textAlign: 'left', background: T.white, border: `1px solid ${T.border}`,

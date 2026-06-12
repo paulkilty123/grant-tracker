@@ -26,6 +26,7 @@ const CLIENT_ALLOWED: ReadonlySet<string> = new Set([
   'profile_updated',
   // Builder fork choice: a plain navigation signal, safe from the client.
   'builder_path_chosen',
+  'project_match_run',
 ])
 
 const isDev = process.env.NODE_ENV !== 'production'

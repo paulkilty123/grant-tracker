@@ -29,6 +29,7 @@ export async function POST(req: NextRequest) {
   let body: {
     org_id?: string
     opportunity_id?: string | null
+    project_id?: string | null
     grant_name?: string | null
     funder_name?: string | null
     questions?: { question_text?: string; word_limit?: number | null }[]
@@ -53,6 +54,18 @@ export async function POST(req: NextRequest) {
 
   const opportunityId =
     body.opportunity_id && UUID_RE.test(body.opportunity_id) ? body.opportunity_id : null
+  // Project link (project-first phase 3). FK checks bypass RLS, so ownership
+  // is verified explicitly: the session-client read only sees own-org rows.
+  let projectId: string | null = null
+  if (body.project_id && UUID_RE.test(body.project_id)) {
+    const { data: proj } = await supabase
+      .from('projects')
+      .select('id')
+      .eq('id', body.project_id)
+      .eq('org_id', body.org_id)
+      .maybeSingle()
+    projectId = proj?.id ?? null
+  }
 
   const questionRows: ApplicationQuestion[] = questions.map(q => ({
     id: randomUUID(),
@@ -70,6 +83,7 @@ export async function POST(req: NextRequest) {
     .insert({
       org_id:         body.org_id,
       opportunity_id: opportunityId,
+      project_id:     projectId,
       grant_name:     body.grant_name?.trim() || null,
       funder_name:    body.funder_name?.trim() || null,
       status:         'draft',

@@ -15,6 +15,7 @@ import { NextRequest } from 'next/server'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { getBuilderUser } from '@/lib/builder/access'
 import { emitEvent } from '@/lib/events/emit'
+import { projectMaterialBlock, type Project } from '@/lib/builder/projects'
 import type { ApplicationQuestion, CoreContentBlock } from '@/lib/builder/types'
 
 export const dynamic     = 'force-dynamic'
@@ -102,11 +103,14 @@ export async function POST(req: NextRequest) {
     return new Response(JSON.stringify({ t: 'error', message: 'Question not found' }) + '\n', { status: 404 })
   }
 
-  const [{ data: org }, { data: blocks }, grantRes] = await Promise.all([
+  const [{ data: org }, { data: blocks }, grantRes, projRes] = await Promise.all([
     supabase.from('organisations').select('*').eq('id', app.org_id).maybeSingle(),
     supabase.from('org_core_content').select('*').eq('org_id', app.org_id),
     app.opportunity_id
       ? supabase.from('grants_with_funder').select('*').eq('id', app.opportunity_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+    app.project_id
+      ? supabase.from('projects').select('*').eq('id', app.project_id).maybeSingle()
       : Promise.resolve({ data: null }),
   ])
   if (!org) {
@@ -115,6 +119,9 @@ export async function POST(req: NextRequest) {
 
   const contentBlocks = (blocks ?? []) as CoreContentBlock[]
   const funderContext = grantRes.data ? buildFunderContext(grantRes.data as Record<string, unknown>) : ''
+  // Project-first phase 3: a linked project's sections feed the draft as
+  // primary material (session-client read, cross-org links resolve null).
+  const projectBlock = projRes.data ? projectMaterialBlock(projRes.data as Project) : ''
   const scaffoldBlock = question.scaffold && question.scaffold.length > 0
     ? question.scaffold
         .slice().sort((a, b) => a.suggested_order - b.suggested_order)
@@ -130,6 +137,7 @@ ${scaffoldBlock ? `THE SCAFFOLD (structure the draft this way)\n${scaffoldBlock}
 THE APPLICANT ORGANISATION (profile)
 ${orgProfileBlock(org as Record<string, unknown>)}
 
+${projectBlock ? `THE PROJECT BEING FUNDED (the applicant's own project; reuse its sentences for project-specific parts of the answer)\n${projectBlock}\n` : ''}
 THE ORGANISATION'S OWN WRITTEN MATERIAL (reuse their sentences; this is the source of the draft's voice)
 ${contentBlocks.length > 0
     ? contentBlocks.map(b => `[${b.block_type}] "${b.title}"\n${b.content}`).join('\n\n---\n\n')

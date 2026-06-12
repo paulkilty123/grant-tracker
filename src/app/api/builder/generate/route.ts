@@ -19,6 +19,7 @@ import { NextRequest } from 'next/server'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { getBuilderUser } from '@/lib/builder/access'
 import { emitEvent } from '@/lib/events/emit'
+import { projectMaterialBlock, type Project } from '@/lib/builder/projects'
 import {
   GenerationResultSchema,
   type ApplicationQuestion,
@@ -111,6 +112,7 @@ function userPrompt(
   blocks: CoreContentBlock[],
   funderContext: string,
   suppliedGuidelines: string,
+  projectBlock: string,
   questions: ApplicationQuestion[],
 ): string {
   const questionsBlock = questions.map((q, i) =>
@@ -119,7 +121,7 @@ function userPrompt(
   return `THE APPLICANT ORGANISATION (profile — mapped content from here uses block_id "profile")
 ${orgProfileBlock(org)}
 
-THE ORGANISATION'S CONTENT BLOCKS (quote verbatim, reference by block_id)
+${projectBlock ? `THE PROJECT BEING FUNDED (the applicant's own project description — primary source material for project-specific questions; quote and compose from it like a content block, reference it by block_id "project")\n${projectBlock}\n\n` : ''}THE ORGANISATION'S CONTENT BLOCKS (quote verbatim, reference by block_id)
 ${contentBlocksSection(blocks)}
 
 ${funderContext ? `THE FUNDER (verified catalogue entry — use it to angle the scaffolds, cite the field names)\n${funderContext}\n` : 'No catalogue entry is linked — scaffold to what a UK funder of this type typically weights, and say so in the guidance.\n'}
@@ -164,11 +166,14 @@ export async function POST(req: NextRequest) {
     return new Response(JSON.stringify({ t: 'error', message: 'This application has no questions' }) + '\n', { status: 400 })
   }
 
-  const [{ data: org }, { data: blocks }, grantRes] = await Promise.all([
+  const [{ data: org }, { data: blocks }, grantRes, projRes] = await Promise.all([
     supabase.from('organisations').select('*').eq('id', app.org_id).maybeSingle(),
     supabase.from('org_core_content').select('*').eq('org_id', app.org_id),
     app.opportunity_id
       ? supabase.from('grants_with_funder').select('*').eq('id', app.opportunity_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+    app.project_id
+      ? supabase.from('projects').select('*').eq('id', app.project_id).maybeSingle()
       : Promise.resolve({ data: null }),
   ])
   if (!org) {
@@ -177,6 +182,9 @@ export async function POST(req: NextRequest) {
 
   const funderContext = grantRes.data ? buildFunderContext(grantRes.data as Record<string, unknown>) : ''
   const contentBlocks = (blocks ?? []) as CoreContentBlock[]
+  // Project-first phase 3: a linked project's sections feed the build as
+  // primary material (session-client read, so cross-org links resolve null).
+  const projectBlock = projRes.data ? projectMaterialBlock(projRes.data as Project) : ''
 
   const started = Date.now()
   const suppliedGuidelines = app.supplied_guidelines ? String(app.supplied_guidelines).slice(0, 16000) : ''
@@ -226,6 +234,7 @@ export async function POST(req: NextRequest) {
                 contentBlocks,
                 funderContext,
                 suppliedGuidelines,
+                projectBlock,
                 chunkQuestions,
               ),
             }],

@@ -110,6 +110,16 @@ export interface EventPayloads {
     method: 'pasted' | 'url'
     char_count: number
   }
+  /** Project-first phase 2: a project was created from a description. */
+  project_created: {
+    project_id: string
+    completeness: number
+  }
+  /** Project-first phase 3: a match run against a project's attributes. */
+  project_match_run: {
+    project_id: string
+    match_count: number
+  }
   /** Project-first fork (spec §8 phase 1): which starting point users pick. */
   builder_path_chosen: {
     path: 'project' | 'funder'
@@ -117,7 +127,7 @@ export interface EventPayloads {
   /** v0.x — cost capture for the fast-model utility calls (parse paste,
    *  import split, returned-doc matching). Tier pricing needs every call. */
   builder_parse_run: {
-    kind: 'questions' | 'import' | 'return'
+    kind: 'questions' | 'import' | 'return' | 'project'
     application_id: string | null
     model: string
     input_tokens: number
@@ -166,6 +176,8 @@ export const EVENT_TYPES = [
   'builder_content_imported',
   'builder_guidelines_added',
   'builder_path_chosen',
+  'project_created',
+  'project_match_run',
   'builder_parse_run',
   'builder_doc_returned',
   'builder_answer_reviewed',
@@ -198,6 +210,8 @@ const REQUIRED_KEYS: Record<EventType, Record<string, Kind>> = {
   builder_content_imported:    { method: 'string', block_count: 'number', block_types: 'string[]' },
   builder_guidelines_added:    { application_id: 'string', method: 'string', char_count: 'number' },
   builder_path_chosen:         { path: 'string' },
+  project_created:             { project_id: 'string', completeness: 'number' },
+  project_match_run:           { project_id: 'string', match_count: 'number' },
   builder_parse_run:           { kind: 'string', application_id: 'nullable-string', model: 'string', input_tokens: 'number', output_tokens: 'number', duration_ms: 'number' },
   builder_doc_returned:        { application_id: 'string', matched_count: 'number', applied_count: 'number' },
   builder_answer_reviewed:     { application_id: 'string', question_id: 'string', score: 'number', model: 'string', input_tokens: 'number', output_tokens: 'number', duration_ms: 'number' },

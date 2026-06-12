@@ -24,6 +24,7 @@ import {
   ChevronUp,
   FilePenLine,
   BarChart3,
+  Lightbulb,
 } from 'lucide-react'
 
 interface Props {
@@ -246,9 +247,13 @@ export default function Sidebar({ org, userEmail }: Props) {
               item.Icon,
               item.href === '/dashboard/profile' ? profileBadge : undefined,
             )}
-            {/* Applications (builder) sits after Pipeline — cohort only */}
-            {item.href === '/dashboard/pipeline' && builderAllowed &&
-              navLink('/dashboard/applications', 'Applications', FilePenLine)}
+            {/* Projects + Applications (builder) sit after Pipeline — cohort only */}
+            {item.href === '/dashboard/pipeline' && builderAllowed && (
+              <>
+                {navLink('/dashboard/projects', 'Projects', Lightbulb)}
+                {navLink('/dashboard/applications', 'Applications', FilePenLine)}
+              </>
+            )}
           </React.Fragment>
         ))}
       </nav>
