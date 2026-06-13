@@ -6,11 +6,21 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { FilePenLine, Plus, ChevronRight, Trash2 } from 'lucide-react'
+import { FilePenLine, Plus, ChevronRight, ChevronDown, Trash2, Lightbulb } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { T, UI, BODY } from '@/components/builder/tokens'
 import type { ApplicationRecord } from '@/lib/builder/types'
+
+// The Apply-tier ethos as a few plain principles. Leads with the funder's-eye
+// reframe (the highest-value move for first-time applicants), closes on voice.
+const STRONG_APPLICATION_PRINCIPLES = [
+  { t: 'See it the funder’s way', b: 'A funder is asking "does this fit us, and can we trust them?" before they admire your writing. Answer the question they are actually asking.' },
+  { t: 'Lead with the need, backed by evidence', b: 'Show the problem and how you know it is real, not just that you care about it.' },
+  { t: 'Show outcomes you can measure', b: 'What will change, and how you will know. Funders fund results, not activity.' },
+  { t: 'Be specific and honest', b: 'Concrete numbers and plain claims beat polish. A gap you name reads better than one they find.' },
+  { t: 'Your voice, not ours', b: 'The application should sound like you. Grant Tracker structures and prompts; the words and the story stay yours.' },
+]
 
 const HOW_IT_WORKS_STEPS = [
   { title: 'Add the questions', body: 'Paste them from the funder’s form, or import a past application.' },
@@ -66,6 +76,7 @@ export default function ApplicationsPage() {
   const [loaded, setLoaded] = useState(false)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [howOpen, setHowOpen] = useState(false)
+  const [principlesOpen, setPrinciplesOpen] = useState(false)
 
   async function deleteApplication(id: string) {
     setApps(prev => prev.filter(a => a.id !== id))
@@ -121,8 +132,9 @@ export default function ApplicationsPage() {
           <h1 style={{ fontFamily: UI, fontWeight: 600, fontSize: 24, color: T.textPrimary, letterSpacing: '-0.01em', margin: 0 }}>
             Applications
           </h1>
-          <p style={{ fontFamily: BODY, fontSize: 14, color: T.textSecondary, margin: '6px 0 0', lineHeight: 1.55, maxWidth: 540 }}>
-            Turn a funder&apos;s question list into a guided draft, written in your words.
+          <p style={{ fontFamily: BODY, fontSize: 14, color: T.textSecondary, margin: '6px 0 0', lineHeight: 1.55, maxWidth: 560 }}>
+            Grant Tracker won&apos;t write your application for you. It shows what each funder looks
+            for and what a strong answer covers, so you write a strong one in your own words.
           </p>
         </div>
         <Link
@@ -136,6 +148,43 @@ export default function ApplicationsPage() {
         >
           <Plus size={15} /> New application
         </Link>
+      </div>
+
+      {/* Ethos: what makes a strong application (collapsible, light) */}
+      <div style={{ marginTop: 14 }}>
+        <button
+          onClick={() => setPrinciplesOpen(o => !o)}
+          aria-expanded={principlesOpen}
+          style={{
+            fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.sage, background: 'transparent',
+            border: 'none', cursor: 'pointer', padding: 0, display: 'inline-flex', alignItems: 'center', gap: 6,
+          }}
+        >
+          <Lightbulb size={14} /> What makes a strong application
+          <ChevronDown size={14} style={{ transform: principlesOpen ? 'rotate(180deg)' : 'none', transition: 'transform 150ms ease' }} />
+        </button>
+        {principlesOpen && (
+          <div style={{
+            background: T.softGreen, border: `1px solid ${T.border}`, borderRadius: 12,
+            padding: '18px 20px', marginTop: 10, display: 'flex', flexDirection: 'column', gap: 12,
+          }}>
+            {STRONG_APPLICATION_PRINCIPLES.map((p, i) => (
+              <div key={i} style={{ display: 'flex', gap: 11 }}>
+                <span style={{
+                  fontFamily: UI, fontWeight: 700, fontSize: 11, color: T.sage, background: T.paleGreen,
+                  width: 22, height: 22, borderRadius: 999, display: 'flex', alignItems: 'center',
+                  justifyContent: 'center', flexShrink: 0, marginTop: 1,
+                }}>
+                  {i + 1}
+                </span>
+                <div>
+                  <p style={{ fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: T.textPrimary, margin: '0 0 2px' }}>{p.t}</p>
+                  <p style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, margin: 0, lineHeight: 1.55 }}>{p.b}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* List */}

@@ -128,7 +128,8 @@ export default function ProjectsPage() {
             Projects
           </h1>
           <p style={{ fontFamily: BODY, fontSize: 14, color: T.textSecondary, margin: '6px 0 0', lineHeight: 1.55, maxWidth: 540 }}>
-            Describe what needs funding once, then match it against the catalogue and apply funder by funder.
+            A clear project is the foundation of every strong application. Describe what needs
+            funding once, match it against the catalogue, and carry it into every application you build.
           </p>
         </div>
         <Link
