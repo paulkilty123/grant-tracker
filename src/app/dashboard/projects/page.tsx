@@ -7,7 +7,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Plus, ChevronRight, Trash2, Lightbulb } from 'lucide-react'
+import { Plus, ChevronRight, Trash2, Lightbulb, HelpCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { T, UI, BODY } from '@/components/builder/tokens'
@@ -34,34 +34,40 @@ const HOW_STEPS = [
 
 function HowItWorks({ withCta }: { withCta?: boolean }) {
   return (
-    <div style={{ background: T.softGreen, border: `1px solid ${T.border}`, borderRadius: 12, padding: '20px 22px' }}>
-      <p style={{ fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textSecondary, margin: '0 0 14px' }}>
-        How it works
-      </p>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 12 }}>
+    <div style={{ background: T.softGreen, border: `1px solid ${T.border}`, borderRadius: 12, padding: '22px 24px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18 }}>
+        <HelpCircle size={18} color={T.sage} />
+        <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 16, color: T.textPrimary }}>How it works</span>
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14 }}>
         {HOW_STEPS.map((s, i) => (
-          <div key={i} style={{ padding: '2px 4px' }}>
-            <span style={{
-              fontFamily: UI, fontWeight: 700, fontSize: 12, color: '#F1F7E4', background: T.greenDeep,
-              width: 24, height: 24, borderRadius: 999, display: 'inline-flex', alignItems: 'center',
-              justifyContent: 'center', marginBottom: 9,
-            }}>
-              {i + 1}
-            </span>
-            <p style={{ fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: T.textPrimary, margin: '0 0 4px' }}>{s.title}</p>
-            <p style={{ fontFamily: BODY, fontSize: 12, color: T.textSecondary, margin: 0, lineHeight: 1.5 }}>{s.body}</p>
-            {withCta && i === 0 && (
-              <Link href="/dashboard/projects/new" style={{
-                fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.greenDeep, background: T.lime,
-                padding: '7px 14px', borderRadius: 8, textDecoration: 'none', display: 'inline-flex',
-                alignItems: 'center', gap: 5, marginTop: 10,
+          <div key={i} style={{ flex: '1 1 150px', minWidth: 150 }}>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
+              <span style={{
+                fontFamily: UI, fontWeight: 700, fontSize: 13, color: '#F1F7E4', background: T.greenDeep,
+                width: 30, height: 30, borderRadius: 999, display: 'inline-flex', alignItems: 'center',
+                justifyContent: 'center', flexShrink: 0,
               }}>
-                <Plus size={13} /> New project
-              </Link>
-            )}
+                {i + 1}
+              </span>
+              {i < HOW_STEPS.length - 1 && (
+                <span style={{ flex: 1, height: 2, background: 'rgba(23,52,4,0.12)', marginLeft: 10, borderRadius: 2 }} />
+              )}
+            </div>
+            <p style={{ fontFamily: UI, fontWeight: 600, fontSize: 14.5, color: T.textPrimary, margin: '0 0 4px' }}>{s.title}</p>
+            <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary, margin: 0, lineHeight: 1.5 }}>{s.body}</p>
           </div>
         ))}
       </div>
+      {withCta && (
+        <Link href="/dashboard/projects/new" style={{
+          fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.greenDeep, background: T.lime,
+          padding: '9px 16px', borderRadius: 8, textDecoration: 'none', display: 'inline-flex',
+          alignItems: 'center', gap: 6, marginTop: 18,
+        }}>
+          <Plus size={14} /> New project
+        </Link>
+      )}
     </div>
   )
 }
