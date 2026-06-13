@@ -118,6 +118,7 @@ export default function NewApplicationPage() {
   // ── Step 2 state ──
   const [questions, setQuestions] = useState<EditableQuestion[]>([])
   const [creating, setCreating] = useState(false)
+  const [focusedQ, setFocusedQ] = useState<number | null>(null)
 
   useEffect(() => {
     async function init() {
@@ -500,8 +501,8 @@ export default function NewApplicationPage() {
             </h2>
             <p style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, margin: '0 0 16px', lineHeight: 1.55 }}>
               {mode === 'project'
-                ? 'Six sections every funder asks about. Adjust them to fit your project, then build.'
-                : 'Fix anything the parser got wrong, including word limits, then build. Word limits the funder stated in characters are shown as approximate words.'}
+                ? 'These are the sections every funder asks about. Click any one to reword it, change its limit, or remove it, then build. You write the answers in the next step, not here.'
+                : 'Click any question to fix what the parser got wrong, including word limits, then build. You write the answers in the next step, not here. Word limits the funder stated in characters are shown as approximate words.'}
             </p>
             {questions.length > 12 && (
               <div style={{ background: T.amberBg, borderRadius: 8, padding: '10px 14px', marginBottom: 14 }}>
@@ -515,39 +516,45 @@ export default function NewApplicationPage() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {questions.map((q, i) => (
-                <div key={i} style={{ border: `1px solid ${T.border}`, borderRadius: 10, padding: '12px 14px' }}>
-                  <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                    <span style={{
-                      fontFamily: UI, fontWeight: 700, fontSize: 12, color: T.sage, background: T.paleGreen,
-                      width: 24, height: 24, borderRadius: 999, display: 'flex', alignItems: 'center',
-                      justifyContent: 'center', flexShrink: 0, marginTop: 4,
-                    }}>
-                      {i + 1}
-                    </span>
-                    <textarea
-                      value={q.question_text}
-                      onChange={e => updateQuestion(i, { question_text: e.target.value })}
-                      rows={Math.min(4, Math.max(1, Math.ceil(q.question_text.length / 90)))}
-                      style={{ ...inputStyle(), border: 'none', padding: '4px 0', resize: 'vertical', lineHeight: 1.5, fontSize: 14 }}
+                <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                  <span style={{
+                    fontFamily: UI, fontWeight: 700, fontSize: 12, color: T.sage, background: T.paleGreen,
+                    width: 24, height: 24, borderRadius: 999, display: 'flex', alignItems: 'center',
+                    justifyContent: 'center', flexShrink: 0, marginTop: 6,
+                  }}>
+                    {i + 1}
+                  </span>
+                  <textarea
+                    value={q.question_text}
+                    onChange={e => updateQuestion(i, { question_text: e.target.value })}
+                    onFocus={() => setFocusedQ(i)}
+                    onBlur={() => setFocusedQ(null)}
+                    rows={Math.min(4, Math.max(1, Math.ceil((q.question_text.length || 1) / 70)))}
+                    placeholder="Type the question"
+                    aria-label={`Question ${i + 1}`}
+                    style={{
+                      ...inputStyle(), flex: 1, background: T.editorBg,
+                      border: `1px solid ${focusedQ === i ? T.borderStrong : T.border}`,
+                      resize: 'none', lineHeight: 1.5, fontSize: 14,
+                    }}
+                  />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, marginTop: 6 }}>
+                    <input
+                      type="number"
+                      value={q.word_limit ?? ''}
+                      onChange={e => updateQuestion(i, { word_limit: e.target.value ? Number(e.target.value) : null })}
+                      placeholder="none"
+                      aria-label={`Word limit for question ${i + 1}`}
+                      style={{ ...inputStyle(), width: 76, padding: '8px 8px', fontSize: 13, textAlign: 'center' }}
                     />
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                      <input
-                        type="number"
-                        value={q.word_limit ?? ''}
-                        onChange={e => updateQuestion(i, { word_limit: e.target.value ? Number(e.target.value) : null })}
-                        placeholder="none"
-                        aria-label="Word limit"
-                        style={{ ...inputStyle(), width: 76, padding: '6px 8px', fontSize: 13, textAlign: 'center' }}
-                      />
-                      <span style={{ fontFamily: UI, fontSize: 11.5, color: T.textTertiary }}>words</span>
-                      <button
-                        onClick={() => setQuestions(qs => qs.filter((_, j) => j !== i))}
-                        aria-label="Remove question"
-                        style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: T.textTertiary, padding: 4 }}
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
+                    <span style={{ fontFamily: UI, fontSize: 11.5, color: T.textTertiary }}>words</span>
+                    <button
+                      onClick={() => setQuestions(qs => qs.filter((_, j) => j !== i))}
+                      aria-label={`Remove question ${i + 1}`}
+                      style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: T.textTertiary, padding: 4 }}
+                    >
+                      <Trash2 size={14} />
+                    </button>
                   </div>
                 </div>
               ))}
