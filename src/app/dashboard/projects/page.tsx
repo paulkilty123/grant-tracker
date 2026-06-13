@@ -40,11 +40,11 @@ function HowItWorks({ withCta }: { withCta?: boolean }) {
       </p>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 12 }}>
         {HOW_STEPS.map((s, i) => (
-          <div key={i} style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 10, padding: '13px 15px' }}>
+          <div key={i} style={{ padding: '2px 4px' }}>
             <span style={{
-              fontFamily: UI, fontWeight: 700, fontSize: 11, color: T.sage, background: T.paleGreen,
-              width: 22, height: 22, borderRadius: 999, display: 'inline-flex', alignItems: 'center',
-              justifyContent: 'center', marginBottom: 8,
+              fontFamily: UI, fontWeight: 700, fontSize: 12, color: '#F1F7E4', background: T.greenDeep,
+              width: 24, height: 24, borderRadius: 999, display: 'inline-flex', alignItems: 'center',
+              justifyContent: 'center', marginBottom: 9,
             }}>
               {i + 1}
             </span>
@@ -150,10 +150,11 @@ export default function ProjectsPage() {
       {loaded && projects.length > 0 && (() => {
         const ready = projects.filter(readyToMatch).length
         const funded = projects.filter(p => p.status === 'funded').length
+        const inDraft = projects.filter(p => p.status === 'active' && !readyToMatch(p)).length
         const tiles = [
           { n: ready, label: 'Ready to match', accent: T.sage },
           { n: funded, label: 'Funded', accent: T.greenDeep },
-          { n: projects.length, label: projects.length === 1 ? 'Project' : 'Projects', accent: T.textPrimary },
+          { n: inDraft, label: 'In draft', accent: T.textTertiary },
         ]
         return (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginTop: 18 }}>
@@ -231,18 +232,17 @@ export default function ProjectsPage() {
                   {p.budget_amount ? ` · £${p.budget_amount.toLocaleString('en-GB')}` : ''}
                 </span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
-                <div style={{ width: 90 }}>
-                  <div style={{ height: 5, background: T.cream, borderRadius: 999, overflow: 'hidden' }}>
-                    <div style={{
-                      height: '100%', width: `${pct}%`,
-                      background: T.lime, borderRadius: 999, transition: 'width 200ms ease',
-                    }} />
-                  </div>
+              <div style={{ width: 132, flexShrink: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
+                  <span style={{ fontFamily: BODY, fontSize: 11.5, color: T.textSecondary }}>Described</span>
+                  <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: T.sage }}>{pct}%</span>
                 </div>
-                <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 11, color: T.textTertiary, width: 32 }}>
-                  {pct}%
-                </span>
+                <div style={{ height: 6, background: T.cream, borderRadius: 999, overflow: 'hidden' }}>
+                  <div style={{
+                    height: '100%', width: `${pct}%`,
+                    background: T.lime, borderRadius: 999, transition: 'width 200ms ease',
+                  }} />
+                </div>
               </div>
               {confirmDeleteId === p.id ? (
                 <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}
@@ -273,7 +273,7 @@ export default function ProjectsPage() {
                   style={{
                     background: 'transparent', border: 'none', cursor: 'pointer',
                     color: T.textTertiary, padding: 6, borderRadius: 6, flexShrink: 0,
-                    opacity: hoveredId === p.id ? 1 : 0.32, transition: 'opacity 150ms ease',
+                    opacity: hoveredId === p.id ? 1 : 0, transition: 'opacity 150ms ease',
                   }}
                 >
                   <Trash2 size={15} />

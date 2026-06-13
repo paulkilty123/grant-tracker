@@ -37,11 +37,11 @@ function HowItWorks({ withCta }: { withCta?: boolean }) {
       </p>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 12 }}>
         {HOW_IT_WORKS_STEPS.map((s, i) => (
-          <div key={i} style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 10, padding: '13px 15px' }}>
+          <div key={i} style={{ padding: '2px 4px' }}>
             <span style={{
-              fontFamily: UI, fontWeight: 700, fontSize: 11, color: T.sage, background: T.paleGreen,
-              width: 22, height: 22, borderRadius: 999, display: 'inline-flex', alignItems: 'center',
-              justifyContent: 'center', marginBottom: 8,
+              fontFamily: UI, fontWeight: 700, fontSize: 12, color: '#F1F7E4', background: T.greenDeep,
+              width: 24, height: 24, borderRadius: 999, display: 'inline-flex', alignItems: 'center',
+              justifyContent: 'center', marginBottom: 9,
             }}>
               {i + 1}
             </span>
@@ -86,6 +86,7 @@ export default function ApplicationsPage() {
   const [howOpen, setHowOpen] = useState(false)
   const [principlesOpen, setPrinciplesOpen] = useState(false)
   const [hoveredId, setHoveredId] = useState<string | null>(null)
+  const [deadlineSoon, setDeadlineSoon] = useState(0)
 
   async function deleteApplication(id: string) {
     setApps(prev => prev.filter(a => a.id !== id))
@@ -110,7 +111,27 @@ export default function ApplicationsPage() {
           .select('*')
           .eq('org_id', org.id)
           .order('updated_at', { ascending: false })
-        setApps((data ?? []) as ApplicationRecord[])
+        const rows = (data ?? []) as ApplicationRecord[]
+        setApps(rows)
+
+        // "Deadline soon" tile: deadlines live on the linked opportunity, not
+        // the application, so join through opportunity_id (UUIDs only).
+        const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+        const oppIds = Array.from(new Set(
+          rows.map(r => (r as { opportunity_id?: string | null }).opportunity_id)
+            .filter((id): id is string => !!id && UUID_RE.test(id)),
+        ))
+        if (oppIds.length > 0) {
+          const today = new Date().toISOString().split('T')[0]
+          const in30 = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0]
+          const { data: gr } = await supabase
+            .from('grants_with_funder')
+            .select('deadline')
+            .in('id', oppIds)
+            .gte('deadline', today)
+            .lte('deadline', in30)
+          setDeadlineSoon((gr ?? []).length)
+        }
       }
       setLoaded(true)
     }
@@ -203,7 +224,7 @@ export default function ApplicationsPage() {
         const tiles = [
           { n: inProgress, label: 'In progress', accent: T.sage },
           { n: complete, label: 'Complete', accent: T.greenDeep },
-          { n: apps.length, label: apps.length === 1 ? 'Application' : 'Applications', accent: T.textPrimary },
+          { n: deadlineSoon, label: 'Deadline soon', accent: deadlineSoon > 0 ? T.coral : T.textTertiary },
         ]
         return (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginTop: 18 }}>
@@ -269,25 +290,27 @@ export default function ApplicationsPage() {
                   </span>
                 </div>
                 <span style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary }}>
-                  {app.funder_name && app.grant_name ? `${app.funder_name} · ` : ''}
-                  {answered > 0
-                    ? `${answered} of ${total} ${total === 1 ? 'question' : 'questions'} written`
+                  {app.funder_name && app.grant_name
+                    ? app.funder_name
                     : `${total} ${total === 1 ? 'question' : 'questions'}`}
                 </span>
               </div>
               {total > 0 && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
-                  <div style={{ width: 90 }}>
-                    <div style={{ height: 5, background: T.cream, borderRadius: 999, overflow: 'hidden' }}>
-                      <div style={{
-                        height: '100%', width: `${Math.round((answered / total) * 100)}%`,
-                        background: T.lime, borderRadius: 999, transition: 'width 200ms ease',
-                      }} />
-                    </div>
+                <div style={{ width: 132, flexShrink: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
+                    <span style={{ fontFamily: BODY, fontSize: 11.5, color: T.textSecondary }}>
+                      {answered} of {total} written
+                    </span>
+                    <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: T.sage }}>
+                      {Math.round((answered / total) * 100)}%
+                    </span>
                   </div>
-                  <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 11, color: T.textTertiary, width: 32 }}>
-                    {Math.round((answered / total) * 100)}%
-                  </span>
+                  <div style={{ height: 6, background: T.cream, borderRadius: 999, overflow: 'hidden' }}>
+                    <div style={{
+                      height: '100%', width: `${Math.round((answered / total) * 100)}%`,
+                      background: T.lime, borderRadius: 999, transition: 'width 200ms ease',
+                    }} />
+                  </div>
                 </div>
               )}
               {confirmDeleteId === app.id ? (
@@ -319,7 +342,7 @@ export default function ApplicationsPage() {
                   style={{
                     background: 'transparent', border: 'none', cursor: 'pointer',
                     color: T.textTertiary, padding: 6, borderRadius: 6, flexShrink: 0,
-                    opacity: hoveredId === app.id ? 1 : 0.32, transition: 'opacity 150ms ease',
+                    opacity: hoveredId === app.id ? 1 : 0, transition: 'opacity 150ms ease',
                   }}
                 >
                   <Trash2 size={15} />
