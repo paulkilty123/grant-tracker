@@ -7,7 +7,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Plus, ChevronRight, Trash2 } from 'lucide-react'
+import { Plus, ChevronRight, Trash2, Lightbulb } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { T, UI, BODY } from '@/components/builder/tokens'
@@ -72,6 +72,7 @@ export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([])
   const [loaded, setLoaded] = useState(false)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [hoveredId, setHoveredId] = useState<string | null>(null)
 
   async function handleDelete(id: string) {
     setProjects(prev => prev.filter(p => p.id !== id))
@@ -145,6 +146,27 @@ export default function ProjectsPage() {
         </Link>
       </div>
 
+      {/* Status strip — lead with state */}
+      {loaded && projects.length > 0 && (() => {
+        const ready = projects.filter(readyToMatch).length
+        const funded = projects.filter(p => p.status === 'funded').length
+        const tiles = [
+          { n: ready, label: 'Ready to match', accent: T.sage },
+          { n: funded, label: 'Funded', accent: T.greenDeep },
+          { n: projects.length, label: projects.length === 1 ? 'Project' : 'Projects', accent: T.textPrimary },
+        ]
+        return (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginTop: 18 }}>
+            {tiles.map(t => (
+              <div key={t.label} style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 10, padding: '12px 16px' }}>
+                <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 22, color: t.accent, display: 'block', lineHeight: 1.1 }}>{t.n}</span>
+                <span style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary }}>{t.label}</span>
+              </div>
+            ))}
+          </div>
+        )
+      })()}
+
       {/* List */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 22 }}>
         {!loaded && [0, 1].map(i => (
@@ -169,12 +191,21 @@ export default function ProjectsPage() {
             <Link
               key={p.id}
               href={`/dashboard/projects/${p.id}`}
+              onMouseEnter={() => setHoveredId(p.id)}
+              onMouseLeave={() => setHoveredId(null)}
               style={{
                 background: T.white, border: `1px solid ${T.border}`, borderRadius: 12,
-                padding: '16px 20px', textDecoration: 'none',
-                display: 'flex', alignItems: 'center', gap: 16,
+                padding: '14px 18px', textDecoration: 'none',
+                display: 'flex', alignItems: 'center', gap: 14,
               }}
             >
+              <span style={{
+                width: 42, height: 42, borderRadius: 10, flexShrink: 0,
+                background: type.bg, color: type.color,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <Lightbulb size={19} />
+              </span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap', marginBottom: 3 }}>
                   <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 15.5, color: T.textPrimary }}>
@@ -242,6 +273,7 @@ export default function ProjectsPage() {
                   style={{
                     background: 'transparent', border: 'none', cursor: 'pointer',
                     color: T.textTertiary, padding: 6, borderRadius: 6, flexShrink: 0,
+                    opacity: hoveredId === p.id ? 1 : 0.32, transition: 'opacity 150ms ease',
                   }}
                 >
                   <Trash2 size={15} />
@@ -251,6 +283,17 @@ export default function ProjectsPage() {
             </Link>
           )
         })}
+
+        {/* Dashed describe-new affordance under the list */}
+        {loaded && projects.length > 0 && (
+          <Link href="/dashboard/projects/new" style={{
+            border: `1px dashed ${T.borderStrong}`, borderRadius: 12, padding: '14px 18px',
+            textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            gap: 8, color: T.textTertiary, fontFamily: UI, fontWeight: 600, fontSize: 13.5,
+          }}>
+            <Plus size={15} /> Describe a new project
+          </Link>
+        )}
 
         {loaded && projects.length > 0 && projects.length <= 2 && <HowItWorks />}
       </div>

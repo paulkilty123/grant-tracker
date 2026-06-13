@@ -69,6 +69,14 @@ const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }>
   complete:    { bg: '#C0DD97',    color: T.greenDeep,     label: 'Complete' },
 }
 
+// Funder/grant monogram for the row template (icon → title → meta → progress).
+function monogram(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean)
+  if (words.length === 0) return '?'
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase()
+  return (words[0][0] + words[1][0]).toUpperCase()
+}
+
 export default function ApplicationsPage() {
   const router = useRouter()
   const [allowed, setAllowed] = useState<boolean | null>(null)
@@ -77,6 +85,7 @@ export default function ApplicationsPage() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [howOpen, setHowOpen] = useState(false)
   const [principlesOpen, setPrinciplesOpen] = useState(false)
+  const [hoveredId, setHoveredId] = useState<string | null>(null)
 
   async function deleteApplication(id: string) {
     setApps(prev => prev.filter(a => a.id !== id))
@@ -187,6 +196,27 @@ export default function ApplicationsPage() {
         )}
       </div>
 
+      {/* Status strip — lead with state (real application states only) */}
+      {loaded && apps.length > 0 && (() => {
+        const inProgress = apps.filter(a => a.status === 'in_progress' || a.status === 'draft').length
+        const complete = apps.filter(a => a.status === 'complete').length
+        const tiles = [
+          { n: inProgress, label: 'In progress', accent: T.sage },
+          { n: complete, label: 'Complete', accent: T.greenDeep },
+          { n: apps.length, label: apps.length === 1 ? 'Application' : 'Applications', accent: T.textPrimary },
+        ]
+        return (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginTop: 18 }}>
+            {tiles.map(t => (
+              <div key={t.label} style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 10, padding: '12px 16px' }}>
+                <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 22, color: t.accent, display: 'block', lineHeight: 1.1 }}>{t.n}</span>
+                <span style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary }}>{t.label}</span>
+              </div>
+            ))}
+          </div>
+        )
+      })()}
+
       {/* List */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 22 }}>
         {!loaded && [0, 1, 2].map(i => (
@@ -211,12 +241,21 @@ export default function ApplicationsPage() {
             <Link
               key={app.id}
               href={`/dashboard/applications/${app.id}`}
+              onMouseEnter={() => setHoveredId(app.id)}
+              onMouseLeave={() => setHoveredId(null)}
               style={{
                 background: T.white, border: `1px solid ${T.border}`, borderRadius: 12,
-                padding: '16px 20px', textDecoration: 'none',
-                display: 'flex', alignItems: 'center', gap: 16,
+                padding: '14px 18px', textDecoration: 'none',
+                display: 'flex', alignItems: 'center', gap: 14,
               }}
             >
+              <span style={{
+                width: 42, height: 42, borderRadius: 10, flexShrink: 0,
+                background: T.paleGreen, color: T.sage, fontFamily: UI, fontWeight: 600, fontSize: 14.5,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                {monogram(app.funder_name || app.grant_name || '?')}
+              </span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap', marginBottom: 3 }}>
                   <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 15.5, color: T.textPrimary }}>
@@ -280,6 +319,7 @@ export default function ApplicationsPage() {
                   style={{
                     background: 'transparent', border: 'none', cursor: 'pointer',
                     color: T.textTertiary, padding: 6, borderRadius: 6, flexShrink: 0,
+                    opacity: hoveredId === app.id ? 1 : 0.32, transition: 'opacity 150ms ease',
                   }}
                 >
                   <Trash2 size={15} />
@@ -289,6 +329,17 @@ export default function ApplicationsPage() {
             </Link>
           )
         })}
+
+        {/* Dashed start-new affordance under the list */}
+        {loaded && apps.length > 0 && (
+          <Link href="/dashboard/applications/new" style={{
+            border: `1px dashed ${T.borderStrong}`, borderRadius: 12, padding: '14px 18px',
+            textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            gap: 8, color: T.textTertiary, fontFamily: UI, fontWeight: 600, fontSize: 13.5,
+          }}>
+            <Plus size={15} /> Start a new application
+          </Link>
+        )}
 
         {/* How it works: full strip for 1-2 applications, collapsed link for 3+ */}
         {loaded && apps.length > 0 && apps.length <= 2 && <HowItWorks />}
