@@ -9,7 +9,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Search as SearchIcon, X as XIcon, Plus, Trash2, Check } from 'lucide-react'
+import { ArrowLeft, Search as SearchIcon, X as XIcon, Plus, Trash2, Check, ExternalLink } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { emitClientEvent } from '@/lib/events/client'
@@ -20,6 +20,26 @@ interface PickedOpportunity {
   id: string          // scraped_grants.id (catalogue UUID)
   title: string
   funder: string
+  applyUrl: string | null     // funder's application page (catalogue apply_url)
+  howToApply: string | null   // funder_brief.how_to_apply guidance
+}
+
+// Map a grants_with_funder row to a PickedOpportunity, carrying the apply-page
+// link and how-to-apply guidance so the setup step can point the user at where
+// to get the questions (we have these for ~100% of the catalogue).
+function toPicked(row: Record<string, unknown>): PickedOpportunity {
+  const brief = row.funder_brief && typeof row.funder_brief === 'object'
+    ? (row.funder_brief as Record<string, string | null>)
+    : null
+  const apply = row.apply_url ? String(row.apply_url).trim() : ''
+  const how = brief?.how_to_apply ? String(brief.how_to_apply).trim() : ''
+  return {
+    id: String(row.id),
+    title: String(row.title ?? ''),
+    funder: String(row.funder ?? ''),
+    applyUrl: apply || null,
+    howToApply: how || null,
+  }
 }
 
 interface EditableQuestion {
@@ -92,11 +112,11 @@ export default function NewApplicationPage() {
       if (oppParam && UUID_RE.test(oppParam)) {
         const { data: row } = await supabase
           .from('grants_with_funder')
-          .select('id, title, funder')
+          .select('id, title, funder, apply_url, funder_brief')
           .eq('id', oppParam)
           .maybeSingle()
         if (row) {
-          setPicked({ id: String(row.id), title: row.title as string, funder: row.funder as string })
+          setPicked(toPicked(row as Record<string, unknown>))
           setMode('funder')
           setStep('setup')
           return
@@ -122,12 +142,11 @@ export default function NewApplicationPage() {
       const supabase = createClient()
       const { data } = await supabase
         .from('grants_with_funder')
-        .select('id, title, funder')
+        .select('id, title, funder, apply_url, funder_brief')
         .eq('is_active', true)
         .or(`title.ilike.%${q}%,funder.ilike.%${q}%`)
         .limit(7)
-      setOppResults(((data ?? []) as { id: string; title: string; funder: string }[])
-        .map(r => ({ id: String(r.id), title: r.title, funder: r.funder })))
+      setOppResults(((data ?? []) as Record<string, unknown>[]).map(toPicked))
     }, 250)
     return () => { if (searchTimer.current) clearTimeout(searchTimer.current) }
   }, [oppQuery, picked])
@@ -370,6 +389,34 @@ export default function NewApplicationPage() {
               limits and all. We&apos;ll sort them into a checklist you can correct before
               anything else happens.
             </p>
+
+            {/* Where to get the questions — apply-page link + how-to-apply
+                guidance from the catalogue (present for ~all grants). */}
+            {picked && (picked.applyUrl || picked.howToApply) && (
+              <div style={{ background: T.paleGreen, borderRadius: 10, padding: '12px 16px', marginBottom: 14 }}>
+                {picked.howToApply && (
+                  <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.sage, margin: '0 0 8px', lineHeight: 1.5 }}>
+                    <span style={{ fontFamily: UI, fontWeight: 600 }}>How to apply: </span>
+                    {picked.howToApply}
+                  </p>
+                )}
+                {picked.applyUrl && (
+                  <a
+                    href={picked.applyUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.greenDeep,
+                      textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5,
+                    }}
+                  >
+                    Open {picked.funder}&apos;s application page to copy the questions
+                    <ExternalLink size={12} />
+                  </a>
+                )}
+              </div>
+            )}
+
             <textarea
               value={rawText}
               onChange={e => setRawText(e.target.value)}
