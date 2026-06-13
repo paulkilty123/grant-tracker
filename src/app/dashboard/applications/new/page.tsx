@@ -42,6 +42,28 @@ function toPicked(row: Record<string, unknown>): PickedOpportunity {
   }
 }
 
+// how_to_apply is often stored as inline-numbered steps ("1. … 2. … 3. …").
+// Split it into a real list so it can render as one. Returns null when the
+// text isn't a numbered sequence (render as a paragraph then). A step boundary
+// is a 1-2 digit number + "." + whitespace, preceded by start/whitespace —
+// "4.00pm" and "22 June 2026." don't match (no whitespace after the dot).
+function parseSteps(text: string): string[] | null {
+  const re = /\d{1,2}\.\s+/g
+  const starts: number[] = []
+  let m: RegExpExecArray | null
+  while ((m = re.exec(text)) !== null) {
+    if (m.index === 0 || /\s/.test(text[m.index - 1])) starts.push(m.index)
+  }
+  if (starts.length < 2) return null
+  const steps: string[] = []
+  for (let i = 0; i < starts.length; i++) {
+    const end = i + 1 < starts.length ? starts[i + 1] : text.length
+    const seg = text.slice(starts[i], end).replace(/^\d{1,2}\.\s+/, '').trim()
+    if (seg) steps.push(seg)
+  }
+  return steps.length >= 2 ? steps : null
+}
+
 interface EditableQuestion {
   question_text: string
   word_limit: number | null
@@ -392,30 +414,46 @@ export default function NewApplicationPage() {
 
             {/* Where to get the questions — apply-page link + how-to-apply
                 guidance from the catalogue (present for ~all grants). */}
-            {picked && (picked.applyUrl || picked.howToApply) && (
-              <div style={{ background: T.paleGreen, borderRadius: 10, padding: '12px 16px', marginBottom: 14 }}>
-                {picked.howToApply && (
-                  <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.sage, margin: '0 0 8px', lineHeight: 1.5 }}>
-                    <span style={{ fontFamily: UI, fontWeight: 600 }}>How to apply: </span>
-                    {picked.howToApply}
-                  </p>
-                )}
-                {picked.applyUrl && (
-                  <a
-                    href={picked.applyUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.greenDeep,
-                      textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5,
-                    }}
-                  >
-                    Open {picked.funder}&apos;s application page to copy the questions
-                    <ExternalLink size={12} />
-                  </a>
-                )}
-              </div>
-            )}
+            {picked && (picked.applyUrl || picked.howToApply) && (() => {
+              const steps = picked.howToApply ? parseSteps(picked.howToApply) : null
+              return (
+                <div style={{ background: T.paleGreen, borderRadius: 10, padding: '14px 16px', marginBottom: 14 }}>
+                  {picked.howToApply && (
+                    <div style={{ marginBottom: picked.applyUrl ? 12 : 0 }}>
+                      <p style={{ fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.sage, margin: '0 0 6px' }}>
+                        How to apply
+                      </p>
+                      {steps ? (
+                        <ol style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                          {steps.map((s, i) => (
+                            <li key={i} style={{ fontFamily: BODY, fontSize: 12.5, color: T.sage, lineHeight: 1.5 }}>{s}</li>
+                          ))}
+                        </ol>
+                      ) : (
+                        <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.sage, margin: 0, lineHeight: 1.5 }}>
+                          {picked.howToApply}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  {picked.applyUrl && (
+                    <a
+                      href={picked.applyUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.greenDeep,
+                        background: T.white, border: `1px solid ${T.borderStrong}`,
+                        padding: '6px 12px', borderRadius: 8, textDecoration: 'none',
+                        display: 'inline-flex', alignItems: 'center', gap: 6,
+                      }}
+                    >
+                      Open application page <ExternalLink size={12} />
+                    </a>
+                  )}
+                </div>
+              )
+            })()}
 
             <textarea
               value={rawText}
