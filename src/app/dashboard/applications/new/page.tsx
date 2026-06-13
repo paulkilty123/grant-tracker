@@ -64,6 +64,15 @@ function parseSteps(text: string): string[] | null {
   return steps.length >= 2 ? steps : null
 }
 
+// Size a question field to its content: one-line questions stay compact, long
+// ones grow to fit without an inner scrollbar, and every row ends up an even,
+// content-matched height (no guessed row counts leaving empty space).
+function autoGrow(el: HTMLTextAreaElement | null) {
+  if (!el) return
+  el.style.height = 'auto'
+  el.style.height = `${Math.max(el.scrollHeight, 48)}px`
+}
+
 interface EditableQuestion {
   question_text: string
   word_limit: number | null
@@ -516,44 +525,46 @@ export default function NewApplicationPage() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {questions.map((q, i) => (
-                <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                   <span style={{
-                    fontFamily: UI, fontWeight: 700, fontSize: 12, color: T.sage, background: T.paleGreen,
-                    width: 24, height: 24, borderRadius: 999, display: 'flex', alignItems: 'center',
-                    justifyContent: 'center', flexShrink: 0, marginTop: 6,
+                    fontFamily: UI, fontWeight: 700, fontSize: 12.5, color: T.sage, background: T.paleGreen,
+                    width: 26, height: 26, borderRadius: 999, display: 'flex', alignItems: 'center',
+                    justifyContent: 'center', flexShrink: 0, marginTop: 11,
                   }}>
                     {i + 1}
                   </span>
                   <textarea
+                    ref={autoGrow}
                     value={q.question_text}
-                    onChange={e => updateQuestion(i, { question_text: e.target.value })}
+                    onChange={e => { updateQuestion(i, { question_text: e.target.value }); autoGrow(e.target) }}
                     onFocus={() => setFocusedQ(i)}
                     onBlur={() => setFocusedQ(null)}
-                    rows={Math.min(4, Math.max(1, Math.ceil((q.question_text.length || 1) / 70)))}
+                    rows={1}
                     placeholder="Type the question"
                     aria-label={`Question ${i + 1}`}
                     style={{
                       ...inputStyle(), flex: 1, background: T.editorBg,
                       border: `1.5px solid ${focusedQ === i ? T.greenMid : T.borderStrong}`,
-                      resize: 'none', lineHeight: 1.5, fontSize: 14,
+                      resize: 'none', overflow: 'hidden', lineHeight: 1.55, fontSize: 15,
+                      padding: '12px 14px', minHeight: 48,
                     }}
                   />
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, marginTop: 6 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0, marginTop: 9 }}>
                     <input
                       type="number"
                       value={q.word_limit ?? ''}
                       onChange={e => updateQuestion(i, { word_limit: e.target.value ? Number(e.target.value) : null })}
                       placeholder="none"
                       aria-label={`Word limit for question ${i + 1}`}
-                      style={{ ...inputStyle(), width: 76, padding: '8px 8px', fontSize: 13, textAlign: 'center' }}
+                      style={{ ...inputStyle(), width: 82, padding: '10px 8px', fontSize: 14, textAlign: 'center' }}
                     />
-                    <span style={{ fontFamily: UI, fontSize: 11.5, color: T.textTertiary }}>words</span>
+                    <span style={{ fontFamily: UI, fontSize: 12, color: T.textTertiary }}>words</span>
                     <button
                       onClick={() => setQuestions(qs => qs.filter((_, j) => j !== i))}
                       aria-label={`Remove question ${i + 1}`}
-                      style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: T.textTertiary, padding: 4 }}
+                      style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: T.textTertiary, padding: 6 }}
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={15} />
                     </button>
                   </div>
                 </div>
