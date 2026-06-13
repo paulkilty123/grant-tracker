@@ -383,9 +383,23 @@ export default function NewApplicationPage() {
             <p style={{ fontFamily: BODY, fontSize: 13.5, color: T.coralText, margin: 0 }}>{error}</p>
           )}
 
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
             <button onClick={handleParse} disabled={parsing} style={forestBtn(parsing)}>
               {parsing ? 'Reading the questions…' : 'Continue'}
+            </button>
+            {/* Escape hatch for portal-gated / EOI-first funders where the
+                applicant can't paste a question list. Keeps the picked funder
+                and any linked project; builds from the standard outline. */}
+            <button
+              onClick={() => {
+                setMode('project')
+                setQuestions(OUTLINE_TEMPLATE.map(q => ({ ...q })))
+                setError(null)
+                setStep('confirm')
+              }}
+              style={ghostBtn()}
+            >
+              No question list? Start from an outline
             </button>
           </div>
         </div>
@@ -470,7 +484,7 @@ export default function NewApplicationPage() {
             <button onClick={handleCreate} disabled={creating} style={primaryBtn(creating)}>
               {creating ? 'Setting up…' : 'Looks right, build the guides'}
             </button>
-            <button onClick={() => { setStep(mode === 'project' ? 'fork' : 'setup'); setError(null) }} style={ghostBtn()}>
+            <button onClick={() => { setStep(mode === 'project' && !picked ? 'fork' : 'setup'); setError(null) }} style={ghostBtn()}>
               Back
             </button>
           </div>
