@@ -534,7 +534,7 @@ export default function NewApplicationPage() {
                     aria-label={`Question ${i + 1}`}
                     style={{
                       ...inputStyle(), flex: 1, background: T.editorBg,
-                      border: `1px solid ${focusedQ === i ? T.borderStrong : T.border}`,
+                      border: `1.5px solid ${focusedQ === i ? T.greenMid : T.borderStrong}`,
                       resize: 'none', lineHeight: 1.5, fontSize: 14,
                     }}
                   />
