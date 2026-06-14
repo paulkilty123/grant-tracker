@@ -106,10 +106,18 @@ function adminClient() {
   )
 }
 
+// Internal admin calls send a Bearer ADMIN_SECRET, so they MUST hit the
+// canonical www host directly. The apex 307-redirects to www and strips the
+// Authorization header (curl-auth-redirect-strip memory); the *.vercel.app
+// deployment URL (VERCEL_URL) is behind Vercel Deployment Protection and 401s
+// server-to-server. Both made these self-calls fail auth (every row failed).
+// Force www for any production host; pass through anything else (dev/localhost).
 function siteBase(): string {
-  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL
-  if (process.env.VERCEL_URL)            return `https://${process.env.VERCEL_URL}`
-  return 'https://www.granttracker.co.uk'
+  const raw = process.env.NEXT_PUBLIC_SITE_URL
+    || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '')
+    || 'https://www.granttracker.co.uk'
+  if (/granttracker\.co\.uk|vercel\.app/.test(raw)) return 'https://www.granttracker.co.uk'
+  return raw
 }
 
 async function callAdmin(path: string, body: Record<string, unknown>): Promise<{ ok: boolean; status: number; json: unknown; error?: string }> {
