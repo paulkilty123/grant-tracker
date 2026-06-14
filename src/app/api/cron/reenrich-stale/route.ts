@@ -59,7 +59,10 @@ const ADMIN_TOUCH_GUARD_DAYS   = 30
 const DIFF_FIELDS = [
   'impact_sectors',
   'niche_tags',
-  'excluded_niche_tags',
+  // NOTE: excluded_niche_tags is NOT a column on scraped_grants — including it
+  // in the pre/post-state SELECT below threw "column does not exist" for every
+  // row, failing the whole batch before enrich ran. Removed 2026-06-14. Re-add
+  // only if/when an excluded_niche_tags column actually exists.
   'target_beneficiaries',
   'eligible_structures',
   'funding_type',
