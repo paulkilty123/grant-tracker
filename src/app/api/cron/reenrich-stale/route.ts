@@ -326,6 +326,7 @@ export async function GET(req: NextRequest) {
       grant_ids:      [row.id],
       include_review: true,
       force:          true,
+      preserve_empty: true,  // automated chain: an empty [] from Claude must not wipe existing structures/beneficiaries
     })
     if (classifyRes.ok) {
       result.classified = true

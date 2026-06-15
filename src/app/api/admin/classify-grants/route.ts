@@ -167,6 +167,7 @@ export async function POST(req: NextRequest) {
     grant_ids?: string[];        // Explicit ID list — re-classifies these regardless of current tag state
     include_review?: boolean;    // When using grant_ids OR force, also pull is_active=false rows in Needs Review queue
     shallow_only?: boolean;      // Server-side filter for shallow-tagged grants — see above
+    preserve_empty?: boolean;    // When true, an empty [] from Claude is "no signal" (preserve existing) even in ID mode — used by the automated re-enrich chains
   }
   const offset       = body.offset ?? 0
   const limit        = body.limit  ?? 20  // 20 grants = 1 Claude call
@@ -175,6 +176,7 @@ export async function POST(req: NextRequest) {
   const grantIds     = Array.isArray(body.grant_ids) ? body.grant_ids.filter(s => typeof s === 'string') : []
   const includeReview = body.include_review ?? false
   const shallowOnly   = body.shallow_only ?? false
+  const preserveEmpty = body.preserve_empty ?? false
 
   const supabase = getAdminClient()
 
@@ -340,10 +342,18 @@ export async function POST(req: NextRequest) {
           // value to take precedence even when it's []. Normal mode preserves
           // existing values when Claude returns no structures (treat empty as
           // "no signal" rather than "I confirm none").
-          if (grantIds.length > 0 || r.eligible_structures.length > 0) {
+          //
+          // EXCEPTION: the automated re-enrich chains (reenrich-stale,
+          // process-pipeline-queue) call with grant_ids but should NOT force-write
+          // []. The classifier returns [] for most funders (it only emits explicit
+          // structures, never guesses from funder type), so honouring empty in ID
+          // mode silently wiped eligible_structures catalogue-wide on every
+          // refresh. Those chains pass preserve_empty:true so [] is "no signal".
+          const honourEmpty = grantIds.length > 0 && !preserveEmpty
+          if (honourEmpty || r.eligible_structures.length > 0) {
             patch.eligible_structures = r.eligible_structures
           }
-          if (grantIds.length > 0 || r.target_beneficiaries.length > 0) {
+          if (honourEmpty || r.target_beneficiaries.length > 0) {
             patch.target_beneficiaries = r.target_beneficiaries
           }
           return mergeGrantUpdate({ id: g.id, fields: patch, source: PROVENANCE_SOURCE, pinned: false, db: supabase })

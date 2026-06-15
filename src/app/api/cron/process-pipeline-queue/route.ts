@@ -119,6 +119,7 @@ async function processOne(
     grant_ids:      [id],
     include_review: true,
     force:          true,
+    preserve_empty: true,  // automated chain: an empty [] from Claude must not wipe existing structures/beneficiaries
   })
   if (!classify.ok) {
     // Classification miss is non-fatal — the row still has the enriched brief.
