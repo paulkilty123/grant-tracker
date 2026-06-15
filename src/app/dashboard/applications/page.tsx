@@ -75,6 +75,14 @@ const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }>
   complete:    { bg: '#C0DD97',    color: T.greenDeep,     label: 'Complete' },
 }
 
+interface PipeItem {
+  id: string
+  grant_name: string
+  funder_name: string | null
+  deadline: string | null
+  stage: string
+}
+
 // Funder/grant monogram for the row template (icon → title → meta → progress).
 function monogram(name: string): string {
   const words = name.trim().split(/\s+/).filter(Boolean)
@@ -93,6 +101,7 @@ export default function ApplicationsPage() {
   const [principlesOpen, setPrinciplesOpen] = useState(false)
   const [hoveredId, setHoveredId] = useState<string | null>(null)
   const [deadlineSoon, setDeadlineSoon] = useState(0)
+  const [readyToStart, setReadyToStart] = useState<PipeItem[]>([])
 
   async function deleteApplication(id: string) {
     setApps(prev => prev.filter(a => a.id !== id))
@@ -138,6 +147,19 @@ export default function ApplicationsPage() {
             .lte('deadline', in30)
           setDeadlineSoon((gr ?? []).length)
         }
+
+        // "Ready to start": pipeline items at identified/applying that don't
+        // yet have an application (dedup via applications.pipeline_item_id).
+        const linkedPipeIds = new Set(
+          rows.map(r => (r as { pipeline_item_id?: string | null }).pipeline_item_id).filter(Boolean),
+        )
+        const { data: pipe } = await supabase
+          .from('pipeline_items')
+          .select('id, grant_name, funder_name, deadline, stage')
+          .eq('org_id', org.id)
+          .in('stage', ['identified', 'applying'])
+          .order('updated_at', { ascending: false })
+        setReadyToStart(((pipe ?? []) as PipeItem[]).filter(p => !linkedPipeIds.has(p.id)))
       }
       setLoaded(true)
     }
@@ -258,7 +280,7 @@ export default function ApplicationsPage() {
             <div style={{ height: 5, width: 90, background: T.cream, borderRadius: 999 }} />
           </div>
         ))}
-        {loaded && apps.length === 0 && <HowItWorks withCta />}
+        {loaded && apps.length === 0 && readyToStart.length === 0 && <HowItWorks withCta />}
 
         {apps.map(app => {
           const status = STATUS_STYLE[app.status] ?? STATUS_STYLE.draft
@@ -368,6 +390,68 @@ export default function ApplicationsPage() {
           }}>
             <Plus size={15} /> Start a new application
           </Link>
+        )}
+
+        {/* Ready to start — pipeline items (identified/applying) without an
+            application yet. Bridges pipeline intent -> drafting. */}
+        {loaded && readyToStart.length > 0 && (
+          <div style={{ marginTop: apps.length > 0 ? 14 : 0 }}>
+            <h2 style={{ fontFamily: UI, fontWeight: 600, fontSize: 16, color: T.textPrimary, margin: '0 0 3px' }}>
+              Ready to start
+            </h2>
+            <p style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary, margin: '0 0 10px', lineHeight: 1.5 }}>
+              In your pipeline, not drafted yet. Start an application when you&apos;re ready.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {readyToStart.map(p => {
+                const stageLabel = p.stage === 'applying' ? 'Applying' : 'Identified'
+                const deadline = p.deadline
+                  ? new Date(p.deadline).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                  : null
+                return (
+                  <div key={p.id} style={{
+                    background: T.white, border: `1px solid ${T.border}`, borderRadius: 12,
+                    padding: '13px 16px', display: 'flex', alignItems: 'center', gap: 14,
+                  }}>
+                    <span style={{
+                      width: 38, height: 38, borderRadius: 10, flexShrink: 0,
+                      background: T.cream, color: T.textSecondary, fontFamily: UI, fontWeight: 600, fontSize: 13,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      {monogram(p.funder_name || p.grant_name || '?')}
+                    </span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 2 }}>
+                        <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 14.5, color: T.textPrimary }}>
+                          {p.grant_name || p.funder_name || 'Untitled'}
+                        </span>
+                        <span style={{
+                          fontFamily: UI, fontWeight: 600, fontSize: 10.5, letterSpacing: '0.03em',
+                          background: T.cream, color: T.textSecondary, padding: '2px 9px', borderRadius: 999,
+                        }}>
+                          {stageLabel}
+                        </span>
+                      </div>
+                      <span style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary }}>
+                        {p.funder_name && p.grant_name ? p.funder_name : 'From your pipeline'}
+                        {deadline ? ` · Deadline ${deadline}` : ''}
+                      </span>
+                    </div>
+                    <Link
+                      href={`/dashboard/applications/new?pipeline=${p.id}`}
+                      style={{
+                        fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.greenDeep, background: T.lime,
+                        padding: '8px 14px', borderRadius: 8, textDecoration: 'none', whiteSpace: 'nowrap',
+                        flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 5,
+                      }}
+                    >
+                      <Plus size={13} /> Start an application
+                    </Link>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
         )}
 
         {/* How it works: full strip for 1-2 applications, collapsed link for 3+ */}

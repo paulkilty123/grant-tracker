@@ -113,6 +113,9 @@ export default function NewApplicationPage() {
   // match list carries ?opportunity= and ?project=; a general proposal
   // carries ?project= alone and goes straight to the outline.
   const [projectId, setProjectId] = useState<string | null>(null)
+  // Pipeline link-through: arriving from a "Ready to start" pipeline item
+  // (?pipeline=) prefills the funder by name and links the new application back.
+  const [pipelineItemId, setPipelineItemId] = useState<string | null>(null)
 
   // ── Step 1 state ──
   const [oppQuery, setOppQuery] = useState('')
@@ -139,10 +142,27 @@ export default function NewApplicationPage() {
       const org = await getOrganisationByOwner(user.id)
       if (org) setOrgId(org.id)
 
-      // Deep-link prefill from a project page.
+      // Deep-link prefill from a project page or a pipeline item.
       const oppParam = searchParams.get('opportunity')
       const projParam = searchParams.get('project')
+      const pipeParam = searchParams.get('pipeline')
       if (projParam && UUID_RE.test(projParam)) setProjectId(projParam)
+      if (pipeParam && UUID_RE.test(pipeParam)) {
+        const { data: pi } = await supabase
+          .from('pipeline_items')
+          .select('id, grant_name, funder_name')
+          .eq('id', pipeParam)
+          .maybeSingle()
+        if (pi) {
+          setPipelineItemId(pi.id as string)
+          setFunderName((pi.funder_name as string) ?? '')
+          setGrantName((pi.grant_name as string) ?? '')
+          setShowManual(true)
+          setMode('funder')
+          setStep('setup')
+          return
+        }
+      }
       if (oppParam && UUID_RE.test(oppParam)) {
         const { data: row } = await supabase
           .from('grants_with_funder')
@@ -219,6 +239,7 @@ export default function NewApplicationPage() {
           org_id: orgId,
           opportunity_id: picked?.id ?? null,
           project_id: projectId,
+          pipeline_item_id: pipelineItemId,
           grant_name: picked?.title ?? (grantName.trim() || null),
           funder_name: picked?.funder ?? (funderName.trim() || null),
           questions: clean,

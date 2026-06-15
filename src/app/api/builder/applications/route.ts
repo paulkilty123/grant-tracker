@@ -30,6 +30,7 @@ export async function POST(req: NextRequest) {
     org_id?: string
     opportunity_id?: string | null
     project_id?: string | null
+    pipeline_item_id?: string | null
     grant_name?: string | null
     funder_name?: string | null
     questions?: { question_text?: string; word_limit?: number | null }[]
@@ -66,6 +67,18 @@ export async function POST(req: NextRequest) {
       .maybeSingle()
     projectId = proj?.id ?? null
   }
+  // Pipeline link — when an application is started from a "Ready to start"
+  // pipeline item. Verified against the org so it can't link a foreign item.
+  let pipelineItemId: string | null = null
+  if (body.pipeline_item_id && UUID_RE.test(body.pipeline_item_id)) {
+    const { data: pi } = await supabase
+      .from('pipeline_items')
+      .select('id')
+      .eq('id', body.pipeline_item_id)
+      .eq('org_id', body.org_id)
+      .maybeSingle()
+    pipelineItemId = pi?.id ?? null
+  }
 
   const questionRows: ApplicationQuestion[] = questions.map(q => ({
     id: randomUUID(),
@@ -81,13 +94,14 @@ export async function POST(req: NextRequest) {
   const { data: created, error } = await supabase
     .from('applications')
     .insert({
-      org_id:         body.org_id,
-      opportunity_id: opportunityId,
-      project_id:     projectId,
-      grant_name:     body.grant_name?.trim() || null,
-      funder_name:    body.funder_name?.trim() || null,
-      status:         'draft',
-      questions:      questionRows,
+      org_id:           body.org_id,
+      opportunity_id:   opportunityId,
+      project_id:       projectId,
+      pipeline_item_id: pipelineItemId,
+      grant_name:       body.grant_name?.trim() || null,
+      funder_name:      body.funder_name?.trim() || null,
+      status:           'draft',
+      questions:        questionRows,
     })
     .select('id')
     .single()
