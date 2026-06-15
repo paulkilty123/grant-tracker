@@ -31,7 +31,7 @@ const HOW_IT_WORKS_STEPS = [
 
 function HowItWorks({ withCta }: { withCta?: boolean }) {
   return (
-    <div style={{ background: T.softGreen, border: `1px solid ${T.border}`, borderRadius: 12, padding: '22px 24px' }}>
+    <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, padding: '22px 24px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18 }}>
         <HelpCircle size={18} color={T.sage} />
         <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 16, color: T.textPrimary }}>How it works</span>
