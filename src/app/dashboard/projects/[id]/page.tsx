@@ -9,7 +9,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft, Check, ChevronDown, ChevronRight, ChevronUp, ExternalLink, Sparkles } from 'lucide-react'
+import { ArrowLeft, Check, ChevronDown, ChevronRight, ChevronUp, ExternalLink, RefreshCw, Sparkles } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { emitClientEvent } from '@/lib/events/client'
@@ -333,6 +333,16 @@ export default function ProjectPage() {
   }, [])
 
   // First run on load, then debounced re-runs when relevance inputs change.
+  // Manual re-check against the latest catalogue. Matches already recompute on
+  // every page load and whenever the project's relevance attributes change;
+  // this clears the session-cached pool so brand-new catalogue grants are
+  // picked up without a full reload.
+  const refreshMatches = useCallback(() => {
+    if (!project || !org || !readyToMatch(project)) return
+    grantPool.current = null
+    void runMatch(project, org)
+  }, [project, org, runMatch])
+
   const relevanceKey = project
     ? `${project.sectors.join(',')}|${project.beneficiary_groups.join(',')}|${project.budget_amount ?? ''}|${readyToMatch(project)}`
     : ''
@@ -617,17 +627,25 @@ export default function ProjectPage() {
           <h2 style={{ fontFamily: UI, fontWeight: 600, fontSize: 18, color: T.textPrimary, margin: 0 }}>
             Funders that fit this project
           </h2>
-          {ready && (
-            <Link
-              href={`/dashboard/applications/new?project=${project.id}`}
-              style={{ fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.sage, textDecoration: 'none', whiteSpace: 'nowrap' }}
+          {ready && matches !== null && (
+            <button
+              onClick={refreshMatches}
+              disabled={matching}
+              aria-label="Re-check matches against the latest catalogue"
+              style={{
+                fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.sage, background: 'transparent',
+                border: 'none', cursor: matching ? 'default' : 'pointer', whiteSpace: 'nowrap',
+                display: 'inline-flex', alignItems: 'center', gap: 5, opacity: matching ? 0.6 : 1,
+              }}
             >
-              Draft a general proposal instead
-            </Link>
+              <RefreshCw size={13} style={matching ? { animation: 'spin 1s linear infinite' } : undefined} />
+              {matching ? 'Checking…' : 'Refresh'}
+            </button>
           )}
         </div>
         <p style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, margin: '0 0 14px', lineHeight: 1.55 }}>
-          Your organisation covers the eligibility side; this project covers the relevance side.
+          Your organisation covers the eligibility side; this project covers the relevance side. We
+          re-check against the catalogue each time you open this project.
         </p>
 
         {!ready && (
@@ -814,6 +832,23 @@ export default function ProjectPage() {
                 )
               })}
             </div>
+          </div>
+        )}
+
+        {/* Secondary: a funder-agnostic proposal, clearly distinct from the
+            match list above (was a confusing link beside the heading). */}
+        {ready && (
+          <div style={{ marginTop: 18, paddingTop: 16, borderTop: `1px solid ${T.border}` }}>
+            <Link
+              href={`/dashboard/applications/new?project=${project.id}`}
+              style={{
+                fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.sage, textDecoration: 'none',
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+              }}
+            >
+              Or draft a general proposal you can reuse with any funder
+              <ChevronRight size={14} />
+            </Link>
           </div>
         )}
       </div>
