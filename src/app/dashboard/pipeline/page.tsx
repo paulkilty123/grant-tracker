@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import NextLink from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import {
   getPipelineItems,
@@ -43,6 +44,8 @@ function PipelineCard({
   onClick,
   onDelete,
   onMove,
+  appId,
+  builderAllowed,
 }: {
   item: PipelineItem
   stage: typeof PIPELINE_STAGES[number]
@@ -51,6 +54,8 @@ function PipelineCard({
   onClick: (item: PipelineItem) => void
   onDelete: (id: string) => void
   onMove: (id: string, stage: PipelineStage) => void
+  appId?: string | null
+  builderAllowed?: boolean
 }) {
   const amountStr = formatRange(item.amount_min, item.amount_max ?? item.amount_requested)
   const deadlineStr = formatDeadline(item.deadline)
@@ -152,7 +157,28 @@ function PipelineCard({
       )}
 
       {/* Stage-contextual footer */}
-      {stage.id === 'identified' && item.grant_url && (
+      {/* Builder link: continue an existing application, else start one in the
+          builder (replaces the old funder-site link for cohort users). */}
+      {builderAllowed && appId && (
+        <NextLink
+          href={`/dashboard/applications/${appId}`}
+          onClick={e => e.stopPropagation()}
+          className="inline-block mt-1.5 text-[10px] font-semibold text-[#639922] hover:text-[#8ECB3C] transition-colors"
+        >
+          Continue application →
+        </NextLink>
+      )}
+      {builderAllowed && !appId && (stage.id === 'identified' || stage.id === 'applying') && (
+        <NextLink
+          href={`/dashboard/applications/new?pipeline=${item.id}`}
+          onClick={e => e.stopPropagation()}
+          className="inline-block mt-1.5 text-[10px] font-semibold text-[#639922] hover:text-[#8ECB3C] transition-colors"
+        >
+          Start an application →
+        </NextLink>
+      )}
+      {/* Non-builder fallback: the funder's own site. */}
+      {!builderAllowed && stage.id === 'identified' && item.grant_url && (
         <a
           href={item.grant_url}
           target="_blank"
@@ -166,7 +192,7 @@ function PipelineCard({
       {stage.id === 'applying' && (
         <button
           onClick={e => { e.stopPropagation(); onMove(item.id, 'submitted') }}
-          className="mt-1.5 text-[10px] font-semibold text-[#639922] hover:text-[#8ECB3C] transition-colors"
+          className="ml-3 mt-1.5 text-[10px] font-semibold text-[#639922] hover:text-[#8ECB3C] transition-colors"
         >
           Mark submitted ✓
         </button>
@@ -460,6 +486,10 @@ export default function PipelinePage() {
   const [selectedItem, setSelectedItem] = useState<PipelineItem | null>(null)
   const [showAdd, setShowAdd] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
+  // Builder bridge: which pipeline items already have an application (id), and
+  // whether this user can use the builder (cohort-gated).
+  const [builderAllowed, setBuilderAllowed] = useState(false)
+  const [appByPipeline, setAppByPipeline] = useState<Record<string, string>>({})
   const draggingId = useRef<string | null>(null)
 
   useEffect(() => {
@@ -473,6 +503,21 @@ export default function PipelinePage() {
       if (o) {
         const data = await getPipelineItems(o.id)
         setItems(data)
+        // Map linked applications so cards can offer Continue vs Start.
+        const access = await fetch('/api/builder/access').then(r => r.json()).catch(() => ({ allowed: false }))
+        setBuilderAllowed(!!access?.allowed)
+        if (access?.allowed) {
+          const { data: apps } = await supabase
+            .from('applications')
+            .select('id, pipeline_item_id')
+            .eq('org_id', o.id)
+            .not('pipeline_item_id', 'is', null)
+          const map: Record<string, string> = {}
+          for (const a of (apps ?? []) as { id: string; pipeline_item_id: string }[]) {
+            if (!map[a.pipeline_item_id]) map[a.pipeline_item_id] = a.id
+          }
+          setAppByPipeline(map)
+        }
       }
       setLoading(false)
     }
@@ -681,6 +726,8 @@ export default function PipelinePage() {
                     onClick={setSelectedItem}
                     onDelete={handleDelete}
                     onMove={handleMove}
+                    appId={appByPipeline[item.id] ?? null}
+                    builderAllowed={builderAllowed}
                   />
                 </div>
               ))}

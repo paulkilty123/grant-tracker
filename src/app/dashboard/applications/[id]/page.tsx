@@ -13,7 +13,7 @@ import {
   BookmarkPlus, Check, X as XIcon, FolderKanban, Loader2, PenLine, FileText, RefreshCw,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { createPipelineItem } from '@/lib/pipeline'
+import { createPipelineItem, updatePipelineStage } from '@/lib/pipeline'
 import { emitClientEvent } from '@/lib/events/client'
 import ImportApplicationModal from '@/components/builder/ImportApplicationModal'
 import { T, UI, BODY, inputStyle, primaryBtn, ghostBtn } from '@/components/builder/tokens'
@@ -798,12 +798,12 @@ export default function ApplicationWorkspacePage() {
   }
 
   const completeWarnedRef = useRef(false)
-  async function markComplete() {
+  async function markSubmitted() {
     if (!app) return
     const remaining = app.questions.reduce((n, q) => n + placeholderCount(q.user_answer), 0)
     if (remaining > 0 && !completeWarnedRef.current) {
       completeWarnedRef.current = true
-      showToast(`${remaining} [ADD: ...] ${remaining === 1 ? 'placeholder' : 'placeholders'} still to fill. Click again to complete anyway`)
+      showToast(`${remaining} [ADD: ...] ${remaining === 1 ? 'placeholder' : 'placeholders'} still to fill. Click again to submit anyway`)
       return
     }
     const supabase = createClient()
@@ -812,7 +812,17 @@ export default function ApplicationWorkspacePage() {
       .update({ status: 'complete', updated_at: new Date().toISOString() })
       .eq('id', app.id)
     setApp(prev => (prev ? { ...prev, status: 'complete' } : prev))
-    showToast('Marked complete')
+    // Sync the linked pipeline item to "submitted" (the funder-facing stage).
+    if (app.pipeline_item_id) {
+      try {
+        await updatePipelineStage(app.pipeline_item_id, 'submitted')
+        showToast('Marked as submitted, pipeline updated')
+      } catch {
+        showToast('Marked as submitted')
+      }
+    } else {
+      showToast('Marked as submitted')
+    }
   }
 
   // ── Derived ──
@@ -893,12 +903,12 @@ export default function ApplicationWorkspacePage() {
           )}
         </div>
         {hasScaffolds && app?.status !== 'complete' && (
-          <button onClick={markComplete} style={{
+          <button onClick={markSubmitted} style={{
             fontFamily: UI, fontWeight: 600, fontSize: compact ? 12.5 : 13, color: '#F1F7E4',
             background: T.greenDeep, border: 'none', padding: compact ? '6px 12px' : '8px 14px',
             borderRadius: 8, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6,
           }}>
-            <Check size={14} /> Mark complete
+            <Check size={14} /> Mark as submitted
           </button>
         )}
       </div>
