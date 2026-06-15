@@ -458,6 +458,13 @@ NOTE: _deadline_cycle and its _citations entry are ONLY present when a recurring
   const briefToSave: Record<string, unknown> = { ...brief }
   delete briefToSave._deadline_cycle  // canonical home is the column, not the blob
 
+  // last_enriched is OURS to set, not the model's. The prompt asks for today's
+  // date, but a small model sometimes echoes a date lifted off the page instead,
+  // saving a stale last_enriched. That makes reenrich-stale think the row was
+  // never refreshed → it re-picks the same rows every run and never clears the
+  // backlog. Force it server-side so it always reflects when WE enriched.
+  briefToSave.last_enriched = new Date().toISOString().split('T')[0]
+
   // Deterministic org-income gate parse over the stored text + fresh brief.
   // Reads grant.description / eligibility_criteria (original scrape) plus the
   // brief's who_can_apply / exclusions / typical_award so band language phrased

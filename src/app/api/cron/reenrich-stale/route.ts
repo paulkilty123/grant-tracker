@@ -51,6 +51,12 @@ export const maxDuration = 270
 const BATCH_LIMIT = 6
 const STALE_AFTER_DAYS         = 90
 const ADMIN_TOUCH_GUARD_DAYS   = 30
+// Back-off window: once the cron has ATTEMPTED a row, don't re-attempt it for
+// this many days — even if its brief still looks stale (enrich no-op'd, URL
+// unfetchable, etc.). Without this, rows the cron can't refresh stay perpetually
+// "oldest stale" and monopolise every batch, re-flagging forever and starving
+// the rest of the backlog.
+const REENRICH_ATTEMPT_BACKOFF_DAYS = 14
 
 // Fields whose change is matcher-relevant. Diff on these → flip the row to
 // tagged_awaiting_review so admin can verify the new classification before
@@ -148,6 +154,7 @@ type Candidate = {
   id: string
   title: string
   funder: string
+  url_status: string | null
   field_provenance: Record<string, { source?: string; set_at?: string; pinned?: boolean }> | null
 }
 
@@ -201,13 +208,18 @@ export async function GET(req: NextRequest) {
   cutoff.setDate(cutoff.getDate() - STALE_AFTER_DAYS)
   const staleCutoffISO = cutoff.toISOString().slice(0, 10)
 
+  // Back-off cutoff: skip rows attempted within the back-off window.
+  const attemptCutoff = new Date()
+  attemptCutoff.setDate(attemptCutoff.getDate() - REENRICH_ATTEMPT_BACKOFF_DAYS)
+  const attemptCutoffISO = attemptCutoff.toISOString()
+
   // Pull candidates — over-fetch (3x batch limit) since some will be filtered
   // out by the admin-touch guard in JS. Order by last_enriched ASC NULLS FIRST
   // so we always work the oldest first.
   const overFetch = effectiveLimit * 3
   const { data: rows, error: fetchErr } = await db
     .from('scraped_grants')
-    .select('id, title, funder, funder_brief, field_provenance')
+    .select('id, title, funder, url_status, funder_brief, field_provenance')
     .eq('is_active', true)
     .eq('pipeline_state', 'published')
     .is('needs_intervention_reason', null)
@@ -221,6 +233,10 @@ export async function GET(req: NextRequest) {
         `funder_brief->>source.eq.knowledge_fallback`,
       ].join(',')
     )
+    // AND not attempted within the back-off window (a second .or() ANDs with
+    // the first). Stops the cron re-picking rows it just tried but couldn't
+    // refresh — those back off for REENRICH_ATTEMPT_BACKOFF_DAYS.
+    .or(`last_reenrich_attempt.is.null,last_reenrich_attempt.lt.${attemptCutoffISO}`)
     .order('funder_brief->>last_enriched', { ascending: true, nullsFirst: true })
     .limit(overFetch)
 
@@ -305,6 +321,29 @@ export async function GET(req: NextRequest) {
       result.elapsed_ms = Date.now() - t0
       results.push(result)
       console.warn(`[reenrich-stale] ✗ ${row.id} (${row.title}) — pre-state fetch failed`)
+      continue
+    }
+
+    // Mark the row ATTEMPTED up-front, before any step that can fail or no-op.
+    // This is the back-off anchor: no matter how this run ends (enrich no-op,
+    // sweep error, dead URL), the row won't be re-selected for
+    // REENRICH_ATTEMPT_BACKOFF_DAYS — so the cron always advances through the
+    // backlog instead of looping on rows it can't refresh.
+    await db.from('scraped_grants')
+      .update({ last_reenrich_attempt: new Date().toISOString() })
+      .eq('id', row.id)
+
+    // Dead URL → enrich can't fetch fresh content, so re-running just churns.
+    // Route to the intervention queue (excluded by the candidate query above)
+    // for a URL fix / archive decision instead of re-processing every cycle.
+    if (row.url_status === 'dead') {
+      await db.from('scraped_grants')
+        .update({ needs_intervention_reason: 'reenrich: apply_url dead — needs URL fix or archive' })
+        .eq('id', row.id)
+      result.error = 'skipped: url dead'
+      result.elapsed_ms = Date.now() - t0
+      results.push(result)
+      console.warn(`[reenrich-stale] ⊘ ${row.id} (${row.title}) — url dead, routed to intervention`)
       continue
     }
 
