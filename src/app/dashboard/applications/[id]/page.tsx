@@ -128,6 +128,7 @@ export default function ApplicationWorkspacePage() {
   const appId = params.id
 
   const [app, setApp] = useState<ApplicationRecord | null>(null)
+  const [linkedProject, setLinkedProject] = useState<{ id: string; name: string } | null>(null)
   const [loaded, setLoaded] = useState(false)
   const [notAllowed, setNotAllowed] = useState(false)
 
@@ -229,6 +230,12 @@ export default function ApplicationWorkspacePage() {
       setApp(data as ApplicationRecord)
       setOpenQid(((data as ApplicationRecord).questions ?? [])[0]?.id ?? null)
       document.title = `${(data as ApplicationRecord).grant_name || (data as ApplicationRecord).funder_name || 'Application'} · Grant Tracker`
+      // Linked project (IA: applications visibly belong to their project).
+      const projId = (data as { project_id?: string | null }).project_id
+      if (projId) {
+        const { data: proj } = await supabase.from('projects').select('id, name').eq('id', projId).maybeSingle()
+        if (proj) setLinkedProject({ id: String(proj.id), name: proj.name as string })
+      }
       setLoaded(true)
     }
     load()
@@ -955,6 +962,15 @@ export default function ApplicationWorkspacePage() {
             {app.grant_name || app.funder_name || 'Application'}
           </h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 6 }}>
+            {linkedProject && (
+              <Link href={`/dashboard/projects/${linkedProject.id}`} style={{
+                fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: T.sage, background: T.paleGreen,
+                padding: '3px 10px', borderRadius: 999, textDecoration: 'none',
+                display: 'inline-flex', alignItems: 'center', gap: 4,
+              }}>
+                Part of: {linkedProject.name}
+              </Link>
+            )}
             {app.funder_name && app.grant_name && (
               <span style={{ fontFamily: BODY, fontSize: 13.5, color: T.textSecondary }}>{app.funder_name}</span>
             )}

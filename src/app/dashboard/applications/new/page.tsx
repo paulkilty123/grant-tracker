@@ -105,8 +105,10 @@ export default function NewApplicationPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [orgId, setOrgId] = useState<string | null>(null)
-  const [step, setStep] = useState<'fork' | 'setup' | 'confirm'>('fork')
-  const [mode, setMode] = useState<'project' | 'funder' | null>(null)
+  // Fork retired (IA: honest per-section creation). "New application" goes
+  // straight to the funder form; the project-first path lives in /projects.
+  const [step, setStep] = useState<'setup' | 'confirm'>('setup')
+  const [mode, setMode] = useState<'project' | 'funder' | null>('funder')
   // Project link-through (project-first phase 3): arriving from a project's
   // match list carries ?opportunity= and ?project=; a general proposal
   // carries ?project= alone and goes straight to the outline.
@@ -249,76 +251,40 @@ export default function NewApplicationPage() {
         New application
       </h1>
 
-      {step !== 'fork' && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginBottom: 26 }}>
-          <StepDot n={1} label="Set up" active={step === 'setup'} done={step === 'confirm'} />
-          <div style={{ flex: '0 0 32px', height: 1, background: T.borderStrong }} />
-          <StepDot n={2} label={mode === 'project' ? 'Describe your project' : 'Check the questions'} active={step === 'confirm'} done={false} />
-          <div style={{ flex: '0 0 32px', height: 1, background: T.border }} />
-          <StepDot n={3} label="Build" active={false} done={false} />
-        </div>
-      )}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginBottom: 26 }}>
+        <StepDot n={1} label="Set up" active={step === 'setup'} done={step === 'confirm'} />
+        <div style={{ flex: '0 0 32px', height: 1, background: T.borderStrong }} />
+        <StepDot n={2} label={mode === 'project' ? 'Describe your project' : 'Check the questions'} active={step === 'confirm'} done={false} />
+        <div style={{ flex: '0 0 32px', height: 1, background: T.border }} />
+        <StepDot n={3} label="Build" active={false} done={false} />
+      </div>
 
       {/* Project-first fork (spec section 8, phase 1) */}
-      {step === 'fork' && (
-        <div>
-          <h2 style={{ fontFamily: UI, fontWeight: 600, fontSize: 17, color: T.textPrimary, margin: '0 0 14px' }}>
-            What are you starting with?
-          </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 14 }}>
+      {step === 'setup' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+          {/* Cross-nudge to the project-first path (replaces the old fork). */}
+          <div style={{
+            background: T.paleGreen, borderRadius: 10, padding: '12px 16px',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap',
+          }}>
+            <span style={{ fontFamily: BODY, fontSize: 12.5, color: T.sage, lineHeight: 1.5 }}>
+              Applying to more than one funder, or the form is behind a portal? Start with a project
+              and we&apos;ll match you to funders.
+            </span>
             <button
               onClick={() => {
                 emitClientEvent(orgId, 'builder_path_chosen', { path: 'project' })
-                // Project-first phase 2: the project path now starts with a
-                // real Project entity (describe -> extract -> match), not a
-                // bare outline.
                 router.push('/dashboard/projects/new')
               }}
               style={{
-                textAlign: 'left', background: T.white, border: `1px solid ${T.border}`,
-                borderRadius: 12, padding: '20px 22px', cursor: 'pointer',
+                fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.greenDeep, background: 'transparent',
+                border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: 4,
               }}
             >
-              <span style={{ display: 'block', fontFamily: UI, fontWeight: 600, fontSize: 16, color: T.textPrimary, marginBottom: 6 }}>
-                A project that needs funding
-              </span>
-              <span style={{ display: 'block', fontFamily: BODY, fontSize: 13, color: T.textSecondary, lineHeight: 1.55, marginBottom: 8 }}>
-                Describe what you want funded, once. We&apos;ll check which funders fit and build an
-                application for each one you choose.
-              </span>
-              <span style={{ display: 'block', fontFamily: UI, fontWeight: 500, fontSize: 11.5, color: T.textTertiary }}>
-                Best if you&apos;ll apply to more than one funder, or the funder keeps their form behind a portal.
-              </span>
-            </button>
-            <button
-              onClick={() => {
-                emitClientEvent(orgId, 'builder_path_chosen', { path: 'funder' })
-                setMode('funder')
-                setError(null)
-                setStep('setup')
-              }}
-              style={{
-                textAlign: 'left', background: T.white, border: `1px solid ${T.border}`,
-                borderRadius: 12, padding: '20px 22px', cursor: 'pointer',
-              }}
-            >
-              <span style={{ display: 'block', fontFamily: UI, fontWeight: 600, fontSize: 16, color: T.textPrimary, marginBottom: 6 }}>
-                A funder&apos;s application form
-              </span>
-              <span style={{ display: 'block', fontFamily: BODY, fontSize: 13, color: T.textSecondary, lineHeight: 1.55, marginBottom: 8 }}>
-                Know who you&apos;re applying to? Pick the funder, paste their questions and start
-                writing straight away.
-              </span>
-              <span style={{ display: 'block', fontFamily: UI, fontWeight: 500, fontSize: 11.5, color: T.textTertiary }}>
-                Best when a deadline is close.
-              </span>
+              Start a project instead →
             </button>
           </div>
-        </div>
-      )}
-
-      {step === 'setup' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
           {/* Funder / opportunity card */}
           <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, padding: '20px 24px' }}>
@@ -587,7 +553,15 @@ export default function NewApplicationPage() {
             <button onClick={handleCreate} disabled={creating} style={primaryBtn(creating)}>
               {creating ? 'Setting up…' : 'Looks right, build the guides'}
             </button>
-            <button onClick={() => { setStep(mode === 'project' && !picked ? 'fork' : 'setup'); setError(null) }} style={ghostBtn()}>
+            <button
+              onClick={() => {
+                // General proposal (project link, no funder) has no setup step
+                // to return to — it deep-linked from a project. Go to Projects.
+                if (mode === 'project' && !picked) { router.push('/dashboard/projects'); return }
+                setStep('setup'); setError(null)
+              }}
+              style={ghostBtn()}
+            >
               Back
             </button>
           </div>
