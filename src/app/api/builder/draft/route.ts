@@ -119,9 +119,11 @@ export async function POST(req: NextRequest) {
 
   const contentBlocks = (blocks ?? []) as CoreContentBlock[]
   const funderContext = grantRes.data ? buildFunderContext(grantRes.data as Record<string, unknown>) : ''
-  // Project-first phase 3: a linked project's sections feed the draft as
-  // primary material (session-client read, cross-org links resolve null).
-  const projectBlock = projRes.data ? projectMaterialBlock(projRes.data as Project) : ''
+  // Project material: a linked project's sections, else the free-text project
+  // brief from the funder-form setup step. Either feeds the draft as material.
+  const projectBlock = projRes.data
+    ? projectMaterialBlock(projRes.data as Project)
+    : (app.project_brief ? String(app.project_brief) : '')
   const scaffoldBlock = question.scaffold && question.scaffold.length > 0
     ? question.scaffold
         .slice().sort((a, b) => a.suggested_order - b.suggested_order)

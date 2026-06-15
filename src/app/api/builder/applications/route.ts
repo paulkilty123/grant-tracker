@@ -31,6 +31,7 @@ export async function POST(req: NextRequest) {
     opportunity_id?: string | null
     project_id?: string | null
     pipeline_item_id?: string | null
+    project_brief?: string | null
     grant_name?: string | null
     funder_name?: string | null
     questions?: { question_text?: string; word_limit?: number | null }[]
@@ -98,6 +99,7 @@ export async function POST(req: NextRequest) {
       opportunity_id:   opportunityId,
       project_id:       projectId,
       pipeline_item_id: pipelineItemId,
+      project_brief:    body.project_brief?.trim().slice(0, 8000) || null,
       grant_name:       body.grant_name?.trim() || null,
       funder_name:      body.funder_name?.trim() || null,
       status:           'draft',

@@ -125,6 +125,7 @@ export default function NewApplicationPage() {
   const [grantName, setGrantName] = useState('')
   const [showManual, setShowManual] = useState(false)
   const [rawText, setRawText] = useState('')
+  const [projectBrief, setProjectBrief] = useState('')
   const [parsing, setParsing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -240,6 +241,7 @@ export default function NewApplicationPage() {
           opportunity_id: picked?.id ?? null,
           project_id: projectId,
           pipeline_item_id: pipelineItemId,
+          project_brief: projectBrief.trim() || null,
           grant_name: picked?.title ?? (grantName.trim() || null),
           funder_name: picked?.funder ?? (funderName.trim() || null),
           questions: clean,
@@ -458,6 +460,28 @@ export default function NewApplicationPage() {
               rows={9}
               placeholder={'1. Tell us about your organisation (max 300 words)\n2. What do you want to do with this funding? (max 500 words)\n3. Who will benefit, and how do you know they need it?\n…'}
               style={{ ...inputStyle(), resize: 'vertical', lineHeight: 1.6, fontSize: 13.5 }}
+            />
+          </div>
+
+          {/* Describe this project — optional material fed into the Build step
+              so the per-question drafts compose from real plans, not just the
+              org profile. Persisted as applications.project_brief. */}
+          <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, padding: '20px 24px' }}>
+            <h2 style={{ fontFamily: UI, fontWeight: 600, fontSize: 16, color: T.textPrimary, margin: '0 0 4px' }}>
+              Describe this project{' '}
+              <span style={{ fontFamily: BODY, fontWeight: 400, fontSize: 13, color: T.textTertiary }}>(optional, but it gives you a real head start)</span>
+            </h2>
+            <p style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, margin: '0 0 14px', lineHeight: 1.55 }}>
+              A few sentences, or paste from an old proposal: what the project will do, who it helps,
+              and the difference it makes. We use this to draft each answer from your real plans,
+              not just your organisation profile.
+            </p>
+            <textarea
+              value={projectBrief}
+              onChange={e => setProjectBrief(e.target.value)}
+              rows={6}
+              placeholder={'e.g. We want to run weekly employability workshops for 40 young people in Southall who are not in education or work, over 12 months, with two part-time coaches. The aim is to get at least half into training or a job…'}
+              style={{ ...inputStyle(), background: T.editorBg, resize: 'vertical', lineHeight: 1.6, fontSize: 13.5 }}
             />
           </div>
 

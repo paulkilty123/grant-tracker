@@ -182,9 +182,12 @@ export async function POST(req: NextRequest) {
 
   const funderContext = grantRes.data ? buildFunderContext(grantRes.data as Record<string, unknown>) : ''
   const contentBlocks = (blocks ?? []) as CoreContentBlock[]
-  // Project-first phase 3: a linked project's sections feed the build as
+  // Project material: a linked project's sections, else the free-text project
+  // brief supplied on the funder-form setup step. Either feeds the build as
   // primary material (session-client read, so cross-org links resolve null).
-  const projectBlock = projRes.data ? projectMaterialBlock(projRes.data as Project) : ''
+  const projectBlock = projRes.data
+    ? projectMaterialBlock(projRes.data as Project)
+    : (app.project_brief ? String(app.project_brief) : '')
 
   const started = Date.now()
   const suppliedGuidelines = app.supplied_guidelines ? String(app.supplied_guidelines).slice(0, 16000) : ''
