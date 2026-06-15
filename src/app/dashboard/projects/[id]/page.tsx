@@ -141,13 +141,6 @@ function MatchDetail({ m }: { m: ScoredMatch }) {
             Visit the funder&apos;s site <ExternalLink size={12} />
           </a>
         )}
-        <Link
-          href={`/dashboard/grants/${m.grant.id}`}
-          onClick={e => e.stopPropagation()}
-          style={{ fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.textSecondary, textDecoration: 'none' }}
-        >
-          Full details
-        </Link>
       </div>
     </div>
   )
