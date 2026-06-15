@@ -1866,7 +1866,22 @@ function parsePoundAmount(str: string): number | null {
 function parseAmountRange(str: string): { min: number | null; max: number | null } {
   if (!str) return { min: null, max: null }
   const nums = Array.from(str.matchAll(/£[\d,]+/g)).map(m => parsePoundAmount(m[0]))
-  return { min: nums[0] ?? null, max: nums[1] ?? nums[0] ?? null }
+  if (nums.length === 0) return { min: null, max: null }
+  if (nums.length >= 2)  return { min: nums[0], max: nums[1] }
+  // Single figure: a directional cue IMMEDIATELY before the £ amount decides
+  // whether it's a ceiling, a floor, or a genuine fixed amount.
+  //   "Up to £X" / "under £X"   → £X is the MAX, min unknown  → { null, X }
+  //   "from £X"  / "at least £X" → £X is the MIN, max unknown  → { X, null }
+  //   bare figure ("Grants of £X") → fixed amount             → { X, X }
+  // The cue must be adjacent to the £ so unrelated words ("over 6 months",
+  // "under 18s") don't trigger it. Previously a lone "Up to £X" was stored as
+  // min = max = X, inventing a false floor that broke grant-size matching.
+  const n = nums[0]
+  const ceiling = /(?:up to|under|less than|no more than|maximum(?: of)?|max\.? of)\s+£/i.test(str)
+  const floor   = /(?:from|at least|minimum(?: of)?|min\.? of|in excess of|more than|over)\s+£/i.test(str)
+  if (ceiling && !floor) return { min: null, max: n }
+  if (floor && !ceiling) return { min: n,    max: null }
+  return { min: n, max: n }
 }
 
 // ── Date parsers ──────────────────────────────────────────────────────────────
