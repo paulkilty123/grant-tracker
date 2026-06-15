@@ -19,7 +19,7 @@ const STRONG_APPLICATION_PRINCIPLES = [
   { t: 'Lead with the need, backed by evidence', b: 'Show the problem and how you know it is real, not just that you care about it.' },
   { t: 'Show outcomes you can measure', b: 'What will change, and how you will know. Funders fund results, not activity.' },
   { t: 'Be specific and honest', b: 'Concrete numbers and plain claims beat polish. A gap you name reads better than one they find.' },
-  { t: 'Your voice, not ours', b: 'The application should sound like you. Grant Tracker structures and prompts; the words and the story stay yours.' },
+  { t: 'Your voice, not ours', b: 'The application should sound like you. Grant Tracker drafts from your own material and sharpens it; the final words and the story stay yours.' },
 ]
 
 const HOW_IT_WORKS_STEPS = [
@@ -168,9 +168,9 @@ export default function ApplicationsPage() {
           <h1 style={{ fontFamily: UI, fontWeight: 600, fontSize: 24, color: T.textPrimary, letterSpacing: '-0.01em', margin: 0 }}>
             Applications
           </h1>
-          <p style={{ fontFamily: BODY, fontSize: 14, color: T.textSecondary, margin: '6px 0 0', lineHeight: 1.55, maxWidth: 560 }}>
-            Grant Tracker won&apos;t write your application for you. It shows what each funder looks
-            for and what a strong answer covers, so you write a strong one in your own words.
+          <p style={{ fontFamily: BODY, fontSize: 14, color: T.textSecondary, margin: '6px 0 0', lineHeight: 1.55, maxWidth: 580 }}>
+            Grant Tracker drafts each answer from your own material and recommends how to make it
+            stronger, so you can write a strong application in your own words, faster.
           </p>
         </div>
         <Link

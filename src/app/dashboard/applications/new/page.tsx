@@ -460,7 +460,7 @@ export default function NewApplicationPage() {
               }}
               style={ghostBtn()}
             >
-              No question list? Start from an outline
+              No questions to paste? Use the questions funders usually ask
             </button>
           </div>
         </div>
