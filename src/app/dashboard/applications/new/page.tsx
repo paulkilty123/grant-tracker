@@ -572,7 +572,7 @@ export default function NewApplicationPage() {
 
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             <button onClick={handleCreate} disabled={creating} style={primaryBtn(creating)}>
-              {creating ? 'Setting up…' : 'Looks right, build the guides'}
+              {creating ? 'Setting up…' : 'Looks right, plan my answers'}
             </button>
             <button
               onClick={() => {

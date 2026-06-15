@@ -9,7 +9,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
-  ArrowLeft, Sparkles, AlertTriangle, CheckCircle2, ChevronDown,
+  ArrowLeft, Sparkles, Compass, AlertTriangle, CheckCircle2, ChevronDown,
   BookmarkPlus, Check, X as XIcon, FolderKanban, Loader2, PenLine, FileText, RefreshCw,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -462,7 +462,7 @@ export default function ApplicationWorkspacePage() {
       if (error) { showToast('Could not save the questions'); return }
       setApp(prev => (prev ? { ...prev, questions: updated } : prev))
       setEditQsOpen(false)
-      showToast('Questions updated. Rebuild the guides to cover new or reworded ones')
+      showToast('Questions updated. Re-plan the answers to cover new or reworded ones')
     } finally {
       setEditSaving(false)
     }
@@ -1297,18 +1297,18 @@ export default function ApplicationWorkspacePage() {
             width: 44, height: 44, borderRadius: 12, background: T.paleGreen, color: T.greenMid,
             display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px',
           }}>
-            <Sparkles size={20} />
+            <Compass size={20} />
           </div>
           <h2 style={{ fontFamily: UI, fontWeight: 600, fontSize: 17, color: T.textPrimary, margin: '0 0 6px' }}>
-            {generating ? 'Building your guides' : 'Ready to build your guides'}
+            {generating ? 'Planning your answers' : 'Ready to plan your answers'}
           </h2>
           <p style={{ fontFamily: BODY, fontSize: 13.5, color: T.textSecondary, margin: '0 auto 16px', lineHeight: 1.6, maxWidth: 460 }}>
             {generating
               ? streamedCount > 0
-                ? `${streamedCount} of ${app.questions.length} done. Finished cards are ready below while the rest build.`
+                ? `${streamedCount} of ${app.questions.length} done. Finished cards are ready below while the rest are prepared.`
                 : 'Reading your profile, your content blocks and the funder context. The first card lands in a few seconds.'
               : blockCount === 0
-                ? 'You have no saved material yet, so guides and drafts will be mostly gaps. Import a past application first (in the &#8943; menu above) and we&apos;ll work from your real material.'
+                ? 'You have no saved material yet, so answer plans and drafts will be mostly gaps. Import a past application first (in the &#8943; menu above) and we&apos;ll work from your real material.'
                 : 'For each question: what a strong answer covers, your own content mapped in, and what is missing. You write the answers, in your voice.'}
           </p>
           {genError && (
@@ -1321,7 +1321,7 @@ export default function ApplicationWorkspacePage() {
               style={primaryBtn(gateBlocksGeneration)}
               title={gateBlocksGeneration ? 'Resolve or acknowledge the eligibility warning first' : undefined}
             >
-              Build the guides
+              Plan my answers
             </button>
           )}
           {generating && (
@@ -1339,15 +1339,15 @@ export default function ApplicationWorkspacePage() {
       {/* ── Rebuild nudge: library grew after scaffolds were built ── */}
       {importedSinceBuild && hasScaffolds && !generating && (
         <div style={{ background: T.paleGreen, borderRadius: 12, padding: '12px 18px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <Sparkles size={15} color={T.greenMid} style={{ flexShrink: 0 }} />
+          <Compass size={15} color={T.greenMid} style={{ flexShrink: 0 }} />
           <span style={{ flex: 1, fontFamily: BODY, fontSize: 13, color: T.sage, minWidth: 200 }}>
-            Your material grew since these guides were built. Rebuild them to map your new material in.
+            Your material grew since these answer plans were made. Re-plan to map your new material in.
           </span>
           <button onClick={generate} style={{
             fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.greenDeep,
             background: T.lime, border: 'none', padding: '7px 14px', borderRadius: 8, cursor: 'pointer',
           }}>
-            Regenerate question guides
+            Re-plan the answers
           </button>
         </div>
       )}
@@ -1397,7 +1397,7 @@ export default function ApplicationWorkspacePage() {
             borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 6,
             cursor: generating ? 'wait' : 'pointer', opacity: generating ? 0.6 : 1,
           }}>
-            <Sparkles size={14} /> {generating ? 'Regenerating…' : 'Regenerate question guides, your answers won’t change'}
+            <Sparkles size={14} /> {generating ? 'Regenerating…' : 'Re-plan the answers, your answers won’t change'}
           </button>
         </div>
       )}
@@ -1903,7 +1903,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
             onChange={e => onAnswerChange(e.target.value)}
             rows={answerRows(q.user_answer, hasScaffold ? (q.user_answer.trim() ? 10 : 6) : 5)}
             readOnly={drafting}
-            placeholder={hasScaffold ? 'Write in your own voice, or draft a starting version below.' : 'Build the guides first, or just start writing.'}
+            placeholder={hasScaffold ? 'Write in your own voice, or draft a starting version below.' : 'Plan your answers first, or just start writing.'}
             style={{
               fontFamily: BODY, fontSize: 14, color: T.textPrimary, width: '100%',
               padding: '10px 12px', borderRadius: 8, border: `1px solid ${drafting ? T.lime : T.border}`,
