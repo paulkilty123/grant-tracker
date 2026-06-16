@@ -11,6 +11,7 @@ import Link from 'next/link'
 import {
   ArrowLeft, Sparkles, Compass, AlertTriangle, CheckCircle2, ChevronDown,
   BookmarkPlus, Check, X as XIcon, FolderKanban, Loader2, PenLine, FilePenLine, FileText, RefreshCw,
+  ArrowDownCircle, Eye,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { createPipelineItem, updatePipelineStage } from '@/lib/pipeline'
@@ -30,8 +31,20 @@ function wordCount(s: string): number {
   return t ? t.split(/\s+/).length : 0
 }
 
+const PLACEHOLDER_RE = /\[ADD:[^\]]*\]/gi
+
 function placeholderCount(s: string): number {
-  return (s.match(/\[ADD:[^\]]*\]/gi) ?? []).length
+  return (s.match(PLACEHOLDER_RE) ?? []).length
+}
+
+/** Character spans of every [ADD: …] placeholder — drives preview highlighting
+ *  and jump-to-fix (textarea setSelectionRange). */
+function findPlaceholders(s: string): { start: number; end: number }[] {
+  const re = new RegExp(PLACEHOLDER_RE.source, 'gi')
+  const spans: { start: number; end: number }[] = []
+  let m: RegExpExecArray | null
+  while ((m = re.exec(s)) !== null) spans.push({ start: m.index, end: m.index + m[0].length })
+  return spans
 }
 
 /** Rows needed to show the whole answer (no inner scrollbar: avoids the
@@ -1716,6 +1729,31 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
   // Empty-answer flow: lead with the draft action; "write from scratch" reveals
   // the blank textarea (redesign state A).
   const [scratch, setScratch] = useState(false)
+  // Preview/edit toggle + jump-to-fix (redesign state C). Preview highlights
+  // placeholders; jump-to-fix selects the next [ADD: …] in the textarea.
+  const [preview, setPreview] = useState(false)
+  const [fixIdx, setFixIdx] = useState(0)
+  const taRef = useRef<HTMLTextAreaElement>(null)
+
+  function jumpToNextFix() {
+    const spans = findPlaceholders(q.user_answer)
+    if (spans.length === 0) return
+    setPreview(false)
+    const i = fixIdx % spans.length
+    setFixIdx(i + 1)
+    requestAnimationFrame(() => {
+      const ta = taRef.current
+      if (!ta) return
+      ta.focus()
+      ta.setSelectionRange(spans[i].start, spans[i].end)
+      // Best-effort: scroll the page so the selected line sits mid-viewport.
+      const before = q.user_answer.slice(0, spans[i].start)
+      const visualLines = before.split('\n').reduce((n, l) => n + Math.max(1, Math.ceil(l.length / 90)), 0) - 1
+      const lh = 14 * 1.65
+      const y = ta.getBoundingClientRect().top + window.scrollY + 12 + visualLines * lh - window.innerHeight / 2
+      window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' })
+    })
+  }
 
   const words = wordCount(q.user_answer)
   const limit = q.word_limit
@@ -1738,6 +1776,9 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
   // Empty answer + a guide to draft from -> lead with the draft action
   // instead of a blank textarea (redesign state A).
   const showDraftPanel = !q.user_answer.trim() && hasScaffold && !scratch && !drafting
+  // Rail is inert until there's something to score: no check action on a
+  // not-started answer (verified deviation — keeps the draft-first steer).
+  const railInert = !q.user_answer.trim() && !review
 
   // Question title: first sentence, remainder behind "Show full question".
   const sentenceMatch = q.question_text.match(/^[^.?!]*[.?!]/)
@@ -1908,8 +1949,38 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
       }}>
         <div style={{ padding: '14px 20px 16px' }}>
           {!showDraftPanel && (
-            <div style={{ fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.textSecondary, marginBottom: 8 }}>
-              Your answer
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
+              <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.textSecondary }}>
+                Your answer
+              </span>
+              {q.user_answer.trim() && !drafting && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {placeholders > 0 && (
+                    <button
+                      onClick={jumpToNextFix}
+                      title="Select the next placeholder so you can type over it"
+                      style={{
+                        fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: T.coralText,
+                        background: T.white, border: `1px solid ${T.coral}`, borderRadius: 8,
+                        padding: '4px 10px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5,
+                      }}
+                    >
+                      <ArrowDownCircle size={13} /> Jump to next fix ({(fixIdx % placeholders) + 1} of {placeholders})
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setPreview(p => !p)}
+                    style={{
+                      fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: preview ? T.sage : T.textSecondary,
+                      background: preview ? T.paleGreen : 'transparent', border: `1px solid ${preview ? 'rgba(59,109,17,0.3)' : T.borderStrong}`,
+                      borderRadius: 8, padding: '4px 10px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5,
+                    }}
+                  >
+                    {preview ? <PenLine size={13} /> : <Eye size={13} />}
+                    {preview ? 'Edit' : 'Preview'}
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -1954,7 +2025,42 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
             </div>
           ) : (
             <>
+              {preview && q.user_answer.trim() ? (
+                /* State C: read view with placeholders highlighted. Click to edit. */
+                <div
+                  onClick={() => setPreview(false)}
+                  title="Click to edit"
+                  style={{
+                    fontFamily: BODY, fontSize: 14, color: T.textPrimary, width: '100%',
+                    padding: '10px 12px', borderRadius: 8, border: `1px solid ${T.border}`,
+                    background: T.editorBg, lineHeight: 1.65, whiteSpace: 'pre-wrap',
+                    cursor: 'text', minHeight: 80,
+                  }}
+                >
+                  {(() => {
+                    const spans = findPlaceholders(q.user_answer)
+                    if (spans.length === 0) return q.user_answer
+                    const parts: React.ReactNode[] = []
+                    let last = 0
+                    spans.forEach((sp, i) => {
+                      if (sp.start > last) parts.push(<span key={`t${i}`}>{q.user_answer.slice(last, sp.start)}</span>)
+                      parts.push(
+                        <mark key={`p${i}`} style={{
+                          background: T.amberBg, color: T.amberText, padding: '1px 6px', borderRadius: 6,
+                          fontFamily: UI, fontWeight: 600, fontSize: 12.5,
+                        }}>
+                          {q.user_answer.slice(sp.start, sp.end)}
+                        </mark>,
+                      )
+                      last = sp.end
+                    })
+                    if (last < q.user_answer.length) parts.push(<span key="tend">{q.user_answer.slice(last)}</span>)
+                    return parts
+                  })()}
+                </div>
+              ) : (
               <textarea
+                ref={taRef}
                 value={q.user_answer}
                 onChange={e => onAnswerChange(e.target.value)}
                 rows={answerRows(q.user_answer, hasScaffold ? (q.user_answer.trim() ? 10 : 6) : 5)}
@@ -1967,6 +2073,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
                   background: T.editorBg, outline: 'none', resize: 'vertical', lineHeight: 1.65,
                 }}
               />
+              )}
               <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap', marginTop: 6 }}>
                 {hasScaffold && (
                   <button
@@ -2067,6 +2174,20 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
             <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 11.5, letterSpacing: '0.01em', color: T.greenMid, marginBottom: 10 }}>
               Tips to improve
             </div>
+            {railInert && (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '8px 4px 4px' }}>
+                <div style={{
+                  width: 40, height: 40, borderRadius: 999, border: `2px dashed ${T.borderStrong}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.textTertiary, marginBottom: 10,
+                }}>
+                  <Compass size={18} />
+                </div>
+                <p style={{ fontFamily: BODY, fontSize: 12, color: T.textTertiary, margin: 0, lineHeight: 1.5 }}>
+                  Tips and a score appear here once you&apos;ve drafted or written an answer.
+                </p>
+              </div>
+            )}
+            {!railInert && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
               <ScoreRing score={review ? review.score : null} stale={reviewStale} />
               <div style={{ minWidth: 0 }}>
@@ -2099,6 +2220,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
                 </button>
               </div>
             </div>
+            )}
 
             {!review && (
               <p style={{ fontFamily: BODY, fontSize: 11.5, color: T.textTertiary, margin: '0 0 10px', lineHeight: 1.5 }}>
@@ -2125,7 +2247,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
             })()}
 
             {/* Summary + open everything */}
-            {(review || q.gaps.length > 0) && !railOpen && (
+            {!railInert && (review || q.gaps.length > 0) && !railOpen && (
               <button
                 onClick={() => setRailOpen(true)}
                 className="gt-link"
