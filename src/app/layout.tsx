@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { Plus_Jakarta_Sans, DM_Serif_Display, Space_Grotesk, Fraunces } from 'next/font/google'
-import Script from 'next/script'
 import './globals.css'
 
 const dmSans = Plus_Jakarta_Sans({
@@ -86,7 +85,7 @@ export default function RootLayout({
             next.config.mjs) so adblockers don't block it. Renders only once
             the website ID is configured. */}
         {process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID && (
-          <Script
+          <script
             defer
             src="/o/script.js"
             data-website-id={process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}

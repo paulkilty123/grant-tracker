@@ -77,6 +77,11 @@ export async function middleware(request: NextRequest) {
     pathname === '/oauth/revoke' ||
     pathname === '/oauth/authorize'
   const isApiRoute = pathname.startsWith('/api/')
+  // Umami analytics proxy — the tracker script (/o/script.js) and its collect
+  // endpoint (/o/api/send) are rewritten to the self-hosted Umami app
+  // (next.config.mjs). They must stay public so visitors' browsers can load
+  // the script and post events; otherwise the auth gate 307s them to /login.
+  const isAnalyticsProxy = pathname.startsWith('/o/')
   // Next-generated metadata routes must be reachable for crawlers (WhatsApp,
   // Slack, LinkedIn, Twitter, Facebook) to fetch the OG / Twitter image.
   // Without this they get redirected to /auth/login and the link preview
@@ -92,7 +97,7 @@ export async function middleware(request: NextRequest) {
     pathname === '/sitemap.xml'
 
   // Redirect unauthenticated users to login
-  if (!user && !isAuthPage && !isPublicPage && !isApiRoute && !isMetadataRoute && !isOAuthPublic) {
+  if (!user && !isAuthPage && !isPublicPage && !isApiRoute && !isMetadataRoute && !isOAuthPublic && !isAnalyticsProxy) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth/login'
     return NextResponse.redirect(url)
