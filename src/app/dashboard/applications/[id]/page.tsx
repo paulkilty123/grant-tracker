@@ -9,7 +9,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
-  ArrowLeft, Sparkles, Compass, AlertTriangle, CheckCircle2, ChevronDown,
+  ArrowLeft, Compass, AlertTriangle, CheckCircle2, ChevronDown,
   BookmarkPlus, Check, X as XIcon, FolderKanban, Loader2, PenLine, FilePenLine, FileText, RefreshCw,
   ArrowDownCircle, Eye,
 } from 'lucide-react'
@@ -1410,7 +1410,7 @@ export default function ApplicationWorkspacePage() {
             borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 6,
             cursor: generating ? 'wait' : 'pointer', opacity: generating ? 0.6 : 1,
           }}>
-            <Sparkles size={14} /> {generating ? 'Regenerating…' : 'Re-plan the answers, your answers won’t change'}
+            <RefreshCw size={14} style={generating ? { animation: 'spin 1s linear infinite' } : undefined} /> {generating ? 'Regenerating…' : 'Re-plan the answers, your answers won’t change'}
           </button>
         </div>
       )}
@@ -2087,7 +2087,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
                       cursor: draftDisabled ? 'wait' : 'pointer',
                     }}
                   >
-                    <PenLine size={14} /> {drafting ? 'Assembling from your material…' : 'Draft a starting version'}
+                    <PenLine size={14} /> {drafting ? 'Assembling from your material…' : q.user_answer.trim() ? 'Redraft' : 'Draft a starting version'}
                   </button>
                 )}
                 {replacedAnswer && !drafting && (
