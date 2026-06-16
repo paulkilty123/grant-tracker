@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { createClient as createServerSupabase } from '@/lib/supabase/server'
 import type { Organisation } from '@/types'
 
 export const dynamic = 'force-dynamic'
 
 const CACHE_TTL_HOURS = 168 // 7 days
+
+// Keep WEEKLY_LIMIT in sync with the client-side UX hint in
+// src/app/dashboard/search/page.tsx. Enforcement lives here, server-side.
+const WEEKLY_LIMIT = 3
+
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? 'paulkilty1@gmail.com')
+  .split(',')
+  .map(e => e.trim().toLowerCase())
+  .filter(Boolean)
 
 // ── URL verification ──────────────────────────────────────────────────────────
 // Checks whether a URL actually resolves before we cache and show it.
@@ -111,6 +121,60 @@ function getAdminClient() {
   )
 }
 
+// Start of the current ISO week (Monday 00:00 UTC) — mirrors getWeeklySearchCount.
+function weekStartISO(): string {
+  const now = new Date()
+  const dow = now.getUTCDay() // 0=Sun … 6=Sat
+  const daysToMonday = dow === 0 ? 6 : dow - 1
+  const monday = new Date(now)
+  monday.setUTCDate(now.getUTCDate() - daysToMonday)
+  monday.setUTCHours(0, 0, 0, 0)
+  return monday.toISOString()
+}
+
+// Resolve the caller's org from their authenticated identity, honouring the
+// active-org cookie. The search client sends org:null, so we never trust the
+// body for the org used to meter the weekly cap.
+async function resolveOrgId(
+  admin: SupabaseClient,
+  userId: string,
+  activeOrgId: string | null
+): Promise<string | null> {
+  const { data } = await admin
+    .from('organisations')
+    .select('id')
+    .eq('owner_id', userId)
+    .order('created_at', { ascending: true })
+  if (!data?.length) return null
+  if (activeOrgId) {
+    const match = data.find((o: { id: string }) => o.id === activeOrgId)
+    if (match) return match.id
+  }
+  return data[0].id
+}
+
+// Records a served search to live_search_history (the weekly-cap ledger).
+// Runs with the service-role client; never lets a logging failure break search.
+async function recordSearch(
+  admin: SupabaseClient,
+  orgId: string | null,
+  query: string,
+  sectors: string[] | undefined,
+  location: string | undefined,
+  resultCount: number
+): Promise<void> {
+  if (!orgId) return
+  try {
+    await admin.from('live_search_history').insert({
+      org_id: orgId,
+      query,
+      sectors: sectors ?? [],
+      location: location?.trim() || null,
+      result_count: resultCount,
+    })
+  } catch { /* ignore — logging must never break the search */ }
+}
+
 function normaliseQuery(query: string): string {
   return query.toLowerCase().trim().replace(/\s+/g, ' ')
 }
@@ -137,6 +201,14 @@ function buildOrgContext(org: Organisation | null): string {
 
 export async function POST(req: NextRequest) {
   try {
+    // ── Auth gate — deep search is authenticated-only (expensive web search) ──
+    const authClient = await createServerSupabase()
+    const { data: { user } } = await authClient.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Please sign in to use deep search.' }, { status: 401 })
+    }
+    const isAdmin = !!user.email && ADMIN_EMAILS.includes(user.email.toLowerCase())
+
     const { query, org, sectors, location, existingGrantTitles } = await req.json()
     // Include sectors/location in cache key so different filter combos cache separately
     const filterKey = [
@@ -145,6 +217,26 @@ export async function POST(req: NextRequest) {
     ].filter(Boolean).join('|')
     const queryKey = normaliseQuery(query) + (filterKey ? `::${filterKey}` : '')
     const supabase = getAdminClient()
+
+    // ── Weekly cap — enforced server-side (the client check is only a UX hint) ─
+    const activeOrgId = req.cookies.get('gt_active_org_id')?.value ?? null
+    const orgId = await resolveOrgId(supabase, user.id, activeOrgId)
+    if (!isAdmin) {
+      if (!orgId) {
+        return NextResponse.json({ error: 'No organisation found for your account.' }, { status: 403 })
+      }
+      const { count } = await supabase
+        .from('live_search_history')
+        .select('id', { count: 'exact', head: true })
+        .eq('org_id', orgId)
+        .gte('created_at', weekStartISO())
+      if ((count ?? 0) >= WEEKLY_LIMIT) {
+        return NextResponse.json(
+          { error: `You've used all ${WEEKLY_LIMIT} deep searches for this week. Your allowance resets Monday.` },
+          { status: 429 }
+        )
+      }
+    }
 
     // ── 1. Check cache ──────────────────────────────────────────────────────
     const cutoff = new Date(Date.now() - CACHE_TTL_HOURS * 60 * 60 * 1000).toISOString()
@@ -156,6 +248,8 @@ export async function POST(req: NextRequest) {
       .maybeSingle()
 
     if (cached) {
+      const cachedCount = Array.isArray(cached.results?.grants) ? cached.results.grants.length : 0
+      await recordSearch(supabase, orgId, query, sectors, location, cachedCount)
       return NextResponse.json({ ...cached.results, _cached: true })
     }
 
@@ -295,6 +389,14 @@ Return ONLY valid JSON — no markdown fences, no commentary outside the JSON ob
       .from('deep_search_cache')
       .upsert({ query_key: queryKey, results: result }, { onConflict: 'query_key' })
 
+    await recordSearch(
+      supabase,
+      orgId,
+      query,
+      sectors,
+      location,
+      Array.isArray(result.grants) ? result.grants.length : 0
+    )
     return NextResponse.json(result)
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Deep search failed'

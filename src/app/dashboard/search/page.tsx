@@ -16,7 +16,7 @@ import {
   LIKE_SCORE_BOOST, DISLIKE_SCORE_PENALTY, LIKE_SECTOR_BOOST, DISLIKE_SECTOR_PENALTY,
   FB_UP_SCORE_BOOST, FB_DOWN_SCORE_PENALTY, FB_UP_SECTOR_BOOST, FB_DOWN_SECTOR_PENALTY,
 } from '@/lib/matchWeights'
-import { saveSearchHistory, getSearchHistory, deleteSearchHistory, getWeeklySearchCount } from '@/lib/searchHistory'
+import { getSearchHistory, deleteSearchHistory, getWeeklySearchCount } from '@/lib/searchHistory'
 import type { GrantOpportunity, Organisation, FunderType, FundingType, ImpactSector, LegalStructure } from '@/types'
 import { MatchFeedbackBlock } from '@/components/MatchFeedbackBlock'
 import { track } from '@/lib/analytics'
@@ -1559,13 +1559,9 @@ export default function SearchPage() {
           filters: { mode: 'live', sectors: liveSelectedSectors, location: locationFilter || null },
           result_count: (data as LiveSearchResponse).grants?.length ?? 0,
         })
-        await saveSearchHistory({
-          orgId: org.id,
-          query: q,
-          sectors: liveSelectedSectors,
-          location: locationFilter,
-          resultCount: (data as LiveSearchResponse).grants?.length ?? 0,
-        })
+        // The search is recorded to live_search_history server-side by
+        // /api/deep-search (single source of truth for the weekly cap); here we
+        // only refresh the displayed history + usage count.
         const [history, newCount] = await Promise.all([
           getSearchHistory(org.id),
           getWeeklySearchCount(org.id),
