@@ -197,9 +197,10 @@ export default function ApplicationsPage() {
           <h1 style={{ fontFamily: UI, fontWeight: 600, fontSize: 24, color: T.textPrimary, letterSpacing: '-0.01em', margin: 0 }}>
             Applications
           </h1>
-          <p style={{ fontFamily: BODY, fontSize: 14, color: T.textSecondary, margin: '6px 0 0', lineHeight: 1.55, maxWidth: 580 }}>
-            Grant Tracker drafts each answer from your own material and recommends how to make it
-            stronger, so you can write a strong application in your own words, faster.
+          <p style={{ fontFamily: BODY, fontSize: 14, color: T.textSecondary, margin: '6px 0 0', lineHeight: 1.55, maxWidth: 620 }}>
+            Grant Tracker shapes each answer from your own material, shows you what a strong response
+            to this funder needs to cover, and flags the gaps before you start. You write it in your
+            own words.
           </p>
         </div>
         <Link
