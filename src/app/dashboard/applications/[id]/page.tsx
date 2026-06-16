@@ -1155,7 +1155,7 @@ export default function ApplicationWorkspacePage() {
             <FileText size={15} color={thin ? T.amberText : T.greenMid} style={{ flexShrink: 0 }} />
             <span style={{ flex: 1, minWidth: 0 }}>
               <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: T.textPrimary }}>
-                What Grant Tracker knows about this funder
+                What we know about this funder
               </span>
               <span style={{ display: 'block', fontFamily: BODY, fontSize: 12, color: T.textSecondary, marginTop: 2 }}>
                 {thin

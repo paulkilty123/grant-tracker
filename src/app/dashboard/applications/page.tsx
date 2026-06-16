@@ -102,6 +102,7 @@ export default function ApplicationsPage() {
   const [hoveredId, setHoveredId] = useState<string | null>(null)
   const [deadlineSoon, setDeadlineSoon] = useState(0)
   const [readyToStart, setReadyToStart] = useState<PipeItem[]>([])
+  const [projectNames, setProjectNames] = useState<Record<string, string>>({})
 
   async function deleteApplication(id: string) {
     setApps(prev => prev.filter(a => a.id !== id))
@@ -128,6 +129,12 @@ export default function ApplicationsPage() {
           .order('updated_at', { ascending: false })
         const rows = (data ?? []) as ApplicationRecord[]
         setApps(rows)
+
+        // Project names for the "Part of: …" differentiator on rows.
+        const { data: projs } = await supabase.from('projects').select('id, name').eq('org_id', org.id)
+        const pmap: Record<string, string> = {}
+        for (const pr of (projs ?? []) as { id: string; name: string }[]) pmap[pr.id] = pr.name
+        setProjectNames(pmap)
 
         // "Deadline soon" tile: deadlines live on the linked opportunity, not
         // the application, so join through opportunity_id (UUIDs only).
@@ -321,6 +328,10 @@ export default function ApplicationsPage() {
                   {app.funder_name && app.grant_name
                     ? app.funder_name
                     : `${total} ${total === 1 ? 'question' : 'questions'}`}
+                  {(() => { const pid = (app as { project_id?: string | null }).project_id; return pid && projectNames[pid] ? ` · Part of ${projectNames[pid]}` : '' })()}
+                  {(app as { created_at?: string }).created_at
+                    ? ` · ${new Date((app as { created_at: string }).created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
+                    : ''}
                 </span>
               </div>
               {total > 0 && (
@@ -408,6 +419,7 @@ export default function ApplicationsPage() {
                 const deadline = p.deadline
                   ? new Date(p.deadline).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
                   : null
+                const overdue = !!p.deadline && p.deadline < new Date().toISOString().split('T')[0]
                 return (
                   <div key={p.id} style={{
                     background: T.white, border: `1px solid ${T.border}`, borderRadius: 12,
@@ -434,7 +446,10 @@ export default function ApplicationsPage() {
                       </div>
                       <span style={{ fontFamily: BODY, fontSize: 12.5, color: T.textSecondary }}>
                         {p.funder_name && p.grant_name ? p.funder_name : 'From your pipeline'}
-                        {deadline ? ` · Deadline ${deadline}` : ''}
+                        {deadline && !overdue && ` · Deadline ${deadline}`}
+                        {deadline && overdue && (
+                          <span style={{ fontFamily: UI, fontWeight: 600, color: T.coral }}> · Overdue {deadline}</span>
+                        )}
                       </span>
                     </div>
                     <Link
@@ -445,7 +460,7 @@ export default function ApplicationsPage() {
                         flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 5,
                       }}
                     >
-                      <Plus size={13} /> Start an application
+                      <FilePenLine size={13} /> Start an application
                     </Link>
                   </div>
                 )

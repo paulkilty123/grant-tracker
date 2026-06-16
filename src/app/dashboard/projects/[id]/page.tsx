@@ -9,7 +9,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft, Check, ChevronDown, ChevronRight, ChevronUp, ExternalLink, RefreshCw, Sparkles } from 'lucide-react'
+import { ArrowLeft, Check, ChevronDown, ChevronRight, ChevronUp, ExternalLink, RefreshCw, FilePenLine } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { emitClientEvent } from '@/lib/events/client'
@@ -668,6 +668,10 @@ export default function ProjectPage() {
             { key: 'programmes', type: 'programme',  label: 'Programmes' },
             { key: 'investment', type: 'investment', label: 'Investment' },
           ]
+          // Only the single strongest match gets the filled CTA; the rest are
+          // outline, so the best option stands out (one primary per screen).
+          const topMatch = matches.grants[0] ?? matches.programmes[0] ?? matches.investment[0] ?? null
+          const topMatchId = topMatch ? (topMatch.grant.uuid ?? topMatch.grant.id) : null
           return (
             <>
               {cashCount === 0 && (
@@ -737,12 +741,15 @@ export default function ProjectPage() {
                                     href={`/dashboard/applications/new?opportunity=${grant.uuid}&project=${project.id}`}
                                     onClick={e => e.stopPropagation()}
                                     style={{
-                                      fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.greenDeep, background: T.lime,
-                                      padding: '7px 14px', borderRadius: 8, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
+                                      fontFamily: UI, fontWeight: 600, fontSize: 12.5, whiteSpace: 'nowrap', flexShrink: 0,
+                                      padding: '7px 14px', borderRadius: 8, textDecoration: 'none',
                                       display: 'inline-flex', alignItems: 'center', gap: 5,
+                                      ...(id === topMatchId
+                                        ? { color: T.greenDeep, background: T.lime, border: '1px solid transparent' }
+                                        : { color: T.greenDeep, background: T.white, border: `1px solid ${T.borderStrong}` }),
                                     }}
                                   >
-                                    <Sparkles size={12} /> Start an application
+                                    <FilePenLine size={12} /> Start an application
                                   </Link>
                                   <ChevronDown
                                     size={16}

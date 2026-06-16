@@ -69,6 +69,26 @@ export default function NewProjectPage() {
         <ArrowLeft size={14} /> Projects
       </Link>
 
+      {/* Stepper — mirrors the new-application flow so the two creation
+          experiences read as one product. */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{
+            width: 24, height: 24, borderRadius: 999, background: T.greenDeep, color: '#F1F7E4',
+            fontFamily: UI, fontWeight: 700, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>1</span>
+          <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.textPrimary }}>Describe</span>
+        </div>
+        <div style={{ flex: '0 0 32px', height: 1, background: T.borderStrong }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{
+            width: 24, height: 24, borderRadius: 999, background: T.cream, color: T.textTertiary,
+            fontFamily: UI, fontWeight: 700, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>2</span>
+          <span style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, color: T.textTertiary }}>Review &amp; match</span>
+        </div>
+      </div>
+
       <h1 style={{ fontFamily: UI, fontWeight: 600, fontSize: 24, color: T.textPrimary, letterSpacing: '-0.01em', margin: '0 0 8px' }}>
         Describe your project
       </h1>
