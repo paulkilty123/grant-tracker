@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Search, ChevronDown, Layers, DollarSign, Rocket, Building2, SlidersHorizontal, MapPin, Users, GraduationCap, TrendingUp, GitMerge, Gift, Landmark, CalendarDays, RefreshCw, Bookmark, PlusCircle, Activity, Info, Target, Star, CheckCircle2, XCircle, Lightbulb, AlertTriangle, Sparkles, ExternalLink, ClipboardList, EyeOff, Eye } from 'lucide-react'
+import { Search, ChevronDown, Layers, DollarSign, Rocket, Building2, SlidersHorizontal, MapPin, Users, GraduationCap, TrendingUp, GitMerge, Gift, Landmark, CalendarDays, RefreshCw, Bookmark, PlusCircle, Activity, Target, Star, CheckCircle2, XCircle, Lightbulb, AlertTriangle, Sparkles, ExternalLink, ClipboardList, EyeOff, Eye } from 'lucide-react'
 import { SEED_GRANTS } from '@/lib/grants'
 import { formatRange } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -16,7 +16,6 @@ import {
   LIKE_SCORE_BOOST, DISLIKE_SCORE_PENALTY, LIKE_SECTOR_BOOST, DISLIKE_SECTOR_PENALTY,
   FB_UP_SCORE_BOOST, FB_DOWN_SCORE_PENALTY, FB_UP_SECTOR_BOOST, FB_DOWN_SECTOR_PENALTY,
 } from '@/lib/matchWeights'
-import { getSearchHistory, deleteSearchHistory, getWeeklySearchCount } from '@/lib/searchHistory'
 import type { GrantOpportunity, Organisation, FunderType, FundingType, ImpactSector, LegalStructure } from '@/types'
 import { MatchFeedbackBlock } from '@/components/MatchFeedbackBlock'
 import { track } from '@/lib/analytics'
@@ -26,20 +25,6 @@ import { normaliseScrapedGrant, type EnrichedGrant } from '@/lib/grants-normalis
 import { emitClientEvent } from '@/lib/events/client'
 import { toCatalogueUuid } from '@/lib/events/taxonomy'
 import type { InteractionAction } from '@/lib/interactions'
-import type { SearchHistoryItem } from '@/lib/searchHistory'
-
-// Format a YYYY-MM-DD deadline string as "Deadline: 10 July 2026"
-// Returns null for non-YYYY-MM-DD strings (e.g. free-text from live search)
-function formatDeadline(dateStr: string | null): string | null {
-  if (!dateStr) return null
-  const parts = dateStr.split('-').map(Number)
-  if (parts.length !== 3 || parts.some(isNaN)) return null
-  const [y, m, d] = parts
-  const date = new Date(y, m - 1, d)
-  if (isNaN(date.getTime())) return null
-  const formatted = date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
-  return `Deadline: ${formatted}`
-}
 
 // Normalise long or awkward free-text sector names for display on grant cards
 const SECTOR_DISPLAY: Record<string, string | null> = {
@@ -157,114 +142,6 @@ const FUNDING_TYPES: { id: FundingType | 'all'; label: string; emoji: string; de
   { id: 'investment', label: 'Investment',  emoji: '💰', desc: 'Repayable finance: loans, patient capital & blended finance' },
   { id: 'in_kind',    label: 'In-Kind',     emoji: '🛠️', desc: 'Non-cash: software credits, ad grants, workspace & pro bono' },
 ]
-
-// ── Live Search (web) types & constants ──────────────────────────────────────
-interface LiveGrant {
-  title: string
-  funder: string
-  description: string
-  amountRange: string | null
-  deadline: string | null
-  applyUrl: string
-  notes: string
-}
-
-interface LiveSearchResponse {
-  summary: string
-  grants: LiveGrant[]
-  _cached?: boolean
-}
-
-const LIVE_SECTOR_FILTERS = [
-  { id: 'mental health',              label: 'Mental Health' },
-  { id: 'youth',                      label: 'Youth' },
-  { id: 'elderly',                    label: 'Older People' },
-  { id: 'education & training',       label: 'Education' },
-  { id: 'housing',                    label: 'Housing' },
-  { id: 'disability',                 label: 'Disability' },
-  { id: 'arts & culture',             label: 'Arts & Culture' },
-  { id: 'sport & physical activity',  label: 'Sport' },
-  { id: 'environment',                label: 'Environment' },
-  { id: 'food poverty',               label: 'Food Poverty' },
-  { id: 'community',                  label: 'Community' },
-  { id: 'social enterprise',          label: 'Social Enterprise' },
-  { id: 'women & girls',              label: 'Women & Girls' },
-]
-
-const LIVE_EXAMPLE_QUERIES = [
-  'mental health funding Lewisham',
-  'youth sport grants Brighton',
-  'community food bank Birmingham',
-  'arts and heritage Cornwall',
-  'disability support Edinburgh',
-  'environmental projects Leeds',
-]
-
-// ── Live Grant Card ───────────────────────────────────────────────────────────
-function LiveGrantCard({ grant, onAddToPipeline }: {
-  grant: LiveGrant
-  onAddToPipeline: (g: LiveGrant) => void
-}) {
-  return (
-    <div className="bg-white p-5 shadow-warm mb-3 border border-warm/80 hover:shadow-lg transition-all">
-      <div className="flex gap-4">
-        {/* Left: main content */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start gap-3 mb-2">
-            <div className="h-10 w-10 bg-[#F5F1E8] flex items-center justify-center text-charcoal font-bold text-sm flex-shrink-0 border border-warm">
-              {grant.funder[0]?.toUpperCase() ?? '?'}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                <h3 className="font-semibold text-charcoal text-lg leading-snug">{grant.title}</h3>
-                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap flex-shrink-0">🌐 Live</span>
-              </div>
-              <p className="text-sm text-mid">{grant.funder}</p>
-            </div>
-          </div>
-
-          <p className="text-sm text-mid leading-relaxed mt-2 mb-3">
-            {grant.description.length > 200
-              ? `${grant.description.slice(0, 200).trimEnd()}…`
-              : grant.description}
-          </p>
-
-          {grant.notes && (
-            <div className="border px-3.5 py-2.5 mb-3 flex items-start gap-2"
-              style={{ backgroundColor: 'rgba(23,52,4,0.06)', borderColor: 'rgba(23,52,4,0.18)' }}>
-              <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: '#8ECB3C' }} strokeWidth={2} />
-              <p className="text-sm leading-snug" style={{ color: '#5F5E5A' }}>{grant.notes}</p>
-            </div>
-          )}
-        </div>
-
-        {/* Right: amount + deadline + actions */}
-        <div className="flex flex-col items-end gap-3 min-w-[150px] flex-shrink-0">
-          <div className="text-right">
-            <p className="text-xl font-bold text-gold">
-              {grant.amountRange ?? '—'}
-            </p>
-            <p className="text-xs text-light mt-0.5">
-              {formatDeadline(grant.deadline) ?? (grant.deadline ? grant.deadline : 'No deadline listed')}
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-1.5 w-full">
-            <a href={grant.applyUrl} target="_blank" rel="noopener noreferrer"
-              className="flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium transition-colors w-full"
-              style={{ background: '#2C2C2A', color: '#ffffff', border: '1px solid #2C2C2A' }}>
-              Visit website →
-            </a>
-            <button onClick={() => onAddToPipeline(grant)}
-              className="px-3 py-2 text-xs font-bold w-full hover:opacity-80 transition-colors rounded-full" style={{ background: '#2C2C2A', color: '#FFFFFF' }}>
-              Pipeline
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 interface AIResult {
   grantId: string
@@ -1400,27 +1277,15 @@ export default function SearchPage() {
   // when the user clicks it directly (or when the org first loads).
   const [profileFilterOn, setProfileFilterOn]     = useState(false)
 
-  // ── Live search (web) state ───────────────────────────────────────────────
-  const [searchMode, setSearchMode]               = useState<'database' | 'live'>('database')
+  // ── Location filter state ─────────────────────────────────────────────────
   const [locationFilter, setLocationFilter]       = useState('')
   const [locationInput, setLocationInput]         = useState('')
-  const [liveSelectedSectors, setLiveSelectedSectors] = useState<string[]>([])
-  const [liveResults, setLiveResults]             = useState<LiveSearchResponse | null>(null)
-  const [liveLoading, setLiveLoading]             = useState(false)
-  const [liveError, setLiveError]                 = useState<string | null>(null)
-  const [liveSmartMatched, setLiveSmartMatched]   = useState(false)
-  const [recentSearchesOpen, setRecentSearchesOpen] = useState(false)
-  const [searchHistory, setSearchHistory]         = useState<SearchHistoryItem[]>([])
-  const [weeklySearchCount, setWeeklySearchCount] = useState(0)
-  const [isAdmin, setIsAdmin]                     = useState(false)
-  const WEEKLY_LIMIT = 3
-  const ADMIN_EMAIL  = 'paulkilty1@gmail.com'
 
   useEffect(() => {
     try {
       const saved = sessionStorage.getItem('grantSearch')
       if (saved) {
-        const { query: q, aiResults: r, activeType: t, smartMatched: sm, liveResults: lr, liveSmartMatched: lsm, activeView: av } = JSON.parse(saved)
+        const { query: q, aiResults: r, activeType: t, smartMatched: sm, activeView: av } = JSON.parse(saved)
         // Only restore AI results + query together. Restoring aiResults alone
         // (when query is empty) leaves the page in a stale state showing
         // "N results for ''" while the tab badges still show profile-matched
@@ -1431,8 +1296,6 @@ export default function SearchPage() {
           if (sm) setSmartMatched(sm)
         }
         if (t)   setActiveType(t)
-        if (lr)  setLiveResults(lr)
-        if (lsm) setLiveSmartMatched(lsm)
         if (av)  setActiveView(
           av === 'matches' || av === 'latest' ? 'browse' :
           av === 'saved' ? 'saved' : 'browse'
@@ -1443,9 +1306,9 @@ export default function SearchPage() {
 
   useEffect(() => {
     try {
-      sessionStorage.setItem('grantSearch', JSON.stringify({ query, aiResults, activeType, smartMatched, liveResults, liveSmartMatched, activeView }))
+      sessionStorage.setItem('grantSearch', JSON.stringify({ query, aiResults, activeType, smartMatched, activeView }))
     } catch { /* ignore */ }
-  }, [query, aiResults, activeType, smartMatched, liveResults, liveSmartMatched, activeView])
+  }, [query, aiResults, activeType, smartMatched, activeView])
 
   useEffect(() => {
     async function loadOrg() {
@@ -1453,7 +1316,6 @@ export default function SearchPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
       setUserId(user.id)
-      setIsAdmin(user.email === ADMIN_EMAIL)
       const o = await getOrganisationByOwner(user.id)
       setOrg(o)
       if (o) {
@@ -1493,15 +1355,6 @@ export default function SearchPage() {
         setScrapedGrants(scraped.map(row => normaliseScrapedGrant(row as Record<string, unknown>)))
       }
       setGrantsLoaded(true)
-      // Load live search history + weekly usage count
-      if (o) {
-        const [history, weekCount] = await Promise.all([
-          getSearchHistory(o.id),
-          getWeeklySearchCount(o.id),
-        ])
-        setSearchHistory(history)
-        setWeeklySearchCount(weekCount)
-      }
     }
     loadOrg()
   }, [])
@@ -1521,114 +1374,6 @@ export default function SearchPage() {
       setActiveTab(ft)
     }
   }, [pinnedGrantId, scrapedGrants])
-
-  // ── Live search handler ───────────────────────────────────────────────────
-  async function runLiveSearch(searchQuery: string, isSmartMatch = false) {
-    if (!searchQuery.trim() && liveSelectedSectors.length === 0 && !locationFilter.trim()) return
-    if (!isAdmin && weeklySearchCount >= WEEKLY_LIMIT) return   // enforce limit client-side
-    setHasSearched(true)
-    setLiveLoading(true)
-    setLiveError(null)
-    setLiveResults(null)
-    setLiveSmartMatched(false)
-    try {
-      const q = searchQuery.trim() || [...liveSelectedSectors, locationFilter].filter(Boolean).join(', ')
-      const response = await fetch('/api/deep-search', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          query: q,
-          org: null,
-          sectors: liveSelectedSectors,
-          location: locationFilter,
-          existingGrantTitles: SEED_GRANTS.map(g => ({ title: g.title, funder: g.funder })),
-        }),
-      })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data?.error ?? `Request failed (${response.status})`)
-      setLiveResults(data as LiveSearchResponse)
-      if (isSmartMatch) setLiveSmartMatched(true)
-      // Save results to localStorage so history items can restore instantly
-      try {
-        const lsKey = `liveSearch:${q}:${liveSelectedSectors.sort().join('|')}:${locationFilter}`
-        localStorage.setItem(lsKey, JSON.stringify(data))
-      } catch { /* ignore storage errors */ }
-      if (org) {
-        emitClientEvent(org.id, 'search_executed', {
-          query_text: q,
-          filters: { mode: 'live', sectors: liveSelectedSectors, location: locationFilter || null },
-          result_count: (data as LiveSearchResponse).grants?.length ?? 0,
-        })
-        // The search is recorded to live_search_history server-side by
-        // /api/deep-search (single source of truth for the weekly cap); here we
-        // only refresh the displayed history + usage count.
-        const [history, newCount] = await Promise.all([
-          getSearchHistory(org.id),
-          getWeeklySearchCount(org.id),
-        ])
-        setSearchHistory(history)
-        setWeeklySearchCount(newCount)
-      }
-    } catch (err) {
-      setLiveError(err instanceof Error ? err.message : 'Live search unavailable — please try again')
-    } finally {
-      setLiveLoading(false)
-    }
-  }
-
-  function restoreSearch(item: SearchHistoryItem) {
-    if (item.sectors?.length) setLiveSelectedSectors(item.sectors)
-    if (item.location)        setLocationFilter(item.location)
-    setInputValue(item.query)
-    setFilterQuery(item.query.trim().toLowerCase())
-    // Try to restore from localStorage instantly — no network call needed
-    try {
-      const lsKey = `liveSearch:${item.query}:${(item.sectors ?? []).sort().join('|')}:${item.location ?? ''}`
-      const saved = localStorage.getItem(lsKey)
-      if (saved) {
-        setLiveResults(JSON.parse(saved) as LiveSearchResponse)
-        setHasSearched(true)
-        return
-      }
-    } catch { /* ignore */ }
-    // Fallback: re-run the search (server cache will serve it quickly)
-    runLiveSearch(item.query)
-  }
-
-  function timeAgo(dateStr: string): string {
-    const diff = Date.now() - new Date(dateStr).getTime()
-    const mins  = Math.floor(diff / 60000)
-    const hours = Math.floor(diff / 3600000)
-    const days  = Math.floor(diff / 86400000)
-    if (mins < 60)  return `${mins}m ago`
-    if (hours < 24) return `${hours}h ago`
-    return `${days}d ago`
-  }
-
-  async function handleLiveAddToPipeline(grant: LiveGrant) {
-    if (!org) { showToast('Complete your profile first to track grants'); return }
-    try {
-      const added = await createPipelineItem({
-        org_id: org.id,
-        grant_name: grant.title,
-        funder_name: grant.funder,
-        funder_type: 'other',
-        amount_min: null, amount_max: null, amount_requested: null,
-        deadline: null, stage: 'identified', notes: grant.notes || null,
-        application_progress: 0, is_urgent: false,
-        contact_name: null, contact_email: null,
-        grant_url: grant.applyUrl || null,
-        outcome_date: null, outcome_notes: null,
-        created_by: userId,
-      })
-      track('pipeline_added')
-      // Live-search grants are off-catalogue — no opportunity UUID exists.
-      emitClientEvent(org.id, 'pipeline_added', { opportunity_id: null, pipeline_item_id: added.id })
-      showToast(`"${grant.title}" added to pipeline!`)
-    } catch {
-      showToast('Failed to add — please try again')
-    }
-  }
 
   function showToast(msg: string) {
     setToast(msg)
