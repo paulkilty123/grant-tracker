@@ -2,9 +2,10 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getDeadlineAlerts, formatCurrency } from '@/lib/utils'
 import type { PipelineItem, Organisation } from '@/types'
-import { Award, TrendingUp, Users, Rocket, GraduationCap, Gift, ArrowRight, CalendarDays, Check, Sparkles, Bookmark, ListChecks, UserPlus } from 'lucide-react'
+import { Award, TrendingUp, Users, Rocket, GraduationCap, Gift, ArrowRight, CalendarDays, Check, Sparkles, Bookmark, ListChecks, UserPlus, FilePenLine, Lightbulb, CircleCheck } from 'lucide-react'
 import { computeMatchScore } from '@/lib/matching'
 import { normaliseScrapedGrant } from '@/lib/grants-normalise'
+import { getBuilderUser } from '@/lib/builder/access'
 
 function formatDeadlineDate(deadline: string | null): { month: string; day: string } | null {
   if (!deadline) return null
@@ -152,6 +153,66 @@ export default async function DashboardPage() {
     }
   }
   const totalMatchCount = scoredAll.length
+
+  // ── "Your work" band (cohort/builder only) — in-progress applications +
+  // projects. Fully gated: non-builder users get the byte-identical dashboard.
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  type WorkApp = { id: string; title: string; funder: string | null; answered: number; total: number; pill: { label: string; coral: boolean } }
+  type WorkProject = { id: string; name: string; ready: boolean; budget: number | null }
+  let builderAllowed = false
+  let workApps: WorkApp[] = []
+  let workProjects: WorkProject[] = []
+  if (typedOrg) {
+    const builderUser = await getBuilderUser()
+    builderAllowed = !!builderUser
+    if (builderAllowed) {
+      const { data: apps } = await supabase
+        .from('applications')
+        .select('id, grant_name, funder_name, status, questions, opportunity_id')
+        .eq('org_id', typedOrg.id)
+        .neq('status', 'complete')
+        .order('updated_at', { ascending: false })
+      const appRows = (apps ?? []) as {
+        id: string; grant_name: string | null; funder_name: string | null
+        questions: { user_answer?: string | null }[] | null; opportunity_id: string | null
+      }[]
+      // Deadlines live on the linked opportunity, not the application.
+      const oppIds = Array.from(new Set(appRows.map(a => a.opportunity_id).filter((id): id is string => !!id && UUID_RE.test(id))))
+      const deadlineMap: Record<string, string> = {}
+      if (oppIds.length > 0) {
+        const { data: gr } = await supabase.from('grants_with_funder').select('id, deadline').in('id', oppIds)
+        for (const g of (gr ?? []) as { id: string; deadline: string | null }[]) if (g.deadline) deadlineMap[String(g.id)] = g.deadline
+      }
+      workApps = appRows.map(a => {
+        const dl = a.opportunity_id ? deadlineMap[a.opportunity_id] ?? null : null
+        const days = dl ? Math.ceil((new Date(dl).getTime() - new Date(today).getTime()) / 86400000) : null
+        const pill = days !== null && days < 0 ? { label: 'Overdue', coral: true }
+          : days !== null && days <= 14 ? { label: `Closes ${days}d`, coral: true }
+          : { label: 'In progress', coral: false }
+        return {
+          id: a.id,
+          title: a.grant_name || a.funder_name || 'Untitled application',
+          funder: a.grant_name && a.funder_name ? a.funder_name : null,
+          answered: (a.questions ?? []).filter(q => q.user_answer?.trim()).length,
+          total: (a.questions ?? []).length,
+          pill,
+        }
+      })
+      const { data: projs } = await supabase
+        .from('projects')
+        .select('id, name, sectors, budget_amount, what_it_will_do')
+        .eq('org_id', typedOrg.id)
+        .order('updated_at', { ascending: false })
+      workProjects = ((projs ?? []) as { id: string; name: string; sectors: string[] | null; budget_amount: number | null; what_it_will_do: string | null }[]).map(p => ({
+        id: p.id,
+        name: p.name,
+        ready: !!p.what_it_will_do?.trim() && (p.sectors?.length ?? 0) > 0 && (p.budget_amount ?? 0) > 0,
+        budget: p.budget_amount ?? null,
+      }))
+    }
+  }
+  const projectsReady = workProjects.filter(p => p.ready).length
+  const hasWork = workApps.length > 0 || workProjects.length > 0
 
   // ── Quality buckets — Strong ≥80, Good 70–79, Partial 50–69, Weak <50.
   // Aligned with Find Funding's tier labels (search/page.tsx:522).
@@ -601,6 +662,7 @@ export default async function DashboardPage() {
   // POPULATED STATE (Week 2+) — dynamic subtitle, deadlines, pipeline, matches
   // ══════════════════════════════════════════════════════════════════════════
   const subtitleParts: string[] = []
+  if (builderAllowed && projectsReady > 0) subtitleParts.push(`${projectsReady} project${projectsReady === 1 ? '' : 's'} ready to match`)
   if (deadlinesThisWeek > 0) subtitleParts.push(`${deadlinesThisWeek} deadline${deadlinesThisWeek === 1 ? '' : 's'} this week`)
   if (inProgressCount > 0)   subtitleParts.push(`${inProgressCount} application${inProgressCount === 1 ? '' : 's'} in progress`)
   if (newMatchesThisWeek > 0) subtitleParts.push(`${newMatchesThisWeek} new match${newMatchesThisWeek === 1 ? '' : 'es'} since Monday`)
@@ -617,6 +679,109 @@ export default async function DashboardPage() {
           {subtitleParts.join(' · ')}
         </p>
       </div>
+
+      {/* ── Your work band (cohort/builder only): resume in-flight work before
+          scanning new matches. Empty state steers to the project route. ── */}
+      {builderAllowed && !hasWork && (
+        <div className="card rounded-xl mb-8" style={{ padding: 28, display: 'grid', gridTemplateColumns: 'minmax(0,1.4fr) minmax(0,1fr)', gap: 28, alignItems: 'center' }}>
+          <div>
+            <div style={{ width: 46, height: 46, borderRadius: 13, background: '#F1F7E4', color: '#3B6D11', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+              <Lightbulb size={23} />
+            </div>
+            <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 22, fontWeight: 600, color: '#2C2C2A', marginBottom: 8 }}>Start your first project</div>
+            <p className="text-mid" style={{ fontSize: 14.5, lineHeight: 1.6, marginBottom: 20, maxWidth: 420 }}>
+              Describe what you need funded once. We&apos;ll match it against the{' '}
+              <span style={{ color: '#2C2C2A', fontWeight: 500 }}>{totalMatchCount} funders that already fit your organisation</span>,
+              then help you build a tailored application for each one you choose.
+            </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' }}>
+              <a href="/dashboard/projects/new" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#8ECB3C', color: '#173404', fontFamily: 'var(--font-space-grotesk)', fontSize: 14.5, fontWeight: 600, padding: '12px 20px', borderRadius: 11, textDecoration: 'none' }}>
+                <Lightbulb size={16} /> Describe a project
+              </a>
+              <a href="/dashboard/applications/new" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 14, fontWeight: 600, color: '#3B6D11', textDecoration: 'none' }}>
+                Know which funder to apply to? Start a direct application →
+              </a>
+            </div>
+          </div>
+          <div style={{ background: '#FBFDF7', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 16, padding: 22 }}>
+            {[
+              { t: 'Describe it once', b: 'A few sentences or paste an old plan.' },
+              { t: 'See who fits', b: 'We rank funders against your project.' },
+              { t: 'Apply to each', b: 'Build a tailored application per funder.' },
+            ].map((s, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: i < 2 ? 16 : 0 }}>
+                <span style={{ width: 26, height: 26, borderRadius: 999, background: '#173404', color: '#F1F7E4', fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</span>
+                <div>
+                  <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: '#2C2C2A' }}>{s.t}</div>
+                  <div className="text-mid" style={{ fontSize: 12 }}>{s.b}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {builderAllowed && hasWork && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-8">
+          {/* Continue writing */}
+          <div className="card rounded-xl p-6">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+              <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 18, fontWeight: 600, color: '#2C2C2A' }}>Continue writing</span>
+              <a href="/dashboard/applications" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: '#3B6D11', textDecoration: 'none' }}>
+                View all{workApps.length > 4 ? ` ${workApps.length}` : ''} →
+              </a>
+            </div>
+            {workApps.length === 0 ? (
+              <p className="text-mid" style={{ fontSize: 13.5, lineHeight: 1.55 }}>No applications yet. Pick a funder from a project to start one.</p>
+            ) : workApps.slice(0, 4).map((a, i, arr) => {
+              const mono = (a.funder || a.title).trim().split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?'
+              const pct = a.total > 0 ? Math.round((a.answered / a.total) * 100) : 0
+              return (
+                <a key={a.id} href={`/dashboard/applications/${a.id}`} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0', borderBottom: i < arr.length - 1 ? '1px solid rgba(23,52,4,0.06)' : 'none', textDecoration: 'none' }}>
+                  <span style={{ width: 40, height: 40, borderRadius: 11, background: '#F1F7E4', color: '#3B6D11', fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{mono}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 15, fontWeight: 500, color: '#2C2C2A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.title}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
+                      <span style={{ height: 6, flex: 1, maxWidth: 150, background: '#EFE9DD', borderRadius: 999, overflow: 'hidden' }}>
+                        <span style={{ display: 'block', height: '100%', width: `${pct}%`, background: '#8ECB3C' }} />
+                      </span>
+                      <span className="text-mid" style={{ fontSize: 12 }}>{a.answered} of {a.total} · {pct}%</span>
+                    </div>
+                  </div>
+                  <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999, whiteSpace: 'nowrap', flexShrink: 0, ...(a.pill.coral ? { color: '#993C1D', background: '#FAECE7' } : { color: '#5F5E5A', background: '#F1ECE1' }) }}>{a.pill.label}</span>
+                </a>
+              )
+            })}
+          </div>
+
+          {/* Your projects */}
+          <div className="card rounded-xl p-6">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+              <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 18, fontWeight: 600, color: '#2C2C2A' }}>Your projects</span>
+              <a href="/dashboard/projects" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: '#3B6D11', textDecoration: 'none' }}>View all →</a>
+            </div>
+            {workProjects.length === 0 ? (
+              <p className="text-mid" style={{ fontSize: 13.5, lineHeight: 1.55, marginBottom: 12 }}>Describe a project to match more funders than your organisation profile alone.</p>
+            ) : workProjects.slice(0, 4).map((p, i, arr) => (
+              <a key={p.id} href={`/dashboard/projects/${p.id}`} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0', borderBottom: i < arr.length - 1 ? '1px solid rgba(23,52,4,0.06)' : 'none', textDecoration: 'none' }}>
+                <span style={{ width: 40, height: 40, borderRadius: 11, background: '#F1F7E4', color: '#3B6D11', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Lightbulb size={19} /></span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 15, fontWeight: 500, color: '#2C2C2A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 5, fontSize: 12.5 }}>
+                    {p.ready
+                      ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#3B6D11', fontWeight: 500 }}><CircleCheck size={13} /> Ready to match</span>
+                      : <span className="text-mid">Needs a few more details</span>}
+                    {p.budget ? <span className="text-mid">· £{p.budget.toLocaleString('en-GB')}</span> : null}
+                  </div>
+                </div>
+              </a>
+            ))}
+            <div style={{ paddingTop: 10 }}>
+              <a href="/dashboard/projects/new" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: '#3B6D11', textDecoration: 'none' }}>+ New project</a>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ─────────────────────────────────────────────────────────────────────
           Your matches summary + Top matches for you
