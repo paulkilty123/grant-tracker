@@ -10,7 +10,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   ArrowLeft, Sparkles, Compass, AlertTriangle, CheckCircle2, ChevronDown,
-  BookmarkPlus, Check, X as XIcon, FolderKanban, Loader2, PenLine, FileText, RefreshCw,
+  BookmarkPlus, Check, X as XIcon, FolderKanban, Loader2, PenLine, FilePenLine, FileText, RefreshCw,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { createPipelineItem, updatePipelineStage } from '@/lib/pipeline'
@@ -1174,7 +1174,7 @@ export default function ApplicationWorkspacePage() {
             <div style={{ borderTop: `1px solid ${T.border}`, padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
               {heldKeys.map(k => (
                 <div key={k}>
-                  <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.greenMid, marginBottom: 3 }}>
+                  <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 11.5, letterSpacing: '0.01em', color: T.greenMid, marginBottom: 3 }}>
                     {BRIEF_FIELD_LABELS[k]}
                   </div>
                   <p style={{ fontFamily: BODY, fontSize: 13, color: T.textPrimary, margin: 0, lineHeight: 1.6, whiteSpace: 'pre-line' }}>
@@ -1713,6 +1713,9 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
   const [expandedGap, setExpandedGap] = useState<number | null>(null)
   const [expandedStep, setExpandedStep] = useState<number | null>(null)
   const [materialOpen, setMaterialOpen] = useState(false)
+  // Empty-answer flow: lead with the draft action; "write from scratch" reveals
+  // the blank textarea (redesign state A).
+  const [scratch, setScratch] = useState(false)
 
   const words = wordCount(q.user_answer)
   const limit = q.word_limit
@@ -1726,6 +1729,15 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
   const review = q.review ?? null
   const reviewStale = !!review && answerHash(q.user_answer) !== review.answer_hash
   const showRail = hasScaffold || q.gaps.length > 0 || !!review
+  // Score chip colour tracks the ring's tier: <5 coral, <7 amber, else green.
+  const reviewTier = review
+    ? (review.score < 5 ? { bg: T.coralBg, color: T.coralText }
+      : review.score < 7 ? { bg: T.amberBg, color: T.amberText }
+      : { bg: T.greenBg, color: T.greenText })
+    : { bg: T.greenBg, color: T.greenText }
+  // Empty answer + a guide to draft from -> lead with the draft action
+  // instead of a blank textarea (redesign state A).
+  const showDraftPanel = !q.user_answer.trim() && hasScaffold && !scratch && !drafting
 
   // Question title: first sentence, remainder behind "Show full question".
   const sentenceMatch = q.question_text.match(/^[^.?!]*[.?!]/)
@@ -1736,7 +1748,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
   const collapsedChip = (() => {
     if (overLimit) return { label: `${words - limit!} words over`, bg: T.coralBg, color: T.coralText }
     if (placeholders > 0) return { label: `${placeholders} ${placeholders === 1 ? 'placeholder' : 'placeholders'}`, bg: T.amberBg, color: T.amberText }
-    if (review && !reviewStale) return { label: `✓ ${review.score % 1 === 0 ? review.score : review.score.toFixed(1)}/10`, bg: T.greenBg, color: T.greenText }
+    if (review && !reviewStale) return { label: `${review.score % 1 === 0 ? review.score : review.score.toFixed(1)}/10`, bg: reviewTier.bg, color: reviewTier.color }
     if (words === 0) return { label: 'Not started', bg: T.cream, color: T.textTertiary }
     return { label: 'In progress', bg: T.paleGreen2, color: T.sage }
   })()
@@ -1823,7 +1835,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
           {review && (
             <span style={{
               fontFamily: UI, fontWeight: 600, fontSize: 11, padding: '3px 10px', borderRadius: 999,
-              background: T.greenBg, color: T.greenText, opacity: reviewStale ? 0.55 : 1,
+              background: reviewTier.bg, color: reviewTier.color, opacity: reviewStale ? 0.55 : 1,
             }}>
               {review.score % 1 === 0 ? review.score : review.score.toFixed(1)} / 10{reviewStale ? ', answer changed' : ''}
             </span>
@@ -1857,7 +1869,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
         {hasScaffold && (
           <div style={{ margin: '10px 0 0', paddingLeft: 38 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-              <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.greenMid }}>
+              <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 11.5, letterSpacing: '0.01em', color: T.greenMid }}>
                 Guide
               </span>
               {sortedScaffold.map((s, i) => (
@@ -1895,60 +1907,107 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
         borderTop: `1px solid ${T.border}`,
       }}>
         <div style={{ padding: '14px 20px 16px' }}>
-          <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.textSecondary, marginBottom: 8 }}>
-            Your answer
-          </div>
-          <textarea
-            value={q.user_answer}
-            onChange={e => onAnswerChange(e.target.value)}
-            rows={answerRows(q.user_answer, hasScaffold ? (q.user_answer.trim() ? 10 : 6) : 5)}
-            readOnly={drafting}
-            placeholder={hasScaffold ? 'Write in your own voice, or draft a starting version below.' : 'Plan your answers first, or just start writing.'}
-            style={{
-              fontFamily: BODY, fontSize: 14, color: T.textPrimary, width: '100%',
-              padding: '10px 12px', borderRadius: 8, border: `1px solid ${drafting ? T.lime : T.border}`,
-              background: T.editorBg, outline: 'none', resize: 'vertical', lineHeight: 1.65,
-            }}
-          />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap', marginTop: 6 }}>
-            {hasScaffold && (
-              <button
-                onClick={onDraft}
-                disabled={draftDisabled}
-                title="Assembles a starting draft from your own material, with placeholders where it runs out"
-                className="gt-link"
+          {!showDraftPanel && (
+            <div style={{ fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.textSecondary, marginBottom: 8 }}>
+              Your answer
+            </div>
+          )}
+
+          {showDraftPanel ? (
+            /* State A: lead with the draft action */
+            <div style={{ border: `1px solid ${T.border}`, borderRadius: 10, background: T.editorBg, padding: '22px 20px', textAlign: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+                {['Draft', 'Review & check', 'Make it yours'].map((label, i) => (
+                  <span key={label} style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{
+                      fontFamily: UI, fontWeight: 600, fontSize: 11, padding: '3px 10px', borderRadius: 999,
+                      background: i === 0 ? T.paleGreen : T.cream, color: i === 0 ? T.sage : T.textTertiary,
+                    }}>
+                      {i + 1} {label}
+                    </span>
+                    {i < 2 && <span style={{ color: T.textTertiary, fontSize: 12 }}>→</span>}
+                  </span>
+                ))}
+              </div>
+              <div style={{
+                width: 46, height: 46, borderRadius: 12, background: T.paleGreen, color: T.sage,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px',
+              }}>
+                <FilePenLine size={22} />
+              </div>
+              <div style={{ fontFamily: UI, fontWeight: 600, fontSize: 16, color: T.textPrimary, marginBottom: 6 }}>
+                Start with a draft
+              </div>
+              <p style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, lineHeight: 1.55, maxWidth: 360, margin: '0 auto 16px' }}>
+                We&apos;ll write a first version from your project and saved material. You review it,
+                check the score, then edit it into your own voice.
+              </p>
+              <button onClick={onDraft} disabled={draftDisabled} style={{ ...primaryBtn(draftDisabled), display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <FilePenLine size={15} /> Draft a starting version
+              </button>
+              <div style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, marginTop: 12 }}>
+                or{' '}
+                <button onClick={() => setScratch(true)} className="gt-link" style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, fontFamily: UI, fontWeight: 600, fontSize: 13, color: T.sage }}>
+                  write it from scratch
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <textarea
+                value={q.user_answer}
+                onChange={e => onAnswerChange(e.target.value)}
+                rows={answerRows(q.user_answer, hasScaffold ? (q.user_answer.trim() ? 10 : 6) : 5)}
+                readOnly={drafting}
+                autoFocus={scratch && !q.user_answer.trim()}
+                placeholder={hasScaffold ? 'Write in your own voice, or draft a starting version below.' : 'Plan your answers first, or just start writing.'}
                 style={{
-                  ...ghostBtn(), display: 'inline-flex', alignItems: 'center', gap: 6,
-                  paddingLeft: 0, color: draftDisabled && !drafting ? T.textTertiary : T.greenMid,
-                  cursor: draftDisabled ? 'wait' : 'pointer',
+                  fontFamily: BODY, fontSize: 14, color: T.textPrimary, width: '100%',
+                  padding: '10px 12px', borderRadius: 8, border: `1px solid ${drafting ? T.lime : T.border}`,
+                  background: T.editorBg, outline: 'none', resize: 'vertical', lineHeight: 1.65,
                 }}
-              >
-                <PenLine size={14} /> {drafting ? 'Assembling from your material…' : 'Draft a starting version'}
-              </button>
-            )}
-            {replacedAnswer && !drafting && (
-              <button
-                onClick={onRestoreAnswer}
-                title="Bring back the answer that was here before the draft"
-                className="gt-link"
-                style={{ ...ghostBtn(), display: 'inline-flex', alignItems: 'center', gap: 6, color: T.textSecondary }}
-              >
-                Restore previous answer
-              </button>
-            )}
-            {q.user_answer.trim() && !q.answer_banked && !drafting && (
-              <button
-                onClick={onBank}
-                className="gt-link"
-                style={{ ...ghostBtn(), display: 'inline-flex', alignItems: 'center', gap: 6, color: T.sage, ...(hasScaffold ? {} : { paddingLeft: 0 }) }}
-              >
-                <BookmarkPlus size={14} /> Save to your material
-              </button>
-            )}
-          </div>
+              />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap', marginTop: 6 }}>
+                {hasScaffold && (
+                  <button
+                    onClick={onDraft}
+                    disabled={draftDisabled}
+                    title="Assembles a starting draft from your own material, with placeholders where it runs out"
+                    className="gt-link"
+                    style={{
+                      ...ghostBtn(), display: 'inline-flex', alignItems: 'center', gap: 6,
+                      paddingLeft: 0, color: draftDisabled && !drafting ? T.textTertiary : T.greenMid,
+                      cursor: draftDisabled ? 'wait' : 'pointer',
+                    }}
+                  >
+                    <PenLine size={14} /> {drafting ? 'Assembling from your material…' : 'Draft a starting version'}
+                  </button>
+                )}
+                {replacedAnswer && !drafting && (
+                  <button
+                    onClick={onRestoreAnswer}
+                    title="Bring back the answer that was here before the draft"
+                    className="gt-link"
+                    style={{ ...ghostBtn(), display: 'inline-flex', alignItems: 'center', gap: 6, color: T.textSecondary }}
+                  >
+                    Restore previous answer
+                  </button>
+                )}
+                {q.user_answer.trim() && !q.answer_banked && !drafting && (
+                  <button
+                    onClick={onBank}
+                    className="gt-link"
+                    style={{ ...ghostBtn(), display: 'inline-flex', alignItems: 'center', gap: 6, color: T.sage, ...(hasScaffold ? {} : { paddingLeft: 0 }) }}
+                  >
+                    <BookmarkPlus size={14} /> Save to your material
+                  </button>
+                )}
+              </div>
+            </>
+          )}
           {voicePrompts.length > 0 && (
             <div style={{ background: T.paleGreen, borderRadius: 8, padding: '10px 13px', marginTop: 8 }}>
-              <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.sage, marginBottom: 5 }}>
+              <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 11.5, letterSpacing: '0.01em', color: T.sage, marginBottom: 5 }}>
                 Make it yours
               </div>
               <ul style={{ margin: 0, paddingLeft: 16 }}>
@@ -1970,7 +2029,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
                   border: 'none', cursor: 'pointer', padding: 0,
                 }}
               >
-                <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.greenMid }}>
+                <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 11.5, letterSpacing: '0.01em', color: T.greenMid }}>
                   Your material
                 </span>
                 <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 10, color: T.greenText, background: T.greenBg, padding: '1px 7px', borderRadius: 999 }}>
@@ -2005,7 +2064,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
             position: isMobile ? 'static' : 'sticky',
             top: 76,
           }}>
-            <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.greenMid, marginBottom: 10 }}>
+            <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 11.5, letterSpacing: '0.01em', color: T.greenMid, marginBottom: 10 }}>
               Tips to improve
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
@@ -2056,7 +2115,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
               const detail = structured ? top.detail : top
               return (
                 <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 8, padding: '10px 12px', marginBottom: 8 }}>
-                  <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 10, letterSpacing: '0.05em', textTransform: 'uppercase', color: T.amberText, marginBottom: 3 }}>
+                  <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 11, letterSpacing: '0.01em', color: T.amberText, marginBottom: 3 }}>
                     Next best fix
                   </div>
                   <p style={{ fontFamily: UI, fontWeight: 600, fontSize: 12.5, color: T.textPrimary, margin: '0 0 3px', lineHeight: 1.4 }}>{headline}</p>
@@ -2136,7 +2195,7 @@ function QuestionCard({ index, question: q, open, onToggle, drafting, draftDisab
                 {/* Gaps */}
                 {q.gaps.length > 0 && (
                   <>
-                    <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: openGaps.some(g => g.severity === 'blocking') ? T.coral : T.amberText, marginBottom: 3 }}>
+                    <div style={{ fontFamily: UI, fontWeight: 700, fontSize: 11.5, letterSpacing: '0.01em', color: openGaps.some(g => g.severity === 'blocking') ? T.coral : T.amberText, marginBottom: 3 }}>
                       Gaps
                     </div>
                     <p style={{ fontFamily: BODY, fontSize: 10.5, color: T.textTertiary, margin: '0 0 7px', lineHeight: 1.4 }}>
