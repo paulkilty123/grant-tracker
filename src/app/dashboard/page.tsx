@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { getDeadlineAlerts, formatCurrency } from '@/lib/utils'
 import type { PipelineItem, Organisation } from '@/types'
@@ -45,9 +46,19 @@ export default async function DashboardPage() {
   // Layout gate guarantees user + completed onboarding before we get here —
   // no null checks needed for redirect paths.
 
-  const { data: org } = user
-    ? await supabase.from('organisations').select('*').eq('owner_id', user.id).order('created_at', { ascending: true }).limit(1).then(r => ({ data: r.data?.[0] ?? null }))
+  // Honour the active-org selection (profile switcher cookie); fall back to
+  // the oldest. Server-readable so the dashboard follows the same org the
+  // profile/applications/projects do.
+  const activeOrgId = cookies().get('gt_active_org_id')?.value ?? null
+  const { data: allOrgs } = user
+    ? await supabase.from('organisations').select('*').eq('owner_id', user.id).order('created_at', { ascending: true })
     : { data: null }
+  const org = (() => {
+    const list = (allOrgs ?? []) as Organisation[]
+    if (list.length === 0) return null
+    if (activeOrgId) { const m = list.find(o => o.id === activeOrgId); if (m) return m }
+    return list[0]
+  })()
   const typedOrg = org as Organisation | null
 
   const { data: rawItems } = typedOrg

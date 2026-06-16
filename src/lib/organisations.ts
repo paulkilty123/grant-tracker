@@ -14,16 +14,36 @@ export async function getOrganisation(orgId: string): Promise<Organisation | nul
   return data
 }
 
+/** Active-org id chosen in the profile switcher. Stored in a cookie (not just
+ *  localStorage) so server components can read it too. Client-only read. */
+export function readActiveOrgCookie(): string | null {
+  if (typeof document === 'undefined') return null
+  const m = document.cookie.match(/(?:^|;\s*)gt_active_org_id=([^;]+)/)
+  return m ? decodeURIComponent(m[1]) : null
+}
+
+export function writeActiveOrgCookie(orgId: string): void {
+  if (typeof document === 'undefined') return
+  document.cookie = `gt_active_org_id=${encodeURIComponent(orgId)}; path=/; max-age=31536000; samesite=lax`
+}
+
 export async function getOrganisationByOwner(userId: string): Promise<Organisation | null> {
   const supabase = createClient()
+  // Load all of the owner's orgs (some users have more than one) and honour
+  // the active-org selection; fall back to the oldest. Previously this took
+  // limit(1) on the oldest, which silently ignored the switcher.
   const { data, error } = await supabase
     .from('organisations')
     .select('*')
     .eq('owner_id', userId)
     .order('created_at', { ascending: true })
-    .limit(1)
 
   if (error || !data?.length) return null
+  const activeId = readActiveOrgCookie()
+  if (activeId) {
+    const match = data.find(o => o.id === activeId)
+    if (match) return match
+  }
   return data[0]
 }
 

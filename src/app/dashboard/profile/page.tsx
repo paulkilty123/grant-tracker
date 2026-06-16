@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { getOrganisationsByOwner, updateOrganisation, deleteOrganisation } from '@/lib/organisations'
+import { getOrganisationsByOwner, updateOrganisation, deleteOrganisation, writeActiveOrgCookie } from '@/lib/organisations'
 import { Pencil, Plus, ChevronDown, RotateCcw, Globe, Check, X, Star, Trash2, AlertTriangle } from 'lucide-react'
 import type { Organisation, LegalStructure, OrgStage, ImpactSector, FundingType, FunderType, BeneficiaryGroup } from '@/types'
 import { useIsMobile } from '@/hooks/useIsMobile'
@@ -1986,8 +1986,10 @@ export default function ProfilePage() {
     const activeId = keepActiveId ?? stored ?? allOrgs[0]?.id ?? null
     if (activeId && allOrgs.find(o => o.id === activeId)) {
       setActiveOrgId(activeId)
+      writeActiveOrgCookie(activeId) // sync the server-readable cookie
     } else if (allOrgs[0]) {
       setActiveOrgId(allOrgs[0].id)
+      writeActiveOrgCookie(allOrgs[0].id)
     }
   }
 
@@ -1998,6 +2000,7 @@ export default function ProfilePage() {
   function switchOrg(id: string) {
     setActiveOrgId(id)
     if (typeof window !== 'undefined') localStorage.setItem('gt_active_org_id', id)
+    writeActiveOrgCookie(id) // so the dashboard + other server surfaces follow
     setEditingCard(null)
   }
 
