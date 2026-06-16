@@ -218,12 +218,16 @@ export default function ProjectsPage() {
                   <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 15.5, color: T.textPrimary }}>
                     {p.name}
                   </span>
-                  <span style={{
-                    fontFamily: UI, fontWeight: 600, fontSize: 11, letterSpacing: '0.03em',
-                    background: type.bg, color: type.color, padding: '3px 10px', borderRadius: 999,
-                  }}>
-                    {type.label}
-                  </span>
+                  {/* Type badge only when it adds signal: redundant in a
+                      "Projects" section for the default 'project'. */}
+                  {p.type_label !== 'project' && (
+                    <span style={{
+                      fontFamily: UI, fontWeight: 600, fontSize: 11, letterSpacing: '0.03em',
+                      background: type.bg, color: type.color, padding: '3px 10px', borderRadius: 999,
+                    }}>
+                      {type.label}
+                    </span>
+                  )}
                   {p.status !== 'active' && (
                     <span style={{
                       fontFamily: UI, fontWeight: 600, fontSize: 11, letterSpacing: '0.03em',
@@ -236,6 +240,7 @@ export default function ProjectsPage() {
                 <span style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary }}>
                   {readyToMatch(p) ? 'Ready to match' : 'Needs a few more details to match'}
                   {p.budget_amount ? ` · £${p.budget_amount.toLocaleString('en-GB')}` : ''}
+                  {p.created_at ? ` · ${new Date(p.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}
                 </span>
               </div>
               <div style={{ width: 132, flexShrink: 0 }}>
