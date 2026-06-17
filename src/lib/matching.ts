@@ -1659,3 +1659,21 @@ export function scoreColour(score: number): { bg: string; text: string; bar: str
   if (score >= 45) return { bg: 'bg-warm',          text: 'text-mid',             bar: 'bg-mid'          }
   return               { bg: 'bg-coral-pale',         text: 'text-coral-saturated', bar: 'bg-coral-mid'  }
 }
+
+// ── Canonical match-tier colours (hex) — single source of truth for tier
+// BADGES/dots that render with inline styles (project funder-fit list,
+// dashboard quality legend). scoreColour above is the Tailwind-class sibling
+// for Find Funding's bars; both are the same green family, kept in step here.
+export const MATCH_TIER = {
+  strong:  { label: 'Strong',  bg: '#C0DD97', color: '#173404', dot: '#639922' },
+  good:    { label: 'Good',    bg: '#EAF3DE', color: '#3B6D11', dot: '#8ECB3C' },
+  partial: { label: 'Partial', bg: '#F5F1E8', color: '#5F5E5A', dot: '#C0DD97' },
+} as const
+
+/** Score -> tier colours. Thresholds match the project funder-fit list
+ *  (strong >=80, good >=70, else partial). */
+export function matchTier(score: number): { label: string; bg: string; color: string; dot: string } {
+  if (score >= 80) return MATCH_TIER.strong
+  if (score >= 70) return MATCH_TIER.good
+  return MATCH_TIER.partial
+}

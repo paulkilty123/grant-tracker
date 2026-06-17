@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getDeadlineAlerts, formatCurrency } from '@/lib/utils'
 import type { PipelineItem, Organisation } from '@/types'
 import { Award, TrendingUp, Users, Rocket, GraduationCap, Gift, ArrowRight, CalendarDays, Check, Sparkles, Bookmark, ListChecks, UserPlus, FilePenLine, Lightbulb, CircleCheck } from 'lucide-react'
-import { computeMatchScore } from '@/lib/matching'
+import { computeMatchScore, MATCH_TIER } from '@/lib/matching'
 import { normaliseScrapedGrant } from '@/lib/grants-normalise'
 import { getBuilderUser } from '@/lib/builder/access'
 
@@ -100,7 +100,10 @@ export default async function DashboardPage() {
   const CANONICAL_TYPES = new Set(['grant', 'programme', 'investment', 'in_kind'])
   const today = new Date().toISOString().split('T')[0]
   type ScoredGrant = { grant: ReturnType<typeof normaliseScrapedGrant>; score: number; lastSeenAt: string | null }
+  // UK-wide / nation-wide scopes always pass the location check.
+  const BROAD_LOCATION = new Set(['uk', 'uk-wide', 'england', 'nationwide', 'national', 'uk wide', 'all uk'])
   let scoredAll: ScoredGrant[] = []
+  let grantPoolRaw: Record<string, unknown>[] = []  // reused for per-project "funders fit"
   if (typedOrg) {
     const { data: grantRows } = await supabase
       .from('grants_with_funder')
@@ -111,6 +114,7 @@ export default async function DashboardPage() {
       .order('last_seen_at', { ascending: false })
       .limit(1000)
 
+    grantPoolRaw = (grantRows ?? []) as Record<string, unknown>[]
     if (grantRows && grantRows.length > 0) {
       const orgStructure = typedOrg.legal_structure
       // Mirror Find Funding's profile prefill (search/page.tsx:1336-1340):
@@ -120,10 +124,6 @@ export default async function DashboardPage() {
       // because sector + location filters weren't being applied here).
       const orgSectors = new Set((typedOrg.impact_sectors ?? []) as string[])
       const orgLocation = (typedOrg.primary_location ?? '').toLowerCase().trim()
-      // UK-wide / nation-wide scopes always pass the location check (a
-      // London charity should still see UK-wide funders). Mirrors
-      // search/page.tsx:2113.
-      const BROAD_LOCATION = new Set(['uk', 'uk-wide', 'england', 'nationwide', 'national', 'uk wide', 'all uk'])
 
       scoredAll = grantRows
         .map(row => {
@@ -169,7 +169,7 @@ export default async function DashboardPage() {
   // projects. Fully gated: non-builder users get the byte-identical dashboard.
   const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
   type WorkApp = { id: string; title: string; funder: string | null; answered: number; total: number; pill: { label: string; coral: boolean } }
-  type WorkProject = { id: string; name: string; ready: boolean; budget: number | null }
+  type WorkProject = { id: string; name: string; ready: boolean; budget: number | null; fitCount: number | null }
   let builderAllowed = false
   let workApps: WorkApp[] = []
   let workProjects: WorkProject[] = []
@@ -214,12 +214,37 @@ export default async function DashboardPage() {
         .select('id, name, sectors, budget_amount, what_it_will_do')
         .eq('org_id', typedOrg.id)
         .order('updated_at', { ascending: false })
-      workProjects = ((projs ?? []) as { id: string; name: string; sectors: string[] | null; budget_amount: number | null; what_it_will_do: string | null }[]).map(p => ({
-        id: p.id,
-        name: p.name,
-        ready: !!p.what_it_will_do?.trim() && (p.sectors?.length ?? 0) > 0 && (p.budget_amount ?? 0) > 0,
-        budget: p.budget_amount ?? null,
-      }))
+      const projList = (projs ?? []) as { id: string; name: string; sectors: string[] | null; budget_amount: number | null; what_it_will_do: string | null }[]
+      // Normalise the already-fetched pool once; per-project "funders fit"
+      // filters cheaply then scores only the survivors. Computed for the
+      // displayed rows only (first 4) to keep the home page fast.
+      const poolNorm = grantPoolRaw.map(r => normaliseScrapedGrant(r))
+      const orgStructure = typedOrg.legal_structure
+      const orgLoc = (typedOrg.primary_location ?? '').toLowerCase().trim()
+      workProjects = projList.map((p, idx) => {
+        const ready = !!p.what_it_will_do?.trim() && (p.sectors?.length ?? 0) > 0 && (p.budget_amount ?? 0) > 0
+        let fitCount: number | null = null
+        if (idx < 4 && ready && typedOrg) {
+          const projectSectors = new Set(p.sectors ?? [])
+          const synthetic = { ...typedOrg, impact_sectors: p.sectors ?? [], min_grant_target: typedOrg.min_grant_target ?? (p.budget_amount ? Math.round(p.budget_amount * 0.1) : null) } as Organisation
+          let n = 0
+          for (const g of poolNorm) {
+            const ge = g as ReturnType<typeof normaliseScrapedGrant> & { impactSectors?: string[]; geoScope?: string[] }
+            if (!CANONICAL_TYPES.has((g.fundingType ?? 'grant') as string)) continue
+            const es = g.eligibleStructures
+            if (orgStructure && es && es.length > 0 && !es.includes(orgStructure)) continue
+            if (orgLoc && ge.geoScope && ge.geoScope.length > 0) {
+              if (!ge.geoScope.some(s => { const sl = s.toLowerCase(); return BROAD_LOCATION.has(sl) || sl.includes(orgLoc) || orgLoc.includes(sl) })) continue
+            }
+            if (projectSectors.size > 0 && ge.impactSectors && ge.impactSectors.length > 0) {
+              if (!ge.impactSectors.some(s => projectSectors.has(s))) continue
+            }
+            if (computeMatchScore(g, synthetic).score >= 55) n++
+          }
+          fitCount = n
+        }
+        return { id: p.id, name: p.name, ready, budget: p.budget_amount ?? null, fitCount }
+      })
     }
   }
   const projectsReady = workProjects.filter(p => p.ready).length
@@ -736,12 +761,13 @@ export default async function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-8">
           {/* Continue writing */}
           <div className="card rounded-xl p-6">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
               <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 18, fontWeight: 600, color: '#2C2C2A' }}>Continue writing</span>
               <a href="/dashboard/applications" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: '#3B6D11', textDecoration: 'none' }}>
                 View all{workApps.length > 4 ? ` ${workApps.length}` : ''} →
               </a>
             </div>
+            <p className="text-mid" style={{ fontSize: 12.5, marginBottom: 12 }}>The answers you&apos;re drafting.</p>
             {workApps.length === 0 ? (
               <p className="text-mid" style={{ fontSize: 13.5, lineHeight: 1.55 }}>No applications yet. Pick a funder from a project to start one.</p>
             ) : workApps.slice(0, 4).map((a, i, arr) => {
@@ -782,6 +808,7 @@ export default async function DashboardPage() {
                     {p.ready
                       ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#3B6D11', fontWeight: 500 }}><CircleCheck size={13} /> Ready to match</span>
                       : <span className="text-mid">Needs a few more details</span>}
+                    {p.fitCount != null && p.fitCount > 0 ? <span className="text-mid">· {p.fitCount} funders fit</span> : null}
                     {p.budget ? <span className="text-mid">· £{p.budget.toLocaleString('en-GB')}</span> : null}
                   </div>
                 </div>
@@ -809,9 +836,9 @@ export default async function DashboardPage() {
         // weakness. Weak (<50) is excluded from the breakdown but counted in
         // the wider 345 total accessible via "Browse all".
         const qualityCols = [
-          { key: 'strong',  label: 'Strong',          count: qualityCounts.strong,  colour: '#639922' },
-          { key: 'good',    label: 'Good',            count: qualityCounts.good,    colour: '#8ECB3C' },
-          { key: 'partial', label: 'Worth exploring', count: qualityCounts.partial, colour: '#C0DD97' },
+          { key: 'strong',  label: 'Strong',          count: qualityCounts.strong,  colour: MATCH_TIER.strong.dot },
+          { key: 'good',    label: 'Good',            count: qualityCounts.good,    colour: MATCH_TIER.good.dot },
+          { key: 'partial', label: 'Worth exploring', count: qualityCounts.partial, colour: MATCH_TIER.partial.dot },
         ]
         const TYPE_BAR: Record<string, { label: string; colour: string; pillBg: string; pillFg: string }> = {
           grant:           { label: 'Grants',      colour: '#639922', pillBg: '#F1F7E4', pillFg: '#3B6D11' },
@@ -1022,10 +1049,11 @@ export default async function DashboardPage() {
             Won standardised to currency (with "—" fallback when value=0)
             so all four active tiles use the same metric format. */}
         <div className="card rounded-xl">
-          <div className="flex items-center justify-between mb-5">
+          <div className={`flex items-center justify-between ${builderAllowed ? 'mb-1' : 'mb-5'}`}>
             <h3 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Pipeline</h3>
             <a href="/dashboard/pipeline" className="text-xs font-semibold hover:underline" style={{ color: '#3B6D11', fontFamily: 'var(--font-space-grotesk)' }}>View pipeline →</a>
           </div>
+          {builderAllowed && <p className="text-mid mb-5" style={{ fontSize: 12.5 }}>Where each opportunity sits by stage and value, not the answer-writing.</p>}
 
           {(() => {
             const activeStages = stageValues.filter(s => s.id !== 'declined')

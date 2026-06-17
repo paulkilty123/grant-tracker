@@ -13,7 +13,7 @@ import { ArrowLeft, Check, ChevronDown, ChevronRight, ChevronUp, ExternalLink, R
 import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { emitClientEvent } from '@/lib/events/client'
-import { computeMatchScore } from '@/lib/matching'
+import { computeMatchScore, matchTier } from '@/lib/matching'
 import { normaliseScrapedGrant, type EnrichedGrant } from '@/lib/grants-normalise'
 import { IMPACT_SECTOR_OPTIONS, BENEFICIARY_OPTIONS } from '@/lib/tag-suggestions'
 import { T, UI, BODY, inputStyle } from '@/components/builder/tokens'
@@ -60,10 +60,11 @@ const FUNDING_TYPE_STYLE: Record<string, { dot: string }> = {
 const CANONICAL_TYPES = new Set(['grant', 'programme', 'investment', 'in_kind'])
 const BROAD_LOCATION = new Set(['uk', 'uk-wide', 'england', 'nationwide', 'national', 'uk wide', 'all uk'])
 
+// Tier colours come from the shared canonical helper (matching.ts) so the
+// project funder-fit list, the dashboard legend and Find Funding stay in step.
 function tierLabel(score: number): { label: string; bg: string; color: string } {
-  if (score >= 80) return { label: 'Strong', bg: '#C0DD97', color: T.greenDeep }
-  if (score >= 70) return { label: 'Good',   bg: T.paleGreen2, color: T.sage }
-  return { label: 'Partial', bg: T.cream, color: T.textSecondary }
+  const t = matchTier(score)
+  return { label: t.label, bg: t.bg, color: t.color }
 }
 
 // "Should I apply?" panel — the assessment view behind each match row.
