@@ -260,20 +260,35 @@ from the mapping table below.
 
 HARD RULES — apply before consulting the mapping table:
 
-1. If the source says "registered" (e.g. "registered charities", "registered
+1. EXPLICIT-MENTION INCLUSION (overrides the tight bias). If the source
+   explicitly names a structure type as ELIGIBLE, you MUST include its mapped
+   values — even when other types are named alongside, and even if "registered
+   charities" is named first. Naming charities first NEVER cancels an explicit
+   mention of another type.
+   - "CICs" / "Community Interest Companies" named eligible → MUST include
+     "cic_guarantee" AND "cic_shares".
+   - "social enterprises" named eligible → MUST include "cic_guarantee",
+     "cic_shares", "ltd_guarantee".
+   - "co-operatives" / "community benefit societies" / "CBS" named eligible →
+     MUST include "cooperative".
+   This rule does NOT apply when the type is named only to be EXCLUDED
+   (e.g. "CICs cannot apply", "registered charities only — not CICs"): then
+   omit it as normal. The trigger is explicit eligibility, never silence.
+
+2. If the source says "registered" (e.g. "registered charities", "registered
    organisations") and does NOT also say one of {"or unregistered",
    "constituted or unconstituted", "any group", "all organisations",
    "open to all"}, the result MUST NOT include "unincorporated" or
    "not_registered".
 
-2. If the source restricts to charity status ("registered charities only",
+3. If the source restricts to charity status ("registered charities only",
    "charity status required", "must have a charity number"), do NOT include
    ltd_shares, llp, cic_shares, sole_trader, not_registered, or unincorporated.
 
-3. The empty array [] is the correct answer when the source does not name
+4. The empty array [] is the correct answer when the source does not name
    structures. Do NOT guess from funder type or sector.
 
-4. Cap at 5 structures unless the source EXPLICITLY indicates broader scope
+5. Cap at 5 structures unless the source EXPLICITLY indicates broader scope
    via wording like "any organisation", "any incorporated organisation",
    "all legal structures", or by listing ≥5 distinct categories itself.
 
@@ -283,6 +298,8 @@ Common mappings (apply only after the hard rules above):
 "registered charities and community organisations"  → ["registered_charity","cio","ltd_guarantee"]
 "registered charities and social enterprises"       → ["registered_charity","cio","cic_guarantee","ltd_guarantee"]
 "CICs / Community Interest Companies"               → ["cic_guarantee", "cic_shares"]
+"registered charities and CICs" / "charities, CICs and community groups"
+                                                    → ["registered_charity","cio","cic_guarantee","cic_shares"] (add "unincorporated" only if "community groups" or "constituted groups" is explicit)
 "social enterprises (broad / open to CICs and Ltds)" → ["cic_guarantee","cic_shares","ltd_guarantee","cooperative"]
 "any incorporated organisation"                     → ["cic_guarantee","cic_shares","cio","registered_charity","ltd_guarantee","ltd_shares","llp","cooperative"]
 "Ltd companies / limited companies"                 → ["ltd_guarantee","ltd_shares"]
