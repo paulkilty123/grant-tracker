@@ -218,16 +218,8 @@ export default function ProjectsPage() {
                   <span style={{ fontFamily: UI, fontWeight: 600, fontSize: 15.5, color: T.textPrimary }}>
                     {p.name}
                   </span>
-                  {/* Type badge only when it adds signal: redundant in a
-                      "Projects" section for the default 'project'. */}
-                  {p.type_label !== 'project' && (
-                    <span style={{
-                      fontFamily: UI, fontWeight: 600, fontSize: 11, letterSpacing: '0.03em',
-                      background: type.bg, color: type.color, padding: '3px 10px', borderRadius: 999,
-                    }}>
-                      {type.label}
-                    </span>
-                  )}
+                  {/* No type badge on list rows — it's AI-guessed and redundant
+                      inside "Projects". type_label stays in data + detail page. */}
                   {p.status !== 'active' && (
                     <span style={{
                       fontFamily: UI, fontWeight: 600, fontSize: 11, letterSpacing: '0.03em',
