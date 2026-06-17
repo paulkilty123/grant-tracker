@@ -17,7 +17,6 @@ import {
   ClipboardList,
   Menu,
   X,
-  Building2,
   Users,
   MessageSquare,
   LogOut,
@@ -79,8 +78,6 @@ const ADMIN_NAV = [
   { href: '/dashboard/admin/quality',      label: 'Tagging Quality',     Icon: BarChart3     },
   { href: '/dashboard/admin/cohort-match-audit', label: 'Cohort Matches', Icon: User          },
   { href: '/dashboard/admin/users',        label: 'Users',               Icon: Users         },
-  { href: '/dashboard/admin/corporate',    label: 'Partner Manager',     Icon: Building2     },
-  { href: '/dashboard/admin/application-review', label: 'Application Review', Icon: FilePenLine },
 ]
 
 export default function Sidebar({ org, userEmail }: Props) {
@@ -230,47 +227,53 @@ export default function Sidebar({ org, userEmail }: Props) {
         </button>
       </div>
 
-      {/* Dashboard */}
-      <div className="mt-1">
-        {navLink('/dashboard', 'Dashboard', LayoutDashboard)}
+      {/* Scrollable nav region — keeps the footer (account / sign-out card)
+          pinned and always visible even when the admin nav is long. flex-1
+          fills the space (footer to the bottom) and scrolls internally when the
+          item list overflows; min-h-0 is required for the overflow to engage. */}
+      <div
+        className="flex-1 min-h-0 overflow-y-auto"
+        style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(245,241,232,0.18) transparent' }}
+      >
+        {/* Dashboard */}
+        <div className="mt-1">
+          {navLink('/dashboard', 'Dashboard', LayoutDashboard)}
+        </div>
+
+        {divider}
+
+        {/* Main nav */}
+        <nav className="flex flex-col gap-0.5">
+          {MAIN_NAV.map(item => (
+            <React.Fragment key={item.href}>
+              {navLink(
+                item.href,
+                item.label,
+                item.Icon,
+                item.href === '/dashboard/profile' ? profileBadge : undefined,
+              )}
+              {/* Projects + Applications (builder) sit after Pipeline — cohort only */}
+              {item.href === '/dashboard/pipeline' && builderAllowed && (
+                <>
+                  {navLink('/dashboard/projects', 'Projects', Lightbulb)}
+                  {navLink('/dashboard/applications', 'Applications', FilePenLine)}
+                </>
+              )}
+            </React.Fragment>
+          ))}
+        </nav>
+
+        {/* Admin section */}
+        {userEmail === ADMIN_EMAIL && (
+          <>
+            {divider}
+            <nav className="flex flex-col gap-0.5">
+              {ADMIN_NAV.map(item => navLink(item.href, item.label, item.Icon))}
+              {navLink('/dashboard/admin/feedback', 'Match Feedback', MessageSquare)}
+            </nav>
+          </>
+        )}
       </div>
-
-      {divider}
-
-      {/* Main nav */}
-      <nav className="flex flex-col gap-0.5">
-        {MAIN_NAV.map(item => (
-          <React.Fragment key={item.href}>
-            {navLink(
-              item.href,
-              item.label,
-              item.Icon,
-              item.href === '/dashboard/profile' ? profileBadge : undefined,
-            )}
-            {/* Projects + Applications (builder) sit after Pipeline — cohort only */}
-            {item.href === '/dashboard/pipeline' && builderAllowed && (
-              <>
-                {navLink('/dashboard/projects', 'Projects', Lightbulb)}
-                {navLink('/dashboard/applications', 'Applications', FilePenLine)}
-              </>
-            )}
-          </React.Fragment>
-        ))}
-      </nav>
-
-      {/* Admin section */}
-      {userEmail === ADMIN_EMAIL && (
-        <>
-          {divider}
-          <nav className="flex flex-col gap-0.5">
-            {ADMIN_NAV.map(item => navLink(item.href, item.label, item.Icon))}
-            {navLink('/dashboard/admin/feedback', 'Match Feedback', MessageSquare)}
-          </nav>
-        </>
-      )}
-
-      {/* Spacer */}
-      <div className="flex-1" />
 
       {divider}
 
