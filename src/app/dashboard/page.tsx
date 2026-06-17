@@ -762,7 +762,7 @@ export default async function DashboardPage() {
           {/* Continue writing */}
           <div className="card rounded-xl p-6">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
-              <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 18, fontWeight: 600, color: '#2C2C2A' }}>Continue writing</span>
+              <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 700, color: '#2C2C2A' }}>Continue writing</span>
               <a href="/dashboard/applications" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: '#3B6D11', textDecoration: 'none' }}>
                 View all{workApps.length > 4 ? ` ${workApps.length}` : ''} →
               </a>
@@ -794,7 +794,7 @@ export default async function DashboardPage() {
           {/* Your projects */}
           <div className="card rounded-xl p-6">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-              <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 18, fontWeight: 600, color: '#2C2C2A' }}>Your projects</span>
+              <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 700, color: '#2C2C2A' }}>Your projects</span>
               <a href="/dashboard/projects" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: '#3B6D11', textDecoration: 'none' }}>View all →</a>
             </div>
             {workProjects.length === 0 ? (
