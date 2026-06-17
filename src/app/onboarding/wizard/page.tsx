@@ -1067,7 +1067,7 @@ export default function OnboardingWizardPage() {
           matchCount={revealCount}
           topMatches={revealMatches}
           hasMission={!!state.mission.trim()}
-          onExplore={() => router.push('/dashboard/profile')}
+          onExplore={() => router.push('/dashboard/search')}
           onAddMission={() => router.push('/dashboard/profile?section=mission')}
         />
       )}
