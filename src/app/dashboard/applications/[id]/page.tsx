@@ -11,7 +11,7 @@ import Link from 'next/link'
 import {
   ArrowLeft, Compass, AlertTriangle, CheckCircle2, ChevronDown,
   BookmarkPlus, Check, X as XIcon, FolderKanban, Loader2, PenLine, FilePenLine, FileText, RefreshCw,
-  ArrowDownCircle, Eye,
+  ArrowDownCircle, Eye, Lightbulb,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { createPipelineItem, updatePipelineStage } from '@/lib/pipeline'
@@ -985,13 +985,27 @@ export default function ApplicationWorkspacePage() {
             {app.grant_name || app.funder_name || 'Application'}
           </h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 6 }}>
-            {linkedProject && (
+            {linkedProject ? (
               <Link href={`/dashboard/projects/${linkedProject.id}`} style={{
                 fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: T.sage, background: T.paleGreen,
                 padding: '3px 10px', borderRadius: 999, textDecoration: 'none',
                 display: 'inline-flex', alignItems: 'center', gap: 4,
               }}>
                 Part of: {linkedProject.name}
+              </Link>
+            ) : (
+              // Standalone application: gentle nudge to define a reusable project
+              // so the same work can match more funders (the duplicate-app risk).
+              <Link
+                href="/dashboard/projects/new"
+                title="Define this as a project once and match it to more funders"
+                style={{
+                  fontFamily: UI, fontWeight: 600, fontSize: 11.5, color: T.sage, background: 'transparent',
+                  border: `1px dashed ${T.borderStrong}`, padding: '3px 10px', borderRadius: 999,
+                  textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4,
+                }}
+              >
+                <Lightbulb size={12} /> Save as a project
               </Link>
             )}
             {app.funder_name && app.grant_name && (
