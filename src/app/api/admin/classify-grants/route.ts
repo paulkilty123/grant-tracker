@@ -15,7 +15,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
-import { classifyBatch, validate, type GrantInput } from '@/lib/classify'
+import { classifyBatch, validate, ensureExplicitStructures, type GrantInput } from '@/lib/classify'
 import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
 import { mergeGrantUpdate } from '@/lib/grant-merge'
 
@@ -69,7 +69,12 @@ async function classifyOnce(supabase: SupabaseClient<any>, limit: number): Promi
           funding_type:   r.funding_type,
           niche_tags:     r.niche_tags,
         }
-        if (r.eligible_structures.length > 0)   patch.eligible_structures = r.eligible_structures
+        // Deterministic CIC/structure guard — enforces explicit-eligibility the
+        // model under-applies. Source = who_can_apply + description.
+        const fbLoop = g.funder_brief as Record<string, unknown> | null
+        const srcLoop = `${typeof fbLoop?.who_can_apply === 'string' ? fbLoop.who_can_apply : ''} ${g.description ?? ''}`
+        const structsLoop = ensureExplicitStructures(r.eligible_structures, srcLoop)
+        if (structsLoop.length > 0)             patch.eligible_structures = structsLoop
         if (r.target_beneficiaries.length > 0)  patch.target_beneficiaries = r.target_beneficiaries
 
         // v3 — per-field citations stamped into field_provenance by the merger.
@@ -338,21 +343,25 @@ export async function POST(req: NextRequest) {
             funding_type:   r.funding_type,
             niche_tags:     r.niche_tags,
           }
-          // Explicit ID mode is a re-classify pass — the caller wants the new
-          // value to take precedence even when it's []. Normal mode preserves
-          // existing values when Claude returns no structures (treat empty as
-          // "no signal" rather than "I confirm none").
-          //
-          // EXCEPTION: the automated re-enrich chains (reenrich-stale,
-          // process-pipeline-queue) call with grant_ids but should NOT force-write
-          // []. The classifier returns [] for most funders (it only emits explicit
-          // structures, never guesses from funder type), so honouring empty in ID
-          // mode silently wiped eligible_structures catalogue-wide on every
-          // refresh. Those chains pass preserve_empty:true so [] is "no signal".
-          const honourEmpty = grantIds.length > 0 && !preserveEmpty
-          if (honourEmpty || r.eligible_structures.length > 0) {
-            patch.eligible_structures = r.eligible_structures
+          // Deterministic CIC/structure guard — enforces explicit-eligibility
+          // the model under-applies (source = who_can_apply + description).
+          const fbChunk = g.funder_brief as Record<string, unknown> | null
+          const srcChunk = `${typeof fbChunk?.who_can_apply === 'string' ? fbChunk.who_can_apply : ''} ${g.description ?? ''}`
+          const structsChunk = ensureExplicitStructures(r.eligible_structures, srcChunk)
+
+          // eligible_structures: NEVER write [] — re-classify must not wipe
+          // structures. Haiku is conservative on this field and returns [] for
+          // many funders; honouring empty in ID mode silently wiped structures
+          // (incl. catalogue-wide on automated refreshes, and 3 rows in the
+          // 2026-06-17 smoke test). Clearing structures is a manual admin action,
+          // never an automated classify side-effect.
+          if (structsChunk.length > 0) {
+            patch.eligible_structures = structsChunk
           }
+          // target_beneficiaries: Haiku returns these reliably, so honour-empty
+          // in explicit-ID mode is retained (a re-classify can legitimately
+          // correct them); automated chains pass preserve_empty to opt out.
+          const honourEmpty = grantIds.length > 0 && !preserveEmpty
           if (honourEmpty || r.target_beneficiaries.length > 0) {
             patch.target_beneficiaries = r.target_beneficiaries
           }

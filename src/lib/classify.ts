@@ -539,6 +539,44 @@ export function validate(raw: ClassificationResult) {
   return { impact_sectors, funding_type, eligible_structures, target_beneficiaries, niche_tags, _citations }
 }
 
+/**
+ * Deterministic enforcement of the explicit-eligibility rule the prompt states
+ * but Haiku applies unreliably — it is conservative on structures and silently
+ * drops CICs even when the source names them (see the classify-grants route
+ * history + the 2026-06-17 CIC under-tagging fix). When the source text
+ * POSITIVELY names a structure type as eligible AND carries no exclusion or
+ * uncertainty cue, ensure its values are present.
+ *
+ * ADD-only — never removes a structure the model returned. Conservative: any
+ * negative/uncertainty cue ("charities only", "CICs cannot apply", "likely",
+ * "should verify", "no information") suppresses the whole guard, so a false
+ * negative (missing a genuine CIC) is preferred over a false positive
+ * (surfacing a grant to a CIC that can't actually apply).
+ */
+export function ensureExplicitStructures(
+  structures: string[],
+  sourceText: string | null | undefined,
+): string[] {
+  const text = (sourceText ?? '').toLowerCase()
+  if (!text) return structures
+
+  // Any exclusion or hedge near structure eligibility → leave the model's call
+  // untouched. Mirrors the false-positive phrasings caught in manual review.
+  const negativeCue = /cannot apply|can.?t apply|not eligible|are excluded|(?:not|except|excluding|no)\s+(?:companies?\s+or\s+)?cics?\b|charit(?:y|ies)\s+only|only\s+registered\s+charit|should\s+(?:verify|check)|verify[^.]*eligib|no information|not\s+(?:detailed|specified|stated|clear)|\bunclear\b|\blikely\b|\binfer|though specific/
+  if (negativeCue.test(text)) return structures
+
+  const out = [...structures]
+  const add = (s: string) => { if (VALID_STRUCTURES.has(s) && !out.includes(s)) out.push(s) }
+
+  if (/\bcics?\b|community interest comp|social enterprise/.test(text)) { add('cic_guarantee'); add('cic_shares') }
+  // Ensure charity types too when charities are explicitly named — guards the
+  // edge where the model returns [] for a "charities and CICs" grant, so we
+  // don't end up CIC-only and wrongly exclude charities.
+  if (/\bcharit/.test(text)) { add('registered_charity'); add('cio') }
+
+  return out
+}
+
 // ── Classify up to `limit` unclassified active grants ─────────────────────────
 // Returns { classified, failed }. Safe to call with limit=0 (no-op).
 export async function classifyUnclassified(
