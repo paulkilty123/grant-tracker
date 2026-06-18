@@ -103,6 +103,45 @@ function detectStaleDates(
   return stale
 }
 
+// ── Numeric-grounding guard (amounts) ─────────────────────────────────────────
+// Numbers are uniquely verifiable: a grant amount is either present in the
+// source or it isn't (unlike a sector/structure, which is a judgement call). The
+// enricher occasionally states a money figure with no source basis — the live
+// failure mode from the 18 Jun review was a source reading "up to £20,000/year,
+// max £40,000" surfacing as "£150,000 / £1 million". This flags any £-figure in
+// typical_award that is NOT grounded in the field's own (verbatim) citation
+// snippet or the original scrape, mirroring the stale-date detector: it lowers
+// the field's citation confidence and records _ungrounded_amounts for review.
+// ADVISORY ONLY — never rewrites the value. A ±10% / ±£1,000 tolerance absorbs
+// honest rounding ("around £300k" vs source "£319k"); fabrication falls outside.
+function extractMoneyAmounts(text: string): number[] {
+  if (!text) return []
+  const out: number[] = []
+  const re = /£\s?(\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?)\s?(k|m|bn|million|billion)?/gi
+  let m: RegExpExecArray | null
+  while ((m = re.exec(text))) {
+    let n = parseFloat(m[1].replace(/,/g, ''))
+    const suffix = (m[2] ?? '').toLowerCase()
+    if (suffix === 'k') n *= 1_000
+    else if (suffix === 'm' || suffix === 'million') n *= 1_000_000
+    else if (suffix === 'bn' || suffix === 'billion') n *= 1_000_000_000
+    if (Number.isFinite(n) && n > 0) out.push(Math.round(n))
+  }
+  return out
+}
+
+// Money figures stated in `value` with no match (within ±10% or ±£1,000) in the
+// grounding text. Non-empty → the field asserts amounts the source doesn't.
+function detectUngroundedAmounts(value: string, groundingText: string): number[] {
+  const stated = extractMoneyAmounts(value)
+  if (stated.length === 0) return []
+  const grounded = extractMoneyAmounts(groundingText)
+  return stated.filter(a => {
+    const tol = Math.max(a * 0.1, 1000)
+    return !grounded.some(g => Math.abs(g - a) <= tol)
+  })
+}
+
 // Fetch page text with realistic browser headers, strip HTML tags
 async function fetchPageText(url: string): Promise<string> {
   const controller = new AbortController()
@@ -453,6 +492,31 @@ NOTE: _deadline_cycle and its _citations entry are ONLY present when a recurring
   if (staleFields.length > 0) {
     brief._stale_dates = staleFields
     console.warn('[enrich-grant] stale-date detector flagged', grantId, staleFields)
+  }
+
+  // ── Numeric-grounding guard (amounts) ────────────────────────────────────
+  // Flag money figures in typical_award the source doesn't support, so the
+  // reviewer's eye lands on the highest-risk field. Grounding = the field's own
+  // verbatim citation snippet + the original scrape (description / eligibility).
+  // Deliberately excludes who_can_apply/exclusions so an org-INCOME band can't
+  // launder a fabricated grant SIZE as "grounded".
+  if (typeof brief.typical_award === 'string') {
+    const amountGrounding = [
+      briefCitations.typical_award?.snippet ?? '',
+      typeof grant.description === 'string' ? grant.description : '',
+      Array.isArray(grant.eligibility_criteria) ? grant.eligibility_criteria.join('  ')
+        : typeof grant.eligibility_criteria === 'string' ? grant.eligibility_criteria : '',
+    ].join('  ')
+    const ungrounded = detectUngroundedAmounts(brief.typical_award, amountGrounding)
+    if (ungrounded.length > 0) {
+      brief._ungrounded_amounts = ungrounded
+      const ta = briefCitations.typical_award
+      if (ta) {
+        ta.confidence = 'low'
+        ta.reason = `ungrounded_amount: ${ungrounded.map(a => '£' + a.toLocaleString()).join(', ')}`
+      }
+      console.warn('[enrich-grant] ungrounded-amount detector flagged', grantId, ungrounded)
+    }
   }
 
   const briefToSave: Record<string, unknown> = { ...brief }
