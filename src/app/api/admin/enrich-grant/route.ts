@@ -117,7 +117,9 @@ function detectStaleDates(
 function extractMoneyAmounts(text: string): number[] {
   if (!text) return []
   const out: number[] = []
-  const re = /£\s?(\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?)\s?(k|m|bn|million|billion)?/gi
+  // (?![a-z]) stops a k/m/bn suffix matching the first letter of a following
+  // word — e.g. "£4,000 Match" must read £4,000, not £4,000m (£4bn).
+  const re = /£\s?(\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?)\s?(k|m|bn|million|billion)?(?![a-z])/gi
   let m: RegExpExecArray | null
   while ((m = re.exec(text))) {
     let n = parseFloat(m[1].replace(/,/g, ''))
@@ -399,7 +401,7 @@ Return ONLY valid JSON in this exact shape:
   "priorities": "Current funding priorities or themes they care about most",
   "strong_application": "What makes a strong or successful application to this funder",
   "exclusions": "What they explicitly will NOT fund or who cannot apply",
-  "typical_award": "Typical grant size or range",
+  "typical_award": "The amount a SINGLE applicant can receive for THIS grant (per-grant size or range). Do NOT substitute: (a) the applicant's INCOME-ELIGIBILITY threshold — e.g. 'open to orgs with income £150k–£1m' is who can apply, NOT the award size; (b) the funder's TOTAL annual distribution, cumulative giving, or overall fund pot — e.g. 'distributes £1m a year across all grants' / 'over £2.7m since 2005' is context, NOT the grant size; (c) a DIFFERENT product's amounts (a separate loan/fund). State the per-grant figure only. If the source gives no per-grant size (only a total pot or income band), say so explicitly rather than substituting that number.",
   "decision_timeline": "How long decisions take, when trustees meet, or application windows. ONLY include dates relevant to APPLYING — drop project-completion dates, end-of-grant reporting deadlines, and other post-award milestones unless the source uses them as the application deadline. Bias TIGHT.",
   "open_status": "EXACTLY ONE OF: 'open' (currently accepting applications), 'closed' (round explicitly closed, e.g. 'this fund is currently closed', 'applications are now closed'), 'between_rounds' (closed now, will reopen — e.g. 'next round opens in autumn 2026'), or 'unknown' (source is silent on current status). Look for explicit open/closed banners on the page. Default to 'unknown' when not stated.",
   "how_to_apply": "Key steps in the application process",
