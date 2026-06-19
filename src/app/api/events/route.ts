@@ -22,6 +22,7 @@ const CLIENT_ALLOWED: ReadonlySet<string> = new Set([
   'opportunity_saved',
   'opportunity_dismissed',
   'pipeline_added',
+  'pipeline_removed',
   'pipeline_stage_changed',
   'profile_updated',
   // Builder fork choice: a plain navigation signal, safe from the client.

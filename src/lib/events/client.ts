@@ -18,6 +18,7 @@ export type ClientEventType = Extract<
   | 'opportunity_saved'
   | 'opportunity_dismissed'
   | 'pipeline_added'
+  | 'pipeline_removed'
   | 'pipeline_stage_changed'
   | 'profile_updated'
   | 'builder_path_chosen'

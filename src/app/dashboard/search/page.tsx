@@ -7,6 +7,7 @@ import { SEED_GRANTS } from '@/lib/grants'
 import { formatRange } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { createPipelineItem, deletePipelineItem } from '@/lib/pipeline'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { computeMatchScore, scoreColour } from '@/lib/matching'
 import type { FeedbackSignals, MatchBreakdown } from '@/lib/matching'
@@ -278,6 +279,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
   const [matchExpanded, setMatchExpanded] = useState(false)
   const isMobile = useIsMobile()
   const [insightsHover, setInsightsHover] = useState(false)
+  const [removeHover, setRemoveHover]     = useState(false)
   // Capture layer — opportunity_viewed fires once when the user opens the
   // insights strip (the real "look at this opportunity in depth" action; the
   // grant detail page is not reachable from this flow).
@@ -638,11 +640,27 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
             return (
               <div style={{ width: isMobile ? '100%' : 170, flexShrink: 0, display: 'flex', flexDirection: isMobile ? 'row' : 'column', flexWrap: 'wrap', gap: 7, paddingTop: isMobile ? 10 : 0, borderTop: isMobile ? '0.5px solid rgba(0,0,0,0.06)' : 'none' }}>
 
-                {/* In pipeline status pill */}
+                {/* In pipeline — single toggle button. Shows status by default;
+                    on hover it reveals the remove affordance. Click opens a
+                    confirm (remove is destructive — see performRemoveFromPipeline). */}
                 {state === 'pipeline' && (
-                  <div style={{ fontSize: 13, background: '#F1F7E4', color: '#3B6D11', padding: '6px 12px', borderRadius: 9999, fontWeight: 500, textAlign: 'center', fontFamily: 'var(--font-dm-sans)' }}>
-                    ✓ In pipeline · {stageLabel}
-                  </div>
+                  <button
+                    onClick={() => onRemoveFromPipeline?.(grant)}
+                    onMouseEnter={() => setRemoveHover(true)}
+                    onMouseLeave={() => setRemoveHover(false)}
+                    title="Click to remove from pipeline"
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                      fontSize: 13, fontWeight: 500, padding: '9px 14px', borderRadius: 10,
+                      cursor: 'pointer', fontFamily: 'var(--font-dm-sans)', whiteSpace: 'nowrap',
+                      transition: 'all 120ms ease',
+                      background: removeHover ? '#FAECE7' : '#F1F7E4',
+                      color:      removeHover ? '#993C1D' : '#3B6D11',
+                      border: `0.5px solid ${removeHover ? 'rgba(0,0,0,0.14)' : 'transparent'}`,
+                    }}
+                  >
+                    {removeHover ? 'Remove from pipeline' : `✓ In pipeline · ${stageLabel}`}
+                  </button>
                 )}
 
                 {/* Saved status pill */}
@@ -703,17 +721,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                   </button>
                 )}
 
-                {/* Remove from pipeline */}
-                {state === 'pipeline' && (
-                  <button
-                    onClick={() => onRemoveFromPipeline?.(grant)}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 10, background: '#fff', color: '#993C1D', border: '0.5px solid rgba(0,0,0,0.14)', padding: '9px 14px', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-dm-sans)' }}
-                    onMouseEnter={e => { e.currentTarget.style.background = '#FAECE7' }}
-                    onMouseLeave={e => { e.currentTarget.style.background = '#fff' }}
-                  >
-                    Remove from pipeline
-                  </button>
-                )}
+                {/* Removal is handled by the In-pipeline toggle button above. */}
 
               </div>
             )
@@ -1266,6 +1274,8 @@ export default function SearchPage() {
   const [profileChipsApplied, setProfileChipsApplied] = useState(false)
   const [pipelineNudge, setPipelineNudge]         = useState<{ name: string; url: string | null } | null>(null)
   const [pipelinedIds, setPipelinedIds]           = useState<Map<string, { id: string; stage: string }>>(new Map())
+  const [removeTarget, setRemoveTarget]           = useState<GrantOpportunity | null>(null)
+  const [removing, setRemoving]                   = useState(false)
   const [hasSearched, setHasSearched]             = useState(false)
   const [profileFiltersOpen, setProfileFiltersOpen] = useState(false)
   const [activeTab, setActiveTab]                 = useState<'grant' | 'programme' | 'investment' | 'in_kind'>('grant')
@@ -1529,16 +1539,34 @@ export default function SearchPage() {
     }
   }
 
-  async function handleRemoveFromPipeline(grant: GrantOpportunity) {
-    const entry = pipelinedIds.get(grant.title)
-    const itemId = entry?.id
-    if (!itemId) return
+  // The results pipeline control is a toggle. Removing is destructive —
+  // deletePipelineItem hard-deletes the row (stage, notes, dates, amounts and
+  // contacts all gone) — so clicking an in-pipeline grant opens a confirm first.
+  // Adding has no confirm.
+  function handleRemoveFromPipeline(grant: GrantOpportunity) {
+    setRemoveTarget(grant)
+  }
+
+  async function performRemoveFromPipeline(grant: GrantOpportunity) {
+    const itemId = pipelinedIds.get(grant.title)?.id
+    if (!itemId) { setRemoveTarget(null); return }
+    setRemoving(true)
     try {
       await deletePipelineItem(itemId)
+      track('pipeline_removed')
+      if (org) {
+        emitClientEvent(org.id, 'pipeline_removed', {
+          opportunity_id: catalogueUuidFor(grant.id),
+          pipeline_item_id: itemId,
+        })
+      }
       setPipelinedIds(prev => { const m = new Map(prev); m.delete(grant.title); return m })
       showToast('Removed from pipeline')
     } catch {
       showToast('Failed to remove — please try again')
+    } finally {
+      setRemoving(false)
+      setRemoveTarget(null)
     }
   }
 
@@ -3119,6 +3147,18 @@ export default function SearchPage() {
           </div>
         )
       })()}
+
+      <ConfirmDialog
+        open={!!removeTarget}
+        destructive
+        busy={removing}
+        title="Remove from pipeline?"
+        message={removeTarget ? `Remove “${removeTarget.title}” from your pipeline? This permanently deletes the pipeline entry along with any stage, notes, dates, amounts or contacts you've saved on it. This can't be undone.` : ''}
+        confirmLabel="Remove"
+        cancelLabel="Keep in pipeline"
+        onConfirm={() => { if (removeTarget) performRemoveFromPipeline(removeTarget) }}
+        onCancel={() => setRemoveTarget(null)}
+      />
 
       {toast && (
         <div className="fixed bottom-6 right-6 bg-charcoal text-white px-5 py-3.5 shadow-card-lg text-sm z-50">

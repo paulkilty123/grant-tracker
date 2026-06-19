@@ -46,6 +46,10 @@ export interface EventPayloads {
     opportunity_id: string | null
     pipeline_item_id: string
   }
+  pipeline_removed: {
+    opportunity_id: string | null
+    pipeline_item_id: string
+  }
   pipeline_stage_changed: {
     opportunity_id: string | null
     pipeline_item_id: string
@@ -164,6 +168,7 @@ export const EVENT_TYPES = [
   'opportunity_saved',
   'opportunity_dismissed',
   'pipeline_added',
+  'pipeline_removed',
   'pipeline_stage_changed',
   'mcp_tool_called',
   'profile_updated',
@@ -198,6 +203,7 @@ const REQUIRED_KEYS: Record<EventType, Record<string, Kind>> = {
   opportunity_saved:           { opportunity_id: 'string' },
   opportunity_dismissed:       { opportunity_id: 'string', reason: 'nullable-string' },
   pipeline_added:              { opportunity_id: 'nullable-string', pipeline_item_id: 'string' },
+  pipeline_removed:            { opportunity_id: 'nullable-string', pipeline_item_id: 'string' },
   pipeline_stage_changed:      { opportunity_id: 'nullable-string', pipeline_item_id: 'string', from_stage: 'string', to_stage: 'string' },
   mcp_tool_called:             { tool_name: 'string', arguments: 'object', result_count: 'nullable-number', duration_ms: 'number' },
   profile_updated:             { fields_changed: 'string[]' },
