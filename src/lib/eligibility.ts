@@ -295,7 +295,7 @@ function investmentChecks(opp: GrantOpportunity, org: Organisation): Eligibility
   const assetLocked =
     org.has_asset_lock === true ||
     (org.legal_structure != null &&
-      ['cic_guarantee', 'cio', 'registered_charity'].includes(org.legal_structure))
+      ['cic_guarantee', 'cio', 'scio', 'registered_charity'].includes(org.legal_structure))
   if (securityRequired && assetLocked) {
     out.push({
       code: 'si_security_vs_asset_lock',
@@ -306,7 +306,7 @@ function investmentChecks(opp: GrantOpportunity, org: Organisation): Eligibility
 
   // Charity / CIO + interest > 0 → trustee approval flag
   const isCharityLike =
-    org.legal_structure === 'registered_charity' || org.legal_structure === 'cio'
+    org.legal_structure === 'registered_charity' || org.legal_structure === 'cio' || org.legal_structure === 'scio'
   if (isCharityLike && opp.siInterestRatePercent != null && opp.siInterestRatePercent > 0) {
     out.push({
       code: 'charity_repayable_finance',
@@ -387,6 +387,7 @@ const STRUCTURE_TOKEN_MAP: Record<string, string[]> = {
   cic_guarantee:      ['cic', 'cic_guarantee', 'community_interest_company'],
   cic_shares:         ['cic', 'cic_shares', 'community_interest_company'],
   cio:                ['cio', 'charity', 'registered_charity', 'charitable_incorporated_organisation'],
+  scio:               ['scio', 'charity', 'registered_charity', 'charitable_incorporated_organisation'],
   registered_charity: ['charity', 'registered_charity'],
   ltd_guarantee:      ['ltd', 'company_limited_by_guarantee', 'social_enterprise'],
   ltd_shares:         ['ltd', 'social_enterprise', 'company_limited_by_shares'],
@@ -412,6 +413,7 @@ function labelStructure(s: LegalStructure): string {
     cic_guarantee:      'CIC (limited by guarantee)',
     cic_shares:         'CIC (limited by shares)',
     cio:                'Charitable Incorporated Organisation',
+    scio:               'Scottish Charitable Incorporated Organisation (SCIO)',
     registered_charity: 'Registered charity',
     ltd_guarantee:      'Limited by guarantee',
     ltd_shares:         'Limited by shares',

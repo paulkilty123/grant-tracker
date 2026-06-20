@@ -454,6 +454,8 @@ function normalizeStructureTokens(s: string): string[] {
       return ['registered_charity', 'charity']
     case 'cio':
       return ['cio', 'charity', 'registered_charity']
+    case 'scio':
+      return ['scio', 'charity', 'registered_charity']
     case 'social_enterprise':
       return ['social_enterprise', 'cic', 'cic_guarantee', 'cic_shares',
               'ltd_guarantee', 'ltd_shares', 'company_ltd_guarantee', 'ltd_company', 'cooperative', 'coop']
@@ -493,7 +495,7 @@ function normalizeStructureTokens(s: string): string[] {
 function orgStructuresToCheck(org: Organisation): LegalStructure[] {
   if (org.legal_structure) return [org.legal_structure]
   switch (org.org_type) {
-    case 'registered_charity': return ['registered_charity', 'cio']
+    case 'registered_charity': return ['registered_charity', 'cio', 'scio']
     case 'cic':                return ['cic_guarantee', 'cic_shares']
     case 'social_enterprise':  return ['ltd_guarantee', 'ltd_shares', 'cooperative', 'cic_guarantee', 'cic_shares']
     case 'community_group':    return ['unincorporated', 'not_registered']
@@ -509,6 +511,7 @@ function structureLabel(s: LegalStructure): string {
     cic_guarantee:      'CIC',
     cic_shares:         'CIC',
     cio:                'CIO',
+    scio:               'SCIO',
     registered_charity: 'registered charity',
     ltd_guarantee:      'Ltd company',
     ltd_shares:         'Ltd company',
@@ -1189,6 +1192,7 @@ export function computeMatchScore(
   const isCharityLike =
     org.legal_structure === 'registered_charity' ||
     org.legal_structure === 'cio' ||
+    org.legal_structure === 'scio' ||
     (org.legal_structure == null && org.org_type === 'registered_charity')
   const isCICLike =
     org.legal_structure === 'cic_guarantee' ||

@@ -61,6 +61,7 @@ const LEGAL_STRUCTURE_OPTIONS: { value: LegalStructure; label: string }[] = [
   { value: 'cic_guarantee',      label: 'CIC (Limited by Guarantee)' },
   { value: 'cic_shares',         label: 'CIC (Limited by Shares)' },
   { value: 'cio',                label: 'Charitable Incorporated Organisation (CIO)' },
+  { value: 'scio',               label: 'Scottish Charitable Incorporated Organisation (SCIO)' },
   { value: 'registered_charity', label: 'Registered Charity' },
   { value: 'ltd_guarantee',      label: 'Ltd by Guarantee (non-charity)' },
   { value: 'ltd_shares',         label: 'Ltd by Shares (social enterprise)' },
@@ -211,6 +212,7 @@ function deriveEligibilityFlags(s: LegalStructure | ''): {
   switch (s) {
     case 'registered_charity':
     case 'cio':
+    case 'scio':
       return { has_asset_lock: true,  social_mission_declared: true,  articles_restrict_profit: true  }
     case 'cic_guarantee':
       return { has_asset_lock: true,  social_mission_declared: true,  articles_restrict_profit: true  }
@@ -236,7 +238,7 @@ function deriveEligibilityFlags(s: LegalStructure | ''): {
 
 function legalStructureToOrgType(s: LegalStructure | '') {
   if (s === 'cic_guarantee' || s === 'cic_shares') return 'cic'
-  if (s === 'registered_charity' || s === 'cio')    return 'registered_charity'
+  if (s === 'registered_charity' || s === 'cio' || s === 'scio') return 'registered_charity'
   if (s === 'unincorporated' || s === 'not_registered') return 'community_group'
   if (s === 'sole_trader') return 'other'
   return 'social_enterprise'
@@ -1425,6 +1427,7 @@ const NICHE_TAGS_BY_SECTOR: Partial<Record<ImpactSector, { value: string; label:
     { value: 'literature',      label: 'Literature & Writing' },
     { value: 'crafts',          label: 'Crafts & Making' },
     { value: 'circus_street',   label: 'Circus & Street Arts' },
+    { value: 'digital_arts',    label: 'Digital Arts & Creative Technology' },
   ],
   sport: [
     { value: 'football',        label: 'Football' },

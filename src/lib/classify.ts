@@ -24,7 +24,7 @@ export const VALID_FUNDING_TYPES = new Set([
 ])
 
 export const VALID_STRUCTURES = new Set([
-  'cic_guarantee', 'cic_shares', 'cio', 'registered_charity',
+  'cic_guarantee', 'cic_shares', 'cio', 'scio', 'registered_charity',
   'ltd_guarantee', 'ltd_shares', 'llp', 'cooperative',
   'unincorporated', 'sole_trader', 'not_registered',
 ])
@@ -572,7 +572,7 @@ export function ensureExplicitStructures(
   // Ensure charity types too when charities are explicitly named — guards the
   // edge where the model returns [] for a "charities and CICs" grant, so we
   // don't end up CIC-only and wrongly exclude charities.
-  if (/\bcharit/.test(text)) { add('registered_charity'); add('cio') }
+  if (/\bcharit/.test(text)) { add('registered_charity'); add('cio'); add('scio') }
 
   return out
 }

@@ -67,6 +67,7 @@ const LEGAL_STRUCTURE_OPTIONS: { value: LegalStructure; label: string }[] = [
   { value: 'cic_guarantee',      label: 'CIC — Limited by Guarantee' },
   { value: 'cic_shares',         label: 'CIC — Limited by Shares' },
   { value: 'cio',                label: 'Charitable Incorporated Organisation (CIO)' },
+  { value: 'scio',               label: 'Scottish Charitable Incorporated Organisation (SCIO)' },
   { value: 'registered_charity', label: 'Registered Charity (Ltd by Guarantee)' },
   { value: 'ltd_guarantee',      label: 'Ltd by Guarantee (non-charity, non-CIC)' },
   { value: 'ltd_shares',         label: 'Ltd by Shares (trading social enterprise)' },
@@ -127,6 +128,7 @@ const NICHE_TAGS_BY_SECTOR: Partial<Record<ImpactSector, { value: string; label:
     { value: 'dance',           label: 'Dance' }, { value: 'visual_arts',   label: 'Visual Arts' },
     { value: 'film_media',      label: 'Film & Media' }, { value: 'literature', label: 'Literature & Writing' },
     { value: 'crafts',          label: 'Crafts & Making' }, { value: 'circus_street', label: 'Circus & Street Arts' },
+    { value: 'digital_arts',    label: 'Digital Arts & Creative Technology' },
   ],
   sport:            [
     { value: 'football',        label: 'Football' }, { value: 'cricket',       label: 'Cricket' },
@@ -347,6 +349,7 @@ function deriveEligibilityFlagsFromStructure(s: LegalStructure | ''): {
   switch (s) {
     case 'registered_charity':
     case 'cio':
+    case 'scio':
     case 'cic_guarantee':
     case 'cooperative':
       return { has_asset_lock: true,  social_mission_declared: true,  articles_restrict_profit: true  }

@@ -7,6 +7,7 @@ export type LegalStructure =
   | 'cic_guarantee'        // CIC limited by guarantee
   | 'cic_shares'           // CIC limited by shares
   | 'cio'                  // Charitable Incorporated Organisation
+  | 'scio'                 // Scottish Charitable Incorporated Organisation (OSCR)
   | 'registered_charity'   // Registered charity (company limited by guarantee)
   | 'ltd_guarantee'        // Ltd by guarantee (non-charity, non-CIC)
   | 'ltd_shares'           // Ltd by shares (trading social enterprise)
