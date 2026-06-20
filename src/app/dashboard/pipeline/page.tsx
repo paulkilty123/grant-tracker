@@ -370,7 +370,7 @@ function AddModal({
         <div className="px-6 py-5 border-b border-warm flex justify-between items-start flex-shrink-0"
              style={{ background: '#FAFAF7' }}>
           <div>
-            <h3 className="text-lg font-bold text-charcoal" style={{ fontFamily: "var(--font-space-grotesk)" }}>Add Opportunity</h3>
+            <h3 className="text-lg font-bold text-charcoal" style={{ fontFamily: "var(--font-space-grotesk)" }}>Add a fund not listed</h3>
             <p className="text-sm text-mid mt-0.5">Track a funding opportunity in your pipeline</p>
           </div>
           <button onClick={onClose} className="text-light hover:text-mid text-xl leading-none mt-0.5">✕</button>
@@ -643,7 +643,7 @@ export default function PipelinePage() {
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
         <div>
           <h2 className="text-4xl font-bold text-charcoal leading-tight" style={{ fontFamily: "var(--font-space-grotesk)", letterSpacing: "-0.02em" }}>Pipeline</h2>
-          <p className="text-mid text-sm mt-1.5 max-w-md">Manage your active opportunities — drag between stages to update status, or use <strong className="font-semibold text-charcoal">+ Add Opportunity</strong> to track a funder that isn&rsquo;t in our catalogue.</p>
+          <p className="text-mid text-sm mt-1.5 max-w-md">Manage your active opportunities. Drag between stages to update status.</p>
         </div>
         <div className="flex items-center gap-5 flex-shrink-0">
           {items.length > 0 && (() => {
@@ -681,7 +681,7 @@ export default function PipelinePage() {
             title="Add a grant or funder that isn't in our catalogue — including ones you already fund"
             className="flex items-center gap-2 px-5 py-2.5 rounded-[10px] border border-[#2C2C2A] text-[#2C2C2A] text-sm font-semibold bg-white hover:bg-[#2C2C2A] hover:text-white transition-colors whitespace-nowrap"
           >
-            + Add Opportunity
+            + Add a fund not listed
           </button>
         </div>
       </div>
