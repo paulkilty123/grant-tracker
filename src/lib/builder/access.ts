@@ -28,6 +28,8 @@ export const BUILDER_ALLOWLIST = [
   'billymizen@gmail.com',
   'georgia.dale@gmail.com',
   'j@joelknightphotography.co.uk',
+  // Added post-cohort
+  'jack@tinderboxcollective.org', // Tinderbox Collective (Edinburgh), joined 2026-06-19
 ]
 
 export interface BuilderUser {
