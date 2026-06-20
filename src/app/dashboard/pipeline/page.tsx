@@ -15,7 +15,7 @@ import { emitClientEvent } from '@/lib/events/client'
 import { track } from '@/lib/analytics'
 import { PIPELINE_STAGES, formatDeadline, formatRange, cn } from '@/lib/utils'
 import type { PipelineItem, PipelineStage, Organisation } from '@/types'
-import { Sparkles, Loader2, Link, ArrowRight, Calendar, AlarmClock, X as XIcon, GripVertical, StickyNote, User as UserIcon, BarChart3 } from 'lucide-react'
+import { Sparkles, Loader2, Link, ArrowRight, Calendar, AlarmClock, X as XIcon, GripVertical, StickyNote, User as UserIcon, BarChart3, Star } from 'lucide-react'
 import { PipelineModal, STAGE_ICONS, getWritingStage } from '@/components/PipelineModal'
 
 const STAGE_BG_HEX: Record<string, string> = {
@@ -43,6 +43,7 @@ function PipelineCard({
   onDragEnd,
   onClick,
   onDelete,
+  onToggleStar,
   onMove,
   appId,
   builderAllowed,
@@ -53,6 +54,7 @@ function PipelineCard({
   onDragEnd: (e: React.DragEvent) => void
   onClick: (item: PipelineItem) => void
   onDelete: (id: string) => void
+  onToggleStar: (id: string, starred: boolean) => void
   onMove: (id: string, stage: PipelineStage) => void
   appId?: string | null
   builderAllowed?: boolean
@@ -96,6 +98,14 @@ function PipelineCard({
         </div>
         <div className="flex items-center gap-1 flex-shrink-0 ml-1">
           <GripVertical size={13} className="text-warm/80 mt-0.5" />
+          <button
+            onClick={e => { e.stopPropagation(); onToggleStar(item.id, !item.starred) }}
+            className="p-0.5 rounded-full transition-colors hover:bg-[#FAEEDA]"
+            style={{ color: item.starred ? '#E8A23D' : '#8A8986' }}
+            title={item.starred ? 'Unstar' : 'Star — add to shortlist'}
+          >
+            <Star size={13} strokeWidth={2} fill={item.starred ? '#E8A23D' : 'none'} />
+          </button>
           <button
             onClick={e => { e.stopPropagation(); onDelete(item.id) }}
             className="p-0.5 rounded-full text-[#8A8986] hover:text-coral-saturated hover:bg-coral-pale transition-colors"
@@ -485,6 +495,7 @@ export default function PipelinePage() {
   const [loading, setLoading] = useState(true)
   const [selectedItem, setSelectedItem] = useState<PipelineItem | null>(null)
   const [showAdd, setShowAdd] = useState(false)
+  const [showStarredOnly, setShowStarredOnly] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   // Builder bridge: which pipeline items already have an application (id), and
   // whether this user can use the builder (cohort-gated).
@@ -613,6 +624,18 @@ export default function PipelinePage() {
     showToast('Deleted')
   }
 
+  async function handleToggleStar(id: string, starred: boolean) {
+    const item = items.find(i => i.id === id)
+    setItems(prev => prev.map(i => i.id === id ? { ...i, starred } : i))
+    try {
+      await updatePipelineItem(id, { starred })
+      if (item) emitClientEvent(item.org_id, 'pipeline_starred', { pipeline_item_id: id, starred })
+    } catch {
+      setItems(prev => prev.map(i => i.id === id ? { ...i, starred: !starred } : i))
+      showToast('Failed to update — please try again')
+    }
+  }
+
   if (loading) return <div className="flex items-center justify-center h-64 text-mid">Loading pipeline…</div>
 
   return (
@@ -640,6 +663,19 @@ export default function PipelinePage() {
               </div>
             ) : null
           })()}
+          {items.some(i => i.starred) && (
+            <button
+              onClick={() => setShowStarredOnly(v => !v)}
+              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-[10px] border text-sm font-semibold transition-colors whitespace-nowrap"
+              style={showStarredOnly
+                ? { background: '#173404', color: '#F1F7E4', borderColor: '#173404' }
+                : { background: '#fff', color: '#2C2C2A', borderColor: '#2C2C2A' }}
+              title={showStarredOnly ? 'Show all' : 'Show starred only'}
+            >
+              <Star size={14} strokeWidth={2} fill={showStarredOnly ? '#8ECB3C' : 'none'} />
+              {showStarredOnly ? `Starred (${items.filter(i => i.starred).length})` : 'Starred'}
+            </button>
+          )}
           <button
             onClick={() => setShowAdd(true)}
             className="flex items-center gap-2 px-5 py-2.5 rounded-[10px] border border-[#2C2C2A] text-[#2C2C2A] text-sm font-semibold bg-white hover:bg-[#2C2C2A] hover:text-white transition-colors whitespace-nowrap"
@@ -666,7 +702,7 @@ export default function PipelinePage() {
       <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 pb-4">
       <div className="grid grid-cols-5 gap-3.5 min-h-[60vh] min-w-[850px] md:min-w-0">
         {PIPELINE_STAGES.map(stage => {
-          const stageItems = items.filter(i => i.stage === stage.id)
+          const stageItems = items.filter(i => i.stage === stage.id && (!showStarredOnly || i.starred))
 
           // Per-column header text tones — the stage bg varies from cream
           // through saturated green to soft coral, so a single grey is
@@ -733,6 +769,7 @@ export default function PipelinePage() {
                     onDragEnd={onDragEnd}
                     onClick={setSelectedItem}
                     onDelete={handleDelete}
+                    onToggleStar={handleToggleStar}
                     onMove={handleMove}
                     appId={appByPipeline[item.id] ?? null}
                     builderAllowed={builderAllowed}

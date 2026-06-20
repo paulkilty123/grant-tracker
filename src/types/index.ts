@@ -209,6 +209,7 @@ export interface PipelineItem {
   notes: string | null
   application_progress: number | null  // 0–100
   is_urgent: boolean
+  starred?: boolean
   contact_name: string | null
   contact_email: string | null
   grant_url: string | null

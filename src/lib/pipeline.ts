@@ -62,6 +62,7 @@ export async function updatePipelineItem(
     | 'grant_url'
     | 'outcome_notes'
     | 'outcome_date'
+    | 'starred'
   >>
 ): Promise<void> {
   const supabase = createClient()
