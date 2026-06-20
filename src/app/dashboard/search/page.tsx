@@ -2344,7 +2344,7 @@ export default function SearchPage() {
                     className="flex-1 bg-transparent outline-none text-sm text-charcoal placeholder-gray-400 min-w-0"
                     placeholder="Search by grant name, keyword or funder..."
                   />
-                  {(inputValue || query || aiResults) && (
+                  {(inputValue || query || aiResults || filterQuery) && (
                     <button
                       onClick={() => { setInputValue(''); setFilterQuery(''); setQuery(''); setAiResults(null); setSmartMatched(false) }}
                       className="flex-shrink-0 p-1 rounded-full hover:bg-gray-100 transition-colors"
@@ -2409,7 +2409,7 @@ export default function SearchPage() {
           {activeView === 'browse' && (aiResults || aiError) && (
             <div className="mt-2 flex items-center gap-2">
               {aiResults && (
-                <button onClick={() => { setAiResults(null); setSmartMatched(false); setQuery(''); setInputValue('') }} className="px-3 py-1 border border-warm text-xs font-medium text-mid hover:border-[#8ECB3C] hover:text-[#639922] transition-all bg-white rounded-md">
+                <button onClick={() => { setAiResults(null); setSmartMatched(false); setQuery(''); setInputValue(''); setFilterQuery('') }} className="px-3 py-1 border border-warm text-xs font-medium text-mid hover:border-[#8ECB3C] hover:text-[#639922] transition-all bg-white rounded-md">
                   Clear results
                 </button>
               )}
