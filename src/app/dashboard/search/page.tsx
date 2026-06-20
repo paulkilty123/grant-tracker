@@ -2297,7 +2297,7 @@ export default function SearchPage() {
               <span>Matched for <strong className="text-charcoal">{org.name ?? 'your organisation'}</strong>{org.primary_location && <span className="text-mid"> · {org.primary_location}</span>}</span>
             </>
           )}
-          {activeView === 'browse' && !org && (
+          {activeView === 'browse' && grantsLoaded && !org && (
             <div className="text-xs border border-amber-mid bg-amber-pale px-3 py-2">
               <a href="/dashboard/profile" className="font-semibold text-amber-deep underline">Set up your profile</a>
               <span className="text-amber-deepest"> to see grants matched for your organisation.</span>
