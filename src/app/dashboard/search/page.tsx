@@ -2324,8 +2324,9 @@ export default function SearchPage() {
         </div>
       </div>
 
-      {/* ── Search card ── */}
-      <div className="bg-white shadow-card mb-5 border border-warm/60 rounded-xl overflow-hidden">
+      {/* ── Search card (browse only — its contents are all browse-gated, so it
+            rendered as an empty panel on the Saved tab) ── */}
+      <div className={`bg-white shadow-card mb-5 border border-warm/60 rounded-xl overflow-hidden ${activeView === 'saved' ? 'hidden' : ''}`}>
 
         <div className="p-5">
 
