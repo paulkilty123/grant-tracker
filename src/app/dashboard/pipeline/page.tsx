@@ -673,7 +673,7 @@ export default function PipelinePage() {
               title={showStarredOnly ? 'Show all' : 'Show starred only'}
             >
               <Star size={14} strokeWidth={2} fill={showStarredOnly ? '#8ECB3C' : 'none'} />
-              {showStarredOnly ? `Starred (${items.filter(i => i.starred).length})` : 'Starred'}
+              Starred ({items.filter(i => i.starred).length})
             </button>
           )}
           <button
