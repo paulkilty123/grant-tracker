@@ -1738,17 +1738,23 @@ export default function SearchPage() {
       const matchesFunderCategory =
         activeFunderCategory === 'all' ||
         ge.funderCategory === activeFunderCategory
-      // Geographic scope (from funders table — uk/england/london/scotland/etc.)
+      // Geographic scope + location text filter (both read funders.geographic_scope:
+      // uk/england/london/scotland/etc.). A region-specific selection must STILL
+      // surface UK-wide/national funding — the largest category for any org — plus
+      // grants with no geo data. Otherwise a Scotland/Wales/NI user silently loses
+      // every UK-wide grant (filter-vs-rank silent exclusion). Both checks union
+      // the broad scopes; the geoScope dropdown previously did a strict match and
+      // dropped all UK-wide funding when a region was picked.
+      const BROAD_SCOPES = ['uk', 'uk-wide', 'england', 'nationwide', 'national', 'uk wide', 'all uk']
+      const geoBroadOrAbsent =
+        !ge.geoScope?.length || ge.geoScope.some(s => BROAD_SCOPES.includes(s.toLowerCase()))
       const matchesGeoScope =
         activeGeoScope === 'all' ||
-        (ge.geoScope && ge.geoScope.includes(activeGeoScope))
-      // Location text filter — soft match against geoScope values (grants with no geo data always pass)
-      // UK/England/nationwide grants always pass regardless of location filter
-      const BROAD_SCOPES = ['uk', 'uk-wide', 'england', 'nationwide', 'national', 'uk wide', 'all uk']
+        geoBroadOrAbsent ||
+        (ge.geoScope?.includes(activeGeoScope) ?? false)
       const matchesLocationText = !locationFilter ||
-        !ge.geoScope?.length ||
-        ge.geoScope.some(s => BROAD_SCOPES.includes(s.toLowerCase())) ||
-        ge.geoScope.some(s => s.toLowerCase().includes(locationFilter.toLowerCase()) || locationFilter.toLowerCase().includes(s.toLowerCase()))
+        geoBroadOrAbsent ||
+        (ge.geoScope?.some(s => s.toLowerCase().includes(locationFilter.toLowerCase()) || locationFilter.toLowerCase().includes(s.toLowerCase())) ?? false)
       // Funding type tab filter — filter by activeTab (gFundingType defaults to 'grant' when unset)
       const matchesTab = gFundingType === activeTab
       // "Includes cash" sub-filter within the Programmes tab
