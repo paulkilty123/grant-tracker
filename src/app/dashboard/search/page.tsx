@@ -777,7 +777,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                     <div style={{ height: '100%', background: tierHue.ring, borderRadius: 2, width: `${displayScore}%` }} />
                   </div>
                 </div>
-                {feedbackBoost && feedbackBoost !== 0 && (
+                {!!feedbackBoost && (
                   <span
                     title={feedbackBoost > 0
                       ? `Your previous thumbs-up promotes this match (+${feedbackBoost} in ranking). The displayed % is the raw match.`
