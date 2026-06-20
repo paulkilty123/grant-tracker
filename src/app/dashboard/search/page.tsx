@@ -2674,7 +2674,7 @@ export default function SearchPage() {
                     )}
                     {profileFilterOn && allCount > displayGrants.length && (
                       <button
-                        onClick={() => { setProfileFilterOn(false); setSortBy('freshest'); setActiveSectors(new Set()); setLocationFilter(''); setLocationInput('') }}
+                        onClick={resetAllFilters}
                         className="text-sm font-semibold px-5 py-2 rounded-lg transition-colors"
                         style={{ background: '#fff', color: '#2C2C2A', border: '1px solid #D0CCC4' }}
                       >
@@ -2900,7 +2900,7 @@ export default function SearchPage() {
                 <div className="flex items-center justify-center gap-3 flex-wrap">
                   {profileFilterOn && rawCatCount > 0 && (
                     <button
-                      onClick={() => { setProfileFilterOn(false); setSortBy('freshest'); setActiveSectors(new Set()); setLocationFilter(''); setLocationInput('') }}
+                      onClick={resetAllFilters}
                       className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-lg appearance-none"
                       style={{ background: '#fff', color: '#2C2C2A', border: '0.5px solid rgba(0,0,0,0.14)' }}
                     >
