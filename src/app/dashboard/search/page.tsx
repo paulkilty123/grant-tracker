@@ -9,7 +9,7 @@ import { createClient } from '@/lib/supabase/client'
 import { createPipelineItem, deletePipelineItem } from '@/lib/pipeline'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { getOrganisationByOwner } from '@/lib/organisations'
-import { computeMatchScore, scoreColour } from '@/lib/matching'
+import { computeMatchScore, scoreColour, grantInGeoSelection, grantMatchesLocationText } from '@/lib/matching'
 import type { FeedbackSignals, MatchBreakdown } from '@/lib/matching'
 import { getInteractions, recordInteraction, removeInteraction } from '@/lib/interactions'
 import { getMatchFeedback, type StoredFeedback } from '@/lib/matchFeedback'
@@ -1738,23 +1738,14 @@ export default function SearchPage() {
       const matchesFunderCategory =
         activeFunderCategory === 'all' ||
         ge.funderCategory === activeFunderCategory
-      // Geographic scope + location text filter (both read funders.geographic_scope:
-      // uk/england/london/scotland/etc.). A region-specific selection must STILL
-      // surface UK-wide/national funding — the largest category for any org — plus
-      // grants with no geo data. Otherwise a Scotland/Wales/NI user silently loses
-      // every UK-wide grant (filter-vs-rank silent exclusion). Both checks union
-      // the broad scopes; the geoScope dropdown previously did a strict match and
-      // dropped all UK-wide funding when a region was picked.
-      const BROAD_SCOPES = ['uk', 'uk-wide', 'england', 'nationwide', 'national', 'uk wide', 'all uk']
-      const geoBroadOrAbsent =
-        !ge.geoScope?.length || ge.geoScope.some(s => BROAD_SCOPES.includes(s.toLowerCase()))
+      // Geographic filters key off the grant's populated `location_tag` (NOT the
+      // funder-level geographic_scope, which is null for ~78% of rows and leaked
+      // other-region grants — e.g. London-only funds — into every region search).
+      // National / UK-wide / no-geo grants surface for any region; a region-specific
+      // grant surfaces only for its own region. See grantInGeoSelection.
       const matchesGeoScope =
-        activeGeoScope === 'all' ||
-        geoBroadOrAbsent ||
-        (ge.geoScope?.includes(activeGeoScope) ?? false)
-      const matchesLocationText = !locationFilter ||
-        geoBroadOrAbsent ||
-        (ge.geoScope?.some(s => s.toLowerCase().includes(locationFilter.toLowerCase()) || locationFilter.toLowerCase().includes(s.toLowerCase())) ?? false)
+        activeGeoScope === 'all' || grantInGeoSelection(ge.locationTag, activeGeoScope)
+      const matchesLocationText = grantMatchesLocationText(ge.locationTag, locationFilter)
       // Funding type tab filter — filter by activeTab (gFundingType defaults to 'grant' when unset)
       const matchesTab = gFundingType === activeTab
       // "Includes cash" sub-filter within the Programmes tab
@@ -2158,7 +2149,6 @@ export default function SearchPage() {
     const qTokens  = filterQuery ? filterQuery.split(/\s+/).filter(t => t.length > 0) : []
     const minAmt   = amountMin ? Number(amountMin) : null
     const maxAmt   = amountMax ? Number(amountMax) : null
-    const BROAD    = ['uk', 'uk-wide', 'england', 'nationwide', 'national', 'uk wide', 'all uk']
     const counts: Record<string, number> = { grant: 0, programme: 0, investment: 0, in_kind: 0 }
 
     allGrants.forEach(g => {
@@ -2188,15 +2178,10 @@ export default function SearchPage() {
         if (!ge.impactSectors.some(s => activeSectors.has(s))) return
       }
 
-      // Location filter (broad scopes always pass)
-      if (locationFilter && ge.geoScope?.length) {
-        const loc = locationFilter.toLowerCase()
-        if (!ge.geoScope.some(s =>
-          BROAD.includes(s.toLowerCase()) ||
-          s.toLowerCase().includes(loc) ||
-          loc.includes(s.toLowerCase())
-        )) return
-      }
+      // Geographic filters — keyed off location_tag (same logic as the displayed
+      // list) so the tab counts match what's actually shown.
+      if (locationFilter && !grantMatchesLocationText(ge.locationTag, locationFilter)) return
+      if (activeGeoScope !== 'all' && !grantInGeoSelection(ge.locationTag, activeGeoScope)) return
 
       // Legal structure eligibility (when profile on)
       if (profileFilterOn && org?.legal_structure) {
@@ -2216,7 +2201,7 @@ export default function SearchPage() {
     })
 
     return counts
-  }, [allGrants, filterQuery, amountMin, amountMax, activeSectors, locationFilter, profileFilterOn, org, actionableOnly])
+  }, [allGrants, filterQuery, amountMin, amountMax, activeSectors, locationFilter, activeGeoScope, profileFilterOn, org, actionableOnly])
 
   const TYPE_TABS = [
     { id: 'grant'      as const, label: 'Grants',      icon: <Landmark size={17} strokeWidth={2} />,  count: crossTabCounts.grant ?? 0 },

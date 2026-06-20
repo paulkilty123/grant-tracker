@@ -344,6 +344,48 @@ function orgMatchesRegionalTag(tagLabel: string, orgLocation: string): boolean {
 }
 
 /**
+ * Search-filter geo logic — keyed off the grant's populated `location_tag`, NOT
+ * the funder-level `geographic_scope` (which is null for ~78% of rows and leaked
+ * other-region grants into every region search). Genuinely national / UK-wide /
+ * unknown / multi-area grants surface for ANY region selection; a region-specific
+ * grant surfaces only for its own region. England includes London and English
+ * regions (they're in England) but excludes Scotland / Wales / NI.
+ * `selection` is a GEO_SCOPES id: uk | england | london | scotland | wales |
+ * northern_ireland | regional.
+ */
+export function grantInGeoSelection(locationTag: string | null | undefined, selection: string): boolean {
+  const c = classifyLocationTag(locationTag)
+  if (c.kind === 'national' || c.kind === 'unknown' || c.kind === 'multi') return true
+  const tag = (locationTag ?? '').toLowerCase()
+  const mentions = (...kw: string[]) => kw.some(k => tag.includes(k))
+  switch (selection) {
+    case 'uk':               return false  // only genuinely-national grants match (returned above)
+    case 'scotland':         return c.kind === 'scotland' || mentions('scotland', 'scottish')
+    case 'wales':            return c.kind === 'wales'    || mentions('wales', 'welsh', 'cymru')
+    case 'northern_ireland': return c.kind === 'ni'       || mentions('northern ireland')
+    case 'london':           return mentions('london')
+    case 'england':
+      return c.kind === 'england'
+        || mentions('england', 'london')
+        || (c.kind === 'regional' && !mentions('scotland', 'scottish', 'wales', 'welsh', 'cymru', 'northern ireland'))
+    case 'regional':         return c.kind === 'regional'
+    default:                 return false
+  }
+}
+
+/**
+ * Free-text location filter, keyed off the grant's `location_tag`. National /
+ * unknown / multi-area grants always pass; a region-specific grant must satisfy
+ * the typed location (bidirectional match + county→town hierarchy).
+ */
+export function grantMatchesLocationText(locationTag: string | null | undefined, text: string): boolean {
+  if (!text.trim()) return true
+  const c = classifyLocationTag(locationTag)
+  if (c.kind === 'national' || c.kind === 'unknown' || c.kind === 'multi') return true
+  return orgMatchesRegionalTag(locationTag ?? '', text)
+}
+
+/**
  * Parse a pound amount from text (handles £10k, £50,000, £100 000 etc.)
  * Returns the numeric value, or null if not parseable.
  */
