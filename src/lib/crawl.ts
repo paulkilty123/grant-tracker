@@ -3304,13 +3304,18 @@ async function crawlBlagraveTrust(): Promise<CrawlResult> {
 }
 
 // ── Source 88 — Rank Foundation ───────────────────────────────────────────────
-// rankfoundation.com — time to shine leadership development + community grants.
+// rankfoundation.com (apex host — the www. host 404s). Time to Shine only.
+// The former "_community" seed was a phantom: the Foundation's real small-grants
+// programme is Pebble Grants, which the Board PAUSED in 2025 (to review late 2025),
+// and the seeded apply_url (www…/grants/) was dead and served an image. Removed
+// pending a verified re-add if/when Pebble Grants reopens. Live row eddc2878…
+// deactivated 2026-06-20 (Jack cohort report). Time to Shine path unverified on
+// the apex host — left for the URL validator to confirm.
 async function crawlRankFoundation(): Promise<CrawlResult> {
   const SOURCE = 'rank_foundation'
   try {
     return await upsertGrants(SOURCE, [
-      { external_id: `${SOURCE}_time_to_shine`, source: SOURCE, title: 'Rank Foundation — Time to Shine Leadership Programme', funder: 'Rank Foundation', funder_type: 'trust_foundation', description: "Time to Shine develops emerging leaders from smaller charities and community organisations. Participants receive leadership training, mentoring, a project grant, and peer network access. Priority for those from disadvantaged backgrounds.", amount_min: 5000, amount_max: 15000, deadline: null, is_rolling: false, is_local: false, sectors: ['leadership', 'community', 'social welfare', 'youth', 'capacity building'], eligibility_criteria: ['Emerging leader from a small charity or community organisation (income under £2m)', 'UK-based', 'Applications typically open spring/summer — check website'], apply_url: 'https://www.rankfoundation.com/time-to-shine/', raw_data: {} as Record<string, unknown> },
-      { external_id: `${SOURCE}_community`, source: SOURCE, title: 'Rank Foundation — Community Grants', funder: 'Rank Foundation', funder_type: 'trust_foundation', description: "Small grants for community organisations working to reduce disadvantage. Focus on employability, digital inclusion, and community resilience. Typically £3,000–£10,000.", amount_min: 3000, amount_max: 10000, deadline: null, is_rolling: true, is_local: false, sectors: ['community', 'social welfare', 'employment', 'digital inclusion'], eligibility_criteria: ['Small charity or community group (income under £500k)', 'UK-based', 'Focus on reducing disadvantage'], apply_url: 'https://www.rankfoundation.com/grants/', raw_data: {} as Record<string, unknown> },
+      { external_id: `${SOURCE}_time_to_shine`, source: SOURCE, title: 'Rank Foundation — Time to Shine Leadership Programme', funder: 'Rank Foundation', funder_type: 'trust_foundation', description: "Time to Shine develops emerging leaders from smaller charities and community organisations. Participants receive leadership training, mentoring, a project grant, and peer network access. Priority for those from disadvantaged backgrounds.", amount_min: 5000, amount_max: 15000, deadline: null, is_rolling: false, is_local: false, sectors: ['leadership', 'community', 'social welfare', 'youth', 'capacity building'], eligibility_criteria: ['Emerging leader from a small charity or community organisation (income under £2m)', 'UK-based', 'Applications typically open spring/summer — check website'], apply_url: 'https://rankfoundation.com/time-to-shine/', raw_data: {} as Record<string, unknown> },
     ])
   } catch (err) { return { source: SOURCE, fetched: 0, upserted: 0, error: toMsg(err) } }
 }

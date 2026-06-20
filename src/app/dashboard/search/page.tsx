@@ -2833,6 +2833,12 @@ export default function SearchPage() {
                 >
                   <XCircle size={14} strokeWidth={2} /> Clear search
                 </button>
+                <p style={{ marginTop: 18, fontSize: 13, color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>
+                  Know a funder we don&rsquo;t list?{' '}
+                  <a href="/dashboard/pipeline?add=1" style={{ color: '#3B6D11', fontWeight: 600, textDecoration: 'none' }}>
+                    Add a fund that isn&rsquo;t listed →
+                  </a>
+                </p>
               </div>
             )
 

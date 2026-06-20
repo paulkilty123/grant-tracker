@@ -492,6 +492,14 @@ export default function PipelinePage() {
   const [appByPipeline, setAppByPipeline] = useState<Record<string, string>>({})
   const draggingId = useRef<string | null>(null)
 
+  // Deep-link from the search empty-state ("Add a fund that isn't listed"):
+  // /dashboard/pipeline?add=1 opens the manual Add Opportunity form on load.
+  useEffect(() => {
+    if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('add') === '1') {
+      setShowAdd(true)
+    }
+  }, [])
+
   useEffect(() => {
     async function load() {
       const supabase = createClient()
