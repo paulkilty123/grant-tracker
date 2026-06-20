@@ -1760,6 +1760,12 @@ export default function SearchPage() {
         .map(r => {
           const grant = allGrants.find(g => g.id === r.grantId)
           if (!grant) return null
+          // Apply the active geographic filter to AI search results too — a region
+          // selection / location filter is a hard constraint the AI ranking doesn't
+          // know about, so without this a Scotland search still surfaces London grants.
+          const locTag = (grant as EnrichedGrant).locationTag
+          if (activeGeoScope !== 'all' && !grantInGeoSelection(locTag, activeGeoScope)) return null
+          if (locationFilter && !grantMatchesLocationText(locTag, locationFilter)) return null
           return { grant, score: r.score, displayScore: r.score, reason: r.reason, isAiScore: true }
         })
         .filter((x): x is DisplayGrant => x !== null)
