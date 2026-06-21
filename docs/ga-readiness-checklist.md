@@ -60,12 +60,20 @@ External/legal — Paul's to drive. Legal *pages* exist in the app; legal *revie
 
 **Verdict:** The allowlist holds for the expensive **builder compute** (AI generation, export, etc.) but **does NOT hold for the pipeline/projects/applications data layer.** RLS still isolates orgs (no cross-org data leak), so this is an **entitlement bypass** (a free-tier user using paid features for their *own* org), not a data breach. Under the GA model where "the allowlist is the security model for paid features," this fails the requirement.
 
-**Fix (GA-blocking):**
-1. Make the entitlement a **DB fact**, not just TS code — e.g. an `apply_access boolean` on `organisations` (or a small `apply_entitlements` table), seeded `true` for the current 21 allowlisted users.
-2. **Rewrite RLS** on `pipeline_items`, `projects`, `applications` so `USING`/`WITH CHECK` also requires the owning org to have `apply_access = true`.
-3. (Defence-in-depth / UX) redirect non-allowlisted users away from the pipeline/projects/applications pages, and gate the pipeline Kanban load behind the access check.
+**Fix (GA-blocking) — build spec for the dedicated session:**
 
-This both closes the GA hole **and** builds the entitlement model that `access.ts` already anticipates replacing the hardcoded list with — so the post-GA paid work becomes "connect entitlement to Stripe + trial expiry," not "build it from scratch."
+> ⚠️ **Run this in a single, fresh, dedicated session** (Paul will `/clear` first for clean context on the schema change). **No parallel work touching `pipeline_items`, `projects`, or `applications` while the migration runs.**
+
+1. **Entitlement as a DB fact.** Add `apply_access boolean not null default false` on `organisations`. Seed `true` for the orgs owned by the 21 emails in `BUILDER_ALLOWLIST` (`src/lib/builder/access.ts`) — map email → `organisations.owner_id` via `auth.users`. Keep `access.ts` in sync, or have it read this column.
+2. **Enforce in RLS.** Rewrite the `USING` (SELECT/UPDATE/DELETE) and `WITH CHECK` (INSERT/UPDATE) policies on `pipeline_items`, `projects`, `applications` so they require **both** org-ownership **and** `apply_access = true` on the owning org. (Today they check org-ownership only.)
+3. **Defence-in-depth / UX.** Redirect non-allowlisted users away from the pipeline/projects/applications pages, and gate the pipeline Kanban load (`pipeline/page.tsx:523`) behind the access check (today it loads unconditionally).
+
+**Acceptance test (must pass before it's called done — verify LIVE on real accounts, both directions):**
+- ✅ A **cohort (allowlisted)** user can still read AND write their own pipeline / projects / applications.
+- ✅ A **non-allowlisted** user is **blocked at the database level** (RLS denies the direct Supabase call), not merely hidden in the UI.
+- Test by hitting the Supabase data path directly (not just the UI) for both a seeded and a non-seeded account.
+
+**Carry-forward bonus:** this `apply_access` entitlement is the **foundation of the post-GA Stripe paid gate** — build it to carry forward (post-GA work = connect `apply_access` to Stripe subscription state + trial-expiry, not rebuild). It replaces the hardcoded TS allowlist that `access.ts` already anticipates retiring.
 
 ---
 
@@ -78,7 +86,7 @@ This both closes the GA hole **and** builds the entitlement model that `access.t
 | Retroactive sweep (run) | ✅ Done | `scripts/sweep-ungrounded-amounts.mjs` over 497 briefs: **0 fabrications in live set**, 13 cosmetic, 1 real error (Fredericks — now fixed). Script uncommitted — optional to commit as a reusable launch tool. |
 | Mis-attribution fix | ✅ Shipped | Prompt disambiguation (`b4fb1cf6`): `typical_award` = per-grant size, not income band / total fund / other product. NB: Fredericks showed mis-attribution can also hit the `amount_max` *parse* path (`fill-amounts`), not just `typical_award` — analogous "don't grab a delivered/other-product ceiling" guard is a possible future enhancement (not GA-blocking). |
 | Fredericks Foundation data error | ✅ Fixed (2026-06-21) | `011655cc` `amount_max` £1.5m → **£50k** (revenue-share product max, web-confirmed). £1.5m was the *Community Builders Fund* (£100k–£1.5m) that Fredericks only *delivers*. `manual`/`external_id=null` + admin-pinned `field_provenance.amount_max` → won't revert on crawl. |
-| Greggs duplicate | 🟡 Recommend archive (pending Paul) | Two rows = **same fund**: `08fcdf0b` "Local Community Projects" (£500–£20k, generic `/grants` URL) and `cfb56fe7` "Community Action Fund" (£20k–£60k). Funder site confirms there is **no** separate Local Community Projects Fund — only the Community Action Fund. **Recommend: archive `08fcdf0b` (stale name), keep `cfb56fe7`** (correct name/URL/eligibility/amount). No delete made — Paul to decide. |
+| Greggs duplicate | ✅ Archived (2026-06-21) | Two rows = **same fund**. Funder site confirms there is **no** separate Local Community Projects Fund — only the Community Action Fund. **Archived `08fcdf0b`** ("Local Community Projects", `is_active=false`/`pipeline_state=archived`, provenance `admin:dedup_2026-06-21`); **kept `cfb56fe7`** "Community Action Fund" (£20k–£60k, correct name/URL/eligibility/amount). |
 | Duplicate rows as a class | ✅ Assessed — not systemic | Seed+scraper heuristic flagged 27 funders, but the overwhelming majority are legitimately multi-programme (NLCF = 24 distinct programmes, Foundation Scotland = 14 community funds, etc.). True same-fund duplication is a **small set**: Greggs (confirmed), plus generic catch-all seed rows that overlap specific programmes (Ufi VocTech, Esmée Fairbairn, Social Investment Business). Dedup discipline is largely holding. Worth a short cleanup pass, not a systemic fix. |
 | Other data errors surfaced (non-blocking) | ⬜ Queue | NLHF "Heritage Grants £250k–£10m" row has `amount_min=10, amount_max=250000` (both wrong — scraper mis-parse; `source=heritage_fund`/`external_id` set → fix in scraper or it reverts). Jack Petchey "Places & Spaces Fund" `amount_max=£2,000,000` looks too high — verify. |
 | Launch-claims SQL pass | 🟡 In progress — **GA BLOCKER** | Amounts honesty pass done (sweep). Coverage verified ad-hoc 2026-06-21 (gap-audit/programme additions still in `tagged` queue, **not live** — no "we added X funders" claim shippable yet). Full coverage-claim SQL pass required before any public launch comms. |
@@ -124,6 +132,7 @@ Moved off the GA-blocker list per the 2026-06-21 scope decision. Cohort tests th
 5. 🔎 Ltd + ICO + insurance confirmed (bank only needed for post-GA paid).
 6. ⬜ Open free-tier signup flipped on + coherent free-tier UX.
 
-**Cleared this session:** ✅ numeric guard live-verified · ✅ Fredericks data error fixed.
-**Recommended (awaiting Paul):** archive Greggs duplicate `08fcdf0b`.
-**Off the GA list (post-GA):** Stripe/payment, entitlement→payment/trial logic, pricing UX.
+**Cleared this session (2026-06-21):** ✅ numeric guard live-verified (Greggs) · ✅ Fredericks data error fixed (£1.5m→£50k) · ✅ Greggs duplicate `08fcdf0b` archived.
+**Queued non-blocking:** NLHF "Heritage Grants £250k–£10m" amount mis-parse (scraper fix) · Jack Petchey "Places & Spaces" £2m to verify.
+**Off the GA list (post-GA, ~2–4 wks):** Stripe/payment, entitlement→payment/trial logic, pricing UX.
+**▶ Next session:** build the Apply-tier RLS entitlement fix (§2a) — fresh & dedicated, no parallel writes to those 3 tables.
