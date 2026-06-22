@@ -10,25 +10,22 @@ Next.js 14 App Router + Supabase + Tailwind CSS, deployed on Vercel via GitHub a
 
 ---
 
-## Git — Critical Workaround
+## Git
 
-The mounted `.git` directory has persistent lock files. Always use this pattern:
+This repo lives at a **plain local path** (`~/dev/grant-tracker`) — **not** inside `~/Documents` or `~/Desktop`. Those are iCloud-synced ("Desktop & Documents Folders"), and syncing a live `.git` corrupts it (stale lock files, broken index/refs, a duplicated object store). Keep the working copy off any synced/cloud location.
 
+Normal git works — no workaround:
 ```bash
-# 1. Copy .git to /tmp and clear locks
-rm -rf /tmp/gg && cp -a .git /tmp/gg && rm -f /tmp/gg/index.lock /tmp/gg/HEAD.lock /tmp/gg/gc.log.lock
-
-# 2. Prefix every git command with these env vars
-GIT_DIR=/tmp/gg GIT_WORK_TREE=$(pwd) git fetch origin main
-GIT_DIR=/tmp/gg GIT_WORK_TREE=$(pwd) git reset origin/main   # syncs to remote, keeps working tree
-GIT_DIR=/tmp/gg GIT_WORK_TREE=$(pwd) git add <files>
-GIT_DIR=/tmp/gg GIT_WORK_TREE=$(pwd) git commit -m "..."
-GIT_DIR=/tmp/gg GIT_WORK_TREE=$(pwd) git push origin HEAD:refs/heads/main
+git status
+git add <files>
+git commit -m "..."
+git push origin main
 ```
+Push auth is a personal-access token embedded in `remote.origin.url` (see `git remote -v`).
 
-**Always `fetch` + `reset origin/main` before staging** — the local tree drifts behind remote. If remote is ahead, reset brings HEAD to remote without touching your working files.
+**After every push:** Vercel auto-deploys from GitHub `main` (~1 min). Verify on the live site.
 
-**After every push:** Vercel takes ~1 min to deploy. Verify on the live site.
+> History: until 2026-06-22 the repo lived in iCloud-synced `~/Documents`, which corrupted `.git` and forced a `/tmp/gg` copy-and-reset ritual to commit. Moving it to `~/dev` fixed the root cause; the ritual is retired. Don't move it back under Documents/Desktop.
 
 ---
 
