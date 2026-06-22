@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { enforceInferenceRateLimit } from '@/lib/mcp-rate-limit'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,6 +18,26 @@ function stripHtml(html: string): string {
 
 export async function POST(req: NextRequest) {
   try {
+    // Auth + per-user rate limit — fetches a URL and calls Anthropic (Haiku).
+    // Both callers (onboarding wizard, profile page) run POST-login (onboarding
+    // is not a middleware-public path), so a per-user gate is safe and does not
+    // break signup. Anonymous direct calls are rejected.
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Please sign in to use auto-fill.' }, { status: 401 })
+    }
+    const rl = await enforceInferenceRateLimit({ scope: 'orgprofile', identifier: `user:${user.id}`, perHour: 20, perDay: 60 })
+    if (!rl.allowed) {
+      if (rl.reason === 'limiter_unavailable') {
+        return NextResponse.json({ error: 'Auto-fill is temporarily unavailable — please fill in your details manually.' }, { status: 503 })
+      }
+      return NextResponse.json(
+        { error: 'Auto-fill limit reached for now — please try again shortly or fill in your details manually.', retry_after: rl.retry_after },
+        { status: 429, headers: rl.retry_after ? { 'Retry-After': String(rl.retry_after) } : undefined },
+      )
+    }
+
     const { url } = await req.json()
 
     if (!url || typeof url !== 'string') {

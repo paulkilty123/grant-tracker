@@ -1,8 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { enforceInferenceRateLimit } from '@/lib/mcp-rate-limit'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
+  // Auth + per-user rate limit — this route fetches a URL and calls Anthropic
+  // (Haiku). Callers are authenticated (pipeline Add-a-fund), so any signed-in
+  // user passes; anonymous direct calls are rejected. Same pattern as ai-search.
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return NextResponse.json({ error: 'Please sign in to use auto-fill.' }, { status: 401 })
+  }
+  const rl = await enforceInferenceRateLimit({ scope: 'autofill', identifier: `user:${user.id}`, perHour: 20, perDay: 60 })
+  if (!rl.allowed) {
+    if (rl.reason === 'limiter_unavailable') {
+      return NextResponse.json({ error: 'Auto-fill is temporarily unavailable — please add the details manually.' }, { status: 503 })
+    }
+    return NextResponse.json(
+      { error: 'Auto-fill limit reached for now — please try again shortly or add the details manually.', retry_after: rl.retry_after },
+      { status: 429, headers: rl.retry_after ? { 'Retry-After': String(rl.retry_after) } : undefined },
+    )
+  }
+
   const { url } = await req.json()
   if (!url || typeof url !== 'string') {
     return NextResponse.json({ error: 'URL is required' }, { status: 400 })

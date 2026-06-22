@@ -159,52 +159,26 @@ export async function enforceRateLimits(ctx: MCPAuthContext): Promise<RateLimitR
 }
 
 // ──────────────────────────────────────────────────────────────────────────
-// ai-search limiter — free-tier AI ranking (a paid Anthropic Haiku call).
+// Inference-surface limiter — per-user limits for the paid Anthropic (Haiku)
+// routes (ai-search ranking, autofill-grant, org-autocomplete profile scan).
 //
 // Same Upstash sliding-window mechanism as the MCP limiters above, keyed per
-// authenticated user. NOT a second rate-limiting system — same library, same
-// Redis, same env vars.
+// authenticated user, one bucket per surface (`scope`). NOT a second rate-
+// limiting system — same library, same Redis, same env vars; this just
+// generalises the one helper across surfaces.
 //
 // FAIL DIRECTION — DELIBERATELY CLOSED. The MCP limiters fail OPEN (degrade to
 // allow-all when Upstash is unreachable) because MCP traffic is already bounded
-// by bearer-key auth and the surface is low-cost. ai-search is an *unbounded
-// inference-cost* surface once free-tier signup opens, so allow-all-on-failure
+// by bearer-key auth and the surface is low-cost. These are *unbounded
+// inference-cost* surfaces once free-tier signup opens, so allow-all-on-failure
 // is the wrong default: if the limiter can't be reached we BLOCK (the route
-// returns 503 and the client falls back to keyword results — no AI spend).
-// Tradeoff: an Upstash outage (or missing prod env vars) disables AI ranking
-// entirely. Keyword/catalogue search is unaffected. This is the safe direction
-// for a cost surface; the cost is availability of one feature, not correctness.
+// returns 503 and the client falls back to its non-AI path — no AI spend).
+// Tradeoff: an Upstash outage (or missing prod env vars) disables AI ranking /
+// auto-fill. Keyword/catalogue search and manual entry are unaffected. Safe
+// direction for a cost surface; the cost is availability of one feature.
 // ──────────────────────────────────────────────────────────────────────────
 
-const AI_SEARCH_PER_HOUR = 30   // per authenticated user
-const AI_SEARCH_PER_DAY  = 150  // per authenticated user
-
-interface AiSearchLimiters { hourly: Ratelimit; daily: Ratelimit }
-let cachedAiSearch: AiSearchLimiters | null = null
-
-function initAiSearchLimiters(): AiSearchLimiters | null {
-  if (cachedAiSearch) return cachedAiSearch
-  const creds = readUpstashEnv()
-  if (!creds) return null
-  const redis = new Redis(creds)
-  cachedAiSearch = {
-    hourly: new Ratelimit({
-      redis,
-      limiter: Ratelimit.slidingWindow(AI_SEARCH_PER_HOUR, '1 h'),
-      prefix:  'aisearch:user:hr',
-      analytics: false,
-    }),
-    daily: new Ratelimit({
-      redis,
-      limiter: Ratelimit.slidingWindow(AI_SEARCH_PER_DAY, '1 d'),
-      prefix:  'aisearch:user:d',
-      analytics: false,
-    }),
-  }
-  return cachedAiSearch
-}
-
-export interface AiSearchRateLimitResult {
+export interface InferenceRateLimitResult {
   allowed:        boolean
   reason:         'ok' | 'rate_limited' | 'limiter_unavailable'
   which_limit:    'hourly' | 'daily' | null
@@ -214,20 +188,42 @@ export interface AiSearchRateLimitResult {
   limits:         { per_hour: number; per_day: number }
 }
 
+interface InferenceLimiterPair { hourly: Ratelimit; daily: Ratelimit }
+const inferenceLimiterCache = new Map<string, InferenceLimiterPair>()
+
+function getInferenceLimiters(scope: string, perHour: number, perDay: number): InferenceLimiterPair | null {
+  const cached = inferenceLimiterCache.get(scope)
+  if (cached) return cached
+  const creds = readUpstashEnv()
+  if (!creds) return null
+  const redis = new Redis(creds)
+  const pair: InferenceLimiterPair = {
+    hourly: new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(perHour, '1 h'), prefix: `infer:${scope}:hr`, analytics: false }),
+    daily:  new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(perDay,  '1 d'), prefix: `infer:${scope}:d`,  analytics: false }),
+  }
+  inferenceLimiterCache.set(scope, pair)
+  return pair
+}
+
 /**
- * Enforce the per-user ai-search rate limit. Fails CLOSED (allowed=false,
- * reason='limiter_unavailable') if Upstash is unset or unreachable — see the
- * section header for the rationale.
+ * Enforce a per-identifier inference rate limit for `scope`. Fails CLOSED
+ * (allowed=false, reason='limiter_unavailable') if Upstash is unset or
+ * unreachable — see the section header for the rationale.
  */
-export async function enforceAiSearchRateLimit(userId: string): Promise<AiSearchRateLimitResult> {
-  const limits = { per_hour: AI_SEARCH_PER_HOUR, per_day: AI_SEARCH_PER_DAY }
-  const limiters = initAiSearchLimiters()
+export async function enforceInferenceRateLimit(opts: {
+  scope: string         // bucket name, e.g. 'aisearch' | 'autofill' | 'orgprofile'
+  identifier: string    // e.g. `user:<uuid>`
+  perHour: number
+  perDay: number
+}): Promise<InferenceRateLimitResult> {
+  const { scope, identifier, perHour, perDay } = opts
+  const limits = { per_hour: perHour, per_day: perDay }
+  const limiters = getInferenceLimiters(scope, perHour, perDay)
   if (!limiters) {
     return { allowed: false, reason: 'limiter_unavailable', which_limit: null, retry_after: null, remaining_hour: null, remaining_day: null, limits }
   }
   try {
-    const id = `user:${userId}`
-    const [h, d] = await Promise.all([limiters.hourly.limit(id), limiters.daily.limit(id)])
+    const [h, d] = await Promise.all([limiters.hourly.limit(identifier), limiters.daily.limit(identifier)])
     const remaining_hour = Math.max(0, h.remaining)
     const remaining_day  = Math.max(0, d.remaining)
     if (!h.success) return { allowed: false, reason: 'rate_limited', which_limit: 'hourly', retry_after: retryAfterSeconds(h.reset), remaining_hour, remaining_day, limits }
@@ -236,7 +232,13 @@ export async function enforceAiSearchRateLimit(userId: string): Promise<AiSearch
   } catch (err) {
     // Redis unreachable mid-request → fail CLOSED (same direction as missing env).
     // eslint-disable-next-line no-console
-    console.error('[ai-search-rate-limit] limiter error — failing closed:', err instanceof Error ? err.message : err)
+    console.error(`[inference-rate-limit:${scope}] limiter error — failing closed:`, err instanceof Error ? err.message : err)
     return { allowed: false, reason: 'limiter_unavailable', which_limit: null, retry_after: null, remaining_hour: null, remaining_day: null, limits }
   }
+}
+
+// Back-compat wrapper — the ai-search route calls this. 30/h, 150/day per user.
+export type AiSearchRateLimitResult = InferenceRateLimitResult
+export function enforceAiSearchRateLimit(userId: string): Promise<InferenceRateLimitResult> {
+  return enforceInferenceRateLimit({ scope: 'aisearch', identifier: `user:${userId}`, perHour: 30, perDay: 150 })
 }
