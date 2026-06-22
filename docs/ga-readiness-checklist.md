@@ -1,7 +1,7 @@
 # Grant Tracker — GA Readiness Checklist
 
 **Target GA:** 30 June 2026 (per delivery plan v2)
-**Last updated:** 2026-06-21
+**Last updated:** 2026-06-22
 **Maintained by:** Claude (update in place as items move)
 
 ## GA scope (decided 2026-06-21)
@@ -42,7 +42,8 @@ External/legal — Paul's to drive. Legal *pages* exist in the app; legal *revie
 |---|---|---|
 | **Apply-tier access enforced server-side (LOAD-BEARING)** | ✅ Shipped (2026-06-22) | `apply_access` entitlement on `organisations` + RLS on pipeline_items/projects/applications/org_core_content (migration 030). DB-verified both directions. Full record in §2a. |
 | Server-side rate limits (MCP) | ✅ Shipped | `src/lib/mcp-rate-limit.ts` — 3 sliding-window limiters (key 100/h, key 1000/d, IP 5000/h), per-request enforcement, fails loud on non-authenticated traffic. Upstash Redis. |
-| Non-MCP API route rate limiting | ⬜ Not started | App/admin API routes rely on auth, not rate limits. Lower risk (authenticated + admin-gated); flag if any unauthenticated route is added. |
+| **AI inference surface (`ai-search`) — auth + rate limit (was a hidden GA BLOCKER)** | ✅ Shipped (2026-06-22) | **Finding:** `api/ai-search/route.ts` — the free-tier Haiku ranking call — was **unauthenticated AND unmetered** (verified live: anon POST returned `200 []`). It had been mis-filed below as "lower risk, authenticated + admin-gated"; it was neither, and goes public the moment free-tier signup opens. **Fix (`06383eb`):** server-side auth gate (any signed-in user, NOT the Apply allowlist → else 401) + per-user Upstash sliding-window limit (**30/h, 150/day**), reusing the MCP limiter mechanism in `mcp-rate-limit.ts` (not a second system). **Fails CLOSED** (limiter unreachable → 503; client falls back to keyword results, no AI spend) — deliberately opposite to the MCP limiter's fail-open, because this is an unbounded inference-cost surface. ⚠️ Consequence: `ai-search` now needs `UPSTASH_*` set in prod or AI ranking returns 503 (overlaps the Upstash item below). |
+| Other non-MCP API routes (admin / builder) | 🟡 Auth/allowlist-gated, no rate limit | `api/admin/*` + `api/builder/*` are auth- + allowlist-gated (low risk; no anonymous inference). No general per-route limiting planned for GA. **Rule:** flag + gate before merge if any *new* unauthenticated or AI-inference route is added. |
 | Upstash token rotation | 🔎 Needs Paul — **GA BLOCKER** | `UPSTASH_REDIS_REST_TOKEN` was briefly visible in a setup screenshot (2026-05-13). Rotate before public launch + confirm prod env vars set (rate limiting silently disables if missing). |
 | MCP counter race | 🟡 Mitigated — **re-smoke-test for GA** | Non-monotonic hourly counter = sliding-window estimator's inherent ±1 variance. Handled: `remaining_hour` clamped ≥0, `reset_at_hour` exposed for precise pacing, documented `mcp-rate-limit.ts:84-88`. Re-run the 6-call smoke test before GA to confirm no drift beyond ±1. |
 
@@ -90,7 +91,8 @@ External/legal — Paul's to drive. Legal *pages* exist in the app; legal *revie
 | Fredericks Foundation data error | ✅ Fixed (2026-06-21) | `011655cc` `amount_max` £1.5m → **£50k** (revenue-share product max, web-confirmed). £1.5m was the *Community Builders Fund* (£100k–£1.5m) that Fredericks only *delivers*. `manual`/`external_id=null` + admin-pinned `field_provenance.amount_max` → won't revert on crawl. |
 | Greggs duplicate | ✅ Archived (2026-06-21) | Two rows = **same fund**. Funder site confirms there is **no** separate Local Community Projects Fund — only the Community Action Fund. **Archived `08fcdf0b`** ("Local Community Projects", `is_active=false`/`pipeline_state=archived`, provenance `admin:dedup_2026-06-21`); **kept `cfb56fe7`** "Community Action Fund" (£20k–£60k, correct name/URL/eligibility/amount). |
 | Duplicate rows as a class | ✅ Assessed — not systemic | Seed+scraper heuristic flagged 27 funders, but the overwhelming majority are legitimately multi-programme (NLCF = 24 distinct programmes, Foundation Scotland = 14 community funds, etc.). True same-fund duplication is a **small set**: Greggs (confirmed), plus generic catch-all seed rows that overlap specific programmes (Ufi VocTech, Esmée Fairbairn, Social Investment Business). Dedup discipline is largely holding. Worth a short cleanup pass, not a systemic fix. |
-| Other data errors surfaced (non-blocking) | ⬜ Queue | NLHF "Heritage Grants £250k–£10m" row has `amount_min=10, amount_max=250000` (both wrong — scraper mis-parse; `source=heritage_fund`/`external_id` set → fix in scraper or it reverts). Jack Petchey "Places & Spaces Fund" `amount_max=£2,000,000` looks too high — verify. |
+| Other data errors surfaced | 🟡 Partly cleared | ✅ **NLHF "Heritage Grants £250k–£10m" FIXED (2026-06-22).** Root cause: `parseAmountRange` matched only `/£[\d,]+/`, so "£250,000 to £10million" parsed as `min=10, max=250000` — a major funder shown orders of magnitude wrong. Parser now magnitude-aware (million/mn/m/thousand/k) + order-robust (`06383eb`); live row `4b989eab` corrected to £250k–£10m via SQL (scraper now emits the same → no revert). The parser fix also self-corrects other "£Nmillion"-style rows on next crawl. ⬜ Still queued: Jack Petchey "Places & Spaces Fund" `amount_max=£2,000,000` — verify. |
+| Creative Scotland "amount fix" — does not exist (conflation) | ✅ Clarified | There was **no Creative Scotland amount mis-parse.** CS's issue was junk/nav-page rows, already deactivated (`6869d90`, `2494968`); the DB confirms those rows are archived and the live row ("Open Fund", £1k–£150k) is correct. Recorded so it isn't chased as an open amount item. |
 | Launch-claims SQL pass | 🟡 In progress — **GA BLOCKER** | Amounts honesty pass done (sweep). Coverage verified ad-hoc 2026-06-21 (gap-audit/programme additions still in `tagged` queue, **not live** — no "we added X funders" claim shippable yet). Full coverage-claim SQL pass required before any public launch comms. |
 
 ---
@@ -122,20 +124,22 @@ Moved off the GA-blocker list per the 2026-06-21 scope decision. Cohort tests th
 | Item | Status | Evidence / notes |
 |---|---|---|
 | London-grants location follow-up | ✅ Shipped | Geo-scope filter was hiding UK-wide funding for region-scoped profiles. Fixed: `a0e9db25`, `f4eaffcf`, `1bdaec30` (all 2026-06-20), on `origin/main`. |
+| Cohort feedback items (Jack, 2026-06-20) — **already shipped, not pending** | ✅ Shipped | Recorded straight because these were loosely carried as "pending": pipeline star/favourite + "Starred only" filter (`50a485a`, `9c2c029`); add-fund discoverability / "Add a fund not listed" relabel (`d464b74`, `931f812`, `e2c1f57`); Rank dead-URL fix (`d464b74`). All on `origin/main`. Remaining Jack items (Scotland coverage depth) stay post-GA. |
 | location_tag hygiene backlog (residual) | 🟡 Post-launch | 6 data-quality items from the 2026-06-02 region audit. Degrade matching at the margins, not silent invisibility — non-blocking for GA. |
 
 ---
 
 ## GA-blocking summary (must be ✅ before opening free-tier signup)
 1. ✅ **Apply-tier access enforced server-side** for pipeline/projects/applications/org_core_content (§2a) — *the load-bearing item; shipped + DB-verified 2026-06-22 (migration 030).*
-2. 🔎 Upstash token rotated + prod env vars confirmed.
-3. 🟡 Launch-claims coverage SQL pass before any public comms.
-4. 🟡 MCP counter-race re-smoke-test.
-5. 🔎 Ltd + ICO + insurance confirmed (bank only needed for post-GA paid).
-6. ⬜ Open free-tier signup flipped on + coherent free-tier UX.
+2. ✅ **AI inference surface (`ai-search`) auth-gated + rate-limited** (§2) — *found mis-classified during this review (was unauth + unmetered); fixed `06383eb`, auth gate verified live.*
+3. 🔎 Upstash token rotated + prod env vars confirmed. **Now load-bearing for `ai-search` too (fail-closed): if `UPSTASH_*` are unset/wrong in prod, AI ranking returns 503 for everyone.** Confirm both vars are set after rotation.
+4. 🟡 Launch-claims coverage SQL pass before any public comms.
+5. 🟡 MCP counter-race re-smoke-test.
+6. 🔎 Ltd + ICO + insurance confirmed (bank only needed for post-GA paid).
+7. ⬜ Open free-tier signup flipped on + coherent free-tier UX.
 
 **Cleared 2026-06-21:** ✅ numeric guard live-verified (Greggs) · ✅ Fredericks data error fixed (£1.5m→£50k) · ✅ Greggs duplicate `08fcdf0b` archived.
-**Cleared 2026-06-22:** ✅ Apply-tier RLS entitlement fix (§2a) shipped + DB-verified (migration 030) — the #1 load-bearing GA blocker.
-**Queued non-blocking:** NLHF "Heritage Grants £250k–£10m" amount mis-parse (scraper fix) · Jack Petchey "Places & Spaces" £2m to verify · §4 free-tier UX must hide pipeline-write affordances on Deadlines/Search (see §2a residual).
-**Off the GA list (post-GA, ~2–4 wks):** Stripe/payment (wire to `apply_access`), entitlement→payment/trial logic, pricing UX.
-**▶ Next GA blockers:** Upstash token rotation (🔎 Paul) · launch-claims coverage SQL pass · MCP counter-race re-smoke-test · open free-tier signup + coherent free-tier UX (§4).
+**Cleared 2026-06-22:** ✅ Apply-tier RLS entitlement fix (§2a) shipped + DB-verified (migration 030) — the #1 load-bearing GA blocker · ✅ `ai-search` auth + rate-limit (§2, `06383eb`) — the inference-surface gap surfaced this review · ✅ NLHF "Heritage Grants £250k–£10m" amount fixed at source (`06383eb`) + live row corrected.
+**Queued non-blocking:** Jack Petchey "Places & Spaces" £2m to verify · §4 free-tier UX must hide pipeline-write affordances on Deadlines/Search (see §2a residual).
+**Off the GA list (post-GA, ~2–4 wks):** Stripe/payment (wire to `apply_access`), entitlement→payment/trial logic, pricing UX · Scotland coverage depth · location_tag hygiene backlog.
+**▶ Next GA blockers:** Upstash token rotation + confirm prod env vars (🔎 Paul; now also gates `ai-search`) · launch-claims coverage SQL pass · MCP counter-race re-smoke-test · open free-tier signup + coherent free-tier UX (§4).
