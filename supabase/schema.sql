@@ -466,6 +466,7 @@ create table public.organisations (
   last_visited_search_page_at timestamptz,
   evidence_notes text,
   excluded_niche_tags text[] not null default '{}'::text[],
+  apply_access boolean not null default false,  -- Apply-tier entitlement (migration 030); gated by trg_enforce_apply_access_immutable
   constraint organisations_pkey primary key (id),
   constraint organisations_legal_structure_check check ((legal_structure = any (array['cic_guarantee'::text, 'cic_shares'::text, 'cio'::text, 'registered_charity'::text, 'ltd_guarantee'::text, 'ltd_shares'::text, 'llp'::text, 'cooperative'::text, 'unincorporated'::text, 'sole_trader'::text, 'not_registered'::text]))),
   constraint organisations_org_stage_check check ((org_stage = any (array['idea'::text, 'pre_revenue'::text, 'early'::text, 'growth'::text, 'established'::text])))
@@ -780,7 +781,32 @@ create or replace view public.grants_with_funder as
     f.typical_max AS funder_typical_max,
     f.is_rolling AS funder_is_rolling,
     g.funding_subtype,
-    g.amount_undisclosed
+    g.amount_undisclosed,
+    -- appended 2026-06-17: matcher/eligibility fields the normaliser reads but the view
+    -- had silently dropped (view drift — view predated these columns). Their absence
+    -- disabled niche exclusion/boost, the income gate, and si/prog/ik eligibility checks
+    -- on EVERY surface that reads this view. IMPORTANT: any new scraped_grants column the
+    -- matcher or eligibility engine reads MUST be added here or it goes dark.
+    g.niche_tags,
+    g.min_org_income,
+    g.max_org_income,
+    g.si_instrument_type,
+    g.si_repayment_term_months,
+    g.si_interest_rate_percent,
+    g.si_security_required,
+    g.si_min_investment,
+    g.si_max_investment,
+    g.prog_cohort_size,
+    g.prog_length_weeks,
+    g.prog_location_mode,
+    g.prog_location_city,
+    g.prog_includes_funding,
+    g.prog_funding_amount,
+    g.prog_application_cycle,
+    g.prog_next_cohort_start,
+    g.ik_support_type,
+    g.ik_value_estimate,
+    g.ik_capacity_available
    FROM public.scraped_grants g
      LEFT JOIN public.funders f ON lower(g.funder) = lower(f.name) OR lower(g.funder) = lower(f.short_name);
 
@@ -957,18 +983,50 @@ create policy "Users can manage their own organisation" on public.organisations
   using (owner_id = auth.uid())
   with check (owner_id = auth.uid());
 
+-- organisations is user-writable (policy above), so the Apply-tier entitlement
+-- column must be locked against self-service escalation: a non-privileged role
+-- cannot set/change apply_access via a hand-crafted INSERT/UPDATE (migration 030).
+create or replace function public.enforce_apply_access_immutable()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if tg_op = 'INSERT' then
+    if new.apply_access is true
+       and current_user not in ('service_role', 'postgres', 'supabase_admin') then
+      raise exception 'apply_access is a managed entitlement and cannot be set on insert (role %)', current_user
+        using errcode = '42501';
+    end if;
+  elsif tg_op = 'UPDATE' then
+    if new.apply_access is distinct from old.apply_access
+       and current_user not in ('service_role', 'postgres', 'supabase_admin') then
+      raise exception 'apply_access is a managed entitlement and cannot be changed directly (role %)', current_user
+        using errcode = '42501';
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+create trigger trg_enforce_apply_access_immutable
+  before insert or update on public.organisations
+  for each row execute function public.enforce_apply_access_immutable();
+
+-- Apply-tier RLS (migration 030): org-ownership AND organisations.apply_access.
 create policy "Org members can view pipeline" on public.pipeline_items
   for select to public
-  using (org_id in (select organisations.id from public.organisations where organisations.owner_id = auth.uid()));
+  using (org_id in (select organisations.id from public.organisations where organisations.owner_id = auth.uid() and organisations.apply_access = true));
 create policy "Org members can insert pipeline" on public.pipeline_items
   for insert to public
-  with check (org_id in (select organisations.id from public.organisations where organisations.owner_id = auth.uid()));
+  with check (org_id in (select organisations.id from public.organisations where organisations.owner_id = auth.uid() and organisations.apply_access = true));
 create policy "Org members can update pipeline" on public.pipeline_items
   for update to public
-  using (org_id in (select organisations.id from public.organisations where organisations.owner_id = auth.uid()));
+  using (org_id in (select organisations.id from public.organisations where organisations.owner_id = auth.uid() and organisations.apply_access = true))
+  with check (org_id in (select organisations.id from public.organisations where organisations.owner_id = auth.uid() and organisations.apply_access = true));
 create policy "Org members can delete pipeline" on public.pipeline_items
   for delete to public
-  using (org_id in (select organisations.id from public.organisations where organisations.owner_id = auth.uid()));
+  using (org_id in (select organisations.id from public.organisations where organisations.owner_id = auth.uid() and organisations.apply_access = true));
 
 create policy "Org members can manage saved grants" on public.saved_grants
   for all to public

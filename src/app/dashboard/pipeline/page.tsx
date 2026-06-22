@@ -517,26 +517,30 @@ export default function PipelinePage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
       setUserId(user.id)
+      // Apply-tier gate: pipeline is cohort-only. Check access BEFORE loading any
+      // pipeline data so a non-entitled (free-tier) user never triggers the
+      // now-RLS-blocked reads. RLS on pipeline_items is the real enforcement
+      // (migration 030); this is the matching UX so the page doesn't render an
+      // empty Kanban they can't use.
+      const access = await fetch('/api/builder/access').then(r => r.json()).catch(() => ({ allowed: false }))
+      setBuilderAllowed(!!access?.allowed)
+      if (!access?.allowed) { setLoading(false); return }
       const o = await getOrganisationByOwner(user.id)
       setOrg(o)
       if (o) {
         const data = await getPipelineItems(o.id)
         setItems(data)
         // Map linked applications so cards can offer Continue vs Start.
-        const access = await fetch('/api/builder/access').then(r => r.json()).catch(() => ({ allowed: false }))
-        setBuilderAllowed(!!access?.allowed)
-        if (access?.allowed) {
-          const { data: apps } = await supabase
-            .from('applications')
-            .select('id, pipeline_item_id')
-            .eq('org_id', o.id)
-            .not('pipeline_item_id', 'is', null)
-          const map: Record<string, string> = {}
-          for (const a of (apps ?? []) as { id: string; pipeline_item_id: string }[]) {
-            if (!map[a.pipeline_item_id]) map[a.pipeline_item_id] = a.id
-          }
-          setAppByPipeline(map)
+        const { data: apps } = await supabase
+          .from('applications')
+          .select('id, pipeline_item_id')
+          .eq('org_id', o.id)
+          .not('pipeline_item_id', 'is', null)
+        const map: Record<string, string> = {}
+        for (const a of (apps ?? []) as { id: string; pipeline_item_id: string }[]) {
+          if (!map[a.pipeline_item_id]) map[a.pipeline_item_id] = a.id
         }
+        setAppByPipeline(map)
       }
       setLoading(false)
     }
@@ -637,6 +641,22 @@ export default function PipelinePage() {
   }
 
   if (loading) return <div className="flex items-center justify-center h-64 text-mid">Loading pipeline…</div>
+
+  // Apply-tier gate (matches Projects/Applications). RLS already blocks the data
+  // for non-entitled users; this keeps them out of the empty Kanban shell.
+  if (!builderAllowed) {
+    return (
+      <div style={{ maxWidth: 660 }}>
+        <h2 className="text-4xl font-bold text-charcoal leading-tight" style={{ fontFamily: "var(--font-space-grotesk)", letterSpacing: "-0.02em" }}>Pipeline</h2>
+        <div className="mt-5" style={{ background: '#F5F1E8', borderRadius: 12, padding: '20px 24px' }}>
+          <p className="text-sm text-mid" style={{ margin: 0, lineHeight: 1.6 }}>
+            Pipeline is currently available to founding cohort members while we shape the
+            Apply tools together. It will open more widely soon.
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div>

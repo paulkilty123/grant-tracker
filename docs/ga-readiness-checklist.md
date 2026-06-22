@@ -40,7 +40,7 @@ External/legal — Paul's to drive. Legal *pages* exist in the app; legal *revie
 
 | Item | Status | Evidence / notes |
 |---|---|---|
-| **Apply-tier access enforced server-side (LOAD-BEARING)** | 🟡 Partial — **GA BLOCKER** | Builder = solid; pipeline/projects/applications = **not enforced**. Full finding + fix below (§2a). |
+| **Apply-tier access enforced server-side (LOAD-BEARING)** | ✅ Shipped (2026-06-22) | `apply_access` entitlement on `organisations` + RLS on pipeline_items/projects/applications/org_core_content (migration 030). DB-verified both directions. Full record in §2a. |
 | Server-side rate limits (MCP) | ✅ Shipped | `src/lib/mcp-rate-limit.ts` — 3 sliding-window limiters (key 100/h, key 1000/d, IP 5000/h), per-request enforcement, fails loud on non-authenticated traffic. Upstash Redis. |
 | Non-MCP API route rate limiting | ⬜ Not started | App/admin API routes rely on auth, not rate limits. Lower risk (authenticated + admin-gated); flag if any unauthenticated route is added. |
 | Upstash token rotation | 🔎 Needs Paul — **GA BLOCKER** | `UPSTASH_REDIS_REST_TOKEN` was briefly visible in a setup screenshot (2026-05-13). Rotate before public launch + confirm prod env vars set (rate limiting silently disables if missing). |
@@ -60,20 +60,22 @@ External/legal — Paul's to drive. Legal *pages* exist in the app; legal *revie
 
 **Verdict:** The allowlist holds for the expensive **builder compute** (AI generation, export, etc.) but **does NOT hold for the pipeline/projects/applications data layer.** RLS still isolates orgs (no cross-org data leak), so this is an **entitlement bypass** (a free-tier user using paid features for their *own* org), not a data breach. Under the GA model where "the allowlist is the security model for paid features," this fails the requirement.
 
-**Fix (GA-blocking) — build spec for the dedicated session:**
+**Fix — SHIPPED 2026-06-22 (migration `030_apply_access_entitlement.sql`):**
 
-> ⚠️ **Run this in a single, fresh, dedicated session** (Paul will `/clear` first for clean context on the schema change). **No parallel work touching `pipeline_items`, `projects`, or `applications` while the migration runs.**
+1. ✅ **Entitlement as a DB fact.** `apply_access boolean not null default false` on `organisations`, seeded `true` from `BUILDER_ALLOWLIST` via `auth.users` join. All 20 current orgs are allowlist-owned → all seeded `true` (zero impact on the live cohort); new (public) signups default `false`. `access.ts` now reads the column (`getBuilderUser()` = allowlist OR `apply_access=true` org) — the list is retained as seed + fallback for internal logins without an org.
+2. ✅ **Enforced in RLS.** All 16 policies on `pipeline_items`, `projects`, `applications`, **and `org_core_content`** (the builder content bank — same bypass class) now require org-ownership **AND** `apply_access = true` (USING + WITH CHECK, incl. explicit WITH CHECK on UPDATE).
+3. ✅ **Self-escalation closed (not in original spec).** `organisations` is user-writable, so a free-tier owner could have set `apply_access=true` on their own org via a hand-crafted INSERT/UPDATE. Trigger `trg_enforce_apply_access_immutable` (SECURITY INVOKER, `current_user`-checked) blocks any non-`service_role`/`postgres`/`supabase_admin` change to the column on both INSERT and UPDATE.
+4. ✅ **Defence-in-depth / UX.** Pipeline page now checks access BEFORE loading the Kanban and shows a cohort-only message otherwise; the Pipeline nav link is hidden from non-entitled users (Projects/Applications already were). Projects/Applications pages already gated.
 
-1. **Entitlement as a DB fact.** Add `apply_access boolean not null default false` on `organisations`. Seed `true` for the orgs owned by the 21 emails in `BUILDER_ALLOWLIST` (`src/lib/builder/access.ts`) — map email → `organisations.owner_id` via `auth.users`. Keep `access.ts` in sync, or have it read this column.
-2. **Enforce in RLS.** Rewrite the `USING` (SELECT/UPDATE/DELETE) and `WITH CHECK` (INSERT/UPDATE) policies on `pipeline_items`, `projects`, `applications` so they require **both** org-ownership **and** `apply_access = true` on the owning org. (Today they check org-ownership only.)
-3. **Defence-in-depth / UX.** Redirect non-allowlisted users away from the pipeline/projects/applications pages, and gate the pipeline Kanban load (`pipeline/page.tsx:523`) behind the access check (today it loads unconditionally).
+**Acceptance test — PASSED (DB-level role simulation, both directions, 2026-06-22):**
+- ✅ Entitled owner (apply_access=true) can read (4 rows) AND insert their own pipeline.
+- ✅ Same owner with apply_access=false (rolled-back tx) → **0 rows on read, RLS `42501` on insert** — blocked at the DB, not just the UI.
+- ✅ Authenticated owner attempting to set `apply_access` (UPDATE or new-org INSERT) → trigger raises `42501`.
+- ✅ Regression: normal profile updates + new-org creation (defaults false) still succeed; no test data leaked; all 20 orgs remain entitled.
 
-**Acceptance test (must pass before it's called done — verify LIVE on real accounts, both directions):**
-- ✅ A **cohort (allowlisted)** user can still read AND write their own pipeline / projects / applications.
-- ✅ A **non-allowlisted** user is **blocked at the database level** (RLS denies the direct Supabase call), not merely hidden in the UI.
-- Test by hitting the Supabase data path directly (not just the UI) for both a seeded and a non-seeded account.
+**Residual (NOT GA-blocking, folds into §4 "coherent free-tier UX"):** the Deadlines and Search pages still expose pipeline-write affordances ("+ Pipeline", "set a date → create pipeline item") to all authenticated users. For a future free-tier user these now fail with an RLS error rather than being hidden. No current user is affected (all are entitled) and open signup isn't live yet, so this is a UX-coherence task to do alongside the §4 free-tier nav/UX pass, not a security gap (RLS denies the write either way).
 
-**Carry-forward bonus:** this `apply_access` entitlement is the **foundation of the post-GA Stripe paid gate** — build it to carry forward (post-GA work = connect `apply_access` to Stripe subscription state + trial-expiry, not rebuild). It replaces the hardcoded TS allowlist that `access.ts` already anticipates retiring.
+**Carry-forward:** `apply_access` is the **foundation of the post-GA Stripe paid gate** — post-GA work = wire subscription state + trial-expiry to this column (set via `service_role`/admin SQL; the trigger already blocks user self-service), **not** a rebuild. Admin can flip entitlement today with `update organisations set apply_access = … where …` run as `service_role`/`postgres`.
 
 ---
 
@@ -125,14 +127,15 @@ Moved off the GA-blocker list per the 2026-06-21 scope decision. Cohort tests th
 ---
 
 ## GA-blocking summary (must be ✅ before opening free-tier signup)
-1. 🟡 **Apply-tier access enforced server-side** for pipeline/projects/applications (§2a) — *the load-bearing item; currently not enforced.*
+1. ✅ **Apply-tier access enforced server-side** for pipeline/projects/applications/org_core_content (§2a) — *the load-bearing item; shipped + DB-verified 2026-06-22 (migration 030).*
 2. 🔎 Upstash token rotated + prod env vars confirmed.
 3. 🟡 Launch-claims coverage SQL pass before any public comms.
 4. 🟡 MCP counter-race re-smoke-test.
 5. 🔎 Ltd + ICO + insurance confirmed (bank only needed for post-GA paid).
 6. ⬜ Open free-tier signup flipped on + coherent free-tier UX.
 
-**Cleared this session (2026-06-21):** ✅ numeric guard live-verified (Greggs) · ✅ Fredericks data error fixed (£1.5m→£50k) · ✅ Greggs duplicate `08fcdf0b` archived.
-**Queued non-blocking:** NLHF "Heritage Grants £250k–£10m" amount mis-parse (scraper fix) · Jack Petchey "Places & Spaces" £2m to verify.
-**Off the GA list (post-GA, ~2–4 wks):** Stripe/payment, entitlement→payment/trial logic, pricing UX.
-**▶ Next session:** build the Apply-tier RLS entitlement fix (§2a) — fresh & dedicated, no parallel writes to those 3 tables.
+**Cleared 2026-06-21:** ✅ numeric guard live-verified (Greggs) · ✅ Fredericks data error fixed (£1.5m→£50k) · ✅ Greggs duplicate `08fcdf0b` archived.
+**Cleared 2026-06-22:** ✅ Apply-tier RLS entitlement fix (§2a) shipped + DB-verified (migration 030) — the #1 load-bearing GA blocker.
+**Queued non-blocking:** NLHF "Heritage Grants £250k–£10m" amount mis-parse (scraper fix) · Jack Petchey "Places & Spaces" £2m to verify · §4 free-tier UX must hide pipeline-write affordances on Deadlines/Search (see §2a residual).
+**Off the GA list (post-GA, ~2–4 wks):** Stripe/payment (wire to `apply_access`), entitlement→payment/trial logic, pricing UX.
+**▶ Next GA blockers:** Upstash token rotation (🔎 Paul) · launch-claims coverage SQL pass · MCP counter-race re-smoke-test · open free-tier signup + coherent free-tier UX (§4).

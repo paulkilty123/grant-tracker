@@ -244,23 +244,28 @@ export default function Sidebar({ org, userEmail }: Props) {
 
         {/* Main nav */}
         <nav className="flex flex-col gap-0.5">
-          {MAIN_NAV.map(item => (
-            <React.Fragment key={item.href}>
-              {navLink(
-                item.href,
-                item.label,
-                item.Icon,
-                item.href === '/dashboard/profile' ? profileBadge : undefined,
-              )}
-              {/* Projects + Applications (builder) sit after Pipeline — cohort only */}
-              {item.href === '/dashboard/pipeline' && builderAllowed && (
-                <>
-                  {navLink('/dashboard/projects', 'Projects', Lightbulb)}
-                  {navLink('/dashboard/applications', 'Applications', FilePenLine)}
-                </>
-              )}
-            </React.Fragment>
-          ))}
+          {MAIN_NAV.map(item => {
+            // Pipeline is Apply-tier (cohort only) — hide it from free-tier users
+            // (RLS blocks the data regardless; this avoids a dead nav entry).
+            if (item.href === '/dashboard/pipeline' && !builderAllowed) return null
+            return (
+              <React.Fragment key={item.href}>
+                {navLink(
+                  item.href,
+                  item.label,
+                  item.Icon,
+                  item.href === '/dashboard/profile' ? profileBadge : undefined,
+                )}
+                {/* Projects + Applications (builder) sit after Pipeline — cohort only */}
+                {item.href === '/dashboard/pipeline' && builderAllowed && (
+                  <>
+                    {navLink('/dashboard/projects', 'Projects', Lightbulb)}
+                    {navLink('/dashboard/applications', 'Applications', FilePenLine)}
+                  </>
+                )}
+              </React.Fragment>
+            )
+          })}
         </nav>
 
         {/* Admin section */}
