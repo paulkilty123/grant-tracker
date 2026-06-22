@@ -1865,9 +1865,25 @@ function parsePoundAmount(str: string): number | null {
 
 function parseAmountRange(str: string): { min: number | null; max: number | null } {
   if (!str) return { min: null, max: null }
-  const nums = Array.from(str.matchAll(/£[\d,]+/g)).map(m => parsePoundAmount(m[0]))
+  // Capture the £ figure AND any magnitude suffix (million / m / k / thousand)
+  // directly after it. The suffix must abut the number and not run into another
+  // word — `(?![a-z])` stops "£10 members" matching "m". Without this, the bare
+  // /£[\d,]+/ regex parsed "£10million" as 10 (dropping the multiplier), which
+  // mis-stored NLHF "Heritage Grants £250,000 to £10million" as min 10 / max 250000.
+  const nums = Array.from(
+    str.matchAll(/£\s?([\d,.]+)(?:\s*(million|mn|m|thousand|k)(?![a-z]))?/gi),
+  ).map(m => {
+    const base = parseFloat(m[1].replace(/,/g, ''))
+    if (isNaN(base)) return null
+    const suffix = (m[2] ?? '').toLowerCase()
+    const mult = suffix === 'million' || suffix === 'mn' || suffix === 'm' ? 1_000_000
+      : suffix === 'thousand' || suffix === 'k' ? 1_000
+      : 1
+    return Math.round(base * mult)
+  }).filter((n): n is number => n != null)
   if (nums.length === 0) return { min: null, max: null }
-  if (nums.length >= 2)  return { min: nums[0], max: nums[1] }
+  // Order-robust: a range can be written high-to-low in source text.
+  if (nums.length >= 2)  return { min: Math.min(nums[0], nums[1]), max: Math.max(nums[0], nums[1]) }
   // Single figure: a directional cue IMMEDIATELY before the £ amount decides
   // whether it's a ceiling, a floor, or a genuine fixed amount.
   //   "Up to £X" / "under £X"   → £X is the MAX, min unknown  → { null, X }

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import type { Organisation } from '@/types'
+import { createClient } from '@/lib/supabase/server'
+import { enforceAiSearchRateLimit } from '@/lib/mcp-rate-limit'
 
 export const dynamic = 'force-dynamic'
 
@@ -46,6 +48,31 @@ function buildOrgContext(org: Organisation | null): string {
 
 export async function POST(req: NextRequest) {
   try {
+    // 1. Auth gate — this route triggers a paid Anthropic call, so it must not
+    //    be callable anonymously. Any authenticated user (free tier included);
+    //    this is NOT the Apply-tier allowlist.
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Please sign in to use AI search.' }, { status: 401 })
+    }
+
+    // 2. Per-user rate limit (Upstash sliding window; fails closed). Keeps the
+    //    free-tier inference cost bounded once public signup opens.
+    const rl = await enforceAiSearchRateLimit(user.id)
+    if (!rl.allowed) {
+      if (rl.reason === 'limiter_unavailable') {
+        return NextResponse.json(
+          { error: 'AI ranking is temporarily unavailable — showing keyword results instead.' },
+          { status: 503 },
+        )
+      }
+      return NextResponse.json(
+        { error: 'You’ve hit the AI search limit for now — keyword results are still available. Please try again shortly.', retry_after: rl.retry_after },
+        { status: 429, headers: rl.retry_after ? { 'Retry-After': String(rl.retry_after) } : undefined },
+      )
+    }
+
     const { query, grants, org } = await req.json()
 
     const orgContext = buildOrgContext(org ?? null)
