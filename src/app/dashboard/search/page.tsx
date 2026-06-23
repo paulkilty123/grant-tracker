@@ -1294,7 +1294,7 @@ export default function SearchPage() {
     try {
       const saved = sessionStorage.getItem('grantSearch')
       if (saved) {
-        const { query: q, aiResults: r, activeType: t, smartMatched: sm, activeView: av } = JSON.parse(saved)
+        const { query: q, aiResults: r, activeType: t, smartMatched: sm } = JSON.parse(saved)
         // Only restore AI results + query together. Restoring aiResults alone
         // (when query is empty) leaves the page in a stale state showing
         // "N results for ''" while the tab badges still show profile-matched
@@ -1305,9 +1305,8 @@ export default function SearchPage() {
           if (sm) setSmartMatched(sm)
         }
         if (t)   setActiveType(t)
-        // 'hidden' is a peek view, not a landing — don't restore it, or a fresh
-        // login lands on an empty "Nothing hidden". Always fall back to Browse.
-        if (av)  setActiveView(av === 'saved' ? 'saved' : 'browse')
+        // Find Funding always opens on Browse — Saved/Hidden are peek views,
+        // not landings (a fresh login shouldn't drop you into a side tab).
       }
     } catch { /* ignore */ }
   }, [])
