@@ -850,6 +850,24 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
           )
         })()}
 
+        {/* Feedback buttons for cards without the full match module — keyword/AI
+            search results carry no score breakdown, so the 👍/👎 previously lived
+            only on profile-matched cards. Render them here too. Complement of the
+            module gate above (breakdown vs !breakdown), so never double-rendered. */}
+        {hasSearch && !breakdown && org?.owner_id && (
+          <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 13, color: '#8A8986', fontFamily: 'var(--font-dm-sans)', whiteSpace: 'nowrap' }}>Improve your matches</span>
+            <MatchFeedbackBlock
+              grantId={grant.id}
+              userId={org.owner_id}
+              matchScore={score}
+              compact
+              onDirectionChange={d => { if (d === 'up') onUndismiss(grant.id) }}
+              onDoneAndRemove={() => onDismiss(grant.id)}
+            />
+          </div>
+        )}
+
       </div>{/* end card-body */}
 
       {/* ── Insights toggle strip ──
