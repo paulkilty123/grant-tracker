@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Search, ChevronDown, Layers, DollarSign, Rocket, Building2, SlidersHorizontal, MapPin, Users, GraduationCap, TrendingUp, GitMerge, Gift, Landmark, CalendarDays, RefreshCw, Bookmark, PlusCircle, Activity, Target, Star, CheckCircle2, XCircle, Lightbulb, AlertTriangle, Sparkles, ExternalLink, ClipboardList, EyeOff, Eye } from 'lucide-react'
+import { Search, ChevronDown, Layers, DollarSign, Rocket, Building2, SlidersHorizontal, MapPin, Users, GraduationCap, TrendingUp, GitMerge, Gift, Landmark, CalendarDays, RefreshCw, Bookmark, PlusCircle, Activity, Target, Star, CheckCircle2, XCircle, Lightbulb, AlertTriangle, Sparkles, ExternalLink, ClipboardList, EyeOff } from 'lucide-react'
 import { SEED_GRANTS } from '@/lib/grants'
 import { formatRange } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -1242,7 +1242,6 @@ export default function SearchPage() {
   const [bannerDismissed, setBannerDismissed] = useState(false)
   const [interactions, setInteractions] = useState<Map<string, Set<InteractionAction>>>(new Map())
   const [matchFeedbackMap, setMatchFeedbackMap] = useState<Map<string, StoredFeedback>>(new Map())
-  const [showDismissed, setShowDismissed] = useState(false)
   // "Already applied" outcome flow — null when closed; otherwise tracks the
   // grant being marked + which step (outcome picker → optional decline reasons).
   const [appliedFlow, setAppliedFlow] = useState<{
@@ -1280,7 +1279,7 @@ export default function SearchPage() {
   const [profileFiltersOpen, setProfileFiltersOpen] = useState(false)
   const [activeTab, setActiveTab]                 = useState<'grant' | 'programme' | 'investment' | 'in_kind'>('grant')
   const [programmeHasCash, setProgrammeHasCash]   = useState(false)
-  const [activeView, setActiveView]               = useState<'browse' | 'saved'>('browse')
+  const [activeView, setActiveView]               = useState<'browse' | 'saved' | 'hidden'>('browse')
   // Explicit profile filter toggle. Previously this was derived from
   // activeSectors/locationFilter, which meant picking a sector inside the
   // filter panel silently flipped it back on. Now the toggle only changes
@@ -1307,8 +1306,8 @@ export default function SearchPage() {
         }
         if (t)   setActiveType(t)
         if (av)  setActiveView(
-          av === 'matches' || av === 'latest' ? 'browse' :
-          av === 'saved' ? 'saved' : 'browse'
+          av === 'saved' ? 'saved' :
+          av === 'hidden' ? 'hidden' : 'browse'
         )
       }
     } catch { /* ignore */ }
@@ -2270,6 +2269,7 @@ export default function SearchPage() {
   ]
 
   const savedCount = Array.from(interactions.values()).filter(s => s.has('saved')).length
+  const hiddenCount = Array.from(interactions.values()).filter(s => s.has('dismissed')).length
 
   // Match scores + reasons are only meaningful when the profile filter is active
   // OR when an AI search has produced scored results. When profile filter is
@@ -2314,7 +2314,7 @@ export default function SearchPage() {
         </div>
         {/* Right: tabs always visible */}
         <div className="flex items-center gap-0 bg-white border border-warm/60 shadow-sm overflow-hidden flex-shrink-0" style={{ borderRadius: 9999 }}>
-          {(['browse', 'saved'] as const).map((v, i) => (
+          {(['browse', 'saved', 'hidden'] as const).map((v, i) => (
             <>
               {i > 0 && <div key={`sep-${v}`} className="w-px h-5 bg-warm/80" />}
               <button
@@ -2322,9 +2322,12 @@ export default function SearchPage() {
                 onClick={() => setActiveView(v)}
                 className={`px-5 py-2 text-sm font-medium transition-colors flex items-center gap-1.5 ${activeView === v ? 'border-b-2 border-[#8ECB3C] text-[#2C2C2A] font-bold' : 'border-b-2 border-transparent text-gray-500 hover:text-charcoal'}`}
               >
-                {v === 'browse' ? 'Browse' : 'Saved'}
+                {v === 'browse' ? 'Browse' : v === 'saved' ? 'Saved' : 'Hidden'}
                 {v === 'saved' && savedCount > 0 && (
                   <span className="text-xs px-1.5 py-0.5 ml-1 font-bold" style={{ borderRadius: 9999, background: '#F1F7E4', color: '#3B6D11' }}>{savedCount}</span>
+                )}
+                {v === 'hidden' && hiddenCount > 0 && (
+                  <span className="text-xs px-1.5 py-0.5 ml-1 font-bold" style={{ borderRadius: 9999, background: '#F5F1E8', color: '#5F5E5A' }}>{hiddenCount}</span>
                 )}
               </button>
             </>
@@ -2334,7 +2337,7 @@ export default function SearchPage() {
 
       {/* ── Search card (browse only — its contents are all browse-gated, so it
             rendered as an empty panel on the Saved tab) ── */}
-      <div className={`bg-white shadow-card mb-5 border border-warm/60 rounded-xl overflow-hidden ${activeView === 'saved' ? 'hidden' : ''}`}>
+      <div className={`bg-white shadow-card mb-5 border border-warm/60 rounded-xl overflow-hidden ${activeView !== 'browse' ? 'hidden' : ''}`}>
 
         <div className="p-5">
 
@@ -2783,9 +2786,7 @@ export default function SearchPage() {
       {/* ── Matches view ── */}
       {activeView === 'browse' && hasSearched && grantsLoaded && (() => {
         const dismissedCount = displayGrants.filter(item => interactions.get(item.grant.id)?.has('dismissed')).length
-        const visibleGrants  = showDismissed
-          ? displayGrants
-          : displayGrants.filter(item => !interactions.get(item.grant.id)?.has('dismissed'))
+        const visibleGrants  = displayGrants.filter(item => !interactions.get(item.grant.id)?.has('dismissed'))
         return visibleGrants.length === 0 && dismissedCount === 0 ? (
           (() => {
             // Detection priority: B (search) → C (filters) → A (category empty)
@@ -2954,7 +2955,6 @@ export default function SearchPage() {
                 onMarkApplied={(g) => setAppliedFlow({ grant: g, step: 'outcome', reasons: [], freeText: '' })}
                 onSave={handleSave}
                 onUnsave={handleUnsave}
-                showIfDismissed={showDismissed}
               />
             ))}
             {visibleCount < visibleGrants.length && (
@@ -2964,19 +2964,6 @@ export default function SearchPage() {
                   className="btn-outline px-6 py-2.5 text-sm"
                 >
                   Show more ({visibleGrants.length - visibleCount} remaining)
-                </button>
-              </div>
-            )}
-            {dismissedCount > 0 && (
-              <div className="text-center py-4 border-t border-warm/50 mt-2">
-                <button
-                  onClick={() => setShowDismissed(v => !v)}
-                  className="inline-flex items-center gap-1.5 text-xs text-light hover:text-mid transition-colors"
-                >
-                  {showDismissed ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                  {showDismissed
-                    ? `Hide ${dismissedCount} hidden grant${dismissedCount !== 1 ? 's' : ''}`
-                    : `${dismissedCount} hidden grant${dismissedCount !== 1 ? 's' : ''} — show`}
                 </button>
               </div>
             )}
@@ -3032,6 +3019,55 @@ export default function SearchPage() {
         )
       })()}
 
+      {/* ── Hidden view ── */}
+      {activeView === 'hidden' && (() => {
+        const hiddenGrants: DisplayGrant[] = allGrants
+          .filter(g => interactions.get(g.id)?.has('dismissed'))
+          .map(g => ({ grant: g, score: 0, displayScore: 0, reason: '', isAiScore: false, breakdown: undefined }))
+        return hiddenGrants.length === 0 ? (
+          <div className="text-center py-16 text-light">
+            <EyeOff className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+            <p className="mb-2 font-medium text-charcoal">Nothing hidden</p>
+            <p className="text-sm mb-4">Grants you mark &ldquo;Not for us&rdquo; are tucked away here. Hit Restore on any to bring it back to Browse.</p>
+          </div>
+        ) : (
+          <>
+            <p className="text-sm text-mid mb-4 px-1">Grants you marked &ldquo;Not for us&rdquo;. Restore any to bring it back to your matches.</p>
+            {hiddenGrants.slice(0, visibleCount).map(item => (
+              <GrantCard
+                key={item.grant.id}
+                item={item}
+                hasOrg={!!org}
+                hasSearch={false}
+                org={org}
+                interactions={interactions.get(item.grant.id) ?? new Set()}
+                onAddToPipeline={handleAddToPipeline}
+                isInPipeline={pipelinedIds.has(item.grant.title)}
+                pipelineStage={pipelinedIds.get(item.grant.title)?.stage}
+                onRemoveFromPipeline={handleRemoveFromPipeline}
+                onDismiss={handleDismiss}
+                onUndismiss={handleUndismiss}
+                onLike={handleLike}
+                onDislike={handleDislike}
+                onMarkApplied={(g) => setAppliedFlow({ grant: g, step: 'outcome', reasons: [], freeText: '' })}
+                onSave={handleSave}
+                onUnsave={handleUnsave}
+                showIfDismissed
+              />
+            ))}
+            {visibleCount < hiddenGrants.length && (
+              <div className="text-center py-6">
+                <button
+                  onClick={() => setVisibleCount(v => v + 30)}
+                  className="btn-outline px-6 py-2.5 text-sm"
+                >
+                  Show more ({hiddenGrants.length - visibleCount} remaining)
+                </button>
+              </div>
+            )}
+          </>
+        )
+      })()}
 
       {/* "Already applied" outcome modal — opens when user clicks the small
           link on a grant card. Two-step: outcome picker → optional declined
