@@ -2136,29 +2136,13 @@ export default function ProfilePage() {
             <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 14, color: '#5F5E5A', margin: 0 }}>
               Refine the details that drive your funding matches.
             </p>
-            {/* Org eyebrow pill — context for single-org users */}
-            {orgs.length <= 1 && activeOrg && (
-              <div style={{
-                display: 'inline-flex', alignItems: 'center', gap: 8, flexShrink: 0,
-                fontFamily: UI, fontWeight: 500, fontSize: 13, color: T.textSecondary,
-                padding: '5px 10px 5px 5px',
-                background: T.white, border: `1px solid ${T.border}`, borderRadius: 20,
-              }}>
-                <span style={{
-                  width: 22, height: 22, background: T.cream, borderRadius: '50%',
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  fontFamily: UI, fontWeight: 600, fontSize: 10, color: T.greenDeep,
-                }}>
-                  {(activeOrg.name ?? 'O').split(' ').filter(Boolean).slice(0,2).map((w: string) => w[0].toUpperCase()).join('')}
-                </span>
-                {activeOrg.name}
-              </div>
-            )}
           </div>
         </div>
 
-        {/* Org switcher — admin only */}
-        {orgs.length > 1 && (
+        {/* Org switcher + Add organisation — always shown (OrgSwitcher renders
+            cleanly for a single org and carries the "Add organisation" button,
+            so single-org users can still add another). */}
+        {activeOrg && (
           <OrgSwitcher
             orgs={orgs}
             activeOrgId={activeOrg.id}
