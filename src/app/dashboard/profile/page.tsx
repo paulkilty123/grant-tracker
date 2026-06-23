@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { getOrganisationsByOwner, updateOrganisation, deleteOrganisation, writeActiveOrgCookie } from '@/lib/organisations'
 import { Pencil, Plus, ChevronDown, RotateCcw, Globe, Check, X, Star, Trash2, AlertTriangle } from 'lucide-react'
@@ -1976,6 +1977,8 @@ export default function ProfilePage() {
       .catch(() => {})
   }, [])
 
+  const router = useRouter()
+
   async function loadOrgs(keepActiveId?: string) {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -2004,6 +2007,7 @@ export default function ProfilePage() {
     setActiveOrgId(id)
     if (typeof window !== 'undefined') localStorage.setItem('gt_active_org_id', id)
     writeActiveOrgCookie(id) // so the dashboard + other server surfaces follow
+    router.refresh()         // re-render the server layout so the sidebar follows the switch
     setEditingCard(null)
   }
 
