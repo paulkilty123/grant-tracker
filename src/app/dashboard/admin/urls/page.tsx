@@ -2283,6 +2283,29 @@ export default function UrlAdminPage() {
     if (/\bscotland\b|\bscottish\b/.test(text)) { setReviewField(grant.id, 'location_tag', 'Scotland'); return }
     if (/\bwales\b|\bwelsh\b|\bcymru\b/.test(text)) { setReviewField(grant.id, 'location_tag', 'Wales'); return }
     if (/\bnorthern\s+ireland\b/.test(text)) { setReviewField(grant.id, 'location_tag', 'Northern Ireland'); return }
+
+    // Compound English-region names ("North East England", "South West
+    // England", "East of England") all contain the word "England", which the
+    // bare \bengland\b nation check below would otherwise grab and over-broaden
+    // to the whole nation. Example: the North East Create Growth Programme is
+    // North East-only but was tagged 'England'. Disambiguate these to the
+    // regional tag first. Only the "… England" compound form promotes here, so
+    // "North West London" still tags 'London' and "Newcastle" alone still tags
+    // 'Newcastle' via the city loop below.
+    const BROAD_ENGLISH_REGIONS: [RegExp, string][] = [
+      [/\bnorth[-\s]?east\s+england\b/, 'North East England'],
+      [/\bnorth[-\s]?west\s+england\b/, 'North West England'],
+      [/\bsouth[-\s]?east\s+england\b/, 'South East England'],
+      [/\bsouth[-\s]?west\s+england\b/, 'South West England'],
+      [/\beast\s+of\s+england\b/, 'East of England'],
+    ]
+    for (const [re, label] of BROAD_ENGLISH_REGIONS) {
+      if (re.test(text)) {
+        // eslint-disable-next-line no-console
+        console.warn('[detectLocation] matched broad english region', label, 're:', re.toString())
+        setReviewField(grant.id, 'location_tag', label); return
+      }
+    }
     if (/\bengland\b|\benglish\b/.test(text)) { setReviewField(grant.id, 'location_tag', 'England'); return }
 
     // London boroughs — check BEFORE generic 'London' so a Camden-specific
