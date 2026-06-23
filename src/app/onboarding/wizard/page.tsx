@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, ArrowRight, ChevronRight, Check, Globe, Pencil, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { getOrganisationByOwner, createOrganisation, updateOrganisation } from '@/lib/organisations'
+import { getOrganisationByOwner, createOrganisation, updateOrganisation, writeActiveOrgCookie } from '@/lib/organisations'
 import { track } from '@/lib/analytics'
 import { computeMatchScore } from '@/lib/matching'
 import { normaliseScrapedGrant } from '@/lib/grants-normalise'
@@ -869,6 +869,14 @@ export default function OnboardingWizardPage() {
         const created = await createOrganisation(payload as Parameters<typeof createOrganisation>[0])
         currentOrgId = created.id
         setOrgId(created.id)
+      }
+      // Make the org we just onboarded the ACTIVE org, so Find Funding /
+      // dashboard match against it — not the previously-selected or oldest org.
+      // Mirrors the profile switcher (cookie + localStorage) so the choice also
+      // survives a later profile-page load.
+      if (currentOrgId) {
+        writeActiveOrgCookie(currentOrgId)
+        if (typeof window !== 'undefined') localStorage.setItem('gt_active_org_id', currentOrgId)
       }
       // Build org for matching directly — avoids read-after-write race condition
       const orgForMatching = { ...payload, id: currentOrgId ?? '', created_at: new Date().toISOString() }
