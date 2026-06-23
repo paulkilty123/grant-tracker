@@ -305,7 +305,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
     if (!showIfDismissed) return null
     return (
       <div className="bg-warm/40 px-5 py-3 mb-2 rounded-lg border border-warm flex items-center justify-between opacity-60">
-        <p className="text-sm text-mid line-through">{grant.title} — {grant.funder}</p>
+        <p className="text-sm text-mid">{grant.title} — {grant.funder}</p>
         <button onClick={() => onUndismiss(grant.id)} className="text-xs hover:underline ml-4 flex-shrink-0" style={{ color: '#8ECB3C' }}>
           Restore
         </button>
