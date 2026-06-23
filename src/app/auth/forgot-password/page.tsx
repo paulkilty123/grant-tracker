@@ -23,7 +23,11 @@ export default function ForgotPasswordPage() {
     const supabase = createClient()
     const redirectTo = `${window.location.origin}/auth/reset-password`
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo })
+    // Normalise: a trailing space or stray capital silently makes the address
+    // not match an account, so the email goes nowhere while the UI says "sent".
+    const cleanEmail = email.trim().toLowerCase()
+    setEmail(cleanEmail)
+    const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, { redirectTo })
 
     if (error) {
       setError(error.message)
@@ -66,7 +70,7 @@ export default function ForgotPasswordPage() {
                 <ul style={{ fontFamily: BODY, fontSize: 12.5, color: '#5F5E5A', lineHeight: 1.6, paddingLeft: 18, margin: 0 }}>
                   <li>Check your spam or junk folder</li>
                   <li>Allow a minute or two for delivery</li>
-                  <li>Make sure you entered the right address</li>
+                  <li>Check it&apos;s exactly the address you signed up with — including the spelling and domain (e.g. .co vs .com)</li>
                   <li>You can only request one link per hour</li>
                 </ul>
               </div>

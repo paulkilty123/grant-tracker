@@ -719,6 +719,7 @@ export default function AccountPage() {
 function PasswordModal({ onClose }: { onClose: () => void }) {
   const [next, setNext]       = useState('')
   const [confirm, setConfirm] = useState('')
+  const [showPw, setShowPw]   = useState(false)
   const [error, setError]     = useState('')
   const [saving, setSaving]   = useState(false)
   const [done, setDone]       = useState(false)
@@ -748,9 +749,12 @@ function PasswordModal({ onClose }: { onClose: () => void }) {
           <ModalTitle>Change password</ModalTitle>
           <ModalDesc>Choose a strong password of at least 8 characters.</ModalDesc>
           <ModalLabel>New password</ModalLabel>
-          <ModalInput type="password" value={next} onChange={setNext} />
+          <ModalInput type={showPw ? 'text' : 'password'} value={next} onChange={setNext} />
           <ModalLabel>Confirm new password</ModalLabel>
-          <ModalInput type="password" value={confirm} onChange={setConfirm} />
+          <ModalInput type={showPw ? 'text' : 'password'} value={confirm} onChange={setConfirm} />
+          <div style={{ marginTop: -4, marginBottom: 12 }}>
+            <InlineLink onClick={() => setShowPw(v => !v)}>{showPw ? 'Hide' : 'Show'} passwords</InlineLink>
+          </div>
           <ModalError msg={error} />
           <ModalActions>
             <InlineLink onClick={onClose}>Cancel</InlineLink>

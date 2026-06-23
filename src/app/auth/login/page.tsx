@@ -56,7 +56,7 @@ function LoginForm() {
     setLoading(true)
     setError(null)
     const supabase = createClient()
-    const { data: signIn, error } = await supabase.auth.signInWithPassword({ email, password })
+    const { data: signIn, error } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password })
     if (error) {
       setError(friendlyError(error.message))
       setLoading(false)

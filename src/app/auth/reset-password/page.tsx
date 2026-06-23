@@ -13,6 +13,7 @@ const BODY = "var(--font-dm-sans), Plus Jakarta Sans, sans-serif"
 function ResetPasswordContent() {
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
+  const [showPw, setShowPw] = useState(false)
   const [loading, setLoading] = useState(false)
   const [exchanging, setExchanging] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -135,20 +136,26 @@ function ResetPasswordContent() {
                 )}
                 <div>
                   <label style={{ display: 'block', fontFamily: UI, fontWeight: 500, fontSize: 13, color: '#2C2C2A', marginBottom: 6 }}>New password</label>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    className="form-input"
-                    placeholder="At least 8 characters"
-                    required
-                    minLength={8}
-                  />
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type={showPw ? 'text' : 'password'}
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                      className="form-input"
+                      style={{ paddingRight: 56 }}
+                      placeholder="At least 8 characters"
+                      required
+                      minLength={8}
+                    />
+                    <button type="button" onClick={() => setShowPw(v => !v)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontFamily: UI, fontSize: 12, color: '#8A8986', background: 'transparent', border: 'none', cursor: 'pointer' }} tabIndex={-1}>
+                      {showPw ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <label style={{ display: 'block', fontFamily: UI, fontWeight: 500, fontSize: 13, color: '#2C2C2A', marginBottom: 6 }}>Confirm new password</label>
                   <input
-                    type="password"
+                    type={showPw ? 'text' : 'password'}
                     value={confirm}
                     onChange={e => setConfirm(e.target.value)}
                     className="form-input"
