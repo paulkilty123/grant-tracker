@@ -480,13 +480,6 @@ export default async function DashboardPage() {
                   See my matches
                   <ArrowRight className="w-4 h-4" />
                 </a>
-                <a
-                  href="/dashboard/search?tour=1"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg border hover:bg-white/60 transition-colors"
-                  style={{ borderColor: '#2C2C2A', color: '#2C2C2A', background: 'rgba(255,255,255,0.40)', fontFamily: 'var(--font-space-grotesk)' }}
-                >
-                  Give me a tour
-                </a>
               </>
             ) : (
               <a
