@@ -2040,7 +2040,14 @@ export default function ProfilePage() {
       }
       setShowDeleteConfirm(false)
       setEditingCard(null)
-      if (!nextId) window.location.href = '/onboarding/wizard'
+      if (!nextId) {
+        window.location.href = '/onboarding/wizard'
+      } else {
+        // Sync the server-readable cookie + re-render the layout, else the
+        // sidebar/dashboard keep pointing at the just-deleted org.
+        writeActiveOrgCookie(nextId)
+        router.refresh()
+      }
     } catch (e) {
       alert(e instanceof Error ? e.message : 'Delete failed')
     } finally { setDeleting(false) }
