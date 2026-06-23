@@ -1390,13 +1390,21 @@ export default function SearchPage() {
     setTimeout(() => setToast(null), 3000)
   }
 
-  // Thumbs-down ("Not for us") records the dismiss to the DB but deliberately
-  // does NOT update the interactions state — keeping the card and its feedback
-  // reasons UI in place for the rest of the session so the user can still say
-  // why. The grant is filtered out of matches on the next page load.
+  // Called by the "Save and remove" button (after reasons are captured), NOT by
+  // the initial thumbs-down — so it's safe to remove the card here. Mirror
+  // handleUndismiss and update interactions state so the grant drops out of the
+  // list immediately (the matches filter hides anything marked 'dismissed').
+  // Without this it only disappeared on the next page load — the reported bug.
   async function handleDismiss(grantId: string) {
     if (!org) return
     await recordInteraction(org.id, grantId, 'dismissed')
+    setInteractions(prev => {
+      const next = new Map(prev)
+      const s = new Set(next.get(grantId) ?? [])
+      s.add('dismissed')
+      next.set(grantId, s)
+      return next
+    })
     const uuid = catalogueUuidFor(grantId)
     if (uuid) emitClientEvent(org.id, 'opportunity_dismissed', { opportunity_id: uuid, reason: null })
   }
