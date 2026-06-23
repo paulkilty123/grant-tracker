@@ -1305,10 +1305,9 @@ export default function SearchPage() {
           if (sm) setSmartMatched(sm)
         }
         if (t)   setActiveType(t)
-        if (av)  setActiveView(
-          av === 'saved' ? 'saved' :
-          av === 'hidden' ? 'hidden' : 'browse'
-        )
+        // 'hidden' is a peek view, not a landing — don't restore it, or a fresh
+        // login lands on an empty "Nothing hidden". Always fall back to Browse.
+        if (av)  setActiveView(av === 'saved' ? 'saved' : 'browse')
       }
     } catch { /* ignore */ }
   }, [])
