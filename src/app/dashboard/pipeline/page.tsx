@@ -199,6 +199,17 @@ function PipelineCard({
           Start application →
         </a>
       )}
+      {/* Jump back to this grant's Find Funding view to re-read the funder info
+          without manually re-searching (David 2026-06-23). */}
+      {stage.id === 'identified' && (
+        <NextLink
+          href={`/dashboard/search?q=${encodeURIComponent(item.grant_name)}`}
+          onClick={e => e.stopPropagation()}
+          className="inline-block mt-1.5 ml-3 text-[10px] font-semibold text-[#639922] hover:text-[#8ECB3C] transition-colors"
+        >
+          View in Find Funding →
+        </NextLink>
+      )}
       {stage.id === 'applying' && (
         <button
           onClick={e => { e.stopPropagation(); onMove(item.id, 'submitted') }}

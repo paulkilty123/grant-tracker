@@ -1335,6 +1335,14 @@ export default function SearchPage() {
     } catch { /* ignore */ }
   }, [query, aiResults, activeType, smartMatched, activeView])
 
+  // Deep-link support: ?q=<text> (e.g. a Pipeline card's "View in Find Funding"
+  // button) prefills the keyword filter so that grant surfaces in Browse.
+  useEffect(() => {
+    const q = searchParams.get('q')
+    if (q) { setInputValue(q); setFilterQuery(q.trim().toLowerCase()); setHasSearched(true) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   useEffect(() => {
     async function loadOrg() {
       const supabase = createClient()
