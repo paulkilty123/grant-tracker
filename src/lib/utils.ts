@@ -65,10 +65,14 @@ export function getDeadlineAlerts(items: PipelineItem[]): DeadlineAlert[] {
     .filter(i => activeStages.includes(i.stage) && i.deadline)
     .map(i => {
       const daysUntil = getDaysUntil(i.deadline)
+      let urgency = getDeadlineUrgency(daysUntil)
+      // A submitted application's deadline is moot — you're already in, so never
+      // flag it 'overdue' (Devi feedback 2026-06-24).
+      if (i.stage === 'submitted' && urgency === 'overdue') urgency = 'ok'
       return {
         item: i,
         daysUntil: daysUntil ?? 999,
-        urgency: getDeadlineUrgency(daysUntil),
+        urgency,
       }
     })
     .filter(a => a.urgency !== 'rolling')
