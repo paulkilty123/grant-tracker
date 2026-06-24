@@ -105,7 +105,7 @@ tech, financial, food, international
 BENEFICIARY GROUP VALUES (pick 1–5, primary first):
 children, young_people, older_people, families, women_girls, men_boys, lgbtq,
 ethnic_minorities, refugees_migrants, disabled_people, mental_health, carers,
-veterans, ex_offenders, homeless, people_in_poverty, rural_communities, general_public
+veterans, ex_offenders, homeless, people_in_poverty, rural_communities, general_public, social_impact_orgs
 
 Rules for _confidence (score each field 0.0–1.0):
 - 0.9–1.0: explicitly stated on the page, high certainty (e.g. org name in <title>, charity number found verbatim)
@@ -120,7 +120,7 @@ Rules for field values:
 - areasOfWork = concrete activities and programmes they run (4–8 items)
 - beneficiaries = specific people they help (3–6 items)
 - impactSectors = use ONLY the exact values listed above, in priority order (most core first)
-- beneficiaryGroups = use ONLY the exact values listed above; put primary beneficiary first; use "general_public" only if genuinely no specific group
+- beneficiaryGroups = use ONLY the exact values listed above; put primary beneficiary first; use "general_public" only if genuinely no specific group; use "social_impact_orgs" when the organisation PRIMARILY supports OTHER charities, social enterprises or social entrepreneurs (a capacity-building / infrastructure / mentoring body — e.g. it mentors founders or supports other organisations) rather than serving end-beneficiaries directly — for such orgs make it the PRIMARY value rather than guessing a frontline group
 - If you cannot determine something, use null for strings, [] for arrays, and 0.0 for confidence
 - annualIncome: infer from staff size, scope of services, number of sites, or any financial figures mentioned
 - Return ONLY the JSON object — no markdown fences, no commentary`

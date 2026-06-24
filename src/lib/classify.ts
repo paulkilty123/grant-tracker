@@ -35,6 +35,7 @@ export const VALID_BENEFICIARIES = new Set([
   'refugees_migrants', 'disabled_people', 'mental_health',
   'carers', 'veterans', 'ex_offenders', 'homeless',
   'people_in_poverty', 'rural_communities', 'general_public',
+  'social_impact_orgs',
 ])
 
 // ── Types ──────────────────────────────────────────────────────────────────────

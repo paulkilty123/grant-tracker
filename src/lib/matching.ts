@@ -1122,6 +1122,14 @@ export function computeMatchScore(
           } else {
             reasons.push(`Partial beneficiary match for ${org.name}`)
           }
+        } else if (orgBeneficiaries.includes('social_impact_orgs')) {
+          // 'social_impact_orgs' (sector-support / capacity-building orgs that
+          // serve other charities & social enterprises) has no catalogue
+          // coverage yet — Layer 2 will tag grants with it. Until then, treat it
+          // as neutral rather than penalising, so an org selecting it is never
+          // hurt for it. Once grants DO carry it, the intersection branch above
+          // rewards the match positively. See docs/strategy/sector-support-org-matching.md.
+          beneficiaryScore = 5
         } else {
           // No intersection — different beneficiary groups
           beneficiaryScore = 2

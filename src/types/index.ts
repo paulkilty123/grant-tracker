@@ -75,6 +75,7 @@ export type BeneficiaryGroup =
   | 'homeless'           // Homeless people & rough sleepers
   | 'people_in_poverty'  // People experiencing poverty
   | 'rural_communities'  // Rural & isolated communities
+  | 'social_impact_orgs' // Social impact organisations — sector-support / capacity-building bodies that serve other charities, social enterprises & social entrepreneurs (not end-beneficiaries)
   | 'general_public'     // General public / no specific group
 
 /** Funding opportunity types — 4-category taxonomy */

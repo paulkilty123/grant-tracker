@@ -296,6 +296,7 @@ const BENEFICIARY_OPTIONS: { value: BeneficiaryGroup; label: string }[] = [
   { value: 'homeless',          label: 'Homeless & rough sleepers' },
   { value: 'people_in_poverty', label: 'People in poverty' },
   { value: 'rural_communities', label: 'Rural & isolated communities' },
+  { value: 'social_impact_orgs', label: 'Social impact organisations' },
   { value: 'general_public',    label: 'General public' },
 ]
 

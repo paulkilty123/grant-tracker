@@ -112,6 +112,7 @@ const BENEFICIARY_GROUPS: { value: BeneficiaryGroup; label: string }[] = [
   { value: 'carers',            label: 'Carers' },
   { value: 'veterans',          label: 'Veterans' },
   { value: 'rural_communities', label: 'Rural communities' },
+  { value: 'social_impact_orgs', label: 'Social impact organisations' },
   { value: 'general_public',    label: 'General public' },
 ]
 
