@@ -1,0 +1,16 @@
+# Build-spec stub: "serves the social sector / other organisations" representation
+
+**Status:** Parked (post-launch). Scoped 2026-06-23, not built. Do not build before the trigger below.
+**Trigger to pick up:** when we start onboarding **infrastructure bodies and their networks at scale** — sector-support orgs whose beneficiaries are *other* impact organisations, not end-beneficiaries (SEUK/Expert Impact, Impact Hub, CVSs, community foundations). See [[project-seuk-expert-impact-partnership]] (memory) for the originating context.
+
+## The gap
+Capacity-building / infrastructure orgs serve *other social organisations*, but the beneficiary taxonomy has only end-beneficiary groups (children, refugees, …) + `general_public`, and there's no applicant-side "we are a capacity builder" org-type (`capacity_builder` is a *funder* type only). So these orgs can't truthfully state who they serve and default to `general_public`. For a one-off trial this is handled by careful manual profile setup (sectors = `social_innovation` + `social_economy` — the two highest-IDF sectors — + `general_public` beneficiaries, which scores neutral). At scale that workaround doesn't hold.
+
+## Two layers — BUILD BOTH TOGETHER (do not ship Layer 1 alone)
+**The matching lift lives entirely in Layer 2.** Layer 1 alone is *worse than the neutral `general_public` workaround*: it adds an honest-looking label the matcher doesn't act on, implying an understanding the product doesn't yet deliver. Only build when both can ship together.
+
+- **Layer 1 — honest self-description (~1–2 hrs, low-risk).** Add one beneficiary value, e.g. `social_sector` ("Social sector / other organisations"). Touchpoints: `BeneficiaryGroup` union at `src/types/index.ts:60` (⚠️ **also update the `src/types/index.js` shadow** — see [[feedback_js_ts_shadow_files]], a `.ts`-only edit may not take effect); onboarding `BENEFICIARY_GROUPS` list (`src/app/onboarding/wizard/page.tsx` ~L98); extractor prompt "BENEFICIARY GROUP VALUES" (`src/app/api/org-autocomplete/route.ts` ~L83); classifier `VALID_BENEFICIARIES` set (`src/lib/classify.ts:32`). **No DB migration** — `organisations.beneficiary_groups` and `scraped_grants.target_beneficiaries` are `text[]` (udt `_text`), not enums, so the enum/TS-union "Save failed" drift trap ([[feedback_postgres_enum_ts_drift]]) does **not** apply.
+- **Layer 2 — make the matcher actually reward it (half-day+, has edges, the dependency).** The matcher itself needs **no change**: the beneficiary dimension (`src/lib/matching.ts` ~L1065, max 10, `general_public` = neutral) is intersection-based, so once *both* org and grant carry `social_sector` it rewards automatically. The work — and the tail — is getting *grants* tagged: update the classifier prompt to assign `social_sector` to capacity-building / infrastructure funders (SIB Reach Fund, UnLtd, Pilotlight, Cranfield, Good Things, NCVO, etc.), then run a **review-gated catalogue re-classification pass** (the needs-review batch discipline applies; this is what competes with launch-critical work).
+
+## Sizing summary
+Layer 1 ≈ a couple of hours, no migration, no enum risk. Layer 2 = classifier change + a review-gated re-tag of the catalogue (half-day-plus with edges). The value is all in Layer 2; ship them as one unit.
