@@ -11,7 +11,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { computeMatchScore, scoreColour, grantInGeoSelection, grantMatchesLocationText } from '@/lib/matching'
 import type { FeedbackSignals, MatchBreakdown } from '@/lib/matching'
-import { getInteractions, recordInteraction, removeInteraction } from '@/lib/interactions'
+import { getInteractions, recordInteraction, removeInteraction, getSavedReminders, setSavedReminder } from '@/lib/interactions'
 import { getMatchFeedback, type StoredFeedback } from '@/lib/matchFeedback'
 import {
   LIKE_SCORE_BOOST, DISLIKE_SCORE_PENALTY, LIKE_SECTOR_BOOST, DISLIKE_SECTOR_PENALTY,
@@ -1260,6 +1260,7 @@ export default function SearchPage() {
   const [bannerDismissed, setBannerDismissed] = useState(false)
   const [interactions, setInteractions] = useState<Map<string, Set<InteractionAction>>>(new Map())
   const [matchFeedbackMap, setMatchFeedbackMap] = useState<Map<string, StoredFeedback>>(new Map())
+  const [savedReminders, setSavedReminders] = useState<Map<string, string>>(new Map())
   // "Already applied" outcome flow — null when closed; otherwise tracks the
   // grant being marked + which step (outcome picker → optional decline reasons).
   const [appliedFlow, setAppliedFlow] = useState<{
@@ -1354,6 +1355,8 @@ export default function SearchPage() {
       if (o) {
         const ix = await getInteractions(o.id)
         setInteractions(ix)
+        const rem = await getSavedReminders(o.id)
+        setSavedReminders(rem)
         const mfb = await getMatchFeedback(user.id)
         setMatchFeedbackMap(mfb)
         // Load existing pipeline grant names to show button state
@@ -1440,6 +1443,17 @@ export default function SearchPage() {
       const s = new Set(next.get(grantId) ?? [])
       s.delete('dismissed')
       next.set(grantId, s)
+      return next
+    })
+  }
+
+  async function handleSetSavedReminder(grantId: string, date: string | null) {
+    if (!org) return
+    await setSavedReminder(org.id, grantId, date)
+    setSavedReminders(prev => {
+      const next = new Map(prev)
+      if (date) next.set(grantId, date)
+      else next.delete(grantId)
       return next
     })
   }
@@ -3008,9 +3022,12 @@ export default function SearchPage() {
           </div>
         ) : (
           <>
-            {savedGrants.slice(0, visibleCount).map(item => (
+            {savedGrants.slice(0, visibleCount).map(item => {
+              const reminder = savedReminders.get(item.grant.id) ?? null
+              const todayStr = new Date().toISOString().split('T')[0]
+              return (
+              <div key={item.grant.id}>
               <GrantCard
-                key={item.grant.id}
                 item={item}
                 hasOrg={!!org}
                 hasSearch={false}
@@ -3025,10 +3042,39 @@ export default function SearchPage() {
                 onLike={handleLike}
                 onDislike={handleDislike}
                 onMarkApplied={(g) => setAppliedFlow({ grant: g, step: 'outcome', reasons: [], freeText: '' })}
-                  onSave={handleSave}
+                onSave={handleSave}
                 onUnsave={handleUnsave}
               />
-            ))}
+              {org?.owner_id && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', margin: '-6px 0 14px', padding: '0 4px', fontFamily: 'var(--font-space-grotesk)', fontSize: 12.5 }}>
+                  {reminder ? (
+                    <>
+                      <span style={{ color: '#3B6D11', fontWeight: 500 }}>
+                        ⏰ Reminder set for {new Date(reminder).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </span>
+                      <button
+                        onClick={() => handleSetSavedReminder(item.grant.id, null)}
+                        style={{ background: 'transparent', border: 'none', color: '#8A8986', cursor: 'pointer', textDecoration: 'underline', padding: 0, fontFamily: 'inherit', fontSize: 12 }}
+                      >
+                        Clear
+                      </button>
+                    </>
+                  ) : (
+                    <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: '#5F5E5A', cursor: 'pointer' }}>
+                      ⏰ Set a reminder
+                      <input
+                        type="date"
+                        min={todayStr}
+                        onChange={e => { if (e.target.value) handleSetSavedReminder(item.grant.id, e.target.value) }}
+                        style={{ fontFamily: 'inherit', fontSize: 12.5, border: '1px solid #E0E0DC', borderRadius: 8, padding: '4px 8px', color: '#2C2C2A' }}
+                      />
+                    </label>
+                  )}
+                </div>
+              )}
+              </div>
+              )
+            })}
             {visibleCount < savedGrants.length && (
               <div className="text-center py-6">
                 <button

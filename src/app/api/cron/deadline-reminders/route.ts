@@ -36,6 +36,7 @@ const STAGE_LABELS: Record<string, string> = {
   identified: '🔵 Identified',
   applying:   '🟣 Applying',
   submitted:  '🟢 Submitted',
+  saved:      '🔖 Saved',
 }
 
 interface ReminderItem {
@@ -154,7 +155,7 @@ export async function GET(req: NextRequest) {
   const in7  = isoDate(7)
   const in14 = isoDate(14)
 
-  // Fetch pipeline items with deadlines in 7 or 14 days, ignoring closed stages
+  // ── Pipeline-deadline reminders ──
   const { data: rows, error: dbErr } = await supabase
     .from('pipeline_items')
     .select('id, grant_name, funder_name, deadline, stage, amount_requested, amount_min, amount_max, org_id')
@@ -165,15 +166,61 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: dbErr.message }, { status: 500 })
   }
 
-  if (!rows?.length) {
-    return NextResponse.json({ success: true, emailsSent: 0, message: 'No upcoming deadlines today' })
-  }
-
-  // Annotate each row with days remaining
-  const items: ReminderItem[] = rows.map(r => ({
+  const items: ReminderItem[] = (rows ?? []).map(r => ({
     ...r as Omit<ReminderItem, 'days'>,
     days: (r as { deadline: string }).deadline === in7 ? 7 : 14,
   }))
+
+  // ── Saved-grant reminders (user-set reminder dates 7 or 14 days out) ──
+  const { data: savedRem } = await supabase
+    .from('grant_interactions')
+    .select('org_id, grant_id, reminder_at')
+    .eq('action', 'saved')
+    .in('reminder_at', [in7, in14])
+
+  if (savedRem?.length) {
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    const savedIds = Array.from(new Set((savedRem as { grant_id: string }[]).map(r => r.grant_id)))
+    const uuidIds  = savedIds.filter(id => UUID_RE.test(id))
+    // grant_id stored is external_id ?? id, so match against BOTH columns.
+    const grantInfo = new Map<string, { title: string; funder: string | null; amount_min: number | null; amount_max: number | null }>()
+    const addRows = (data: any[] | null) => {
+      for (const g of data ?? []) {
+        const info = { title: g.title, funder: g.funder, amount_min: g.amount_min, amount_max: g.amount_max }
+        grantInfo.set(g.id, info)
+        if (g.external_id) grantInfo.set(g.external_id, info)
+      }
+    }
+    const cols = 'id, external_id, title, funder, amount_min, amount_max'
+    if (uuidIds.length) {
+      const { data } = await supabase.from('grants_with_funder').select(cols).in('id', uuidIds)
+      addRows(data as any[] | null)
+    }
+    {
+      const { data } = await supabase.from('grants_with_funder').select(cols).in('external_id', savedIds)
+      addRows(data as any[] | null)
+    }
+    for (const r of savedRem as { org_id: string; grant_id: string; reminder_at: string }[]) {
+      const info = grantInfo.get(r.grant_id)
+      if (!info) continue   // grant archived/unknown — skip rather than email a blank row
+      items.push({
+        id:               `saved:${r.grant_id}`,
+        grant_name:       info.title,
+        funder_name:      info.funder ?? 'Saved grant',
+        deadline:         r.reminder_at,
+        stage:            'saved',
+        amount_requested: null,
+        amount_min:       info.amount_min,
+        amount_max:       info.amount_max,
+        org_id:           r.org_id,
+        days:             r.reminder_at === in7 ? 7 : 14,
+      })
+    }
+  }
+
+  if (!items.length) {
+    return NextResponse.json({ success: true, emailsSent: 0, message: 'No upcoming deadlines or reminders today' })
+  }
 
   // Group by org_id
   const orgMap = new Map<string, ReminderItem[]>()

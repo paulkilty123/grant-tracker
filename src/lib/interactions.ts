@@ -47,3 +47,36 @@ export async function getInteractions(
   }
   return result
 }
+
+/** Set (or clear, with null) a reminder date on a saved grant. Upserts the
+ *  'saved' row — setting a reminder implies the grant is saved. */
+export async function setSavedReminder(
+  orgId: string,
+  grantId: string,
+  reminderAt: string | null,
+): Promise<void> {
+  const supabase = createClient()
+  await supabase
+    .from('grant_interactions')
+    .upsert(
+      { org_id: orgId, grant_id: grantId, action: 'saved', reminder_at: reminderAt },
+      { onConflict: 'org_id,grant_id,action' },
+    )
+}
+
+/** Load reminder dates for an org's saved grants: grantId → ISO date string. */
+export async function getSavedReminders(orgId: string): Promise<Map<string, string>> {
+  const supabase = createClient()
+  const { data } = await supabase
+    .from('grant_interactions')
+    .select('grant_id, reminder_at')
+    .eq('org_id', orgId)
+    .eq('action', 'saved')
+    .not('reminder_at', 'is', null)
+
+  const result = new Map<string, string>()
+  for (const row of (data ?? []) as { grant_id: string; reminder_at: string | null }[]) {
+    if (row.reminder_at) result.set(row.grant_id, row.reminder_at)
+  }
+  return result
+}
