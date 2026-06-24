@@ -177,7 +177,7 @@ export function PipelineModal({
           <div style={{ background: '#F1F7E4', border: '0.5px solid rgba(57,109,17,0.18)', borderRadius: 10, padding: '12px 14px' }}>
             <div className="flex items-center justify-between gap-3" style={{ marginBottom: 8 }}>
               <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#3B6D11', margin: 0 }}>About this grant</p>
-              {loadingSummary ? null : catalogue?.isActive ? (
+              {loadingSummary ? null : catalogue ? (
                 <NextLink
                   href={`/dashboard/search?grant=${encodeURIComponent(catalogue.pinId)}`}
                   style={{ fontSize: 12, fontWeight: 600, color: '#3B6D11', textDecoration: 'none', whiteSpace: 'nowrap' }}
@@ -208,7 +208,7 @@ export function PipelineModal({
                   </div>
                 )}
                 {!catalogue.isActive && (
-                  <p className="text-xs" style={{ color: '#8A8986', margin: '8px 0 0' }}>This grant is no longer listed in the live catalogue — it may have closed. Use the funder site link above.</p>
+                  <p className="text-xs" style={{ color: '#8A8986', margin: '8px 0 0' }}>This grant has closed — it&apos;s no longer in the live catalogue. Opening it in Find Funding shows it as no longer open.</p>
                 )}
               </>
             ) : (

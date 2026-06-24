@@ -1270,6 +1270,7 @@ export default function SearchPage() {
     freeText: string
   } | null>(null)
   const [scrapedGrants, setScrapedGrants] = useState<EnrichedGrant[]>([])
+  const [pinnedExtra, setPinnedExtra] = useState<{ name: string; funder: string | null; applyUrl: string | null; deadline: string | null; isRolling: boolean } | null>(null)
   const [grantsLoaded, setGrantsLoaded]   = useState(false)
   const [amountMin, setAmountMin]         = useState('')
   const [amountMax, setAmountMax]         = useState('')
@@ -1409,6 +1410,28 @@ export default function SearchPage() {
     if (ft === 'grant' || ft === 'programme' || ft === 'investment' || ft === 'in_kind') {
       setActiveTab(ft)
     }
+  }, [pinnedGrantId, scrapedGrants])
+
+  // If the pinned grant (?grant=<id>) isn't in the live/active set, it's archived
+  // or expired. Fetch it so we can show a clear "no longer open" banner (e.g. a
+  // closed grant opened from a Pipeline link) rather than silently landing on a
+  // different grant.
+  useEffect(() => {
+    if (!pinnedGrantId || scrapedGrants.length === 0) { setPinnedExtra(null); return }
+    if (scrapedGrants.some(g => g.id === pinnedGrantId)) { setPinnedExtra(null); return }
+    let cancelled = false
+    ;(async () => {
+      const supabase = createClient()
+      const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+      const base = supabase.from('grants_with_funder').select('title, funder, apply_url, deadline, is_rolling')
+      const { data } = UUID_RE.test(pinnedGrantId)
+        ? await base.eq('id', pinnedGrantId).limit(1)
+        : await base.eq('external_id', pinnedGrantId).limit(1)
+      if (cancelled) return
+      const row = data?.[0] as { title: string; funder: string | null; apply_url: string | null; deadline: string | null; is_rolling: boolean | null } | undefined
+      setPinnedExtra(row ? { name: row.title, funder: row.funder, applyUrl: row.apply_url, deadline: row.deadline, isRolling: !!row.is_rolling } : null)
+    })()
+    return () => { cancelled = true }
   }, [pinnedGrantId, scrapedGrants])
 
   function showToast(msg: string) {
@@ -2687,6 +2710,29 @@ export default function SearchPage() {
           >
             Filter by my profile
           </button>
+        </div>
+      )}
+
+      {/* Pinned grant that's no longer live (archived / expired) — opened from a
+          Pipeline link. Show it clearly as closed instead of landing on a different grant. */}
+      {activeView === 'browse' && pinnedExtra && (
+        <div style={{ background: '#FAEEDA', border: '0.5px solid rgba(180,135,40,0.30)', borderRadius: 12, padding: '14px 18px', marginBottom: 16 }}>
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <div>
+              <p style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, fontSize: 15, color: '#854F0B', margin: 0 }}>
+                ⏳ No longer open — {pinnedExtra.name}
+              </p>
+              <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 13, color: '#854F0B', margin: '3px 0 0', lineHeight: 1.5 }}>
+                {pinnedExtra.funder ? `${pinnedExtra.funder} · ` : ''}This grant has closed{pinnedExtra.deadline && !pinnedExtra.isRolling ? ` (deadline ${new Date(pinnedExtra.deadline).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })})` : ''} and is no longer in the live catalogue. It&apos;s still tracked in your pipeline.
+              </p>
+            </div>
+            {pinnedExtra.applyUrl && (
+              <a href={pinnedExtra.applyUrl} target="_blank" rel="noopener noreferrer"
+                style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, fontSize: 13, color: '#854F0B', textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                Visit funder site →
+              </a>
+            )}
+          </div>
         </div>
       )}
 
