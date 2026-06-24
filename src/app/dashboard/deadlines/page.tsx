@@ -1032,6 +1032,18 @@ export default function DeadlinesPage() {
 
       // Match rows with upcoming deadlines
       const today = new Date().toISOString().split('T')[0]
+
+      // Load saved + dismissed interactions once. Dismissed grants are excluded from
+      // matches & saved rows so a "Not for us" reject sticks across reloads.
+      const { data: interactionRows } = await supabase
+        .from('grant_interactions')
+        .select('grant_id, action')
+        .eq('org_id', org.id)
+        .in('action', ['saved', 'dismissed'])
+      const dismissedIds = new Set(
+        (interactionRows ?? []).filter((r: { action: string }) => r.action === 'dismissed').map((r: { grant_id: string }) => r.grant_id)
+      )
+
       const { data: grantRows } = await supabase
         .from('grants_with_funder')
         .select('*')
@@ -1050,7 +1062,7 @@ export default function DeadlinesPage() {
             const score = computeMatchScore(g, typedOrg).score
             return { grant: g, score, deadline: g.deadline ?? '' }
           })
-          .filter(x => x.score >= 55 && x.deadline)
+          .filter(x => x.score >= 55 && x.deadline && !dismissedIds.has(x.grant.id))
           .sort((a, b) => (a.deadline < b.deadline ? -1 : 1))
           .slice(0, 20)
         setMatchRows(scored.map(({ grant, score }) => ({ grant, score })))
@@ -1058,14 +1070,14 @@ export default function DeadlinesPage() {
         setMatchRows([])
       }
 
-      // Saved grants with upcoming deadlines
-      const { data: savedInteractions } = await supabase
-        .from('grant_interactions')
-        .select('grant_id')
-        .eq('org_id', org.id)
-        .eq('action', 'saved')
+      // Saved grants with upcoming deadlines (reuse interactions fetched above; drop dismissed)
       const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-      const savedIds = Array.from(new Set((savedInteractions ?? []).map((r: { grant_id: string }) => r.grant_id).filter(id => UUID_RE.test(id))))
+      const savedIds = Array.from(new Set(
+        (interactionRows ?? [])
+          .filter((r: { action: string }) => r.action === 'saved')
+          .map((r: { grant_id: string }) => r.grant_id)
+          .filter((id: string) => UUID_RE.test(id) && !dismissedIds.has(id))
+      ))
       if (savedIds.length > 0) {
         const { data: savedRows } = await supabase
           .from('grants_with_funder')
@@ -1073,7 +1085,7 @@ export default function DeadlinesPage() {
           .in('id', savedIds)
           .order('deadline', { ascending: true })
         const allSaved = (savedRows ?? []).map(row => normaliseScrapedGrant(row as Record<string, unknown>))
-        setSavedGrantRows(allSaved.filter(g => g.deadline && g.deadline >= today))
+        setSavedGrantRows(allSaved.filter(g => g.deadline && g.deadline >= today && !dismissedIds.has(g.id)))
         setSavedNoDeadline(allSaved.filter(g => !g.deadline))
       } else {
         setSavedGrantRows([])
@@ -1198,6 +1210,16 @@ export default function DeadlinesPage() {
     }, 900)
   }
 
+  // "Not for us" — reject a match/saved grant from the deadlines list (Devi 2026-06-24).
+  // Mirrors Find Funding's dismiss: records 'dismissed' so it stays hidden on reload.
+  async function handleDismissMatch(grant: EnrichedGrant) {
+    const id = grant.id
+    setMatchRows(prev => prev.filter(m => m.grant.id !== id))
+    setSavedGrantRows(prev => prev.filter(g => g.id !== id))
+    await recordInteraction(orgId, id, 'dismissed')
+    track('grant_dismissed')
+  }
+
   // ── Derived data ─────────────────────────────────────────────────────────────
   const overdue     = alerts.filter(a => a.urgency === 'overdue')
   const urgentCount = alerts.filter(a => a.urgency === 'urgent' || a.urgency === 'overdue').length
@@ -1290,9 +1312,11 @@ export default function DeadlinesPage() {
     if (!dl) return 9999
     return Math.ceil((new Date(dl).getTime() - Date.now()) / 86400000)
   }
-  const thisWeek  = displayedScheduled.filter(r => rowDays(r) <= 7)
-  const thisMonth = displayedScheduled.filter(r => rowDays(r) > 7 && rowDays(r) <= 31)
-  const laterRows = displayedScheduled.filter(r => rowDays(r) > 31)
+  const thisWeek     = displayedScheduled.filter(r => rowDays(r) <= 7)
+  // Actionable window is the next 6 weeks (Devi 2026-06-24: "too soon is too late;
+  // the most interesting deadlines are 2–8 weeks out"). Previously capped at 31 days.
+  const nextSixWeeks = displayedScheduled.filter(r => rowDays(r) > 7 && rowDays(r) <= 42)
+  const laterRows    = displayedScheduled.filter(r => rowDays(r) > 42)
 
   // "Needs a deadline" drawer contents
   const needsDeadlineAll = [
@@ -1300,9 +1324,9 @@ export default function DeadlinesPage() {
     ...(showSaved ? savedNoDeadline.map(g => ({ kind: 'saved' as const, grant: g })) : []),
   ]
 
-  // "This month" meta: show the date 31 days out
-  const date31 = new Date(Date.now() + 31 * 86400000)
-  const thisMonthMeta = `Due by ${date31.getDate()} ${MONTH_NAMES[date31.getMonth()]}`
+  // "Next 6 weeks" meta: show the date 42 days out
+  const date42 = new Date(Date.now() + 42 * 86400000)
+  const windowMeta = `Due by ${date42.getDate()} ${MONTH_NAMES[date42.getMonth()]}`
 
   const UI_FONT   = 'var(--font-space-grotesk)'
   const BODY_FONT = 'var(--font-dm-sans)'
@@ -1362,13 +1386,21 @@ export default function DeadlinesPage() {
       )
     } else if (row.kind === 'saved') {
       actions = (
-        <button
-          onClick={() => handlePipelineMatch(row.grant)}
-          style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, padding: '6px 12px', borderRadius: 6,
-            border: 'none', background: '#8ECB3C', color: '#173404', cursor: 'pointer',
-            display: 'inline-flex', alignItems: 'center', gap: 4, flexShrink: 0, whiteSpace: 'nowrap' }}>
-          <Plus size={10} />Pipeline
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+          <button onClick={() => handleDismissMatch(row.grant)}
+            style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, color: '#8A8986', padding: '6px 8px', borderRadius: 6,
+              border: 'none', background: 'transparent', cursor: 'pointer', whiteSpace: 'nowrap' }}
+            title="Not for us — hide this grant">
+            Not for us
+          </button>
+          <button
+            onClick={() => handlePipelineMatch(row.grant)}
+            style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, padding: '6px 12px', borderRadius: 6,
+              border: 'none', background: '#8ECB3C', color: '#173404', cursor: 'pointer',
+              display: 'inline-flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
+            <Plus size={10} />Pipeline
+          </button>
+        </div>
       )
     } else {
       const gId       = row.grant.id
@@ -1409,6 +1441,13 @@ export default function DeadlinesPage() {
       } else {
         actions = (
           <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+            <button onClick={() => handleDismissMatch(row.grant)} disabled={!!actioning}
+              style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, color: '#8A8986', padding: '6px 8px',
+                borderRadius: 6, border: 'none', background: 'transparent',
+                cursor: actioning ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' }}
+              title="Not for us — hide this grant">
+              Not for us
+            </button>
             <button onClick={() => handleSaveMatch(gId)} disabled={!!actioning}
               style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, color: '#5F5E5A', padding: '6px 10px',
                 borderRadius: 6, border: '0.5px solid rgba(23,52,4,0.14)', background: '#fff',
@@ -1525,17 +1564,17 @@ export default function DeadlinesPage() {
             </div>
           )}
 
-          {/* This month */}
-          {thisMonth.length > 0 && (
+          {/* Next 6 weeks */}
+          {nextSixWeeks.length > 0 && (
             <div style={{ background: '#fff', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '16px 22px', borderBottom: '1px solid rgba(23,52,4,0.08)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ fontFamily: UI_FONT, fontWeight: 600, fontSize: 15, color: '#2C2C2A', letterSpacing: '-0.01em' }}>This month</span>
-                  <span style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 12, color: '#8A8986', background: '#FAFAF7', padding: '3px 9px', borderRadius: 10 }}>{thisMonth.length}</span>
+                  <span style={{ fontFamily: UI_FONT, fontWeight: 600, fontSize: 15, color: '#2C2C2A', letterSpacing: '-0.01em' }}>Next 6 weeks</span>
+                  <span style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 12, color: '#8A8986', background: '#FAFAF7', padding: '3px 9px', borderRadius: 10 }}>{nextSixWeeks.length}</span>
                 </div>
-                <span style={{ fontFamily: BODY_FONT, fontSize: 12, color: '#8A8986' }}>{thisMonthMeta}</span>
+                <span style={{ fontFamily: BODY_FONT, fontSize: 12, color: '#8A8986' }}>{windowMeta}</span>
               </div>
-              {thisMonth.map((row, i) => renderScheduledRow(row, 'month', i === thisMonth.length - 1,
+              {nextSixWeeks.map((row, i) => renderScheduledRow(row, 'month', i === nextSixWeeks.length - 1,
                 row.kind === 'pipeline' ? row.alert.item.id : row.grant.id + '-month-' + i))}
             </div>
           )}
