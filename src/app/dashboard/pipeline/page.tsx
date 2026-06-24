@@ -47,6 +47,7 @@ function PipelineCard({
   onMove,
   appId,
   builderAllowed,
+  findFundingId,
 }: {
   item: PipelineItem
   stage: typeof PIPELINE_STAGES[number]
@@ -58,6 +59,7 @@ function PipelineCard({
   onMove: (id: string, stage: PipelineStage) => void
   appId?: string | null
   builderAllowed?: boolean
+  findFundingId?: string
 }) {
   const amountStr = formatRange(item.amount_min, item.amount_max ?? item.amount_requested)
   const deadlineStr = formatDeadline(item.deadline)
@@ -199,11 +201,12 @@ function PipelineCard({
           Start application →
         </a>
       )}
-      {/* Jump back to this grant's Find Funding view to re-read the funder info
-          without manually re-searching (David 2026-06-23). */}
-      {stage.id === 'identified' && (
+      {/* Jump back to this grant's Find Funding view (precise pin by catalogue
+          id). Only shown when the grant is live in the catalogue; otherwise the
+          detail modal offers a funder-site link instead. */}
+      {stage.id === 'identified' && findFundingId && (
         <NextLink
-          href={`/dashboard/search?q=${encodeURIComponent(item.grant_name)}`}
+          href={`/dashboard/search?grant=${encodeURIComponent(findFundingId)}`}
           onClick={e => e.stopPropagation()}
           className="inline-block mt-1.5 ml-3 text-[10px] font-semibold text-[#639922] hover:text-[#8ECB3C] transition-colors"
         >
@@ -501,6 +504,7 @@ function AddModal({
 
 export default function PipelinePage() {
   const [items, setItems] = useState<PipelineItem[]>([])
+  const [catalogueIds, setCatalogueIds] = useState<Map<string, string>>(new Map())
   const [org, setOrg] = useState<Organisation | null>(null)
   const [userId, setUserId] = useState<string>('')
   const [loading, setLoading] = useState(true)
@@ -541,6 +545,21 @@ export default function PipelinePage() {
       if (o) {
         const data = await getPipelineItems(o.id)
         setItems(data)
+        // Pre-resolve catalogue ids for items' apply URLs so cards can deep-link
+        // precisely (?grant=<id>) instead of a fuzzy name search. Active only.
+        const urls = Array.from(new Set(data.map(i => i.grant_url).filter((u): u is string => !!u)))
+        if (urls.length) {
+          const { data: cat } = await supabase
+            .from('grants_with_funder')
+            .select('id, external_id, apply_url')
+            .in('apply_url', urls)
+            .eq('is_active', true)
+          const m = new Map<string, string>()
+          for (const g of (cat ?? []) as { id: string; external_id: string | null; apply_url: string | null }[]) {
+            if (g.apply_url) m.set(g.apply_url, g.external_id ?? g.id)
+          }
+          setCatalogueIds(m)
+        }
         // Map linked applications so cards can offer Continue vs Start.
         const { data: apps } = await supabase
           .from('applications')
@@ -805,6 +824,7 @@ export default function PipelinePage() {
                     onMove={handleMove}
                     appId={appByPipeline[item.id] ?? null}
                     builderAllowed={builderAllowed}
+                    findFundingId={item.grant_url ? catalogueIds.get(item.grant_url) : undefined}
                   />
                 </div>
               ))}

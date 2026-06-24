@@ -85,7 +85,7 @@ export function PipelineModal({
   // Pull a summary from the live catalogue by matching the grant's apply URL.
   // Pipeline rows don't store the catalogue id, so URL is the reliable join;
   // manual adds / delisted grants won't match and fall back gracefully.
-  const [catalogue, setCatalogue] = useState<{ description: string | null; sectors: string[] } | null>(null)
+  const [catalogue, setCatalogue] = useState<{ pinId: string; isActive: boolean; description: string | null; sectors: string[] } | null>(null)
   const [loadingSummary, setLoadingSummary] = useState(false)
 
   useEffect(() => {
@@ -96,14 +96,16 @@ export function PipelineModal({
       const supabase = createClient()
       const { data } = await supabase
         .from('grants_with_funder')
-        .select('description, impact_sectors, sectors')
+        .select('id, external_id, is_active, description, impact_sectors, sectors')
         .eq('apply_url', item.grant_url)
         .limit(1)
       if (cancelled) return
-      const row = data?.[0] as { description: string | null; impact_sectors: string[] | null; sectors: string[] | null } | undefined
+      const row = data?.[0] as { id: string; external_id: string | null; is_active: boolean | null; description: string | null; impact_sectors: string[] | null; sectors: string[] | null } | undefined
       if (row) {
         const raw = (row.impact_sectors?.length ? row.impact_sectors : row.sectors) ?? []
-        setCatalogue({ description: row.description ?? null, sectors: raw.map(s => s.replace(/_/g, ' ')) })
+        // Pin by the normalised id (external_id ?? id) — that's what the search
+        // page keys grants on, so ?grant= lifts the exact grant to the top.
+        setCatalogue({ pinId: row.external_id ?? row.id, isActive: !!row.is_active, description: row.description ?? null, sectors: raw.map(s => s.replace(/_/g, ' ')) })
       } else {
         setCatalogue(null)
       }
@@ -162,14 +164,25 @@ export function PipelineModal({
           {/* About this grant — summary pulled from the live catalogue by URL,
               plus a link to its Find Funding card. Shown for all stages. */}
           <div style={{ background: '#F1F7E4', border: '0.5px solid rgba(57,109,17,0.18)', borderRadius: 10, padding: '12px 14px' }}>
-            <div className="flex items-center justify-between gap-3" style={{ marginBottom: (loadingSummary || catalogue?.description || !catalogue) ? 8 : 0 }}>
+            <div className="flex items-center justify-between gap-3" style={{ marginBottom: 8 }}>
               <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#3B6D11', margin: 0 }}>About this grant</p>
-              <NextLink
-                href={`/dashboard/search?q=${encodeURIComponent(item.grant_name)}`}
-                style={{ fontSize: 12, fontWeight: 600, color: '#3B6D11', textDecoration: 'none', whiteSpace: 'nowrap' }}
-              >
-                View in Find Funding →
-              </NextLink>
+              {loadingSummary ? null : catalogue?.isActive ? (
+                <NextLink
+                  href={`/dashboard/search?grant=${encodeURIComponent(catalogue.pinId)}`}
+                  style={{ fontSize: 12, fontWeight: 600, color: '#3B6D11', textDecoration: 'none', whiteSpace: 'nowrap' }}
+                >
+                  View in Find Funding →
+                </NextLink>
+              ) : item.grant_url ? (
+                <a
+                  href={item.grant_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ fontSize: 12, fontWeight: 600, color: '#3B6D11', textDecoration: 'none', whiteSpace: 'nowrap' }}
+                >
+                  Visit funder site →
+                </a>
+              ) : null}
             </div>
             {loadingSummary ? (
               <p className="text-xs" style={{ color: '#8A8986', margin: 0 }}>Loading summary…</p>
@@ -183,9 +196,12 @@ export function PipelineModal({
                     ))}
                   </div>
                 )}
+                {!catalogue.isActive && (
+                  <p className="text-xs" style={{ color: '#8A8986', margin: '8px 0 0' }}>This grant is no longer listed in the live catalogue — it may have closed. Use the funder site link above.</p>
+                )}
               </>
             ) : (
-              <p className="text-xs" style={{ color: '#8A8986', margin: 0 }}>Not in the live catalogue (added manually or no longer listed) — use the link to search by name.</p>
+              <p className="text-xs" style={{ color: '#8A8986', margin: 0 }}>Not in the live catalogue (added manually or no longer listed) — use the funder site link if available.</p>
             )}
           </div>
 
