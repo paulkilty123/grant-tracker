@@ -1417,7 +1417,10 @@ export default function SearchPage() {
   // closed grant opened from a Pipeline link) rather than silently landing on a
   // different grant.
   useEffect(() => {
-    if (!pinnedGrantId || scrapedGrants.length === 0) { setPinnedExtra(null); return }
+    // Don't clear pinnedExtra on a missing pin here: the banner is shown from state
+    // and we strip ?grant= from the URL below, so clearing on null would hide it the
+    // instant the URL is cleaned. A fresh/clean page load starts with pinnedExtra null.
+    if (!pinnedGrantId || scrapedGrants.length === 0) return
     if (scrapedGrants.some(g => g.id === pinnedGrantId)) { setPinnedExtra(null); return }
     let cancelled = false
     ;(async () => {
@@ -1430,6 +1433,14 @@ export default function SearchPage() {
       if (cancelled) return
       const row = data?.[0] as { title: string; funder: string | null; apply_url: string | null; deadline: string | null; is_rolling: boolean | null } | undefined
       setPinnedExtra(row ? { forId: pinnedGrantId, name: row.title, funder: row.funder, applyUrl: row.apply_url, deadline: row.deadline, isRolling: !!row.is_rolling } : null)
+      // Strip ?grant= from the URL so a refresh / clean visit doesn't re-show the
+      // banner — it's a one-time notice that stays in state only for this view.
+      if (row && typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search)
+        params.delete('grant')
+        const qs = params.toString()
+        window.history.replaceState(null, '', `${window.location.pathname}${qs ? `?${qs}` : ''}`)
+      }
     })()
     return () => { cancelled = true }
   }, [pinnedGrantId, scrapedGrants])
@@ -2717,7 +2728,7 @@ export default function SearchPage() {
           Pipeline link. Show it clearly as closed instead of landing on a different
           grant. Gated on forId === the CURRENT ?grant= param so it never lingers on
           a clean visit or after navigating to a different grant. */}
-      {activeView === 'browse' && pinnedExtra && pinnedExtra.forId === pinnedGrantId && (
+      {activeView === 'browse' && pinnedExtra && (
         <div style={{ background: '#FAEEDA', border: '0.5px solid rgba(180,135,40,0.30)', borderRadius: 12, padding: '14px 18px', marginBottom: 16, position: 'relative' }}>
           <div className="flex items-start justify-between gap-3 flex-wrap" style={{ paddingRight: 22 }}>
             <div>
