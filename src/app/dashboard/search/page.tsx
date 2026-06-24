@@ -1916,6 +1916,10 @@ export default function SearchPage() {
     if (profileFilterOn && org?.legal_structure) {
       withScores.splice(0, withScores.length,
         ...withScores.filter(d => {
+          // Pinned grant (?grant=<id>) must survive to the lift below, even if
+          // structure-ineligible for the current org — the user explicitly asked
+          // to view this one (e.g. opening a pipelined grant from another org).
+          if (pinnedGrantId && d.grant.id === pinnedGrantId) return true
           const eligible = d.grant.eligibleStructures
           if (eligible && eligible.length > 0) {
             return eligible.includes(org.legal_structure as LegalStructure)
@@ -1927,7 +1931,7 @@ export default function SearchPage() {
     // Mirrors the filter applied in crossTabCounts above so headline tab
     // counts and the visible list stay consistent.
     if (actionableOnly) {
-      withScores.splice(0, withScores.length, ...withScores.filter(d => d.score >= 50))
+      withScores.splice(0, withScores.length, ...withScores.filter(d => (pinnedGrantId && d.grant.id === pinnedGrantId) || d.score >= 50))
     }
     // on it immediately. Falls through silently if the id isn't in the list
     // (e.g. grant has since been filtered out).
