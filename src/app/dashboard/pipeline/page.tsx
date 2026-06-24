@@ -11,6 +11,7 @@ import {
   deletePipelineItem,
 } from '@/lib/pipeline'
 import { getOrganisationByOwner } from '@/lib/organisations'
+import { setDismissSnooze } from '@/lib/interactions'
 import { emitClientEvent } from '@/lib/events/client'
 import { track } from '@/lib/analytics'
 import { PIPELINE_STAGES, formatDeadline, formatRange, cn } from '@/lib/utils'
@@ -621,6 +622,26 @@ export default function PipelinePage() {
     }
   }
 
+  // Won grants drop out of Find Funding for ~a year, then resurface for re-application
+  // (Devi #4). Maps the pipeline item to its catalogue grant (title+funder) and snoozes
+  // the dismissal; no-op for manual adds with no catalogue match. Returns true if hidden.
+  async function hideWonGrantFromMatches(item: PipelineItem): Promise<boolean> {
+    if (!item.grant_name || !item.funder_name) return false
+    const supabase = createClient()
+    const { data } = await supabase
+      .from('grants_with_funder')
+      .select('id, external_id')
+      .eq('title', item.grant_name)
+      .eq('funder', item.funder_name)
+      .order('is_active', { ascending: false })
+      .limit(1)
+    const row = data?.[0] as { id: string; external_id: string | null } | undefined
+    if (!row) return false
+    const d = new Date(); d.setMonth(d.getMonth() + 12)
+    await setDismissSnooze(item.org_id, row.external_id ?? row.id, d.toISOString().split('T')[0])
+    return true
+  }
+
   async function onColDrop(e: React.DragEvent, stageId: PipelineStage) {
     e.preventDefault()
     ;(e.currentTarget as HTMLElement).classList.remove('drag-over')
@@ -634,8 +655,12 @@ export default function PipelinePage() {
     emitClientEvent(item.org_id, 'pipeline_stage_changed', {
       opportunity_id: null, pipeline_item_id: id, from_stage: item.stage, to_stage: stageId,
     })
-    const stageName = PIPELINE_STAGES.find(s => s.id === stageId)?.label ?? stageId
-    showToast(`Moved to ${stageName}`)
+    if (stageId === 'won' && item.stage !== 'won' && await hideWonGrantFromMatches(item)) {
+      showToast('🏆 Won — hidden from Find Funding for a year')
+    } else {
+      const stageName = PIPELINE_STAGES.find(s => s.id === stageId)?.label ?? stageId
+      showToast(`Moved to ${stageName}`)
+    }
   }
 
   async function handleMove(id: string, stage: PipelineStage) {
@@ -647,7 +672,11 @@ export default function PipelinePage() {
         opportunity_id: null, pipeline_item_id: id, from_stage: beforeItem.stage, to_stage: stage,
       })
     }
-    showToast(`Moved to ${PIPELINE_STAGES.find(s => s.id === stage)?.label}`)
+    if (stage === 'won' && beforeItem && beforeItem.stage !== 'won' && await hideWonGrantFromMatches(beforeItem)) {
+      showToast('🏆 Won — hidden from Find Funding for a year')
+    } else {
+      showToast(`Moved to ${PIPELINE_STAGES.find(s => s.id === stage)?.label}`)
+    }
   }
 
   async function handleSave(id: string, updates: Partial<PipelineItem>) {
