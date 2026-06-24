@@ -1,7 +1,9 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import NextLink from 'next/link'
 import { PIPELINE_STAGES, formatRange } from '@/lib/utils'
+import { createClient } from '@/lib/supabase/client'
 import type { PipelineItem, PipelineStage } from '@/types'
 import {
   Search, Pencil, Send, Trophy, XCircle, X as XIcon, Circle, FileText,
@@ -80,6 +82,36 @@ export function PipelineModal({
   const [grantUrl, setGrantUrl] = useState(item.grant_url ?? '')
   const [saving, setSaving] = useState(false)
 
+  // Pull a summary from the live catalogue by matching the grant's apply URL.
+  // Pipeline rows don't store the catalogue id, so URL is the reliable join;
+  // manual adds / delisted grants won't match and fall back gracefully.
+  const [catalogue, setCatalogue] = useState<{ description: string | null; sectors: string[] } | null>(null)
+  const [loadingSummary, setLoadingSummary] = useState(false)
+
+  useEffect(() => {
+    if (!item.grant_url) { setCatalogue(null); return }
+    let cancelled = false
+    setLoadingSummary(true)
+    ;(async () => {
+      const supabase = createClient()
+      const { data } = await supabase
+        .from('grants_with_funder')
+        .select('description, impact_sectors, sectors')
+        .eq('apply_url', item.grant_url)
+        .limit(1)
+      if (cancelled) return
+      const row = data?.[0] as { description: string | null; impact_sectors: string[] | null; sectors: string[] | null } | undefined
+      if (row) {
+        const raw = (row.impact_sectors?.length ? row.impact_sectors : row.sectors) ?? []
+        setCatalogue({ description: row.description ?? null, sectors: raw.map(s => s.replace(/_/g, ' ')) })
+      } else {
+        setCatalogue(null)
+      }
+      setLoadingSummary(false)
+    })()
+    return () => { cancelled = true }
+  }, [item.grant_url])
+
   async function handleSave() {
     setSaving(true)
     if (isApplyingOrLater) {
@@ -127,6 +159,36 @@ export function PipelineModal({
         </div>
 
         <div className="p-6 space-y-5">
+          {/* About this grant — summary pulled from the live catalogue by URL,
+              plus a link to its Find Funding card. Shown for all stages. */}
+          <div style={{ background: '#F1F7E4', border: '0.5px solid rgba(57,109,17,0.18)', borderRadius: 10, padding: '12px 14px' }}>
+            <div className="flex items-center justify-between gap-3" style={{ marginBottom: (loadingSummary || catalogue?.description || !catalogue) ? 8 : 0 }}>
+              <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#3B6D11', margin: 0 }}>About this grant</p>
+              <NextLink
+                href={`/dashboard/search?q=${encodeURIComponent(item.grant_name)}`}
+                style={{ fontSize: 12, fontWeight: 600, color: '#3B6D11', textDecoration: 'none', whiteSpace: 'nowrap' }}
+              >
+                View in Find Funding →
+              </NextLink>
+            </div>
+            {loadingSummary ? (
+              <p className="text-xs" style={{ color: '#8A8986', margin: 0 }}>Loading summary…</p>
+            ) : catalogue?.description ? (
+              <>
+                <p className="text-sm line-clamp-4" style={{ color: '#2C2C2A', lineHeight: 1.5, margin: 0 }}>{catalogue.description}</p>
+                {catalogue.sectors.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {catalogue.sectors.slice(0, 4).map(s => (
+                      <span key={s} style={{ fontSize: 11, background: '#fff', color: '#3B6D11', border: '0.5px solid rgba(57,109,17,0.2)', borderRadius: 999, padding: '2px 8px', textTransform: 'capitalize' }}>{s}</span>
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : (
+              <p className="text-xs" style={{ color: '#8A8986', margin: 0 }}>Not in the live catalogue (added manually or no longer listed) — use the link to search by name.</p>
+            )}
+          </div>
+
           {/* Amount & Deadline */}
           {isApplyingOrLater ? (
             <div className="grid grid-cols-2 gap-3">
