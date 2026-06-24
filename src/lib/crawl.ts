@@ -3830,6 +3830,10 @@ async function crawlUnLtd(): Promise<CrawlResult> {
       const desc  = card.querySelector('p, .card-body')?.text.trim() ?? ''
       const href  = card.querySelector('a')?.getAttribute('href') ?? ''
       const url   = href.startsWith('http') ? href : `https://unltd.org.uk${href}`
+      // Skip dated event links (e.g. Eventbrite tickets). They go stale the moment
+      // the event passes and must not be ingested as standing funding rows — a row
+      // like "Introduction to UnLtd…/e/…-tickets-<id>" dies on the event date.
+      if (/eventbrite\.[a-z.]+|\/e\/[^/]*-tickets-/i.test(url)) return
       const slug  = slugify(url)
       grants.push({
         external_id:          `unltd_${slug}`,
