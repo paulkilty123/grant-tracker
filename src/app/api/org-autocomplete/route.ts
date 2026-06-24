@@ -98,9 +98,9 @@ Extract information and return ONLY a valid JSON object with these exact keys:
 }
 
 IMPACT SECTOR VALUES (pick 1–5 in priority order):
-young_people, community, health, mental_health, housing, education, employment,
+community, health, mental_health, housing, education, employment,
 disability, older_people, environment, creative, heritage, sport, women, justice,
-tech, financial, food, international
+tech, financial, food, international, social_economy, social_innovation
 
 BENEFICIARY GROUP VALUES (pick 1–5, primary first):
 children, young_people, older_people, families, women_girls, men_boys, lgbtq,
@@ -120,7 +120,7 @@ Rules for field values:
 - themes = broad thematic areas (4–8 items)
 - areasOfWork = concrete activities and programmes they run (4–8 items)
 - beneficiaries = specific people they help (3–6 items)
-- impactSectors = use ONLY the exact values listed above, in priority order (most core first)
+- impactSectors = use ONLY the exact values listed above, in priority order (most core first); when the organisation is a sector-support / capacity-building body (the same signal as beneficiary "social_impact_orgs" — it supports other charities, social enterprises or founders), prefer "social_innovation" (systems change) and/or "social_economy" (co-ops & community ownership) as the PRIMARY sectors, NOT the frontline themes (employment, education, community) of the organisations they help
 - beneficiaryGroups = use ONLY the exact values listed above; put primary beneficiary first; use "general_public" only if genuinely no specific group; use "social_impact_orgs" when the organisation PRIMARILY supports OTHER charities, social enterprises or social entrepreneurs (a capacity-building / infrastructure / mentoring body — e.g. it mentors founders or supports other organisations) rather than serving end-beneficiaries directly — for such orgs make it the PRIMARY value, and do NOT also add frontline end-beneficiary groups (young_people, women_girls, etc.) UNLESS the org clearly ALSO delivers services directly to those groups — supporting founders/organisations whose causes touch a group does NOT mean the applicant serves that group, so social_impact_orgs is usually the ONLY beneficiary (optionally plus general_public)
 - If you cannot determine something, use null for strings, [] for arrays, and 0.0 for confidence
 - annualIncome: infer from staff size, scope of services, number of sites, or any financial figures mentioned
