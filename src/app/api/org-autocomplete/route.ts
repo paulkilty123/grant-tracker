@@ -114,13 +114,14 @@ Rules for _confidence (score each field 0.0–1.0):
 - 0.1–0.39: weak inference, could easily be wrong (e.g. location guessed from domain TLD, structure guessed from name alone)
 - 0.0: not determinable from available content (use null for the field value too)
 - orgType is ELIGIBILITY-CRITICAL — be strict and do NOT overstate certainty. Score orgType >= 0.8 ONLY when the page names a SINGLE explicit legal form (e.g. "registered charity no. 1234567", "a community interest company"/"CIC", "registered society", "charitable incorporated organisation"). If the organisation describes itself as MORE THAN ONE structure (e.g. "we are both a charity and a social enterprise"), or the legal form is only inferred from tone/mission/name rather than stated, score orgType 0.5 or LOWER. A confidently-wrong structure silently mis-ranks the applicant's funding matches, so when a single legal form is not explicit on the page, score LOW and let the user confirm it.
+- beneficiaryGroups — when social_impact_orgs is the primary value, score beneficiaryGroups confidence 0.7 or LOWER (sector-support beneficiaries are easily over-tagged with frontline groups), so the field is flagged for the user to confirm rather than auto-confirming green.
 
 Rules for field values:
 - themes = broad thematic areas (4–8 items)
 - areasOfWork = concrete activities and programmes they run (4–8 items)
 - beneficiaries = specific people they help (3–6 items)
 - impactSectors = use ONLY the exact values listed above, in priority order (most core first)
-- beneficiaryGroups = use ONLY the exact values listed above; put primary beneficiary first; use "general_public" only if genuinely no specific group; use "social_impact_orgs" when the organisation PRIMARILY supports OTHER charities, social enterprises or social entrepreneurs (a capacity-building / infrastructure / mentoring body — e.g. it mentors founders or supports other organisations) rather than serving end-beneficiaries directly — for such orgs make it the PRIMARY value rather than guessing a frontline group
+- beneficiaryGroups = use ONLY the exact values listed above; put primary beneficiary first; use "general_public" only if genuinely no specific group; use "social_impact_orgs" when the organisation PRIMARILY supports OTHER charities, social enterprises or social entrepreneurs (a capacity-building / infrastructure / mentoring body — e.g. it mentors founders or supports other organisations) rather than serving end-beneficiaries directly — for such orgs make it the PRIMARY value, and do NOT also add frontline end-beneficiary groups (young_people, women_girls, etc.) UNLESS the org clearly ALSO delivers services directly to those groups — supporting founders/organisations whose causes touch a group does NOT mean the applicant serves that group, so social_impact_orgs is usually the ONLY beneficiary (optionally plus general_public)
 - If you cannot determine something, use null for strings, [] for arrays, and 0.0 for confidence
 - annualIncome: infer from staff size, scope of services, number of sites, or any financial figures mentioned
 - Return ONLY the JSON object — no markdown fences, no commentary`
