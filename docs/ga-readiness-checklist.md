@@ -1,7 +1,7 @@
 # Grant Tracker — GA Readiness Checklist
 
 **Target GA:** 30 June 2026 (per delivery plan v2)
-**Last updated:** 2026-06-22
+**Last updated:** 2026-06-24
 **Maintained by:** Claude (update in place as items move)
 
 ## GA scope (decided 2026-06-21)
@@ -107,6 +107,7 @@ External/legal — Paul's to drive. Legal *pages* exist in the app; legal *revie
 | Email verification | ✅ Shipped | Supabase confirm-email flow wired: `auth/callback/route.ts` + login error handling for `Email not confirmed` / `otp_expired` / `confirmation_failed` (`auth/login/page.tsx`). |
 | Builder/pipeline gated from free-tier users | 🟡 Partial | See §2a — builder compute gated; pipeline/projects/applications data not. GA-blocking. |
 | Free vs Apply nav/UX for public users | ⬜ Not started | Confirm a public free-tier user sees a coherent app (matching + saved) without dead-ends into gated Apply features. |
+| **Deadline / saved-grant reminder emails — enable + unsubscribe** | ⬜ Not started (Paul to dive into) | Cron `/api/cron/deadline-reminders` is **fully coded** (pipeline deadlines + David's saved-grant reminders + a "due today" tier, `1a17179`) but **NOT listed in `vercel.json` → it never fires; zero reminder emails send today.** **To enable:** add `{ "path": "/api/cron/deadline-reminders", "schedule": "30 7 * * *" }` to `vercel.json` + confirm env (`CRON_SECRET`, `RESEND_API_KEY` ✅already set, `ALERT_FROM_EMAIL`). **Verify firing:** Vercel → Cron Jobs tab (last run/status), or `curl -H "Authorization: Bearer $CRON_SECRET" https://www.granttracker.co.uk/api/cron/deadline-reminders` (use **www** — apex strips the bearer). **Blocker before enabling for cohort:** no one-click **unsubscribe** in the email (only in-app Clear / footer "Manage settings" → /dashboard/profile). Reminders are opt-in per action (pipeline-add / set-reminder), so more transactional than the auto-subscribed digests. **Decision pending:** (A) enable now + fast-follow a tokenised unsubscribe, or (B) build unsubscribe first then enable. |
 
 ---
 
@@ -142,6 +143,6 @@ Moved off the GA-blocker list per the 2026-06-21 scope decision. Cohort tests th
 
 **Cleared 2026-06-21:** ✅ numeric guard live-verified (Greggs) · ✅ Fredericks data error fixed (£1.5m→£50k) · ✅ Greggs duplicate `08fcdf0b` archived.
 **Cleared 2026-06-22:** ✅ Apply-tier RLS entitlement fix (§2a) shipped + DB-verified (migration 030) — the #1 load-bearing GA blocker · ✅ `ai-search` auth + rate-limit (§2, `06383eb`) — the inference-surface gap surfaced this review · ✅ `autofill-grant` + `org-autocomplete` auth + rate-limit (§2, `e86e7c7`) — same inference-surface class, anon → 401 verified live · ✅ NLHF "Heritage Grants £250k–£10m" amount fixed at source (`06383eb`) + live row corrected · ✅ Upstash token rotated (Paul) + prod connectivity verified live (MCP counters `94/973`).
-**Queued non-blocking:** Jack Petchey "Places & Spaces" £2m to verify · §4 free-tier UX must hide pipeline-write affordances on Deadlines/Search (see §2a residual) · SSRF hardening on the two auto-fill URL-fetch routes — host/scheme allowlist (see §2).
+**Queued non-blocking:** Jack Petchey "Places & Spaces" £2m to verify · §4 free-tier UX must hide pipeline-write affordances on Deadlines/Search (see §2a residual) · SSRF hardening on the two auto-fill URL-fetch routes — host/scheme allowlist (see §2) · **enable deadline/saved reminder-email cron (not in `vercel.json`) + build email unsubscribe before cohort sends (§4)**.
 **Off the GA list (post-GA, ~2–4 wks):** Stripe/payment (wire to `apply_access`), entitlement→payment/trial logic, pricing UX · Scotland coverage depth · location_tag hygiene backlog.
 **▶ Next GA blockers:** launch-claims coverage SQL pass · MCP counter-race re-smoke-test · open free-tier signup + coherent free-tier UX (§4) · (🔎 Paul, external) ICO + insurance + Ltd; confirm old Upstash token revoked.
