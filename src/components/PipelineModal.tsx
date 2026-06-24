@@ -89,18 +89,29 @@ export function PipelineModal({
   const [loadingSummary, setLoadingSummary] = useState(false)
 
   useEffect(() => {
-    if (!item.grant_url) { setCatalogue(null); return }
     let cancelled = false
     setLoadingSummary(true)
     ;(async () => {
       const supabase = createClient()
-      const { data } = await supabase
-        .from('grants_with_funder')
-        .select('id, external_id, is_active, description, impact_sectors, sectors')
-        .eq('apply_url', item.grant_url)
-        .limit(1)
+      const cols = 'id, external_id, is_active, description, impact_sectors, sectors'
+      type Row = { id: string; external_id: string | null; is_active: boolean | null; description: string | null; impact_sectors: string[] | null; sectors: string[] | null }
+      let row: Row | undefined
+      // Primary: exact title + funder (how pipeline items are created from the
+      // catalogue, so this is the reliable join). Active preferred.
+      if (item.grant_name && item.funder_name) {
+        const { data } = await supabase.from('grants_with_funder').select(cols)
+          .eq('title', item.grant_name).eq('funder', item.funder_name)
+          .order('is_active', { ascending: false }).limit(1)
+        row = data?.[0] as Row | undefined
+      }
+      // Fallback: match by apply URL (e.g. if the name was edited).
+      if (!row && item.grant_url) {
+        const { data } = await supabase.from('grants_with_funder').select(cols)
+          .eq('apply_url', item.grant_url)
+          .order('is_active', { ascending: false }).limit(1)
+        row = data?.[0] as Row | undefined
+      }
       if (cancelled) return
-      const row = data?.[0] as { id: string; external_id: string | null; is_active: boolean | null; description: string | null; impact_sectors: string[] | null; sectors: string[] | null } | undefined
       if (row) {
         const raw = (row.impact_sectors?.length ? row.impact_sectors : row.sectors) ?? []
         // Pin by the normalised id (external_id ?? id) — that's what the search
@@ -112,7 +123,7 @@ export function PipelineModal({
       setLoadingSummary(false)
     })()
     return () => { cancelled = true }
-  }, [item.grant_url])
+  }, [item.grant_name, item.funder_name, item.grant_url])
 
   async function handleSave() {
     setSaving(true)

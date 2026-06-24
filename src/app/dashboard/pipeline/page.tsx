@@ -545,20 +545,30 @@ export default function PipelinePage() {
       if (o) {
         const data = await getPipelineItems(o.id)
         setItems(data)
-        // Pre-resolve catalogue ids for items' apply URLs so cards can deep-link
-        // precisely (?grant=<id>) instead of a fuzzy name search. Active only.
-        const urls = Array.from(new Set(data.map(i => i.grant_url).filter((u): u is string => !!u)))
-        if (urls.length) {
+        // Pre-resolve each item's catalogue id (keyed by pipeline item id) so cards
+        // can deep-link precisely (?grant=<id>). Match active rows by exact
+        // title+funder (the reliable join) then by apply URL.
+        const funders = Array.from(new Set(data.map(i => i.funder_name).filter((f): f is string => !!f)))
+        if (funders.length) {
           const { data: cat } = await supabase
             .from('grants_with_funder')
-            .select('id, external_id, apply_url')
-            .in('apply_url', urls)
+            .select('id, external_id, title, funder, apply_url')
             .eq('is_active', true)
-          const m = new Map<string, string>()
-          for (const g of (cat ?? []) as { id: string; external_id: string | null; apply_url: string | null }[]) {
-            if (g.apply_url) m.set(g.apply_url, g.external_id ?? g.id)
+            .in('funder', funders)
+          const byTitleFunder = new Map<string, string>()
+          const byUrl = new Map<string, string>()
+          for (const g of (cat ?? []) as { id: string; external_id: string | null; title: string | null; funder: string | null; apply_url: string | null }[]) {
+            const pinId = g.external_id ?? g.id
+            if (g.title && g.funder) byTitleFunder.set(`${g.title}|${g.funder}`, pinId)
+            if (g.apply_url) byUrl.set(g.apply_url, pinId)
           }
-          setCatalogueIds(m)
+          const resolved = new Map<string, string>()
+          for (const it of data) {
+            const pin = (it.grant_name && it.funder_name ? byTitleFunder.get(`${it.grant_name}|${it.funder_name}`) : undefined)
+              ?? (it.grant_url ? byUrl.get(it.grant_url) : undefined)
+            if (pin) resolved.set(it.id, pin)
+          }
+          setCatalogueIds(resolved)
         }
         // Map linked applications so cards can offer Continue vs Start.
         const { data: apps } = await supabase
@@ -824,7 +834,7 @@ export default function PipelinePage() {
                     onMove={handleMove}
                     appId={appByPipeline[item.id] ?? null}
                     builderAllowed={builderAllowed}
-                    findFundingId={item.grant_url ? catalogueIds.get(item.grant_url) : undefined}
+                    findFundingId={catalogueIds.get(item.id)}
                   />
                 </div>
               ))}
