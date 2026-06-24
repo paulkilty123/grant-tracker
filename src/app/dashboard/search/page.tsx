@@ -6,7 +6,7 @@ import { Search, ChevronDown, Layers, DollarSign, Rocket, Building2, SlidersHori
 import { SEED_GRANTS } from '@/lib/grants'
 import { formatRange } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
-import { createPipelineItem, deletePipelineItem } from '@/lib/pipeline'
+import { createPipelineItem, deletePipelineItem, updatePipelineStage } from '@/lib/pipeline'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { computeMatchScore, scoreColour, grantInGeoSelection, grantMatchesLocationText } from '@/lib/matching'
@@ -1483,6 +1483,19 @@ export default function SearchPage() {
       next.set(grantId, s)
       return next
     })
+    // Keep Find Funding & the pipeline consistent: if this grant is in the pipeline,
+    // move it to Declined (David 2026-06-24). Non-destructive — keeps the record; skips Won.
+    const dismissedTitle = scrapedGrants.find(g => g.id === grantId)?.title
+    const pl = dismissedTitle ? pipelinedIds.get(dismissedTitle) : undefined
+    if (pl && pl.stage !== 'declined' && pl.stage !== 'won') {
+      await updatePipelineStage(pl.id, 'declined')
+      setPipelinedIds(prev => {
+        const m = new Map(prev)
+        const e = m.get(dismissedTitle!)
+        if (e) m.set(dismissedTitle!, { ...e, stage: 'declined' })
+        return m
+      })
+    }
     const uuid = catalogueUuidFor(grantId)
     if (uuid) emitClientEvent(org.id, 'opportunity_dismissed', { opportunity_id: uuid, reason: null })
   }
