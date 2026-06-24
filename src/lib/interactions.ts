@@ -98,6 +98,39 @@ export async function setDismissSnooze(
     )
 }
 
+/** Set/clear a free-text note on a saved grant (David 2026-06-24). Stored on the
+ *  'saved' row's note column; pass null to clear. */
+export async function setSavedNote(
+  orgId: string,
+  grantId: string,
+  note: string | null,
+): Promise<void> {
+  const supabase = createClient()
+  await supabase
+    .from('grant_interactions')
+    .upsert(
+      { org_id: orgId, grant_id: grantId, action: 'saved', note: note && note.trim() ? note.trim() : null },
+      { onConflict: 'org_id,grant_id,action' },
+    )
+}
+
+/** Load notes for an org's saved grants: grantId → note text. */
+export async function getSavedNotes(orgId: string): Promise<Map<string, string>> {
+  const supabase = createClient()
+  const { data } = await supabase
+    .from('grant_interactions')
+    .select('grant_id, note')
+    .eq('org_id', orgId)
+    .eq('action', 'saved')
+    .not('note', 'is', null)
+
+  const result = new Map<string, string>()
+  for (const row of (data ?? []) as { grant_id: string; note: string | null }[]) {
+    if (row.note) result.set(row.grant_id, row.note)
+  }
+  return result
+}
+
 /** Load resurface dates for an org's dismissed grants: grantId → ISO date string. */
 export async function getDismissSnoozes(orgId: string): Promise<Map<string, string>> {
   const supabase = createClient()

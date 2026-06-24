@@ -11,7 +11,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { computeMatchScore, scoreColour, grantInGeoSelection, grantMatchesLocationText } from '@/lib/matching'
 import type { FeedbackSignals, MatchBreakdown } from '@/lib/matching'
-import { getInteractions, recordInteraction, removeInteraction, getSavedReminders, setSavedReminder, getDismissSnoozes, setDismissSnooze } from '@/lib/interactions'
+import { getInteractions, recordInteraction, removeInteraction, getSavedReminders, setSavedReminder, getDismissSnoozes, setDismissSnooze, getSavedNotes, setSavedNote } from '@/lib/interactions'
 import { getMatchFeedback, type StoredFeedback } from '@/lib/matchFeedback'
 import {
   LIKE_SCORE_BOOST, DISLIKE_SCORE_PENALTY, LIKE_SECTOR_BOOST, DISLIKE_SECTOR_PENALTY,
@@ -1262,6 +1262,9 @@ export default function SearchPage() {
   const [matchFeedbackMap, setMatchFeedbackMap] = useState<Map<string, StoredFeedback>>(new Map())
   const [savedReminders, setSavedReminders] = useState<Map<string, string>>(new Map())
   const [dismissSnoozes, setDismissSnoozes] = useState<Map<string, string>>(new Map())
+  const [savedNotes, setSavedNotes] = useState<Map<string, string>>(new Map())
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null)
+  const [noteDraft, setNoteDraft] = useState('')
   // "Already applied" outcome flow — null when closed; otherwise tracks the
   // grant being marked + which step (outcome picker → optional decline reasons).
   const [appliedFlow, setAppliedFlow] = useState<{
@@ -1370,6 +1373,7 @@ export default function SearchPage() {
         setInteractions(ix)
         const rem = await getSavedReminders(o.id)
         setSavedReminders(rem)
+        setSavedNotes(await getSavedNotes(o.id))
         setDismissSnoozes(snoozes)
         const mfb = await getMatchFeedback(user.id)
         setMatchFeedbackMap(mfb)
@@ -1547,6 +1551,24 @@ export default function SearchPage() {
       else next.delete(grantId)
       return next
     })
+  }
+
+  // Free-text notes on saved grants (David 2026-06-24).
+  function startEditNote(grantId: string) {
+    setEditingNoteId(grantId)
+    setNoteDraft(savedNotes.get(grantId) ?? '')
+  }
+  async function saveNote(grantId: string) {
+    if (!org) return
+    const text = noteDraft.trim()
+    await setSavedNote(org.id, grantId, text || null)
+    setSavedNotes(prev => {
+      const next = new Map(prev)
+      if (text) next.set(grantId, text)
+      else next.delete(grantId)
+      return next
+    })
+    setEditingNoteId(null)
   }
 
   async function handleSave(grantId: string) {
@@ -3149,6 +3171,8 @@ export default function SearchPage() {
             {savedGrants.slice(0, visibleCount).map(item => {
               const reminder = savedReminders.get(item.grant.id) ?? null
               const todayStr = new Date().toISOString().split('T')[0]
+              const note = savedNotes.get(item.grant.id) ?? ''
+              const isEditingNote = editingNoteId === item.grant.id
               return (
               <div key={item.grant.id}>
               <GrantCard
@@ -3170,7 +3194,8 @@ export default function SearchPage() {
                 onUnsave={handleUnsave}
               />
               {org?.owner_id && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', margin: '-6px 0 14px', padding: '0 4px', fontFamily: 'var(--font-space-grotesk)', fontSize: 12.5 }}>
+                <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', margin: '-6px 0 8px', padding: '0 4px', fontFamily: 'var(--font-space-grotesk)', fontSize: 12.5 }}>
                   {reminder ? (
                     <>
                       <span style={{ color: '#3B6D11', fontWeight: 500 }}>
@@ -3199,6 +3224,45 @@ export default function SearchPage() {
                     </>
                   )}
                 </div>
+                {/* Free-text notes on the saved grant (David 2026-06-24) */}
+                <div style={{ margin: '0 0 14px', padding: '0 4px', fontFamily: 'var(--font-space-grotesk)', fontSize: 12.5 }}>
+                  {isEditingNote ? (
+                    <div style={{ maxWidth: 540 }}>
+                      <textarea
+                        value={noteDraft}
+                        onChange={e => setNoteDraft(e.target.value)}
+                        autoFocus
+                        rows={3}
+                        placeholder="Your own notes — e.g. eligibility we don't meet now but could in a year…"
+                        style={{ width: '100%', fontFamily: 'var(--font-dm-sans)', fontSize: 13, border: '1px solid #E0E0DC', borderRadius: 8, padding: '8px 10px', color: '#2C2C2A', resize: 'vertical' }}
+                      />
+                      <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+                        <button onClick={() => saveNote(item.grant.id)}
+                          style={{ fontFamily: 'inherit', fontSize: 12, fontWeight: 600, padding: '5px 12px', borderRadius: 8, border: 'none', background: '#8ECB3C', color: '#173404', cursor: 'pointer' }}>
+                          Save note
+                        </button>
+                        <button onClick={() => setEditingNoteId(null)}
+                          style={{ fontFamily: 'inherit', fontSize: 12, color: '#8A8986', background: 'transparent', border: 'none', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : note ? (
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, flexWrap: 'wrap' }}>
+                      <span style={{ color: '#5F5E5A', fontFamily: 'var(--font-dm-sans)', fontSize: 12.5, whiteSpace: 'pre-wrap' }}>📝 {note}</span>
+                      <button onClick={() => startEditNote(item.grant.id)}
+                        style={{ background: 'transparent', border: 'none', color: '#3B6D11', cursor: 'pointer', textDecoration: 'underline', padding: 0, fontFamily: 'inherit', fontSize: 12, fontWeight: 600 }}>
+                        Edit
+                      </button>
+                    </div>
+                  ) : (
+                    <button onClick={() => startEditNote(item.grant.id)}
+                      style={{ background: 'transparent', border: 'none', color: '#5F5E5A', cursor: 'pointer', textDecoration: 'underline', padding: 0, fontFamily: 'inherit', fontSize: 12.5 }}>
+                      📝 Add a note
+                    </button>
+                  )}
+                </div>
+                </>
               )}
               </div>
               )
