@@ -80,3 +80,37 @@ export async function getSavedReminders(orgId: string): Promise<Map<string, stri
   }
   return result
 }
+
+/** Snooze a dismissed grant: set/clear a resurface date on the 'dismissed' row. The
+ *  grant stays hidden from matches until this date passes, then reappears (Devi snooze
+ *  2026-06-24). Reuses the reminder_at column — on a 'dismissed' row it means "come back on". */
+export async function setDismissSnooze(
+  orgId: string,
+  grantId: string,
+  resurfaceAt: string | null,
+): Promise<void> {
+  const supabase = createClient()
+  await supabase
+    .from('grant_interactions')
+    .upsert(
+      { org_id: orgId, grant_id: grantId, action: 'dismissed', reminder_at: resurfaceAt },
+      { onConflict: 'org_id,grant_id,action' },
+    )
+}
+
+/** Load resurface dates for an org's dismissed grants: grantId → ISO date string. */
+export async function getDismissSnoozes(orgId: string): Promise<Map<string, string>> {
+  const supabase = createClient()
+  const { data } = await supabase
+    .from('grant_interactions')
+    .select('grant_id, reminder_at')
+    .eq('org_id', orgId)
+    .eq('action', 'dismissed')
+    .not('reminder_at', 'is', null)
+
+  const result = new Map<string, string>()
+  for (const row of (data ?? []) as { grant_id: string; reminder_at: string | null }[]) {
+    if (row.reminder_at) result.set(row.grant_id, row.reminder_at)
+  }
+  return result
+}

@@ -11,7 +11,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { computeMatchScore, scoreColour, grantInGeoSelection, grantMatchesLocationText } from '@/lib/matching'
 import type { FeedbackSignals, MatchBreakdown } from '@/lib/matching'
-import { getInteractions, recordInteraction, removeInteraction, getSavedReminders, setSavedReminder } from '@/lib/interactions'
+import { getInteractions, recordInteraction, removeInteraction, getSavedReminders, setSavedReminder, getDismissSnoozes, setDismissSnooze } from '@/lib/interactions'
 import { getMatchFeedback, type StoredFeedback } from '@/lib/matchFeedback'
 import {
   LIKE_SCORE_BOOST, DISLIKE_SCORE_PENALTY, LIKE_SECTOR_BOOST, DISLIKE_SECTOR_PENALTY,
@@ -1261,6 +1261,7 @@ export default function SearchPage() {
   const [interactions, setInteractions] = useState<Map<string, Set<InteractionAction>>>(new Map())
   const [matchFeedbackMap, setMatchFeedbackMap] = useState<Map<string, StoredFeedback>>(new Map())
   const [savedReminders, setSavedReminders] = useState<Map<string, string>>(new Map())
+  const [dismissSnoozes, setDismissSnoozes] = useState<Map<string, string>>(new Map())
   // "Already applied" outcome flow — null when closed; otherwise tracks the
   // grant being marked + which step (outcome picker → optional decline reasons).
   const [appliedFlow, setAppliedFlow] = useState<{
@@ -1355,9 +1356,21 @@ export default function SearchPage() {
       setOrg(o)
       if (o) {
         const ix = await getInteractions(o.id)
+        const snoozes = await getDismissSnoozes(o.id)
+        // Expire snoozes whose resurface date has passed: lift the dismissal entirely
+        // so the grant returns as a normal match (not a self-hiding dismissed card).
+        const snoozeToday = new Date().toISOString().split('T')[0]
+        for (const [grantId, date] of Array.from(snoozes.entries())) {
+          if (date <= snoozeToday) {
+            await removeInteraction(o.id, grantId, 'dismissed')
+            ix.get(grantId)?.delete('dismissed')
+            snoozes.delete(grantId)
+          }
+        }
         setInteractions(ix)
         const rem = await getSavedReminders(o.id)
         setSavedReminders(rem)
+        setDismissSnoozes(snoozes)
         const mfb = await getMatchFeedback(user.id)
         setMatchFeedbackMap(mfb)
         // Load existing pipeline grant names to show button state
@@ -1458,6 +1471,11 @@ export default function SearchPage() {
   async function handleDismiss(grantId: string) {
     if (!org) return
     await recordInteraction(org.id, grantId, 'dismissed')
+    // A fresh dismiss is permanent — clear any stale resurface date from a prior snooze.
+    if (dismissSnoozes.has(grantId)) {
+      await setDismissSnooze(org.id, grantId, null)
+      setDismissSnoozes(prev => { const n = new Map(prev); n.delete(grantId); return n })
+    }
     setInteractions(prev => {
       const next = new Map(prev)
       const s = new Set(next.get(grantId) ?? [])
@@ -1487,6 +1505,32 @@ export default function SearchPage() {
     setSavedReminders(prev => {
       const next = new Map(prev)
       if (date) next.set(grantId, date)
+      else next.delete(grantId)
+      return next
+    })
+  }
+
+  // Snooze / resurface for dismissed grants (Devi 2026-06-24). A grant is "hidden"
+  // only while dismissed AND (no resurface date, or it's still in the future); once
+  // the date passes it reappears in matches. Resurfaced/closed grants self-protect:
+  // the catalogue fetch already drops inactive/expired rows.
+  const snoozeTodayISO = new Date().toISOString().split('T')[0]
+  function isHidden(grantId: string): boolean {
+    if (!interactions.get(grantId)?.has('dismissed')) return false
+    const snooze = dismissSnoozes.get(grantId)
+    return !snooze || snooze > snoozeTodayISO
+  }
+  function snoozeMonthsFromNow(n: number): string {
+    const d = new Date()
+    d.setMonth(d.getMonth() + n)
+    return d.toISOString().split('T')[0]
+  }
+  async function handleSetSnooze(grantId: string, resurfaceAt: string | null) {
+    if (!org) return
+    await setDismissSnooze(org.id, grantId, resurfaceAt)
+    setDismissSnoozes(prev => {
+      const next = new Map(prev)
+      if (resurfaceAt) next.set(grantId, resurfaceAt)
       else next.delete(grantId)
       return next
     })
@@ -2345,7 +2389,7 @@ export default function SearchPage() {
   ]
 
   const savedCount = Array.from(interactions.values()).filter(s => s.has('saved')).length
-  const hiddenCount = Array.from(interactions.values()).filter(s => s.has('dismissed')).length
+  const hiddenCount = Array.from(interactions.keys()).filter(id => isHidden(id)).length
 
   // Match scores + reasons are only meaningful when the profile filter is active
   // OR when an AI search has produced scored results. When profile filter is
@@ -2890,8 +2934,8 @@ export default function SearchPage() {
 
       {/* ── Matches view ── */}
       {activeView === 'browse' && hasSearched && grantsLoaded && (() => {
-        const dismissedCount = displayGrants.filter(item => interactions.get(item.grant.id)?.has('dismissed')).length
-        const visibleGrants  = displayGrants.filter(item => !interactions.get(item.grant.id)?.has('dismissed'))
+        const dismissedCount = displayGrants.filter(item => isHidden(item.grant.id)).length
+        const visibleGrants  = displayGrants.filter(item => !isHidden(item.grant.id))
         return visibleGrants.length === 0 && dismissedCount === 0 ? (
           (() => {
             // Detection priority: B (search) → C (filters) → A (category empty)
@@ -3163,7 +3207,7 @@ export default function SearchPage() {
       {/* ── Hidden view ── */}
       {activeView === 'hidden' && (() => {
         const hiddenGrants: DisplayGrant[] = allGrants
-          .filter(g => interactions.get(g.id)?.has('dismissed'))
+          .filter(g => isHidden(g.id))
           .map(g => ({ grant: g, score: 0, displayScore: 0, reason: '', isAiScore: false, breakdown: undefined }))
         return hiddenGrants.length === 0 ? (
           <div className="text-center py-16 text-light">
@@ -3174,9 +3218,11 @@ export default function SearchPage() {
         ) : (
           <>
             <p className="text-sm text-mid mb-4 px-1">Grants you marked &ldquo;Not for us&rdquo;. Restore any to bring it back to your matches.</p>
-            {hiddenGrants.slice(0, visibleCount).map(item => (
+            {hiddenGrants.slice(0, visibleCount).map(item => {
+              const snooze = dismissSnoozes.get(item.grant.id) ?? null
+              return (
+              <div key={item.grant.id}>
               <GrantCard
-                key={item.grant.id}
                 item={item}
                 hasOrg={!!org}
                 hasSearch={false}
@@ -3195,7 +3241,36 @@ export default function SearchPage() {
                 onUnsave={handleUnsave}
                 showIfDismissed
               />
-            ))}
+              {org?.owner_id && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', margin: '-6px 0 14px', padding: '0 4px', fontFamily: 'var(--font-space-grotesk)', fontSize: 12.5 }}>
+                  {snooze ? (
+                    <>
+                      <span style={{ color: '#3B6D11', fontWeight: 500 }}>↩ Comes back {new Date(snooze).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                      <button onClick={() => handleSetSnooze(item.grant.id, null)}
+                        style={{ background: 'transparent', border: 'none', color: '#8A8986', cursor: 'pointer', textDecoration: 'underline', padding: 0, fontFamily: 'inherit', fontSize: 12 }}>
+                        Keep hidden
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: '#5F5E5A' }}>
+                        ↩ Bring it back in
+                        <select value="" onChange={e => { if (e.target.value) handleSetSnooze(item.grant.id, snoozeMonthsFromNow(Number(e.target.value))) }}
+                          style={{ fontFamily: 'inherit', fontSize: 12.5, border: '1px solid #E0E0DC', borderRadius: 8, padding: '4px 8px', color: '#2C2C2A', cursor: 'pointer' }}>
+                          <option value="">choose…</option>
+                          <option value="3">3 months</option>
+                          <option value="6">6 months</option>
+                          <option value="12">1 year</option>
+                        </select>
+                      </label>
+                      <span style={{ color: '#8A8986', fontSize: 11.5 }}>then it reappears in your matches</span>
+                    </>
+                  )}
+                </div>
+              )}
+              </div>
+              )
+            })}
             {visibleCount < hiddenGrants.length && (
               <div className="text-center py-6">
                 <button

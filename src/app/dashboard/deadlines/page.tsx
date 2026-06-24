@@ -1037,11 +1037,15 @@ export default function DeadlinesPage() {
       // matches & saved rows so a "Not for us" reject sticks across reloads.
       const { data: interactionRows } = await supabase
         .from('grant_interactions')
-        .select('grant_id, action')
+        .select('grant_id, action, reminder_at')
         .eq('org_id', org.id)
         .in('action', ['saved', 'dismissed'])
+      // A dismissed grant is hidden only while it has no resurface date (permanent)
+      // or that date is still in the future (snoozed). Past that, it resurfaces.
       const dismissedIds = new Set(
-        (interactionRows ?? []).filter((r: { action: string }) => r.action === 'dismissed').map((r: { grant_id: string }) => r.grant_id)
+        (interactionRows ?? [])
+          .filter((r: { action: string; reminder_at: string | null }) => r.action === 'dismissed' && (!r.reminder_at || r.reminder_at > today))
+          .map((r: { grant_id: string }) => r.grant_id)
       )
 
       const { data: grantRows } = await supabase
