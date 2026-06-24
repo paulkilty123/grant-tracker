@@ -3119,6 +3119,7 @@ export default function SearchPage() {
                       <span style={{ color: '#3B6D11', fontWeight: 500 }}>
                         ⏰ Reminder set for {new Date(reminder).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </span>
+                      <span style={{ color: '#8A8986', fontSize: 11.5 }}>— emailed 2 weeks &amp; 1 week before, and on the day</span>
                       <button
                         onClick={() => handleSetSavedReminder(item.grant.id, null)}
                         style={{ background: 'transparent', border: 'none', color: '#8A8986', cursor: 'pointer', textDecoration: 'underline', padding: 0, fontFamily: 'inherit', fontSize: 12 }}
@@ -3127,15 +3128,18 @@ export default function SearchPage() {
                       </button>
                     </>
                   ) : (
-                    <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: '#5F5E5A', cursor: 'pointer' }}>
-                      ⏰ Set a reminder
-                      <input
-                        type="date"
-                        min={todayStr}
-                        onChange={e => { if (e.target.value) handleSetSavedReminder(item.grant.id, e.target.value) }}
-                        style={{ fontFamily: 'inherit', fontSize: 12.5, border: '1px solid #E0E0DC', borderRadius: 8, padding: '4px 8px', color: '#2C2C2A' }}
-                      />
-                    </label>
+                    <>
+                      <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: '#5F5E5A', cursor: 'pointer' }}>
+                        ⏰ Remind me before
+                        <input
+                          type="date"
+                          min={todayStr}
+                          onChange={e => { if (e.target.value) handleSetSavedReminder(item.grant.id, e.target.value) }}
+                          style={{ fontFamily: 'inherit', fontSize: 12.5, border: '1px solid #E0E0DC', borderRadius: 8, padding: '4px 8px', color: '#2C2C2A' }}
+                        />
+                      </label>
+                      <span style={{ color: '#8A8986', fontSize: 11.5 }}>We&apos;ll email you 2 weeks &amp; 1 week before, and on the day.</span>
+                    </>
                   )}
                 </div>
               )}

@@ -53,6 +53,7 @@ interface ReminderItem {
 }
 
 function buildReminderHtml(orgName: string, items: ReminderItem[]): string {
+  const todayItems   = items.filter(i => i.days === 0)
   const urgentItems  = items.filter(i => i.days === 7)
   const warningItems = items.filter(i => i.days === 14)
 
@@ -73,8 +74,8 @@ function buildReminderHtml(orgName: string, items: ReminderItem[]): string {
             </div>
           </div>
           <div style="text-align:right;flex-shrink:0;">
-            <p style="margin:0;font-size:20px;font-weight:800;color:${item.days === 7 ? '#D85A30' : '#c9963a'};">
-              ${item.days} days
+            <p style="margin:0;font-size:20px;font-weight:800;color:${item.days <= 7 ? '#D85A30' : '#c9963a'};">
+              ${item.days === 0 ? 'Today' : `${item.days} days`}
             </p>
             <p style="margin:2px 0 0;font-size:11px;color:#6b6b6b;">
               ${new Date(item.deadline).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
@@ -112,6 +113,7 @@ function buildReminderHtml(orgName: string, items: ReminderItem[]): string {
 
       <!-- Body -->
       <div style="background:#ffffff;border-radius:16px;padding:24px 28px;margin-bottom:24px;border:1px solid #e8ddd0;">
+        ${section('🔴 Due today', '#D85A30', todayItems)}
         ${section('⚠️ Due in 7 days — action needed', '#D85A30', urgentItems)}
         ${section('📅 Due in 14 days — heads up', '#c9963a', warningItems)}
       </div>
@@ -152,6 +154,7 @@ export async function GET(req: NextRequest) {
   const supabase = adminClient()
   const resend   = new Resend(process.env.RESEND_API_KEY)
 
+  const in0  = isoDate(0)
   const in7  = isoDate(7)
   const in14 = isoDate(14)
 
@@ -159,7 +162,7 @@ export async function GET(req: NextRequest) {
   const { data: rows, error: dbErr } = await supabase
     .from('pipeline_items')
     .select('id, grant_name, funder_name, deadline, stage, amount_requested, amount_min, amount_max, org_id')
-    .in('deadline', [in7, in14])
+    .in('deadline', [in0, in7, in14])
     .not('stage', 'in', '("won","declined")')
 
   if (dbErr) {
@@ -168,15 +171,15 @@ export async function GET(req: NextRequest) {
 
   const items: ReminderItem[] = (rows ?? []).map(r => ({
     ...r as Omit<ReminderItem, 'days'>,
-    days: (r as { deadline: string }).deadline === in7 ? 7 : 14,
+    days: (r as { deadline: string }).deadline === in0 ? 0 : (r as { deadline: string }).deadline === in7 ? 7 : 14,
   }))
 
-  // ── Saved-grant reminders (user-set reminder dates 7 or 14 days out) ──
+  // ── Saved-grant reminders (user-set reminder dates: today, 7 or 14 days out) ──
   const { data: savedRem } = await supabase
     .from('grant_interactions')
     .select('org_id, grant_id, reminder_at')
     .eq('action', 'saved')
-    .in('reminder_at', [in7, in14])
+    .in('reminder_at', [in0, in7, in14])
 
   if (savedRem?.length) {
     const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -213,7 +216,7 @@ export async function GET(req: NextRequest) {
         amount_min:       info.amount_min,
         amount_max:       info.amount_max,
         org_id:           r.org_id,
-        days:             r.reminder_at === in7 ? 7 : 14,
+        days:             r.reminder_at === in0 ? 0 : r.reminder_at === in7 ? 7 : 14,
       })
     }
   }
@@ -247,9 +250,11 @@ export async function GET(req: NextRequest) {
     const email = userData?.user?.email
     if (!email) continue
 
+    const todayCount   = orgItems.filter((i: ReminderItem) => i.days === 0).length
     const urgentCount  = orgItems.filter((i: ReminderItem) => i.days === 7).length
     const warningCount = orgItems.filter((i: ReminderItem) => i.days === 14).length
     const subjectParts = []
+    if (todayCount)   subjectParts.push(`${todayCount} due today`)
     if (urgentCount)  subjectParts.push(`${urgentCount} due in 7 days`)
     if (warningCount) subjectParts.push(`${warningCount} due in 14 days`)
 
