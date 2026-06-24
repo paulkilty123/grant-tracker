@@ -672,6 +672,14 @@ export default function OnboardingWizardPage() {
       if (!res.ok) throw new Error(data?.error ?? 'Auto-fill failed')
       const conf = data._confidence ?? {}
 
+      // Legal structure is eligibility-critical (a wrong value silently caps the
+      // applicant's matches). Only pre-fill it when the extractor is genuinely
+      // confident there's ONE clear legal form; otherwise leave it blank so the
+      // user completes it manually (the structure field is required to finish).
+      // The extractor is calibrated to score orgType low when the structure is
+      // ambiguous/dual/inferred (see api/org-autocomplete prompt).
+      const structureConfident = (conf.orgType ?? 0) >= 0.8
+
       let derivedLegal: LegalStructure | '' = ''
       if (data.orgType === 'registered_charity')   derivedLegal = 'registered_charity'
       else if (data.orgType === 'cic')              derivedLegal = 'cic_guarantee'
@@ -681,7 +689,7 @@ export default function OnboardingWizardPage() {
       const ext: ExtractedData = {
         url: raw,
         name:              data.name ?? null,
-        legalStructure:    derivedLegal || null,
+        legalStructure:    structureConfident ? (derivedLegal || null) : null,
         primaryLocation:   data.primaryLocation ?? null,
         annualIncomeBand:  data.annualIncome ?? null,
         mission:           data.mission ?? null,
@@ -689,7 +697,9 @@ export default function OnboardingWizardPage() {
         beneficiaryGroups: Array.isArray(data.beneficiaryGroups) ? data.beneficiaryGroups.slice(0, 5) : [],
         confidence: {
           name:              conf.name,
-          legalStructure:    conf.orgType,
+          // undefined (not the low score) when unconfident → review renders the
+          // structure as a "please add" field rather than a guess to rubber-stamp.
+          legalStructure:    structureConfident ? conf.orgType : undefined,
           primaryLocation:   conf.primaryLocation,
           annualIncomeBand:  conf.annualIncome,
           mission:           conf.mission,

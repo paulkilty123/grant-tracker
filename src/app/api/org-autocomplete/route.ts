@@ -113,6 +113,7 @@ Rules for _confidence (score each field 0.0–1.0):
 - 0.4–0.69: inferred with some uncertainty (e.g. income estimated from staff size, sector inferred from activity list)
 - 0.1–0.39: weak inference, could easily be wrong (e.g. location guessed from domain TLD, structure guessed from name alone)
 - 0.0: not determinable from available content (use null for the field value too)
+- orgType is ELIGIBILITY-CRITICAL — be strict and do NOT overstate certainty. Score orgType >= 0.8 ONLY when the page names a SINGLE explicit legal form (e.g. "registered charity no. 1234567", "a community interest company"/"CIC", "registered society", "charitable incorporated organisation"). If the organisation describes itself as MORE THAN ONE structure (e.g. "we are both a charity and a social enterprise"), or the legal form is only inferred from tone/mission/name rather than stated, score orgType 0.5 or LOWER. A confidently-wrong structure silently mis-ranks the applicant's funding matches, so when a single legal form is not explicit on the page, score LOW and let the user confirm it.
 
 Rules for field values:
 - themes = broad thematic areas (4–8 items)
