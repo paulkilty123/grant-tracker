@@ -1270,7 +1270,7 @@ export default function SearchPage() {
     freeText: string
   } | null>(null)
   const [scrapedGrants, setScrapedGrants] = useState<EnrichedGrant[]>([])
-  const [pinnedExtra, setPinnedExtra] = useState<{ name: string; funder: string | null; applyUrl: string | null; deadline: string | null; isRolling: boolean } | null>(null)
+  const [pinnedExtra, setPinnedExtra] = useState<{ forId: string; name: string; funder: string | null; applyUrl: string | null; deadline: string | null; isRolling: boolean } | null>(null)
   const [grantsLoaded, setGrantsLoaded]   = useState(false)
   const [amountMin, setAmountMin]         = useState('')
   const [amountMax, setAmountMax]         = useState('')
@@ -1429,7 +1429,7 @@ export default function SearchPage() {
         : await base.eq('external_id', pinnedGrantId).limit(1)
       if (cancelled) return
       const row = data?.[0] as { title: string; funder: string | null; apply_url: string | null; deadline: string | null; is_rolling: boolean | null } | undefined
-      setPinnedExtra(row ? { name: row.title, funder: row.funder, applyUrl: row.apply_url, deadline: row.deadline, isRolling: !!row.is_rolling } : null)
+      setPinnedExtra(row ? { forId: pinnedGrantId, name: row.title, funder: row.funder, applyUrl: row.apply_url, deadline: row.deadline, isRolling: !!row.is_rolling } : null)
     })()
     return () => { cancelled = true }
   }, [pinnedGrantId, scrapedGrants])
@@ -2714,10 +2714,12 @@ export default function SearchPage() {
       )}
 
       {/* Pinned grant that's no longer live (archived / expired) — opened from a
-          Pipeline link. Show it clearly as closed instead of landing on a different grant. */}
-      {activeView === 'browse' && pinnedExtra && (
-        <div style={{ background: '#FAEEDA', border: '0.5px solid rgba(180,135,40,0.30)', borderRadius: 12, padding: '14px 18px', marginBottom: 16 }}>
-          <div className="flex items-start justify-between gap-3 flex-wrap">
+          Pipeline link. Show it clearly as closed instead of landing on a different
+          grant. Gated on forId === the CURRENT ?grant= param so it never lingers on
+          a clean visit or after navigating to a different grant. */}
+      {activeView === 'browse' && pinnedExtra && pinnedExtra.forId === pinnedGrantId && (
+        <div style={{ background: '#FAEEDA', border: '0.5px solid rgba(180,135,40,0.30)', borderRadius: 12, padding: '14px 18px', marginBottom: 16, position: 'relative' }}>
+          <div className="flex items-start justify-between gap-3 flex-wrap" style={{ paddingRight: 22 }}>
             <div>
               <p style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, fontSize: 15, color: '#854F0B', margin: 0 }}>
                 ⏳ No longer open — {pinnedExtra.name}
@@ -2733,6 +2735,10 @@ export default function SearchPage() {
               </a>
             )}
           </div>
+          <button onClick={() => setPinnedExtra(null)} aria-label="Dismiss"
+            style={{ position: 'absolute', top: 8, right: 10, background: 'none', border: 'none', cursor: 'pointer', color: '#854F0B', fontSize: 18, lineHeight: 1, padding: 2 }}>
+            ×
+          </button>
         </div>
       )}
 
