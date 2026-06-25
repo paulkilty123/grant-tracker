@@ -1013,6 +1013,11 @@ export default async function DashboardPage() {
                         <span className="font-semibold uppercase px-1.5 py-0.5 rounded flex-shrink-0" style={{ background: cfg.pillBg, color: cfg.pillFg, fontSize: 10, letterSpacing: '0.04em', fontFamily: 'var(--font-space-grotesk)' }}>
                           {cfg.label.replace(/s$/, '')}
                         </span>
+                        {m.grant.isInviteOnly && (
+                          <span className="flex-shrink-0 inline-flex items-center gap-0.5 rounded-full" style={{ background: '#F3EDFA', color: '#6B21A8', fontSize: 10, padding: '2px 7px', fontWeight: 500, fontFamily: 'var(--font-dm-sans)' }}>
+                            ✉ Invite only
+                          </span>
+                        )}
                         <span style={{ color: '#5F5E5A' }} className="truncate min-w-0">
                           {m.grant.funder} · {amt}
                           {deadlineNode && <> · {deadlineNode}</>}
