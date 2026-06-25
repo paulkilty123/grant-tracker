@@ -96,7 +96,7 @@ const IMPACT_SECTOR_FILTERS: { id: ImpactSector; label: string }[] = [
   { id: 'environment',   label: 'Environment & Climate' },
   { id: 'food',          label: 'Food & Agriculture' },
   { id: 'tech',          label: 'Tech for Good' },
-  { id: 'justice',       label: 'Justice & Rights' },
+  { id: 'justice',       label: 'Human Rights & Justice' },
 ]
 
 const FUNDER_TYPES = [

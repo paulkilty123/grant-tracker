@@ -114,7 +114,7 @@ const IMPACT_SECTOR_OPTIONS: { value: ImpactSector; label: string }[] = [
   { value: 'heritage',          label: 'Heritage & Conservation' },
   { value: 'sport',             label: 'Sport & Physical Activity' },
   { value: 'women',             label: 'Women & Gender Equality' },
-  { value: 'justice',           label: 'Justice, Rights & Democracy' },
+  { value: 'justice',           label: 'Human Rights, Justice & Democracy' },
   { value: 'tech',              label: 'Tech for Good' },
   { value: 'financial',         label: 'Financial Inclusion' },
   { value: 'food',              label: 'Food & Agriculture' },
