@@ -1885,14 +1885,18 @@ export default function UrlAdminPage() {
     // "We're proud to launch the £4m Stronger Futures Programme 3.0" — £4m
     // was previously slipping through and becoming amount_max even though
     // typical_award correctly said £80k–£200k per grant.
-    const POOL_CUES_LEFT = /\b(?:awarded?\s+(?:a\s+)?total|totalling|total\s+(?:of|awarded|distributed|grants?|funding|funds|fund)\b|in\s+(?:the\s+)?(?:past|previous|last)\s+(?:year|years|few\s+years)|annual(?:ly\s+(?:awards?|distribut(?:es?|ed|ing)|gives?|gave|given|spen(?:ds?|t|ding))|\s+(?:budget|fund|spending|expenditure))|per\s+(?:year|annum)|each\s+year|distribut(?:es?|ed|ing)|donat(?:es?|ed|ing)|spen(?:ds?|t|ding)|gives?\s+(?:away|out)|gave\s+(?:away|out)|given\s+(?:away|out)|endowment|combined\s+(?:total|funding|budget)|(?:launch(?:ing|ed)?|announc(?:ing|ed))\s+(?:our\s+|the\s+|a\s+|new\s+|with\s+)|annual\s+(?:income|turnover|expenditure|spending|spend|revenue|budget)\s*(?:[<>≤≥]|of\b)|(?:income|turnover|expenditure|spending|spend|revenue|reserves|budget)\s*(?:[<>≤≥]|\b(?:of|cap|limit|under|below|over|above|up\s+to|less\s+than|more\s+than|exceeding)\b))/i
+    const POOL_CUES_LEFT = /\b(?:awarded?\s+(?:a\s+)?total|totalling|totalled|total\s+(?:of|awarded|distributed|grants?|funding|funds|fund)\b|in\s+(?:the\s+)?(?:past|previous|last)\s+(?:year|years|few\s+years)|annual(?:ly\s+(?:awards?|distribut(?:es?|ed|ing)|gives?|gave|given|spen(?:ds?|t|ding))|\s+(?:budget|fund|spending|expenditure))|per\s+(?:year|annum)|each\s+year|distribut(?:es?|ed|ing)|donat(?:es?|ed|ing)|spen(?:ds?|t|ding)|gives?\s+(?:away|out)|gave\s+(?:away|out)|given\s+(?:away|out)|endowment|combined\s+(?:total|funding|budget)|(?:launch(?:ing|ed)?|announc(?:ing|ed))\s+(?:our\s+|the\s+|a\s+|new\s+|with\s+)|annual\s+(?:income|turnover|expenditure|spending|spend|revenue|budget)\s*(?:[<>≤≥]|of\b)|(?:income|turnover|expenditure|spending|spend|revenue|reserves|budget)\s*(?:[<>≤≥]|\b(?:of|cap|limit|under|below|over|above|up\s+to|less\s+than|more\s+than|exceeding)\b))/i
     // Right-context "[programme/fund/scheme name]" pattern: when 1–4 lowercase
     // words follow the amount and end in "Programme/Fund/Scheme/Initiative/Pool",
     // the amount is the size of that named container, not a per-grant figure.
     // Requires ≥1 intermediate word so "£10,000 fund" alone (where 'fund' is
     // just the funder noun) doesn't get dropped — only "£4m Stronger Futures
     // Programme" / "£2m Climate Action Fund" style.
-    const POOL_CUES_RIGHT = /^[\s,()]*(?:distribut(?:es|ed|ing)\b|donat(?:es|ed|ing)\b|spen(?:ds|t|ding)\b|spread\s+across|split\s+(?:across|between|among)|shared\s+(?:across|between|among)|across\s+(?:multiple|several|all|charities|recipients|organisations|projects|grants?|funds?|programmes?)|to\s+multiple|in\s+20\d{2}(?:[\/\-]\d{2,4})?\b|in\s+total\b|annually\b|each\s+year\b|per\s+(?:year|annum)\b|altogether\b|or\s+(?:less|below|under|fewer)\b|\s+[a-z]+(?:\s+[a-z]+){1,3}\s+(?:programme|scheme|initiative|pool|total\s+budget|prize\s+pool)\b)/i
+    // "a year" (annual pool, e.g. "£400,000 a year in grants") and
+    // "annual pot/pool/fund" (e.g. "~£100,000 annual pot") are pool totals,
+    // not per-grant sizes — the per-grant "up to £X" left cue still overrides
+    // these (so "up to £5,000 a year" survives as a per-grant figure).
+    const POOL_CUES_RIGHT = /^[\s,()]*(?:distribut(?:es|ed|ing)\b|donat(?:es|ed|ing)\b|spen(?:ds|t|ding)\b|spread\s+across|split\s+(?:across|between|among)|shared\s+(?:across|between|among)|across\s+(?:multiple|several|all|charities|recipients|organisations|projects|grants?|funds?|programmes?)|to\s+multiple|in\s+20\d{2}(?:[\/\-]\d{2,4})?\b|in\s+total\b|annually\b|each\s+year\b|a\s+year\b|annual\s+(?:pot|pool|fund|budget|allocation)\b|per\s+(?:year|annum)\b|altogether\b|or\s+(?:less|below|under|fewer)\b|\s+[a-z]+(?:\s+[a-z]+){1,3}\s+(?:programme|scheme|initiative|pool|pot|total\s+budget|prize\s+pool)\b)/i
     // Per-grant qualifiers in left-context override the pool-cues-RIGHT
     // check. Without this, "Up to £10,000 per year" gets dropped because
     // 'per year' looks pool-shaped — but the left 'up to' makes clear
@@ -1910,40 +1914,93 @@ export default function UrlAdminPage() {
       if (isNaN(val) || val > 50_000_000) return null  // sanity cap
       return Math.round(val)
     }
-    // Range-pair detection: "between £X and £Y annually" means BOTH £X and
-    // £Y are pool figures, but my per-amount right-context check on £X
-    // sees " and £Y annually" — the pool cue is past the partner. Detect
-    // range pairs as a unit; if the cue follows the *second* amount, drop
-    // both. Example: Sterry Family Foundation "...awards between £80,000
-    // and £100,000 annually in total." — without this, £80k slipped
-    // through and became amount_max.
-    const rangeRe = /between\s+(£[\d,]+(?:\.?\d+)?(?:\s*[km](?:illion)?)?)\s+(?:and|to|–|—|-)\s+(£[\d,]+(?:\.?\d+)?(?:\s*[km](?:illion)?)?)/gi
+    // Pool-range detection: "£X (to|and|–) £Y" where the PAIR is a pool /
+    // annual total, signalled by a pool cue right after £Y OR within ~60
+    // chars before £X — UNLESS the range is per-grant-framed ("grants range
+    // from £X to £Y"). Both endpoints are then dropped from detection AND
+    // from amount_max (the per-amount checks on £X miss a cue that sits past
+    // the partner £Y, so the pair must be judged as a unit).
+    // Catches: Sterry Family Foundation "awards between £80,000 and £100,000
+    // annually in total"; Adint "total awarded each year is around
+    // £450,000–£470,000". Leaves "grants range from £2,000 to £10,000 per
+    // year" intact (per-grant-framed).
+    // STRICT frame: only a strong per-grant qualifier ("up to / grants of /
+    // ranges from") protects a pool-cued range from being dropped. Bare
+    // "between"/"from" do NOT — "the Trust awards between £90,000 and £97,000
+    // annually" is a pool, not a per-grant range. BROAD frame (below) is used
+    // for *cueing* a surviving range, where "between"/"from" are fine.
+    const PER_GRANT_RANGE_FRAME_STRICT = /(?:up\s+to|grants?\s+of|awards?\s+of|ranges?\s+(?:from|of))\s*$/i
+    const PER_GRANT_RANGE_FRAME = /(?:up\s+to|grants?\s+of|awards?\s+of|between|ranges?\s+(?:from|of|between|are)|from|of)\s*$/i
+    const rangeRe = /(£[\d,]+(?:\.?\d+)?(?:\s*[km](?:illion)?)?)\s*(?:and|to|–|—|-)\s*(£[\d,]+(?:\.?\d+)?(?:\s*[km](?:illion)?)?)/gi
     const dropFromRange = new Set<number>()
     for (const m of Array.from(awardText.matchAll(rangeRe))) {
       const start = m.index ?? 0
       const xIdx  = start + m[0].indexOf(m[1])
       const yIdx  = start + m[0].lastIndexOf(m[2])
-      const afterY = awardText.slice(yIdx + m[2].length, yIdx + m[2].length + 50)
-      if (POOL_CUES_RIGHT.test(afterY)) {
+      const afterY  = awardText.slice(yIdx + m[2].length, yIdx + m[2].length + 50)
+      const beforeX = awardText.slice(Math.max(0, xIdx - 60), xIdx)
+      const perGrantFramed = PER_GRANT_RANGE_FRAME_STRICT.test(awardText.slice(Math.max(0, xIdx - 40), xIdx))
+      if (!perGrantFramed && (POOL_CUES_RIGHT.test(afterY) || POOL_CUES_LEFT.test(beforeX))) {
         dropFromRange.add(xIdx)
         dropFromRange.add(yIdx)
       }
     }
 
-    const amounts: number[] = []
+    // Each surviving amount is tagged with whether it carried an explicit
+    // per-grant cue ("up to" / "grants of" / "between …") and whether that
+    // cue was specifically a *ceiling* (up to / maximum / no more than).
+    // amount_max is then the largest surviving figure (pool/total figures
+    // are filtered out below), while amount_min is taken ONLY from a cued,
+    // non-ceiling floor — so an "up to £X" cap or a bare pool figure can
+    // never become a false amount_min. Example bug this fixes: Havering
+    // Community Chest — "Up to £5,000 per project. Total funding available
+    // is approximately £100,000 (£80,000 from NHS… and circa £20,000…)"
+    // previously produced min=£5,000 (the per-project cap, wrongly the floor)
+    // and max=£100,000 (the pot). Now: max=£5,000, min unset.
+    const CEILING_LEFT_CUES = /(?:^|[\s.,;:(])(?:up\s+to|of\s+up\s+to|maximum(?:\s+of)?|max(?:\s+of)?|no\s+more\s+than|limit(?:\s+of)?)\s*$/i
+    // Breakdown connectors: a figure that follows a pool total via one of
+    // these (within ~90 chars) is itemising the pool, not a grant size —
+    // e.g. "total funding … £100,000 (£80,000 from NHS… and circa £20,000…)".
+    const BREAKDOWN_CONNECTOR = /[(]|\bfrom\b|\bcomprising\b|\bmade\s+up\b|\bconsisting\b|\bincluding\b|\bplus\b|\bof\s+which\b/i
+    const detected: { value: number; cued: boolean; ceiling: boolean }[] = []
+    let chainEnd = -Infinity   // end index of the last pool-total / breakdown amount
     for (const m of Array.from(awardText.matchAll(amountRe))) {
       const idx = m.index ?? 0
       if (dropFromRange.has(idx)) continue           // pool-range pair  → skip
       const leftCtx  = awardText.slice(Math.max(0, idx - 50), idx)
       const rightCtx = awardText.slice(idx + m[0].length, idx + m[0].length + 50)
-      if (POOL_CUES_LEFT.test(leftCtx))   continue   // strong pool cue before → skip
-      // Per-grant left qualifier overrides the right-context pool check
-      // (e.g. "Up to £10,000 per year" — 'per year' is the payment rate,
-      // not a pool total).
+      // Per-grant left qualifier (up to / grants of / between …) overrides
+      // the right-context pool + breakdown checks (e.g. "Up to £10,000 per
+      // year" — 'per year' is the payment rate, not a pool total).
       const perGrantLeft = PER_GRANT_LEFT_CUES.test(leftCtx)
+      if (POOL_CUES_LEFT.test(leftCtx)) { chainEnd = idx + m[0].length; continue }   // pool total → anchor a breakdown chain
       if (!perGrantLeft && POOL_CUES_RIGHT.test(rightCtx)) continue
+      if (!perGrantLeft && idx - chainEnd < 90 && BREAKDOWN_CONNECTOR.test(awardText.slice(Math.max(0, chainEnd), idx))) {
+        chainEnd = idx + m[0].length   // extend the chain over the breakdown component
+        continue
+      }
       const v = parseAmt(m[0])
-      if (v !== null) amounts.push(v)
+      if (v !== null) detected.push({ value: v, cued: perGrantLeft, ceiling: CEILING_LEFT_CUES.test(leftCtx) })
+    }
+
+    // Cue per-grant ranges ("grants of between £X and £Y", "£X to £Y",
+    // "£X–£Y") so BOTH endpoints become floors and a genuine min–max range
+    // is preserved — including a partner that the per-amount pass dropped
+    // (e.g. the "£10,000" in "£2,000 to £10,000 per year", dropped by the
+    // 'per year' right-cue, is recovered here). Requires per-grant framing
+    // immediately before; pool ranges are already excluded via dropFromRange.
+    const markRangeCued = (raw: string) => {
+      const val = parseAmt(raw)
+      if (val === null) return
+      const hit = detected.find(d => d.value === val)
+      if (hit) hit.cued = true
+      else detected.push({ value: val, cued: true, ceiling: false })
+    }
+    for (const m of Array.from(awardText.matchAll(rangeRe))) {
+      const xIdx = (m.index ?? 0) + m[0].indexOf(m[1])
+      if (dropFromRange.has(xIdx)) continue
+      if (!PER_GRANT_RANGE_FRAME.test(awardText.slice(Math.max(0, xIdx - 40), xIdx))) continue
+      markRangeCued(m[1]); markRangeCued(m[2])
     }
 
     // Multi-year amplification: detect "£X/year for Y years" patterns and
@@ -1951,21 +2008,36 @@ export default function UrlAdminPage() {
     // the headline amount_max only reflects the per-year cap and hides
     // the real ceiling. Example: Trusthouse "up to £50,000/year for up
     // to 3 years" — per-year £50k is right, but a 3-year grant is worth
-    // £150k. Cap years at 2–10 to avoid misparsing nonsense.
+    // £150k. Cap years at 2–10. Tagged as a ceiling (multi-year cap, never
+    // a floor).
     const multiYearRe = /(£[\d,]+(?:\.?\d+)?(?:\s*[km](?:illion)?)?)\s*(?:\/|\s+per\s+|\s+a\s+)\s*(?:year|annum)\s+(?:for\s+|over\s+|across\s+)?(?:up\s+to\s+)?(\d+)\s+years?\b/gi
     for (const m of Array.from(awardText.matchAll(multiYearRe))) {
       const perYear = parseAmt(m[1])
       const years   = parseInt(m[2], 10)
       if (perYear !== null && years >= 2 && years <= 10) {
-        amounts.push(perYear * years)
+        detected.push({ value: perYear * years, cued: true, ceiling: true })
       }
     }
-    if (amounts.length === 1) {
-      if (!getReviewVal(grant.id,'amount_max',null)) updates.amount_max = amounts[0]
-    } else if (amounts.length >= 2) {
-      const sorted = [...amounts].sort((a,b) => a - b)
-      if (!getReviewVal(grant.id,'amount_min',null)) updates.amount_min = sorted[0]
-      if (!getReviewVal(grant.id,'amount_max',null)) updates.amount_max = sorted[sorted.length-1]
+
+    // Dedupe by value, OR-ing the cued/ceiling flags.
+    const byVal = new Map<number, { value: number; cued: boolean; ceiling: boolean }>()
+    for (const d of detected) {
+      const ex = byVal.get(d.value)
+      if (ex) { ex.cued = ex.cued || d.cued; ex.ceiling = ex.ceiling || d.ceiling }
+      else byVal.set(d.value, { ...d })
+    }
+    const deduped = Array.from(byVal.values())
+    if (deduped.length > 0) {
+      // amount_max: largest surviving figure (pools already filtered out).
+      const maxVal = Math.max(...deduped.map(d => d.value))
+      // amount_min: smallest cued, non-ceiling floor — and only if it is
+      // genuinely below the max (a lone "up to £X" asserts no floor).
+      const floors = deduped.filter(d => d.cued && !d.ceiling).map(d => d.value)
+      const minVal = floors.length > 0 ? Math.min(...floors) : null
+      if (!getReviewVal(grant.id,'amount_max',null)) updates.amount_max = maxVal
+      if (minVal !== null && minVal < maxVal && !getReviewVal(grant.id,'amount_min',null)) {
+        updates.amount_min = minVal
+      }
     }
 
     // ── Detect rolling cues ────────────────────────────────────────────────
