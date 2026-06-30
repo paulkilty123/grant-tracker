@@ -1859,6 +1859,23 @@ export default function UrlAdminPage() {
     const openStatus = (brief.open_status ?? '').toString().toLowerCase().trim()
     const todayISO   = new Date().toISOString().slice(0, 10)
 
+    // ── Backfill description when it's empty or junk ──────────────────────────
+    // Some listing scrapers store only the deadline line as description
+    // ("Closes: July 16, 2026 12 Noon", e.g. Forever Manchester), while the
+    // real prose lives in the enriched brief. When the current description is
+    // empty OR a pure "Closes:/deadline" date line, seed it from
+    // what_they_fund. Real prose descriptions (≥40 chars, not date-led) are
+    // left untouched, and a pending review edit always wins.
+    const currentDesc = ((grant as Grant & { description?: string | null }).description ?? '').trim()
+    const descIsJunk =
+      currentDesc.length === 0 ||
+      /^(?:closes?|closing\s+date|deadline|apply\s+by)\b/i.test(currentDesc) ||
+      (currentDesc.length < 40 && /\b(?:19|20)\d{2}\b/.test(currentDesc))
+    const briefDesc = (brief.what_they_fund ?? '').trim()
+    if (descIsJunk && briefDesc.length > 40 && !getReviewVal(grant.id, 'description', null)) {
+      updates.description = briefDesc
+    }
+
     // ── Extract amounts ───────────────────────────────────────────────────────
     // Matches: £10,000 | £10k | £1m | up to £50,000 | $50,000
     // Per-amount context filter: drop any £X whose surrounding text
@@ -2493,14 +2510,31 @@ export default function UrlAdminPage() {
     // together so an "Exclusions: CICs cannot apply" line still ticked CIC
     // because the matcher saw "CIC" in the blob.
     const brief = grant.funder_brief as Record<string, string | null> | null
+    // Verbatim source quotes live in the brief's _citations map and preserve
+    // structural nouns the LLM paraphrase drops — e.g. the source said
+    // "grassroots community organisations" but who_can_apply got paraphrased
+    // to "community-based groups", which matches none of the rules below.
+    // Feed every citation snippet EXCEPT the exclusions one into the inclusion
+    // text; route the exclusions snippet into exclusionText so it can only
+    // strip structures, never add them.
+    const citations = (grant.funder_brief as { _citations?: Record<string, { snippet?: string | null }> } | null)?._citations ?? null
+    const citationInclusion = citations
+      ? Object.entries(citations)
+          .filter(([k]) => k !== 'exclusions')
+          .map(([, v]) => v?.snippet ?? '')
+          .filter(Boolean)
+          .join(' ')
+      : ''
+    const citationExclusion = citations?.exclusions?.snippet ?? ''
     // Include every brief section likely to mention applicant types — not just
     // what_they_fund/who_can_apply/priorities. NFP / structure cues often
     // surface in how_to_apply, strong_application or funder_tips too.
     const inclusionText = [
       brief?.what_they_fund, brief?.who_can_apply, brief?.priorities,
       brief?.how_to_apply, brief?.strong_application, brief?.funder_tips,
+      citationInclusion,
     ].filter(Boolean).join(' ').toLowerCase()
-    const exclusionText = (brief?.exclusions ?? '').toLowerCase()
+    const exclusionText = [brief?.exclusions, citationExclusion].filter(Boolean).join(' ').toLowerCase()
     const fallbackText = [
       (grant as Grant & { description?: string }).description ?? '',
       grant.title ?? '',
