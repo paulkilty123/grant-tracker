@@ -2653,7 +2653,13 @@ export default function UrlAdminPage() {
     // restriction overrides those broad ticks.
     const charitiesOnly =
       /\bregistered\s+charit(y|ies)\s+only\b|\bcharit(y|ies)\s+only\b|\bonly\s+registered\s+charit/.test(inclusionText) ||
-      /\b(?:must\s+be|need\s+to\s+be|have\s+to\s+be)\s+(?:a\s+)?registered\s+charit/.test(inclusionText) ||
+      // "must be a registered charity" is charities-only ONLY when it isn't
+      // an OR-list. Council / CIL community funds often say "to manage funds
+      // directly you must be a registered charity, CIC, or community group"
+      // (and unconstituted groups can still apply via a fiscal host) — the
+      // negative lookahead stops that list from collapsing the set to
+      // charity+CIO. Example: Sutton Neighbourhood Fund 2026.
+      /\b(?:must\s+be|need\s+to\s+be|have\s+to\s+be)\s+(?:a\s+)?registered\s+charit(?:y|ies)\b(?!\s*,?\s*(?:or\s+)?(?:an?\s+)?(?:cic|community|charitable\s+incorporated|social\s+enterprise|voluntary|co.operative|not[-\s]?for[-\s]?profit|cbs|registered\s+societ))/.test(inclusionText) ||
       /\bnon[-\s]?registered\s+charit(?:y|ies)?\s+(?:cannot|can\s+not|are\s+not|will\s+not)/.test(exclusionText) ||
       /\b(?:open\s+only\s+to|restricted\s+to|limited\s+to)\s+(?:uk\s+)?registered\s+charit/.test(inclusionText)
     if (charitiesOnly) {
