@@ -289,9 +289,10 @@ const mcpHandler = createMcpHandler(
         try {
           searchResults = await executeMCPSearch(params, ctx)
         } catch (err) {
+          console.error('[mcp] search failed:', err)
           return {
             content: [{ type: 'text', text: JSON.stringify({
-              error: { code: 'internal_error', message: err instanceof Error ? err.message : 'search failed' },
+              error: { code: 'internal_error', message: 'Search failed. Please retry; if this persists, contact hello@granttracker.co.uk.' },
               attribution: ATTRIBUTION,
               rate_limit_status: rateLimitStatusForContext(auth),
             }) }],
@@ -384,9 +385,10 @@ const mcpHandler = createMcpHandler(
           .maybeSingle()
 
         if (error) {
+          console.error('[mcp] opportunity detail lookup failed:', error.message)
           return {
             content: [{ type: 'text', text: JSON.stringify({
-              error: { code: 'internal_error', message: error.message },
+              error: { code: 'internal_error', message: 'Could not load this opportunity. Please retry; if this persists, contact hello@granttracker.co.uk.' },
               attribution: ATTRIBUTION,
               rate_limit_status: rateLimitStatusForContext(auth),
             }) }],
