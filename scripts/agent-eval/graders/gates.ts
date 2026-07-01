@@ -8,7 +8,11 @@ import type {
 import { resolveRef } from '../refs'
 
 const PROMISE_TERMS = [
-  /\bguarantee(d|s)?\b/i, /\byou will win\b/i, /\bcertain to (receive|win|get)\b/i,
+  // "guaranteed" in the promise sense — but NOT "limited by guarantee" (a legal
+  // structure that legitimately appears in eligibility text).
+  /\bguaranteed\b/i,
+  /\bguarantees?\s+(you|your|funding|success|a\s+grant|to\s+(win|receive|get))\b/i,
+  /\byou (?:will|are (?:certain|sure) to) win\b/i, /\bcertain to (receive|win|get)\b/i,
   /\bwe will win\b/i, /\bassured funding\b/i,
 ]
 const CAPABILITY_TERMS = [

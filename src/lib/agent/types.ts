@@ -92,19 +92,19 @@ export const REASON_CODES = [
 ] as const
 export type ReasonCode = (typeof REASON_CODES)[number]
 
-// ── Eligibility (mirrors src/lib/eligibility.ts EligibilityVerdict shape) ─────
-
-export type EligibilitySeverity = 'blocker' | 'warning' | 'info'
-export interface EligibilityIssue {
-  code: string
-  severity: EligibilitySeverity
-  message: string
-}
-export type EligibilityStatus = 'eligible' | 'ineligible' | 'check'
-export interface EligibilityVerdict {
-  status: EligibilityStatus
-  issues: EligibilityIssue[]
-  reason: string
+// ── Eligibility — single source of truth is the real engine ──────────────────
+// Imported for local use and re-exported so the agent layer and graders share
+// the exact verdict shape (status: eligible | likely_eligible | check_required
+// | ineligible; reason string | null). Only 'ineligible' (a blocker) removes a
+// row from candidates.
+import type {
+  EligibilityStatus, IssueSeverity, EligibilityIssue, EligibilityVerdict,
+} from '../eligibility'
+export type {
+  EligibilityStatus,
+  IssueSeverity as EligibilitySeverity,
+  EligibilityIssue,
+  EligibilityVerdict,
 }
 
 // ── Briefing pack (build-spec §6.1) — the world the reasoner is given ────────

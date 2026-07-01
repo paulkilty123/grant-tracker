@@ -7,7 +7,7 @@
   "assertionsPass": 10,
   "fullPass": 10,
   "schemaErrors": 0,
-  "missingPinnedSnapshots": 8,
+  "missingPinnedSnapshots": 0,
   "results": [
     {
       "id": "GS-01",
@@ -34,7 +34,7 @@
         {
           "gate": "G4",
           "pass": true,
-          "detail": "recs=5 qs=0 words=29 emptyWhy=0"
+          "detail": "recs=4 qs=0 words=29 emptyWhy=0"
         },
         {
           "gate": "G5",
@@ -66,15 +66,13 @@
         {
           "assertion": "max_recommendations",
           "pass": true,
-          "detail": "recs=5 max=5"
+          "detail": "recs=4 max=5"
         }
       ],
       "gatesPass": true,
       "assertionsPass": true,
       "pass": true,
-      "notes": [
-        "2 pinned ref(s) not in snapshot — running on synthetics + pool (see fixtures-build.ts)"
-      ]
+      "notes": []
     },
     {
       "id": "GS-02",
@@ -101,7 +99,7 @@
         {
           "gate": "G4",
           "pass": true,
-          "detail": "recs=4 qs=0 words=29 emptyWhy=0"
+          "detail": "recs=3 qs=0 words=29 emptyWhy=0"
         },
         {
           "gate": "G5",
@@ -194,9 +192,7 @@
       "gatesPass": true,
       "assertionsPass": false,
       "pass": false,
-      "notes": [
-        "1 pinned ref(s) not in snapshot — running on synthetics + pool (see fixtures-build.ts)"
-      ]
+      "notes": []
     },
     {
       "id": "GS-04",
@@ -316,9 +312,7 @@
       "gatesPass": true,
       "assertionsPass": true,
       "pass": true,
-      "notes": [
-        "2 pinned ref(s) not in snapshot — running on synthetics + pool (see fixtures-build.ts)"
-      ]
+      "notes": []
     },
     {
       "id": "GS-06",
@@ -345,7 +339,7 @@
         {
           "gate": "G4",
           "pass": true,
-          "detail": "recs=2 qs=0 words=31 emptyWhy=0"
+          "detail": "recs=3 qs=0 words=23 emptyWhy=0"
         },
         {
           "gate": "G5",
@@ -376,16 +370,14 @@
         },
         {
           "assertion": "must_not_recommend",
-          "pass": true,
-          "detail": "syn-secured-loan absent"
+          "pass": false,
+          "detail": "syn-secured-loan WRONGLY recommended"
         }
       ],
       "gatesPass": true,
       "assertionsPass": false,
       "pass": false,
-      "notes": [
-        "2 pinned ref(s) not in snapshot — running on synthetics + pool (see fixtures-build.ts)"
-      ]
+      "notes": []
     },
     {
       "id": "GS-07",
@@ -450,9 +442,7 @@
       "gatesPass": true,
       "assertionsPass": false,
       "pass": false,
-      "notes": [
-        "1 pinned ref(s) not in snapshot — running on synthetics + pool (see fixtures-build.ts)"
-      ]
+      "notes": []
     },
     {
       "id": "GS-08",
@@ -582,9 +572,7 @@
       "gatesPass": true,
       "assertionsPass": true,
       "pass": true,
-      "notes": [
-        "2 pinned ref(s) not in snapshot — running on synthetics + pool (see fixtures-build.ts)"
-      ]
+      "notes": []
     },
     {
       "id": "GS-10",
@@ -611,7 +599,7 @@
         {
           "gate": "G4",
           "pass": true,
-          "detail": "recs=2 qs=0 words=31 emptyWhy=0"
+          "detail": "recs=1 qs=0 words=31 emptyWhy=0"
         },
         {
           "gate": "G5",
@@ -632,8 +620,8 @@
       "assertions": [
         {
           "assertion": "must_recommend",
-          "pass": true,
-          "detail": "syn-wales-culture recommended"
+          "pass": false,
+          "detail": "syn-wales-culture MISSING from recs"
         },
         {
           "assertion": "must_rule_out",
@@ -642,16 +630,14 @@
         },
         {
           "assertion": "must_acknowledge_thin_coverage",
-          "pass": true,
-          "detail": "thin coverage acknowledged for topic"
+          "pass": false,
+          "detail": "thin=true topicRef=false"
         }
       ],
       "gatesPass": true,
       "assertionsPass": false,
       "pass": false,
-      "notes": [
-        "2 pinned ref(s) not in snapshot — running on synthetics + pool (see fixtures-build.ts)"
-      ]
+      "notes": []
     },
     {
       "id": "GS-11",
@@ -678,7 +664,7 @@
         {
           "gate": "G4",
           "pass": true,
-          "detail": "recs=4 qs=0 words=23 emptyWhy=0"
+          "detail": "recs=3 qs=0 words=23 emptyWhy=0"
         },
         {
           "gate": "G5",
@@ -786,9 +772,7 @@
       "gatesPass": true,
       "assertionsPass": true,
       "pass": true,
-      "notes": [
-        "1 pinned ref(s) not in snapshot — running on synthetics + pool (see fixtures-build.ts)"
-      ]
+      "notes": []
     },
     {
       "id": "GS-13",
