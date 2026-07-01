@@ -232,7 +232,7 @@ Assembly steps, in order:
 
 `src/lib/agent/reason.ts`. One LLM call per run (v1; no multi-agent orchestration — cost and consistency both argue for one well-fed pass).
 
-- **Models:** default `claude-sonnet-4-6` (already in use in the codebase for reasoning-grade tasks). Scaffolding/iteration during the Fable free window (ends 22 Jun) may use Fable; Opus as quality fallback if Sonnet misses the bar on eval. Model id is a config constant in `src/lib/agent/llm.ts`, recorded per run. Cheap subtasks (e.g. summarising a long user correction into a fact row) use `claude-haiku-4-5`.
+- **Models:** default `claude-sonnet-4-6` (already in use in the codebase for reasoning-grade tasks); `claude-opus-4-8` as the quality fallback if Sonnet misses the bar on eval. Model id is a config constant in `src/lib/agent/llm.ts`, recorded per run. Cheap subtasks (e.g. summarising a long user correction into a fact row) use `claude-haiku-4-5`. (Fable 5 was briefly considered as a free-window scaffolding option; access was suspended 12 Jun 2026, so the deployable set is Sonnet / Opus / Haiku and tier economics must be costed against those.)
 - **Prompt layout for caching (§8):** static system prompt (versioned, `prompt_version`) → org model block (stable per org, cache-friendly) → goal + pipeline block → candidate fact cards → task instruction. Order chosen so the long-lived prefix is cacheable.
 - **System prompt encodes the behaviour contract** (Part two, as instructions): lead with the real constraint; recommend at most 5 actions; sequence and say why this order; rule out near-misses with reasons; every factual claim must reference a provided source by id — if it isn't in the pack, it isn't a fact you may state; mark strategic judgment as judgment; honest verdicts including "nothing here moves your goal this month"; never guarantee funding; consultant test; kind challenge (push back constructively when the user's stated intent conflicts with the goal arithmetic, while respecting their decision); British English, sentence case.
 - **Structured output (tool-enforced):** the model must emit the recommendation-set JSON (§6.3) via a forced tool call — not prose-then-parse. Memory lesson (silent catch hides max_tokens): log `stop_reason` and retry-with-larger-budget on `max_tokens` before failing; never swallow.
@@ -331,6 +331,8 @@ Mistakes this codebase has already taught; the agent build must not re-learn the
 
 Per handover and build plan exclusions: application builder integration (link vocabulary reserved only), CRM/relationship layer (one `action_type` reserved), team/seats/roles, central brain computation of any kind, sector insights, funder-side anything, live web search in the agent path, contracts-as-funding-type, multiple goal templates beyond mixed-income operating fundraising, authenticated MCP agent surface (the MCP stays the free catalogue-reasoning surface; the agent's MCP surface is a future phase).
 
+> On external/web intelligence specifically: **live web search in the reasoning path stays excluded** (cost, the unverified-data trust problem, and it competes with generic AI on breadth — the one battlefield the strategy declines). But the *underlying need* — an agent that reasons with awareness of the sector, not just the database — is real and maps to the central brain's eventual "sector layer." The shape that captures it without the risk is specified as design headroom in §12; the only thing built now is the seam.
+
 ---
 
 ## 11. Sequencing and definition of done
@@ -345,3 +347,66 @@ Order of implementation (each step lands on the agent branch, tsc-clean, behind 
 6. **Iteration loop** — the judgment-paced weeks: prompt versions regressed against the harness, heartland cases to the consistency bar (eval-harness §6). *This is where elapsed time lives; do not start it before steps 1–5 are green.*
 
 **Definition of done for the reasoning core (Phase 2 exit):** full golden set passes hard gates at 100% across 3 consecutive runs; heartland family (GS-01/02/07/14/16) meets the consistency bar; per-run cost instrumented and within budget envelope; flag-off production verified byte-identical; Paul has reviewed a transcript pack of all 16 case outputs and signed off the bar subjectively (the consultant test is ultimately his call, then the cohort's).
+
+---
+
+## 12. Design headroom: external/sector intelligence (post-core, not built now)
+
+Captures a decision (14 Jun 2026) so the architecture leaves room without spending build time. **Nothing in this section is built in v1.** The reasoning core hits its §11 consistency bar first; this is a v1.x / brain-Phase-2 increment. What gets done *now* is only the seam (12.4) so adding the feature later is additive, not surgery.
+
+### 12.1 The need, disaggregated
+
+"Let the agent use outside information" is three different things with three different homes. Conflating them is the trap.
+
+| Type | Example | Right home | New build? |
+|---|---|---|---|
+| **New funding schemes / large announcements** | a new £20m Sport England fund | catalogue ingestion → NR gate → published rows; agent reasons over it as verified data | No — this is catalogue freshness. The 2026-06-12 gap audit + programme sweep *are* this capability run manually (web-research subagents → verify on funder site → stage to NR). Systematise the discovery feed, don't add a runtime web agent. |
+| **Funder-specific intelligence** | funder paused, changed priorities, new route in | `funder_brief` freshness, same ingestion pipeline | No — same pipeline, becomes verified + cited normally. |
+| **Sector-wide trends / policy** | IVAR open-and-trusting shift, AI-application-volume crisis, funder consolidation, Procurement Act, Charity Digital Skills report | **a curated sector-signals store in the brain** (12.2) | Yes — but post-core, and never as live web search. This is the genuinely new category: not catalogue-shaped (no amount/deadline/eligibility), and it's what a good consultant carries that the agent currently can't. |
+
+The strategy already values type 3 — the brief's evidence log is full of it. The question was never *whether* but *where it lives in the architecture*.
+
+### 12.2 The shape: curated sector-signals store, not a scanner
+
+Reuse the catalogue pattern exactly: **offline discovery → human gate → dated, sourced, verified store → agent reasons over the store, never the live web.**
+
+Proposed additive table (sketch; same "not applied this session" convention as §5):
+
+```sql
+create table public.sector_signals (
+  id            uuid primary key default gen_random_uuid(),
+  created_at    timestamptz not null default now(),
+  approved_at   timestamptz,                      -- null until human-gated (the NR equivalent)
+  status        text not null default 'draft',    -- draft | active | expired | retracted
+  kind          text not null,                    -- trend | policy | funder_posture | macro
+  claim         text not null,                    -- the one-line intelligence item
+  source_name   text not null,
+  source_url    text not null,
+  published_date date,                            -- when the source said it
+  review_by     date,                             -- staleness horizon; past it → not retrieved as current
+  scope_sectors      text[] default '{}',         -- empty = applies broadly
+  scope_regions      text[] default '{}',
+  scope_funder_types text[] default '{}',
+  confidence    text                              -- how settled the trend is (publisher-level, not org-level)
+);
+```
+
+Discovery is agent-assisted (the same sweep mechanism already proven), drafting candidates into the queue; Paul approves; approved rows go `active`. **Signals are org-agnostic** — patterns about the landscape, never one org's competitive specifics. This is the central brain's "patterns not playbooks" rule applied early, and it makes the store a clean seed of the brain's eventual sector layer.
+
+### 12.3 The hard line that keeps it safe
+
+A sector signal may **only** enter reasoning through the existing `judgments[]` channel (§6.3) — never `facts[]`, never as the basis of a confident recommendation, never overriding a verified value. This is the brief's "firm on facts, transparent on judgment" discipline applied verbatim: "here's a development worth watching, per [source], [date]." The agent degrades honestly on staleness ("as of March 2026"), exactly as it does on nulls.
+
+This is also the answer to the QC question: quality control is not a new mechanism. It is (a) the **same human gate** as the catalogue NR flow, plus (b) the **same fact/judgment guardrail** the reasoning core already enforces. Two existing disciplines, no third.
+
+### 12.4 The seam to build now (the only v1 cost)
+
+So the later feature is additive, reserve these now and leave them unused:
+
+- **Briefing pack (§6.1):** reserve a `sector_signals: []` slot in the pack shape. In v1 it is always empty. When the store exists, assembly retrieves `active`, in-`review_by`, scope-matching signals into it.
+- **Output contract (§6.3):** allow a `judgments[]` entry to carry an optional `signal_ref` (id into `sector_signals`), parallel to how `facts[].source.ref` traces to the pack. Absent in v1 output; present once signals flow.
+- **Eval (eval-harness.md):** the gates that police this already exist in shape — extend **G7 (promise lint)** and **R4 (fact/judgment separation)** to cover "sector claim stated as fact" as a failure, and add a small **staleness gate** (a signal past its `review_by` must not be presented as current). Add 1–2 golden cases when the feature is scheduled, e.g. "agent cites a sector trend as if it were a verified fact" → must fail; "agent uses a relevant in-date trend correctly as marked judgment" → must pass.
+
+### 12.5 Recommended first increment (when it's time)
+
+Cheapest version first, almost zero engineering and zero runtime risk: a small hand-curated set of current sector-context notes (you already have them in the evidence log), dated and judgment-tagged, loaded into the **cacheable system-prompt prefix** (§6.2). That gives the agent a consultant's awareness of the moment immediately. The `sector_signals` table + agent-assisted discovery (12.2) is the *scaling* mechanism you add only once the curated version has proven its worth — same crawl-walk-run the catalogue took.
