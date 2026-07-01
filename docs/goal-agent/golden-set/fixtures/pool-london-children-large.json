@@ -1,0 +1,31 @@
+{
+  "pool_id": "pool-london-children-large",
+  "note": "Synthetic filler rows for London children shortlists at larger org income (£700k+ / £1-5m). Depth-pressure set for GS-04.",
+  "rows": [
+    {
+      "fixture_id": "pool-lonl-1", "title": "Major London Children's Grants", "funder": "Metropolitan Trust (synthetic)",
+      "fundingType": "grant", "amountMin": 50000, "amountMax": 250000, "amountUndisclosed": false,
+      "deadline": "2026-10-31", "isRolling": false, "eligibleStructures": ["registered_charity", "cio"],
+      "minOrgIncome": 250000, "maxOrgIncome": null, "locationTag": "London", "isInviteOnly": false,
+      "sectors": ["community", "young_people"], "impactSectors": ["community"], "beneficiaryGroups": ["children", "families"],
+      "funder_brief": { "what_they_fund": "Multi-year grants for established London children's charities.", "who_can_apply": "Registered charities with income over £250,000.", "open_status": "open", "citations": { "who_can_apply": { "snippet": "open to registered charities with an annual income over £250,000", "confidence": "high" } } }
+    },
+    {
+      "fixture_id": "pool-lonl-2", "title": "Creative Education Grants", "funder": "Bloomsbury Foundation (synthetic)",
+      "fundingType": "grant", "amountMin": 20000, "amountMax": 100000, "amountUndisclosed": false,
+      "deadline": "2026-09-18", "isRolling": false, "eligibleStructures": ["registered_charity", "cio", "cic_guarantee"],
+      "minOrgIncome": null, "maxOrgIncome": null, "locationTag": "London", "isInviteOnly": false,
+      "sectors": ["creative", "education"], "impactSectors": ["education"], "beneficiaryGroups": ["children"],
+      "funder_brief": { "what_they_fund": "Creative education partnerships with schools in London.", "open_status": "open" }
+    },
+    {
+      "fixture_id": "pool-lonl-3", "title": "Restricted Programme Fund", "funder": "Riverside Trust (synthetic)",
+      "fundingType": "grant", "amountMin": 30000, "amountMax": 150000, "amountUndisclosed": false,
+      "deadline": null, "isRolling": false, "nextOpenDate": "2027-01-15", "openStatus": "between_rounds",
+      "isRolling_note": "closed between rounds", "eligibleStructures": ["registered_charity"],
+      "minOrgIncome": 500000, "maxOrgIncome": null, "locationTag": "London", "isInviteOnly": false,
+      "sectors": ["education"], "impactSectors": ["education"], "beneficiaryGroups": ["children"],
+      "funder_brief": { "what_they_fund": "Restricted programme funding; currently between rounds.", "open_status": "between_rounds", "decision_timeline": "Next round opens January 2027." }
+    }
+  ]
+}

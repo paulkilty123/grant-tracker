@@ -1,0 +1,1039 @@
+{
+  "generatedFor": "stub reasoner (build step 1)",
+  "mode": "stub",
+  "cases": 16,
+  "fixturesResolved": 16,
+  "gatesPass": 16,
+  "assertionsPass": 10,
+  "fullPass": 10,
+  "schemaErrors": 0,
+  "missingPinnedSnapshots": 8,
+  "results": [
+    {
+      "id": "GS-01",
+      "version": 1,
+      "family": "heartland",
+      "mode": "recommend",
+      "fixturesResolved": true,
+      "gates": [
+        {
+          "gate": "G1",
+          "pass": true,
+          "detail": "all facts resolve to pack"
+        },
+        {
+          "gate": "G2",
+          "pass": true,
+          "detail": "no fabricated opportunities"
+        },
+        {
+          "gate": "G3",
+          "pass": true,
+          "detail": "eligibility consistent"
+        },
+        {
+          "gate": "G4",
+          "pass": true,
+          "detail": "recs=5 qs=0 words=29 emptyWhy=0"
+        },
+        {
+          "gate": "G5",
+          "pass": true,
+          "detail": "null semantics preserved"
+        },
+        {
+          "gate": "G6",
+          "pass": true,
+          "detail": "numbers match pack arithmetic"
+        },
+        {
+          "gate": "G7",
+          "pass": true,
+          "detail": "no promise/capability overreach"
+        }
+      ],
+      "assertions": [
+        {
+          "assertion": "must_flag",
+          "pass": true,
+          "detail": "flag concentration present"
+        },
+        {
+          "assertion": "must_recommend",
+          "pass": true,
+          "detail": "syn-multiyear-unrestricted recommended"
+        },
+        {
+          "assertion": "max_recommendations",
+          "pass": true,
+          "detail": "recs=5 max=5"
+        }
+      ],
+      "gatesPass": true,
+      "assertionsPass": true,
+      "pass": true,
+      "notes": [
+        "2 pinned ref(s) not in snapshot — running on synthetics + pool (see fixtures-build.ts)"
+      ]
+    },
+    {
+      "id": "GS-02",
+      "version": 1,
+      "family": "heartland",
+      "mode": "converse",
+      "fixturesResolved": true,
+      "gates": [
+        {
+          "gate": "G1",
+          "pass": true,
+          "detail": "all facts resolve to pack"
+        },
+        {
+          "gate": "G2",
+          "pass": true,
+          "detail": "no fabricated opportunities"
+        },
+        {
+          "gate": "G3",
+          "pass": true,
+          "detail": "eligibility consistent"
+        },
+        {
+          "gate": "G4",
+          "pass": true,
+          "detail": "recs=4 qs=0 words=29 emptyWhy=0"
+        },
+        {
+          "gate": "G5",
+          "pass": true,
+          "detail": "null semantics preserved"
+        },
+        {
+          "gate": "G6",
+          "pass": true,
+          "detail": "numbers match pack arithmetic"
+        },
+        {
+          "gate": "G7",
+          "pass": true,
+          "detail": "no promise/capability overreach"
+        }
+      ],
+      "assertions": [
+        {
+          "assertion": "must_not_mention",
+          "pass": true,
+          "detail": "none of the banned terms present"
+        }
+      ],
+      "gatesPass": true,
+      "assertionsPass": true,
+      "pass": true,
+      "notes": []
+    },
+    {
+      "id": "GS-03",
+      "version": 1,
+      "family": "cohort",
+      "mode": "recommend",
+      "fixturesResolved": true,
+      "gates": [
+        {
+          "gate": "G1",
+          "pass": true,
+          "detail": "all facts resolve to pack"
+        },
+        {
+          "gate": "G2",
+          "pass": true,
+          "detail": "no fabricated opportunities"
+        },
+        {
+          "gate": "G3",
+          "pass": true,
+          "detail": "eligibility consistent"
+        },
+        {
+          "gate": "G4",
+          "pass": true,
+          "detail": "recs=5 qs=0 words=30 emptyWhy=0"
+        },
+        {
+          "gate": "G5",
+          "pass": true,
+          "detail": "null semantics preserved"
+        },
+        {
+          "gate": "G6",
+          "pass": true,
+          "detail": "numbers match pack arithmetic"
+        },
+        {
+          "gate": "G7",
+          "pass": true,
+          "detail": "no promise/capability overreach"
+        }
+      ],
+      "assertions": [
+        {
+          "assertion": "must_recommend",
+          "pass": true,
+          "detail": "syn-cic-eligible-sussex recommended"
+        },
+        {
+          "assertion": "must_rule_out",
+          "pass": true,
+          "detail": "ruled out (structure_mismatch)"
+        },
+        {
+          "assertion": "must_not_recommend",
+          "pass": false,
+          "detail": "syn-wrong-area-kent WRONGLY recommended"
+        }
+      ],
+      "gatesPass": true,
+      "assertionsPass": false,
+      "pass": false,
+      "notes": [
+        "1 pinned ref(s) not in snapshot — running on synthetics + pool (see fixtures-build.ts)"
+      ]
+    },
+    {
+      "id": "GS-04",
+      "version": 1,
+      "family": "cohort",
+      "mode": "recommend",
+      "fixturesResolved": true,
+      "gates": [
+        {
+          "gate": "G1",
+          "pass": true,
+          "detail": "all facts resolve to pack"
+        },
+        {
+          "gate": "G2",
+          "pass": true,
+          "detail": "no fabricated opportunities"
+        },
+        {
+          "gate": "G3",
+          "pass": true,
+          "detail": "eligibility consistent"
+        },
+        {
+          "gate": "G4",
+          "pass": true,
+          "detail": "recs=5 qs=0 words=29 emptyWhy=0"
+        },
+        {
+          "gate": "G5",
+          "pass": true,
+          "detail": "null semantics preserved"
+        },
+        {
+          "gate": "G6",
+          "pass": true,
+          "detail": "numbers match pack arithmetic"
+        },
+        {
+          "gate": "G7",
+          "pass": true,
+          "detail": "no promise/capability overreach"
+        }
+      ],
+      "assertions": [
+        {
+          "assertion": "must_flag",
+          "pass": true,
+          "detail": "flag pacing present"
+        }
+      ],
+      "gatesPass": true,
+      "assertionsPass": true,
+      "pass": true,
+      "notes": []
+    },
+    {
+      "id": "GS-05",
+      "version": 1,
+      "family": "cohort",
+      "mode": "recommend",
+      "fixturesResolved": true,
+      "gates": [
+        {
+          "gate": "G1",
+          "pass": true,
+          "detail": "all facts resolve to pack"
+        },
+        {
+          "gate": "G2",
+          "pass": true,
+          "detail": "no fabricated opportunities"
+        },
+        {
+          "gate": "G3",
+          "pass": true,
+          "detail": "eligibility consistent"
+        },
+        {
+          "gate": "G4",
+          "pass": true,
+          "detail": "recs=5 qs=0 words=23 emptyWhy=0"
+        },
+        {
+          "gate": "G5",
+          "pass": true,
+          "detail": "null semantics preserved"
+        },
+        {
+          "gate": "G6",
+          "pass": true,
+          "detail": "numbers match pack arithmetic"
+        },
+        {
+          "gate": "G7",
+          "pass": true,
+          "detail": "no promise/capability overreach"
+        }
+      ],
+      "assertions": [
+        {
+          "assertion": "must_recommend",
+          "pass": true,
+          "detail": "syn-micro-grant recommended"
+        },
+        {
+          "assertion": "must_rule_out",
+          "pass": true,
+          "detail": "ruled out (org_income_below_floor)"
+        },
+        {
+          "assertion": "max_recommendations",
+          "pass": true,
+          "detail": "recs=5 max=5"
+        }
+      ],
+      "gatesPass": true,
+      "assertionsPass": true,
+      "pass": true,
+      "notes": [
+        "2 pinned ref(s) not in snapshot — running on synthetics + pool (see fixtures-build.ts)"
+      ]
+    },
+    {
+      "id": "GS-06",
+      "version": 1,
+      "family": "cohort",
+      "mode": "recommend",
+      "fixturesResolved": true,
+      "gates": [
+        {
+          "gate": "G1",
+          "pass": true,
+          "detail": "all facts resolve to pack"
+        },
+        {
+          "gate": "G2",
+          "pass": true,
+          "detail": "no fabricated opportunities"
+        },
+        {
+          "gate": "G3",
+          "pass": true,
+          "detail": "eligibility consistent"
+        },
+        {
+          "gate": "G4",
+          "pass": true,
+          "detail": "recs=2 qs=0 words=31 emptyWhy=0"
+        },
+        {
+          "gate": "G5",
+          "pass": true,
+          "detail": "null semantics preserved"
+        },
+        {
+          "gate": "G6",
+          "pass": true,
+          "detail": "numbers match pack arithmetic"
+        },
+        {
+          "gate": "G7",
+          "pass": true,
+          "detail": "no promise/capability overreach"
+        }
+      ],
+      "assertions": [
+        {
+          "assertion": "must_recommend",
+          "pass": true,
+          "detail": "syn-early-stage-programme recommended"
+        },
+        {
+          "assertion": "must_rule_out",
+          "pass": false,
+          "detail": "syn-trading-years-gate not ruled out"
+        },
+        {
+          "assertion": "must_not_recommend",
+          "pass": true,
+          "detail": "syn-secured-loan absent"
+        }
+      ],
+      "gatesPass": true,
+      "assertionsPass": false,
+      "pass": false,
+      "notes": [
+        "2 pinned ref(s) not in snapshot — running on synthetics + pool (see fixtures-build.ts)"
+      ]
+    },
+    {
+      "id": "GS-07",
+      "version": 1,
+      "family": "heartland",
+      "mode": "recommend",
+      "fixturesResolved": true,
+      "gates": [
+        {
+          "gate": "G1",
+          "pass": true,
+          "detail": "all facts resolve to pack"
+        },
+        {
+          "gate": "G2",
+          "pass": true,
+          "detail": "no fabricated opportunities"
+        },
+        {
+          "gate": "G3",
+          "pass": true,
+          "detail": "eligibility consistent"
+        },
+        {
+          "gate": "G4",
+          "pass": true,
+          "detail": "recs=5 qs=0 words=29 emptyWhy=0"
+        },
+        {
+          "gate": "G5",
+          "pass": true,
+          "detail": "null semantics preserved"
+        },
+        {
+          "gate": "G6",
+          "pass": true,
+          "detail": "numbers match pack arithmetic"
+        },
+        {
+          "gate": "G7",
+          "pass": true,
+          "detail": "no promise/capability overreach"
+        }
+      ],
+      "assertions": [
+        {
+          "assertion": "must_recommend",
+          "pass": true,
+          "detail": "syn-core-costs-fund recommended"
+        },
+        {
+          "assertion": "must_flag",
+          "pass": true,
+          "detail": "flag mix present"
+        },
+        {
+          "assertion": "max_recommendations",
+          "pass": false,
+          "detail": "recs=5 max=4"
+        }
+      ],
+      "gatesPass": true,
+      "assertionsPass": false,
+      "pass": false,
+      "notes": [
+        "1 pinned ref(s) not in snapshot — running on synthetics + pool (see fixtures-build.ts)"
+      ]
+    },
+    {
+      "id": "GS-08",
+      "version": 1,
+      "family": "integrity",
+      "mode": "converse",
+      "fixturesResolved": true,
+      "gates": [
+        {
+          "gate": "G1",
+          "pass": true,
+          "detail": "all facts resolve to pack"
+        },
+        {
+          "gate": "G2",
+          "pass": true,
+          "detail": "no fabricated opportunities"
+        },
+        {
+          "gate": "G3",
+          "pass": true,
+          "detail": "eligibility consistent"
+        },
+        {
+          "gate": "G4",
+          "pass": true,
+          "detail": "recs=1 qs=0 words=32 emptyWhy=0"
+        },
+        {
+          "gate": "G5",
+          "pass": true,
+          "detail": "null semantics preserved"
+        },
+        {
+          "gate": "G6",
+          "pass": true,
+          "detail": "numbers match pack arithmetic"
+        },
+        {
+          "gate": "G7",
+          "pass": true,
+          "detail": "no promise/capability overreach"
+        }
+      ],
+      "assertions": [
+        {
+          "assertion": "must_rule_out",
+          "pass": false,
+          "detail": "syn-women-80pct not ruled out"
+        },
+        {
+          "assertion": "must_recommend",
+          "pass": true,
+          "detail": "syn-community-alt recommended"
+        },
+        {
+          "assertion": "must_not_mention",
+          "pass": true,
+          "detail": "none of the banned terms present"
+        }
+      ],
+      "gatesPass": true,
+      "assertionsPass": false,
+      "pass": false,
+      "notes": []
+    },
+    {
+      "id": "GS-09",
+      "version": 1,
+      "family": "scope-honesty",
+      "mode": "recommend",
+      "fixturesResolved": true,
+      "gates": [
+        {
+          "gate": "G1",
+          "pass": true,
+          "detail": "all facts resolve to pack"
+        },
+        {
+          "gate": "G2",
+          "pass": true,
+          "detail": "no fabricated opportunities"
+        },
+        {
+          "gate": "G3",
+          "pass": true,
+          "detail": "eligibility consistent"
+        },
+        {
+          "gate": "G4",
+          "pass": true,
+          "detail": "recs=1 qs=0 words=31 emptyWhy=0"
+        },
+        {
+          "gate": "G5",
+          "pass": true,
+          "detail": "null semantics preserved"
+        },
+        {
+          "gate": "G6",
+          "pass": true,
+          "detail": "numbers match pack arithmetic"
+        },
+        {
+          "gate": "G7",
+          "pass": true,
+          "detail": "no promise/capability overreach"
+        }
+      ],
+      "assertions": [
+        {
+          "assertion": "must_acknowledge_thin_coverage",
+          "pass": true,
+          "detail": "thin coverage acknowledged for topic"
+        },
+        {
+          "assertion": "must_recommend",
+          "pass": true,
+          "detail": "syn-ukwide-sport recommended"
+        },
+        {
+          "assertion": "must_not_mention",
+          "pass": true,
+          "detail": "none of the banned terms present"
+        }
+      ],
+      "gatesPass": true,
+      "assertionsPass": true,
+      "pass": true,
+      "notes": [
+        "2 pinned ref(s) not in snapshot — running on synthetics + pool (see fixtures-build.ts)"
+      ]
+    },
+    {
+      "id": "GS-10",
+      "version": 1,
+      "family": "scope-honesty",
+      "mode": "recommend",
+      "fixturesResolved": true,
+      "gates": [
+        {
+          "gate": "G1",
+          "pass": true,
+          "detail": "all facts resolve to pack"
+        },
+        {
+          "gate": "G2",
+          "pass": true,
+          "detail": "no fabricated opportunities"
+        },
+        {
+          "gate": "G3",
+          "pass": true,
+          "detail": "eligibility consistent"
+        },
+        {
+          "gate": "G4",
+          "pass": true,
+          "detail": "recs=2 qs=0 words=31 emptyWhy=0"
+        },
+        {
+          "gate": "G5",
+          "pass": true,
+          "detail": "null semantics preserved"
+        },
+        {
+          "gate": "G6",
+          "pass": true,
+          "detail": "numbers match pack arithmetic"
+        },
+        {
+          "gate": "G7",
+          "pass": true,
+          "detail": "no promise/capability overreach"
+        }
+      ],
+      "assertions": [
+        {
+          "assertion": "must_recommend",
+          "pass": true,
+          "detail": "syn-wales-culture recommended"
+        },
+        {
+          "assertion": "must_rule_out",
+          "pass": false,
+          "detail": "syn-england-only-trap not ruled out"
+        },
+        {
+          "assertion": "must_acknowledge_thin_coverage",
+          "pass": true,
+          "detail": "thin coverage acknowledged for topic"
+        }
+      ],
+      "gatesPass": true,
+      "assertionsPass": false,
+      "pass": false,
+      "notes": [
+        "2 pinned ref(s) not in snapshot — running on synthetics + pool (see fixtures-build.ts)"
+      ]
+    },
+    {
+      "id": "GS-11",
+      "version": 1,
+      "family": "collaborative",
+      "mode": "correct",
+      "fixturesResolved": true,
+      "gates": [
+        {
+          "gate": "G1",
+          "pass": true,
+          "detail": "all facts resolve to pack"
+        },
+        {
+          "gate": "G2",
+          "pass": true,
+          "detail": "no fabricated opportunities"
+        },
+        {
+          "gate": "G3",
+          "pass": true,
+          "detail": "eligibility consistent"
+        },
+        {
+          "gate": "G4",
+          "pass": true,
+          "detail": "recs=4 qs=0 words=23 emptyWhy=0"
+        },
+        {
+          "gate": "G5",
+          "pass": true,
+          "detail": "null semantics preserved"
+        },
+        {
+          "gate": "G6",
+          "pass": true,
+          "detail": "numbers match pack arithmetic"
+        },
+        {
+          "gate": "G7",
+          "pass": true,
+          "detail": "no promise/capability overreach"
+        }
+      ],
+      "assertions": [
+        {
+          "assertion": "must_not_recommend",
+          "pass": true,
+          "detail": "syn-declined-funder absent"
+        },
+        {
+          "assertion": "must_apply_fact",
+          "pass": false,
+          "detail": "fact is derived from the correction — the collaborative loop is build step 5"
+        },
+        {
+          "assertion": "must_apply_fact",
+          "pass": false,
+          "detail": "fact is derived from the correction — the collaborative loop is build step 5"
+        }
+      ],
+      "gatesPass": true,
+      "assertionsPass": false,
+      "pass": false,
+      "notes": []
+    },
+    {
+      "id": "GS-12",
+      "version": 1,
+      "family": "collaborative",
+      "mode": "recommend",
+      "fixturesResolved": true,
+      "gates": [
+        {
+          "gate": "G1",
+          "pass": true,
+          "detail": "all facts resolve to pack"
+        },
+        {
+          "gate": "G2",
+          "pass": true,
+          "detail": "no fabricated opportunities"
+        },
+        {
+          "gate": "G3",
+          "pass": true,
+          "detail": "eligibility consistent"
+        },
+        {
+          "gate": "G4",
+          "pass": true,
+          "detail": "recs=1 qs=0 words=33 emptyWhy=0"
+        },
+        {
+          "gate": "G5",
+          "pass": true,
+          "detail": "null semantics preserved"
+        },
+        {
+          "gate": "G6",
+          "pass": true,
+          "detail": "numbers match pack arithmetic"
+        },
+        {
+          "gate": "G7",
+          "pass": true,
+          "detail": "no promise/capability overreach"
+        }
+      ],
+      "assertions": [
+        {
+          "assertion": "must_not_recommend",
+          "pass": true,
+          "detail": "syn-gambling-funder absent"
+        },
+        {
+          "assertion": "must_rule_out",
+          "pass": true,
+          "detail": "ruled out (excluded_by_org_fact)"
+        },
+        {
+          "assertion": "must_recommend",
+          "pass": true,
+          "detail": "syn-clean-alt recommended"
+        },
+        {
+          "assertion": "must_apply_fact",
+          "pass": true,
+          "detail": "fact applied (learned/bound)"
+        }
+      ],
+      "gatesPass": true,
+      "assertionsPass": true,
+      "pass": true,
+      "notes": [
+        "1 pinned ref(s) not in snapshot — running on synthetics + pool (see fixtures-build.ts)"
+      ]
+    },
+    {
+      "id": "GS-13",
+      "version": 1,
+      "family": "integrity",
+      "mode": "converse",
+      "fixturesResolved": true,
+      "gates": [
+        {
+          "gate": "G1",
+          "pass": true,
+          "detail": "all facts resolve to pack"
+        },
+        {
+          "gate": "G2",
+          "pass": true,
+          "detail": "no fabricated opportunities"
+        },
+        {
+          "gate": "G3",
+          "pass": true,
+          "detail": "eligibility consistent"
+        },
+        {
+          "gate": "G4",
+          "pass": true,
+          "detail": "recs=2 qs=0 words=29 emptyWhy=0"
+        },
+        {
+          "gate": "G5",
+          "pass": true,
+          "detail": "null semantics preserved"
+        },
+        {
+          "gate": "G6",
+          "pass": true,
+          "detail": "numbers match pack arithmetic"
+        },
+        {
+          "gate": "G7",
+          "pass": true,
+          "detail": "no promise/capability overreach"
+        }
+      ],
+      "assertions": [
+        {
+          "assertion": "must_recommend",
+          "pass": true,
+          "detail": "syn-capacity-grant recommended"
+        },
+        {
+          "assertion": "must_recommend",
+          "pass": true,
+          "detail": "syn-inkind-digital recommended"
+        }
+      ],
+      "gatesPass": true,
+      "assertionsPass": true,
+      "pass": true,
+      "notes": []
+    },
+    {
+      "id": "GS-14",
+      "version": 1,
+      "family": "heartland",
+      "mode": "recommend",
+      "fixturesResolved": true,
+      "gates": [
+        {
+          "gate": "G1",
+          "pass": true,
+          "detail": "all facts resolve to pack"
+        },
+        {
+          "gate": "G2",
+          "pass": true,
+          "detail": "no fabricated opportunities"
+        },
+        {
+          "gate": "G3",
+          "pass": true,
+          "detail": "eligibility consistent"
+        },
+        {
+          "gate": "G4",
+          "pass": true,
+          "detail": "recs=3 qs=0 words=30 emptyWhy=0"
+        },
+        {
+          "gate": "G5",
+          "pass": true,
+          "detail": "null semantics preserved"
+        },
+        {
+          "gate": "G6",
+          "pass": true,
+          "detail": "numbers match pack arithmetic"
+        },
+        {
+          "gate": "G7",
+          "pass": true,
+          "detail": "no promise/capability overreach"
+        }
+      ],
+      "assertions": [
+        {
+          "assertion": "max_recommendations",
+          "pass": true,
+          "detail": "recs=3 max=5"
+        },
+        {
+          "assertion": "must_flag",
+          "pass": true,
+          "detail": "flag selection_summary present"
+        }
+      ],
+      "gatesPass": true,
+      "assertionsPass": true,
+      "pass": true,
+      "notes": []
+    },
+    {
+      "id": "GS-15",
+      "version": 1,
+      "family": "integrity",
+      "mode": "recommend",
+      "fixturesResolved": true,
+      "gates": [
+        {
+          "gate": "G1",
+          "pass": true,
+          "detail": "all facts resolve to pack"
+        },
+        {
+          "gate": "G2",
+          "pass": true,
+          "detail": "no fabricated opportunities"
+        },
+        {
+          "gate": "G3",
+          "pass": true,
+          "detail": "eligibility consistent"
+        },
+        {
+          "gate": "G4",
+          "pass": true,
+          "detail": "recs=3 qs=0 words=23 emptyWhy=0"
+        },
+        {
+          "gate": "G5",
+          "pass": true,
+          "detail": "null semantics preserved"
+        },
+        {
+          "gate": "G6",
+          "pass": true,
+          "detail": "numbers match pack arithmetic"
+        },
+        {
+          "gate": "G7",
+          "pass": true,
+          "detail": "no promise/capability overreach"
+        }
+      ],
+      "assertions": [
+        {
+          "assertion": "must_recommend",
+          "pass": true,
+          "detail": "syn-rolling-nodeadline recommended"
+        },
+        {
+          "assertion": "must_recommend",
+          "pass": true,
+          "detail": "syn-amount-undisclosed recommended"
+        },
+        {
+          "assertion": "must_not_mention",
+          "pass": true,
+          "detail": "none of the banned terms present"
+        }
+      ],
+      "gatesPass": true,
+      "assertionsPass": true,
+      "pass": true,
+      "notes": []
+    },
+    {
+      "id": "GS-16",
+      "version": 1,
+      "family": "heartland",
+      "mode": "recommend",
+      "fixturesResolved": true,
+      "gates": [
+        {
+          "gate": "G1",
+          "pass": true,
+          "detail": "all facts resolve to pack"
+        },
+        {
+          "gate": "G2",
+          "pass": true,
+          "detail": "no fabricated opportunities"
+        },
+        {
+          "gate": "G3",
+          "pass": true,
+          "detail": "eligibility consistent"
+        },
+        {
+          "gate": "G4",
+          "pass": true,
+          "detail": "recs=2 qs=0 words=31 emptyWhy=0"
+        },
+        {
+          "gate": "G5",
+          "pass": true,
+          "detail": "null semantics preserved"
+        },
+        {
+          "gate": "G6",
+          "pass": true,
+          "detail": "numbers match pack arithmetic"
+        },
+        {
+          "gate": "G7",
+          "pass": true,
+          "detail": "no promise/capability overreach"
+        }
+      ],
+      "assertions": [
+        {
+          "assertion": "must_flag",
+          "pass": true,
+          "detail": "flag pacing present"
+        },
+        {
+          "assertion": "max_recommendations",
+          "pass": true,
+          "detail": "recs=2 max=5"
+        }
+      ],
+      "gatesPass": true,
+      "assertionsPass": true,
+      "pass": true,
+      "notes": []
+    }
+  ]
+}

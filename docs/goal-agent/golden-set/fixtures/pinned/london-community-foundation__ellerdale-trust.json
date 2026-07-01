@@ -1,0 +1,30 @@
+{
+  "id": "5c74e93a-e188-4d9d-b673-ce43a3d8c688",
+  "title": "The Ellerdale Trust Grants Programme",
+  "funder": "London Community Foundation",
+  "fundingType": "grant",
+  "amountMin": null,
+  "amountMax": null,
+  "amountUndisclosed": false,
+  "deadline": null,
+  "isRolling": false,
+  "nextOpenDate": null,
+  "openStatus": null,
+  "eligibleStructures": [],
+  "minOrgIncome": null,
+  "maxOrgIncome": null,
+  "locationTag": null,
+  "isInviteOnly": false,
+  "sectors": [
+    "community",
+    "social welfare"
+  ],
+  "impactSectors": [
+    "community"
+  ],
+  "beneficiaryGroups": [
+    "general_public"
+  ],
+  "funder_brief": null,
+  "_snapshot_at": "2026-07-01"
+}

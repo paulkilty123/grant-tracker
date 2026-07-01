@@ -1,0 +1,30 @@
+{
+  "pool_id": "pool-london-children",
+  "note": "Synthetic filler rows for London children/families shortlists (small-to-mid orgs).",
+  "rows": [
+    {
+      "fixture_id": "pool-lonc-1", "title": "London Children's Fund", "funder": "Capital Giving (synthetic)",
+      "fundingType": "grant", "amountMin": 2000, "amountMax": 20000, "amountUndisclosed": false,
+      "deadline": "2026-10-05", "isRolling": false, "eligibleStructures": ["registered_charity", "cio", "cic_guarantee"],
+      "minOrgIncome": null, "maxOrgIncome": 1000000, "locationTag": "London", "isInviteOnly": false,
+      "sectors": ["community", "young_people"], "impactSectors": ["community"], "beneficiaryGroups": ["children", "families"],
+      "funder_brief": { "what_they_fund": "Grants for organisations supporting children and families across London.", "open_status": "open", "citations": { "what_they_fund": { "snippet": "grants for organisations supporting children and families across London", "confidence": "high" } } }
+    },
+    {
+      "fixture_id": "pool-lonc-2", "title": "Borough Wellbeing Grants", "funder": "Thames Foundation (synthetic)",
+      "fundingType": "grant", "amountMin": null, "amountMax": 10000, "amountUndisclosed": false,
+      "deadline": null, "isRolling": true, "eligibleStructures": ["registered_charity", "cio", "unincorporated"],
+      "minOrgIncome": null, "maxOrgIncome": 500000, "locationTag": "London", "isInviteOnly": false,
+      "sectors": ["community", "health"], "impactSectors": ["community"], "beneficiaryGroups": ["children", "general_public"],
+      "funder_brief": { "what_they_fund": "Rolling small grants for borough-level wellbeing work.", "open_status": "open" }
+    },
+    {
+      "fixture_id": "pool-lonc-3", "title": "Creative Kids Grants", "funder": "Playful London (synthetic)",
+      "fundingType": "grant", "amountMin": 1000, "amountMax": 8000, "amountUndisclosed": false,
+      "deadline": "2026-11-01", "isRolling": false, "eligibleStructures": ["registered_charity", "cio", "cic_guarantee"],
+      "minOrgIncome": null, "maxOrgIncome": null, "locationTag": "London", "isInviteOnly": false,
+      "sectors": ["creative", "education"], "impactSectors": ["creative"], "beneficiaryGroups": ["children"],
+      "funder_brief": { "what_they_fund": "Arts and creativity projects for children in London.", "open_status": "open" }
+    }
+  ]
+}

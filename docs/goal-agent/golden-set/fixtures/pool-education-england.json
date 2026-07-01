@@ -1,0 +1,38 @@
+{
+  "pool_id": "pool-education-england",
+  "note": "Synthetic filler rows to crowd education/England shortlists. Not asserted on; provides realistic ranking pressure.",
+  "rows": [
+    {
+      "fixture_id": "pool-edu-1", "title": "School Improvement Small Grants", "funder": "Learning Futures Trust (synthetic)",
+      "fundingType": "grant", "amountMin": 2000, "amountMax": 10000, "amountUndisclosed": false,
+      "deadline": "2026-10-15", "isRolling": false, "eligibleStructures": ["registered_charity", "cio"],
+      "minOrgIncome": null, "maxOrgIncome": 1000000, "locationTag": "England", "isInviteOnly": false,
+      "sectors": ["education"], "impactSectors": ["education"], "beneficiaryGroups": ["children"],
+      "funder_brief": { "what_they_fund": "Small grants for classroom and school-improvement projects.", "open_status": "open", "citations": { "what_they_fund": { "snippet": "small grants for classroom and school-improvement projects", "confidence": "high" } } }
+    },
+    {
+      "fixture_id": "pool-edu-2", "title": "Family Learning Fund", "funder": "Bright Start Foundation (synthetic)",
+      "fundingType": "grant", "amountMin": 5000, "amountMax": 25000, "amountUndisclosed": false,
+      "deadline": "2026-11-30", "isRolling": false, "eligibleStructures": ["registered_charity", "cio", "cic_guarantee"],
+      "minOrgIncome": null, "maxOrgIncome": null, "locationTag": "England", "isInviteOnly": false,
+      "sectors": ["education", "community"], "impactSectors": ["education"], "beneficiaryGroups": ["families", "children"],
+      "funder_brief": { "what_they_fund": "Projects that help families support children's learning at home.", "open_status": "open" }
+    },
+    {
+      "fixture_id": "pool-edu-3", "title": "Youth Attainment Grants", "funder": "Chance to Thrive (synthetic)",
+      "fundingType": "grant", "amountMin": null, "amountMax": 15000, "amountUndisclosed": false,
+      "deadline": null, "isRolling": true, "eligibleStructures": ["registered_charity", "cio"],
+      "minOrgIncome": null, "maxOrgIncome": null, "locationTag": "England", "isInviteOnly": false,
+      "sectors": ["education", "young_people"], "impactSectors": ["young_people"], "beneficiaryGroups": ["young_people"],
+      "funder_brief": { "what_they_fund": "Rolling small grants raising attainment for disadvantaged young people.", "open_status": "open" }
+    },
+    {
+      "fixture_id": "pool-edu-4", "title": "Community Education Partnership Fund", "funder": "Regional CF (synthetic)",
+      "fundingType": "grant", "amountMin": 1000, "amountMax": 5000, "amountUndisclosed": false,
+      "deadline": "2026-09-20", "isRolling": false, "eligibleStructures": ["registered_charity", "cio", "unincorporated"],
+      "minOrgIncome": null, "maxOrgIncome": 250000, "locationTag": "England", "isInviteOnly": false,
+      "sectors": ["education", "community"], "impactSectors": ["community"], "beneficiaryGroups": ["children", "families"],
+      "funder_brief": { "what_they_fund": "Micro-grants for community-led education partnerships.", "open_status": "open" }
+    }
+  ]
+}

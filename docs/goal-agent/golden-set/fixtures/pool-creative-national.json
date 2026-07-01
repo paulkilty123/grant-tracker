@@ -1,0 +1,38 @@
+{
+  "pool_id": "pool-creative-national",
+  "note": "Synthetic filler rows to crowd creative/arts UK-wide shortlists.",
+  "rows": [
+    {
+      "fixture_id": "pool-cre-1", "title": "Small Arts Project Grants", "funder": "Creative Communities Fund (synthetic)",
+      "fundingType": "grant", "amountMin": 1000, "amountMax": 10000, "amountUndisclosed": false,
+      "deadline": "2026-10-01", "isRolling": false, "eligibleStructures": ["registered_charity", "cio", "cic_guarantee", "unincorporated"],
+      "minOrgIncome": null, "maxOrgIncome": null, "locationTag": "UK", "isInviteOnly": false,
+      "sectors": ["creative"], "impactSectors": ["creative"], "beneficiaryGroups": ["general_public"],
+      "funder_brief": { "what_they_fund": "Small grants for participatory arts projects across the UK.", "open_status": "open", "citations": { "what_they_fund": { "snippet": "small grants for participatory arts projects across the UK", "confidence": "high" } } }
+    },
+    {
+      "fixture_id": "pool-cre-2", "title": "Young People's Performing Arts Fund", "funder": "Stage & Sound Trust (synthetic)",
+      "fundingType": "grant", "amountMin": 2000, "amountMax": 20000, "amountUndisclosed": false,
+      "deadline": "2026-11-14", "isRolling": false, "eligibleStructures": ["registered_charity", "cio", "cic_guarantee"],
+      "minOrgIncome": null, "maxOrgIncome": 500000, "locationTag": "UK", "isInviteOnly": false,
+      "sectors": ["creative", "young_people"], "impactSectors": ["creative"], "beneficiaryGroups": ["young_people", "children"],
+      "funder_brief": { "what_they_fund": "Theatre, music and dance projects with young people.", "open_status": "open" }
+    },
+    {
+      "fixture_id": "pool-cre-3", "title": "Cultural Access Grants", "funder": "Open Doors Foundation (synthetic)",
+      "fundingType": "grant", "amountMin": null, "amountMax": null, "amountUndisclosed": true,
+      "deadline": null, "isRolling": true, "eligibleStructures": ["registered_charity", "cio"],
+      "minOrgIncome": null, "maxOrgIncome": null, "locationTag": "UK", "isInviteOnly": false,
+      "sectors": ["creative", "accessibility"], "impactSectors": ["creative"], "beneficiaryGroups": ["disabled_people"],
+      "funder_brief": { "what_they_fund": "Improving disabled people's access to cultural activity.", "open_status": "open" }
+    },
+    {
+      "fixture_id": "pool-cre-4", "title": "Heritage & Creative Skills Programme", "funder": "Craft Futures (synthetic)",
+      "fundingType": "programme", "amountMin": null, "amountMax": null, "amountUndisclosed": true,
+      "deadline": "2026-09-30", "isRolling": false, "eligibleStructures": ["registered_charity", "cio", "cic_guarantee", "ltd_guarantee"],
+      "minOrgIncome": null, "maxOrgIncome": null, "locationTag": "UK", "isInviteOnly": false,
+      "sectors": ["creative", "heritage"], "impactSectors": ["heritage"], "beneficiaryGroups": ["young_people"],
+      "funder_brief": { "what_they_fund": "A skills programme (not a cash grant) developing creative and heritage crafts.", "open_status": "open" }
+    }
+  ]
+}
