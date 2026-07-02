@@ -9,9 +9,11 @@
 // Status: ✅ built through the full envelope · ○ designed, implementation pending.
 
 import { addToPipeline, updatePipelineItem } from './pipeline'
+import { getPlanState, getBriefing } from './plan'
+import { assessOpportunityAgainstPlan } from './assess'
 import { CONTRACT } from '../contract'
 
-export { addToPipeline, updatePipelineItem }
+export { addToPipeline, updatePipelineItem, getPlanState, getBriefing, assessOpportunityAgainstPlan }
 export { defineTool } from './envelope'
 export { requireTool, isEntitled, allowedTools } from './entitlement'
 export { assertScaffoldOnly } from './authorship'
@@ -44,21 +46,21 @@ export const TOOL_REGISTRY: ToolSpecEntry[] = [
   {
     name: 'get_plan_state',
     tier: 'companion',
-    status: 'designed',
+    status: 'built',
     params: 'org_id',
-    description: `Return the deterministic plan arithmetic against the goal — secured, in-pipeline (weighted and unweighted), gap, months remaining, required monthly run-rate, and funder/opportunity concentration. Numbers only; ${CONTRACT.neverRestateNumbers}`,
+    description: `Return the deterministic plan arithmetic against the goal — secured, in-pipeline (weighted and unweighted), gap, months remaining, required monthly run-rate, and funder/opportunity concentration. Numbers only; ${CONTRACT.neverRestateNumbers} With no goal set, returns a short "set a goal to see plan state" payload.`,
   },
   {
     name: 'get_briefing',
     tier: 'companion',
-    status: 'designed',
+    status: 'built',
     params: 'org_id, since?',
-    description: `Assemble the plan state, what has changed since \`since\`, and the top eligibility-checked candidates against the gap — deterministically, from existing data. This is the reasoning surface: ${CONTRACT.constraintFirst} ${CONTRACT.factsVsJudgment}`,
+    description: `Assemble the plan state, what has changed since \`since\`, and the top eligibility-checked candidates against the gap — deterministically, from existing data. This is the reasoning surface: ${CONTRACT.constraintFirst} ${CONTRACT.factsVsJudgment} With no goal set, returns an onboarding payload naming exactly what's needed to build a plan — relay it as-is.`,
   },
   {
     name: 'assess_opportunity_against_plan',
     tier: 'companion',
-    status: 'designed',
+    status: 'built',
     params: 'org_id, opportunity_id',
     description: `Return one opportunity's eligibility verdict, match breakdown, and verified fields alongside how it sits against the current gap and mix. You make the sequencing decision from what this returns; it does none of that reasoning itself.`,
   },

@@ -410,3 +410,15 @@ So the later feature is additive, reserve these now and leave them unused:
 ### 12.5 Recommended first increment (when it's time)
 
 Cheapest version first, almost zero engineering and zero runtime risk: a small hand-curated set of current sector-context notes (you already have them in the evidence log), dated and judgment-tagged, loaded into the **cacheable system-prompt prefix** (§6.2). That gives the agent a consultant's awareness of the moment immediately. The `sector_signals` table + agent-assisted discovery (12.2) is the *scaling* mechanism you add only once the curated version has proven its worth — same crawl-walk-run the catalogue took.
+
+---
+
+## 13. Tool layer + deferred follow-ups
+
+The agent's interface to data/state is the named tool layer `src/lib/agent/tools/` — one layer, two surfaces (in-app orchestrator + gated MCP), envelope on every call (entitlement · authorship · surface-discriminated capture log · provenance). Discipline is in CLAUDE.md → *Goal Agent — Tool Layer Discipline* and enforced by the eslint override on `tools/**`. Built: `add_to_pipeline`, `update_pipeline_item`, `get_plan_state`, `get_briefing`, `assess_opportunity_against_plan`. Descriptions live in `tools/index.ts` `TOOL_REGISTRY` (canonical MCP steering); `contract.ts` holds the four load-bearing rules once, from which `reason.ts`'s prompt is derived.
+
+Deferred follow-ups (signposted, not fixed):
+1. **Client-agnostic `pipeline.ts` refactor.** `src/lib/pipeline.ts` is browser-client-bound, so the server tools re-implement the writes. The two are cross-commented ("keep in sync"). Refactor `pipeline.ts` to accept an injected client so both surfaces share one implementation, then delete the duplication.
+2. **Candidate-diff in `get_briefing`.** Plan-delta already derives from the capture-layer event log (no `agent_runs` dependency); candidate-level "new since last briefing" needs `agent_runs.context_digest` (§5.2) — add when the agent tables land.
+3. **`goals` / `org_facts` tables (§5.1, §5.3).** Until applied, the read tools degrade to the onboarding path (`get_briefing` no-goal payload). Step 2 (migrations on a Supabase branch) lifts them into live plan state.
+4. **`agent_tool_called` event** is now reserved and emitted by the read tools — the demand-intelligence signal for the brain (what orgs ask the strategist, from which surface). Emit it from the write tools too when convenient, and from every future tool by default.

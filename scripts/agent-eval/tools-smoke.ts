@@ -4,6 +4,9 @@
 
 import { defineTool } from '../../src/lib/agent/tools/envelope'
 import { EntitlementError, AuthorshipError, type ToolContext } from '../../src/lib/agent/tools/types'
+import { buildPlanState, buildBriefingOnboarding } from '../../src/lib/agent/tools/plan'
+import type { GoalInput, PipelineEntry } from '../../src/lib/agent/types'
+import type { Organisation } from '@/types'
 
 const captured: Array<{ surface: string; orgId: string; itemId: string }> = []
 
@@ -46,7 +49,27 @@ async function main() {
   check('in-app and mcp calls in ONE log, distinguishable by surface',
     captured.some(e => e.surface === 'app') && captured.some(e => e.surface === 'mcp'))
 
-  console.log(`\n${fail === 0 ? '✓ ENVELOPE PROVEN' : '✗ ENVELOPE FAILURES'}: ${pass} passed, ${fail} failed`)
+  // 6. Read-tool degraded / onboarding logic (pure, no DB).
+  const pipeline: PipelineEntry[] = [
+    { grant_name: 'A', funder_name: 'F', stage: 'applying', amount_requested: 50000, deadline: null },
+    { grant_name: 'B', funder_name: 'G', stage: 'declined', amount_requested: 99999, deadline: null },
+  ]
+  const noGoal = buildPlanState(null, pipeline, '2026-07-01')
+  check('get_plan_state degrades with no goal', noGoal.has_goal === false)
+
+  const goal: GoalInput = { title: 'Y', target_amount: 1_000_000, secured_amount: 400_000, start_date: '2026-01-01', end_date: '2026-12-31', mix_targets: null, constraints: [] }
+  const withGoal = buildPlanState(goal, pipeline, '2026-07-01')
+  check('get_plan_state computes the gap with a goal', withGoal.has_goal === true && withGoal.arithmetic.gap === 600_000)
+
+  const onboarding = buildBriefingOnboarding(
+    { legal_structure: 'registered_charity', annual_income_band: '£100,000–£250,000', impact_sectors: ['community'] } as unknown as Organisation,
+    pipeline,
+  )
+  check('get_briefing returns onboarding, not an error, with no goal', onboarding.has_goal === false)
+  check('onboarding shows pipeline value excluding declined (£50k)',
+    onboarding.has_goal === false && onboarding.onboarding.what_i_can_already_see.pipeline_value === 50000)
+
+  console.log(`\n${fail === 0 ? '✓ ENVELOPE + READ TOOLS PROVEN' : '✗ FAILURES'}: ${pass} passed, ${fail} failed`)
   process.exit(fail === 0 ? 0 : 1)
 }
 main()

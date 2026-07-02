@@ -69,6 +69,16 @@ export interface EventPayloads {
     channel?: string
     auth_state?: string
   }
+  /** Emitted by every goal-agent tool — the demand-intelligence signal: what an
+   *  org asked of the strategist, from which surface (the event's surface
+   *  column). Distinct from mcp_tool_called (the raw MCP JSON-RPC transport log);
+   *  this is the agent capability layer, in-app and MCP alike. `degraded` marks
+   *  calls that returned an onboarding/no-goal payload rather than a full one. */
+  agent_tool_called: {
+    tool_name: string
+    result_count: number | null
+    degraded: boolean
+  }
   profile_updated: {
     fields_changed: string[]
   }
@@ -176,6 +186,7 @@ export const EVENT_TYPES = [
   'pipeline_starred',
   'pipeline_stage_changed',
   'mcp_tool_called',
+  'agent_tool_called',
   'profile_updated',
   'builder_questions_submitted',
   'builder_scaffold_generated',
@@ -212,6 +223,7 @@ const REQUIRED_KEYS: Record<EventType, Record<string, Kind>> = {
   pipeline_starred:            { pipeline_item_id: 'string', starred: 'boolean' },
   pipeline_stage_changed:      { opportunity_id: 'nullable-string', pipeline_item_id: 'string', from_stage: 'string', to_stage: 'string' },
   mcp_tool_called:             { tool_name: 'string', arguments: 'object', result_count: 'nullable-number', duration_ms: 'number' },
+  agent_tool_called:           { tool_name: 'string', result_count: 'nullable-number', degraded: 'boolean' },
   profile_updated:             { fields_changed: 'string[]' },
   builder_questions_submitted: { application_id: 'string', question_count: 'number', opportunity_id: 'nullable-string' },
   builder_scaffold_generated:  { application_id: 'string', model: 'string', input_tokens: 'number', output_tokens: 'number', duration_ms: 'number' },

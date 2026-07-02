@@ -17,6 +17,11 @@ export async function getPipelineItems(orgId: string): Promise<PipelineItem[]> {
 
 // ── CREATE ────────────────────────────────────
 
+// ⚠ DUPLICATED WRITE LOGIC — keep in sync with src/lib/agent/tools/pipeline.ts
+// (add_to_pipeline / update_pipeline_item), the server-side, org-scoped,
+// entitlement-enveloped version used by the agent + MCP surfaces. This is the
+// browser-client CRM path. Merge into one impl when pipeline.ts is refactored
+// to accept an injected client (see build-spec §13).
 export async function createPipelineItem(
   item: Omit<PipelineItem, 'id' | 'created_at' | 'updated_at'>
 ): Promise<PipelineItem> {
