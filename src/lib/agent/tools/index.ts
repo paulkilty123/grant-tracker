@@ -11,9 +11,10 @@
 import { addToPipeline, updatePipelineItem } from './pipeline'
 import { getPlanState, getBriefing } from './plan'
 import { assessOpportunityAgainstPlan } from './assess'
+import { getFundingGoal, setFundingGoal } from './goal'
 import { CONTRACT } from '../contract'
 
-export { addToPipeline, updatePipelineItem, getPlanState, getBriefing, assessOpportunityAgainstPlan }
+export { addToPipeline, updatePipelineItem, getPlanState, getBriefing, assessOpportunityAgainstPlan, getFundingGoal, setFundingGoal }
 export { defineTool } from './envelope'
 export { requireTool, isEntitled, allowedTools } from './entitlement'
 export { assertScaffoldOnly } from './authorship'
@@ -74,15 +75,15 @@ export const TOOL_REGISTRY: ToolSpecEntry[] = [
   {
     name: 'get_funding_goal',
     tier: 'companion',
-    status: 'designed',
+    status: 'built',
     params: 'org_id',
-    description: `Return the organisation's active funding goal — target amount, funding-type mix, and deadline — or null if none is set.`,
+    description: `Return the organisation's active funding goal — target amount, secured-to-date, funding-type mix, and deadline — or null if none is set. Secured is derived from pipeline 'won'; ${CONTRACT.neverRestateNumbers}`,
   },
   {
     name: 'set_funding_goal',
     tier: 'companion',
-    status: 'designed',
-    params: 'org_id, title, target_amount, mix_targets?, start_date, end_date, constraints?',
-    description: `Set or replace the organisation's funding goal. Constraints capture what the org will not take money for; mix_targets are percentages by funding type.`,
+    status: 'built',
+    params: 'title, target_amount, start_date, end_date, mix_targets?, constraints?, secured_amount?',
+    description: `Set or replace the organisation's funding goal. Replacing supersedes the prior goal (kept as history, never deleted). Constraints capture what the org will not take money for; mix_targets are percentages by funding type. Secured-to-date is derived from pipeline 'won' unless stated explicitly.`,
   },
 ]

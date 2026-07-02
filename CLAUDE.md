@@ -112,6 +112,9 @@ Without this filter, non-UUID legacy IDs cause a Postgres cast error, the query 
 ### Seed Data
 `src/lib/grants.ts` is fallback seed only — new grants go directly into Supabase.
 
+### Ops: backups / direct DB connection
+For a `pg_dump` backup before a prod migration, use the **session pooler** connection string, not the direct `db.<ref>.supabase.co` host — the direct host does not resolve from Paul's network. Session pooler host: `aws-0-<region>.pooler.supabase.com:5432`, user `postgres.<project-ref>` (get the exact string from Supabase → Project Settings → Database → Connection string → Session pooler). A full dump is ~12MB. `.env.local` holds the service-role JWT + `NEXT_PUBLIC_SUPABASE_URL` but **no** DB connection string / password, so `pg_dump` needs the pooler string supplied separately.
+
 ---
 
 ## Key Library Files
