@@ -45,6 +45,12 @@ import { executeMCPSearch, computeZeroResultDiagnostic, type MCPSearchParams } f
 import { logMcpQuery } from '@/lib/mcp-query-log'
 import { emitEvent } from '@/lib/events/emit'
 import { getUpgradeNote, getErrorVariantNote } from '@/lib/mcp-upgrade-notes'
+import { resolveOrgAndTier } from '@/lib/mcp-entitlement'
+import {
+  addToPipeline, updatePipelineItem, getPlanState, getBriefing,
+  assessOpportunityAgainstPlan, getFundingGoal, setFundingGoal,
+  TOOL_REGISTRY, EntitlementError, AuthorshipError, type ToolContext,
+} from '@/lib/agent/tools'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -164,7 +170,144 @@ function withCapture(
   }
 }
 
-const mcpHandler = createMcpHandler(
+// ──────────────────────────────────────────────────────────────────────────
+// Companion tools (goal agent) — registered ONLY on the companion handler.
+//
+// Org identity is IMPLICIT: resolved from the OAuth token at the boundary
+// (resolveOrgAndTier) and read from the auth store here — it is never a tool
+// parameter, so an external model cannot spoof it. Each tool runs through the
+// same envelope (entitlement · authorship · capture · provenance) as the in-app
+// surface; this route is an EXPOSURE of that one layer, not a second build. The
+// descriptions come verbatim from TOOL_REGISTRY (the canonical MCP steering).
+// ──────────────────────────────────────────────────────────────────────────
+
+const COMPANION_DESC: Record<string, string> =
+  Object.fromEntries(TOOL_REGISTRY.map(t => [t.name, t.description]))
+
+function companionError(code: string, message: string) {
+  return {
+    content: [{ type: 'text' as const, text: JSON.stringify({
+      error: { code, message },
+      attribution: ATTRIBUTION,
+      rate_limit_status: rateLimitStatusForContext(authStore.getStore()),
+    }) }],
+    isError: true,
+  }
+}
+
+// Build ToolContext from the request's auth store, run the tool, and serialise
+// its ToolResult (data + provenance) to MCP content. Envelope errors map to
+// generic, client-safe messages — nothing about org internals leaks.
+async function runCompanion(
+  run: (ctx: ToolContext) => Promise<{ tool: string; surface: string; data: unknown; provenance: unknown }>,
+) {
+  const auth = authStore.getStore()
+  if (!auth?.orgId || auth.tier !== 'companion') {
+    return companionError('forbidden', 'Companion tools require a Companion-tier Grant Tracker account linked to this connection.')
+  }
+  const ctx: ToolContext = { orgId: auth.orgId, surface: 'mcp', tier: auth.tier, userId: auth.oauth?.user_id ?? null }
+  try {
+    const result = await run(ctx)
+    return { content: [{ type: 'text' as const, text: JSON.stringify({
+      ...result,
+      attribution: ATTRIBUTION,
+      rate_limit_status: rateLimitStatusForContext(auth),
+    }) }] }
+  } catch (e) {
+    if (e instanceof EntitlementError) return companionError('forbidden', 'This tool is not available on your plan.')
+    if (e instanceof AuthorshipError) return companionError('invalid_parameter', 'This tool scaffolds structure only; it does not accept application content.')
+    console.error('[mcp] companion tool failed:', e)
+    return companionError('internal_error', 'Something went wrong. Please retry; if it persists, contact hello@granttracker.co.uk.')
+  }
+}
+
+const STAGE = z.enum(['identified', 'applying', 'submitted', 'won', 'declined'])
+
+type McpServerArg = Parameters<Parameters<typeof createMcpHandler>[0]>[0]
+
+function registerCompanionTools(server: McpServerArg) {
+  server.tool(
+    'get_funding_goal',
+    COMPANION_DESC['get_funding_goal'],
+    {},
+    { title: 'Funding goal', readOnlyHint: true },
+    async () => runCompanion(ctx => getFundingGoal(ctx, {})),
+  )
+
+  server.tool(
+    'set_funding_goal',
+    COMPANION_DESC['set_funding_goal'],
+    {
+      title:          z.string().describe('Short label for the goal, e.g. "2026 income target". Scaffold, not prose.'),
+      target_amount:  z.number().describe('Total funding target for the period, in GBP.'),
+      start_date:     z.string().describe('Period start, ISO date (YYYY-MM-DD).'),
+      end_date:       z.string().describe('Period end / deadline, ISO date (YYYY-MM-DD). Must be after start_date.'),
+      mix_targets:    z.record(z.string(), z.number()).optional().describe('Optional funding-type mix as percentages, e.g. { "grant": 70, "contract": 20, "corporate": 10 }.'),
+      constraints:    z.array(z.object({ kind: z.string(), text: z.string() })).optional().describe('What the org will not take money for, e.g. [{ "kind": "sector", "text": "no gambling or tobacco funding" }].'),
+      secured_amount: z.number().optional().describe('Override secured-to-date; omit to derive from pipeline items already won.'),
+    },
+    { title: 'Set funding goal' },
+    async (p) => runCompanion(ctx => setFundingGoal(ctx, p)),
+  )
+
+  server.tool(
+    'get_plan_state',
+    COMPANION_DESC['get_plan_state'],
+    {},
+    { title: 'Plan state', readOnlyHint: true },
+    async () => runCompanion(ctx => getPlanState(ctx, {})),
+  )
+
+  server.tool(
+    'get_briefing',
+    COMPANION_DESC['get_briefing'],
+    { since: z.string().optional().describe('Optional ISO timestamp; returns what changed in the pipeline since then.') },
+    { title: 'Funding briefing', readOnlyHint: true },
+    async (p) => runCompanion(ctx => getBriefing(ctx, p)),
+  )
+
+  server.tool(
+    'assess_opportunity_against_plan',
+    COMPANION_DESC['assess_opportunity_against_plan'],
+    { opportunity_id: z.string().describe('Catalogue opportunity id (UUID or external id), e.g. from a search result.') },
+    { title: 'Assess opportunity', readOnlyHint: true },
+    async (p) => runCompanion(ctx => assessOpportunityAgainstPlan(ctx, p)),
+  )
+
+  server.tool(
+    'add_to_pipeline',
+    COMPANION_DESC['add_to_pipeline'],
+    {
+      grant_name:       z.string().describe('Name of the opportunity to track.'),
+      funder_name:      z.string().optional().describe('Funder / provider name.'),
+      opportunity_id:   z.string().optional().describe('Catalogue id, if this came from a search result.'),
+      stage:            STAGE.optional().describe('Pipeline stage; defaults to "identified".'),
+      amount_requested: z.number().optional().describe('Amount to request, in GBP.'),
+      deadline:         z.string().optional().describe('Application deadline, ISO date.'),
+      grant_url:        z.string().optional().describe('Funder application URL.'),
+    },
+    { title: 'Add to pipeline' },
+    async (p) => runCompanion(ctx => addToPipeline(ctx, p)),
+  )
+
+  server.tool(
+    'update_pipeline_item',
+    COMPANION_DESC['update_pipeline_item'],
+    {
+      pipeline_item_id: z.string().describe('Id of the pipeline item to update.'),
+      stage:            STAGE.optional().describe('New stage. Moving to won/declined records the outcome.'),
+      amount_requested: z.number().optional().describe('Updated amount, in GBP.'),
+      deadline:         z.string().optional().describe('Updated deadline, ISO date.'),
+      outcome_date:     z.string().optional().describe('Date the outcome was decided, ISO date.'),
+      outcome_notes:    z.string().optional().describe('Short outcome note (scaffold, not application prose).'),
+    },
+    { title: 'Update pipeline item' },
+    async (p) => runCompanion(ctx => updatePipelineItem(ctx, p)),
+  )
+}
+
+function buildHandler(includeCompanion: boolean) {
+  return createMcpHandler(
   (server) => {
     // Capture layer: intercept tool registration so every handler — current
     // and future — is wrapped with mcp_tool_called instrumentation. Done at
@@ -545,12 +688,24 @@ const mcpHandler = createMcpHandler(
         }
       },
     )
+
+    // Goal-agent tools — present only on the companion handler, so free/apply
+    // and API-key callers see the exact same 5-tool list as before.
+    if (includeCompanion) registerCompanionTools(server)
   },
   // Server options — mcp-handler extends the SDK's ServerOptions with serverInfo
   { serverInfo: MCP_SERVER_INFO },
   // Handler config — basePath drives endpoint URL derivation inside the SDK
   { basePath: '/api/mcp/v1', maxDuration: 60 },
-)
+  )
+}
+
+// Two handlers built once at module load. The free handler is byte-identical to
+// the previous single handler (same 5 tools, same serverInfo); the companion
+// handler adds the 7 goal-agent tools. handle() routes to one based on the
+// resolved tier, so existing (free / apply / API-key) callers are unaffected.
+const freeHandler = buildHandler(false)
+const companionHandler = buildHandler(true)
 
 // ──────────────────────────────────────────────────────────────────────────
 // Route handlers
@@ -636,7 +791,16 @@ async function handle(req: NextRequest): Promise<Response> {
     })
   }
 
-  return authStore.run(authCtx, () => mcpHandler(req))
+  // Resolve org + tier at the boundary — OAuth path only. API-key callers keep
+  // the existing free surface with no extra query. Companion tier routes to the
+  // companion handler; everyone else gets the byte-identical free handler.
+  if (authCtx.oauth) {
+    const resolved = await resolveOrgAndTier(authCtx.oauth.user_id)
+    authCtx.orgId = resolved.orgId
+    authCtx.tier = resolved.tier
+  }
+  const handler = authCtx.tier === 'companion' ? companionHandler : freeHandler
+  return authStore.run(authCtx, () => handler(req))
 }
 
 export const POST = handle

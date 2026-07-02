@@ -35,7 +35,7 @@ export const TOOL_REGISTRY: ToolSpecEntry[] = [
     tier: 'apply',
     status: 'built',
     params: 'grant_name, funder_name?, opportunity_id?, stage?, amount_requested?, deadline?, grant_url?, source_recommendation_id?',
-    description: `Record an opportunity in the organisation's pipeline so it can be tracked and counted against the plan. Scaffold only — this records the intent to pursue and never any application content. ${CONTRACT.scaffoldNotGhostwriter}`,
+    description: `Record an opportunity in the organisation's pipeline so it can be tracked and counted against the plan. ${CONTRACT.scaffoldNotGhostwriter}`,
   },
   {
     name: 'update_pipeline_item',
@@ -49,14 +49,14 @@ export const TOOL_REGISTRY: ToolSpecEntry[] = [
     tier: 'companion',
     status: 'built',
     params: 'org_id',
-    description: `Return the deterministic plan arithmetic against the goal — secured, in-pipeline (weighted and unweighted), gap, months remaining, required monthly run-rate, and funder/opportunity concentration. Numbers only; ${CONTRACT.neverRestateNumbers} With no goal set, returns a short "set a goal to see plan state" payload.`,
+    description: `Return the deterministic plan arithmetic against the goal — secured, in-pipeline (weighted and unweighted), gap, months remaining, required monthly run-rate, and funder/opportunity concentration. Numbers only; ${CONTRACT.neverRestateNumbers} With no goal set, returns a short "set a goal to see plan state" payload. Use this only when you need the bare arithmetic; for a strategic briefing with candidates and what has changed, call get_briefing instead.`,
   },
   {
     name: 'get_briefing',
     tier: 'companion',
     status: 'built',
     params: 'org_id, since?',
-    description: `Assemble the plan state, what has changed since \`since\`, and the top eligibility-checked candidates against the gap — deterministically, from existing data. This is the reasoning surface: ${CONTRACT.constraintFirst} ${CONTRACT.factsVsJudgment} With no goal set, returns an onboarding payload naming exactly what's needed to build a plan — relay it as-is.`,
+    description: `The primary tool for "where do I stand / what should I do next" — assemble the plan state, what has changed since \`since\`, and the top eligibility-checked candidates against the gap, deterministically from existing data. This is the reasoning surface: ${CONTRACT.constraintFirst} ${CONTRACT.factsVsJudgment} With no goal set, returns an onboarding payload naming exactly what's needed to build a plan — relay it as-is.`,
   },
   {
     name: 'assess_opportunity_against_plan',
@@ -84,6 +84,6 @@ export const TOOL_REGISTRY: ToolSpecEntry[] = [
     tier: 'companion',
     status: 'built',
     params: 'title, target_amount, start_date, end_date, mix_targets?, constraints?, secured_amount?',
-    description: `Set or replace the organisation's funding goal. Replacing supersedes the prior goal (kept as history, never deleted). Constraints capture what the org will not take money for; mix_targets are percentages by funding type. Secured-to-date is derived from pipeline 'won' unless stated explicitly.`,
+    description: `Call this only once the user has stated a funding target and a deadline — never infer or invent them. Sets or replaces the organisation's funding goal; replacing supersedes the prior goal (kept as history, never deleted). Constraints capture what the org will not take money for; mix_targets are percentages by funding type. Secured-to-date is derived from pipeline 'won' unless stated explicitly.`,
   },
 ]

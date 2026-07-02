@@ -15,6 +15,7 @@ import {
   resolveAccessToken,
   type ResolvedAccessToken,
 } from './mcp-oauth'
+import type { Tier } from './agent/tools/types'
 
 export type MCPAuthState = 'authenticated' | 'anonymous' | 'invalid' | 'revoked'
 
@@ -43,6 +44,14 @@ export interface MCPAuthContext {
    * present so the response reflects live counters.
    */
   rate_limit_status?: { remaining_hour: number; remaining_day: number | null }
+  /**
+   * Resolved org + tier for the companion (goal-agent) surface. Populated in
+   * the MCP route AFTER validation, only on the OAuth path (resolveOrgAndTier).
+   * `tier` decides which tool handler serves the request; `orgId` becomes
+   * ToolContext.orgId. Undefined for API-key callers, who keep the free surface.
+   */
+  orgId?: string | null
+  tier?: Tier
 }
 
 function getServiceClient() {
