@@ -39,7 +39,17 @@ export function resolveRef(pack: BriefingPack, r: string): Resolved {
   }
 
   const cand = findCand(pack, id)
-  if (!cand) return { ok: false, kind: null, value: null, detail: `no candidate '${id}' in pack` }
+  if (!cand) {
+    // Rule-out annex items are real pack elements the model may cite when
+    // ruling something out. They carry an eligibility verdict + identity only.
+    const annex = pack.ruleOutAnnex.find(x => x.id === id)
+    if (annex) {
+      if (field === 'eligibility') return { ok: true, kind: 'engine_verdict', value: annex.eligibility, detail: `${id} eligibility (annex)` }
+      if (field === 'title' || field === 'funder') return { ok: true, kind: 'catalogue_field', value: (annex as unknown as Record<string, unknown>)[field], detail: `${id} ${field} (annex)` }
+      return { ok: false, kind: null, value: null, detail: `annex item '${id}' has no field '${field}'` }
+    }
+    return { ok: false, kind: null, value: null, detail: `no candidate '${id}' in pack` }
+  }
 
   if (field.startsWith('brief.')) {
     const bf = field.slice('brief.'.length)

@@ -1,8 +1,6 @@
-# Goal-agent eval — stub run (build step 1)
+# Goal-agent eval — stub run
 
-Mode: `stub`  ·  cases: 16  ·  fixtures resolve: 16/16  ·  hard gates pass: 16/16  ·  assertions pass: 10/16
-
-> Stub reasoner, no LLM. Hard gates are real; the rubric judge (R1–R7) and the correction loop land in build steps 4–5, so some assertions are expected-red here.
+cases 16 · fixtures 16/16 · hard gates 16/16 · assertions 10/16
 
 | Case | Family/Mode | Fixtures | Gates | Assertions | Notes |
 |---|---|---|---|---|---|

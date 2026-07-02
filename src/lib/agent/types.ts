@@ -298,4 +298,9 @@ export interface CaseResult {
   assertionsPass: boolean
   pass: boolean
   notes: string[]
+  // full mode only
+  rubric?: { score: number; minDim: number; scores: Record<string, number>; note: string } | null
+  rubricPass?: boolean
+  costMicroGbp?: number
+  model?: string
 }

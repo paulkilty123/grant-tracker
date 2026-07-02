@@ -5,6 +5,7 @@ import type {
   AgentRunOutput, BriefingPack, GoldenCase, Assertion,
   GateResult, AssertionResult,
 } from '../../../src/lib/agent/types'
+import { REASON_CODES } from '../../../src/lib/agent/types'
 import { resolveRef } from '../refs'
 
 const PROMISE_TERMS = [
@@ -58,9 +59,11 @@ export function runGates(o: AgentRunOutput, pack: BriefingPack, c: GoldenCase): 
     const bad: string[] = []
     const claims = [...o.recommendations.flatMap(r => r.facts), ...o.flags.flatMap(f => f.facts)]
     for (const cl of claims) {
+      // G1 is about resolution: does the ref point at a real pack element?
+      // The `kind` label is advisory (fact/judgment separation is R4's job;
+      // eligibility-code correctness is G3's) — don't fail on a kind mismatch.
       const r = resolveRef(pack, cl.source.ref)
-      if (!r.ok) { bad.push(`unresolved ref '${cl.source.ref}'`); continue }
-      if (r.kind && cl.source.kind !== r.kind) bad.push(`ref '${cl.source.ref}' kind ${cl.source.kind}≠${r.kind}`)
+      if (!r.ok) bad.push(`unresolved ref '${cl.source.ref}'`)
     }
     add('G1', bad.length === 0, bad.length ? bad.slice(0, 3).join('; ') : 'all facts resolve to pack')
   }
@@ -78,14 +81,20 @@ export function runGates(o: AgentRunOutput, pack: BriefingPack, c: GoldenCase): 
   {
     const eligibleIds = new Set(pack.candidates.map(x => x.id))
     const annex = new Map(pack.ruleOutAnnex.map(x => [x.id, x]))
+    const candById = new Map(pack.candidates.map(x => [x.id, x]))
     const bad: string[] = []
     for (const r of o.recommendations) if (r.opportunity_id && !eligibleIds.has(r.opportunity_id)) bad.push(`recommended non-eligible ${r.opportunity_id}`)
     for (const r of o.rule_outs) {
-      const a = r.opportunity_id ? annex.get(r.opportunity_id) : undefined
-      if (a && r.source === 'engine_verdict') {
-        const codes = a.eligibility.issues.map(i => i.code)
-        if (!codes.includes(r.reason_code)) bad.push(`rule_out ${r.opportunity_id} code ${r.reason_code}∉[${codes.join(',')}]`)
-      }
+      if (!r.opportunity_id) continue
+      const a = annex.get(r.opportunity_id)
+      const cand = candById.get(r.opportunity_id)
+      if (!a && !cand) continue // ruling out something not in the pack is G2's concern
+      // Valid rule-out codes for this item: its annex reason_code (e.g.
+      // excluded_by_org_fact) + its engine issue codes + recognised agent codes.
+      const valid = new Set<string>(REASON_CODES as readonly string[])
+      if (a) { valid.add(a.reason_code); for (const i of a.eligibility.issues) valid.add(i.code) }
+      if (cand) for (const i of cand.eligibility.issues) valid.add(i.code)
+      if (!valid.has(r.reason_code)) bad.push(`rule_out ${r.opportunity_id} code ${r.reason_code} not valid for it`)
     }
     add('G3', bad.length === 0, bad.length ? bad.slice(0, 3).join('; ') : 'eligibility consistent')
   }
@@ -107,23 +116,33 @@ export function runGates(o: AgentRunOutput, pack: BriefingPack, c: GoldenCase): 
       if (!cand) continue
       const factText = r.facts.map(f => f.claim).join(' ').toLowerCase()
       if (cand.amountUndisclosed && /£\s?\d/.test(factText)) bad.push(`${cand.id}: invented amount for undisclosed`)
-      if (cand.isRolling && /\bclos(e|es|ing)\b/.test(factText)) bad.push(`${cand.id}: invented deadline for rolling`)
+      // A rolling fund must not carry an ACTUAL deadline date — but "no fixed
+      // closing date" is honest, so match a date token, not the bare word.
+      const DATE = /\b\d{4}-\d\d-\d\d\b|\bclos(e|es|ing)\s+(on\s+)?(\d{1,2}\b|[a-z]+\s+\d)|\bdeadline[:\s]+\d|\b\d{1,2}\s+(january|february|march|april|may|june|july|august|september|october|november|december)\b/i
+      if (cand.isRolling && DATE.test(factText)) bad.push(`${cand.id}: invented deadline for rolling`)
       if (cand.openStatus === 'between_rounds' && !/between rounds|next opens|prepare/i.test(`${factText} ${r.why} ${r.sequencing_note ?? ''}`)) bad.push(`${cand.id}: between-rounds not surfaced`)
     }
     add('G5', bad.length === 0, bad.length ? bad.slice(0, 3).join('; ') : 'null semantics preserved')
   }
 
-  // G6 arithmetic fidelity (narrative + flag details only — sourced facts exempt)
+  // G6 arithmetic fidelity (narrative + flag details only — sourced facts exempt).
+  // The risk is a FABRICATED number: a total/gap/run-rate the pack never
+  // computed, or an amount for no real opportunity. So the allowed set is every
+  // £ value present anywhere in the pack — arithmetic figures AND real candidate
+  // amounts, pipeline amounts, and goal figures the model may legitimately cite.
+  // A £ value matching nothing in the pack is the genuine failure.
   {
     const scope = [o.narrative, ...o.flags.map(f => f.detail)].join('  ')
     const a = pack.arithmetic
-    const okMoney = new Set([a.target, a.secured, a.gap, a.inPipelineWeighted, a.inPipelineUnweighted, a.requiredRunRateMonthly].map(n => Math.round(n)))
-    const okPct = new Set<number>([Math.round(a.concentration.topFunderShare * 100), Math.round(a.concentration.topOpportunityShare * 100)])
+    const okMoney = new Set<number>([a.target, a.secured, a.gap, a.inPipelineWeighted, a.inPipelineUnweighted, a.requiredRunRateMonthly, pack.goal.target_amount, pack.goal.secured_amount].map(n => Math.round(n)))
+    for (const c of pack.candidates) { if (c.amountMin != null) okMoney.add(c.amountMin); if (c.amountMax != null) okMoney.add(c.amountMax) }
+    for (const p of pack.pipeline) if (p.amount_requested != null) okMoney.add(p.amount_requested)
+    const okPct = new Set<number>([0, 100, Math.round(a.concentration.topFunderShare * 100), Math.round(a.concentration.topOpportunityShare * 100)])
     for (const v of Object.values(a.mixTarget ?? {})) okPct.add(v)
     const bad: string[] = []
-    for (const m of moneyIn(scope)) if (!okMoney.has(m)) bad.push(`£${m} not a pack value`)
+    for (const m of moneyIn(scope)) if (!okMoney.has(m)) bad.push(`£${m} not any pack value`)
     for (const p of pctIn(scope)) if (!Array.from(okPct).some(x => Math.abs(x - p) <= 1)) bad.push(`${p}% not a pack value`)
-    add('G6', bad.length === 0, bad.length ? bad.join('; ') : 'numbers match pack arithmetic')
+    add('G6', bad.length === 0, bad.length ? bad.join('; ') : 'numbers trace to pack values')
   }
 
   // G7 promise lint
