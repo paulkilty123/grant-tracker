@@ -1,0 +1,29 @@
+{
+  "extends": "next/core-web-vitals",
+  "overrides": [
+    {
+      "files": ["src/lib/agent/tools/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "next/headers",
+                  "next/server",
+                  "**/supabase/server",
+                  "**/supabase/middleware",
+                  "**/builder/**",
+                  "**/application-draft*",
+                  "**/application-review*"
+                ],
+                "message": "Tool layer must not import session/cookie/request context or the application builder. Resolve org identity at the auth boundary and pass ToolContext in; the scaffold-not-ghostwriter line is structural."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

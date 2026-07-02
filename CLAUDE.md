@@ -208,3 +208,18 @@ Deferred post-beta:
 3. **Minimal changes.** Fix the stated problem. Don't refactor surrounding code unless asked.
 4. **Verify on live site** after every push (~1 min Vercel deploy).
 5. **No border-radius: 0** anywhere — rounded corners are a hard design rule.
+
+---
+
+## Goal Agent — Tool Layer Discipline (`agent/v1-core`)
+
+The goal agent's entire interface to data and state is `src/lib/agent/tools/` — one named tool layer, callable identically by the in-app orchestrator and (later) an external MCP client, so exposing the gated MCP subset is an *exposure step, not a second build*. The test for any capability: **could an external model exercise this via a tool call and get the same result?** If not, restructure until it could.
+
+Hard rules (structural, not prompt-level):
+1. **Nothing under `src/lib/agent/tools/` may import session, cookie, or request context** (`next/headers`, `next/server`, `supabase/server`, cookies) — enforced by the eslint override on that path. Org identity is resolved at the route/auth boundary (web session **or** MCP OAuth token, identically) and passed in as `ToolContext { orgId, surface, tier, userId }`. `orgId` comes from ctx, never from params.
+2. **Every tool goes through `defineTool()`** (`tools/envelope.ts`) — entitlement check → authorship guard → implementation → capture-log (surface-discriminated) → provenance envelope. No side doors.
+3. **Scaffold-not-ghostwriter is enforced in code**: `assertScaffoldOnly()` rejects application-prose params, and tools may not import the builder's modules (eslint). The layer neither returns nor accepts drafted application content.
+4. **Every factual field returned carries the `Provenance<T> = { value, source, verified_at }` envelope** (`tools/types.ts`).
+5. **The behaviour contract lives once in `src/lib/agent/contract.ts`** — the MCP tool descriptions (`tools/index.ts` `TOOL_REGISTRY`) are its canonical home; `reason.ts`'s prompt is a derived copy assembled from the same constants and must never contradict them.
+
+No reasoning may depend on app-session state an external model couldn't see; no goal/plan state lives in prompts or conversation history rather than in schema. Don't build the MCP exposure yet — this is the shape the in-app build must hold.
