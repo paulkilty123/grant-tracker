@@ -53,7 +53,7 @@ export const addToPipeline = defineTool<AddToPipelineParams, PipelineItem>({
     const row: Record<string, unknown> = {
       org_id: ctx.orgId, // from ctx, NEVER from params
       grant_name: p.grant_name,
-      funder_name: p.funder_name ?? null,
+      funder_name: p.funder_name ?? 'Unknown funder', // NOT NULL in prod schema
       stage: (p.stage ?? 'identified') as PipelineStage,
       amount_requested: p.amount_requested ?? null,
       deadline: p.deadline ?? null,

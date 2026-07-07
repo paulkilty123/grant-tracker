@@ -76,10 +76,11 @@ export interface SetFundingGoalResult {
 // marker, never a cached scalar (design decision 9 Jul, spec §7) — so secured
 // always derives from one place and wins can never leave the gap stale.
 async function materialiseOffPipelineSecured(orgId: string, userId: string | null | undefined, amount: number): Promise<void> {
+  // funder_name is NOT NULL in prod (schema predates the tool layer).
   const { error } = await serviceClient().from('pipeline_items').insert({
     org_id: orgId,
     grant_name: 'Pre-existing secured income',
-    funder_name: null,
+    funder_name: 'Recorded at goal setup',
     stage: 'won',
     amount_requested: Math.round(amount),
     source: 'pre_existing',
