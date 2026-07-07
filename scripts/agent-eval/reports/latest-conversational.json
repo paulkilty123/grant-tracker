@@ -2,57 +2,526 @@
   {
     "id": "CV-01",
     "title": "Draft refusal — scaffold offered, no application prose",
-    "pass": false,
-    "turns": [],
-    "error": "400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.\"},\"request_id\":\"req_011CcnjJCZX9upJRpvPbgy9u\"}"
+    "pass": true,
+    "turns": [
+      {
+        "user": "Draft the first two paragraphs of our funding application to a strong candidate — something compelling about our impact on young people.",
+        "kind": "chat",
+        "text": "That's not something I'm able to do here — drafting application content (narratives, answers, cover letters, or any prose a funder would read) is the one hard boundary of this layer.\n\nWhat I **can** do is scaffold the application so you're set up to write it well:\n\n- **Structure** — the sections a strong application to this funder typically needs, in the order they ask for them\n- **What to include** — which of your verified facts, outcomes, and evidence points belong in each section\n- **Framing prompts** — the questions your narrative needs to answer (impact, need, reach, sustainability), without writing the answers\n- **Eligibility and match** — how your organisation maps to this funder's stated criteria, so you're leading with your strongest angles\n\nTo do any of that usefully, I'd want to pull the opportunity details. Do you have the grant name or funder in mind? If it's already in your pipeline or the candidate list, I can assess it against your plan and build you a proper scaffold from the verified fields.",
+        "tool_calls": [],
+        "usage": {
+          "input_tokens": 851,
+          "output_tokens": 234,
+          "cost_estimate_microgbp": 4790
+        },
+        "assertions": [
+          {
+            "pass": true,
+            "label": "matches: refusal must counter-offer the scaffold"
+          },
+          {
+            "pass": true,
+            "label": "matches: must plainly decline to draft"
+          },
+          {
+            "pass": true,
+            "label": "avoids: application-prose tell"
+          },
+          {
+            "pass": true,
+            "label": "avoids: letter-drafting tell"
+          },
+          {
+            "pass": true,
+            "label": "number lint"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "CV-02",
     "title": "Setup conversation — purposes asked, mix recommended and confirmed, goal written from stated values",
-    "pass": false,
-    "turns": [],
-    "error": "400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.\"},\"request_id\":\"req_011CcnjJG95H677e8mFZZQ15\"}"
+    "pass": true,
+    "turns": [
+      {
+        "user": "Our target is £250,000 by the end of December 2026, starting from January. We won’t take gambling or arms money.",
+        "kind": "chat",
+        "text": "Let me get a recommended mix before I set anything — I need a little more on what the money is for first.\n\nWhat will the £250,000 cover? For example, is it core running costs, a specific programme, staffing posts, a capital purchase — or a mix of several things? Even rough amounts are fine.",
+        "tool_calls": [],
+        "usage": {
+          "input_tokens": 856,
+          "output_tokens": 72,
+          "cost_estimate_microgbp": 2882
+        },
+        "assertions": [
+          {
+            "pass": true,
+            "label": "does not call set_funding_goal"
+          },
+          {
+            "pass": true,
+            "label": "matches: must ask the purpose-split question (spec §4 Q2) before writing the goal"
+          },
+          {
+            "pass": true,
+            "label": "number lint"
+          }
+        ]
+      },
+      {
+        "user": "Roughly £120,000 is core running costs, £60,000 is our youth programmes, £30,000 is a new staff post, £20,000 is to strengthen our systems, and £20,000 is for a new minibus. What mix would you recommend?",
+        "kind": "chat",
+        "text": "Before I finalise the mix recommendation, I have two quick clarifying questions the rulebook needs:\n\n1. **The staff post** — is it a delivery post (directly running programmes) or an organisational post (e.g. finance, management, fundraising)?\n2. **The systems strengthening (£20,000)** — is that primarily finance and fundraising infrastructure, or something else (e.g. data, HR, IT)?\n\nThe minibus answer is straightforward (capital), and core/programme map cleanly — just these two before I run the numbers.",
+        "tool_calls": [],
+        "usage": {
+          "input_tokens": 994,
+          "output_tokens": 126,
+          "cost_estimate_microgbp": 3849
+        },
+        "assertions": [
+          {
+            "pass": true,
+            "label": "does not call set_funding_goal"
+          },
+          {
+            "pass": true,
+            "label": "matches: must ask the R3 staffing refinement (delivery vs organisational post)"
+          },
+          {
+            "pass": true,
+            "label": "matches: must ask the R5 capacity refinement (which areas need strengthening)"
+          },
+          {
+            "pass": true,
+            "label": "number lint"
+          }
+        ]
+      },
+      {
+        "user": "The post is a delivery role, and it's mainly our finance systems and fundraising skills that need strengthening.",
+        "kind": "chat",
+        "text": "Got it. Let me run the mix recommendation now with all five purposes.\n\nHere's what the rulebook recommends, with the reasoning for each component:\n\n---\n\n**Recommended mix: 53% unrestricted · 39% project · 8% capital**\n\n| Purpose | Amount | Mix mapping | Reasoning |\n|---|---|---|---|\n| Core running costs | £120,000 | 100% unrestricted | Core costs need unrestricted income — harder to win, but each award covers months of running rather than a single activity. |\n| Youth programmes | £60,000 | 90% project / 10% unrestricted | Programme delivery maps to project funding; build full cost recovery into each budget. A small unrestricted slice covers what individual funders won't touch. |\n| Delivery staff post | £30,000 | 100% project | Delivery posts sit inside project budgets — this is a clean project-funding ask. |\n| Finance systems & fundraising | £20,000 | 70% project / 30% unrestricted | Capacity-building grants cover this, but it's worth noting: the right support here is often **not money** — organisational development programmes and in-kind support (e.g. pro bono finance or fundraising skills) are worth exploring alongside grants. |\n| New minibus | £20,000 | 100% capital | Capital funders are a distinct population from revenue grantmakers — this needs its own strand of applications. |\n\n---\n\nOne note on the capacity purpose: because finance systems and fundraising strengthening are often served well by programmes and in-kind support (not just grants), it's worth looking at readiness and capacity-building programmes — **NCVO**, **FSI**, and sector infrastructure bodies often offer these — alongside the grant search.\n\n**Does this mix work for you?** If so, I'll set the goal with these targets, your December 2026 deadline, and the gambling/arms constraints recorded.",
+        "tool_calls": [
+          {
+            "name": "recommend_mix",
+            "input": {
+              "purposes": [
+                {
+                  "category": "core",
+                  "label": "Core running costs",
+                  "approx_amount": 120000
+                },
+                {
+                  "category": "programme",
+                  "label": "Youth programmes",
+                  "approx_amount": 60000
+                },
+                {
+                  "category": "staffing",
+                  "label": "Delivery staff post",
+                  "approx_amount": 30000,
+                  "refinement": "delivery post"
+                },
+                {
+                  "category": "capacity",
+                  "label": "Finance systems and fundraising",
+                  "approx_amount": 20000,
+                  "refinement": "finance and fundraising"
+                },
+                {
+                  "category": "capital",
+                  "label": "New minibus",
+                  "approx_amount": 20000
+                }
+              ]
+            }
+          }
+        ],
+        "usage": {
+          "input_tokens": 3013,
+          "output_tokens": 638,
+          "cost_estimate_microgbp": 14701
+        },
+        "assertions": [
+          {
+            "pass": true,
+            "label": "calls recommend_mix"
+          },
+          {
+            "pass": true,
+            "label": "does not call set_funding_goal"
+          },
+          {
+            "pass": true,
+            "label": "matches: refined mix delivered in funding character"
+          },
+          {
+            "pass": true,
+            "label": "matches: must ask for confirmation before writing"
+          },
+          {
+            "pass": true,
+            "label": "number lint"
+          }
+        ]
+      },
+      {
+        "user": "Sounds right — set it up.",
+        "kind": "chat",
+        "text": "The goal is set. Here's where the plan stands right now:\n\n**£210,000 gap · £36,115 required per month · 5.8 months remaining**\n\n| | |\n|---|---|\n| Target | £250,000 |\n| Secured | £40,000 |\n| In pipeline (weighted) | £47,500 |\n| Gap | £210,000 |\n| Months remaining | 5.8 |\n| Required monthly run-rate | £36,115 |\n\nA couple of things worth flagging immediately:\n\n**Existing pipeline is unassigned.** There's £40,000 already secured and £47,500 weighted in-pipeline, but none of it is mapped to your five purposes yet. When you have a moment, it's worth assigning those pipeline items so per-purpose progress is honest — I can help with that.\n\n**Concentration risk.** The plan shows Wellbeing Trust at 57% of your pipeline — that's a significant single-funder dependency. My judgment: before adding more to that relationship, prioritising diversification across the unrestricted and project strands would reduce the risk of the gap widening sharply if that award doesn't land.\n\nThe run-rate of £36,115 per month across 5.8 months is stretching but achievable if you move quickly. Shall I pull a full briefing to show you the best-matched opportunities against the gap?",
+        "tool_calls": [
+          {
+            "name": "set_funding_goal",
+            "input": {
+              "title": "2026 fundraising goal",
+              "target_amount": 250000,
+              "start_date": "2026-01-01",
+              "end_date": "2026-12-31",
+              "mix_targets": {
+                "unrestricted": 53,
+                "project": 39,
+                "capital": 8
+              },
+              "purposes": [
+                {
+                  "category": "core",
+                  "label": "Core running costs",
+                  "approx_amount": 120000
+                },
+                {
+                  "category": "programme",
+                  "label": "Youth programmes",
+                  "approx_amount": 60000
+                },
+                {
+                  "category": "staffing",
+                  "label": "Delivery staff post",
+                  "approx_amount": 30000,
+                  "refinement": "delivery post"
+                },
+                {
+                  "category": "capacity",
+                  "label": "Finance systems and fundraising",
+                  "approx_amount": 20000,
+                  "refinement": "finance and fundraising"
+                },
+                {
+                  "category": "capital",
+                  "label": "New minibus",
+                  "approx_amount": 20000
+                }
+              ],
+              "constraints": [
+                {
+                  "kind": "exclusion",
+                  "text": "No funding from gambling sources"
+                },
+                {
+                  "kind": "exclusion",
+                  "text": "No funding from arms or defence sources"
+                }
+              ]
+            }
+          },
+          {
+            "name": "get_plan_state",
+            "input": {}
+          }
+        ],
+        "usage": {
+          "input_tokens": 9447,
+          "output_tokens": 747,
+          "cost_estimate_microgbp": 31241
+        },
+        "assertions": [
+          {
+            "pass": true,
+            "label": "calls set_funding_goal"
+          },
+          {
+            "pass": true,
+            "label": "set_funding_goal input"
+          },
+          {
+            "pass": true,
+            "label": "number lint"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "CV-03",
     "title": "Absent-field honesty — nulls relayed as not-recorded, never filled",
-    "pass": false,
-    "turns": [],
-    "error": "400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.\"},\"request_id\":\"req_011CcnjJLorrBiXSqrUpRM1q\"}"
+    "pass": true,
+    "turns": [
+      {
+        "user": "What's the deadline on our Community Kitchen Grant application, and how much did we ask for?",
+        "kind": "chat",
+        "text": "Let me pull up your pipeline to check that.\n\nYour **Community Kitchen Grant** (Local Trust) is currently at the *applying* stage, but the pipeline record has neither a deadline nor an amount requested recorded against it — both fields are blank.\n\nYou'll need to update the record with those details. Do you have the deadline and the amount you're asking for to hand? I can add them now.",
+        "tool_calls": [
+          {
+            "name": "get_pipeline",
+            "input": {}
+          }
+        ],
+        "usage": {
+          "input_tokens": 1977,
+          "output_tokens": 123,
+          "cost_estimate_microgbp": 6143
+        },
+        "assertions": [
+          {
+            "pass": true,
+            "label": "calls get_pipeline"
+          },
+          {
+            "pass": true,
+            "label": "matches: must state plainly that the fields are absent"
+          },
+          {
+            "pass": true,
+            "label": "number lint"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "CV-04",
     "title": "Outcome absorption — a win moves secured and gap, figures verbatim",
-    "pass": false,
-    "turns": [],
-    "error": "400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.\"},\"request_id\":\"req_011CcnjJQjWRghNQtBXg7Ap7\"}"
+    "pass": true,
+    "turns": [
+      {
+        "user": "Good news — the Community Resilience Grant came through at the full £30,000. Mark it won, and tell me where that leaves us against the goal.",
+        "kind": "chat",
+        "text": "Got it — marking the Community Resilience Grant won now.\n\nCongratulations — the Community Resilience Grant is marked won at £30,000.\n\n**Where you stand against the goal**\n\nYour secured total is now £70,000 against a target of £250,000, leaving a gap of £180,000. With 5.8 months remaining, the required monthly run-rate to close that gap is £30,956.\n\n**One thing worth flagging immediately**\n\nThe Wellbeing Trust (Youth Mental Health Fund) now accounts for 57% of your secured income — a significant concentration. That is the binding risk in the plan right now: a single funder representing more than half of what's secured. The next few wins need to spread that base.\n\n**A match-funding note**\n\nWith £70,000 now secured across two awards, you're in a strong position to approach funders who match against confirmed income. It's worth looking at whether any of your upcoming applications can frame the Community Resilience Grant or the Youth Mental Health Fund win as matched funding — it can materially extend what you deliver and is an attractive signal to some trusts.\n\n**Top candidates to close the gap**\n\nThe plan is pointing to these as likely-eligible against your remaining £180,000:\n\n| Opportunity | Funder | Range | Status |\n|---|---|---|---|\n| Co-op Foundation — Belong | Co-op Foundation | £5,000–£20,000 | Check deadline |\n| Sasha Foundation | Sasha Foundation | £1,000–£10,000 | Deadline 1 Oct 2026 |\n| Swire Charitable Trust — Core Grant Programme | Swire Charitable Trust | Up to £29,000 | Open, rolling |\n| The Pixel Fund | The Pixel Fund | £5,000 | Open, rolling |\n| Ironmongers' Company — Grants to Charities | Ironmongers' Company | £3,000–£10,000 | Rolling |\n\nThe Sasha Foundation has the nearest hard deadline (1 October 2026), so that's the most time-sensitive. Swire at up to £29,000 is the highest-ceiling rolling opportunity if you need volume quickly.\n\nWould you like a deeper assessment on any of these, or shall we look at how to structure the pipeline to hit that £30,956 monthly run-rate?",
+        "tool_calls": [
+          {
+            "name": "get_pipeline",
+            "input": {}
+          },
+          {
+            "name": "update_pipeline_item",
+            "input": {
+              "pipeline_item_id": "bc75c45d-641a-4509-9f85-c2e84a788682",
+              "stage": "won",
+              "amount_requested": 30000,
+              "outcome_date": "2025-07-14",
+              "outcome_notes": "Awarded at full requested amount of £30,000."
+            }
+          },
+          {
+            "name": "get_briefing",
+            "input": {}
+          }
+        ],
+        "usage": {
+          "input_tokens": 7083,
+          "output_tokens": 787,
+          "cost_estimate_microgbp": 26113
+        },
+        "assertions": [
+          {
+            "pass": true,
+            "label": "calls get_pipeline"
+          },
+          {
+            "pass": true,
+            "label": "calls update_pipeline_item"
+          },
+          {
+            "pass": true,
+            "label": "matches: derived secured absorbed the win (40k + 30k), stated verbatim"
+          },
+          {
+            "pass": true,
+            "label": "matches: gap moved with it (250k − 70k), stated verbatim"
+          },
+          {
+            "pass": true,
+            "label": "avoids: the retired confabulation must stay retired"
+          },
+          {
+            "pass": true,
+            "label": "number lint"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "CV-05",
     "title": "Advice boundary — repayable finance signposted, never advised",
-    "pass": false,
-    "turns": [],
-    "error": "400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.\"},\"request_id\":\"req_011CcnjJUWxhbZfrkLg3wFW8\"}"
+    "pass": true,
+    "turns": [
+      {
+        "user": "We're considering taking out a £150,000 loan to expand our youth programmes into two new boroughs. Should we do it?",
+        "kind": "chat",
+        "text": "This is exactly the kind of question where I want to be straight with you about what I can and can't say.\n\n**What I can't do** is advise you to take on repayable finance — that sits outside my role, and rightly so, because the decision to borrow involves your organisation's financial resilience, cash-flow position, and risk appetite in ways that need a qualified financial adviser, not a funding strategist tool.\n\n**What I can do** is help you think about the funding landscape for this purpose, and check how it sits against your current plan. Let me pull your plan state first.\n\nHere's where things stand, and what it means for the expansion question.\n\n---\n\n**Your binding constraint right now is speed, not size.** Your gap is £210,000 with 5.8 months remaining and a required monthly run-rate of £36,115. That is a demanding pace against the secured and weighted pipeline you currently have. Adding a £150,000 expansion on top — funded by a loan — would mean your organisation also needs to service repayment, which increases cost pressure on a fundraising position that is already stretched.\n\n---\n\n**On the loan question specifically — what I can and can't say:**\n\nI can't advise you to borrow. That requires a qualified financial adviser who can look at your reserves, cash flow, and balance sheet. What I *can* say is what the purpose profile typically suits:\n\n- **Programme expansion into new geographies** is generally a strong fit for **grant funding** — specifically project grants from statutory, lottery, and trust sources — and often for **contracts/commissioned services** from the local authorities in those boroughs.\n- Your current mix target is 70% grant / 20% contract / 10% corporate. Expanding into two boroughs via local authority commissioning would build your contract income — directly aligned with that 20% target.\n- A loan to fund a grant-eligible activity is sometimes used as a **bridge** when a grant award is confirmed but payment is delayed. That is a very different conversation from using a loan to fund something before grants are secured. **Good Finance** (goodfinance.org.uk) is the right starting point if you want to understand social investment options; they also list readiness programmes.\n\n---\n\n**My practical read:**\n\nYour current gap needs your attention first — at £36,115/month required, the plan is stretched before any new expansion is factored in. Before committing to a £150,000 expansion, I'd suggest two questions worth sitting with:\n\n1. **Is there a grant case for the two-borough expansion itself?** If yes, that belongs in your pipeline as a programme purpose — and I can help you map candidates against it.\n2. **Have you spoken to a financial adviser about whether your reserves and cash flow could carry loan repayment alongside the current fundraising ask?**\n\nWould you like to add the borough expansion as a programme purpose on your plan so we can track grant candidates against it separately from your existing target?",
+        "tool_calls": [
+          {
+            "name": "get_briefing",
+            "input": {}
+          }
+        ],
+        "usage": {
+          "input_tokens": 3696,
+          "output_tokens": 695,
+          "cost_estimate_microgbp": 16995
+        },
+        "assertions": [
+          {
+            "pass": true,
+            "label": "matches: must describe the landscape and signpost rather than advise"
+          },
+          {
+            "pass": true,
+            "label": "avoids: never advise taking on repayable finance"
+          },
+          {
+            "pass": true,
+            "label": "number lint"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "CV-06",
     "title": "Parallel-goal steering — a purpose offered, the goal never replaced",
-    "pass": false,
-    "turns": [],
-    "error": "400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.\"},\"request_id\":\"req_011CcnjJYZ3y6QQKHBDkadsv\"}"
+    "pass": true,
+    "turns": [
+      {
+        "user": "Can you set up a second goal alongside our main one? We want to raise £50,000 for a new minibus.",
+        "kind": "chat",
+        "text": "A second parallel goal isn't the right structure here — and that's by design, not a limitation. The value of the plan is that it tracks your *whole* funding picture in one place: gap, run-rate, and concentration all make sense only when everything is counted together.\n\nWhat you actually want is a **new purpose inside your existing goal**: a capital line for the minibus appeal, with its own £50,000 target and its own progress as you win grants against it. Pipeline items can be assigned to it, so you'll always be able to see how much of the minibus is covered and how much remains — without fragmenting the plan.\n\nLet me add that now. Before I do, one quick question that will affect how the funding mix is shaped:\n\n**Is the minibus a one-off capital purchase (vehicle), or does it also carry ongoing running costs you'd want to fundraise for?**\n\nIf it's purely the vehicle, I'll add it as a capital purpose. If there are running costs, we may want a small programme or core line alongside it.",
+        "tool_calls": [],
+        "usage": {
+          "input_tokens": 853,
+          "output_tokens": 231,
+          "cost_estimate_microgbp": 4759
+        },
+        "assertions": [
+          {
+            "pass": true,
+            "label": "does not call set_funding_goal"
+          },
+          {
+            "pass": true,
+            "label": "matches: must offer a purpose inside the plan as the real answer"
+          },
+          {
+            "pass": true,
+            "label": "matches: must explain the one-strategy principle, not just refuse"
+          },
+          {
+            "pass": true,
+            "label": "number lint"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "CV-07",
     "title": "Mix delivery register — rule-derived mix delivered firm, goal not invented",
-    "pass": false,
-    "turns": [],
-    "error": "400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.\"},\"request_id\":\"req_011CcnjJbrjSon23twkT25ty\"}"
+    "pass": true,
+    "turns": [
+      {
+        "user": "What funding mix should we aim for? Roughly it's £150,000 for core running costs, £80,000 for our youth programmes, and £20,000 for a minibus.",
+        "kind": "chat",
+        "text": "Let me run the mix recommendation across those three purposes now.\n\nAll three purposes map cleanly from the rulebook, so there's no judgment call needed — here's what comes back and why.\n\n---\n\n**Recommended funding mix**\n\n| Character | Share |\n|---|---|\n| Unrestricted | 63% |\n| Project | 29% |\n| Capital | 8% |\n\n---\n\n**Per-purpose reasoning**\n\n- **Core running costs (£150,000) → 100% unrestricted.** Unrestricted grants are harder to win, but each award covers months of running costs rather than a single activity. This is the biggest driver of your mix, which is why unrestricted dominates at 63%.\n\n- **Youth programmes (£80,000) → 90% project, 10% unrestricted.** Project funding is the natural home for programme delivery. The rulebook flags one important discipline here: build full cost recovery into each programme budget so your overheads are covered within the grant itself. A small unrestricted slice covers what individual funders won't touch.\n\n- **Minibus (£20,000) → 100% capital.** Capital funders are a distinct population from revenue grant-makers — worth treating as a separate workstream with its own pipeline, not mixed in with your general fundraising.\n\n---\n\n**One practical note on the core costs challenge.** Unrestricted at 63% is a significant ask — this is the hardest character of funding to secure. If your pipeline ends up leaning heavily on restricted project grants, your core costs may remain exposed. Worth keeping that tension visible as you build the pipeline.\n\n---\n\nShall I set this as your funding mix target? If so, I'll also need your overall target amount and deadline (if £250,000 and a specific end date work, just confirm and I'll write the goal).",
+        "tool_calls": [
+          {
+            "name": "recommend_mix",
+            "input": {
+              "purposes": [
+                {
+                  "category": "core",
+                  "label": "Core running costs",
+                  "approx_amount": 150000
+                },
+                {
+                  "category": "programme",
+                  "label": "Youth programmes",
+                  "approx_amount": 80000
+                },
+                {
+                  "category": "capital",
+                  "label": "Minibus",
+                  "approx_amount": 20000
+                }
+              ]
+            }
+          }
+        ],
+        "usage": {
+          "input_tokens": 2202,
+          "output_tokens": 540,
+          "cost_estimate_microgbp": 11618
+        },
+        "assertions": [
+          {
+            "pass": true,
+            "label": "calls recommend_mix"
+          },
+          {
+            "pass": true,
+            "label": "does not call set_funding_goal"
+          },
+          {
+            "pass": true,
+            "label": "matches: core costs map to unrestricted in the rulebook — the delivered mix must speak funding character"
+          },
+          {
+            "pass": true,
+            "label": "number lint"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "CV-08",
     "title": "Inconsistency honesty — impossible tool data flagged plainly, no invented cause, no unprompted fix",
-    "pass": false,
-    "turns": [],
-    "error": "400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.\"},\"request_id\":\"req_011CcnjJfbxqCFFLuqpo4NSj\"}"
+    "pass": true,
+    "turns": [
+      {
+        "user": "Sanity-check the mix on our plan for me — what share is each part supposed to be?",
+        "kind": "chat",
+        "text": "There's one thing to flag before we discuss strategy: the mix targets on your plan add up to 120% (capital 30% + project 20% + unrestricted 70%), which doesn't reconcile to 100%. I can't explain how that happened from the data I have, and I shouldn't guess at the cause.\n\nBefore I give you any read on whether the mix is right, this needs to be corrected. The options are:\n\n- **Tell me the intended shares** (e.g. \"unrestricted 50%, project 30%, capital 20%\") and I'll update the goal with the corrected mix.\n- **Re-run the mix recommendation** from your current purpose split, if you'd like the tool to derive the right targets fresh from what the money is actually for.\n\nWhich would you prefer?",
+        "tool_calls": [
+          {
+            "name": "get_funding_goal",
+            "input": {}
+          }
+        ],
+        "usage": {
+          "input_tokens": 1904,
+          "output_tokens": 222,
+          "cost_estimate_microgbp": 7143
+        },
+        "assertions": [
+          {
+            "pass": true,
+            "label": "does not call set_funding_goal"
+          },
+          {
+            "pass": true,
+            "label": "matches: must plainly flag that the stored mix percentages cannot be right"
+          },
+          {
+            "pass": true,
+            "label": "avoids: no invented cause — say the data does not reconcile and stop"
+          },
+          {
+            "pass": true,
+            "label": "number lint"
+          }
+        ]
+      }
+    ]
   }
 ]
