@@ -157,6 +157,13 @@ async function main() {
       const t2 = await threads.getOrCreateActiveThread(orgId)
       check('one active thread per org (stable id)', !!t1 && t1 === t2)
 
+      await threads.seedThreadOpener(t1!, orgId, 'Scripted opener — first question?')
+      await threads.seedThreadOpener(t1!, orgId, 'DUPLICATE — must not appear')
+      const seededView = await threads.loadThreadView(t1!)
+      check('scripted opener seeds once (idempotent)', seededView.length === 1 && seededView[0].text.startsWith('Scripted opener'))
+      const seededHistory = await threads.loadThreadHistory(t1!)
+      check('model replay excludes the leading scripted assistant message', seededHistory.length === 0)
+
       await threads.appendTurn(t1!, orgId, [
         { role: 'user', content: 'Where do we stand?' },
         { role: 'assistant', content: [{ type: 'text', text: 'Let me check.' }, { type: 'tool_use', id: 'tu_1', name: 'get_briefing', input: {} }] },
@@ -165,11 +172,11 @@ async function main() {
       ], { turnKind: 'chat', usage: { model: 'smoke', input_tokens: 1, output_tokens: 1, cost_estimate_microgbp: 0, duration_ms: 1, tool_names: ['get_briefing'], loop_iterations: 2 } })
 
       const history = await threads.loadThreadHistory(t1!)
-      check('turn persists and replays (4 messages)', history.length === 4, `got ${history.length}`)
+      check('turn persists and replays (4 messages after the trimmed opener)', history.length === 4, `got ${history.length}`)
       check('replay opens on a plain user message', history[0]?.role === 'user' && typeof history[0]?.content === 'string')
 
       const view = await threads.loadThreadView(t1!)
-      check('drawer view folds tool_result carriers (3 visible)', view.length === 3, `got ${view.length}`)
+      check('drawer view folds tool_result carriers (4 visible incl. opener)', view.length === 4, `got ${view.length}`)
       check('drawer view carries tool names', view.some(v => v.tool_names.includes('get_briefing')))
     }
   } finally {

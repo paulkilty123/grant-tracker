@@ -96,6 +96,30 @@ export async function appendTurn(
   }
 }
 
+/** Seed the scripted setup opener as the thread's first assistant message
+ *  (design spec §3.2: the opening message demonstrates the Companion already
+ *  knows the organisation). Server-composed from profile fields — not model
+ *  output — and written to the thread so the model's replayed history and the
+ *  user's view agree on how the conversation began. No-op if the thread
+ *  already has messages. */
+export async function seedThreadOpener(threadId: string, orgId: string, text: string): Promise<void> {
+  try {
+    const sb = serviceClient()
+    const { count } = await sb.from('agent_messages')
+      .select('id', { count: 'exact', head: true }).eq('thread_id', threadId)
+    if ((count ?? 0) > 0) return
+    await sb.from('agent_messages').insert({
+      thread_id: threadId,
+      org_id: orgId,
+      role: 'assistant',
+      content: [{ type: 'text', text }],
+      model: 'scripted-opener',
+    })
+  } catch (e) {
+    console.error('[threads] seedThreadOpener failed:', e)
+  }
+}
+
 /** Render-friendly view for the briefing drawer: text turns with tool names,
  *  tool_result-only messages folded away. */
 export interface ThreadViewMessage {

@@ -3,115 +3,33 @@
 // The Companion ask bar + thread drawer (design spec §3.1). The thread is a
 // dismissible drawer over the right side, never a permanent panel —
 // glanceability wins the default state; conversation is one click away.
-// History is server-side (agent_threads); this component only renders the
-// view and streams new turns over SSE from /api/agent/chat.
+// Chat mechanics live in useAgentChat (shared with the setup experience).
 
 import React, { useEffect, useRef, useState } from 'react'
+import { useAgentChat, TOOL_LABELS } from './useAgentChat'
 
 const grotesk = { fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }
 
-interface ViewMessage {
-  role: 'user' | 'assistant'
-  text: string
-  tool_names: string[]
-}
-
-const TOOL_LABELS: Record<string, string> = {
-  get_briefing: 'checked your briefing',
-  get_plan_state: 'checked the plan arithmetic',
-  get_pipeline: 'checked your pipeline',
-  get_funding_goal: 'checked your goal',
-  set_funding_goal: 'updated your goal',
-  update_goal_purposes: 'updated your purposes',
-  update_pipeline_item: 'updated a pipeline item',
-  add_to_pipeline: 'added to your pipeline',
-  assess_opportunity_against_plan: 'assessed an opportunity',
-  recommend_mix: 'derived the recommended mix',
-}
-
 export default function CompanionDrawer({ examplePrompt }: { examplePrompt: string }) {
   const [open, setOpen] = useState(false)
-  const [messages, setMessages] = useState<ViewMessage[]>([])
-  const [loaded, setLoaded] = useState(false)
   const [input, setInput] = useState('')
-  const [busy, setBusy] = useState(false)
+  const { messages, loaded, busy, loadThread, send } = useAgentChat()
   const scrollRef = useRef<HTMLDivElement>(null)
+  const loadedOnce = useRef(false)
 
   useEffect(() => {
-    if (!open || loaded) return
-    fetch('/api/agent/thread')
-      .then(r => r.json())
-      .then(d => {
-        setMessages((d?.messages ?? []).map((m: { role: 'user' | 'assistant'; text: string; tool_names: string[] }) =>
-          ({ role: m.role, text: m.text, tool_names: m.tool_names ?? [] })))
-        setLoaded(true)
-      })
-      .catch(() => setLoaded(true))
-  }, [open, loaded])
+    if (open && !loadedOnce.current) { loadedOnce.current = true; loadThread() }
+  }, [open, loadThread])
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight })
   }, [messages, open])
 
-  async function send() {
-    const userTurn = input.trim()
-    if (!userTurn || busy) return
+  function submit() {
+    const text = input.trim()
+    if (!text) return
     setInput('')
-    setBusy(true)
-    setMessages(prev => [...prev, { role: 'user', text: userTurn, tool_names: [] }, { role: 'assistant', text: '', tool_names: [] }])
-
-    try {
-      const res = await fetch('/api/agent/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_turn: userTurn, turn_kind: 'chat' }),
-      })
-      if (!res.ok || !res.body) {
-        const err = await res.json().catch(() => null)
-        setMessages(prev => {
-          const next = [...prev]
-          next[next.length - 1] = { role: 'assistant', text: err?.error ?? 'Something went wrong. Please try again.', tool_names: [] }
-          return next
-        })
-        return
-      }
-      const reader = res.body.getReader()
-      const decoder = new TextDecoder()
-      let buffer = ''
-      for (;;) {
-        const { done, value } = await reader.read()
-        if (done) break
-        buffer += decoder.decode(value, { stream: true })
-        const frames = buffer.split('\n\n')
-        buffer = frames.pop() ?? ''
-        for (const frame of frames) {
-          const line = frame.trim()
-          if (!line.startsWith('data: ')) continue
-          let ev: { type: string; text?: string; name?: string; message?: string }
-          try { ev = JSON.parse(line.slice(6)) } catch { continue }
-          setMessages(prev => {
-            const next = [...prev]
-            const last = { ...next[next.length - 1] }
-            if (ev.type === 'text_delta') last.text += ev.text ?? ''
-            if (ev.type === 'tool_start' && ev.name) last.tool_names = [...last.tool_names, ev.name]
-            if (ev.type === 'error') last.text += (last.text ? '\n\n' : '') + (ev.message ?? 'Something went wrong.')
-            next[next.length - 1] = last
-            return next
-          })
-        }
-      }
-    } catch {
-      setMessages(prev => {
-        const next = [...prev]
-        const last = next[next.length - 1]
-        if (last?.role === 'assistant' && !last.text) {
-          next[next.length - 1] = { ...last, text: 'Connection lost mid-turn. Please try again.' }
-        }
-        return next
-      })
-    } finally {
-      setBusy(false)
-    }
+    void send(text)
   }
 
   return (
@@ -169,14 +87,14 @@ export default function CompanionDrawer({ examplePrompt }: { examplePrompt: stri
               <input
                 value={input}
                 onChange={e => setInput(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void send() } }}
+                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit() } }}
                 placeholder="Ask your Companion…"
                 className="flex-1 text-sm px-3 py-2 rounded-lg outline-none"
                 style={{ border: '1px solid #E9E6DD', color: '#2C2C2A' }}
                 disabled={busy}
               />
               <button
-                onClick={() => void send()}
+                onClick={submit}
                 disabled={busy || !input.trim()}
                 className="text-sm font-semibold px-4 py-2 rounded-lg disabled:opacity-50"
                 style={{ ...grotesk, background: '#173404', color: '#F1F7E4' }}

@@ -14,9 +14,11 @@ import { createClient } from '@/lib/supabase/server'
 import { resolveWebToolContext } from '@/lib/agent/boundary'
 import { agentEnabledForOrg } from '@/lib/agent/orchestrator/config'
 import { getBriefing, getPlanState, getPipeline } from '@/lib/agent/tools'
+import { getOrCreateActiveThread, seedThreadOpener } from '@/lib/agent/orchestrator/threads'
 import BriefingView from '@/components/briefing/BriefingView'
 import CompanionDrawer from '@/components/briefing/CompanionDrawer'
 import BriefingSeen from '@/components/briefing/BriefingSeen'
+import SetupExperience from '@/components/briefing/SetupExperience'
 
 export const dynamic = 'force-dynamic'
 
@@ -44,9 +46,32 @@ export default async function BriefingPage() {
   const cleaned = rawName.includes('@') ? rawName.split('@')[0].replace(/\d+$/, '').replace(/\./g, ' ') : rawName.trim()
   const displayName = cleaned ? cleaned.split(/\s+/)[0].charAt(0).toUpperCase() + cleaned.split(/\s+/)[0].slice(1) : 'there'
 
-  const examplePrompt = briefing.data.has_goal
-    ? 'What should I focus on this week?'
-    : 'Our target is £250,000 by next December — set up our goal'
+  // No goal yet → the setup conversation IS the page (spec §3.2/§8). Seed the
+  // scripted opener (profile summary first — the pre-seeded org model doing
+  // its job) into the thread so the model's history and the user's view agree.
+  if (!briefing.data.has_goal) {
+    const { data: orgRow } = await supabase
+      .from('organisations')
+      .select('name, legal_structure, impact_sectors, annual_income_band, primary_location')
+      .eq('id', ctx.orgId).maybeSingle()
+    const o = (orgRow ?? {}) as Record<string, unknown>
+    const org = {
+      name: String(o.name ?? 'your organisation'),
+      structure: o.legal_structure ? String(o.legal_structure).replace(/_/g, ' ') : null,
+      sectors: Array.isArray(o.impact_sectors) ? (o.impact_sectors as string[]).map(s => s.replace(/_/g, ' ')) : [],
+      incomeBand: o.annual_income_band ? String(o.annual_income_band) : null,
+      location: o.primary_location ? String(o.primary_location) : null,
+    }
+    const threadId = await getOrCreateActiveThread(ctx.orgId)
+    if (threadId) {
+      const profileBits = [org.structure, org.sectors.slice(0, 3).join(', '), org.location].filter(Boolean).join(', ')
+      await seedThreadOpener(threadId, ctx.orgId,
+        `You're ${org.name}${profileBits ? ` — ${profileBits}` : ''} — so I already know a good deal about how you work. Let's build your funding plan; it takes about two minutes.\n\nFirst: how much do you need to raise, and by when?`)
+    }
+    return <SetupExperience org={org} />
+  }
+
+  const examplePrompt = 'What should I focus on this week?'
 
   return (
     <>

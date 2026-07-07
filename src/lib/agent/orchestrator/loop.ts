@@ -23,9 +23,28 @@ import { pickModel, MAX_LOOP_ITERATIONS, MAX_TOKENS_PER_CALL, type TurnKind } fr
 export type OrchestratorEvent =
   | { type: 'text_delta'; text: string }
   | { type: 'tool_start'; name: string }
-  | { type: 'tool_done'; name: string; ok: boolean }
+  | { type: 'tool_done'; name: string; ok: boolean; data?: unknown }
   | { type: 'done'; usage: TurnUsage }
   | { type: 'error'; message: string }
+
+// Tools whose results are streamed to the client so surfaces (the setup
+// panel's "plan, assembling") can render from TOOL DATA, never model prose.
+// Whitelist + slimming — never a blanket pass-through.
+const PANEL_RESULT_SLIMMERS: Record<string, (data: unknown) => unknown> = {
+  recommend_mix: d => d, // deterministic rulebook output, already slim
+  set_funding_goal: d => {
+    const r = d as { goal?: unknown; purposes?: unknown }
+    return { goal: r.goal, purposes: r.purposes }
+  },
+  get_plan_state: d => {
+    const r = d as { has_goal?: boolean; arithmetic?: unknown; purposes?: unknown }
+    return { has_goal: r.has_goal, arithmetic: r.arithmetic ?? null, purposes: r.purposes ?? null }
+  },
+  get_briefing: d => {
+    const r = d as { has_goal?: boolean; top_candidates?: unknown[] }
+    return { has_goal: r.has_goal, candidate_count: r.top_candidates?.length ?? 0 }
+  },
+}
 
 export interface TurnUsage {
   model: string
@@ -133,7 +152,8 @@ export async function runAgentTurn(opts: {
           tool_use_id: tu.id,
           content: JSON.stringify({ data: result.data, provenance: result.provenance }),
         })
-        emit({ type: 'tool_done', name: tu.name, ok: true })
+        const slim = PANEL_RESULT_SLIMMERS[tu.name]
+        emit({ type: 'tool_done', name: tu.name, ok: true, ...(slim ? { data: slim(result.data) } : {}) })
       } catch (e) {
         results.push({ type: 'tool_result', tool_use_id: tu.id, content: toolErrorMessage(e), is_error: true })
         emit({ type: 'tool_done', name: tu.name, ok: false })
