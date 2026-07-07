@@ -21,6 +21,15 @@ export interface ResolvedOrgTier {
   tier: Tier
 }
 
+/** The one org-flags → tier mapping, shared by the MCP boundary (below) and the
+ *  web-session boundary (src/lib/agent/boundary.ts). Change entitlement policy
+ *  here and both surfaces move together. */
+export function tierForOrgFlags(flags: { apply_access?: boolean | null; companion_access?: boolean | null }): Tier {
+  if (flags.companion_access) return 'companion'
+  if (flags.apply_access) return 'apply'
+  return 'free'
+}
+
 function serviceClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -41,10 +50,12 @@ export async function resolveOrgAndTier(userId: string | null | undefined): Prom
   const orgs = (data ?? []) as Array<{ id: string; apply_access: boolean; companion_access: boolean }>
   if (orgs.length === 0) return { orgId: null, tier: 'free' }
 
-  const companion = orgs.find(o => o.companion_access)
+  // Highest entitlement wins, tie-broken oldest — via the same flags→tier
+  // mapping the web boundary uses (tierForOrgFlags).
+  const companion = orgs.find(o => tierForOrgFlags(o) === 'companion')
   if (companion) return { orgId: companion.id, tier: 'companion' }
 
-  const apply = orgs.find(o => o.apply_access)
+  const apply = orgs.find(o => tierForOrgFlags(o) === 'apply')
   if (apply) return { orgId: apply.id, tier: 'apply' }
 
   return { orgId: orgs[0].id, tier: 'free' }

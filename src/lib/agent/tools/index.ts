@@ -26,7 +26,14 @@ export interface ToolSpecEntry {
   status: 'built' | 'designed'
   params: string
   description: string
+  /** Canonical machine-readable param schema (JSON Schema). The in-app
+   *  orchestrator builds its Anthropic tool definitions from this verbatim;
+   *  the MCP route's zod schemas must agree with it (deriving them from this
+   *  is a logged follow-on — MCP changes are out of orchestrator v1 scope). */
+  input_schema?: Record<string, unknown>
 }
+
+const STAGES = ['identified', 'applying', 'submitted', 'won', 'declined']
 
 // Descriptions double as MCP system-prompt steering (separate wordsmithing later).
 export const TOOL_REGISTRY: ToolSpecEntry[] = [
@@ -36,6 +43,19 @@ export const TOOL_REGISTRY: ToolSpecEntry[] = [
     status: 'built',
     params: 'grant_name, funder_name?, opportunity_id?, stage?, amount_requested?, deadline?, grant_url?, source_recommendation_id?',
     description: `Record an opportunity in the organisation's pipeline so it can be tracked and counted against the plan. ${CONTRACT.scaffoldNotGhostwriter}`,
+    input_schema: {
+      type: 'object',
+      properties: {
+        grant_name: { type: 'string', description: 'Name of the grant or opportunity.' },
+        funder_name: { type: 'string', description: 'Funder name, if known.' },
+        opportunity_id: { type: 'string', description: 'Catalogue UUID when the opportunity came from the catalogue (e.g. a get_briefing candidate).' },
+        stage: { type: 'string', enum: STAGES, description: "Defaults to 'identified'." },
+        amount_requested: { type: 'number', description: 'Whole pounds.' },
+        deadline: { type: 'string', description: 'ISO date (YYYY-MM-DD).' },
+        grant_url: { type: 'string' },
+      },
+      required: ['grant_name'],
+    },
   },
   {
     name: 'update_pipeline_item',
@@ -43,6 +63,18 @@ export const TOOL_REGISTRY: ToolSpecEntry[] = [
     status: 'built',
     params: 'pipeline_item_id, stage?, amount_requested?, deadline?, outcome_date?, outcome_notes?',
     description: `Update a pipeline item's stage, amounts, deadline, or outcome. Moving to won/declined records the outcome, which feeds the plan arithmetic and the audit log. Outcome notes are short scaffold, not application prose.`,
+    input_schema: {
+      type: 'object',
+      properties: {
+        pipeline_item_id: { type: 'string', description: 'The pipeline item UUID (returned by add_to_pipeline).' },
+        stage: { type: 'string', enum: STAGES },
+        amount_requested: { type: 'number', description: 'Whole pounds.' },
+        deadline: { type: 'string', description: 'ISO date (YYYY-MM-DD).' },
+        outcome_date: { type: 'string', description: 'ISO date, when moving to won/declined.' },
+        outcome_notes: { type: 'string', description: 'Short scaffold note, not application prose.' },
+      },
+      required: ['pipeline_item_id'],
+    },
   },
   {
     name: 'get_plan_state',
@@ -50,6 +82,7 @@ export const TOOL_REGISTRY: ToolSpecEntry[] = [
     status: 'built',
     params: 'org_id',
     description: `Return the deterministic plan arithmetic against the goal — secured, in-pipeline (weighted and unweighted), gap, months remaining, required monthly run-rate, and funder/opportunity concentration. Numbers only; ${CONTRACT.neverRestateNumbers} With no goal set, returns a short "set a goal to see plan state" payload. Use this only when you need the bare arithmetic; for a strategic briefing with candidates and what has changed, call get_briefing instead.`,
+    input_schema: { type: 'object', properties: {}, required: [] },
   },
   {
     name: 'get_briefing',
@@ -57,6 +90,13 @@ export const TOOL_REGISTRY: ToolSpecEntry[] = [
     status: 'built',
     params: 'org_id, since?',
     description: `The primary tool for "where do I stand / what should I do next" — assemble the plan state, what has changed since \`since\`, and the top eligibility-checked candidates against the gap, deterministically from existing data. This is the reasoning surface: ${CONTRACT.constraintFirst} ${CONTRACT.factsVsJudgment} With no goal set, returns an onboarding payload naming exactly what's needed to build a plan — relay it as-is.`,
+    input_schema: {
+      type: 'object',
+      properties: {
+        since: { type: 'string', description: 'ISO timestamp — include what has changed since this moment (e.g. the last briefing).' },
+      },
+      required: [],
+    },
   },
   {
     name: 'assess_opportunity_against_plan',
@@ -64,6 +104,13 @@ export const TOOL_REGISTRY: ToolSpecEntry[] = [
     status: 'built',
     params: 'org_id, opportunity_id',
     description: `Return one opportunity's eligibility verdict, match breakdown, and verified fields alongside how it sits against the current gap and mix. You make the sequencing decision from what this returns; it does none of that reasoning itself.`,
+    input_schema: {
+      type: 'object',
+      properties: {
+        opportunity_id: { type: 'string', description: 'Catalogue opportunity id (from get_briefing candidates or search).' },
+      },
+      required: ['opportunity_id'],
+    },
   },
   {
     name: 'get_org_context',
@@ -78,6 +125,7 @@ export const TOOL_REGISTRY: ToolSpecEntry[] = [
     status: 'built',
     params: 'org_id',
     description: `Return the organisation's active funding goal — target amount, secured-to-date, funding-type mix, and deadline — or null if none is set. Secured is derived from pipeline 'won'; ${CONTRACT.neverRestateNumbers}`,
+    input_schema: { type: 'object', properties: {}, required: [] },
   },
   {
     name: 'set_funding_goal',
@@ -85,5 +133,30 @@ export const TOOL_REGISTRY: ToolSpecEntry[] = [
     status: 'built',
     params: 'title, target_amount, start_date, end_date, mix_targets?, constraints?, secured_amount?',
     description: `Call this only once the user has stated a funding target and a deadline — never infer or invent them. Sets or replaces the organisation's funding goal; replacing supersedes the prior goal (kept as history, never deleted). Constraints capture what the org will not take money for; mix_targets are percentages by funding type. Secured-to-date is derived from pipeline 'won' unless stated explicitly.`,
+    input_schema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', description: 'Short goal title, e.g. "2026/27 operating year".' },
+        target_amount: { type: 'number', description: 'Whole pounds. Must come from what the user stated.' },
+        start_date: { type: 'string', description: 'ISO date (YYYY-MM-DD).' },
+        end_date: { type: 'string', description: 'ISO date (YYYY-MM-DD). Must come from what the user stated.' },
+        mix_targets: {
+          type: 'object',
+          description: 'Percentages by funding type, e.g. {"grant": 70, "contract": 20, "corporate": 10}. Only if the user stated a mix.',
+          additionalProperties: { type: 'number' },
+        },
+        constraints: {
+          type: 'array',
+          description: 'What the org will not take money for, as the user stated it.',
+          items: {
+            type: 'object',
+            properties: { kind: { type: 'string' }, text: { type: 'string' } },
+            required: ['kind', 'text'],
+          },
+        },
+        secured_amount: { type: 'number', description: 'Whole pounds already secured OUTSIDE the tracked pipeline. Omit to derive from pipeline wins.' },
+      },
+      required: ['title', 'target_amount', 'start_date', 'end_date'],
+    },
   },
 ]
