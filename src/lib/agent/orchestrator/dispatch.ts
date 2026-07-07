@@ -6,7 +6,7 @@
 
 import {
   TOOL_REGISTRY,
-  addToPipeline, updatePipelineItem,
+  addToPipeline, updatePipelineItem, getPipeline,
   getPlanState, getBriefing, assessOpportunityAgainstPlan,
   getFundingGoal, setFundingGoal,
   isEntitled,
@@ -18,6 +18,7 @@ type AnyToolFn = (ctx: ToolContext, params: Record<string, unknown>) => Promise<
 const DISPATCH: Record<string, AnyToolFn> = {
   add_to_pipeline: addToPipeline as AnyToolFn,
   update_pipeline_item: updatePipelineItem as AnyToolFn,
+  get_pipeline: getPipeline as AnyToolFn,
   get_plan_state: getPlanState as AnyToolFn,
   get_briefing: getBriefing as AnyToolFn,
   assess_opportunity_against_plan: assessOpportunityAgainstPlan as AnyToolFn,

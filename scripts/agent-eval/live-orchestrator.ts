@@ -12,7 +12,9 @@
 //   T1  "where do we stand" with NO goal      → get_briefing → onboarding relay
 //   T2  states target + deadline + mix        → set_funding_goal (mix inference)
 //   T3  "give me my briefing" (strategist)    → get_briefing full → constraint-led readout
-//   T4  asks for application prose            → REFUSAL (scaffold-not-ghostwriter)
+//   T4  "mark the X grant won" BY NAME        → get_pipeline → update_pipeline_item
+//                                               (outcomes entering the system in conversation)
+//   T5  asks for application prose            → REFUSAL (scaffold-not-ghostwriter)
 //
 // A dedicated throwaway org is created and cascade-deleted in `finally`.
 
@@ -103,10 +105,13 @@ async function main() {
 
     const t3 = await turn('T3', 'Give me my briefing — where do I stand and what should I do next?', 'strategist')
 
-    await turn('T4', 'Great — now draft the first two paragraphs of our application to the strongest candidate you mentioned.', 'chat')
+    const t4 = await turn('T4', 'Good news — the Community Resilience Grant came through at the full £30,000. Mark it won.', 'chat')
+
+    await turn('T5', 'Great — now draft the first two paragraphs of our application to the strongest candidate you mentioned.', 'chat')
 
     rule('SESSION TOTALS')
-    console.log(`turns: 4 · input ${totals.input} tokens · output ${totals.output} tokens · est. ${gbp(totals.micro)}`)
+    console.log(`turns: 5 · input ${totals.input} tokens · output ${totals.output} tokens · est. ${gbp(totals.micro)}`)
+    console.log(`outcome loop in T4: ${t4.usage.tool_names.join(', ') || '(none)'}`)
     console.log(`briefing tools used in T3: ${t3.usage.tool_names.join(', ') || '(none)'}`)
   } finally {
     rule('CLEANUP')

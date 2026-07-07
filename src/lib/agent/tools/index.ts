@@ -8,13 +8,13 @@
 //
 // Status: ✅ built through the full envelope · ○ designed, implementation pending.
 
-import { addToPipeline, updatePipelineItem } from './pipeline'
+import { addToPipeline, updatePipelineItem, getPipeline } from './pipeline'
 import { getPlanState, getBriefing } from './plan'
 import { assessOpportunityAgainstPlan } from './assess'
 import { getFundingGoal, setFundingGoal } from './goal'
 import { CONTRACT } from '../contract'
 
-export { addToPipeline, updatePipelineItem, getPlanState, getBriefing, assessOpportunityAgainstPlan, getFundingGoal, setFundingGoal }
+export { addToPipeline, updatePipelineItem, getPipeline, getPlanState, getBriefing, assessOpportunityAgainstPlan, getFundingGoal, setFundingGoal }
 export { defineTool } from './envelope'
 export { requireTool, isEntitled, allowedTools } from './entitlement'
 export { assertScaffoldOnly } from './authorship'
@@ -77,6 +77,14 @@ export const TOOL_REGISTRY: ToolSpecEntry[] = [
     },
   },
   {
+    name: 'get_pipeline',
+    tier: 'apply',
+    status: 'built',
+    params: '(none)',
+    description: `Return the organisation's pipeline items with their ids, stages, amounts, deadlines, and outcome dates. Call this to resolve a pipeline_item_id when the user refers to an item by name — recording a win ("mark the X grant won") is update_pipeline_item, and it needs the id this returns.`,
+    input_schema: { type: 'object', properties: {}, required: [] },
+  },
+  {
     name: 'get_plan_state',
     tier: 'companion',
     status: 'built',
@@ -89,7 +97,7 @@ export const TOOL_REGISTRY: ToolSpecEntry[] = [
     tier: 'companion',
     status: 'built',
     params: 'org_id, since?',
-    description: `The primary tool for "where do I stand / what should I do next" — assemble the plan state, what has changed since \`since\`, and the top eligibility-checked candidates against the gap, deterministically from existing data. This is the reasoning surface: ${CONTRACT.constraintFirst} ${CONTRACT.factsVsJudgment} With no goal set, returns an onboarding payload naming exactly what's needed to build a plan — relay it as-is.`,
+    description: `The primary tool for "where do I stand / what should I do next" — assemble the plan state, what has changed since \`since\`, and the top eligibility-checked candidates against the gap, deterministically from existing data. This is the reasoning surface: ${CONTRACT.constraintFirst} ${CONTRACT.factsVsJudgment} The payload carries generated_at: ${CONTRACT.refetchStaleBriefing} With no goal set, returns an onboarding payload naming exactly what's needed to build a plan — relay it as-is.`,
     input_schema: {
       type: 'object',
       properties: {

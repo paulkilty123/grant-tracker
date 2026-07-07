@@ -12,6 +12,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { emitEvent } from '../../events/emit'
 import { defineTool } from './envelope'
+import { getPipelineItems, type PipelineItemRow } from './repository'
 import { prov, type ToolContext } from './types'
 import type { PipelineItem, PipelineStage } from '@/types'
 
@@ -118,6 +119,28 @@ export const updatePipelineItem = defineTool<UpdatePipelineItemParams, UpdatePip
     stage: prov(r.item.stage, 'agent', nowIso()),
     outcome_date: prov(r.item.outcome_date ?? null, 'user', null),
   }),
+})
+
+// ── get_pipeline ─────────────────────────────────────────────────────────────
+// The read that makes update_pipeline_item usable in conversation: "mark the X
+// grant won" needs an id, and this is how outcomes enter the system — outcomes
+// feed the plan arithmetic, the capture layer, and eventually the brain.
+
+export interface GetPipelinePayload {
+  count: number
+  items: PipelineItemRow[]
+}
+
+export const getPipeline = defineTool<Record<string, unknown>, GetPipelinePayload>({
+  name: 'get_pipeline',
+  handler: async (ctx) => {
+    const items = await getPipelineItems(ctx.orgId)
+    return { count: items.length, items }
+  },
+  logEvent: async (ctx, _p, r) => {
+    await emitEvent({ surface: ctx.surface, orgId: ctx.orgId, userId: ctx.userId },
+      'agent_tool_called', { tool_name: 'get_pipeline', result_count: r.count, degraded: false })
+  },
 })
 
 export type { ToolContext }

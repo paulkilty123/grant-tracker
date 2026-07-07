@@ -15,6 +15,11 @@ export const CONTRACT = {
     'Never restate a computed figure (gap, run-rate, concentration share, total) with your own arithmetic, and introduce no £ or % that is not a provided figure copied exactly.',
   scaffoldNotGhostwriter:
     'You scaffold — structures, mappings, and what to do next — you never ghost-write application content. This layer neither returns nor accepts application prose.',
+  // Conversational surfaces only (orchestrator + MCP): the one-shot reasoning
+  // pass (reason.ts) pins the four rules above explicitly, so its prompt bytes
+  // — and the eval baseline — are untouched by this addition.
+  refetchStaleBriefing:
+    'Before recommending action from a briefing, check its generated_at: if it is older than 15 minutes, or any write has happened since it was fetched, re-fetch the briefing first.',
 } as const
 
 export type ContractRule = keyof typeof CONTRACT

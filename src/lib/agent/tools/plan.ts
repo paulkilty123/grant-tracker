@@ -65,17 +65,29 @@ export const getPlanState = defineTool<Record<string, unknown>, PlanStatePayload
 
 // ── get_briefing ─────────────────────────────────────────────────────────────
 
+// A FitCard carries enough verified fields to sequence from in conversation —
+// amounts, timing, warning codes — without an assess round-trip per candidate.
+// Also a hard dependency of the briefing-page candidate cards (§14.1.3).
 interface FitCard {
   opportunity_id: string
   title: string
   funder: string
   funding_type: string
+  amount_min: number | null
+  amount_max: number | null
+  amount_undisclosed: boolean
+  deadline: string | null
+  is_rolling: boolean
+  next_open_date: string | null
+  open_status: string | null
   eligibility_status: string
+  warning_codes: string[]
   match_reasons: string[]
 }
 export type BriefingPayload =
   | {
       has_goal: false
+      generated_at: string
       onboarding: {
         message: string
         to_build_your_plan: string[]
@@ -85,6 +97,7 @@ export type BriefingPayload =
     }
   | {
       has_goal: true
+      generated_at: string
       plan_state: GoalArithmetic
       coverage: BriefingPack['coverage']
       changes_since: PlanDeltas | null
@@ -95,6 +108,7 @@ export type BriefingPayload =
 export function buildBriefingOnboarding(org: Organisation | null, pipeline: PipelineEntry[]): BriefingPayload {
   return {
     has_goal: false,
+    generated_at: new Date().toISOString(),
     onboarding: {
       message: "You don't have a funding goal set yet, so I can't hold a plan or measure your gap. Tell me your target for the year and your deadline and I'll build one and start prioritising against it.",
       to_build_your_plan: [
@@ -115,6 +129,7 @@ export function buildBriefingOnboarding(org: Organisation | null, pipeline: Pipe
 export function buildBriefingFull(pack: BriefingPack, deltas: PlanDeltas | null): BriefingPayload {
   return {
     has_goal: true,
+    generated_at: new Date().toISOString(),
     plan_state: pack.arithmetic,
     coverage: pack.coverage,
     changes_since: deltas,
@@ -124,7 +139,15 @@ export function buildBriefingFull(pack: BriefingPack, deltas: PlanDeltas | null)
       title: c.title,
       funder: c.funder,
       funding_type: c.fundingType,
+      amount_min: c.amountMin,
+      amount_max: c.amountMax,
+      amount_undisclosed: c.amountUndisclosed,
+      deadline: c.deadline,
+      is_rolling: c.isRolling,
+      next_open_date: c.nextOpenDate ?? null,
+      open_status: c.openStatus ?? null,
       eligibility_status: c.eligibility.status,
+      warning_codes: c.eligibility.issues.map(i => i.code),
       match_reasons: c.matchReasons ?? [],
     })),
   }

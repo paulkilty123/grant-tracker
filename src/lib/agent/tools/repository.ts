@@ -41,6 +41,39 @@ export async function getPipeline(orgId: string): Promise<PipelineEntry[]> {
   }))
 }
 
+/** Pipeline rows WITH ids — the shape get_pipeline returns so a conversation
+ *  can resolve "the Wellbeing Trust one" to a pipeline_item_id before calling
+ *  update_pipeline_item. getPipeline (above) stays id-less for the arithmetic. */
+export interface PipelineItemRow {
+  pipeline_item_id: string
+  grant_name: string
+  funder_name: string | null
+  stage: string
+  amount_requested: number | null
+  deadline: string | null
+  outcome_date: string | null
+}
+
+export async function getPipelineItems(orgId: string): Promise<PipelineItemRow[]> {
+  const { data } = await serviceClient()
+    .from('pipeline_items')
+    .select('id, grant_name, funder_name, stage, amount_requested, deadline, outcome_date')
+    .eq('org_id', orgId)
+    .order('created_at', { ascending: true })
+  return (data ?? []).map(r => {
+    const row = r as Record<string, unknown>
+    return {
+      pipeline_item_id: String(row.id),
+      grant_name: String(row.grant_name ?? ''),
+      funder_name: (row.funder_name as string | null) ?? null,
+      stage: String(row.stage ?? 'identified'),
+      amount_requested: (row.amount_requested as number | null) ?? null,
+      deadline: (row.deadline as string | null) ?? null,
+      outcome_date: (row.outcome_date as string | null) ?? null,
+    }
+  })
+}
+
 export async function getOrg(orgId: string): Promise<Organisation | null> {
   const { data } = await serviceClient().from('organisations').select('*').eq('id', orgId).maybeSingle()
   if (!data) return null
