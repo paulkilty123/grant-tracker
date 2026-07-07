@@ -13,7 +13,8 @@ const TIER_TOOLS: Record<Tier, ReadonlySet<string>> = {
   apply: new Set<string>(['add_to_pipeline', 'update_pipeline_item', 'get_pipeline']),
   companion: new Set<string>([
     'add_to_pipeline', 'update_pipeline_item', 'get_pipeline',
-    'get_funding_goal', 'set_funding_goal', 'get_plan_state', 'get_briefing',
+    'get_funding_goal', 'set_funding_goal', 'update_goal_purposes', 'recommend_mix',
+    'get_plan_state', 'get_briefing',
     'assess_opportunity_against_plan', 'get_org_context',
   ]),
   internal: new Set<string>(['*']),

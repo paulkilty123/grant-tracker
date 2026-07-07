@@ -11,10 +11,21 @@
 import { addToPipeline, updatePipelineItem, getPipeline } from './pipeline'
 import { getPlanState, getBriefing } from './plan'
 import { assessOpportunityAgainstPlan } from './assess'
-import { getFundingGoal, setFundingGoal } from './goal'
+import { getFundingGoal, setFundingGoal, updateGoalPurposes, PURPOSE_CATEGORIES } from './goal'
+import { recommendMix, RECOMMEND_MIX_DESCRIPTION } from './mix'
 import { CONTRACT } from '../contract'
 
-export { addToPipeline, updatePipelineItem, getPipeline, getPlanState, getBriefing, assessOpportunityAgainstPlan, getFundingGoal, setFundingGoal }
+export { addToPipeline, updatePipelineItem, getPipeline, getPlanState, getBriefing, assessOpportunityAgainstPlan, getFundingGoal, setFundingGoal, updateGoalPurposes, recommendMix }
+
+const PURPOSE_ITEM_SCHEMA = {
+  type: 'object',
+  properties: {
+    category: { type: 'string', enum: [...PURPOSE_CATEGORIES], description: 'Purpose category. Use "other" only when nothing fits — it routes to your own labelled judgment via recommend_mix.' },
+    label: { type: 'string', description: 'Short free-text label, e.g. "Minibus appeal", "Youth worker post".' },
+    approx_amount: { type: 'number', description: 'Approximate whole pounds. Roughness is fine — omit if the user genuinely does not know.' },
+  },
+  required: ['category', 'label'],
+}
 export { defineTool } from './envelope'
 export { requireTool, isEntitled, allowedTools } from './entitlement'
 export { assertScaffoldOnly } from './authorship'
@@ -140,7 +151,7 @@ export const TOOL_REGISTRY: ToolSpecEntry[] = [
     tier: 'companion',
     status: 'built',
     params: 'title, target_amount, start_date, end_date, mix_targets?, constraints?, secured_amount?',
-    description: `Call this only once the user has stated a funding target and a deadline — never infer or invent them. Sets or replaces the organisation's funding goal; replacing supersedes the prior goal (kept as history, never deleted). Constraints capture what the org will not take money for; mix_targets are percentages by funding type. Secured-to-date is derived from pipeline 'won' unless stated explicitly.`,
+    description: `Call this only once the user has stated a funding target and a deadline — never infer or invent them. Sets or replaces the organisation's funding goal; replacing supersedes the prior goal (kept as history, never deleted) and carries active purposes forward unless new ones are given. One active goal per org is a design principle, not a limitation: a side funding project is a purpose (update_goal_purposes), never a second goal. Constraints capture what the org will not take money for. mix_targets should be the CONFIRMED output of recommend_mix (funding-character percentages), or the user's own stated mix. Off-pipeline secured income given here is recorded as a won pipeline item, never a cached figure.`,
     input_schema: {
       type: 'object',
       properties: {
@@ -148,9 +159,14 @@ export const TOOL_REGISTRY: ToolSpecEntry[] = [
         target_amount: { type: 'number', description: 'Whole pounds. Must come from what the user stated.' },
         start_date: { type: 'string', description: 'ISO date (YYYY-MM-DD).' },
         end_date: { type: 'string', description: 'ISO date (YYYY-MM-DD). Must come from what the user stated.' },
+        purposes: {
+          type: 'array',
+          description: "What the money is for — the purpose split. Structure the user's rough answer; approximate amounts are fine.",
+          items: PURPOSE_ITEM_SCHEMA,
+        },
         mix_targets: {
           type: 'object',
-          description: 'Percentages by funding type, e.g. {"grant": 70, "contract": 20, "corporate": 10}. Only if the user stated a mix.',
+          description: 'Funding-character percentages, e.g. {"unrestricted": 55, "project": 35, "capital": 10} — the confirmed recommend_mix output, or the mix the user themselves stated.',
           additionalProperties: { type: 'number' },
         },
         constraints: {
@@ -162,9 +178,56 @@ export const TOOL_REGISTRY: ToolSpecEntry[] = [
             required: ['kind', 'text'],
           },
         },
-        secured_amount: { type: 'number', description: 'Whole pounds already secured OUTSIDE the tracked pipeline. Omit to derive from pipeline wins.' },
+        secured_amount: { type: 'number', description: 'Whole pounds already secured OUTSIDE the tracked pipeline (recorded as a won pipeline item with a pre-existing marker). Omit when all wins are already tracked.' },
       },
       required: ['title', 'target_amount', 'start_date', 'end_date'],
+    },
+  },
+  {
+    name: 'update_goal_purposes',
+    tier: 'companion',
+    status: 'built',
+    params: 'add?, update?, retire?',
+    description: `Add, edit, or retire purpose lines on the ACTIVE goal without replacing it. This is how a side funding project enters the plan ("we're also raising £50k for a minibus" = a new capital purpose) and how the purpose split stays current after setup. Retiring keeps history; nothing is deleted. If the purpose split changes materially, offer to re-run recommend_mix — the mix probably shifts too.`,
+    input_schema: {
+      type: 'object',
+      properties: {
+        add: { type: 'array', description: 'New purpose lines.', items: PURPOSE_ITEM_SCHEMA },
+        update: {
+          type: 'array',
+          description: 'Edits to existing purposes by purpose_id (from get_plan_state or a prior write).',
+          items: {
+            type: 'object',
+            properties: {
+              purpose_id: { type: 'string' },
+              label: { type: 'string' },
+              approx_amount: { type: 'number' },
+              category: { type: 'string', enum: [...PURPOSE_CATEGORIES] },
+            },
+            required: ['purpose_id'],
+          },
+        },
+        retire: { type: 'array', description: 'purpose_ids to retire (kept as history).', items: { type: 'string' } },
+      },
+      required: [],
+    },
+  },
+  {
+    name: 'recommend_mix',
+    tier: 'companion',
+    status: 'built',
+    params: 'purposes?',
+    description: RECOMMEND_MIX_DESCRIPTION,
+    input_schema: {
+      type: 'object',
+      properties: {
+        purposes: {
+          type: 'array',
+          description: "The purpose split to derive from (during setup, before the goal exists). Omit to use the active goal's stored purposes.",
+          items: PURPOSE_ITEM_SCHEMA,
+        },
+      },
+      required: [],
     },
   },
 ]

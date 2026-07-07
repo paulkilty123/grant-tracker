@@ -79,6 +79,13 @@ export interface EventPayloads {
     result_count: number | null
     degraded: boolean
   }
+  /** recommend_mix fell back to labelled model judgment for purposes the
+   *  rulebook doesn't cover (design spec §2 layer 2). Every firing is logged so
+   *  the rulebook grows from real usage exactly as the catalogue does. */
+  mix_fallback_fired: {
+    categories: string[]
+    rulebook_version: string
+  }
   /** One conversational orchestrator turn (in-app goal agent) — the per-turn
    *  cost/usage record the tier prices get set against, and the substrate the
    *  per-org daily inference bounds are enforced from. Token counts are summed
@@ -202,6 +209,7 @@ export const EVENT_TYPES = [
   'mcp_tool_called',
   'agent_tool_called',
   'agent_turn_completed',
+  'mix_fallback_fired',
   'profile_updated',
   'builder_questions_submitted',
   'builder_scaffold_generated',
@@ -240,6 +248,7 @@ const REQUIRED_KEYS: Record<EventType, Record<string, Kind>> = {
   mcp_tool_called:             { tool_name: 'string', arguments: 'object', result_count: 'nullable-number', duration_ms: 'number' },
   agent_tool_called:           { tool_name: 'string', result_count: 'nullable-number', degraded: 'boolean' },
   agent_turn_completed:        { turn_kind: 'string', model: 'string', input_tokens: 'number', output_tokens: 'number', cost_estimate_microgbp: 'number', duration_ms: 'number', tool_names: 'string[]', loop_iterations: 'number' },
+  mix_fallback_fired:          { categories: 'string[]', rulebook_version: 'string' },
   profile_updated:             { fields_changed: 'string[]' },
   builder_questions_submitted: { application_id: 'string', question_count: 'number', opportunity_id: 'nullable-string' },
   builder_scaffold_generated:  { application_id: 'string', model: 'string', input_tokens: 'number', output_tokens: 'number', duration_ms: 'number' },

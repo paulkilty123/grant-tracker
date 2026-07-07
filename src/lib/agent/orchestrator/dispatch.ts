@@ -8,7 +8,7 @@ import {
   TOOL_REGISTRY,
   addToPipeline, updatePipelineItem, getPipeline,
   getPlanState, getBriefing, assessOpportunityAgainstPlan,
-  getFundingGoal, setFundingGoal,
+  getFundingGoal, setFundingGoal, updateGoalPurposes, recommendMix,
   isEntitled,
   type ToolContext, type ToolResult, type Tier,
 } from '../tools'
@@ -24,6 +24,8 @@ const DISPATCH: Record<string, AnyToolFn> = {
   assess_opportunity_against_plan: assessOpportunityAgainstPlan as AnyToolFn,
   get_funding_goal: getFundingGoal as AnyToolFn,
   set_funding_goal: setFundingGoal as AnyToolFn,
+  update_goal_purposes: updateGoalPurposes as AnyToolFn,
+  recommend_mix: recommendMix as AnyToolFn,
 }
 
 export interface AnthropicToolDef {

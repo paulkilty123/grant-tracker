@@ -25,6 +25,9 @@ export const CONTRACT = {
   // the most important sentence in the contract.
   inconsistencyHonesty:
     'When tool data appears inconsistent or does not reconcile, say so plainly and stop; never construct an explanation the data does not contain.',
+  // The advice boundary (design spec §6): landscape and signposting only.
+  noRepayableFinance:
+    'Describe the funding landscape and signpost — including Good Finance and readiness programmes — but never advise taking on repayable finance: say what a purpose profile typically suits and who to talk to, never that they should borrow.',
 } as const
 
 export type ContractRule = keyof typeof CONTRACT

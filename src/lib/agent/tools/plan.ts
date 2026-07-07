@@ -11,8 +11,8 @@
 
 import { defineTool } from './envelope'
 import { emitEvent } from '../../events/emit'
-import { assembleBriefingPack, computeArithmetic } from '../context'
-import { getGoal, getPipeline, getOrg, getOrgFacts, getActiveCatalogue, getPipelineDeltasSince, type PlanDeltas } from './repository'
+import { assembleBriefingPack, computeArithmetic, WEIGHTED_FORMULA_CAPTION } from '../context'
+import { getGoal, getPipeline, getOrg, getOrgFacts, getActiveCatalogue, getPipelineDeltasSince, getPurposeProgress, type PlanDeltas, type PurposeProgress } from './repository'
 import type { GoalArithmetic, GoalInput, PipelineEntry, BriefingPack } from '../types'
 import type { Organisation } from '@/types'
 
@@ -32,11 +32,24 @@ function orgSummary(org: Organisation | null) {
 
 // ── get_plan_state ───────────────────────────────────────────────────────────
 
+/** Per-purpose progress (spec §5/§7): derived on read from pipeline purpose
+ *  assignments. Null when no purposes exist (pre-setup or pre-migration). */
+export interface PurposesBlock {
+  items: PurposeProgress[]
+  unassigned: { secured: number; weighted: number }
+}
+
 export type PlanStatePayload =
   | { has_goal: false; message: string; to_set_a_goal: string[] }
-  | { has_goal: true; goal: { title: string; target_amount: number; secured_amount: number; end_date: string }; arithmetic: GoalArithmetic }
+  | {
+      has_goal: true
+      goal: { title: string; target_amount: number; secured_amount: number; end_date: string }
+      arithmetic: GoalArithmetic
+      weighted_formula: string
+      purposes: PurposesBlock | null
+    }
 
-export function buildPlanState(goal: GoalInput | null, pipeline: PipelineEntry[], asOf: string): PlanStatePayload {
+export function buildPlanState(goal: GoalInput | null, pipeline: PipelineEntry[], asOf: string, purposes: PurposesBlock | null = null): PlanStatePayload {
   if (!goal) {
     return {
       has_goal: false,
@@ -48,14 +61,21 @@ export function buildPlanState(goal: GoalInput | null, pipeline: PipelineEntry[]
     has_goal: true,
     goal: { title: goal.title, target_amount: goal.target_amount, secured_amount: goal.secured_amount, end_date: goal.end_date },
     arithmetic: computeArithmetic(goal, pipeline, asOf),
+    weighted_formula: WEIGHTED_FORMULA_CAPTION,
+    purposes,
   }
 }
 
 export const getPlanState = defineTool<Record<string, unknown>, PlanStatePayload>({
   name: 'get_plan_state',
   handler: async (ctx) => {
-    const [goal, pipeline] = await Promise.all([getGoal(ctx.orgId), getPipeline(ctx.orgId)])
-    return buildPlanState(goal, pipeline, today())
+    const [goal, pipeline, purposeProgress] = await Promise.all([
+      getGoal(ctx.orgId), getPipeline(ctx.orgId), getPurposeProgress(ctx.orgId),
+    ])
+    const purposes = purposeProgress
+      ? { items: purposeProgress.purposes, unassigned: purposeProgress.unassigned }
+      : null
+    return buildPlanState(goal, pipeline, today(), purposes)
   },
   logEvent: async (ctx, _p, r) => {
     await emitEvent({ surface: ctx.surface, orgId: ctx.orgId, userId: ctx.userId },

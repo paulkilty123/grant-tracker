@@ -10,23 +10,120 @@ import { normaliseScrapedGrant } from '../../grants-normalise'
 import type { GrantOpportunity, Organisation } from '@/types'
 import type { GoalInput, PipelineEntry, OrgFact } from '../types'
 
+// Secured is DERIVED ON READ from pipeline 'won', never read from the cached
+// goals.secured_amount scalar (design decision 9 Jul, spec §7: off-pipeline
+// secured income is represented as won pipeline items with a source marker, so
+// one sum covers everything and wins can never leave the gap stale).
+async function deriveSecuredFromPipeline(orgId: string): Promise<number> {
+  const { data } = await serviceClient()
+    .from('pipeline_items').select('amount_requested').eq('org_id', orgId).eq('stage', 'won')
+  return (data ?? []).reduce((s, r) => s + (((r as Record<string, unknown>).amount_requested as number | null) ?? 0), 0)
+}
+
 export async function getGoal(orgId: string): Promise<GoalInput | null> {
   try {
-    const { data, error } = await serviceClient()
-      .from('goals').select('*').eq('org_id', orgId).eq('status', 'active')
-      .order('created_at', { ascending: false }).limit(1).maybeSingle()
+    const [{ data, error }, secured] = await Promise.all([
+      serviceClient()
+        .from('goals').select('*').eq('org_id', orgId).eq('status', 'active')
+        .order('created_at', { ascending: false }).limit(1).maybeSingle(),
+      deriveSecuredFromPipeline(orgId),
+    ])
     if (error || !data) return null
     const g = data as Record<string, unknown>
     return {
       title: String(g.title ?? 'Funding goal'),
       target_amount: Number(g.target_amount ?? 0),
-      secured_amount: Number(g.secured_amount ?? 0),
+      secured_amount: secured,
       start_date: String(g.start_date ?? ''),
       end_date: String(g.end_date ?? ''),
       mix_targets: (g.mix_targets as Record<string, number> | null) ?? null,
       constraints: (g.constraints as Array<{ kind: string; text: string }>) ?? [],
     }
   } catch { return null } // table not applied yet → no goal
+}
+
+/** The active goal's row id — needed by the purpose write tools. Kept separate
+ *  from getGoal so GoalInput stays the arithmetic shape. */
+export async function getActiveGoalId(orgId: string): Promise<string | null> {
+  try {
+    const { data } = await serviceClient()
+      .from('goals').select('id').eq('org_id', orgId).eq('status', 'active')
+      .order('created_at', { ascending: false }).limit(1).maybeSingle()
+    return data ? String((data as Record<string, unknown>).id) : null
+  } catch { return null }
+}
+
+// ── goal purposes (design spec §5/§7) ────────────────────────────────────────
+
+export interface PurposeRow {
+  purpose_id: string
+  category: string
+  label: string
+  approx_amount: number | null
+}
+
+export async function getPurposes(orgId: string): Promise<PurposeRow[]> {
+  try {
+    const { data, error } = await serviceClient()
+      .from('goal_purposes')
+      .select('id, category, label, approx_amount, sort_order')
+      .eq('org_id', orgId).eq('status', 'active')
+      .order('sort_order', { ascending: true })
+    if (error || !data) return []
+    return data.map(r => {
+      const row = r as Record<string, unknown>
+      return {
+        purpose_id: String(row.id),
+        category: String(row.category),
+        label: String(row.label ?? ''),
+        approx_amount: (row.approx_amount as number | null) ?? null,
+      }
+    })
+  } catch { return [] } // table not applied yet
+}
+
+export interface PurposeProgress extends PurposeRow {
+  secured: number   // won items assigned to this purpose
+  weighted: number  // stage-weighted pipeline assigned to this purpose
+}
+
+/** Per-purpose progress, DERIVED on read from pipeline assignments (spec §7:
+ *  same derive-not-cache discipline as secured). Items without a purpose count
+ *  toward the goal overall — returned in `unassigned`. */
+export async function getPurposeProgress(orgId: string): Promise<{ purposes: PurposeProgress[]; unassigned: { secured: number; weighted: number } } | null> {
+  const purposes = await getPurposes(orgId)
+  if (!purposes.length) return null
+  try {
+    const { STAGE_WEIGHTS } = await import('../context')
+    const { data } = await serviceClient()
+      .from('pipeline_items')
+      .select('purpose_id, stage, amount_requested')
+      .eq('org_id', orgId)
+    const rows = (data ?? []) as Array<Record<string, unknown>>
+    const byPurpose = new Map<string, { secured: number; weighted: number }>()
+    const unassigned = { secured: 0, weighted: 0 }
+    for (const r of rows) {
+      const amt = (r.amount_requested as number | null) ?? 0
+      const stage = String(r.stage ?? 'identified')
+      const bucket = r.purpose_id
+        ? (byPurpose.get(String(r.purpose_id)) ?? { secured: 0, weighted: 0 })
+        : unassigned
+      if (stage === 'won') bucket.secured += amt
+      bucket.weighted += amt * (STAGE_WEIGHTS[stage] ?? 0)
+      if (r.purpose_id) byPurpose.set(String(r.purpose_id), bucket)
+    }
+    return {
+      purposes: purposes.map(p => ({
+        ...p,
+        secured: Math.round(byPurpose.get(p.purpose_id)?.secured ?? 0),
+        weighted: Math.round(byPurpose.get(p.purpose_id)?.weighted ?? 0),
+      })),
+      unassigned: { secured: Math.round(unassigned.secured), weighted: Math.round(unassigned.weighted) },
+    }
+  } catch {
+    // purpose_id column not applied yet — purposes exist but progress can't derive
+    return { purposes: purposes.map(p => ({ ...p, secured: 0, weighted: 0 })), unassigned: { secured: 0, weighted: 0 } }
+  }
 }
 
 export async function getPipeline(orgId: string): Promise<PipelineEntry[]> {

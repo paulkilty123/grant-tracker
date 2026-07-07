@@ -18,9 +18,16 @@ import type {
 } from './types'
 
 const SHORTLIST_N = 40
-const STAGE_WEIGHT: Record<string, number> = {
+
+/** Per-stage likelihood weights for the weighted-pipeline figure (design spec
+ *  §7). V1 uses these FIXED values, surfaced to the user via the formula
+ *  caption below — any computed number the user might distrust carries its
+ *  formula. PENDING: Paul's stage-weights review session (spec §9) may adjust
+ *  the values; learned weights are a brain feature later. */
+export const STAGE_WEIGHTS: Record<string, number> = {
   identified: 0.1, applying: 0.3, submitted: 0.5, won: 1, declined: 0,
 }
+export const WEIGHTED_FORMULA_CAPTION = 'weighted = amount × stage likelihood'
 
 export interface ContextInput {
   org: Organisation
@@ -41,7 +48,7 @@ function dayDiff(from: string, to: string): number {
 export function computeArithmetic(goal: GoalInput, pipeline: PipelineEntry[], asOf: string): GoalArithmetic {
   const active = pipeline.filter(p => p.stage !== 'declined')
   const total = active.reduce((s, p) => s + (p.amount_requested ?? 0), 0)
-  const weighted = pipeline.reduce((s, p) => s + (p.amount_requested ?? 0) * (STAGE_WEIGHT[p.stage] ?? 0), 0)
+  const weighted = pipeline.reduce((s, p) => s + (p.amount_requested ?? 0) * (STAGE_WEIGHTS[p.stage] ?? 0), 0)
 
   const byFunder = new Map<string, number>()
   let topOpp = 0
