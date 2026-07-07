@@ -91,6 +91,8 @@ export async function runAgentTurn(opts: {
 
   while (iterations < MAX_LOOP_ITERATIONS) {
     iterations += 1
+    // Mirror the same paragraph break on the live stream between iterations.
+    if (finalText && !finalText.endsWith('\n')) emit({ type: 'text_delta', text: '\n\n' })
 
     const stream = getAgentClient().messages.stream({
       model,
@@ -106,7 +108,10 @@ export async function runAgentTurn(opts: {
     inputTokens += effectiveInputTokens(response.usage)
     outputTokens += response.usage.output_tokens ?? 0
     for (const block of response.content) {
-      if (block.type === 'text') finalText += block.text
+      if (block.type !== 'text') continue
+      // Text emitted before a tool call and text after its results are separate
+      // paragraphs, not one run-on sentence.
+      finalText += (finalText && !finalText.endsWith('\n') ? '\n\n' : '') + block.text
     }
 
     if (response.stop_reason !== 'tool_use') {

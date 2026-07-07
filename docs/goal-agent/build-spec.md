@@ -427,3 +427,37 @@ Deferred follow-ups (signposted, not fixed):
 5. **Concentration flag must carry its threshold.** `arithmetic.concentration` reports `topFunderShare` / `topOpportunityShare` as bare fractions — the reasoning surface can say *that* it fired but not *why*. Attach the firing threshold (and the share that crossed it) to the flag's provenance / engine metadata so the strategist can explain the trigger, not just assert it. Applies wherever the concentration flag surfaces (`get_plan_state`, `get_briefing`, `assess_opportunity_against_plan`).
 6. **Candidate-diff must be per-surface.** When candidate-level "new since last briefing" lands (item 2), compute it against `agent_runs` **scoped by surface**, so an MCP client's last briefing and the in-app briefing keep independent watermarks — otherwise the same opportunity gets marked "new" twice (once per surface) or once and then silently suppressed for the other. `agent_runs` already carries the surface via its capture context; key the diff on `(org_id, surface)`.
 7. **Per-connection org selection (designed, not built).** `resolveOrgAndTier` (src/lib/mcp-entitlement.ts) binds an MCP connection to ONE org — highest entitlement (companion > apply > plain), tie-broken oldest. Multi-org owners switch org by moving the `companion_access` flag (one companion org at a time). The future multi-org / consultant story — hold companion on several orgs and pick per-connection — needs org choice captured at **OAuth consent time** (bound into the token) or an explicit org selector, NOT a tool param (org identity must stay un-spoofable). Not this month; the "move the flag" mechanism holds until then.
+
+---
+
+## 14. In-app goal agent v1 — the conversational orchestrator (workstream scoped 7 Jul 2026)
+
+**Sequencing constraint:** month-2 build. Nothing here displaces launch-critical work (signup hardening, Stripe, trial); only cheap scaffolding runs alongside month-1 work.
+
+### 14.1 V1 scope (exhaustive)
+
+1. **Web-session ToolContext boundary** — ✅ BUILT (`src/lib/agent/boundary.ts`). Same flags→tier mapping as the MCP path (`tierForOrgFlags`, shared in `mcp-entitlement.ts`), same entitlement gate. One documented divergence: web binds to the ACTIVE org (cookie, oldest fallback — the app convention) and resolves tier for that org; MCP binds highest-entitled (§13.7 pending).
+2. **Conversational orchestrator** — ✅ SKELETON BUILT (`src/lib/agent/orchestrator/`): multi-turn streaming tool loop over the tool layer (dispatch + Anthropic tool defs derived from `TOOL_REGISTRY.input_schema`, now the canonical machine-readable param schema); system prompt derived from `contract.ts` (elaborates, never contradicts); model routing lanes `chat`/`strategist` (default PROVISIONAL — pending Paul's pick; both lanes inherit `AGENT_MODEL` until then); per-turn token/cost instrumentation via the new `agent_turn_completed` event; server-side per-org daily turn/token caps + global kill-switch budget, read back from the capture layer (`orchestrator/budget.ts`). Route: `POST /api/agent/chat` — `AGENT_ENABLED` flag + `AGENT_ORG_ALLOWLIST`, companion-tier, budget-checked, SSE. Validated end-to-end by `scripts/agent-eval/live-orchestrator.ts` (throwaway org, 4 scripted turns, cleanup; first run 7 Jul: ~£0.06/4-turn session on Sonnet 4.6).
+3. **Briefing-first surface** — NOT BUILT YET: the briefing pack rendered as a page (goal state, plan arithmetic, worth-your-time candidates) with the conversation thread attached — not a standalone chat. Needs thread persistence (see 14.3.1).
+4. **Eval harness, conversational cases** — NOT BUILT YET: extend the harness with multi-turn cases seeded from the MCP test transcript — the draft-refusal, the unverified-row handling, the mix inference. (The live harness's T2/T4 already smoke-test mix inference and draft-refusal informally.)
+
+### 14.2 Explicitly out of v1 (designed follow-ons, logged)
+
+- **Web research/search tools** in the agent path (stays excluded per §10/§12 — the sector-signals store is the sanctioned shape).
+- **Builder integration** (`action_type='apply'` link vocabulary stays reserved; no coupling).
+- **Proactive delivery / alerts** (digest, email, nudges — Phase 5; also blocked on alert opt-out UX).
+- **MCP changes of any kind** — the orchestrator consumes the same tool layer; exposure changes wait until the in-app path has shaken the contract out.
+
+### 14.3 Tool-layer awkwardness exposed by the conversational loop (flagged 7 Jul 2026)
+
+1. **No pipeline read tool.** `update_pipeline_item` needs `pipeline_item_id`, but nothing returns the org's pipeline items with ids (`get_briefing` carries arithmetic + candidates only). Conversationally, "we won the Wellbeing Trust one — mark it won" is impossible unless the add happened earlier in the same thread. Affects the MCP surface identically. Fix: a `get_pipeline` read tool (id, name, funder, stage, amount, deadline per item), or ids+items on the briefing payload.
+2. **Briefing FitCards are too thin to sequence from.** `top_candidates` carry no amount, no deadline/rolling flag, no warning codes — the one-shot reasoner's pack rendering had all three. A conversational model must burn one `assess_opportunity_against_plan` round-trip per candidate or (worse) speak without the data. Fix: add amount/timing/warning-code fields to the FitCard — still scaffold-slim.
+3. **Param schemas now live in three places**: `TOOL_REGISTRY.input_schema` (canonical, added this session), the MCP route's hand-written zod schemas, and the `params` display strings. Follow-on: derive the MCP zod from the canonical schema when MCP changes reopen.
+4. **The G1–G7 render gates don't exist on this surface.** `reason.ts`'s structured output is validated before display; streamed conversational prose can't be. `neverRestateNumbers` is prompt-level only here. Mitigations: the briefing page renders arithmetic from the tool result (deterministic), never from model prose; conversational eval cases (14.1.4) carry the number-discipline assertions; a post-hoc number-lint over the final text is possible but can't gate a live stream.
+5. **`assertScaffoldOnly` doesn't recurse.** Only top-level string params are length/name-checked; strings nested in arrays/objects (e.g. `constraints[].text`, `mix_targets` keys) bypass the prose guard. Fix: recurse into containers.
+6. **Briefing staleness policy is unstated.** In the live run, T3 ("give me my briefing") reused T2's `get_briefing` result from history rather than re-pulling — honest this time ("nothing has changed since"), but long threads will go stale. Needs a freshness rule in the prompt + an eval case (e.g. "re-pull after any write; re-pull if the last briefing is older than the turn budget").
+7. **`get_briefing` cost per call.** Every call rescoring the full active catalogue (~650 rows) is fine at cohort scale but conversational threads multiply calls; memoise per-turn or cache per-org-day when usage grows.
+
+### 14.4 Model routing decision (PENDING — Paul)
+
+Lanes wired (`AGENT_CHAT_MODEL` / `AGENT_STRATEGIST_MODEL`), default inherits `AGENT_MODEL` (Sonnet 4.6) until picked. Options + measured/indicative per-session costs presented 7 Jul 2026 (session notes); decision to be recorded here.
