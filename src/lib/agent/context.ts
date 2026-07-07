@@ -108,6 +108,8 @@ function toPackCandidate(g: GrantOpportunity, reasons: string[], eligibility: Pa
     funder_brief: brief,
     eligibility,
     matchReasons: reasons,
+    urlStatus: (g as { urlStatus?: string | null }).urlStatus ?? null,
+    urlLastChecked: (g as { urlLastChecked?: string | null }).urlLastChecked ?? null,
   }
 }
 

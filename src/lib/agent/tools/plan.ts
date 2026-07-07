@@ -103,6 +103,10 @@ interface FitCard {
   eligibility_status: string
   warning_codes: string[]
   match_reasons: string[]
+  /** Verification chrome (spec §3.1): 'checked' = the link validator passed on
+   *  checked_at (say "checked against funder site", never "verified");
+   *  'unverified' = never checked or last check failed → amber badge. */
+  record_check: { status: 'checked' | 'unverified'; checked_at: string | null }
 }
 export type BriefingPayload =
   | {
@@ -173,6 +177,9 @@ export function buildBriefingFull(pack: BriefingPack, deltas: PlanDeltas | null,
       eligibility_status: c.eligibility.status,
       warning_codes: c.eligibility.issues.map(i => i.code),
       match_reasons: c.matchReasons ?? [],
+      record_check: c.urlStatus === 'ok' && c.urlLastChecked
+        ? { status: 'checked', checked_at: c.urlLastChecked }
+        : { status: 'unverified', checked_at: null },
     })),
   }
 }

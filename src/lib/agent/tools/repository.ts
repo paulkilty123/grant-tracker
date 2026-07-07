@@ -225,14 +225,16 @@ export interface PlanDeltas {
   added: number
   stage_changes: number
   removed: number
-  events: Array<{ type: string; at: string; payload: Record<string, unknown> }>
+  /** surface carries attribution for the briefing's "Since you last looked"
+   *  ('mcp' renders as "via Claude"). */
+  events: Array<{ type: string; at: string; surface: string; payload: Record<string, unknown> }>
 }
 
 // Plan-delta since a timestamp, derived from the capture-layer event log alone
 // (pipeline_* events carry the surface tag). No agent_runs dependency.
 export async function getPipelineDeltasSince(orgId: string, since: string): Promise<PlanDeltas> {
   const { data } = await serviceClient()
-    .from('events').select('event_type, created_at, payload')
+    .from('events').select('event_type, created_at, surface, payload')
     .eq('org_id', orgId).gt('created_at', since)
     .in('event_type', ['pipeline_added', 'pipeline_stage_changed', 'pipeline_removed'])
     .order('created_at', { ascending: true })
@@ -241,6 +243,6 @@ export async function getPipelineDeltasSince(orgId: string, since: string): Prom
     added: rows.filter(r => r.event_type === 'pipeline_added').length,
     stage_changes: rows.filter(r => r.event_type === 'pipeline_stage_changed').length,
     removed: rows.filter(r => r.event_type === 'pipeline_removed').length,
-    events: rows.map(r => ({ type: String(r.event_type), at: String(r.created_at), payload: (r.payload as Record<string, unknown>) ?? {} })),
+    events: rows.map(r => ({ type: String(r.event_type), at: String(r.created_at), surface: String(r.surface ?? 'app'), payload: (r.payload as Record<string, unknown>) ?? {} })),
   }
 }

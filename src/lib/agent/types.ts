@@ -148,6 +148,9 @@ export interface PackCandidate {
   funder_brief?: FunderBrief | null
   eligibility: EligibilityVerdict
   matchReasons?: string[]
+  /** Link-checker state for the verification chrome (spec §3.1). */
+  urlStatus?: string | null
+  urlLastChecked?: string | null
 }
 
 export interface GoalArithmetic {

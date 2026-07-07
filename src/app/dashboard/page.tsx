@@ -7,6 +7,8 @@ import { Award, TrendingUp, Users, Rocket, GraduationCap, Gift, ArrowRight, Cale
 import { computeMatchScore, MATCH_TIER } from '@/lib/matching'
 import { normaliseScrapedGrant } from '@/lib/grants-normalise'
 import { getBuilderUser } from '@/lib/builder/access'
+import { agentEnabledForOrg } from '@/lib/agent/orchestrator/config'
+import { tierForOrgFlags } from '@/lib/mcp-entitlement'
 
 function formatDeadlineDate(deadline: string | null): { month: string; day: string } | null {
   if (!deadline) return null
@@ -60,6 +62,13 @@ export default async function DashboardPage() {
     return list[0]
   })()
   const typedOrg = org as Organisation | null
+
+  // Companion-surface users get the briefing as their home (design spec §1:
+  // the swap itself is part of what the tier visibly buys). No-op while
+  // AGENT_ENABLED is off — this page stays byte-identical for everyone else.
+  if (typedOrg && agentEnabledForOrg(typedOrg.id) && tierForOrgFlags(typedOrg as { apply_access?: boolean | null; companion_access?: boolean | null }) === 'companion') {
+    redirect('/dashboard/briefing')
+  }
 
   const { data: rawItems } = typedOrg
     ? await supabase.from('pipeline_items').select('*').eq('org_id', typedOrg.id).order('created_at', { ascending: false })

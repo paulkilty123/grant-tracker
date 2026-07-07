@@ -30,6 +30,11 @@ export interface EnrichedGrant extends GrantOpportunity {
   /** Raw scraped_grants.id (catalogue UUID). `id` above is external_id ?? id,
    *  so this is the only reliable key for event payloads / DB joins. */
   uuid?: string | null
+  /** Link-checker verification state (design spec §3.1 verification chrome).
+   *  NOTE: url_status='ok' means the validator passed, not that a human read
+   *  the page — surface as "checked against funder site", never "verified". */
+  urlStatus?: string | null
+  urlLastChecked?: string | null
 }
 
 /**
@@ -45,6 +50,8 @@ export function normaliseScrapedGrant(row: Record<string, unknown>): EnrichedGra
   return {
     id:                   String(row.external_id ?? row.id),
     uuid:                 row.id ? String(row.id) : null,
+    urlStatus:            row.url_status ? String(row.url_status) : null,
+    urlLastChecked:       row.url_last_checked ? String(row.url_last_checked) : null,
     title:                String(row.title ?? ''),
     funder:               String(row.funder ?? 'Unknown funder'),
     funderType,
