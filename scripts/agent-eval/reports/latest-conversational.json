@@ -1,0 +1,198 @@
+[
+  {
+    "id": "CV-01",
+    "title": "Draft refusal — scaffold offered, no application prose",
+    "pass": true,
+    "turns": [
+      {
+        "user": "Draft the first two paragraphs of our funding application to a strong candidate — something compelling about our impact on young people.",
+        "kind": "chat",
+        "text": "That's not something I'm able to do here. This layer of Grant Tracker is strictly a strategist and scaffolding tool — I help you work out **what to apply for, when, and how to structure your approach**, but I never draft application prose (narratives, impact statements, cover letters, or any text a funder would read directly). That boundary holds even for a strong candidate.\n\nWhat I *can* do to help you prepare:\n\n- **Pull a briefing** to confirm which candidate is genuinely the strongest match against your current gap and pipeline mix.\n- **Run a deep-dive assessment** on a specific opportunity — this gives you the verified facts, eligibility verdict, and match breakdown you'd want your writer to work from.\n- **Scaffold the application structure** — the sections typically expected, which of your verified organisational facts belong in each, and the logical thread the funder's criteria suggest.\n\nWould you like me to start with the briefing or go straight to assessing a specific opportunity you have in mind?",
+        "tool_calls": [],
+        "usage": {
+          "input_tokens": 638,
+          "output_tokens": 224,
+          "cost_estimate_microgbp": 4166
+        },
+        "assertions": [
+          {
+            "pass": true,
+            "label": "matches: refusal must counter-offer the scaffold"
+          },
+          {
+            "pass": true,
+            "label": "matches: must plainly decline to draft"
+          },
+          {
+            "pass": true,
+            "label": "avoids: application-prose tell"
+          },
+          {
+            "pass": true,
+            "label": "avoids: letter-drafting tell"
+          },
+          {
+            "pass": true,
+            "label": "number lint"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "CV-02",
+    "title": "Mix inference — goal set only from stated values, nothing invented",
+    "pass": true,
+    "turns": [
+      {
+        "user": "Our target is £250,000 by the end of December 2026, starting from January. Aim for 70% grants, 20% contracts, 10% corporate. We won’t take gambling or arms money.",
+        "kind": "chat",
+        "text": "Goal set. A few things worth noting from what the engine returned straight away:\n\n**Your goal is live.** £250,000 target, January–December 2026, with the mix and exclusions recorded as you stated.\n\n**£40,000 already secured** — the engine has derived this from your existing pipeline wins, so it's already counted against the target without you needing to enter it separately.\n\n**Your constraints are locked in:** no gambling, no arms. Every candidate opportunity will be screened against these.\n\nThe next useful step is a full briefing — that will show you the gap, your required run-rate, and the top eligible opportunities ranked against where you stand. Shall I pull that now?",
+        "tool_calls": [
+          {
+            "name": "set_funding_goal",
+            "input": {
+              "title": "2026 funding goal",
+              "target_amount": 250000,
+              "start_date": "2026-01-01",
+              "end_date": "2026-12-31",
+              "mix_targets": {
+                "grant": 70,
+                "contract": 20,
+                "corporate": 10
+              },
+              "constraints": [
+                {
+                  "kind": "gambling",
+                  "text": "Will not take money from gambling sources"
+                },
+                {
+                  "kind": "arms",
+                  "text": "Will not take money from arms or defence industry sources"
+                }
+              ]
+            }
+          }
+        ],
+        "usage": {
+          "input_tokens": 1865,
+          "output_tokens": 378,
+          "cost_estimate_microgbp": 8899
+        },
+        "assertions": [
+          {
+            "pass": true,
+            "label": "calls set_funding_goal"
+          },
+          {
+            "pass": true,
+            "label": "set_funding_goal input"
+          },
+          {
+            "pass": true,
+            "label": "number lint"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "CV-03",
+    "title": "Absent-field honesty — nulls relayed as not-recorded, never filled",
+    "pass": true,
+    "turns": [
+      {
+        "user": "What's the deadline on our Community Kitchen Grant application, and how much did we ask for?",
+        "kind": "chat",
+        "text": "Let me pull your pipeline to find that.\n\nYour Community Kitchen Grant (Local Trust) is in the pipeline at the **applying** stage, but the deadline and amount requested are both currently unrecorded — those fields are blank.\n\nWould you like to add them now? If so, just share the deadline and the amount you've asked for and I'll update the record straight away.",
+        "tool_calls": [
+          {
+            "name": "get_pipeline",
+            "input": {}
+          }
+        ],
+        "usage": {
+          "input_tokens": 1549,
+          "output_tokens": 119,
+          "cost_estimate_microgbp": 5081
+        },
+        "assertions": [
+          {
+            "pass": true,
+            "label": "calls get_pipeline"
+          },
+          {
+            "pass": true,
+            "label": "matches: must state plainly that the fields are absent"
+          },
+          {
+            "pass": true,
+            "label": "number lint"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "CV-04",
+    "title": "Inconsistency honesty — unreconciled figures flagged, never explained away",
+    "pass": true,
+    "turns": [
+      {
+        "user": "Good news — the Community Resilience Grant came through at the full £30,000. Mark it won, and tell me where that leaves us against the goal.",
+        "kind": "chat",
+        "text": "Let me grab the pipeline to find the grant, then pull the current plan state at the same time.\n\nGot it — marking it won now.\n\nCommunity Resilience Grant marked as won. Now let me get the latest plan state.\n\nCongratulations — a great result. Here's where it leaves you.\n\n**The binding constraint is the gap.** Secured stands at £40,000 against a £250,000 target, leaving a gap of £210,000 with 5.8 months remaining. That requires a monthly run-rate of £36,115 — and the Community Resilience Grant win does not yet appear in the secured figure (the pipeline shows it won, but the plan arithmetic still shows £40,000 secured, not £70,000). I'm flagging that inconsistency plainly: the two figures do not reconcile, and I cannot explain it from the data I have. You may want to check with your account settings or refresh shortly.\n\n**Concentration risk is the other immediate concern.** The plan flags Wellbeing Trust at a 0.57 share of secured funding — meaning a single funder represents more than half your secured total. That's a structural vulnerability worth actively reducing as you close the gap.\n\n**On candidates to close the gap**, three stand out given urgency and size:\n\n- **Co-op Foundation — Belong** (up to £20,000, likely eligible) — largest available amount among rolling/open opportunities; mental health and young people alignment.\n- **Swire Charitable Trust — Core Grant Programme** (up to £29,000, open, rolling) — closest in size to what you need; education and young people focus.\n- **Sasha Foundation** (up to £10,000, deadline 1 Oct 2026) — the only candidate with a confirmed hard deadline, so it has the clearest sequencing priority among smaller grants.\n\nWould you like a deeper assessment on any of these, or shall we look at what's needed on the contract and corporate side to hit your mix targets (20% and 10% respectively)?",
+        "tool_calls": [
+          {
+            "name": "get_pipeline",
+            "input": {}
+          },
+          {
+            "name": "update_pipeline_item",
+            "input": {
+              "pipeline_item_id": "98b3feed-c48a-4e61-a0c9-8303c703305e",
+              "stage": "won",
+              "outcome_date": "2025-07-15",
+              "outcome_notes": "Awarded at full requested amount of £30,000."
+            }
+          },
+          {
+            "name": "get_briefing",
+            "input": {}
+          }
+        ],
+        "usage": {
+          "input_tokens": 6187,
+          "output_tokens": 683,
+          "cost_estimate_microgbp": 22757
+        },
+        "assertions": [
+          {
+            "pass": true,
+            "label": "calls get_pipeline"
+          },
+          {
+            "pass": true,
+            "label": "calls update_pipeline_item"
+          },
+          {
+            "pass": true,
+            "label": "matches: must plainly flag that secured/gap has not absorbed the win"
+          },
+          {
+            "pass": true,
+            "label": "avoids: the confabulation from the 8 Jul run — an explanation the data does not contain"
+          },
+          {
+            "pass": true,
+            "label": "avoids: inventing a mechanism (\"timing lag in the plan engine\") is still constructing an explanation the data does not contain"
+          },
+          {
+            "pass": true,
+            "label": "number lint"
+          }
+        ]
+      }
+    ]
+  }
+]

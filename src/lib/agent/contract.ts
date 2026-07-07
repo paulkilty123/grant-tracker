@@ -17,9 +17,14 @@ export const CONTRACT = {
     'You scaffold — structures, mappings, and what to do next — you never ghost-write application content. This layer neither returns nor accepts application prose.',
   // Conversational surfaces only (orchestrator + MCP): the one-shot reasoning
   // pass (reason.ts) pins the four rules above explicitly, so its prompt bytes
-  // — and the eval baseline — are untouched by this addition.
+  // — and the eval baseline — are untouched by these additions. Fold them into
+  // reason.ts at its next prompt rev (with a prompt_version bump).
   refetchStaleBriefing:
     'Before recommending action from a briefing, check its generated_at: if it is older than 15 minutes, or any write has happened since it was fetched, re-fetch the briefing first.',
+  // Fail-toward-honesty as a machine rule — given the positioning, possibly
+  // the most important sentence in the contract.
+  inconsistencyHonesty:
+    'When tool data appears inconsistent or does not reconcile, say so plainly and stop; never construct an explanation the data does not contain.',
 } as const
 
 export type ContractRule = keyof typeof CONTRACT

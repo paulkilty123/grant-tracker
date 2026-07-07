@@ -89,7 +89,7 @@ export const TOOL_REGISTRY: ToolSpecEntry[] = [
     tier: 'companion',
     status: 'built',
     params: 'org_id',
-    description: `Return the deterministic plan arithmetic against the goal — secured, in-pipeline (weighted and unweighted), gap, months remaining, required monthly run-rate, and funder/opportunity concentration. Numbers only; ${CONTRACT.neverRestateNumbers} With no goal set, returns a short "set a goal to see plan state" payload. Use this only when you need the bare arithmetic; for a strategic briefing with candidates and what has changed, call get_briefing instead.`,
+    description: `Return the deterministic plan arithmetic against the goal — secured, in-pipeline (weighted and unweighted), gap, months remaining, required monthly run-rate, and funder/opportunity concentration. Numbers only; ${CONTRACT.neverRestateNumbers} ${CONTRACT.inconsistencyHonesty} With no goal set, returns a short "set a goal to see plan state" payload. Use this only when you need the bare arithmetic; for a strategic briefing with candidates and what has changed, call get_briefing instead.`,
     input_schema: { type: 'object', properties: {}, required: [] },
   },
   {
@@ -97,7 +97,7 @@ export const TOOL_REGISTRY: ToolSpecEntry[] = [
     tier: 'companion',
     status: 'built',
     params: 'org_id, since?',
-    description: `The primary tool for "where do I stand / what should I do next" — assemble the plan state, what has changed since \`since\`, and the top eligibility-checked candidates against the gap, deterministically from existing data. This is the reasoning surface: ${CONTRACT.constraintFirst} ${CONTRACT.factsVsJudgment} The payload carries generated_at: ${CONTRACT.refetchStaleBriefing} With no goal set, returns an onboarding payload naming exactly what's needed to build a plan — relay it as-is.`,
+    description: `The primary tool for "where do I stand / what should I do next" — assemble the plan state, what has changed since \`since\`, and the top eligibility-checked candidates against the gap, deterministically from existing data. This is the reasoning surface: ${CONTRACT.constraintFirst} ${CONTRACT.factsVsJudgment} ${CONTRACT.inconsistencyHonesty} The payload carries generated_at: ${CONTRACT.refetchStaleBriefing} With no goal set, returns an onboarding payload naming exactly what's needed to build a plan — relay it as-is.`,
     input_schema: {
       type: 'object',
       properties: {
