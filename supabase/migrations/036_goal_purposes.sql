@@ -23,9 +23,10 @@ create table if not exists public.goal_purposes (
   created_at    timestamptz not null default now(),
   updated_at    timestamptz not null default now(),
   status        text not null default 'active' check (status in ('active','retired')),
-  category      text not null check (category in ('core','programme','staffing','capital','capacity','working_capital','other')),
+  category      text not null check (category in ('core','programme','staffing','capital','capacity','working_capital','match_funding','other')),
   label         text not null,              -- free text: "Minibus appeal", "Youth worker post"
   approx_amount integer,                    -- whole pounds; nullable — roughness is honest (spec §4 Q2)
+  refinement    text,                       -- ask-with-refinement answer (rulebook v1.0 R3/R5): e.g. staffing 'delivery post', capacity 'finance and fundraising'
   sort_order    integer not null default 0
 );
 create index if not exists goal_purposes_org on public.goal_purposes (org_id, status);

@@ -12,7 +12,7 @@
 import { defineTool } from './envelope'
 import { emitEvent } from '../../events/emit'
 import { assembleBriefingPack, computeArithmetic, WEIGHTED_FORMULA_CAPTION } from '../context'
-import { getGoal, getPipeline, getOrg, getOrgFacts, getActiveCatalogue, getPipelineDeltasSince, getPurposeProgress, type PlanDeltas, type PurposeProgress } from './repository'
+import { getGoal, getPipeline, getOrg, getOrgFacts, getActiveCatalogue, getPipelineDeltasSince, getPurposeProgress, hasRecentWin, type PlanDeltas, type PurposeProgress } from './repository'
 import type { GoalArithmetic, GoalInput, PipelineEntry, BriefingPack } from '../types'
 import type { Organisation } from '@/types'
 
@@ -123,6 +123,9 @@ export type BriefingPayload =
       changes_since: PlanDeltas | null
       candidate_diff: 'deferred — needs agent_runs snapshots (§5.2)'
       top_candidates: FitCard[]
+      /** Deterministic strategist nudges (rulebook v1.0 R8b: match funding
+       *  after a recent win). Relay, and reason from, never invent. */
+      considerations: Array<{ kind: string; detail: string }>
     }
 
 export function buildBriefingOnboarding(org: Organisation | null, pipeline: PipelineEntry[]): BriefingPayload {
@@ -146,7 +149,7 @@ export function buildBriefingOnboarding(org: Organisation | null, pipeline: Pipe
   }
 }
 
-export function buildBriefingFull(pack: BriefingPack, deltas: PlanDeltas | null): BriefingPayload {
+export function buildBriefingFull(pack: BriefingPack, deltas: PlanDeltas | null, considerations: Array<{ kind: string; detail: string }> = []): BriefingPayload {
   return {
     has_goal: true,
     generated_at: new Date().toISOString(),
@@ -154,6 +157,7 @@ export function buildBriefingFull(pack: BriefingPack, deltas: PlanDeltas | null)
     coverage: pack.coverage,
     changes_since: deltas,
     candidate_diff: 'deferred — needs agent_runs snapshots (§5.2)',
+    considerations,
     top_candidates: pack.candidates.slice(0, 8).map(c => ({
       opportunity_id: c.id,
       title: c.title,
@@ -179,10 +183,14 @@ export const getBriefing = defineTool<{ since?: string } & Record<string, unknow
     const [goal, pipeline, org] = await Promise.all([getGoal(ctx.orgId), getPipeline(ctx.orgId), getOrg(ctx.orgId)])
     if (!goal) return buildBriefingOnboarding(org, pipeline)
     if (!org) throw new Error('get_briefing: organisation not found')
-    const [orgFacts, catalogue] = await Promise.all([getOrgFacts(ctx.orgId), getActiveCatalogue()])
+    const [orgFacts, catalogue, recentWin] = await Promise.all([getOrgFacts(ctx.orgId), getActiveCatalogue(), hasRecentWin(ctx.orgId)])
     const pack = assembleBriefingPack({ org, goal, pipeline, orgFacts, catalogue, asOf: today(), userTurn: null })
     const deltas = typeof p.since === 'string' ? await getPipelineDeltasSince(ctx.orgId, p.since) : null
-    return buildBriefingFull(pack, deltas)
+    const considerations = recentWin ? [{
+      kind: 'match_funding',
+      detail: 'A win was recorded in the last 30 days. Other funders will match against secured funding — consider match-funding asks that name the secured award; it can expand what the project delivers.',
+    }] : []
+    return buildBriefingFull(pack, deltas, considerations)
   },
   logEvent: async (ctx, _p, r) => {
     await emitEvent({ surface: ctx.surface, orgId: ctx.orgId, userId: ctx.userId },

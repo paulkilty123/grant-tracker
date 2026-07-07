@@ -60,13 +60,14 @@ export interface PurposeRow {
   category: string
   label: string
   approx_amount: number | null
+  refinement: string | null
 }
 
 export async function getPurposes(orgId: string): Promise<PurposeRow[]> {
   try {
     const { data, error } = await serviceClient()
       .from('goal_purposes')
-      .select('id, category, label, approx_amount, sort_order')
+      .select('id, category, label, approx_amount, refinement, sort_order')
       .eq('org_id', orgId).eq('status', 'active')
       .order('sort_order', { ascending: true })
     if (error || !data) return []
@@ -77,6 +78,7 @@ export async function getPurposes(orgId: string): Promise<PurposeRow[]> {
         category: String(row.category),
         label: String(row.label ?? ''),
         approx_amount: (row.approx_amount as number | null) ?? null,
+        refinement: (row.refinement as string | null) ?? null,
       }
     })
   } catch { return [] } // table not applied yet
@@ -202,6 +204,21 @@ export async function getGrantById(id: string): Promise<GrantOpportunity | null>
   const { data } = await serviceClient()
     .from('grants_with_funder').select('*').or(`id.eq.${id},external_id.eq.${id}`).limit(1).maybeSingle()
   return data ? normaliseScrapedGrant(data as Record<string, unknown>) : null
+}
+
+/** True when a pipeline item moved to 'won' within the window — drives the
+ *  briefing's match-funding consideration (rulebook v1.0 R8b). Derived from
+ *  the capture-layer event log, like the plan deltas. */
+export async function hasRecentWin(orgId: string, days = 30): Promise<boolean> {
+  const since = new Date(Date.now() - days * 86_400_000).toISOString()
+  const { data } = await serviceClient()
+    .from('events').select('payload')
+    .eq('org_id', orgId).eq('event_type', 'pipeline_stage_changed')
+    .gte('created_at', since).limit(100)
+  return (data ?? []).some(r => {
+    const payload = (r as Record<string, unknown>).payload as Record<string, unknown> | null
+    return payload?.to_stage === 'won'
+  })
 }
 
 export interface PlanDeltas {

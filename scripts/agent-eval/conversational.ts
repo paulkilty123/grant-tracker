@@ -39,7 +39,7 @@ interface TurnRecord {
   usage: { input_tokens: number; output_tokens: number; cost_estimate_microgbp: number }
   assertions: AssertionResult[]
 }
-interface CaseRecord { id: string; title: string; pass: boolean; turns: TurnRecord[] }
+interface CaseRecord { id: string; title: string; pass: boolean; turns: TurnRecord[]; error?: string }
 
 // ── number lint ──────────────────────────────────────────────────────────────
 
@@ -218,7 +218,14 @@ async function main() {
   for (const c of cases) {
     rule(`${c.id} — ${c.title}`)
     console.log(`seed: ${c.seed}`)
-    const r = await runCase(c)
+    let r: CaseRecord
+    try {
+      r = await runCase(c)
+    } catch (e) {
+      // A dead case must not kill the suite (or lose the report to a stale file).
+      r = { id: c.id, title: c.title, pass: false, turns: [], error: e instanceof Error ? e.message : String(e) }
+      console.log(`  ✗ case errored: ${r.error}`)
+    }
     records.push(r)
     for (const t of r.turns) {
       micro += t.usage.cost_estimate_microgbp

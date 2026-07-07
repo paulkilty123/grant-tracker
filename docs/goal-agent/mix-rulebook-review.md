@@ -1,69 +1,52 @@
-# Mix rulebook v0.1 + stage weights — review pack
+# Mix rulebook — v1.0 (reviewed) + stage weights (final)
 
-**Status: DRAFT, awaiting Paul's line-by-line review. Both tables are ship gates** (design spec §9): the rulebook gates the mix recommendation going live to users; the stage weights gate the weighted-pipeline figure being presented as trustworthy. The build is not gated — `recommend_mix` and `STAGE_WEIGHTS` are live in code at these draft values.
+**Status: REVIEWED — Paul's line-by-line markup applied 11 Jul 2026. Both ship gates cleared** on implementation of this document: rulebook `mix-rules-v1.0` (code: `src/lib/agent/tools/mix.ts`), stage weights final (code: `src/lib/agent/context.ts`), CV-02 extended to cover the R3/R5 follow-up questions. Future changes go through this document first, then code, with a version bump. Candidate categories Paul may add later: reserves rebuilding, appeal costs — the `mix_fallback_fired` log tells us what else the wild asks for.
 
-**How to mark up:** per row — `OK` / corrected split / corrected reasoning / `CUT`. Add rows for categories the draft misses. The code (`src/lib/agent/tools/mix.ts` RULEBOOK, `src/lib/agent/context.ts` STAGE_WEIGHTS) is updated from this document after review, and the version strings move off `-draft`.
-
-**Vocabulary (fixed by the spec, not under review):** mix is expressed in funding character — `unrestricted`, `project`, `capital`, `investment`. Sources (corporate, contracts, trusts) are attributes of opportunities within the mix.
+**Vocabulary (fixed by the spec):** mix is expressed in funding character — `unrestricted`, `project`, `capital`, `investment`. Sources (corporate, contracts, trusts) are attributes of opportunities within the mix.
 
 ---
 
-## 1. The rulebook: purpose category → mix split → stated reasoning
+## 1. The rulebook v1.0
 
-The reasoning column is delivered VERBATIM by the Companion as the firm, rule-derived register — it is product copy, not an implementation note.
+The reasoning column is delivered VERBATIM by the Companion in the firm register — it is product copy.
 
-| # | Category | Example purposes | Mix split | Reasoning the Companion states | Review |
-|---|---|---|---|---|---|
-| R1 | `core` | rent, utilities, admin, "keeping the lights on" | unrestricted 100 | "Core running costs point at unrestricted funders — harder to win, but each award covers months of running costs rather than one activity." | |
-| R2 | `programme` | delivery of a named programme or service | project 85 · unrestricted 15 | "Programme delivery maps to project funding, with a slice of unrestricted to keep overhead recovery honest." | |
-| R3 | `staffing` | new posts, salaries | unrestricted 50 · project 50 | "Posts split by what the role serves: delivery posts sit in project budgets; organisational posts need unrestricted income." | |
-| R4 | `capital` | equipment, vehicles, building work | capital 100 | "Equipment and building costs sit with capital funders — a distinct funder population from revenue grants." | |
-| R5 | `capacity` | systems, training, organisational development | project 70 · unrestricted 30 | "Capacity building is fundable as a defined project by infrastructure funders; some support it through unrestricted grants." | |
-| R6 | `working_capital` | cashflow ahead of contracted income (venture) | investment 100 | "Working capital ahead of contracted income is repayable-finance territory: describe the landscape and signpost readiness support; the decision to borrow is never advice this tool or its caller gives." | |
-| R7 | `other` | anything that fits no category | — no rule (deliberate) | — routes to the fallback below | |
+| # | Category | Mix split | Behaviour + reasoning the Companion states | Review outcome |
+|---|---|---|---|---|
+| R1 | `core` | unrestricted 100 | "Core running costs point at unrestricted funders — harder to win, but each award covers months of running costs rather than one activity." | ✅ confirmed |
+| R2 | `programme` | project 90 · unrestricted 10 | "Programme delivery maps to project funding — build full cost recovery into each budget so your overheads are covered within the grant itself; a small unrestricted slice covers what individual funders won't." | ✏️ split 85/15 → 90/10; reasoning rewritten (FCR, not overhead-via-unrestricted) |
+| R3 | `staffing` | ask-with-refinement: delivery → project 100 · organisational → unrestricted 100 · mixed/skipped → 50/50 | Clarify: "Is that a delivery post or an organisational post?" Reasoning: "Posts split by what the role serves: delivery posts sit in project budgets; organisational posts need unrestricted income." | ✏️ restructured as ask-with-refinement |
+| R4 | `capital` | capital 100 | "Equipment and building costs sit with capital funders — a distinct funder population from revenue grants." | ✅ confirmed |
+| R5 | `capacity` | project 70 · unrestricted 30 **+ opportunity types: programme, in_kind** | Clarify: "Which areas need strengthening — for example finance, digital, governance, fundraising itself?" Reasoning: "Capacity building is funded through project grants and unrestricted capacity-building grants — and the right support is often not money: organisational-development programmes and in-kind support cover this ground too." | ✏️ ask-with-refinement + recommends opportunity types beyond the mix |
+| R6 | `working_capital` | investment 100 **+ opportunity types: investment, programme** | "Working capital ahead of contracted income is repayable-finance territory. The landscape spans social investment, incubator and accelerator programmes (some carry funding), and impact investment (which may or may not take equity) — describe it and signpost; the decision to borrow or give equity is never advice this layer gives." | ✏️ held on-rulebook, landscape widened; advice boundary unchanged |
+| R8 | `match_funding` | project 100 | "Match funding comes from funders comfortable co-funding alongside a lead award — they match against money already secured, so name the secured grant in the ask; a confirmed win expands what you can credibly request." | ➕ NEW — part (a), the purpose rule |
+| R7 | `other` | — no rule (deliberate) | Routes to labelled Layer-2 judgment; every firing logged via `mix_fallback_fired` with the rulebook version | ✅ confirmed |
 
-**Open questions on the rows:**
-- R2/R5: are 85/15 and 70/30 the splits you actually advise, or placeholders to replace wholesale?
-- R3: should staffing instead *ask* (delivery post vs organisational post) rather than fix 50/50? That would be a rulebook feature (a clarifying sub-question), not just a number change.
-- R6: is `investment 100` right for v1, or should working_capital route entirely off-rulebook until the venture fork ships (it is gated behind the SI catalogue audit anyway)?
-- Missing categories? (e.g. reserves building, match funding for a confirmed grant, deficit recovery.)
+**R8 part (b) — strategist behaviour (the more valuable half):** after a win is recorded, the Companion raises match as a consideration — "other funders will match against secured funding, which can expand what the project delivers" — recommending it where the purpose fits. Implemented as an orchestrator steering line + a deterministic `considerations` entry on the briefing payload when a won-stage event exists in the last 30 days. **Logged gap:** match-friendly funders cannot yet be identified from catalogue data — a candidate enrichment field (e.g. `accepts_match`) recorded in build-spec §14 as a follow-on.
 
-## 2. Off-rulebook fallback behaviour (Layer 2 — also reviewable)
+## 2. Off-rulebook fallback (Layer 2) — confirmed
 
-- A purpose whose category has no rule (today: `other`) comes back marked `off_rulebook: true` with no mapping and no reasoning.
-- The Companion must present its own reasoning for those purposes **explicitly as its judgment, not a standard mapping** (steering in the tool description + orchestrator prompt; CV-07 polices the register).
-- Every firing logs a `mix_fallback_fired` event (categories + rulebook version) — the rulebook grows from real usage exactly as the catalogue does.
-- The blended `recommended_mix` covers only rule-derived purposes; fallback purposes are additional to it, never silently folded in.
+Unmapped purposes come back `off_rulebook: true`; the Companion reasons about them explicitly as its judgment; every firing logs `mix_fallback_fired`; the blended mix covers rule-derived purposes only.
 
-## 3. Blending mechanics (decisions embedded in code — confirm or correct)
+## 3. Blending mechanics — confirmed as drafted
 
-| # | Mechanic | Current behaviour | Review |
-|---|---|---|---|
-| B1 | Weighting | Each purpose's mapping is weighted by its approximate amount | |
-| B2 | Missing amounts | A purpose with no stated amount is weighted at the MEAN of the stated amounts (equal weight if none are stated) | |
-| B3 | Rounding | Largest-remainder to integers summing exactly 100; zero-percent components dropped | |
-| B4 | Totals | `purposes_total` (sum of stated amounts) returned so the Companion can state the total verbatim | |
+B1 amount-weighted · B2 missing amounts weighted at the mean of stated amounts (equal if none) · B3 largest-remainder rounding to 100, zero components dropped · B4 `purposes_total` returned for verbatim totals. Ask-with-refinement components blend at their refined mapping once refined, default mapping until then.
 
-## 4. Stage weights (the weighted-pipeline figure)
+## 4. Stage weights — FINAL
 
-Caption shown wherever the figure renders: **"weighted = amount × stage likelihood"**. V1 weights are fixed and visible; learned weights are a brain feature later.
+Caption everywhere the figure renders: **"weighted = amount × stage likelihood"**. **Principle (recorded in build-spec §14): the gap must never flatter — conservative beats optimistic everywhere the arithmetic surfaces.**
 
-| Stage | Weight | Reads as | Review |
-|---|---|---|---|
-| identified | 0.10 | "a 1-in-10 chance while it's just a lead" | |
-| applying | 0.30 | "3-in-10 once you're writing it" | |
-| submitted | 0.50 | "a coin flip once it's in" | |
-| won | 1.00 | counted in full (also feeds derived secured) | |
-| declined | 0.00 | contributes nothing | |
-
-**Open questions:** is 0.5 at submitted too generous for competitive national funds (sector benchmarks often sit nearer 0.25–0.4)? Should `identified` count at all — 0.1 across a fat top-of-funnel can inflate the weighted figure an anxious user leans on?
+| Stage | Weight | Rationale |
+|---|---|---|
+| identified | **0** | a bookmark is not money |
+| applying | **0.25** | |
+| submitted | **0.40** | |
+| won | 1.00 | counted in full; feeds derived secured |
+| declined | 0.00 | |
 
 ## 5. Sign-off
 
-- [ ] Rulebook rows R1–R7 marked up and final
-- [ ] Fallback behaviour confirmed
-- [ ] Blending mechanics B1–B4 confirmed
-- [ ] Stage weights confirmed
-- [ ] Code updated from this doc; versions move off `-draft` (`mix-rules-v0.1-draft` → `mix-rules-v1`); evals re-run
-
-Once signed off, this document is the canonical statement of the rulebook; the code is its implementation.
+- [x] Rulebook rows marked up and final (11 Jul 2026)
+- [x] Fallback behaviour confirmed
+- [x] Blending mechanics confirmed
+- [x] Stage weights final
+- [x] Code updated from this doc; `mix-rules-v1.0`; CV-02 extended to R3/R5 follow-ups; suite green

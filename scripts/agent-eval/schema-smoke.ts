@@ -32,7 +32,28 @@ async function main() {
   const tools = await import('../../src/lib/agent/tools')
   const repo = await import('../../src/lib/agent/tools/repository')
   const threads = await import('../../src/lib/agent/orchestrator/threads')
+  const { deriveMix, RULEBOOK_VERSION } = await import('../../src/lib/agent/tools/mix')
+  const { STAGE_WEIGHTS } = await import('../../src/lib/agent/context')
   type Ctx = import('../../src/lib/agent/tools/types').ToolContext
+
+  // ── rulebook v1.0 units (pure — no DB, no model) ───────────────────────────
+  rule(`rulebook units — ${RULEBOOK_VERSION}`)
+  const r2 = deriveMix([{ category: 'programme', label: 'x', approx_amount: 100 }])
+  check('R2 programme → project 90 / unrestricted 10', r2.recommended_mix?.project === 90 && r2.recommended_mix?.unrestricted === 10)
+  const r3a = deriveMix([{ category: 'staffing', label: 'x' }])
+  check('R3 unrefined staffing carries the clarify question + 50/50 default',
+    !!r3a.components[0].clarify && r3a.components[0].mapping?.project === 50)
+  const r3b = deriveMix([{ category: 'staffing', label: 'x', refinement: 'delivery post' }])
+  check('R3 delivery refinement → project 100, no clarify', r3b.components[0].mapping?.project === 100 && !r3b.components[0].clarify)
+  const r3c = deriveMix([{ category: 'staffing', label: 'x', refinement: 'organisational' }])
+  check('R3 organisational refinement → unrestricted 100', r3c.components[0].mapping?.unrestricted === 100)
+  const r5 = deriveMix([{ category: 'capacity', label: 'x' }])
+  check('R5 capacity carries clarify + programme/in_kind opportunity types',
+    !!r5.components[0].clarify && JSON.stringify(r5.components[0].recommended_opportunity_types) === '["programme","in_kind"]')
+  const r8 = deriveMix([{ category: 'match_funding', label: 'x', approx_amount: 10000 }])
+  check('R8 match_funding on-rulebook (project 100)', r8.components[0].off_rulebook === false && r8.components[0].mapping?.project === 100)
+  check('stage weights finalised (identified 0 / applying 0.25 / submitted 0.4)',
+    STAGE_WEIGHTS.identified === 0 && STAGE_WEIGHTS.applying === 0.25 && STAGE_WEIGHTS.submitted === 0.4 && STAGE_WEIGHTS.won === 1)
 
   const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } })
 
@@ -95,7 +116,7 @@ async function main() {
 
       const progress = await repo.getPurposeProgress(orgId)
       const capProg = progress?.purposes.find(p => p.purpose_id === capital.purpose_id)
-      check('per-purpose progress derives (capital weighted 10000 = 20000 × 0.5)', capProg?.weighted === 10000, `got ${capProg?.weighted}`)
+      check('per-purpose progress derives (capital weighted 8000 = 20000 × 0.4)', capProg?.weighted === 8000, `got ${capProg?.weighted}`)
       check('unassigned bucket carries the pre_existing win', progress?.unassigned.secured === 15000, `got ${progress?.unassigned.secured}`)
 
       await tools.updatePipelineItem(ctx, { pipeline_item_id: add.data.id, stage: 'won' })
@@ -115,11 +136,12 @@ async function main() {
       check('secured derives across adjustment (15000 + 20000)', set2.data.goal.secured_amount === 35000, `got ${set2.data.goal.secured_amount}`)
 
       const upd = await tools.updateGoalPurposes(ctx, {
-        add: [{ category: 'staffing', label: 'Youth worker post', approx_amount: 30000 }],
+        add: [{ category: 'staffing', label: 'Youth worker post', approx_amount: 30000, refinement: 'delivery post' }],
         retire: [set1.data.purposes.find(p => p.category === 'programme')!.purpose_id],
       })
       check('update_goal_purposes add+retire', upd.data.added === 1 && upd.data.retired === 1 && upd.data.purposes.length === 3,
         `added ${upd.data.added} retired ${upd.data.retired} now ${upd.data.purposes.length}`)
+      check('refinement persists and reads back', upd.data.purposes.find(p => p.category === 'staffing')?.refinement === 'delivery post')
 
       const plan = await tools.getPlanState(ctx, {})
       check('get_plan_state carries purposes block', plan.data.has_goal === true && !!plan.data.purposes && plan.data.purposes.items.length === 3)

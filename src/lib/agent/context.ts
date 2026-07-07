@@ -20,12 +20,13 @@ import type {
 const SHORTLIST_N = 40
 
 /** Per-stage likelihood weights for the weighted-pipeline figure (design spec
- *  §7). V1 uses these FIXED values, surfaced to the user via the formula
- *  caption below — any computed number the user might distrust carries its
- *  formula. PENDING: Paul's stage-weights review session (spec §9) may adjust
- *  the values; learned weights are a brain feature later. */
+ *  §7). FINALISED in the rulebook review (v1.0): identified counts ZERO — a
+ *  bookmark is not money — and the principle recorded in build-spec §14 is
+ *  that the gap must never flatter; conservative beats optimistic everywhere
+ *  the arithmetic surfaces. Values render to users via the caption below.
+ *  Learned weights are a brain feature later. */
 export const STAGE_WEIGHTS: Record<string, number> = {
-  identified: 0.1, applying: 0.3, submitted: 0.5, won: 1, declined: 0,
+  identified: 0, applying: 0.25, submitted: 0.4, won: 1, declined: 0,
 }
 export const WEIGHTED_FORMULA_CAPTION = 'weighted = amount × stage likelihood'
 

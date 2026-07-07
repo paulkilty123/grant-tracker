@@ -19,13 +19,16 @@ import { defineTool } from './envelope'
 import { prov, type Provenance } from './types'
 import type { GoalInput } from '../types'
 
-export const PURPOSE_CATEGORIES = ['core', 'programme', 'staffing', 'capital', 'capacity', 'working_capital', 'other'] as const
+export const PURPOSE_CATEGORIES = ['core', 'programme', 'staffing', 'capital', 'capacity', 'working_capital', 'match_funding', 'other'] as const
 export type PurposeCategory = typeof PURPOSE_CATEGORIES[number]
 
 export interface PurposeInput {
   category: PurposeCategory
   label: string
   approx_amount?: number | null
+  /** Ask-with-refinement answer (rulebook v1.0 R3/R5), e.g. staffing
+   *  'delivery post', capacity 'finance and fundraising'. */
+  refinement?: string | null
 }
 
 const nowIso = () => new Date().toISOString()
@@ -148,6 +151,7 @@ export const setFundingGoal = defineTool<SetFundingGoalParams, SetFundingGoalRes
           category: purpose.category,
           label: purpose.label,
           approx_amount: purpose.approx_amount != null ? Math.round(purpose.approx_amount) : null,
+          refinement: purpose.refinement ?? null,
           sort_order: i,
         }))
         const { error: pErr } = await sb.from('goal_purposes').insert(rows)
@@ -189,7 +193,7 @@ export const setFundingGoal = defineTool<SetFundingGoalParams, SetFundingGoalRes
 
 export interface UpdateGoalPurposesParams extends Record<string, unknown> {
   add?: PurposeInput[]
-  update?: Array<{ purpose_id: string; label?: string; approx_amount?: number | null; category?: PurposeCategory }>
+  update?: Array<{ purpose_id: string; label?: string; approx_amount?: number | null; category?: PurposeCategory; refinement?: string | null }>
   retire?: string[] // purpose ids
 }
 export interface UpdateGoalPurposesResult {
@@ -217,6 +221,7 @@ export const updateGoalPurposes = defineTool<UpdateGoalPurposesParams, UpdateGoa
         category: purpose.category,
         label: purpose.label,
         approx_amount: purpose.approx_amount != null ? Math.round(purpose.approx_amount) : null,
+        refinement: purpose.refinement ?? null,
         sort_order: 100 + added,
       })
       if (error) throw new Error(`update_goal_purposes: add failed: ${error.message}`)
@@ -227,6 +232,7 @@ export const updateGoalPurposes = defineTool<UpdateGoalPurposesParams, UpdateGoa
       if (u.label !== undefined) patch.label = u.label
       if (u.approx_amount !== undefined) patch.approx_amount = u.approx_amount != null ? Math.round(u.approx_amount) : null
       if (u.category !== undefined) patch.category = u.category
+      if (u.refinement !== undefined) patch.refinement = u.refinement
       const { data, error } = await sb.from('goal_purposes')
         .update(patch).eq('id', u.purpose_id).eq('org_id', ctx.orgId).select('id')
       if (error) throw new Error(`update_goal_purposes: update failed: ${error.message}`)

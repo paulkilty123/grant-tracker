@@ -23,6 +23,7 @@ const PURPOSE_ITEM_SCHEMA = {
     category: { type: 'string', enum: [...PURPOSE_CATEGORIES], description: 'Purpose category. Use "other" only when nothing fits — it routes to your own labelled judgment via recommend_mix.' },
     label: { type: 'string', description: 'Short free-text label, e.g. "Minibus appeal", "Youth worker post".' },
     approx_amount: { type: 'number', description: 'Approximate whole pounds. Roughness is fine — omit if the user genuinely does not know.' },
+    refinement: { type: 'string', description: "The user's answer to a recommend_mix clarifying question, e.g. staffing 'delivery post' / 'organisational post', capacity 'finance and fundraising'. Omit until asked and answered." },
   },
   required: ['category', 'label'],
 }

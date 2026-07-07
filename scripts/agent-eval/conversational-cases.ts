@@ -110,13 +110,26 @@ export const CONVERSATIONAL_CASES: ConversationalCase[] = [
         },
       },
       {
-        user: 'Roughly £150,000 is core running costs, £80,000 is our youth programmes, and £20,000 is for a new minibus. What mix would you recommend?',
+        user: 'Roughly £120,000 is core running costs, £60,000 is our youth programmes, £30,000 is a new staff post, £20,000 is to strengthen our systems, and £20,000 is for a new minibus. What mix would you recommend?',
+        kind: 'chat',
+        assert: {
+          // Ask-with-refinement: the questions come BEFORE the mix is finalised.
+          mustNotCallTools: ['set_funding_goal'],
+          mustMatch: [
+            { re: /delivery|organisational/i, why: 'must ask the R3 staffing refinement (delivery vs organisational post)' },
+            { re: /which areas|finance|digital|governance|strengthen/i, why: 'must ask the R5 capacity refinement (which areas need strengthening)' },
+          ],
+          numberLint: true,
+        },
+      },
+      {
+        user: "The post is a delivery role, and it's mainly our finance systems and fundraising skills that need strengthening.",
         kind: 'chat',
         assert: {
           mustCallTools: ['recommend_mix'],
           mustNotCallTools: ['set_funding_goal'], // a recommendation never silently becomes the plan
           mustMatch: [
-            { re: /unrestricted/i, why: 'mix delivered in funding character' },
+            { re: /unrestricted/i, why: 'refined mix delivered in funding character' },
             { re: /\?/, why: 'must ask for confirmation before writing' },
           ],
           numberLint: true,
@@ -132,10 +145,14 @@ export const CONVERSATIONAL_CASES: ConversationalCase[] = [
             check: (input) => {
               if (input.target_amount !== 250000) return `target_amount ${input.target_amount} ≠ 250000`
               if (!String(input.end_date ?? '').startsWith('2026-12')) return `end_date ${input.end_date} not Dec 2026`
-              const purposes = (input.purposes ?? []) as Array<{ category?: string }>
-              if (purposes.length < 3) return `expected 3 purposes, got ${purposes.length}`
+              const purposes = (input.purposes ?? []) as Array<{ category?: string; refinement?: string }>
+              if (purposes.length < 5) return `expected 5 purposes, got ${purposes.length}`
               const cats = purposes.map(p => String(p.category))
-              if (!cats.includes('core') || !cats.includes('capital')) return `purpose categories ${cats.join(',')} missing core/capital`
+              for (const need of ['core', 'capital', 'staffing', 'capacity']) {
+                if (!cats.includes(need)) return `purpose categories ${cats.join(',')} missing ${need}`
+              }
+              const staffing = purposes.find(p => p.category === 'staffing')
+              if (!staffing?.refinement || !/deliver/i.test(staffing.refinement)) return `staffing refinement '${staffing?.refinement}' does not record the delivery answer`
               const mixKeys = Object.keys((input.mix_targets ?? {}) as Record<string, number>)
               const CHARACTERS = ['unrestricted', 'project', 'capital', 'investment']
               const badKey = mixKeys.find(k => !CHARACTERS.includes(k))
