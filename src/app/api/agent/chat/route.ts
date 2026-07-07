@@ -8,13 +8,16 @@
 // then one orchestrator turn, streamed as SSE.
 //
 // Body: { user_turn: string, turn_kind?: 'chat' | 'strategist',
-//         history?: MessageParam[] }  — history is the caller's replay of prior
-// turns (stateless v1; server-side thread persistence is a logged follow-on.
-// A caller can only ever "inject" into their own org's conversation — all data
-// the model can reach is scoped by the server-resolved ToolContext).
+//         history?: MessageParam[] }
 //
-// Stream: SSE, one JSON event per line — text_delta | tool_start | tool_done |
-// done (with usage) | error.
+// History is SERVER-SIDE (spec §9 step 3): each turn replays from the org's
+// active thread (agent_threads/agent_messages) and persists its new messages
+// back. body.history is honoured ONLY as a stateless fallback when migration
+// 037 is not applied — once threads exist, client history is ignored, which
+// also closes the fabricated-tool-result injection surface.
+//
+// Stream: SSE, one JSON event per line — thread (id, first) | text_delta |
+// tool_start | tool_done | done (with usage) | error.
 
 import { NextRequest, NextResponse } from 'next/server'
 import type Anthropic from '@anthropic-ai/sdk'
@@ -22,6 +25,7 @@ import { resolveWebToolContext } from '@/lib/agent/boundary'
 import { runAgentTurn, type OrchestratorEvent } from '@/lib/agent/orchestrator/loop'
 import { checkInferenceBudget } from '@/lib/agent/orchestrator/budget'
 import { agentEnabledForOrg, type TurnKind } from '@/lib/agent/orchestrator/config'
+import { getOrCreateActiveThread, loadThreadHistory, appendTurn } from '@/lib/agent/orchestrator/threads'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 120
@@ -54,15 +58,24 @@ export async function POST(req: NextRequest) {
   const userTurn = (body.user_turn ?? '').trim()
   if (!userTurn) return NextResponse.json({ error: 'user_turn required' }, { status: 400 })
   const turnKind: TurnKind = body.turn_kind === 'strategist' ? 'strategist' : 'chat'
-  const history = Array.isArray(body.history) ? body.history : []
+
+  // Server-side thread; stateless client-history fallback pre-migration-037.
+  const threadId = await getOrCreateActiveThread(ctx.orgId)
+  const history = threadId
+    ? await loadThreadHistory(threadId)
+    : (Array.isArray(body.history) ? body.history : [])
 
   const encoder = new TextEncoder()
   const stream = new ReadableStream({
     async start(controller) {
-      const send = (ev: OrchestratorEvent) =>
+      const send = (ev: OrchestratorEvent | { type: 'thread'; thread_id: string | null }) =>
         controller.enqueue(encoder.encode(`data: ${JSON.stringify(ev)}\n\n`))
+      send({ type: 'thread', thread_id: threadId })
       try {
-        await runAgentTurn({ ctx, history, userTurn, turnKind, onEvent: send })
+        const res = await runAgentTurn({ ctx, history, userTurn, turnKind, onEvent: send })
+        if (threadId) {
+          await appendTurn(threadId, ctx.orgId, res.messages.slice(history.length), { turnKind, usage: res.usage })
+        }
       } catch (e) {
         console.error('[agent/chat] turn failed:', e)
         send({ type: 'error', message: 'Something went wrong mid-turn. Please try again.' })

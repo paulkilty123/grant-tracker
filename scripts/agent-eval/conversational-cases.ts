@@ -234,7 +234,7 @@ export const CONVERSATIONAL_CASES: ConversationalCase[] = [
           mustNotCallTools: ['set_funding_goal'],
           mustMatch: [
             { re: /purpose/i, why: 'must offer a purpose inside the plan as the real answer' },
-            { re: /(one|single) (active )?(goal|strategy|plan)|whole (funding )?picture|within your (existing |current )?(goal|plan)|inside your (existing |current )?(goal|plan)|part of your (existing |current )?(goal|plan)/i, why: 'must explain the one-strategy principle, not just refuse' },
+            { re: /(one|single)[- ](active[- ])?(goal|strategy|plan)|whole (funding )?picture|(inside|within|part of)\W{0,4}your (existing |current )?(goal|plan)/i, why: 'must explain the one-strategy principle, not just refuse' },
           ],
           numberLint: true,
         },
