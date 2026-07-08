@@ -133,11 +133,44 @@ function excludedByFact(g: GrantOpportunity, facts: OrgFact[]): boolean {
 export function assembleBriefingPack(input: ContextInput): BriefingPack {
   const { org, goal, pipeline, orgFacts, catalogue, asOf } = input
 
-  // Score every catalogue row, keep the top N by match score (build-spec §6.1.2).
+  // Cash-first for cash gaps. Match score alone floats generic non-cash support
+  // (in-kind pro bono, volunteer matching) to the top because it "fits" every
+  // org — so a Manchester charity that needs £150k cash was led with pro bono
+  // consultancy. Rank by whether a candidate's funding type serves a funding
+  // character the goal's gap actually targets, THEN by score. A cash gap (mix
+  // is cash-character, or no mix is set) puts grants first; in-kind and
+  // repayable investment drop below the cash it needs — still present, not the
+  // lead. A venture mix that targets investment lifts investment back up.
+  // Deterministic, so both the briefing page and MCP get_briefing get it.
+  const CASH_CHARS = new Set(['unrestricted', 'project', 'capital'])
+  // grant delivers cash (unrestricted/project/capital); investment is repayable
+  // finance; programme and in_kind are SUPPORT, never a mix character — so they
+  // never lead a gap, only supplement it (the rulebook surfaces them as
+  // recommended_opportunity_types, not gap-closers).
+  const CHARS_BY_TYPE: Record<string, string[]> = {
+    grant: ['unrestricted', 'project', 'capital'],
+    investment: ['investment'],
+    programme: [],
+    in_kind: [],
+  }
+  const gapChars = goal.mix_targets && Object.keys(goal.mix_targets).length > 0
+    ? new Set(Object.keys(goal.mix_targets))
+    : CASH_CHARS // no confirmed mix ⇒ a cash gap
+  const gapAppropriate = (type: string | null | undefined): boolean => {
+    const chars = CHARS_BY_TYPE[type ?? 'grant'] ?? Array.from(CASH_CHARS) // unknown type ⇒ treat as cash
+    return chars.some(c => gapChars.has(c))
+  }
+
+  // Score every catalogue row, then rank gap-appropriate first, score second,
+  // before taking the top N (build-spec §6.1.2).
   const scored = catalogue.map(g => {
     const m = computeMatchScore(g, org)
     return { g, score: m.score, reasons: m.positiveReasons ?? [] }
-  }).sort((a, b) => b.score - a.score).slice(0, SHORTLIST_N)
+  }).sort((a, b) => {
+    const ga = gapAppropriate(a.g.fundingType), gb = gapAppropriate(b.g.fundingType)
+    if (ga !== gb) return ga ? -1 : 1
+    return b.score - a.score
+  }).slice(0, SHORTLIST_N)
 
   const candidates: PackCandidate[] = []
   const ruleOutAnnex: BriefingPack['ruleOutAnnex'] = []

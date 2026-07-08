@@ -208,12 +208,16 @@ export default function BriefingView({ briefing, plan, pipeline, displayName }: 
                     ))}
                   </div>
                 )}
+                {/* Verification + warnings are quiet secondary info, never accented:
+                    almost every candidate carries some warning, so accenting them
+                    turns the whole briefing into red flags. State them plainly in
+                    the tertiary grey and let the reasoning decide. */}
                 <div className="mt-2 text-[11px]" style={{ color: '#8A8986' }}>
                   {item.c.record_check.status === 'checked'
-                    ? <>✓ checked against funder site · {fmtDate(item.c.record_check.checked_at)}</>
-                    : <span className="px-2 py-0.5" style={{ background: '#FAEEDA', color: '#854F0B', borderRadius: 999 }}>unverified record — confirm before you invest time</span>}
+                    ? <>checked against funder site · {fmtDate(item.c.record_check.checked_at)}</>
+                    : <>record not yet re-checked</>}
                   {item.c.warning_codes.length > 0 && (
-                    <span className="ml-2" style={{ color: '#993C1D' }}>check: {item.c.warning_codes.join(', ')}</span>
+                    <span className="ml-2">· worth confirming: {item.c.warning_codes.join(', ')}</span>
                   )}
                 </div>
               </>
