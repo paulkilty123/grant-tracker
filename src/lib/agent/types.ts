@@ -151,6 +151,9 @@ export interface PackCandidate {
   /** Link-checker state for the verification chrome (spec §3.1). */
   urlStatus?: string | null
   urlLastChecked?: string | null
+  /** Award-size mismatch named on the card when the minimum award dwarfs the
+   *  goal or the org's income (briefing v2 §1). Null when the size is fine. */
+  sizeNote?: string | null
 }
 
 export interface GoalArithmetic {

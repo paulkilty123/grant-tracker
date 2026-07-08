@@ -199,6 +199,8 @@ interface FitCard {
    *  checked_at (say "checked against funder site", never "verified");
    *  'unverified' = never checked or last check failed → amber badge. */
   record_check: { status: 'checked' | 'unverified'; checked_at: string | null }
+  /** Award-size mismatch to name on the card (briefing v2 §1), or null. */
+  size_note: string | null
 }
 export type BriefingPayload =
   | {
@@ -289,6 +291,7 @@ export function buildBriefingFull(pack: BriefingPack, deltas: PlanDeltas | null,
       record_check: c.urlStatus === 'ok' && c.urlLastChecked
         ? { status: 'checked', checked_at: c.urlLastChecked }
         : { status: 'unverified', checked_at: null },
+      size_note: c.sizeNote ?? null,
     })),
   }
 }

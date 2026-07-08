@@ -91,7 +91,9 @@ export default function BriefingView({ briefing, plan, pipeline, displayName }: 
   const oppMove: Move | null = topC ? {
     kind: 'opportunity', rank: 100,
     headline: topC.title,
-    sentence: `${topC.funder} could add ${amountLine(topC)} and ${timingLine(topC)}. It clears your eligibility checks, so it is worth a serious look this week.`,
+    sentence: topC.size_note
+      ? `${topC.funder} could add ${amountLine(topC)} and ${timingLine(topC)}, but ${topC.size_note.charAt(0).toLowerCase()}${topC.size_note.slice(1)} Weigh whether the fit is worth pursuing.`
+      : `${topC.funder} could add ${amountLine(topC)} and ${timingLine(topC)}. It clears your eligibility checks, so it is worth a serious look this week.`,
     action: { label: 'See the full match', mode: 'link', href: `/dashboard/search?grant=${encodeURIComponent(topC.opportunity_id)}` },
     meta: { candidate: topC },
   } : null
@@ -119,7 +121,7 @@ export default function BriefingView({ briefing, plan, pipeline, displayName }: 
     <div className="max-w-3xl">
       {/* header — greeting + judgment summary (consequences, not counts) */}
       <h1 className="text-2xl font-bold" style={{ ...grotesk, color: COLOR.ink }}>{greeting}, {displayName}.</h1>
-      <p className="mt-1 text-[13px]" style={{ color: COLOR.mid }}>{summaryLine}</p>
+      <p className="mt-1 text-[13px]" style={{ color: COLOR.ink }}>{summaryLine}</p>
 
       {/* hero card — one number: still to find */}
       <div className="bg-white rounded-xl p-5 mt-6" style={{ border: `1px solid ${COLOR.hair}` }}>
@@ -127,6 +129,11 @@ export default function BriefingView({ briefing, plan, pipeline, displayName }: 
           <div>
             <SectionLabel>Still to find</SectionLabel>
             <HeroNumber>{gbp(a.gap)}</HeroNumber>
+            {a.secured === 0 && a.inPipelineUnweighted === 0 && (
+              <p className="text-[13px] mt-1.5 max-w-md" style={{ color: COLOR.mid }}>
+                This is normal at day one. The plan below is how that changes.
+              </p>
+            )}
           </div>
           <div className="text-right shrink-0">
             {deadlineChip && <div className="mb-1.5"><AmberPill>{deadlineChip}</AmberPill></div>}
@@ -173,8 +180,8 @@ export default function BriefingView({ briefing, plan, pipeline, displayName }: 
               )}
               {topCandidate && <span className="text-[12px] shrink-0" style={{ color: COLOR.mid }}>{amountLine(topCandidate)}</span>}
             </div>
-            {topCandidate && <div className="text-[12px] mt-0.5" style={{ color: COLOR.mid }}>{topCandidate.funder} · {timingLine(topCandidate)}</div>}
-            <p className="text-[13px] mt-2 leading-relaxed" style={{ color: COLOR.mid }}>{primary.sentence}</p>
+            {topCandidate && <div className="text-[12px] mt-0.5" style={{ color: COLOR.faint }}>{topCandidate.funder} · {timingLine(topCandidate)}</div>}
+            <p className="text-[13px] mt-2 leading-relaxed" style={{ color: COLOR.ink }}>{primary.sentence}</p>
             <div className="flex items-center gap-2 mt-3 flex-wrap">
               <ActionButton action={primary.action} primary />
               {primary.secondary && <ActionButton action={primary.secondary} />}
@@ -209,7 +216,7 @@ export default function BriefingView({ briefing, plan, pipeline, displayName }: 
               return (
                 <div key={`${m.kind}-${i}`} className="bg-white rounded-xl p-3" style={{ border: `1px solid ${COLOR.hair}` }}>
                   <div className="text-[13px] font-semibold" style={{ ...grotesk, color: COLOR.ink }}>{m.headline}</div>
-                  <p className="text-[12px] mt-0.5 leading-relaxed" style={{ color: COLOR.mid }}>{m.sentence}</p>
+                  <p className="text-[13px] mt-0.5 leading-relaxed" style={{ color: COLOR.ink }}>{m.sentence}</p>
                   <div className="mt-2"><ActionButton action={m.action} /></div>
                   {cand && cand.warning_codes.length > 0 && <div className="text-[11px] mt-1.5" style={{ color: COLOR.faint }}>worth confirming: {cand.warning_codes.join(', ')}</div>}
                 </div>
@@ -239,7 +246,7 @@ export default function BriefingView({ briefing, plan, pipeline, displayName }: 
                   </li>
                 ))}
                 {briefing.selection_note && (
-                  <li className="text-[12.5px]" style={{ color: COLOR.mid }}>{briefing.selection_note}</li>
+                  <li className="text-[13px]" style={{ color: COLOR.ink }}>{briefing.selection_note}</li>
                 )}
               </ul>
             )}

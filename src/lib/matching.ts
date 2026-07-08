@@ -30,7 +30,7 @@ export interface MatchResult {
 // Map income bands to approximate midpoints.
 // Covers both the current granular bands and legacy coarse bands (kept for
 // backward compatibility with profiles saved before the band expansion).
-const INCOME_MIDPOINTS: Record<string, number> = {
+export const INCOME_MIDPOINTS: Record<string, number> = {
   'Under £10,000':             5_000,
   '£10,000–£50,000':          30_000,
   '£50,000–£100,000':         75_000,

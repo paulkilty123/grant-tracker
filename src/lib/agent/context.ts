@@ -10,7 +10,7 @@
 // This module produces only facts; the reasoning pass (reason.ts, step 4) does
 // the judgment over them.
 
-import { computeMatchScore } from '../matching'
+import { computeMatchScore, INCOME_MIDPOINTS } from '../matching'
 import { runEligibilityChecks } from '../eligibility'
 import type { GrantOpportunity, Organisation } from '@/types'
 import type {
@@ -161,14 +161,36 @@ export function assembleBriefingPack(input: ContextInput): BriefingPack {
     return chars.some(c => gapChars.has(c))
   }
 
-  // Score every catalogue row, then rank gap-appropriate first, score second,
-  // before taking the top N (build-spec §6.1.2).
+  // Award-size sanity. A fund whose MINIMUM award dwarfs the goal is wrong advice
+  // regardless of sector fit — a £500k-minimum lottery fund headlined a £150k
+  // goal before this. Demote when the minimum exceeds the remaining gap, or is
+  // large relative to the org's income; name the mismatch if it still surfaces.
+  const gbp = (n: number) => `£${Math.round(n).toLocaleString('en-GB')}`
+  const gapRemaining = Math.max(0, goal.target_amount - goal.secured_amount)
+  const incomeMid = INCOME_MIDPOINTS[String((org as unknown as { annual_income_band?: string }).annual_income_band ?? '')] ?? null
+  const sizeIncompatible = (amountMin: number | null | undefined): boolean => {
+    if (!amountMin) return false // undisclosed / unknown ⇒ do not penalise
+    if (gapRemaining > 0 && amountMin > gapRemaining) return true
+    if (incomeMid && amountMin > incomeMid * 0.5) return true
+    return false
+  }
+  const sizeNote = (amountMin: number | null | undefined): string | null => {
+    if (!amountMin) return null
+    if (gapRemaining > 0 && amountMin > gapRemaining) return `Its minimum award of ${gbp(amountMin)} is larger than your whole remaining goal.`
+    if (incomeMid && amountMin > incomeMid * 0.5) return `Its minimum award of ${gbp(amountMin)} is large relative to your income.`
+    return null
+  }
+
+  // Score every catalogue row, then rank gap-appropriate first, size-compatible
+  // second, score third, before taking the top N (build-spec §6.1.2).
   const scored = catalogue.map(g => {
     const m = computeMatchScore(g, org)
     return { g, score: m.score, reasons: m.positiveReasons ?? [] }
   }).sort((a, b) => {
     const ga = gapAppropriate(a.g.fundingType), gb = gapAppropriate(b.g.fundingType)
     if (ga !== gb) return ga ? -1 : 1
+    const sa = !sizeIncompatible(a.g.amountMin), sb = !sizeIncompatible(b.g.amountMin)
+    if (sa !== sb) return sa ? -1 : 1
     return b.score - a.score
   }).slice(0, SHORTLIST_N)
 
@@ -194,7 +216,9 @@ export function assembleBriefingPack(input: ContextInput): BriefingPack {
       ruleOutAnnex.push({ id: g.id, title: g.title, funder: g.funder, reason_code: code, source: 'engine_verdict', eligibility: verdict })
       continue
     }
-    candidates.push(toPackCandidate(g, reasons, verdict))
+    const cand = toPackCandidate(g, reasons, verdict)
+    cand.sizeNote = sizeNote(g.amountMin)
+    candidates.push(cand)
   }
 
   const thin = candidates.length < 3
