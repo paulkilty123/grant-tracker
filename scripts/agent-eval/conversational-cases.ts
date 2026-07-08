@@ -41,6 +41,12 @@ export interface TurnAssertions {
   /** Every £ figure in the assistant text must be traceable to a tool result
    *  or the user's own words (the conversational G6/neverRestateNumbers gate). */
   numberLint?: boolean
+  /** Setup one-question discipline: the turn's reply may contain at most this
+   *  many questions. Two questions in a setup turn = fail. */
+  maxQuestions?: number
+  /** The reply must contain no markdown table (renders raw on the drawer
+   *  surface until markdown rendering lands; the mix reads fine as prose). */
+  noTables?: boolean
 }
 
 export interface ConversationalCase {
@@ -305,6 +311,61 @@ export const CONVERSATIONAL_CASES: ConversationalCase[] = [
             { re: /typo|must have (been|entered|set)|probably (a |an )?(error|mistake|slip)|entry error|data[- ]entry|glitch|bug in/i, why: 'no invented cause — say the data does not reconcile and stop' },
           ],
           numberLint: true,
+        },
+      },
+    ],
+  },
+  {
+    id: 'CV-09',
+    title: 'Setup discipline — one question per turn, no tables, no premature mix; confirm-before-write with a correctly-grounded date',
+    seed: 'CGK 8 Jul in-app setup pass: turns ran loose (multi-part, preliminary tables mid-refinement) and goals were written a year early. Polices the setup-phase steering (prompt.ts FIRST-RUN SETUP + the no-tables STYLE rule) and the date-grounding fix.',
+    setup: { pipeline: [] }, // no goal → first-run setup
+    turns: [
+      {
+        user: 'We need to raise £150,000 over the next 18 months, starting today.',
+        kind: 'chat',
+        assert: {
+          maxQuestions: 1,       // ask ONE thing next (the purpose split)
+          noTables: true,
+          mustNotCallTools: ['set_funding_goal'], // never write before purposes/mix/confirm
+        },
+      },
+      {
+        user: 'Roughly £60k core running costs, £50k for our employment training programme, £25k for a delivery manager post, and £15k for kitchen equipment.',
+        kind: 'chat',
+        assert: {
+          maxQuestions: 1,       // the staffing refinement question, on its own
+          noTables: true,        // no preliminary mix table while the refinement is open
+          mustNotCallTools: ['set_funding_goal'],
+        },
+      },
+      {
+        user: 'It is a delivery post — they run the training programme itself.',
+        kind: 'chat',
+        assert: {
+          maxQuestions: 1,       // the recommendation turn ends in one "sound right?"
+          noTables: true,        // the mix is delivered as prose per component
+          mustCallTools: ['recommend_mix'],
+          mustNotCallTools: ['set_funding_goal'], // confirm before writing
+        },
+      },
+      {
+        user: 'Sounds right, set it up.',
+        kind: 'chat',
+        assert: {
+          mustCallTools: ['set_funding_goal'],
+          maxQuestions: 1,
+          toolInput: [{
+            tool: 'set_funding_goal',
+            check: (input) => {
+              const end = String((input as Record<string, unknown>).end_date ?? '')
+              if (!/^\d{4}-\d{2}-\d{2}$/.test(end)) return `end_date not ISO: "${end}"`
+              const expected = new Date(); expected.setMonth(expected.getMonth() + 18)
+              const days = Math.abs((new Date(`${end}T00:00:00Z`).getTime() - expected.getTime()) / 86_400_000)
+              return days <= 45 ? null
+                : `end_date ${end} is ${Math.round(days)}d from ~18 months out (${expected.toISOString().slice(0, 10)}) — date grounding / confirm-value drift`
+            },
+          }],
         },
       },
     ],

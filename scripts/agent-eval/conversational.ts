@@ -109,7 +109,37 @@ function evaluateTurn(
       : { pass: true, label: `${tool} input` })
   }
   if (a.numberLint) out.push(lintPoundFigures(text, allowedNumbers))
+  if (typeof a.maxQuestions === 'number') {
+    const q = countQuestions(text)
+    out.push(q <= a.maxQuestions
+      ? { pass: true, label: `≤${a.maxQuestions} question(s)` }
+      : { pass: false, label: `≤${a.maxQuestions} question(s)`, detail: `found ${q} question(s)` })
+  }
+  if (a.noTables) {
+    out.push(hasMarkdownTable(text)
+      ? { pass: false, label: 'no markdown table', detail: 'a table was rendered in the reply' }
+      : { pass: true, label: 'no markdown table' })
+  }
   return out
+}
+
+// A setup turn asks exactly one thing (Paul's one-question discipline). Count
+// sentences that end in a question mark, ignoring "?" inside a word/URL.
+function countQuestions(text: string): number {
+  return (text.match(/[^.?!\n]*\?/g) ?? []).filter(s => /[a-z]/i.test(s)).length
+}
+
+// Detect a markdown table: a delimiter row (|---|---|) or two+ consecutive
+// lines each with two or more column separators.
+function hasMarkdownTable(text: string): boolean {
+  const lines = text.split('\n')
+  if (lines.some(l => /\|\s*:?-{2,}:?\s*\|/.test(l))) return true
+  let run = 0
+  for (const l of lines) {
+    if ((l.match(/\|/g) ?? []).length >= 2) { if (++run >= 2) return true }
+    else run = 0
+  }
+  return false
 }
 
 // ── runner ───────────────────────────────────────────────────────────────────

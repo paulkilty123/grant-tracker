@@ -86,7 +86,14 @@ export default function SetupExperience({ org }: { org: OrgSummary }) {
     void send(t)
   }
 
-  const awaitingConfirm = !!panel.mix && !panel.goalWritten
+  // Finding A: a recommend_mix result is provisional while any component still
+  // carries an open clarify question — the split shown then uses default
+  // mappings (e.g. staffing 50/50) and will change once the user answers. Hold
+  // the mix chips AND the confirm chips until every refinement is resolved
+  // (clarify null on re-derive) or the goal is written. Display timing only —
+  // the update path is unchanged.
+  const hasOpenRefinement = !panel.goalWritten && (panel.mix?.components ?? []).some(c => c.clarify)
+  const awaitingConfirm = !!panel.mix && !panel.goalWritten && !hasOpenRefinement
   const purposeRows = panel.purposes?.length
     ? panel.purposes.map(p => ({ label: p.label, amount: p.approx_amount }))
     : (panel.mix?.components ?? []).map(c => ({ label: c.label, amount: c.approx_amount }))
@@ -204,6 +211,11 @@ export default function SetupExperience({ org }: { org: OrgSummary }) {
               )}
             </div>
             {(() => {
+              // Hold the chips while a refinement is open — the pre-answer split
+              // is provisional and would flash a number that then changes.
+              if (hasOpenRefinement) {
+                return <div className="text-xs mt-1" style={{ color: '#8A8986' }}>one detail to confirm first…</div>
+              }
               const mix = panel.goalWritten ? panel.goal?.mix_targets : panel.mix?.recommended_mix
               const entries = Object.entries((mix ?? {}) as Record<string, number>)
               return entries.length === 0
