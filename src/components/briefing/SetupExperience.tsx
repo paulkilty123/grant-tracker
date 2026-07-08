@@ -13,6 +13,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAgentChat, TOOL_LABELS } from './useAgentChat'
+import Markdown from './Markdown'
 
 const grotesk = { fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }
 const gbp = (n: number) => `£${Math.round(n).toLocaleString('en-GB')}`
@@ -111,7 +112,7 @@ export default function SetupExperience({ org }: { org: OrgSummary }) {
             {messages.map((m, i) => (
               <div key={i} className={m.role === 'user' ? 'flex justify-end' : 'flex justify-start'}>
                 <div
-                  className="max-w-[90%] rounded-xl px-3 py-2 text-sm whitespace-pre-wrap leading-relaxed"
+                  className={`max-w-[90%] rounded-xl px-3 py-2 text-sm leading-relaxed ${m.role === 'user' ? 'whitespace-pre-wrap' : ''}`}
                   style={m.role === 'user'
                     ? { background: '#F5F1E8', color: '#2C2C2A' }
                     : { background: '#fff', border: '1px solid #E9E6DD', color: '#2C2C2A' }}
@@ -121,7 +122,9 @@ export default function SetupExperience({ org }: { org: OrgSummary }) {
                       {m.tool_names.map(t => TOOL_LABELS[t] ?? t).join(' · ')}
                     </div>
                   )}
-                  {m.text || (m.role === 'assistant' && busy && i === messages.length - 1 ? '…' : '')}
+                  {m.role === 'assistant' && m.text
+                    ? <Markdown>{m.text}</Markdown>
+                    : (m.text || (m.role === 'assistant' && busy && i === messages.length - 1 ? '…' : ''))}
                 </div>
               </div>
             ))}
