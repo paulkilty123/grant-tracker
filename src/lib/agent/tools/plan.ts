@@ -222,6 +222,10 @@ export type BriefingPayload =
       /** Deterministic strategist nudges (rulebook v1.0 R8b: match funding
        *  after a recent win). Relay, and reason from, never invent. */
       considerations: Array<{ kind: string; detail: string }>
+      /** Consequence-phrased selection delta for "since you last looked"
+       *  (redesign §2): support/non-cash matches deprioritised because the gap
+       *  is a cash gap. Null when the gap is not cash-led or none were held back. */
+      selection_note: string | null
     }
 
 export function buildBriefingOnboarding(org: Organisation | null, pipeline: PipelineEntry[]): BriefingPayload {
@@ -245,6 +249,18 @@ export function buildBriefingOnboarding(org: Organisation | null, pipeline: Pipe
   }
 }
 
+/** Consequence-phrased selection delta (redesign §2): when the gap is cash-led,
+ *  the cash-first re-rank pushes support/non-cash candidates below the grants.
+ *  Name that decision honestly rather than hiding it. */
+function computeSelectionNote(pack: BriefingPack): string | null {
+  const mix = pack.goal.mix_targets
+  const cashGap = !mix || !('investment' in mix) // not an investment-led venture
+  if (!cashGap) return null
+  const nonCash = pack.candidates.filter(c => ['in_kind', 'programme', 'investment'].includes(c.fundingType)).length
+  if (nonCash === 0) return null
+  return `${nonCash} in-kind and support match${nonCash === 1 ? '' : 'es'} held back, because they do not move a cash gap.`
+}
+
 export function buildBriefingFull(pack: BriefingPack, deltas: PlanDeltas | null, considerations: Array<{ kind: string; detail: string }> = []): BriefingPayload {
   return {
     has_goal: true,
@@ -254,6 +270,7 @@ export function buildBriefingFull(pack: BriefingPack, deltas: PlanDeltas | null,
     changes_since: deltas,
     candidate_diff: 'deferred — needs agent_runs snapshots (§5.2)',
     considerations,
+    selection_note: computeSelectionNote(pack),
     top_candidates: pack.candidates.slice(0, 8).map(c => ({
       opportunity_id: c.id,
       title: c.title,

@@ -72,6 +72,13 @@ export default async function BriefingPage() {
   }
 
   const examplePrompt = 'What should I focus on this week?'
+  // Context suggestion chips — always include one that teaches the outcome loop
+  // (recording a win), so users discover that the plan responds to their reality.
+  const suggestions = [
+    'What should I focus on this week?',
+    'We just won a grant',
+    'Which funders back core costs?',
+  ]
 
   return (
     <>
@@ -81,7 +88,7 @@ export default async function BriefingPage() {
         pipeline={pipeline.data}
         displayName={displayName}
       />
-      <CompanionDrawer examplePrompt={examplePrompt} />
+      <CompanionDrawer examplePrompt={examplePrompt} suggestions={suggestions} />
       <BriefingSeen />
     </>
   )
