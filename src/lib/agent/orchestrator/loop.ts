@@ -108,6 +108,15 @@ export async function runAgentTurn(opts: {
   let iterations = 0
   let finalText = ''
 
+  // The model has no inherent knowledge of the current date, so "18 months from
+  // today" was being computed against its training-era sense of "now" (a wrong
+  // year), producing goal end_dates a year early. Give it today explicitly. Kept
+  // OUT of SYSTEM_PROMPT (the frozen cached prefix) as a separate trailing,
+  // uncached block so the cache breakpoint stays byte-stable across the day.
+  const todayIso = new Date().toISOString().slice(0, 10)
+  const dateContext =
+    `Today's date is ${todayIso} (UTC). Compute every relative date the user gives ("18 months from today", "by next spring", "end of the financial year") against this date, and pass tools absolute ISO dates (YYYY-MM-DD). Never assume the year — derive it from today.`
+
   while (iterations < MAX_LOOP_ITERATIONS) {
     iterations += 1
     // Mirror the same paragraph break on the live stream between iterations.
@@ -117,7 +126,12 @@ export async function runAgentTurn(opts: {
       model,
       max_tokens: MAX_TOKENS_PER_CALL,
       // Frozen prefix (tools render before system) — one breakpoint caches both.
-      system: [{ type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
+      // Today's date rides in a separate trailing block, after the cache
+      // breakpoint, so it never busts the cached prefix.
+      system: [
+        { type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } },
+        { type: 'text', text: dateContext },
+      ],
       tools,
       messages,
     })
