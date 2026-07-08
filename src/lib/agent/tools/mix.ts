@@ -28,6 +28,7 @@ import { CONTRACT } from '../contract'
 export const RULEBOOK_VERSION = 'mix-rules-v1.0'
 
 export type MixCharacter = 'unrestricted' | 'project' | 'capital' | 'investment'
+export const MIX_CHARACTERS: readonly MixCharacter[] = ['unrestricted', 'project', 'capital', 'investment'] as const
 
 interface Rule {
   mapping: Partial<Record<MixCharacter, number>> // percentages, sum 100 (the default when unrefined)

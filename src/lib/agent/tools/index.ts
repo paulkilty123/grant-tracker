@@ -95,7 +95,7 @@ export const TOOL_REGISTRY: ToolSpecEntry[] = [
     tier: 'apply',
     status: 'built',
     params: '(none)',
-    description: `Return the organisation's pipeline items with their ids, stages, amounts, deadlines, and outcome dates. Call this to resolve a pipeline_item_id when the user refers to an item by name — recording a win ("mark the X grant won") is update_pipeline_item, and it needs the id this returns.`,
+    description: `Return the organisation's pipeline items with their ids, stages, amounts, deadlines, outcome dates, and short notes (declined items carry their triage reason in notes). Call this to resolve a pipeline_item_id when the user refers to an item by name — recording a win ("mark the X grant won") is update_pipeline_item, and it needs the id this returns.`,
     input_schema: { type: 'object', properties: {}, required: [] },
   },
   {
@@ -103,7 +103,7 @@ export const TOOL_REGISTRY: ToolSpecEntry[] = [
     tier: 'companion',
     status: 'built',
     params: 'org_id',
-    description: `Return the deterministic plan arithmetic against the goal — secured, in-pipeline (weighted and unweighted), gap, months remaining, required monthly run-rate, and funder/opportunity concentration. Numbers only; ${CONTRACT.neverRestateNumbers} ${CONTRACT.inconsistencyHonesty} With no goal set, returns a short "set a goal to see plan state" payload. Use this only when you need the bare arithmetic; for a strategic briefing with candidates and what has changed, call get_briefing instead.`,
+    description: `Return the deterministic plan arithmetic against the goal — secured, in-pipeline (weighted and unweighted), gap, months remaining, required monthly run-rate, and funder/opportunity concentration. When purposes exist it also carries per-purpose progress and the mix composition (pipeline versus target, attributed via purpose assignments); mix.attributable=false means composition could not be derived — never claim a slice is unaddressed in that case. Numbers only; ${CONTRACT.neverRestateNumbers} ${CONTRACT.inconsistencyHonesty} With no goal set, returns a short "set a goal to see plan state" payload. Use this only when you need the bare arithmetic; for a strategic briefing with candidates and what has changed, call get_briefing instead.`,
     input_schema: { type: 'object', properties: {}, required: [] },
   },
   {

@@ -7,6 +7,7 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 import { useAgentChat, TOOL_LABELS } from './useAgentChat'
+import { COMPANION_OPEN_EVENT } from './CompanionOpenLink'
 
 const grotesk = { fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }
 
@@ -20,6 +21,14 @@ export default function CompanionDrawer({ examplePrompt }: { examplePrompt: stri
   useEffect(() => {
     if (open && !loadedOnce.current) { loadedOnce.current = true; loadThread() }
   }, [open, loadThread])
+
+  // Elsewhere on the page (e.g. the plan page's "Adjust your goal") opens the
+  // same conversation via CompanionOpenLink's window event.
+  useEffect(() => {
+    const onOpen = () => setOpen(true)
+    window.addEventListener(COMPANION_OPEN_EVENT, onOpen)
+    return () => window.removeEventListener(COMPANION_OPEN_EVENT, onOpen)
+  }, [])
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight })

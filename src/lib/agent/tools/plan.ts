@@ -12,7 +12,9 @@
 import { defineTool } from './envelope'
 import { emitEvent } from '../../events/emit'
 import { assembleBriefingPack, computeArithmetic, WEIGHTED_FORMULA_CAPTION } from '../context'
-import { getGoal, getPipeline, getOrg, getOrgFacts, getActiveCatalogue, getPipelineDeltasSince, getPurposeProgress, hasRecentWin, type PlanDeltas, type PurposeProgress } from './repository'
+import { getGoal, getPipeline, getOrg, getOrgFacts, getActiveCatalogue, getPipelineDeltasSince, getPurposeProgress, hasRecentWin, type PlanDeltas, type PurposeProgress, type PurposeRow, type PipelineAllocation } from './repository'
+import { deriveMix, type MixCharacter } from './mix'
+import { PURPOSE_CATEGORIES, type PurposeCategory } from './goal'
 import type { GoalArithmetic, GoalInput, PipelineEntry, BriefingPack } from '../types'
 import type { Organisation } from '@/types'
 
@@ -39,6 +41,89 @@ export interface PurposesBlock {
   unassigned: { secured: number; weighted: number }
 }
 
+/** Mix composition, pipeline versus target (spec §3.3). Each slice compares
+ *  the confirmed target share with what the pipeline actually pursues,
+ *  attributed via purpose assignments: a pipeline item counts toward the
+ *  funding characters its purpose's rulebook mapping names. Deterministic —
+ *  the same derive-not-cache discipline as secured. */
+export interface MixSlice {
+  character: string // MixCharacter for rulebook-era goals; legacy goals may carry source-vocabulary keys
+  target_pct: number
+  target_amount: number // target_pct of the goal target, rounded
+  in_pipeline: number   // attributed active (non-declined) pipeline value, won included
+  secured: number       // the won share of in_pipeline
+}
+export interface MixProgressBlock {
+  /** False when composition cannot be derived (no purposes, or the purpose_id
+   *  column predates migration 036) — targets still render; absence claims
+   *  ("nothing addresses X") are only honest when this is true. */
+  attributable: boolean
+  slices: MixSlice[]
+  /** Active pipeline value not counted in any slice: unassigned items, or
+   *  items on an off-rulebook purpose. */
+  unattributed: number
+  basis: string
+}
+
+export function buildMixProgress(
+  goal: GoalInput,
+  purposes: PurposeRow[],
+  allocations: PipelineAllocation[],
+  pipeline: PipelineEntry[],
+): MixProgressBlock | null {
+  const targets = goal.mix_targets ?? null
+  if (!targets || Object.keys(targets).length === 0) return null
+
+  const attributable = purposes.length > 0 && allocations.length > 0
+  const inPipeline = new Map<string, number>()
+  const secured = new Map<string, number>()
+  let attributed = 0
+  const activeTotal = (attributable ? allocations : pipeline)
+    .filter(r => r.stage !== 'declined')
+    .reduce((s, r) => s + (r.amount_requested ?? 0), 0)
+
+  if (attributable) {
+    // deriveMix returns exactly one component per input purpose, in order — zip
+    // by index to recover purpose_id → refinement-aware rulebook mapping.
+    const components = deriveMix(purposes.map(p => ({
+      category: (PURPOSE_CATEGORIES.includes(p.category as PurposeCategory) ? p.category : 'other') as PurposeCategory,
+      label: p.label,
+      approx_amount: p.approx_amount,
+      refinement: p.refinement,
+    }))).components
+    const mappingByPurpose = new Map<string, Partial<Record<MixCharacter, number>> | null>()
+    purposes.forEach((p, i) => mappingByPurpose.set(p.purpose_id, components[i]?.mapping ?? null))
+
+    for (const row of allocations) {
+      if (row.stage === 'declined') continue
+      const amt = row.amount_requested ?? 0
+      if (amt <= 0) continue
+      const mapping = row.purpose_id ? mappingByPurpose.get(row.purpose_id) : null
+      if (!mapping) continue // unassigned, or off-rulebook purpose → stays unattributed
+      for (const [character, pct] of Object.entries(mapping)) {
+        const share = amt * (pct / 100)
+        inPipeline.set(character, (inPipeline.get(character) ?? 0) + share)
+        if (row.stage === 'won') secured.set(character, (secured.get(character) ?? 0) + share)
+        attributed += share
+      }
+    }
+  }
+
+  const characters = Array.from(new Set([...Object.keys(targets), ...Array.from(inPipeline.keys())]))
+  return {
+    attributable,
+    slices: characters.map(character => ({
+      character,
+      target_pct: targets[character] ?? 0,
+      target_amount: Math.round(((targets[character] ?? 0) / 100) * goal.target_amount),
+      in_pipeline: Math.round(inPipeline.get(character) ?? 0),
+      secured: Math.round(secured.get(character) ?? 0),
+    })),
+    unattributed: Math.round(Math.max(0, activeTotal - attributed)),
+    basis: 'Composition is derived from purpose assignments: each pipeline item counts toward the funding characters its purpose maps to.',
+  }
+}
+
 export type PlanStatePayload =
   | { has_goal: false; message: string; to_set_a_goal: string[] }
   | {
@@ -47,9 +132,12 @@ export type PlanStatePayload =
       arithmetic: GoalArithmetic
       weighted_formula: string
       purposes: PurposesBlock | null
+      /** Pipeline-versus-target mix composition; null when the goal has no
+       *  confirmed mix (for example a goal that predates the rulebook). */
+      mix: MixProgressBlock | null
     }
 
-export function buildPlanState(goal: GoalInput | null, pipeline: PipelineEntry[], asOf: string, purposes: PurposesBlock | null = null): PlanStatePayload {
+export function buildPlanState(goal: GoalInput | null, pipeline: PipelineEntry[], asOf: string, purposes: PurposesBlock | null = null, mix: MixProgressBlock | null = null): PlanStatePayload {
   if (!goal) {
     return {
       has_goal: false,
@@ -63,6 +151,7 @@ export function buildPlanState(goal: GoalInput | null, pipeline: PipelineEntry[]
     arithmetic: computeArithmetic(goal, pipeline, asOf),
     weighted_formula: WEIGHTED_FORMULA_CAPTION,
     purposes,
+    mix,
   }
 }
 
@@ -75,7 +164,10 @@ export const getPlanState = defineTool<Record<string, unknown>, PlanStatePayload
     const purposes = purposeProgress
       ? { items: purposeProgress.purposes, unassigned: purposeProgress.unassigned }
       : null
-    return buildPlanState(goal, pipeline, today(), purposes)
+    const mix = goal
+      ? buildMixProgress(goal, purposeProgress?.purposes ?? [], purposeProgress?.allocations ?? [], pipeline)
+      : null
+    return buildPlanState(goal, pipeline, today(), purposes, mix)
   },
   logEvent: async (ctx, _p, r) => {
     await emitEvent({ surface: ctx.surface, orgId: ctx.orgId, userId: ctx.userId },

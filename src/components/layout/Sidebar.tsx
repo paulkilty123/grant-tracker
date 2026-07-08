@@ -10,6 +10,7 @@ import LogoMark from '@/components/icons/LogoMark'
 import {
   LayoutDashboard,
   Compass,
+  Target,
   Search,
   FolderKanban,
   CalendarClock,
@@ -241,10 +242,15 @@ export default function Sidebar({ org, userEmail, companionSurface = false }: Pr
         className="flex-1 min-h-0 overflow-y-auto"
         style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(245,241,232,0.18) transparent' }}
       >
-        {/* Dashboard — Briefing replaces it for Companion-surface users */}
+        {/* Dashboard — Briefing (+ Plan) replaces it for Companion-surface users */}
         <div className="mt-1">
           {companionSurface
-            ? navLink('/dashboard/briefing', 'Briefing', Compass)
+            ? (
+              <>
+                {navLink('/dashboard/briefing', 'Briefing', Compass)}
+                {navLink('/dashboard/plan', 'Plan', Target)}
+              </>
+            )
             : navLink('/dashboard', 'Dashboard', LayoutDashboard)}
         </div>
 

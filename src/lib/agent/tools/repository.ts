@@ -89,10 +89,18 @@ export interface PurposeProgress extends PurposeRow {
   weighted: number  // stage-weighted pipeline assigned to this purpose
 }
 
+/** One pipeline item's purpose assignment — the raw rows behind per-purpose
+ *  progress, also consumed by the plan-state mix composition (spec §3.3). */
+export interface PipelineAllocation {
+  purpose_id: string | null
+  stage: string
+  amount_requested: number | null
+}
+
 /** Per-purpose progress, DERIVED on read from pipeline assignments (spec §7:
  *  same derive-not-cache discipline as secured). Items without a purpose count
  *  toward the goal overall — returned in `unassigned`. */
-export async function getPurposeProgress(orgId: string): Promise<{ purposes: PurposeProgress[]; unassigned: { secured: number; weighted: number } } | null> {
+export async function getPurposeProgress(orgId: string): Promise<{ purposes: PurposeProgress[]; unassigned: { secured: number; weighted: number }; allocations: PipelineAllocation[] } | null> {
   const purposes = await getPurposes(orgId)
   if (!purposes.length) return null
   try {
@@ -102,17 +110,21 @@ export async function getPurposeProgress(orgId: string): Promise<{ purposes: Pur
       .select('purpose_id, stage, amount_requested')
       .eq('org_id', orgId)
     const rows = (data ?? []) as Array<Record<string, unknown>>
+    const allocations: PipelineAllocation[] = rows.map(r => ({
+      purpose_id: r.purpose_id ? String(r.purpose_id) : null,
+      stage: String(r.stage ?? 'identified'),
+      amount_requested: (r.amount_requested as number | null) ?? null,
+    }))
     const byPurpose = new Map<string, { secured: number; weighted: number }>()
     const unassigned = { secured: 0, weighted: 0 }
-    for (const r of rows) {
-      const amt = (r.amount_requested as number | null) ?? 0
-      const stage = String(r.stage ?? 'identified')
+    for (const r of allocations) {
+      const amt = r.amount_requested ?? 0
       const bucket = r.purpose_id
-        ? (byPurpose.get(String(r.purpose_id)) ?? { secured: 0, weighted: 0 })
+        ? (byPurpose.get(r.purpose_id) ?? { secured: 0, weighted: 0 })
         : unassigned
-      if (stage === 'won') bucket.secured += amt
-      bucket.weighted += amt * (STAGE_WEIGHTS[stage] ?? 0)
-      if (r.purpose_id) byPurpose.set(String(r.purpose_id), bucket)
+      if (r.stage === 'won') bucket.secured += amt
+      bucket.weighted += amt * (STAGE_WEIGHTS[r.stage] ?? 0)
+      if (r.purpose_id) byPurpose.set(r.purpose_id, bucket)
     }
     return {
       purposes: purposes.map(p => ({
@@ -121,10 +133,11 @@ export async function getPurposeProgress(orgId: string): Promise<{ purposes: Pur
         weighted: Math.round(byPurpose.get(p.purpose_id)?.weighted ?? 0),
       })),
       unassigned: { secured: Math.round(unassigned.secured), weighted: Math.round(unassigned.weighted) },
+      allocations,
     }
   } catch {
     // purpose_id column not applied yet — purposes exist but progress can't derive
-    return { purposes: purposes.map(p => ({ ...p, secured: 0, weighted: 0 })), unassigned: { secured: 0, weighted: 0 } }
+    return { purposes: purposes.map(p => ({ ...p, secured: 0, weighted: 0 })), unassigned: { secured: 0, weighted: 0 }, allocations: [] }
   }
 }
 
@@ -151,12 +164,16 @@ export interface PipelineItemRow {
   amount_requested: number | null
   deadline: string | null
   outcome_date: string | null
+  /** Short user/system notes — declined items carry their triage reason here
+   *  ("Decline reasons: …"), which the plan page surfaces (spec §3.3/§8). */
+  notes: string | null
+  outcome_notes: string | null
 }
 
 export async function getPipelineItems(orgId: string): Promise<PipelineItemRow[]> {
   const { data } = await serviceClient()
     .from('pipeline_items')
-    .select('id, grant_name, funder_name, stage, amount_requested, deadline, outcome_date')
+    .select('id, grant_name, funder_name, stage, amount_requested, deadline, outcome_date, notes, outcome_notes')
     .eq('org_id', orgId)
     .order('created_at', { ascending: true })
   return (data ?? []).map(r => {
@@ -169,6 +186,8 @@ export async function getPipelineItems(orgId: string): Promise<PipelineItemRow[]
       amount_requested: (row.amount_requested as number | null) ?? null,
       deadline: (row.deadline as string | null) ?? null,
       outcome_date: (row.outcome_date as string | null) ?? null,
+      notes: (row.notes as string | null) ?? null,
+      outcome_notes: (row.outcome_notes as string | null) ?? null,
     }
   })
 }

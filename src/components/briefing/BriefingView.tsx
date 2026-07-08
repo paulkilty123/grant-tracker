@@ -110,7 +110,10 @@ export default function BriefingView({ briefing, plan, pipeline, displayName }: 
 
   const target = a.target || 1
   const securedPct = Math.min(100, (a.secured / target) * 100)
-  const weightedPct = Math.min(100 - securedPct, (a.inPipelineWeighted / target) * 100)
+  // inPipelineWeighted includes won at weight 1.0 — the segment stacked next to
+  // secured is weighted MINUS secured, or the bar double-counts wins and the
+  // gap flatters.
+  const weightedPct = Math.min(100 - securedPct, Math.max(0, ((a.inPipelineWeighted - a.secured) / target) * 100))
 
   return (
     <div className="max-w-3xl">
@@ -139,10 +142,13 @@ export default function BriefingView({ briefing, plan, pipeline, displayName }: 
           <div className="text-sm font-semibold" style={{ ...grotesk, color: '#2C2C2A' }}>
             {goal.title}: {gbp(goal.target_amount)} by {fmtDate(goal.end_date)}
           </div>
-          <div className="flex gap-1.5 flex-wrap">
-            {mixChips.map(([k, v]) => (
-              <span key={k} className="text-[11px] px-2 py-0.5" style={{ background: '#F1F7E4', color: '#3B6D11', borderRadius: 999 }}>{k} {v}%</span>
-            ))}
+          <div className="flex items-baseline gap-2 flex-wrap">
+            <div className="flex gap-1.5 flex-wrap">
+              {mixChips.map(([k, v]) => (
+                <span key={k} className="text-[11px] px-2 py-0.5" style={{ background: '#F1F7E4', color: '#3B6D11', borderRadius: 999 }}>{k} {v}%</span>
+              ))}
+            </div>
+            <Link href="/dashboard/plan" className="text-[11px] underline shrink-0" style={{ color: '#3B6D11' }}>Full plan detail</Link>
           </div>
         </div>
         <div className="mt-3 h-3 rounded-full overflow-hidden flex" style={{ background: '#F5F1E8' }}>
