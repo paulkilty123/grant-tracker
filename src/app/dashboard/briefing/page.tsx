@@ -17,7 +17,7 @@ import { getBriefing, getPlanState, getPipeline } from '@/lib/agent/tools'
 import { getOrCreateActiveThread, seedThreadOpener } from '@/lib/agent/orchestrator/threads'
 import BriefingView from '@/components/briefing/BriefingView'
 import BriefingSeen from '@/components/briefing/BriefingSeen'
-import SetupExperience from '@/components/briefing/SetupExperience'
+import SetupStepper from '@/components/briefing/SetupStepper'
 import GuidanceRefresher from '@/components/briefing/GuidanceRefresher'
 
 export const dynamic = 'force-dynamic'
@@ -68,7 +68,7 @@ export default async function BriefingPage() {
       await seedThreadOpener(threadId, ctx.orgId,
         `You're ${org.name}${profileBits ? ` — ${profileBits}` : ''} — so I already know a good deal about how you work. Let's build your funding plan; it takes about two minutes.\n\nFirst: how much do you need to raise, and by when?`)
     }
-    return <SetupExperience org={org} />
+    return <SetupStepper org={org} />
   }
 
   // The adviser surface (rail on wide, ask bar + overlay drawer on narrow) lives

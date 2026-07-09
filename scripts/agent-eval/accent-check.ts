@@ -25,6 +25,7 @@ function limeAccents(rel: string): number {
 const VIEWS = [
   { name: 'briefing', file: 'src/components/briefing/BriefingView.tsx' },
   { name: 'plan', file: 'src/components/briefing/PlanView.tsx' },
+  { name: 'setup stepper', file: 'src/components/briefing/SetupStepper.tsx' },
 ]
 // Entrances: exactly one accent each (mutually exclusive at runtime — the ask
 // bar / rail on the briefing, the launcher's lime ring on every other page).
