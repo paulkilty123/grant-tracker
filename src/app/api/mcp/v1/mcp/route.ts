@@ -216,7 +216,7 @@ async function runCompanion(
     }) }] }
   } catch (e) {
     if (e instanceof EntitlementError) return companionError('forbidden', 'This tool is not available on your plan.')
-    if (e instanceof AuthorshipError) return companionError('invalid_parameter', 'This tool scaffolds structure only; it does not accept application content.')
+    if (e instanceof AuthorshipError) return companionError('invalid_parameter', 'This tool helps with structure only; it does not accept application content.')
     console.error('[mcp] companion tool failed:', e)
     return companionError('internal_error', 'Something went wrong. Please retry; if it persists, contact hello@granttracker.co.uk.')
   }
@@ -252,7 +252,7 @@ function registerCompanionTools(server: McpServerArg) {
     'set_funding_goal',
     COMPANION_DESC['set_funding_goal'],
     {
-      title:          z.string().describe('Short label for the goal, e.g. "2026 income target". Scaffold, not prose.'),
+      title:          z.string().describe('Short label for the goal, e.g. "2026 income target". A label, not application prose.'),
       target_amount:  z.number().describe('Total funding target for the period, in GBP.'),
       start_date:     z.string().describe('Period start, ISO date (YYYY-MM-DD).'),
       end_date:       z.string().describe('Period end / deadline, ISO date (YYYY-MM-DD). Must be after start_date.'),
@@ -340,7 +340,7 @@ function registerCompanionTools(server: McpServerArg) {
       amount_requested: z.number().optional().describe('Updated amount, in GBP.'),
       deadline:         z.string().optional().describe('Updated deadline, ISO date.'),
       outcome_date:     z.string().optional().describe('Date the outcome was decided, ISO date.'),
-      outcome_notes:    z.string().optional().describe('Short outcome note (scaffold, not application prose).'),
+      outcome_notes:    z.string().optional().describe('Short outcome note (a note, not application prose).'),
     },
     { title: 'Update pipeline item' },
     async (p) => runCompanion(ctx => updatePipelineItem(ctx, p)),

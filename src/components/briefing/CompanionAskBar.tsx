@@ -9,6 +9,7 @@
 
 import { grotesk, COLOR, CompanionMark } from './ui'
 import { openCompanion } from './CompanionOpenLink'
+import { ADVISER_BOUNDARY } from '@/lib/agent/copy'
 
 export default function CompanionAskBar({ examplePrompt, suggestions = [] }: { examplePrompt: string; suggestions?: string[] }) {
   return (
@@ -37,7 +38,7 @@ export default function CompanionAskBar({ examplePrompt, suggestions = [] }: { e
             {s}
           </button>
         ))}
-        <span className="text-[11px] ml-auto" style={{ color: COLOR.faint }}>scaffolds and strategy only</span>
+        <span className="text-[11px] ml-auto" style={{ color: COLOR.faint }}>{ADVISER_BOUNDARY}</span>
       </div>
     </div>
   )

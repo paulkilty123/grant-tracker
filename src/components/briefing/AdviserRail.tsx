@@ -13,6 +13,7 @@ import { useAgentChat, TOOL_LABELS } from './useAgentChat'
 import { COMPANION_OPEN_EVENT } from './CompanionOpenLink'
 import Markdown from './Markdown'
 import { grotesk, COLOR, CompanionMark, SectionLabel } from './ui'
+import { ADVISER_BOUNDARY } from '@/lib/agent/copy'
 
 export default function AdviserRail({ myRead, suggestions = [], examplePrompt }: { myRead: string | null; suggestions?: string[]; examplePrompt: string }) {
   const [input, setInput] = useState('')
@@ -109,7 +110,7 @@ export default function AdviserRail({ myRead, suggestions = [], examplePrompt }:
                 <button key={s} onClick={() => prefill(s)} className="text-[12px] px-2.5 py-1 rounded-full text-left" style={{ background: COLOR.pale, color: COLOR.sage, border: '1px solid #DCE8C8' }}>{s}</button>
               ))}
             </div>
-            <div className="text-[11px] mt-2" style={{ color: COLOR.faint }}>scaffolds and strategy only</div>
+            <div className="text-[11px] mt-2" style={{ color: COLOR.faint }}>{ADVISER_BOUNDARY}</div>
           </>
         )}
       </div>

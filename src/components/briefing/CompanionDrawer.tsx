@@ -11,6 +11,7 @@ import { useAgentChat, TOOL_LABELS } from './useAgentChat'
 import { COMPANION_OPEN_EVENT } from './CompanionOpenLink'
 import Markdown from './Markdown'
 import { grotesk, CompanionMark } from './ui'
+import { ADVISER_BOUNDARY } from '@/lib/agent/copy'
 
 export default function CompanionDrawer({ examplePrompt }: { examplePrompt: string }) {
   const [open, setOpen] = useState(false)
@@ -60,7 +61,7 @@ export default function CompanionDrawer({ examplePrompt }: { examplePrompt: stri
                 <CompanionMark size={30} />
                 <div>
                   <div className="text-sm font-bold" style={{ ...grotesk, color: '#2C2C2A' }}>Your adviser</div>
-                  <div className="text-[11px]" style={{ color: '#8A8986' }}>Scaffolds and strategy only. It never writes applications.</div>
+                  <div className="text-[11px]" style={{ color: '#8A8986' }}>{ADVISER_BOUNDARY}</div>
                 </div>
               </div>
               <button onClick={() => setOpen(false)} aria-label="Close" className="text-xl leading-none px-2" style={{ color: '#5F5E5A' }}>×</button>
