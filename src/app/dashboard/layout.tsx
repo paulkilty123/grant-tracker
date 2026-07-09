@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/layout/Sidebar'
+import AdviserLauncher from '@/components/briefing/AdviserLauncher'
 import { agentEnabledForOrg } from '@/lib/agent/orchestrator/config'
 import { tierForOrgFlags } from '@/lib/mcp-entitlement'
 import { ToastProvider } from '@/components/ui/Toast'
@@ -46,6 +47,9 @@ export default async function AppLayout({
             {children}
           </div>
         </main>
+        {/* Everywhere-launcher: adviser-tier only, on every app page except the
+            briefing (it self-hides there — the rail is the entrance). */}
+        <AdviserLauncher enabled={companionSurface} />
       </div>
     </ToastProvider>
   )

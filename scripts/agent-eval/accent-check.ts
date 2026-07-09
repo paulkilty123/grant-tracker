@@ -26,10 +26,12 @@ const VIEWS = [
   { name: 'briefing', file: 'src/components/briefing/BriefingView.tsx' },
   { name: 'plan', file: 'src/components/briefing/PlanView.tsx' },
 ]
-// Entrances: exactly one accent each (mutually exclusive at runtime).
+// Entrances: exactly one accent each (mutually exclusive at runtime — the ask
+// bar / rail on the briefing, the launcher's lime ring on every other page).
 const ENTRANCES = [
   'src/components/briefing/CompanionAskBar.tsx',
   'src/components/briefing/AdviserRail.tsx',
+  'src/components/briefing/AdviserLauncher.tsx',
 ]
 
 let fail = 0
