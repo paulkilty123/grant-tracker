@@ -1090,7 +1090,7 @@ export function computeMatchScore(
 
     if (hasConflict) {
       beneficiaryScore = 1
-      reasons.push('Grant targets a different beneficiary group — check eligibility')
+      reasons.push('Grant targets a conflicting beneficiary group; check eligibility')
     } else {
       // general_public is a universal match — skip structured scoring
       const grantIsGeneral = grantBeneficiaries.includes('general_public')
@@ -1131,9 +1131,10 @@ export function computeMatchScore(
           // rewards the match positively. See docs/strategy/sector-support-org-matching.md.
           beneficiaryScore = 5
         } else {
-          // No intersection — different beneficiary groups
+          // No intersection — different beneficiary groups. Phrase so it is
+          // classified as a warning ("not match") rather than a positive reason.
           beneficiaryScore = 2
-          reasons.push('Different target beneficiary group')
+          reasons.push('Beneficiary groups do not match this funder target group')
         }
       }
     }
@@ -1554,7 +1555,7 @@ export function computeMatchScore(
   if (score < 80) {
     const dimGaps: Array<{ key: string; gap: number; msg: string }> = [
       { key: 'themes',      gap: 35 - wThemes,       msg: 'Sector alignment: thematic overlap with this funder priority areas is limited' },
-      { key: 'beneficiary', gap: 20 - wBeneficiary,  msg: 'Beneficiary group: this funder target group may not fully match your primary beneficiaries' },
+      { key: 'beneficiary', gap: 20 - wBeneficiary,  msg: 'Beneficiary group: partial overlap with this funder target group' },
       { key: 'location',    gap: 15 - wLocation,     msg: 'Geographic focus: limited location overlap - check whether this funder covers your area' },
       { key: 'eligibility', gap: 12 - wEligibility,  msg: 'Eligibility: some requirements are unclear - review the criteria carefully before applying' },
       { key: 'funderType',  gap: 8  - wFunderType,   msg: 'Funder type: this funder type is outside your stated preferences' },
