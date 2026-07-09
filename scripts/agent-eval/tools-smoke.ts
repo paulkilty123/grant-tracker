@@ -4,7 +4,8 @@
 
 import { defineTool } from '../../src/lib/agent/tools/envelope'
 import { EntitlementError, AuthorshipError, type ToolContext } from '../../src/lib/agent/tools/types'
-import { buildPlanState, buildBriefingOnboarding } from '../../src/lib/agent/tools/plan'
+import { buildPlanState, buildBriefingOnboarding, buildMixProgress } from '../../src/lib/agent/tools/plan'
+import type { PurposeRow, PipelineAllocation } from '../../src/lib/agent/tools/repository'
 import type { GoalInput, PipelineEntry } from '../../src/lib/agent/types'
 import type { Organisation } from '@/types'
 
@@ -68,6 +69,34 @@ async function main() {
   check('get_briefing returns onboarding, not an error, with no goal', onboarding.has_goal === false)
   check('onboarding shows pipeline value excluding declined (£50k)',
     onboarding.has_goal === false && onboarding.onboarding.what_i_can_already_see.pipeline_value === 50000)
+
+  // 7. Mix composition (pure) — spec §3.3 pipeline-versus-target.
+  const mixGoal: GoalInput = { ...goal, target_amount: 200_000, mix_targets: { unrestricted: 60, capital: 40 } }
+  const purposes: PurposeRow[] = [
+    { purpose_id: 'p-core', category: 'core', label: 'Core costs', approx_amount: 120_000, refinement: null },
+    { purpose_id: 'p-van', category: 'capital', label: 'Minibus', approx_amount: 80_000, refinement: null },
+    { purpose_id: 'p-odd', category: 'other', label: 'Off-rulebook thing', approx_amount: null, refinement: null },
+  ]
+  const allocations: PipelineAllocation[] = [
+    { purpose_id: 'p-core', stage: 'won', amount_requested: 30_000 },       // → unrestricted (100%), secured
+    { purpose_id: 'p-van', stage: 'applying', amount_requested: 20_000 },   // → capital (100%)
+    { purpose_id: 'p-odd', stage: 'applying', amount_requested: 10_000 },   // off-rulebook → unattributed
+    { purpose_id: null, stage: 'identified', amount_requested: 5_000 },     // unassigned → unattributed
+    { purpose_id: 'p-van', stage: 'declined', amount_requested: 99_999 },   // declined → excluded entirely
+  ]
+  const mix = buildMixProgress(mixGoal, purposes, allocations, pipeline)
+  const slice = (c: string) => mix?.slices.find(s => s.character === c)
+  check('mix: null without confirmed targets', buildMixProgress(goal, purposes, allocations, pipeline) === null)
+  check('mix: attributable with purposes + allocations', mix?.attributable === true)
+  check('mix: won core attributed to unrestricted, and secured',
+    slice('unrestricted')?.in_pipeline === 30_000 && slice('unrestricted')?.secured === 30_000)
+  check('mix: capital slice carries the applying item', slice('capital')?.in_pipeline === 20_000 && slice('capital')?.secured === 0)
+  check('mix: target amounts derive from target_pct of goal',
+    slice('unrestricted')?.target_amount === 120_000 && slice('capital')?.target_amount === 80_000)
+  check('mix: off-rulebook + unassigned land in unattributed (declined excluded)', mix?.unattributed === 15_000)
+  const mixNoPurposes = buildMixProgress(mixGoal, [], [], pipeline)
+  check('mix: not attributable pre-purposes; active pipeline all unattributed',
+    mixNoPurposes?.attributable === false && mixNoPurposes?.unattributed === 50_000)
 
   console.log(`\n${fail === 0 ? '✓ ENVELOPE + READ TOOLS PROVEN' : '✗ FAILURES'}: ${pass} passed, ${fail} failed`)
   process.exit(fail === 0 ? 0 : 1)

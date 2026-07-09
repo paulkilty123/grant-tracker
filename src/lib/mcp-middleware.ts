@@ -51,6 +51,7 @@ export interface MCPAuthContext {
    * ToolContext.orgId. Undefined for API-key callers, who keep the free surface.
    */
   orgId?: string | null
+  orgName?: string | null
   tier?: Tier
 }
 

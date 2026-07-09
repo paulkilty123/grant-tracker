@@ -19,6 +19,7 @@ const PRICES: Record<string, [number, number]> = {
   'claude-fable-5': [10, 50],
   'claude-opus-4-8': [5, 25],
   'claude-opus-4-7': [5, 25],
+  'claude-sonnet-5': [3, 15], // sticker; $2/$10 intro pricing runs to 2026-08-31 — instrument at sticker so estimates stay conservative
   'claude-sonnet-4-6': [3, 15],
   'claude-haiku-4-5': [1, 5],
 }
@@ -45,6 +46,13 @@ function client(): Anthropic {
     _client = new Anthropic({ apiKey })
   }
   return _client
+}
+
+/** The one agent-scoped Anthropic client (build-spec §2: all agent inference
+ *  behind this wrapper so cost instrumentation and caps apply only to agent
+ *  traffic). The conversational orchestrator streams through this. */
+export function getAgentClient(): Anthropic {
+  return client()
 }
 
 export interface ToolSchema {

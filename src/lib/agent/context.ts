@@ -10,7 +10,7 @@
 // This module produces only facts; the reasoning pass (reason.ts, step 4) does
 // the judgment over them.
 
-import { computeMatchScore } from '../matching'
+import { computeMatchScore, INCOME_MIDPOINTS } from '../matching'
 import { runEligibilityChecks } from '../eligibility'
 import type { GrantOpportunity, Organisation } from '@/types'
 import type {
@@ -18,9 +18,17 @@ import type {
 } from './types'
 
 const SHORTLIST_N = 40
-const STAGE_WEIGHT: Record<string, number> = {
-  identified: 0.1, applying: 0.3, submitted: 0.5, won: 1, declined: 0,
+
+/** Per-stage likelihood weights for the weighted-pipeline figure (design spec
+ *  §7). FINALISED in the rulebook review (v1.0): identified counts ZERO — a
+ *  bookmark is not money — and the principle recorded in build-spec §14 is
+ *  that the gap must never flatter; conservative beats optimistic everywhere
+ *  the arithmetic surfaces. Values render to users via the caption below.
+ *  Learned weights are a brain feature later. */
+export const STAGE_WEIGHTS: Record<string, number> = {
+  identified: 0, applying: 0.25, submitted: 0.4, won: 1, declined: 0,
 }
+export const WEIGHTED_FORMULA_CAPTION = 'weighted = amount × stage likelihood'
 
 export interface ContextInput {
   org: Organisation
@@ -41,7 +49,7 @@ function dayDiff(from: string, to: string): number {
 export function computeArithmetic(goal: GoalInput, pipeline: PipelineEntry[], asOf: string): GoalArithmetic {
   const active = pipeline.filter(p => p.stage !== 'declined')
   const total = active.reduce((s, p) => s + (p.amount_requested ?? 0), 0)
-  const weighted = pipeline.reduce((s, p) => s + (p.amount_requested ?? 0) * (STAGE_WEIGHT[p.stage] ?? 0), 0)
+  const weighted = pipeline.reduce((s, p) => s + (p.amount_requested ?? 0) * (STAGE_WEIGHTS[p.stage] ?? 0), 0)
 
   const byFunder = new Map<string, number>()
   let topOpp = 0
@@ -100,6 +108,8 @@ function toPackCandidate(g: GrantOpportunity, reasons: string[], eligibility: Pa
     funder_brief: brief,
     eligibility,
     matchReasons: reasons,
+    urlStatus: (g as { urlStatus?: string | null }).urlStatus ?? null,
+    urlLastChecked: (g as { urlLastChecked?: string | null }).urlLastChecked ?? null,
   }
 }
 
@@ -123,11 +133,66 @@ function excludedByFact(g: GrantOpportunity, facts: OrgFact[]): boolean {
 export function assembleBriefingPack(input: ContextInput): BriefingPack {
   const { org, goal, pipeline, orgFacts, catalogue, asOf } = input
 
-  // Score every catalogue row, keep the top N by match score (build-spec §6.1.2).
+  // Cash-first for cash gaps. Match score alone floats generic non-cash support
+  // (in-kind pro bono, volunteer matching) to the top because it "fits" every
+  // org — so a Manchester charity that needs £150k cash was led with pro bono
+  // consultancy. Rank by whether a candidate's funding type serves a funding
+  // character the goal's gap actually targets, THEN by score. A cash gap (mix
+  // is cash-character, or no mix is set) puts grants first; in-kind and
+  // repayable investment drop below the cash it needs — still present, not the
+  // lead. A venture mix that targets investment lifts investment back up.
+  // Deterministic, so both the briefing page and MCP get_briefing get it.
+  const CASH_CHARS = new Set(['unrestricted', 'project', 'capital'])
+  // grant delivers cash (unrestricted/project/capital); investment is repayable
+  // finance; programme and in_kind are SUPPORT, never a mix character — so they
+  // never lead a gap, only supplement it (the rulebook surfaces them as
+  // recommended_opportunity_types, not gap-closers).
+  const CHARS_BY_TYPE: Record<string, string[]> = {
+    grant: ['unrestricted', 'project', 'capital'],
+    investment: ['investment'],
+    programme: [],
+    in_kind: [],
+  }
+  const gapChars = goal.mix_targets && Object.keys(goal.mix_targets).length > 0
+    ? new Set(Object.keys(goal.mix_targets))
+    : CASH_CHARS // no confirmed mix ⇒ a cash gap
+  const gapAppropriate = (type: string | null | undefined): boolean => {
+    const chars = CHARS_BY_TYPE[type ?? 'grant'] ?? Array.from(CASH_CHARS) // unknown type ⇒ treat as cash
+    return chars.some(c => gapChars.has(c))
+  }
+
+  // Award-size sanity. A fund whose MINIMUM award dwarfs the goal is wrong advice
+  // regardless of sector fit — a £500k-minimum lottery fund headlined a £150k
+  // goal before this. Demote when the minimum exceeds the remaining gap, or is
+  // large relative to the org's income; name the mismatch if it still surfaces.
+  const gbp = (n: number) => `£${Math.round(n).toLocaleString('en-GB')}`
+  const gapRemaining = Math.max(0, goal.target_amount - goal.secured_amount)
+  const incomeMid = INCOME_MIDPOINTS[String((org as unknown as { annual_income_band?: string }).annual_income_band ?? '')] ?? null
+  const sizeIncompatible = (amountMin: number | null | undefined): boolean => {
+    if (!amountMin) return false // undisclosed / unknown ⇒ do not penalise
+    if (gapRemaining > 0 && amountMin > gapRemaining) return true
+    if (incomeMid && amountMin > incomeMid * 0.5) return true
+    return false
+  }
+  const sizeNote = (amountMin: number | null | undefined): string | null => {
+    if (!amountMin) return null
+    if (gapRemaining > 0 && amountMin > gapRemaining) return `Its minimum award of ${gbp(amountMin)} is larger than your whole remaining goal.`
+    if (incomeMid && amountMin > incomeMid * 0.5) return `Its minimum award of ${gbp(amountMin)} is large relative to your income.`
+    return null
+  }
+
+  // Score every catalogue row, then rank gap-appropriate first, size-compatible
+  // second, score third, before taking the top N (build-spec §6.1.2).
   const scored = catalogue.map(g => {
     const m = computeMatchScore(g, org)
     return { g, score: m.score, reasons: m.positiveReasons ?? [] }
-  }).sort((a, b) => b.score - a.score).slice(0, SHORTLIST_N)
+  }).sort((a, b) => {
+    const ga = gapAppropriate(a.g.fundingType), gb = gapAppropriate(b.g.fundingType)
+    if (ga !== gb) return ga ? -1 : 1
+    const sa = !sizeIncompatible(a.g.amountMin), sb = !sizeIncompatible(b.g.amountMin)
+    if (sa !== sb) return sa ? -1 : 1
+    return b.score - a.score
+  }).slice(0, SHORTLIST_N)
 
   const candidates: PackCandidate[] = []
   const ruleOutAnnex: BriefingPack['ruleOutAnnex'] = []
@@ -151,7 +216,9 @@ export function assembleBriefingPack(input: ContextInput): BriefingPack {
       ruleOutAnnex.push({ id: g.id, title: g.title, funder: g.funder, reason_code: code, source: 'engine_verdict', eligibility: verdict })
       continue
     }
-    candidates.push(toPackCandidate(g, reasons, verdict))
+    const cand = toPackCandidate(g, reasons, verdict)
+    cand.sizeNote = sizeNote(g.amountMin)
+    candidates.push(cand)
   }
 
   const thin = candidates.length < 3

@@ -13,11 +13,23 @@
 // this ordering is what keeps that invariant satisfiable.
 
 import { serviceClient } from './db'
-import { getGoal, getPipeline } from './repository'
+import { getGoal, getActiveGoalId, getPurposes, type PurposeRow } from './repository'
 import { emitEvent } from '../../events/emit'
 import { defineTool } from './envelope'
 import { prov, type Provenance } from './types'
 import type { GoalInput } from '../types'
+
+export const PURPOSE_CATEGORIES = ['core', 'programme', 'staffing', 'capital', 'capacity', 'working_capital', 'match_funding', 'other'] as const
+export type PurposeCategory = typeof PURPOSE_CATEGORIES[number]
+
+export interface PurposeInput {
+  category: PurposeCategory
+  label: string
+  approx_amount?: number | null
+  /** Ask-with-refinement answer (rulebook v1.0 R3/R5), e.g. staffing
+   *  'delivery post', capacity 'finance and fundraising'. */
+  refinement?: string | null
+}
 
 const nowIso = () => new Date().toISOString()
 
@@ -49,23 +61,32 @@ export interface SetFundingGoalParams extends Record<string, unknown> {
   end_date: string
   mix_targets?: Record<string, number> | null
   constraints?: Array<{ kind: string; text: string }>
-  secured_amount?: number | null // omit to derive from pipeline 'won'
+  purposes?: PurposeInput[] // what the money is for (spec §4 Q2); omit on adjustment to carry active purposes forward
+  secured_amount?: number | null // income secured OUTSIDE the tracked pipeline — materialised as a won item (spec §7)
   source?: 'wizard' | 'upload' | 'conversation'
 }
 export interface SetFundingGoalResult {
   id: string
   goal: GoalInput
   superseded_prior: boolean
+  purposes: PurposeRow[]
 }
 
-// secured is a fact: the sum of pipeline items already 'won', unless the caller
-// states one explicitly (e.g. money secured outside the tracked pipeline).
-async function deriveSecured(orgId: string, override?: number | null): Promise<number> {
-  if (typeof override === 'number') return Math.round(override)
-  const pipeline = await getPipeline(orgId)
-  return pipeline
-    .filter(p => p.stage === 'won')
-    .reduce((s, p) => s + (p.amount_requested ?? 0), 0)
+// Off-pipeline secured income enters as a WON PIPELINE ITEM with a source
+// marker, never a cached scalar (design decision 9 Jul, spec §7) — so secured
+// always derives from one place and wins can never leave the gap stale.
+async function materialiseOffPipelineSecured(orgId: string, userId: string | null | undefined, amount: number): Promise<void> {
+  // funder_name is NOT NULL in prod (schema predates the tool layer).
+  const { error } = await serviceClient().from('pipeline_items').insert({
+    org_id: orgId,
+    grant_name: 'Pre-existing secured income',
+    funder_name: 'Recorded at goal setup',
+    stage: 'won',
+    amount_requested: Math.round(amount),
+    source: 'pre_existing',
+    created_by: userId ?? null,
+  })
+  if (error) throw new Error(`set_funding_goal: could not record off-pipeline secured income: ${error.message}`)
 }
 
 export const setFundingGoal = defineTool<SetFundingGoalParams, SetFundingGoalResult>({
@@ -78,9 +99,20 @@ export const setFundingGoal = defineTool<SetFundingGoalParams, SetFundingGoalRes
     if (!Number.isFinite(p.target_amount) || p.target_amount <= 0) throw new Error('set_funding_goal: target_amount must be a positive number')
     if (!p.start_date || !p.end_date) throw new Error('set_funding_goal: start_date and end_date are required')
     if (p.end_date <= p.start_date) throw new Error('set_funding_goal: end_date must be after start_date')
+    for (const purpose of p.purposes ?? []) {
+      if (!PURPOSE_CATEGORIES.includes(purpose.category)) {
+        throw new Error(`set_funding_goal: purpose category '${purpose.category}' is not one of: ${PURPOSE_CATEGORIES.join(', ')}`)
+      }
+      if (!purpose.label) throw new Error('set_funding_goal: every purpose needs a label')
+    }
 
     const sb = serviceClient()
-    const secured = await deriveSecured(ctx.orgId, p.secured_amount)
+
+    // Off-pipeline secured income becomes a won pipeline item BEFORE the goal
+    // row exists, so the derived secured picks it up like any other win.
+    if (typeof p.secured_amount === 'number' && p.secured_amount > 0) {
+      await materialiseOffPipelineSecured(ctx.orgId, ctx.userId, p.secured_amount)
+    }
 
     // Supersede the current active goal FIRST (kept as history; partial unique
     // index forbids two active rows). No hard delete — status transition only.
@@ -93,7 +125,7 @@ export const setFundingGoal = defineTool<SetFundingGoalParams, SetFundingGoalRes
       status: 'active',
       title: p.title,
       target_amount: Math.round(p.target_amount),
-      secured_amount: secured,
+      secured_amount: 0, // back-compat column only — secured is DERIVED on read (spec §7)
       start_date: p.start_date,
       end_date: p.end_date,
       mix_targets: p.mix_targets ?? null,
@@ -102,20 +134,45 @@ export const setFundingGoal = defineTool<SetFundingGoalParams, SetFundingGoalRes
     }
     const { data, error } = await sb.from('goals').insert(row).select().single()
     if (error) throw new Error(`set_funding_goal failed: ${error.message}`)
-
     const g = data as Record<string, unknown>
+    const goalId = String(g.id)
+
+    // Purposes: new list provided → write it (retiring any carried rows);
+    // omitted on an adjustment → RE-PARENT active purposes to the new goal row
+    // so pipeline purpose references survive (spec §5). Table may not be
+    // applied yet — purposes fail soft, the goal itself stands.
+    try {
+      if (p.purposes?.length) {
+        await sb.from('goal_purposes')
+          .update({ status: 'retired', updated_at: nowIso() })
+          .eq('org_id', ctx.orgId).eq('status', 'active')
+        const rows = p.purposes.map((purpose, i) => ({
+          org_id: ctx.orgId,
+          goal_id: goalId,
+          category: purpose.category,
+          label: purpose.label,
+          approx_amount: purpose.approx_amount != null ? Math.round(purpose.approx_amount) : null,
+          refinement: purpose.refinement ?? null,
+          sort_order: i,
+        }))
+        const { error: pErr } = await sb.from('goal_purposes').insert(rows)
+        if (pErr) console.error('[set_funding_goal] purposes insert failed:', pErr.message)
+      } else {
+        await sb.from('goal_purposes')
+          .update({ goal_id: goalId, updated_at: nowIso() })
+          .eq('org_id', ctx.orgId).eq('status', 'active')
+      }
+    } catch (e) {
+      console.error('[set_funding_goal] purposes step skipped:', e)
+    }
+
+    const [freshGoal, purposes] = await Promise.all([getGoal(ctx.orgId), getPurposes(ctx.orgId)])
+    if (!freshGoal) throw new Error('set_funding_goal: goal write verified read-back failed')
     return {
-      id: String(g.id),
+      id: goalId,
       superseded_prior: (superseded ?? []).length > 0,
-      goal: {
-        title: String(g.title),
-        target_amount: Number(g.target_amount),
-        secured_amount: Number(g.secured_amount),
-        start_date: String(g.start_date),
-        end_date: String(g.end_date),
-        mix_targets: (g.mix_targets as Record<string, number> | null) ?? null,
-        constraints: (g.constraints as Array<{ kind: string; text: string }>) ?? [],
-      },
+      goal: freshGoal, // secured_amount here is the DERIVED figure
+      purposes,
     }
   },
   logEvent: async (ctx, _p, r) => {
@@ -128,4 +185,73 @@ export const setFundingGoal = defineTool<SetFundingGoalParams, SetFundingGoalRes
     secured_amount: prov(r.goal.secured_amount, 'engine', nowIso()),
     end_date: prov(r.goal.end_date, 'user', nowIso()),
   }),
+})
+
+// ── update_goal_purposes ─────────────────────────────────────────────────────
+// Purposes are addable and editable AT ANY TIME after setup (spec §5): a side
+// funding project ("we're also raising £50k for a minibus") is a purpose line
+// inside the active goal, never a parallel goal. Retire, don't delete.
+
+export interface UpdateGoalPurposesParams extends Record<string, unknown> {
+  add?: PurposeInput[]
+  update?: Array<{ purpose_id: string; label?: string; approx_amount?: number | null; category?: PurposeCategory; refinement?: string | null }>
+  retire?: string[] // purpose ids
+}
+export interface UpdateGoalPurposesResult {
+  purposes: PurposeRow[]
+  added: number
+  updated: number
+  retired: number
+}
+
+export const updateGoalPurposes = defineTool<UpdateGoalPurposesParams, UpdateGoalPurposesResult>({
+  name: 'update_goal_purposes',
+  handler: async (ctx, p) => {
+    const goalId = await getActiveGoalId(ctx.orgId)
+    if (!goalId) throw new Error('update_goal_purposes: no active goal — set one with set_funding_goal first')
+    const sb = serviceClient()
+    let added = 0, updated = 0, retired = 0
+
+    for (const purpose of p.add ?? []) {
+      if (!PURPOSE_CATEGORIES.includes(purpose.category)) {
+        throw new Error(`update_goal_purposes: category '${purpose.category}' is not one of: ${PURPOSE_CATEGORIES.join(', ')}`)
+      }
+      const { error } = await sb.from('goal_purposes').insert({
+        org_id: ctx.orgId,
+        goal_id: goalId,
+        category: purpose.category,
+        label: purpose.label,
+        approx_amount: purpose.approx_amount != null ? Math.round(purpose.approx_amount) : null,
+        refinement: purpose.refinement ?? null,
+        sort_order: 100 + added,
+      })
+      if (error) throw new Error(`update_goal_purposes: add failed: ${error.message}`)
+      added += 1
+    }
+    for (const u of p.update ?? []) {
+      const patch: Record<string, unknown> = { updated_at: nowIso() }
+      if (u.label !== undefined) patch.label = u.label
+      if (u.approx_amount !== undefined) patch.approx_amount = u.approx_amount != null ? Math.round(u.approx_amount) : null
+      if (u.category !== undefined) patch.category = u.category
+      if (u.refinement !== undefined) patch.refinement = u.refinement
+      const { data, error } = await sb.from('goal_purposes')
+        .update(patch).eq('id', u.purpose_id).eq('org_id', ctx.orgId).select('id')
+      if (error) throw new Error(`update_goal_purposes: update failed: ${error.message}`)
+      if (!data?.length) throw new Error('update_goal_purposes: no such purpose for this org')
+      updated += 1
+    }
+    for (const id of p.retire ?? []) {
+      const { data, error } = await sb.from('goal_purposes')
+        .update({ status: 'retired', updated_at: nowIso() }).eq('id', id).eq('org_id', ctx.orgId).select('id')
+      if (error) throw new Error(`update_goal_purposes: retire failed: ${error.message}`)
+      if (!data?.length) throw new Error('update_goal_purposes: no such purpose for this org')
+      retired += 1
+    }
+
+    return { purposes: await getPurposes(ctx.orgId), added, updated, retired }
+  },
+  logEvent: async (ctx, _p, r) => {
+    await emitEvent({ surface: ctx.surface, orgId: ctx.orgId, userId: ctx.userId },
+      'agent_tool_called', { tool_name: 'update_goal_purposes', result_count: r.purposes.length, degraded: false })
+  },
 })

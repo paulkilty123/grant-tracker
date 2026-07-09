@@ -12,6 +12,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { emitEvent } from '../../events/emit'
 import { defineTool } from './envelope'
+import { getPipelineItems, type PipelineItemRow } from './repository'
 import { prov, type ToolContext } from './types'
 import type { PipelineItem, PipelineStage } from '@/types'
 
@@ -26,6 +27,14 @@ const nowIso = () => new Date().toISOString()
 
 // ── add_to_pipeline ──────────────────────────────────────────────────────────
 
+// A purpose assignment must belong to this org — the tool is the authorization
+// boundary (service role bypasses RLS), so verify before writing.
+async function assertPurposeOwnership(orgId: string, purposeId: string): Promise<void> {
+  const { data } = await svc().from('goal_purposes')
+    .select('id').eq('id', purposeId).eq('org_id', orgId).eq('status', 'active').maybeSingle()
+  if (!data) throw new Error('No such active purpose for this organisation — get_plan_state lists the purposes and their ids.')
+}
+
 export interface AddToPipelineParams extends Record<string, unknown> {
   grant_name: string
   funder_name?: string | null
@@ -34,22 +43,29 @@ export interface AddToPipelineParams extends Record<string, unknown> {
   amount_requested?: number | null
   deadline?: string | null
   grant_url?: string | null
+  purpose_id?: string | null // optional purpose assignment (spec §7 — a nudge, never a requirement)
   source_recommendation_id?: string | null
 }
 
 export const addToPipeline = defineTool<AddToPipelineParams, PipelineItem>({
   name: 'add_to_pipeline',
   handler: async (ctx, p) => {
-    const row = {
+    const row: Record<string, unknown> = {
       org_id: ctx.orgId, // from ctx, NEVER from params
       grant_name: p.grant_name,
-      funder_name: p.funder_name ?? null,
+      funder_name: p.funder_name ?? 'Unknown funder', // NOT NULL in prod schema
       stage: (p.stage ?? 'identified') as PipelineStage,
       amount_requested: p.amount_requested ?? null,
       deadline: p.deadline ?? null,
       grant_url: p.grant_url ?? null,
       source_recommendation_id: p.source_recommendation_id ?? null,
       created_by: ctx.userId ?? null,
+    }
+    // Only touch the (036) column when actually assigning — keeps the basic
+    // write path working if the migration lags the deploy.
+    if (p.purpose_id) {
+      await assertPurposeOwnership(ctx.orgId, p.purpose_id)
+      row.purpose_id = p.purpose_id
     }
     const { data, error } = await svc().from('pipeline_items').insert(row).select().single()
     if (error) throw new Error(`add_to_pipeline failed: ${error.message}`)
@@ -75,6 +91,7 @@ export interface UpdatePipelineItemParams extends Record<string, unknown> {
   deadline?: string | null
   outcome_date?: string | null
   outcome_notes?: string | null // short outcome note — scaffold, not application prose
+  purpose_id?: string | null // assign to a purpose, or null to unassign
 }
 export interface UpdatePipelineItemResult {
   item: PipelineItem
@@ -97,6 +114,10 @@ export const updatePipelineItem = defineTool<UpdatePipelineItemParams, UpdatePip
     if (p.deadline !== undefined) updates.deadline = p.deadline
     if (p.outcome_date !== undefined) updates.outcome_date = p.outcome_date
     if (p.outcome_notes !== undefined) updates.outcome_notes = p.outcome_notes
+    if (p.purpose_id !== undefined) {
+      if (p.purpose_id) await assertPurposeOwnership(ctx.orgId, p.purpose_id)
+      updates.purpose_id = p.purpose_id
+    }
 
     const { data, error } = await sb.from('pipeline_items')
       .update(updates).eq('id', p.pipeline_item_id).eq('org_id', ctx.orgId).select().single()
@@ -118,6 +139,28 @@ export const updatePipelineItem = defineTool<UpdatePipelineItemParams, UpdatePip
     stage: prov(r.item.stage, 'agent', nowIso()),
     outcome_date: prov(r.item.outcome_date ?? null, 'user', null),
   }),
+})
+
+// ── get_pipeline ─────────────────────────────────────────────────────────────
+// The read that makes update_pipeline_item usable in conversation: "mark the X
+// grant won" needs an id, and this is how outcomes enter the system — outcomes
+// feed the plan arithmetic, the capture layer, and eventually the brain.
+
+export interface GetPipelinePayload {
+  count: number
+  items: PipelineItemRow[]
+}
+
+export const getPipeline = defineTool<Record<string, unknown>, GetPipelinePayload>({
+  name: 'get_pipeline',
+  handler: async (ctx) => {
+    const items = await getPipelineItems(ctx.orgId)
+    return { count: items.length, items }
+  },
+  logEvent: async (ctx, _p, r) => {
+    await emitEvent({ surface: ctx.surface, orgId: ctx.orgId, userId: ctx.userId },
+      'agent_tool_called', { tool_name: 'get_pipeline', result_count: r.count, degraded: false })
+  },
 })
 
 export type { ToolContext }

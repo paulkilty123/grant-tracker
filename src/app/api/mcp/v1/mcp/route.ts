@@ -49,6 +49,7 @@ import { resolveOrgAndTier } from '@/lib/mcp-entitlement'
 import {
   addToPipeline, updatePipelineItem, getPlanState, getBriefing,
   assessOpportunityAgainstPlan, getFundingGoal, setFundingGoal,
+  recommendMix, updateGoalPurposes, PURPOSE_CATEGORIES,
   TOOL_REGISTRY, EntitlementError, AuthorshipError, type ToolContext,
 } from '@/lib/agent/tools'
 
@@ -203,7 +204,7 @@ async function runCompanion(
 ) {
   const auth = authStore.getStore()
   if (!auth?.orgId || auth.tier !== 'companion') {
-    return companionError('forbidden', 'Companion tools require a Companion-tier Grant Tracker account linked to this connection.')
+    return companionError('forbidden', 'Adviser tools require an Adviser-tier Grant Tracker account linked to this connection.')
   }
   const ctx: ToolContext = { orgId: auth.orgId, surface: 'mcp', tier: auth.tier, userId: auth.oauth?.user_id ?? null }
   try {
@@ -212,16 +213,37 @@ async function runCompanion(
       ...result,
       attribution: ATTRIBUTION,
       rate_limit_status: rateLimitStatusForContext(auth),
+      // §13 item 8 ("connected as [org]") + MCP date-grounding: an external
+      // client controls its own system prompt, so unlike the in-app
+      // orchestrator there is no cache-safe way to inject org identity or
+      // today's date there. Every companion tool result instead carries both
+      // in its envelope — see CONTRACT.dateGrounding for the steering that
+      // tells the model to use as_of rather than its own sense of the date.
+      connected_org: auth.orgName ?? null,
+      as_of: new Date().toISOString().slice(0, 10),
     }) }] }
   } catch (e) {
     if (e instanceof EntitlementError) return companionError('forbidden', 'This tool is not available on your plan.')
-    if (e instanceof AuthorshipError) return companionError('invalid_parameter', 'This tool scaffolds structure only; it does not accept application content.')
+    if (e instanceof AuthorshipError) return companionError('invalid_parameter', 'This tool helps with structure only; it does not accept application content.')
     console.error('[mcp] companion tool failed:', e)
     return companionError('internal_error', 'Something went wrong. Please retry; if it persists, contact hello@granttracker.co.uk.')
   }
 }
 
 const STAGE = z.enum(['identified', 'applying', 'submitted', 'won', 'declined'])
+
+// Purpose split (design spec §4 Q2) — mirrors PURPOSE_ITEM_SCHEMA in the
+// canonical TOOL_REGISTRY. category is the shared PURPOSE_CATEGORIES enum so the
+// MCP schema and the tool layer can never drift on the vocabulary. Cast keeps
+// the literal union (not bare string) so params stay assignable to PurposeInput.
+type PurposeCategory = typeof PURPOSE_CATEGORIES[number]
+const PURPOSE_CATEGORY = z.enum([...PURPOSE_CATEGORIES] as [PurposeCategory, ...PurposeCategory[]])
+const PURPOSE_ITEM = z.object({
+  category:      PURPOSE_CATEGORY.describe('Purpose category. Use "other" only when nothing fits — it routes to your own labelled judgment via recommend_mix.'),
+  label:         z.string().describe('Short free-text label, e.g. "Youth worker post", "Minibus appeal".'),
+  approx_amount: z.number().optional().describe('Approximate whole pounds. Roughness is fine — omit if the user genuinely does not know.'),
+  refinement:    z.string().optional().describe("The user's answer to a recommend_mix clarifying question (e.g. staffing 'delivery post' / 'organisational post'). Omit until asked and answered."),
+})
 
 type McpServerArg = Parameters<Parameters<typeof createMcpHandler>[0]>[0]
 
@@ -238,16 +260,43 @@ function registerCompanionTools(server: McpServerArg) {
     'set_funding_goal',
     COMPANION_DESC['set_funding_goal'],
     {
-      title:          z.string().describe('Short label for the goal, e.g. "2026 income target". Scaffold, not prose.'),
+      title:          z.string().describe('Short label for the goal, e.g. "2026 income target". A label, not application prose.'),
       target_amount:  z.number().describe('Total funding target for the period, in GBP.'),
       start_date:     z.string().describe('Period start, ISO date (YYYY-MM-DD).'),
       end_date:       z.string().describe('Period end / deadline, ISO date (YYYY-MM-DD). Must be after start_date.'),
-      mix_targets:    z.record(z.string(), z.number()).optional().describe('Optional funding-type mix as percentages, e.g. { "grant": 70, "contract": 20, "corporate": 10 }.'),
+      purposes:       z.array(PURPOSE_ITEM).optional().describe("What the money is for — the purpose split (design spec Q2). Structure the user's rough answer; approximate amounts are fine. Drives recommend_mix and sharpens matching (many funders fund only projects, never core)."),
+      mix_targets:    z.record(z.string(), z.number()).optional().describe('Funding-character mix as percentages, e.g. { "unrestricted": 55, "project": 35, "capital": 10 } — the CONFIRMED output of recommend_mix, or the mix the user themselves stated. Never a mix you invented.'),
       constraints:    z.array(z.object({ kind: z.string(), text: z.string() })).optional().describe('What the org will not take money for, e.g. [{ "kind": "sector", "text": "no gambling or tobacco funding" }].'),
       secured_amount: z.number().optional().describe('Override secured-to-date; omit to derive from pipeline items already won.'),
     },
     { title: 'Set funding goal' },
     async (p) => runCompanion(ctx => setFundingGoal(ctx, p)),
+  )
+
+  server.tool(
+    'recommend_mix',
+    COMPANION_DESC['recommend_mix'],
+    { purposes: z.array(PURPOSE_ITEM).optional().describe("The purpose split to derive from (during setup, before the goal exists). Omit to use the active goal's stored purposes.") },
+    { title: 'Recommend funding mix', readOnlyHint: true },
+    async (p) => runCompanion(ctx => recommendMix(ctx, p)),
+  )
+
+  server.tool(
+    'update_goal_purposes',
+    COMPANION_DESC['update_goal_purposes'],
+    {
+      add:    z.array(PURPOSE_ITEM).optional().describe('New purpose lines to add to the active goal (e.g. a side funding project).'),
+      update: z.array(z.object({
+        purpose_id:    z.string().describe('From get_plan_state or a prior write.'),
+        label:         z.string().optional(),
+        approx_amount: z.number().optional(),
+        category:      PURPOSE_CATEGORY.optional(),
+        refinement:    z.string().optional(),
+      })).optional().describe('Edits to existing purposes, keyed by purpose_id.'),
+      retire: z.array(z.string()).optional().describe('purpose_ids to retire (kept as history; nothing is deleted).'),
+    },
+    { title: 'Update goal purposes' },
+    async (p) => runCompanion(ctx => updateGoalPurposes(ctx, p)),
   )
 
   server.tool(
@@ -299,7 +348,7 @@ function registerCompanionTools(server: McpServerArg) {
       amount_requested: z.number().optional().describe('Updated amount, in GBP.'),
       deadline:         z.string().optional().describe('Updated deadline, ISO date.'),
       outcome_date:     z.string().optional().describe('Date the outcome was decided, ISO date.'),
-      outcome_notes:    z.string().optional().describe('Short outcome note (scaffold, not application prose).'),
+      outcome_notes:    z.string().optional().describe('Short outcome note (a note, not application prose).'),
     },
     { title: 'Update pipeline item' },
     async (p) => runCompanion(ctx => updatePipelineItem(ctx, p)),
@@ -797,6 +846,7 @@ async function handle(req: NextRequest): Promise<Response> {
   if (authCtx.oauth) {
     const resolved = await resolveOrgAndTier(authCtx.oauth.user_id)
     authCtx.orgId = resolved.orgId
+    authCtx.orgName = resolved.orgName
     authCtx.tier = resolved.tier
   }
   const handler = authCtx.tier === 'companion' ? companionHandler : freeHandler

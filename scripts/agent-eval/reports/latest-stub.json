@@ -1,11 +1,11 @@
 {
   "mode": "stub",
-  "cases": 16,
-  "fixturesResolved": 16,
-  "gatesPass": 16,
-  "assertionsPass": 10,
+  "cases": 17,
+  "fixturesResolved": 17,
+  "gatesPass": 17,
+  "assertionsPass": 11,
   "rubricPass": 0,
-  "fullPass": 10,
+  "fullPass": 11,
   "schemaErrors": 0,
   "totalCostMicroGbp": 0,
   "model": "claude-sonnet-4-6",
@@ -1013,6 +1013,71 @@
           "assertion": "max_recommendations",
           "pass": true,
           "detail": "recs=2 max=5"
+        }
+      ],
+      "gatesPass": true,
+      "assertionsPass": true,
+      "pass": true,
+      "notes": []
+    },
+    {
+      "id": "GS-17",
+      "version": 1,
+      "family": "integrity",
+      "mode": "recommend",
+      "fixturesResolved": true,
+      "gates": [
+        {
+          "gate": "G1",
+          "pass": true,
+          "detail": "all facts resolve to pack"
+        },
+        {
+          "gate": "G2",
+          "pass": true,
+          "detail": "no fabricated opportunities"
+        },
+        {
+          "gate": "G3",
+          "pass": true,
+          "detail": "eligibility consistent"
+        },
+        {
+          "gate": "G4",
+          "pass": true,
+          "detail": "recs=5 qs=0 words=23 emptyWhy=0"
+        },
+        {
+          "gate": "G5",
+          "pass": true,
+          "detail": "null semantics preserved"
+        },
+        {
+          "gate": "G6",
+          "pass": true,
+          "detail": "numbers trace to pack values"
+        },
+        {
+          "gate": "G7",
+          "pass": true,
+          "detail": "no promise/capability overreach"
+        }
+      ],
+      "assertions": [
+        {
+          "assertion": "must_recommend",
+          "pass": true,
+          "detail": "syn-right-sized recommended"
+        },
+        {
+          "assertion": "must_not_recommend",
+          "pass": true,
+          "detail": "syn-oversized-lottery absent"
+        },
+        {
+          "assertion": "max_recommendations",
+          "pass": true,
+          "detail": "recs=5 max=5"
         }
       ],
       "gatesPass": true,

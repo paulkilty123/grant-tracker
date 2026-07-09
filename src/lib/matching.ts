@@ -30,7 +30,7 @@ export interface MatchResult {
 // Map income bands to approximate midpoints.
 // Covers both the current granular bands and legacy coarse bands (kept for
 // backward compatibility with profiles saved before the band expansion).
-const INCOME_MIDPOINTS: Record<string, number> = {
+export const INCOME_MIDPOINTS: Record<string, number> = {
   'Under £10,000':             5_000,
   '£10,000–£50,000':          30_000,
   '£50,000–£100,000':         75_000,
@@ -576,11 +576,22 @@ export interface FeedbackSignals {
   sectorPenalties: Map<string, number>
 }
 
+/** Per-dimension weights (max points). Parameterised so the scoring-variant
+ *  harness can sweep them against a ground-truth pipeline WITHOUT touching
+ *  production, which passes nothing and gets DEFAULT_MATCH_WEIGHTS. Do not
+ *  change these defaults without an eval-backed decision (see the F8 harness). */
+export interface MatchWeights {
+  location: number; themesGrant: number; beneficiaryGrant: number; funderType: number; eligibility: number
+}
+export const DEFAULT_MATCH_WEIGHTS: MatchWeights = { location: 15, themesGrant: 35, beneficiaryGrant: 20, funderType: 8, eligibility: 12 }
+
 export function computeMatchScore(
   grant: GrantOpportunity,
   org: Organisation,
   feedback?: FeedbackSignals,
+  weights?: MatchWeights,
 ): MatchResult {
+  const W = weights ?? DEFAULT_MATCH_WEIGHTS
   const reasons: string[] = []
 
   // Full grant text used for keyword matching (includes funderBrief when available)
@@ -1090,7 +1101,7 @@ export function computeMatchScore(
 
     if (hasConflict) {
       beneficiaryScore = 1
-      reasons.push('Grant targets a different beneficiary group — check eligibility')
+      reasons.push('Grant targets a conflicting beneficiary group; check eligibility')
     } else {
       // general_public is a universal match — skip structured scoring
       const grantIsGeneral = grantBeneficiaries.includes('general_public')
@@ -1131,9 +1142,10 @@ export function computeMatchScore(
           // rewards the match positively. See docs/strategy/sector-support-org-matching.md.
           beneficiaryScore = 5
         } else {
-          // No intersection — different beneficiary groups
+          // No intersection — different beneficiary groups. Phrase so it is
+          // classified as a warning ("not match") rather than a positive reason.
           beneficiaryScore = 2
-          reasons.push('Different target beneficiary group')
+          reasons.push('Beneficiary groups do not match this funder target group')
         }
       }
     }
@@ -1459,14 +1471,16 @@ export function computeMatchScore(
                         || grant.fundingType === 'investment'
                         || grant.fundingType === 'programme'
 
-  const themesMax       = isOrgCentredType ? 50 : 35
-  const beneficiaryMax  = isOrgCentredType ?  5 : 20
+  // org-centred types route 15 beneficiary points to themes (see comment above);
+  // parameterised so a weight variant shifts the grant-type split too.
+  const themesMax       = isOrgCentredType ? W.themesGrant + 15 : W.themesGrant
+  const beneficiaryMax  = isOrgCentredType ? Math.max(0, W.beneficiaryGrant - 15) : W.beneficiaryGrant
 
-  const wLocation     = Math.round(locationScore     * 15 / 20)
+  const wLocation     = Math.round(locationScore     * W.location / 20)
   const wThemes       = Math.round(themesScore       * themesMax / 25)
   const wBeneficiary  = Math.round(beneficiaryScore  * beneficiaryMax / 10)
-  const wFunderType   = Math.round(funderTypeScore   *  8 / 15)
-  const wEligibility  = Math.round(eligibilityScore  * 12 / 15)
+  const wFunderType   = Math.round(funderTypeScore   * W.funderType / 15)
+  const wEligibility  = Math.round(eligibilityScore  * W.eligibility / 15)
 
   let score = Math.min(100,
     wLocation + wThemes + wBeneficiary + grantSizeScore + wFunderType + wEligibility
@@ -1554,7 +1568,7 @@ export function computeMatchScore(
   if (score < 80) {
     const dimGaps: Array<{ key: string; gap: number; msg: string }> = [
       { key: 'themes',      gap: 35 - wThemes,       msg: 'Sector alignment: thematic overlap with this funder priority areas is limited' },
-      { key: 'beneficiary', gap: 20 - wBeneficiary,  msg: 'Beneficiary group: this funder target group may not fully match your primary beneficiaries' },
+      { key: 'beneficiary', gap: 20 - wBeneficiary,  msg: 'Beneficiary group: partial overlap with this funder target group' },
       { key: 'location',    gap: 15 - wLocation,     msg: 'Geographic focus: limited location overlap - check whether this funder covers your area' },
       { key: 'eligibility', gap: 12 - wEligibility,  msg: 'Eligibility: some requirements are unclear - review the criteria carefully before applying' },
       { key: 'funderType',  gap: 8  - wFunderType,   msg: 'Funder type: this funder type is outside your stated preferences' },
@@ -1693,12 +1707,12 @@ export function computeMatchScore(
     warnReasons:     warns,
     eligibilityIssues: branchedVerdict.issues,
     breakdown: {
-      location:      { score: wLocation,     max: 15,             label: 'Location' },
+      location:      { score: wLocation,     max: W.location,     label: 'Location' },
       themes:        { score: wThemes,       max: themesMax,      label: 'Themes & work' },
       beneficiaries: { score: wBeneficiary,  max: beneficiaryMax, label: 'Beneficiaries' },
       grantSize:     { score: grantSizeScore, max: 10,            label: 'Grant size' },
-      funderType:    { score: wFunderType,   max: 8,              label: 'Funder type' },
-      eligibility:   { score: wEligibility,  max: 12,             label: 'Eligibility' },
+      funderType:    { score: wFunderType,   max: W.funderType,   label: 'Funder type' },
+      eligibility:   { score: wEligibility,  max: W.eligibility,  label: 'Eligibility' },
     },
   }
 }

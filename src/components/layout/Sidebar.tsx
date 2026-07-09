@@ -9,6 +9,8 @@ import { cn } from '@/lib/utils'
 import LogoMark from '@/components/icons/LogoMark'
 import {
   LayoutDashboard,
+  Compass,
+  Target,
   Search,
   FolderKanban,
   CalendarClock,
@@ -29,6 +31,11 @@ import {
 interface Props {
   org: Organisation | null
   userEmail: string
+  /** Companion surface gate (design spec + build-spec §14): computed
+   *  server-side in the layout from AGENT_ENABLED + the org's tier. When true,
+   *  Briefing replaces Dashboard as the first item. The flag is the single
+   *  source of truth for nav visibility — no separate UI toggle. */
+  companionSurface?: boolean
 }
 
 function matchProfileScore(org: Organisation | null): number {
@@ -80,7 +87,7 @@ const ADMIN_NAV = [
   { href: '/dashboard/admin/users',        label: 'Users',               Icon: Users         },
 ]
 
-export default function Sidebar({ org, userEmail }: Props) {
+export default function Sidebar({ org, userEmail, companionSurface = false }: Props) {
   const pathname    = usePathname()
   const router      = useRouter()
   const [mobileOpen,   setMobileOpen]   = useState(false)
@@ -235,9 +242,16 @@ export default function Sidebar({ org, userEmail }: Props) {
         className="flex-1 min-h-0 overflow-y-auto"
         style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(245,241,232,0.18) transparent' }}
       >
-        {/* Dashboard */}
+        {/* Dashboard — Briefing (+ Plan) replaces it for Companion-surface users */}
         <div className="mt-1">
-          {navLink('/dashboard', 'Dashboard', LayoutDashboard)}
+          {companionSurface
+            ? (
+              <>
+                {navLink('/dashboard/briefing', 'Briefing', Compass)}
+                {navLink('/dashboard/plan', 'Plan', Target)}
+              </>
+            )
+            : navLink('/dashboard', 'Dashboard', LayoutDashboard)}
         </div>
 
         {divider}

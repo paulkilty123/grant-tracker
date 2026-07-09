@@ -1,0 +1,104 @@
+{
+  "id": "GS-17",
+  "version": 1,
+  "family": "integrity",
+  "title": "Award-size sanity - a fund whose minimum dwarfs the goal must not headline",
+  "provenance": "Briefing v2 regression, 8 Jul 2026: the £500k-£5m National Lottery 'UK Fund' headlined a £150k cash goal (CGK). Selection needs an award-size compatibility dimension: a minimum award larger than the remaining gap is wrong advice regardless of sector fit, and must be demoted (named if it still surfaces).",
+  "run_mode": "recommend",
+  "org": {
+    "name": "Small community charity (award-size archetype)",
+    "legal_structure": "registered_charity",
+    "annual_income_band": "£100,000–£250,000",
+    "primary_location": "England",
+    "geographic_reach": "England",
+    "impact_sectors": ["community", "education", "young_people"],
+    "beneficiary_groups": ["young_people", "families", "people_in_poverty"],
+    "years_trading": 6,
+    "org_stage": "growth",
+    "mission": "Runs community education and youth programmes for disadvantaged families in England."
+  },
+  "goal": {
+    "title": "Next 12 months",
+    "target_amount": 120000,
+    "secured_amount": 0,
+    "start_date": "2026-07-01",
+    "end_date": "2027-06-30",
+    "mix_targets": null,
+    "constraints": []
+  },
+  "pipeline": [],
+  "org_facts": [],
+  "user_turn": null,
+  "as_of": "2026-07-08",
+  "fixtures": {
+    "synthetic": [
+      {
+        "fixture_id": "syn-oversized-lottery",
+        "title": "Large national community fund",
+        "funder": "Big Lottery Programme (synthetic)",
+        "fundingType": "grant",
+        "description": "Major grants of £500,000 to £5,000,000 for large-scale community programmes across the UK. A perfect sector and beneficiary match on paper, but the minimum award is more than four times this organisation's whole 12-month goal.",
+        "amountMin": 500000,
+        "amountMax": 5000000,
+        "deadline": "2026-10-31",
+        "isRolling": false,
+        "sectors": ["community", "education", "young_people"],
+        "impactSectors": ["community", "education", "young_people"],
+        "beneficiaryGroups": ["young_people", "families", "people_in_poverty"],
+        "eligibilityCriteria": ["UK-based not-for-profit organisations", "Track record of delivery"],
+        "eligibleStructures": ["registered_charity", "cio", "cic_guarantee"],
+        "locationTag": "UK",
+        "applyUrl": "https://example.org/large-national-community-fund",
+        "isInviteOnly": false,
+        "funder_brief": {
+          "what_they_fund": "Large-scale, multi-year community programmes of national significance.",
+          "who_can_apply": "UK not-for-profit organisations able to deliver at scale.",
+          "open_status": "open",
+          "citations": {
+            "what_they_fund": { "snippet": "grants from £500,000 to £5 million for large-scale community programmes", "confidence": "high" }
+          }
+        }
+      },
+      {
+        "fixture_id": "syn-right-sized",
+        "title": "Community futures grants",
+        "funder": "Right Size Trust (synthetic)",
+        "fundingType": "grant",
+        "description": "Grants of £15,000 to £50,000 for community and youth education projects run by small and medium charities in England.",
+        "amountMin": 15000,
+        "amountMax": 50000,
+        "deadline": "2026-09-30",
+        "isRolling": false,
+        "sectors": ["community", "education", "young_people"],
+        "impactSectors": ["community", "education", "young_people"],
+        "beneficiaryGroups": ["young_people", "families", "people_in_poverty"],
+        "eligibilityCriteria": ["Registered charities and CIOs in England", "Income under £1 million"],
+        "eligibleStructures": ["registered_charity", "cio", "cic_guarantee"],
+        "maxOrgIncome": 1000000,
+        "locationTag": "England",
+        "applyUrl": "https://example.org/community-futures",
+        "isInviteOnly": false,
+        "funder_brief": {
+          "what_they_fund": "Community and youth education projects by small and medium charities.",
+          "who_can_apply": "Registered charities and CIOs in England with income under £1 million.",
+          "open_status": "open",
+          "citations": {
+            "what_they_fund": { "snippet": "grants of £15,000 to £50,000 for community and youth education projects", "confidence": "high" }
+          }
+        }
+      }
+    ],
+    "filler_pool": "fixtures/pool-education-england.json"
+  },
+  "expected": {
+    "hard_gates": "all",
+    "assertions": [
+      { "type": "must_recommend", "fixture_id": "syn-right-sized" },
+      { "type": "must_not_recommend", "fixture_id": "syn-oversized-lottery" },
+      { "type": "max_recommendations", "value": 5 }
+    ],
+    "rubric_focus": ["R3", "R5", "R7"],
+    "judge_guidance": "The oversized national fund is a perfect sector match but its minimum award (£500,000) is more than four times the £120,000 goal, so recommending it is wrong advice and fails the consultant test. A good readout leads with the right-sized fund, keeps the whole agenda proportionate to a £120k goal, and if the oversized fund surfaces at all names the mismatch plainly (minimum award larger than the whole goal) rather than presenting it as a headline opportunity."
+  },
+  "notes": "Regression guard for the award-size compatibility dimension added to selection in briefing v2. The oversized fixture is deliberately fully ELIGIBLE (no income floor/ceiling that would rule it out), so only the award-size sanity demotes it - isolating the dimension under test."
+}

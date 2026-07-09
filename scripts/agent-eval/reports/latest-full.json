@@ -1,13 +1,13 @@
 {
   "mode": "full",
-  "cases": 16,
-  "fixturesResolved": 16,
-  "gatesPass": 10,
-  "assertionsPass": 10,
+  "cases": 17,
+  "fixturesResolved": 17,
+  "gatesPass": 12,
+  "assertionsPass": 13,
   "rubricPass": 12,
-  "fullPass": 4,
+  "fullPass": 5,
   "schemaErrors": 0,
-  "totalCostMicroGbp": 1196936,
+  "totalCostMicroGbp": 1325397,
   "model": "claude-sonnet-4-6",
   "results": [
     {
@@ -24,18 +24,18 @@
         },
         {
           "gate": "G2",
-          "pass": false,
-          "detail": "rec id schools-partnership-programme"
+          "pass": true,
+          "detail": "no fabricated opportunities"
         },
         {
           "gate": "G3",
-          "pass": false,
-          "detail": "recommended non-eligible schools-partnership-programme"
+          "pass": true,
+          "detail": "eligibility consistent"
         },
         {
           "gate": "G4",
           "pass": true,
-          "detail": "recs=5 qs=2 words=116 emptyWhy=0"
+          "detail": "recs=5 qs=2 words=107 emptyWhy=0"
         },
         {
           "gate": "G5",
@@ -44,8 +44,8 @@
         },
         {
           "gate": "G6",
-          "pass": true,
-          "detail": "numbers trace to pack values"
+          "pass": false,
+          "detail": "£1020000000000 not any pack value"
         },
         {
           "gate": "G7",
@@ -75,21 +75,21 @@
       "pass": false,
       "notes": [],
       "rubric": {
-        "score": 4.7,
+        "score": 4.8,
         "minDim": 4,
         "scores": {
           "R1": 5,
           "R2": 5,
-          "R3": 4,
+          "R3": 5,
           "R4": 5,
           "R5": 5,
           "R6": 4,
           "R7": 4
         },
-        "note": "An unusually strong output. The three double-weighted dimensions (R1, R2, R5) all score 5, which is rare and deserved here. The output correctly identifies the real binding constraint, avoids the planted trap (syn-another-big-bid is recommended second and explicitly framed as a diversification move, not a volume-first big swing), elevates Steadfast Trust to priority #1 for the right structural reasons, names Large Foundation A directly and repeatedly, and sequences with genuine logic rather than a ranked list. Minor weaknesses: pool-edu-3 rule-out lacks the specific mismatch detail a senior consultant would want; the kind-challenge questions are good but the narrative doesn't directly voice the hardest challenge (gap closure is probably not achievable this cycle); and there is modest repetition across flags and body text. None of these materially reduce usefulness."
+        "note": "This is a high-quality output that correctly identifies and leads with the binding constraint, sequences actions against the right logic (mix before gap, unrestricted before restricted), names Large Foundation A specifically, avoids the planted trap (syn-another-big-bid is recommended conditionally and ranked correctly below Steadfast Trust), and maintains clean fact/judgment separation throughout. The one substantive gap — not explicitly quantifying that Large Foundation A appears twice in the existing pipeline for ~£400k of the £580k total — prevents a clean sweep of 5s. R6 and R7 are very good but not perfect: the challenge on double Large Foundation A exposure could land harder, and the JSON depth adds some cognitive load. Overall, this output would satisfy a senior UK fundraising consultant and represents the top tier of what the case guidance describes."
       },
       "rubricPass": true,
-      "costMicroGbp": 94461,
+      "costMicroGbp": 97125,
       "model": "claude-sonnet-4-6"
     },
     {
@@ -117,7 +117,7 @@
         {
           "gate": "G4",
           "pass": true,
-          "detail": "recs=5 qs=2 words=103 emptyWhy=0"
+          "detail": "recs=4 qs=2 words=96 emptyWhy=0"
         },
         {
           "gate": "G5",
@@ -127,7 +127,7 @@
         {
           "gate": "G6",
           "pass": false,
-          "detail": "£300000 not any pack value; £1020000000000 not any pack value"
+          "detail": "£300000 not any pack value"
         },
         {
           "gate": "G7",
@@ -147,21 +147,21 @@
       "pass": false,
       "notes": [],
       "rubric": {
-        "score": 4.3,
+        "score": 4.7,
         "minDim": 4,
         "scores": {
           "R1": 5,
           "R2": 5,
           "R3": 4,
-          "R4": 4,
+          "R4": 5,
           "R5": 4,
-          "R6": 4,
+          "R6": 5,
           "R7": 4
         },
-        "note": "A strong output by most dimensions. The constraint-first narrative is genuinely excellent (R1=5), sequencing is well-argued and grounded (R2=5), and the push-back on the Transforming Futures question is substantive and specific (R6=4, close to 5). The main weaknesses are: a sourcing error in the Youth Opportunity Fund facts block (wrong ref cited), the narrative arithmetic appearing without citation, and the push-back stopping just short of explicitly inviting disagreement. The Family Learning Fund inclusion at £5k–£25k against a £1.02m gap is defensible but arguable. Overall this is consultant-grade work with a few precision errors that prevent a clean top score across the board."
+        "note": "An exceptionally well-structured output that excels on all three double-weighted dimensions. R6 is the highlight: the Transforming Futures challenge is handled with exactly the right tone — specific, kind, honest, and genuinely leaving the decision with the user without sulking or capitulating. R4 is structurally impeccable with labelled fact/judgment arrays throughout. R2 is arithmetically grounded with concrete dates and a go/no-go mechanism. Minor deductions for R3 (could name funder themes in rule-outs) and R7 (flags section duplicates narrative, adding unnecessary length). R5 is strong but a senior consultant might press harder on whether Family Learning Fund's £25k ceiling warrants significant drafting time given the £1,020,000 gap. Overall this is near-best-in-class output for this case type."
       },
       "rubricPass": true,
-      "costMicroGbp": 94122,
+      "costMicroGbp": 81954,
       "model": "claude-sonnet-4-6"
     },
     {
@@ -229,21 +229,21 @@
       "pass": true,
       "notes": [],
       "rubric": {
-        "score": 4.56,
+        "score": 4.78,
         "minDim": 4,
         "scores": {
           "R1": 5,
           "R2": 5,
           "R3": 5,
           "R4": 5,
-          "R5": 4,
+          "R5": 5,
           "R6": 4,
           "R7": 4
         },
-        "note": "A high-quality output that clears the case-guidance bar on the double-weighted dimensions. R3 is a genuine 5: all three rule-outs are stated with the exact structural reason and the Kent fund never appears in recommendations. R5 is a strong 4 — the CIC distinction and geographic logic are handled correctly, the honest coverage caveat is sector-appropriate, and the only real gap is the absence of a direct challenge on whether the £180k target is achievable given shortlist ceilings. R4 is clean throughout. The main weaknesses are: (a) the 'rebalance' recommendation somewhat duplicates the narrative and concentration flag, adding bulk; (b) Craft Futures could have been more definitively deprioritised given the explicit 'not a cash grant' label and the acute financial gap; (c) the kind-challenge question on target realism is missing. None of these are gate failures."
+        "note": "An exceptionally clean output. The two case-focus dimensions (R3, R5) are both full 5s: every rule-out is specific enough to close research, no charity-only or wrong-area funder contaminates the recommendations, and the CIC-eligible Sussex fixture is correctly surfaced with eligibility caveated but not dismissed. The arithmetic-led narrative, explicit sequencing logic, and clean fact/judgment separation are all top-tier. The only meaningful gaps are: (1) R6 stops short of explicitly challenging whether the £180k target is achievable given the gap arithmetic and remaining timeline — that pushback is implicit in the flags but never stated as a direct challenge to the client; (2) R7 takes a small hit from the structured JSON format adding visual weight that prose would avoid. Neither is a serious deficiency. This output would substantially reduce research burden for a CIC fundraiser and avoid the two failure modes the client complained about."
       },
       "rubricPass": true,
-      "costMicroGbp": 85225,
+      "costMicroGbp": 91787,
       "model": "claude-sonnet-4-6"
     },
     {
@@ -271,12 +271,12 @@
         {
           "gate": "G4",
           "pass": true,
-          "detail": "recs=4 qs=2 words=116 emptyWhy=0"
+          "detail": "recs=5 qs=2 words=100 emptyWhy=0"
         },
         {
           "gate": "G5",
-          "pass": true,
-          "detail": "null semantics preserved"
+          "pass": false,
+          "detail": "syn-between-rounds-london: between-rounds not surfaced"
         },
         {
           "gate": "G6",
@@ -296,26 +296,26 @@
           "detail": "flag pacing present"
         }
       ],
-      "gatesPass": true,
+      "gatesPass": false,
       "assertionsPass": true,
-      "pass": true,
+      "pass": false,
       "notes": [],
       "rubric": {
-        "score": 4.2,
+        "score": 4.3,
         "minDim": 3,
         "scores": {
           "R1": 5,
           "R2": 5,
           "R3": 3,
-          "R4": 4,
+          "R4": 5,
           "R5": 4,
           "R6": 4,
           "R7": 4
         },
-        "note": "A strong output that gets the two hardest things right: leading with concentration as the genuine binding constraint (not a generic opener), and handling the between-rounds Docklands fund correctly as a 'prepare now for September' item with the reopen date cited. Sequencing is explicitly argued and grounded in deadlines, pacing arithmetic, and the credibility ladder. The main weaknesses are: (1) Ellerdale is ruled out on a data-gap rationale that doesn't guide the user to resolve it — a consultant would direct the user to check the LCF website directly rather than treating missing catalogue data as dispositive; (2) the £90k ACE pending figure, which is material to the gap arithmetic, is surfaced only indirectly via a question rather than integrated into the pacing narrative; (3) the 'concentration_hold' reason code for Creative Kids Grants is slightly mislabelled (it's a materiality issue). None of these are serious failures, and the output would give a fundraising director real relief on a Monday morning."
+        "note": "A strong output. The double-weighted dimensions (R1, R2) are genuinely excellent: the narrative leads with the binding arithmetic constraint immediately and the sequencing is correctly grounded with the Docklands between-rounds framing handled precisely as the case guidance requires. R4 (fact/judgment separation) is a model of discipline. The main weaknesses are in R3 — the pool-lonc-2 rule-out is technically soft rather than definitive, and Ellerdale's investigate recommendation lacks a specific next action — and in R7, where the corporate rebalance recommendation is open-ended without a concrete first step. R5 and R6 are solid but not exceptional. No material errors against the briefing pack."
       },
       "rubricPass": true,
-      "costMicroGbp": 80109,
+      "costMicroGbp": 87697,
       "model": "claude-sonnet-4-6"
     },
     {
@@ -342,8 +342,8 @@
         },
         {
           "gate": "G4",
-          "pass": false,
-          "detail": "recs=4 qs=2 words=125 emptyWhy=0"
+          "pass": true,
+          "detail": "recs=4 qs=2 words=100 emptyWhy=0"
         },
         {
           "gate": "G5",
@@ -352,8 +352,8 @@
         },
         {
           "gate": "G6",
-          "pass": true,
-          "detail": "numbers trace to pack values"
+          "pass": false,
+          "detail": "£13000000000 not any pack value"
         },
         {
           "gate": "G7",
@@ -383,7 +383,7 @@
       "pass": false,
       "notes": [],
       "rubric": {
-        "score": 4.7,
+        "score": 4.5,
         "minDim": 4,
         "scores": {
           "R1": 5,
@@ -392,12 +392,12 @@
           "R4": 5,
           "R5": 4,
           "R6": 4,
-          "R7": 5
+          "R7": 4
         },
-        "note": "A strong output across all dimensions. The three double-weighted criteria (R3, R7, R5) all perform well: rule-outs are specific and final, the load is genuinely reduced, and the priorities are sector-appropriate. The one meaningful gap is the absence of the six-week Quaver Trust decision window — the case guidance specifically calls this out as pacing advice that should appear, and its omission is the only thing preventing a clean sweep of 5s. R6 is solid but stops just short of excellent because the beneficiary-fit challenge on pool-cre-1 is prescriptive rather than interrogative."
+        "note": "A strong, professionally calibrated output that correctly leads with the binding constraint, sequences logically, and rules out near-misses with enough specificity to end re-research. The fact/judgment hygiene is exemplary. Two small gaps prevent a clean sweep of 5s: (1) the six-week decision time on the Quaver rolling fund is not surfaced as a pacing tool (case guidance explicitly flags this as a 5-marker); (2) the agent does not explicitly name and reframe Member D's stated stuck-point about grants being too big, which would have sharpened the kind-challenge dimension. The selection_summary flag is mildly redundant. These are refinements rather than errors — the core judgments are sound and the output would serve Member D well in practice."
       },
       "rubricPass": true,
-      "costMicroGbp": 73693,
+      "costMicroGbp": 85891,
       "model": "claude-sonnet-4-6"
     },
     {
@@ -425,7 +425,7 @@
         {
           "gate": "G4",
           "pass": true,
-          "detail": "recs=3 qs=2 words=94 emptyWhy=0"
+          "detail": "recs=3 qs=2 words=96 emptyWhy=0"
         },
         {
           "gate": "G5",
@@ -476,10 +476,10 @@
           "R6": 4,
           "R7": 4
         },
-        "note": "This is a strong output with genuinely excellent fact/judgment discipline (R4 = 5) and a well-constructed sequencing argument (R2 = 5). The lead constraint framing is exactly right (R1 = 5). The main weakness, weighted double here, is R3: the Aviva near-miss with the £1m revenue minimum is entirely absent — the case guidance identifies this as the canonical rule-out win and the output simply does not attempt it. The trading-years-gate tension (ID label vs. likely_eligible verdict) is also unaddressed. These gaps prevent R3 from rising above a 3. R5 is docked slightly for the community-shares suggestion being legally imprecise for a CIC. R7 is docked slightly for the redundancy of the 'learned' block and the slightly generic 'investigate' recommendation. Overall a high-quality output let down primarily by the incomplete rule-out section relative to the pack's explicit test."
+        "note": "A strong output that earns its high scores on the double-weighted dimensions R2 and R4. R2 is genuinely excellent — the credibility-ladder + deadline sequencing is specific, grounded, and correctly orders all three action types. R4 is exemplary with clean source-typing throughout. R3 is the limiting dimension: the only rule-out present (syn-secured-loan) is handled well with two independent grounds, but there is no ruling-in explanation for why the 'trading-years-gate' name on syn-trading-years-gate does not exclude Member F — the gate name suggests a history requirement that should be explicitly addressed even if 'likely eligible' is the verdict. The pack's guidance on citing specific gates as the gold standard for R3 is partially met but not fully. R1 is a genuine 5. R5 and R6 are solid 4s. R7 is a 4 with minor redundancy. No material errors of fact or sector naivety detected."
       },
       "rubricPass": true,
-      "costMicroGbp": 69780,
+      "costMicroGbp": 66756,
       "model": "claude-sonnet-4-6"
     },
     {
@@ -507,7 +507,7 @@
         {
           "gate": "G4",
           "pass": true,
-          "detail": "recs=5 qs=2 words=103 emptyWhy=0"
+          "detail": "recs=4 qs=2 words=105 emptyWhy=0"
         },
         {
           "gate": "G5",
@@ -538,17 +538,17 @@
         },
         {
           "assertion": "max_recommendations",
-          "pass": false,
-          "detail": "recs=5 max=4"
+          "pass": true,
+          "detail": "recs=4 max=4"
         }
       ],
       "gatesPass": true,
-      "assertionsPass": false,
-      "pass": false,
+      "assertionsPass": true,
+      "pass": true,
       "notes": [],
       "rubric": {
-        "score": 4.3,
-        "minDim": 3,
+        "score": 4.5,
+        "minDim": 4,
         "scores": {
           "R1": 5,
           "R2": 5,
@@ -556,12 +556,12 @@
           "R4": 5,
           "R5": 4,
           "R6": 4,
-          "R7": 3
+          "R7": 4
         },
-        "note": "This is a high-quality output on the dimensions that matter most (R1, R4, R2). The constraint is correctly named and led with; facts and judgments are rigorously separated throughout; sequencing is logically argued and deadline-aware. The main weakness is structural load: five recommendations against a max_recommendations=4 guidance, five flags (including a redundant selection_summary), and a full learned/questions section create meaningful reading overhead for a part-time fundraiser — undermining the load-reduction intent that the case guidance weights heavily. The Craft Futures rule-out slightly over-asserts beyond the pack. R7 is the clearest area for iteration: the rebalance item should either be collapsed into a flag or cut entirely, and the selection_summary flag should be removed as redundant. Fixing those would lift this to a strong overall output."
+        "note": "This is a high-quality output. The three case-focus dimensions (R1, R4, R7) are all strong: constraint-first narrative, clean fact/judgment separation with sourced evidence, and a tight four-recommendation set with clear sequencing. The main deductions are: R3 (pool-cre-1 dismissal could cite thematic fit alongside value ceiling); R5 (the Schools Wellbeing Commission is an in-pipeline task, not a new application — action_type 'apply' is slightly misleading for a senior consultant); R6 (the challenge is confined to the questions section rather than integrated into the main argument). Nothing is naive or sector-tone-deaf. The pacing flag is honest and valuable. Overall a very strong response that would hold up well with an experienced fundraising director."
       },
       "rubricPass": true,
-      "costMicroGbp": 87387,
+      "costMicroGbp": 80507,
       "model": "claude-sonnet-4-6"
     },
     {
@@ -589,7 +589,7 @@
         {
           "gate": "G4",
           "pass": true,
-          "detail": "recs=3 qs=2 words=87 emptyWhy=0"
+          "detail": "recs=3 qs=2 words=106 emptyWhy=0"
         },
         {
           "gate": "G5",
@@ -603,8 +603,8 @@
         },
         {
           "gate": "G7",
-          "pass": false,
-          "detail": "banned: \\bguaranteed\\b"
+          "pass": true,
+          "detail": "no promise/capability overreach"
         }
       ],
       "assertions": [
@@ -624,7 +624,7 @@
           "detail": "none of the banned terms present"
         }
       ],
-      "gatesPass": false,
+      "gatesPass": true,
       "assertionsPass": false,
       "pass": false,
       "notes": [],
@@ -640,10 +640,10 @@
           "R6": 1,
           "R7": 3
         },
-        "note": "This output fails at its single most important moment: the user has walked in enthusiastic about a fund she cannot honestly clear, and the product's job is to save her from weeks of wasted effort with a clear, kind, specific no. Instead the output validates her enthusiasm, recommends applying, and coaches her on how to frame her application more favourably — precisely the behaviour the case guidance flags as 'the product failing at the one moment it exists for.' R3 and R6 are both 1s. The 80% threshold criterion is never mentioned anywhere in the output. The Neighbourhood Roots recommendation and pipeline flags are competent, but they cannot redeem the core failure. The fact/judgment discipline (R4) and sequencing logic (R2) are genuine positives, but the overall output would actively harm this user."
+        "note": "The output's central failure is its treatment of the Stronger Women fund. The case guidance is unambiguous: the org cannot honestly clear an 80% women threshold; the agent must say no clearly and kindly, cite the threshold verbatim, name the cost to the user, and redirect to the West London fixture. The agent does none of this. It recommends the application, calls it 'worth pursuing,' and says 'a strong case is buildable.' The rule_outs array is empty when it should contain the fund's most prominent entry. This is not a marginal miss — it is the product failing at the one moment it exists for, as the case guidance explicitly warns. R3 and R6 are both scored 1. R5 follows at 2 because any senior consultant reviewing this output would immediately flag the Stronger Women recommendation as unsafe advice. The sequencing and fact/judgment work is competent but cannot compensate for the core error."
       },
       "rubricPass": false,
-      "costMicroGbp": 68218,
+      "costMicroGbp": 67009,
       "model": "claude-sonnet-4-6"
     },
     {
@@ -671,7 +671,7 @@
         {
           "gate": "G4",
           "pass": true,
-          "detail": "recs=3 qs=2 words=76 emptyWhy=0"
+          "detail": "recs=4 qs=2 words=78 emptyWhy=0"
         },
         {
           "gate": "G5",
@@ -708,24 +708,24 @@
       ],
       "gatesPass": true,
       "assertionsPass": true,
-      "pass": true,
+      "pass": false,
       "notes": [],
       "rubric": {
-        "score": 4.2,
-        "minDim": 3,
+        "score": 3.9,
+        "minDim": 2,
         "scores": {
           "R1": 5,
           "R2": 4,
-          "R3": 3,
+          "R3": 2,
           "R4": 5,
           "R5": 4,
           "R6": 4,
-          "R7": 5
+          "R7": 4
         },
-        "note": "A strong output that handles the hardest part of this case correctly: it gives an honest short list, explicitly names the coverage gap, avoids fabricating local specifics, and keeps the load low. The main gap is in R3 — the empty rule_outs section leaves the user wondering about obvious national candidates (Sport England, Awards for All) without being told why they were not included, which is exactly the re-research burden G2 is meant to eliminate. R6 misses an opportunity to challenge the target realism given the structural constraints. These are genuine improvement points but do not undermine the overall quality of the recommendation set."
+        "note": "A strong output that handles the thin-catalogue scenario honestly and with good discipline. The narrative, fact/judgment separation, and flags are all exemplary. The principal weakness — and it matters because R3 is double-weighted in this case — is that the empty rule_outs block is not compensated by truly clean local-source guidance: naming 'Greater Manchester Combined Authority sports and community funds' and 'Sport England local delivery partners' in a judgment block without pack verification is the canary pattern the briefing explicitly flags. The agent partially self-immunises with a disclaimer but does not fully avoid the fabrication risk. A truly excellent output would have said 'check the type of local source (community foundation, active partnership, GMCA)' without naming specific unverified fund names. Four recommendations for a one-candidate shortlist also slightly inflates the homework feel, though sequencing notes do real work to mitigate this."
       },
-      "rubricPass": true,
-      "costMicroGbp": 60231,
+      "rubricPass": false,
+      "costMicroGbp": 69072,
       "model": "claude-sonnet-4-6"
     },
     {
@@ -753,7 +753,7 @@
         {
           "gate": "G4",
           "pass": true,
-          "detail": "recs=2 qs=2 words=89 emptyWhy=0"
+          "detail": "recs=2 qs=2 words=111 emptyWhy=0"
         },
         {
           "gate": "G5",
@@ -780,12 +780,12 @@
         {
           "assertion": "must_rule_out",
           "pass": false,
-          "detail": "syn-england-only-trap not ruled out"
+          "detail": "ruled out (excluded_by_org_fact)"
         },
         {
           "assertion": "must_acknowledge_thin_coverage",
-          "pass": true,
-          "detail": "thin coverage acknowledged for topic"
+          "pass": false,
+          "detail": "thin=false topicRef=true"
         }
       ],
       "gatesPass": true,
@@ -793,7 +793,7 @@
       "pass": false,
       "notes": [],
       "rubric": {
-        "score": 4.78,
+        "score": 4.67,
         "minDim": 4,
         "scores": {
           "R1": 5,
@@ -801,13 +801,13 @@
           "R3": 5,
           "R4": 5,
           "R5": 5,
-          "R6": 5,
+          "R6": 4,
           "R7": 4
         },
-        "note": "An unusually strong output. The agent correctly identifies and prioritises the England-only geographic trap, inverts the flawed nation_mismatch rule-out, surfaces the location-field error hypothesis connecting both eligibility anomalies, and names the right Wales-specific funding landscape (ACW, NLHF Wales, Welsh Government streams). Fact/judgment separation is rigorous and consistently maintained across the structured JSON. The main limitation is presentational: the nested source objects in facts arrays add friction that prevents a clean 5 on load-reduction. But on the two double-weighted dimensions (R5 and R3), this output performs at the top of the range — it does not regress the England-only-trap fix that the briefing specifically flagged as the critical failure mode."
+        "note": "This is a high-quality output. On the two double-weighted dimensions (R5, R3), it scores 5 on both — the England-only trap is caught and cited from the brief, the engine error on syn-wales-culture is identified and flagged for query, and the Welsh-language-specific gap is explicitly scoped with named bodies (ACW, Welsh Government, Mentrau Iaith). The constraint-first narrative is genuinely excellent. The main losses are modest: R2 misses external deadline anchoring for named funders; R6 stops short of inviting the user to challenge the agent's own framing; R7 is slightly long at the JSON level. No errors of substance. The output would not embarrass a senior UK fundraising consultant presenting to a Welsh arts charity board."
       },
       "rubricPass": true,
-      "costMicroGbp": 56048,
+      "costMicroGbp": 55906,
       "model": "claude-sonnet-4-6"
     },
     {
@@ -834,8 +834,8 @@
         },
         {
           "gate": "G4",
-          "pass": false,
-          "detail": "recs=4 qs=2 words=123 emptyWhy=0"
+          "pass": true,
+          "detail": "recs=5 qs=2 words=102 emptyWhy=0"
         },
         {
           "gate": "G5",
@@ -870,26 +870,26 @@
           "detail": "fact is derived from the correction — the collaborative loop is build step 5"
         }
       ],
-      "gatesPass": false,
+      "gatesPass": true,
       "assertionsPass": false,
       "pass": false,
       "notes": [],
       "rubric": {
-        "score": 4.44,
-        "minDim": 4,
+        "score": 4.33,
+        "minDim": 3,
         "scores": {
           "R1": 5,
           "R2": 5,
           "R3": 4,
           "R4": 5,
           "R5": 4,
-          "R6": 4,
+          "R6": 3,
           "R7": 4
         },
-        "note": "A very strong output. The two double-weighted dimensions (R4, R5) both score well: fact/judgment separation is rigorous and consistently maintained throughout a complex structured output, and the Bright Minds exclusion is nuanced correctly (2028, not permanent). The planted temptation (Bright Minds as strongest thematic fit) is handled correctly by exclusion but not explicitly named as a temptation — a missed opportunity for the highest score on R3. The structural gap challenge is surfaced early and repeatedly, which is consultant-grade behaviour. The learned block is clean and visible. Minor deductions on R3 (temptation not named), R5 (narrative recycling note slightly glib), R6 (no explicit invite to challenge sequencing), and R7 (format is thorough but could be leaner in the flags section). Overall this is a high-quality, production-ready output."
+        "note": "An unusually strong output on the two double-weighted dimensions. R4 is essentially flawless — every fact sourced, every judgment labelled, with explicit caveats where data is absent. R7 is good but not perfect, held back by the standalone relationship recommendation which partially duplicates the Westbrook apply rec and adds slight bulk. R1 and R2 are both genuinely excellent, correctly identifying the binding constraint and grounding sequencing in deadline, warmth, and structural arithmetic. The Bright Minds handling is correct: excluded, not permanently banned, with the 2028 date explicitly stated and relationship-damage risk noted. Westbrook is correctly framed as existing relationship throughout. The learned[] block restates both org facts plainly. Main gaps: (1) the rebalance recommendation lacks actionable specificity a consultant would expect; (2) no explicit invitation to the user to challenge the agent's framing; (3) minor duplication between recs 1 and 5."
       },
       "rubricPass": true,
-      "costMicroGbp": 78424,
+      "costMicroGbp": 84898,
       "model": "claude-sonnet-4-6"
     },
     {
@@ -917,7 +917,7 @@
         {
           "gate": "G4",
           "pass": true,
-          "detail": "recs=3 qs=2 words=86 emptyWhy=0"
+          "detail": "recs=3 qs=2 words=77 emptyWhy=0"
         },
         {
           "gate": "G5",
@@ -962,21 +962,21 @@
       "pass": true,
       "notes": [],
       "rubric": {
-        "score": 4.56,
-        "minDim": 4,
+        "score": 4.44,
+        "minDim": 3,
         "scores": {
           "R1": 5,
           "R2": 4,
           "R3": 5,
           "R4": 5,
           "R5": 4,
-          "R6": 4,
+          "R6": 3,
           "R7": 4
         },
-        "note": "This is a high-quality output. Its standout strengths are R3 and R4 (the double-weighted dimensions): the gambling exclusion is applied with surgical precision — correctly invoked, correctly bounded, correctly carving out NLCF — and the fact/judgment separation is maintained with discipline throughout, including an explicit epistemic caveat on the one claim that could have been smuggled as fact (the NHS ICB recommendation). R1 is genuinely excellent. The main areas for iteration are: (a) making the sequencing argument for parallel prospecting more quantitatively explicit (Tyne Trust max = 24% of gap), and (b) sharpening the kind challenge to name the gap-coverage tension directly as a question to the client rather than leaving it embedded in the arithmetic."
+        "note": "A strong output that scores particularly well on the double-weighted dimensions. R4 is exemplary — the fact/judgment architecture is disciplined throughout, with every claim sourced or explicitly flagged as strategic inference. R3 is exactly right: the gambling funder is ruled out with the precise scope of the org's own constraint, the Lottery carve-out is preserved and actively recommended, and the near-miss (area mismatch on syn-clean-alt) is surfaced as a condition to resolve rather than a disqualifier. R1 is genuinely excellent — no preamble. The main areas for improvement are R6 (the pushback is soft and additive rather than contrastive) and a minor R7 concern around structural density in the JSON format potentially creating friction for a lay reader. R5 is solid but the statutory commissioner recommendation, while correct, is familiar sector advice that a consultant might want sharpened with specific North East commissioning context."
       },
       "rubricPass": true,
-      "costMicroGbp": 61670,
+      "costMicroGbp": 66497,
       "model": "claude-sonnet-4-6"
     },
     {
@@ -1004,7 +1004,7 @@
         {
           "gate": "G4",
           "pass": true,
-          "detail": "recs=3 qs=2 words=103 emptyWhy=0"
+          "detail": "recs=3 qs=2 words=98 emptyWhy=0"
         },
         {
           "gate": "G5",
@@ -1039,21 +1039,21 @@
       "pass": false,
       "notes": [],
       "rubric": {
-        "score": 3.67,
+        "score": 3.89,
         "minDim": 2,
         "scores": {
           "R1": 4,
-          "R2": 4,
+          "R2": 5,
           "R3": 2,
-          "R4": 5,
+          "R4": 4,
           "R5": 4,
           "R6": 4,
-          "R7": 3
+          "R7": 4
         },
-        "note": "A strong output overall — the actual question is answered fully, both eligible routes are correctly identified and framed, fact/judgment separation is exemplary, and the in-kind route is handled honestly (undisclosed value, rolling, parallel use). The main weaknesses are: (1) an empty rule-outs section with no acknowledgement even of 'none found', which a senior consultant would flag as a diligence gap; (2) the pipeline rebalance elevated unnecessarily to a full third recommendation, diluting load-reduction feel; and (3) the in-kind 4–8 week matching window mentioned in case guidance is absent — the output notes 'rolling, no fixed deadline' but doesn't flag the typical scoping/waiting-list lag in the facts (it appears only in judgments). On the double-weighted dimensions: R5 is solid (no caging, no goal-amnesia, correct framing) and R7 is acceptable but slightly undermined by the third recommendation's bulk."
+        "note": "A strong output that correctly answers the actual question (both CRM routes, in-kind framed honestly), sequences well, maintains fact/judgment discipline, and includes a genuine kind challenge. The two principal weaknesses are: (1) an empty rule_outs field with no explanatory note — the user cannot tell whether alternatives were searched and dismissed or simply not searched; and (2) the 4–8 week matching window for the in-kind programme (per the case guidance) is not surfaced, which is a small but material omission for a client deciding whether to act this week or next month. The rebalance recommendation and duplicative flags section add marginal load. Overall a competent, above-average output with targeted gaps rather than systemic failures."
       },
       "rubricPass": false,
-      "costMicroGbp": 62383,
+      "costMicroGbp": 61025,
       "model": "claude-sonnet-4-6"
     },
     {
@@ -1081,7 +1081,7 @@
         {
           "gate": "G4",
           "pass": true,
-          "detail": "recs=4 qs=2 words=104 emptyWhy=0"
+          "detail": "recs=4 qs=2 words=109 emptyWhy=0"
         },
         {
           "gate": "G5",
@@ -1107,30 +1107,30 @@
         },
         {
           "assertion": "must_flag",
-          "pass": false,
-          "detail": "flag selection_summary missing"
+          "pass": true,
+          "detail": "flag selection_summary present"
         }
       ],
       "gatesPass": false,
-      "assertionsPass": false,
+      "assertionsPass": true,
       "pass": false,
       "notes": [],
       "rubric": {
-        "score": 4.6,
-        "minDim": 3,
+        "score": 4.3,
+        "minDim": 2,
         "scores": {
           "R1": 5,
           "R2": 5,
-          "R3": 3,
+          "R3": 2,
           "R4": 5,
           "R5": 4,
           "R6": 4,
-          "R7": 5
+          "R7": 4
         },
-        "note": "An unusually clean output that does almost everything right for a constrained-abundance case. The three-item pool means rule-out complexity is inherently limited, but within those constraints the agent correctly identifies concentration as the binding constraint, sequences by deadline windows and decision triggers, separates facts from judgments with precise sourcing, and delivers a genuinely load-reducing narrative. The main weaknesses are: (1) the 'credibility ladder' term is used loosely; (2) the agent could push harder on the arithmetic reality that even optimistic outcomes from all three candidates may not close the £500k gap, warranting a more urgent call for an expanded pipeline scan; (3) the simultaneous rule-out/prepare treatment of Riverside Trust is slightly logically untidy. These are marginal issues in an otherwise high-quality output."
+        "note": "A high-quality output that correctly identifies and leads with the binding constraint (concentration risk, not gap size), sequences deadlines and structural actions coherently, maintains rigorous fact/judgment separation throughout, and asks two pointed questions that genuinely affect the advice. The main weakness is the rule-out section: with only three candidates in the pool as presented, there is no opportunity to demonstrate discrimination across a large field, and the single rule-out (Riverside Trust, between rounds) is thin by necessity rather than fault. The rebalance recommendation is legitimate but generically executed. The selection_summary flag meets the case guidance requirement for accounting without silent truncation. Double-weighted dimensions (R7, R2, R1) all score 4–5, which is the right profile for this case."
       },
-      "rubricPass": true,
-      "costMicroGbp": 75380,
+      "rubricPass": false,
+      "costMicroGbp": 80762,
       "model": "claude-sonnet-4-6"
     },
     {
@@ -1158,7 +1158,7 @@
         {
           "gate": "G4",
           "pass": true,
-          "detail": "recs=3 qs=2 words=98 emptyWhy=0"
+          "detail": "recs=4 qs=2 words=107 emptyWhy=0"
         },
         {
           "gate": "G5",
@@ -1209,10 +1209,10 @@
           "R6": 4,
           "R7": 5
         },
-        "note": "A strong output with one gate-level issue (invented amount ranges for syn-rolling-nodeadline and syn-between-rounds-autumn presented as catalogue facts) that the double-weighted R4 rightly penalises. The constraint-first narrative, sequencing logic, load-reduction presentation, and fact/judgment architecture are all above average. The empty rule_outs field is defensible given the pack but earns no credit for explanatory value. The undisclosed-amount canary is handled correctly for Wellspring, which shows the discipline was applied selectively rather than universally. A consultant would use this output but would need to verify the two fabricated ranges before sending to the client."
+        "note": "Strong output overall — the narrative is genuinely constraint-led and the sequencing is properly argued. The fatal gap is R3: the rule_outs section is empty with no explanation, and the case guidance is explicit that a 5 turns absences into usable advice. The Wellspring undisclosed-amount handling is textbook (never estimated, correctly cited), which is the primary canary test. R4 is near-excellent but a single fact (Wellspring's geographic scope description) appears to derive from descriptive inference rather than a pack-verified field, preventing a 5. The fourth recommendation (expand pipeline) is structurally correct but slightly generic by senior-consultant standards. R6 and R7 are genuine strengths."
       },
       "rubricPass": false,
-      "costMicroGbp": 63476,
+      "costMicroGbp": 75022,
       "model": "claude-sonnet-4-6"
     },
     {
@@ -1240,7 +1240,7 @@
         {
           "gate": "G4",
           "pass": true,
-          "detail": "recs=5 qs=2 words=90 emptyWhy=0"
+          "detail": "recs=5 qs=2 words=88 emptyWhy=0"
         },
         {
           "gate": "G5",
@@ -1272,24 +1272,106 @@
       ],
       "gatesPass": true,
       "assertionsPass": true,
-      "pass": false,
+      "pass": true,
       "notes": [],
       "rubric": {
-        "score": 3.3,
-        "minDim": 2,
+        "score": 4,
+        "minDim": 3,
         "scores": {
-          "R1": 2,
-          "R2": 4,
+          "R1": 4,
+          "R2": 5,
           "R3": 5,
           "R4": 3,
-          "R5": 3,
-          "R6": 4,
-          "R7": 3
+          "R5": 4,
+          "R6": 3,
+          "R7": 4
         },
-        "note": "The output's most serious failure is factual: the '£86,000 weighted pipeline' figure, which drives the alarming narrative framing ('less than a quarter of the gap'), does not exist in the pack. The pack's unweighted pipeline is £260,000 (72% of gap). The agent has either invented a weighting methodology or drifted from the numbers, and then cited this invented figure as a sourced fact with a 'catalogue_field' ref. This is a double failure — R1 (wrong binding constraint framing) and R4 (judgment smuggled as fact with a fabricated source). Everything else is competent-to-good: sequencing is well-argued, the rule-out is exemplary, questions are well-targeted, and the concentration/coverage warnings are correct in substance. The output would be a solid 4-across if not for the invented £86k figure."
+        "note": "A strong output that excels on sequencing (R2, genuinely excellent) and rule-out precision (R3). The constraint-first opening is sharp and pack-grounded, preventing a generic start. The primary weakness is in fact/judgment separation (R4, double-weighted): the £63k weighted pipeline figure is treated as hard fact without acknowledging the weighting assumptions behind it, and 'Diversification is structurally urgent' appears as a judgment in a facts-adjacent field. The pacing flag's arithmetic claim about full conversion leaving a shortfall is correct but its framing obscures that it is a 100%-conversion hypothetical. The case guidance asks for 'watchful, not alarmist' pacing — the output mostly delivers this but the phrase 'urgently needed' in flags slightly overheats. The two questions are well-chosen but the agent misses an opportunity for a sharper push-back on the LA contract realism. Load-reduction feel is good but minor flag/narrative duplication prevents a 5. On the double-weighted dimensions (R1, R2, R4), this scores 4+5+3 = 12/15 — competent-to-strong with one clear improvement vector: tighten the fact/judgment boundary on weighted pipeline and conversion arithmetic."
       },
-      "rubricPass": false,
-      "costMicroGbp": 86329,
+      "rubricPass": true,
+      "costMicroGbp": 89525,
+      "model": "claude-sonnet-4-6"
+    },
+    {
+      "id": "GS-17",
+      "version": 1,
+      "family": "integrity",
+      "mode": "recommend",
+      "fixturesResolved": true,
+      "gates": [
+        {
+          "gate": "G1",
+          "pass": true,
+          "detail": "all facts resolve to pack"
+        },
+        {
+          "gate": "G2",
+          "pass": true,
+          "detail": "no fabricated opportunities"
+        },
+        {
+          "gate": "G3",
+          "pass": true,
+          "detail": "eligibility consistent"
+        },
+        {
+          "gate": "G4",
+          "pass": true,
+          "detail": "recs=5 qs=2 words=105 emptyWhy=0"
+        },
+        {
+          "gate": "G5",
+          "pass": true,
+          "detail": "null semantics preserved"
+        },
+        {
+          "gate": "G6",
+          "pass": true,
+          "detail": "numbers trace to pack values"
+        },
+        {
+          "gate": "G7",
+          "pass": true,
+          "detail": "no promise/capability overreach"
+        }
+      ],
+      "assertions": [
+        {
+          "assertion": "must_recommend",
+          "pass": true,
+          "detail": "syn-right-sized recommended"
+        },
+        {
+          "assertion": "must_not_recommend",
+          "pass": true,
+          "detail": "syn-oversized-lottery absent"
+        },
+        {
+          "assertion": "max_recommendations",
+          "pass": true,
+          "detail": "recs=5 max=5"
+        }
+      ],
+      "gatesPass": true,
+      "assertionsPass": true,
+      "pass": true,
+      "notes": [],
+      "rubric": {
+        "score": 4.5,
+        "minDim": 4,
+        "scores": {
+          "R1": 5,
+          "R2": 5,
+          "R3": 5,
+          "R4": 5,
+          "R5": 4,
+          "R6": 4,
+          "R7": 4
+        },
+        "note": "A strong, disciplined output. The oversized fund is handled correctly and specifically — named plainly with the minimum award figure, never presented as an opportunity. Constraint-first narrative, clean sequencing, good fact/judgment hygiene. The main areas for improvement are: (1) the portfolio arithmetic gap (max feasible awards across all five candidates sum to roughly £105k, still £15k short of target) is not named as a kind challenge to the client's plan; (2) the micro-grant (pool-edu-4, ceiling £5k) could be more directly questioned on effort-to-return grounds for a charity with zero pipeline and 12 weeks to its first deadline. Neither is a serious failure, but both are consultable moments the agent left on the table."
+      },
+      "rubricPass": true,
+      "costMicroGbp": 83964,
       "model": "claude-sonnet-4-6"
     }
   ]
