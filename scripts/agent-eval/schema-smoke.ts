@@ -134,6 +134,13 @@ async function main() {
       check('purpose ids stable across adjustment (pipeline refs survive)',
         set2.data.purposes.some(p => p.purpose_id === capital.purpose_id))
       check('secured derives across adjustment (15000 + 20000)', set2.data.goal.secured_amount === 35000, `got ${set2.data.goal.secured_amount}`)
+      // Purposes re-parenting guard (found 10 Jul via the MCP live steering
+      // test: £400k of purposes survived a replacement onto a £300k goal with
+      // no reconciliation check). Carried-forward 250k purposes on this 300k
+      // target (>10% off) must be flagged, never silently pass as matching.
+      check('re-parented purposes that no longer reconcile are flagged',
+        typeof set2.data.purposes_reconciliation_warning === 'string' && set2.data.purposes_reconciliation_warning.length > 0,
+        `got ${JSON.stringify(set2.data.purposes_reconciliation_warning)}`)
 
       const upd = await tools.updateGoalPurposes(ctx, {
         add: [{ category: 'staffing', label: 'Youth worker post', approx_amount: 30000, refinement: 'delivery post' }],
@@ -145,6 +152,51 @@ async function main() {
 
       const plan = await tools.getPlanState(ctx, {})
       check('get_plan_state carries purposes block', plan.data.has_goal === true && !!plan.data.purposes && plan.data.purposes.items.length === 3)
+
+      // Structural MCP setup gate (found 10 Jul via the live steering test:
+      // description-only steering didn't stop the model writing a first goal
+      // over MCP straight from unquantified purposes). A goal-less org must be
+      // refused on ctx.surface='mcp'; the same call succeeds on 'app', and an
+      // ADJUSTMENT (goal already exists) succeeds on 'mcp' too.
+      const { data: mcpOrg } = await sb.from('organisations').insert({
+        name: 'ZZ Schema Smoke MCP-gate (delete me)', owner_id: ownerId,
+        org_type: 'registered_charity', legal_structure: 'registered_charity',
+        annual_income_band: '£100,000–£250,000', primary_location: 'UK-wide',
+        geographic_reach: 'regional', impact_sectors: ['mental_health'],
+        beneficiary_groups: ['young_people'], funding_type_preferences: ['grant'],
+      }).select('id').single()
+      const mcpOrgId = (mcpOrg as { id: string } | null)?.id
+      if (!mcpOrgId) {
+        check('MCP setup gate — test org created', false)
+      } else {
+        try {
+          const mcpCtx: Ctx = { orgId: mcpOrgId, surface: 'mcp', tier: 'companion', userId: ownerId }
+          let blocked = false
+          try {
+            await tools.setFundingGoal(mcpCtx, { title: 'x', target_amount: 1000, start_date: '2026-01-01', end_date: '2026-12-31' })
+          } catch (e) { blocked = e instanceof Error && e.name === 'SetupSurfaceError' }
+          check('first-time goal write refused over MCP (SetupSurfaceError)', blocked)
+
+          const appCtx: Ctx = { orgId: mcpOrgId, surface: 'app', tier: 'companion', userId: ownerId }
+          const firstAppGoal = await tools.setFundingGoal(appCtx, { title: 'x', target_amount: 1000, start_date: '2026-01-01', end_date: '2026-12-31' })
+          check('same first-time write succeeds on app surface', !!firstAppGoal.data.id)
+
+          const mcpAdjust = await tools.setFundingGoal(mcpCtx, { title: 'x adjusted', target_amount: 2000, start_date: '2026-01-01', end_date: '2026-12-31' })
+          check('adjustment (goal already exists) succeeds over MCP', mcpAdjust.data.superseded_prior)
+
+          // Fresh purposes that DO sum to the new target → no false positive.
+          const mcpFreshPurposes = await tools.setFundingGoal(mcpCtx, {
+            title: 'x reset', target_amount: 5000, start_date: '2026-01-01', end_date: '2026-12-31',
+            purposes: [{ category: 'core', label: 'Core costs', approx_amount: 5000 }],
+          })
+          check('fresh purposes that reconcile carry no warning', mcpFreshPurposes.data.purposes_reconciliation_warning === null,
+            `got ${JSON.stringify(mcpFreshPurposes.data.purposes_reconciliation_warning)}`)
+        } finally {
+          await sb.from('goal_purposes').delete().eq('org_id', mcpOrgId)
+          await sb.from('goals').delete().eq('org_id', mcpOrgId)
+          await sb.from('organisations').delete().eq('id', mcpOrgId)
+        }
+      }
     }
 
     // ── 037: threads ─────────────────────────────────────────────────────────
