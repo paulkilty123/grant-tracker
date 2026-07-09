@@ -19,7 +19,7 @@ import type { Move } from './considerations'
 
 const gbp = (n: number) => `£${Math.round(n).toLocaleString('en-GB')}`
 
-export const AUTHOR_PROMPT_VERSION = 'author-v1'
+export const AUTHOR_PROMPT_VERSION = 'author-v2' // v2: + plan_read, verb ladder, contractions
 
 function djb2(s: string): string {
   let h = 5381
@@ -36,6 +36,7 @@ function djb2(s: string): string {
 export function briefingSignature(pack: BriefingPack): string {
   const a = pack.arithmetic
   const parts = {
+    v: AUTHOR_PROMPT_VERSION, // a prompt/output-shape change invalidates the cache
     t: Math.round(pack.goal.target_amount),
     s: Math.round(pack.goal.secured_amount),
     e: pack.goal.end_date ?? null,
@@ -69,6 +70,9 @@ export function availableMoves(candidates: PackCandidate[], considerations: Move
 
 export interface AuthoredBriefing {
   my_read: string
+  /** One or two sentences for the plan page: the SHAPE of the plan (the mix
+   *  composition and the order to build it), not a repeat of My read. */
+  plan_read: string
   agenda: Array<{ ref: string; title: string; reason: string }>
   usage: Usage
   model: string
@@ -97,6 +101,8 @@ THIS WEEK — choose and order the two or three moves that matter most, from the
   - reason: at most two sentences on why it matters now and what it moves. Do not repeat the funder or fund name from the title. Vary the sentence structure across the moves; do not give them all the same shape.
 You may only order moves that are listed below; never invent one, and never reference a ref that is not present.
 
+PLAN READ — also write plan_read: one or two sentences for the plan page, about the SHAPE of the plan, the mix composition and the order to build it (which slice leads, which is hardest, what balance to aim for). It sits above the composition breakdown, so it must NOT repeat My read; same voice, same number rules.
+
 NUMBERS — every £ figure and every percentage you write must be copied exactly from the PACK FIGURES below; never compute, round, or estimate your own. Bare counts like "18 months" are fine. Prefer words to numbers wherever you can.
 
 EXAMPLE OF THE TARGET VOICE (illustration only — do NOT reuse its figures, dates, or funder names; write from the pack you are given):
@@ -114,6 +120,7 @@ const OUTPUT_TOOL = {
     type: 'object',
     properties: {
       my_read: { type: 'string', description: 'Three sentences (four at most), adviser framing, constraint-first, second person, no dashes.' },
+      plan_read: { type: 'string', description: 'One or two sentences on the plan SHAPE (mix composition and build order); not a repeat of my_read.' },
       agenda: {
         type: 'array',
         description: 'The two or three most important moves this week, ordered most-important first.',
@@ -128,7 +135,7 @@ const OUTPUT_TOOL = {
         },
       },
     },
-    required: ['my_read', 'agenda'],
+    required: ['my_read', 'plan_read', 'agenda'],
   },
 }
 
@@ -207,7 +214,7 @@ export async function authorBriefing(pack: BriefingPack, moves: AvailableMove[],
   const validRefs = new Set(moves.map(m => m.ref))
   let last: AuthoredBriefing | null = null
   for (let attempt = 0; attempt < 2; attempt++) {
-    const { data, usage } = await callStructuredTool<{ my_read: string; agenda: Array<{ ref: string; title: string; reason: string }> }>({
+    const { data, usage } = await callStructuredTool<{ my_read: string; plan_read: string; agenda: Array<{ ref: string; title: string; reason: string }> }>({
       system: SYSTEM,
       user: renderInput(pack, moves),
       tool: OUTPUT_TOOL,
@@ -218,9 +225,10 @@ export async function authorBriefing(pack: BriefingPack, moves: AvailableMove[],
       .filter(x => validRefs.has(x.ref)) // drop any invented refs
       .map(x => ({ ref: x.ref, title: stripDashes(x.title ?? ''), reason: stripDashes(x.reason ?? '') }))
     const my_read = stripDashes(data.my_read ?? '')
-    const lintText = [my_read, ...agenda.flatMap(x => [x.title, x.reason])].join('\n')
+    const plan_read = stripDashes(data.plan_read ?? '')
+    const lintText = [my_read, plan_read, ...agenda.flatMap(x => [x.title, x.reason])].join('\n')
     const offenders = lintNumbers(lintText, pack)
-    last = { my_read, agenda, usage, model: usage.model, numberLintPassed: offenders.length === 0 }
+    last = { my_read, plan_read, agenda, usage, model: usage.model, numberLintPassed: offenders.length === 0 }
     if (offenders.length === 0) return last
   }
   return last as AuthoredBriefing // numberLintPassed=false → caller uses deterministic fallback

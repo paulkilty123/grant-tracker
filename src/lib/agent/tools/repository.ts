@@ -62,6 +62,7 @@ export async function getActiveGoalId(orgId: string): Promise<string | null> {
 export interface BriefingRunCache {
   signature: string
   my_read: string
+  plan_read: string
   agenda: Array<{ ref: string; title: string; reason: string }>
   generated_at: string
   /** complete run with content = safe to show; a guardrail-blocked attempt is
@@ -79,11 +80,12 @@ export async function getLatestBriefingRun(orgId: string): Promise<BriefingRunCa
     if (!data) return null
     const r = data as Record<string, unknown>
     const digest = (r.context_digest as { signature?: string } | null) ?? {}
-    const raw = (r.raw_output as { agenda?: unknown[] } | null) ?? {}
+    const raw = (r.raw_output as { agenda?: unknown[]; plan_read?: string } | null) ?? {}
     const my_read = String(r.narrative ?? '')
     return {
       signature: String(digest.signature ?? ''),
       my_read,
+      plan_read: String(raw.plan_read ?? ''),
       agenda: (raw.agenda as BriefingRunCache['agenda']) ?? [],
       generated_at: String(r.created_at ?? ''),
       usable: r.status === 'complete' && my_read.length > 0,
@@ -93,7 +95,7 @@ export async function getLatestBriefingRun(orgId: string): Promise<BriefingRunCa
 
 export async function saveBriefingRun(input: {
   orgId: string; goalId: string | null; signature: string
-  myRead: string; agenda: unknown[]
+  myRead: string; planRead: string; agenda: unknown[]
   model: string; promptVersion: string
   inputTokens: number; outputTokens: number; costMicroGbp: number
   status?: 'complete' | 'guardrail_blocked'
@@ -111,7 +113,7 @@ export async function saveBriefingRun(input: {
       cost_estimate_microgbp: input.costMicroGbp,
       status: input.status ?? 'complete',
       narrative: input.myRead,
-      raw_output: { agenda: input.agenda },
+      raw_output: { agenda: input.agenda, plan_read: input.planRead },
     }).select('created_at').single()
     return data ? String((data as { created_at: string }).created_at) : null
   } catch (e) { console.error('[briefing] saveBriefingRun failed', e); return null }

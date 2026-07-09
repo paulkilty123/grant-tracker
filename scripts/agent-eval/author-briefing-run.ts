@@ -73,6 +73,9 @@ async function main() {
   rule('MY READ')
   console.log(out.my_read)
 
+  rule('PLAN READ (plan page)')
+  console.log(out.plan_read)
+
   rule('THIS WEEK, IN ORDER')
   out.agenda.forEach((item, i) => {
     console.log(`${i + 1}. ${item.title}   [${item.ref}]`)

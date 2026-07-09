@@ -207,6 +207,9 @@ interface FitCard {
 }
 export interface BriefingGuidance {
   my_read: string
+  /** Plan-page framing (mix shape + build order); carried on the briefing
+   *  guidance so the plan page reads the same cached generation. */
+  plan_read: string
   agenda: Array<{ ref: string; title: string; reason: string }>
   generated_at: string
 }
@@ -328,14 +331,14 @@ async function resolveGuidance(
   // Same plan state as the last attempt: reuse it if usable, otherwise fall
   // back without re-spending (whether it last failed the lint or the budget).
   if (cached && cached.signature === signature) {
-    return cached.usable ? { my_read: cached.my_read, agenda: cached.agenda, generated_at: cached.generated_at } : null
+    return cached.usable ? { my_read: cached.my_read, plan_read: cached.plan_read, agenda: cached.agenda, generated_at: cached.generated_at } : null
   }
 
   const budget = await checkInferenceBudget(ctx.orgId)
   if (!budget.allowed) {
     // Over budget / kill-switch: keep showing the last good guidance if we have
     // one, else the deterministic layer. Do not generate.
-    return cached?.usable ? { my_read: cached.my_read, agenda: cached.agenda, generated_at: cached.generated_at } : null
+    return cached?.usable ? { my_read: cached.my_read, plan_read: cached.plan_read, agenda: cached.agenda, generated_at: cached.generated_at } : null
   }
 
   // Authoring move set: candidates + the singleton strategic considerations.
@@ -355,13 +358,13 @@ async function resolveGuidance(
     const goalId = await getActiveGoalId(ctx.orgId)
     const createdAt = await saveBriefingRun({
       orgId: ctx.orgId, goalId, signature,
-      myRead: out.my_read, agenda: out.agenda,
+      myRead: out.my_read, planRead: out.plan_read, agenda: out.agenda,
       model: out.model, promptVersion: AUTHOR_PROMPT_VERSION,
       inputTokens: out.usage.inputTokens, outputTokens: out.usage.outputTokens, costMicroGbp: out.usage.costMicroGbp,
       status: out.numberLintPassed ? 'complete' : 'guardrail_blocked',
     })
     if (!out.numberLintPassed) return null // lint failed twice → deterministic fallback
-    return { my_read: out.my_read, agenda: out.agenda, generated_at: createdAt ?? new Date().toISOString() }
+    return { my_read: out.my_read, plan_read: out.plan_read, agenda: out.agenda, generated_at: createdAt ?? new Date().toISOString() }
   } catch (e) {
     console.error('[briefing] guidance generation failed', e)
     return null

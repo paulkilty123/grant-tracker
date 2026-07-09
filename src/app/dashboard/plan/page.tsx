@@ -12,7 +12,7 @@
 import { redirect } from 'next/navigation'
 import { resolveWebToolContext } from '@/lib/agent/boundary'
 import { agentEnabledForOrg } from '@/lib/agent/orchestrator/config'
-import { getPlanState, getPipeline } from '@/lib/agent/tools'
+import { getPlanState, getPipeline, getBriefing } from '@/lib/agent/tools'
 import PlanView from '@/components/briefing/PlanView'
 import CompanionDrawer from '@/components/briefing/CompanionDrawer'
 
@@ -24,17 +24,19 @@ export default async function PlanPage() {
   const { ctx } = boundary
   if (!agentEnabledForOrg(ctx.orgId) || ctx.tier !== 'companion') redirect('/dashboard')
 
-  const [plan, pipeline] = await Promise.all([
+  const [plan, pipeline, briefing] = await Promise.all([
     getPlanState(ctx, {}),
     getPipeline(ctx, {}),
+    getBriefing(ctx, {}), // shares the cached guidance generation; carries plan_read
   ])
 
   const planData = plan.data
   if (!planData.has_goal) redirect('/dashboard/briefing')
+  const planRead = briefing.data.has_goal ? (briefing.data.guidance?.plan_read ?? null) : null
 
   return (
     <>
-      <PlanView plan={planData} pipeline={pipeline.data} />
+      <PlanView plan={planData} pipeline={pipeline.data} planRead={planRead} />
       <CompanionDrawer examplePrompt="Which purpose is furthest behind?" />
     </>
   )

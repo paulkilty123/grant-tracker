@@ -93,7 +93,7 @@ async function main() {
   console.log(`match-trading grant in candidate set: ${tradingSurfaced ? 'yes' : 'NO (case not exercising the hedge — check fixtures)'}`)
 
   const out = await authorBriefing(pack, moves)
-  const text = [out.my_read, ...out.agenda.flatMap(x => [x.title, x.reason])].join('\n')
+  const text = [out.my_read, out.plan_read, ...out.agenda.flatMap(x => [x.title, x.reason])].join('\n')
   console.log('\n--- authored output ---')
   console.log(out.my_read)
   out.agenda.forEach((x, i) => console.log(`${i + 1}. ${x.title}\n   ${x.reason}`))
