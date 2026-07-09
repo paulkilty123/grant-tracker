@@ -4,12 +4,18 @@
 // drawer and the setup experience, so the two surfaces can't drift.
 
 import { useCallback, useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 export interface ChatMessage {
   role: 'user' | 'assistant'
   text: string
   tool_names: string[]
 }
+
+// Tools that change the plan state, so the briefing/plan behind the drawer is
+// now out of date. After such a turn we soft-refresh the route, which lets
+// GuidanceRefresher regenerate the authored layer out of band (latency fix).
+const PLAN_CHANGING_TOOLS = new Set(['set_funding_goal', 'update_goal_purposes', 'add_to_pipeline', 'update_pipeline_item'])
 
 export function useAgentChat(opts?: {
   turnKind?: 'chat' | 'strategist'
@@ -23,6 +29,7 @@ export function useAgentChat(opts?: {
   const [busy, setBusy] = useState(false)
   const onToolData = opts?.onToolData
   const turnKind = opts?.turnKind ?? 'chat'
+  const router = useRouter()
 
   const loadThread = useCallback(() => {
     fetch('/api/agent/thread')
@@ -40,6 +47,7 @@ export function useAgentChat(opts?: {
     if (!text || busy) return
     setBusy(true)
     setMessages(prev => [...prev, { role: 'user', text, tool_names: [] }, { role: 'assistant', text: '', tool_names: [] }])
+    let planChanged = false
     try {
       const res = await fetch('/api/agent/chat', {
         method: 'POST',
@@ -72,6 +80,9 @@ export function useAgentChat(opts?: {
           if (ev.type === 'tool_done' && ev.name && ev.data !== undefined && onToolData) {
             onToolData(ev.name, ev.data)
           }
+          if ((ev.type === 'tool_start' || ev.type === 'tool_done') && ev.name && PLAN_CHANGING_TOOLS.has(ev.name)) {
+            planChanged = true
+          }
           setMessages(prev => {
             const next = [...prev]
             const last = { ...next[next.length - 1] }
@@ -94,8 +105,11 @@ export function useAgentChat(opts?: {
       })
     } finally {
       setBusy(false)
+      // A plan-changing turn makes the briefing/plan behind the drawer stale;
+      // soft-refresh so the server re-reads and GuidanceRefresher regenerates.
+      if (planChanged) router.refresh()
     }
-  }, [busy, turnKind, onToolData])
+  }, [busy, turnKind, onToolData, router])
 
   return { messages, loaded, busy, loadThread, send }
 }

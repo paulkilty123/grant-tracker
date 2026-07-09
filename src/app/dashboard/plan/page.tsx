@@ -15,6 +15,7 @@ import { agentEnabledForOrg } from '@/lib/agent/orchestrator/config'
 import { getPlanState, getPipeline, getBriefing } from '@/lib/agent/tools'
 import PlanView from '@/components/briefing/PlanView'
 import CompanionDrawer from '@/components/briefing/CompanionDrawer'
+import GuidanceRefresher from '@/components/briefing/GuidanceRefresher'
 
 export const dynamic = 'force-dynamic'
 
@@ -33,11 +34,13 @@ export default async function PlanPage() {
   const planData = plan.data
   if (!planData.has_goal) redirect('/dashboard/briefing')
   const planRead = briefing.data.has_goal ? (briefing.data.guidance?.plan_read ?? null) : null
+  const guidanceStale = briefing.data.has_goal ? briefing.data.guidance_stale : false
 
   return (
     <>
       <PlanView plan={planData} pipeline={pipeline.data} planRead={planRead} />
       <CompanionDrawer examplePrompt="Which purpose is furthest behind?" />
+      <GuidanceRefresher stale={guidanceStale} />
     </>
   )
 }

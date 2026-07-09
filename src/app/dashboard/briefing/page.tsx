@@ -19,6 +19,7 @@ import BriefingView from '@/components/briefing/BriefingView'
 import CompanionDrawer from '@/components/briefing/CompanionDrawer'
 import BriefingSeen from '@/components/briefing/BriefingSeen'
 import SetupExperience from '@/components/briefing/SetupExperience'
+import GuidanceRefresher from '@/components/briefing/GuidanceRefresher'
 
 export const dynamic = 'force-dynamic'
 
@@ -90,6 +91,7 @@ export default async function BriefingPage() {
       />
       <CompanionDrawer examplePrompt={examplePrompt} suggestions={suggestions} />
       <BriefingSeen />
+      <GuidanceRefresher stale={briefing.data.guidance_stale} />
     </>
   )
 }

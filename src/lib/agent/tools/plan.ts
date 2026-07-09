@@ -246,6 +246,12 @@ export type BriefingPayload =
        *  page falls back to the deterministic template sentences. Agenda refs
        *  are 'cand:<opportunity_id>' or 'consideration:<kind>'. */
       guidance: BriefingGuidance | null
+      /** True when the current plan-state signature has no cached generation
+       *  yet, so a background refresh (/api/agent/guidance/refresh) would
+       *  produce fresh guidance. The read path never generates; the page fires
+       *  the refresh and re-renders. False when guidance is fresh, disabled, or
+       *  already attempted at this signature. */
+      guidance_stale: boolean
     }
 
 export function buildBriefingOnboarding(org: Organisation | null, pipeline: PipelineEntry[]): BriefingPayload {
@@ -281,7 +287,7 @@ function computeSelectionNote(pack: BriefingPack): string | null {
   return `${nonCash} in-kind and support match${nonCash === 1 ? '' : 'es'} held back, because they do not move a cash gap.`
 }
 
-export function buildBriefingFull(pack: BriefingPack, deltas: PlanDeltas | null, considerations: Array<{ kind: string; detail: string }> = [], guidance: BriefingGuidance | null = null): BriefingPayload {
+export function buildBriefingFull(pack: BriefingPack, deltas: PlanDeltas | null, considerations: Array<{ kind: string; detail: string }> = [], guidance: BriefingGuidance | null = null, guidanceStale = false): BriefingPayload {
   return {
     has_goal: true,
     generated_at: new Date().toISOString(),
@@ -292,6 +298,7 @@ export function buildBriefingFull(pack: BriefingPack, deltas: PlanDeltas | null,
     considerations,
     selection_note: computeSelectionNote(pack),
     guidance,
+    guidance_stale: guidanceStale,
     top_candidates: pack.candidates.slice(0, 8).map(c => ({
       opportunity_id: c.id,
       title: c.title,
@@ -321,25 +328,35 @@ export function buildBriefingFull(pack: BriefingPack, deltas: PlanDeltas | null,
  *  the guidance kill-switch. A guardrail-blocked or budget-blocked attempt
  *  falls back to the deterministic template sentences on the page (guidance =
  *  null) without re-spending at the same plan state. */
-async function resolveGuidance(
-  ctx: { orgId: string; surface: string; userId?: string | null },
-  pack: BriefingPack, goal: GoalInput, pipeline: PipelineEntry[], asOf: string, recentWin: boolean,
-): Promise<BriefingGuidance | null> {
-  if (process.env.AGENT_BRIEFING_GUIDANCE === 'false') return null // targeted kill-switch, independent of chat
+function readGuidance(cached: Awaited<ReturnType<typeof getLatestBriefingRun>>, signature: string): { guidance: BriefingGuidance | null; stale: boolean } {
+  if (process.env.AGENT_BRIEFING_GUIDANCE === 'false') return { guidance: null, stale: false }
+  const matches = !!cached && cached.signature === signature
+  const guidance = matches && cached!.usable
+    ? { my_read: cached!.my_read, plan_read: cached!.plan_read, agenda: cached!.agenda, generated_at: cached!.generated_at }
+    : null
+  // stale = the current plan state has no run yet (a refresh would help). A
+  // guardrail-blocked attempt at THIS signature counts as attempted, not stale,
+  // so a persistent lint failure does not loop the refresher.
+  return { guidance, stale: !matches }
+}
+
+/** Generate + cache the guidance for the current plan state, if stale and within
+ *  budget. Self-assembling so it runs OUT of the read path — the /refresh route
+ *  awaits it after a plan-changing write. Idempotent: a run already exists at
+ *  this signature → no-op. This is the ONLY place guidance is generated, so
+ *  reads (get_briefing / get_plan_state → get_briefing) never block on the LLM. */
+export async function refreshBriefingGuidance(ctx: { orgId: string; surface: string; userId?: string | null }): Promise<{ refreshed: boolean; reason: string }> {
+  if (process.env.AGENT_BRIEFING_GUIDANCE === 'false') return { refreshed: false, reason: 'disabled' }
+  const [goal, pipeline, org] = await Promise.all([getGoal(ctx.orgId), getPipeline(ctx.orgId), getOrg(ctx.orgId)])
+  if (!goal || !org) return { refreshed: false, reason: 'no_goal' }
+  const [orgFacts, catalogue, recentWin] = await Promise.all([getOrgFacts(ctx.orgId), getActiveCatalogue(), hasRecentWin(ctx.orgId)])
+  const asOf = today()
+  const pack = assembleBriefingPack({ org, goal, pipeline, orgFacts, catalogue, asOf, userTurn: null })
   const signature = briefingSignature(pack)
   const cached = await getLatestBriefingRun(ctx.orgId)
-  // Same plan state as the last attempt: reuse it if usable, otherwise fall
-  // back without re-spending (whether it last failed the lint or the budget).
-  if (cached && cached.signature === signature) {
-    return cached.usable ? { my_read: cached.my_read, plan_read: cached.plan_read, agenda: cached.agenda, generated_at: cached.generated_at } : null
-  }
-
+  if (cached && cached.signature === signature) return { refreshed: false, reason: 'fresh' } // already attempted at this plan state
   const budget = await checkInferenceBudget(ctx.orgId)
-  if (!budget.allowed) {
-    // Over budget / kill-switch: keep showing the last good guidance if we have
-    // one, else the deterministic layer. Do not generate.
-    return cached?.usable ? { my_read: cached.my_read, plan_read: cached.plan_read, agenda: cached.agenda, generated_at: cached.generated_at } : null
-  }
+  if (!budget.allowed) return { refreshed: false, reason: 'budget' }
 
   // Authoring move set: candidates + the singleton strategic considerations.
   // deadline_pressure is excluded — it is time-critical, stays deterministic
@@ -351,23 +368,22 @@ async function resolveGuidance(
     recentWin,
   }).filter(m => m.kind !== 'deadline_pressure')
   const moves = availableMoves(pack.candidates, strategic)
-  if (moves.length === 0) return null
+  if (moves.length === 0) return { refreshed: false, reason: 'no_moves' }
 
   try {
     const out = await authorBriefing(pack, moves)
     const goalId = await getActiveGoalId(ctx.orgId)
-    const createdAt = await saveBriefingRun({
+    await saveBriefingRun({
       orgId: ctx.orgId, goalId, signature,
       myRead: out.my_read, planRead: out.plan_read, agenda: out.agenda,
       model: out.model, promptVersion: AUTHOR_PROMPT_VERSION,
       inputTokens: out.usage.inputTokens, outputTokens: out.usage.outputTokens, costMicroGbp: out.usage.costMicroGbp,
       status: out.numberLintPassed ? 'complete' : 'guardrail_blocked',
     })
-    if (!out.numberLintPassed) return null // lint failed twice → deterministic fallback
-    return { my_read: out.my_read, plan_read: out.plan_read, agenda: out.agenda, generated_at: createdAt ?? new Date().toISOString() }
+    return { refreshed: out.numberLintPassed, reason: out.numberLintPassed ? 'generated' : 'lint_failed' }
   } catch (e) {
     console.error('[briefing] guidance generation failed', e)
-    return null
+    return { refreshed: false, reason: 'error' }
   }
 }
 
@@ -385,8 +401,14 @@ export const getBriefing = defineTool<{ since?: string } & Record<string, unknow
       kind: 'match_funding',
       detail: 'A win was recorded in the last 30 days. Other funders will match against secured funding — consider match-funding asks that name the secured award; it can expand what the project delivers.',
     }] : []
-    const guidance = await resolveGuidance(ctx, pack, goal, pipeline, asOf, recentWin)
-    return buildBriefingFull(pack, deltas, considerations, guidance)
+    // READ-ONLY: the read path never calls the LLM (latency fix). A stale/absent
+    // signature yields deterministic fallback + guidance_stale=true; the page
+    // fires the background /api/agent/guidance/refresh, which warms the cache and
+    // triggers a soft re-render. Generation lives only in refreshBriefingGuidance.
+    const signature = briefingSignature(pack)
+    const cached = await getLatestBriefingRun(ctx.orgId)
+    const { guidance, stale } = readGuidance(cached, signature)
+    return buildBriefingFull(pack, deltas, considerations, guidance, stale)
   },
   logEvent: async (ctx, _p, r) => {
     await emitEvent({ surface: ctx.surface, orgId: ctx.orgId, userId: ctx.userId },
