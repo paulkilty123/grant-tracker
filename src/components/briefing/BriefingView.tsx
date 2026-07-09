@@ -99,12 +99,36 @@ export default function BriefingView({ briefing, plan, pipeline, displayName }: 
   } : null
 
   const moves = [...considerations, ...(oppMove ? [oppMove] : [])].sort((x, y) => x.rank - y.rank)
-  const primary = moves[0] ?? null
-  const alsoWorth = moves.slice(1, 3)
+
+  // ── authored guidance layer (briefing v2 §2/§3) ─────────────────────────────
+  // When present, the reasoner-authored agenda drives the cards (authored title
+  // + reason), mapped back to the deterministic move for its action + chrome.
+  // Time-critical deadline moves stay deterministic and lead. Absent guidance =
+  // the deterministic templates below.
+  type RM = { key: string; title: string; reason: string; action: Move['action']; secondary?: Move['action']; candidate: typeof topC | null }
+  const guided = briefing.guidance && briefing.guidance.agenda.length > 0 ? briefing.guidance : null
+  const renderMoves: RM[] = guided
+    ? [
+        ...moves.filter(m => m.kind === 'deadline_pressure').map((m, i): RM => ({ key: `dl-${i}`, title: m.headline, reason: m.sentence, action: m.action, secondary: m.secondary, candidate: null })),
+        ...guided.agenda.map((it, i): RM | null => {
+          if (it.ref.startsWith('cand:')) {
+            const id = it.ref.slice(5)
+            const cand = briefing.top_candidates.find(c => c.opportunity_id === id) ?? null
+            return { key: `g-${i}`, title: it.title, reason: it.reason, action: { label: 'See the full match', mode: 'link', href: `/dashboard/search?grant=${encodeURIComponent(id)}` }, candidate: cand }
+          }
+          const kind = it.ref.replace(/^consideration:/, '')
+          const dm = moves.find(m => m.kind === kind)
+          if (!dm) return null
+          return { key: `g-${i}`, title: it.title, reason: it.reason, action: dm.action, secondary: dm.secondary, candidate: null }
+        }).filter((x): x is RM => x !== null),
+      ]
+    : moves.map((m, i): RM => ({ key: `${m.kind}-${i}`, title: m.headline, reason: m.sentence, action: m.action, secondary: m.secondary, candidate: m.kind === 'opportunity' ? (m.meta?.candidate as typeof topC) : null }))
+  const primary = renderMoves[0] ?? null
+  const alsoWorth = renderMoves.slice(1, 3)
 
   // Judgment summary line: consequences, never match counts. Quiet day is a
   // confident render, never "the rest is handled".
-  const worthCount = moves.length
+  const worthCount = renderMoves.length
   const changeCount = changes ? changes.added + changes.stage_changes + changes.removed : 0
   const summaryLine = worthCount === 0
     ? 'Nothing else needs you today.'
@@ -115,7 +139,7 @@ export default function BriefingView({ briefing, plan, pipeline, displayName }: 
   const securedPct = Math.min(100, (a.secured / target) * 100)
   const weightedPct = Math.min(100 - securedPct, Math.max(0, ((a.inPipelineWeighted - a.secured) / target) * 100))
 
-  const topCandidate = primary?.kind === 'opportunity' ? (primary.meta?.candidate as typeof topC) : null
+  const topCandidate = primary?.candidate ?? null
 
   return (
     <div className="max-w-3xl">
@@ -163,9 +187,18 @@ export default function BriefingView({ briefing, plan, pipeline, displayName }: 
         )}
       </div>
 
+      {/* my read — the adviser's framing (authored guidance layer, §2). Absent
+          guidance = this block does not render and the cards use templates. */}
+      {guided && (
+        <div className="mt-8">
+          <SectionLabel>My read</SectionLabel>
+          <p className="mt-2 text-[14px] leading-relaxed" style={{ color: COLOR.ink }}>{guided.my_read}</p>
+        </div>
+      )}
+
       {/* your next move — the single lime-accented card */}
       <div className="mt-8">
-        <SectionLabel>Your next move</SectionLabel>
+        <SectionLabel>{guided ? 'This week' : 'Your next move'}</SectionLabel>
         {!primary ? (
           <div className="bg-white rounded-xl p-4 mt-2 text-[13px]" style={{ border: `1px solid ${COLOR.hair}`, color: COLOR.mid }}>
             Nothing new moves your goal today. An honest quiet day beats noise.
@@ -174,14 +207,14 @@ export default function BriefingView({ briefing, plan, pipeline, displayName }: 
           <div className="bg-white rounded-xl p-4 mt-2" style={{ border: `2px solid ${COLOR.lime}` }}>
             <div className="flex items-baseline justify-between gap-3">
               {topCandidate ? (
-                <Link href={`/dashboard/search?grant=${encodeURIComponent(topCandidate.opportunity_id)}`} className="text-[15px] font-semibold no-underline hover:underline" style={{ ...grotesk, color: COLOR.ink }}>{primary.headline}</Link>
+                <Link href={`/dashboard/search?grant=${encodeURIComponent(topCandidate.opportunity_id)}`} className="text-[15px] font-semibold no-underline hover:underline" style={{ ...grotesk, color: COLOR.ink }}>{primary.title}</Link>
               ) : (
-                <span className="text-[15px] font-semibold" style={{ ...grotesk, color: COLOR.ink }}>{primary.headline}</span>
+                <span className="text-[15px] font-semibold" style={{ ...grotesk, color: COLOR.ink }}>{primary.title}</span>
               )}
               {topCandidate && <span className="text-[12px] shrink-0" style={{ color: COLOR.mid }}>{amountLine(topCandidate)}</span>}
             </div>
             {topCandidate && <div className="text-[12px] mt-0.5" style={{ color: COLOR.faint }}>{topCandidate.funder} · {timingLine(topCandidate)}</div>}
-            <p className="text-[13px] mt-2 leading-relaxed" style={{ color: COLOR.ink }}>{primary.sentence}</p>
+            <p className="text-[13px] mt-2 leading-relaxed" style={{ color: COLOR.ink }}>{primary.reason}</p>
             <div className="flex items-center gap-2 mt-3 flex-wrap">
               <ActionButton action={primary.action} primary />
               {primary.secondary && <ActionButton action={primary.secondary} />}
@@ -211,12 +244,12 @@ export default function BriefingView({ briefing, plan, pipeline, displayName }: 
           <div className="mt-2 space-y-2">
             {alsoWorth.length === 0 ? (
               <div className="text-[12.5px]" style={{ color: COLOR.faint }}>Nothing else is pressing right now.</div>
-            ) : alsoWorth.map((m, i) => {
-              const cand = m.kind === 'opportunity' ? (m.meta?.candidate as typeof topC) : null
+            ) : alsoWorth.map((m) => {
+              const cand = m.candidate
               return (
-                <div key={`${m.kind}-${i}`} className="bg-white rounded-xl p-3" style={{ border: `1px solid ${COLOR.hair}` }}>
-                  <div className="text-[13px] font-semibold" style={{ ...grotesk, color: COLOR.ink }}>{m.headline}</div>
-                  <p className="text-[13px] mt-0.5 leading-relaxed" style={{ color: COLOR.ink }}>{m.sentence}</p>
+                <div key={m.key} className="bg-white rounded-xl p-3" style={{ border: `1px solid ${COLOR.hair}` }}>
+                  <div className="text-[13px] font-semibold" style={{ ...grotesk, color: COLOR.ink }}>{m.title}</div>
+                  <p className="text-[13px] mt-0.5 leading-relaxed" style={{ color: COLOR.ink }}>{m.reason}</p>
                   <div className="mt-2"><ActionButton action={m.action} /></div>
                   {cand && cand.warning_codes.length > 0 && <div className="text-[11px] mt-1.5" style={{ color: COLOR.faint }}>worth confirming: {cand.warning_codes.join(', ')}</div>}
                 </div>

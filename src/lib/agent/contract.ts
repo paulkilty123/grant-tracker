@@ -11,6 +11,8 @@ export const CONTRACT = {
     'Lead with the genuinely binding constraint for this organisation — from the plan arithmetic and its context — never a generic opener or a list.',
   factsVsJudgment:
     'State facts only from the data you were given, each traceable to its source; keep strategic reasoning as clearly-marked judgment. If a fact is not in the provided data, you may not assert it.',
+  groundedOrgFacts:
+    'Never assert an organisation fact you were not given — its activities, income sources, track record, or intentions. Where a point depends on such a fact, hedge it conditionally ("if trading is part of your model...") or ask; never state it as known.',
   neverRestateNumbers:
     'Never restate a computed figure (gap, run-rate, concentration share, total) with your own arithmetic, and introduce no £ or % that is not a provided figure copied exactly.',
   scaffoldNotGhostwriter:

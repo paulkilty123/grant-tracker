@@ -53,6 +53,70 @@ export async function getActiveGoalId(orgId: string): Promise<string | null> {
   } catch { return null }
 }
 
+// ── briefing guidance cache (agent_runs, trigger='briefing') ─────────────────
+// The authored guidance layer (author.ts) is expensive (~9s, ~£0.011/gen), so
+// it is generated only when the plan-state signature changes and cached as an
+// agent_runs row: narrative = "My read", raw_output.agenda = the week's moves,
+// context_digest.signature = the debounce key, token columns = the meter.
+
+export interface BriefingRunCache {
+  signature: string
+  my_read: string
+  agenda: Array<{ ref: string; title: string; reason: string }>
+  generated_at: string
+  /** complete run with content = safe to show; a guardrail-blocked attempt is
+   *  unusable but still debounces (same signature → don't re-spend). */
+  usable: boolean
+}
+
+export async function getLatestBriefingRun(orgId: string): Promise<BriefingRunCache | null> {
+  try {
+    const { data } = await serviceClient()
+      .from('agent_runs')
+      .select('context_digest, narrative, raw_output, created_at, status')
+      .eq('org_id', orgId).eq('trigger', 'briefing')
+      .order('created_at', { ascending: false }).limit(1).maybeSingle()
+    if (!data) return null
+    const r = data as Record<string, unknown>
+    const digest = (r.context_digest as { signature?: string } | null) ?? {}
+    const raw = (r.raw_output as { agenda?: unknown[] } | null) ?? {}
+    const my_read = String(r.narrative ?? '')
+    return {
+      signature: String(digest.signature ?? ''),
+      my_read,
+      agenda: (raw.agenda as BriefingRunCache['agenda']) ?? [],
+      generated_at: String(r.created_at ?? ''),
+      usable: r.status === 'complete' && my_read.length > 0,
+    }
+  } catch { return null }
+}
+
+export async function saveBriefingRun(input: {
+  orgId: string; goalId: string | null; signature: string
+  myRead: string; agenda: unknown[]
+  model: string; promptVersion: string
+  inputTokens: number; outputTokens: number; costMicroGbp: number
+  status?: 'complete' | 'guardrail_blocked'
+}): Promise<string | null> {
+  try {
+    const { data } = await serviceClient().from('agent_runs').insert({
+      org_id: input.orgId,
+      goal_id: input.goalId,
+      trigger: 'briefing',
+      context_digest: { signature: input.signature },
+      model: input.model,
+      prompt_version: input.promptVersion,
+      input_tokens: input.inputTokens,
+      output_tokens: input.outputTokens,
+      cost_estimate_microgbp: input.costMicroGbp,
+      status: input.status ?? 'complete',
+      narrative: input.myRead,
+      raw_output: { agenda: input.agenda },
+    }).select('created_at').single()
+    return data ? String((data as { created_at: string }).created_at) : null
+  } catch (e) { console.error('[briefing] saveBriefingRun failed', e); return null }
+}
+
 // ── goal purposes (design spec §5/§7) ────────────────────────────────────────
 
 export interface PurposeRow {

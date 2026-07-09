@@ -25,12 +25,22 @@ function startOfTodayUtc(): string {
 }
 
 export async function checkInferenceBudget(orgId: string): Promise<BudgetVerdict> {
-  const { data } = await serviceClient()
-    .from('events')
-    .select('org_id, payload')
-    .eq('event_type', 'agent_turn_completed')
-    .gte('created_at', startOfTodayUtc())
-    .limit(5000)
+  const sb = serviceClient()
+  const [{ data }, { data: briefingRuns }] = await Promise.all([
+    sb.from('events')
+      .select('org_id, payload')
+      .eq('event_type', 'agent_turn_completed')
+      .gte('created_at', startOfTodayUtc())
+      .limit(5000),
+    // Briefing guidance generations (agent_runs) share the same token budget
+    // and global kill-switch as conversational turns, so total agent spend per
+    // org is bounded together. They do NOT count toward the turn cap.
+    sb.from('agent_runs')
+      .select('org_id, input_tokens, output_tokens')
+      .eq('trigger', 'briefing')
+      .gte('created_at', startOfTodayUtc())
+      .limit(5000),
+  ])
   const rows = (data ?? []) as TurnRow[]
 
   let globalTokens = 0
@@ -40,6 +50,11 @@ export async function checkInferenceBudget(orgId: string): Promise<BudgetVerdict
     const t = (r.payload?.input_tokens ?? 0) + (r.payload?.output_tokens ?? 0)
     globalTokens += t
     if (r.org_id === orgId) { orgTokens += t; orgTurns += 1 }
+  }
+  for (const r of (briefingRuns ?? []) as Array<{ org_id: string | null; input_tokens: number | null; output_tokens: number | null }>) {
+    const t = (r.input_tokens ?? 0) + (r.output_tokens ?? 0)
+    globalTokens += t
+    if (r.org_id === orgId) orgTokens += t
   }
 
   if (globalTokens >= DAILY_TOKEN_CAP_GLOBAL) {

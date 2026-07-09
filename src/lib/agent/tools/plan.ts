@@ -12,9 +12,12 @@
 import { defineTool } from './envelope'
 import { emitEvent } from '../../events/emit'
 import { assembleBriefingPack, computeArithmetic, WEIGHTED_FORMULA_CAPTION } from '../context'
-import { getGoal, getPipeline, getOrg, getOrgFacts, getActiveCatalogue, getPipelineDeltasSince, getPurposeProgress, hasRecentWin, type PlanDeltas, type PurposeProgress, type PurposeRow, type PipelineAllocation } from './repository'
+import { getGoal, getPipeline, getOrg, getOrgFacts, getActiveCatalogue, getPipelineDeltasSince, getPurposeProgress, hasRecentWin, getActiveGoalId, getLatestBriefingRun, saveBriefingRun, type PlanDeltas, type PurposeProgress, type PurposeRow, type PipelineAllocation } from './repository'
 import { deriveMix, type MixCharacter } from './mix'
 import { PURPOSE_CATEGORIES, type PurposeCategory } from './goal'
+import { buildConsiderations } from '../considerations'
+import { authorBriefing, availableMoves, briefingSignature, AUTHOR_PROMPT_VERSION } from '../author'
+import { checkInferenceBudget } from '../orchestrator/budget'
 import type { GoalArithmetic, GoalInput, PipelineEntry, BriefingPack } from '../types'
 import type { Organisation } from '@/types'
 
@@ -202,6 +205,12 @@ interface FitCard {
   /** Award-size mismatch to name on the card (briefing v2 §1), or null. */
   size_note: string | null
 }
+export interface BriefingGuidance {
+  my_read: string
+  agenda: Array<{ ref: string; title: string; reason: string }>
+  generated_at: string
+}
+
 export type BriefingPayload =
   | {
       has_goal: false
@@ -228,6 +237,12 @@ export type BriefingPayload =
        *  (redesign §2): support/non-cash matches deprioritised because the gap
        *  is a cash gap. Null when the gap is not cash-led or none were held back. */
       selection_note: string | null
+      /** Authored guidance layer (briefing v2 §2/§3): the "My read" paragraph
+       *  and the ordered week's agenda, from author.ts. Cached per plan-state
+       *  signature, regenerated on plan change only, budget-gated. Null = the
+       *  page falls back to the deterministic template sentences. Agenda refs
+       *  are 'cand:<opportunity_id>' or 'consideration:<kind>'. */
+      guidance: BriefingGuidance | null
     }
 
 export function buildBriefingOnboarding(org: Organisation | null, pipeline: PipelineEntry[]): BriefingPayload {
@@ -263,7 +278,7 @@ function computeSelectionNote(pack: BriefingPack): string | null {
   return `${nonCash} in-kind and support match${nonCash === 1 ? '' : 'es'} held back, because they do not move a cash gap.`
 }
 
-export function buildBriefingFull(pack: BriefingPack, deltas: PlanDeltas | null, considerations: Array<{ kind: string; detail: string }> = []): BriefingPayload {
+export function buildBriefingFull(pack: BriefingPack, deltas: PlanDeltas | null, considerations: Array<{ kind: string; detail: string }> = [], guidance: BriefingGuidance | null = null): BriefingPayload {
   return {
     has_goal: true,
     generated_at: new Date().toISOString(),
@@ -273,6 +288,7 @@ export function buildBriefingFull(pack: BriefingPack, deltas: PlanDeltas | null,
     candidate_diff: 'deferred — needs agent_runs snapshots (§5.2)',
     considerations,
     selection_note: computeSelectionNote(pack),
+    guidance,
     top_candidates: pack.candidates.slice(0, 8).map(c => ({
       opportunity_id: c.id,
       title: c.title,
@@ -296,6 +312,62 @@ export function buildBriefingFull(pack: BriefingPack, deltas: PlanDeltas | null,
   }
 }
 
+/** The authored guidance layer (briefing v2 §2/§3). Regenerated ONLY when the
+ *  plan-state signature changes (debounce: the daily crawl and the clock cannot
+ *  burn a regeneration), and only within the per-org / global token budget and
+ *  the guidance kill-switch. A guardrail-blocked or budget-blocked attempt
+ *  falls back to the deterministic template sentences on the page (guidance =
+ *  null) without re-spending at the same plan state. */
+async function resolveGuidance(
+  ctx: { orgId: string; surface: string; userId?: string | null },
+  pack: BriefingPack, goal: GoalInput, pipeline: PipelineEntry[], asOf: string, recentWin: boolean,
+): Promise<BriefingGuidance | null> {
+  if (process.env.AGENT_BRIEFING_GUIDANCE === 'false') return null // targeted kill-switch, independent of chat
+  const signature = briefingSignature(pack)
+  const cached = await getLatestBriefingRun(ctx.orgId)
+  // Same plan state as the last attempt: reuse it if usable, otherwise fall
+  // back without re-spending (whether it last failed the lint or the budget).
+  if (cached && cached.signature === signature) {
+    return cached.usable ? { my_read: cached.my_read, agenda: cached.agenda, generated_at: cached.generated_at } : null
+  }
+
+  const budget = await checkInferenceBudget(ctx.orgId)
+  if (!budget.allowed) {
+    // Over budget / kill-switch: keep showing the last good guidance if we have
+    // one, else the deterministic layer. Do not generate.
+    return cached?.usable ? { my_read: cached.my_read, agenda: cached.agenda, generated_at: cached.generated_at } : null
+  }
+
+  // Authoring move set: candidates + the singleton strategic considerations.
+  // deadline_pressure is excluded — it is time-critical, stays deterministic
+  // (hero chip + "let it go" action), and can fire more than once (ref clash).
+  const strategic = buildConsiderations({
+    asOf, goalEndDate: goal.end_date, mixTarget: pack.arithmetic.mixTarget,
+    arithmetic: { gap: pack.arithmetic.gap, inPipelineWeighted: pack.arithmetic.inPipelineWeighted, target: pack.arithmetic.target || 1 },
+    pipelineItems: pipeline.map((pi, i) => ({ pipeline_item_id: String(i), grant_name: pi.grant_name, stage: pi.stage, amount_requested: pi.amount_requested, deadline: pi.deadline })),
+    recentWin,
+  }).filter(m => m.kind !== 'deadline_pressure')
+  const moves = availableMoves(pack.candidates, strategic)
+  if (moves.length === 0) return null
+
+  try {
+    const out = await authorBriefing(pack, moves)
+    const goalId = await getActiveGoalId(ctx.orgId)
+    const createdAt = await saveBriefingRun({
+      orgId: ctx.orgId, goalId, signature,
+      myRead: out.my_read, agenda: out.agenda,
+      model: out.model, promptVersion: AUTHOR_PROMPT_VERSION,
+      inputTokens: out.usage.inputTokens, outputTokens: out.usage.outputTokens, costMicroGbp: out.usage.costMicroGbp,
+      status: out.numberLintPassed ? 'complete' : 'guardrail_blocked',
+    })
+    if (!out.numberLintPassed) return null // lint failed twice → deterministic fallback
+    return { my_read: out.my_read, agenda: out.agenda, generated_at: createdAt ?? new Date().toISOString() }
+  } catch (e) {
+    console.error('[briefing] guidance generation failed', e)
+    return null
+  }
+}
+
 export const getBriefing = defineTool<{ since?: string } & Record<string, unknown>, BriefingPayload>({
   name: 'get_briefing',
   handler: async (ctx, p) => {
@@ -303,13 +375,15 @@ export const getBriefing = defineTool<{ since?: string } & Record<string, unknow
     if (!goal) return buildBriefingOnboarding(org, pipeline)
     if (!org) throw new Error('get_briefing: organisation not found')
     const [orgFacts, catalogue, recentWin] = await Promise.all([getOrgFacts(ctx.orgId), getActiveCatalogue(), hasRecentWin(ctx.orgId)])
-    const pack = assembleBriefingPack({ org, goal, pipeline, orgFacts, catalogue, asOf: today(), userTurn: null })
+    const asOf = today()
+    const pack = assembleBriefingPack({ org, goal, pipeline, orgFacts, catalogue, asOf, userTurn: null })
     const deltas = typeof p.since === 'string' ? await getPipelineDeltasSince(ctx.orgId, p.since) : null
     const considerations = recentWin ? [{
       kind: 'match_funding',
       detail: 'A win was recorded in the last 30 days. Other funders will match against secured funding — consider match-funding asks that name the secured award; it can expand what the project delivers.',
     }] : []
-    return buildBriefingFull(pack, deltas, considerations)
+    const guidance = await resolveGuidance(ctx, pack, goal, pipeline, asOf, recentWin)
+    return buildBriefingFull(pack, deltas, considerations, guidance)
   },
   logEvent: async (ctx, _p, r) => {
     await emitEvent({ surface: ctx.surface, orgId: ctx.orgId, userId: ctx.userId },
