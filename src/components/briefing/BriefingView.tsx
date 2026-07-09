@@ -1,14 +1,15 @@
 'use client'
 
-// Briefing page (redesign §2, v3) — a DETERMINISTIC render of tool payloads.
-// Load-bearing numbers come from get_plan_state / get_briefing / get_pipeline;
-// the authored "My read" + agenda come from the guidance layer (author.ts).
-// v3 order: hero → My read → ask bar → recommended moves (one authored, ordered
-// list). Design grammar (ui.tsx): one hero number; exactly two lime accents
-// (move 1 + the ask bar); the ti-bulb marks Companion judgment; one colour
-// system for funding characters across this page and the plan. House copy:
-// sentence case, no dashes.
+// Briefing page (redesign §2, v3, amendment §2/§3) — a DETERMINISTIC render of
+// tool payloads. Load-bearing numbers come from get_plan_state / get_briefing /
+// get_pipeline; the authored "My read" + agenda come from the guidance layer.
+// Layout: wide (≥1100px) is a two-column grid — a flexing main column (hero +
+// moves) and a sticky adviser rail (My read + ask). Below 1100px it folds to the
+// v3 stacked order (hero → read → ask → moves) with the overlay drawer. Design
+// grammar (ui.tsx): one hero number; two lime accents (move 1 + the rail/ask
+// bar); the ti-bulb marks adviser judgment; one funding-character colour system.
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import type { BriefingPayload, PlanStatePayload } from '@/lib/agent/tools/plan'
 import type { GetPipelinePayload } from '@/lib/agent/tools/pipeline'
@@ -16,6 +17,8 @@ import { buildConsiderations, topDeadlineChip, type Move } from '@/lib/agent/con
 import { openCompanion } from './CompanionOpenLink'
 import { grotesk, gbp, fmtDate, COLOR, HeroNumber, SectionLabel, InfoDot, AmberPill, CompanionMark, mixColor, cap } from './ui'
 import CompanionAskBar from './CompanionAskBar'
+import CompanionDrawer from './CompanionDrawer'
+import AdviserRail from './AdviserRail'
 
 const todayIso = () => new Date().toISOString().slice(0, 10)
 
@@ -97,6 +100,19 @@ export default function BriefingView({ briefing, plan, pipeline, displayName, si
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
 
+  // Wide (≥1100px) → the adviser rail docks on the right; below that the page is
+  // the v3 stacked layout with the overlay drawer. First render is narrow (SSR-
+  // safe: server and first client render agree), then the effect promotes to
+  // wide after mount, so there is no hydration mismatch.
+  const [wide, setWide] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1100px)')
+    const on = () => setWide(mq.matches)
+    on()
+    mq.addEventListener('change', on)
+    return () => mq.removeEventListener('change', on)
+  }, [])
+
   // Defensive: the page routes no-goal orgs to the setup experience, so this
   // branch is a fallback only.
   if (!briefing.has_goal || !plan.has_goal) {
@@ -143,9 +159,6 @@ export default function BriefingView({ briefing, plan, pipeline, displayName, si
   const moves = [...considerations, ...(oppMove ? [oppMove] : [])].sort((x, y) => x.rank - y.rank)
 
   // ── authored guidance → one ordered, tagged move list (v3) ───────────────────
-  // Authored title + reason; the deterministic move supplies the action + chrome;
-  // each move carries a funding-character tag. Deadline moves stay deterministic
-  // and lead. Absent guidance = the deterministic templates.
   type RM = { key: string; title: string; reason: string; action: Move['action']; secondary?: Move['action']; candidate: FitCard | null; tag: { char: string; label: string } | null }
   const guided = briefing.guidance && briefing.guidance.agenda.length > 0 ? briefing.guidance : null
   const renderMoves: RM[] = (guided
@@ -199,157 +212,188 @@ export default function BriefingView({ briefing, plan, pipeline, displayName, si
     'We just won a grant',
     'Which funders back core costs?',
   ]
-
+  const askExample = 'What should I focus on this week?'
   const hasDeltas = !!changes && (changes.events.length > 0 || !!briefing.selection_note)
 
-  return (
-    <div className="max-w-3xl mx-auto">
-      {/* header — greeting + judgment summary (consequences, not counts) */}
+  // ── section pieces (reused by both the wide grid and the narrow stack) ────────
+  const header = (
+    <>
       <h1 className="text-2xl font-bold" style={{ ...grotesk, color: COLOR.ink }}>{greeting}, {displayName}.</h1>
       <p className="mt-1 text-[13px]" style={{ color: COLOR.ink }}>{summaryLine}</p>
+    </>
+  )
 
-      {/* hero card — one number: still to find */}
-      <div className="bg-white rounded-xl p-5 mt-6" style={{ border: `1px solid ${COLOR.hair}` }}>
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <SectionLabel>Still to find</SectionLabel>
-            <HeroNumber>{gbp(a.gap)}</HeroNumber>
-            {a.secured === 0 && a.inPipelineUnweighted === 0 && (
-              <p className="text-[13px] mt-1.5 max-w-md" style={{ color: COLOR.mid }}>
-                This is normal at day one. The plan below is how that changes.
-              </p>
-            )}
-          </div>
-          <div className="text-right shrink-0">
-            {deadlineChip && <div className="mb-1.5"><AmberPill>{deadlineChip}</AmberPill></div>}
-            <div className="text-[13px] font-semibold" style={{ ...grotesk, color: COLOR.ink }}>{gbp(a.requiredRunRateMonthly)}/month</div>
-            <div className="text-[12px]" style={{ color: COLOR.faint }}>{a.monthsRemaining} months to {fmtDate(goal.end_date)}</div>
-          </div>
+  const heroCard = (
+    <div className="bg-white rounded-xl p-5 mt-6" style={{ border: `1px solid ${COLOR.hair}` }}>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <SectionLabel>Still to find</SectionLabel>
+          <HeroNumber>{gbp(a.gap)}</HeroNumber>
+          {a.secured === 0 && a.inPipelineUnweighted === 0 && (
+            <p className="text-[13px] mt-1.5 max-w-md" style={{ color: COLOR.mid }}>
+              This is normal at day one. The plan below is how that changes.
+            </p>
+          )}
         </div>
-
-        {heroSegments.length > 0 ? (
-          <>
-            <div className="mt-4 h-3.5 rounded-full overflow-hidden flex" style={{ background: COLOR.cream }}>
-              {heroSegments.map(s => (
-                <div key={s.char} className="relative h-full" style={{ width: `${s.width}%` }} title={`${cap(s.char)} target`}>
-                  <div className="absolute inset-0" style={{ background: hatch(mixColor(s.char)) }} />
-                  <div className="absolute inset-y-0 left-0" style={{ width: `${s.fillPct}%`, background: mixColor(s.char) }} />
-                </div>
-              ))}
-            </div>
-            <div className="mt-1.5 text-[11px]" style={{ color: COLOR.faint }}>the shape of what you&rsquo;re raising</div>
-          </>
-        ) : (
-          <div className="mt-4 h-3 rounded-full overflow-hidden flex" style={{ background: COLOR.cream }}>
-            <div style={{ width: `${securedPct}%`, background: COLOR.secured }} />
-            <div style={{ width: `${weightedPct}%`, background: COLOR.weighted }} />
-          </div>
-        )}
-
-        <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-[12.5px]" style={{ color: COLOR.faint }}>
-          <span>
-            secured {gbp(a.secured)} · weighted pipeline {gbp(a.inPipelineWeighted)} <InfoDot caption={`${plan.weighted_formula}. The gap is target minus secured; weighted pipeline does not reduce the gap until it is won.`} />
-          </span>
-          <Link href="/dashboard/plan" className="underline" style={{ color: COLOR.sage }}>Full plan</Link>
+        <div className="text-right shrink-0">
+          {deadlineChip && <div className="mb-1.5"><AmberPill>{deadlineChip}</AmberPill></div>}
+          <div className="text-[13px] font-semibold" style={{ ...grotesk, color: COLOR.ink }}>{gbp(a.requiredRunRateMonthly)}/month</div>
+          <div className="text-[12px]" style={{ color: COLOR.faint }}>{a.monthsRemaining} months to {fmtDate(goal.end_date)}</div>
         </div>
-        {missingAmounts > 0 && (
-          <div className="mt-2.5 text-[12.5px]" style={{ color: COLOR.amberInk }}>
-            The gap excludes {missingAmounts} pipeline item{missingAmounts === 1 ? '' : 's'} with no amount set.{' '}
-            <Link href="/dashboard/pipeline" className="underline" style={{ color: COLOR.sage }}>Add amounts</Link>
-          </div>
-        )}
       </div>
 
-      {/* my read — the adviser's framing, marked with the adviser bulb */}
-      {guided && (
-        <div className="mt-8">
-          <div className="flex items-center gap-2">
-            <CompanionMark size={32} />
-            <SectionLabel>My read</SectionLabel>
+      {heroSegments.length > 0 ? (
+        <>
+          <div className="mt-4 h-3.5 rounded-full overflow-hidden flex" style={{ background: COLOR.cream }}>
+            {heroSegments.map(s => (
+              <div key={s.char} className="relative h-full" style={{ width: `${s.width}%` }} title={`${cap(s.char)} target`}>
+                <div className="absolute inset-0" style={{ background: hatch(mixColor(s.char)) }} />
+                <div className="absolute inset-y-0 left-0" style={{ width: `${s.fillPct}%`, background: mixColor(s.char) }} />
+              </div>
+            ))}
           </div>
-          <p className="mt-2 text-[14px] leading-relaxed" style={{ color: COLOR.ink }}>{guided.my_read}</p>
+          <div className="mt-1.5 text-[11px]" style={{ color: COLOR.faint }}>the shape of what you&rsquo;re raising</div>
+        </>
+      ) : (
+        <div className="mt-4 h-3 rounded-full overflow-hidden flex" style={{ background: COLOR.cream }}>
+          <div style={{ width: `${securedPct}%`, background: COLOR.secured }} />
+          <div style={{ width: `${weightedPct}%`, background: COLOR.weighted }} />
         </div>
       )}
 
-      {/* ask bar — the conversation, directly beneath the read */}
-      <CompanionAskBar examplePrompt="What should I focus on this week?" suggestions={askChips} />
-
-      {/* recommended moves — one authored, ordered list */}
-      <div className="mt-8">
-        <SectionLabel>Recommended moves · in order</SectionLabel>
-        {renderMoves.length === 0 ? (
-          <div className="bg-white rounded-xl p-4 mt-3 text-[13px]" style={{ border: `1px solid ${COLOR.hair}`, color: COLOR.mid }}>
-            Nothing new moves your goal today. An honest quiet day beats noise.
-          </div>
-        ) : (
-          <div className="mt-3 space-y-3">
-            {renderMoves.map((m, i) => {
-              const first = i === 0
-              const cand = m.candidate
-              const checked = cand && cand.record_check.status === 'checked'
-              return (
-                <div key={m.key} className="bg-white rounded-xl p-4 flex gap-3" style={{ border: first ? `2px solid ${COLOR.lime}` : `1px solid ${COLOR.hair}` }}>
-                  <span className="shrink-0 inline-flex items-center justify-center text-[12px] font-semibold mt-0.5" style={{ width: 24, height: 24, borderRadius: 999, ...grotesk, ...(first ? { background: COLOR.lime, color: COLOR.forest } : { border: `1px solid ${COLOR.hair}`, color: COLOR.mid }) }}>{i + 1}</span>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-baseline justify-between gap-3 flex-wrap">
-                      {cand ? (
-                        <Link href={`/dashboard/search?grant=${encodeURIComponent(cand.opportunity_id)}`} className="text-[14px] font-semibold no-underline hover:underline" style={{ ...grotesk, color: COLOR.ink }}>{m.title}</Link>
-                      ) : (
-                        <span className="text-[14px] font-semibold" style={{ ...grotesk, color: COLOR.ink }}>{m.title}</span>
-                      )}
-                      {m.tag && <span className="text-[11px] font-semibold shrink-0" style={{ color: mixColor(m.tag.char) }}>{cap(m.tag.char)} · {m.tag.label}</span>}
-                    </div>
-                    <p className="text-[13px] mt-1 leading-relaxed" style={{ color: COLOR.ink }}>
-                      {m.reason}
-                      {checked && <span className="text-[11px]" style={{ color: COLOR.faint }}> · checked against funder site {fmtDate(cand!.record_check.checked_at)}</span>}
-                      {cand && cand.warning_codes.length > 0 && <span className="text-[11px]" style={{ color: COLOR.faint }}> · worth confirming: {cand.warning_codes.join(', ')}</span>}
-                    </p>
-                    <div className="flex items-center gap-2 mt-2.5 flex-wrap">
-                      <ActionButton action={m.action} primary={first} />
-                      {m.secondary && <ActionButton action={m.secondary} />}
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-[12.5px]" style={{ color: COLOR.faint }}>
+        <span>
+          secured {gbp(a.secured)} · weighted pipeline {gbp(a.inPipelineWeighted)} <InfoDot caption={`${plan.weighted_formula}. The gap is target minus secured; weighted pipeline does not reduce the gap until it is won.`} />
+        </span>
+        <Link href="/dashboard/plan" className="underline" style={{ color: COLOR.sage }}>Full plan</Link>
       </div>
-
-      {briefing.coverage.thin && (
-        <p className="mt-3 text-[12px]" style={{ color: COLOR.amberInk }}>
-          Coverage is thin here: {briefing.coverage.note ?? 'few eligible catalogue matches for this profile.'} Showing what clears the bar rather than padding the list.
-        </p>
+      {missingAmounts > 0 && (
+        <div className="mt-2.5 text-[12.5px]" style={{ color: COLOR.amberInk }}>
+          The gap excludes {missingAmounts} pipeline item{missingAmounts === 1 ? '' : 's'} with no amount set.{' '}
+          <Link href="/dashboard/pipeline" className="underline" style={{ color: COLOR.sage }}>Add amounts</Link>
+        </div>
       )}
+    </div>
+  )
 
-      {/* since you last looked — boxed only when there are deltas, else a quiet footer */}
-      {hasDeltas ? (
-        <div className="mt-8">
-          <SectionLabel>Since you last looked</SectionLabel>
-          <div className="bg-white rounded-xl p-3 mt-2" style={{ border: `1px solid ${COLOR.hair}` }}>
-            <ul className="space-y-1.5">
-              {changes!.events.slice(0, 5).map((e, i) => (
-                <li key={i} className="text-[12.5px] flex justify-between gap-3" style={{ color: COLOR.ink }}>
-                  <span>
-                    {e.type === 'pipeline_added' && 'You added an opportunity to your pipeline'}
-                    {e.type === 'pipeline_stage_changed' && `Moved from ${String(e.payload.from_stage ?? '?')} to ${String(e.payload.to_stage ?? '?')}`}
-                    {e.type === 'pipeline_removed' && 'You removed an opportunity'}
-                    {e.surface === 'mcp' && <span className="ml-1.5 text-[11px]" style={{ color: COLOR.faint }}>via Claude</span>}
-                  </span>
-                  <span className="text-[11px] shrink-0" style={{ color: COLOR.faint }}>{fmtDate(e.at)}</span>
-                </li>
-              ))}
-              {briefing.selection_note && (
-                <li className="text-[13px]" style={{ color: COLOR.ink }}>{briefing.selection_note}</li>
-              )}
-            </ul>
-          </div>
+  const myReadBlock = guided ? (
+    <div className="mt-8">
+      <div className="flex items-center gap-2">
+        <CompanionMark size={32} />
+        <SectionLabel>My read</SectionLabel>
+      </div>
+      <p className="mt-2 text-[14px] leading-relaxed" style={{ color: COLOR.ink }}>{guided.my_read}</p>
+    </div>
+  ) : null
+
+  const movesSection = (
+    <div className="mt-8">
+      <SectionLabel>Recommended moves · in order</SectionLabel>
+      {renderMoves.length === 0 ? (
+        <div className="bg-white rounded-xl p-4 mt-3 text-[13px]" style={{ border: `1px solid ${COLOR.hair}`, color: COLOR.mid }}>
+          Nothing new moves your goal today. An honest quiet day beats noise.
         </div>
       ) : (
-        <p className="mt-8 text-[12px]" style={{ color: COLOR.faint }}>
-          {changes ? `Nothing has moved since ${sinceLabel(since)}.` : 'This is your first look. Changes to your plan will appear here from now on.'}
-        </p>
+        <div className="mt-3 space-y-3">
+          {renderMoves.map((m, i) => {
+            const first = i === 0
+            const cand = m.candidate
+            const checked = cand && cand.record_check.status === 'checked'
+            return (
+              <div key={m.key} className="bg-white rounded-xl p-4 flex gap-3" style={{ border: first ? `2px solid ${COLOR.lime}` : `1px solid ${COLOR.hair}` }}>
+                <span className="shrink-0 inline-flex items-center justify-center text-[12px] font-semibold mt-0.5" style={{ width: 24, height: 24, borderRadius: 999, ...grotesk, ...(first ? { background: COLOR.lime, color: COLOR.forest } : { border: `1px solid ${COLOR.hair}`, color: COLOR.mid }) }}>{i + 1}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-baseline justify-between gap-3 flex-wrap">
+                    {cand ? (
+                      <Link href={`/dashboard/search?grant=${encodeURIComponent(cand.opportunity_id)}`} className="text-[14px] font-semibold no-underline hover:underline" style={{ ...grotesk, color: COLOR.ink }}>{m.title}</Link>
+                    ) : (
+                      <span className="text-[14px] font-semibold" style={{ ...grotesk, color: COLOR.ink }}>{m.title}</span>
+                    )}
+                    {m.tag && <span className="text-[11px] font-semibold shrink-0" style={{ color: mixColor(m.tag.char) }}>{cap(m.tag.char)} · {m.tag.label}</span>}
+                  </div>
+                  <p className="text-[13px] mt-1 leading-relaxed" style={{ color: COLOR.ink }}>
+                    {m.reason}
+                    {checked && <span className="text-[11px]" style={{ color: COLOR.faint }}> · checked against funder site {fmtDate(cand!.record_check.checked_at)}</span>}
+                    {cand && cand.warning_codes.length > 0 && <span className="text-[11px]" style={{ color: COLOR.faint }}> · worth confirming: {cand.warning_codes.join(', ')}</span>}
+                  </p>
+                  <div className="flex items-center gap-2 mt-2.5 flex-wrap">
+                    <ActionButton action={m.action} primary={first} />
+                    {m.secondary && <ActionButton action={m.secondary} />}
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
       )}
+    </div>
+  )
+
+  const coverageNote = briefing.coverage.thin ? (
+    <p className="mt-3 text-[12px]" style={{ color: COLOR.amberInk }}>
+      Coverage is thin here: {briefing.coverage.note ?? 'few eligible catalogue matches for this profile.'} Showing what clears the bar rather than padding the list.
+    </p>
+  ) : null
+
+  const sinceSection = hasDeltas ? (
+    <div className="mt-8">
+      <SectionLabel>Since you last looked</SectionLabel>
+      <div className="bg-white rounded-xl p-3 mt-2" style={{ border: `1px solid ${COLOR.hair}` }}>
+        <ul className="space-y-1.5">
+          {changes!.events.slice(0, 5).map((e, i) => (
+            <li key={i} className="text-[12.5px] flex justify-between gap-3" style={{ color: COLOR.ink }}>
+              <span>
+                {e.type === 'pipeline_added' && 'You added an opportunity to your pipeline'}
+                {e.type === 'pipeline_stage_changed' && `Moved from ${String(e.payload.from_stage ?? '?')} to ${String(e.payload.to_stage ?? '?')}`}
+                {e.type === 'pipeline_removed' && 'You removed an opportunity'}
+                {e.surface === 'mcp' && <span className="ml-1.5 text-[11px]" style={{ color: COLOR.faint }}>via Claude</span>}
+              </span>
+              <span className="text-[11px] shrink-0" style={{ color: COLOR.faint }}>{fmtDate(e.at)}</span>
+            </li>
+          ))}
+          {briefing.selection_note && (
+            <li className="text-[13px]" style={{ color: COLOR.ink }}>{briefing.selection_note}</li>
+          )}
+        </ul>
+      </div>
+    </div>
+  ) : (
+    <p className="mt-8 text-[12px]" style={{ color: COLOR.faint }}>
+      {changes ? `Nothing has moved since ${sinceLabel(since)}.` : 'This is your first look. Changes to your plan will appear here from now on.'}
+    </p>
+  )
+
+  // ── wide: main column (hero + moves) | sticky adviser rail ────────────────────
+  if (wide) {
+    return (
+      <div className="max-w-[1240px] mx-auto">
+        {header}
+        <div className="grid gap-6 items-start" style={{ gridTemplateColumns: 'minmax(0, 1fr) 400px' }}>
+          <div className="min-w-0">
+            {heroCard}
+            {movesSection}
+            {coverageNote}
+            {sinceSection}
+          </div>
+          <div className="sticky top-6 mt-6">
+            <AdviserRail myRead={guided ? guided.my_read : null} suggestions={askChips} examplePrompt={askExample} />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ── narrow: v3 stacked order + overlay drawer ─────────────────────────────────
+  return (
+    <div className="max-w-3xl mx-auto">
+      {header}
+      {heroCard}
+      {myReadBlock}
+      <CompanionAskBar examplePrompt={askExample} suggestions={askChips} />
+      {movesSection}
+      {coverageNote}
+      {sinceSection}
+      <CompanionDrawer examplePrompt={askExample} />
     </div>
   )
 }

@@ -16,7 +16,6 @@ import { agentEnabledForOrg } from '@/lib/agent/orchestrator/config'
 import { getBriefing, getPlanState, getPipeline } from '@/lib/agent/tools'
 import { getOrCreateActiveThread, seedThreadOpener } from '@/lib/agent/orchestrator/threads'
 import BriefingView from '@/components/briefing/BriefingView'
-import CompanionDrawer from '@/components/briefing/CompanionDrawer'
 import BriefingSeen from '@/components/briefing/BriefingSeen'
 import SetupExperience from '@/components/briefing/SetupExperience'
 import GuidanceRefresher from '@/components/briefing/GuidanceRefresher'
@@ -72,8 +71,8 @@ export default async function BriefingPage() {
     return <SetupExperience org={org} />
   }
 
-  // The ask bar (with contextual chips) now lives inside BriefingView, in flow
-  // beneath My read; the drawer is the overlay it opens.
+  // The adviser surface (rail on wide, ask bar + overlay drawer on narrow) lives
+  // inside BriefingView so it can pick the layout by viewport.
   return (
     <>
       <BriefingView
@@ -83,7 +82,6 @@ export default async function BriefingPage() {
         displayName={displayName}
         since={since}
       />
-      <CompanionDrawer examplePrompt="What should I focus on this week?" />
       <BriefingSeen />
       <GuidanceRefresher stale={briefing.data.guidance_stale} />
     </>

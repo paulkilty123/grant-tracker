@@ -1,8 +1,9 @@
-// Accent-count render check (briefing/plan redesign §1, §5). The design grammar
-// allows AT MOST two lime accents per page: the single most important card and
-// the Companion ask bar. Lime is a 2px lime border (COLOR.lime / #8ECB3C). This
-// scans each page's component set and fails if a page carries more than one
-// accented card (the ask bar, shared, is the second permitted accent).
+// Accent-count render check (briefing/plan redesign §1, §5; amendment §3). The
+// grammar allows AT MOST two lime accents per page: the single most important
+// card and the adviser entrance. Lime is a 2px lime border (COLOR.lime /
+// #8ECB3C). A page shows view(≤1) + one entrance(1) = 2 at runtime; the
+// entrances are mutually exclusive (the rail on wide, the ask bar on narrow, the
+// launcher elsewhere), so each carries exactly one accent and only one renders.
 //
 //   npx tsx scripts/agent-eval/accent-check.ts
 //
@@ -20,23 +21,28 @@ function limeAccents(rel: string): number {
   catch { return 0 }
 }
 
-// A "page" = its view component(s) + the shared ask bar (CompanionAskBar).
-const ASK_BAR = 'src/components/briefing/CompanionAskBar.tsx'
-const PAGES: Array<{ name: string; view: string }> = [
-  { name: 'briefing', view: 'src/components/briefing/BriefingView.tsx' },
-  { name: 'plan', view: 'src/components/briefing/PlanView.tsx' },
+// Views: at most one accented card each.
+const VIEWS = [
+  { name: 'briefing', file: 'src/components/briefing/BriefingView.tsx' },
+  { name: 'plan', file: 'src/components/briefing/PlanView.tsx' },
+]
+// Entrances: exactly one accent each (mutually exclusive at runtime).
+const ENTRANCES = [
+  'src/components/briefing/CompanionAskBar.tsx',
+  'src/components/briefing/AdviserRail.tsx',
 ]
 
 let fail = 0
-const askBarAccents = limeAccents(ASK_BAR)
-console.log(`ask bar (${ASK_BAR}): ${askBarAccents} lime accent (expect 1)`)
-if (askBarAccents !== 1) { console.log('  ✗ the ask bar must carry exactly one lime accent'); fail++ }
-
-for (const p of PAGES) {
-  const cardAccents = limeAccents(p.view)
-  const total = cardAccents + askBarAccents
-  const ok = cardAccents <= 1 && total <= 2
-  console.log(`${ok ? '✓' : '✗'} ${p.name}: ${cardAccents} accented card(s) + ask bar = ${total} lime accents (max 2)`)
+for (const e of ENTRANCES) {
+  const n = limeAccents(e)
+  const ok = n === 1
+  console.log(`${ok ? '✓' : '✗'} entrance ${e.split('/').pop()}: ${n} lime accent (expect 1)`)
+  if (!ok) fail++
+}
+for (const v of VIEWS) {
+  const n = limeAccents(v.file)
+  const ok = n <= 1
+  console.log(`${ok ? '✓' : '✗'} view ${v.name}: ${n} accented card(s) (max 1; + one entrance = ≤2 on screen)`)
   if (!ok) fail++
 }
 
