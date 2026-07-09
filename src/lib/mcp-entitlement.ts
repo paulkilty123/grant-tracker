@@ -18,6 +18,7 @@ import type { Tier } from './agent/tools/types'
 
 export interface ResolvedOrgTier {
   orgId: string | null
+  orgName: string | null
   tier: Tier
 }
 
@@ -39,24 +40,24 @@ function serviceClient() {
 }
 
 export async function resolveOrgAndTier(userId: string | null | undefined): Promise<ResolvedOrgTier> {
-  if (!userId) return { orgId: null, tier: 'free' }
+  if (!userId) return { orgId: null, orgName: null, tier: 'free' }
 
   const { data } = await serviceClient()
     .from('organisations')
-    .select('id, apply_access, companion_access, created_at')
+    .select('id, name, apply_access, companion_access, created_at')
     .eq('owner_id', userId)
     .order('created_at', { ascending: true })
 
-  const orgs = (data ?? []) as Array<{ id: string; apply_access: boolean; companion_access: boolean }>
-  if (orgs.length === 0) return { orgId: null, tier: 'free' }
+  const orgs = (data ?? []) as Array<{ id: string; name: string | null; apply_access: boolean; companion_access: boolean }>
+  if (orgs.length === 0) return { orgId: null, orgName: null, tier: 'free' }
 
   // Highest entitlement wins, tie-broken oldest — via the same flags→tier
   // mapping the web boundary uses (tierForOrgFlags).
   const companion = orgs.find(o => tierForOrgFlags(o) === 'companion')
-  if (companion) return { orgId: companion.id, tier: 'companion' }
+  if (companion) return { orgId: companion.id, orgName: companion.name, tier: 'companion' }
 
   const apply = orgs.find(o => tierForOrgFlags(o) === 'apply')
-  if (apply) return { orgId: apply.id, tier: 'apply' }
+  if (apply) return { orgId: apply.id, orgName: apply.name, tier: 'apply' }
 
-  return { orgId: orgs[0].id, tier: 'free' }
+  return { orgId: orgs[0].id, orgName: orgs[0].name, tier: 'free' }
 }

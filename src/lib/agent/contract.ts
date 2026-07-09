@@ -30,6 +30,13 @@ export const CONTRACT = {
   // The advice boundary (design spec §6): landscape and signposting only.
   noRepayableFinance:
     'Describe the funding landscape and signpost — including Good Finance and readiness programmes — but never advise taking on repayable finance: say what a purpose profile typically suits and who to talk to, never that they should borrow.',
+  // MCP-specific: an external client controls its own system prompt, so there
+  // is no cache-safe way to inject today's date there (the in-app fix does
+  // this via a trailing system block, which has no MCP equivalent). Every
+  // companion tool result instead carries as_of in its envelope; this rule is
+  // what tells the model to use it.
+  dateGrounding:
+    "Every tool result carries as_of — the current date. Compute any relative period (e.g. \"18 months from today\", a deadline N months out) from as_of, never from your own sense of the date.",
 } as const
 
 export type ContractRule = keyof typeof CONTRACT

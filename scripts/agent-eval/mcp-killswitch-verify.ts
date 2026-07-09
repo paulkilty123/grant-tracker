@@ -1,7 +1,7 @@
-// Kill-switch verifier (UNTRACKED — mints a prod OAuth token, flips a flag).
+// Kill-switch verifier (mints a prod OAuth token, flips a flag).
 // Proves companion_access is a live, no-redeploy switch: with a companion OAuth
-// token, tools/list = 12 → flip companion_access=false on IoI → tools/list = 5
-// (routed to the free handler) → flip back true → tools/list = 12. Always
+// token, tools/list = 14 → flip companion_access=false on IoI → tools/list = 5
+// (routed to the free handler) → flip back true → tools/list = 14. Always
 // restores companion_access=true and deletes the token in finally.
 //   npx tsx --env-file=.env.local scripts/agent-eval/mcp-killswitch-verify.ts
 
@@ -60,7 +60,7 @@ async function main() {
   try {
     await setCompanion(true)
     const on1 = await toolCount(raw)
-    console.log(`companion_access=true  → ${on1} tools  ${on1 === 12 ? '✓ companion handler' : '✗'}`)
+    console.log(`companion_access=true  → ${on1} tools  ${on1 === 14 ? '✓ companion handler' : '✗'}`)
 
     await setCompanion(false)
     const off = await toolCount(raw)
@@ -68,9 +68,9 @@ async function main() {
 
     await setCompanion(true)
     const on2 = await toolCount(raw)
-    console.log(`companion_access=true  → ${on2} tools  ${on2 === 12 ? '✓ flipped back on' : '✗'}`)
+    console.log(`companion_access=true  → ${on2} tools  ${on2 === 14 ? '✓ flipped back on' : '✗'}`)
 
-    console.log(`\n${on1 === 12 && off === 5 && on2 === 12 ? '✓ KILL SWITCH PROVEN — instant, no redeploy' : '✗ UNEXPECTED — inspect'}`)
+    console.log(`\n${on1 === 14 && off === 5 && on2 === 14 ? '✓ KILL SWITCH PROVEN — instant, no redeploy' : '✗ UNEXPECTED — inspect'}`)
   } finally {
     await setCompanion(true) // always leave companion ON for Paul's test
     await sb.from('oauth_tokens').delete().eq('access_token_hash', sha(raw))

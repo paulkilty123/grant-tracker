@@ -147,7 +147,7 @@ export const TOOL_REGISTRY: ToolSpecEntry[] = [
     tier: 'companion',
     status: 'built',
     params: 'org_id',
-    description: `Return the organisation's active funding goal — target amount, secured-to-date, funding-type mix, and deadline — or null if none is set. Secured is derived from pipeline 'won'; ${CONTRACT.neverRestateNumbers}`,
+    description: `Return the organisation's active funding goal — target amount, secured-to-date, funding-type mix, and deadline — or null if none is set. Secured is derived from pipeline 'won'; ${CONTRACT.neverRestateNumbers} ${CONTRACT.dateGrounding}`,
     input_schema: { type: 'object', properties: {}, required: [] },
   },
   {
@@ -155,7 +155,7 @@ export const TOOL_REGISTRY: ToolSpecEntry[] = [
     tier: 'companion',
     status: 'built',
     params: 'title, target_amount, start_date, end_date, mix_targets?, constraints?, secured_amount?',
-    description: `Call this only once the user has stated a funding target and a deadline — never infer or invent them. Sets or replaces the organisation's funding goal; replacing supersedes the prior goal (kept as history, never deleted) and carries active purposes forward unless new ones are given. One active goal per org is a design principle, not a limitation: a side funding project is a purpose (update_goal_purposes), never a second goal. Constraints capture what the org will not take money for. Derive any mix from recommend_mix (the deterministic rulebook) rather than inventing one, and never let a recommended mix silently become the plan: present it and get the user's explicit go-ahead in a confirm turn BEFORE writing it here — mix_targets is the CONFIRMED output of recommend_mix (funding-character percentages), or the user's own stated mix. Off-pipeline secured income given here is recorded as a won pipeline item, never a cached figure. ${CONTRACT.neverRestateNumbers} ${CONTRACT.inconsistencyHonesty}`,
+    description: `Call this only once the user has stated a funding target and a deadline — never infer or invent them. Sets or replaces the organisation's funding goal; replacing supersedes the prior goal (kept as history, never deleted) and carries active purposes forward unless new ones are given. One active goal per org is a design principle, not a limitation: a side funding project is a purpose (update_goal_purposes), never a second goal. Constraints capture what the org will not take money for. Derive any mix from recommend_mix (the deterministic rulebook) rather than inventing one, and never let a recommended mix silently become the plan: present it and get the user's explicit go-ahead in a confirm turn BEFORE writing it here — mix_targets is the CONFIRMED output of recommend_mix (funding-character percentages), or the user's own stated mix. Off-pipeline secured income given here is recorded as a won pipeline item, never a cached figure. When the user gives a relative period ("18 months from today", "by the end of next year"), compute start_date/end_date from as_of on the most recent tool result, never from your own sense of the date. ${CONTRACT.neverRestateNumbers} ${CONTRACT.inconsistencyHonesty} ${CONTRACT.dateGrounding}`,
     input_schema: {
       type: 'object',
       properties: {

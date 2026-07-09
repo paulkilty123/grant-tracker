@@ -213,6 +213,14 @@ async function runCompanion(
       ...result,
       attribution: ATTRIBUTION,
       rate_limit_status: rateLimitStatusForContext(auth),
+      // §13 item 8 ("connected as [org]") + MCP date-grounding: an external
+      // client controls its own system prompt, so unlike the in-app
+      // orchestrator there is no cache-safe way to inject org identity or
+      // today's date there. Every companion tool result instead carries both
+      // in its envelope — see CONTRACT.dateGrounding for the steering that
+      // tells the model to use as_of rather than its own sense of the date.
+      connected_org: auth.orgName ?? null,
+      as_of: new Date().toISOString().slice(0, 10),
     }) }] }
   } catch (e) {
     if (e instanceof EntitlementError) return companionError('forbidden', 'This tool is not available on your plan.')
@@ -838,6 +846,7 @@ async function handle(req: NextRequest): Promise<Response> {
   if (authCtx.oauth) {
     const resolved = await resolveOrgAndTier(authCtx.oauth.user_id)
     authCtx.orgId = resolved.orgId
+    authCtx.orgName = resolved.orgName
     authCtx.tier = resolved.tier
   }
   const handler = authCtx.tier === 'companion' ? companionHandler : freeHandler
