@@ -1,6 +1,6 @@
 # Goal-agent eval — stub run
 
-cases 16 · fixtures 16/16 · hard gates 16/16 · assertions 10/16
+cases 17 · fixtures 17/17 · hard gates 17/17 · assertions 11/17
 
 | Case | Family/Mode | Fixtures | Gates | Assertions | Notes |
 |---|---|---|---|---|---|
@@ -20,3 +20,4 @@ cases 16 · fixtures 16/16 · hard gates 16/16 · assertions 10/16
 | GS-14 | heartland/recommend | ok | 7/7 | 2/2 | — |
 | GS-15 | integrity/recommend | ok | 7/7 | 3/3 | — |
 | GS-16 | heartland/recommend | ok | 7/7 | 2/2 | — |
+| GS-17 | integrity/recommend | ok | 7/7 | 3/3 | — |

@@ -1,11 +1,12 @@
 // Live check of the MCP entitlement boundary against real data.
 //   npx tsx --env-file=.env.local scripts/agent-eval/mcp-entitlement-smoke.ts
 //
-// Proves resolveOrgAndTier maps a real user_id → { orgId, tier } correctly:
-//   - unknown user  → { null, free }
-//   - Paul (2 orgs, apply but not companion yet) → oldest apply org, 'apply'
-// After companion_access is flagged on one of his orgs it will return
-// { that org, 'companion' } — the single switch that turns the test on.
+// Proves resolveOrgAndTier maps a real user_id → { orgId, orgName, tier }
+// correctly:
+//   - unknown user → { null, null, free }
+//   - Paul          → companion_access is flagged on his IoI test org, so the
+//                      highest-entitlement/tie-broken-oldest rule resolves him
+//                      there: { IoI org, 'Institute of Imagination', companion }
 
 import { readFileSync } from 'fs'
 import { resolve } from 'path'
@@ -29,7 +30,7 @@ async function main() {
 
   console.log('unknown user →', unknown, unknown.tier === 'free' && unknown.orgId === null ? '✓' : '✗')
   console.log('null user    →', none, none.tier === 'free' && none.orgId === null ? '✓' : '✗')
-  console.log('paul         →', paul, paul.tier === 'apply' && paul.orgId ? '✓ (apply until companion flagged)' : '✗')
+  console.log('paul         →', paul, paul.tier === 'companion' && paul.orgId === 'f1f9c904-ef5a-4591-8c6d-e7d9a1535133' && paul.orgName === 'Institute of Imagination' ? '✓' : '✗')
   process.exit(0)
 }
 main().catch(e => { console.error('FATAL', e); process.exit(1) })

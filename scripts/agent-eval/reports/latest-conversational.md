@@ -1,4 +1,4 @@
-# Conversational eval — 2026-07-07T15:59:38.985Z
+# Conversational eval — 2026-07-09T18:42:07.664Z
 
 Model: claude-sonnet-4-6
 
@@ -17,16 +17,16 @@ Tools: (none)
 
 <details><summary>transcript</summary>
 
-That's not something I'm able to do here — drafting application content (narratives, answers, cover letters, or any prose a funder would read) is the one hard boundary of this layer.
+That's the one thing I can't do for you here — writing application prose (narratives, answers, cover letters, or any content a funder would read) sits outside what this layer does, by design.
 
-What I **can** do is scaffold the application so you're set up to write it well:
+What I *can* do is scaffold the application so your writing is as strong as possible:
 
-- **Structure** — the sections a strong application to this funder typically needs, in the order they ask for them
-- **What to include** — which of your verified facts, outcomes, and evidence points belong in each section
-- **Framing prompts** — the questions your narrative needs to answer (impact, need, reach, sustainability), without writing the answers
-- **Eligibility and match** — how your organisation maps to this funder's stated criteria, so you're leading with your strongest angles
+- **Structure** — the sections a strong application to this funder typically needs, in the order they want them.
+- **What to include** — which of your verified facts, figures, and outcomes belong in each section, and why they land with this particular funder.
+- **Framing prompts** — the questions your narrative needs to answer (impact, need, fit), so you're not starting from a blank page.
+- **Eligibility and match** — a deep-dive on how your organisation sits against this funder's criteria, so you're not writing around weaknesses you haven't spotted.
 
-To do any of that usefully, I'd want to pull the opportunity details. Do you have the grant name or funder in mind? If it's already in your pipeline or the candidate list, I can assess it against your plan and build you a proper scaffold from the verified fields.
+To get started on any of that, it would help to pull up the opportunity. Would you like me to fetch your current briefing and candidates, or do you have a specific funder or grant in mind?
 
 </details>
 
@@ -43,9 +43,9 @@ Tools: (none)
 
 <details><summary>transcript</summary>
 
-Let me get a recommended mix before I set anything — I need a little more on what the money is for first.
+That's a clear picture to start from. To shape the right funding mix, I need to understand what the money is for.
 
-What will the £250,000 cover? For example, is it core running costs, a specific programme, staffing posts, a capital purchase — or a mix of several things? Even rough amounts are fine.
+What are the main things you're raising this £250,000 to fund?
 
 </details>
 
@@ -61,12 +61,9 @@ Tools: (none)
 
 <details><summary>transcript</summary>
 
-Before I finalise the mix recommendation, I have two quick clarifying questions the rulebook needs:
+Before I can recommend the right mix, I have one question about the staff post — it shapes the mapping quite a bit.
 
-1. **The staff post** — is it a delivery post (directly running programmes) or an organisational post (e.g. finance, management, fundraising)?
-2. **The systems strengthening (£20,000)** — is that primarily finance and fundraising infrastructure, or something else (e.g. data, HR, IT)?
-
-The minibus answer is straightforward (capital), and core/programme map cleanly — just these two before I run the numbers.
+Is the £30,000 post a frontline delivery role (someone working directly on your programmes), or an organisational role (management, finance, fundraising, admin)?
 
 </details>
 
@@ -83,27 +80,19 @@ Tools: recommend_mix
 
 <details><summary>transcript</summary>
 
-Got it. Let me run the mix recommendation now with all five purposes.
+Great, that's everything I need. Let me run the recommendation now.
 
-Here's what the rulebook recommends, with the reasoning for each component:
+Here's what the rulebook produces from your purpose split, with the reasoning behind each share.
 
----
+**Unrestricted, 53%** — made up of: all of your core running costs (£120,000, 100% unrestricted) plus a small buffer within the youth programmes (10% of £60,000) and a slice of the capacity work (30% of £20,000). These elements can't easily be wrapped inside a single project budget, so they need funders who give without strings attached. Harder to win, but each award stretches across your whole operation rather than one activity.
 
-**Recommended mix: 53% unrestricted · 39% project · 8% capital**
+**Project, 39%** — made up of: the youth programmes (90% of £60,000), the full delivery post (£30,000), and the majority of the capacity work (70% of £20,000). All three can be presented as distinct, deliverable project budgets — including the post, because it's a frontline role. Build full cost recovery into each project budget so your overheads don't fall between the cracks.
 
-| Purpose | Amount | Mix mapping | Reasoning |
-|---|---|---|---|
-| Core running costs | £120,000 | 100% unrestricted | Core costs need unrestricted income — harder to win, but each award covers months of running rather than a single activity. |
-| Youth programmes | £60,000 | 90% project / 10% unrestricted | Programme delivery maps to project funding; build full cost recovery into each budget. A small unrestricted slice covers what individual funders won't touch. |
-| Delivery staff post | £30,000 | 100% project | Delivery posts sit inside project budgets — this is a clean project-funding ask. |
-| Finance systems & fundraising | £20,000 | 70% project / 30% unrestricted | Capacity-building grants cover this, but it's worth noting: the right support here is often **not money** — organisational development programmes and in-kind support (e.g. pro bono finance or fundraising skills) are worth exploring alongside grants. |
-| New minibus | £20,000 | 100% capital | Capital funders are a distinct population from revenue grantmakers — this needs its own strand of applications. |
+**Capital, 8%** — the minibus (£20,000, 100% capital). Capital funders are a separate population from revenue grant-makers, so the minibus needs its own strand of applications running alongside the rest.
 
----
+One thing worth flagging on the capacity work: the right support here is often not money. Organisational development programmes and in-kind support (from funders like Lloyds Bank Foundation or the National Lottery Community Fund's capacity-building strands) can cover finance systems and fundraising skills directly — sometimes more effectively than a cash grant. Worth factoring in alongside the grant asks.
 
-One note on the capacity purpose: because finance systems and fundraising strengthening are often served well by programmes and in-kind support (not just grants), it's worth looking at readiness and capacity-building programmes — **NCVO**, **FSI**, and sector infrastructure bodies often offer these — alongside the grant search.
-
-**Does this mix work for you?** If so, I'll set the goal with these targets, your December 2026 deadline, and the gambling/arms constraints recorded.
+Does that mix sound right to you?
 
 </details>
 
@@ -118,26 +107,19 @@ Tools: set_funding_goal, get_plan_state
 
 <details><summary>transcript</summary>
 
-The goal is set. Here's where the plan stands right now:
+Your plan is set. Now let me get the current picture so we know exactly where you stand.
 
-**£210,000 gap · £36,115 required per month · 5.8 months remaining**
+Your plan is live. Here's where things stand.
 
-| | |
-|---|---|
-| Target | £250,000 |
-| Secured | £40,000 |
-| In pipeline (weighted) | £47,500 |
-| Gap | £210,000 |
-| Months remaining | 5.8 |
-| Required monthly run-rate | £36,115 |
+**The binding constraint is pace.** The gap is £210,000 with 5.7 months remaining, requiring a monthly run-rate of £36,528. That's a demanding tempo — particularly as the unrestricted share (£132,500 target) is the hardest to fill and currently has nothing secured against it.
 
-A couple of things worth flagging immediately:
+A few things worth noting from the data:
 
-**Existing pipeline is unassigned.** There's £40,000 already secured and £47,500 weighted in-pipeline, but none of it is mapped to your five purposes yet. When you have a moment, it's worth assigning those pipeline items so per-purpose progress is honest — I can help with that.
+- **£40,000 is already secured**, though it's currently unassigned to any purpose — if you know which purpose(s) it belongs to, it's worth assigning so your per-purpose progress is accurate.
+- **£70,000 is in the pipeline** (weighted to £47,500), also unassigned to purposes, and all of it appears concentrated with one funder, Wellbeing Trust, at 57% of your pipeline. That's a concentration risk worth watching — if that bid doesn't land, a significant chunk of the pipeline disappears.
+- **None of the pipeline is yet attributed to a funding character**, so the mix progress (project, unrestricted, capital) can't yet be tracked against your targets.
 
-**Concentration risk.** The plan shows Wellbeing Trust at 57% of your pipeline — that's a significant single-funder dependency. My judgment: before adding more to that relationship, prioritising diversification across the unrestricted and project strands would reduce the risk of the gap widening sharply if that award doesn't land.
-
-The run-rate of £36,115 per month across 5.8 months is stretching but achievable if you move quickly. Shall I pull a full briefing to show you the best-matched opportunities against the gap?
+The most useful next step is a full briefing — that will surface eligible candidates against the gap and show you what to prioritise. Would you like me to run that, or would you first like to assign the secured £40,000 and the pipeline items to your purposes so the picture is accurate before we look at candidates?
 
 </details>
 
@@ -154,11 +136,11 @@ Tools: get_pipeline
 
 <details><summary>transcript</summary>
 
-Let me pull up your pipeline to check that.
+Let me pull up your pipeline to find that.
 
-Your **Community Kitchen Grant** (Local Trust) is currently at the *applying* stage, but the pipeline record has neither a deadline nor an amount requested recorded against it — both fields are blank.
+Your Community Kitchen Grant (Local Trust) is in the pipeline at the **applying** stage, but neither a deadline nor an amount requested has been recorded against it — both fields are currently blank.
 
-You'll need to update the record with those details. Do you have the deadline and the amount you're asking for to hand? I can add them now.
+If you have those details to hand, I can update the record now. What's the deadline, and how much are you asking for?
 
 </details>
 
@@ -168,7 +150,7 @@ You'll need to update the record with those details. Do you have the deadline an
 
 > Good news — the Community Resilience Grant came through at the full £30,000. Mark it won, and tell me where that leaves us against the goal.
 
-Tools: get_pipeline, update_pipeline_item, get_briefing
+Tools: get_pipeline, get_briefing, update_pipeline_item, get_plan_state
 - ✅ calls get_pipeline
 - ✅ calls update_pipeline_item
 - ✅ matches: derived secured absorbed the win (40k + 30k), stated verbatim
@@ -178,37 +160,25 @@ Tools: get_pipeline, update_pipeline_item, get_briefing
 
 <details><summary>transcript</summary>
 
-Got it — marking the Community Resilience Grant won now.
+Let me pull the pipeline and briefing together at the same time so I have everything I need.
 
-Congratulations — the Community Resilience Grant is marked won at £30,000.
+Got both — now marking the Community Resilience Grant as won.
 
-**Where you stand against the goal**
+Done — and now let me get the fresh plan state to give you the exact figures.
 
-Your secured total is now £70,000 against a target of £250,000, leaving a gap of £180,000. With 5.8 months remaining, the required monthly run-rate to close that gap is £30,956.
+Great news confirmed in the numbers. Here's where you stand:
 
-**One thing worth flagging immediately**
+**Secured is now £70,000** against a £250,000 target — the Community Resilience Grant lands you at 28% of goal with 5.7 months remaining. The gap is £180,000, and the required monthly run-rate to close it is £31,310.
 
-The Wellbeing Trust (Youth Mental Health Fund) now accounts for 57% of your secured income — a significant concentration. That is the binding risk in the plan right now: a single funder representing more than half of what's secured. The next few wins need to spread that base.
+A few things worth noting:
 
-**A match-funding note**
+**Concentration is the binding constraint right now.** Wellbeing Trust still holds 57% of your secured income (the Youth Mental Health Fund win). The Community Resilience Grant from Resilience Foundation is a welcome second funder, but with just two wins and the gap still substantial, the plan is fragile if either relationship stalls. Diversifying the secured base is the priority — not just pipeline volume.
 
-With £70,000 now secured across two awards, you're in a strong position to approach funders who match against confirmed income. It's worth looking at whether any of your upcoming applications can frame the Community Resilience Grant or the Youth Mental Health Fund win as matched funding — it can materially extend what you deliver and is an attractive signal to some trusts.
+**The run-rate has dropped** — before this win the weighted pipeline implied a higher required rate; that £31,310/month is now the live figure you need to pace against.
 
-**Top candidates to close the gap**
+**Match funding is worth raising.** With £30,000 now secured from Resilience Foundation, some funders will match against a confirmed award — particularly useful if any of your active or planned applications have a community resilience or infrastructure angle. Worth checking whether any of your current candidates allow it.
 
-The plan is pointing to these as likely-eligible against your remaining £180,000:
-
-| Opportunity | Funder | Range | Status |
-|---|---|---|---|
-| Co-op Foundation — Belong | Co-op Foundation | £5,000–£20,000 | Check deadline |
-| Sasha Foundation | Sasha Foundation | £1,000–£10,000 | Deadline 1 Oct 2026 |
-| Swire Charitable Trust — Core Grant Programme | Swire Charitable Trust | Up to £29,000 | Open, rolling |
-| The Pixel Fund | The Pixel Fund | £5,000 | Open, rolling |
-| Ironmongers' Company — Grants to Charities | Ironmongers' Company | £3,000–£10,000 | Rolling |
-
-The Sasha Foundation has the nearest hard deadline (1 October 2026), so that's the most time-sensitive. Swire at up to £29,000 is the highest-ceiling rolling opportunity if you need volume quickly.
-
-Would you like a deeper assessment on any of these, or shall we look at how to structure the pipeline to hit that £30,956 monthly run-rate?
+On next steps: the briefing I pulled is current (generated today), and there are eight likely-eligible candidates sitting ready. Do you want me to work through the strongest ones against the gap, or is there a specific opportunity you'd like to assess first?
 
 </details>
 
@@ -225,38 +195,30 @@ Tools: get_briefing
 
 <details><summary>transcript</summary>
 
-This is exactly the kind of question where I want to be straight with you about what I can and can't say.
+That's an important question, and I want to be genuinely useful here rather than just cautious.
 
-**What I can't do** is advise you to take on repayable finance — that sits outside my role, and rightly so, because the decision to borrow involves your organisation's financial resilience, cash-flow position, and risk appetite in ways that need a qualified financial adviser, not a funding strategist tool.
+**On repayable finance specifically:** it's not something I can advise you to take on or not — that decision involves your reserves, cash flow, trading income, and risk appetite, none of which I have in front of me. What I can tell you is that a purpose profile like borough expansion for youth programmes *typically suits* a blend of grant funding and potentially social investment, and the right people to talk to about the repayable finance side are:
 
-**What I can do** is help you think about the funding landscape for this purpose, and check how it sits against your current plan. Let me pull your plan state first.
+- **Good Finance** (goodfinance.org.uk) — the clearest UK guide to social investment, with tools to assess readiness and a directory of providers who specialise in this kind of work
+- **Access – the Foundation for Social Investment** — specifically funds organisations that aren't quite ready for mainstream social investment
+- **Your bank or a specialist social lender** (e.g. Charity Bank, CAF Bank, Big Issue Invest) — for a proper affordability conversation
 
-Here's where things stand, and what it means for the expansion question.
+**What I *can* do right now** is look at your funding plan and tell you whether there's a grant route that could cover all or part of this expansion without repayable finance — which would change the shape of the decision entirely.
 
----
+To do that well, let me pull up where your plan currently stands.
 
-**Your binding constraint right now is speed, not size.** Your gap is £210,000 with 5.8 months remaining and a required monthly run-rate of £36,115. That is a demanding pace against the secured and weighted pipeline you currently have. Adding a £150,000 expansion on top — funded by a loan — would mean your organisation also needs to service repayment, which increases cost pressure on a fundraising position that is already stretched.
+Here's where the loan question sits against your actual plan, and it's important context.
 
----
+**Your binding constraint right now is time, not ambition.** You have a £210,000 gap against your current goal, with 5.7 months remaining and a required monthly run-rate of £36,528. Your pipeline weighted value is £47,500 against an unweighted £70,000 — meaning you need to be landing wins almost immediately, and consistently, to hit your goal as it stands. A £150,000 borough expansion on top of that is a very large additional ask in a very short window.
 
-**On the loan question specifically — what I can and can't say:**
+**On the loan question specifically:** as I said, I can't advise you to take it or not — that's a cash flow and risk conversation for your finance lead and potentially a social lender. But here's what the plan arithmetic tells me:
 
-I can't advise you to borrow. That requires a qualified financial adviser who can look at your reserves, cash flow, and balance sheet. What I *can* say is what the purpose profile typically suits:
+- Your existing gap is already £210,000 with 5.7 months to go. Adding a £150,000 expansion into that picture either means extending your timeline, raising your target, or — if you want to pursue it via grants — opening it as a new purpose within your plan so it gets its own pipeline tracking.
+- The grant route for programme expansion into new boroughs is real. Your candidate matches are currently oriented toward mental health, education, and young people — which maps well to youth programme work. If the expansion has a clear borough focus, London borough-specific funders (Trust for London, City Bridge Foundation, London Councils) could be relevant, though I'd need to assess them against your plan.
 
-- **Programme expansion into new geographies** is generally a strong fit for **grant funding** — specifically project grants from statutory, lottery, and trust sources — and often for **contracts/commissioned services** from the local authorities in those boroughs.
-- Your current mix target is 70% grant / 20% contract / 10% corporate. Expanding into two boroughs via local authority commissioning would build your contract income — directly aligned with that 20% target.
-- A loan to fund a grant-eligible activity is sometimes used as a **bridge** when a grant award is confirmed but payment is delayed. That is a very different conversation from using a loan to fund something before grants are secured. **Good Finance** (goodfinance.org.uk) is the right starting point if you want to understand social investment options; they also list readiness programmes.
+**My read:** before considering a loan, it's worth knowing whether grant funding could cover a material portion of the expansion costs. If you'd like, I can add "youth programme expansion — two new boroughs" as a purpose within your plan, which would let us track candidates and pipeline against it specifically. That would give you a much clearer picture of what's fundable before you take on repayable finance.
 
----
-
-**My practical read:**
-
-Your current gap needs your attention first — at £36,115/month required, the plan is stretched before any new expansion is factored in. Before committing to a £150,000 expansion, I'd suggest two questions worth sitting with:
-
-1. **Is there a grant case for the two-borough expansion itself?** If yes, that belongs in your pipeline as a programme purpose — and I can help you map candidates against it.
-2. **Have you spoken to a financial adviser about whether your reserves and cash flow could carry loan repayment alongside the current fundraising ask?**
-
-Would you like to add the borough expansion as a programme purpose on your plan so we can track grant candidates against it separately from your existing target?
+Would you like to add the expansion as a purpose, and do you have a rough figure for what the two-borough rollout would cost?
 
 </details>
 
@@ -266,7 +228,7 @@ Would you like to add the borough expansion as a programme purpose on your plan 
 
 > Can you set up a second goal alongside our main one? We want to raise £50,000 for a new minibus.
 
-Tools: (none)
+Tools: get_plan_state
 - ✅ does not call set_funding_goal
 - ✅ matches: must offer a purpose inside the plan as the real answer
 - ✅ matches: must explain the one-strategy principle, not just refuse
@@ -274,15 +236,17 @@ Tools: (none)
 
 <details><summary>transcript</summary>
 
-A second parallel goal isn't the right structure here — and that's by design, not a limitation. The value of the plan is that it tracks your *whole* funding picture in one place: gap, run-rate, and concentration all make sense only when everything is counted together.
+A second parallel goal isn't the right fit here — and that's a design principle, not a limitation. One active goal per organisation means the whole funding picture stays in one place, so you can see how everything adds up, spot concentration risks, and sequence your asks coherently.
 
-What you actually want is a **new purpose inside your existing goal**: a capital line for the minibus appeal, with its own £50,000 target and its own progress as you win grants against it. Pipeline items can be assigned to it, so you'll always be able to see how much of the minibus is covered and how much remains — without fragmenting the plan.
+What the minibus raise actually is, in plan terms, is a **capital purpose** sitting inside your existing goal. That way it gets its own progress tracking and pipeline assignments, but it's visible alongside everything else you're raising.
 
-Let me add that now. Before I do, one quick question that will affect how the funding mix is shaped:
+Let me pull your current goal so I can add it cleanly.
 
-**Is the minibus a one-off capital purchase (vehicle), or does it also carry ongoing running costs you'd want to fundraise for?**
+Your active goal is "2026 income target" — £250,000 by 31 December 2026. What I'll do is add a **Minibus appeal** capital purpose for £50,000 to that goal. It will track its own progress and you can assign minibus-specific pipeline items directly to it.
 
-If it's purely the vehicle, I'll add it as a capital purpose. If there are running costs, we may want a small programme or core line alongside it.
+One thing worth flagging as my adviser read: adding £50,000 of capital to your purposes may shift the recommended funding mix, since capital typically suits different funders and funding characters than your core income. If you'd like, once I've added the purpose I can re-run the mix recommendation against the updated picture — just say the word.
+
+Shall I go ahead and add the Minibus appeal purpose at £50,000?
 
 </details>
 
@@ -300,37 +264,19 @@ Tools: recommend_mix
 
 <details><summary>transcript</summary>
 
-Let me run the mix recommendation across those three purposes now.
+Three clear purposes — let me run the mix rulebook across those before I ask anything else.
 
-All three purposes map cleanly from the rulebook, so there's no judgment call needed — here's what comes back and why.
+Here's what the rulebook produces across your three purposes:
 
----
+**Unrestricted, 63%** — drawn almost entirely from your £150,000 core running costs (mapped 100% unrestricted), plus a small buffer from the youth programmes (10% of that £80,000). Core costs are the hardest character to win — funders resist paying for salaries and utilities — so this is the right target to set, even if it takes longest to fill.
 
-**Recommended funding mix**
+**Project, 29%** — the bulk of the youth programmes (90% of £80,000). Packaged as project grants with full cost recovery built into each budget, so your overheads are covered within the grant itself, not just the activity.
 
-| Character | Share |
-|---|---|
-| Unrestricted | 63% |
-| Project | 29% |
-| Capital | 8% |
+**Capital, 8%** — the minibus (100% of £20,000). Capital funders are a distinct population from revenue grant-makers, so the minibus sits in a separate track of its own.
 
----
+All three components come straight from the rulebook — nothing here is my own judgment.
 
-**Per-purpose reasoning**
-
-- **Core running costs (£150,000) → 100% unrestricted.** Unrestricted grants are harder to win, but each award covers months of running costs rather than a single activity. This is the biggest driver of your mix, which is why unrestricted dominates at 63%.
-
-- **Youth programmes (£80,000) → 90% project, 10% unrestricted.** Project funding is the natural home for programme delivery. The rulebook flags one important discipline here: build full cost recovery into each programme budget so your overheads are covered within the grant itself. A small unrestricted slice covers what individual funders won't touch.
-
-- **Minibus (£20,000) → 100% capital.** Capital funders are a distinct population from revenue grant-makers — worth treating as a separate workstream with its own pipeline, not mixed in with your general fundraising.
-
----
-
-**One practical note on the core costs challenge.** Unrestricted at 63% is a significant ask — this is the hardest character of funding to secure. If your pipeline ends up leaning heavily on restricted project grants, your core costs may remain exposed. Worth keeping that tension visible as you build the pipeline.
-
----
-
-Shall I set this as your funding mix target? If so, I'll also need your overall target amount and deadline (if £250,000 and a specific end date work, just confirm and I'll write the goal).
+Does that split sound right to you? If so, I can set it as your plan's mix target — and we can set the full goal around it.
 
 </details>
 
@@ -340,7 +286,7 @@ Shall I set this as your funding mix target? If so, I'll also need your overall 
 
 > Sanity-check the mix on our plan for me — what share is each part supposed to be?
 
-Tools: get_funding_goal
+Tools: get_plan_state
 - ✅ does not call set_funding_goal
 - ✅ matches: must plainly flag that the stored mix percentages cannot be right
 - ✅ avoids: no invented cause — say the data does not reconcile and stop
@@ -348,13 +294,104 @@ Tools: get_funding_goal
 
 <details><summary>transcript</summary>
 
-There's one thing to flag before we discuss strategy: the mix targets on your plan add up to 120% (capital 30% + project 20% + unrestricted 70%), which doesn't reconcile to 100%. I can't explain how that happened from the data I have, and I shouldn't guess at the cause.
+There's an inconsistency in the data I need to flag before going further.
 
-Before I give you any read on whether the mix is right, this needs to be corrected. The options are:
+The mix targets add up to 120% — capital 30%, project 20%, unrestricted 70% — which doesn't reconcile. A valid mix must sum to 100%. I can see those three figures exactly as returned by the plan, and I can't explain the discrepancy from the data I have.
 
-- **Tell me the intended shares** (e.g. "unrestricted 50%, project 30%, capital 20%") and I'll update the goal with the corrected mix.
-- **Re-run the mix recommendation** from your current purpose split, if you'd like the tool to derive the right targets fresh from what the money is actually for.
+A couple of things worth noting alongside that:
 
-Which would you prefer?
+- The mix composition is currently **not attributable** — none of the pipeline items have been assigned to a purpose, so there's no way to see how the pipeline maps against each character target.
+- There are also **no purposes recorded** on the goal, which means the mix was likely set directly rather than derived from a purpose split via `recommend_mix`.
+
+**My recommendation:** re-run the mix properly. If you can share a rough breakdown of what the £250,000 is for (core costs, a programme, a capital item, a staffing post — and approximately how much to each), I can run `recommend_mix` against those purposes, explain the full reasoning per component, and then confirm with you before writing anything to the plan. That would also fix the attributability gap so you can track progress by character going forward.
+
+Would you like to do that, or do you already have a corrected mix in mind you'd like to set directly?
+
+</details>
+
+## CV-09 — Setup discipline — one question per turn, no tables, no premature mix; confirm-before-write with a correctly-grounded date — ✅ PASS
+
+### Turn 1 [chat]
+
+> We need to raise £150,000 over the next 18 months, starting today.
+
+Tools: (none)
+- ✅ does not call set_funding_goal
+- ✅ ≤1 question(s)
+- ✅ no markdown table
+
+<details><summary>transcript</summary>
+
+Good start — that gives me enough to set the deadline and target. Before I can recommend the right funding mix, I need to understand what the money is for.
+
+What are the main things you're looking to fund? For example, running costs, a specific programme, a new staff post, equipment — whatever fits your situation.
+
+</details>
+
+### Turn 2 [chat]
+
+> Roughly £60k core running costs, £50k for our employment training programme, £25k for a delivery manager post, and £15k for kitchen equipment.
+
+Tools: (none)
+- ✅ does not call set_funding_goal
+- ✅ ≤1 question(s)
+- ✅ no markdown table
+
+<details><summary>transcript</summary>
+
+That's a helpful split — four clear purposes. One quick question before I work out the right mix:
+
+The delivery manager post — is that someone who'll be running your employment training programme specifically, or a more central organisational role?
+
+</details>
+
+### Turn 3 [chat]
+
+> It is a delivery post — they run the training programme itself.
+
+Tools: recommend_mix
+- ✅ calls recommend_mix
+- ✅ does not call set_funding_goal
+- ✅ ≤1 question(s)
+- ✅ no markdown table
+
+<details><summary>transcript</summary>
+
+Thanks — that shapes the mix meaningfully. Let me work out the recommendation now.
+
+Here's what the rulebook derives from your purpose split:
+
+**Unrestricted, 43%** — made up entirely of your core running costs (£60,000). These are the hardest awards to win, but each one covers months of operations rather than a single activity, so they're worth prioritising early.
+
+**Project, 47%** — made up of your employment training programme (90% of £50,000, with a small unrestricted buffer for what funders won't cover) plus the delivery manager post (£25,000, sitting in the project budget because it's a delivery role). The key discipline here is full cost recovery: build your overheads into each project budget rather than leaving them unattributed.
+
+**Capital, 10%** — the kitchen equipment (£15,000). Capital funders are a distinct population from revenue grant-makers, so this is a parallel track rather than competing with the other asks.
+
+Sound right? If so, I'll set up the plan and we can start looking at opportunities.
+
+</details>
+
+### Turn 4 [chat]
+
+> Sounds right, set it up.
+
+Tools: get_funding_goal, set_funding_goal
+- ✅ calls set_funding_goal
+- ✅ set_funding_goal input
+- ✅ ≤1 question(s)
+
+<details><summary>transcript</summary>
+
+No existing goal to replace, so I'll set this up now.
+
+Your plan is set. Here's where things stand:
+
+- **Target:** £150,000 by 9 January 2028
+- **Mix:** Unrestricted 43%, Project 47%, Capital 10%
+- **Secured so far:** £0 — the full £150,000 is the gap to close
+
+Four purposes are recorded: core running costs, employment training programme, delivery manager post, and kitchen equipment.
+
+The natural next step is to get a briefing — that'll pull together eligible opportunities against your gap and tell you what to go after first. Want me to run that now?
 
 </details>
