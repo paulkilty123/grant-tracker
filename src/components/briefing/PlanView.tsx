@@ -95,7 +95,7 @@ export default function PlanView({ plan, pipeline, planRead = null }: {
       </div>
       <p className="mt-1 text-[13px]" style={{ color: COLOR.ink }}>
         {goal.title}
-        <span style={{ color: COLOR.faint }}>. Adjustments are a conversation; your Companion confirms the impact before anything changes.</span>
+        <span style={{ color: COLOR.faint }}>. Adjustments are a conversation; your adviser confirms the impact before anything changes.</span>
       </p>
       {/* gap context as metadata — the number lives on the briefing, not here as a bar */}
       <p className="mt-1.5 text-[12.5px]" style={{ color: COLOR.faint }}>
@@ -119,7 +119,7 @@ export default function PlanView({ plan, pipeline, planRead = null }: {
         <SectionLabel>Your funding mix</SectionLabel>
         {!mix ? (
           <p className="mt-2 text-[13px]" style={{ color: COLOR.mid }}>
-            This goal has no confirmed funding mix yet. Tell your Companion what the money is for and it will recommend one; the recommendation never becomes the plan until you confirm it.
+            This goal has no confirmed funding mix yet. Tell your adviser what the money is for and it will recommend one; the recommendation never becomes the plan until you confirm it.
           </p>
         ) : (
           <>

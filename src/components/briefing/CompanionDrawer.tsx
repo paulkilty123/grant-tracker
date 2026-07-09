@@ -52,14 +52,14 @@ export default function CompanionDrawer({ examplePrompt }: { examplePrompt: stri
       {/* the drawer — opened via COMPANION_OPEN_EVENT (CompanionAskBar, chips,
           next-move actions). The ask bar itself lives in CompanionAskBar. */}
       {open && (
-        <div className="fixed inset-0 z-50" role="dialog" aria-label="Your Companion">
+        <div className="fixed inset-0 z-50" role="dialog" aria-label="Your adviser">
           <div className="absolute inset-0" style={{ background: 'rgba(44,44,42,0.25)' }} onClick={() => setOpen(false)} />
           <div className="absolute inset-y-0 right-0 w-full max-w-md bg-white shadow-2xl flex flex-col">
             <div className="p-4 flex items-center justify-between" style={{ borderBottom: '1px solid #E9E6DD' }}>
               <div className="flex items-center gap-2">
                 <CompanionMark size={30} />
                 <div>
-                  <div className="text-sm font-bold" style={{ ...grotesk, color: '#2C2C2A' }}>Your Companion</div>
+                  <div className="text-sm font-bold" style={{ ...grotesk, color: '#2C2C2A' }}>Your adviser</div>
                   <div className="text-[11px]" style={{ color: '#8A8986' }}>Scaffolds and strategy only. It never writes applications.</div>
                 </div>
               </div>
@@ -100,7 +100,7 @@ export default function CompanionDrawer({ examplePrompt }: { examplePrompt: stri
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit() } }}
-                placeholder="Ask your Companion…"
+                placeholder="Ask your adviser…"
                 className="flex-1 text-sm px-3 py-2 rounded-lg outline-none"
                 style={{ border: '1px solid #E9E6DD', color: '#2C2C2A' }}
                 disabled={busy}

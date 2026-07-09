@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
   if (ctx.tier !== 'companion') {
-    return NextResponse.json({ error: 'The strategist requires the Companion tier.' }, { status: 403 })
+    return NextResponse.json({ error: 'The strategist requires the Adviser tier.' }, { status: 403 })
   }
 
   const budget = await checkInferenceBudget(ctx.orgId)

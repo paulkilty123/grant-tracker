@@ -34,10 +34,11 @@ export const MIX_COLOR: Record<string, string> = {
 export const mixColor = (c: string) => MIX_COLOR[c] ?? COLOR.lime
 export const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' ')
 
-// The Companion mark: the ti-bulb in a lime disc is the product-wide sign of
-// Companion JUDGMENT (My read, the ask bar, the drawer header). It is not a
-// decorative icon — do not use the bulb anywhere it does not denote the
-// Companion's own reasoning.
+// The adviser mark: the ti-bulb in a lime disc is the product-wide sign of
+// ADVISER presence and judgment (My read, the ask bar / rail header, the drawer
+// header, the everywhere-launcher). It is not a decorative icon; never use the
+// bulb anywhere it does not denote the adviser's own reasoning or presence.
+// (Design-system rule, alongside the two-lime-accents-per-page rule.)
 export function CompanionMark({ size = 32 }: { size?: number }) {
   return (
     <span className="inline-flex items-center justify-center shrink-0" style={{ width: size, height: size, borderRadius: 999, background: COLOR.lime, color: COLOR.forest }}>

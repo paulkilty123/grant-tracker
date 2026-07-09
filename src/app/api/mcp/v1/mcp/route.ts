@@ -204,7 +204,7 @@ async function runCompanion(
 ) {
   const auth = authStore.getStore()
   if (!auth?.orgId || auth.tier !== 'companion') {
-    return companionError('forbidden', 'Companion tools require a Companion-tier Grant Tracker account linked to this connection.')
+    return companionError('forbidden', 'Adviser tools require an Adviser-tier Grant Tracker account linked to this connection.')
   }
   const ctx: ToolContext = { orgId: auth.orgId, surface: 'mcp', tier: auth.tier, userId: auth.oauth?.user_id ?? null }
   try {

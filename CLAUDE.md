@@ -88,6 +88,11 @@ Rounded corners everywhere: `rounded-xl` (cards/panels), `rounded-lg` (inputs/bu
 | Won | `#639922` | `#fff` |
 | Declined | `#FAECE7` | `#993C1D` |
 
+### House Copy (user-facing text)
+- **"adviser"** — British spelling, **never "advisor"**, and **never "companion" in user-facing copy** (the internal identifiers `companion_access`, `tier: 'companion'`, `CompanionDrawer`, `COMPANION_OPEN_EVENT` etc. stay; this is the spoken layer only). The product surface, tier ("the Adviser tier"), rail header ("Your adviser"), ask placeholders, and the generation prompts all say adviser.
+- **No dashes** — no em dashes, no en dashes, no double hyphens; use commas and full stops. (Numeric range labels like "£20–70k" are the one deliberate exception.) Sentence case.
+- **The ti-bulb mark = adviser presence/judgment only** (rail header, launcher, drawer marks, My read). Never decorative. Two lime accents per page maximum (the one accented card + the ask bar / rail).
+
 ---
 
 ## Database

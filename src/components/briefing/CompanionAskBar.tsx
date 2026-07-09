@@ -16,7 +16,7 @@ export default function CompanionAskBar({ examplePrompt, suggestions = [] }: { e
       <div className="bg-white rounded-xl p-3 flex items-center gap-3" style={{ border: `2px solid ${COLOR.lime}` }}>
         <CompanionMark size={30} />
         <button onClick={() => openCompanion()} className="flex-1 text-left text-sm cursor-text" style={{ color: COLOR.faint }}>
-          Ask your Companion<span className="hidden sm:inline"> — e.g. “{examplePrompt}”</span>
+          Ask your adviser<span className="hidden sm:inline"> — e.g. “{examplePrompt}”</span>
         </button>
         <button
           onClick={() => openCompanion()}

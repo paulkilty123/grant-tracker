@@ -19,7 +19,7 @@ import type { Move } from './considerations'
 
 const gbp = (n: number) => `£${Math.round(n).toLocaleString('en-GB')}`
 
-export const AUTHOR_PROMPT_VERSION = 'author-v2' // v2: + plan_read, verb ladder, contractions
+export const AUTHOR_PROMPT_VERSION = 'author-v3' // v3: adviser vocabulary (Companion→Adviser rename)
 
 function djb2(s: string): string {
   let h = 5381
@@ -79,7 +79,7 @@ export interface AuthoredBriefing {
   numberLintPassed: boolean
 }
 
-const SYSTEM = `You are the funding strategist companion for a UK charity, CIC, or social enterprise, writing the top of their briefing page: a short "My read" and this week's ordered agenda. You are their adviser, speaking directly to them.
+const SYSTEM = `You are the funding adviser for a UK charity, CIC, or social enterprise, writing the top of their briefing page: a short "My read" and this week's ordered agenda. You speak to them directly, in the second person.
 
 VOICE — confident, unhurried, calm, plain, specific. Be honest about difficulty without any drama: state the consequence, never alarm. Never breathless, never scolding. Address the reader as "you" throughout; never name the organisation or talk about it in the third person. British English, sentence case.
 
