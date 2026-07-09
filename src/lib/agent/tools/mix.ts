@@ -118,6 +118,11 @@ export interface RecommendMixPayload {
    *  figure the caller can state verbatim, never its own arithmetic. Null when
    *  no amounts were given. */
   purposes_total: number | null
+  /** True only when EVERY rule-covered purpose carries a positive £ amount, so
+   *  the mix is genuinely amount-weighted. False ⇒ the blend fell back to equal
+   *  weighting; the caller must get the rough £ split before presenting a mix
+   *  (F1: never derive proportions from descriptions or a difficulty heuristic). */
+  amounts_complete: boolean
   components: MixComponent[]
   off_rulebook_categories: string[]
 }
@@ -149,7 +154,7 @@ function roundToHundred(weights: Map<MixCharacter, number>): Partial<Record<MixC
 
 export function deriveMix(purposes: PurposeInput[]): RecommendMixPayload {
   if (!purposes.length) {
-    return { rulebook_version: RULEBOOK_VERSION, status: 'no_purposes', recommended_mix: null, purposes_total: null, components: [], off_rulebook_categories: [] }
+    return { rulebook_version: RULEBOOK_VERSION, status: 'no_purposes', recommended_mix: null, purposes_total: null, amounts_complete: false, components: [], off_rulebook_categories: [] }
   }
   const known = purposes.map(p => p.approx_amount).filter((a): a is number => typeof a === 'number' && a > 0)
   const purposesTotal = known.length ? Math.round(known.reduce((a, b) => a + b, 0)) : null
@@ -176,13 +181,16 @@ export function deriveMix(purposes: PurposeInput[]): RecommendMixPayload {
     components.push({ category: p.category, label: p.label, approx_amount: p.approx_amount ?? null, off_rulebook: false, mapping, reasoning: rule.reasoning, clarify, recommended_opportunity_types: rule.opportunityTypes ?? null })
   }
 
-  const covered = components.filter(c => !c.off_rulebook).length
+  const ruleCovered = components.filter(c => !c.off_rulebook)
+  const covered = ruleCovered.length
   const status = covered === 0 ? 'all_fallback' : offRulebook.size > 0 ? 'partial_fallback' : 'rule_derived'
+  const amountsComplete = covered > 0 && ruleCovered.every(c => typeof c.approx_amount === 'number' && c.approx_amount > 0)
   return {
     rulebook_version: RULEBOOK_VERSION,
     status,
     recommended_mix: covered > 0 ? roundToHundred(blend) : null,
     purposes_total: purposesTotal,
+    amounts_complete: amountsComplete,
     components,
     off_rulebook_categories: Array.from(offRulebook),
   }
@@ -215,4 +223,4 @@ export const recommendMix = defineTool<RecommendMixParams, RecommendMixPayload>(
 /** Canonical steering for the registry entry — kept beside the rulebook so the
  *  description and the logic move together. */
 export const RECOMMEND_MIX_DESCRIPTION =
-  `Derive the recommended funding mix from the purpose split using the deterministic rulebook — the model delivers and explains the recommendation, it never derives it. Rule-derived output is delivered as firm, with the per-component reasoning returned here; any component marked off_rulebook is yours to reason about and MUST be presented explicitly as your judgment, not a standard mapping. A component may carry a clarifying question — ask it on its OWN turn, one question at a time, before finalising (never bundled with the recommendation or a mix preview); the default stands if the user skips it. Components also carry recommended_opportunity_types (programmes, in-kind, investment) worth surfacing alongside grants, because the right support is often not money. Mix vocabulary is funding character (unrestricted, project, capital, investment), never source. Present the recommended mix as prose, one short line per component (character, share, reason) — never a markdown table, some clients render tables raw. A recommendation never silently becomes the plan: confirm it with the user before writing it via set_funding_goal. ${CONTRACT.noRepayableFinance}`
+  `Derive the recommended funding mix from the purpose split using the deterministic rulebook — the model delivers and explains the recommendation, it never derives it. The mix is AMOUNT-WEIGHTED: the proportions come only from the rulebook's blend across the purposes' approximate £ amounts. NEVER set the mix from the purposes' descriptions, and NEVER inflate a share on a "harder-to-win-so-weight-it-more" basis — difficulty affects how you sequence the work, not the target proportions. If amounts_complete is false, ask the user for the rough £ split across the purposes on its OWN turn FIRST, then call recommend_mix again with those amounts; do not present a mix built on missing or equal-weighted amounts. When you present the recommendation, itemise every component that makes up each headline share — including the small unrestricted buffer inside programme delivery (it is in that component's mapping) — never state a headline percentage whose parts you cannot show. Rule-derived output is delivered as firm, with the per-component reasoning returned here; any component marked off_rulebook is yours to reason about and MUST be presented explicitly as your judgment, not a standard mapping. A component may carry a clarifying question — ask it on its OWN turn, one question at a time, before finalising (never bundled with the recommendation or a mix preview); the default stands if the user skips it. Components also carry recommended_opportunity_types (programmes, in-kind, investment) worth surfacing alongside grants, because the right support is often not money. Mix vocabulary is funding character (unrestricted, project, capital, investment), never source. Present the recommended mix as prose, one short line per component (character, share, reason) — never a markdown table, some clients render tables raw. A recommendation never silently becomes the plan: confirm it with the user before writing it via set_funding_goal. ${CONTRACT.noRepayableFinance}`
