@@ -6,6 +6,7 @@
 // House copy: sentence case, no em dashes, British English.
 
 import React from 'react'
+import { Lightbulb } from 'lucide-react'
 
 export const grotesk = { fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }
 export const gbp = (n: number) => `£${Math.round(n).toLocaleString('en-GB')}`
@@ -21,6 +22,28 @@ export const COLOR = {
   hair: '#E9E6DD', lime: '#8ECB3C', forest: '#173404', sage: '#3B6D11',
   secured: '#639922', weighted: '#C0DD97', cream: '#F5F1E8', pale: '#F1F7E4',
   amberBg: '#FAEEDA', amberInk: '#854F0B',
+}
+
+// Funding-character palette — ONE colour system across the briefing hero bar,
+// the recommended-move tags, and the plan-page mix. Greens for the cash
+// characters (core to hardest), the funding-type accents for investment/in-kind.
+export const MIX_COLOR: Record<string, string> = {
+  unrestricted: COLOR.forest, project: COLOR.secured, capital: '#97C459',
+  investment: '#85B7EB', in_kind: '#EF9F27',
+}
+export const mixColor = (c: string) => MIX_COLOR[c] ?? COLOR.lime
+export const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' ')
+
+// The Companion mark: the ti-bulb in a lime disc is the product-wide sign of
+// Companion JUDGMENT (My read, the ask bar, the drawer header). It is not a
+// decorative icon — do not use the bulb anywhere it does not denote the
+// Companion's own reasoning.
+export function CompanionMark({ size = 32 }: { size?: number }) {
+  return (
+    <span className="inline-flex items-center justify-center shrink-0" style={{ width: size, height: size, borderRadius: 999, background: COLOR.lime, color: COLOR.forest }}>
+      <Lightbulb size={Math.round(size * 0.55)} strokeWidth={2.2} />
+    </span>
+  )
 }
 
 /** The page's single hero number: 28-30px, medium weight. */

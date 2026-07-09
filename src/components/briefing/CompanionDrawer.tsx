@@ -1,27 +1,18 @@
 'use client'
 
-// The Companion ask bar + thread drawer (redesign §2). The ask bar is one of the
-// page's two permitted lime accents: lime-bordered, an avatar, a prominent Ask
-// button, and context suggestion chips (one always teaches the outcome loop,
-// e.g. "We just won a grant"). Chips and next-move actions open the drawer with
-// a prefilled prompt (never auto-sent). Chat mechanics live in useAgentChat.
+// The Companion thread drawer (redesign §2, v3). The ask bar was split out to
+// CompanionAskBar so the page can place it in flow; this component is now the
+// drawer overlay alone, opened via COMPANION_OPEN_EVENT (from the ask bar,
+// suggestion chips, next-move actions, or the plan page's "Adjust your goal").
+// Chat mechanics live in useAgentChat.
 
 import React, { useEffect, useRef, useState } from 'react'
 import { useAgentChat, TOOL_LABELS } from './useAgentChat'
 import { COMPANION_OPEN_EVENT } from './CompanionOpenLink'
 import Markdown from './Markdown'
+import { grotesk, CompanionMark } from './ui'
 
-const grotesk = { fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }
-
-function Avatar() {
-  return (
-    <span className="inline-flex items-center justify-center shrink-0" style={{ width: 30, height: 30, borderRadius: 999, background: '#8ECB3C', color: '#173404' }}>
-      <span style={{ ...grotesk, fontSize: 15, fontWeight: 600, lineHeight: 1 }}>✦</span>
-    </span>
-  )
-}
-
-export default function CompanionDrawer({ examplePrompt, suggestions = [] }: { examplePrompt: string; suggestions?: string[] }) {
+export default function CompanionDrawer({ examplePrompt }: { examplePrompt: string }) {
   const [open, setOpen] = useState(false)
   const [input, setInput] = useState('')
   const { messages, loaded, busy, loadThread, send } = useAgentChat()
@@ -55,51 +46,18 @@ export default function CompanionDrawer({ examplePrompt, suggestions = [] }: { e
     setInput('')
     void send(text)
   }
-  function openWith(prompt?: string) {
-    setOpen(true)
-    if (prompt) { setInput(prompt); setTimeout(() => inputRef.current?.focus(), 50) }
-  }
 
   return (
     <>
-      {/* the ask bar — one of the two lime accents on the page */}
-      <div className="w-full max-w-3xl mt-8">
-        <div className="bg-white rounded-xl p-3 flex items-center gap-3" style={{ border: `2px solid #8ECB3C` }}>
-          <Avatar />
-          <button onClick={() => openWith()} className="flex-1 text-left text-sm cursor-text" style={{ color: '#8A8986' }}>
-            Ask your Companion<span className="hidden sm:inline"> — e.g. “{examplePrompt}”</span>
-          </button>
-          <button
-            onClick={() => openWith()}
-            className="text-sm font-semibold px-4 py-2 rounded-lg shrink-0"
-            style={{ ...grotesk, background: '#8ECB3C', color: '#173404' }}
-          >
-            Ask
-          </button>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap mt-2">
-          {suggestions.slice(0, 3).map(s => (
-            <button
-              key={s}
-              onClick={() => openWith(s)}
-              className="text-[12px] px-2.5 py-1 rounded-full"
-              style={{ background: '#F1F7E4', color: '#3B6D11', border: '1px solid #DCE8C8' }}
-            >
-              {s}
-            </button>
-          ))}
-          <span className="text-[11px] ml-auto" style={{ color: '#8A8986' }}>scaffolds and strategy only</span>
-        </div>
-      </div>
-
-      {/* the drawer */}
+      {/* the drawer — opened via COMPANION_OPEN_EVENT (CompanionAskBar, chips,
+          next-move actions). The ask bar itself lives in CompanionAskBar. */}
       {open && (
         <div className="fixed inset-0 z-50" role="dialog" aria-label="Your Companion">
           <div className="absolute inset-0" style={{ background: 'rgba(44,44,42,0.25)' }} onClick={() => setOpen(false)} />
           <div className="absolute inset-y-0 right-0 w-full max-w-md bg-white shadow-2xl flex flex-col">
             <div className="p-4 flex items-center justify-between" style={{ borderBottom: '1px solid #E9E6DD' }}>
               <div className="flex items-center gap-2">
-                <Avatar />
+                <CompanionMark size={30} />
                 <div>
                   <div className="text-sm font-bold" style={{ ...grotesk, color: '#2C2C2A' }}>Your Companion</div>
                   <div className="text-[11px]" style={{ color: '#8A8986' }}>Scaffolds and strategy only. It never writes applications.</div>

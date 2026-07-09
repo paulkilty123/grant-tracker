@@ -12,20 +12,10 @@ import type { PlanStatePayload } from '@/lib/agent/tools/plan'
 import type { GetPipelinePayload } from '@/lib/agent/tools/pipeline'
 import { STAGE_WEIGHTS } from '@/lib/agent/context'
 import { MIX_CHARACTERS } from '@/lib/agent/tools/mix'
-import { grotesk, gbp, fmtDate, COLOR, SectionLabel, InfoDot, AmberPill } from './ui'
+import { grotesk, gbp, fmtDate, COLOR, SectionLabel, InfoDot, AmberPill, mixColor, cap } from './ui'
 import CompanionOpenLink from './CompanionOpenLink'
 
 type ActivePlan = Extract<PlanStatePayload, { has_goal: true }>
-
-const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' ')
-
-// Mix-character palette — greens for the cash characters (core to hardest),
-// the funding-type accents for investment / in-kind.
-const MIX_COLOR: Record<string, string> = {
-  unrestricted: COLOR.forest, project: COLOR.secured, capital: '#97C459',
-  investment: '#85B7EB', in_kind: '#EF9F27',
-}
-const mixColor = (c: string) => MIX_COLOR[c] ?? COLOR.lime
 
 // Pipeline stage palette (design system, locked)
 const STAGE_STYLE: Record<string, { bg: string; color: string; label: string }> = {

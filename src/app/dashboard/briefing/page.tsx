@@ -72,15 +72,8 @@ export default async function BriefingPage() {
     return <SetupExperience org={org} />
   }
 
-  const examplePrompt = 'What should I focus on this week?'
-  // Context suggestion chips — always include one that teaches the outcome loop
-  // (recording a win), so users discover that the plan responds to their reality.
-  const suggestions = [
-    'What should I focus on this week?',
-    'We just won a grant',
-    'Which funders back core costs?',
-  ]
-
+  // The ask bar (with contextual chips) now lives inside BriefingView, in flow
+  // beneath My read; the drawer is the overlay it opens.
   return (
     <>
       <BriefingView
@@ -88,8 +81,9 @@ export default async function BriefingPage() {
         plan={plan.data}
         pipeline={pipeline.data}
         displayName={displayName}
+        since={since}
       />
-      <CompanionDrawer examplePrompt={examplePrompt} suggestions={suggestions} />
+      <CompanionDrawer examplePrompt="What should I focus on this week?" />
       <BriefingSeen />
       <GuidanceRefresher stale={briefing.data.guidance_stale} />
     </>

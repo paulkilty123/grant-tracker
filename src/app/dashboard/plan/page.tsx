@@ -15,6 +15,7 @@ import { agentEnabledForOrg } from '@/lib/agent/orchestrator/config'
 import { getPlanState, getPipeline, getBriefing } from '@/lib/agent/tools'
 import PlanView from '@/components/briefing/PlanView'
 import CompanionDrawer from '@/components/briefing/CompanionDrawer'
+import CompanionAskBar from '@/components/briefing/CompanionAskBar'
 import GuidanceRefresher from '@/components/briefing/GuidanceRefresher'
 
 export const dynamic = 'force-dynamic'
@@ -39,6 +40,7 @@ export default async function PlanPage() {
   return (
     <>
       <PlanView plan={planData} pipeline={pipeline.data} planRead={planRead} />
+      <CompanionAskBar examplePrompt="Which purpose is furthest behind?" suggestions={['Which purpose is furthest behind?', 'We just won a grant', 'Rebalance my mix']} />
       <CompanionDrawer examplePrompt="Which purpose is furthest behind?" />
       <GuidanceRefresher stale={guidanceStale} />
     </>

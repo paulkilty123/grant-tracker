@@ -20,8 +20,8 @@ function limeAccents(rel: string): number {
   catch { return 0 }
 }
 
-// A "page" = its view component(s) + the shared ask bar (CompanionDrawer).
-const ASK_BAR = 'src/components/briefing/CompanionDrawer.tsx'
+// A "page" = its view component(s) + the shared ask bar (CompanionAskBar).
+const ASK_BAR = 'src/components/briefing/CompanionAskBar.tsx'
 const PAGES: Array<{ name: string; view: string }> = [
   { name: 'briefing', view: 'src/components/briefing/BriefingView.tsx' },
   { name: 'plan', view: 'src/components/briefing/PlanView.tsx' },
