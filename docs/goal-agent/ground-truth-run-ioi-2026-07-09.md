@@ -305,6 +305,29 @@ steered to the in-app guided flow, which already proved out at 9/9 in the conver
 £300k goal, its stale purposes, and the test conversation thread) was reset to profile-only baseline
 via `reset-test-org.ts` immediately after — ready for whatever Jack-prep work needs next.
 
+### A caution on tool-description steering, and one flaky case found along the way
+
+Shipping this pre-merge regression pass wasn't clean the first time: the first attempt at the
+`set_funding_goal`/`recommend_mix` directing line broke CV-02, CV-07, and CV-09 — the model narrated a
+fictional "check" and wrote a goal before asking about purposes, and separately over-generalised
+`recommend_mix`'s MCP-only redirect into refusing to quote an exploratory in-app mix. Both tools share
+one canonical description with the in-app orchestrator (`dispatch.ts`: "the in-app model and a future
+external MCP client are steered identically") — an opening sentence that reframes what the tool does,
+or a premise stated before its surface qualifier, reliably bled into in-app behaviour even when the
+literal words said "on MCP." Fix: keep the original opening sentence completely intact, state any
+surface-specific behaviour as a fact late in the string ("over an external MCP connection
+specifically... this does not apply to the in-app conversation"), and — for `recommend_mix` — drop the
+addition entirely once it was clear the harmless, read-only tool didn't need it: `set_funding_goal`'s
+structural refusal alone fully blocks the harmful outcome (a bad write) regardless of whether
+`recommend_mix` gets called speculatively first.
+
+Chasing CV-07's continued failures after the `recommend_mix` revert surfaced a separate, useful fact:
+CV-07 has a real **~45-50% baseline pass rate**, confirmed by running it 11 times across both the fixed
+and the fully-reverted (pre-fix) description text — same rate either way. It predates today's work
+entirely; the single sample validated yesterday (9/9) was luck, not a clean pass. Logged as a follow-on
+(the model sometimes invents an unnecessary staffing clarifying question before calling `recommend_mix`
+even when no purpose category needs refinement), not a blocker for this merge.
+
 ## What went right (lock in as regression cases)
 
 - Confirm-vs-written integrity + correct date grounding.
