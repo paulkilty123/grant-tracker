@@ -102,7 +102,7 @@ export default function BriefingView({ briefing, plan, pipeline, displayName, si
   if (!briefing.has_goal || !plan.has_goal) {
     const ob = !briefing.has_goal ? briefing.onboarding : null
     return (
-      <div className="max-w-3xl">
+      <div className="max-w-3xl mx-auto">
         <h1 className="text-2xl font-bold" style={{ ...grotesk, color: COLOR.ink }}>{greeting}, {displayName}.</h1>
         <p className="mt-1 text-[13px]" style={{ color: COLOR.mid }}>Your Companion is ready. It needs a goal to hold a plan with you.</p>
         <div className="mt-6 rounded-xl p-6" style={{ background: COLOR.pale, border: '1px solid #DCE8C8' }}>
@@ -203,7 +203,7 @@ export default function BriefingView({ briefing, plan, pipeline, displayName, si
   const hasDeltas = !!changes && (changes.events.length > 0 || !!briefing.selection_note)
 
   return (
-    <div className="max-w-3xl">
+    <div className="max-w-3xl mx-auto">
       {/* header — greeting + judgment summary (consequences, not counts) */}
       <h1 className="text-2xl font-bold" style={{ ...grotesk, color: COLOR.ink }}>{greeting}, {displayName}.</h1>
       <p className="mt-1 text-[13px]" style={{ color: COLOR.ink }}>{summaryLine}</p>

@@ -85,7 +85,7 @@ export default function PlanView({ plan, pipeline, planRead = null }: {
   const noDeadlineCount = items.filter(i => openStages.includes(i.stage) && !i.deadline).length
 
   return (
-    <div className="max-w-3xl">
+    <div className="max-w-3xl mx-auto">
       {/* header */}
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h1 className="text-2xl font-bold" style={{ ...grotesk, color: COLOR.ink }}>Your plan</h1>

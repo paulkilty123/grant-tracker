@@ -12,7 +12,7 @@ import { openCompanion } from './CompanionOpenLink'
 
 export default function CompanionAskBar({ examplePrompt, suggestions = [] }: { examplePrompt: string; suggestions?: string[] }) {
   return (
-    <div className="w-full max-w-3xl mt-4">
+    <div className="w-full max-w-3xl mx-auto mt-4">
       <div className="bg-white rounded-xl p-3 flex items-center gap-3" style={{ border: `2px solid ${COLOR.lime}` }}>
         <CompanionMark size={30} />
         <button onClick={() => openCompanion()} className="flex-1 text-left text-sm cursor-text" style={{ color: COLOR.faint }}>
