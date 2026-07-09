@@ -10,10 +10,16 @@
 import { revalidatePath } from 'next/cache'
 import { resolveWebToolContext } from '@/lib/agent/boundary'
 import { serviceClient } from '@/lib/agent/tools/db'
-import { recommendMix, setFundingGoal } from '@/lib/agent/tools'
+// Import recommendMix/setFundingGoal from their own modules, NOT the
+// '@/lib/agent/tools' barrel — that barrel also re-exports plan.ts (which
+// pulls in author.ts/orchestrator/budget.ts and the Anthropic SDK). Pulling
+// that whole chain into this Server Action's own webpack bundle broke the
+// production build ("Cannot get final name for export 'APIUserAbortError'
+// of .../@anthropic-ai/sdk/error.mjs") even though the same barrel import
+// already works fine from a regular Server Component like briefing/page.tsx.
+import { recommendMix } from '@/lib/agent/tools/mix'
 import type { RecommendMixPayload } from '@/lib/agent/tools/mix'
-import type { PurposeInput, SetFundingGoalParams, SetFundingGoalResult } from '@/lib/agent/tools/goal'
-import { materialisePreExistingRow, type PreExistingRow } from '@/lib/agent/tools/goal'
+import { setFundingGoal, materialisePreExistingRow, type PreExistingRow, type PurposeInput, type SetFundingGoalParams, type SetFundingGoalResult } from '@/lib/agent/tools/goal'
 import { getOrCreateActiveThread } from '@/lib/agent/orchestrator/threads'
 
 async function requireCtx() {
