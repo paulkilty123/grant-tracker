@@ -25,11 +25,11 @@ async function main() {
 
   for (const t of TARGETS) {
     // best-scoring catalogue row for this funder
-    const rows = catalogue.filter(g => String((g as Record<string, unknown>).funder).toLowerCase().includes(t.toLowerCase()))
+    const rows = catalogue.filter(g => String((g as unknown as Record<string, unknown>).funder).toLowerCase().includes(t.toLowerCase()))
     if (!rows.length) { console.log(`── ${t}: no catalogue row\n`); continue }
     const best = rows.map(g => ({ g, r: computeMatchScore(g, org!) })).sort((a, b) => b.r.score - a.r.score)[0]
-    const g = best.g as Record<string, unknown>
-    const b = best.r.breakdown
+    const g = best.g as unknown as Record<string, unknown>
+    const b = best.r.breakdown as unknown as Record<string, { score: number; max: number }>
     console.log(`── ${g.funder}  —  ${String(g.title).slice(0, 44)}`)
     console.log(`   TOTAL ${best.r.score}   loc ${b.location.score}/${b.location.max} · themes ${b.themes.score}/${b.themes.max} · benef ${b.beneficiaries.score}/${b.beneficiaries.max} · size ${b.grantSize.score}/${b.grantSize.max} · funderType ${b.funderType.score}/${b.funderType.max} · elig ${b.eligibility.score}/${b.eligibility.max}`)
     console.log(`   tags: sectors ${JSON.stringify(g.impactSectors ?? g.sectors ?? [])} | beneficiaries ${JSON.stringify(g.targetBeneficiaries ?? g.beneficiaryGroups ?? [])} | locationTag ${JSON.stringify(g.locationTag)} | funderType ${g.funderType} | amount ${g.amountMin}-${g.amountMax}`)

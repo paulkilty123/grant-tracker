@@ -200,6 +200,53 @@ BBC Children in Need shows the identical pattern (themes 4/35).
 | F5 | De-dup surfaced set by funder | Low | Collapse to one grant per funder in moves | Low |
 | F2 | Programme buffer under-disclosed | Low | Quantify the 10% sliver in the first mix breakdown | Low |
 
+## 7. Post-run empirical results (F-list execution, 9 Jul)
+
+### F7 re-tagging proven null → F8 is the unified lever
+Applying accurate, brief-grounded corrections to the named near-misses (Barbara Ward +`young_people`,
+BBC Children in Need +`young_people`; durable admin+pinned provenance) moved recall by **zero**
+(12/5/13/2 unchanged) and did **not** drop the Jerwood false-positive. That is the finding: the
+near-misses are genuine **beneficiary-not-theme** matches, and Jerwood is a coarse-**theme** over-reach
+— **both** caused by themes being over-weighted (35/100) and coarse. **Re-tagging cannot fix either
+without misrepresenting funders.** On inspection only 2 of the 6 named funders had genuine sector
+mis-tags; the rest (DCR Allen, Garfield Weston, Clothworkers, Baring) were already correctly tagged or
+*accurately* partial. **F7 (re-tagging) is not the recall lever; F8 (weighting) is — now proven, not
+asserted.** Jerwood's beneficiary was corrected to `general_public` anyway (it funds artists) — accuracy
+over recall.
+
+### F7 systematic pass — sized
+**89 of 643 active grants (14%)** are under-tagged (5 zero-sector, 84 single-sector) — a *different*
+population from the IoI near-misses (which had 2–4 sectors). Worth doing for broad recall; it will not
+move a Devi-style benchmark.
+
+### F8 — scoring-variant harness + result
+`scripts/agent-eval/scoring-harness.ts`: **one benchmark, many candidate scorers.** A variant is a
+`MatchWeights` config passed to the **real** `computeMatchScore` (caps/freshness/IDF all apply —
+faithful, not an approximation), ranked through the same cash-first ordering. Metrics **both
+directions** (recall@40 + top-10 retention + winner-surfaced) and an **overfitting guard** on CGK + ACC
+(top candidates stay sensible; no non-cash / size-mismatch resurgence). `computeMatchScore` gained an
+optional `weights?` param; **`DEFAULT_MATCH_WEIGHTS` = current values, so production is byte-identical.**
+
+Weight sweep (themes vs beneficiaries):
+
+| variant | recall@40 | top-10 | winner rank | guard |
+|---|---|---|---|---|
+| baseline t35/b20 | 11/28 | 5 | #11 | reference |
+| **t25/b30** | **13/28** | **6** | **#9** | holds |
+| t20/b35 | 12/28 | 4 | #7 | ACC drifts |
+
+**`t25/b30` (themes 35→25, beneficiaries 20→30) lifts *both* directions** — recall +2, top-10 +1,
+winner *into* the top 10 — while CGK/ACC hold. Over-shifting (t20/b35) breaks precision. **PROVISIONAL
+pending benchmark #2:** n=1 is the risk, so the winning weights are **not** shipped —
+`DEFAULT_MATCH_WEIGHTS` is unchanged. **Jack's onboarding is benchmark #2 waiting** — his real pipeline
+vs the adviser's plan, same protocol; confirm t25/b30 there before touching production weights.
+
+### F6 amount audit
+Two clear sub-£100-minimum artefacts fixed to undisclosed (**British Film Institute £1**, **South
+Lanarkshire Council £75**; durable admin+pinned). The ratio heuristic over-flags — genuinely wide public
+funders (National Lottery, UK Sport, Screen Scotland) left untouched; the £250–£500-minimum batch logged
+for per-row judgment in normal verification. No bulk edits.
+
 ## What went right (lock in as regression cases)
 
 - Confirm-vs-written integrity + correct date grounding.

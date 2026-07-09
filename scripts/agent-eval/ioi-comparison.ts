@@ -37,7 +37,7 @@ async function main() {
   if (!goal || !org) throw new Error('test IoI missing goal/org')
   const [orgFacts, catalogue] = await Promise.all([repo.getOrgFacts(TEST_IOI), repo.getActiveCatalogue()])
   const pack = assembleBriefingPack({ org, goal, pipeline, orgFacts, catalogue, asOf: new Date().toISOString().slice(0, 10), userTurn: null })
-  const cands = pack.candidates as Array<Record<string, unknown>>
+  const cands = pack.candidates as unknown as Array<Record<string, unknown>>
 
   // ── ground truth: Devi's real pipeline
   const { data: srcRows } = await sb.from('organisations').select('id, name').ilike('name', '%institute of imagination%')
@@ -47,7 +47,7 @@ async function main() {
   const devs = (pipeRows ?? []) as Array<{ grant_name: string; funder_name: string | null; stage: string; amount_requested: number | null }>
 
   // ── whole-catalogue funder set (coverage: does the catalogue even hold Devi's funders?)
-  const catFunders = Array.from(new Set(catalogue.map(g => (g as Record<string, unknown>).funder as string).filter(Boolean)))
+  const catFunders = Array.from(new Set(catalogue.map(g => (g as unknown as Record<string, unknown>).funder as string).filter(Boolean)))
 
   console.log(`ADVISER candidate set (IoI pack): ${cands.length} ranked, eligibility-checked`)
   console.log(`GROUND TRUTH (Devi's pipeline): ${devs.length} items`)

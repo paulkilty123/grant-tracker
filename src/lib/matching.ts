@@ -576,11 +576,22 @@ export interface FeedbackSignals {
   sectorPenalties: Map<string, number>
 }
 
+/** Per-dimension weights (max points). Parameterised so the scoring-variant
+ *  harness can sweep them against a ground-truth pipeline WITHOUT touching
+ *  production, which passes nothing and gets DEFAULT_MATCH_WEIGHTS. Do not
+ *  change these defaults without an eval-backed decision (see the F8 harness). */
+export interface MatchWeights {
+  location: number; themesGrant: number; beneficiaryGrant: number; funderType: number; eligibility: number
+}
+export const DEFAULT_MATCH_WEIGHTS: MatchWeights = { location: 15, themesGrant: 35, beneficiaryGrant: 20, funderType: 8, eligibility: 12 }
+
 export function computeMatchScore(
   grant: GrantOpportunity,
   org: Organisation,
   feedback?: FeedbackSignals,
+  weights?: MatchWeights,
 ): MatchResult {
+  const W = weights ?? DEFAULT_MATCH_WEIGHTS
   const reasons: string[] = []
 
   // Full grant text used for keyword matching (includes funderBrief when available)
@@ -1460,14 +1471,16 @@ export function computeMatchScore(
                         || grant.fundingType === 'investment'
                         || grant.fundingType === 'programme'
 
-  const themesMax       = isOrgCentredType ? 50 : 35
-  const beneficiaryMax  = isOrgCentredType ?  5 : 20
+  // org-centred types route 15 beneficiary points to themes (see comment above);
+  // parameterised so a weight variant shifts the grant-type split too.
+  const themesMax       = isOrgCentredType ? W.themesGrant + 15 : W.themesGrant
+  const beneficiaryMax  = isOrgCentredType ? Math.max(0, W.beneficiaryGrant - 15) : W.beneficiaryGrant
 
-  const wLocation     = Math.round(locationScore     * 15 / 20)
+  const wLocation     = Math.round(locationScore     * W.location / 20)
   const wThemes       = Math.round(themesScore       * themesMax / 25)
   const wBeneficiary  = Math.round(beneficiaryScore  * beneficiaryMax / 10)
-  const wFunderType   = Math.round(funderTypeScore   *  8 / 15)
-  const wEligibility  = Math.round(eligibilityScore  * 12 / 15)
+  const wFunderType   = Math.round(funderTypeScore   * W.funderType / 15)
+  const wEligibility  = Math.round(eligibilityScore  * W.eligibility / 15)
 
   let score = Math.min(100,
     wLocation + wThemes + wBeneficiary + grantSizeScore + wFunderType + wEligibility
@@ -1694,12 +1707,12 @@ export function computeMatchScore(
     warnReasons:     warns,
     eligibilityIssues: branchedVerdict.issues,
     breakdown: {
-      location:      { score: wLocation,     max: 15,             label: 'Location' },
+      location:      { score: wLocation,     max: W.location,     label: 'Location' },
       themes:        { score: wThemes,       max: themesMax,      label: 'Themes & work' },
       beneficiaries: { score: wBeneficiary,  max: beneficiaryMax, label: 'Beneficiaries' },
       grantSize:     { score: grantSizeScore, max: 10,            label: 'Grant size' },
-      funderType:    { score: wFunderType,   max: 8,              label: 'Funder type' },
-      eligibility:   { score: wEligibility,  max: 12,             label: 'Eligibility' },
+      funderType:    { score: wFunderType,   max: W.funderType,   label: 'Funder type' },
+      eligibility:   { score: wEligibility,  max: W.eligibility,  label: 'Eligibility' },
     },
   }
 }

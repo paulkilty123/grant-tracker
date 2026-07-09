@@ -42,7 +42,7 @@ async function main() {
   const sizeBad = (min: number | null | undefined) => !min ? false : (gapRemaining > 0 && min > gapRemaining) || (!!incomeMid && min > incomeMid * 0.5)
 
   const ranked = catalogue.map(g => {
-    const gg = g as Record<string, unknown>
+    const gg = g as unknown as Record<string, unknown>
     return { funder: String(gg.funder), title: String(gg.title), type: String(gg.fundingType), amountMin: gg.amountMin as number | null, score: computeMatchScore(g, org).score }
   }).sort((a, b) => {
     const ga = gapApp(a.type), gb = gapApp(b.type); if (ga !== gb) return ga ? -1 : 1
