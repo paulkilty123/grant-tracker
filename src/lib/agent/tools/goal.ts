@@ -16,7 +16,7 @@ import { serviceClient } from './db'
 import { getGoal, getActiveGoalId, getPurposes, type PurposeRow } from './repository'
 import { emitEvent } from '../../events/emit'
 import { defineTool } from './envelope'
-import { prov, type Provenance } from './types'
+import { prov, SetupSurfaceError, type Provenance } from './types'
 import type { GoalInput } from '../types'
 
 export const PURPOSE_CATEGORIES = ['core', 'programme', 'staffing', 'capital', 'capacity', 'working_capital', 'match_funding', 'other'] as const
@@ -70,6 +70,10 @@ export interface SetFundingGoalResult {
   goal: GoalInput
   superseded_prior: boolean
   purposes: PurposeRow[]
+  /** Non-null when the active purposes (fresh or re-parented from a prior
+   *  goal) do not reconcile with target_amount — surface this plainly per
+   *  CONTRACT.inconsistencyHonesty, never proceed as if they match. */
+  purposes_reconciliation_warning: string | null
 }
 
 // Off-pipeline secured income enters as a WON PIPELINE ITEM with a source
@@ -92,6 +96,17 @@ async function materialiseOffPipelineSecured(orgId: string, userId: string | nul
 export const setFundingGoal = defineTool<SetFundingGoalParams, SetFundingGoalResult>({
   name: 'set_funding_goal',
   handler: async (ctx, p) => {
+    // Structural (not prose) block on first-run setup over MCP. The live
+    // steering test (10 Jul) showed description-only steering doesn't hold:
+    // the model wrote a goal straight from unquantified purposes on MCP — no
+    // amounts question, no recommend_mix, no confirm turn. Adjustments to an
+    // EXISTING goal are unaffected; this only blocks creating the first one.
+    if (ctx.surface === 'mcp' && !(await getActiveGoalId(ctx.orgId))) {
+      throw new SetupSurfaceError(
+        'Initial goal setup works best in the Grant Tracker app, which walks through it one question at a time — direct the user to sign in at granttracker.co.uk and set up their funding goal there. Once a goal exists, this tool and the full adviser work fully here.'
+      )
+    }
+
     // Minimal, defensible validation — the authorship guard already rejects
     // prose/content-shaped fields; here we guard the numeric/date invariants the
     // arithmetic depends on.
@@ -168,11 +183,26 @@ export const setFundingGoal = defineTool<SetFundingGoalParams, SetFundingGoalRes
 
     const [freshGoal, purposes] = await Promise.all([getGoal(ctx.orgId), getPurposes(ctx.orgId)])
     if (!freshGoal) throw new Error('set_funding_goal: goal write verified read-back failed')
+
+    // Purposes can be re-parented from the prior goal (carried forward, above)
+    // rather than restated — nothing previously checked the carried amounts
+    // still make sense against a NEW target_amount. Repro'd live 10 Jul: £400k
+    // of purposes survived a replacement onto a £300k goal. Flag rather than
+    // let a materially mismatched carry-forward pass silently, whether the
+    // purposes were just re-parented or restated fresh but don't add up.
+    const purposesTotal = purposes.reduce((sum, pu) => sum + (pu.approx_amount ?? 0), 0)
+    const purposesHaveAmounts = purposes.some(pu => typeof pu.approx_amount === 'number' && pu.approx_amount > 0)
+    const purposesReconciliationWarning =
+      purposesHaveAmounts && Math.abs(purposesTotal - freshGoal.target_amount) > freshGoal.target_amount * 0.1
+        ? `The active purposes total £${purposesTotal.toLocaleString('en-GB')}, which does not reconcile with the new target of £${freshGoal.target_amount.toLocaleString('en-GB')}${p.purposes?.length ? '' : ' (carried forward from the prior goal)'} — say so plainly and ask whether the purposes need updating, never proceed as if they already match.`
+        : null
+
     return {
       id: goalId,
       superseded_prior: (superseded ?? []).length > 0,
       goal: freshGoal, // secured_amount here is the DERIVED figure
       purposes,
+      purposes_reconciliation_warning: purposesReconciliationWarning,
     }
   },
   logEvent: async (ctx, _p, r) => {

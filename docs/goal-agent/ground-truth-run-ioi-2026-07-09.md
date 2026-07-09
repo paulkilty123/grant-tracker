@@ -247,10 +247,92 @@ Lanarkshire Council £75**; durable admin+pinned). The ratio heuristic over-flag
 funders (National Lottery, UK Sport, Screen Scotland) left untouched; the £250–£500-minimum batch logged
 for per-row judgment in normal verification. No bulk edits.
 
+## 8. MCP live steering test (10 Jul) — F1 fails on MCP, two real fixes shipped
+
+Ahead of Jack's onboarding, the MCP promotion (`agent/v1-core` → `main`, purposes-based goals +
+`recommend_mix` + `update_goal_purposes` + whoami/date-grounding) was verified with a scripted repeat
+of the IoI mix failure, run from a fresh Claude chat against the promoted prod endpoint: the F1
+amounts-first probe, confirm-before-write, mix-component disclosure, and a draft-refusal probe.
+
+### Result: F1 fails on MCP — description-only steering doesn't hold
+
+The model wrote the goal immediately from unquantified purposes: no amounts question, no
+`recommend_mix` call, no confirm turn. Same failure class as the original IoI mix bug (inventing
+proportions instead of asking), reproduced through a *different* mechanism: MCP has no orchestrator
+system prompt to carry the in-app FIRST-RUN SETUP discipline (one question per turn, no premature mix,
+confirm-before-write) — only the tool descriptions in `TOOL_REGISTRY` steer an external client, and
+prose steering alone did not hold for setup procedure, even though it held for other rules (see below).
+**Values in a description are followed; process needs enforcing in code.**
+
+### Fix 1 — structural setup gate, not prose
+
+`set_funding_goal` now refuses to write a **first** goal (`ctx.surface === 'mcp'` and no active goal
+exists) — `SetupSurfaceError`, mapped to a `setup_requires_app` MCP error directing the user to sign in
+at granttracker.co.uk. Adjustments to an *existing* goal are unaffected — MCP remains the full adviser
+for everything post-setup, per the fallback already agreed. `set_funding_goal` and `recommend_mix`
+descriptions also gained a directing line, phrased surface-agnostically (`TOOL_REGISTRY` descriptions
+are shared verbatim with the in-app orchestrator — see `orchestrator/dispatch.ts` — so an "on MCP…"
+conditional would ask the in-app model to reason about a surface it isn't on; the new wording states the
+mechanism as a fact instead: writing a first goal "over an external MCP connection" is refused).
+
+### Fix 2 — purposes re-parenting bug (cross-surface, not MCP-specific)
+
+Separately, and more seriously: a goal replacement that omits `purposes` **re-parents** the prior
+goal's purposes onto the new goal row (by design, so pipeline `purpose_id` references survive an
+adjustment) — but nothing checked whether the carried-forward amounts still made sense against the
+**new** `target_amount`. Reproduced live: **£400,000 of purposes survived a replacement onto a
+£300,000 goal**, with stale labels, and the model treated them as current. `set_funding_goal` now
+computes `purposes_reconciliation_warning` on every write (fresh or carried-forward) — non-null when the
+active purposes don't sum to within 10% of the target — and the description instructs the model to
+surface it plainly rather than proceed as if it matches (`CONTRACT.inconsistencyHonesty`). Covered by 5
+new `schema-smoke.ts` cases: the natural carry-forward mismatch is flagged, a fresh reconciling set
+is not, and the MCP setup gate is proven both ways (blocked with no goal, allowed once one exists).
+
+### The win, logged
+
+`connected_org` and `as_of` (this session's whoami + date-grounding build) both surfaced correctly on
+the failing path. More importantly: **the model's own post-hoc inconsistency-flagging held** — it
+caught the £400k-on-£300k mismatch itself, unprompted, even though nothing forced it to. Procedure
+(amounts-first, confirm-turn) needed code; honesty (say when something doesn't add up) held on prose
+alone. The `inconsistencyHonesty` contract rule is surface-independent even where setup procedure isn't
+— worth noting as a distinct finding, not folded into the failure.
+
+### Outcome
+
+MCP stays the full adviser for everything past initial setup. Initial goal setup is structurally
+steered to the in-app guided flow, which already proved out at 9/9 in the conversational eval suite
+(CV-09 specifically polices this discipline). IoI's test-org state (the superseded £400k goal, the
+£300k goal, its stale purposes, and the test conversation thread) was reset to profile-only baseline
+via `reset-test-org.ts` immediately after — ready for whatever Jack-prep work needs next.
+
+### A caution on tool-description steering, and one flaky case found along the way
+
+Shipping this pre-merge regression pass wasn't clean the first time: the first attempt at the
+`set_funding_goal`/`recommend_mix` directing line broke CV-02, CV-07, and CV-09 — the model narrated a
+fictional "check" and wrote a goal before asking about purposes, and separately over-generalised
+`recommend_mix`'s MCP-only redirect into refusing to quote an exploratory in-app mix. Both tools share
+one canonical description with the in-app orchestrator (`dispatch.ts`: "the in-app model and a future
+external MCP client are steered identically") — an opening sentence that reframes what the tool does,
+or a premise stated before its surface qualifier, reliably bled into in-app behaviour even when the
+literal words said "on MCP." Fix: keep the original opening sentence completely intact, state any
+surface-specific behaviour as a fact late in the string ("over an external MCP connection
+specifically... this does not apply to the in-app conversation"), and — for `recommend_mix` — drop the
+addition entirely once it was clear the harmless, read-only tool didn't need it: `set_funding_goal`'s
+structural refusal alone fully blocks the harmful outcome (a bad write) regardless of whether
+`recommend_mix` gets called speculatively first.
+
+Chasing CV-07's continued failures after the `recommend_mix` revert surfaced a separate, useful fact:
+CV-07 has a real **~45-50% baseline pass rate**, confirmed by running it 11 times across both the fixed
+and the fully-reverted (pre-fix) description text — same rate either way. It predates today's work
+entirely; the single sample validated yesterday (9/9) was luck, not a clean pass. Logged as a follow-on
+(the model sometimes invents an unnecessary staffing clarifying question before calling `recommend_mix`
+even when no purpose category needs refinement), not a blocker for this merge.
+
 ## What went right (lock in as regression cases)
 
 - Confirm-vs-written integrity + correct date grounding.
-- Inconsistency-honesty and deference in the mix debate.
+- Inconsistency-honesty and deference in the mix debate — confirmed surface-independent by §8: held on
+  the description-only MCP path even where setup procedure didn't.
 - Top-of-list precision validated against a human expert, winner included.
 - Coordinator reallocation respecting org reality over the default rule.
 

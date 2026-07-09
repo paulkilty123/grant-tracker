@@ -50,7 +50,7 @@ import {
   addToPipeline, updatePipelineItem, getPlanState, getBriefing,
   assessOpportunityAgainstPlan, getFundingGoal, setFundingGoal,
   recommendMix, updateGoalPurposes, PURPOSE_CATEGORIES,
-  TOOL_REGISTRY, EntitlementError, AuthorshipError, type ToolContext,
+  TOOL_REGISTRY, EntitlementError, AuthorshipError, SetupSurfaceError, type ToolContext,
 } from '@/lib/agent/tools'
 
 export const dynamic = 'force-dynamic'
@@ -225,6 +225,7 @@ async function runCompanion(
   } catch (e) {
     if (e instanceof EntitlementError) return companionError('forbidden', 'This tool is not available on your plan.')
     if (e instanceof AuthorshipError) return companionError('invalid_parameter', 'This tool helps with structure only; it does not accept application content.')
+    if (e instanceof SetupSurfaceError) return companionError('setup_requires_app', e.message)
     console.error('[mcp] companion tool failed:', e)
     return companionError('internal_error', 'Something went wrong. Please retry; if it persists, contact hello@granttracker.co.uk.')
   }

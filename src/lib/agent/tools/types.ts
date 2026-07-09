@@ -45,3 +45,10 @@ export class EntitlementError extends Error {
 export class AuthorshipError extends Error {
   constructor(message: string) { super(message); this.name = 'AuthorshipError' }
 }
+/** Structural (not prose) block on first-run goal setup over MCP — the live
+ *  steering test (10 Jul) showed description-only steering doesn't hold for
+ *  setup discipline on an external client. Thrown only when surface is 'mcp'
+ *  and no goal exists yet; adjustments to an existing goal are unaffected. */
+export class SetupSurfaceError extends Error {
+  constructor(message: string) { super(message); this.name = 'SetupSurfaceError' }
+}
