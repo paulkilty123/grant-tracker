@@ -173,7 +173,10 @@ function renderPack(pack: BriefingPack): string {
   lines.push(`AS OF: ${pack.as_of}`)
   lines.push(`ORG: ${org.name ?? 'org'} | structure ${org.legal_structure ?? '?'} | income ${org.annual_income_band ?? '?'} | location ${org.primary_location ?? '?'} | sectors ${(org.impact_sectors as string[] ?? []).join(', ')}`)
   lines.push(`GOAL: ${pack.goal.title} — target ${fmtGbp(pack.goal.target_amount)}, secured ${fmtGbp(pack.goal.secured_amount)}`)
-  if (pack.goal.constraints?.length) lines.push(`GOAL CONSTRAINTS: ${pack.goal.constraints.map(c => c.text).join(' | ')}`)
+  const exclusionConstraints = pack.goal.constraints?.filter(c => c.kind !== 'context') ?? []
+  const contextConstraints = pack.goal.constraints?.filter(c => c.kind === 'context') ?? []
+  if (exclusionConstraints.length) lines.push(`GOAL CONSTRAINTS (what the org will not take money for): ${exclusionConstraints.map(c => c.text).join(' | ')}`)
+  if (contextConstraints.length) lines.push(`ADDITIONAL CONTEXT FROM THE USER: ${contextConstraints.map(c => c.text).join(' | ')}`)
   lines.push('')
   lines.push('ARITHMETIC (use these figures verbatim; do not compute your own):')
   lines.push(`  gap ${fmtGbp(a.gap)} | in-pipeline weighted ${fmtGbp(a.inPipelineWeighted)} | unweighted ${fmtGbp(a.inPipelineUnweighted)}`)

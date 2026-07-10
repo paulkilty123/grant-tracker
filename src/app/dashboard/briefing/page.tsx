@@ -81,6 +81,7 @@ export default async function BriefingPage() {
         pipeline={pipeline.data}
         displayName={displayName}
         since={since}
+        guidanceStale={briefing.data.guidance_stale}
       />
       <BriefingSeen />
       <GuidanceRefresher stale={briefing.data.guidance_stale} />

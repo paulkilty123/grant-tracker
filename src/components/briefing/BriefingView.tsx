@@ -90,12 +90,22 @@ function ActionButton({ action, primary }: { action: Move['action']; primary?: b
 
 // ── main view ────────────────────────────────────────────────────────────────
 
-export default function BriefingView({ briefing, plan, pipeline, displayName, since = null }: {
+// A shimmer placeholder bar — used only while guidance is being authored for
+// the first time (or re-authored after a material plan change), so the page
+// never shows the deterministic layer's content and then swaps it for the
+// authored one a few seconds later (found live: visible as a "half-populated
+// then pops" flash on first load).
+function ShimmerBar({ width = '100%', height = 12 }: { width?: string; height?: number }) {
+  return <div className="rounded animate-pulse" style={{ width, height, background: COLOR.hair }} />
+}
+
+export default function BriefingView({ briefing, plan, pipeline, displayName, since = null, guidanceStale = false }: {
   briefing: BriefingPayload
   plan: PlanStatePayload
   pipeline: GetPipelinePayload
   displayName: string
   since?: string | null
+  guidanceStale?: boolean
 }) {
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
@@ -161,6 +171,11 @@ export default function BriefingView({ briefing, plan, pipeline, displayName, si
   // ── authored guidance → one ordered, tagged move list (v3) ───────────────────
   type RM = { key: string; title: string; reason: string; action: Move['action']; secondary?: Move['action']; candidate: FitCard | null; tag: { char: string; label: string } | null }
   const guided = briefing.guidance && briefing.guidance.agenda.length > 0 ? briefing.guidance : null
+  // Stale AND nothing cached yet: a real generation is in flight (Guidance-
+  // Refresher fires it and soft-refreshes the route once it lands). Show a
+  // loading state instead of the deterministic layer, so nothing renders and
+  // then gets silently replaced.
+  const awaitingGuidance = guidanceStale && !guided
   const renderMoves: RM[] = (guided
     ? [
         ...moves.filter(m => m.kind === 'deadline_pressure').map((m, i): RM => ({ key: `dl-${i}`, title: m.headline, reason: m.sentence, action: m.action, secondary: m.secondary, candidate: null, tag: null })),
@@ -284,12 +299,37 @@ export default function BriefingView({ briefing, plan, pipeline, displayName, si
       </div>
       <p className="mt-2 text-[14px] leading-relaxed" style={{ color: COLOR.ink }}>{guided.my_read}</p>
     </div>
+  ) : awaitingGuidance ? (
+    <div className="mt-8">
+      <div className="flex items-center gap-2">
+        <CompanionMark size={32} />
+        <SectionLabel>My read</SectionLabel>
+      </div>
+      <p className="mt-2 text-[12.5px]" style={{ color: COLOR.faint }}>Your adviser is reading your plan…</p>
+      <div className="mt-2 space-y-1.5">
+        <ShimmerBar width="95%" />
+        <ShimmerBar width="88%" />
+        <ShimmerBar width="55%" />
+      </div>
+    </div>
   ) : null
 
   const movesSection = (
     <div className="mt-8">
       <SectionLabel>Recommended moves · in order</SectionLabel>
-      {renderMoves.length === 0 ? (
+      {awaitingGuidance ? (
+        <div className="mt-3 space-y-3">
+          {[0, 1, 2].map(i => (
+            <div key={i} className="bg-white rounded-xl p-4 flex gap-3" style={{ border: `1px solid ${COLOR.hair}` }}>
+              <span className="shrink-0 rounded-full animate-pulse" style={{ width: 24, height: 24, background: COLOR.hair }} />
+              <div className="flex-1 min-w-0 space-y-2 py-0.5">
+                <ShimmerBar width="45%" height={13} />
+                <ShimmerBar width="80%" height={11} />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : renderMoves.length === 0 ? (
         <div className="bg-white rounded-xl p-4 mt-3 text-[13px]" style={{ border: `1px solid ${COLOR.hair}`, color: COLOR.mid }}>
           Nothing new moves your goal today. An honest quiet day beats noise.
         </div>
@@ -376,7 +416,7 @@ export default function BriefingView({ briefing, plan, pipeline, displayName, si
             {sinceSection}
           </div>
           <div className="sticky top-6 mt-6">
-            <AdviserRail myRead={guided ? guided.my_read : null} suggestions={askChips} examplePrompt={askExample} />
+            <AdviserRail myRead={guided ? guided.my_read : null} awaitingRead={awaitingGuidance} suggestions={askChips} examplePrompt={askExample} />
           </div>
         </div>
       </div>

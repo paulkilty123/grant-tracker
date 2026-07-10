@@ -15,12 +15,12 @@
 // thread as a real user/assistant exchange (see actions.ts) so the model
 // sees it on the next turn rather than the user repeating themselves.
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import SetupExperience, { type OrgSummary } from './SetupExperience'
 import DurationDatePicker from './DurationDatePicker'
 import { recommendMixAction, setFundingGoalAction, addPreExistingRowAction, seedFreeformContextAction } from '@/app/dashboard/briefing/actions'
-import type { RecommendMixPayload } from '@/lib/agent/tools/mix'
+import type { RecommendMixPayload, MixComponent } from '@/lib/agent/tools/mix'
 import type { PurposeInput, PurposeCategory } from '@/lib/agent/tools/goal'
 import { COLOR, grotesk, gbp, fmtDate, mixColor, cap, CompanionMark, SectionLabel } from './ui'
 
@@ -29,6 +29,10 @@ const STEP_ORDER: StepKey[] = ['target', 'purposes', 'inmotion', 'recommend']
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10)
+}
+
+function newId(): string {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 }
 
 function parseAmount(raw: string): number | null {
@@ -48,18 +52,25 @@ const CATEGORY_CHIPS: CategoryChipDef[] = [
   { key: 'other', label: 'Something else', placeholder: 'What is it?' },
 ]
 
-interface PurposeDraft { label: string; amount: string; refinement: string | null }
+// A purpose ROW, not a per-category slot — every category supports any number
+// of rows (a real org has several programmes), so a chip click always adds a
+// new row rather than toggling a single one on/off.
+interface PurposeRowEntry { id: string; category: PurposeCategory; label: string; amount: string; refinement: string | null }
 
-const STAFFING_REFINEMENTS = [
-  { value: 'delivery post', label: 'Delivery post' },
-  { value: 'organisational', label: 'Organisational post' },
-  { value: 'a bit of both', label: 'A bit of both' },
+const STAFFING_OPTIONS = [
+  { value: 'delivery post', label: 'Delivering programmes' },
+  { value: 'organisational', label: 'Running the organisation' },
+  { value: 'a bit of both', label: 'A mix of both' },
 ]
-const CAPACITY_REFINEMENTS = [
+const CAPACITY_OPTIONS = [
   { value: 'finance', label: 'Finance' },
   { value: 'digital', label: 'Digital' },
   { value: 'governance', label: 'Governance' },
   { value: 'fundraising', label: 'Fundraising' },
+  { value: 'hr', label: 'HR and people' },
+  { value: 'marketing', label: 'Marketing and communications' },
+  { value: 'operations', label: 'Operations' },
+  { value: 'evaluation', label: 'Evaluation and impact' },
 ]
 
 const OPPORTUNITY_LABELS: Record<string, string> = { programme: 'programmes', in_kind: 'in-kind support', investment: 'investment' }
@@ -119,37 +130,45 @@ function PrimaryButton({ children, onClick, disabled, busy }: { children: React.
   return (
     <button type="button" onClick={onClick} disabled={disabled || busy}
       className="text-sm font-semibold px-5 py-2.5 rounded-lg disabled:opacity-50"
-      style={{ ...grotesk, background: COLOR.lime, color: COLOR.forest, border: 'none', cursor: disabled ? 'not-allowed' : 'pointer' }}>
+      style={{ ...grotesk, background: COLOR.lime, color: COLOR.forest, border: 'none', cursor: (disabled || busy) ? 'not-allowed' : 'pointer' }}>
       {busy ? 'One moment…' : children}
     </button>
   )
 }
 
-function GhostButton({ children, onClick }: { children: React.ReactNode; onClick: () => void }) {
+function GhostButton({ children, onClick, disabled }: { children: React.ReactNode; onClick: () => void; disabled?: boolean }) {
   return (
-    <button type="button" onClick={onClick}
-      className="text-sm font-medium px-4 py-2.5 rounded-lg"
-      style={{ ...grotesk, background: '#fff', color: COLOR.ink, border: `1px solid ${COLOR.ink}` }}>
+    <button type="button" onClick={onClick} disabled={disabled}
+      className="text-sm font-medium px-4 py-2.5 rounded-lg disabled:opacity-50"
+      style={{ ...grotesk, background: '#fff', color: COLOR.ink, border: `1px solid ${COLOR.ink}`, cursor: disabled ? 'not-allowed' : 'pointer' }}>
       {children}
     </button>
+  )
+}
+
+/** A card in the assembling panel — briefing/plan card grammar (white, hair
+ *  border, rounded-xl) rather than one flat beige block. */
+function PanelCard({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="bg-white rounded-xl p-3.5" style={{ border: `1px solid ${COLOR.hair}` }}>
+      {children}
+    </div>
   )
 }
 
 function buildSoFarSummary(opts: {
   targetAmount: string
   endDate: string | null
-  selected: PurposeCategory[]
-  rows: Record<string, PurposeDraft>
+  purposeRows: PurposeRowEntry[]
   inMotion: InMotionDraft[]
 }): string {
   const lines: string[] = []
   const target = parseAmount(opts.targetAmount)
   if (target && opts.endDate) lines.push(`- Target: ${gbp(target)} by ${fmtDate(opts.endDate)}`)
   else if (target) lines.push(`- Target amount: ${gbp(target)} (no deadline set yet)`)
-  for (const cat of opts.selected) {
-    const row = opts.rows[cat]
-    const amt = row ? parseAmount(row.amount) : null
-    if (row?.label && amt) lines.push(`- ${row.label} (${cap(cat)}): about ${gbp(amt)}`)
+  for (const row of opts.purposeRows) {
+    const amt = parseAmount(row.amount)
+    if (row.label && amt) lines.push(`- ${row.label} (${cap(row.category)}): about ${gbp(amt)}`)
   }
   for (const row of opts.inMotion) {
     const amt = parseAmount(row.amount)
@@ -169,28 +188,41 @@ export default function SetupStepper({ org }: { org: OrgSummary }) {
   const [targetAmount, setTargetAmount] = useState('')
   const [endDate, setEndDate] = useState<string | null>(null)
 
-  // step 2 — purposes
-  const [selected, setSelected] = useState<PurposeCategory[]>([])
-  const [rows, setRows] = useState<Record<string, PurposeDraft>>({})
+  // step 2 — purposes (one row PER PURPOSE, not per category — a category can
+  // repeat any number of times)
+  const [purposeRows, setPurposeRows] = useState<PurposeRowEntry[]>([])
+  // free text, shared with the recommendation step — one field, editable from
+  // either place, not two separate asks (spec §4 B8: nothing a user wanted to
+  // say should get lost between the structured steps and the model).
+  const [contextText, setContextText] = useState('')
 
   // step 3 — already in motion
   const [inMotion, setInMotion] = useState<InMotionDraft[]>([])
+  const [submittingInMotion, setSubmittingInMotion] = useState(false)
+  // Row ids already written to the pipeline — visiting step 3 again (BackLink,
+  // then forward again) must never re-submit the same row. Found live: no
+  // guard here meant a slow click or a back-and-forth wrote the SAME grant 5
+  // times, inflating the unweighted pipeline figure app-wide (£600k for one
+  // £120k grant).
+  const [submittedInMotionIds, setSubmittedInMotionIds] = useState<Set<string>>(new Set())
 
   // step 4 — recommendation
   const [mix, setMix] = useState<RecommendMixPayload | null>(null)
   const [mixLoading, setMixLoading] = useState(false)
   const [skippedClarify, setSkippedClarify] = useState<Set<string>>(new Set())
+  const [clarifySelections, setClarifySelections] = useState<string[]>([]) // capacity multi-select working state
+  const [clarifyOtherText, setClarifyOtherText] = useState('')
+  const [staffingFreeTextMode, setStaffingFreeTextMode] = useState(false)
   const [whyOpen, setWhyOpen] = useState(false)
   const [constraintsText, setConstraintsText] = useState('')
+  const [editingIndex, setEditingIndex] = useState<number | null>(null)
+  const [editDraft, setEditDraft] = useState<{ label: string; amount: string }>({ label: '', amount: '' })
   const [confirming, setConfirming] = useState(false)
   const [confirmed, setConfirmed] = useState<{ warning: string | null } | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   function purposesInput(): PurposeInput[] {
-    return selected.map(cat => {
-      const row = rows[cat] ?? { label: '', amount: '', refinement: null }
-      return { category: cat, label: row.label.trim(), approx_amount: parseAmount(row.amount), refinement: row.refinement }
-    })
+    return purposeRows.map(r => ({ category: r.category, label: r.label.trim(), approx_amount: parseAmount(r.amount), refinement: r.refinement }))
   }
 
   async function refreshMix(purposes: PurposeInput[]) {
@@ -205,51 +237,102 @@ export default function SetupStepper({ org }: { org: OrgSummary }) {
     }
   }
 
-  function toggleCategory(cat: PurposeCategory) {
-    setSelected(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat])
-    setRows(prev => prev[cat] ? prev : { ...prev, [cat]: { label: '', amount: '', refinement: null } })
+  // A chip click always ADDS another row of that category — it never toggles
+  // a category off. Removing happens per-row (the × on that row).
+  function addPurposeRow(cat: PurposeCategory) {
+    setPurposeRows(prev => [...prev, { id: newId(), category: cat, label: '', amount: '', refinement: null }])
+  }
+  function updatePurposeRow(id: string, patch: Partial<PurposeRowEntry>) {
+    setPurposeRows(prev => prev.map(r => (r.id === id ? { ...r, ...patch } : r)))
+  }
+  function removePurposeRow(id: string) {
+    setPurposeRows(prev => prev.filter(r => r.id !== id))
   }
 
-  const targetValid = parseAmount(targetAmount) !== null && !!endDate
-  const purposesValid = selected.length > 0 && selected.every(cat => {
-    const row = rows[cat]
-    return !!row && row.label.trim().length > 0 && parseAmount(row.amount) !== null
-  })
+  const targetNum = parseAmount(targetAmount) ?? 0
+  const allocatedSum = purposeRows.reduce((s, r) => s + (parseAmount(r.amount) ?? 0), 0)
+  const unallocated = targetNum - allocatedSum
 
-  async function goToPurposesFromTarget() {
+  const targetValid = parseAmount(targetAmount) !== null && !!endDate
+  const purposesValid = purposeRows.length > 0 && purposeRows.every(r => r.label.trim().length > 0 && parseAmount(r.amount) !== null)
+
+  function goToPurposesFromTarget() {
     setStep('purposes')
   }
 
-  async function goToInMotionFromPurposes() {
+  function goToInMotionFromPurposes() {
     setStep('inmotion')
     void refreshMix(purposesInput()) // kicks off in the background (spec: "the moment step 2 completes")
   }
 
   async function goToRecommendFromInMotion() {
-    const valid = inMotion.filter(r => r.name.trim() && parseAmount(r.amount) !== null)
-    if (valid.length) {
-      await Promise.all(valid.map(r => addPreExistingRowAction({ name: r.name.trim(), amount: parseAmount(r.amount)!, status: r.status }).catch(() => null)))
+    if (submittingInMotion) return
+    setSubmittingInMotion(true)
+    setErrorMsg(null)
+    try {
+      const valid = inMotion.filter(r => !submittedInMotionIds.has(r.id) && r.name.trim() && parseAmount(r.amount) !== null)
+      if (valid.length) {
+        await Promise.all(valid.map(r => addPreExistingRowAction({ name: r.name.trim(), amount: parseAmount(r.amount)!, status: r.status })))
+        setSubmittedInMotionIds(prev => {
+          const next = new Set(prev)
+          valid.forEach(r => next.add(r.id))
+          return next
+        })
+      }
+      setStep('recommend')
+    } catch {
+      setErrorMsg("Couldn't save what's already in motion. Please try again.")
+    } finally {
+      setSubmittingInMotion(false)
     }
-    setStep('recommend')
   }
 
   function addInMotionRow() {
-    setInMotion(prev => [...prev, { id: `${Date.now()}-${prev.length}`, name: '', amount: '', status: 'expected' }])
+    setInMotion(prev => [...prev, { id: newId(), name: '', amount: '', status: 'expected' }])
   }
   function removeInMotionRow(id: string) {
     setInMotion(prev => prev.filter(r => r.id !== id))
   }
 
   const openClarify = mix?.components.find(c => c.clarify && !skippedClarify.has(c.category + '::' + c.label)) ?? null
+  const openClarifyKey = openClarify ? openClarify.category + '::' + openClarify.label : null
 
+  // Fresh working state for whichever clarify question is currently open —
+  // otherwise a capacity multi-select would carry over into the next question.
+  useEffect(() => {
+    setClarifySelections([])
+    setClarifyOtherText('')
+    setStaffingFreeTextMode(false)
+  }, [openClarifyKey])
+
+  function toggleClarifySelection(v: string) {
+    setClarifySelections(prev => (prev.includes(v) ? prev.filter(x => x !== v) : [...prev, v]))
+  }
+
+  // Matches a mix component back to its source row by category+label (labels
+  // are user-authored per row and expected to be distinct within a category).
   async function answerClarify(category: string, label: string, value: string) {
     const cat = category as PurposeCategory
-    setRows(prev => ({ ...prev, [cat]: { ...prev[cat], refinement: value } }))
-    const updated = purposesInput().map(p => (p.category === category && p.label === label) ? { ...p, refinement: value } : p)
+    setPurposeRows(prev => prev.map(r => (r.category === cat && r.label === label ? { ...r, refinement: value } : r)))
+    const updated = purposesInput().map(p => (p.category === category && p.label === label ? { ...p, refinement: value } : p))
     await refreshMix(updated)
   }
   function skipClarify(category: string, label: string) {
     setSkippedClarify(prev => new Set(prev).add(category + '::' + label))
+  }
+
+  function startEditComponent(i: number, c: MixComponent) {
+    setEditingIndex(i)
+    setEditDraft({ label: c.label, amount: c.approx_amount != null ? String(c.approx_amount) : '' })
+  }
+  async function saveEditComponent(c: MixComponent) {
+    const newLabel = editDraft.label.trim()
+    const newAmountStr = editDraft.amount
+    const newAmount = parseAmount(newAmountStr)
+    setPurposeRows(prev => prev.map(r => (r.category === c.category && r.label === c.label ? { ...r, label: newLabel, amount: newAmountStr } : r)))
+    const updated = purposesInput().map(p => (p.category === c.category && p.label === c.label ? { ...p, label: newLabel, approx_amount: newAmount } : p))
+    setEditingIndex(null)
+    await refreshMix(updated)
   }
 
   async function handleConfirm() {
@@ -258,6 +341,9 @@ export default function SetupStepper({ org }: { org: OrgSummary }) {
     setErrorMsg(null)
     try {
       const target = parseAmount(targetAmount)!
+      const constraints: Array<{ kind: string; text: string }> = []
+      if (constraintsText.trim()) constraints.push({ kind: 'user_stated', text: constraintsText.trim() })
+      if (contextText.trim()) constraints.push({ kind: 'context', text: contextText.trim() })
       const result = await setFundingGoalAction({
         title: `Raise ${gbp(target)} by ${fmtDate(endDate) ?? endDate}`,
         target_amount: target,
@@ -265,7 +351,7 @@ export default function SetupStepper({ org }: { org: OrgSummary }) {
         end_date: endDate!,
         mix_targets: (mix.recommended_mix as Record<string, number> | null) ?? null,
         purposes: purposesInput(),
-        constraints: constraintsText.trim() ? [{ kind: 'user_stated', text: constraintsText.trim() }] : undefined,
+        constraints: constraints.length ? constraints : undefined,
       })
       setConfirmed({ warning: result.purposes_reconciliation_warning })
     } catch {
@@ -276,7 +362,7 @@ export default function SetupStepper({ org }: { org: OrgSummary }) {
   }
 
   async function switchToFreeform() {
-    const summary = buildSoFarSummary({ targetAmount, endDate, selected, rows, inMotion })
+    const summary = buildSoFarSummary({ targetAmount, endDate, purposeRows, inMotion })
     void seedFreeformContextAction(summary).catch(() => null)
     setFreeform(true)
   }
@@ -326,37 +412,69 @@ export default function SetupStepper({ org }: { org: OrgSummary }) {
             <>
               <BackLink onClick={() => setStep('target')} />
               <h2 className="text-base font-semibold" style={{ ...grotesk, color: COLOR.ink }}>What is the money for?</h2>
-              <p className="text-xs mt-1" style={{ color: COLOR.faint }}>Pick everything that applies. Rough amounts are fine, you can refine later.</p>
+              <p className="text-xs mt-1" style={{ color: COLOR.faint }}>Add everything that applies — click a category again for another one. Rough amounts are fine, you can refine later.</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {CATEGORY_CHIPS.map(c => {
-                  const sel = selected.includes(c.key)
+                  const count = purposeRows.filter(r => r.category === c.key).length
                   return (
-                    <button key={c.key} type="button" onClick={() => toggleCategory(c.key)}
+                    <button key={c.key} type="button" onClick={() => addPurposeRow(c.key)}
                       className="text-sm px-3 py-1.5 rounded-lg"
-                      style={{ ...grotesk, border: sel ? `1.5px solid ${COLOR.sage}` : `1px solid ${COLOR.hair}`, background: sel ? COLOR.pale : '#fff', color: sel ? COLOR.sage : COLOR.ink }}>
-                      {c.label}
+                      style={{ ...grotesk, border: count > 0 ? `1.5px solid ${COLOR.sage}` : `1px solid ${COLOR.hair}`, background: count > 0 ? COLOR.pale : '#fff', color: count > 0 ? COLOR.sage : COLOR.ink }}>
+                      {c.label}{count > 0 ? ` (${count})` : ''}
                     </button>
                   )
                 })}
               </div>
-              <div className="mt-4 space-y-3">
-                {selected.map(cat => {
-                  const def = CATEGORY_CHIPS.find(c => c.key === cat)!
-                  const row = rows[cat] ?? { label: '', amount: '', refinement: null }
+
+              <div className="mt-4 space-y-4">
+                {CATEGORY_CHIPS.map(def => {
+                  const catRows = purposeRows.filter(r => r.category === def.key)
+                  if (catRows.length === 0) return null
                   return (
-                    <div key={cat} className="rounded-lg p-3" style={{ background: COLOR.cream }}>
+                    <div key={def.key}>
                       <div className="text-[11px] uppercase tracking-wide mb-1.5" style={{ color: COLOR.faint }}>{def.label}</div>
-                      <div className="grid grid-cols-[1fr_140px] gap-2">
-                        <input type="text" value={row.label} placeholder={def.placeholder}
-                          onChange={e => setRows(prev => ({ ...prev, [cat]: { ...row, label: e.target.value } }))}
-                          className="text-sm rounded-lg outline-none px-3"
-                          style={{ height: 38, border: `1px solid ${COLOR.hair}`, color: COLOR.ink }} />
-                        <PoundInput value={row.amount} onChange={v => setRows(prev => ({ ...prev, [cat]: { ...row, amount: v } }))} />
+                      <div className="space-y-2">
+                        {catRows.map(row => (
+                          <div key={row.id} className="rounded-lg p-3 grid gap-2" style={{ background: COLOR.cream, gridTemplateColumns: '1fr 140px 28px' }}>
+                            <input type="text" value={row.label} placeholder={def.placeholder}
+                              onChange={e => updatePurposeRow(row.id, { label: e.target.value })}
+                              className="text-sm rounded-lg outline-none px-3"
+                              style={{ height: 38, border: `1px solid ${COLOR.hair}`, color: COLOR.ink, background: '#fff' }} />
+                            <PoundInput value={row.amount} onChange={v => updatePurposeRow(row.id, { amount: v })} />
+                            <button type="button" onClick={() => removePurposeRow(row.id)}
+                              className="flex items-center justify-center rounded-md" style={{ width: 28, height: 28, background: '#fff', border: `1px solid ${COLOR.hair}`, color: COLOR.mid, cursor: 'pointer' }}>
+                              ×
+                            </button>
+                          </div>
+                        ))}
                       </div>
+                      <button type="button" onClick={() => addPurposeRow(def.key)}
+                        className="mt-1.5 text-xs underline" style={{ color: COLOR.sage, background: 'none', border: 'none', cursor: 'pointer' }}>
+                        + Add another {def.label.toLowerCase()}
+                      </button>
                     </div>
                   )
                 })}
               </div>
+
+              {targetNum > 0 && purposeRows.length > 0 && (
+                <p className="mt-4 text-xs" style={{ color: COLOR.mid }}>
+                  {gbp(allocatedSum)} of {gbp(targetNum)} allocated
+                  {unallocated > 0 && <> · {gbp(unallocated)} unallocated</>}
+                  {unallocated < 0 && <> · {gbp(-unallocated)} over target</>}
+                </p>
+              )}
+
+              <div className="mt-4">
+                <label className="text-xs font-medium block mb-1.5" style={{ color: COLOR.ink }}>
+                  Anything else your adviser should know? <span style={{ color: COLOR.faint, fontWeight: 400 }}>optional</span>
+                </label>
+                <input type="text" value={contextText} onChange={e => setContextText(e.target.value)}
+                  placeholder="e.g. we've just lost a major funder, or we're planning a merger"
+                  className="text-sm rounded-lg outline-none w-full px-3"
+                  style={{ height: 38, border: `1px solid ${COLOR.hair}`, color: COLOR.ink }} />
+              </div>
+
               <div className="mt-6 flex justify-end">
                 <PrimaryButton onClick={goToInMotionFromPurposes} disabled={!purposesValid}>Continue</PrimaryButton>
               </div>
@@ -366,37 +484,44 @@ export default function SetupStepper({ org }: { org: OrgSummary }) {
           {step === 'inmotion' && (
             <>
               <BackLink onClick={() => setStep('purposes')} />
-              <h2 className="text-base font-semibold" style={{ ...grotesk, color: COLOR.ink }}>Anything already in motion?</h2>
-              <p className="text-xs mt-1" style={{ color: COLOR.faint }}>Grants you have already won or are expecting. Entirely optional.</p>
+              <h2 className="text-base font-semibold" style={{ ...grotesk, color: COLOR.ink }}>Anything already secured or expected?</h2>
+              <p className="text-xs mt-1" style={{ color: COLOR.faint }}>Grants you&rsquo;ve won, applications in flight, likely renewals. Entirely optional.</p>
               <div className="mt-3 space-y-2">
                 {inMotion.map(row => (
-                  <div key={row.id} className="grid gap-2 items-center" style={{ gridTemplateColumns: '1fr 120px 120px 28px' }}>
-                    <input type="text" value={row.name} placeholder="e.g. Garfield Weston Foundation"
-                      onChange={e => setInMotion(prev => prev.map(r => r.id === row.id ? { ...r, name: e.target.value } : r))}
-                      className="text-sm rounded-lg outline-none px-3"
-                      style={{ height: 38, border: `1px solid ${COLOR.hair}`, color: COLOR.ink }} />
-                    <PoundInput value={row.amount} onChange={v => setInMotion(prev => prev.map(r => r.id === row.id ? { ...r, amount: v } : r))} />
-                    <select value={row.status}
-                      onChange={e => setInMotion(prev => prev.map(r => r.id === row.id ? { ...r, status: e.target.value as 'confirmed' | 'expected' } : r))}
-                      className="text-sm rounded-lg outline-none px-2"
-                      style={{ height: 38, border: `1px solid ${COLOR.hair}`, color: COLOR.ink, background: '#fff' }}>
-                      <option value="expected">Expected</option>
-                      <option value="confirmed">Confirmed</option>
-                    </select>
-                    <button type="button" onClick={() => removeInMotionRow(row.id)}
-                      className="flex items-center justify-center rounded-md" style={{ width: 28, height: 28, background: COLOR.cream, border: 'none', color: COLOR.mid, cursor: 'pointer' }}>
-                      ×
-                    </button>
+                  <div key={row.id} className="rounded-lg p-3" style={{ background: COLOR.cream }}>
+                    <div className="grid gap-2" style={{ gridTemplateColumns: '1fr 140px 28px' }}>
+                      <input type="text" value={row.name} placeholder="e.g. Garfield Weston Foundation"
+                        onChange={e => setInMotion(prev => prev.map(r => (r.id === row.id ? { ...r, name: e.target.value } : r)))}
+                        className="text-sm rounded-lg outline-none px-3"
+                        style={{ height: 38, border: `1px solid ${COLOR.hair}`, color: COLOR.ink, background: '#fff' }} />
+                      <PoundInput value={row.amount} onChange={v => setInMotion(prev => prev.map(r => (r.id === row.id ? { ...r, amount: v } : r)))} />
+                      <button type="button" onClick={() => removeInMotionRow(row.id)}
+                        className="flex items-center justify-center rounded-md" style={{ width: 28, height: 28, background: '#fff', border: `1px solid ${COLOR.hair}`, color: COLOR.mid, cursor: 'pointer' }}>
+                        ×
+                      </button>
+                    </div>
+                    <div className="mt-2 flex gap-2">
+                      {(['confirmed', 'expected'] as const).map(s => {
+                        const sel = row.status === s
+                        return (
+                          <button key={s} type="button" onClick={() => setInMotion(prev => prev.map(r => (r.id === row.id ? { ...r, status: s } : r)))}
+                            className="text-xs px-2.5 py-1 rounded-lg"
+                            style={{ ...grotesk, border: sel ? `1.5px solid ${COLOR.sage}` : `1px solid ${COLOR.hair}`, background: sel ? '#fff' : 'transparent', color: sel ? COLOR.sage : COLOR.mid }}>
+                            {s === 'confirmed' ? 'Confirmed' : 'Expected'}
+                          </button>
+                        )
+                      })}
+                    </div>
                   </div>
                 ))}
                 <button type="button" onClick={addInMotionRow}
                   className="text-xs underline" style={{ color: COLOR.sage, background: 'none', border: 'none', cursor: 'pointer' }}>
-                  + Add a row
+                  + Add another
                 </button>
               </div>
               <div className="mt-6 flex justify-end gap-2">
-                <GhostButton onClick={goToRecommendFromInMotion}>Skip</GhostButton>
-                <PrimaryButton onClick={goToRecommendFromInMotion}>Continue</PrimaryButton>
+                <GhostButton onClick={goToRecommendFromInMotion} disabled={submittingInMotion}>Skip</GhostButton>
+                <PrimaryButton onClick={goToRecommendFromInMotion} busy={submittingInMotion}>Continue</PrimaryButton>
               </div>
             </>
           )}
@@ -424,24 +549,72 @@ export default function SetupStepper({ org }: { org: OrgSummary }) {
               ) : !mix ? (
                 <p className="text-sm" style={{ color: COLOR.faint }}>One moment…</p>
               ) : openClarify ? (
-                <>
-                  <h2 className="text-base font-semibold" style={{ ...grotesk, color: COLOR.ink }}>{openClarify.clarify}</h2>
-                  <p className="text-xs mt-1" style={{ color: COLOR.faint }}>About &ldquo;{openClarify.label}&rdquo;. The default split stands if you skip this.</p>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {(openClarify.category === 'staffing' ? STAFFING_REFINEMENTS : CAPACITY_REFINEMENTS).map(opt => (
-                      <button key={opt.value} type="button"
-                        onClick={() => answerClarify(openClarify.category, openClarify.label, opt.value)}
-                        className="text-sm px-3 py-1.5 rounded-lg"
-                        style={{ ...grotesk, border: `1px solid ${COLOR.hair}`, background: '#fff', color: COLOR.ink }}>
-                        {opt.label}
+                openClarify.category === 'staffing' ? (
+                  <>
+                    <h2 className="text-base font-semibold" style={{ ...grotesk, color: COLOR.ink }}>Is this role mainly…</h2>
+                    <p className="text-xs mt-1" style={{ color: COLOR.faint }}>About &ldquo;{openClarify.label}&rdquo;. The default split stands if you skip this.</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {STAFFING_OPTIONS.map(opt => (
+                        <button key={opt.value} type="button"
+                          onClick={() => answerClarify(openClarify.category, openClarify.label, opt.value)}
+                          className="text-sm px-3 py-1.5 rounded-lg"
+                          style={{ ...grotesk, border: `1px solid ${COLOR.hair}`, background: '#fff', color: COLOR.ink }}>
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                    {!staffingFreeTextMode ? (
+                      <button type="button" onClick={() => setStaffingFreeTextMode(true)}
+                        className="mt-2.5 text-xs underline block" style={{ color: COLOR.sage, background: 'none', border: 'none', cursor: 'pointer' }}>
+                        This covers more than one role, describe it instead
                       </button>
-                    ))}
-                  </div>
-                  <button type="button" onClick={() => skipClarify(openClarify.category, openClarify.label)}
-                    className="mt-3 text-xs underline block" style={{ color: COLOR.faint, background: 'none', border: 'none', cursor: 'pointer' }}>
-                    Skip this question
-                  </button>
-                </>
+                    ) : (
+                      <div className="mt-2.5 flex gap-2">
+                        <input type="text" value={clarifyOtherText} onChange={e => setClarifyOtherText(e.target.value)}
+                          placeholder="e.g. two delivery posts and a part-time coordinator"
+                          className="text-sm rounded-lg outline-none flex-1 px-3"
+                          style={{ height: 38, border: `1px solid ${COLOR.hair}`, color: COLOR.ink }} />
+                        <PrimaryButton onClick={() => answerClarify(openClarify.category, openClarify.label, clarifyOtherText.trim())} disabled={!clarifyOtherText.trim()}>Save</PrimaryButton>
+                      </div>
+                    )}
+                    <button type="button" onClick={() => skipClarify(openClarify.category, openClarify.label)}
+                      className="mt-3 text-xs underline block" style={{ color: COLOR.faint, background: 'none', border: 'none', cursor: 'pointer' }}>
+                      Skip this question
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <h2 className="text-base font-semibold" style={{ ...grotesk, color: COLOR.ink }}>Which areas need strengthening?</h2>
+                    <p className="text-xs mt-1" style={{ color: COLOR.faint }}>About &ldquo;{openClarify.label}&rdquo;. Select all that apply, then continue.</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {CAPACITY_OPTIONS.map(opt => {
+                        const sel = clarifySelections.includes(opt.value)
+                        return (
+                          <button key={opt.value} type="button" onClick={() => toggleClarifySelection(opt.value)}
+                            className="text-sm px-3 py-1.5 rounded-lg"
+                            style={{ ...grotesk, border: sel ? `1.5px solid ${COLOR.sage}` : `1px solid ${COLOR.hair}`, background: sel ? COLOR.pale : '#fff', color: sel ? COLOR.sage : COLOR.ink }}>
+                            {opt.label}
+                          </button>
+                        )
+                      })}
+                    </div>
+                    <input type="text" value={clarifyOtherText} onChange={e => setClarifyOtherText(e.target.value)}
+                      placeholder="Other (optional)"
+                      className="mt-2.5 text-sm rounded-lg outline-none w-full px-3"
+                      style={{ height: 38, border: `1px solid ${COLOR.hair}`, color: COLOR.ink }} />
+                    <div className="mt-3 flex justify-between items-center">
+                      <button type="button" onClick={() => skipClarify(openClarify.category, openClarify.label)}
+                        className="text-xs underline" style={{ color: COLOR.faint, background: 'none', border: 'none', cursor: 'pointer' }}>
+                        Skip this question
+                      </button>
+                      <PrimaryButton
+                        onClick={() => answerClarify(openClarify.category, openClarify.label, [...clarifySelections, clarifyOtherText.trim()].filter(Boolean).join(', '))}
+                        disabled={clarifySelections.length === 0 && !clarifyOtherText.trim()}>
+                        Continue
+                      </PrimaryButton>
+                    </div>
+                  </>
+                )
               ) : (
                 <>
                   <div className="flex items-center gap-2">
@@ -468,38 +641,68 @@ export default function SetupStepper({ org }: { org: OrgSummary }) {
                   )}
 
                   <div className="mt-4 space-y-3">
-                    {mix.components.map((c, i) => (
-                      <div key={i} className="rounded-lg p-3" style={{ background: COLOR.cream }}>
-                        <div className="flex justify-between gap-2 text-sm">
-                          <span className="font-semibold" style={{ ...grotesk, color: COLOR.ink }}>{c.label}</span>
-                          {c.approx_amount != null && <span style={{ color: COLOR.faint }}>{gbp(c.approx_amount)}</span>}
+                    {mix.components.map((c, i) => {
+                      const editing = editingIndex === i
+                      return (
+                        <div key={i} className="rounded-lg p-3" style={{ background: COLOR.cream }}>
+                          {editing ? (
+                            <div className="grid gap-2" style={{ gridTemplateColumns: '1fr 140px' }}>
+                              <input type="text" value={editDraft.label} onChange={e => setEditDraft(d => ({ ...d, label: e.target.value }))}
+                                className="text-sm rounded-lg outline-none px-3"
+                                style={{ height: 36, border: `1px solid ${COLOR.hair}`, color: COLOR.ink, background: '#fff' }} />
+                              <PoundInput value={editDraft.amount} onChange={v => setEditDraft(d => ({ ...d, amount: v }))} />
+                            </div>
+                          ) : (
+                            <div className="flex justify-between gap-2 text-sm">
+                              <span className="font-semibold" style={{ ...grotesk, color: COLOR.ink }}>{c.label}</span>
+                              <span className="flex items-center gap-2" style={{ color: COLOR.faint }}>
+                                {c.approx_amount != null && gbp(c.approx_amount)}
+                                <button type="button" onClick={() => startEditComponent(i, c)}
+                                  className="text-[11px] underline" style={{ color: COLOR.sage, background: 'none', border: 'none', cursor: 'pointer' }}>
+                                  Edit
+                                </button>
+                              </span>
+                            </div>
+                          )}
+                          {editing && (
+                            <div className="mt-2 flex gap-2 justify-end">
+                              <button type="button" onClick={() => setEditingIndex(null)}
+                                className="text-xs px-2.5 py-1 rounded-lg" style={{ ...grotesk, border: `1px solid ${COLOR.hair}`, background: '#fff', color: COLOR.mid }}>
+                                Cancel
+                              </button>
+                              <button type="button" onClick={() => saveEditComponent(c)}
+                                className="text-xs font-semibold px-2.5 py-1 rounded-lg" style={{ ...grotesk, background: COLOR.forest, color: COLOR.pale, border: 'none' }}>
+                                Save
+                              </button>
+                            </div>
+                          )}
+                          {!editing && (c.off_rulebook ? (
+                            <p className="mt-1 text-xs" style={{ color: COLOR.faint }}>
+                              This one does not map to a standard funding character, so it is not counted in the mix above. Your adviser can help place it, use &ldquo;Type instead&rdquo; to talk it through.
+                            </p>
+                          ) : (
+                            <>
+                              <p className="mt-1 text-xs" style={{ color: COLOR.mid }}>{c.reasoning}</p>
+                              {c.mapping && (
+                                <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px]" style={{ color: COLOR.mid }}>
+                                  {Object.entries(c.mapping).map(([k, v]) => (
+                                    <span key={k}>
+                                      <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: 2, background: mixColor(k), marginRight: 4, verticalAlign: 'middle' }} />
+                                      {cap(k)} {v}%
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                              {c.recommended_opportunity_types && c.recommended_opportunity_types.length > 0 && (
+                                <p className="mt-1 text-[11px]" style={{ color: COLOR.faint }}>
+                                  Worth exploring alongside grants: {c.recommended_opportunity_types.map(t => OPPORTUNITY_LABELS[t] ?? t).join(', ')}.
+                                </p>
+                              )}
+                            </>
+                          ))}
                         </div>
-                        {c.off_rulebook ? (
-                          <p className="mt-1 text-xs" style={{ color: COLOR.faint }}>
-                            This one does not map to a standard funding character, so it is not counted in the mix above. Your adviser can help place it, use &ldquo;Type instead&rdquo; to talk it through.
-                          </p>
-                        ) : (
-                          <>
-                            <p className="mt-1 text-xs" style={{ color: COLOR.mid }}>{c.reasoning}</p>
-                            {c.mapping && (
-                              <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px]" style={{ color: COLOR.mid }}>
-                                {Object.entries(c.mapping).map(([k, v]) => (
-                                  <span key={k}>
-                                    <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: 2, background: mixColor(k), marginRight: 4, verticalAlign: 'middle' }} />
-                                    {cap(k)} {v}%
-                                  </span>
-                                ))}
-                              </div>
-                            )}
-                            {c.recommended_opportunity_types && c.recommended_opportunity_types.length > 0 && (
-                              <p className="mt-1 text-[11px]" style={{ color: COLOR.faint }}>
-                                Worth exploring alongside grants: {c.recommended_opportunity_types.map(t => OPPORTUNITY_LABELS[t] ?? t).join(', ')}.
-                              </p>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
 
                   <button type="button" onClick={() => setWhyOpen(o => !o)}
@@ -509,6 +712,13 @@ export default function SetupStepper({ org }: { org: OrgSummary }) {
                   {whyOpen && <p className="mt-1.5 text-xs" style={{ color: COLOR.mid }}>{WHY_UNRESTRICTED_COPY}</p>}
 
                   <div className="mt-4">
+                    <label className="text-xs font-medium block mb-1.5" style={{ color: COLOR.ink }}>
+                      Anything else your adviser should know? <span style={{ color: COLOR.faint, fontWeight: 400 }}>optional</span>
+                    </label>
+                    <input type="text" value={contextText} onChange={e => setContextText(e.target.value)}
+                      placeholder="e.g. we've just lost a major funder, or we're planning a merger"
+                      className="text-sm rounded-lg outline-none w-full px-3 mb-2"
+                      style={{ height: 38, border: `1px solid ${COLOR.hair}`, color: COLOR.ink }} />
                     <label className="text-xs font-medium block mb-1.5" style={{ color: COLOR.ink }}>
                       Anything to flag, such as a funder to avoid or a location restriction? <span style={{ color: COLOR.faint, fontWeight: 400 }}>optional</span>
                     </label>
@@ -527,47 +737,59 @@ export default function SetupStepper({ org }: { org: OrgSummary }) {
           )}
         </div>
 
-        {/* the plan, assembling */}
-        <div className="rounded-xl p-4" style={{ background: COLOR.cream, border: `1px solid ${COLOR.hair}` }}>
-          <div className="text-[11px] uppercase tracking-wide" style={{ color: COLOR.faint }}>Your plan, assembling</div>
-          <div className="text-sm font-semibold mt-1" style={{ ...grotesk, color: COLOR.ink }}>{org.name}</div>
-          <div className="text-[11px] mt-0.5" style={{ color: COLOR.mid }}>
-            {[org.structure, org.sectors.slice(0, 3).join(', '), org.incomeBand, org.location].filter(Boolean).join(' · ')}
-          </div>
-
-          <div className="mt-4 space-y-2 text-sm" style={{ color: COLOR.ink }}>
-            <div className="flex justify-between gap-2">
-              <span style={{ color: COLOR.mid }}>Target</span>
-              <span className="font-semibold" style={grotesk}>{parseAmount(targetAmount) ? gbp(parseAmount(targetAmount)!) : '—'}</span>
-            </div>
-            <div className="flex justify-between gap-2">
-              <span style={{ color: COLOR.mid }}>Deadline</span>
-              <span className="font-semibold" style={grotesk}>{endDate ? fmtDate(endDate) : '—'}</span>
+        {/* the plan, assembling — briefing/plan card grammar, not one flat block */}
+        <div className="space-y-3">
+          <div>
+            <div className="text-[11px] uppercase tracking-wide" style={{ color: COLOR.faint }}>Your plan, assembling</div>
+            <div className="text-sm font-semibold mt-1" style={{ ...grotesk, color: COLOR.ink }}>{org.name}</div>
+            <div className="text-[11px] mt-0.5" style={{ color: COLOR.mid }}>
+              {[org.structure, org.sectors.slice(0, 3).join(', '), org.incomeBand, org.location].filter(Boolean).join(' · ')}
             </div>
           </div>
 
-          <div className="mt-4">
+          <PanelCard>
+            <div className="space-y-2 text-sm" style={{ color: COLOR.ink }}>
+              <div className="flex justify-between gap-2">
+                <span style={{ color: COLOR.mid }}>Target</span>
+                <span className="font-semibold" style={grotesk}>{targetNum > 0 ? gbp(targetNum) : '—'}</span>
+              </div>
+              <div className="flex justify-between gap-2">
+                <span style={{ color: COLOR.mid }}>Deadline</span>
+                <span className="font-semibold" style={grotesk}>{endDate ? fmtDate(endDate) : '—'}</span>
+              </div>
+            </div>
+          </PanelCard>
+
+          <PanelCard>
             <div className="text-[11px] uppercase tracking-wide" style={{ color: COLOR.faint }}>What the money is for</div>
-            {selected.length === 0 ? (
+            {purposeRows.length === 0 ? (
               <div className="text-sm mt-1" style={{ color: COLOR.faint }}>—</div>
             ) : (
-              <ul className="mt-1.5 space-y-1">
-                {selected.map(cat => {
-                  const row = rows[cat]
-                  const amt = row ? parseAmount(row.amount) : null
-                  return (
-                    <li key={cat} className="text-sm flex justify-between gap-2" style={{ color: COLOR.ink }}>
-                      <span>{row?.label || cap(cat)}</span>
-                      <span style={{ color: COLOR.mid }}>{amt ? gbp(amt) : '—'}</span>
-                    </li>
-                  )
-                })}
-              </ul>
+              <>
+                <ul className="mt-1.5 space-y-1">
+                  {purposeRows.map(row => {
+                    const amt = parseAmount(row.amount)
+                    return (
+                      <li key={row.id} className="text-sm flex justify-between gap-2" style={{ color: COLOR.ink }}>
+                        <span>{row.label || cap(row.category)}</span>
+                        <span style={{ color: COLOR.mid }}>{amt ? gbp(amt) : '—'}</span>
+                      </li>
+                    )
+                  })}
+                </ul>
+                {targetNum > 0 && (
+                  <p className="mt-2 text-[11px]" style={{ color: COLOR.faint }}>
+                    {gbp(allocatedSum)} of {gbp(targetNum)} allocated
+                    {unallocated > 0 && <> · {gbp(unallocated)} unallocated</>}
+                    {unallocated < 0 && <> · {gbp(-unallocated)} over target</>}
+                  </p>
+                )}
+              </>
             )}
-          </div>
+          </PanelCard>
 
           {inMotion.some(r => r.name.trim() && parseAmount(r.amount)) && (
-            <div className="mt-4">
+            <PanelCard>
               <div className="text-[11px] uppercase tracking-wide" style={{ color: COLOR.faint }}>Already in motion</div>
               <ul className="mt-1.5 space-y-1">
                 {inMotion.filter(r => r.name.trim() && parseAmount(r.amount)).map(r => (
@@ -577,21 +799,21 @@ export default function SetupStepper({ org }: { org: OrgSummary }) {
                   </li>
                 ))}
               </ul>
-            </div>
+            </PanelCard>
           )}
 
-          <div className="mt-4">
+          <PanelCard>
             <div className="text-[11px] uppercase tracking-wide" style={{ color: COLOR.faint }}>Recommended mix</div>
             {!mix || !mix.recommended_mix || openClarify ? (
               <div className="text-sm mt-1" style={{ color: COLOR.faint }}>—</div>
             ) : (
               <div className="flex gap-1.5 flex-wrap mt-1.5">
                 {Object.entries(mix.recommended_mix).map(([k, v]) => (
-                  <span key={k} className="text-[11px] px-2 py-0.5 bg-white" style={{ color: COLOR.sage, borderRadius: 999, border: `1px solid ${COLOR.hair}` }}>{cap(k)} {v}%</span>
+                  <span key={k} className="text-[11px] px-2 py-0.5" style={{ background: COLOR.pale, color: COLOR.sage, borderRadius: 999, border: `1px solid ${COLOR.hair}` }}>{cap(k)} {v}%</span>
                 ))}
               </div>
             )}
-          </div>
+          </PanelCard>
         </div>
       </div>
     </div>
