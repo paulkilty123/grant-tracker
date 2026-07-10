@@ -20,11 +20,15 @@ export default function GuidanceRefresher({ stale }: { stale: boolean }) {
     // We only guard the soft-refresh against a stale closure.
     fetch('/api/agent/guidance/refresh', { method: 'POST' })
       .then(r => (r.ok ? r.json() : null))
-      // On success, soft-refresh so get_briefing re-reads the now-warm cache and
-      // the authored layer replaces the deterministic one in place. On no-op
-      // (budget, lint, disabled) `stale` stays true but the effect will not
-      // re-run until a new render changes it, so there is no polling loop.
-      .then(d => { if (!cancelled && d?.refreshed) router.refresh() })
+      // Refresh on `settled`, not `refreshed`: a guardrail-blocked attempt
+      // still writes a row at this signature, which flips the next read's
+      // guidance_stale to false even though no NEW usable guidance landed
+      // (readGuidance in plan.ts) — the page needs to re-read that regardless,
+      // or a caller showing a loading state for `stale` (BriefingView) never
+      // learns the attempt finished and waits forever. True no-ops that wrote
+      // nothing (budget/no_moves/error/disabled) leave `settled` false, so
+      // `stale` stays true and there is still no polling loop.
+      .then(d => { if (!cancelled && d?.settled) router.refresh() })
       .catch(() => { /* stale guidance just stays deterministic; never surface an error */ })
     return () => { cancelled = true }
   }, [stale, router])

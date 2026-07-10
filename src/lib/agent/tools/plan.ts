@@ -344,19 +344,28 @@ function readGuidance(cached: Awaited<ReturnType<typeof getLatestBriefingRun>>, 
  *  budget. Self-assembling so it runs OUT of the read path — the /refresh route
  *  awaits it after a plan-changing write. Idempotent: a run already exists at
  *  this signature → no-op. This is the ONLY place guidance is generated, so
- *  reads (get_briefing / get_plan_state → get_briefing) never block on the LLM. */
-export async function refreshBriefingGuidance(ctx: { orgId: string; surface: string; userId?: string | null }): Promise<{ refreshed: boolean; reason: string }> {
-  if (process.env.AGENT_BRIEFING_GUIDANCE === 'false') return { refreshed: false, reason: 'disabled' }
+ *  reads (get_briefing / get_plan_state → get_briefing) never block on the LLM.
+ *
+ *  `settled` (distinct from `refreshed`) is true whenever a run now exists at
+ *  the CURRENT signature — including a guardrail-blocked one — so the caller
+ *  knows the next read's `guidance_stale` will come back false even though no
+ *  new usable guidance landed. Found live: GuidanceRefresher only re-rendered
+ *  the page on `refreshed`, so a guardrail-blocked attempt (a real, saved row)
+ *  left the client showing its stale-render's loading state forever, because
+ *  nothing ever told it to check again. `refreshed` alone is right for "is
+ *  there new content to show"; `settled` answers "should the page re-read." */
+export async function refreshBriefingGuidance(ctx: { orgId: string; surface: string; userId?: string | null }): Promise<{ refreshed: boolean; settled: boolean; reason: string }> {
+  if (process.env.AGENT_BRIEFING_GUIDANCE === 'false') return { refreshed: false, settled: false, reason: 'disabled' }
   const [goal, pipeline, org] = await Promise.all([getGoal(ctx.orgId), getPipeline(ctx.orgId), getOrg(ctx.orgId)])
-  if (!goal || !org) return { refreshed: false, reason: 'no_goal' }
+  if (!goal || !org) return { refreshed: false, settled: false, reason: 'no_goal' }
   const [orgFacts, catalogue, recentWin] = await Promise.all([getOrgFacts(ctx.orgId), getActiveCatalogue(), hasRecentWin(ctx.orgId)])
   const asOf = today()
   const pack = assembleBriefingPack({ org, goal, pipeline, orgFacts, catalogue, asOf, userTurn: null })
   const signature = briefingSignature(pack)
   const cached = await getLatestBriefingRun(ctx.orgId)
-  if (cached && cached.signature === signature) return { refreshed: false, reason: 'fresh' } // already attempted at this plan state
+  if (cached && cached.signature === signature) return { refreshed: false, settled: true, reason: 'fresh' } // already attempted at this plan state
   const budget = await checkInferenceBudget(ctx.orgId)
-  if (!budget.allowed) return { refreshed: false, reason: 'budget' }
+  if (!budget.allowed) return { refreshed: false, settled: false, reason: 'budget' }
 
   // Authoring move set: candidates + the singleton strategic considerations.
   // deadline_pressure is excluded — it is time-critical, stays deterministic
@@ -368,7 +377,7 @@ export async function refreshBriefingGuidance(ctx: { orgId: string; surface: str
     recentWin,
   }).filter(m => m.kind !== 'deadline_pressure')
   const moves = availableMoves(pack.candidates, strategic)
-  if (moves.length === 0) return { refreshed: false, reason: 'no_moves' }
+  if (moves.length === 0) return { refreshed: false, settled: false, reason: 'no_moves' }
 
   try {
     const out = await authorBriefing(pack, moves)
@@ -380,10 +389,10 @@ export async function refreshBriefingGuidance(ctx: { orgId: string; surface: str
       inputTokens: out.usage.inputTokens, outputTokens: out.usage.outputTokens, costMicroGbp: out.usage.costMicroGbp,
       status: out.numberLintPassed ? 'complete' : 'guardrail_blocked',
     })
-    return { refreshed: out.numberLintPassed, reason: out.numberLintPassed ? 'generated' : 'lint_failed' }
+    return { refreshed: out.numberLintPassed, settled: true, reason: out.numberLintPassed ? 'generated' : 'lint_failed' }
   } catch (e) {
     console.error('[briefing] guidance generation failed', e)
-    return { refreshed: false, reason: 'error' }
+    return { refreshed: false, settled: false, reason: 'error' }
   }
 }
 
