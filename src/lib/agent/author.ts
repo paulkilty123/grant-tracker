@@ -19,7 +19,7 @@ import type { Move } from './considerations'
 
 const gbp = (n: number) => `£${Math.round(n).toLocaleString('en-GB')}`
 
-export const AUTHOR_PROMPT_VERSION = 'author-v4' // v4: identified-but-uncounted pipeline grounding + averaged-monthly-figure framing
+export const AUTHOR_PROMPT_VERSION = 'author-v5' // v5: concentration-share % whitelisted in the number lint (was false-positive guardrail-blocking correct citations)
 
 function djb2(s: string): string {
   let h = 5381
@@ -215,6 +215,14 @@ function allowedFigures(pack: BriefingPack): { pounds: Set<number>; pcts: Set<nu
   for (const i of identified.items) pounds.add(Math.round(i.amount))
   const pcts = new Set<number>()
   for (const v of Object.values(a.mixTarget ?? {})) pcts.add(Math.round(v))
+  // Concentration shares are explicitly handed to the model as a citable PACK
+  // FIGURE ("concentration: top funder ... X%") but were missing from this
+  // whitelist — found live: a correctly-cited "100%" funder concentration
+  // (a real pack figure, not an invented one) guardrail-blocked an otherwise
+  // good run on a thin-pipeline test org, which is exactly the shape of org
+  // where concentration is highest and most worth naming.
+  pcts.add(Math.round(a.concentration.topFunderShare * 100))
+  pcts.add(Math.round(a.concentration.topOpportunityShare * 100))
   return { pounds, pcts }
 }
 
