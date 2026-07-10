@@ -102,7 +102,7 @@ export default function SetupExperience({ org }: { org: OrgSummary }) {
   return (
     <div className="max-w-5xl">
       <h1 className="text-2xl font-bold" style={{ ...grotesk, color: '#2C2C2A' }}>Let’s build your funding plan.</h1>
-      <p className="mt-1 text-sm" style={{ color: '#5F5E5A' }}>A two-minute conversation — your plan assembles on the right as you answer.</p>
+      <p className="mt-1 text-sm" style={{ color: '#5F5E5A' }}>A two-minute conversation. Your plan assembles on the right as you answer.</p>
 
       <div className="mt-6 grid md:grid-cols-[58%_1fr] gap-4 items-start">
         {/* conversation column */}

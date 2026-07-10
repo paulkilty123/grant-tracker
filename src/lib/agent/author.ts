@@ -19,7 +19,7 @@ import type { Move } from './considerations'
 
 const gbp = (n: number) => `£${Math.round(n).toLocaleString('en-GB')}`
 
-export const AUTHOR_PROMPT_VERSION = 'author-v3' // v3: adviser vocabulary (Companion→Adviser rename)
+export const AUTHOR_PROMPT_VERSION = 'author-v4' // v4: identified-but-uncounted pipeline grounding + averaged-monthly-figure framing
 
 function djb2(s: string): string {
   let h = 5381
@@ -94,6 +94,10 @@ ${CONTRACT.neverRestateNumbers}
 ${CONTRACT.noRepayableFinance}
 ${CONTRACT.inconsistencyHonesty}
 
+IDENTIFIED-BUT-UNCOUNTED PIPELINE — if PACK FIGURES lists identified-stage items, these are real prospects the org already has in view but that carry zero weight in the arithmetic until they move forward (applying, submitted, won). Never call the plan "starting from scratch" or "a blank slate" when this figure is nonzero: name the item and its status plainly instead (e.g. "you have £120,000 expected from Reaching Communities, which the plan doesn't count until it firms up, worth confirming its status"). Reserve the blank-slate framing for when the pipeline is genuinely empty.
+
+MONTHLY FIGURE IS AN AVERAGE — "needed per month" is the remaining gap divided evenly across the months left, not a flat target for every individual month. When the purposes or pipeline suggest the real need is lumpier (a big capital ask, a grant that closes early), say so and present the monthly figure as an average ("roughly £12,500 a month on average") rather than the binding constraint itself.
+
 MY READ — three sentences, four only when a genuine tension needs it. Its job is framing, not detail. Lead with the one binding constraint for this reader, name the real strategic tension, and say how to play the period; the agenda carries the specifics. Use at most one or two figures here. The page already shows the numbers, and words often read better ("nearly half your target" rather than a percentage).
 
 THIS WEEK — choose and order the two or three moves that matter most, from the AVAILABLE MOVES below. Reference each by its exact ref string. For each move, author two things:
@@ -156,6 +160,19 @@ function mixSlices(pack: BriefingPack): Array<{ purpose: string; pct: number; am
   return Object.entries(mt).map(([purpose, pct]) => ({ purpose, pct: Math.round(pct), amount: Math.round(pack.goal.target_amount * pct / 100) }))
 }
 
+// Identified-stage pipeline items carry zero weight (STAGE_WEIGHTS.identified
+// === 0) but are real prospects, not nothing — surfacing them by name here is
+// what lets "My read" acknowledge them instead of defaulting to a blank-slate
+// framing whenever secured+weighted both read £0 (found live: a £120,000
+// expected grant went unmentioned because only the aggregate weighted/secured
+// figures were ever in this prompt, never the per-item identified pipeline).
+function identifiedNotCounted(pack: BriefingPack): { total: number; items: Array<{ name: string; amount: number }> } {
+  const items = pack.pipeline
+    .filter(p => p.stage === 'identified' && (p.amount_requested ?? 0) > 0)
+    .map(p => ({ name: p.grant_name, amount: p.amount_requested as number }))
+  return { total: items.reduce((s, i) => s + i.amount, 0), items }
+}
+
 function renderInput(pack: BriefingPack, moves: AvailableMove[]): string {
   const a = pack.arithmetic
   const org = pack.org as Record<string, unknown>
@@ -173,6 +190,12 @@ function renderInput(pack: BriefingPack, moves: AvailableMove[]): string {
   L.push(`  concentration: top funder ${a.concentration.topFunderName ?? 'n/a'} ${Math.round(a.concentration.topFunderShare * 100)}%, top opportunity ${Math.round(a.concentration.topOpportunityShare * 100)}%`)
   L.push(`  coverage: ${pack.coverage.thin ? `THIN — ${pack.coverage.note}` : 'adequate'}`)
   if (pack.pipeline.length === 0) L.push('  pipeline: empty (nothing secured, nothing in progress)')
+  const identified = identifiedNotCounted(pack)
+  if (identified.total > 0) {
+    L.push(`  identified but not yet counted (zero weight until it moves to applying/submitted/won): ${gbp(identified.total)} total, e.g. ${identified.items.slice(0, 3).map(i => `${i.name} (${gbp(i.amount)})`).join(', ')}`)
+  }
+  const contextNotes = (pack.goal.constraints ?? []).filter(c => c.kind === 'context')
+  if (contextNotes.length) L.push(`  additional context from the user: ${contextNotes.map(c => c.text).join(' | ')}`)
   L.push('')
   L.push('AVAILABLE MOVES (order the 2-3 that matter most; reference by ref):')
   for (const m of moves) L.push(`  ref "${m.ref}": ${m.headline} — ${m.detail}`)
@@ -187,6 +210,9 @@ function allowedFigures(pack: BriefingPack): { pounds: Set<number>; pcts: Set<nu
   const pounds = new Set<number>([a.gap, a.secured, a.inPipelineWeighted, a.inPipelineUnweighted, a.requiredRunRateMonthly, pack.goal.target_amount, pack.goal.secured_amount].map(Math.round))
   for (const c of pack.candidates) { if (c.amountMin) pounds.add(Math.round(c.amountMin)); if (c.amountMax) pounds.add(Math.round(c.amountMax)) }
   for (const s of mixSlices(pack)) pounds.add(s.amount) // mix slices are citable (target × mix%)
+  const identified = identifiedNotCounted(pack)
+  if (identified.total > 0) pounds.add(Math.round(identified.total))
+  for (const i of identified.items) pounds.add(Math.round(i.amount))
   const pcts = new Set<number>()
   for (const v of Object.values(a.mixTarget ?? {})) pcts.add(Math.round(v))
   return { pounds, pcts }

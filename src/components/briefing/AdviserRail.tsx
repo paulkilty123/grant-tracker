@@ -15,7 +15,7 @@ import Markdown from './Markdown'
 import { grotesk, COLOR, CompanionMark, SectionLabel } from './ui'
 import { ADVISER_BOUNDARY } from '@/lib/agent/copy'
 
-export default function AdviserRail({ myRead, suggestions = [], examplePrompt }: { myRead: string | null; suggestions?: string[]; examplePrompt: string }) {
+export default function AdviserRail({ myRead, awaitingRead = false, suggestions = [], examplePrompt }: { myRead: string | null; awaitingRead?: boolean; suggestions?: string[]; examplePrompt: string }) {
   const [input, setInput] = useState('')
   const { messages, loaded, busy, loadThread, send } = useAgentChat()
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -77,14 +77,21 @@ export default function AdviserRail({ myRead, suggestions = [], examplePrompt }:
             </div>
           ))}
         </div>
-      ) : (
-        myRead && (
-          <div className="px-4 pb-3">
-            <SectionLabel>My read</SectionLabel>
-            <p className="mt-2 text-[14px] leading-relaxed" style={{ color: COLOR.ink }}>{myRead}</p>
+      ) : myRead ? (
+        <div className="px-4 pb-3">
+          <SectionLabel>My read</SectionLabel>
+          <p className="mt-2 text-[14px] leading-relaxed" style={{ color: COLOR.ink }}>{myRead}</p>
+        </div>
+      ) : awaitingRead ? (
+        <div className="px-4 pb-3">
+          <SectionLabel>My read</SectionLabel>
+          <p className="mt-2 text-[12.5px]" style={{ color: COLOR.faint }}>Your adviser is reading your plan…</p>
+          <div className="mt-2 space-y-1.5">
+            <div className="h-3 rounded animate-pulse" style={{ background: COLOR.hair, width: '92%' }} />
+            <div className="h-3 rounded animate-pulse" style={{ background: COLOR.hair, width: '70%' }} />
           </div>
-        )
-      )}
+        </div>
+      ) : null}
 
       <div className="p-3" style={{ borderTop: `1px solid ${COLOR.hair}` }}>
         <div className="flex gap-2">

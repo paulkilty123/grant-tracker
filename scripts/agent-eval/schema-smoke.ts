@@ -33,6 +33,7 @@ async function main() {
   const repo = await import('../../src/lib/agent/tools/repository')
   const threads = await import('../../src/lib/agent/orchestrator/threads')
   const { deriveMix, RULEBOOK_VERSION } = await import('../../src/lib/agent/tools/mix')
+  const { materialisePreExistingRow } = await import('../../src/lib/agent/tools/goal')
   const { STAGE_WEIGHTS } = await import('../../src/lib/agent/context')
   type Ctx = import('../../src/lib/agent/tools/types').ToolContext
 
@@ -191,6 +192,19 @@ async function main() {
           })
           check('fresh purposes that reconcile carry no warning', mcpFreshPurposes.data.purposes_reconciliation_warning === null,
             `got ${JSON.stringify(mcpFreshPurposes.data.purposes_reconciliation_warning)}`)
+
+          // Setup stepper step 3 (spec §3.2) — one real pipeline item per named
+          // row, not a scalar; confirmed -> won, expected -> identified. Run on
+          // the throwaway MCP-gate org (about to be deleted) so these rows
+          // don't perturb the primary org's secured/unassigned sums checked above.
+          await materialisePreExistingRow(mcpOrgId, ownerId, { name: 'ZZ Smoke Confirmed Grant', amount: 12000, status: 'confirmed' })
+          await materialisePreExistingRow(mcpOrgId, ownerId, { name: 'ZZ Smoke Expected Grant', amount: 8000, status: 'expected' })
+          const { data: confirmedRow } = await sb.from('pipeline_items').select('stage, source').eq('org_id', mcpOrgId).eq('grant_name', 'ZZ Smoke Confirmed Grant').maybeSingle()
+          check('materialisePreExistingRow confirmed row -> won, source marker',
+            (confirmedRow as Record<string, unknown> | null)?.stage === 'won' && (confirmedRow as Record<string, unknown> | null)?.source === 'pre_existing')
+          const { data: expectedRow } = await sb.from('pipeline_items').select('stage, source').eq('org_id', mcpOrgId).eq('grant_name', 'ZZ Smoke Expected Grant').maybeSingle()
+          check('materialisePreExistingRow expected row -> identified, source marker',
+            (expectedRow as Record<string, unknown> | null)?.stage === 'identified' && (expectedRow as Record<string, unknown> | null)?.source === 'pre_existing')
         } finally {
           await sb.from('goal_purposes').delete().eq('org_id', mcpOrgId)
           await sb.from('goals').delete().eq('org_id', mcpOrgId)

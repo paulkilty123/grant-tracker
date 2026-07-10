@@ -93,6 +93,30 @@ async function materialiseOffPipelineSecured(orgId: string, userId: string | nul
   if (error) throw new Error(`set_funding_goal: could not record off-pipeline secured income: ${error.message}`)
 }
 
+// Sibling to materialiseOffPipelineSecured, for the setup stepper's "already in
+// motion" step (spec §3.2 step 3): one real pipeline item per named row, not a
+// scalar, so each is individually visible/editable in the Kanban afterwards.
+// Not a registered tool — called directly from the stepper's Server Action,
+// same category as the helper above.
+export interface PreExistingRow {
+  name: string
+  amount: number
+  status: 'confirmed' | 'expected'
+}
+
+export async function materialisePreExistingRow(orgId: string, userId: string | null | undefined, row: PreExistingRow): Promise<void> {
+  const { error } = await serviceClient().from('pipeline_items').insert({
+    org_id: orgId,
+    grant_name: row.name,
+    funder_name: 'Recorded at goal setup',
+    stage: row.status === 'confirmed' ? 'won' : 'identified',
+    amount_requested: Math.round(row.amount),
+    source: 'pre_existing',
+    created_by: userId ?? null,
+  })
+  if (error) throw new Error(`materialisePreExistingRow: could not record pre-existing pipeline item: ${error.message}`)
+}
+
 export const setFundingGoal = defineTool<SetFundingGoalParams, SetFundingGoalResult>({
   name: 'set_funding_goal',
   handler: async (ctx, p) => {
