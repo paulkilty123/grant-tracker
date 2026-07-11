@@ -26,6 +26,7 @@ const ALLOWLIST = new Set([
   'f1f9c904-ef5a-4591-8c6d-e7d9a1535133', // IoI
   '4ef429df-19d0-49b0-9c7b-ccb802b70a6d', // Common Ground Kitchen CIC
   'cb66226d-1ec0-47e1-945d-4ef2d7ee7896', // OpenAccess Digital CIC
+  '47817906-ea3e-4890-a7f6-21dbf81f63b3', // Reprezent
 ])
 
 function fail(msg: string): never { console.error(`\n✗ REFUSED: ${msg}\n`); process.exit(1) }
