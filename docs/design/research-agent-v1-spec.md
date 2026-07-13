@@ -65,12 +65,12 @@ In-app only in v1. The MCP surface keeps its current tool set; the research capa
 
 ## 8. Build order and gates
 
-1. Threads + pins schema (migration discipline as ever).
-2. Research capability flag + steering + cost levers.
-3. The Research section UI per the mockup.
-4. Action chips + briefs.
-5. Enrichment staging flow.
-6. The eval set → ship to Paul's orgs behind the existing gates.
+1. Threads + pins schema (migration discipline as ever). — DONE (migration 038)
+2. Research capability flag + steering + cost levers. — DONE (migration 039)
+3. The Research section UI per the mockup. — DONE
+4. Action chips + briefs. — DONE (migration 040)
+5. Enrichment staging flow. — DONE (migration 041), verified live 2026-07-13. `flag_for_verification` stages via `stampNewGrant()` into `scraped_grants` (is_active=false, source `system:research-flag-<date>`, never `admin:`) — the same table and Needs Review workflow every other addition uses, deliberately not the smaller `funders` table, which the admin UI doesn't surface at all. `agent_flagged_findings` is the "tagged to the originating thread" audit trail. Explicit-user-request only, never automatic; the model says "staged for review," never "verified" or "in the catalogue." No UI chip for this by design — the mockup's researched-live card only lists Save for later / Research deeper / Pin; flagging is conversational-only.
+6. The eval set → ship to Paul's orgs behind the existing gates. — NOT STARTED.
 
 **Ship-gate, decided 2026-07-13 (step 3 review), CLOSED same day (step 4):** cards used to render live only, not reconstruct on a thread reload. Closed by factoring PANEL_RESULT_SLIMMERS out of loop.ts into orchestrator/panel-slimmers.ts, shared by the live loop and threads.ts's loadThreadView, which now resolves each turn's card-worthy tool_use ids against the following stored tool_result row and re-slims through the identical mapping. Verified live via research-smoke.ts (a stored synthetic get_briefing turn reconstructs the same card data a live turn would show).
 
