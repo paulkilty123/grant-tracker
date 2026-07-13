@@ -72,7 +72,7 @@ In-app only in v1. The MCP surface keeps its current tool set; the research capa
 5. Enrichment staging flow.
 6. The eval set → ship to Paul's orgs behind the existing gates.
 
-**Ship-gate, decided 2026-07-13 (step 3 review):** cards currently render live as a turn streams but do not reconstruct on a thread reload — a reload replays the full prose text, just not the opportunity cards. Approved as a deferred follow-up, NOT deferred indefinitely: it must land with, or immediately after, step 4, before this section is shown to anyone outside Paul's own review. Track it as part of closing out step 4, not step 6.
+**Ship-gate, decided 2026-07-13 (step 3 review), CLOSED same day (step 4):** cards used to render live only, not reconstruct on a thread reload. Closed by factoring PANEL_RESULT_SLIMMERS out of loop.ts into orchestrator/panel-slimmers.ts, shared by the live loop and threads.ts's loadThreadView, which now resolves each turn's card-worthy tool_use ids against the following stored tool_result row and re-slims through the identical mapping. Verified live via research-smoke.ts (a stored synthetic get_briefing turn reconstructs the same card data a live turn would show).
 
 **Confirmed correct, not a hack (step 3 review):** "Save for later" on a researched-live (not-yet-catalogued) card creates a pin rather than a `grant_interactions` row — there is no catalogue id to attach one to yet. This is logged, intended behaviour, not a stand-in to revisit; it stays this way until the enrichment staging flow (step 5) gives a researched find a real catalogue home.
 
