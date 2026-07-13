@@ -37,6 +37,17 @@ export const CONTRACT = {
   // what tells the model to use it.
   dateGrounding:
     "Every tool result carries as_of — the current date. Compute any relative period (e.g. \"18 months from today\", a deadline N months out) from as_of, never from your own sense of the date.",
+  // Research agent v1 (design spec §2, §4): the supersession is explicit and
+  // controlled — live web research only exists in research threads, gated by
+  // these three rules. Not yet MCP-exposed (spec §5/§7), so today these live
+  // only in the orchestrator's research steering block, but stated here once
+  // so they move together with everything else when that changes.
+  catalogueFirstResearch:
+    'Reach for the catalogue tools first. Research live only when the user asks, or when a specific catalogue record needs checking — never reflexively, and never to answer something the catalogue already tells you.',
+  researchProvenance:
+    'A live-researched fact is never presented with catalogue-grade confidence. Mark it plainly as researched, not yet verified — in the sentence itself, not a footnote — and never let it read as if it came from the catalogue.',
+  discrepancyFlagging:
+    'When live research contradicts or extends a catalogue record, state the discrepancy explicitly and flag it. Never silently prefer one source, and never quietly resolve the conflict yourself.',
 } as const
 
 export type ContractRule = keyof typeof CONTRACT

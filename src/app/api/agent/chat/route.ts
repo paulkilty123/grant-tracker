@@ -25,7 +25,7 @@ import { resolveWebToolContext } from '@/lib/agent/boundary'
 import { runAgentTurn, type OrchestratorEvent } from '@/lib/agent/orchestrator/loop'
 import { checkInferenceBudget } from '@/lib/agent/orchestrator/budget'
 import { agentEnabledForOrg, type TurnKind } from '@/lib/agent/orchestrator/config'
-import { getOrCreateActiveThread, loadThreadHistory, appendTurn } from '@/lib/agent/orchestrator/threads'
+import { getOrCreateActiveThread, getThread, loadThreadHistory, appendTurn } from '@/lib/agent/orchestrator/threads'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 120
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: budget.message, reason: budget.reason }, { status: 429 })
   }
 
-  let body: { user_turn?: string; turn_kind?: string; history?: Anthropic.MessageParam[] }
+  let body: { user_turn?: string; turn_kind?: string; history?: Anthropic.MessageParam[]; thread_id?: string }
   try {
     body = await req.json()
   } catch {
@@ -60,7 +60,20 @@ export async function POST(req: NextRequest) {
   const turnKind: TurnKind = body.turn_kind === 'strategist' ? 'strategist' : 'chat'
 
   // Server-side thread; stateless client-history fallback pre-migration-037.
-  const threadId = await getOrCreateActiveThread(ctx.orgId)
+  // Research agent v1 (design spec §3/§8 step 2): a thread_id addresses ONE OF
+  // POSSIBLY MANY research threads — there is no "the" active one, unlike the
+  // briefing drawer. Omitting thread_id is unchanged behaviour: the single
+  // active briefing thread, exactly as before this existed.
+  let threadId: string | null
+  let research = false
+  if (body.thread_id) {
+    const thread = await getThread(body.thread_id, ctx.orgId)
+    if (!thread) return NextResponse.json({ error: 'Thread not found' }, { status: 404 })
+    threadId = thread.id
+    research = thread.kind === 'research'
+  } else {
+    threadId = await getOrCreateActiveThread(ctx.orgId)
+  }
   const history = threadId
     ? await loadThreadHistory(threadId)
     : (Array.isArray(body.history) ? body.history : [])
@@ -72,7 +85,7 @@ export async function POST(req: NextRequest) {
         controller.enqueue(encoder.encode(`data: ${JSON.stringify(ev)}\n\n`))
       send({ type: 'thread', thread_id: threadId })
       try {
-        const res = await runAgentTurn({ ctx, history, userTurn, turnKind, onEvent: send })
+        const res = await runAgentTurn({ ctx, history, userTurn, turnKind, research, onEvent: send })
         if (threadId) {
           await appendTurn(threadId, ctx.orgId, res.messages.slice(history.length), { turnKind, usage: res.usage })
         }

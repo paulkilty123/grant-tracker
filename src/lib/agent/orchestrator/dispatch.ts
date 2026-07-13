@@ -9,6 +9,7 @@ import {
   addToPipeline, updatePipelineItem, getPipeline,
   getPlanState, getBriefing, assessOpportunityAgainstPlan,
   getFundingGoal, setFundingGoal, updateGoalPurposes, recommendMix,
+  checkResearchedFunder, cacheResearchedFunder,
   isEntitled,
   type ToolContext, type ToolResult, type Tier,
 } from '../tools'
@@ -26,6 +27,8 @@ const DISPATCH: Record<string, AnyToolFn> = {
   set_funding_goal: setFundingGoal as AnyToolFn,
   update_goal_purposes: updateGoalPurposes as AnyToolFn,
   recommend_mix: recommendMix as AnyToolFn,
+  check_researched_funder: checkResearchedFunder as AnyToolFn,
+  cache_researched_funder: cacheResearchedFunder as AnyToolFn,
 }
 
 export interface AnthropicToolDef {
@@ -37,10 +40,13 @@ export interface AnthropicToolDef {
 /** The tool definitions offered to the model for this tier: built, entitled,
  *  and carrying a canonical schema. (Entitlement is ALSO enforced inside the
  *  envelope on every call — this filter just avoids offering tools that would
- *  only ever error.) */
-export function toolDefsForTier(tier: Tier): AnthropicToolDef[] {
+ *  only ever error.) researchOnly entries (research agent v1, spec §4) are
+ *  additionally gated on the caller passing research: true — a research
+ *  thread's turn only, never the briefing generation path or the standard
+ *  drawer. */
+export function toolDefsForTier(tier: Tier, opts: { research?: boolean } = {}): AnthropicToolDef[] {
   return TOOL_REGISTRY
-    .filter(t => t.status === 'built' && t.input_schema && isEntitled(tier, t.name))
+    .filter(t => t.status === 'built' && t.input_schema && isEntitled(tier, t.name) && (!t.researchOnly || opts.research))
     .map(t => ({ name: t.name, description: t.description, input_schema: t.input_schema! }))
 }
 

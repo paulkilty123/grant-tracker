@@ -9,6 +9,7 @@
 import { serviceClient } from '../tools/db'
 import {
   DAILY_TURN_CAP_PER_ORG, DAILY_TOKEN_CAP_PER_ORG, DAILY_TOKEN_CAP_GLOBAL,
+  RESEARCH_ACTIONS_MONTHLY_CAP_PER_ORG,
 } from './config'
 
 export type BudgetVerdict =
@@ -67,4 +68,42 @@ export async function checkInferenceBudget(orgId: string): Promise<BudgetVerdict
     return { allowed: false, reason: 'org_token_cap', message: "You've reached today's usage limit. It resets at midnight UTC." }
   }
   return { allowed: true }
+}
+
+function startOfMonthUtc(): string {
+  const now = new Date()
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString()
+}
+
+export interface ResearchBudgetVerdict {
+  allowed: boolean
+  usedThisMonth: number
+  cap: number
+}
+
+/** Research agent v1 cost lever 1 — same derive-from-capture-layer discipline
+ *  as checkInferenceBudget, no second bookkeeping table. Never a hard block on
+ *  the turn itself: the caller (loop.ts) uses this to decide whether to OFFER
+ *  web_search/web_fetch this turn, and steers the model to say so plainly and
+ *  continue catalogue-only when over (design spec §4.1). Filtered by org_id at
+ *  the DB (unlike checkInferenceBudget, which needs a cross-org sum for the
+ *  global cap) — this only ever needs one org's count. */
+export async function checkResearchBudget(orgId: string): Promise<ResearchBudgetVerdict> {
+  const { data } = await serviceClient()
+    .from('events')
+    .select('payload')
+    .eq('event_type', 'agent_turn_completed')
+    .eq('org_id', orgId)
+    .gte('created_at', startOfMonthUtc())
+    .limit(5000)
+  const rows = (data ?? []) as TurnRow[]
+  const usedThisMonth = rows.filter(r => {
+    const names = (r.payload as { tool_names?: string[] } | null)?.tool_names ?? []
+    return names.includes('web_search') || names.includes('web_fetch')
+  }).length
+  return {
+    allowed: usedThisMonth < RESEARCH_ACTIONS_MONTHLY_CAP_PER_ORG,
+    usedThisMonth,
+    cap: RESEARCH_ACTIONS_MONTHLY_CAP_PER_ORG,
+  }
 }

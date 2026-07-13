@@ -21,13 +21,64 @@ export async function getOrCreateActiveThread(orgId: string): Promise<string | n
   try {
     const sb = serviceClient()
     const { data, error } = await sb.from('agent_threads')
-      .select('id').eq('org_id', orgId).eq('status', 'active').maybeSingle()
+      .select('id').eq('org_id', orgId).eq('status', 'active').eq('kind', 'briefing').maybeSingle()
     if (error) return null // table missing → stateless fallback
     if (data) return String((data as Record<string, unknown>).id)
     const { data: created, error: insErr } = await sb.from('agent_threads')
-      .insert({ org_id: orgId }).select('id').single()
+      .insert({ org_id: orgId, kind: 'briefing' }).select('id').single()
     if (insErr || !created) return null
     return String((created as Record<string, unknown>).id)
+  } catch { return null }
+}
+
+export interface ThreadMeta {
+  id: string
+  kind: 'briefing' | 'research'
+  status: string
+  focusLabel: string | null
+  focusPurposeId: string | null
+}
+
+/** Research agent v1 (design spec §3): research threads are addressed by id,
+ *  never "the" active thread — many can be open per org at once. Validates
+ *  org ownership so a thread_id from one org can never be used to read/write
+ *  another's conversation. */
+export async function getThread(threadId: string, orgId: string): Promise<ThreadMeta | null> {
+  try {
+    const { data, error } = await serviceClient().from('agent_threads')
+      .select('id, kind, status, focus_label, focus_purpose_id')
+      .eq('id', threadId).eq('org_id', orgId).maybeSingle()
+    if (error || !data) return null
+    const row = data as Record<string, unknown>
+    return {
+      id: String(row.id),
+      kind: (row.kind as 'briefing' | 'research') ?? 'briefing',
+      status: String(row.status),
+      focusLabel: (row.focus_label as string | null) ?? null,
+      focusPurposeId: (row.focus_purpose_id as string | null) ?? null,
+    }
+  } catch { return null }
+}
+
+/** Research agent v1 (design spec §3): always creates a NEW thread — there is
+ *  no "the" research thread to fetch-or-create, unlike the briefing drawer.
+ *  focusPurposeId/focusLabel are both optional and independent (either, both,
+ *  or neither — the caller decides; schema doesn't enforce exclusivity). */
+export async function createResearchThread(
+  orgId: string,
+  opts: { focusPurposeId?: string | null; focusLabel?: string | null } = {},
+): Promise<string | null> {
+  try {
+    const { data, error } = await serviceClient().from('agent_threads')
+      .insert({
+        org_id: orgId,
+        kind: 'research',
+        focus_purpose_id: opts.focusPurposeId ?? null,
+        focus_label: opts.focusLabel ?? null,
+      })
+      .select('id').single()
+    if (error || !data) return null
+    return String((data as Record<string, unknown>).id)
   } catch { return null }
 }
 

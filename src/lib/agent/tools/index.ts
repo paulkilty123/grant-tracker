@@ -13,9 +13,10 @@ import { getPlanState, getBriefing } from './plan'
 import { assessOpportunityAgainstPlan } from './assess'
 import { getFundingGoal, setFundingGoal, updateGoalPurposes, PURPOSE_CATEGORIES } from './goal'
 import { recommendMix, RECOMMEND_MIX_DESCRIPTION } from './mix'
+import { checkResearchedFunder, cacheResearchedFunder } from './research'
 import { CONTRACT } from '../contract'
 
-export { addToPipeline, updatePipelineItem, getPipeline, getPlanState, getBriefing, assessOpportunityAgainstPlan, getFundingGoal, setFundingGoal, updateGoalPurposes, recommendMix }
+export { addToPipeline, updatePipelineItem, getPipeline, getPlanState, getBriefing, assessOpportunityAgainstPlan, getFundingGoal, setFundingGoal, updateGoalPurposes, recommendMix, checkResearchedFunder, cacheResearchedFunder }
 export { PURPOSE_CATEGORIES } from './goal'
 
 const PURPOSE_ITEM_SCHEMA = {
@@ -44,6 +45,11 @@ export interface ToolSpecEntry {
    *  the MCP route's zod schemas must agree with it (deriving them from this
    *  is a logged follow-on — MCP changes are out of orchestrator v1 scope). */
   input_schema?: Record<string, unknown>
+  /** Research agent v1 (design spec §4): only ever offered to the model on a
+   *  research-thread turn (dispatch.ts's toolDefsForTier filters on this) —
+   *  never the briefing generation path or the standard drawer. The MCP route
+   *  hand-picks its own tool set and never imports these regardless. */
+  researchOnly?: boolean
 }
 
 const STAGES = ['identified', 'applying', 'submitted', 'won', 'declined']
@@ -232,6 +238,39 @@ export const TOOL_REGISTRY: ToolSpecEntry[] = [
         },
       },
       required: [],
+    },
+  },
+  {
+    name: 'check_researched_funder',
+    tier: 'companion',
+    status: 'built',
+    researchOnly: true,
+    params: 'funder_name',
+    description: `Research agent v1 cost lever: check the shared research cache for this funder before running a live web search. Returns found=false when nothing is cached, or stale=true when the cached profile is older than the freshness window — either way, search live. A found, non-stale result is safe to use directly (still say it is researched, not catalogue data — ${CONTRACT.researchProvenance}).`,
+    input_schema: {
+      type: 'object',
+      properties: {
+        funder_name: { type: 'string', description: 'The funder name as you would search for it.' },
+      },
+      required: ['funder_name'],
+    },
+  },
+  {
+    name: 'cache_researched_funder',
+    tier: 'companion',
+    status: 'built',
+    researchOnly: true,
+    params: 'funder_name, summary, focus_notes?, source_urls',
+    description: `Research agent v1 cost lever: after live research turns up something worth keeping about a funder, save a short summary here so every future thread and org asking about the same funder skips the live search. This is a cost-saving cache, not a user-facing action — call it without asking, once per funder per research session. Keep the summary to a paragraph (what they fund, how to approach, watch-outs); this never writes to the catalogue and is not the verified record.`,
+    input_schema: {
+      type: 'object',
+      properties: {
+        funder_name: { type: 'string', description: 'The funder name, as you would want it displayed.' },
+        summary: { type: 'string', description: 'A short paragraph: what they fund, how to approach, watch-outs.' },
+        focus_notes: { type: 'array', items: { type: 'string' }, description: 'Optional short bullet-style facts, e.g. "rolling deadline", "UK-registered charities only".' },
+        source_urls: { type: 'array', items: { type: 'string' }, description: 'The URLs the summary was researched from.' },
+      },
+      required: ['funder_name', 'summary', 'source_urls'],
     },
   },
 ]

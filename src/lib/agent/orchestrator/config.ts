@@ -38,6 +38,13 @@ export const DAILY_TOKEN_CAP_PER_ORG = Number(process.env.AGENT_DAILY_TOKEN_CAP 
 /** Global kill-switch budget across all orgs — the spend backstop. */
 export const DAILY_TOKEN_CAP_GLOBAL = Number(process.env.AGENT_GLOBAL_DAILY_TOKEN_CAP ?? 20_000_000)
 
+/** Research agent v1 cost lever 1 (design spec §4.1): research actions per org
+ *  per calendar month. A "research action" is one turn whose tool_names
+ *  included web_search or web_fetch — thread chatter that never searches
+ *  doesn't count. Provisional N — set from real research-thread usage once
+ *  there is some; generous and mostly invisible until actually hit. */
+export const RESEARCH_ACTIONS_MONTHLY_CAP_PER_ORG = Number(process.env.AGENT_RESEARCH_MONTHLY_CAP ?? 40)
+
 /** Feature flag + per-org allowlist (build-spec §2). AGENT_ENABLED must be
  *  'true'; if AGENT_ORG_ALLOWLIST is set (comma-separated org ids), the org
  *  must be on it. Flag off = the route 404s and production is byte-identical. */

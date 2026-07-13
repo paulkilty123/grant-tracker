@@ -19,6 +19,15 @@ import { EntitlementError, AuthorshipError, type ToolContext } from '../tools/ty
 import { toolDefsForTier, dispatchTool } from './dispatch'
 import { SYSTEM_PROMPT, ORCHESTRATOR_PROMPT_VERSION } from './prompt'
 import { pickModel, MAX_LOOP_ITERATIONS, MAX_TOKENS_PER_CALL, type TurnKind } from './config'
+import { checkResearchBudget } from './budget'
+import { RESEARCH_SERVER_TOOLS, researchSteering } from './research'
+
+// Anthropic charges web_search per call, separate from token pricing — web_fetch
+// is token-metered only (fetched content counts as input tokens). USD, applied
+// through the same USD_TO_GBP conversion as llm.ts. Approximate; correct if
+// Anthropic's published rate moves.
+const WEB_SEARCH_COST_USD_PER_CALL = 0.01
+const USD_TO_GBP = 0.79
 
 export type OrchestratorEvent =
   | { type: 'text_delta'; text: string }
@@ -85,16 +94,30 @@ export async function runAgentTurn(opts: {
   history: Anthropic.MessageParam[]
   userTurn: string
   turnKind: TurnKind
+  /** Research agent v1 thread-kind capability flag (design spec §4). Set only
+   *  from a thread whose kind === 'research' — never true for the briefing
+   *  generation path (reason.ts, which doesn't call this) or an ordinary
+   *  drawer turn. Cost lever 1 (the monthly budget) still gates whether the
+   *  live tools actually get offered this turn; a research thread over budget
+   *  still works, just catalogue-only. */
+  research?: boolean
   onEvent?: (ev: OrchestratorEvent) => void
 }): Promise<TurnResult> {
-  const { ctx, turnKind } = opts
+  const { ctx } = opts
   const emit = opts.onEvent ?? (() => {})
+  // Model routing lever 3 (spec §4.1): a research thread's turns always run
+  // the strategist lane — the model needs to reason well about provenance,
+  // discrepancy-flagging, and citation, exactly the bar that lane exists for.
+  const turnKind: TurnKind = opts.research ? 'strategist' : opts.turnKind
   const model = pickModel(turnKind)
-  const tools = toolDefsForTier(ctx.tier).map(t => ({
+  const researchBudget = opts.research ? await checkResearchBudget(ctx.orgId) : null
+  const researchAllowed = researchBudget?.allowed ?? false
+  const tools: Anthropic.ToolUnion[] = toolDefsForTier(ctx.tier, { research: opts.research }).map(t => ({
     name: t.name,
     description: t.description,
     input_schema: t.input_schema as Anthropic.Tool.InputSchema,
   }))
+  if (opts.research && researchAllowed) tools.push(...RESEARCH_SERVER_TOOLS)
   const started = Date.now()
 
   const messages: Anthropic.MessageParam[] = [
@@ -105,6 +128,7 @@ export async function runAgentTurn(opts: {
   let inputTokens = 0
   let outputTokens = 0
   const toolNames: string[] = []
+  let webSearchCalls = 0
   let iterations = 0
   let finalText = ''
 
@@ -126,10 +150,17 @@ export async function runAgentTurn(opts: {
       model,
       max_tokens: MAX_TOKENS_PER_CALL,
       // Frozen prefix (tools render before system) — one breakpoint caches both.
-      // Today's date rides in a separate trailing block, after the cache
-      // breakpoint, so it never busts the cached prefix.
+      // Research steering gets its OWN breakpoint (static across research
+      // turns, so it still caches) right after SYSTEM_PROMPT's, so non-research
+      // turns' cached prefix is completely untouched. Today's date stays last,
+      // uncached, so neither breakpoint busts across the day.
       system: [
         { type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } },
+        ...(opts.research ? [{
+          type: 'text' as const,
+          text: researchSteering(researchAllowed),
+          cache_control: { type: 'ephemeral' as const },
+        }] : []),
         { type: 'text', text: dateContext },
       ],
       tools,
@@ -140,6 +171,17 @@ export async function runAgentTurn(opts: {
 
     inputTokens += effectiveInputTokens(response.usage)
     outputTokens += response.usage.output_tokens ?? 0
+    // Server tools (web_search/web_fetch) resolve INSIDE this same response —
+    // no separate dispatch round-trip — so their usage only shows up here, not
+    // in the tool_use loop below. Folded into toolNames so agent_turn_completed
+    // carries them (instrumentation lever 4, and what checkResearchBudget
+    // counts against next month).
+    const serverTools = response.usage.server_tool_use
+    if (serverTools) {
+      for (let i = 0; i < serverTools.web_search_requests; i++) toolNames.push('web_search')
+      for (let i = 0; i < serverTools.web_fetch_requests; i++) toolNames.push('web_fetch')
+      webSearchCalls += serverTools.web_search_requests
+    }
     for (const block of response.content) {
       if (block.type !== 'text') continue
       // Text emitted before a tool call and text after its results are separate
@@ -176,11 +218,16 @@ export async function runAgentTurn(opts: {
     messages.push({ role: 'user', content: results })
   }
 
+  // web_search is billed per call, separate from token pricing (web_fetch is
+  // token-metered only — fetched content counts as input tokens, already in
+  // inputTokens above). Added on top of estimateCostMicroGbp's token estimate.
+  const webSearchCostMicroGbp = Math.round(webSearchCalls * WEB_SEARCH_COST_USD_PER_CALL * USD_TO_GBP * 1e6)
+
   const usage: TurnUsage = {
     model,
     input_tokens: inputTokens,
     output_tokens: outputTokens,
-    cost_estimate_microgbp: estimateCostMicroGbp(model, inputTokens, outputTokens),
+    cost_estimate_microgbp: estimateCostMicroGbp(model, inputTokens, outputTokens) + webSearchCostMicroGbp,
     duration_ms: Date.now() - started,
     tool_names: toolNames,
     loop_iterations: iterations,
