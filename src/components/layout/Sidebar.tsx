@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   Compass,
   Target,
+  Telescope,
   Search,
   FolderKanban,
   CalendarClock,
@@ -249,6 +250,7 @@ export default function Sidebar({ org, userEmail, companionSurface = false }: Pr
               <>
                 {navLink('/dashboard/briefing', 'Briefing', Compass)}
                 {navLink('/dashboard/plan', 'Plan', Target)}
+                {navLink('/dashboard/research', 'Research', Telescope)}
               </>
             )
             : navLink('/dashboard', 'Dashboard', LayoutDashboard)}

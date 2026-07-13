@@ -51,8 +51,29 @@ const PANEL_RESULT_SLIMMERS: Record<string, (data: unknown) => unknown> = {
   },
   get_briefing: d => {
     const r = d as { has_goal?: boolean; top_candidates?: unknown[] }
-    return { has_goal: r.has_goal, candidate_count: r.top_candidates?.length ?? 0 }
+    // candidates: research agent v1 (design spec §3) — the Research page's
+    // catalogue-verified opportunity cards render straight from this, the SAME
+    // FitCard shape the briefing page's own candidate cards use (plan.ts).
+    // candidate_count/has_goal are unchanged — SetupExperience only reads those.
+    return { has_goal: r.has_goal, candidate_count: r.top_candidates?.length ?? 0, candidates: r.top_candidates ?? [] }
   },
+  // Research agent v1 (design spec §3): a single catalogue-verified opportunity
+  // deep-dive, rendered as one card the same way a get_briefing candidate is.
+  assess_opportunity_against_plan: d => {
+    const r = d as { opportunity?: unknown; eligibility?: unknown; match?: { positive_reasons?: string[] } }
+    return {
+      opportunity: r.opportunity ?? null,
+      eligibility: r.eligibility ?? null,
+      match_reasons: r.match?.positive_reasons ?? [],
+    }
+  },
+  // Research agent v1 (design spec §3): the researched-live card's trigger.
+  // The model calls cache_researched_funder as a cost-saving background action
+  // (research.ts steering) — that SAME call is the UI's signal to render a
+  // researched-live card, so caching and card-rendering share one event
+  // instead of needing a second, purpose-built "present a finding" tool. The
+  // tool's own result echoes back what was written, so no params round-trip.
+  cache_researched_funder: d => d,
 }
 
 export interface TurnUsage {

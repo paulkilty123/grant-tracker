@@ -4,14 +4,14 @@
 // render-friendly view (text turns + tool names); the raw replay substrate
 // never leaves the server.
 
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { resolveWebToolContext } from '@/lib/agent/boundary'
 import { agentEnabledForOrg } from '@/lib/agent/orchestrator/config'
-import { getOrCreateActiveThread, loadThreadView } from '@/lib/agent/orchestrator/threads'
+import { getOrCreateActiveThread, getThread, loadThreadView } from '@/lib/agent/orchestrator/threads'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const boundary = await resolveWebToolContext()
   if (!boundary.ok) {
     return NextResponse.json({ error: boundary.error }, { status: boundary.status })
@@ -25,7 +25,18 @@ export async function GET() {
     return NextResponse.json({ error: 'The strategist requires the Adviser tier.' }, { status: 403 })
   }
 
-  const threadId = await getOrCreateActiveThread(ctx.orgId)
+  // Research agent v1 (design spec §3): ?thread_id addresses a SPECIFIC
+  // thread (one of possibly many research threads) — org-ownership-checked.
+  // Omitted (unchanged behaviour): the single active briefing thread.
+  const requestedId = req.nextUrl.searchParams.get('thread_id')
+  let threadId: string | null
+  if (requestedId) {
+    const thread = await getThread(requestedId, ctx.orgId)
+    if (!thread) return NextResponse.json({ error: 'Thread not found' }, { status: 404 })
+    threadId = thread.id
+  } else {
+    threadId = await getOrCreateActiveThread(ctx.orgId)
+  }
   if (!threadId) {
     return NextResponse.json({ thread_id: null, messages: [] }) // 037 not applied yet
   }

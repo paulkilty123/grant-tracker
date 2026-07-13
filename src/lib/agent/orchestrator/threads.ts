@@ -60,6 +60,33 @@ export async function getThread(threadId: string, orgId: string): Promise<Thread
   } catch { return null }
 }
 
+export interface ResearchThreadSummary {
+  id: string
+  focusLabel: string | null
+  focusPurposeId: string | null
+  updatedAt: string
+}
+
+/** Research agent v1 (design spec §3): the thread tab row's data source —
+ *  every research thread for the org, most recently active first. Archived
+ *  threads are excluded (status='active' only); archiving isn't built yet, so
+ *  today this is every research thread the org has ever opened. */
+export async function listResearchThreads(orgId: string): Promise<ResearchThreadSummary[]> {
+  try {
+    const { data, error } = await serviceClient().from('agent_threads')
+      .select('id, focus_label, focus_purpose_id, updated_at')
+      .eq('org_id', orgId).eq('kind', 'research').eq('status', 'active')
+      .order('updated_at', { ascending: false })
+    if (error || !data) return []
+    return (data as Array<Record<string, unknown>>).map(row => ({
+      id: String(row.id),
+      focusLabel: (row.focus_label as string | null) ?? null,
+      focusPurposeId: (row.focus_purpose_id as string | null) ?? null,
+      updatedAt: String(row.updated_at),
+    }))
+  } catch { return [] }
+}
+
 /** Research agent v1 (design spec §3): always creates a NEW thread — there is
  *  no "the" research thread to fetch-or-create, unlike the briefing drawer.
  *  focusPurposeId/focusLabel are both optional and independent (either, both,

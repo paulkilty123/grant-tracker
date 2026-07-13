@@ -96,6 +96,11 @@ export interface CacheResearchedFunderParams extends Record<string, unknown> {
 }
 export interface CacheResearchedFunderResult {
   funder_key: string
+  funder_name: string
+  summary: string
+  focus_notes: string[]
+  source_urls: string[]
+  fetched_at: string
   cached: true
 }
 
@@ -113,18 +118,23 @@ export const cacheResearchedFunder = defineTool<CacheResearchedFunderParams, Cac
       throw new Error('cache_researched_funder: at least one source_url is required')
     }
     const key = normaliseFunderKey(p.funder_name)
+    const fetchedAt = new Date().toISOString()
+    const focusNotes = p.focus_notes ?? []
     const { error } = await serviceClient()
       .from('researched_funder_cache')
       .upsert({
         funder_key: key,
         funder_name: p.funder_name,
         summary: p.summary,
-        focus_notes: p.focus_notes ?? [],
+        focus_notes: focusNotes,
         source_urls: p.source_urls,
-        fetched_at: new Date().toISOString(),
+        fetched_at: fetchedAt,
       }, { onConflict: 'funder_key' })
     if (error) throw new Error(`cache_researched_funder failed: ${error.message}`)
-    return { funder_key: key, cached: true }
+    // Echoes back what was written (not just an id) — this is also the UI's
+    // researched-live card render signal (loop.ts PANEL_RESULT_SLIMMERS), so
+    // the card needs the content here, not a second round-trip to fetch it.
+    return { funder_key: key, funder_name: p.funder_name, summary: p.summary, focus_notes: focusNotes, source_urls: p.source_urls, fetched_at: fetchedAt, cached: true }
   },
   logEvent: async (ctx, _p, r) => {
     await emitEvent({ surface: ctx.surface, orgId: ctx.orgId, userId: ctx.userId },

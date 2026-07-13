@@ -6,10 +6,20 @@
 import { useCallback, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
+export interface ChatCard {
+  tool: string
+  data: unknown
+}
+
 export interface ChatMessage {
   role: 'user' | 'assistant'
   text: string
   tool_names: string[]
+  /** Research agent v1 (design spec §3): slimmed tool_done payloads attached
+   *  to this turn, in call order — the Research page's opportunity cards
+   *  render straight from these. Empty on every other surface (no consumer
+   *  ever asks for card-worthy tools there). */
+  cards: ChatCard[]
 }
 
 // Tools that change the plan state, so the briefing/plan behind the drawer is
@@ -19,6 +29,9 @@ const PLAN_CHANGING_TOOLS = new Set(['set_funding_goal', 'update_goal_purposes',
 
 export function useAgentChat(opts?: {
   turnKind?: 'chat' | 'strategist'
+  /** Research agent v1 (design spec §3/§8 step 3): addresses a SPECIFIC
+   *  thread. Omitted (unchanged behaviour): the single active briefing thread. */
+  threadId?: string
   /** Whitelisted tool results streamed by the loop (recommend_mix,
    *  set_funding_goal, get_plan_state, get_briefing) — the setup panel's
    *  render source. */
@@ -29,36 +42,38 @@ export function useAgentChat(opts?: {
   const [busy, setBusy] = useState(false)
   const onToolData = opts?.onToolData
   const turnKind = opts?.turnKind ?? 'chat'
+  const threadId = opts?.threadId
   const router = useRouter()
 
   const loadThread = useCallback(() => {
-    fetch('/api/agent/thread')
+    const url = threadId ? `/api/agent/thread?thread_id=${encodeURIComponent(threadId)}` : '/api/agent/thread'
+    fetch(url)
       .then(r => r.json())
       .then(d => {
         setMessages((d?.messages ?? []).map((m: { role: 'user' | 'assistant'; text: string; tool_names: string[] }) =>
-          ({ role: m.role, text: m.text, tool_names: m.tool_names ?? [] })))
+          ({ role: m.role, text: m.text, tool_names: m.tool_names ?? [], cards: [] })))
         setLoaded(true)
       })
       .catch(() => setLoaded(true))
-  }, [])
+  }, [threadId])
 
   const send = useCallback(async (userTurn: string) => {
     const text = userTurn.trim()
     if (!text || busy) return
     setBusy(true)
-    setMessages(prev => [...prev, { role: 'user', text, tool_names: [] }, { role: 'assistant', text: '', tool_names: [] }])
+    setMessages(prev => [...prev, { role: 'user', text, tool_names: [], cards: [] }, { role: 'assistant', text: '', tool_names: [], cards: [] }])
     let planChanged = false
     try {
       const res = await fetch('/api/agent/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_turn: text, turn_kind: turnKind }),
+        body: JSON.stringify({ user_turn: text, turn_kind: turnKind, ...(threadId ? { thread_id: threadId } : {}) }),
       })
       if (!res.ok || !res.body) {
         const err = await res.json().catch(() => null)
         setMessages(prev => {
           const next = [...prev]
-          next[next.length - 1] = { role: 'assistant', text: err?.error ?? 'Something went wrong. Please try again.', tool_names: [] }
+          next[next.length - 1] = { role: 'assistant', text: err?.error ?? 'Something went wrong. Please try again.', tool_names: [], cards: [] }
           return next
         })
         return
@@ -88,6 +103,7 @@ export function useAgentChat(opts?: {
             const last = { ...next[next.length - 1] }
             if (ev.type === 'text_delta') last.text += ev.text ?? ''
             if (ev.type === 'tool_start' && ev.name) last.tool_names = [...last.tool_names, ev.name]
+            if (ev.type === 'tool_done' && ev.name && ev.data !== undefined) last.cards = [...last.cards, { tool: ev.name, data: ev.data }]
             if (ev.type === 'error') last.text += (last.text ? '\n\n' : '') + (ev.message ?? 'Something went wrong.')
             next[next.length - 1] = last
             return next
@@ -109,7 +125,7 @@ export function useAgentChat(opts?: {
       // soft-refresh so the server re-reads and GuidanceRefresher regenerates.
       if (planChanged) router.refresh()
     }
-  }, [busy, turnKind, onToolData, router])
+  }, [busy, turnKind, threadId, onToolData, router])
 
   return { messages, loaded, busy, loadThread, send }
 }
