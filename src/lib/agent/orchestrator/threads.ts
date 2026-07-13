@@ -10,6 +10,7 @@ import type Anthropic from '@anthropic-ai/sdk'
 import { serviceClient } from '../tools/db'
 import type { TurnUsage } from './loop'
 import type { TurnKind } from './config'
+import { PANEL_RESULT_SLIMMERS, RESEARCH_CARD_TOOLS } from './panel-slimmers'
 
 /** Replay window: the most recent messages loaded into model context. Long
  *  threads beyond this are simply not replayed (plan/goal state lives in
@@ -199,11 +200,16 @@ export async function seedThreadOpener(threadId: string, orgId: string, text: st
 }
 
 /** Render-friendly view for the briefing drawer: text turns with tool names,
- *  tool_result-only messages folded away. */
+ *  tool_result-only messages folded away. `cards` (research agent v1 ship-
+ *  gate, spec §8 step 3/4): reconstructed from the SAME stored tool_result
+ *  JSON a live turn streamed from, via the SAME slimmers (panel-slimmers.ts)
+ *  — a reload can never show something a live turn wouldn't have. Empty on
+ *  every message that carried no card-worthy tool call. */
 export interface ThreadViewMessage {
   role: 'user' | 'assistant'
   text: string
   tool_names: string[]
+  cards: Array<{ tool: string; data: unknown }>
   created_at: string
 }
 
@@ -216,22 +222,53 @@ export async function loadThreadView(threadId: string, limit = 100): Promise<Thr
       .order('seq', { ascending: false })
       .limit(limit)
     if (error || !data) return []
+    const rows = data.reverse() as Array<{ role: string; content: unknown; created_at: string }>
     const out: ThreadViewMessage[] = []
-    for (const r of data.reverse()) {
-      const row = r as Record<string, unknown>
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i]
       const content = row.content as Anthropic.MessageParam['content']
       let text = ''
       const toolNames: string[] = []
+      const toolUses: Array<{ id: string; name: string }> = []
       if (typeof content === 'string') text = content
       else if (Array.isArray(content)) {
         for (const block of content) {
           if (typeof block !== 'object' || block === null || !('type' in block)) continue
           if (block.type === 'text') text += (text ? '\n\n' : '') + block.text
-          if (block.type === 'tool_use') toolNames.push(String((block as { name?: unknown }).name ?? ''))
+          if (block.type === 'tool_use') {
+            const name = String((block as { name?: unknown }).name ?? '')
+            toolNames.push(name)
+            const id = String((block as { id?: unknown }).id ?? '')
+            if (id && RESEARCH_CARD_TOOLS.has(name)) toolUses.push({ id, name })
+          }
         }
       }
       if (!text && !toolNames.length) continue // pure tool_result carrier — not a visible turn
-      out.push({ role: row.role as 'user' | 'assistant', text, tool_names: toolNames, created_at: String(row.created_at) })
+
+      // Cards: resolve this turn's card-worthy tool_use ids against the NEXT
+      // stored row's tool_result blocks (loop.ts always writes them adjacent —
+      // assistant tool_use message, then the user tool_result message).
+      const cards: ThreadViewMessage['cards'] = []
+      if (toolUses.length) {
+        const next = rows[i + 1]?.content as Anthropic.MessageParam['content'] | undefined
+        if (Array.isArray(next)) {
+          for (const block of next) {
+            if (typeof block !== 'object' || block === null || !('type' in block) || block.type !== 'tool_result') continue
+            const tr = block as { tool_use_id?: string; content?: unknown; is_error?: boolean }
+            if (tr.is_error) continue
+            const match = toolUses.find(t => t.id === tr.tool_use_id)
+            if (!match) continue
+            const slim = PANEL_RESULT_SLIMMERS[match.name]
+            if (!slim) continue
+            try {
+              const parsed = JSON.parse(String(tr.content)) as { data?: unknown }
+              cards.push({ tool: match.name, data: slim(parsed.data) })
+            } catch { /* stored content wasn't the expected JSON shape — skip, don't throw */ }
+          }
+        }
+      }
+
+      out.push({ role: row.role as 'user' | 'assistant', text, tool_names: toolNames, cards, created_at: String(row.created_at) })
     }
     return out
   } catch { return [] }

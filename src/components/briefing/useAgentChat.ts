@@ -50,8 +50,13 @@ export function useAgentChat(opts?: {
     fetch(url)
       .then(r => r.json())
       .then(d => {
-        setMessages((d?.messages ?? []).map((m: { role: 'user' | 'assistant'; text: string; tool_names: string[] }) =>
-          ({ role: m.role, text: m.text, tool_names: m.tool_names ?? [], cards: [] })))
+        setMessages((d?.messages ?? []).map((m: { role: 'user' | 'assistant'; text: string; tool_names: string[]; cards?: ChatCard[] }) =>
+          // cards: research agent v1 ship-gate (spec §8 step 3/4) — reconstructed
+          // server-side by loadThreadView from the SAME stored tool results a
+          // live turn streamed from (threads.ts), so a reload shows the same
+          // cards a live session would have. Absent/[] on every non-research
+          // surface (the briefing drawer/setup never carry card-worthy tools).
+          ({ role: m.role, text: m.text, tool_names: m.tool_names ?? [], cards: m.cards ?? [] })))
         setLoaded(true)
       })
       .catch(() => setLoaded(true))

@@ -18,6 +18,7 @@ import NewThreadModal from './NewThreadModal'
 import OpportunityCard from './OpportunityCard'
 import { cardsFromToolPayloads, type OpportunityCardData } from './cards'
 import type { ResearchThreadSummary } from './types'
+import type { Brief } from './brief-types'
 
 export default function ResearchView({
   orgId,
@@ -124,7 +125,31 @@ export default function ResearchView({
     void send(`Research ${name} further — go deeper on eligibility, deadlines, and how to approach.`)
   }
 
-  const cardActions = { onAddToPipeline: handleAddToPipeline, onSaveForLater: handleSaveForLater, onPin: handlePin, onResearchDeeper: handleResearchDeeper }
+  async function handleWriteBrief(data: OpportunityCardData): Promise<Brief> {
+    if (!activeId) throw new Error('No active thread')
+    const res = await fetch('/api/agent/research/brief', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ thread_id: activeId, opportunity: data }),
+    })
+    const d = await res.json().catch(() => null)
+    if (!res.ok || !d?.brief) throw new Error(d?.error ?? 'Brief generation failed.')
+    return d.brief as Brief
+  }
+
+  async function handlePinBrief(brief: Brief, opportunity: OpportunityCardData) {
+    if (!activeId) return
+    const opportunityRef = opportunity.variant === 'catalogue' ? opportunity.opportunity_id : opportunity.funder_key
+    await createPin(orgId, activeId, {
+      title: brief.title,
+      body: brief.sections.what_they_fund[0]?.text ?? null,
+      source_kind: opportunity.variant === 'catalogue' ? 'catalogue' : 'researched',
+      opportunity_ref: opportunityRef,
+    })
+    refreshPins()
+  }
+
+  const cardActions = { onAddToPipeline: handleAddToPipeline, onSaveForLater: handleSaveForLater, onPin: handlePin, onResearchDeeper: handleResearchDeeper, onWriteBrief: handleWriteBrief, onPinBrief: handlePinBrief }
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 md:px-6">

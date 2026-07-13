@@ -16,6 +16,11 @@ export interface CatalogueCardData {
   deadline: string | null
   reason: string | null
   record_check: { status: 'checked' | 'unverified'; checked_at: string | null }
+  /** Carried for brief generation's watch_outs section (api/agent/research/brief) — not otherwise rendered on the card face. */
+  eligibility_status: string | null
+  warning_codes: string[]
+  size_note: string | null
+  match_reasons: string[]
 }
 
 export interface ResearchedCardData {
@@ -23,6 +28,7 @@ export interface ResearchedCardData {
   funder_key: string
   funder_name: string
   summary: string
+  focus_notes: string[]
   source_urls: string[]
   fetched_at: string
 }
@@ -39,6 +45,9 @@ interface FitCardShape {
   amount_undisclosed: boolean
   deadline?: string | null
   match_reasons?: string[]
+  eligibility_status?: string | null
+  warning_codes?: string[]
+  size_note?: string | null
   record_check: { status: 'checked' | 'unverified'; checked_at: string | null }
 }
 
@@ -55,6 +64,10 @@ function fromFitCard(c: FitCardShape): CatalogueCardData {
     deadline: c.deadline ?? null,
     reason: c.match_reasons?.[0] ?? null,
     record_check: c.record_check,
+    eligibility_status: c.eligibility_status ?? null,
+    warning_codes: c.warning_codes ?? [],
+    size_note: c.size_note ?? null,
+    match_reasons: c.match_reasons ?? [],
   }
 }
 
@@ -76,6 +89,7 @@ export function cardsFromToolPayloads(cards: ChatCard[]): OpportunityCardData[] 
       // through untouched.
       const d = c.data as {
         opportunity?: { id: string; title: string; funder: string; funding_type?: string; amount_min: number | null; amount_max: number | null; amount_undisclosed: boolean; deadline?: string | null }
+        eligibility?: { status: string; issues: Array<{ code: string }> }
         match_reasons?: string[]
       }
       if (d.opportunity) {
@@ -83,17 +97,20 @@ export function cardsFromToolPayloads(cards: ChatCard[]): OpportunityCardData[] 
           ...d.opportunity,
           opportunity_id: d.opportunity.id,
           match_reasons: d.match_reasons,
+          eligibility_status: d.eligibility?.status ?? null,
+          warning_codes: d.eligibility?.issues?.map(i => i.code) ?? [],
           record_check: { status: 'unverified', checked_at: null }, // assess doesn't carry link-check state
         }))
       }
     } else if (c.tool === 'cache_researched_funder') {
-      const d = c.data as { funder_key?: string; funder_name?: string; summary?: string; source_urls?: string[]; fetched_at?: string }
+      const d = c.data as { funder_key?: string; funder_name?: string; summary?: string; focus_notes?: string[]; source_urls?: string[]; fetched_at?: string }
       if (d.funder_key && d.funder_name) {
         out.push({
           variant: 'researched',
           funder_key: d.funder_key,
           funder_name: d.funder_name,
           summary: d.summary ?? '',
+          focus_notes: d.focus_notes ?? [],
           source_urls: d.source_urls ?? [],
           fetched_at: d.fetched_at ?? new Date().toISOString(),
         })

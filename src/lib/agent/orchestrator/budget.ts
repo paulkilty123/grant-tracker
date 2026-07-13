@@ -33,12 +33,13 @@ export async function checkInferenceBudget(orgId: string): Promise<BudgetVerdict
       .eq('event_type', 'agent_turn_completed')
       .gte('created_at', startOfTodayUtc())
       .limit(5000),
-    // Briefing guidance generations (agent_runs) share the same token budget
-    // and global kill-switch as conversational turns, so total agent spend per
-    // org is bounded together. They do NOT count toward the turn cap.
+    // Briefing guidance + research brief generations (agent_runs) share the
+    // same token budget and global kill-switch as conversational turns, so
+    // total agent spend per org is bounded together. They do NOT count
+    // toward the turn cap.
     sb.from('agent_runs')
       .select('org_id, input_tokens, output_tokens')
-      .eq('trigger', 'briefing')
+      .in('trigger', ['briefing', 'research_brief'])
       .gte('created_at', startOfTodayUtc())
       .limit(5000),
   ])

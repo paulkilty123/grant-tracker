@@ -124,6 +124,40 @@ async function main() {
 
       const briefingMeta = await threads.getThread(briefing1!, orgId)
       check('getThread on the briefing thread reports kind=briefing', briefingMeta?.kind === 'briefing')
+
+      // ── ship-gate: cards reconstruct on reload, not just live (spec §8 step 3/4) ──
+      rule('ship-gate — card reload reconstruction')
+      const fakeCandidate = {
+        opportunity_id: '11111111-1111-1111-1111-111111111111',
+        title: 'ZZ Smoke Test Fund', funder: 'ZZ Smoke Funder', funding_type: 'grant',
+        amount_min: 5000, amount_max: 20000, amount_undisclosed: false,
+        deadline: null, is_rolling: true, next_open_date: null, open_status: null,
+        eligibility_status: 'eligible', warning_codes: [], match_reasons: ['Matches your sector.'],
+        record_check: { status: 'unverified', checked_at: null }, size_note: null,
+      }
+      await threads.appendTurn(r1!, orgId, [
+        { role: 'user', content: 'Find me some funders.' },
+        {
+          role: 'assistant',
+          content: [
+            { type: 'text', text: 'Here is one candidate.' },
+            { type: 'tool_use', id: 'tu_ship_gate_1', name: 'get_briefing', input: {} },
+          ],
+        },
+        {
+          role: 'user',
+          content: [{
+            type: 'tool_result', tool_use_id: 'tu_ship_gate_1',
+            content: JSON.stringify({ data: { has_goal: false, top_candidates: [fakeCandidate] }, provenance: {} }),
+          }],
+        },
+      ], { turnKind: 'chat', usage: { model: 'smoke', input_tokens: 1, output_tokens: 1, cost_estimate_microgbp: 0, duration_ms: 1, tool_names: ['get_briefing'], loop_iterations: 1 } })
+
+      const reloaded = await threads.loadThreadView(r1!)
+      const assistantTurn = reloaded.find(m => m.role === 'assistant' && m.tool_names.includes('get_briefing'))
+      check('reload reconstructs a card for the stored get_briefing tool_result', (assistantTurn?.cards.length ?? 0) === 1, `got ${JSON.stringify(assistantTurn?.cards)}`)
+      const cardData = assistantTurn?.cards[0]?.data as { candidates?: Array<{ opportunity_id: string }> } | undefined
+      check('reconstructed card carries the SAME candidate data a live turn would show', cardData?.candidates?.[0]?.opportunity_id === fakeCandidate.opportunity_id)
     }
 
     // ── 039: researched_funder_cache (self-gated) ──────────────────────────────
