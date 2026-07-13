@@ -16,7 +16,7 @@ const TIER_TOOLS: Record<Tier, ReadonlySet<string>> = {
     'get_funding_goal', 'set_funding_goal', 'update_goal_purposes', 'recommend_mix',
     'get_plan_state', 'get_briefing',
     'assess_opportunity_against_plan', 'get_org_context',
-    'check_researched_funder', 'cache_researched_funder',
+    'check_researched_funder', 'cache_researched_funder', 'flag_for_verification',
   ]),
   internal: new Set<string>(['*']),
 }

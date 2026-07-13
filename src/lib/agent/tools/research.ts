@@ -17,6 +17,7 @@ import { defineTool } from './envelope'
 import { emitEvent } from '../../events/emit'
 import { EntitlementError, prov, type Provenance } from './types'
 import type { ToolContext } from './types'
+import { stampNewGrant } from '../../grant-merge'
 
 /** How long a cached profile is treated as fresh before check_researched_funder
  *  flags it stale (the model then decides whether to re-research). Provisional
@@ -140,4 +141,83 @@ export const cacheResearchedFunder = defineTool<CacheResearchedFunderParams, Cac
     await emitEvent({ surface: ctx.surface, orgId: ctx.orgId, userId: ctx.userId },
       'agent_tool_called', { tool_name: 'cache_researched_funder', result_count: 1, degraded: false })
   },
+})
+
+// ── flag_for_verification ────────────────────────────────────────────────────
+// The enrichment staging flow (design spec §3/§4, build step 5). Stages the
+// SAME table and Needs Review workflow every other catalogue addition goes
+// through — is_active=false, source below admin/ai_enrich trust (a real
+// enrichment pass can still improve it later) — via the SAME stampNewGrant()
+// every scraper/audit insert uses, so this never becomes a parallel,
+// differently-behaved staging path (CLAUDE.md's field_provenance trust
+// ladder gotcha: never stamp `admin:` on something no human has reviewed).
+// A dedicated small table (agent_flagged_findings, migration 041) records the
+// thread + source URLs + claimed fields — the audit trail spec §4 asks for
+// ("tagged to the originating thread"); the staged content itself lives on
+// the scraped_grants row, exactly like every other addition.
+
+export interface FlagForVerificationParams extends Record<string, unknown> {
+  funder_name: string
+  summary: string
+  focus_notes?: string[]
+  source_urls: string[]
+}
+export interface FlagForVerificationResult {
+  scraped_grant_id: string
+  flagged: true
+}
+
+export const flagForVerification = defineTool<FlagForVerificationParams, FlagForVerificationResult>({
+  name: 'flag_for_verification',
+  handler: async (ctx, p) => {
+    assertAppSurface(ctx, 'flag_for_verification')
+    if (!p.funder_name || typeof p.funder_name !== 'string') {
+      throw new Error('flag_for_verification: funder_name is required')
+    }
+    if (!p.summary || typeof p.summary !== 'string') {
+      throw new Error('flag_for_verification: summary is required')
+    }
+    if (!Array.isArray(p.source_urls) || p.source_urls.length === 0) {
+      throw new Error('flag_for_verification: at least one source_url is required')
+    }
+    if (!ctx.threadId) {
+      throw new Error('flag_for_verification: no thread context — this is a research-thread-only action')
+    }
+
+    const sb = serviceClient()
+    const source = `system:research-flag-${new Date().toISOString().slice(0, 10)}`
+    const stamped = stampNewGrant(
+      {
+        title: p.funder_name,
+        funder: p.funder_name,
+        description: p.summary,
+        apply_url: p.source_urls[0] ?? null,
+        source: 'research_agent', // scraped_grants.source (how it entered the catalogue) — distinct from field_provenance's per-field source strings above
+        is_active: false,
+        raw_data: { flagged_from_research: true, source_urls: p.source_urls, focus_notes: p.focus_notes ?? [] },
+      },
+      source,
+    )
+    const { data, error } = await sb.from('scraped_grants').insert(stamped).select('id').single()
+    if (error || !data) throw new Error(`flag_for_verification: scraped_grants insert failed: ${error?.message}`)
+    const scrapedGrantId = String((data as Record<string, unknown>).id)
+
+    const { error: linkErr } = await sb.from('agent_flagged_findings').insert({
+      thread_id: ctx.threadId,
+      org_id: ctx.orgId,
+      scraped_grant_id: scrapedGrantId,
+      source_urls: p.source_urls,
+      claimed_fields: { funder_name: p.funder_name, summary: p.summary, focus_notes: p.focus_notes ?? [] },
+    })
+    if (linkErr) console.error('[flag_for_verification] agent_flagged_findings insert failed (catalogue row still staged):', linkErr.message)
+
+    return { scraped_grant_id: scrapedGrantId, flagged: true }
+  },
+  logEvent: async (ctx, _p, r) => {
+    await emitEvent({ surface: ctx.surface, orgId: ctx.orgId, userId: ctx.userId },
+      'agent_tool_called', { tool_name: 'flag_for_verification', result_count: 1, degraded: false })
+  },
+  provenance: (_ctx, r): Record<string, Provenance<unknown>> => ({
+    scraped_grant_id: prov(r.scraped_grant_id, 'agent', new Date().toISOString()),
+  }),
 })

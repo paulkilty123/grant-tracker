@@ -19,6 +19,13 @@ export interface ToolContext {
   surface: EventSurface // 'app' (in-app agent) | 'mcp' (external client)
   tier: Tier
   userId?: string | null
+  /** Research agent v1 only (design spec §3): the research thread a turn is
+   *  running in, when there is one. Threads are in-app conversational
+   *  infrastructure, not a canonical identity concept — undefined on MCP
+   *  calls and on any non-research in-app turn. Only flag_for_verification
+   *  reads this today (the enrichment audit trail's "tagged to the
+   *  originating thread"). */
+  threadId?: string
 }
 
 /** Uniform provenance envelope — every factual field a tool returns carries it. */

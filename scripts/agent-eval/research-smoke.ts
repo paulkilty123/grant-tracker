@@ -86,6 +86,7 @@ async function main() {
     pins: !(await sb.from('agent_thread_pins').select('id').limit(1)).error,
     funderCache: !(await sb.from('researched_funder_cache').select('id').limit(1)).error,
     briefs: !(await sb.from('agent_thread_briefs').select('id').limit(1)).error,
+    flaggedFindings: !(await sb.from('agent_flagged_findings').select('id').limit(1)).error,
   }
 
   const { data: anyOrg } = await sb.from('organisations').select('owner_id').limit(1).single()
@@ -227,6 +228,52 @@ async function main() {
 
         // No separate cleanup: agent_thread_briefs.thread_id cascades from
         // agent_threads on delete, covered by the finally block below.
+      }
+    }
+
+    // ── 041: flag_for_verification (self-gated) ────────────────────────────────
+    rule('041 — flag_for_verification (enrichment staging flow)')
+    if (!applied.flaggedFindings) {
+      console.log('  ⏭  SKIPPED — apply supabase/migrations/041_flagged_findings.sql first')
+      failures += 1
+    } else if (!applied.threadKindFocus) {
+      console.log('  ⏭  SKIPPED — needs a research thread (038) to attach to')
+      failures += 1
+    } else {
+      const flagThreadId = await threads.createResearchThread(orgId, { focusLabel: 'ZZ flag smoke thread' })
+      if (!flagThreadId) {
+        check('could create a thread to flag from', false)
+      } else {
+        const flagCtx: Ctx = { orgId, surface: 'app', tier: 'companion', userId: ownerId, threadId: flagThreadId }
+        const flagged = await tools.flagForVerification(flagCtx, {
+          funder_name: 'ZZ Smoke Test Flagged Funder',
+          summary: 'Funds community projects; researched live, not yet in the catalogue.',
+          focus_notes: ['rolling deadline'],
+          source_urls: ['https://example.org/zz-smoke-flagged-funder'],
+        })
+        check('flag_for_verification returns a scraped_grant_id', !!flagged.data.scraped_grant_id)
+
+        const { data: stagedRow } = await sb.from('scraped_grants')
+          .select('title, funder, is_active, source, pipeline_state, field_provenance')
+          .eq('id', flagged.data.scraped_grant_id).maybeSingle()
+        const staged = stagedRow as Record<string, unknown> | null
+        check('staged row is inactive (needs review, never live by default)', staged?.is_active === false)
+        check('staged row lands in pipeline_state=captured', staged?.pipeline_state === 'captured')
+        const prov = (staged?.field_provenance as Record<string, { source?: string }> | null)?.title
+        check('field_provenance source is system:research-flag-*, NOT admin (trust-ladder gotcha)',
+          !!prov?.source && prov.source.startsWith('system:research-flag-'), `got ${JSON.stringify(prov)}`)
+
+        const { data: linkRow } = await sb.from('agent_flagged_findings')
+          .select('thread_id, org_id, scraped_grant_id, source_urls')
+          .eq('scraped_grant_id', flagged.data.scraped_grant_id).maybeSingle()
+        const link = linkRow as Record<string, unknown> | null
+        check('agent_flagged_findings links the thread + org + staged row',
+          link?.thread_id === flagThreadId && link?.org_id === orgId && Array.isArray(link?.source_urls) && (link.source_urls as string[]).includes('https://example.org/zz-smoke-flagged-funder'))
+
+        // Cleanup: delete the staged scraped_grants row (cascades the
+        // agent_flagged_findings link row via its FK); the thread itself is
+        // covered by the finally block's agent_threads delete-by-org.
+        await sb.from('scraped_grants').delete().eq('id', flagged.data.scraped_grant_id)
       }
     }
 

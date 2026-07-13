@@ -13,10 +13,10 @@ import { getPlanState, getBriefing } from './plan'
 import { assessOpportunityAgainstPlan } from './assess'
 import { getFundingGoal, setFundingGoal, updateGoalPurposes, PURPOSE_CATEGORIES } from './goal'
 import { recommendMix, RECOMMEND_MIX_DESCRIPTION } from './mix'
-import { checkResearchedFunder, cacheResearchedFunder } from './research'
+import { checkResearchedFunder, cacheResearchedFunder, flagForVerification } from './research'
 import { CONTRACT } from '../contract'
 
-export { addToPipeline, updatePipelineItem, getPipeline, getPlanState, getBriefing, assessOpportunityAgainstPlan, getFundingGoal, setFundingGoal, updateGoalPurposes, recommendMix, checkResearchedFunder, cacheResearchedFunder }
+export { addToPipeline, updatePipelineItem, getPipeline, getPlanState, getBriefing, assessOpportunityAgainstPlan, getFundingGoal, setFundingGoal, updateGoalPurposes, recommendMix, checkResearchedFunder, cacheResearchedFunder, flagForVerification }
 export { PURPOSE_CATEGORIES } from './goal'
 
 const PURPOSE_ITEM_SCHEMA = {
@@ -269,6 +269,24 @@ export const TOOL_REGISTRY: ToolSpecEntry[] = [
         summary: { type: 'string', description: 'A short paragraph: what they fund, how to approach, watch-outs.' },
         focus_notes: { type: 'array', items: { type: 'string' }, description: 'Optional short bullet-style facts, e.g. "rolling deadline", "UK-registered charities only".' },
         source_urls: { type: 'array', items: { type: 'string' }, description: 'The URLs the summary was researched from.' },
+      },
+      required: ['funder_name', 'summary', 'source_urls'],
+    },
+  },
+  {
+    name: 'flag_for_verification',
+    tier: 'companion',
+    status: 'built',
+    researchOnly: true,
+    params: 'funder_name, summary, focus_notes?, source_urls',
+    description: `Research agent v1 enrichment staging flow: stage a researched-live finding for human catalogue verification. Only ever call this when the user explicitly asks to flag, verify, or add a researched find toward the catalogue — never as a default follow-up to research, and never in place of cache_researched_funder (call that too, or first, regardless). This creates an inactive, unreviewed catalogue entry; it does NOT make the finding usable or add-to-pipeline-eligible, and the user should be told plainly that a human needs to verify it against the funder's own source before it goes live. Never say this means the finding is now "in the catalogue" or "verified" — say it has been staged for review.`,
+    input_schema: {
+      type: 'object',
+      properties: {
+        funder_name: { type: 'string', description: 'The funder name, as you would want it displayed.' },
+        summary: { type: 'string', description: 'A short paragraph: what they fund, how to approach, watch-outs.' },
+        focus_notes: { type: 'array', items: { type: 'string' }, description: 'Optional short bullet-style facts, e.g. "rolling deadline", "UK-registered charities only".' },
+        source_urls: { type: 'array', items: { type: 'string' }, description: 'The URLs the summary was researched from — the reviewer checks these against the funder\'s own source before activation.' },
       },
       required: ['funder_name', 'summary', 'source_urls'],
     },

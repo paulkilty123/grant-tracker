@@ -77,6 +77,9 @@ export async function POST(req: NextRequest) {
   const history = threadId
     ? await loadThreadHistory(threadId)
     : (Array.isArray(body.history) ? body.history : [])
+  // threadId on ctx (research agent v1): only flag_for_verification reads it
+  // today (tools/types.ts) — undefined is fine everywhere else, including MCP.
+  const ctxWithThread = { ...ctx, threadId: threadId ?? undefined }
 
   const encoder = new TextEncoder()
   const stream = new ReadableStream({
@@ -85,7 +88,7 @@ export async function POST(req: NextRequest) {
         controller.enqueue(encoder.encode(`data: ${JSON.stringify(ev)}\n\n`))
       send({ type: 'thread', thread_id: threadId })
       try {
-        const res = await runAgentTurn({ ctx, history, userTurn, turnKind, research, onEvent: send })
+        const res = await runAgentTurn({ ctx: ctxWithThread, history, userTurn, turnKind, research, onEvent: send })
         if (threadId) {
           await appendTurn(threadId, ctx.orgId, res.messages.slice(history.length), { turnKind, usage: res.usage })
         }

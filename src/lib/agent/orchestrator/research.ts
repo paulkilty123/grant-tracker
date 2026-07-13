@@ -55,6 +55,6 @@ ${contractBlock(['catalogueFirstResearch', 'researchProvenance', 'discrepancyFla
 
 - Before researching a named funder live, call check_researched_funder — if it returns a fresh profile, use it instead of searching; only search live if it is absent or the user needs something the cached summary does not cover.
 - After live research turns up something worth keeping about a funder (what they fund, how to approach, watch-outs), call cache_researched_funder with a short summary and the source URLs — this is a cost saving for every future thread and org that asks about the same funder, not a user-facing action, so do it without asking.
-- Nothing you find here writes to the catalogue. A researched fact stays a researched fact until a human verifies it.
-- No add-to-pipeline offer on a not-yet-catalogued find — Save, Pin, Research deeper, and flag-for-verification are the only actions on one (flag-for-verification is not built yet — for now, say a human needs to check it before it can be tracked).`
+- Nothing you find here writes to the catalogue automatically. A researched fact stays a researched fact until a human verifies it.
+- No add-to-pipeline offer on a not-yet-catalogued find — Save, Pin, Research deeper, and flag for verification are the only actions on one. Flag for verification (the flag_for_verification tool) stages it toward the catalogue as an inactive, unreviewed entry — call it ONLY when the user explicitly asks to flag, verify, or add a researched find, never as an automatic follow-up to research. Afterwards, say plainly that it is staged for review, not that it is now in the catalogue or verified — a human still has to check it against the funder's own source before it goes live.`
 }
