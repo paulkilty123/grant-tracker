@@ -1,7 +1,7 @@
 'use client'
 
 // Opportunity card — two variants, per the 11 July Research section mockup.
-// Catalogue-verified: forest [Add to pipeline] + hairline [Save for later] /
+// Catalogue-verified: lime [Add to pipeline] + hairline [Save for later] /
 // [Write me a brief]. Researched-live: amber "researched live" badge, NO
 // add-to-pipeline (restricted-actions rule, design spec §2), hairline
 // [Save for later] / [Research deeper] / [Pin]. The two variants' chrome is
@@ -12,12 +12,10 @@ import { formatRange } from '@/lib/utils'
 import { COLOR, grotesk, fmtDate, AmberPill } from '@/components/briefing/ui'
 import type { CatalogueCardData, OpportunityCardData } from './cards'
 
-// NOTE on Add to pipeline's fill colour: the 11 July mockup calls this chip
-// "forest solid, the primary". CLAUDE.md's locked button-hierarchy rule
-// assigns card-level +Pipeline to LIME fill instead. Built to the mockup as
-// pasted — flagging the conflict for Paul to reconcile on review, not
-// resolving it silently (the exact discipline this page's own steering
-// asks of the model, applied to the build itself).
+// Add to pipeline's fill colour: the 11 July mockup called this chip "forest
+// solid, the primary"; CLAUDE.md's locked button-hierarchy rule assigns
+// card-level +Pipeline to LIME fill instead. Resolved 2026-07-13 — CLAUDE.md
+// wins, the mockup's "forest solid" is superseded on this one point.
 const chipBase: React.CSSProperties = {
   ...grotesk,
   fontSize: 12.5,
@@ -28,7 +26,7 @@ const chipBase: React.CSSProperties = {
   cursor: 'pointer',
   whiteSpace: 'nowrap',
 }
-const chipForest: React.CSSProperties = { ...chipBase, background: COLOR.forest, color: COLOR.pale }
+const chipLime: React.CSSProperties = { ...chipBase, background: COLOR.lime, color: COLOR.forest }
 const chipHairline: React.CSSProperties = { ...chipBase, background: '#fff', color: COLOR.ink, border: `1px solid ${COLOR.hair}` }
 const chipHairlineDone: React.CSSProperties = { ...chipHairline, color: COLOR.sage, borderColor: COLOR.weighted }
 
@@ -103,7 +101,7 @@ export default function OpportunityCard({ data, actions }: { data: OpportunityCa
       <div className="flex items-center gap-1.5 mt-2.5 flex-wrap">
         {isCatalogue ? (
           <>
-            <Chip label={added ? 'Added' : 'Add to pipeline'} done={added} style={chipForest} disabled={added}
+            <Chip label={added ? 'Added' : 'Add to pipeline'} done={added} style={chipLime} disabled={added}
               onClick={() => { setAdded(true); actions.onAddToPipeline?.(data) }} />
             <Chip label={saved ? 'Saved' : 'Save for later'} done={saved} style={saved ? chipHairlineDone : chipHairline} disabled={saved}
               onClick={() => { setSaved(true); actions.onSaveForLater?.(data) }} />
