@@ -25,6 +25,8 @@ Push auth is a personal-access token embedded in `remote.origin.url` (see `git r
 
 **After every push:** Vercel auto-deploys from GitHub `main` (~1 min). Verify on the live site.
 
+**Branch discipline for build work:** build work happens on the feature branch (e.g. `agent/v1-core`) — commits and pushes to that branch are Claude's to make freely, no need to check in first. Nothing merges into `main`, and nothing pushes to `main`, except on Paul's explicit go, through the standing deploy gate: regression suites, accent check, free-surface fingerprint, named rollback. `main` is the production branch Vercel deploys from — treat a push to it as the deploy trigger it is, not a routine save.
+
 > History: until 2026-06-22 the repo lived in iCloud-synced `~/Documents`, which corrupted `.git` and forced a `/tmp/gg` copy-and-reset ritual to commit. Moving it to `~/dev` fixed the root cause; the ritual is retired. Don't move it back under Documents/Desktop.
 
 ---
@@ -113,6 +115,15 @@ const savedIds = Array.from(new Set(interactions.map(r => r.grant_id).filter(id 
 ```
 
 Without this filter, non-UUID legacy IDs cause a Postgres cast error, the query silently returns null, and no rows are shown.
+
+### Important Gotcha: field_provenance trust ladder blocks re-enrichment on staged rows
+Every write to a tracked field on `scraped_grants` (`funder_brief`, `description`, `amount_min/max`, `eligible_structures`, etc. — see `TRACKED_FIELDS` in `src/lib/grant-merge.ts`) goes through `mergeGrantUpdate()`, which stamps `field_provenance` and enforces a trust ladder (`admin`=100 > `360giving`=80 > `ai_*`=60 > `system`/`ai_extract`=50 > `scraper`=40 > `ai_detect`/`seed`/`discovery`≤30). A **higher-trust source blocks a lower-trust source from ever overwriting that field again** — by design, so AI can't silently clobber a deliberate admin correction.
+
+**The trap:** if you hand-author a starter `funder_brief` (or any tracked field) for a row you're staging into Needs Review — e.g. via a raw SQL `INSERT`/`UPDATE` with a `source` like `admin:gap-audit-<name>-<date>` — and that source also gets stamped into `field_provenance`, it carries **full admin trust (100)**, even though no human has actually reviewed it yet. That permanently outranks `ai_enrich` (60), so **Re-enrich in the Needs Review UI silently fails**: the API computes a fresh brief and the UI flashes it, but the DB write is rejected by the trust ladder, and the next state refresh reverts the screen to the old value with no explanation.
+
+**Fixed instance:** 2026-07-09, 12 Scotland-batch rows (Corra Foundation, Gannochy Trust, Hugh Fraser Foundation, Volant Charitable Trust) — `field_provenance` entries for that batch's `admin:gap-audit-scotland-2026-07-09` source were stripped so `ai_enrich` could write again. The `urls/page.tsx` enrich handlers (single, with-sources, bulk) now also check the API response's `rejected` array and surface a warning instead of silently showing content that didn't save.
+
+**Going forward:** when staging a row that's still awaiting human review (i.e. not yet Paul-activated), use a source **below `ai_enrich` trust** for any tracked field you pre-populate — e.g. `system:gap-audit-<name>-<date>` (trust 50) or `seed:...` (trust 25) — never `admin:...`. Reserve `admin:` sources for values a human has actually reviewed and decided on.
 
 ### Seed Data
 `src/lib/grants.ts` is fallback seed only — new grants go directly into Supabase.
@@ -211,10 +222,10 @@ Deferred post-beta:
 
 ## Rules
 
-1. **Commit after every file change.** Vercel deploys from GitHub only.
+1. **Commit after every file change.** On a feature branch, push freely too. `main` only moves on Paul's explicit go (see Git → Branch discipline) — Vercel deploys from `main` only.
 2. **TypeScript clean before every push.** `npx tsc --noEmit` must produce no output.
 3. **Minimal changes.** Fix the stated problem. Don't refactor surrounding code unless asked.
-4. **Verify on live site** after every push (~1 min Vercel deploy).
+4. **Verify on live site** after every merge/push to `main` (~1 min Vercel deploy).
 5. **No border-radius: 0** anywhere — rounded corners are a hard design rule.
 
 ---
