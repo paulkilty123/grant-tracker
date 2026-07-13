@@ -85,6 +85,7 @@ async function main() {
     threadKindFocus: !(await sb.from('agent_threads').select('kind, focus_purpose_id, focus_label').limit(1)).error,
     pins: !(await sb.from('agent_thread_pins').select('id').limit(1)).error,
     funderCache: !(await sb.from('researched_funder_cache').select('id').limit(1)).error,
+    briefs: !(await sb.from('agent_thread_briefs').select('id').limit(1)).error,
   }
 
   const { data: anyOrg } = await sb.from('organisations').select('owner_id').limit(1).single()
@@ -186,6 +187,47 @@ async function main() {
       await tools.cacheResearchedFunder(appCtx, { funder_name: 'ZZ Smoke Test Trust', summary: 'Updated summary.', source_urls: ['https://example.org/zz-smoke-test-trust-2'] })
       const { data: rows } = await sb.from('researched_funder_cache').select('id').eq('funder_key', 'zz smoke test trust')
       check('re-caching the same funder upserts, not duplicates', (rows ?? []).length === 1, `got ${(rows ?? []).length} rows`)
+    }
+
+    // ── 040: agent_thread_briefs (self-gated) ──────────────────────────────────
+    rule('040 — agent_thread_briefs')
+    if (!applied.briefs) {
+      console.log('  ⏭  SKIPPED — apply supabase/migrations/040_research_briefs.sql first')
+      failures += 1
+    } else if (!applied.threadKindFocus) {
+      console.log('  ⏭  SKIPPED — needs a research thread (038) to attach to')
+      failures += 1
+    } else {
+      const briefThreadId = await threads.createResearchThread(orgId, { focusLabel: 'ZZ brief smoke thread' })
+      if (!briefThreadId) {
+        check('could create a thread to attach a brief to', false)
+      } else {
+        // No LLM call here (this suite costs nothing) — write the row
+        // directly, the exact shape api/agent/research/brief's route writes,
+        // proving the schema + RLS select policy end to end. Real generation
+        // (brief.ts's provenance lint) is a paid Anthropic call, not exercised
+        // by this free suite — same convention as schema-smoke.ts.
+        const sections = {
+          what_they_fund: [{ text: 'Funds youth programmes across the UK.', provenance: 'catalogue' }],
+          fit_against_purpose: [{ text: 'Matches the schools programme purpose.', provenance: 'adviser_judgment' }],
+          how_to_approach: [{ text: 'Apply via their online portal.', provenance: 'catalogue' }],
+          watch_outs: [] as Array<{ text: string; provenance: string }>,
+        }
+        const { data: savedBrief, error: briefErr } = await sb.from('agent_thread_briefs').insert({
+          thread_id: briefThreadId, org_id: orgId, opportunity_ref: '11111111-1111-1111-1111-111111111111',
+          title: 'ZZ Smoke Test Brief', sections, model: 'smoke', prompt_version: 'smoke-v0',
+        }).select('id, title, sections, created_at').single()
+        check('brief row inserts', !briefErr && !!savedBrief, briefErr?.message)
+
+        const { data: readBack } = await sb.from('agent_thread_briefs')
+          .select('id, thread_id, title, sections').eq('thread_id', briefThreadId).maybeSingle()
+        const rb = readBack as { title?: string; sections?: typeof sections } | null
+        check('brief reads back with title + provenance-tagged sections intact',
+          rb?.title === 'ZZ Smoke Test Brief' && rb?.sections?.what_they_fund?.[0]?.provenance === 'catalogue')
+
+        // No separate cleanup: agent_thread_briefs.thread_id cascades from
+        // agent_threads on delete, covered by the finally block below.
+      }
     }
 
     // ── cost lever 1 — monthly research budget (live, no migration needed) ────
