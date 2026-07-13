@@ -8,6 +8,7 @@ import { buildPlanState, buildBriefingOnboarding, buildMixProgress } from '../..
 import type { PurposeRow, PipelineAllocation } from '../../src/lib/agent/tools/repository'
 import type { GoalInput, PipelineEntry } from '../../src/lib/agent/types'
 import type { Organisation } from '@/types'
+import { lintApplicationVoice, type BriefSections } from '../../src/lib/agent/brief'
 
 const captured: Array<{ surface: string; orgId: string; itemId: string }> = []
 
@@ -97,6 +98,31 @@ async function main() {
   const mixNoPurposes = buildMixProgress(mixGoal, [], [], pipeline)
   check('mix: not attributable pre-purposes; active pipeline all unattributed',
     mixNoPurposes?.attributable === false && mixNoPurposes?.unattributed === 50_000)
+
+  // 8. Scaffold guard, extended to the brief artefact (research agent v1, design
+  // spec §6): brief generation runs OUTSIDE the tool layer (CLAUDE.md — briefs
+  // are legitimately adviser-authored advice), so assertScaffoldOnly never sees
+  // it. lintApplicationVoice is that artefact's equivalent guard — pure,
+  // no model call, same discipline as every other case in this suite.
+  const cleanSections: BriefSections = {
+    what_they_fund: [{ text: 'Funds community projects across the UK.', provenance: 'catalogue' }],
+    fit_against_purpose: [{ text: 'A reasonable fit for a schools programme.', provenance: 'adviser_judgment' }],
+    how_to_approach: [{ text: 'Check their website for the current application window.', provenance: 'catalogue' }],
+    watch_outs: [],
+  }
+  check('clean adviser-voiced brief passes the voice lint', lintApplicationVoice(cleanSections) === null)
+
+  const draftedAskSections: BriefSections = {
+    ...cleanSections,
+    how_to_approach: [{ text: 'We are writing to request a grant of £20,000 to support our schools programme.', provenance: 'adviser_judgment' }],
+  }
+  check('drafted first-person ask text in how_to_approach is caught', lintApplicationVoice(draftedAskSections) !== null)
+
+  const letterOpenerSections: BriefSections = {
+    ...cleanSections,
+    how_to_approach: [{ text: 'Dear Trustees, on behalf of our organisation we would be grateful if you would consider our application.', provenance: 'adviser_judgment' }],
+  }
+  check('letter-shaped opener ("Dear ...") is caught', lintApplicationVoice(letterOpenerSections) !== null)
 
   console.log(`\n${fail === 0 ? '✓ ENVELOPE + READ TOOLS PROVEN' : '✗ FAILURES'}: ${pass} passed, ${fail} failed`)
   process.exit(fail === 0 ? 0 : 1)

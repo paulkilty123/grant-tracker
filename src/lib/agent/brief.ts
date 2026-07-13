@@ -35,6 +35,13 @@ export interface AuthoredBrief {
   usage: Usage
   model: string
   provenanceLintPassed: boolean
+  /** Scaffold-guard extension to the brief artefact (design spec §6): a brief
+   *  is advice, second person, about the funder — never first-person
+   *  application-style ask text (a draft letter, "we are writing to
+   *  request..."). The tool layer's assertScaffoldOnly never sees brief
+   *  generation (it runs outside the tool envelope, CLAUDE.md), so this is
+   *  the equivalent mechanical guard for this artefact specifically. */
+  voiceLintPassed: boolean
 }
 
 export interface BriefInput {
@@ -83,6 +90,8 @@ ${CONTRACT.researchProvenance}
 ${CONTRACT.discrepancyFlagging}
 
 PROVENANCE IS THE WHOLE POINT — every claim you write carries a provenance tag: 'catalogue' (drawn from the verified opportunity record you were given), 'researched' (drawn from a live-researched summary you were given), or 'adviser_judgment' (your own reasoning or synthesis, not a fact from either source). You are given EXACTLY ONE of a catalogue-verified opportunity or a researched-live one below, never both — tag accordingly: if you were given catalogue data, every factual claim is 'catalogue' (never 'researched' — you did not research this live); if you were given a researched summary, every factual claim is 'researched' (never 'catalogue' — there is no catalogue record for this yet). Your own inference, sequencing advice, or synthesis is always 'adviser_judgment' regardless of which one you were given.
+
+VOICE — you are advising the reader about the funder, always second person ("you", "your"), never first person plural as if you were the applicant ("we are writing to", "we would like to apply", "on behalf of our organisation"). how_to_approach describes what THEY should do and lead with; it is never a drafted line of an actual application, letter, or ask. That boundary is absolute: this is advice, not application content.
 
 FOUR SECTIONS, each a short list of claims (one or two sentences per claim, two to four claims per section):
 - what_they_fund: what this funder actually funds, in their own terms where you have them.
@@ -163,6 +172,34 @@ function lintProvenance(sections: BriefSections, variant: 'catalogue' | 'researc
   return null
 }
 
+// Scaffold-guard extension to the brief artefact (design spec §6): first-person
+// application-style ask phrasing, or a letter-shaped opener/sign-off, anywhere
+// in the brief. Exported for the pure scaffold-guard test suite (tools-smoke.ts)
+// — this is that suite's brief-artefact case, not a live eval, matching how the
+// REST of the scaffold guard is tested (direct calls against synthetic input,
+// no model call).
+const APPLICATION_VOICE_PATTERNS = [
+  /\bwe (are writing|write) to\b/i,
+  /\bi am writing to\b/i,
+  /\bwe (would like|wish|hereby) to apply\b/i,
+  /\bwe are (seeking|requesting) (a grant|funding)\b/i,
+  /\bwe respectfully request\b/i,
+  /\bplease (consider our application|find enclosed)\b/i,
+  /\bon behalf of (our|my) organisation\b/i,
+  /\bwe would be grateful if you would consider\b/i,
+  /^dear\s/im,
+  /\byours (sincerely|faithfully)\b/i,
+]
+export function lintApplicationVoice(sections: BriefSections): string | null {
+  for (const claims of Object.values(sections)) {
+    for (const c of claims as Claim[]) {
+      const hit = APPLICATION_VOICE_PATTERNS.find(re => re.test(c.text))
+      if (hit) return c.text
+    }
+  }
+  return null
+}
+
 export async function writeBrief(input: BriefInput, model?: string): Promise<AuthoredBrief> {
   let last: AuthoredBrief | null = null
   for (let attempt = 0; attempt < 2; attempt++) {
@@ -184,8 +221,13 @@ export async function writeBrief(input: BriefInput, model?: string): Promise<Aut
       watch_outs: clean(data.watch_outs),
     }
     const offender = lintProvenance(sections, input.opportunity.variant)
-    last = { title: stripDashes(data.title ?? ''), sections, usage, model: usage.model, provenanceLintPassed: offender === null }
-    if (offender === null) return last
+    const voiceOffender = lintApplicationVoice(sections)
+    last = {
+      title: stripDashes(data.title ?? ''), sections, usage, model: usage.model,
+      provenanceLintPassed: offender === null,
+      voiceLintPassed: voiceOffender === null,
+    }
+    if (offender === null && voiceOffender === null) return last
   }
-  return last as AuthoredBrief // provenanceLintPassed=false → caller refuses to serve it (never a mislabelled fallback)
+  return last as AuthoredBrief // either lint failed → caller refuses to serve it (never a mislabelled or application-voiced fallback)
 }

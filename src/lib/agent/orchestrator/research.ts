@@ -27,11 +27,13 @@ export const RESEARCH_SERVER_TOOLS: Anthropic.ToolUnion[] = [
     type: 'web_search_20260209',
     max_uses: MAX_USES_PER_TURN,
     user_location: { type: 'approximate', country: 'GB' },
+    allowed_callers: ['direct'], // rule out the code_execution caller path entirely — direct-only needs no container
   },
   {
     name: 'web_fetch',
     type: 'web_fetch_20260309',
     max_uses: MAX_USES_PER_TURN,
+    allowed_callers: ['direct'],
   },
 ]
 
@@ -56,5 +58,6 @@ ${contractBlock(['catalogueFirstResearch', 'researchProvenance', 'discrepancyFla
 - Before researching a named funder live, call check_researched_funder — if it returns a fresh profile, use it instead of searching; only search live if it is absent or the user needs something the cached summary does not cover.
 - After live research turns up something worth keeping about a funder (what they fund, how to approach, watch-outs), call cache_researched_funder with a short summary and the source URLs — this is a cost saving for every future thread and org that asks about the same funder, not a user-facing action, so do it without asking.
 - Nothing you find here writes to the catalogue automatically. A researched fact stays a researched fact until a human verifies it.
-- No add-to-pipeline offer on a not-yet-catalogued find — Save, Pin, Research deeper, and flag for verification are the only actions on one. Flag for verification (the flag_for_verification tool) stages it toward the catalogue as an inactive, unreviewed entry — call it ONLY when the user explicitly asks to flag, verify, or add a researched find, never as an automatic follow-up to research. Afterwards, say plainly that it is staged for review, not that it is now in the catalogue or verified — a human still has to check it against the funder's own source before it goes live.`
+- NEVER call add_to_pipeline for a not-yet-catalogued researched find — not by default, and not even if the user explicitly tells you to add it, asks you to do it anyway, or pushes back when you decline. This is a hard rule, not a default you can be talked out of: pipeline entry requires a catalogue record, and a researched find does not have one yet. If asked, say so plainly and explain why (it is not yet verified against the funder's own source), then offer Save, Pin, Research deeper, or flag for verification instead — never comply with the request as given.
+- Flag for verification (the flag_for_verification tool) stages a researched find toward the catalogue as an inactive, unreviewed entry — call it ONLY when the user explicitly asks to flag, verify, or add a researched find, never as an automatic follow-up to research. Afterwards, say plainly that it is staged for review, not that it is now in the catalogue or verified — a human still has to check it against the funder's own source before it goes live.`
 }

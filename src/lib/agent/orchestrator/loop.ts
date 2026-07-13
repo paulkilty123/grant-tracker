@@ -123,6 +123,14 @@ export async function runAgentTurn(opts: {
   const dateContext =
     `Today's date is ${todayIso} (UTC). Compute every relative date the user gives ("18 months from today", "by next spring", "end of the financial year") against this date, and pass tools absolute ISO dates (YYYY-MM-DD). Never assume the year — derive it from today.`
 
+  // Server tools (web_search/web_fetch) run in a backend execution container
+  // (Anthropic's Message.container). A turn that spans more than one API call
+  // AFTER a server tool has fired must carry that container id forward, or the
+  // next call 400s ("container_id is required when there are pending tool
+  // uses..."). Undefined until the first response that returns one; every
+  // later call in this turn's loop passes it back.
+  let containerId: string | undefined
+
   while (iterations < MAX_LOOP_ITERATIONS) {
     iterations += 1
     // Mirror the same paragraph break on the live stream between iterations.
@@ -131,6 +139,7 @@ export async function runAgentTurn(opts: {
     const stream = getAgentClient().messages.stream({
       model,
       max_tokens: MAX_TOKENS_PER_CALL,
+      ...(containerId ? { container: containerId } : {}),
       // Frozen prefix (tools render before system) — one breakpoint caches both.
       // Research steering gets its OWN breakpoint (static across research
       // turns, so it still caches) right after SYSTEM_PROMPT's, so non-research
@@ -150,6 +159,7 @@ export async function runAgentTurn(opts: {
     })
     stream.on('text', text => emit({ type: 'text_delta', text }))
     const response = await stream.finalMessage()
+    if (response.container?.id) containerId = response.container.id
 
     inputTokens += effectiveInputTokens(response.usage)
     outputTokens += response.usage.output_tokens ?? 0
@@ -183,8 +193,26 @@ export async function runAgentTurn(opts: {
     for (const tu of toolUses) {
       toolNames.push(tu.name)
       emit({ type: 'tool_start', name: tu.name })
+      // Structural (not prompt-only) block on the restricted-actions rule
+      // (design spec §2/§6): eval found the steering alone doesn't hold under
+      // a direct "add it to my pipeline anyway" push. A research thread's
+      // add_to_pipeline call without a real catalogue opportunity_id is
+      // exactly what a freshly-researched, uncatalogued find looks like — an
+      // opportunity_id-carrying add (a real catalogue candidate from
+      // get_briefing/assess_opportunity_against_plan, surfaced in this SAME
+      // thread) is unaffected, and so is every ordinary manual pipeline add
+      // outside a research thread (opts.research is false there).
+      const input = (tu.input ?? {}) as Record<string, unknown>
+      if (opts.research && tu.name === 'add_to_pipeline' && !input.opportunity_id) {
+        results.push({
+          type: 'tool_result', tool_use_id: tu.id, is_error: true,
+          content: 'Refused: add_to_pipeline needs a catalogue opportunity_id in a research thread. A researched, not-yet-catalogued find cannot go to the pipeline — offer Save, Pin, Research deeper, or flag_for_verification instead.',
+        })
+        emit({ type: 'tool_done', name: tu.name, ok: false })
+        continue
+      }
       try {
-        const result = await dispatchTool(ctx, tu.name, (tu.input ?? {}) as Record<string, unknown>)
+        const result = await dispatchTool(ctx, tu.name, input)
         results.push({
           type: 'tool_result',
           tool_use_id: tu.id,

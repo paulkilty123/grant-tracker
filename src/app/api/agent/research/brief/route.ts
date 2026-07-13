@@ -82,12 +82,15 @@ export async function POST(req: NextRequest) {
     input_tokens: authored.usage.inputTokens,
     output_tokens: authored.usage.outputTokens,
     cost_estimate_microgbp: authored.usage.costMicroGbp,
-    status: authored.provenanceLintPassed ? 'complete' : 'guardrail_blocked',
+    status: authored.provenanceLintPassed && authored.voiceLintPassed ? 'complete' : 'guardrail_blocked',
     narrative: authored.title,
   })
 
   if (!authored.provenanceLintPassed) {
     return NextResponse.json({ error: "Couldn't write a brief that kept catalogue and researched facts cleanly apart. Please try again." }, { status: 502 })
+  }
+  if (!authored.voiceLintPassed) {
+    return NextResponse.json({ error: "That came out drafted as application text, not adviser guidance. Please try again." }, { status: 502 })
   }
 
   const opportunityRef = body.opportunity.variant === 'catalogue'
