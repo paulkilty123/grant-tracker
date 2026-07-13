@@ -131,6 +131,13 @@ Every write to a tracked field on `scraped_grants` (`funder_brief`, `description
 ### Ops: backups / direct DB connection
 For a `pg_dump` backup before a prod migration, use the **session pooler** connection string, not the direct `db.<ref>.supabase.co` host — the direct host does not resolve from Paul's network. Session pooler host: `aws-0-<region>.pooler.supabase.com:5432`, user `postgres.<project-ref>` (get the exact string from Supabase → Project Settings → Database → Connection string → Session pooler). A full dump is ~12MB. `.env.local` holds the service-role JWT + `NEXT_PUBLIC_SUPABASE_URL` but **no** DB connection string / password, so `pg_dump` needs the pooler string supplied separately.
 
+**Run it as two lines, not one.** A single long `pg_dump "postgresql://..."` line breaks on paste in zsh — set the connection string first, then dump:
+```bash
+DB="postgresql://postgres.<project-ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres"
+/opt/homebrew/opt/libpq/bin/pg_dump "$DB" > backup-$(date +%Y%m%d).sql
+```
+Use the full `/opt/homebrew/opt/libpq/bin/pg_dump` path — Homebrew's `libpq` build, not whatever `pg_dump` resolves to on PATH.
+
 ---
 
 ## Key Library Files
