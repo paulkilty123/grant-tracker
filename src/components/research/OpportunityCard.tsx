@@ -2,10 +2,15 @@
 
 // Opportunity card — two variants, per the 11 July Research section mockup.
 // Catalogue-verified: lime [Add to pipeline] + hairline [Save for later] /
-// [Write me a brief]. Researched-live: amber "researched live" badge, NO
+// [Funder profile]. Researched-live: amber "researched live" badge, NO
 // add-to-pipeline (restricted-actions rule, design spec §2), hairline
 // [Save for later] / [Research deeper] / [Pin]. The two variants' chrome is
 // never conflated (spec §2's provenance discipline).
+//
+// v1.1 §4: "Funder profile" is a shallow, user-facing-only rename of what
+// was "Brief" (same treatment as Companion -> Adviser). Internal identifiers
+// (brief.ts, agent_thread_briefs, the Brief type, handleWriteBrief, etc.)
+// deliberately keep their original names — only the copy the user reads changed.
 
 import React, { useState } from 'react'
 import { formatRange } from '@/lib/utils'
@@ -85,7 +90,7 @@ function BriefBlock({ brief, onPin }: { brief: Brief; onPin?: () => void }) {
           disabled={pinned}
           style={{ ...grotesk, fontSize: 11, fontWeight: 500, color: pinned ? COLOR.sage : COLOR.mid, background: 'transparent', border: 'none', cursor: pinned ? 'default' : 'pointer' }}
         >
-          {pinned ? '✓ Pinned' : 'Pin this brief'}
+          {pinned ? '✓ Pinned' : 'Pin this profile'}
         </button>
       </div>
       <BriefSection heading="What they fund" claims={brief.sections.what_they_fund} />
@@ -177,7 +182,7 @@ export default function OpportunityCard({ data, actions }: { data: OpportunityCa
               onClick={() => { setAdded(true); actions.onAddToPipeline?.(data) }} />
             <Chip label={saved ? 'Saved' : 'Save for later'} done={saved} style={saved ? chipHairlineDone : chipHairline} disabled={saved}
               onClick={() => { setSaved(true); actions.onSaveForLater?.(data) }} />
-            <Chip label={briefLoading ? 'Writing…' : brief ? 'Brief written' : 'Write me a brief'} done={!!brief} style={brief ? chipHairlineDone : chipHairline} disabled={briefLoading || !!brief}
+            <Chip label={briefLoading ? 'Writing…' : brief ? 'Profile written' : 'Funder profile'} done={!!brief} style={brief ? chipHairlineDone : chipHairline} disabled={briefLoading || !!brief}
               onClick={requestBrief} />
           </>
         ) : (

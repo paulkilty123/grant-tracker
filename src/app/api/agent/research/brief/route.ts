@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
     authored = await writeBrief(input)
   } catch (e) {
     console.error('[research/brief] generation failed:', e)
-    return NextResponse.json({ error: 'Brief generation failed. Please try again.' }, { status: 502 })
+    return NextResponse.json({ error: 'Funder profile generation failed. Please try again.' }, { status: 502 })
   }
 
   const sb = serviceClient()
@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
   })
 
   if (!authored.provenanceLintPassed) {
-    return NextResponse.json({ error: "Couldn't write a brief that kept catalogue and researched facts cleanly apart. Please try again." }, { status: 502 })
+    return NextResponse.json({ error: "Couldn't write a funder profile that kept catalogue and researched facts cleanly apart. Please try again." }, { status: 502 })
   }
   if (!authored.voiceLintPassed) {
     return NextResponse.json({ error: "That came out drafted as application text, not adviser guidance. Please try again." }, { status: 502 })
@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
 
   if (saveErr || !saved) {
     console.error('[research/brief] save failed:', saveErr?.message)
-    return NextResponse.json({ error: 'Brief generated but could not be saved. Please try again.' }, { status: 500 })
+    return NextResponse.json({ error: 'Funder profile generated but could not be saved. Please try again.' }, { status: 500 })
   }
 
   return NextResponse.json({ brief: saved })

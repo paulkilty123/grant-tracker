@@ -169,7 +169,7 @@ export default function ResearchView({
       body: JSON.stringify({ thread_id: activeId, opportunity: data }),
     })
     const d = await res.json().catch(() => null)
-    if (!res.ok || !d?.brief) throw new Error(d?.error ?? 'Brief generation failed.')
+    if (!res.ok || !d?.brief) throw new Error(d?.error ?? 'Funder profile generation failed.')
     return d.brief as Brief
   }
 

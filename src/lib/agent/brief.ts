@@ -112,7 +112,7 @@ const OUTPUT_TOOL = {
   input_schema: {
     type: 'object',
     properties: {
-      title: { type: 'string', description: 'Short title, e.g. "Brief: Joseph Rank Trust".' },
+      title: { type: 'string', description: 'Short title, e.g. "Funder profile: Joseph Rank Trust".' },
       what_they_fund: { type: 'array', items: claimSchema() },
       fit_against_purpose: { type: 'array', items: claimSchema() },
       how_to_approach: { type: 'array', items: claimSchema() },
