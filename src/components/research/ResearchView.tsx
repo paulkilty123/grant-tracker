@@ -30,13 +30,49 @@ export default function ResearchView({
   initialThreads: ResearchThreadSummary[]
 }) {
   const [threads, setThreads] = useState<ResearchThreadSummary[]>(initialThreads)
-  const [activeId, setActiveId] = useState<string | null>(initialThreads[0]?.id ?? null)
+  const [activeId, setActiveIdRaw] = useState<string | null>(initialThreads[0]?.id ?? null)
   const [showNewThread, setShowNewThread] = useState(false)
   const [pins, setPins] = useState<Pin[]>([])
   const [pinnedOpen, setPinnedOpen] = useState(false)
   const [input, setInput] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+
+  // Which thread was open persists across navigation (localStorage, per org —
+  // matches the gt_active_org_id cookie's job for the org switcher, just
+  // client-side since this is convenience state, not an auth boundary).
+  // initialThreads (the server-rendered prop) is a snapshot from whenever
+  // this route was last rendered; on a soft navigation back to /dashboard/
+  // research, Next's router cache can serve that snapshot from BEFORE a
+  // thread or its latest messages existed, which read as "the thread was
+  // lost" even though nothing was ever deleted. The mount effect below
+  // re-fetches the thread list fresh from the API — never trusts the prop
+  // alone — and restores the remembered thread once it's confirmed to still
+  // exist in that fresh list.
+  const storageKey = `gt_research_active_thread_${orgId}`
+  const setActiveId = useCallback((id: string | null) => {
+    setActiveIdRaw(id)
+    try {
+      if (id) localStorage.setItem(storageKey, id)
+      else localStorage.removeItem(storageKey)
+    } catch { /* localStorage unavailable (private browsing etc.) — in-memory only */ }
+  }, [storageKey])
+
+  useEffect(() => {
+    fetch('/api/agent/research/threads')
+      .then(r => r.json())
+      .then((d: { threads?: ResearchThreadSummary[] }) => {
+        const fresh = d.threads ?? []
+        if (!fresh.length) return // nothing to reconcile against — keep whatever initialThreads/activeId already have
+        setThreads(fresh)
+        let remembered: string | null = null
+        try { remembered = localStorage.getItem(storageKey) } catch { /* ignore */ }
+        const stillExists = remembered && fresh.some(t => t.id === remembered)
+        setActiveIdRaw(stillExists ? remembered : fresh[0].id)
+      })
+      .catch(() => { /* keep the server-rendered snapshot on a fetch failure */ })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const { messages, loaded, busy, loadThread, send } = useAgentChat({ threadId: activeId ?? undefined })
 
