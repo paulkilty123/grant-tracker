@@ -365,6 +365,20 @@ function deriveGovUkLocation(locations: string[]): { tag: string; isLocal: boole
   return { tag: 'Selected areas', isLocal: false }
 }
 
+// gov.uk's Find a Grant schema requires SOME numeric grantMinimumAward, so a
+// funder that states no real floor gets a bare "1" from their system, not
+// null — their own grantMinimumAwardDisplay renders it as "£1" too, so
+// nothing on their end flags it as a placeholder. Copying it verbatim reads
+// as "starts from just £1", which is never actually true (found live,
+// 2026-07-14, on BFI's UK Global Screen Fund rows: fixed one-off with an
+// admin: pinned override on 23 June, then AGAIN on 14 July when the daily
+// crawl re-ran and re-imported the same artefact — a live example of the
+// "one-time SQL fix reverts on the next crawl" trap). Treat exactly 1 as
+// "no stated minimum", the same as gov.uk truly omitting the field.
+function normaliseGovUkAward(value: unknown): number | null {
+  return typeof value === 'number' && value > 1 ? value : null
+}
+
 function normaliseFindAGrant(g: Record<string, unknown>): ScrapedGrant | null {
   const label       = String(g.label ?? g.id ?? Math.random())
   const locations   = Array.isArray(g.grantLocation)    ? g.grantLocation    as string[] : []
@@ -382,7 +396,7 @@ function normaliseFindAGrant(g: Record<string, unknown>): ScrapedGrant | null {
     funder:               String(g.grantFunder ?? 'UK Government'),
     funder_type:          'government',
     description:          String(g.grantShortDescription ?? g.grantDescription ?? ''),
-    amount_min:           typeof g.grantMinimumAward === 'number' ? g.grantMinimumAward : null,
+    amount_min:           normaliseGovUkAward(g.grantMinimumAward),
     amount_max:           typeof g.grantMaximumAward === 'number' ? g.grantMaximumAward : null,
     deadline:             parseDeadline(g.grantApplicationCloseDate),
     is_rolling:           false,
