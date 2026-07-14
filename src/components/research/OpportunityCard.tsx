@@ -13,10 +13,12 @@
 // deliberately keep their original names — only the copy the user reads changed.
 
 import React, { useState } from 'react'
+import { Pin as PinIcon } from 'lucide-react'
 import { formatRange } from '@/lib/utils'
 import { COLOR, grotesk, fmtDate, AmberPill } from '@/components/briefing/ui'
+import { BriefSectionsFull } from './BriefSections'
 import type { CatalogueCardData, OpportunityCardData } from './cards'
-import type { Brief, ProvenanceKind } from './brief-types'
+import type { Brief } from './brief-types'
 
 // Add to pipeline's fill colour: the 11 July mockup called this chip "forest
 // solid, the primary"; CLAUDE.md's locked button-hierarchy rule assigns
@@ -48,37 +50,6 @@ function Chip({ label, done, style, onClick, disabled }: { label: string; done?:
   )
 }
 
-// Provenance chrome for a brief claim (spec §2/§3): catalogue is the default,
-// unmarked chrome (already what a card's own catalogue-verified content
-// looks like); researched gets the same amber treatment as the card badge —
-// never visually conflated with catalogue; adviser_judgment is marked as the
-// adviser's own read, not a fact from either source.
-function claimTag(provenance: ProvenanceKind): { label: string; color: string } | null {
-  if (provenance === 'researched') return { label: 'researched', color: COLOR.amberInk }
-  if (provenance === 'adviser_judgment') return { label: 'my read', color: COLOR.faint }
-  return null
-}
-
-function BriefSection({ heading, claims }: { heading: string; claims: Array<{ text: string; provenance: ProvenanceKind }> }) {
-  if (claims.length === 0) return null
-  return (
-    <div className="mt-2.5">
-      <div style={{ ...grotesk, fontSize: 10.5, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: COLOR.faint }}>{heading}</div>
-      <ul className="mt-1 pl-4" style={{ listStyle: 'disc' }}>
-        {claims.map((c, i) => {
-          const tag = claimTag(c.provenance)
-          return (
-            <li key={i} className="mt-0.5" style={{ fontSize: 12.5, lineHeight: 1.5, color: COLOR.ink }}>
-              {c.text}
-              {tag && <span style={{ fontSize: 10.5, color: tag.color, marginLeft: 5 }}>· {tag.label}</span>}
-            </li>
-          )
-        })}
-      </ul>
-    </div>
-  )
-}
-
 function BriefBlock({ brief, onPin }: { brief: Brief; onPin?: () => void }) {
   const [pinned, setPinned] = useState(false)
   return (
@@ -93,11 +64,31 @@ function BriefBlock({ brief, onPin }: { brief: Brief; onPin?: () => void }) {
           {pinned ? '✓ Pinned' : 'Pin this profile'}
         </button>
       </div>
-      <BriefSection heading="What they fund" claims={brief.sections.what_they_fund} />
-      <BriefSection heading="Fit against your purpose" claims={brief.sections.fit_against_purpose} />
-      <BriefSection heading="How to approach" claims={brief.sections.how_to_approach} />
-      <BriefSection heading="Watch outs" claims={brief.sections.watch_outs} />
+      <BriefSectionsFull brief={brief} />
     </div>
+  )
+}
+
+// Pin affordance (v1.1 §5): a visible icon in the card's top corner, replacing
+// the buried text link/chip. Every card gets one now -- catalogue cards had
+// no pin affordance at all before this pass.
+function PinButton({ pinned, onClick }: { pinned: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={pinned}
+      title={pinned ? "Pinned to this thread's research log" : "Pin to this thread's research log"}
+      aria-label={pinned ? 'Pinned' : 'Pin'}
+      className="flex items-center justify-center flex-shrink-0"
+      style={{
+        width: 24, height: 24, borderRadius: 999, border: 'none', padding: 0,
+        cursor: pinned ? 'default' : 'pointer',
+        background: pinned ? COLOR.pale : 'transparent',
+        color: pinned ? COLOR.sage : COLOR.faint,
+      }}
+    >
+      <PinIcon size={13} strokeWidth={2.2} fill={pinned ? COLOR.sage : 'none'} />
+    </button>
   )
 }
 
@@ -148,9 +139,12 @@ export default function OpportunityCard({ data, actions }: { data: OpportunityCa
           </span>
           {!isCatalogue && <AmberPill>researched live · not yet in catalogue</AmberPill>}
         </div>
-        {isCatalogue && (
-          <span style={{ ...grotesk, fontSize: 12.5, fontWeight: 500, color: COLOR.mid, flexShrink: 0 }}>{amountLabel}</span>
-        )}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {isCatalogue && (
+            <span style={{ ...grotesk, fontSize: 12.5, fontWeight: 500, color: COLOR.mid }}>{amountLabel}</span>
+          )}
+          <PinButton pinned={pinned} onClick={() => { setPinned(true); actions.onPin?.(data) }} />
+        </div>
       </div>
 
       {isCatalogue && (
@@ -190,8 +184,6 @@ export default function OpportunityCard({ data, actions }: { data: OpportunityCa
             <Chip label={saved ? 'Saved' : 'Save for later'} done={saved} style={saved ? chipHairlineDone : chipHairline} disabled={saved}
               onClick={() => { setSaved(true); actions.onSaveForLater?.(data) }} />
             <Chip label="Research deeper" style={chipHairline} onClick={() => actions.onResearchDeeper?.(data)} />
-            <Chip label={pinned ? 'Pinned' : 'Pin'} done={pinned} style={pinned ? chipHairlineDone : chipHairline} disabled={pinned}
-              onClick={() => { setPinned(true); actions.onPin?.(data) }} />
           </>
         )}
       </div>

@@ -152,7 +152,7 @@ export default function ResearchView({
     const pin = data.variant === 'catalogue'
       ? { title: data.title, body: data.funder, source_kind: 'catalogue' as const, opportunity_ref: data.opportunity_id }
       : { title: data.funder_name, body: data.summary.slice(0, 200), source_kind: 'researched' as const, opportunity_ref: data.funder_key }
-    await createPin(orgId, activeId, pin)
+    await createPin(orgId, activeId, { ...pin, pin_type: 'finding' })
     refreshPins()
   }
 
@@ -181,6 +181,8 @@ export default function ResearchView({
       body: brief.sections.what_they_fund[0]?.text ?? null,
       source_kind: opportunity.variant === 'catalogue' ? 'catalogue' : 'researched',
       opportunity_ref: opportunityRef,
+      pin_type: 'profile',
+      brief_id: brief.id,
     })
     refreshPins()
   }
@@ -245,7 +247,7 @@ export default function ResearchView({
                 className="w-full flex items-center justify-between px-3.5 py-2.5"
                 style={{ border: `1px solid ${COLOR.hair}`, borderRadius: 10, background: '#fff', ...grotesk, fontSize: 12.5, fontWeight: 600, color: COLOR.ink }}
               >
-                <span>📌 Pinned in this thread</span>
+                <span>📌 Research log</span>
                 <span style={{ color: COLOR.faint }}>{pinnedOpen ? '−' : `${pins.length} ▾`}</span>
               </button>
               {pinnedOpen && <div className="mt-2"><PinnedPanel pins={pins} /></div>}
