@@ -20,7 +20,7 @@ import { toolDefsForTier, dispatchTool } from './dispatch'
 import { SYSTEM_PROMPT, ORCHESTRATOR_PROMPT_VERSION } from './prompt'
 import { pickModel, MAX_LOOP_ITERATIONS, MAX_TOKENS_PER_CALL, type TurnKind } from './config'
 import { checkResearchBudget } from './budget'
-import { RESEARCH_SERVER_TOOLS, researchSteering } from './research'
+import { RESEARCH_SERVER_TOOLS, RESEARCH_SYSTEM_PROMPT, researchSteering } from './research'
 import { PANEL_RESULT_SLIMMERS } from './panel-slimmers'
 
 // Anthropic charges web_search per call, separate from token pricing — web_fetch
@@ -141,19 +141,22 @@ export async function runAgentTurn(opts: {
       max_tokens: MAX_TOKENS_PER_CALL,
       ...(containerId ? { container: containerId } : {}),
       // Frozen prefix (tools render before system) — one breakpoint caches both.
-      // Research steering gets its OWN breakpoint (static across research
-      // turns, so it still caches) right after SYSTEM_PROMPT's, so non-research
-      // turns' cached prefix is completely untouched. Today's date stays last,
-      // uncached, so neither breakpoint busts across the day.
-      system: [
-        { type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } },
-        ...(opts.research ? [{
-          type: 'text' as const,
-          text: researchSteering(researchAllowed),
-          cache_control: { type: 'ephemeral' as const },
-        }] : []),
-        { type: 'text', text: dateContext },
-      ],
+      // A research turn uses its OWN base prompt (RESEARCH_SYSTEM_PROMPT, no
+      // goal/plan framing — amendment v1.1 §1), never SYSTEM_PROMPT, so the
+      // shared briefing/chat prefix is completely untouched either way.
+      // researchSteering gets its own breakpoint after it (static per
+      // `researchAllowed` value, so it still caches). Today's date stays
+      // last, uncached, so neither breakpoint busts across the day.
+      system: opts.research
+        ? [
+            { type: 'text', text: RESEARCH_SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } },
+            { type: 'text', text: researchSteering(researchAllowed), cache_control: { type: 'ephemeral' } },
+            { type: 'text', text: dateContext },
+          ]
+        : [
+            { type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } },
+            { type: 'text', text: dateContext },
+          ],
       tools,
       messages,
     })

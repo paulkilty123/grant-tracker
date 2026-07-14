@@ -46,7 +46,10 @@ export interface AuthoredBrief {
 
 export interface BriefInput {
   org: { name: string | null; legal_structure: string | null; income_band: string | null; location: string | null; sectors: string[] }
-  /** Free text — the thread's focus label, or a purpose's label/amount. Optional: not every thread tracks a purpose. */
+  /** The thread's own free-text focus label, verbatim — nothing else. v1.1 §1:
+   *  research threads are standalone, fresh eyes; this is never resolved
+   *  against goal_purposes (that plan-linked mode is designed but dormant
+   *  until the strategy agent exists). Null when the thread has no label. */
   purposeContext: string | null
   opportunity:
     | {

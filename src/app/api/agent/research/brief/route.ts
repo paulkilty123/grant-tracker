@@ -14,7 +14,7 @@ import { resolveWebToolContext } from '@/lib/agent/boundary'
 import { agentEnabledForOrg } from '@/lib/agent/orchestrator/config'
 import { checkInferenceBudget } from '@/lib/agent/orchestrator/budget'
 import { getThread } from '@/lib/agent/orchestrator/threads'
-import { getOrg, getPurposes } from '@/lib/agent/tools/repository'
+import { getOrg } from '@/lib/agent/tools/repository'
 import { serviceClient } from '@/lib/agent/tools/db'
 import { writeBrief, BRIEF_PROMPT_VERSION, type BriefInput } from '@/lib/agent/brief'
 
@@ -43,11 +43,13 @@ export async function POST(req: NextRequest) {
   const budget = await checkInferenceBudget(ctx.orgId)
   if (!budget.allowed) return NextResponse.json({ error: budget.message, reason: budget.reason }, { status: 429 })
 
-  const [org, purposes] = await Promise.all([getOrg(ctx.orgId), getPurposes(ctx.orgId)])
-  const matchedPurpose = thread.focusPurposeId ? purposes.find(p => p.purpose_id === thread.focusPurposeId) : null
-  const purposeContext = matchedPurpose
-    ? `${matchedPurpose.label}${matchedPurpose.approx_amount ? ` · £${matchedPurpose.approx_amount.toLocaleString('en-GB')}` : ''}`
-    : thread.focusLabel
+  const org = await getOrg(ctx.orgId)
+  // v1.1 §1: research threads are standalone, fresh eyes — no plan/goal/
+  // purpose framing. purposeContext is just the thread's own free-text focus
+  // label (what the user is asking about in THIS thread), never looked up
+  // from goal_purposes. focus_purpose_id stays dormant on the schema for the
+  // future plan-linked mode; nothing here reads it.
+  const purposeContext = thread.focusLabel
 
   const orgRow = org as unknown as Record<string, unknown> | null
   const input: BriefInput = {
