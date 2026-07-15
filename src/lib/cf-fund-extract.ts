@@ -41,10 +41,22 @@ const PROVENANCE_SOURCE = 'ai_extract:cf_fund_pipeline'
 // umbrella row is the right place to point users — see project notes.
 export const AMOUNT_THRESHOLD = 5000
 
+// Next.js 14 caches fetch() calls by default, including the ones supabase-js
+// makes internally — and that cache persists across invocations within a
+// single Vercel deployment, not just within one request. Found live this
+// session: a query with a STATIC shape (same funder name every run, unlike
+// e.g. expire-grants' date-based queries which naturally cache-bust daily)
+// kept returning its first-ever "row doesn't exist" response on every
+// subsequent call, even after a full process restart — which would have
+// caused this weekly cron to silently reinsert duplicates on its second run,
+// reintroducing the exact bug class this pipeline exists to fix. Explicit
+// cache: 'no-store' on every request this client makes is required, not
+// optional, for correctness here.
 function adminClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { global: { fetch: (url, options) => fetch(url, { ...options, cache: 'no-store' }) } },
   )
 }
 
@@ -127,9 +139,9 @@ async function fetchPageText(url: string): Promise<string> {
 // ── Extraction model call ─────────────────────────────────────────────────────
 
 function buildSystemPrompt(): string {
-  return `You are extracting individual named grant funds from a UK Community Foundation's funds/grants listing page. Community Foundations run many separate small funds (often £200-£3,000) alongside a few larger, more substantial funds. Your job is to find ONLY the funds worth cataloguing individually: those where the maximum a single applicant can receive is £${AMOUNT_THRESHOLD.toLocaleString()} or more, OR where no amount is stated at all.
+  return `You are extracting EVERY individual named grant fund mentioned on a UK Community Foundation's funds/grants listing page — small and large alike. Do not filter or omit anything based on amount; a downstream process decides which funds are worth cataloguing, not you. Your only job is complete, accurately-grounded extraction.
 
-CRITICAL grounding rule: amount_max is what a SINGLE applicant can receive from THIS named fund. Do NOT use a total programme pot, cumulative annual distribution, or a "grants of up to £Xm distributed since Y" figure — those describe the whole portfolio, not one grant. If you cannot find a clear per-applicant amount, set amount_status to "unstated" and leave amount_min/amount_max as null. Never guess a number to force a fund past the threshold, and never discard a fund just because its amount is unstated — that decision is made downstream, not by you.
+CRITICAL grounding rule: amount_max is what a SINGLE applicant can receive from THIS named fund. Do NOT use a total programme pot, cumulative annual distribution, or a "grants of up to £Xm distributed since Y" figure — those describe the whole portfolio, not one grant. If you cannot find a clear per-applicant amount, set amount_status to "unstated" and leave amount_min/amount_max as null. Never guess a number.
 
 Every amount and deadline you return must be backed by a verbatim snippet from the page text in amount_snippet / deadline_snippet.
 
@@ -144,7 +156,7 @@ Page text:
 ${pageText}
 """
 
-Extract every named fund on this page where the maximum award is stated as £${AMOUNT_THRESHOLD.toLocaleString()} or above, OR where no amount is stated at all. Skip funds clearly stated as smaller than £${AMOUNT_THRESHOLD.toLocaleString()} — do not include them in the output.
+Extract EVERY named fund mentioned on this page, regardless of size — including small funds under £1,000. Do not skip or omit any fund based on its amount; return the complete list and let amount_min/amount_max/amount_status speak for themselves.
 
 Return JSON in this exact format:
 {
@@ -214,6 +226,20 @@ function slugify(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 100)
 }
 
+// Normalises a title for fuzzy comparison: lowercases, folds "&"/"and"
+// together (found live this session — "Community Wellbeing & Mental Health
+// Fund" vs "...and Mental Health Fund" broke a naive substring match, the
+// same class of bug as "Elephant & Castle" vs "Elephant Castle" found
+// manually auditing London CF), and strips punctuation/whitespace noise.
+function normaliseTitle(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+    .replace(/\s+/g, ' ')
+}
+
 // Root-cause dedup fix (see file header): check apply_url first, then a
 // funder+title fuzzy fallback, BEFORE the deterministic external_id lookup.
 // This is what catches an existing manually-added row under a different
@@ -234,10 +260,13 @@ async function findExistingRowId(
     .select('id, title')
     .ilike('funder', `%${funderName}%`)
   if (candidates) {
-    const fundLower = fundName.toLowerCase().trim()
+    const fundNorm = normaliseTitle(fundName)
     const match = candidates.find(c => {
-      const titleLower = String(c.title).toLowerCase().trim()
-      return titleLower === fundLower || titleLower.includes(fundLower) || fundLower.includes(titleLower)
+      // Existing titles are often prefixed with the funder name (e.g. "X
+      // Community Foundation — Y Fund"), which the extracted fund name never
+      // is — so containment, not equality, both directions.
+      const titleNorm = normaliseTitle(String(c.title))
+      return titleNorm === fundNorm || titleNorm.includes(fundNorm) || fundNorm.includes(titleNorm)
     })
     if (match) return match.id as string
   }
@@ -254,9 +283,19 @@ async function upsertFund(
     ? `cf_fund:${slugify(fund.apply_url)}`
     : `cf_fund:${config.slug}:${slugify(fund.name)}`
 
-  const row = {
+  // Content fields only — applied on BOTH insert and update. Deliberately
+  // excludes is_active/url_status/pipeline_state: those are new-row-only
+  // (see below). Found live this session — a first version of this function
+  // included is_active: false unconditionally in the update patch too, which
+  // meant re-running the pipeline against a CF that already had an
+  // individually-catalogued, published fund (Dorset's Wellbeing Fund) would
+  // silently un-publish it — mergeGrantUpdate's state machine treats
+  // is_active:false landing on a published row as an explicit admin
+  // de-publish action and demotes it to 'captured'. An update must never
+  // touch activation state; only a genuinely new row goes through Needs
+  // Review.
+  const contentFields = {
     external_id:          externalId,
-    source:                PROVENANCE_SOURCE,
     title:                 fund.name,
     funder:                config.funderName,
     funder_type:           'community_foundation',
@@ -270,8 +309,6 @@ async function upsertFund(
     sectors:               [] as string[],
     eligibility_criteria:  [] as string[],
     apply_url:             applyUrl,
-    is_active:             false, // Needs Review — universal catalogue-addition gate
-    url_status:            'unchecked',
     raw_data: {
       amount_snippet:      fund.amount_snippet,
       deadline_snippet:    fund.deadline_snippet,
@@ -279,17 +316,25 @@ async function upsertFund(
     },
   }
 
-  const existingId = await findExistingRowId(db, fund.apply_url, config.funderName, fund.name)
-    ?? (await db.from('scraped_grants').select('id').eq('external_id', externalId).maybeSingle()).data?.id as string | undefined
-    ?? null
+  let existingId = await findExistingRowId(db, fund.apply_url, config.funderName, fund.name)
+  if (!existingId) {
+    const { data } = await db.from('scraped_grants').select('id').eq('external_id', externalId).maybeSingle()
+    existingId = (data?.id as string | undefined) ?? null
+  }
 
   if (existingId) {
-    const { external_id: _drop, ...patch } = row
-    void _drop
-    await mergeGrantUpdate({ id: existingId, fields: patch, source: PROVENANCE_SOURCE, pinned: false, db })
+    await mergeGrantUpdate({ id: existingId, fields: contentFields, source: PROVENANCE_SOURCE, pinned: false, db })
     return 'updated'
   }
 
+  // is_active/url_status are new-row-only — see the comment on contentFields
+  // above for why an update must never carry these.
+  const row = {
+    ...contentFields,
+    source:      PROVENANCE_SOURCE,
+    is_active:   false, // Needs Review — universal catalogue-addition gate
+    url_status:  'unchecked',
+  }
   const stamped = stampNewGrant(row, PROVENANCE_SOURCE, { pinned: false })
   const { error } = await db.from('scraped_grants').insert(stamped)
   if (error) throw new Error(error.message)
