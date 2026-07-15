@@ -138,8 +138,10 @@ async function fetchPageText(url: string): Promise<string> {
 
 // ── Extraction model call ─────────────────────────────────────────────────────
 
-function buildSystemPrompt(): string {
+function buildSystemPrompt(todayISO: string): string {
   return `You are extracting EVERY individual named grant fund mentioned on a UK Community Foundation's funds/grants listing page — small and large alike. Do not filter or omit anything based on amount; a downstream process decides which funds are worth cataloguing, not you. Your only job is complete, accurately-grounded extraction.
+
+Today's date is ${todayISO}. This matters for deadlines: found live in production data — a fund whose page states a recurring pattern like "Application deadlines: 1 February, 1 August" was extracted with deadline "2025-02-01", a date in the PAST, because the year was guessed rather than reasoned from today's date. When a fund's deadline is described as a recurring pattern (multiple dates per year, "next closing date", etc.), you MUST compute the NEXT occurrence strictly after ${todayISO} — never return a deadline date that has already passed.
 
 CRITICAL grounding rule: amount_max is what a SINGLE applicant can receive from THIS named fund. Do NOT use a total programme pot, cumulative annual distribution, or a "grants of up to £Xm distributed since Y" figure — those describe the whole portfolio, not one grant. If you cannot find a clear per-applicant amount, set amount_status to "unstated" and leave amount_min/amount_max as null. Never guess a number.
 
@@ -148,8 +150,9 @@ Every amount and deadline you return must be backed by a verbatim snippet from t
 Return valid JSON only — no markdown fencing, no commentary.`
 }
 
-function buildUserPrompt(funderName: string, pageText: string): string {
+function buildUserPrompt(funderName: string, pageText: string, todayISO: string): string {
   return `Funder: ${funderName}
+Today's date: ${todayISO}
 
 Page text:
 """
@@ -157,6 +160,8 @@ ${pageText}
 """
 
 Extract EVERY named fund mentioned on this page, regardless of size — including small funds under £1,000. Do not skip or omit any fund based on its amount; return the complete list and let amount_min/amount_max/amount_status speak for themselves.
+
+For any deadline, compute the next occurrence strictly after ${todayISO} — if the page states a recurring pattern (e.g. two dates a year), pick whichever of those dates is soonest after today, rolling into next year if every stated date this year has already passed.
 
 Return JSON in this exact format:
 {
@@ -179,6 +184,7 @@ Return JSON in this exact format:
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function callExtractionModel(funderName: string, pageText: string): Promise<ExtractedFund[]> {
+  const todayISO = new Date().toISOString().slice(0, 10)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let data: any = null
   for (let attempt = 0; attempt < 3; attempt++) {
@@ -194,8 +200,8 @@ async function callExtractionModel(funderName: string, pageText: string): Promis
       body: JSON.stringify({
         model: EXTRACTION_MODEL,
         max_tokens: 8192,
-        system: buildSystemPrompt(),
-        messages: [{ role: 'user', content: buildUserPrompt(funderName, pageText) }],
+        system: buildSystemPrompt(todayISO),
+        messages: [{ role: 'user', content: buildUserPrompt(funderName, pageText, todayISO) }],
       }),
     })
 
