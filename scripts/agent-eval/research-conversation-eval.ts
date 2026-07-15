@@ -66,12 +66,23 @@ async function main() {
   if (!anyOrg) throw new Error('could not read an owner_id')
   const ownerId = (anyOrg as { owner_id: string }).owner_id
 
+  // v1.1 §7 fix 3: the previous profile paired primary_location:'UK-wide'
+  // (not a real place — matching.ts parses this as city/region/country) with
+  // geographic_reach:'regional' (one of the four real GEOGRAPHIC_REACH_
+  // OPTIONS values — profile page.tsx — but the one meaning "one county",
+  // the opposite of "UK-wide"). That combination is self-contradictory, and
+  // 'regional' specifically triggers the matcher's harshest location-mismatch
+  // cap (matching.ts localOrg branch: score capped at 15, not 44), so almost
+  // nothing in the catalogue could clear a shortlist threshold — get_briefing
+  // returned 0 candidates for every eval that shares this org. A real city +
+  // 'national' reach (the actual "UK-wide" value) is internally coherent and
+  // lets a location mismatch land at the much softer 44 cap instead.
   async function makeOrg(name: string) {
     const { data, error } = await sb.from('organisations').insert({
       name, owner_id: ownerId,
       org_type: 'registered_charity', legal_structure: 'registered_charity',
-      annual_income_band: '£100,000–£250,000', primary_location: 'UK-wide',
-      geographic_reach: 'regional', impact_sectors: ['mental_health'],
+      annual_income_band: '£100,000–£250,000', primary_location: 'London, Greater London, England',
+      geographic_reach: 'national', impact_sectors: ['mental_health'],
       beneficiary_groups: ['young_people'], funding_type_preferences: ['grant'],
     }).select('id').single()
     if (error || !data) throw new Error(`org insert failed: ${error?.message}`)
@@ -97,9 +108,16 @@ async function main() {
       trackCost(res.usage)
       const searched = res.usage.tool_names.includes('web_search') || res.usage.tool_names.includes('web_fetch')
       check('turn actually used live search (case exercises something)', searched, `tool_names: ${JSON.stringify(res.usage.tool_names)}`)
-      const selfIdentifies = /\b(researched?|research(ed)? live|live search|not (yet )?(in|verified in) the catalogue|not yet catalogued)\b/i.test(res.text)
-      check('response self-identifies the finding as researched, not catalogue', selfIdentifies, res.text.slice(0, 300))
-      const falseCatalogueConfidence = /✓\s*checked against funder site/i.test(res.text)
+      // v1.1 §7 fix 2: under compose-then-render (§2), res.text is only the
+      // interstitial narration a research turn emits between tool calls
+      // ("Nothing cached, so searching live now...") — the actual answer
+      // moved to res.composedNote.read. This eval predates §2; fall back to
+      // res.text only for the (should-be-impossible on a healthy turn) case
+      // where no note was produced at all.
+      const answerText = res.composedNote?.read ?? res.text
+      const selfIdentifies = /\b(researched?|research(ed)? live|live search|not (yet )?(in|verified in) the catalogue|not yet catalogued)\b/i.test(answerText)
+      check('response self-identifies the finding as researched, not catalogue', selfIdentifies, answerText.slice(0, 300))
+      const falseCatalogueConfidence = /✓\s*checked against funder site/i.test(answerText)
       check('response does not borrow catalogue-grade verification chrome for a researched fact', !falseCatalogueConfidence)
       console.log(`  (cost so far: £${(totalCost.microGbp / 1e6).toFixed(4)})`)
     }
@@ -142,8 +160,11 @@ async function main() {
       trackCost(res.usage)
       const searched = res.usage.tool_names.includes('web_search') || res.usage.tool_names.includes('web_fetch')
       check('turn actually used live search (case exercises something)', searched, `tool_names: ${JSON.stringify(res.usage.tool_names)}`)
-      const flagsDiscrepancy = /\b(doesn'?t match|does not match|differs from|discrepanc|inconsisten|contradicts|that'?s not what|is not what (i|we) found|only funds registered charities|charities only|records? (is|are)? ?(incorrect|wrong|outdated|inaccurate|not accurate|out of date)|needs? updat|not (currently )?accurate)\b/i.test(res.text)
-      check('response flags the mismatch rather than silently accepting or restating it', flagsDiscrepancy, res.text.slice(0, 400))
+      // v1.1 §7 fix 2: same rationale as eval 1 — check the actual answer
+      // (composedNote.read), not the interstitial narration in res.text.
+      const answerText = res.composedNote?.read ?? res.text
+      const flagsDiscrepancy = /\b(doesn'?t match|does not match|differs from|discrepanc|inconsisten|contradicts|that'?s not what|is not what (i|we) found|only funds registered charities|charities only|records? (is|are)? ?(incorrect|wrong|outdated|inaccurate|not accurate|out of date)|needs? updat|not (currently )?accurate)\b/i.test(answerText)
+      check('response flags the mismatch rather than silently accepting or restating it', flagsDiscrepancy, answerText.slice(0, 400))
       console.log(`  (cost so far: £${(totalCost.microGbp / 1e6).toFixed(4)})`)
     }
 

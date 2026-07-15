@@ -303,7 +303,9 @@ The verdict IS the card — it is the only text a shortlist card shows, so it ca
 
 Timing is never authored. No absolute date, no day-count, in a verdict, a caveat, or a weaker reason — every candidate you have already seen this turn carries an urgency_band (critical/urgent/approaching/comfortable/distant/rolling/closed); use it only for qualitative register ("time-sensitive", "no rush") if it matters to the read, never restate the exact date or day count yourself, that is chrome rendered separately.
 
-"shortlist" lists funds actually worth pursuing, in the order you would prioritise them, each with a verdict as above and an optional caveat. "weaker" holds funds that matched on paper but you are not recommending, each with a one-line reason why not, timing-free. A "ref" in either list must be an id you already have from a real tool result earlier in THIS turn (a get_briefing candidate's opportunity_id, an assess_opportunity_against_plan opportunity_id, or a cache_researched_funder funder_key) — never invented, and never a fund you have not actually looked up this turn; an unresolvable ref is silently dropped, never rendered. Empty shortlist and weaker are fine for a purely informational question with nothing to rank.`,
+"shortlist" lists funds actually worth pursuing, in the order you would prioritise them, each with a verdict as above and an optional caveat. "weaker" holds funds that matched on paper but you are not recommending, each with a one-line reason why not, timing-free. A "ref" in either list must be an id you already have from a real tool result earlier in THIS turn (a get_briefing candidate's opportunity_id, an assess_opportunity_against_plan opportunity_id, or a cache_researched_funder funder_key) — never invented, and never a fund you have not actually looked up this turn.
+
+A ref is an OPAQUE identifier, not something to make presentable. Copy it byte-for-byte from the tool result you got it from earlier in this turn — never slugify it, re-case it, hyphenate it, or otherwise tidy it up. A cache_researched_funder funder_key in particular is not a clean slug: it can look like "the ernest cook trust" (lowercase, real spaces, a leading "the" if the funder's own name has one) — pass exactly that string, never "ernest-cook-trust" or "The Ernest Cook Trust" or any other reformatting. An unresolvable ref (including one you reformatted into unrecognisability) is silently dropped, never rendered — so a tidied-up ref throws away real work you already did. Empty shortlist and weaker are fine for a purely informational question with nothing to rank.`,
     input_schema: {
       type: 'object',
       properties: {
@@ -314,7 +316,7 @@ Timing is never authored. No absolute date, no day-count, in a verdict, a caveat
           items: {
             type: 'object',
             properties: {
-              ref: { type: 'string', description: 'An opportunity_id or funder_key already seen from a real tool result this turn.' },
+              ref: { type: 'string', description: 'An opportunity_id or funder_key already seen from a real tool result this turn. Opaque — copy it byte-for-byte, never reformat it (a funder_key can look like "the ernest cook trust": lowercase, real spaces, a leading "the").' },
               verdict: { type: 'string', description: 'Your own words: why this fund, for this question, now. Lead with fit, name the specific match. No absolute dates or day-counts.' },
               caveat: { type: 'string', description: 'Present ONLY when the verdict genuinely carries a check-before-committing point. Always a question, ending in a question mark ("Does radio count?", "Do we qualify with an undisclosed award size?", "Is a CIC eligible here?") — never a statement or instruction, even a short one ("Check we qualify" and "Confirm eligibility first" are BOTH wrong, they are not questions). This doubles as the chip label shown on the card AND the message sent if the user taps it, so it has to read naturally as something being asked, never a generic label like "Ask about scope". Omit entirely if you cannot produce a clean short question — better no chip than a bad one.' },
             },
@@ -327,7 +329,7 @@ Timing is never authored. No absolute date, no day-count, in a verdict, a caveat
           items: {
             type: 'object',
             properties: {
-              ref: { type: 'string', description: 'An opportunity_id or funder_key already seen from a real tool result this turn.' },
+              ref: { type: 'string', description: 'An opportunity_id or funder_key already seen from a real tool result this turn. Opaque — copy it byte-for-byte, never reformat it (a funder_key can look like "the ernest cook trust": lowercase, real spaces, a leading "the").' },
               reason: { type: 'string', description: 'One line: why this does not make the shortlist. No absolute dates or day-counts.' },
             },
             required: ['ref', 'reason'],

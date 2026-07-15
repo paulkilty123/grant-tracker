@@ -24,7 +24,14 @@ import { stampNewGrant } from '../../grant-merge'
  *  — tune once real research-thread usage shows how fast funder pages churn. */
 const STALE_AFTER_DAYS = 90
 
-function normaliseFunderKey(name: string): string {
+// Exported for loop.ts's compose_research_note ref hydration (v1.1 §7 fix 1b):
+// a model-supplied ref is run through the SAME normalisation before matching
+// against the card pool, so a near-miss (wrong case, collapsed whitespace)
+// still resolves — only a ref that doesn't identify the same funder at all
+// (e.g. a slugified rewrite that drops "the" or swaps spaces for hyphens)
+// stays unresolved. See fix 1a on the tool description for the other half:
+// telling the model not to reformat the ref in the first place.
+export function normaliseFunderKey(name: string): string {
   return name.trim().toLowerCase().replace(/\s+/g, ' ')
 }
 

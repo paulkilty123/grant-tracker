@@ -22,6 +22,7 @@ import { pickModel, MAX_LOOP_ITERATIONS, MAX_TOKENS_PER_CALL, type TurnKind } fr
 import { checkResearchBudget } from './budget'
 import { RESEARCH_SERVER_TOOLS, RESEARCH_SYSTEM_PROMPT, researchSteering } from './research'
 import { PANEL_RESULT_SLIMMERS } from './panel-slimmers'
+import { normaliseFunderKey } from '../tools/research'
 
 // Anthropic charges web_search per call, separate from token pricing — web_fetch
 // is token-metered only (fetched content counts as input tokens). USD, applied
@@ -29,6 +30,31 @@ import { PANEL_RESULT_SLIMMERS } from './panel-slimmers'
 // Anthropic's published rate moves.
 const WEB_SEARCH_COST_USD_PER_CALL = 0.01
 const USD_TO_GBP = 0.79
+
+// compose_research_note ref hydration, tolerant fallback (v1.1 §7 fix 1b).
+// Fix 1a hardens the tool description to stop the model reformatting a ref;
+// this is the structural half — a ref that identifies the SAME funder under
+// different punctuation (hyphens standing in for the real spaces, a dropped
+// leading "the") still resolves, rather than silently losing a genuinely-
+// earned verdict. Runs the SAME normalisation that built the funder_key pool
+// key (normaliseFunderKey) plus one more pass bridging exactly that
+// reformatting. Exact match is always tried first — this is only a fallback,
+// never a substitute for it, so two distinct real ids can't collide (a
+// get_briefing/assess_opportunity_against_plan opportunity_id is a UUID; two
+// different UUIDs never canonicalise to the same string).
+function canonicaliseRef(ref: string): string {
+  return normaliseFunderKey(ref).replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim().replace(/^the /, '')
+}
+
+function resolveRef(cardPool: Map<string, { tool: string; data: unknown }>, ref: string): { tool: string; data: unknown } | undefined {
+  const exact = cardPool.get(ref)
+  if (exact) return exact
+  const target = canonicaliseRef(ref)
+  for (const key of Array.from(cardPool.keys())) {
+    if (canonicaliseRef(key) === target) return cardPool.get(key)
+  }
+  return undefined
+}
 
 export type OrchestratorEvent =
   | { type: 'text_delta'; text: string }
@@ -312,7 +338,7 @@ export async function runAgentTurn(opts: {
           const raw = result.data as { read: string; shortlist?: Array<{ ref: string; verdict: string; caveat?: string }>; weaker?: Array<{ ref: string; reason: string }> }
           const shortlist: ComposedNoteCard[] = []
           for (const item of raw.shortlist ?? []) {
-            const pooled = cardPool.get(item.ref)
+            const pooled = resolveRef(cardPool, item.ref)
             if (!pooled) { console.warn(`[research] compose_research_note: unresolved shortlist ref '${item.ref}' — dropped`); continue }
             // §3.1: a card with no authored text is a compose bug to surface,
             // never papered over with a template fallback — the whole point
@@ -323,7 +349,7 @@ export async function runAgentTurn(opts: {
           }
           const weaker: ComposedNoteCard[] = []
           for (const item of raw.weaker ?? []) {
-            const pooled = cardPool.get(item.ref)
+            const pooled = resolveRef(cardPool, item.ref)
             if (!pooled) { console.warn(`[research] compose_research_note: unresolved weaker ref '${item.ref}' — dropped`); continue }
             let reason = item.reason?.trim()
             if (!reason) { console.warn(`[research] compose_research_note: empty reason for ref '${item.ref}'`); reason = 'No reason authored.' }
