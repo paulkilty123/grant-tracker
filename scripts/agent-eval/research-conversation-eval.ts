@@ -189,7 +189,12 @@ async function main() {
       // res.text only for the (should-be-impossible on a healthy turn) case
       // where no note was produced at all.
       const answerText = res.composedNote?.read ?? res.text
-      const selfIdentifies = /\b(researched?|research(ed)? live|live search|not (yet )?(in|verified in) the catalogue|not yet catalogued)\b/i.test(answerText)
+      // v1.1 §7 eval-hygiene: same rigidity pattern as evals 2/4 — a real
+      // response said "based on live research — not yet verified against
+      // the catalogue" (reversed word order on "research live", and
+      // "against" instead of "in"), both natural, both honest, neither
+      // matched by the original literal phrasing.
+      const selfIdentifies = /\b(researched?|research(ed)? live|live research(ed)?|live search|not (yet )?(in|part of|listed in|verified (in|against|with|from)) the catalogue|not yet catalogued)\b/i.test(answerText)
       check('response self-identifies the finding as researched, not catalogue', selfIdentifies, answerText.slice(0, 300))
       const falseCatalogueConfidence = /✓\s*checked against funder site/i.test(answerText)
       check('response does not borrow catalogue-grade verification chrome for a researched fact', !falseCatalogueConfidence)
