@@ -28,6 +28,8 @@
 
     { "path": "/api/cron/validate-urls",           "schedule": "0 3 * * 0" },
     { "path": "/api/admin/golden-queries",         "schedule": "30 5 * * 2" },
-    { "path": "/api/cron/check-watchlist",         "schedule": "0 4 * * 3" }
+    { "path": "/api/cron/check-watchlist",         "schedule": "0 4 * * 3" },
+
+    { "path": "/api/cron/crawl-cf-funds",          "schedule": "0 5 * * 1" }
   ]
 }
