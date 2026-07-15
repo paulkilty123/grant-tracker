@@ -189,12 +189,18 @@ async function main() {
       // res.text only for the (should-be-impossible on a healthy turn) case
       // where no note was produced at all.
       const answerText = res.composedNote?.read ?? res.text
-      // v1.1 §7 eval-hygiene: same rigidity pattern as evals 2/4 — a real
-      // response said "based on live research — not yet verified against
-      // the catalogue" (reversed word order on "research live", and
-      // "against" instead of "in"), both natural, both honest, neither
-      // matched by the original literal phrasing.
-      const selfIdentifies = /\b(researched?|research(ed)? live|live research(ed)?|live search|not (yet )?(in|part of|listed in|verified (in|against|with|from)) the catalogue|not yet catalogued)\b/i.test(answerText)
+      // v1.1 §7 eval-hygiene: two overlapping bugs. (1) a real response said
+      // "based on live research — not yet verified against the catalogue"
+      // (reversed word order on "research live", and "against" instead of
+      // "in"); (2) the original bare "researched?" alternative, wrapped in a
+      // trailing \b, silently never matched "researching" — a \b right
+      // after a word-stem only fires if nothing else follows, so any longer
+      // real word-form (discovered during the same sweep on eval 3's
+      // "discrepanc"/"inconsisten"/"updat") was invisible. research\w*
+      // fixes both — it already subsumes "research/researched/researching
+      // live" and "live research(ed/ing)" as substrings, so those no longer
+      // need separate alternatives.
+      const selfIdentifies = /\b(research\w*|live search|not (yet )?(in|part of|listed in|verified (in|against|with|from)) the catalogue|not yet catalogued)\b/i.test(answerText)
       check('response self-identifies the finding as researched, not catalogue', selfIdentifies, answerText.slice(0, 300))
       const falseCatalogueConfidence = /✓\s*checked against funder site/i.test(answerText)
       check('response does not borrow catalogue-grade verification chrome for a researched fact', !falseCatalogueConfidence)
@@ -271,7 +277,17 @@ async function main() {
       // v1.1 §7 fix 2: same rationale as eval 1 — check the actual answer
       // (composedNote.read), not the interstitial narration in res.text.
       const answerText = res.composedNote?.read ?? res.text
-      const flagsDiscrepancy = /\b(doesn'?t match|does not match|differs from|discrepanc|inconsisten|contradicts|that'?s not what|is not what (i|we) found|only funds registered charities|charities only|records? (is|are)? ?(incorrect|wrong|outdated|inaccurate|not accurate|out of date)|needs? updat|not (currently )?accurate)\b/i.test(answerText)
+      // v1.1 §7 eval-hygiene: the sixth instance of the same rigidity class
+      // this pass, and this one had a structural root cause worth fixing
+      // properly rather than patching one more phrase — bare word-stems
+      // ("discrepanc", "inconsisten", "updat") were wrapped in a trailing
+      // \b that only matches a boundary immediately after the stem, so any
+      // real word-form with more letters after it (discrepancy,
+      // inconsistent, updating) silently never matched at all. Fixed with
+      // \w* to consume the rest of the word. Also widened "records...
+      // incorrect" from a rigid "(is|are)? ?" gap to a tolerant character
+      // gap — the failing real text was "records appear to be incorrect".
+      const flagsDiscrepancy = /\b(doesn'?t match|does not match|differs from|discrepanc\w*|inconsisten\w*|contradict\w*|that'?s not what|is not what (i|we) found|only funds registered charities|charities only|records?[^.!?]{0,30}(incorrect|wrong|outdated|inaccurate|not accurate|out of date)|needs? (to be )?updat\w*|not (currently )?accurate)\b/i.test(answerText)
       check('response flags the mismatch rather than silently accepting or restating it', flagsDiscrepancy, answerText.slice(0, 400))
       console.log(`  (cost so far: £${(totalCost.microGbp / 1e6).toFixed(4)})`)
     }
@@ -314,7 +330,9 @@ async function main() {
       // transparency, worded either way — fabricatesFinding below still
       // guards the one thing that actually matters: never claiming a fresh
       // live search that didn't happen.
-      const statesLimit = /\b(budget|monthly (research )?(limit|cap)|catalogue.?only|can'?t (research|search) (that|this)? ?live|without a live search|no live search (was )?(done|performed|available)?|cache[ds]?|catalogue (entry|record)|not (a )?(fully )?verified|research(ed)? data)\b/i.test(answerText)
+      // "cache[ds]?" had the same stem-\b bug found on eval 3's sweep —
+      // never matched "caching". cach\w* fixes it the same way.
+      const statesLimit = /\b(budget|monthly (research )?(limit|cap)|catalogue.?only|can'?t (research|search) (that|this)? ?live|without a live search|no live search (was )?(done|performed|available)?|cach\w*|catalogue (entry|record)|not (a )?(fully )?verified|research\w* data)\b/i.test(answerText)
       check('response states the limitation plainly (no silent degradation)', statesLimit, answerText.slice(0, 400))
       const fabricatesFinding = /\b(i found|according to their website|their site (says|states))\b/i.test(answerText)
       check('response does not fabricate a live-search finding it never made', !fabricatesFinding, answerText.slice(0, 400))
