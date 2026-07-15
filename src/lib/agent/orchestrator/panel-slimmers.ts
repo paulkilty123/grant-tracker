@@ -20,12 +20,14 @@ export const PANEL_RESULT_SLIMMERS: Record<string, (data: unknown) => unknown> =
     return { has_goal: r.has_goal, arithmetic: r.arithmetic ?? null, purposes: r.purposes ?? null }
   },
   get_briefing: d => {
-    const r = d as { has_goal?: boolean; top_candidates?: unknown[] }
+    const r = d as { has_goal?: boolean; top_candidates?: unknown[]; catalogue_scanned?: number }
     // candidates: research agent v1 (design spec §3) — the Research page's
     // catalogue-verified opportunity cards render straight from this, the SAME
     // FitCard shape the briefing page's own candidate cards use (plan.ts).
     // candidate_count/has_goal are unchanged — SetupExperience only reads those.
-    return { has_goal: r.has_goal, candidate_count: r.top_candidates?.length ?? 0, candidates: r.top_candidates ?? [] }
+    // catalogue_scanned (v1.1 §2): the research log's working-state checklist
+    // line ("Checked N catalogue records · M candidates").
+    return { has_goal: r.has_goal, candidate_count: r.top_candidates?.length ?? 0, candidates: r.top_candidates ?? [], catalogue_scanned: r.catalogue_scanned ?? null }
   },
   // Research agent v1 (design spec §3): a single catalogue-verified opportunity
   // deep-dive, rendered as one card the same way a get_briefing candidate is.

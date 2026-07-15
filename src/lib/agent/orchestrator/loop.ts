@@ -34,8 +34,28 @@ export type OrchestratorEvent =
   | { type: 'text_delta'; text: string }
   | { type: 'tool_start'; name: string }
   | { type: 'tool_done'; name: string; ok: boolean; data?: unknown }
+  | { type: 'note'; note: ComposedNote }
   | { type: 'done'; usage: TurnUsage }
   | { type: 'error'; message: string }
+
+/** v1.1 §2 (compose-then-render). One card's data is whatever
+ *  PANEL_RESULT_SLIMMERS already produced for its source tool (get_briefing /
+ *  assess_opportunity_against_plan / cache_researched_funder) — the SAME
+ *  shape cards.ts's cardFromEntry already knows how to render — plus the
+ *  model's own authored judgment for THIS turn (verdict for a shortlist item,
+ *  reason for a weaker one). */
+export interface ComposedNoteCard {
+  tool: string
+  data: unknown
+  verdict?: string
+  reason?: string
+}
+export interface ComposedNote {
+  schema_version: number
+  read: string
+  shortlist: ComposedNoteCard[]
+  weaker: ComposedNoteCard[]
+}
 
 export interface TurnUsage {
   model: string
@@ -53,6 +73,11 @@ export interface TurnResult {
   /** Full updated message list (caller's history + this turn), replayable as-is. */
   messages: Anthropic.MessageParam[]
   usage: TurnUsage
+  /** v1.1 §2: the composed research note, when opts.research is true. Always
+   *  non-null for a completed research turn (break-at-compose, or the
+   *  finalText-based fallback when compose was never called or was
+   *  degenerate) — null for every non-research turn. */
+  composedNote: ComposedNote | null
 }
 
 function effectiveInputTokens(u: Anthropic.Usage): number {
@@ -67,7 +92,11 @@ function effectiveInputTokens(u: Anthropic.Usage): number {
 // adapt in-conversation. Envelope errors map to honest, user-safe phrasing.
 function toolErrorMessage(e: unknown): string {
   if (e instanceof EntitlementError) return 'This tool is not available on this plan.'
-  if (e instanceof AuthorshipError) return 'Refused: this layer scaffolds structure only — it does not accept or produce application content.'
+  // e.message already carries the specific reason (which field, or how many
+  // chars over assertScaffoldOnly's cap) — surfacing it lets the model
+  // self-correct (e.g. shorten a field) instead of reading a generic
+  // "this looks like application content" refusal as the actual problem.
+  if (e instanceof AuthorshipError) return e.message
   return e instanceof Error ? e.message : 'Tool failed.'
 }
 
@@ -113,6 +142,13 @@ export async function runAgentTurn(opts: {
   let webSearchCalls = 0
   let iterations = 0
   let finalText = ''
+
+  // v1.1 §2 (compose-then-render). Turn-scoped, not iteration-scoped —
+  // compose_research_note is typically dispatched in a LATER loop iteration
+  // than the tool that populated a ref it references, so both must survive
+  // across the whole while loop, not just one pass of it.
+  const cardPool = new Map<string, { tool: string; data: unknown }>()
+  let composedNote: ComposedNote | null = null
 
   // The model has no inherent knowledge of the current date, so "18 months from
   // today" was being computed against its training-era sense of "now" (a wrong
@@ -190,10 +226,30 @@ export async function runAgentTurn(opts: {
     }
 
     // Execute every tool_use block; return ALL results in one user message.
+    //
+    // v1.1 §2 (compose-then-render): non-compose tools dispatch FIRST, so the
+    // card pool is populated before any compose_research_note in the SAME
+    // response tries to resolve a ref against it. assess_opportunity_
+    // against_plan's opportunity_id and cache_researched_funder's funder_key
+    // are both values the model already knows before calling the tool (an
+    // echo / a deterministic slug of its own input, unlike get_briefing's
+    // DB-generated ids) — so a model can legitimately bundle one of those
+    // WITH compose_research_note in one response, and Anthropic does not
+    // guarantee block order matches dependency order. compose_research_note
+    // block(s) are processed last, deterministically, regardless of the
+    // order the model emitted them in.
+    //
+    // The whole batch is always finished and pushed as ONE tool_result
+    // message before the turn can terminate (break-at-compose, below) — an
+    // unmatched tool_use in persisted history breaks next-turn replay.
     messages.push({ role: 'assistant', content: response.content })
     const toolUses = response.content.filter((b): b is Anthropic.ToolUseBlock => b.type === 'tool_use')
+    const composeUses = toolUses.filter(tu => tu.name === 'compose_research_note')
+    const otherUses = toolUses.filter(tu => tu.name !== 'compose_research_note')
     const results: Anthropic.ToolResultBlockParam[] = []
-    for (const tu of toolUses) {
+    let composedThisIteration = false
+
+    const runOne = async (tu: Anthropic.ToolUseBlock): Promise<void> => {
       toolNames.push(tu.name)
       emit({ type: 'tool_start', name: tu.name })
       // Structural (not prompt-only) block on the restricted-actions rule
@@ -212,23 +268,136 @@ export async function runAgentTurn(opts: {
           content: 'Refused: add_to_pipeline needs a catalogue opportunity_id in a research thread. A researched, not-yet-catalogued find cannot go to the pipeline — offer Save, Pin, Research deeper, or flag_for_verification instead.',
         })
         emit({ type: 'tool_done', name: tu.name, ok: false })
-        continue
+        return
       }
       try {
         const result = await dispatchTool(ctx, tu.name, input)
-        results.push({
-          type: 'tool_result',
-          tool_use_id: tu.id,
-          content: JSON.stringify({ data: result.data, provenance: result.provenance }),
-        })
-        const slim = PANEL_RESULT_SLIMMERS[tu.name]
-        emit({ type: 'tool_done', name: tu.name, ok: true, ...(slim ? { data: slim(result.data) } : {}) })
+
+        if (tu.name === 'compose_research_note') {
+          // Hydrate refs against this turn's card pool rather than trusting
+          // the model's own params — a ref that doesn't resolve to something
+          // a real tool call actually returned THIS turn is dropped, never
+          // rendered as a fabricated card ("steps derive from real tool
+          // activity, never invented" extended to the note itself).
+          const raw = result.data as { read: string; shortlist?: Array<{ ref: string; verdict: string }>; weaker?: Array<{ ref: string; reason: string }> }
+          const shortlist: ComposedNoteCard[] = []
+          for (const item of raw.shortlist ?? []) {
+            const pooled = cardPool.get(item.ref)
+            if (!pooled) { console.warn(`[research] compose_research_note: unresolved shortlist ref '${item.ref}' — dropped`); continue }
+            shortlist.push({ tool: pooled.tool, data: pooled.data, verdict: item.verdict })
+          }
+          const weaker: ComposedNoteCard[] = []
+          for (const item of raw.weaker ?? []) {
+            const pooled = cardPool.get(item.ref)
+            if (!pooled) { console.warn(`[research] compose_research_note: unresolved weaker ref '${item.ref}' — dropped`); continue }
+            weaker.push({ tool: pooled.tool, data: pooled.data, reason: item.reason })
+          }
+          // Degenerate: a call that's technically valid (the tool's own
+          // handler already rejects a blank read) but content-poor in every
+          // dimension at once — route to the same finalText-based synthesis
+          // the no-compose-called fallback uses, rather than a near-blank
+          // note. Leaving composedNote unset here (not composedThisIteration)
+          // is what routes it there; the turn still terminates below either
+          // way, only the CONTENT that ends up persisted/emitted differs.
+          const degenerate = !raw.read?.trim() && shortlist.length === 0 && weaker.length === 0
+          const note: ComposedNote = { schema_version: 1, read: raw.read, shortlist, weaker }
+
+          // Minimal tool_result — the model never sees the full hydrated
+          // cards back (the turn is ending), this exists purely for
+          // tool_use/tool_result replay integrity on the next turn.
+          results.push({
+            type: 'tool_result', tool_use_id: tu.id,
+            content: JSON.stringify({ data: { ok: true, shortlist_count: shortlist.length, weaker_count: weaker.length }, provenance: {} }),
+          })
+          emit({ type: 'tool_done', name: tu.name, ok: true })
+
+          // Two compose blocks in one response (unusual): keep the FIRST as
+          // the turn's note; the second still gets a tool_result above (for
+          // replay integrity) but never overrides an already-set note.
+          if (!degenerate && !composedNote) {
+            composedNote = note
+            composedThisIteration = true
+            emit({ type: 'note', note })
+          }
+        } else {
+          results.push({
+            type: 'tool_result',
+            tool_use_id: tu.id,
+            content: JSON.stringify({ data: result.data, provenance: result.provenance }),
+          })
+          const slim = PANEL_RESULT_SLIMMERS[tu.name]
+          const slimmed = slim ? slim(result.data) : undefined
+          emit({ type: 'tool_done', name: tu.name, ok: true, ...(slimmed !== undefined ? { data: slimmed } : {}) })
+
+          // Card pool (v1.1 §2): get_briefing's candidate shape carries
+          // record_check/next_open_date/open_status/size_note that assess_
+          // opportunity_against_plan's slimmed opportunity sub-object does
+          // not — richer card, so get_briefing wins a same-ref collision
+          // regardless of call order. cache_researched_funder never collides
+          // (funder_key is a disjoint key space from opportunity ids).
+          if (tu.name === 'get_briefing') {
+            const d = slimmed as { candidates?: Array<{ opportunity_id?: string }> } | undefined
+            for (const c of d?.candidates ?? []) {
+              if (c.opportunity_id) cardPool.set(c.opportunity_id, { tool: tu.name, data: c })
+            }
+          } else if (tu.name === 'assess_opportunity_against_plan') {
+            const d = slimmed as { opportunity?: { id?: string } } | undefined
+            const id = d?.opportunity?.id
+            if (id && cardPool.get(id)?.tool !== 'get_briefing') cardPool.set(id, { tool: tu.name, data: d })
+          } else if (tu.name === 'cache_researched_funder') {
+            const d = slimmed as { funder_key?: string } | undefined
+            if (d?.funder_key) cardPool.set(d.funder_key, { tool: tu.name, data: d })
+          }
+        }
       } catch (e) {
         results.push({ type: 'tool_result', tool_use_id: tu.id, content: toolErrorMessage(e), is_error: true })
         emit({ type: 'tool_done', name: tu.name, ok: false })
       }
     }
+
+    for (const tu of otherUses) await runOne(tu)
+    for (const tu of composeUses) await runOne(tu)
+
     messages.push({ role: 'user', content: results })
+    // Break-at-compose: a successful, non-degenerate compose_research_note
+    // ends the turn here — no further API call for a final plain-text
+    // wrap-up. The note SSE event already fired at hydration above, so the
+    // live bubble already shows it; asking the model again would be
+    // redundant. This REPLACES the old final-text round rather than adding
+    // to it, so the iteration budget (config.ts) is unchanged from before
+    // this feature.
+    if (composedThisIteration) break
+  }
+
+  // Fallback (v1.1 §2): the turn ended without a usable composedNote — compose_
+  // research_note was never called, the model exhausted its tool-call budget
+  // before reaching it, or its own attempt was degenerate (above). Synthesise
+  // a minimal note from whatever plain text the model DID produce, so the
+  // research UI never has "turn finished but nothing to show." Must ALSO emit
+  // the note event, not just be persisted below — otherwise the client's note
+  // field stays null and the message falls into the error-branch rendering
+  // even though nothing actually errored.
+  if (opts.research && !composedNote) {
+    composedNote = { schema_version: 1, read: finalText.trim().slice(0, 500) || 'No further detail available.', shortlist: [], weaker: [] }
+    emit({ type: 'note', note: composedNote })
+  }
+
+  // Post-loop normalization (v1.1 §2): break-at-compose (or hitting
+  // MAX_LOOP_ITERATIONS mid-tool-calling) can leave `messages` ending on a
+  // user tool_result row, which would break the Anthropic API's strict
+  // user/assistant alternation on the NEXT turn (two consecutive user-role
+  // messages once the next real user turn is appended). If the last row is
+  // already a real assistant reply (compose was never called and the model's
+  // own final text ended the turn normally), there is nothing to append —
+  // appendTurn (threads.ts) stamps composed_note onto that existing row. If
+  // the last row is a tool_result carrier, append a synthetic assistant text
+  // row so persisted history stays valid to replay. Never streamed — the
+  // note SSE event already showed this live, this is persistence-only.
+  if (opts.research && composedNote) {
+    const last = messages[messages.length - 1]
+    if (last?.role === 'user') {
+      messages.push({ role: 'assistant', content: [{ type: 'text', text: composedNote.read }] })
+    }
   }
 
   // web_search is billed per call, separate from token pricing (web_fetch is
@@ -261,7 +430,7 @@ export async function runAgentTurn(opts: {
     })
 
   emit({ type: 'done', usage })
-  return { text: finalText, messages, usage }
+  return { text: finalText, messages, usage, composedNote }
 }
 
 export { ORCHESTRATOR_PROMPT_VERSION }

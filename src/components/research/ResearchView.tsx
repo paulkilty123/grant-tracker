@@ -16,7 +16,9 @@ import ThreadTabs from './ThreadTabs'
 import PinnedPanel from './PinnedPanel'
 import NewThreadModal from './NewThreadModal'
 import OpportunityCard from './OpportunityCard'
-import { cardsFromToolPayloads, type OpportunityCardData } from './cards'
+import WorkingState from './WorkingState'
+import ComposedNoteView from './ComposedNote'
+import type { OpportunityCardData } from './cards'
 import type { ResearchThreadSummary } from './types'
 import type { Brief } from './brief-types'
 
@@ -220,23 +222,51 @@ export default function ResearchView({
                 </div>
               )}
               {messages.map((m, i) => {
-                const cards = m.role === 'assistant' ? cardsFromToolPayloads(m.cards) : []
-                return (
-                  <div key={i} className={m.role === 'user' ? 'flex justify-end mb-3' : 'mb-3'}>
-                    {m.role === 'user' ? (
+                // v1.1 §2 (compose-then-render): nothing renders from raw
+                // tool results anymore. Three states, in priority order:
+                // (1) the in-progress message, busy, no note yet — the live
+                //     checklist, never raw text/cards.
+                // (2) a note exists — the composed note, rendered once.
+                // (3) neither, but there's real text — a genuine mid-stream
+                //     error (loop.ts's fallback guarantees every non-errored
+                //     research turn ends with a note, so this branch is only
+                //     reachable on a real failure, never in normal operation).
+                // An interior tool-calling row with none of the above (a
+                // mid-turn reload row, or a pre-migration research message)
+                // contributes nothing — matching how it never rendered as
+                // its own bubble live either.
+                if (m.role === 'user') {
+                  return (
+                    <div key={i} className="flex justify-end mb-3">
                       <div className="max-w-[85%] rounded-xl px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap" style={{ background: COLOR.cream, color: COLOR.ink }}>
                         {m.text}
                       </div>
-                    ) : (
-                      <div style={{ fontSize: 13, color: COLOR.ink }}>
-                        {m.text ? <Markdown>{m.text}</Markdown> : (busy && i === messages.length - 1 ? <span style={{ color: COLOR.faint }}>…</span> : null)}
-                        {cards.map((c, ci) => (
-                          <OpportunityCard key={ci} data={c} actions={cardActions} />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )
+                    </div>
+                  )
+                }
+                const isLast = i === messages.length - 1
+                if (busy && isLast && !m.note) {
+                  return (
+                    <div key={i} className="mb-3" style={{ fontSize: 13, color: COLOR.ink }}>
+                      <WorkingState toolNames={m.tool_names} cards={m.cards} />
+                    </div>
+                  )
+                }
+                if (m.note) {
+                  return (
+                    <div key={i} className="mb-3" style={{ fontSize: 13, color: COLOR.ink }}>
+                      <ComposedNoteView note={m.note} actions={cardActions} />
+                    </div>
+                  )
+                }
+                if (m.text) {
+                  return (
+                    <div key={i} className="mb-3" style={{ fontSize: 13, color: COLOR.ink }}>
+                      <Markdown>{m.text}</Markdown>
+                    </div>
+                  )
+                }
+                return null
               })}
             </div>
 

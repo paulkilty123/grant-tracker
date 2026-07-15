@@ -232,6 +232,10 @@ export type BriefingPayload =
       coverage: BriefingPack['coverage']
       changes_since: PlanDeltas | null
       candidate_diff: 'deferred — needs agent_runs snapshots (§5.2)'
+      /** v1.1 §2: total catalogue rows scored/considered before the
+       *  shortlist slice — the research log's "Checked N catalogue records ·
+       *  M candidates" working-state line. */
+      catalogue_scanned: number
       top_candidates: FitCard[]
       /** Deterministic strategist nudges (rulebook v1.0 R8b: match funding
        *  after a recent win). Relay, and reason from, never invent. */
@@ -295,6 +299,7 @@ export function buildBriefingFull(pack: BriefingPack, deltas: PlanDeltas | null,
     coverage: pack.coverage,
     changes_since: deltas,
     candidate_diff: 'deferred — needs agent_runs snapshots (§5.2)',
+    catalogue_scanned: pack.catalogue_scanned,
     considerations,
     selection_note: computeSelectionNote(pack),
     guidance,

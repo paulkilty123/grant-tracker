@@ -9,7 +9,7 @@ import {
   addToPipeline, updatePipelineItem, getPipeline,
   getPlanState, getBriefing, assessOpportunityAgainstPlan,
   getFundingGoal, setFundingGoal, updateGoalPurposes, recommendMix,
-  checkResearchedFunder, cacheResearchedFunder, flagForVerification,
+  checkResearchedFunder, cacheResearchedFunder, flagForVerification, composeResearchNote,
   isEntitled,
   type ToolContext, type ToolResult, type Tier,
 } from '../tools'
@@ -30,6 +30,7 @@ const DISPATCH: Record<string, AnyToolFn> = {
   check_researched_funder: checkResearchedFunder as AnyToolFn,
   cache_researched_funder: cacheResearchedFunder as AnyToolFn,
   flag_for_verification: flagForVerification as AnyToolFn,
+  compose_research_note: composeResearchNote as AnyToolFn,
 }
 
 export interface AnthropicToolDef {

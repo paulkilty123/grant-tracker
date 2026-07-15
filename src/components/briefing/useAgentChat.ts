@@ -11,6 +11,22 @@ export interface ChatCard {
   data: unknown
 }
 
+/** v1.1 §2 (compose-then-render). Mirrors orchestrator/loop.ts's ComposedNote
+ *  wire shape client-side (not imported directly — this file has no
+ *  server-only dependency, and the shape is small/stable enough to mirror). */
+export interface ComposedNoteCard {
+  tool: string
+  data: unknown
+  verdict?: string
+  reason?: string
+}
+export interface ComposedNote {
+  schema_version: number
+  read: string
+  shortlist: ComposedNoteCard[]
+  weaker: ComposedNoteCard[]
+}
+
 export interface ChatMessage {
   role: 'user' | 'assistant'
   text: string
@@ -20,6 +36,10 @@ export interface ChatMessage {
    *  render straight from these. Empty on every other surface (no consumer
    *  ever asks for card-worthy tools there). */
   cards: ChatCard[]
+  /** v1.1 §2: set once a research turn's composed note arrives (live via the
+   *  'note' SSE event, or on reload from the stored row). Null everywhere
+   *  else, including the whole life of a briefing-drawer message. */
+  note: ComposedNote | null
 }
 
 // Tools that change the plan state, so the briefing/plan behind the drawer is
@@ -50,13 +70,16 @@ export function useAgentChat(opts?: {
     fetch(url)
       .then(r => r.json())
       .then(d => {
-        setMessages((d?.messages ?? []).map((m: { role: 'user' | 'assistant'; text: string; tool_names: string[]; cards?: ChatCard[] }) =>
+        setMessages((d?.messages ?? []).map((m: { role: 'user' | 'assistant'; text: string; tool_names: string[]; cards?: ChatCard[]; note?: ComposedNote | null }) =>
           // cards: research agent v1 ship-gate (spec §8 step 3/4) — reconstructed
           // server-side by loadThreadView from the SAME stored tool results a
           // live turn streamed from (threads.ts), so a reload shows the same
           // cards a live session would have. Absent/[] on every non-research
           // surface (the briefing drawer/setup never carry card-worthy tools).
-          ({ role: m.role, text: m.text, tool_names: m.tool_names ?? [], cards: m.cards ?? [] })))
+          // note (v1.1 §2): read back verbatim from the stored row, no
+          // re-derivation — null on every non-research message and every
+          // pre-migration research row.
+          ({ role: m.role, text: m.text, tool_names: m.tool_names ?? [], cards: m.cards ?? [], note: m.note ?? null })))
         setLoaded(true)
       })
       .catch(() => setLoaded(true))
@@ -66,7 +89,7 @@ export function useAgentChat(opts?: {
     const text = userTurn.trim()
     if (!text || busy) return
     setBusy(true)
-    setMessages(prev => [...prev, { role: 'user', text, tool_names: [], cards: [] }, { role: 'assistant', text: '', tool_names: [], cards: [] }])
+    setMessages(prev => [...prev, { role: 'user', text, tool_names: [], cards: [], note: null }, { role: 'assistant', text: '', tool_names: [], cards: [], note: null }])
     let planChanged = false
     try {
       const res = await fetch('/api/agent/chat', {
@@ -78,7 +101,7 @@ export function useAgentChat(opts?: {
         const err = await res.json().catch(() => null)
         setMessages(prev => {
           const next = [...prev]
-          next[next.length - 1] = { role: 'assistant', text: err?.error ?? 'Something went wrong. Please try again.', tool_names: [], cards: [] }
+          next[next.length - 1] = { role: 'assistant', text: err?.error ?? 'Something went wrong. Please try again.', tool_names: [], cards: [], note: null }
           return next
         })
         return
@@ -95,7 +118,7 @@ export function useAgentChat(opts?: {
         for (const frame of frames) {
           const line = frame.trim()
           if (!line.startsWith('data: ')) continue
-          let ev: { type: string; text?: string; name?: string; message?: string; data?: unknown }
+          let ev: { type: string; text?: string; name?: string; message?: string; data?: unknown; note?: ComposedNote }
           try { ev = JSON.parse(line.slice(6)) } catch { continue }
           if (ev.type === 'tool_done' && ev.name && ev.data !== undefined && onToolData) {
             onToolData(ev.name, ev.data)
@@ -109,6 +132,7 @@ export function useAgentChat(opts?: {
             if (ev.type === 'text_delta') last.text += ev.text ?? ''
             if (ev.type === 'tool_start' && ev.name) last.tool_names = [...last.tool_names, ev.name]
             if (ev.type === 'tool_done' && ev.name && ev.data !== undefined) last.cards = [...last.cards, { tool: ev.name, data: ev.data }]
+            if (ev.type === 'note' && ev.note) last.note = ev.note
             if (ev.type === 'error') last.text += (last.text ? '\n\n' : '') + (ev.message ?? 'Something went wrong.')
             next[next.length - 1] = last
             return next

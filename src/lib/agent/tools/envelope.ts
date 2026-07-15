@@ -22,6 +22,13 @@ export interface ToolSpec<P extends Record<string, unknown>, R> {
   logEvent: (ctx: ToolContext, params: P, result: R) => Promise<void>
   /** Per-field provenance for the returned data. */
   provenance?: (ctx: ToolContext, result: R) => Record<string, Provenance<unknown>>
+  /** Named, visible exemption from step 2 (assertScaffoldOnly) — NOT a side door, every tool
+   *  still goes through defineTool(). For a tool whose params are never submitted to a funder
+   *  and only ever render back to the same user (e.g. compose_research_note's authored note
+   *  text) — the guard's purpose (stop ghostwritten application prose from reaching a funder)
+   *  is a category mismatch, and its blanket 600-char cap would hard-reject the whole call over
+   *  a merely long field. Use sparingly; the default (unset) keeps the guard on. */
+  skipAuthorshipGuard?: boolean
 }
 
 export type ToolFn<P extends Record<string, unknown>, R> =
@@ -30,7 +37,7 @@ export type ToolFn<P extends Record<string, unknown>, R> =
 export function defineTool<P extends Record<string, unknown>, R>(spec: ToolSpec<P, R>): ToolFn<P, R> {
   return async (ctx, params) => {
     requireTool(ctx, spec.name)          // 1. entitlement
-    assertScaffoldOnly(params)           // 2. authorship
+    if (!spec.skipAuthorshipGuard) assertScaffoldOnly(params)   // 2. authorship
     const data = await spec.handler(ctx, params)   // 3. implementation (orgId from ctx)
     await spec.logEvent(ctx, params, data)         // 4a. capture log (surface)
     return {                                        // 4b. provenance envelope

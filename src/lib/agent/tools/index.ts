@@ -13,10 +13,10 @@ import { getPlanState, getBriefing } from './plan'
 import { assessOpportunityAgainstPlan } from './assess'
 import { getFundingGoal, setFundingGoal, updateGoalPurposes, PURPOSE_CATEGORIES } from './goal'
 import { recommendMix, RECOMMEND_MIX_DESCRIPTION } from './mix'
-import { checkResearchedFunder, cacheResearchedFunder, flagForVerification } from './research'
+import { checkResearchedFunder, cacheResearchedFunder, flagForVerification, composeResearchNote } from './research'
 import { CONTRACT } from '../contract'
 
-export { addToPipeline, updatePipelineItem, getPipeline, getPlanState, getBriefing, assessOpportunityAgainstPlan, getFundingGoal, setFundingGoal, updateGoalPurposes, recommendMix, checkResearchedFunder, cacheResearchedFunder, flagForVerification }
+export { addToPipeline, updatePipelineItem, getPipeline, getPlanState, getBriefing, assessOpportunityAgainstPlan, getFundingGoal, setFundingGoal, updateGoalPurposes, recommendMix, checkResearchedFunder, cacheResearchedFunder, flagForVerification, composeResearchNote }
 export { PURPOSE_CATEGORIES } from './goal'
 
 const PURPOSE_ITEM_SCHEMA = {
@@ -289,6 +289,45 @@ export const TOOL_REGISTRY: ToolSpecEntry[] = [
         source_urls: { type: 'array', items: { type: 'string' }, description: 'The URLs the summary was researched from — the reviewer checks these against the funder\'s own source before activation.' },
       },
       required: ['funder_name', 'summary', 'source_urls'],
+    },
+  },
+  {
+    name: 'compose_research_note',
+    tier: 'companion',
+    status: 'built',
+    researchOnly: true,
+    params: 'read, shortlist?, weaker?',
+    description: `Research agent v1.1 (compose-then-render): the ONLY way a research-thread reply reaches the user — every substantive response in this thread must end by calling this, never by writing a final answer as plain text. "read" is your honest headline read in 2-4 sentences. "shortlist" lists funds actually worth pursuing, in the order you would prioritise them, each with a short verdict in your own words for THIS question, never a template line. "weaker" holds funds that matched on paper but you are not recommending, each with a one-line reason why not. A "ref" in either list must be an id you already have from a real tool result earlier in THIS turn (a get_briefing candidate's opportunity_id, an assess_opportunity_against_plan opportunity_id, or a cache_researched_funder funder_key) — never invented; an unresolvable ref is silently dropped, never rendered. Empty shortlist and weaker are fine for a purely informational question with nothing to rank.`,
+    input_schema: {
+      type: 'object',
+      properties: {
+        read: { type: 'string', description: 'Your headline read, 2-4 sentences, in your own words.' },
+        shortlist: {
+          type: 'array',
+          description: 'Funds worth pursuing, in priority order.',
+          items: {
+            type: 'object',
+            properties: {
+              ref: { type: 'string', description: 'An opportunity_id or funder_key already seen from a real tool result this turn.' },
+              verdict: { type: 'string', description: 'Your own words: why this fund, for this question, now.' },
+            },
+            required: ['ref', 'verdict'],
+          },
+        },
+        weaker: {
+          type: 'array',
+          description: 'Funds that matched but are not recommended.',
+          items: {
+            type: 'object',
+            properties: {
+              ref: { type: 'string', description: 'An opportunity_id or funder_key already seen from a real tool result this turn.' },
+              reason: { type: 'string', description: 'One line: why this does not make the shortlist.' },
+            },
+            required: ['ref', 'reason'],
+          },
+        },
+      },
+      required: ['read'],
     },
   },
 ]

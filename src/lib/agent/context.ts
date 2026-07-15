@@ -242,6 +242,7 @@ export function assembleBriefingPack(input: ContextInput): BriefingPack {
     },
     sector_signals: [],
     userTurn: input.userTurn ?? null,
+    catalogue_scanned: catalogue.length,
     digest: {
       candidateIds: candidates.map(c => c.id),
       excluded: {

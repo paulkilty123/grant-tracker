@@ -8,7 +8,7 @@
 
 import type Anthropic from '@anthropic-ai/sdk'
 import { serviceClient } from '../tools/db'
-import type { TurnUsage } from './loop'
+import type { TurnUsage, ComposedNote, ComposedNoteCard } from './loop'
 import type { TurnKind } from './config'
 import { PANEL_RESULT_SLIMMERS, RESEARCH_CARD_TOOLS } from './panel-slimmers'
 
@@ -145,7 +145,7 @@ export async function appendTurn(
   threadId: string,
   orgId: string,
   newMessages: Anthropic.MessageParam[],
-  meta: { turnKind: TurnKind; usage: TurnUsage },
+  meta: { turnKind: TurnKind; usage: TurnUsage; composedNote?: ComposedNote | null },
 ): Promise<void> {
   if (!newMessages.length) return
   try {
@@ -166,12 +166,36 @@ export async function appendTurn(
         tool_names: meta.usage.tool_names,
         loop_iterations: meta.usage.loop_iterations,
       } : null,
+      // v1.1 §2: loop.ts's post-loop normalization guarantees the note-bearing
+      // row is always the array's actual last assistant-role entry, so the
+      // SAME lastAssistant index usage already stamps onto is also correct here.
+      composed_note: i === lastAssistant ? (meta.composedNote ?? null) : null,
     }))
     const { error } = await sb.from('agent_messages').insert(rows)
     if (error) { console.error('[threads] appendTurn insert failed:', error.message); return }
     await sb.from('agent_threads').update({ updated_at: new Date().toISOString() }).eq('id', threadId)
   } catch (e) {
     console.error('[threads] appendTurn threw:', e)
+  }
+}
+
+/** v1.1 §2: parse a stored composed_note defensively — a malformed value or
+ *  an unexpected schema_version degrades to "show the read, drop the bad
+ *  card," never throws and blanks the whole thread on reload. */
+function parseComposedNote(raw: unknown): ComposedNote | null {
+  if (!raw || typeof raw !== 'object') return null
+  const r = raw as Record<string, unknown>
+  if (typeof r.read !== 'string') return null
+  const safeCards = (v: unknown): ComposedNoteCard[] =>
+    Array.isArray(v)
+      ? v.filter((item): item is ComposedNoteCard =>
+          !!item && typeof item === 'object' && typeof (item as Record<string, unknown>).tool === 'string')
+      : []
+  return {
+    schema_version: typeof r.schema_version === 'number' ? r.schema_version : 1,
+    read: r.read,
+    shortlist: safeCards(r.shortlist),
+    weaker: safeCards(r.weaker),
   }
 }
 
@@ -210,6 +234,11 @@ export interface ThreadViewMessage {
   text: string
   tool_names: string[]
   cards: Array<{ tool: string; data: unknown }>
+  /** v1.1 §2: the composed research note, when this row is a research
+   *  thread's note-bearing row. Reload just reads this back verbatim — no
+   *  re-deriving, the hydration already happened once, live (loop.ts). Null
+   *  on every row from before migration 043 (accepted, not backfilled). */
+  note: ComposedNote | null
   created_at: string
 }
 
@@ -217,16 +246,17 @@ export async function loadThreadView(threadId: string, limit = 100): Promise<Thr
   try {
     const { data, error } = await serviceClient()
       .from('agent_messages')
-      .select('role, content, created_at')
+      .select('role, content, composed_note, created_at')
       .eq('thread_id', threadId)
       .order('seq', { ascending: false })
       .limit(limit)
     if (error || !data) return []
-    const rows = data.reverse() as Array<{ role: string; content: unknown; created_at: string }>
+    const rows = data.reverse() as Array<{ role: string; content: unknown; composed_note: unknown; created_at: string }>
     const out: ThreadViewMessage[] = []
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i]
       const content = row.content as Anthropic.MessageParam['content']
+      const note = parseComposedNote(row.composed_note)
       let text = ''
       const toolNames: string[] = []
       const toolUses: Array<{ id: string; name: string }> = []
@@ -243,7 +273,11 @@ export async function loadThreadView(threadId: string, limit = 100): Promise<Thr
           }
         }
       }
-      if (!text && !toolNames.length) continue // pure tool_result carrier — not a visible turn
+      // v1.1 §2: a note-bearing row can have empty text and call no more
+      // tools (the note itself already answers the question) — without the
+      // !note check here, that row would be silently dropped and the
+      // composed note lost on reload even though it rendered live.
+      if (!text && !toolNames.length && !note) continue // pure tool_result carrier — not a visible turn
 
       // Cards: resolve this turn's card-worthy tool_use ids against the NEXT
       // stored row's tool_result blocks (loop.ts always writes them adjacent —
@@ -268,7 +302,7 @@ export async function loadThreadView(threadId: string, limit = 100): Promise<Thr
         }
       }
 
-      out.push({ role: row.role as 'user' | 'assistant', text, tool_names: toolNames, cards, created_at: String(row.created_at) })
+      out.push({ role: row.role as 'user' | 'assistant', text, tool_names: toolNames, cards, note, created_at: String(row.created_at) })
     }
     return out
   } catch { return [] }

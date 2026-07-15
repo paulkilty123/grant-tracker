@@ -221,3 +221,34 @@ export const flagForVerification = defineTool<FlagForVerificationParams, FlagFor
     scraped_grant_id: prov(r.scraped_grant_id, 'agent', new Date().toISOString()),
   }),
 })
+
+// ── compose_research_note ────────────────────────────────────────────────────
+// v1.1 §2 (compose-then-render). A structured-final-answer tool, not a data
+// mutation: its only job is to force a research turn's reply through
+// validated JSON instead of free text, so nothing renders from raw tool
+// results directly. The orchestrator loop (loop.ts) does the real work —
+// resolving shortlist/weaker refs against this turn's card pool, deciding
+// when the turn terminates — this handler is a thin structural passthrough.
+//
+// skipAuthorshipGuard: these params are never submitted to a funder, they
+// render back to the same user as the adviser's own note — assertScaffoldOnly
+// exists to stop ghostwritten application prose reaching a funder, a category
+// mismatch here, and its blanket 600-char cap would hard-reject the WHOLE
+// note over one long field (losing every card, burning a retry iteration).
+
+export interface ComposeResearchNoteParams extends Record<string, unknown> {
+  read: string
+  shortlist?: Array<{ ref: string; verdict: string }>
+  weaker?: Array<{ ref: string; reason: string }>
+}
+
+export const composeResearchNote = defineTool<ComposeResearchNoteParams, ComposeResearchNoteParams>({
+  name: 'compose_research_note',
+  skipAuthorshipGuard: true,
+  handler: async (ctx, params) => {
+    assertAppSurface(ctx, 'compose_research_note')
+    if (!params.read?.trim()) throw new Error('compose_research_note: read is required')
+    return params
+  },
+  logEvent: async () => {}, // turn choreography, not a domain event
+})

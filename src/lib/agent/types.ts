@@ -218,6 +218,10 @@ export interface BriefingPack {
   coverage: { thin: boolean; note: string | null; about: string[] }
   sector_signals: never[] // §12.4 reserved seam — always empty in v1
   userTurn: string | null
+  /** v1.1 §2: total catalogue rows scored/considered before the shortlist
+   *  slice — feeds the research log's "Checked N catalogue records ·
+   *  M candidates" working-state line. Not a new query, catalogue.length. */
+  catalogue_scanned: number
   digest: {
     candidateIds: string[]
     excluded: { count: number; byReason: Record<string, number> }

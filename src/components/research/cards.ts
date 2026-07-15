@@ -1,8 +1,11 @@
-// Card shapes + the tool-payload -> card mapping (research agent v1, design
-// spec §3). Cards render straight from loop.ts's PANEL_RESULT_SLIMMERS output
-// (ChatCard[] on a ChatMessage) — no separate fetch, no separate shape.
+// Card shapes + the tool-payload -> card mapping (research agent v1.1 §2:
+// compose-then-render). A card only ever comes from ONE place now: a
+// composed research note's shortlist/weaker entries, each already hydrated
+// server-side (loop.ts) against this turn's real tool results — never
+// rendered straight from a raw tool_done event (that path, cardsFromToolPayloads,
+// is retired: nothing renders from tool results directly, per the amendment).
 
-import type { ChatCard } from '@/components/briefing/useAgentChat'
+import type { ComposedNote } from '@/components/briefing/useAgentChat'
 
 export interface CatalogueCardData {
   variant: 'catalogue'
@@ -71,51 +74,83 @@ function fromFitCard(c: FitCardShape): CatalogueCardData {
   }
 }
 
-/** Maps a turn's raw ChatCard[] (one entry per card-worthy tool_done event)
- *  into the card data this component tree renders. Unknown tool names are
- *  silently skipped — loop.ts's slimmer list is wider than what this page
- *  chooses to visualise (e.g. recommend_mix/set_funding_goal, consumed
- *  elsewhere, not here). */
-export function cardsFromToolPayloads(cards: ChatCard[]): OpportunityCardData[] {
-  const out: OpportunityCardData[] = []
-  for (const c of cards) {
-    if (c.tool === 'get_briefing') {
-      const d = c.data as { candidates?: FitCardShape[] }
-      for (const cand of d.candidates ?? []) out.push(fromFitCard(cand))
-    } else if (c.tool === 'assess_opportunity_against_plan') {
-      // assess_opportunity_against_plan's opportunity shape uses `id`, not
-      // `opportunity_id` (assess.ts's AssessPayload) — remapped here rather
-      // than in loop.ts's slimmer, which passes the tool's own field names
-      // through untouched.
-      const d = c.data as {
-        opportunity?: { id: string; title: string; funder: string; funding_type?: string; amount_min: number | null; amount_max: number | null; amount_undisclosed: boolean; deadline?: string | null }
-        eligibility?: { status: string; issues: Array<{ code: string }> }
-        match_reasons?: string[]
-      }
-      if (d.opportunity) {
-        out.push(fromFitCard({
-          ...d.opportunity,
-          opportunity_id: d.opportunity.id,
-          match_reasons: d.match_reasons,
-          eligibility_status: d.eligibility?.status ?? null,
-          warning_codes: d.eligibility?.issues?.map(i => i.code) ?? [],
-          record_check: { status: 'unverified', checked_at: null }, // assess doesn't carry link-check state
-        }))
-      }
-    } else if (c.tool === 'cache_researched_funder') {
-      const d = c.data as { funder_key?: string; funder_name?: string; summary?: string; focus_notes?: string[]; source_urls?: string[]; fetched_at?: string }
-      if (d.funder_key && d.funder_name) {
-        out.push({
-          variant: 'researched',
-          funder_key: d.funder_key,
-          funder_name: d.funder_name,
-          summary: d.summary ?? '',
-          focus_notes: d.focus_notes ?? [],
-          source_urls: d.source_urls ?? [],
-          fetched_at: d.fetched_at ?? new Date().toISOString(),
-        })
-      }
+/** One composed-note card entry ({tool, data}) -> render-ready card data, or
+ *  null if the entry's shape doesn't carry enough to render. A card-pool
+ *  entry (loop.ts) is always ONE opportunity/funder already — get_briefing's
+ *  entries are populated per-candidate there, not as the get_briefing
+ *  wrapper, so this reads a single FitCardShape directly rather than
+ *  unwrapping a `candidates` array. */
+export function cardFromEntry(entry: { tool: string; data: unknown }): OpportunityCardData | null {
+  if (entry.tool === 'get_briefing') {
+    const d = entry.data as Partial<FitCardShape>
+    if (!d.opportunity_id) return null
+    return fromFitCard(d as FitCardShape)
+  }
+  if (entry.tool === 'assess_opportunity_against_plan') {
+    // assess_opportunity_against_plan's opportunity shape uses `id`, not
+    // `opportunity_id` (assess.ts's AssessPayload) — remapped here rather
+    // than in loop.ts's slimmer, which passes the tool's own field names
+    // through untouched.
+    const d = entry.data as {
+      opportunity?: { id: string; title: string; funder: string; funding_type?: string; amount_min: number | null; amount_max: number | null; amount_undisclosed: boolean; deadline?: string | null }
+      eligibility?: { status: string; issues: Array<{ code: string }> }
+      match_reasons?: string[]
+    }
+    if (!d.opportunity) return null
+    return fromFitCard({
+      ...d.opportunity,
+      opportunity_id: d.opportunity.id,
+      match_reasons: d.match_reasons,
+      eligibility_status: d.eligibility?.status ?? null,
+      warning_codes: d.eligibility?.issues?.map(i => i.code) ?? [],
+      record_check: { status: 'unverified', checked_at: null }, // assess doesn't carry link-check state
+    })
+  }
+  if (entry.tool === 'cache_researched_funder') {
+    const d = entry.data as { funder_key?: string; funder_name?: string; summary?: string; focus_notes?: string[]; source_urls?: string[]; fetched_at?: string }
+    if (!d.funder_key || !d.funder_name) return null
+    return {
+      variant: 'researched',
+      funder_key: d.funder_key,
+      funder_name: d.funder_name,
+      summary: d.summary ?? '',
+      focus_notes: d.focus_notes ?? [],
+      source_urls: d.source_urls ?? [],
+      fetched_at: d.fetched_at ?? new Date().toISOString(),
     }
   }
-  return out
+  return null
+}
+
+/** A composed note's shortlist/weaker entries -> render-ready cards, each
+ *  carrying the adviser's own authored text for THIS turn (verdict/reason)
+ *  instead of the raw match-reason/summary the source tool returned — the
+ *  minimum §2 needs so a shortlist card shows judgment, not a template line.
+ *  Entries whose ref didn't resolve server-side never reach here at all
+ *  (loop.ts drops them before persisting/emitting). */
+export function composedNoteCards(note: ComposedNote): {
+  shortlist: Array<{ card: OpportunityCardData; verdict: string }>
+  weaker: Array<{ card: OpportunityCardData; reason: string }>
+} {
+  const shortlist: Array<{ card: OpportunityCardData; verdict: string }> = []
+  for (const item of note.shortlist) {
+    const card = cardFromEntry(item)
+    if (!card) continue
+    const verdict = item.verdict ?? ''
+    shortlist.push({
+      card: card.variant === 'catalogue' ? { ...card, reason: verdict } : { ...card, summary: verdict },
+      verdict,
+    })
+  }
+  const weaker: Array<{ card: OpportunityCardData; reason: string }> = []
+  for (const item of note.weaker) {
+    const card = cardFromEntry(item)
+    if (!card) continue
+    const reason = item.reason ?? ''
+    weaker.push({
+      card: card.variant === 'catalogue' ? { ...card, reason } : { ...card, summary: reason },
+      reason,
+    })
+  }
+  return { shortlist, weaker }
 }

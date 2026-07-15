@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
       try {
         const res = await runAgentTurn({ ctx: ctxWithThread, history, userTurn, turnKind, research, onEvent: send })
         if (threadId) {
-          await appendTurn(threadId, ctx.orgId, res.messages.slice(history.length), { turnKind, usage: res.usage })
+          await appendTurn(threadId, ctx.orgId, res.messages.slice(history.length), { turnKind, usage: res.usage, composedNote: res.composedNote })
         }
       } catch (e) {
         console.error('[agent/chat] turn failed:', e)

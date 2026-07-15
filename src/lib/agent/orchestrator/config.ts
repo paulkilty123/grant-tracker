@@ -23,8 +23,13 @@ export function pickModel(kind: TurnKind): string {
 }
 
 /** Hard ceiling on model-call round-trips within one user turn. A turn that
- *  needs more than this is looping, not working. */
-export const MAX_LOOP_ITERATIONS = 6
+ *  needs more than this is looping, not working. v1.1 §2 (compose-then-render):
+ *  a research turn now always ends with a compose_research_note call instead
+ *  of a final plain-text response — that call REPLACES the old final round
+ *  rather than adding to it (break-at-compose, loop.ts), so the iteration math
+ *  is unchanged from before that feature (K real rounds + 1 terminal round).
+ *  7, not 6, for one round of slack on a long multi-fund/live-research turn. */
+export const MAX_LOOP_ITERATIONS = 7
 
 /** Per-model-call output budget. Turns are conversational, not documents. */
 export const MAX_TOKENS_PER_CALL = 4096
