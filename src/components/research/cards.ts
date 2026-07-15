@@ -24,6 +24,11 @@ export interface CatalogueCardData {
   warning_codes: string[]
   size_note: string | null
   match_reasons: string[]
+  /** v1.1 §3.3: a shortlist-only authored caveat — a plain question, doubles
+   *  as the chip label and the next-turn message when tapped. Null for every
+   *  weaker card (weaker's shape has no caveat) and for any shortlist card
+   *  where the model didn't author one. */
+  caveat: string | null
 }
 
 export interface ResearchedCardData {
@@ -34,6 +39,8 @@ export interface ResearchedCardData {
   focus_notes: string[]
   source_urls: string[]
   fetched_at: string
+  /** v1.1 §3.3 — see CatalogueCardData.caveat. */
+  caveat: string | null
 }
 
 export type OpportunityCardData = CatalogueCardData | ResearchedCardData
@@ -65,12 +72,16 @@ function fromFitCard(c: FitCardShape): CatalogueCardData {
     amount_max: c.amount_max,
     amount_undisclosed: c.amount_undisclosed,
     deadline: c.deadline ?? null,
+    // Overwritten unconditionally by composedNoteCards below with the
+    // authored verdict/reason — this default only matters if cardFromEntry
+    // is ever called outside that path (it isn't today).
     reason: c.match_reasons?.[0] ?? null,
     record_check: c.record_check,
     eligibility_status: c.eligibility_status ?? null,
     warning_codes: c.warning_codes ?? [],
     size_note: c.size_note ?? null,
     match_reasons: c.match_reasons ?? [],
+    caveat: null,
   }
 }
 
@@ -117,6 +128,7 @@ export function cardFromEntry(entry: { tool: string; data: unknown }): Opportuni
       focus_notes: d.focus_notes ?? [],
       source_urls: d.source_urls ?? [],
       fetched_at: d.fetched_at ?? new Date().toISOString(),
+      caveat: null,
     }
   }
   return null
@@ -137,8 +149,9 @@ export function composedNoteCards(note: ComposedNote): {
     const card = cardFromEntry(item)
     if (!card) continue
     const verdict = item.verdict ?? ''
+    const caveat = item.caveat?.trim() || null
     shortlist.push({
-      card: card.variant === 'catalogue' ? { ...card, reason: verdict } : { ...card, summary: verdict },
+      card: card.variant === 'catalogue' ? { ...card, reason: verdict, caveat } : { ...card, summary: verdict, caveat },
       verdict,
     })
   }

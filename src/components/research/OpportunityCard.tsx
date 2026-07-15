@@ -16,9 +16,43 @@ import React, { useState } from 'react'
 import { Pin as PinIcon } from 'lucide-react'
 import { formatRange } from '@/lib/utils'
 import { COLOR, grotesk, fmtDate, AmberPill } from '@/components/briefing/ui'
+import { deadlineUrgency, type UrgencyBand } from '@/lib/agent/urgency'
 import { BriefSectionsFull } from './BriefSections'
 import type { CatalogueCardData, OpportunityCardData } from './cards'
 import type { Brief } from './brief-types'
+
+// v1.1 §3.2: chrome only, deliberately distinct from provenance amber (§3.4)
+// so "unverified" and "closing soon" never read as the same signal —
+// urgent/critical share the amber treatment with provenance chrome
+// elsewhere, but nothing here reuses the record_check badge's exact styling.
+function urgencyChipStyle(band: UrgencyBand): React.CSSProperties {
+  switch (band) {
+    case 'critical':
+    case 'urgent':
+      return { background: COLOR.amberBg, color: COLOR.amberInk }
+    case 'closed':
+      return { background: COLOR.hair, color: COLOR.faint }
+    case 'approaching':
+    case 'comfortable':
+      return { background: '#fff', color: COLOR.mid, border: `1px solid ${COLOR.hair}` }
+    default: // rolling, distant
+      return { background: COLOR.cream, color: COLOR.faint }
+  }
+}
+
+function DeadlineChip({ deadline }: { deadline: string | null }) {
+  const u = deadlineUrgency(deadline, new Date())
+  return (
+    <span
+      style={{
+        ...grotesk, fontSize: 11, fontWeight: 500, padding: '3px 8px', borderRadius: 999,
+        ...urgencyChipStyle(u.band),
+      }}
+    >
+      {u.chipLabel}
+    </span>
+  )
+}
 
 // Add to pipeline's fill colour: the 11 July mockup called this chip "forest
 // solid, the primary"; CLAUDE.md's locked button-hierarchy rule assigns
@@ -50,12 +84,19 @@ function Chip({ label, done, style, onClick, disabled }: { label: string; done?:
   )
 }
 
-function BriefBlock({ brief, onPin }: { brief: Brief; onPin?: () => void }) {
+function BriefBlock({ brief, deadline, onPin }: { brief: Brief; deadline: string | null; onPin?: () => void }) {
   const [pinned, setPinned] = useState(false)
   return (
     <div className="mt-2.5" style={{ borderTop: `1px solid ${COLOR.hair}`, paddingTop: 10 }}>
-      <div className="flex items-center justify-between">
-        <span style={{ ...grotesk, fontSize: 12.5, fontWeight: 600, color: COLOR.ink }}>{brief.title}</span>
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span style={{ ...grotesk, fontSize: 12.5, fontWeight: 600, color: COLOR.ink }}>{brief.title}</span>
+          {/* v1.1 §3.2/§3.4: the funder profile header reads the SAME urgency
+              chip as the card, computed from the SAME deadline the card
+              received as a prop (this component has no catalogue query of
+              its own) — one function, one date, so they cannot disagree. */}
+          <DeadlineChip deadline={deadline} />
+        </div>
         <button
           onClick={() => { setPinned(true); onPin?.() }}
           disabled={pinned}
@@ -66,6 +107,21 @@ function BriefBlock({ brief, onPin }: { brief: Brief; onPin?: () => void }) {
       </div>
       <BriefSectionsFull brief={brief} />
     </div>
+  )
+}
+
+// Caveat chip (v1.1 §3.3): authored, not extracted — present only when the
+// note carried one for this card. Tapping sends the caveat text verbatim as
+// the next turn (the SAME chip-to-prompt path Research deeper already uses),
+// the label and the sent message are deliberately the one authored string.
+function CaveatChip({ caveat, onClick }: { caveat: string; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{ ...chipHairline, color: COLOR.sage, borderColor: COLOR.weighted }}
+    >
+      {caveat}
+    </button>
   )
 }
 
@@ -99,6 +155,8 @@ export interface OpportunityCardActions {
   onResearchDeeper?: (data: OpportunityCardData) => void
   onWriteBrief?: (data: CatalogueCardData) => Promise<Brief>
   onPinBrief?: (brief: Brief, data: OpportunityCardData) => void
+  /** v1.1 §3.3: tap sends the caveat text verbatim as the next turn. */
+  onCaveat?: (caveat: string) => void
 }
 
 export default function OpportunityCard({ data, actions }: { data: OpportunityCardData; actions: OpportunityCardActions }) {
@@ -148,7 +206,10 @@ export default function OpportunityCard({ data, actions }: { data: OpportunityCa
       </div>
 
       {isCatalogue && (
-        <div className="mt-0.5" style={{ fontSize: 12, color: COLOR.faint }}>{data.funder}</div>
+        <div className="mt-1 flex items-center gap-2 flex-wrap">
+          <span style={{ fontSize: 12, color: COLOR.faint }}>{data.funder}</span>
+          <DeadlineChip deadline={data.deadline} />
+        </div>
       )}
 
       {/* Reason sentence + verification chrome (catalogue) or summary (researched) */}
@@ -186,11 +247,12 @@ export default function OpportunityCard({ data, actions }: { data: OpportunityCa
             <Chip label="Research deeper" style={chipHairline} onClick={() => actions.onResearchDeeper?.(data)} />
           </>
         )}
+        {data.caveat && <CaveatChip caveat={data.caveat} onClick={() => actions.onCaveat?.(data.caveat!)} />}
       </div>
       {briefError && (
         <p className="mt-1.5 mb-0" style={{ fontSize: 11.5, color: '#993C1D' }}>{briefError}</p>
       )}
-      {brief && <BriefBlock brief={brief} onPin={() => actions.onPinBrief?.(brief, data)} />}
+      {brief && <BriefBlock brief={brief} deadline={isCatalogue ? data.deadline : null} onPin={() => actions.onPinBrief?.(brief, data)} />}
     </div>
   )
 }

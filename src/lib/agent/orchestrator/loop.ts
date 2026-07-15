@@ -49,6 +49,10 @@ export interface ComposedNoteCard {
   data: unknown
   verdict?: string
   reason?: string
+  /** v1.1 §3.3: present only when the verdict genuinely carries a check-
+   *  before-committing point — a plain question, doubles as the card's chip
+   *  label and the message sent when tapped. Shortlist items only. */
+  caveat?: string
 }
 export interface ComposedNote {
   schema_version: number
@@ -305,18 +309,25 @@ export async function runAgentTurn(opts: {
           // a real tool call actually returned THIS turn is dropped, never
           // rendered as a fabricated card ("steps derive from real tool
           // activity, never invented" extended to the note itself).
-          const raw = result.data as { read: string; shortlist?: Array<{ ref: string; verdict: string }>; weaker?: Array<{ ref: string; reason: string }> }
+          const raw = result.data as { read: string; shortlist?: Array<{ ref: string; verdict: string; caveat?: string }>; weaker?: Array<{ ref: string; reason: string }> }
           const shortlist: ComposedNoteCard[] = []
           for (const item of raw.shortlist ?? []) {
             const pooled = cardPool.get(item.ref)
             if (!pooled) { console.warn(`[research] compose_research_note: unresolved shortlist ref '${item.ref}' — dropped`); continue }
-            shortlist.push({ tool: pooled.tool, data: pooled.data, verdict: item.verdict })
+            // §3.1: a card with no authored text is a compose bug to surface,
+            // never papered over with a template fallback — the whole point
+            // of hydration is that only AUTHORED cards render.
+            let verdict = item.verdict?.trim()
+            if (!verdict) { console.warn(`[research] compose_research_note: empty verdict for ref '${item.ref}'`); verdict = 'No verdict authored.' }
+            shortlist.push({ tool: pooled.tool, data: pooled.data, verdict, caveat: item.caveat?.trim() || undefined })
           }
           const weaker: ComposedNoteCard[] = []
           for (const item of raw.weaker ?? []) {
             const pooled = cardPool.get(item.ref)
             if (!pooled) { console.warn(`[research] compose_research_note: unresolved weaker ref '${item.ref}' — dropped`); continue }
-            weaker.push({ tool: pooled.tool, data: pooled.data, reason: item.reason })
+            let reason = item.reason?.trim()
+            if (!reason) { console.warn(`[research] compose_research_note: empty reason for ref '${item.ref}'`); reason = 'No reason authored.' }
+            weaker.push({ tool: pooled.tool, data: pooled.data, reason })
           }
           // Degenerate: a call that's technically valid (the tool's own
           // handler already rejects a blank read) but content-poor in every
@@ -326,7 +337,11 @@ export async function runAgentTurn(opts: {
           // is what routes it there; the turn still terminates below either
           // way, only the CONTENT that ends up persisted/emitted differs.
           const degenerate = !raw.read?.trim() && shortlist.length === 0 && weaker.length === 0
-          const note: ComposedNote = { schema_version: 1, read: raw.read, shortlist, weaker }
+          // schema_version 2 (v1.1 §3.5): adds the optional caveat field. A
+          // v1 note (reload of a pre-§3 turn) is caveat-free by definition —
+          // the tolerant reader (threads.ts) treats a missing field as
+          // "no chip", so it renders identically minus caveats it never had.
+          const note: ComposedNote = { schema_version: 2, read: raw.read, shortlist, weaker }
 
           // Minimal tool_result — the model never sees the full hydrated
           // cards back (the turn is ending), this exists purely for

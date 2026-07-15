@@ -297,11 +297,17 @@ export const TOOL_REGISTRY: ToolSpecEntry[] = [
     status: 'built',
     researchOnly: true,
     params: 'read, shortlist?, weaker?',
-    description: `Research agent v1.1 (compose-then-render): the ONLY way a research-thread reply reaches the user — every substantive response in this thread must end by calling this, never by writing a final answer as plain text. "read" is your honest headline read in 2-4 sentences. "shortlist" lists funds actually worth pursuing, in the order you would prioritise them, each with a short verdict in your own words for THIS question, never a template line. "weaker" holds funds that matched on paper but you are not recommending, each with a one-line reason why not. A "ref" in either list must be an id you already have from a real tool result earlier in THIS turn (a get_briefing candidate's opportunity_id, an assess_opportunity_against_plan opportunity_id, or a cache_researched_funder funder_key) — never invented; an unresolvable ref is silently dropped, never rendered. Empty shortlist and weaker are fine for a purely informational question with nothing to rank.`,
+    description: `Research agent v1.1 (compose-then-render): the ONLY way a research-thread reply reaches the user — every substantive response in this thread must end by calling this, never by writing a final answer as plain text. "read" is your honest headline read in 2-4 sentences.
+
+The verdict IS the card — it is the only text a shortlist card shows, so it carries real judgment, not a restatement of the fund's own blurb. Lead with fit ("London-wide youth broadcast equipment is exactly what this funds"), not with the sector match ("Arts and Culture aligns with your work"). Name the specific thing about the applicant that fits the specific thing the fund backs — that specificity is what makes it authored rather than templated. Shortlist versus weaker is a hard sort, not a spectrum: shortlist means pursue, weaker means matched on paper but not recommended, with the one-line reason why not. A fund you are arguing against belongs in weaker with its reason, never in shortlist with a hedge.
+
+Timing is never authored. No absolute date, no day-count, in a verdict, a caveat, or a weaker reason — every candidate you have already seen this turn carries an urgency_band (critical/urgent/approaching/comfortable/distant/rolling/closed); use it only for qualitative register ("time-sensitive", "no rush") if it matters to the read, never restate the exact date or day count yourself, that is chrome rendered separately.
+
+"shortlist" lists funds actually worth pursuing, in the order you would prioritise them, each with a verdict as above and an optional caveat. "weaker" holds funds that matched on paper but you are not recommending, each with a one-line reason why not, timing-free. A "ref" in either list must be an id you already have from a real tool result earlier in THIS turn (a get_briefing candidate's opportunity_id, an assess_opportunity_against_plan opportunity_id, or a cache_researched_funder funder_key) — never invented, and never a fund you have not actually looked up this turn; an unresolvable ref is silently dropped, never rendered. Empty shortlist and weaker are fine for a purely informational question with nothing to rank.`,
     input_schema: {
       type: 'object',
       properties: {
-        read: { type: 'string', description: 'Your headline read, 2-4 sentences, in your own words.' },
+        read: { type: 'string', description: 'Your headline read, 2-4 sentences, in your own words. No absolute dates or day-counts — timing is chrome, not prose.' },
         shortlist: {
           type: 'array',
           description: 'Funds worth pursuing, in priority order.',
@@ -309,7 +315,8 @@ export const TOOL_REGISTRY: ToolSpecEntry[] = [
             type: 'object',
             properties: {
               ref: { type: 'string', description: 'An opportunity_id or funder_key already seen from a real tool result this turn.' },
-              verdict: { type: 'string', description: 'Your own words: why this fund, for this question, now.' },
+              verdict: { type: 'string', description: 'Your own words: why this fund, for this question, now. Lead with fit, name the specific match. No absolute dates or day-counts.' },
+              caveat: { type: 'string', description: 'Present ONLY when the verdict genuinely carries a check-before-committing point. A single plain question ("Does radio count?", "Check we qualify") — this doubles as the chip label shown on the card AND the message sent if the user taps it, so phrase it as something worth asking, never a generic label like "Ask about scope". Omit entirely if you cannot produce a clean short question — better no chip than a bad one.' },
             },
             required: ['ref', 'verdict'],
           },
@@ -321,7 +328,7 @@ export const TOOL_REGISTRY: ToolSpecEntry[] = [
             type: 'object',
             properties: {
               ref: { type: 'string', description: 'An opportunity_id or funder_key already seen from a real tool result this turn.' },
-              reason: { type: 'string', description: 'One line: why this does not make the shortlist.' },
+              reason: { type: 'string', description: 'One line: why this does not make the shortlist. No absolute dates or day-counts.' },
             },
             required: ['ref', 'reason'],
           },

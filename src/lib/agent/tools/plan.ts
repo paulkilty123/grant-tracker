@@ -18,6 +18,7 @@ import { PURPOSE_CATEGORIES, type PurposeCategory } from './goal'
 import { buildConsiderations } from '../considerations'
 import { authorBriefing, availableMoves, briefingSignature, AUTHOR_PROMPT_VERSION } from '../author'
 import { checkInferenceBudget } from '../orchestrator/budget'
+import { deadlineUrgency, type UrgencyBand } from '../urgency'
 import type { GoalArithmetic, GoalInput, PipelineEntry, BriefingPack } from '../types'
 import type { Organisation } from '@/types'
 
@@ -204,6 +205,11 @@ interface FitCard {
   record_check: { status: 'checked' | 'unverified'; checked_at: string | null }
   /** Award-size mismatch to name on the card (briefing v2 §1), or null. */
   size_note: string | null
+  /** v1.1 §3.2: a judgment input for the model only — never restate the exact
+   *  day count or date in authored prose, timing is chrome (the OpportunityCard
+   *  chip, computed independently client-side from `deadline` via the SAME
+   *  urgency.ts function). Qualitative phrasing only ("time-sensitive"). */
+  urgency_band: UrgencyBand
 }
 export interface BriefingGuidance {
   my_read: string
@@ -323,6 +329,7 @@ export function buildBriefingFull(pack: BriefingPack, deltas: PlanDeltas | null,
         ? { status: 'checked', checked_at: c.urlLastChecked }
         : { status: 'unverified', checked_at: null },
       size_note: c.sizeNote ?? null,
+      urgency_band: deadlineUrgency(c.deadline, new Date()).band,
     })),
   }
 }

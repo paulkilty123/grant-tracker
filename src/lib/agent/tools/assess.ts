@@ -11,6 +11,7 @@ import { computeMatchScore } from '../../matching'
 import { computeArithmetic } from '../context'
 import { prov } from './types'
 import { getGoal, getPipeline, getOrg, getGrantById } from './repository'
+import { deadlineUrgency, type UrgencyBand } from '../urgency'
 import type { GrantOpportunity } from '@/types'
 
 const today = () => new Date().toISOString().slice(0, 10)
@@ -26,6 +27,8 @@ export interface AssessPayload {
     amount_undisclosed: boolean
     deadline: string | null
     is_rolling: boolean
+    /** v1.1 §3.2: judgment input only, see plan.ts's FitCard for the rule. */
+    urgency_band: UrgencyBand
   }
   eligibility: { status: string; reason: string | null; issues: Array<{ code: string; severity: string; message: string }> }
   match: { score: number; positive_reasons: string[]; warn_reasons: string[] }
@@ -68,6 +71,7 @@ export const assessOpportunityAgainstPlan = defineTool<{ opportunity_id: string 
         id: g.id, title: g.title, funder: g.funder, funding_type: g.fundingType ?? 'grant',
         amount_min: g.amountMin ?? null, amount_max: g.amountMax ?? null, amount_undisclosed: Boolean(g.amountUndisclosed),
         deadline: g.deadline, is_rolling: g.isRolling,
+        urgency_band: deadlineUrgency(g.deadline, new Date()).band,
       },
       eligibility: { status: verdict.status, reason: verdict.reason, issues: verdict.issues },
       match: { score: match.score, positive_reasons: match.positiveReasons ?? [], warn_reasons: match.warnReasons ?? [] },

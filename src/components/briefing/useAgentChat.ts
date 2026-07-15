@@ -19,6 +19,8 @@ export interface ComposedNoteCard {
   data: unknown
   verdict?: string
   reason?: string
+  /** v1.1 §3.3 — see loop.ts's ComposedNoteCard. */
+  caveat?: string
 }
 export interface ComposedNote {
   schema_version: number

@@ -163,6 +163,12 @@ export default function ResearchView({
     void send(`Research ${name} further — go deeper on eligibility, deadlines, and how to approach.`)
   }
 
+  // v1.1 §3.3: the caveat chip's label and its tap action are the SAME
+  // authored string — no wrapping, no prefix, exactly what the adviser wrote.
+  function handleCaveat(caveat: string) {
+    void send(caveat)
+  }
+
   async function handleWriteBrief(data: OpportunityCardData): Promise<Brief> {
     if (!activeId) throw new Error('No active thread')
     const res = await fetch('/api/agent/research/brief', {
@@ -189,7 +195,7 @@ export default function ResearchView({
     refreshPins()
   }
 
-  const cardActions = { onAddToPipeline: handleAddToPipeline, onSaveForLater: handleSaveForLater, onPin: handlePin, onResearchDeeper: handleResearchDeeper, onWriteBrief: handleWriteBrief, onPinBrief: handlePinBrief }
+  const cardActions = { onAddToPipeline: handleAddToPipeline, onSaveForLater: handleSaveForLater, onPin: handlePin, onResearchDeeper: handleResearchDeeper, onWriteBrief: handleWriteBrief, onPinBrief: handlePinBrief, onCaveat: handleCaveat }
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 md:px-6">

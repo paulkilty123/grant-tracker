@@ -1,9 +1,12 @@
-// Research agent v1 — the four conversational evals from design spec §6
-// (build step 6). LIVE: calls the real orchestrator loop (Sonnet + real
-// web_search/web_fetch where budget allows) on a throwaway org. Costs real
-// money (a handful of turns, a handful of live searches — pennies, same
-// order of magnitude as author-eval.ts) and makes real external web
-// requests. Not part of the free `research-smoke.ts` suite for that reason.
+// Research agent — the four conversational evals from design spec §6 (build
+// step 6), plus three more from v1.1 §3.6 (verdict-governed cards: prose-card
+// consistency, urgency-register consistency, caveat-chip discipline — the
+// fourth §7 case, working-state honesty, is separate, not added here). LIVE:
+// calls the real orchestrator loop (Sonnet + real web_search/web_fetch where
+// budget allows) on a throwaway org. Costs real money (a handful of turns, a
+// handful of live searches — pennies, same order of magnitude as
+// author-eval.ts) and makes real external web requests. Not part of the free
+// `research-smoke.ts` suite for that reason.
 //
 //   npx tsx --env-file=.env.local scripts/agent-eval/research-conversation-eval.ts
 //
@@ -165,6 +168,82 @@ async function main() {
       check('response states the limitation plainly (no silent degradation)', statesLimit, res.text.slice(0, 400))
       const fabricatesFinding = /\b(i found|according to their website|their site (says|states))\b/i.test(res.text)
       check('response does not fabricate a live-search finding it never made', !fabricatesFinding, res.text.slice(0, 400))
+      console.log(`  (cost so far: £${(totalCost.microGbp / 1e6).toFixed(4)})`)
+    }
+
+    // ── Eval 5 (§3.6a): prose-card consistency ───────────────────────────────
+    rule('EVAL 5 — prose-card consistency (§3.6a)')
+    {
+      const threadId = await threads.createResearchThread(orgId, { focusLabel: 'ZZ eval: prose-card consistency' })
+      const ctx: Ctx = { orgId, surface: 'app', tier: 'companion', userId: ownerId, threadId: threadId! }
+      const res = await runAgentTurn({
+        ctx, history: [], turnKind: 'chat', research: true,
+        userTurn: 'What are our best-matching grants right now? Rank them and be honest about which ones are not actually worth pursuing.',
+      })
+      trackCost(res.usage)
+      const note = res.composedNote
+      check('turn produced a composed note', !!note, JSON.stringify(res.usage.tool_names))
+      // A shortlist verdict that argues against the fund is a structural
+      // mis-sort — that fund belongs in weaker, with its reason, not in
+      // shortlist with a hedge (§3.1's hard-sort rule).
+      const NEGATIVE = /\b(wouldn'?t pursue|would not pursue|does(n'?t| not) fit|not worth (it|pursuing|applying)|not a (good )?fit|skip this (one|fund)|avoid this|rule(d)? out)\b/i
+      const POSITIVE = /\b(strong(ly)? recommend|worth pursuing|definitely (pursue|apply)|best (option|fit|match)|top (priority|pick|choice)|pursue this (first|now))\b/i
+      const badShortlist = (note?.shortlist ?? []).filter(c => c.verdict && NEGATIVE.test(c.verdict))
+      check('no shortlist verdict argues against pursuing (belongs in weaker instead)', badShortlist.length === 0, JSON.stringify(badShortlist.map(c => c.verdict)))
+      const badWeaker = (note?.weaker ?? []).filter(c => c.reason && POSITIVE.test(c.reason))
+      check('no weaker reason strongly recommends pursuing (belongs in shortlist instead)', badWeaker.length === 0, JSON.stringify(badWeaker.map(c => c.reason)))
+      console.log(`  (cost so far: £${(totalCost.microGbp / 1e6).toFixed(4)})`)
+    }
+
+    // ── Eval 6 (§3.6b): urgency-register consistency ─────────────────────────
+    rule('EVAL 6 — urgency-register consistency (§3.6b)')
+    {
+      const threadId = await threads.createResearchThread(orgId, { focusLabel: 'ZZ eval: urgency register' })
+      const ctx: Ctx = { orgId, surface: 'app', tier: 'companion', userId: ownerId, threadId: threadId! }
+      const res = await runAgentTurn({
+        ctx, history: [], turnKind: 'chat', research: true,
+        userTurn: 'What are our best-matching grants right now, and how urgent is each one?',
+      })
+      trackCost(res.usage)
+      const note = res.composedNote
+      check('turn produced a composed note', !!note, JSON.stringify(res.usage.tool_names))
+      // Timing is chrome, never authored (§3.2) — a verdict/caveat/reason
+      // that states an absolute date or a day-count is exactly the failure
+      // mode the urgency-register regression came from. Mechanical: this one
+      // check enforces the whole cross-surface, cross-time consistency
+      // property, because authored text that contains no timing cannot drift.
+      const DAY_COUNT = /\b\d+\s*days?\b/i
+      const ABS_DATE = /\b\d{1,2}(st|nd|rd|th)?\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b/i
+      const authoredTexts: string[] = [
+        ...(note?.shortlist ?? []).flatMap(c => [c.verdict, c.caveat].filter((s): s is string => !!s)),
+        ...(note?.weaker ?? []).map(c => c.reason).filter((s): s is string => !!s),
+      ]
+      const offenders = authoredTexts.filter(t => DAY_COUNT.test(t) || ABS_DATE.test(t))
+      check('no authored verdict/caveat/reason states an absolute date or a day-count (timing is chrome-only)', offenders.length === 0, JSON.stringify(offenders))
+      console.log(`  (cost so far: £${(totalCost.microGbp / 1e6).toFixed(4)})`)
+    }
+
+    // ── Eval 7 (§3.6d): caveat-chip discipline ────────────────────────────────
+    rule('EVAL 7 — caveat-chip discipline (§3.6d)')
+    {
+      const threadId = await threads.createResearchThread(orgId, { focusLabel: 'ZZ eval: caveat chip' })
+      const ctx: Ctx = { orgId, surface: 'app', tier: 'companion', userId: ownerId, threadId: threadId! }
+      const res = await runAgentTurn({
+        ctx, history: [], turnKind: 'chat', research: true,
+        userTurn: 'What are our best-matching grants right now? Flag anything I should double check before applying.',
+      })
+      trackCost(res.usage)
+      const note = res.composedNote
+      const shortlist = note?.shortlist ?? []
+      check('turn produced a composed note with at least one shortlist card to test caveats against', shortlist.length > 0, JSON.stringify(res.usage.tool_names))
+      // The chip renders iff the field is present (a frontend guarantee,
+      // cards.ts/OpportunityCard.tsx — not re-tested here); this eval checks
+      // the MODEL's half of the contract: every caveat it DOES author is a
+      // real, non-generic question, never the retired "Ask about scope"
+      // placeholder or a bare label.
+      const GENERIC_LABELS = /^(ask about scope|check eligibility|check details|more info needed)\.?$/i
+      const badCaveats = shortlist.filter(c => c.caveat && (!/\?\s*$/.test(c.caveat.trim()) || GENERIC_LABELS.test(c.caveat.trim())))
+      check('every authored caveat is phrased as a real, non-generic question', badCaveats.length === 0, JSON.stringify(badCaveats.map(c => c.caveat)))
       console.log(`  (cost so far: £${(totalCost.microGbp / 1e6).toFixed(4)})`)
     }
   } finally {

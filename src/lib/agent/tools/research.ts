@@ -238,7 +238,11 @@ export const flagForVerification = defineTool<FlagForVerificationParams, FlagFor
 
 export interface ComposeResearchNoteParams extends Record<string, unknown> {
   read: string
-  shortlist?: Array<{ ref: string; verdict: string }>
+  /** v1.1 §3.3: caveat is authored, not extracted — present only when the
+   *  verdict genuinely carries a check-before-committing point, phrased as a
+   *  plain question (doubles as the chip label and the message sent when
+   *  tapped). Omit rather than force a generic label. */
+  shortlist?: Array<{ ref: string; verdict: string; caveat?: string }>
   weaker?: Array<{ ref: string; reason: string }>
 }
 
