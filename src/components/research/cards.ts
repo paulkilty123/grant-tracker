@@ -31,6 +31,16 @@ export interface CatalogueCardData {
   caveat: string | null
 }
 
+/** v1.1 §7 fix B: intentionally a local, structural duplicate of tools/
+ *  research.ts's CatalogueMatch, not an import — that module pulls in
+ *  serviceClient (service-role credentials), which must never reach a
+ *  client bundle. cards.ts is imported by 'use client' ResearchView.tsx. */
+export interface CatalogueMatch {
+  opportunity_id: string
+  title: string
+  funder: string
+}
+
 export interface ResearchedCardData {
   variant: 'researched'
   funder_key: string
@@ -41,6 +51,12 @@ export interface ResearchedCardData {
   fetched_at: string
   /** v1.1 §3.3 — see CatalogueCardData.caveat. */
   caveat: string | null
+  /** v1.1 §7 fix B: non-null when hydration (loop.ts) found this funder as
+   *  an ACTIVE catalogue opportunity despite arriving via cache_researched_
+   *  funder — a real check, not a guess. The "not yet in catalogue" tag
+   *  renders only when this is null (OpportunityCard.tsx). The verdict/
+   *  summary text is never rewritten based on this — chrome only. */
+  catalogue_match: CatalogueMatch | null
 }
 
 export type OpportunityCardData = CatalogueCardData | ResearchedCardData
@@ -118,7 +134,7 @@ export function cardFromEntry(entry: { tool: string; data: unknown }): Opportuni
     })
   }
   if (entry.tool === 'cache_researched_funder') {
-    const d = entry.data as { funder_key?: string; funder_name?: string; summary?: string; focus_notes?: string[]; source_urls?: string[]; fetched_at?: string }
+    const d = entry.data as { funder_key?: string; funder_name?: string; summary?: string; focus_notes?: string[]; source_urls?: string[]; fetched_at?: string; catalogue_match?: CatalogueMatch | null }
     if (!d.funder_key || !d.funder_name) return null
     return {
       variant: 'researched',
@@ -129,6 +145,7 @@ export function cardFromEntry(entry: { tool: string; data: unknown }): Opportuni
       source_urls: d.source_urls ?? [],
       fetched_at: d.fetched_at ?? new Date().toISOString(),
       caveat: null,
+      catalogue_match: d.catalogue_match ?? null,
     }
   }
   return null

@@ -22,7 +22,7 @@ import { pickModel, MAX_LOOP_ITERATIONS, MAX_TOKENS_PER_CALL, type TurnKind } fr
 import { checkResearchBudget } from './budget'
 import { RESEARCH_SERVER_TOOLS, RESEARCH_SYSTEM_PROMPT, researchSteering } from './research'
 import { PANEL_RESULT_SLIMMERS } from './panel-slimmers'
-import { normaliseFunderKey } from '../tools/research'
+import { canonicaliseFunderIdentity, findCatalogueMatchByFunder } from '../tools/research'
 
 // Anthropic charges web_search per call, separate from token pricing — web_fetch
 // is token-metered only (fetched content counts as input tokens). USD, applied
@@ -36,24 +36,49 @@ const USD_TO_GBP = 0.79
 // this is the structural half — a ref that identifies the SAME funder under
 // different punctuation (hyphens standing in for the real spaces, a dropped
 // leading "the") still resolves, rather than silently losing a genuinely-
-// earned verdict. Runs the SAME normalisation that built the funder_key pool
-// key (normaliseFunderKey) plus one more pass bridging exactly that
-// reformatting. Exact match is always tried first — this is only a fallback,
-// never a substitute for it, so two distinct real ids can't collide (a
-// get_briefing/assess_opportunity_against_plan opportunity_id is a UUID; two
-// different UUIDs never canonicalise to the same string).
-function canonicaliseRef(ref: string): string {
-  return normaliseFunderKey(ref).replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim().replace(/^the /, '')
-}
-
+// earned verdict. Runs canonicaliseFunderIdentity (research.ts) — the SAME
+// identity form used everywhere a funder is compared, including the new
+// catalogue-provenance check below. Exact match is always tried first — this
+// is only a fallback, never a substitute for it, so two distinct real ids
+// can't collide (a get_briefing/assess_opportunity_against_plan
+// opportunity_id is a UUID; two different UUIDs never canonicalise to the
+// same string).
 function resolveRef(cardPool: Map<string, { tool: string; data: unknown }>, ref: string): { tool: string; data: unknown } | undefined {
   const exact = cardPool.get(ref)
   if (exact) return exact
-  const target = canonicaliseRef(ref)
+  const target = canonicaliseFunderIdentity(ref)
   for (const key of Array.from(cardPool.keys())) {
-    if (canonicaliseRef(key) === target) return cardPool.get(key)
+    if (canonicaliseFunderIdentity(key) === target) return cardPool.get(key)
   }
   return undefined
+}
+
+// v1.1 §7 fix B (defect 1, the guarantee): the "researched live · not yet in
+// catalogue" tag used to be a pure tool-provenance label (cards.ts's
+// cardFromEntry: variant:'researched' iff entry.tool === 'cache_researched_
+// funder') — no catalogue lookup behind it at all, so it could lie for any
+// fund the model chose to research live regardless of whether it was
+// actually catalogued (confirmed: Paul Hamlyn Foundation's Arts-based
+// Learning Fund, a real, high-scoring get_briefing candidate). This runs a
+// REAL catalogue check at hydration time, once, and freezes the result into
+// the persisted card data — cards.ts/OpportunityCard.tsx render the tag off
+// this stored field, never off which tool produced the card. Fix A should
+// make this rare in practice (the model is steered to catalogue tools before
+// it ever reaches cache_researched_funder for an already-catalogued fund);
+// when it still fires, that's the acceptable backstop path Fix A can't fully
+// close (a deliberate live re-check for fresher detail, or the model
+// bypassing the steering) — logged, not blocked, per the "the harm was the
+// lie, not the live call" decision.
+async function withCatalogueProvenance(pooled: { tool: string; data: unknown }): Promise<unknown> {
+  if (pooled.tool !== 'cache_researched_funder') return pooled.data
+  const d = pooled.data as { funder_name?: string } | undefined
+  if (!d?.funder_name) return pooled.data
+  const catalogueMatch = await findCatalogueMatchByFunder(d.funder_name)
+  if (catalogueMatch) {
+    console.warn(`[research] cache_researched_funder card resolved to an ACTIVE catalogue match despite live research — backstop path for '${d.funder_name}' -> ${catalogueMatch.opportunity_id}`)
+    return { ...(pooled.data as object), catalogue_match: catalogueMatch }
+  }
+  return pooled.data
 }
 
 export type OrchestratorEvent =
@@ -345,7 +370,7 @@ export async function runAgentTurn(opts: {
             // of hydration is that only AUTHORED cards render.
             let verdict = item.verdict?.trim()
             if (!verdict) { console.warn(`[research] compose_research_note: empty verdict for ref '${item.ref}'`); verdict = 'No verdict authored.' }
-            shortlist.push({ tool: pooled.tool, data: pooled.data, verdict, caveat: item.caveat?.trim() || undefined })
+            shortlist.push({ tool: pooled.tool, data: await withCatalogueProvenance(pooled), verdict, caveat: item.caveat?.trim() || undefined })
           }
           const weaker: ComposedNoteCard[] = []
           for (const item of raw.weaker ?? []) {
@@ -353,7 +378,7 @@ export async function runAgentTurn(opts: {
             if (!pooled) { console.warn(`[research] compose_research_note: unresolved weaker ref '${item.ref}' — dropped`); continue }
             let reason = item.reason?.trim()
             if (!reason) { console.warn(`[research] compose_research_note: empty reason for ref '${item.ref}'`); reason = 'No reason authored.' }
-            weaker.push({ tool: pooled.tool, data: pooled.data, reason })
+            weaker.push({ tool: pooled.tool, data: await withCatalogueProvenance(pooled), reason })
           }
           // Degenerate: a call that's technically valid (the tool's own
           // handler already rejects a blank read) but content-poor in every

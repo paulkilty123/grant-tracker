@@ -18,6 +18,7 @@ import { emitEvent } from '../../events/emit'
 import { EntitlementError, prov, type Provenance } from './types'
 import type { ToolContext } from './types'
 import { stampNewGrant } from '../../grant-merge'
+import { getActiveCatalogue } from './repository'
 
 /** How long a cached profile is treated as fresh before check_researched_funder
  *  flags it stale (the model then decides whether to re-research). Provisional
@@ -35,10 +36,51 @@ export function normaliseFunderKey(name: string): string {
   return name.trim().toLowerCase().replace(/\s+/g, ' ')
 }
 
+// Canonical funder-identity form (v1.1 §7 provenance fix): one more pass on
+// top of normaliseFunderKey bridging the reformatting a model ref sometimes
+// invents — hyphens standing in for the real spaces, a dropped leading "the".
+// Shared by loop.ts's compose_research_note ref hydration AND
+// findCatalogueMatchByFunder below, so a funder's identity resolves the same
+// way everywhere it's compared.
+export function canonicaliseFunderIdentity(name: string): string {
+  return normaliseFunderKey(name).replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim().replace(/^the /, '')
+}
+
 function assertAppSurface(ctx: ToolContext, toolName: string): void {
   if (ctx.surface !== 'app') {
     throw new EntitlementError(`'${toolName}' is not available on this surface — research agent v1 is in-app only (design spec §5).`)
   }
+}
+
+export interface CatalogueMatch {
+  opportunity_id: string
+  title: string
+  funder: string
+}
+
+// v1.1 §7 fix A (defect 2, the root cause): check_researched_funder used to
+// be structurally blind to the catalogue — it could only ever report a
+// research-cache hit, never "this funder is already catalogued". That is
+// exactly why the catalogueFirstResearch steering (contract.ts) could never
+// actually catch a catalogued fund: it told the model to check first, but
+// the check itself couldn't see what it was steering the model away from.
+// Confirmed live: Paul Hamlyn Foundation's Arts-based Learning Fund — score
+// 73, ranked #3 of 674 in get_briefing's own match path, a real candidate —
+// got live-researched anyway, because nothing in the pre-research check
+// could tell the model it was already there.
+//
+// Matches on canonicaliseFunderIdentity with symmetric containment, not
+// exact equality — a user's or model's shorthand ("Hugo Burge") still finds
+// the catalogue's full name ("Hugo Burge Foundation"), and vice versa.
+export async function findCatalogueMatchByFunder(funderName: string): Promise<CatalogueMatch | null> {
+  const target = canonicaliseFunderIdentity(funderName)
+  if (!target) return null
+  const catalogue = await getActiveCatalogue()
+  const hit = catalogue.find(g => {
+    const candidate = canonicaliseFunderIdentity(g.funder)
+    return candidate === target || candidate.includes(target) || target.includes(candidate)
+  })
+  return hit ? { opportunity_id: hit.id, title: hit.title, funder: hit.funder } : null
 }
 
 // ── check_researched_funder ──────────────────────────────────────────────────
@@ -54,6 +96,13 @@ export interface CheckResearchedFunderResult {
   focus_notes: string[]
   source_urls: string[]
   fetched_at: string | null
+  /** v1.1 §7 fix A — non-null when this funder is already an active
+   *  catalogue opportunity. Steers the model to get_briefing / assess_
+   *  opportunity_against_plan instead of live-researching a fund that's
+   *  already there. Independent of the cache found/stale result above —
+   *  a funder can be catalogued with nothing in the research cache, or vice
+   *  versa. */
+  catalogue_match: CatalogueMatch | null
 }
 
 export const checkResearchedFunder = defineTool<CheckResearchedFunderParams, CheckResearchedFunderResult>({
@@ -64,13 +113,16 @@ export const checkResearchedFunder = defineTool<CheckResearchedFunderParams, Che
       throw new Error('check_researched_funder: funder_name is required')
     }
     const key = normaliseFunderKey(p.funder_name)
-    const { data, error } = await serviceClient()
-      .from('researched_funder_cache')
-      .select('funder_name, summary, focus_notes, source_urls, fetched_at')
-      .eq('funder_key', key)
-      .maybeSingle()
+    const [{ data, error }, catalogueMatch] = await Promise.all([
+      serviceClient()
+        .from('researched_funder_cache')
+        .select('funder_name, summary, focus_notes, source_urls, fetched_at')
+        .eq('funder_key', key)
+        .maybeSingle(),
+      findCatalogueMatchByFunder(p.funder_name),
+    ])
     if (error || !data) {
-      return { found: false, stale: false, funder_name: null, summary: null, focus_notes: [], source_urls: [], fetched_at: null }
+      return { found: false, stale: false, funder_name: null, summary: null, focus_notes: [], source_urls: [], fetched_at: null, catalogue_match: catalogueMatch }
     }
     const row = data as Record<string, unknown>
     const fetchedAt = String(row.fetched_at)
@@ -83,6 +135,7 @@ export const checkResearchedFunder = defineTool<CheckResearchedFunderParams, Che
       focus_notes: (row.focus_notes as string[] | null) ?? [],
       source_urls: (row.source_urls as string[] | null) ?? [],
       fetched_at: fetchedAt,
+      catalogue_match: catalogueMatch,
     }
   },
   logEvent: async (ctx, _p, r) => {

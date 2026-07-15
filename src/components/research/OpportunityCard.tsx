@@ -183,19 +183,31 @@ export default function OpportunityCard({ data, actions }: { data: OpportunityCa
 
   const isCatalogue = data.variant === 'catalogue'
   const amountLabel = isCatalogue ? formatRange(data.amount_min, data.amount_max, data.amount_undisclosed) : null
+  // v1.1 §7 fix B: the tag is a real catalogue check frozen at hydration
+  // (loop.ts), never a guess from which tool produced the card — a
+  // cache_researched_funder card that DOES match an active catalogue
+  // opportunity carries that provenance here instead of the amber claim.
+  const catalogueMatch = !isCatalogue ? data.catalogue_match : null
 
   return (
     <div
       className="my-2"
       style={{ border: `1px solid ${COLOR.hair}`, borderRadius: 10, padding: '11px 13px', background: '#fff' }}
     >
-      {/* Title line: title + amount (catalogue) or amber badge (researched) */}
+      {/* Title line: title + amount (catalogue) or amber/green badge (researched) */}
       <div className="flex items-baseline justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2 flex-wrap">
           <span style={{ ...grotesk, fontSize: 13.5, fontWeight: 500, color: COLOR.ink }}>
             {isCatalogue ? data.title : data.funder_name}
           </span>
-          {!isCatalogue && <AmberPill>researched live · not yet in catalogue</AmberPill>}
+          {!isCatalogue && (catalogueMatch
+            ? (
+              <span className="inline-block text-[11px] px-2 py-0.5" style={{ background: COLOR.pale, color: COLOR.sage, borderRadius: 999 }}>
+                researched live · also in catalogue
+              </span>
+            )
+            : <AmberPill>researched live · not yet in catalogue</AmberPill>
+          )}
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           {isCatalogue && (

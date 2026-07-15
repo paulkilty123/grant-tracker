@@ -54,7 +54,13 @@ function report(label: string, ok: boolean, detail?: string) {
 // suite runs in one process, so reusing a name risks eval 8's cache-check
 // finding an entry an EARLIER eval already wrote this run, skipping the live
 // search + cache_researched_funder call eval 8 needs to fire.
-const CACHE_KEYS_TO_CLEAN = ['garfield weston foundation', 'the ernest cook trust', 'the barrow cadbury trust']
+// 'the peter cruddas foundation' (eval 9 only) is CONFIRMED uncatalogued
+// (checked live against the active catalogue via findCatalogueMatchByFunder
+// before picking it — evals 1/3/8's own funders turned out to ALL be
+// catalogued already, discovered during the v1.1 §7 fix A/B/C investigation;
+// eval 9 needs a genuinely uncatalogued fund to reliably produce a
+// researched-tagged card to test the invariant against).
+const CACHE_KEYS_TO_CLEAN = ['garfield weston foundation', 'the ernest cook trust', 'the barrow cadbury trust', 'the peter cruddas foundation']
 
 async function main() {
   const { createClient } = await import('@supabase/supabase-js')
@@ -64,6 +70,8 @@ async function main() {
   const { emitEvent } = await import('../../src/lib/events/emit')
   const threads = await import('../../src/lib/agent/orchestrator/threads')
   const { stepLineFor } = await import('../../src/components/research/workingStateSteps')
+  const { cardFromEntry } = await import('../../src/components/research/cards')
+  const { findCatalogueMatchByFunder } = await import('../../src/lib/agent/tools/research')
   type Ctx = import('../../src/lib/agent/tools/types').ToolContext
   type OrchestratorEvent = import('../../src/lib/agent/orchestrator/loop').OrchestratorEvent
 
@@ -421,6 +429,49 @@ async function main() {
       // actually exists to protect, and they stay hard.
       const tiers = { quantified: briefingSteps.length > 0, named: cacheSteps.length > 0, titled: assessSteps.length > 0, generic: genericSteps.length > 0 }
       report('fixture exercised all four richness tiers this run', Object.values(tiers).every(Boolean), JSON.stringify(tiers))
+      console.log(`  (cost so far: £${(totalCost.microGbp / 1e6).toFixed(4)})`)
+    }
+
+    // ── Eval 9 (§7 fix C): researched-live tag never lies ─────────────────────
+    rule('EVAL 9 — researched-live tag corresponds to a genuine catalogue absence (§7 fix C)')
+    {
+      const threadId = await threads.createResearchThread(orgId, { focusLabel: 'ZZ eval: researched-tag honesty' })
+      const ctx: Ctx = { orgId, surface: 'app', tier: 'companion', userId: ownerId, threadId: threadId! }
+      const res = await runAgentTurn({
+        ctx, history: [], turnKind: 'chat', research: true,
+        userTurn: 'Research The Peter Cruddas Foundation live and tell us whether it is worth pursuing — rank it against anything else worth mentioning from our briefing.',
+      })
+      trackCost(res.usage)
+      const note = res.composedNote
+      const allCards = [...(note?.shortlist ?? []), ...(note?.weaker ?? [])]
+      type ResearchedCardData = import('../../src/components/research/cards').ResearchedCardData
+      const researchedCards = allCards
+        .map(c => cardFromEntry({ tool: c.tool, data: c.data }))
+        .filter((c): c is ResearchedCardData => c !== null && c.variant === 'researched')
+      check('turn produced at least one researched-tagged card to test the invariant against', researchedCards.length > 0, JSON.stringify(res.usage.tool_names))
+
+      // The lock: independently re-query the ACTIVE catalogue right now for
+      // every researched-tagged card — never just read back catalogue_match
+      // (that would only prove hydration agrees with itself, not that the
+      // tag is actually true). A card whose own stored catalogue_match is
+      // null but an independent lookup finds an active match means the tag
+      // is lying — exactly the defect this eval exists to catch if it ever
+      // regresses.
+      for (const card of researchedCards) {
+        const independentMatch = await findCatalogueMatchByFunder(card.funder_name)
+        check(
+          `researched-tagged card for "${card.funder_name}" corresponds to a genuine catalogue absence`,
+          independentMatch === null,
+          independentMatch ? `INDEPENDENT CHECK FOUND AN ACTIVE MATCH the tag missed: ${JSON.stringify(independentMatch)}` : undefined,
+        )
+        // Consistency check on Fix B's own stored field, secondary to the
+        // independent check above (a hydration bug that agrees with a stale
+        // or wrong catalogue_match would still pass the primary check above
+        // if the independent lookup also happened to be stale — vanishingly
+        // unlikely given both run seconds apart against the same table, but
+        // this is belt-and-suspenders, not the load-bearing assertion).
+        check(`"${card.funder_name}" card's own stored catalogue_match agrees with the independent check`, card.catalogue_match === null, JSON.stringify(card.catalogue_match))
+      }
       console.log(`  (cost so far: £${(totalCost.microGbp / 1e6).toFixed(4)})`)
     }
   } finally {

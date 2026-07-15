@@ -246,7 +246,7 @@ export const TOOL_REGISTRY: ToolSpecEntry[] = [
     status: 'built',
     researchOnly: true,
     params: 'funder_name',
-    description: `Research agent v1 cost lever: check the shared research cache for this funder before running a live web search. Returns found=false when nothing is cached, or stale=true when the cached profile is older than the freshness window — either way, search live. A found, non-stale result is safe to use directly (still say it is researched, not catalogue data — ${CONTRACT.researchProvenance}).`,
+    description: `Research agent v1 cost lever + catalogue-first check: before running a live web search for a named funder, check BOTH the shared research cache and whether the funder is already an active catalogue opportunity. found=false / stale=true on the cache half means search live for that part — but check catalogue_match first regardless: when it is set, this funder is already catalogued, so use get_briefing or assess_opportunity_against_plan (catalogue_match.opportunity_id) instead of researching live. A found, non-stale cache result with no catalogue_match is safe to use directly (still say it is researched, not catalogue data — ${CONTRACT.researchProvenance}).`,
     input_schema: {
       type: 'object',
       properties: {
