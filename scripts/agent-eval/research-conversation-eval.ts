@@ -42,7 +42,12 @@ function check(label: string, ok: boolean, detail?: string) {
 // surface) — researched_funder_cache is GLOBAL, not org-scoped, so cleanup
 // deletes these specific keys regardless of whether the model cached them,
 // to guarantee no eval residue leaks into a real user's future research.
-const CACHE_KEYS_TO_CLEAN = ['garfield weston foundation', 'the ernest cook trust']
+// 'the barrow cadbury trust' (eval 8 only) is deliberately DIFFERENT from the
+// funders evals 1/3 use — researched_funder_cache is global and this whole
+// suite runs in one process, so reusing a name risks eval 8's cache-check
+// finding an entry an EARLIER eval already wrote this run, skipping the live
+// search + cache_researched_funder call eval 8 needs to fire.
+const CACHE_KEYS_TO_CLEAN = ['garfield weston foundation', 'the ernest cook trust', 'the barrow cadbury trust']
 
 async function main() {
   const { createClient } = await import('@supabase/supabase-js')
@@ -51,7 +56,9 @@ async function main() {
   const { RESEARCH_ACTIONS_MONTHLY_CAP_PER_ORG } = await import('../../src/lib/agent/orchestrator/config')
   const { emitEvent } = await import('../../src/lib/events/emit')
   const threads = await import('../../src/lib/agent/orchestrator/threads')
+  const { stepLineFor } = await import('../../src/components/research/workingStateSteps')
   type Ctx = import('../../src/lib/agent/tools/types').ToolContext
+  type OrchestratorEvent = import('../../src/lib/agent/orchestrator/loop').OrchestratorEvent
 
   const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } })
 
@@ -244,6 +251,117 @@ async function main() {
       const GENERIC_LABELS = /^(ask about scope|check eligibility|check details|more info needed)\.?$/i
       const badCaveats = shortlist.filter(c => c.caveat && (!/\?\s*$/.test(c.caveat.trim()) || GENERIC_LABELS.test(c.caveat.trim())))
       check('every authored caveat is phrased as a real, non-generic question', badCaveats.length === 0, JSON.stringify(badCaveats.map(c => c.caveat)))
+      console.log(`  (cost so far: £${(totalCost.microGbp / 1e6).toFixed(4)})`)
+    }
+
+    // ── Eval 8 (§7c): working-state honesty ───────────────────────────────────
+    rule('EVAL 8 — working-state honesty (§7c)')
+    {
+      const threadId = await threads.createResearchThread(orgId, { focusLabel: 'ZZ eval: working-state honesty' })
+      const ctx: Ctx = { orgId, surface: 'app', tier: 'companion', userId: ownerId, threadId: threadId! }
+      const events: OrchestratorEvent[] = []
+      const res = await runAgentTurn({
+        ctx, history: [], turnKind: 'chat', research: true,
+        userTurn: 'Check our current briefing for matching grants first. Then check the research cache for The Barrow Cadbury Trust, and if nothing useful is cached, research them live and save what you find for future threads. Finally, run a detailed assessment against our plan for one of the strongest catalogue candidates the briefing surfaced.',
+        onEvent: ev => { events.push(ev) },
+      })
+      trackCost(res.usage)
+
+      // Reconstruct EXACTLY as useAgentChat.ts's reducer does — this eval
+      // must test the SAME transform the real client applies to the SAME
+      // captured stream, not a fresh re-implementation that could silently
+      // drift from what the browser actually shows.
+      const toolNames: string[] = []
+      const cards: Array<{ tool: string; data: unknown }> = []
+      for (const ev of events) {
+        if (ev.type === 'tool_start' && ev.name) toolNames.push(ev.name)
+        if (ev.type === 'tool_done' && ev.name && ev.data !== undefined) cards.push({ tool: ev.name, data: ev.data })
+      }
+
+      const cardsByTool = new Map<string, unknown[]>()
+      for (const c of cards) {
+        const list = cardsByTool.get(c.tool) ?? []
+        list.push(c.data)
+        cardsByTool.set(c.tool, list)
+      }
+      const seenCount = new Map<string, number>()
+      const steps: Array<{ tool: string; data: unknown; line: string | null }> = []
+      for (const tool of toolNames) {
+        const occurrence = seenCount.get(tool) ?? 0
+        seenCount.set(tool, occurrence + 1)
+        const data = cardsByTool.get(tool)?.[occurrence]
+        steps.push({ tool, data, line: stepLineFor({ tool, data }, occurrence) })
+      }
+
+      // Assertion 1 — attribution: every tool event (except compose_research_
+      // note, the final-answer container) produces a step, and every step
+      // traces back to a real tool_start event by name — no orphan/invented
+      // steps. True by construction of the reconstruction above; asserted
+      // explicitly so a future refactor that breaks it stays caught.
+      const missingLines = steps.filter(s => s.tool !== 'compose_research_note' && s.line === null)
+      check('every non-compose tool event produced a step line (no silent drops)', missingLines.length === 0, JSON.stringify(missingLines.map(s => s.tool)))
+      const stepToolNames = new Set(steps.filter(s => s.line !== null).map(s => s.tool))
+      const realToolNames = new Set(toolNames)
+      const orphanTools = Array.from(stepToolNames).filter(t => !realToolNames.has(t))
+      check('no step exists for a tool name absent from the event stream', orphanTools.length === 0, JSON.stringify(orphanTools))
+
+      // Assertion 2 — data provenance: every interpolated literal in a step
+      // line traces back to THAT SAME tool call's actual tool_done.data.
+      // This is the non-tautological core — a template that fabricates a
+      // number or a name the event didn't carry fails here.
+      const briefingSteps = steps.filter(s => s.tool === 'get_briefing' && s.line)
+      for (const s of briefingSteps) {
+        const d = s.data as { catalogue_scanned?: number; candidate_count?: number } | undefined
+        if (typeof d?.candidate_count !== 'number') { check('get_briefing step: no candidate_count on this call — nothing to check', true); continue }
+        if (typeof d.catalogue_scanned === 'number') {
+          check(`get_briefing step states the ACTUAL catalogue_scanned (${d.catalogue_scanned})`, s.line!.includes(`${d.catalogue_scanned} catalogue records`), s.line ?? '')
+        }
+        check(`get_briefing step states the ACTUAL candidate_count (${d.candidate_count})`, s.line!.includes(`${d.candidate_count} candidate`), s.line ?? '')
+      }
+
+      const cacheSteps = steps.filter(s => s.tool === 'cache_researched_funder' && s.line)
+      for (const s of cacheSteps) {
+        const d = s.data as { funder_name?: string; summary?: string } | undefined
+        if (!d?.funder_name) { check('cache_researched_funder step: no funder_name on this call — nothing to check', true); continue }
+        check(`cache_researched_funder step names the ACTUAL funder (${d.funder_name})`, s.line!.includes(d.funder_name), s.line ?? '')
+        // Brittle-on-purpose-avoidance: compare a short, whitespace-normalised
+        // PREFIX only. Truncation (stepLineFor) only ever cuts the END of the
+        // summary, so the first ~20 normalised chars are stable regardless of
+        // where the word-boundary cut lands — a longer/exact comparison would
+        // be the brittle version the spec warns about.
+        if (d.summary?.trim()) {
+          const normalise = (t: string) => t.replace(/\s+/g, ' ').trim()
+          const prefix = normalise(d.summary).slice(0, 20)
+          check('cache_researched_funder step summary is a real prefix of the actual summary (normalised)', normalise(s.line!).includes(prefix), s.line ?? '')
+        }
+      }
+
+      const assessSteps = steps.filter(s => s.tool === 'assess_opportunity_against_plan' && s.line)
+      for (const s of assessSteps) {
+        const d = s.data as { opportunity?: { title?: string } } | undefined
+        if (!d?.opportunity?.title) { check('assess_opportunity_against_plan step: no title on this call — nothing to check', true); continue }
+        check(`assess_opportunity_against_plan step names the ACTUAL title (${d.opportunity.title})`, s.line!.includes(d.opportunity.title), s.line ?? '')
+      }
+
+      // Assertion 3 — generic tools stay generic: check_researched_funder and
+      // flag_for_verification never carry tool_done data (not in PANEL_
+      // RESULT_SLIMMERS), so their steps must be the fixed constant only —
+      // an exact match subsumes "no digits" and "no funder-name token" both,
+      // since the constant string contains neither by construction.
+      const genericSteps = steps.filter(s => (s.tool === 'check_researched_funder' || s.tool === 'flag_for_verification') && s.line)
+      const GENERIC_EXACT = new Set(['Checked the research cache', 'Staged a find for verification'])
+      for (const s of genericSteps) {
+        check(`${s.tool} step is exactly the fixed generic constant, never a fabricated specific`, GENERIC_EXACT.has(s.line!), s.line ?? '')
+      }
+      check('turn exercised at least one generic-tier (no-data) tool', genericSteps.length > 0, JSON.stringify(Array.from(new Set(toolNames))))
+
+      // Assertion 4 — the static "Writing up…" line is a known UI constant,
+      // never derived from a tool event — it makes no factual claim, so it's
+      // deliberately excluded from every check above (WorkingState.tsx
+      // renders it unconditionally alongside the derived steps, not as one).
+
+      const tiers = { quantified: briefingSteps.length > 0, named: cacheSteps.length > 0, titled: assessSteps.length > 0, generic: genericSteps.length > 0 }
+      check('fixture exercised all four richness tiers this run', Object.values(tiers).every(Boolean), JSON.stringify(tiers))
       console.log(`  (cost so far: £${(totalCost.microGbp / 1e6).toFixed(4)})`)
     }
   } finally {

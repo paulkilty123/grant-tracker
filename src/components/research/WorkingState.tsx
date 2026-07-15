@@ -13,38 +13,8 @@
 
 import React from 'react'
 import { COLOR, grotesk } from '@/components/briefing/ui'
+import { stepLineFor } from './workingStateSteps'
 import type { ChatCard } from '@/components/briefing/useAgentChat'
-
-function stepLabel(tool: string, data: unknown, occurrenceIndexForTool: number): string {
-  if (tool === 'get_briefing') {
-    const d = data as { catalogue_scanned?: number | null; candidate_count?: number } | undefined
-    if (d && typeof d.candidate_count === 'number') {
-      const scanned = typeof d.catalogue_scanned === 'number' ? `${d.catalogue_scanned} catalogue records · ` : ''
-      return `Checked ${scanned}${d.candidate_count} candidate${d.candidate_count === 1 ? '' : 's'}`
-    }
-    return 'Checked your briefing'
-  }
-  if (tool === 'assess_opportunity_against_plan') {
-    const d = data as { opportunity?: { title?: string } } | undefined
-    return d?.opportunity?.title ? `Checked ${d.opportunity.title}'s fit` : 'Checked an opportunity’s fit'
-  }
-  if (tool === 'cache_researched_funder') {
-    const d = data as { funder_name?: string; summary?: string } | undefined
-    if (d?.funder_name) {
-      const summary = (d.summary ?? '').trim()
-      return summary ? `Researched ${d.funder_name} live · ${summary.length > 90 ? summary.slice(0, 90) + '…' : summary}` : `Researched ${d.funder_name} live`
-    }
-    return 'Researched a funder live'
-  }
-  // check_researched_funder / flag_for_verification never carry tool_done
-  // data today (not in PANEL_RESULT_SLIMMERS) — honest but generic.
-  if (tool === 'check_researched_funder') return 'Checked the research cache'
-  if (tool === 'flag_for_verification') return 'Staged a find for verification'
-  if (tool === 'web_search' || tool === 'web_fetch') return occurrenceIndexForTool === 0 ? 'Researching live…' : 'Still researching live…'
-  // Unrecognised tool (a research thread can technically call any non-
-  // researchOnly tool too) — still a real step, just plainly named.
-  return `Checked ${tool.replace(/_/g, ' ')}`
-}
 
 export default function WorkingState({ toolNames, cards }: { toolNames: string[]; cards: ChatCard[] }) {
   const cardsByTool = new Map<string, unknown[]>()
@@ -56,11 +26,11 @@ export default function WorkingState({ toolNames, cards }: { toolNames: string[]
   const seenCount = new Map<string, number>()
   const steps: string[] = []
   for (const tool of toolNames) {
-    if (tool === 'compose_research_note') continue // the final answer container, not a step
     const occurrence = seenCount.get(tool) ?? 0
     seenCount.set(tool, occurrence + 1)
     const data = cardsByTool.get(tool)?.[occurrence]
-    steps.push(stepLabel(tool, data, occurrence))
+    const line = stepLineFor({ tool, data }, occurrence)
+    if (line) steps.push(line)
   }
 
   return (
