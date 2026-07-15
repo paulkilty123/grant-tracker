@@ -167,6 +167,16 @@ export async function runAgentTurn(opts: {
   // later call in this turn's loop passes it back.
   let containerId: string | undefined
 
+  // v1.1 §2: the system prompt alone (however forcefully worded) does not
+  // reliably stop the model from ending a research turn with a rich plain-
+  // text answer instead of calling compose_research_note — observed live,
+  // twice, even with a MANDATORY instruction at the very top of the prompt.
+  // Set once the model tries to end a turn this way; forces tool_choice on
+  // the immediate retry so the turn still ends through the structured path
+  // rather than silently degrading to a truncated snapshot of prose the
+  // model chose not to submit as a real answer.
+  let forcedCompose = false
+
   while (iterations < MAX_LOOP_ITERATIONS) {
     iterations += 1
     // Mirror the same paragraph break on the live stream between iterations.
@@ -176,6 +186,7 @@ export async function runAgentTurn(opts: {
       model,
       max_tokens: MAX_TOKENS_PER_CALL,
       ...(containerId ? { container: containerId } : {}),
+      ...(forcedCompose ? { tool_choice: { type: 'tool' as const, name: 'compose_research_note' } } : {}),
       // Frozen prefix (tools render before system) — one breakpoint caches both.
       // A research turn uses its OWN base prompt (RESEARCH_SYSTEM_PROMPT, no
       // goal/plan framing — amendment v1.1 §1), never SYSTEM_PROMPT, so the
@@ -221,9 +232,24 @@ export async function runAgentTurn(opts: {
     }
 
     if (response.stop_reason !== 'tool_use') {
+      if (opts.research && !composedNote && !forcedCompose) {
+        // Discard this attempt WITHOUT pushing it to messages — never
+        // persisted, never shown, not even a corrective "user" turn injected
+        // into history (which would itself render as a fake message bubble
+        // on reload). The exact same messages array is replayed once more,
+        // this time with tool_choice forcing compose_research_note, so the
+        // model has no way to answer except through the structured path.
+        forcedCompose = true
+        continue
+      }
       messages.push({ role: 'assistant', content: response.content })
       break
     }
+    // A forced tool_choice call is satisfied by this response (stop_reason
+    // === 'tool_use' now) — reset so a LATER, separate plain-text attempt in
+    // the same turn (unlikely, but not impossible) still gets its own retry
+    // rather than being silently forced again without cause.
+    forcedCompose = false
 
     // Execute every tool_use block; return ALL results in one user message.
     //
@@ -378,7 +404,12 @@ export async function runAgentTurn(opts: {
   // field stays null and the message falls into the error-branch rendering
   // even though nothing actually errored.
   if (opts.research && !composedNote) {
-    composedNote = { schema_version: 1, read: finalText.trim().slice(0, 500) || 'No further detail available.', shortlist: [], weaker: [] }
+    const trimmed = finalText.trim()
+    // Cut at a word boundary, not mid-word — a hard character slice can land
+    // inside a word ("...on its o|wn"), which reads as broken even though
+    // it's a deliberate fallback, not an error.
+    const read = trimmed.length <= 500 ? trimmed : trimmed.slice(0, trimmed.lastIndexOf(' ', 500)).trimEnd() + '…'
+    composedNote = { schema_version: 1, read: read || 'No further detail available.', shortlist: [], weaker: [] }
     emit({ type: 'note', note: composedNote })
   }
 
