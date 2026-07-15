@@ -316,7 +316,7 @@ Timing is never authored. No absolute date, no day-count, in a verdict, a caveat
             properties: {
               ref: { type: 'string', description: 'An opportunity_id or funder_key already seen from a real tool result this turn.' },
               verdict: { type: 'string', description: 'Your own words: why this fund, for this question, now. Lead with fit, name the specific match. No absolute dates or day-counts.' },
-              caveat: { type: 'string', description: 'Present ONLY when the verdict genuinely carries a check-before-committing point. A single plain question ("Does radio count?", "Check we qualify") — this doubles as the chip label shown on the card AND the message sent if the user taps it, so phrase it as something worth asking, never a generic label like "Ask about scope". Omit entirely if you cannot produce a clean short question — better no chip than a bad one.' },
+              caveat: { type: 'string', description: 'Present ONLY when the verdict genuinely carries a check-before-committing point. Always a question, ending in a question mark ("Does radio count?", "Do we qualify with an undisclosed award size?", "Is a CIC eligible here?") — never a statement or instruction, even a short one ("Check we qualify" and "Confirm eligibility first" are BOTH wrong, they are not questions). This doubles as the chip label shown on the card AND the message sent if the user taps it, so it has to read naturally as something being asked, never a generic label like "Ask about scope". Omit entirely if you cannot produce a clean short question — better no chip than a bad one.' },
             },
             required: ['ref', 'verdict'],
           },
