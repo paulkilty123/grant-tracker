@@ -86,7 +86,24 @@ async function main() {
       beneficiary_groups: ['young_people'], funding_type_preferences: ['grant'],
     }).select('id').single()
     if (error || !data) throw new Error(`org insert failed: ${error?.message}`)
-    return (data as { id: string }).id
+    const orgId = (data as { id: string }).id
+
+    // v1.1 §7 fix 4: get_briefing (plan.ts:415) returns buildBriefingOnboarding
+    // — a structurally different, candidate-free response shape — for any org
+    // with no active goals row, regardless of catalogue match quality. Fix 3's
+    // location/reach correction was real but never mattered: assembleBriefingPack
+    // (where that scoring lives) is only reached once a goal exists. Cleanup
+    // needs no explicit goals delete — `on delete cascade` from organisations.
+    const today = new Date()
+    const endDate = new Date(today)
+    endDate.setFullYear(endDate.getFullYear() + 1)
+    const { error: goalError } = await sb.from('goals').insert({
+      org_id: orgId, status: 'active', title: 'ZZ eval funding goal (delete me)',
+      target_amount: 250000, start_date: today.toISOString().slice(0, 10), end_date: endDate.toISOString().slice(0, 10),
+    })
+    if (goalError) throw new Error(`goal insert failed: ${goalError.message}`)
+
+    return orgId
   }
 
   const orgId = await makeOrg('ZZ Research Eval (delete me)')
