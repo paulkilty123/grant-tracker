@@ -94,6 +94,7 @@ async function main() {
   const { stepLineFor } = await import('../../src/components/research/workingStateSteps')
   const { cardFromEntry } = await import('../../src/components/research/cards')
   const { findCatalogueMatchByFunder } = await import('../../src/lib/agent/tools/research')
+  const { writeBrief } = await import('../../src/lib/agent/brief')
   type Ctx = import('../../src/lib/agent/tools/types').ToolContext
   type OrchestratorEvent = import('../../src/lib/agent/orchestrator/loop').OrchestratorEvent
 
@@ -583,6 +584,47 @@ async function main() {
         // this is belt-and-suspenders, not the load-bearing assertion).
         check(`"${card.funder_name}" card's own stored catalogue_match agrees with the independent check`, card.catalogue_match === null, JSON.stringify(card.catalogue_match))
       }
+      console.log(`  (cost so far: £${(totalCost.microGbp / 1e6).toFixed(4)})`)
+    }
+
+    // ── Eval 10 (§7 fix B, brief surface): the brief never claims false absence ──
+    rule('EVAL 10 — funder profile never falsely claims catalogue absence (brief surface)')
+    {
+      // Eval 9 locks the CARD tag; this locks the BRIEF, the second surface
+      // that made the identical unchecked "NOT in the catalogue" claim
+      // (brief.ts:154) before this session's fix. Deliberately constructs a
+      // BriefInput the way a buggy client-supplied card WOULD have looked —
+      // variant:'researched' for a funder that is ACTUALLY catalogued — the
+      // exact shape of the original bug. Calls the real writeBrief() (one
+      // live LLM call, not a full agent turn — writeBrief has no DB
+      // dependency of its own besides the new catalogue check, so no
+      // throwaway org/thread is needed here). The assertion reads the
+      // GENERATED BRIEF TEXT, never writeBrief's internal catalogueMatch
+      // variable — reading that back would only prove the fix agrees with
+      // itself, not that the false claim is actually gone from what a user
+      // would see.
+      const funderName = 'The Ernest Cook Trust'
+      const catalogueMatch = await findCatalogueMatchByFunder(funderName)
+      check(`fixture precondition: "${funderName}" is genuinely catalogued (this eval needs the buggy-shape case)`, catalogueMatch !== null, catalogueMatch ? undefined : 'NOT catalogued — pick a different fixture funder for eval 10')
+
+      const authored = await writeBrief({
+        org: { name: 'ZZ Eval Org', legal_structure: 'registered_charity', income_band: '£100,000–£250,000', location: 'London, Greater London, England', sectors: ['education'] },
+        purposeContext: null,
+        opportunity: {
+          variant: 'researched',
+          funder_name: funderName,
+          summary: 'A UK land-based educational charity funding outdoor learning and land-based education for children and young people.',
+          focus_notes: ['Outdoor learning', 'Land-based education'],
+          source_urls: ['https://ernestcooktrust.org.uk'],
+        },
+      })
+      trackCost({ cost_estimate_microgbp: authored.usage.costMicroGbp })
+      check('brief generation passed its own provenance/voice lints', authored.provenanceLintPassed && authored.voiceLintPassed, JSON.stringify({ provenanceLintPassed: authored.provenanceLintPassed, voiceLintPassed: authored.voiceLintPassed }))
+
+      const allClaimText = Object.values(authored.sections).flat().map(c => c.text).join(' \n ')
+      const FALSE_ABSENCE = /\b(not (yet )?(in|part of|listed in) the catalogue|no catalogue (record|entry)|not (yet )?catalogued|not (yet )?in (our|the|grant tracker'?s?) catalogue)\b/i
+      const claimsFalseAbsence = FALSE_ABSENCE.test(allClaimText)
+      check(`brief for a genuinely CATALOGUED funder ("${funderName}") never claims catalogue absence anywhere in its text`, !claimsFalseAbsence, allClaimText.slice(0, 500))
       console.log(`  (cost so far: £${(totalCost.microGbp / 1e6).toFixed(4)})`)
     }
   } finally {

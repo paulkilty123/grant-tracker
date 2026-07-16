@@ -13,9 +13,24 @@
 // feature exists to prevent, so a lint failure returns no brief at all
 // (never a degraded fallback with a wrong label, unlike author.ts's
 // deterministic-template fallback for numbers).
+//
+// v1.1 §7 fix B, brief surface (this was the second lying mouth Fix B's card
+// fix left open): a researched-live opportunity's prompt used to assert
+// "NOT in the catalogue" purely from opportunity.variant, exactly the same
+// tool-provenance guess the card badge made before Fix B — no real catalogue
+// check behind it. A brief is what a user leans on to write an application,
+// so a false absence claim here carries more weight than a card tag. writeBrief
+// now runs a REAL catalogue lookup (findCatalogueMatchByFunder — same
+// function, same identity normalisation as the card path) once per call,
+// before either retry attempt, and only asserts absence when that lookup is
+// genuinely null. The provenance-tagging rule itself is unchanged: the model
+// was given a researched summary, not catalogue data, so every claim is
+// still tagged 'researched' regardless of whether a catalogue row exists —
+// only the header's absence CLAIM was ever false, never the tagging logic.
 
 import { callStructuredTool, AGENT_MODEL, type Usage } from './llm'
 import { CONTRACT } from './contract'
+import { findCatalogueMatchByFunder, type CatalogueMatch } from './tools/research'
 
 export const BRIEF_PROMPT_VERSION = 'brief-v1'
 
@@ -136,7 +151,11 @@ function stripDashes(s: string): string {
   return s.replace(/\s*(—|–|--)\s*/g, ', ').replace(/,\s*([.;:,])/g, '$1').replace(/\s{2,}/g, ' ').trim()
 }
 
-function renderInput(input: BriefInput): string {
+// catalogueMatch is null for a 'catalogue' opportunity (irrelevant — the
+// header already reflects reality) and, for a 'researched' opportunity, the
+// result of a REAL catalogue lookup writeBrief already ran — never derived
+// here, so this function stays a pure formatter, same as before.
+function renderInput(input: BriefInput, catalogueMatch: CatalogueMatch | null): string {
   const { org, opportunity } = input
   const L: string[] = []
   L.push(`ORG: ${org.name ?? 'org'} | ${org.legal_structure ?? '?'} | income ${org.income_band ?? '?'} | ${org.location ?? '?'} | sectors ${org.sectors.join(', ') || '?'}`)
@@ -151,7 +170,13 @@ function renderInput(input: BriefInput): string {
     if (opportunity.size_note) L.push(`  size note: ${opportunity.size_note}`)
     if (opportunity.match_reasons.length) L.push(`  match reasons: ${opportunity.match_reasons.join('; ')}`)
   } else {
-    L.push('OPPORTUNITY (researched live, NOT in the catalogue — every factual claim must be tagged researched):')
+    // The absence claim renders only when catalogueMatch is genuinely null —
+    // the fix. Provenance tagging is unaffected either way: the model was
+    // given a researched summary, not catalogue data, so every claim stays
+    // 'researched' regardless of whether a catalogue row happens to exist.
+    L.push(catalogueMatch
+      ? 'OPPORTUNITY (researched live — you were given a researched summary, not catalogue data, so every factual claim is still tagged researched, never catalogue, even though a catalogue record also exists for this funder):'
+      : 'OPPORTUNITY (researched live, not yet in the catalogue — every factual claim must be tagged researched):')
     L.push(`  ${opportunity.funder_name}`)
     L.push(`  summary: ${opportunity.summary}`)
     if (opportunity.focus_notes.length) L.push(`  notes: ${opportunity.focus_notes.join('; ')}`)
@@ -204,6 +229,13 @@ export function lintApplicationVoice(sections: BriefSections): string | null {
 }
 
 export async function writeBrief(input: BriefInput, model?: string): Promise<AuthoredBrief> {
+  // Real catalogue lookup, once, before either retry attempt — never a guess
+  // from input.opportunity.variant (that was the bug). Only relevant for a
+  // researched-live opportunity; null for 'catalogue' since that header is
+  // already reality regardless.
+  const catalogueMatch = input.opportunity.variant === 'researched'
+    ? await findCatalogueMatchByFunder(input.opportunity.funder_name)
+    : null
   let last: AuthoredBrief | null = null
   for (let attempt = 0; attempt < 2; attempt++) {
     const { data, usage } = await callStructuredTool<{
@@ -211,7 +243,7 @@ export async function writeBrief(input: BriefInput, model?: string): Promise<Aut
       what_they_fund: Claim[]; fit_against_purpose: Claim[]; how_to_approach: Claim[]; watch_outs: Claim[]
     }>({
       system: SYSTEM,
-      user: renderInput(input),
+      user: renderInput(input, catalogueMatch),
       tool: OUTPUT_TOOL,
       model: model ?? AGENT_MODEL,
       maxTokens: 1500,
