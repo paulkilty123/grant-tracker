@@ -77,12 +77,68 @@ export interface CFFundConfig {
   listingUrl:  string
 }
 
+// ── Full rollout — 26 more CFs, researched and URL-verified 2026-07-22 ──────
+// Deliberately excluded, not forgotten:
+//   - Community Foundation Wales, South Yorkshire CF — fund lists render via
+//     JS/AJAX; a plain fetch only sees "Loading...". This pipeline is static-
+//     fetch-only by design (matches crawl.ts's existing convention of hand-
+//     converting JS-heavy pages to static seeds rather than escalating to a
+//     headless browser) — Wales already has a sitemap-based DOM scraper
+//     (crawlCFWales) that works around this differently; South Yorkshire has
+//     no equivalent yet.
+//   - East End Community Foundation — no single aggregate listing page, only
+//     4 separate borough pages (Tower Hamlets, Hackney, Newham, City of
+//     London) with 1-2 funds each. Low yield for the added config complexity.
+//   - Essex Community Foundation — only real listing found is a fundholder
+//     directory that mixes in closed/legacy funds alongside live ones (noisy).
+//     Already has a working rolling+note umbrella row; left alone rather than
+//     risk bad extractions.
+//   - Cumbria Community Foundation — tested during rollout, not excluded on
+//     paper alone: its listing page is ~43k chars (200+ named funds), took
+//     2m40s to process even with the raised caps below (a real risk to
+//     batch-mates sharing a 270s window), and came back 100% "unstated" for
+//     amounts anyway — its page lists fund names only, amounts live on
+//     individual per-fund sub-pages this pipeline doesn't follow. Zero yield
+//     for outsized cost; would need per-fund-page-following to ever be worth
+//     including, which is real extra engineering, not a config change.
+//   - "Community Foundation North East" and "Community Foundation Tyne & Wear
+//     and Northumberland" are the SAME organisation (same domain,
+//     communityfoundation.org.uk) — the DB has both funder-name strings from
+//     past scraping, exactly the kind of duplicate-funder confusion this
+//     pipeline is meant to avoid creating fresh instances of. Kept as one
+//     entry, using the funder name with more existing catalogue rows.
 export const CF_FUND_SOURCES: CFFundConfig[] = [
   { slug: 'cambridgeshire_cf', funderName: 'Cambridgeshire Community Foundation', listingUrl: 'https://www.cambscf.org.uk/funds/' },
   { slug: 'cornwall_cf',       funderName: 'Cornwall Community Foundation',       listingUrl: 'https://cornwallcommunityfoundation.com/cornwall-charity-grants/grants/' },
   { slug: 'oxfordshire_cf',    funderName: 'Oxfordshire Community Foundation',    listingUrl: 'https://oxfordshire.org/ocfgrants/' },
   { slug: 'dorset_cf',         funderName: 'Dorset Community Foundation',         listingUrl: 'https://www.dorsetcommunityfoundation.org/apply-for-a-grant/grants-for-groups/' },
   { slug: 'sussex_cf_funds',   funderName: 'Sussex Community Foundation',         listingUrl: 'https://sussexcommunityfoundation.org/grants/how-to-apply/' },
+
+  { slug: 'heart_of_england_cf_funds', funderName: 'Heart of England Community Foundation',              listingUrl: 'https://www.heartofenglandcf.org/available-grants/' },
+  { slug: 'bedfordshire_luton_cf',     funderName: 'Bedfordshire and Luton Community Foundation',         listingUrl: 'https://blcf.org.uk/apply-for-a-grant/' },
+  { slug: 'berkshire_cf',              funderName: 'Berkshire Community Foundation',                      listingUrl: 'https://berkshirecf.org/available-funding/' },
+  { slug: 'cheshire_cf',               funderName: 'Cheshire Community Foundation',                       listingUrl: 'https://www.cheshirecommunityfoundation.org.uk/grants-programmes/' },
+  { slug: 'merseyside_cf',             funderName: 'Community Foundation for Merseyside',                 listingUrl: 'https://cfmerseyside.org.uk/our-grants' },
+  { slug: 'cf_northern_ireland',       funderName: 'Community Foundation for Northern Ireland',           listingUrl: 'https://www.communityfoundationni.org/achieving-impact/available-grants/' },
+  { slug: 'cf_surrey',                 funderName: 'Community Foundation for Surrey',                     listingUrl: 'https://www.cfsurrey.org.uk/apply' },
+  { slug: 'tyne_wear_northumberland_cf', funderName: 'Community Foundation Tyne & Wear and Northumberland', listingUrl: 'https://www.communityfoundation.org.uk/apply/' },
+  { slug: 'devon_cf',                  funderName: 'Devon Community Foundation',                          listingUrl: 'https://devoncf.com/current-funds/' },
+  { slug: 'forever_notts_cf',          funderName: 'Forever Notts (Nottinghamshire Community Foundation)', listingUrl: 'https://www.forevernotts.com/grants/apply-for-grants/' },
+  { slug: 'hampshire_iow_cf',          funderName: 'Hampshire & Isle of Wight Community Foundation',       listingUrl: 'https://hiwcf.org.uk/grants-for-groups/' },
+  { slug: 'herefordshire_cf',          funderName: 'Herefordshire Community Foundation',                  listingUrl: 'https://www.herefordshirecf.org/our-funds-programmes/' },
+  { slug: 'hertfordshire_cf',          funderName: 'Hertfordshire Community Foundation',                  listingUrl: 'https://www.hertscf.org.uk/grant-making' },
+  { slug: 'kent_cf',                   funderName: 'Kent Community Foundation',                           listingUrl: 'https://kentcf.org.uk/about-us/our-funds/' },
+  { slug: 'leeds_cf_funds',            funderName: 'Leeds Community Foundation',                          listingUrl: 'https://www.leedscf.org.uk/open-grants/' },
+  { slug: 'leicestershire_rutland_cf', funderName: 'Leicestershire and Rutland Community Foundation',     listingUrl: 'https://www.llrcommunityfoundation.org.uk/our-grants/apply-for-a-grant/' },
+  { slug: 'lincolnshire_cf',           funderName: 'Lincolnshire Community Foundation',                   listingUrl: 'https://lincolnshirecf.co.uk/available-grants/' },
+  { slug: 'london_cf_funds',           funderName: 'London Community Foundation',                         listingUrl: 'https://londoncf.org.uk/apply/available-grants' },
+  { slug: 'norfolk_cf',                funderName: 'Norfolk Community Foundation',                        listingUrl: 'https://www.norfolkfoundation.com/funding-support/grants/groups/' },
+  { slug: 'northamptonshire_cf',       funderName: 'Northamptonshire Community Foundation',               listingUrl: 'https://www.ncf.uk.com/grants/grants-available' },
+  { slug: 'quartet_cf_funds',          funderName: 'Quartet Community Foundation',                        listingUrl: 'https://quartetcf.org.uk/apply-for-funding/apply-for-a-grant/' },
+  { slug: 'somerset_cf',               funderName: 'Somerset Community Foundation',                       listingUrl: 'https://www.somersetcf.org.uk/grants-and-funding/grants-and-funding-for-groups/' },
+  { slug: 'suffolk_cf',                funderName: 'Suffolk Community Foundation',                        listingUrl: 'https://suffolkcf.org.uk/current-grants/' },
+  { slug: 'two_ridings_cf_funds',      funderName: 'Two Ridings Community Foundation',                    listingUrl: 'https://tworidingscf.org.uk/apply-for-funding/' },
+  { slug: 'wiltshire_swindon_cf',      funderName: 'Wiltshire and Swindon Community Foundation',          listingUrl: 'https://www.wscf.org.uk/grants-and-support/groups/' },
 ]
 
 // ── Extraction types ──────────────────────────────────────────────────────────
@@ -132,8 +188,13 @@ async function fetchPageText(url: string): Promise<string> {
   const root = parseHTML(html)
   root.querySelectorAll('script, style, noscript').forEach(el => el.remove())
   const text = root.text.replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim()
-  // CF listing pages can enumerate 100+ funds — cap generously.
-  return text.slice(0, 18_000)
+  // Most CF listing pages run 5k-15k chars stripped (10-40 funds). Cumbria CF
+  // is a known outlier at ~43k chars (200+ named funds) — this cap won't
+  // fully cover it even raised this far, and the model's max_tokens budget
+  // couldn't return 200 funds' worth of structured JSON in one call anyway.
+  // Accepted as a documented partial-coverage case rather than building
+  // multi-call pagination for one outlier; flag if Cumbria's results look thin.
+  return text.slice(0, 30_000)
 }
 
 // ── Extraction model call ─────────────────────────────────────────────────────
@@ -143,7 +204,7 @@ function buildSystemPrompt(todayISO: string): string {
 
 Today's date is ${todayISO}. This matters for deadlines: found live in production data — a fund whose page states a recurring pattern like "Application deadlines: 1 February, 1 August" was extracted with deadline "2025-02-01", a date in the PAST, because the year was guessed rather than reasoned from today's date. When a fund's deadline is described as a recurring pattern (multiple dates per year, "next closing date", etc.), you MUST compute the NEXT occurrence strictly after ${todayISO} — never return a deadline date that has already passed.
 
-CRITICAL grounding rule: amount_max is what a SINGLE applicant can receive from THIS named fund. Do NOT use a total programme pot, cumulative annual distribution, or a "grants of up to £Xm distributed since Y" figure — those describe the whole portfolio, not one grant. If you cannot find a clear per-applicant amount, set amount_status to "unstated" and leave amount_min/amount_max as null. Never guess a number.
+CRITICAL grounding rule: amount_max is what a SINGLE applicant can receive from THIS SPECIFIC named fund. Do NOT use a total programme pot, cumulative annual distribution, or a "grants of up to £Xm distributed since Y" figure — those describe the whole portfolio, not one grant. Also found live in production data — a foundation's page had a single page-wide disclaimer ("Most of our funds are for grants under £10,000") that got wrongly copied onto EVERY fund as if each one specifically said this. A statement about the foundation's funds IN GENERAL, or about "most" of its funds, is NOT evidence for any ONE named fund's specific amount — if a fund has no amount stated for IT BY NAME, set amount_status to "unstated" even if a general/aggregate statement exists elsewhere on the page. Never guess a number, and never reuse one generic statement across multiple funds unless the page explicitly states that exact figure applies to each of them by name.
 
 Every amount and deadline you return must be backed by a verbatim snippet from the page text in amount_snippet / deadline_snippet.
 
@@ -199,7 +260,7 @@ async function callExtractionModel(funderName: string, pageText: string): Promis
       },
       body: JSON.stringify({
         model: EXTRACTION_MODEL,
-        max_tokens: 8192,
+        max_tokens: 16384, // raised from 8192 for larger CFs (Kent 40+ funds, etc.) — see fetchPageText's cap comment for the one known outlier this still doesn't fully solve
         system: buildSystemPrompt(todayISO),
         messages: [{ role: 'user', content: buildUserPrompt(funderName, pageText, todayISO) }],
       }),
