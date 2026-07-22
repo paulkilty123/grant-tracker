@@ -34,7 +34,9 @@ import { mergeGrantUpdate, stampNewGrant } from '@/lib/grant-merge'
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY!
 const EXTRACTION_MODEL  = 'claude-sonnet-4-5-20250929'
-const PROVENANCE_SOURCE = 'ai_extract:cf_fund_pipeline'
+// Exported so cf-fund-verify.ts can identify this pipeline's own rows without
+// duplicating the string literal.
+export const PROVENANCE_SOURCE = 'ai_extract:cf_fund_pipeline'
 
 // Only catalogue a fund individually if a single applicant can receive at
 // least this much from it. Below this, the CF's existing rolling+note
@@ -52,7 +54,10 @@ export const AMOUNT_THRESHOLD = 5000
 // reintroducing the exact bug class this pipeline exists to fix. Explicit
 // cache: 'no-store' on every request this client makes is required, not
 // optional, for correctness here.
-function adminClient() {
+// Exported so cf-fund-verify.ts's later pass over this pipeline's own rows
+// gets the same no-store fix — it would be exposed to the identical staleness
+// bug otherwise (see comment above).
+export function adminClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -143,6 +148,12 @@ export const CF_FUND_SOURCES: CFFundConfig[] = [
 
 // ── Extraction types ──────────────────────────────────────────────────────────
 
+interface DeadlineCycleEntry {
+  day:    number
+  month:  number
+  label?: string
+}
+
 interface ExtractedFund {
   name:              string
   amount_min:        number | null
@@ -152,6 +163,7 @@ interface ExtractedFund {
   deadline:          string | null   // ISO date or null
   is_rolling:        boolean
   deadline_snippet:  string | null
+  deadline_cycle:    DeadlineCycleEntry[] | null
   eligibility_notes: string | null
   apply_url:         string | null
 }
@@ -208,6 +220,8 @@ CRITICAL grounding rule: amount_max is what a SINGLE applicant can receive from 
 
 Every amount and deadline you return must be backed by a verbatim snippet from the page text in amount_snippet / deadline_snippet.
 
+DEADLINE CYCLE — a fund with a genuinely recurring annual pattern (e.g. "two deadlines per year in May and October", "applications close 8 May, 31 August and 11 December each year") needs more than just its next deadline captured, or a downstream process has no way to know a further round is coming once that one date passes. When the page explicitly states day-of-month + month for each recurring round, ALSO populate deadline_cycle as an array of {day, month, label} objects (label optional, e.g. "Round 1"). Only populate it from genuinely recurring dates stated with day-of-month + month for each occurrence — do not populate it from a single one-off deadline, from decision/notification dates, or from a strategy period (e.g. "2025-2027" is not a cycle). If no recurring cycle is stated, set deadline_cycle to null — do not guess or infer one from vague language like "we run several rounds a year" with no specific dates given.
+
 Return valid JSON only — no markdown fencing, no commentary.`
 }
 
@@ -222,7 +236,7 @@ ${pageText}
 
 Extract EVERY named fund mentioned on this page, regardless of size — including small funds under £1,000. Do not skip or omit any fund based on its amount; return the complete list and let amount_min/amount_max/amount_status speak for themselves.
 
-For any deadline, compute the next occurrence strictly after ${todayISO} — if the page states a recurring pattern (e.g. two dates a year), pick whichever of those dates is soonest after today, rolling into next year if every stated date this year has already passed.
+For any deadline, compute the next occurrence strictly after ${todayISO} — if the page states a recurring pattern (e.g. two dates a year), pick whichever of those dates is soonest after today, rolling into next year if every stated date this year has already passed. If that recurring pattern gives explicit day-of-month + month for each round, also populate deadline_cycle (see system instructions) — otherwise leave it null.
 
 Return JSON in this exact format:
 {
@@ -236,6 +250,7 @@ Return JSON in this exact format:
       "deadline": "2026-09-04",
       "is_rolling": false,
       "deadline_snippet": "verbatim text backing the deadline or rolling status",
+      "deadline_cycle": null,
       "eligibility_notes": "brief eligibility summary",
       "apply_url": "https://... specific fund page if linked, else null"
     }
@@ -372,6 +387,11 @@ async function upsertFund(
     amount_max:            fund.amount_max,
     deadline:              fund.is_rolling ? null : fund.deadline,
     is_rolling:            fund.is_rolling,
+    // Only ever included when the model actually found a stated recurring
+    // pattern — omitted (not written as null) otherwise, so a later run that
+    // DOES find cycle detail (or an admin who adds one manually) is never
+    // clobbered by an earlier run's "no cycle found" result.
+    ...(fund.deadline_cycle && fund.deadline_cycle.length > 0 ? { deadline_cycle: fund.deadline_cycle } : {}),
     is_local:              true,
     sectors:               [] as string[],
     eligibility_criteria:  [] as string[],
