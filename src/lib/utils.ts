@@ -9,6 +9,32 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+// ── Text helpers ──────────────────────────────
+
+/**
+ * Trim a string to <= max chars without cutting mid-word.
+ * Prefers to end on a sentence boundary; otherwise backs off to the last whole
+ * word and appends an ellipsis. Used as the safety net when auto-filling a
+ * mission from a website scan, so it never ends mid-word (e.g. "…for their vi").
+ */
+export function trimMission(text: string, max = 200): string {
+  const clean = text.trim()
+  if (clean.length <= max) return clean
+  const slice = clean.slice(0, max)
+  const lastSentence = Math.max(
+    slice.lastIndexOf('. '),
+    slice.lastIndexOf('! '),
+    slice.lastIndexOf('? '),
+  )
+  // Only snap to a sentence boundary if it keeps most of the allowed length.
+  if (lastSentence >= max * 0.6) {
+    return slice.slice(0, lastSentence + 1).trim()
+  }
+  const lastSpace = slice.lastIndexOf(' ')
+  const base = (lastSpace > 0 ? slice.slice(0, lastSpace) : slice).replace(/[\s.,;:–—-]+$/, '')
+  return `${base}…`
+}
+
 // ── Currency formatting ───────────────────────
 
 export function formatCurrency(amount: number): string {

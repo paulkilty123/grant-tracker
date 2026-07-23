@@ -7,6 +7,7 @@ import { getOrganisationsByOwner, updateOrganisation, deleteOrganisation, writeA
 import { Pencil, Plus, ChevronDown, RotateCcw, Globe, Check, X, Star, Trash2, AlertTriangle } from 'lucide-react'
 import type { Organisation, LegalStructure, OrgStage, ImpactSector, FundingType, FunderType, BeneficiaryGroup } from '@/types'
 import { useIsMobile } from '@/hooks/useIsMobile'
+import { trimMission } from '@/lib/utils'
 import ClearProfileButton from '@/app/dashboard/admin/ClearProfileButton'
 import CoreContentSection from '@/components/builder/CoreContentSection'
 
@@ -737,7 +738,7 @@ function ScanBar({ orgId, website, onSaved }: { orgId: string; website?: string 
       const labels: Record<string, string> = { name: 'name', mission: 'mission', impact_sectors: 'sectors', beneficiary_groups: 'beneficiaries', primary_location: 'location', annual_income_band: 'income', legal_structure: 'legal structure' }
 
       if (data.name) { updates.name = String(data.name).slice(0, 150); fieldNames.push(labels.name) }
-      if (data.mission) { updates.mission = String(data.mission).slice(0, 200); fieldNames.push(labels.mission) }
+      if (data.mission) { updates.mission = trimMission(String(data.mission)); fieldNames.push(labels.mission) }
       if (Array.isArray(data.impactSectors) && data.impactSectors.length > 0) { updates.impact_sectors = data.impactSectors.slice(0, 5); fieldNames.push(labels.impact_sectors) }
       if (Array.isArray(data.beneficiaryGroups) && data.beneficiaryGroups.length > 0) { updates.beneficiary_groups = data.beneficiaryGroups.slice(0, 5); fieldNames.push(labels.beneficiary_groups) }
       if (data.primaryLocation) { updates.primary_location = String(data.primaryLocation).slice(0, 100); fieldNames.push(labels.primary_location) }
