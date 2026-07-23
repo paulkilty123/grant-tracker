@@ -325,6 +325,38 @@ const REGION_HIERARCHY: Record<string, string[]> = {
   'merseyside':        ['liverpool', 'birkenhead', 'st helens', 'southport', 'bootle', 'wirral'],
   'tyne and wear':     ['newcastle', 'sunderland', 'gateshead', 'south shields', 'north shields', 'washington', 'whitley bay'],
   'west midlands':     ['birmingham', 'coventry', 'wolverhampton', 'dudley', 'walsall', 'solihull', 'west bromwich'],
+  // Official England regions — broader than the counties/city-regions above, so
+  // list is a union of their constituent areas plus places not otherwise covered.
+  // Added after Oglesby Charitable Trust (tagged "North West England") scored a
+  // false-negative location mismatch for a Manchester-based org — 2026-07-23.
+  'north west england': ['manchester', 'salford', 'bolton', 'stockport', 'oldham', 'rochdale', 'bury', 'wigan',
+    'tameside', 'trafford', 'preston', 'blackpool', 'blackburn', 'burnley', 'lancaster', 'lytham', 'chorley',
+    'carlisle', 'kendal', 'barrow', 'workington', 'penrith', 'whitehaven', 'liverpool', 'birkenhead',
+    'st helens', 'southport', 'bootle', 'wirral', 'chester', 'warrington', 'crewe', 'macclesfield'],
+  'south west england': ['exeter', 'plymouth', 'torquay', 'paignton', 'barnstaple', 'newton abbot', 'tiverton',
+    'truro', 'falmouth', 'penzance', 'newquay', 'st austell', 'camborne', 'redruth', 'bodmin',
+    'taunton', 'bridgwater', 'yeovil', 'wells', 'frome', 'glastonbury', 'bournemouth', 'poole',
+    'weymouth', 'dorchester', 'bridport', 'bristol', 'bath', 'swindon', 'gloucester', 'cheltenham', 'stroud'],
+  'west of england': ['bristol', 'bath', 'swindon', 'south gloucestershire', 'gloucester'],
+  'north east england': ['newcastle', 'sunderland', 'gateshead', 'south shields', 'north shields', 'washington',
+    'durham', 'darlington', 'middlesbrough', 'stockton', 'hartlepool', 'blyth', 'cramlington', 'hexham'],
+  'east of england': ['norwich', 'great yarmouth', 'kings lynn', "king's lynn", 'thetford', 'dereham',
+    'ipswich', 'lowestoft', 'bury st edmunds', 'felixstowe', 'haverhill', 'chelmsford', 'colchester',
+    'southend', 'basildon', 'harlow', 'brentwood', 'braintree', 'clacton', 'cambridge', 'peterborough',
+    'bedford', 'luton', 'hertford', 'watford', 'stevenage'],
+  'south east england': ['brighton', 'hove', 'lewes', 'eastbourne', 'worthing', 'crawley', 'hastings',
+    'bexhill', 'chichester', 'horsham', 'canterbury', 'maidstone', 'dover', 'margate', 'ramsgate',
+    'ashford', 'tunbridge wells', 'tonbridge', 'gravesend', 'dartford', 'folkestone', 'sevenoaks',
+    'guildford', 'woking', 'epsom', 'reigate', 'redhill', 'camberley', 'staines', 'leatherhead', 'dorking',
+    'oxford', 'banbury', 'bicester', 'witney', 'abingdon', 'reading', 'slough', 'southampton', 'portsmouth',
+    'winchester', 'basingstoke', 'milton keynes', 'aylesbury'],
+  'yorkshire and the humber': ['leeds', 'sheffield', 'bradford', 'york', 'hull', 'huddersfield', 'wakefield',
+    'doncaster', 'rotherham', 'barnsley', 'harrogate', 'scarborough', 'halifax', 'grimsby', 'scunthorpe'],
+  'east midlands': ['nottingham', 'leicester', 'derby', 'lincoln', 'northampton', 'mansfield', 'chesterfield', 'loughborough'],
+  // Umbrella label spanning the North West, North East and Yorkshire regions.
+  'north of england': ['manchester', 'liverpool', 'leeds', 'sheffield', 'newcastle', 'sunderland', 'preston',
+    'bolton', 'salford', 'hull', 'york', 'bradford', 'durham', 'carlisle', 'lancaster', 'middlesbrough',
+    'blackpool', 'wigan', 'stockport'],
 }
 
 function orgMatchesRegionalTag(tagLabel: string, orgLocation: string): boolean {
