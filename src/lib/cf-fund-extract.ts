@@ -158,7 +158,14 @@ interface ExtractedFund {
   name:              string
   amount_min:        number | null
   amount_max:        number | null
-  amount_status:     'stated' | 'unstated'
+  // 'uncapped' is distinct from 'unstated': found live on Suffolk CF's
+  // Sizewell C Community Fund ("Provides up to £23m... Maximum grant: No
+  // maximum") — a fund that explicitly states it has NO per-grant ceiling is
+  // not the same as a fund that just never mentions an amount, and treating
+  // them the same discarded the single largest, most significant fund on
+  // the whole page for the same reason a genuinely-too-vague-to-catalogue
+  // fund gets discarded.
+  amount_status:     'stated' | 'unstated' | 'uncapped'
   amount_snippet:    string | null
   deadline:          string | null   // ISO date or null
   is_rolling:        boolean
@@ -178,6 +185,14 @@ export interface CFFundResult {
   inserted:                 number
   updated:                  number
   discardedDetail:          { name: string; amount_max?: number | null; reason: 'below_threshold' | 'unstated' }[]
+  // Foundation-wide operational notices (e.g. a new application portal
+  // launching) found alongside the per-fund listing — see buildSystemPrompt.
+  // `applied` is only ever true when there was exactly one unambiguous
+  // existing non-pipeline row for this funder AND the write wasn't rejected
+  // by the trust ladder (umbrella rows fixed by an admin earlier this
+  // project are pinned admin-trust, which correctly refuses an automated
+  // overwrite — see applyFunderNotice).
+  funderNotice:             { text: string; applied: boolean; reason: string } | null
   errors:                   string[]
 }
 
@@ -199,6 +214,22 @@ async function fetchPageText(url: string): Promise<string> {
   const html = await res.text()
   const root = parseHTML(html)
   root.querySelectorAll('script, style, noscript').forEach(el => el.remove())
+
+  // Found live on Suffolk CF's page: every fund's apply_url was coming back
+  // as the shared listing page URL, not that fund's own "More about this
+  // fund" page — because a plain .text strip throws away every href
+  // attribute, leaving the model nothing but the visible label to work with.
+  // Inline each link's resolved absolute URL right after its own text so the
+  // information survives being flattened to plain text.
+  root.querySelectorAll('a').forEach(a => {
+    const href  = a.getAttribute('href')
+    const label = a.text.trim()
+    if (!href || !label) return
+    let absolute: string
+    try { absolute = new URL(href, url).toString() } catch { return }
+    a.set_content(`${label} [URL: ${absolute}]`)
+  })
+
   const text = root.text.replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim()
   // Most CF listing pages run 5k-15k chars stripped (10-40 funds). Cumbria CF
   // is a known outlier at ~43k chars (200+ named funds) — this cap won't
@@ -218,7 +249,13 @@ Today's date is ${todayISO}. This matters for deadlines: found live in productio
 
 CRITICAL grounding rule: amount_max is what a SINGLE applicant can receive from THIS SPECIFIC named fund. Do NOT use a total programme pot, cumulative annual distribution, or a "grants of up to £Xm distributed since Y" figure — those describe the whole portfolio, not one grant. Also found live in production data — a foundation's page had a single page-wide disclaimer ("Most of our funds are for grants under £10,000") that got wrongly copied onto EVERY fund as if each one specifically said this. A statement about the foundation's funds IN GENERAL, or about "most" of its funds, is NOT evidence for any ONE named fund's specific amount — if a fund has no amount stated for IT BY NAME, set amount_status to "unstated" even if a general/aggregate statement exists elsewhere on the page. Never guess a number, and never reuse one generic statement across multiple funds unless the page explicitly states that exact figure applies to each of them by name.
 
+UNCAPPED FUNDS — a fund can also explicitly state it has NO per-grant maximum (e.g. "Maximum grant: No maximum", "grants are uncapped", alongside a total programme figure like "Provides up to £23m to local charities"). This is different from a fund that simply never mentions money at all. When the page explicitly says there is no cap, set amount_status to "uncapped" (not "unstated"), leave amount_max null, and put the total-programme context (if any) in eligibility_notes as background — never in amount_max, which must always mean a single applicant's own ceiling, never the whole programme's size.
+
 Every amount and deadline you return must be backed by a verbatim snippet from the page text in amount_snippet / deadline_snippet.
+
+LINK FORMAT — links on this page appear inline as "visible text [URL: https://...]". When a fund's own details are followed by a link like "More about this fund… [URL: https://example.org/grants/my-fund/]" or "Apply here [URL: ...]", that URL is THIS fund's own apply_url — prefer it over the general listing page URL. If no such per-fund link is present near a fund's details, leave apply_url null (a downstream process falls back to the listing page).
+
+FOUNDER-WIDE NOTICE — separately from individual funds, note whether the page states an important operational change to the APPLICATION PROCESS ITSELF — e.g. a new funding portal or platform launching, a registration requirement, a change to how you submit. This is different from any one fund's eligibility criteria. Only report this if it's a genuine process-level announcement, not routine guidance (e.g. "use Chrome, not Safari" is not a notice). If present, summarise it in 1-2 sentences in the top-level funder_notice field; otherwise set it to null.
 
 DEADLINE CYCLE — a fund with a genuinely recurring annual pattern (e.g. "two deadlines per year in May and October", "applications close 8 May, 31 August and 11 December each year") needs more than just its next deadline captured, or a downstream process has no way to know a further round is coming once that one date passes. When the page explicitly states day-of-month + month for each recurring round, ALSO populate deadline_cycle as an array of {day, month, label} objects (label optional, e.g. "Round 1"). Only populate it from genuinely recurring dates stated with day-of-month + month for each occurrence — do not populate it from a single one-off deadline, from decision/notification dates, or from a strategy period (e.g. "2025-2027" is not a cycle). If no recurring cycle is stated, set deadline_cycle to null — do not guess or infer one from vague language like "we run several rounds a year" with no specific dates given.
 
@@ -238,6 +275,8 @@ Extract EVERY named fund mentioned on this page, regardless of size — includin
 
 For any deadline, compute the next occurrence strictly after ${todayISO} — if the page states a recurring pattern (e.g. two dates a year), pick whichever of those dates is soonest after today, rolling into next year if every stated date this year has already passed. If that recurring pattern gives explicit day-of-month + month for each round, also populate deadline_cycle (see system instructions) — otherwise leave it null.
 
+For apply_url, use the per-fund link (formatted "text [URL: ...]" per the system instructions) that appears with that fund's own details, not the page's own URL.
+
 Return JSON in this exact format:
 {
   "funds": [
@@ -254,12 +293,18 @@ Return JSON in this exact format:
       "eligibility_notes": "brief eligibility summary",
       "apply_url": "https://... specific fund page if linked, else null"
     }
-  ]
+  ],
+  "funder_notice": null
 }`
 }
 
+interface ExtractionResult {
+  funds:         ExtractedFund[]
+  funderNotice:  string | null
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function callExtractionModel(funderName: string, pageText: string): Promise<ExtractedFund[]> {
+async function callExtractionModel(funderName: string, pageText: string): Promise<ExtractionResult> {
   const todayISO = new Date().toISOString().slice(0, 10)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let data: any = null
@@ -299,7 +344,10 @@ async function callExtractionModel(funderName: string, pageText: string): Promis
   }
 
   const parsed = JSON.parse(raw)
-  return Array.isArray(parsed.funds) ? parsed.funds : []
+  return {
+    funds:        Array.isArray(parsed.funds) ? parsed.funds : [],
+    funderNotice: typeof parsed.funder_notice === 'string' && parsed.funder_notice.trim() ? parsed.funder_notice.trim() : null,
+  }
 }
 
 // ── Dedup + upsert ─────────────────────────────────────────────────────────────
@@ -428,6 +476,56 @@ async function upsertFund(
   return 'inserted'
 }
 
+// A foundation-wide operational notice (see buildSystemPrompt) belongs on
+// the CF's own general/rolling catalogue row, not any one individual fund —
+// but this pipeline only ever inserts/updates individual funds, so that row
+// has to be found separately. Deliberately conservative: only write when
+// there's exactly one unambiguous candidate (any non-pipeline-sourced row
+// for this funder). Multiple matches, or none, are surfaced rather than
+// guessed at.
+//
+// Found live this session: Suffolk's own umbrella row was fixed by an admin
+// earlier this project (source admin:cf-hub-relabel-2026-06-24, pinned) —
+// which correctly BLOCKS this pipeline's ai_extract-trust write, per the
+// same trust ladder that stops any lower-trust source clobbering a
+// deliberate admin correction. That's not a bug to route around; it's
+// reported honestly via the returned `reason` so a human can decide whether
+// to apply the suggested text by hand, exactly like the urls/page.tsx enrich
+// handlers already surface a `rejected` array instead of silently showing
+// content that didn't save.
+async function applyFunderNotice(
+  db: SupabaseClient,
+  config: CFFundConfig,
+  notice: string,
+): Promise<{ text: string; applied: boolean; reason: string }> {
+  const { data: candidates, error } = await db
+    .from('scraped_grants')
+    .select('id, description')
+    .eq('funder', config.funderName)
+    .neq('source', PROVENANCE_SOURCE)
+
+  if (error) return { text: notice, applied: false, reason: `candidate lookup failed: ${error.message}` }
+  if (!candidates || candidates.length === 0) return { text: notice, applied: false, reason: 'no existing umbrella row found for this funder' }
+  if (candidates.length > 1) return { text: notice, applied: false, reason: `${candidates.length} candidate rows found for this funder — ambiguous, left for manual placement` }
+
+  const [target] = candidates
+  const existingDescription = (target.description as string | null) ?? ''
+  if (existingDescription.includes(notice)) return { text: notice, applied: false, reason: 'already present' }
+
+  const newDescription = existingDescription ? `${existingDescription}\n\n${notice}` : notice
+  const { rejected } = await mergeGrantUpdate({
+    id: target.id as string,
+    fields: { description: newDescription },
+    source: PROVENANCE_SOURCE,
+    pinned: false,
+    db,
+  })
+  if (rejected.some(r => r.field === 'description')) {
+    return { text: notice, applied: false, reason: `blocked by trust ladder (${rejected.find(r => r.field === 'description')?.reason}) — apply by hand if wanted` }
+  }
+  return { text: notice, applied: true, reason: 'appended to existing umbrella row' }
+}
+
 // ── Main entry point ────────────────────────────────────────────────────────────
 
 export async function extractFundsFromCF(config: CFFundConfig): Promise<CFFundResult> {
@@ -441,6 +539,7 @@ export async function extractFundsFromCF(config: CFFundConfig): Promise<CFFundRe
     inserted: 0,
     updated: 0,
     discardedDetail: [],
+    funderNotice: null,
     errors: [],
   }
 
@@ -455,8 +554,9 @@ export async function extractFundsFromCF(config: CFFundConfig): Promise<CFFundRe
   }
 
   let funds: ExtractedFund[]
+  let funderNotice: string | null
   try {
-    funds = await callExtractionModel(config.funderName, pageText)
+    ;({ funds, funderNotice } = await callExtractionModel(config.funderName, pageText))
   } catch (e) {
     result.errors.push(`extraction failed: ${e instanceof Error ? e.message : String(e)}`)
     return result
@@ -473,7 +573,12 @@ export async function extractFundsFromCF(config: CFFundConfig): Promise<CFFundRe
       continue
     }
 
-    const passesCeiling = fund.amount_max != null && fund.amount_max >= AMOUNT_THRESHOLD
+    // 'uncapped' funds explicitly state there's no per-grant ceiling, so
+    // there's no maximum to compare against AMOUNT_THRESHOLD — they always
+    // qualify (see the ExtractedFund.amount_status comment for why this is
+    // NOT the same as 'unstated').
+    const passesCeiling = fund.amount_status === 'uncapped'
+      || (fund.amount_max != null && fund.amount_max >= AMOUNT_THRESHOLD)
     const passesFloor   = fund.amount_max == null && fund.amount_min != null && fund.amount_min >= AMOUNT_THRESHOLD
     if (!passesCeiling && !passesFloor) {
       result.discardedBelowThreshold++
@@ -488,6 +593,14 @@ export async function extractFundsFromCF(config: CFFundConfig): Promise<CFFundRe
       else result.updated++
     } catch (e) {
       result.errors.push(`write failed for "${fund.name}": ${e instanceof Error ? e.message : String(e)}`)
+    }
+  }
+
+  if (funderNotice) {
+    try {
+      result.funderNotice = await applyFunderNotice(db, config, funderNotice)
+    } catch (e) {
+      result.errors.push(`funder notice failed: ${e instanceof Error ? e.message : String(e)}`)
     }
   }
 

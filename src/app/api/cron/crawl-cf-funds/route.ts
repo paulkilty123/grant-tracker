@@ -77,7 +77,7 @@ export async function GET(req: NextRequest) {
           slug: targets[i].slug,
           funderName: targets[i].funderName,
           extracted: 0, atOrAboveThreshold: 0, discardedBelowThreshold: 0, discardedUnstated: 0,
-          inserted: 0, updated: 0, discardedDetail: [],
+          inserted: 0, updated: 0, discardedDetail: [], funderNotice: null,
           errors: [s.reason instanceof Error ? s.reason.message : String(s.reason)],
         }
   )
