@@ -61,7 +61,7 @@ const COHORT: CohortMember[] = [
   { user_id: '9d87b46f-2ecc-487c-b189-41f05ed0e73e', email: 'hema@olympiasmusic.com',            first_name: 'Hema',      send_first_time: false },
   { user_id: 'aa821d0e-23f8-437b-ae9d-232e5cba4ff0', email: 'jen.robinson-slater@learningwithparents.com', first_name: 'Jen', send_first_time: false },
   { user_id: 'f1c8c8a8-dbe5-4639-93a1-c6322e6d70ea', email: 'david@digitalability.co',           first_name: 'David',     send_first_time: false },
-  { user_id: '0fb0581f-89c3-41c7-9a0d-daf814add5cf', email: 'louis@reprezent.org.uk',            first_name: 'Louis',     send_first_time: false },
+  { user_id: '0fb0581f-89c3-41c7-9a0d-daf814add5cf', email: 'louis@bluegarage.org',              first_name: 'Louis',     send_first_time: false },
   { user_id: 'aabfaef1-55fe-4cae-a262-e2a089aea12c', email: 'deviyani.clark@gmail.com',          first_name: 'Devi',      send_first_time: false, force_active_opener: true },
 ]
 
@@ -541,8 +541,8 @@ function todayDateLabel(): string {
 
 function subjectLineFor(member: CohortMember): string {
   return member.send_first_time
-    ? 'First cohort update from Grant Tracker'
-    : `Cohort update, ${todayDateLabel()}`
+    ? 'Grant Tracker cohort update'
+    : 'Grant Tracker cohort update'
 }
 
 // ── Formatting helpers ────────────────────────────────────────────────────────
@@ -733,13 +733,13 @@ function htmlCard(opts: {
     ? 'border-left:3px solid transparent;'
     : `border-left:3px solid ${s.border};`
   return `
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin:0 0 12px 0;background:#F9F9F6;${borderStyle}border-radius:6px;text-align:left;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#F4F4EF" style="border-collapse:collapse;margin:0 0 12px 0;background-color:#F4F4EF;${borderStyle}border-radius:6px;text-align:left;">
   <tr>
     <td style="padding:14px 16px;text-align:left;">
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">
         <tr>
           <td style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;font-weight:600;color:#173404;line-height:1.35;padding-right:8px;text-align:left;">${esc(opts.title)}</td>
-          <td style="text-align:right;white-space:nowrap;width:1%;"><span style="display:inline-block;background:${s.pillBg};color:${s.pillText};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;">${esc(opts.pillText)}</span></td>
+          <td style="text-align:right;white-space:nowrap;width:1%;vertical-align:top;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;"><tr><td bgcolor="${s.pillBg}" style="background-color:${s.pillBg};color:${s.pillText};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;white-space:nowrap;">${esc(opts.pillText)}</td></tr></table></td>
         </tr>
       </table>
       ${opts.meta ? `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;color:#5F5E5A;margin:4px 0 8px 0;text-align:left;">${esc(opts.meta)}</div>` : ''}
@@ -838,7 +838,7 @@ function renderHtml(draft: Draft): string {
   }
 
   // CTA
-  parts.push(`<div style="${STYLE_CTA_WRAP}"><a href="${MATCHES_URL}" style="${STYLE_CTA}">See your matches →</a></div>`)
+  parts.push(`<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:18px auto 8px auto;"><tr><td bgcolor="#8ECB3C" style="background-color:#8ECB3C;border-radius:8px;"><a href="${MATCHES_URL}" style="display:inline-block;color:#173404;font-family:${FONT_STACK};font-size:15px;font-weight:600;padding:12px 22px;text-decoration:none;">See your matches →</a></td></tr></table>`)
 
   // Pipeline (always-rendered: heading shown either way, items OR empty-state nudge)
   parts.push(`<h2 style="${STYLE_H2}">Your pipeline</h2>`)
@@ -888,7 +888,7 @@ function renderHtml(draft: Draft): string {
     // Empty-state nudge — cream-tinted block with a secondary link to the
     // pipeline view. Distinct from the green match-card treatment.
     parts.push(`
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin:0 0 12px 0;background:#F5F1E8;border-radius:6px;text-align:left;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#F5F1E8" style="border-collapse:collapse;margin:0 0 12px 0;background-color:#F5F1E8;border-radius:6px;text-align:left;">
   <tr>
     <td style="padding:16px 18px;text-align:left;">
       <div style="font-family:${FONT_STACK};font-size:14px;line-height:1.55;color:#2C2C2A;margin:0 0 10px 0;text-align:left;">No pipeline items yet. Track grants you're applying to in one place. Set deadlines, record progress, and the next update will show your live applications and recent submissions.</div>
