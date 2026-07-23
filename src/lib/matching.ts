@@ -324,6 +324,20 @@ const REGION_HIERARCHY: Record<string, string[]> = {
   'greater manchester':['manchester', 'salford', 'bolton', 'stockport', 'oldham', 'rochdale', 'bury', 'wigan', 'tameside', 'trafford'],
   'merseyside':        ['liverpool', 'birkenhead', 'st helens', 'southport', 'bootle', 'wirral'],
   'tyne and wear':     ['newcastle', 'sunderland', 'gateshead', 'south shields', 'north shields', 'washington', 'whitley bay'],
+  // Live location_tags spell this with an ampersand ("Tyne & Wear"), a different
+  // string to the 'tyne and wear' key above, so the whole-tag hierarchy lookup
+  // missed it even though the key existed. Kept as a second literal entry so
+  // both spellings resolve. Found during the region-hierarchy audit, 2026-07-23.
+  'tyne & wear':       ['newcastle', 'sunderland', 'gateshead', 'south shields', 'north shields', 'washington', 'whitley bay'],
+  // Exact compound strings seen in the live catalogue — "Tyne & Wear" plus
+  // Northumberland towns combined. The generic compound-part splitter can't
+  // resolve these because splitting on "&"/"," breaks "Tyne & Wear" itself
+  // into two meaningless single-word parts ("tyne", "wear") before either
+  // gets a chance to match as a unit, so these are matched as whole tags.
+  'tyne & wear and northumberland': ['newcastle', 'sunderland', 'gateshead', 'south shields', 'north shields',
+    'washington', 'whitley bay', 'alnwick', 'berwick', 'morpeth', 'hexham', 'blyth', 'cramlington', 'ashington'],
+  'tyne & wear, northumberland': ['newcastle', 'sunderland', 'gateshead', 'south shields', 'north shields',
+    'washington', 'whitley bay', 'alnwick', 'berwick', 'morpeth', 'hexham', 'blyth', 'cramlington', 'ashington'],
   'west midlands':     ['birmingham', 'coventry', 'wolverhampton', 'dudley', 'walsall', 'solihull', 'west bromwich'],
   // Official England regions — broader than the counties/city-regions above, so
   // list is a union of their constituent areas plus places not otherwise covered.
@@ -357,6 +371,14 @@ const REGION_HIERARCHY: Record<string, string[]> = {
   'north of england': ['manchester', 'liverpool', 'leeds', 'sheffield', 'newcastle', 'sunderland', 'preston',
     'bolton', 'salford', 'hull', 'york', 'bradford', 'durham', 'carlisle', 'lancaster', 'middlesbrough',
     'blackpool', 'wigan', 'stockport'],
+  // "Yorkshire and Humber" appears in the live catalogue without "the" — same
+  // region, kept as a separate key since lookups are exact-string.
+  'yorkshire and humber': ['leeds', 'sheffield', 'bradford', 'york', 'hull', 'huddersfield', 'wakefield',
+    'doncaster', 'rotherham', 'barnsley', 'harrogate', 'scarborough', 'halifax', 'grimsby', 'scunthorpe'],
+  // Bare "Midlands" (distinct from the "West Midlands" metro county already above)
+  // — union of West and East Midlands so it resolves for either half.
+  'midlands': ['birmingham', 'coventry', 'wolverhampton', 'dudley', 'walsall', 'solihull', 'west bromwich',
+    'nottingham', 'leicester', 'derby', 'lincoln', 'northampton', 'mansfield', 'chesterfield', 'loughborough'],
 }
 
 function orgMatchesRegionalTag(tagLabel: string, orgLocation: string): boolean {
@@ -365,9 +387,17 @@ function orgMatchesRegionalTag(tagLabel: string, orgLocation: string): boolean {
   if (!tagLower || !orgLower) return false
   // Direct substring match either way
   if (orgLower.includes(tagLower) || tagLower.includes(orgLower.split(',')[0].trim())) return true
-  // Handle compound tags like "Tyne & Wear", "Coventry & Warwickshire" — split and match any part
-  const parts = tagLower.split(/\s*&\s*|\s+and\s+/).map(p => p.trim()).filter(p => p.length >= 3)
+  // Handle compound tags like "Tyne & Wear", "Coventry & Warwickshire", "Tyne & Wear,
+  // Northumberland" — split on &, "and", or commas and check each part both as a direct
+  // substring AND against its own region-hierarchy entry, so e.g. "West Midlands &
+  // Worcestershire" resolves for a Birmingham org via the "west midlands" hierarchy,
+  // not just a literal substring match.
+  const parts = tagLower.split(/\s*&\s*|\s+and\s+|\s*,\s*/).map(p => p.trim()).filter(p => p.length >= 3)
   if (parts.some(p => orgLower.includes(p))) return true
+  if (parts.some(p => {
+    const partChildren = REGION_HIERARCHY[p]
+    return partChildren ? partChildren.some(town => orgLower.includes(town)) : false
+  })) return true
   // Region hierarchy — the org's town sits within the tagged county/region
   // (e.g. grant tagged "Sussex", org entered "Brighton and Hove").
   const children = REGION_HIERARCHY[tagLower]
