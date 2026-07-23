@@ -1778,6 +1778,21 @@ export default function UrlAdminPage() {
   }
 
   // ── Funder intelligence enrichment (inline) ──────────────────────────────────
+  // enrich-grant always returns the freshly-computed brief in its JSON response,
+  // even when mergeGrantUpdate's trust ladder REJECTED the DB write (e.g. an
+  // existing admin:-sourced value outranks ai_enrich). Left unchecked, the UI
+  // renders that computed-but-unsaved brief as if it succeeded, then a later
+  // refetch (detectAll's classify step re-reads the row from DB) reverts the
+  // screen to the old value with no explanation — reads as a random UI bug.
+  // Surface the rejection instead of silently discarding it.
+  function briefRejectionMessage(json: { rejected?: { field: string; reason: string }[] }): string | null {
+    const r = json.rejected?.find(x => x.field === 'funder_brief')
+    if (!r) return null
+    return r.reason === 'pinned'
+      ? 'New brief computed but NOT saved — the existing one is pinned by an admin. Unpin it to let AI enrichment overwrite it.'
+      : 'New brief computed but NOT saved — the existing content has a higher-trust source, so this preview will not persist. Clear its provenance to allow AI enrichment.'
+  }
+
   async function enrichGrantFromManager(grant: Grant) {
     if (enrichingId) return
     setEnrichingId(grant.id)
@@ -1793,14 +1808,23 @@ export default function UrlAdminPage() {
       })
       clearTimeout(clientTimeout)
       if (res.ok) {
-        const { brief } = await res.json()
-        const patch = (g: Grant) => g.id === grant.id ? { ...g, funder_brief: brief } : g
-        setGrants(prev => prev.map(patch))
-        setNewGrants(prev => prev.map(g => g.id === grant.id ? { ...g, funder_brief: brief } : g))
-        setReviewGrants(prev => prev.map(g => g.id === grant.id ? { ...g, funder_brief: brief } : g))
-        setSuspiciousGrants(prev => prev.map(g => g.id === grant.id ? { ...g, funder_brief: brief } : g))
-        setRecentGrants(prev => prev.map(patch))
-        setCategoryGrants(prev => prev.map(g => g.id === grant.id ? { ...g, funder_brief: brief } : g))
+        const json = await res.json()
+        const { brief } = json
+        const rejectionMsg = briefRejectionMessage(json)
+        if (rejectionMsg) {
+          // Don't apply the optimistic update — it wouldn't persist anyway,
+          // and rendering it just to have it vanish on the next refetch is
+          // the exact "flash then collapse" bug this check exists to avoid.
+          setReviewEnrichError(e => ({ ...e, [grant.id]: rejectionMsg }))
+        } else {
+          const patch = (g: Grant) => g.id === grant.id ? { ...g, funder_brief: brief } : g
+          setGrants(prev => prev.map(patch))
+          setNewGrants(prev => prev.map(g => g.id === grant.id ? { ...g, funder_brief: brief } : g))
+          setReviewGrants(prev => prev.map(g => g.id === grant.id ? { ...g, funder_brief: brief } : g))
+          setSuspiciousGrants(prev => prev.map(g => g.id === grant.id ? { ...g, funder_brief: brief } : g))
+          setRecentGrants(prev => prev.map(patch))
+          setCategoryGrants(prev => prev.map(g => g.id === grant.id ? { ...g, funder_brief: brief } : g))
+        }
         // Auto-fire Detect all so structured fields (amounts, deadline,
         // rolling, location, eligibility) populate as draft edits. User
         // still clicks Save to commit. Mirrors the same call in
@@ -2825,11 +2849,16 @@ export default function UrlAdminPage() {
       clearTimeout(clientTimeout)
       const json = await res.json()
       if (res.ok && json.brief) {
-        const patch = (g: Grant) => g.id === grant.id ? { ...g, funder_brief: json.brief } : g
-        setReviewGrants(prev => prev.map(patch))
-        setGrants(prev => prev.map(patch))
-        setRecentGrants(prev => prev.map(patch))
-        setCategoryGrants(prev => prev.map(g => g.id === grant.id ? { ...g, funder_brief: json.brief } : g))
+        const rejectionMsg = briefRejectionMessage(json)
+        if (rejectionMsg) {
+          setReviewEnrichError(e => ({ ...e, [grant.id]: rejectionMsg }))
+        } else {
+          const patch = (g: Grant) => g.id === grant.id ? { ...g, funder_brief: json.brief } : g
+          setReviewGrants(prev => prev.map(patch))
+          setGrants(prev => prev.map(patch))
+          setRecentGrants(prev => prev.map(patch))
+          setCategoryGrants(prev => prev.map(g => g.id === grant.id ? { ...g, funder_brief: json.brief } : g))
+        }
         // Auto-fire Detect all so the structured fields (amounts, deadline,
         // rolling, location, eligibility) populate as draft edits. User
         // still clicks Save to commit — preserves the human review step.
@@ -2913,7 +2942,20 @@ export default function UrlAdminPage() {
         })
         clearTimeout(timeout)
         if (res.ok) {
-          const { brief } = await res.json()
+          const json = await res.json()
+          const { brief } = json
+          const rejectionMsg = briefRejectionMessage(json)
+          if (rejectionMsg) {
+            // Don't apply the unsaved brief or derive fields from it — bulk
+            // has no human review step, so committing structured fields
+            // sourced from content that was itself rejected would compound
+            // the problem rather than just skip it silently.
+            setBulkEnrichLog(prev => [...prev, `⚠ ${grant.funder ?? ''} — ${grant.title}: ${rejectionMsg}`])
+            done++
+            setBulkEnrichDone(done)
+            await new Promise(r => setTimeout(r, 800))
+            continue
+          }
           const patch = (g: Grant) => g.id === grant.id ? { ...g, funder_brief: brief } : g
           setGrants(prev => prev.map(patch))
           setNewGrants(prev => prev.map(g => g.id === grant.id ? { ...g, funder_brief: brief } : g))
