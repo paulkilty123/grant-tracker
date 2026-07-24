@@ -200,8 +200,8 @@ export default async function QualityPage() {
               {coverage.map(f => (
                 <tr key={f.field} className="hover:bg-surface-page/50 transition-colors">
                   <td className="px-5 py-3 font-medium text-charcoal">{f.label}</td>
-                  <td className="px-5 py-3 text-right text-sm font-semibold" style={{ color: '#3B6D11' }}>{f.populated}</td>
-                  <td className="px-5 py-3 text-right text-sm font-semibold" style={{ color: f.missing > 0 ? '#993C1D' : '#5F5E5A' }}>{f.missing}</td>
+                  <td className="px-5 py-3 text-right text-sm font-semibold" style={{ color: 'var(--state-success)' }}>{f.populated}</td>
+                  <td className="px-5 py-3 text-right text-sm font-semibold" style={{ color: f.missing > 0 ? 'var(--state-error)' : 'var(--text-muted)' }}>{f.missing}</td>
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-2 justify-end">
                       <div className="h-1.5 w-20 rounded-full bg-warm overflow-hidden">
@@ -209,7 +209,7 @@ export default async function QualityPage() {
                           className="h-full rounded-full"
                           style={{
                             width: `${f.pct}%`,
-                            background: f.pct >= 90 ? '#8ECB3C' : f.pct >= 70 ? '#F0997B' : '#D85A30',
+                            background: f.pct >= 90 ? '#8ECB3C' : f.pct >= 70 ? 'var(--ordinal-3-good)' : 'var(--terra)',
                           }}
                         />
                       </div>
@@ -270,12 +270,12 @@ export default async function QualityPage() {
                           style={{
                             width: `${s.pct}%`,
                             background:
-                              s.source.startsWith('admin')        ? '#3B6D11' :
-                              s.source.startsWith('ai_classifier') ? '#85B7EB' :
-                              s.source.startsWith('ai_enrich')    ? '#008080' :
-                              s.source.startsWith('360giving')    ? '#F0997B' :
-                              s.source === 'scraper'              ? '#5F5E5A' :
-                                                                    '#8A8986',
+                              s.source.startsWith('admin')        ? 'var(--state-success)' :
+                              s.source.startsWith('ai_classifier') ? 'var(--ordinal-2-fair)' :
+                              s.source.startsWith('ai_enrich')    ? 'var(--teal)' :
+                              s.source.startsWith('360giving')    ? 'var(--ordinal-3-good)' :
+                              s.source === 'scraper'              ? 'var(--text-muted)' :
+                                                                    'var(--text-subtle)',
                           }}
                         />
                       </div>
@@ -347,7 +347,7 @@ function DistTable({
                 className="h-full rounded-full"
                 style={{
                   width: `${(r.count / max) * 100}%`,
-                  background: r.count >= 10 ? '#8ECB3C' : r.count >= 3 ? '#F0997B' : '#D85A30',
+                  background: r.count >= 10 ? '#8ECB3C' : r.count >= 3 ? 'var(--ordinal-3-good)' : 'var(--terra)',
                 }}
               />
             </div>
