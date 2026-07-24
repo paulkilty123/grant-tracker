@@ -7,8 +7,10 @@
  * Source population: every distinct 6-digit hex literal found in `src/**\/*.{ts,tsx}`,
  * excluding the four token-definition files (tailwind.config.ts, globals.css,
  * builder/tokens.ts, and this file itself). 165 distinct values as of the
- * gold-collision commit. See KNOWN_GAPS at the bottom for what this scan
- * structurally cannot see.
+ * gold-collision commit, covered by tiers 1-4, 5, 6, 7 below. Tier 5b adds
+ * the 9 real 3-digit hex values (142 occurrences) that scan structurally
+ * could not see — folded in once found rather than left as a silent gap.
+ * See KNOWN_GAPS at the bottom for what's still outstanding.
  *
  * ============================================================
  * WHY THIS FILE CHANGED SHAPE
@@ -65,6 +67,14 @@
  * 5. NEAREST_TOKEN_MAPPING (126) — algorithmic redmean colour-distance
  *    assignment, minus #BA7517/#EEEDFE/#3C3489 (moved to tier 3) and
  *    #5A9080 (moved to tier 7, EXCLUDED_VALUES).
+ *
+ * 5b. THREE_DIGIT_MAPPING (9) — the 3-digit hex shorthand population
+ *    (#fff/#888/#666/#eee/#c00/#999/#444/#ddd/#aaa; #163 excluded as the
+ *    `&#163;` HTML-entity false positive). Outside the original 6-digit
+ *    scan's reach, found and resolved in the same pass as the 5A9080/
+ *    sector-tag decisions. No polysemy — each value plays one consistent
+ *    role everywhere — but 3 rows override the numerically-nearest token
+ *    for role (#c00, #444, #aaa), same as tier 3.
  *
  * 6. ORPHANS (0) — empty. All 7 from the usage report are now decided
  *    (tiers 2 and 3). Kept as an export for structural completeness.
@@ -447,6 +457,54 @@ export const NEAREST_TOKEN_MAPPING: NearestMappingRow[] = [
   { hex: '#0369A1', count: 1, token: 'state-info', distance: 98.5, source: 'nearest' },
 ]
 
+// ==== 5b. THREE_DIGIT_MAPPING — 3-digit hex shorthand, 9 values, 142 occurrences ====
+// Out of scope for the original 6-digit-only scan (KNOWN_GAPS flagged this).
+// 10 distinct 3-digit values were found; #163 (1 occurrence, api/admin/
+// fetch-grant-info/route.ts:28) is the `&#163;` HTML-entity false positive
+// (the pound-sign escape, not a colour) and is excluded, leaving 9 real
+// values / 142 occurrences. Every occurrence was read directly — none show
+// polysemy (each value plays one consistent role everywhere it appears) —
+// so this is a value-keyed tier like NEAREST_TOKEN_MAPPING, with reasoning
+// attached for the 3 rows where role overrode the numerically-closest token.
+export const THREE_DIGIT_MAPPING: DecidedRow[] = [
+  {
+    hex: '#fff', count: 116, token: 'surface-card',
+    reasoning: 'Plain white, exact match (distance 0.0) — same value #FFFFFF already maps to in DOC_MAPPING, just the 3-digit shorthand.',
+  },
+  {
+    hex: '#666', count: 5, token: 'text-muted',
+    reasoning: 'Secondary/caption text throughout admin/feedback and search pages (labels, sub-headers, dimension bar labels) — distance 15.1, clean fit, consistent role everywhere.',
+  },
+  {
+    hex: '#c00', count: 3, token: 'state-error',
+    reasoning: "Distance 152.8 — poor raw match (#cc0000 is far more saturated than state-error's #993C1D), but role is unambiguous: an 'Access denied' error message, the down-vote side of an up/down colour switch, and a down-count table cell, all on admin/feedback/page.tsx. The switch's up-side (#2a7a2a) already maps to state-success in NEAREST_TOKEN_MAPPING — pairing #c00 with state-error keeps that up/down switch semantically coherent (good/bad), not just individually nearest. Same role-over-distance precedent as #C96A00/#FFB74D above.",
+  },
+  {
+    hex: '#888', count: 7, token: 'text-subtle',
+    reasoning: 'Tertiary/muted caption text in transactional emails (contact/feedback route handlers) and admin/feedback captions — distance 32.1.',
+  },
+  {
+    hex: '#999', count: 3, token: 'text-subtle',
+    reasoning: "Empty-state placeholder text on admin/feedback/page.tsx ('No chips recorded yet' etc.) — distance 28.9, same token as #888 above. Two legacy greys converging on one canonical subtle-text tone is the intended outcome of a token sweep, not a polysemy problem: both are genuinely playing the same tertiary-text role, just with slightly different pre-token-system hex values.",
+  },
+  {
+    hex: '#444', count: 3, token: 'text-body',
+    reasoning: "Body prose text (GrantDetailModal's description + eligibility list, admin/intelligence's answer paragraph) — distance 65.98, marginally further than `deep` (60.72). Overridden for role: `deep` is the heading/inverse-surface token (its own definition is text-heading/surface-inverse); using it for paragraph body copy would be the wrong role despite the closer number. text-body is correct and the distance gap is negligible.",
+  },
+  {
+    hex: '#eee', count: 3, token: 'surface-pill',
+    reasoning: "hr divider border-top in transactional emails (contact/feedback route handlers) — distance 8.7, an excellent raw match. Nearest role-correct token (border-warm) is a much worse 51.3 — but these are raw HTML email strings, not app UI referencing a token by name, so the literal colour match matters more here than the token's semantic label. Single-use decorative, per the decision rule.",
+  },
+  {
+    hex: '#ddd', count: 1, token: 'border-warm',
+    reasoning: 'hr divider border-top in the builder export route (docx-adjacent HTML) — distance 26.3, and here the role-correct border token IS also the near-numeric match, unlike #eee above.',
+  },
+  {
+    hex: '#aaa', count: 1, token: 'text-subtle',
+    reasoning: "Timestamp text colour on admin/feedback/page.tsx's free-text list — distance 76.5, further than `sage` (71.3) or `text-on-dark-mut` (72.2). Overridden for role twice over: `sage` is a green brand accent — substituting it would visibly green-tint a plain grey timestamp, not just a semantic mislabel like the #eee case (neutral-for-neutral); `text-on-dark-mut` is specifically for text on the dark/inverse surface, and this timestamp sits on a light admin-page background. text-subtle is the correct light-surface tertiary-text token.",
+  },
+]
+
 // ==== 6. ORPHANS — none remain ====
 // All 7 from the usage report are decided: #FAC775/#FFB74D/#C96A00/#6D28D9/
 // #1D4ED8/#6B21A8 -> DECIDED_MAPPING; #F4A0A0 -> ONE_OFFS. Kept as an export
@@ -471,6 +529,6 @@ export const EXCLUDED_VALUES = [
 // investigating the above. Listed rather than silently left out.
 // ============================================================
 export const KNOWN_GAPS = [
-  "3-digit hex shorthand is entirely outside this file's scope (it was built by scanning for #[0-9a-fA-F]{6} only). Confirmed in active semantic use: #c00 (admin/feedback/page.tsx's old 'pillStyle' down-vote text colour, a SECOND up/down pastel pair on the same page, distinct from the ONE_OFFS FEEDBACK_CHART pair above) plus at least 9 more distinct 3-digit values found earlier in this session (#fff x116, #888 x7, #666 x5, #eee x3, #999 x3, #444 x3, #DDD x1, #aaa x1) that were never individually triaged. Needs its own short pass before the sweep is considered complete, even though most of that list is generic greys/white with low polysemy risk.",
+  "RESOLVED — 3-digit hex shorthand (was entirely outside this file's original scope, built by scanning for #[0-9a-fA-F]{6} only): all 9 real values now in THREE_DIGIT_MAPPING (tier 5b), 142 occurrences, #163 excluded as the &#163; HTML-entity false positive.",
   "Pipeline-stage colours (identified/applying/submitted/won/declined) are hardcoded independently in AT LEAST 6 places found across both research passes this session: STAGE_STYLE (deadlines/page.tsx), STAGE_STYLE (briefing/PlanView.tsx, separately defined, identical values), STAGE_BG_HEX (pipeline/page.tsx, values diverge from the other two for applying/submitted/won), tones (PipelineModal.tsx, its own bg values, matching STAGE_BG_HEX not STAGE_STYLE), stageData (dashboard/page.tsx, matching STAGE_STYLE), and STAGE_COLOURS (admin/users/[id]/page.tsx, a previously-undiscovered 4th independent copy). None of the individual hex values here are dangerously polysemous — they consistently map to their correct DOC_MAPPING/NEAREST_TOKEN_MAPPING destinations wherever they appear — but the 6-way duplication with 2 genuinely divergent value sets (STAGE_STYLE's bg for applying/submitted/won vs STAGE_BG_HEX/tones/STAGE_COLOURS's bg for the same 3 stages) is worth a consolidation pass alongside or after the sweep.",
 ]
