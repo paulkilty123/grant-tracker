@@ -38,7 +38,6 @@ const config: Config = {
         'cream-1':         '#F5F1E8',
         'bg-page':         '#FAFAF7',
         'bg-pill-neutral': '#F1F0EA',
-        'toggle-off':      '#D9D6CB',
 
         // Coral (Programmes + Declined + urgent)
         'coral-pale':      '#FAECE7',
@@ -50,9 +49,7 @@ const config: Config = {
         // Blue (Social Investment only)
         'blue-pale':       '#E6F1FB',
         'blue-mid':        '#B5D4F4',
-        'blue-saturated':  '#378ADD',
         'blue-deep':       '#0C447C',
-        'blue-deepest':    '#042C53',
 
         // Amber (In-Kind + helper/assistant + warnings)
         'amber-pale':      '#FAEEDA',
@@ -61,22 +58,14 @@ const config: Config = {
         'amber-deep':      '#854F0B',
         'amber-deepest':   '#412402',
 
-        // Text semantic
-        'text-primary':    '#2C2C2A',
-        'text-secondary':  '#5F5E5A',
-        'text-tertiary':   '#8A8986',
-
         // Legacy aliases (remapped to new tokens)
         forest:   '#173404',
         'sage-deep': '#639922',  // was bare `sage` — renamed, name collision with new sage accent (see below)
-        mint:     '#C0DD97',
         // `cream` retired: old value (#FAFAF7, aliased to bg-page) is now covered by
         // `surface-page` (#FBF9F4, added below) — see the collision resolution note.
         warm:     '#E8E0D1',
         'gold-deep': '#BA7517',  // was bare `gold` — renamed, name collision with new gold accent (see below)
-        'gold-light': '#FAC775',
         coral:         '#D85A30',
-        'coral-light': '#F5C4B3',
         charcoal: '#2C2C2A',
         mid:      '#5F5E5A',
         light:    '#8A8986',
@@ -155,6 +144,14 @@ const config: Config = {
         'state-error-pale':   '#FAECE7',
         'state-info':         '#0C447C',
         'state-info-pale':    '#E6F1FB',
+
+        // Product status (not a generic semantic state, not a funding type —
+        // its own thing). Currently duplicated as raw inline hex in
+        // dashboard/page.tsx and dashboard/search/page.tsx's "Invite only"
+        // badge; named here so the sweep and the primitives pass can point
+        // both call sites at one definition instead of two copies.
+        'status-invite':      '#6B21A8',
+        'status-invite-pale': '#F3EDFA',
       },
       fontFamily: {
         sans:    ['var(--font-dm-sans)', 'system-ui', 'sans-serif'],

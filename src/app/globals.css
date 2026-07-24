@@ -48,19 +48,15 @@
     /* Blue */
     --blue-pale:       #E6F1FB;
     --blue-mid:        #B5D4F4;
-    --blue-saturated:  #378ADD;
     --blue-deep:       #0C447C;
-    --blue-deepest:    #042C53;
 
     /* Amber */
     --amber-pale:      #FAEEDA;
-    --amber-mid:       #FAC775;
     --amber-saturated: #BA7517;
     --amber-deep:      #854F0B;
     --amber-deepest:   #412402;
 
     /* Borders */
-    --border-light:  rgba(0, 0, 0, 0.06);
     --border-med:    rgba(0, 0, 0, 0.08);
     --border-input:  rgba(0, 0, 0, 0.14);
     --border-subtle: rgba(0, 0, 0, 0.10);
@@ -83,7 +79,6 @@
     /* Legacy aliases (point at new tokens) */
     --forest:    var(--green-deep);
     --sage-deep: var(--green-mid); /* was --sage — renamed, name collision with new sage accent below */
-    --mint:      var(--green-pale-3);
     /* --cream retired: old value (var(--bg-page)) is now covered by
        --surface-page (below) — see the collision resolution note. */
     --warm:      #E8E0D1;
@@ -161,6 +156,14 @@
     --state-error-pale:   #FAECE7;
     --state-info:         #0C447C;
     --state-info-pale:    #E6F1FB;
+
+    /* Product status (not a generic semantic state, not a funding type — its
+       own thing). Currently duplicated as raw inline hex in dashboard/page.tsx
+       and dashboard/search/page.tsx's "Invite only" badge; named here so the
+       sweep and the primitives pass can point both call sites at one
+       definition instead of two copies. */
+    --status-invite:      #6B21A8;
+    --status-invite-pale: #F3EDFA;
   }
 
   html {
