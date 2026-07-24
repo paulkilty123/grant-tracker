@@ -226,9 +226,9 @@ function sourceLabel(source: string): string {
 // MED  (amber)  → spot-check the snippet
 // LOW  (coral)  → must read the snippet + reason before approving
 const CONFIDENCE_STYLES = {
-  high: { bg: '#EAF3DE', fg: '#3B6D11', border: '#8ECB3C66', label: 'HIGH' },
-  med:  { bg: '#FAEEDA', fg: '#854F0B', border: '#EF9F2766', label: 'MED'  },
-  low:  { bg: '#FAECE7', fg: '#993C1D', border: '#D85A3066', label: 'LOW'  },
+  high: { bg: 'var(--state-success-pale)', fg: 'var(--state-success)', border: '#8ECB3C66', label: 'HIGH' },
+  med:  { bg: 'var(--state-warning-pale)', fg: 'var(--state-warning)', border: '#EF9F2766', label: 'MED'  },
+  low:  { bg: 'var(--state-error-pale)', fg: 'var(--state-error)', border: '#D85A3066', label: 'LOW'  },
 } as const
 
 function ConfidenceChip({ citation }: { citation: NonNullable<ProvenanceEntry['citation']> }) {
@@ -256,9 +256,9 @@ function ProvBadge({ entry }: { entry: ProvenanceEntry | undefined }) {
       <span
         className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded"
         style={{
-          background:    pinned ? '#F1F7E4' : '#F5F1E8',
-          color:         pinned ? '#3B6D11' : '#5F5E5A',
-          border:        `1px solid ${pinned ? '#8ECB3C44' : '#E8E0D1'}`,
+          background:    pinned ? 'var(--state-success-pale)' : 'var(--surface-sunken)',
+          color:         pinned ? 'var(--state-success)' : 'var(--text-muted)',
+          border:        `1px solid ${pinned ? '#8ECB3C44' : 'var(--border-warm)'}`,
         }}
         title={`Source: ${entry.source}${entry.backfilled ? ' (backfilled)' : ''}\nSet: ${entry.set_at}${pinned ? '\nPinned by admin — survives scraper runs' : ''}`}
       >
@@ -297,9 +297,9 @@ function ChipMultiSelect({
             }}
             className="text-xs px-2.5 py-1 rounded-full font-medium transition-colors"
             style={{
-              background:  active ? '#8ECB3C' : '#FFFFFF',
-              color:       active ? '#173404' : '#5F5E5A',
-              border:      `1px solid ${active ? '#8ECB3C' : '#E8E0D1'}`,
+              background:  active ? '#8ECB3C' : 'var(--surface-card)',
+              color:       active ? 'var(--deep)' : 'var(--text-muted)',
+              border:      `1px solid ${active ? '#8ECB3C' : 'var(--border-warm)'}`,
             }}
           >
             {opt.label}
@@ -346,18 +346,18 @@ function Completeness({ grant }: { grant: GrantEditorGrant }) {
   const missing = CORE_FIELDS.filter(f => !isPopulated(grant, f.field))
   const total   = CORE_FIELDS.length
   const pct     = Math.round((filled / total) * 100)
-  const colour  = filled === total ? '#3B6D11' : filled >= total * 0.7 ? '#5F5E5A' : '#993C1D'
+  const colour  = filled === total ? 'var(--state-success)' : filled >= total * 0.7 ? 'var(--text-muted)' : 'var(--state-error)'
 
   return (
     <div
       className="rounded-lg p-3 text-xs"
-      style={{ background: '#FFFFFF', border: '1px solid #E8E0D1' }}
+      style={{ background: 'var(--surface-card)', border: '1px solid var(--border-warm)' }}
     >
       <div className="flex items-center justify-between mb-2">
         <span className="font-semibold text-charcoal">Completeness</span>
         <span className="font-bold" style={{ color: colour }}>{filled} / {total}</span>
       </div>
-      <div className="h-1 rounded-full mb-2 overflow-hidden" style={{ background: '#F5F1E8' }}>
+      <div className="h-1 rounded-full mb-2 overflow-hidden" style={{ background: 'var(--surface-sunken)' }}>
         <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: colour }} />
       </div>
       {missing.length > 0 && (
@@ -456,7 +456,7 @@ export function GrantEditor(props: GrantEditorProps) {
   })()
 
   return (
-    <div className="mx-3 mb-1 rounded-xl border border-forest/20 bg-[#f0fdf9] p-4">
+    <div className="mx-3 mb-1 rounded-xl border border-forest/20 bg-surface-page p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
         <div className="flex items-center gap-3 flex-wrap">
@@ -466,7 +466,7 @@ export function GrantEditor(props: GrantEditorProps) {
           {confidenceSummary.total > 0 && (
             <div
               className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2 py-1 rounded-full"
-              style={{ background: '#FFFFFF', border: '1px solid #E8E0D1', color: '#5F5E5A' }}
+              style={{ background: 'var(--surface-card)', border: '1px solid var(--border-warm)', color: 'var(--text-muted)' }}
               title={`Citation coverage across ${confidenceSummary.total} AI-written field${confidenceSummary.total === 1 ? '' : 's'}.\nHIGH: AI quoted source verbatim — accept on glance.\nMED: implied, light inference — spot-check.\nLOW: inferred or no source — read snippet + reason before approving.`}
             >
               <span style={{ color: CONFIDENCE_STYLES.high.fg }}>● {confidenceSummary.high} high</span>
@@ -480,7 +480,7 @@ export function GrantEditor(props: GrantEditorProps) {
           onClick={onDetectAll}
           disabled={classifyingNow}
           className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-full text-white transition-colors disabled:opacity-70"
-          style={{ backgroundColor: '#173404' }}
+          style={{ backgroundColor: 'var(--deep)' }}
         >
           {classifyingNow
             ? (<><RefreshCw className="w-3 h-3 animate-spin" /> Classifying…</>)
@@ -723,8 +723,8 @@ export function GrantEditor(props: GrantEditorProps) {
           onClick={onToggleSources}
           className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold border rounded-full transition-colors ml-auto"
           style={{
-            borderColor:     sourcesOpen ? '#173404'                  : '#E8E0D1',
-            color:           sourcesOpen ? '#173404'                  : '#5F5E5A',
+            borderColor:     sourcesOpen ? 'var(--deep)'                  : 'var(--border-warm)',
+            color:           sourcesOpen ? 'var(--deep)'                  : 'var(--text-muted)',
             backgroundColor: sourcesOpen ? 'rgba(31,92,82,0.08)'      : 'white',
           }}
         >
@@ -735,7 +735,7 @@ export function GrantEditor(props: GrantEditorProps) {
 
       {/* Sources panel */}
       {sourcesOpen && (
-        <div className="mt-2 p-3 rounded-lg border border-[#E8E0D1] bg-[#faf8f5] space-y-2">
+        <div className="mt-2 p-3 rounded-lg border border-border-warm bg-surface-page space-y-2">
           <div className="flex items-center justify-between">
             <p className="text-xs font-semibold text-charcoal">Additional sources</p>
             <div className="flex items-center gap-2">
@@ -743,7 +743,7 @@ export function GrantEditor(props: GrantEditorProps) {
                 type="button"
                 onClick={onAddSource}
                 className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-white rounded-full"
-                style={{ backgroundColor: '#173404' }}
+                style={{ backgroundColor: 'var(--deep)' }}
               >
                 <PlusCircle className="w-3 h-3" />Add source
               </button>
@@ -753,7 +753,7 @@ export function GrantEditor(props: GrantEditorProps) {
                   onClick={onEnrichWithSources}
                   disabled={enrichingNow}
                   className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-full disabled:opacity-40"
-                  style={{ backgroundColor: '#8ECB3C', color: '#2C2C2A' }}
+                  style={{ backgroundColor: '#8ECB3C', color: 'var(--text-body)' }}
                 >
                   <Sparkles className="w-3 h-3" />{enrichingNow ? 'Enriching…' : 'Enrich with sources'}
                 </button>
@@ -764,14 +764,14 @@ export function GrantEditor(props: GrantEditorProps) {
             <p className="text-xs text-light italic">Add a URL or paste content to improve enrichment quality.</p>
           )}
           {sources.map((src, idx) => (
-            <div key={idx} className="bg-white border border-[#E8E0D1] p-2 rounded-lg space-y-1.5">
+            <div key={idx} className="bg-white border border-border-warm p-2 rounded-lg space-y-1.5">
               <div className="flex items-center gap-2">
                 <input
                   type="text"
                   placeholder="Label (optional)"
                   value={src.label}
                   onChange={e => onUpdateSource(idx, 'label', e.target.value)}
-                  className="flex-1 text-xs border border-[#E8E0D1] rounded px-2 py-1 outline-none focus:border-forest"
+                  className="flex-1 text-xs border border-border-warm rounded px-2 py-1 outline-none focus:border-forest"
                 />
                 <button
                   type="button"
@@ -786,14 +786,14 @@ export function GrantEditor(props: GrantEditorProps) {
                 placeholder="URL (fetched automatically)"
                 value={src.url}
                 onChange={e => onUpdateSource(idx, 'url', e.target.value)}
-                className="w-full text-xs border border-[#E8E0D1] rounded px-2 py-1 outline-none focus:border-forest"
+                className="w-full text-xs border border-border-warm rounded px-2 py-1 outline-none focus:border-forest"
               />
               <textarea
                 placeholder="Or paste content directly…"
                 value={src.text}
                 onChange={e => onUpdateSource(idx, 'text', e.target.value)}
                 rows={2}
-                className="w-full text-xs border border-[#E8E0D1] rounded px-2 py-1 outline-none focus:border-forest resize-none"
+                className="w-full text-xs border border-border-warm rounded px-2 py-1 outline-none focus:border-forest resize-none"
               />
             </div>
           ))}
