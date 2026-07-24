@@ -38,8 +38,8 @@ export function ConfirmDialog({
   if (!open) return null
 
   const confirmStyle = destructive
-    ? { background: '#D85A30', color: '#FFFFFF' }
-    : { background: '#8ECB3C', color: '#173404' }
+    ? { background: 'var(--terra)', color: 'var(--surface-card)' }
+    : { background: '#8ECB3C', color: 'var(--deep)' }
 
   return (
     <div
@@ -57,11 +57,11 @@ export function ConfirmDialog({
         style={{ borderRadius: 12 }}
       >
         {title && (
-          <h3 className="text-lg font-bold text-charcoal mb-2" style={{ color: '#2C2C2A' }}>
+          <h3 className="text-lg font-bold text-charcoal mb-2" style={{ color: 'var(--text-body)' }}>
             {title}
           </h3>
         )}
-        <p className="text-sm leading-relaxed" style={{ color: '#2C2C2A' }}>
+        <p className="text-sm leading-relaxed" style={{ color: 'var(--text-body)' }}>
           {message}
         </p>
         <div className="mt-5 flex items-center justify-end gap-2">
@@ -70,7 +70,7 @@ export function ConfirmDialog({
             onClick={onCancel}
             disabled={busy}
             className="rounded-lg px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-50"
-            style={{ border: '1px solid #2C2C2A', background: '#FFFFFF', color: '#2C2C2A' }}
+            style={{ border: '1px solid var(--text-body)', background: 'var(--surface-card)', color: 'var(--text-body)' }}
           >
             {cancelLabel}
           </button>

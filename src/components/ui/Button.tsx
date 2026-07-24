@@ -7,8 +7,8 @@ import { ButtonHTMLAttributes, forwardRef, useState } from 'react'
    onboarding HTML reference spec exactly.
 ───────────────────────────────────────────── */
 const LIME       = '#8ECB3C'
-const GREEN_MID  = '#639922'
-const GREEN_DEEP = '#173404'
+const GREEN_MID  = 'var(--sage-deep)'
+const GREEN_DEEP = 'var(--deep)'
 
 const VARIANT_STYLES = {
   primary: {
@@ -19,15 +19,15 @@ const VARIANT_STYLES = {
     fontWeight: 500,
   },
   secondary: {
-    background: '#fff',
-    color: '#2C2C2A',
+    background: 'var(--surface-card)',
+    color: 'var(--text-body)',
     border: '0.5px solid rgba(0,0,0,0.14)',
     borderRadius: 10,
     fontWeight: 500,
   },
   ghost: {
     background: 'transparent',
-    color: '#5F5E5A',
+    color: 'var(--text-muted)',
     border: 'none',
     borderRadius: 10,
     fontWeight: 500,
@@ -48,12 +48,12 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 /**
  * Button — the single canonical button primitive.
  *
- * primary   lime #8ECB3C / deep-forest #173404  — the one CTA per screen
- *           hover: green-mid #639922 / #fff
+ * primary   lime #8ECB3C / deep-forest var(--deep)  — the one CTA per screen
+ *           hover: green-mid var(--sage-deep) / var(--surface-card)
  * secondary white / rgba(0,0,0,0.14) border      — supporting actions
- * ghost     transparent / #5F5E5A                — back, cancel, text links
+ * ghost     transparent / var(--text-muted)                — back, cancel, text links
  *
- * Deep forest (#173404) fill is retired as a standalone button bg.
+ * Deep forest (var(--deep)) fill is retired as a standalone button bg.
  * Never use ad-hoc lime-400 / lime-500 Tailwind utilities — they won't match.
  */
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -65,7 +65,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     // Primary hover: lime → green-mid, deep-forest text → white (matches HTML spec)
     const hoverOverride = hovered && !disabled && variant === 'primary'
-      ? { background: GREEN_MID, color: '#fff' }
+      ? { background: GREEN_MID, color: 'var(--surface-card)' }
       : {}
 
     return (

@@ -20,9 +20,9 @@ type ToastApi = {
 const ToastContext = createContext<ToastApi | null>(null)
 
 const KIND_STYLE: Record<ToastKind, { bg: string; border: string; text: string }> = {
-  success: { bg: '#F1F7E4', border: '#8ECB3C', text: '#173404' },
-  error:   { bg: '#FAECE7', border: '#D85A30', text: '#993C1D' },
-  info:    { bg: '#F5F1E8', border: '#5F5E5A', text: '#2C2C2A' },
+  success: { bg: 'var(--state-success-pale)', border: '#8ECB3C', text: 'var(--deep)' },
+  error:   { bg: 'var(--state-error-pale)', border: 'var(--terra)', text: 'var(--state-error)' },
+  info:    { bg: 'var(--surface-sunken)', border: 'var(--text-muted)', text: 'var(--text-body)' },
 }
 
 const DURATION_MS = 4000
