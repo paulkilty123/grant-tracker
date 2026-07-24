@@ -61,8 +61,8 @@ export default function AdminFeedbackPage() {
       .catch(() => setLoading(false))
   }, [])
 
-  if (loading) return <div style={{ padding: 48, fontFamily: 'DM Sans, sans-serif', color: '#666' }}>Loading...</div>
-  if (denied) return <div style={{ padding: 48, fontFamily: 'DM Sans, sans-serif', color: '#c00' }}>Access denied.</div>
+  if (loading) return <div style={{ padding: 48, fontFamily: 'DM Sans, sans-serif', color: 'var(--text-muted)' }}>Loading...</div>
+  if (denied) return <div style={{ padding: 48, fontFamily: 'DM Sans, sans-serif', color: 'var(--state-error)' }}>Access denied.</div>
 
   const total = rows.length
   const upCount = rows.filter(r => r.direction === 'up').length
@@ -112,25 +112,25 @@ export default function AdminFeedbackPage() {
 
   const s: Record<string, React.CSSProperties> = {
     page: { padding: '40px 48px', fontFamily: 'DM Sans, sans-serif', maxWidth: 1100, margin: '0 auto' },
-    h1: { fontSize: 26, fontWeight: 700, color: '#1f5c52', marginBottom: 8 },
-    sub: { fontSize: 14, color: '#666', marginBottom: 36 },
+    h1: { fontSize: 26, fontWeight: 700, color: 'var(--surface-inverse)', marginBottom: 8 },
+    sub: { fontSize: 14, color: 'var(--text-muted)', marginBottom: 36 },
     statGrid: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 40 },
-    statCard: { background: '#faf7f2', border: '1px solid #e8ddd0', padding: '20px 24px' },
-    statNum: { fontSize: 34, fontWeight: 700, color: '#1f5c52', lineHeight: 1 },
-    statLabel: { fontSize: 13, color: '#666', marginTop: 6 },
+    statCard: { background: 'var(--surface-page)', border: '1px solid var(--border-warm)', padding: '20px 24px' },
+    statNum: { fontSize: 34, fontWeight: 700, color: 'var(--surface-inverse)', lineHeight: 1 },
+    statLabel: { fontSize: 13, color: 'var(--text-muted)', marginTop: 6 },
     section: { marginBottom: 44 },
-    sectionTitle: { fontSize: 15, fontWeight: 600, color: '#2c2c2a', marginBottom: 16 },
-    card: { background: '#fff', border: '1px solid #e8ddd0', padding: '24px 28px' },
+    sectionTitle: { fontSize: 15, fontWeight: 600, color: 'var(--text-body)', marginBottom: 16 },
+    card: { background: 'var(--surface-card)', border: '1px solid var(--border-warm)', padding: '24px 28px' },
     table: { width: '100%', borderCollapse: 'collapse' as const, fontSize: 13 },
-    th: { textAlign: 'left' as const, padding: '8px 12px', borderBottom: '1px solid #e8ddd0', color: '#666', fontWeight: 500 },
-    td: { padding: '10px 12px', borderBottom: '1px solid #f3efea', verticalAlign: 'top' as const },
-    warn: { color: '#c96a00', fontWeight: 600 },
+    th: { textAlign: 'left' as const, padding: '8px 12px', borderBottom: '1px solid var(--border-warm)', color: 'var(--text-muted)', fontWeight: 500 },
+    td: { padding: '10px 12px', borderBottom: '1px solid var(--surface-pill)', verticalAlign: 'top' as const },
+    warn: { color: 'var(--state-warning)', fontWeight: 600 },
   }
 
   const pillStyle = (dir: 'up' | 'down'): React.CSSProperties => ({
     display: 'inline-block', padding: '2px 8px', fontSize: 11, fontWeight: 600,
-    background: dir === 'up' ? '#e6f4e6' : '#fce8e8',
-    color: dir === 'up' ? '#2a7a2a' : '#c00',
+    background: dir === 'up' ? 'var(--type-inkind-pale)' : 'var(--type-investment-pale)',
+    color: dir === 'up' ? 'var(--state-success)' : 'var(--state-error)',
   })
 
   return (
@@ -164,12 +164,12 @@ export default function AdminFeedbackPage() {
                 <div key={d.date} title={`${d.date}: ${d.up} up ${d.down} down`} style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
                   {downH > 0 && <div style={{ height: downH, background: FEEDBACK_CHART.negative }} />}
                   {upH > 0 && <div style={{ height: upH, background: FEEDBACK_CHART.positive }} />}
-                  {h === 0 && <div style={{ height: 2, background: '#e8e0d8' }} />}
+                  {h === 0 && <div style={{ height: 2, background: 'var(--border-warm)' }} />}
                 </div>
               )
             })}
           </div>
-          <div style={{ display: 'flex', gap: 16, marginTop: 10, fontSize: 11, color: '#888' }}>
+          <div style={{ display: 'flex', gap: 16, marginTop: 10, fontSize: 11, color: 'var(--text-subtle)' }}>
             <span><span style={{ display: 'inline-block', width: 10, height: 10, background: FEEDBACK_CHART.positive, marginRight: 4 }} />Good match</span>
             <span><span style={{ display: 'inline-block', width: 10, height: 10, background: FEEDBACK_CHART.negative, marginRight: 4 }} />Not for us</span>
           </div>
@@ -179,7 +179,7 @@ export default function AdminFeedbackPage() {
       <div style={s.section}>
         <div style={s.sectionTitle}>Reason chips</div>
         <div style={s.card}>
-          {chipStats.length === 0 && <div style={{ color: '#999', fontSize: 13 }}>No chips recorded yet.</div>}
+          {chipStats.length === 0 && <div style={{ color: 'var(--text-subtle)', fontSize: 13 }}>No chips recorded yet.</div>}
           {chipStats.map(c => {
             const t = c.up + c.down
             const upPct = Math.round((c.up / t) * 100)
@@ -187,9 +187,9 @@ export default function AdminFeedbackPage() {
               <div key={c.reason} style={{ marginBottom: 14 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 4 }}>
                   <span style={{ fontWeight: 500 }}>{CHIP_LABELS[c.reason] ?? c.reason}</span>
-                  <span style={{ color: '#888' }}>{c.up} up {c.down} down</span>
+                  <span style={{ color: 'var(--text-subtle)' }}>{c.up} up {c.down} down</span>
                 </div>
-                <div style={{ height: 12, background: '#f0ece6', overflow: 'hidden' }}>
+                <div style={{ height: 12, background: 'var(--surface-pill)', overflow: 'hidden' }}>
                   <div style={{ width: `${(t / maxChip) * 100}%`, display: 'flex', height: '100%' }}>
                     <div style={{ width: `${upPct}%`, background: FEEDBACK_CHART.positive }} />
                     <div style={{ width: `${100 - upPct}%`, background: FEEDBACK_CHART.negative }} />
@@ -204,7 +204,7 @@ export default function AdminFeedbackPage() {
       <div style={s.section}>
         <div style={s.sectionTitle}>Grants with most signals</div>
         <div style={s.card}>
-          {hotGrants.length === 0 && <div style={{ color: '#999', fontSize: 13 }}>No grants with 2+ events yet.</div>}
+          {hotGrants.length === 0 && <div style={{ color: 'var(--text-subtle)', fontSize: 13 }}>No grants with 2+ events yet.</div>}
           {hotGrants.length > 0 && (
             <table style={s.table}>
               <thead>
@@ -214,8 +214,8 @@ export default function AdminFeedbackPage() {
                 {hotGrants.map(g => (
                   <tr key={g.grant_id}>
                     <td style={s.td}>{g.title}</td>
-                    <td style={{ ...s.td, color: '#2a7a2a', fontWeight: 600 }}>{g.up}</td>
-                    <td style={{ ...s.td, color: '#c00', fontWeight: 600 }}>{g.down}</td>
+                    <td style={{ ...s.td, color: 'var(--state-success)', fontWeight: 600 }}>{g.up}</td>
+                    <td style={{ ...s.td, color: 'var(--state-error)', fontWeight: 600 }}>{g.down}</td>
                     <td style={s.td}>{g.total}</td>
                     <td style={s.td}>{g.pctNeg}%</td>
                     <td style={s.td}>{g.total >= 3 && g.pctNeg >= 70 && <span style={s.warn}>Review</span>}</td>
@@ -230,17 +230,17 @@ export default function AdminFeedbackPage() {
       <div style={s.section}>
         <div style={s.sectionTitle}>Free text ({freeTextCount})</div>
         <div style={s.card}>
-          {freeTexts.length === 0 && <div style={{ color: '#999', fontSize: 13 }}>No free text entries yet.</div>}
+          {freeTexts.length === 0 && <div style={{ color: 'var(--text-subtle)', fontSize: 13 }}>No free text entries yet.</div>}
           {freeTexts.map(r => (
-            <div key={r.id} style={{ paddingBottom: 16, marginBottom: 16, borderBottom: '1px solid #f0ece6' }}>
+            <div key={r.id} style={{ paddingBottom: 16, marginBottom: 16, borderBottom: '1px solid var(--surface-pill)' }}>
               <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 6 }}>
                 <span style={pillStyle(r.direction)}>{r.direction === 'up' ? 'Good match' : 'Not for us'}</span>
-                <span style={{ fontSize: 12, color: '#888' }}>{r.grant_title}</span>
-                <span style={{ fontSize: 12, color: '#aaa', marginLeft: 'auto' }}>{fmt(r.created_at)}</span>
+                <span style={{ fontSize: 12, color: 'var(--text-subtle)' }}>{r.grant_title}</span>
+                <span style={{ fontSize: 12, color: 'var(--text-subtle)', marginLeft: 'auto' }}>{fmt(r.created_at)}</span>
               </div>
-              <div style={{ fontSize: 14, color: '#3a3a3a', lineHeight: 1.5 }}>{r.free_text}</div>
+              <div style={{ fontSize: 14, color: 'var(--text-body)', lineHeight: 1.5 }}>{r.free_text}</div>
               {r.reasons && r.reasons.length > 0 && (
-                <div style={{ marginTop: 6, fontSize: 12, color: '#888' }}>
+                <div style={{ marginTop: 6, fontSize: 12, color: 'var(--text-subtle)' }}>
                   Chips: {r.reasons.map(rc => CHIP_LABELS[rc] ?? rc).join(', ')}
                 </div>
               )}
