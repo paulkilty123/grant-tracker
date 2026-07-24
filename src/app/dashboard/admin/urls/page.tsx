@@ -166,10 +166,10 @@ function SavedForLaterTab() {
   }, [])
 
   const FT_STYLE: Record<string, { bg: string; color: string; label: string }> = {
-    grant:      { bg: 'rgba(132,204,22,0.15)', color: '#639922', label: 'Grant' },
-    programme:  { bg: 'rgba(251,146,60,0.15)', color: '#993C1D', label: 'Programme' },
-    investment: { bg: 'rgba(96,165,250,0.15)', color: '#0C447C', label: 'Investment' },
-    in_kind:    { bg: 'rgba(167,139,250,0.15)', color: '#BA7517', label: 'In-Kind' },
+    grant:      { bg: 'rgba(132,204,22,0.15)', color: 'var(--sage-deep)', label: 'Grant' },
+    programme:  { bg: 'rgba(251,146,60,0.15)', color: 'var(--state-error)', label: 'Programme' },
+    investment: { bg: 'rgba(96,165,250,0.15)', color: 'var(--state-info)', label: 'Investment' },
+    in_kind:    { bg: 'rgba(167,139,250,0.15)', color: 'var(--gold-deep)', label: 'In-Kind' },
   }
 
   if (loading) return <div className="py-12 text-center text-sm text-mid">Loading…</div>
@@ -197,7 +197,7 @@ function SavedForLaterTab() {
         <tbody className="divide-y divide-warm/60">
           {grants.map(grant => {
             const ft = grant.funding_type
-            const ftStyle = ft ? (FT_STYLE[ft] ?? { bg: '#f3f4f6', color: '#5F5E5A', label: ft }) : null
+            const ftStyle = ft ? (FT_STYLE[ft] ?? { bg: 'var(--surface-page)', color: 'var(--text-muted)', label: ft }) : null
             return (
               <tr key={grant.id} id={`grant-row-${grant.id}`} className="hover:bg-surface-page/50 transition-colors">
                 <td className="px-5 py-3 max-w-[200px]">
@@ -3171,8 +3171,8 @@ export default function UrlAdminPage() {
           title={grant.funder_brief ? 'Funder brief enriched ✓' : 'Enrich with funder intelligence'}
           className={`rounded-full border p-1.5 transition-colors disabled:opacity-40 ${
             grant.funder_brief
-              ? 'border-[#008080]/30 bg-[#008080]/10 text-[#008080] cursor-default'
-              : 'border-warm text-mid hover:border-[#008080] hover:text-[#008080]'
+              ? 'border-teal/30 bg-teal/10 text-teal cursor-default'
+              : 'border-warm text-mid hover:border-teal hover:text-teal'
           }`}
         >
           {enrichingId === grant.id
@@ -3579,7 +3579,7 @@ export default function UrlAdminPage() {
         <div className="flex items-center justify-between gap-4">
           <div>
             <p className="text-sm font-medium text-charcoal flex items-center gap-1.5">
-              <Brain className="h-4 w-4 text-[#008080]" />
+              <Brain className="h-4 w-4 text-teal" />
               Bulk funder intelligence enrichment
             </p>
             <p className="mt-0.5 text-xs text-mid">
@@ -3593,7 +3593,7 @@ export default function UrlAdminPage() {
           <button
             onClick={() => bulkEnrich('active')}
             disabled={bulkEnriching}
-            className="flex items-center gap-2 rounded-lg bg-[#008080] px-4 py-2 text-sm font-medium text-white hover:bg-[#006666] disabled:opacity-50 transition-colors"
+            className="flex items-center gap-2 rounded-lg bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-state-info disabled:opacity-50 transition-colors"
           >
             {bulkEnriching
               ? <><RefreshCw className="h-3.5 w-3.5 animate-spin" /> Enriching…</>
@@ -3604,7 +3604,7 @@ export default function UrlAdminPage() {
           <div className="mt-3">
             <div className="h-1.5 w-full rounded-full bg-warm overflow-hidden">
               <div
-                className="h-full rounded-full bg-[#008080] transition-all duration-300"
+                className="h-full rounded-full bg-teal transition-all duration-300"
                 style={{ width: `${Math.round((bulkEnrichDone / bulkEnrichTotal) * 100)}%` }}
               />
             </div>
@@ -3620,7 +3620,7 @@ export default function UrlAdminPage() {
         {bulkDetecting && bulkDetectTotal > 0 && (
           <div className="mt-3">
             <div className="h-2 overflow-hidden rounded-full bg-warm/60">
-              <div className="h-full bg-[#3B6D11] transition-all" style={{ width: `${Math.round((bulkDetectDone / bulkDetectTotal) * 100)}%` }} />
+              <div className="h-full bg-state-success transition-all" style={{ width: `${Math.round((bulkDetectDone / bulkDetectTotal) * 100)}%` }} />
             </div>
           </div>
         )}
@@ -4132,14 +4132,14 @@ export default function UrlAdminPage() {
             </div>
             <div className="flex items-center gap-2">
               <button onClick={() => bulkEnrich('review')} disabled={bulkEnriching || bulkDetecting || reviewGrants.length === 0}
-                className="flex items-center gap-1.5 rounded-full bg-[#008080] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#006666] transition-colors disabled:opacity-50">
+                className="flex items-center gap-1.5 rounded-full bg-teal px-4 py-1.5 text-xs font-semibold text-white hover:bg-state-info transition-colors disabled:opacity-50">
                 {bulkEnriching
                   ? <><RefreshCw className="h-3 w-3 animate-spin" /> Enriching {bulkEnrichDone}/{bulkEnrichTotal}</>
                   : <><Brain className="h-3 w-3" /> Enrich all unenriched</>}
               </button>
               <button onClick={bulkDetectReview} disabled={bulkEnriching || bulkDetecting || reviewGrants.length === 0}
                 title="Re-run Detect on every row's existing brief — extracts amount, deadline, location etc. without calling Claude."
-                className="flex items-center gap-1.5 rounded-full bg-[#3B6D11] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#2E5410] transition-colors disabled:opacity-50">
+                className="flex items-center gap-1.5 rounded-full bg-state-success px-4 py-1.5 text-xs font-semibold text-white hover:bg-state-success transition-colors disabled:opacity-50">
                 {bulkDetecting
                   ? <><RefreshCw className="h-3 w-3 animate-spin" /> Detecting {bulkDetectDone}/{bulkDetectTotal}</>
                   : <><Sparkles className="h-3 w-3" /> Detect all</>}
@@ -4213,12 +4213,12 @@ export default function UrlAdminPage() {
                         {(grant as Grant & { funding_type?: string }).funding_type && (() => {
                           const ft = (grant as Grant & { funding_type?: string }).funding_type!
                           const FT_STYLE: Record<string, { bg: string; color: string; label: string }> = {
-                            grant:      { bg: 'rgba(132,204,22,0.15)', color: '#639922', label: 'Grant' },
-                            programme:  { bg: 'rgba(251,146,60,0.15)', color: '#993C1D', label: 'Programme' },
-                            investment: { bg: 'rgba(96,165,250,0.15)', color: '#0C447C', label: 'Investment' },
-                            in_kind:    { bg: 'rgba(167,139,250,0.15)', color: '#BA7517', label: 'In-Kind' },
+                            grant:      { bg: 'rgba(132,204,22,0.15)', color: 'var(--sage-deep)', label: 'Grant' },
+                            programme:  { bg: 'rgba(251,146,60,0.15)', color: 'var(--state-error)', label: 'Programme' },
+                            investment: { bg: 'rgba(96,165,250,0.15)', color: 'var(--state-info)', label: 'Investment' },
+                            in_kind:    { bg: 'rgba(167,139,250,0.15)', color: 'var(--gold-deep)', label: 'In-Kind' },
                           }
-                          const s = FT_STYLE[ft] ?? { bg: '#f3f4f6', color: '#5F5E5A', label: ft }
+                          const s = FT_STYLE[ft] ?? { bg: 'var(--surface-page)', color: 'var(--text-muted)', label: ft }
                           return <span className="inline-block ml-1 mt-1 rounded-full px-2 py-0.5 text-[10px] font-semibold" style={{ backgroundColor: s.bg, color: s.color }}>{s.label}</span>
                         })()}
                         {grant.funder_type && grant.funder_type !== 'other' && (() => {
@@ -4228,7 +4228,7 @@ export default function UrlAdminPage() {
                             local_authority: 'Local Auth', capacity_builder: 'Capacity Bldr',
                           }
                           const label = FT_LABELS[grant.funder_type] ?? grant.funder_type
-                          return <span className="inline-block ml-1 mt-1 rounded-full bg-[#f0f9ff] px-2 py-0.5 text-[10px] font-semibold text-[#0369a1]">{label}</span>
+                          return <span className="inline-block ml-1 mt-1 rounded-full bg-type-programme-pale px-2 py-0.5 text-[10px] font-semibold text-state-info">{label}</span>
                         })()}
                       </td>
                       <td className="px-5 py-3 max-w-[280px]">
@@ -4299,7 +4299,7 @@ export default function UrlAdminPage() {
           Review, which shows both captured + tagged). */}
       {filter === 'captured' && (
         <div className="rounded-xl border border-warm bg-white overflow-hidden shadow-card">
-          <div className="flex items-center justify-between border-b border-warm bg-[#F5F1E8] px-5 py-3">
+          <div className="flex items-center justify-between border-b border-warm bg-surface-sunken px-5 py-3">
             <div>
               <p className="text-sm font-semibold text-charcoal">
                 {capturedGrants.length} grant{capturedGrants.length !== 1 ? 's' : ''} captured, awaiting AI processing
@@ -4310,7 +4310,7 @@ export default function UrlAdminPage() {
             </div>
             <div className="flex items-center gap-2">
               <button onClick={() => bulkEnrich('review')} disabled={bulkEnriching || bulkDetecting || capturedGrants.length === 0}
-                className="flex items-center gap-1.5 rounded-full bg-[#008080] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#006666] transition-colors disabled:opacity-50">
+                className="flex items-center gap-1.5 rounded-full bg-teal px-4 py-1.5 text-xs font-semibold text-white hover:bg-state-info transition-colors disabled:opacity-50">
                 {bulkEnriching
                   ? <><RefreshCw className="h-3 w-3 animate-spin" /> Enriching {bulkEnrichDone}/{bulkEnrichTotal}</>
                   : <><Brain className="h-3 w-3" /> Enrich all unenriched</>}
@@ -4353,7 +4353,7 @@ export default function UrlAdminPage() {
                       <td className="px-5 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button onClick={() => enrichGrantFromManager(grant)} disabled={!!enrichingId}
-                            className="flex items-center gap-1 rounded-full bg-[#008080] px-3 py-1 text-xs font-semibold text-white hover:bg-[#006666] transition-colors disabled:opacity-40">
+                            className="flex items-center gap-1 rounded-full bg-teal px-3 py-1 text-xs font-semibold text-white hover:bg-state-info transition-colors disabled:opacity-40">
                             {enrichingId === grant.id ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Brain className="h-3 w-3" />}
                             {enrichingId === grant.id ? 'Enriching…' : 'Enrich'}
                           </button>
@@ -4394,9 +4394,9 @@ export default function UrlAdminPage() {
           ai_enrich:v1 provenance on the result. */}
       {filter === 'needs_enrichment' && (
         <div className="rounded-xl border border-warm bg-white overflow-hidden shadow-card">
-          <div className="flex items-center justify-between border-b border-warm bg-[#F1F7E4] px-5 py-3">
+          <div className="flex items-center justify-between border-b border-warm bg-state-success-pale px-5 py-3">
             <div>
-              <p className="text-sm font-semibold text-[#173404]">
+              <p className="text-sm font-semibold text-deep">
                 {needsEnrichmentGrants.length} published grant{needsEnrichmentGrants.length !== 1 ? 's' : ''} missing a funder brief
               </p>
               <p className="text-xs text-sage-deep mt-0.5">
@@ -4405,7 +4405,7 @@ export default function UrlAdminPage() {
             </div>
             <div className="flex items-center gap-2">
               <button onClick={() => bulkEnrich('active')} disabled={bulkEnriching || bulkDetecting || needsEnrichmentGrants.length === 0}
-                className="flex items-center gap-1.5 rounded-full bg-[#008080] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#006666] transition-colors disabled:opacity-50">
+                className="flex items-center gap-1.5 rounded-full bg-teal px-4 py-1.5 text-xs font-semibold text-white hover:bg-state-info transition-colors disabled:opacity-50">
                 {bulkEnriching
                   ? <><RefreshCw className="h-3 w-3 animate-spin" /> Enriching {bulkEnrichDone}/{bulkEnrichTotal}</>
                   : <><Brain className="h-3 w-3" /> Enrich all unenriched</>}
@@ -4448,7 +4448,7 @@ export default function UrlAdminPage() {
                       <td className="px-5 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button onClick={() => enrichGrantFromManager(grant)} disabled={!!enrichingId}
-                            className="flex items-center gap-1 rounded-full bg-[#008080] px-3 py-1 text-xs font-semibold text-white hover:bg-[#006666] transition-colors disabled:opacity-40">
+                            className="flex items-center gap-1 rounded-full bg-teal px-3 py-1 text-xs font-semibold text-white hover:bg-state-info transition-colors disabled:opacity-40">
                             {enrichingId === grant.id ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Brain className="h-3 w-3" />}
                             {enrichingId === grant.id ? 'Enriching…' : 'Enrich'}
                           </button>
@@ -4484,9 +4484,9 @@ export default function UrlAdminPage() {
           next visit. */}
       {filter === 'tag_audit' && (
         <div className="rounded-xl border border-warm bg-white overflow-hidden shadow-card">
-          <div className="flex items-center justify-between border-b border-warm bg-[#FAECE7] px-5 py-3">
+          <div className="flex items-center justify-between border-b border-warm bg-state-error-pale px-5 py-3">
             <div>
-              <p className="text-sm font-semibold text-[#993C1D]">
+              <p className="text-sm font-semibold text-state-error">
                 {tagAuditLoading
                   ? 'Scanning catalogue…'
                   : `${tagAuditRows.length} grant${tagAuditRows.length !== 1 ? 's' : ''} with tagging disagreements`}
@@ -4499,7 +4499,7 @@ export default function UrlAdminPage() {
             <button
               onClick={loadTagAudit}
               disabled={tagAuditLoading}
-              className="flex items-center gap-1.5 rounded-full border border-[#993C1D] px-3 py-1.5 text-xs font-semibold text-[#993C1D] hover:bg-coral-pale transition-colors disabled:opacity-40"
+              className="flex items-center gap-1.5 rounded-full border border-state-error px-3 py-1.5 text-xs font-semibold text-state-error hover:bg-coral-pale transition-colors disabled:opacity-40"
             >
               <RefreshCw className={`h-3 w-3 ${tagAuditLoading ? 'animate-spin' : ''}`} />
               {tagAuditLoading ? 'Scanning' : 'Rescan'}
@@ -4538,8 +4538,8 @@ export default function UrlAdminPage() {
                           className="inline-flex items-center justify-center min-w-[28px] h-6 rounded-full text-xs font-bold"
                           style={{
                             // Weighted score scale: missing*2 + extras*0.5. Thresholds tuned 2026-05-24.
-                            background: row.score >= 12 ? '#D85A30' : row.score >= 6 ? '#F0997B' : '#F5F1E8',
-                            color:      row.score >= 12 ? '#FFFFFF' : row.score >= 6 ? '#993C1D' : '#5F5E5A',
+                            background: row.score >= 12 ? 'var(--terra)' : row.score >= 6 ? 'var(--ordinal-2-fair)' : 'var(--surface-sunken)',
+                            color:      row.score >= 12 ? 'var(--surface-card)' : row.score >= 6 ? 'var(--state-error)' : 'var(--text-muted)',
                           }}
                         >
                           {row.score}
@@ -4548,7 +4548,7 @@ export default function UrlAdminPage() {
                       <td className="px-5 py-3 w-16 text-center">
                         <span
                           className="text-xs font-semibold"
-                          style={{ color: row.tag_count <= 3 ? '#993C1D' : row.tag_count <= 6 ? '#5F5E5A' : '#3B6D11' }}
+                          style={{ color: row.tag_count <= 3 ? 'var(--state-error)' : row.tag_count <= 6 ? 'var(--text-muted)' : 'var(--state-success)' }}
                           title="Current tag count (sectors + beneficiaries). Low count with high score usually means real under-tagging worth fixing."
                         >
                           {row.tag_count}
