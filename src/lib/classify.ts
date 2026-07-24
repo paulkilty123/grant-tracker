@@ -569,7 +569,13 @@ export function ensureExplicitStructures(
   const out = [...structures]
   const add = (s: string) => { if (VALID_STRUCTURES.has(s) && !out.includes(s)) out.push(s) }
 
-  if (/\bcics?\b|community interest comp|social enterprise/.test(text)) { add('cic_guarantee'); add('cic_shares') }
+  if (/\bcics?\b|community interest comp/.test(text)) { add('cic_guarantee'); add('cic_shares') }
+  // "social enterprise" is broader than CIC — the prompt's own hard rule
+  // (see ELIGIBLE STRUCTURES rule 1) requires ltd_guarantee alongside both
+  // CIC variants for this phrase specifically. Found live: the model was
+  // tagging cic_guarantee/cic_shares correctly but dropping ltd_guarantee,
+  // and this backstop had the identical gap instead of catching it.
+  if (/social enterprise/.test(text)) { add('cic_guarantee'); add('cic_shares'); add('ltd_guarantee') }
   // Ensure charity types too when charities are explicitly named — guards the
   // edge where the model returns [] for a "charities and CICs" grant, so we
   // don't end up CIC-only and wrongly exclude charities.
