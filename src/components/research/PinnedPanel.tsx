@@ -90,7 +90,7 @@ function PinRow({ pin, isLast }: { pin: Pin; isLast: boolean }) {
           {pin.pin_type === 'profile' ? (
             <>
               {briefLoading && <div style={{ fontSize: 11.5, color: COLOR.faint }}>Loading…</div>}
-              {briefError && <div style={{ fontSize: 11.5, color: '#993C1D' }}>{briefError}</div>}
+              {briefError && <div style={{ fontSize: 11.5, color: 'var(--state-error)' }}>{briefError}</div>}
               {brief && (
                 <>
                   <BriefSectionsSummary brief={brief} />
@@ -119,7 +119,7 @@ function PinRow({ pin, isLast }: { pin: Pin; isLast: boolean }) {
 
 export default function PinnedPanel({ pins }: { pins: Pin[] }) {
   return (
-    <div style={{ border: `1px solid ${COLOR.hair}`, borderRadius: 12, background: '#fff', overflow: 'hidden' }}>
+    <div style={{ border: `1px solid ${COLOR.hair}`, borderRadius: 12, background: 'var(--surface-card)', overflow: 'hidden' }}>
       <div className="flex items-center justify-between px-3.5 py-3" style={{ borderBottom: `1px solid ${COLOR.hair}` }}>
         <span style={{ ...grotesk, fontSize: 13, fontWeight: 600, color: COLOR.ink }}>📌 Research log</span>
         <span style={{ ...grotesk, fontSize: 11.5, fontWeight: 500, color: COLOR.faint }}>{pins.length}</span>

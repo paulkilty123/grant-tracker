@@ -35,7 +35,7 @@ export default function ThreadTabs({
               padding: '6px 13px',
               borderRadius: 999,
               cursor: 'pointer',
-              background: active ? '#fff' : 'transparent',
+              background: active ? 'var(--surface-card)' : 'transparent',
               color: active ? COLOR.ink : COLOR.mid,
               border: active ? `1.5px solid ${COLOR.lime}` : `1px solid ${COLOR.hair}`,
             }}

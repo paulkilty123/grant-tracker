@@ -281,7 +281,7 @@ export default function ResearchView({
               <button
                 onClick={() => setPinnedOpen(v => !v)}
                 className="w-full flex items-center justify-between px-3.5 py-2.5"
-                style={{ border: `1px solid ${COLOR.hair}`, borderRadius: 10, background: '#fff', ...grotesk, fontSize: 12.5, fontWeight: 600, color: COLOR.ink }}
+                style={{ border: `1px solid ${COLOR.hair}`, borderRadius: 10, background: 'var(--surface-card)', ...grotesk, fontSize: 12.5, fontWeight: 600, color: COLOR.ink }}
               >
                 <span>📌 Research log</span>
                 <span style={{ color: COLOR.faint }}>{pinnedOpen ? '−' : `${pins.length} ▾`}</span>
@@ -290,7 +290,7 @@ export default function ResearchView({
             </div>
 
             {/* Input bar — lime-bordered, per the mockup */}
-            <div className="flex items-end gap-2 p-2.5" style={{ border: `1.5px solid ${COLOR.lime}`, borderRadius: 12, background: '#fff' }}>
+            <div className="flex items-end gap-2 p-2.5" style={{ border: `1.5px solid ${COLOR.lime}`, borderRadius: 12, background: 'var(--surface-card)' }}>
               <textarea
                 ref={inputRef}
                 value={input}

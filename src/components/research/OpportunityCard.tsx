@@ -34,7 +34,7 @@ function urgencyChipStyle(band: UrgencyBand): React.CSSProperties {
       return { background: COLOR.hair, color: COLOR.faint }
     case 'approaching':
     case 'comfortable':
-      return { background: '#fff', color: COLOR.mid, border: `1px solid ${COLOR.hair}` }
+      return { background: 'var(--surface-card)', color: COLOR.mid, border: `1px solid ${COLOR.hair}` }
     default: // rolling, distant
       return { background: COLOR.cream, color: COLOR.faint }
   }
@@ -69,7 +69,7 @@ const chipBase: React.CSSProperties = {
   whiteSpace: 'nowrap',
 }
 const chipLime: React.CSSProperties = { ...chipBase, background: COLOR.lime, color: COLOR.forest }
-const chipHairline: React.CSSProperties = { ...chipBase, background: '#fff', color: COLOR.ink, border: `1px solid ${COLOR.hair}` }
+const chipHairline: React.CSSProperties = { ...chipBase, background: 'var(--surface-card)', color: COLOR.ink, border: `1px solid ${COLOR.hair}` }
 const chipHairlineDone: React.CSSProperties = { ...chipHairline, color: COLOR.sage, borderColor: COLOR.weighted }
 
 function Chip({ label, done, style, onClick, disabled }: { label: string; done?: boolean; style: React.CSSProperties; onClick?: () => void; disabled?: boolean }) {
@@ -192,7 +192,7 @@ export default function OpportunityCard({ data, actions }: { data: OpportunityCa
   return (
     <div
       className="my-2"
-      style={{ border: `1px solid ${COLOR.hair}`, borderRadius: 10, padding: '11px 13px', background: '#fff' }}
+      style={{ border: `1px solid ${COLOR.hair}`, borderRadius: 10, padding: '11px 13px', background: 'var(--surface-card)' }}
     >
       {/* Title line: title + amount (catalogue) or amber/green badge (researched) */}
       <div className="flex items-baseline justify-between gap-3 flex-wrap">
@@ -262,7 +262,7 @@ export default function OpportunityCard({ data, actions }: { data: OpportunityCa
         {data.caveat && <CaveatChip caveat={data.caveat} onClick={() => actions.onCaveat?.(data.caveat!)} />}
       </div>
       {briefError && (
-        <p className="mt-1.5 mb-0" style={{ fontSize: 11.5, color: '#993C1D' }}>{briefError}</p>
+        <p className="mt-1.5 mb-0" style={{ fontSize: 11.5, color: 'var(--state-error)' }}>{briefError}</p>
       )}
       {brief && <BriefBlock brief={brief} deadline={isCatalogue ? data.deadline : null} onPin={() => actions.onPinBrief?.(brief, data)} />}
     </div>

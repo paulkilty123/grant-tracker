@@ -14,7 +14,7 @@ export default function BriefProfileModal({ brief, onClose }: { brief: Brief; on
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-5" style={{ background: 'rgba(44,44,42,0.35)' }} onClick={onClose}>
       <div
-        style={{ width: '100%', maxWidth: 480, maxHeight: '80vh', overflowY: 'auto', background: '#fff', borderRadius: 14 }}
+        style={{ width: '100%', maxWidth: 480, maxHeight: '80vh', overflowY: 'auto', background: 'var(--surface-card)', borderRadius: 14 }}
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-5" style={{ borderBottom: `1px solid ${COLOR.hair}` }}>

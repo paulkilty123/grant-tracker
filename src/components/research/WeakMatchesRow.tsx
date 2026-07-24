@@ -22,7 +22,7 @@ export default function WeakMatchesRow({
   if (items.length === 0) return null
 
   return (
-    <div className="mt-2" style={{ border: `1px solid ${COLOR.hair}`, borderRadius: 10, background: '#fff', overflow: 'hidden' }}>
+    <div className="mt-2" style={{ border: `1px solid ${COLOR.hair}`, borderRadius: 10, background: 'var(--surface-card)', overflow: 'hidden' }}>
       <button
         onClick={() => setOpen(v => !v)}
         className="w-full flex items-center gap-1.5 px-3 py-2.5 text-left"
