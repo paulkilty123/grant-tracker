@@ -52,10 +52,10 @@ const TABS: { id: TabId; label: string; icon: React.ElementType; introTitle: str
 const PAGES = ['Dashboard', 'Find Funding', 'Pipeline', 'Deadlines', 'Profile', 'Onboarding', 'Other']
 
 const STATUS_CONFIG: Record<SubmissionStatus, { label: string; bg: string; color: string }> = {
-  received:  { label: 'Received',  bg: '#F5F1E8', color: '#5F5E5A' },
-  reviewing: { label: 'In review', bg: '#FAEEDA', color: '#854F0B' },
-  actioned:  { label: 'Actioned',  bg: '#F0F5F3', color: '#5A9080' },
-  shipped:   { label: 'Shipped',   bg: '#F4F9ED', color: '#639922' },
+  received:  { label: 'Received',  bg: 'var(--surface-sunken)', color: 'var(--text-muted)' },
+  reviewing: { label: 'In review', bg: 'var(--state-warning-pale)', color: 'var(--state-warning)' },
+  actioned:  { label: 'Actioned',  bg: 'var(--surface-pill)', color: '#5A9080' },
+  shipped:   { label: 'Shipped',   bg: 'var(--surface-page)', color: 'var(--sage-deep)' },
 }
 
 const TAB_TYPE_LABELS: Record<TabId, string> = {
@@ -69,14 +69,14 @@ const labelStyle: React.CSSProperties = {
   fontFamily: 'var(--font-space-grotesk)',
   fontWeight: 500,
   fontSize: 13,
-  color: '#2C2C2A',
+  color: 'var(--text-body)',
 }
 
 const inputStyle: React.CSSProperties = {
   fontFamily: 'var(--font-dm-sans)',
   fontSize: 14.5,
-  color: '#2C2C2A',
-  background: '#FAFAF7',
+  color: 'var(--text-body)',
+  background: 'var(--surface-page)',
   border: '1px solid rgba(23,52,4,0.14)',
   borderRadius: 8,
   padding: '10px 12px',
@@ -172,10 +172,10 @@ export default function FeedbackPage() {
 
       {/* Header */}
       <div style={{ marginBottom: 32 }}>
-        <h1 style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, fontSize: 28, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 6 }}>
+        <h1 style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, fontSize: 28, letterSpacing: '-0.02em', color: 'var(--text-body)', marginBottom: 6 }}>
           Feedback
         </h1>
-        <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 15, color: '#5F5E5A', maxWidth: 560 }}>
+        <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 15, color: 'var(--text-muted)', maxWidth: 560 }}>
           Tell us what&apos;s working, what isn&apos;t, and what&apos;s missing. We read every message and use it to shape what we build next.
         </p>
       </div>
@@ -189,7 +189,7 @@ export default function FeedbackPage() {
           {/* Category tab strip — 2x2 grid on mobile to keep labels readable */}
           <div style={{
             display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 4,
-            padding: 4, background: '#FFFFFF',
+            padding: 4, background: 'var(--surface-card)',
             border: '1px solid rgba(23,52,4,0.08)', borderRadius: 10, marginBottom: 20,
           }}>
             {TABS.map(tab => {
@@ -201,8 +201,8 @@ export default function FeedbackPage() {
                   onClick={() => { setActiveTab(tab.id); setStatus('idle') }}
                   style={{
                     fontFamily: 'var(--font-space-grotesk)', fontWeight: isActive ? 600 : 500,
-                    fontSize: 13.5, color: isActive ? '#173404' : '#5F5E5A',
-                    background: isActive ? '#F5F1E8' : 'transparent',
+                    fontSize: 13.5, color: isActive ? 'var(--deep)' : 'var(--text-muted)',
+                    background: isActive ? 'var(--surface-sunken)' : 'transparent',
                     border: 'none', padding: '10px 12px', borderRadius: 7,
                     cursor: 'pointer', display: 'flex', alignItems: 'center',
                     justifyContent: 'center', gap: 7, whiteSpace: 'nowrap',
@@ -217,18 +217,18 @@ export default function FeedbackPage() {
           </div>
 
           {/* Form card */}
-          <div style={{ background: '#FFFFFF', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, overflow: 'hidden' }}>
+          <div style={{ background: 'var(--surface-card)', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, overflow: 'hidden' }}>
 
             {status === 'sent' ? (
               <div style={{ textAlign: 'center', padding: '56px 32px' }}>
                 <div style={{ width: 48, height: 48, background: 'rgba(23,52,4,0.08)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                  <CheckCircle size={22} color="#173404" />
+                  <CheckCircle size={22} color="var(--deep)" />
                 </div>
-                <p style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 700, color: '#2C2C2A', marginBottom: 6 }}>Thank you!</p>
-                <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 14, color: '#5F5E5A', marginBottom: 24, lineHeight: 1.6 }}>
+                <p style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 700, color: 'var(--text-body)', marginBottom: 6 }}>Thank you!</p>
+                <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 14, color: 'var(--text-muted)', marginBottom: 24, lineHeight: 1.6 }}>
                   Your feedback has been received. We really appreciate it.
                 </p>
-                <button onClick={() => setStatus('idle')} style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13, color: '#e8604c', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>
+                <button onClick={() => setStatus('idle')} style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13, color: 'var(--terra)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>
                   Submit another
                 </button>
               </div>
@@ -238,12 +238,12 @@ export default function FeedbackPage() {
 
                   {/* Intro */}
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, paddingBottom: 18, borderBottom: '1px solid rgba(23,52,4,0.08)' }}>
-                    <div style={{ width: 36, height: 36, background: '#F5F1E8', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <meta.icon size={18} color="#173404" />
+                    <div style={{ width: 36, height: 36, background: 'var(--surface-sunken)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <meta.icon size={18} color="var(--deep)" />
                     </div>
                     <div style={{ paddingTop: 2 }}>
-                      <div style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, fontSize: 15, color: '#2C2C2A', marginBottom: 2 }}>{meta.introTitle}</div>
-                      <div style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 13.5, color: '#5F5E5A', lineHeight: 1.5 }}>{meta.introDesc}</div>
+                      <div style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, fontSize: 15, color: 'var(--text-body)', marginBottom: 2 }}>{meta.introTitle}</div>
+                      <div style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 13.5, color: 'var(--text-muted)', lineHeight: 1.5 }}>{meta.introDesc}</div>
                     </div>
                   </div>
 
@@ -258,7 +258,7 @@ export default function FeedbackPage() {
                       <textarea value={bugHow} onChange={e => setBugHow(e.target.value)} placeholder="Describe what went wrong. Include any error messages you saw." style={{ ...inputStyle, minHeight: 110, resize: 'vertical' }} />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-                      <label style={labelStyle}>Where did this happen? <span style={{ fontWeight: 400, fontSize: 12, color: '#8A8986' }}>Optional</span></label>
+                      <label style={labelStyle}>Where did this happen? <span style={{ fontWeight: 400, fontSize: 12, color: 'var(--text-subtle)' }}>Optional</span></label>
                       <select value={bugPage} onChange={e => setBugPage(e.target.value)} style={inputStyle}>
                         <option value="">Choose a page…</option>
                         {PAGES.map(p => <option key={p} value={p}>{p}</option>)}
@@ -273,11 +273,11 @@ export default function FeedbackPage() {
                       <input type="text" value={funderName} onChange={e => setFunderName(e.target.value)} placeholder="e.g. Esmée Fairbairn Foundation" style={inputStyle} />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-                      <label style={labelStyle}>Website <span style={{ fontWeight: 400, fontSize: 12, color: '#8A8986' }}>Optional</span></label>
+                      <label style={labelStyle}>Website <span style={{ fontWeight: 400, fontSize: 12, color: 'var(--text-subtle)' }}>Optional</span></label>
                       <input type="url" value={funderUrl} onChange={e => setFunderUrl(e.target.value)} placeholder="https://…" style={inputStyle} />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-                      <label style={labelStyle}>Why is it relevant? <span style={{ fontWeight: 400, fontSize: 12, color: '#8A8986' }}>Optional</span></label>
+                      <label style={labelStyle}>Why is it relevant? <span style={{ fontWeight: 400, fontSize: 12, color: 'var(--text-subtle)' }}>Optional</span></label>
                       <textarea value={funderWhy} onChange={e => setFunderWhy(e.target.value)} placeholder="What sector do they fund? Who can apply?" style={{ ...inputStyle, minHeight: 90, resize: 'vertical' }} />
                     </div>
                   </>)}
@@ -296,7 +296,7 @@ export default function FeedbackPage() {
                   )}
 
                   {status === 'error' && (
-                    <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 12.5, color: '#993C1D' }}>
+                    <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 12.5, color: 'var(--state-error)' }}>
                       Something went wrong — please try again or email{' '}
                       <a href={`mailto:${brand.email.hello}`} style={{ color: 'inherit' }}>{brand.email.hello}</a>
                     </p>
@@ -304,8 +304,8 @@ export default function FeedbackPage() {
                 </div>
 
                 {/* Form footer — stacks on mobile so the submit button stays full-width and reachable */}
-                <div style={{ background: '#FAFAF7', borderTop: '1px solid rgba(23,52,4,0.08)', padding: isMobile ? '14px 18px' : '14px 26px', display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'center', justifyContent: 'space-between', gap: isMobile ? 12 : 16 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-dm-sans)', fontSize: 12.5, color: '#8A8986' }}>
+                <div style={{ background: 'var(--surface-page)', borderTop: '1px solid rgba(23,52,4,0.08)', padding: isMobile ? '14px 18px' : '14px 26px', display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'center', justifyContent: 'space-between', gap: isMobile ? 12 : 16 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-dm-sans)', fontSize: 12.5, color: 'var(--text-subtle)' }}>
                     <CheckCircle size={13} />
                     Your account and browser details are attached automatically
                   </div>
@@ -314,7 +314,7 @@ export default function FeedbackPage() {
                     disabled={status === 'sending' || !isValid()}
                     style={{
                       fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 14,
-                      background: '#8ECB3C', color: '#173404', border: 'none',
+                      background: '#8ECB3C', color: 'var(--deep)', border: 'none',
                       padding: '10px 20px', borderRadius: 8,
                       cursor: (status === 'sending' || !isValid()) ? 'not-allowed' : 'pointer',
                       display: 'inline-flex', alignItems: 'center', gap: 8, transition: 'filter 0.15s',
@@ -329,11 +329,11 @@ export default function FeedbackPage() {
           </div>
 
           {/* Email fallback */}
-          <div style={{ marginTop: 24, padding: '16px 20px', background: '#FFFFFF', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 12, fontFamily: 'var(--font-dm-sans)', fontSize: 13.5, color: '#5F5E5A' }}>
-            <Mail size={16} color="#8A8986" style={{ flexShrink: 0 }} />
+          <div style={{ marginTop: 24, padding: '16px 20px', background: 'var(--surface-card)', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 12, fontFamily: 'var(--font-dm-sans)', fontSize: 13.5, color: 'var(--text-muted)' }}>
+            <Mail size={16} color="var(--text-subtle)" style={{ flexShrink: 0 }} />
             <span>
               Need a faster response, or prefer email? Write to{' '}
-              <a href={`mailto:${brand.email.hello}`} style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, color: '#173404', textDecoration: 'none' }}>
+              <a href={`mailto:${brand.email.hello}`} style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, color: 'var(--deep)', textDecoration: 'none' }}>
                 {brand.email.hello}
               </a>
             </span>
@@ -342,16 +342,16 @@ export default function FeedbackPage() {
         </div>
 
         {/* RIGHT: recent submissions */}
-        <aside style={{ background: '#FFFFFF', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, padding: '20px 22px', position: 'sticky', top: 24 }}>
+        <aside style={{ background: 'var(--surface-card)', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, padding: '20px 22px', position: 'sticky', top: 24 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 14, paddingBottom: 14, borderBottom: '1px solid rgba(23,52,4,0.08)' }}>
-            <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, fontSize: 14.5, color: '#2C2C2A' }}>Your recent submissions</span>
+            <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, fontSize: 14.5, color: 'var(--text-body)' }}>Your recent submissions</span>
             {submissions.length > 0 && (
-              <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 12, color: '#8A8986' }}>{submissions.length} total</span>
+              <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 12, color: 'var(--text-subtle)' }}>{submissions.length} total</span>
             )}
           </div>
 
           {submissions.length === 0 ? (
-            <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 13, color: '#8A8986', lineHeight: 1.6, paddingTop: 4 }}>
+            <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 13, color: 'var(--text-subtle)', lineHeight: 1.6, paddingTop: 4 }}>
               Nothing yet — we&apos;ll show your submissions here once you send one.
             </p>
           ) : (
@@ -366,7 +366,7 @@ export default function FeedbackPage() {
               return (
                 <div key={sub.id} style={{ padding: i === 0 ? '0 0 12px' : '12px 0', borderBottom: i < submissions.length - 1 ? '1px solid rgba(23,52,4,0.08)' : 'none' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 5 }}>
-                    <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 11.5, color: '#5F5E5A', display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 11.5, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 5 }}>
                       <Icon size={11} style={{ opacity: 0.7 }} />
                       {TAB_TYPE_LABELS[sub.type]}
                     </span>
@@ -374,10 +374,10 @@ export default function FeedbackPage() {
                       {sc.label}
                     </span>
                   </div>
-                  <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 13, color: '#2C2C2A', lineHeight: 1.45, marginBottom: 4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                  <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 13, color: 'var(--text-body)', lineHeight: 1.45, marginBottom: 4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                     {preview}
                   </p>
-                  <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 11.5, color: '#8A8986' }}>
+                  <span style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 11.5, color: 'var(--text-subtle)' }}>
                     Sent {formatDate(sub.created_at)}
                   </span>
                 </div>
