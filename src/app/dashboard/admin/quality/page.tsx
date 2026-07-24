@@ -209,7 +209,7 @@ export default async function QualityPage() {
                           className="h-full rounded-full"
                           style={{
                             width: `${f.pct}%`,
-                            background: f.pct >= 90 ? '#8ECB3C' : f.pct >= 70 ? 'var(--ordinal-3-good)' : 'var(--terra)',
+                            background: f.pct >= 90 ? '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ : f.pct >= 70 ? 'var(--ordinal-3-good)' : 'var(--terra)',
                           }}
                         />
                       </div>
@@ -347,7 +347,7 @@ function DistTable({
                 className="h-full rounded-full"
                 style={{
                   width: `${(r.count / max) * 100}%`,
-                  background: r.count >= 10 ? '#8ECB3C' : r.count >= 3 ? 'var(--ordinal-3-good)' : 'var(--terra)',
+                  background: r.count >= 10 ? '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ : r.count >= 3 ? 'var(--ordinal-3-good)' : 'var(--terra)',
                 }}
               />
             </div>

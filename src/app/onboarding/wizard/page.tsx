@@ -20,7 +20,7 @@ import { brand } from '@/config/brand'
    ═══════════════════════════════════════════════ */
 
 const T = {
-  lime:          '#8ECB3C',
+  lime:          '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */,
   greenMid:      'var(--sage-deep)',
   greenDeep:     'var(--deep)',
   greenTextDeep: 'var(--state-success)',
@@ -1696,7 +1696,7 @@ function StepSectors({ impactSectors, nicheTags, excludedNicheTags, toggleSector
       {nicheSectors.length > 0 && (
         <div style={{
           background: 'var(--surface-sunken)',
-          borderLeft: '3px solid #8ECB3C',
+          borderLeft: '3px solid #8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */,
           borderRadius: 8,
           padding: '12px 14px',
           marginBottom: 20,
@@ -1730,7 +1730,7 @@ function StepSectors({ impactSectors, nicheTags, excludedNicheTags, toggleSector
                   {opts.map(opt => {
                     const isIncluded = nicheTags.includes(opt.value)
                     const isExcluded = excludedNicheTags.includes(opt.value)
-                    const borderCol = isIncluded ? '#8ECB3C' : isExcluded ? 'var(--terra)' : 'var(--border-warm)'
+                    const borderCol = isIncluded ? '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ : isExcluded ? 'var(--terra)' : 'var(--border-warm)'
                     const bgCol     = isIncluded ? 'var(--type-inkind-pale)' : isExcluded ? 'var(--state-error-pale)' : 'var(--surface-page)'
                     const txtCol    = isIncluded ? 'var(--state-success)' : isExcluded ? 'var(--state-error)' : T.textSecondary
                     return (

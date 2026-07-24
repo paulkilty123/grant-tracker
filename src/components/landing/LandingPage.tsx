@@ -322,11 +322,11 @@ export default function LandingPage() {
                   style={{
                     fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif',
                     color: (link as any).cohort ? 'var(--deep)' : isActive ? 'var(--text-body)' : 'var(--text-muted)',
-                    borderBottom: isActive ? '2px solid #8ECB3C' : '2px solid transparent',
+                    borderBottom: isActive ? '2px solid #8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ : '2px solid transparent',
                     transition: 'color 0.2s, border-color 0.2s',
                   }}
                 >
-                  {(link as any).cohort && <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#8ECB3C' }} />}
+                  {(link as any).cohort && <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }} />}
                   {link.label}
                 </a>
               )
@@ -337,13 +337,13 @@ export default function LandingPage() {
             <Link href="/auth/login" className="text-text-body font-semibold text-base hover:opacity-80 transition-opacity no-underline" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>
               Sign in
             </Link>
-            <Link href={COHORT_URL} onClick={trackCohortApply} className="bg-[#8ECB3C] text-deep px-8 py-3 rounded-[10px] font-bold text-base hover:opacity-90 transition-all no-underline">
+            <Link href={COHORT_URL} onClick={trackCohortApply} className="bg-[#8ECB3C] text-deep px-8 py-3 rounded-[10px] font-bold text-base hover:opacity-90 transition-all no-underline" /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */>
               Apply to join
             </Link>
           </div>
           {/* Mobile */}
           <div className="flex lg:hidden items-center gap-3">
-            <Link href={COHORT_URL} onClick={trackCohortApply} className="bg-[#8ECB3C] text-deep px-4 py-2 rounded-[10px] text-sm font-bold hover:opacity-90 transition-all no-underline">Apply to join</Link>
+            <Link href={COHORT_URL} onClick={trackCohortApply} className="bg-[#8ECB3C] text-deep px-4 py-2 rounded-[10px] text-sm font-bold hover:opacity-90 transition-all no-underline" /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */>Apply to join</Link>
             <button onClick={() => setMobileOpen(o => !o)} className="p-1 text-text-body" aria-label="Toggle menu">
               {mobileOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
@@ -361,7 +361,7 @@ export default function LandingPage() {
               ))}
               <div className="flex flex-col gap-2 pt-2">
                 <Link href="/auth/login" onClick={() => setMobileOpen(false)} className="text-center text-sm text-text-muted py-2 border border-slate-200 rounded-[10px]">Sign in</Link>
-                <Link href={COHORT_URL} onClick={() => { trackCohortApply(); setMobileOpen(false) }} className="bg-[#8ECB3C] text-deep rounded-[10px] text-center text-sm font-bold py-2 hover:opacity-90 transition-colors">Apply to join</Link>
+                <Link href={COHORT_URL} onClick={() => { trackCohortApply(); setMobileOpen(false) }} className="bg-[#8ECB3C] text-deep rounded-[10px] text-center text-sm font-bold py-2 hover:opacity-90 transition-colors" /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */>Apply to join</Link>
               </div>
             </div>
           </motion.div>
@@ -376,7 +376,7 @@ export default function LandingPage() {
           <motion.div {...fadeUp(0)} className="flex flex-col justify-start">
             {/* Cohort status pill */}
             <div className="flex items-center gap-2 bg-state-info-pale text-state-info px-4 py-2.5 rounded-full w-fit mb-10">
-              <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#8ECB3C' }} />
+              <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }} />
               <p className="font-bold text-xs tracking-wide uppercase">
                 Founding cohort, applications open
               </p>
@@ -387,7 +387,7 @@ export default function LandingPage() {
               style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: 'clamp(52px, 9vw, 88px)', letterSpacing: '-0.04em' }}
             >
               Funding,<br/>
-              <span style={{ color: '#8ECB3C' }}>matched</span><br/>
+              <span style={{ color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }}>matched</span><br/>
               for you.
             </h1>
             {/* Subtext */}
@@ -400,7 +400,7 @@ export default function LandingPage() {
                 href={COHORT_URL}
                 onClick={trackCohortApply}
                 className="text-deep px-9 py-4 rounded-[10px] font-bold text-base hover:opacity-95 transition-all no-underline"
-                style={{ background: '#8ECB3C' }}
+                style={{ background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }}
               >
                 Apply to join
               </Link>
@@ -423,7 +423,7 @@ export default function LandingPage() {
                   <p className="text-text-muted font-medium mt-0.5 text-sm">Match summary</p>
                 </div>
                 <div className="bg-sage-pale px-4 py-1.5 rounded-full flex items-center gap-1.5 flex-shrink-0 self-start">
-                  <span className="w-2 h-2 rounded-full bg-[#8ECB3C] animate-pulse" />
+                  <span className="w-2 h-2 rounded-full bg-[#8ECB3C] animate-pulse" /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ />
                   <span className="text-text-body font-bold text-xs tracking-tight">Pipeline: Draft</span>
                 </div>
               </div>
@@ -432,12 +432,12 @@ export default function LandingPage() {
                 <div className="bg-surface-pill rounded-2xl p-4 sm:p-5 min-w-0">
                   <p className="text-text-muted text-xs font-semibold mb-1">Eligibility match</p>
                   <div className="flex items-baseline gap-1.5">
-                    <span className="text-5xl font-bold text-[#8ECB3C]" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>94%</span>
+                    <span className="text-5xl font-bold text-[#8ECB3C]" /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>94%</span>
                     <span className="text-text-muted font-bold text-sm">Match</span>
                   </div>
                   <div className="mt-4">
                     <div className="h-1.5 w-full bg-border-warm rounded-full overflow-hidden">
-                      <div className="h-full bg-[#8ECB3C] rounded-full" style={{ width: '94%' }} />
+                      <div className="h-full bg-[#8ECB3C] rounded-full" /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ style={{ width: '94%' }} />
                     </div>
                   </div>
                   <p className="text-[11px] text-text-muted mt-3 font-semibold italic">Across 12 eligibility checks</p>
@@ -564,7 +564,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-14">
             {stats.map((s, i) => (
               <motion.div key={s.label} {...fadeInView(i * 0.1)}>
-                <p className="leading-none mb-3" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 'clamp(40px, 4vw, 56px)', color: '#8ECB3C', letterSpacing: '-0.02em' }}>{s.value}</p>
+                <p className="leading-none mb-3" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 'clamp(40px, 4vw, 56px)', color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, letterSpacing: '-0.02em' }}>{s.value}</p>
                 <p style={{ fontSize: 15, color: 'var(--sage-pale)', lineHeight: 1.5 }}>{s.label}</p>
               </motion.div>
             ))}
@@ -579,10 +579,10 @@ export default function LandingPage() {
           {/* Header row */}
           <motion.div {...fadeInView(0)} className="grid lg:grid-cols-2 gap-8 items-end mb-14">
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest mb-5" style={{ color: '#8ECB3C' }}>Process</p>
+              <p className="text-xs font-bold uppercase tracking-widest mb-5" style={{ color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }}>Process</p>
               <h2 className="font-bold leading-tight" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: 'var(--text-body)' }}>
                 Setup, search and<br/>
-                <span style={{ color: '#8ECB3C' }}>track what matters</span>
+                <span style={{ color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }}>track what matters</span>
               </h2>
             </div>
             <div className="lg:pb-2">
@@ -628,9 +628,9 @@ export default function LandingPage() {
           {/* Header row — matches Process section */}
           <motion.div {...fadeInView(0)} className="grid lg:grid-cols-2 gap-8 items-end mb-14">
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest mb-5" style={{ color: '#8ECB3C' }}>Funding Types</p>
+              <p className="text-xs font-bold uppercase tracking-widest mb-5" style={{ color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }}>Funding Types</p>
               <h2 className="font-bold leading-tight" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: 'var(--text-body)' }}>
-                Not just grants,<br/><span style={{ color: '#8ECB3C' }}>the full picture.</span>
+                Not just grants,<br/><span style={{ color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }}>the full picture.</span>
               </h2>
             </div>
             <div className="lg:pb-2">
@@ -715,9 +715,9 @@ export default function LandingPage() {
 
               {/* Left: copy */}
               <motion.div {...fadeInView(0)}>
-                <p className="text-xs font-bold uppercase tracking-widest mb-5" style={{ color: '#8ECB3C' }}>Features</p>
+                <p className="text-xs font-bold uppercase tracking-widest mb-5" style={{ color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }}>Features</p>
                 <h2 className="font-bold leading-tight mb-5" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif', fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: 'var(--text-body)' }}>
-                  Search &amp; track,<br/><span style={{ color: '#8ECB3C' }}>in one place.</span>
+                  Search &amp; track,<br/><span style={{ color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }}>in one place.</span>
                 </h2>
                 <ul className="space-y-6 mb-10">
                   {[
@@ -738,7 +738,7 @@ export default function LandingPage() {
                     </li>
                   ))}
                 </ul>
-                <Link href={COHORT_URL} onClick={trackCohortApply} className="inline-flex items-center gap-3 bg-[#8ECB3C] text-deep px-7 py-4 rounded-[10px] font-bold text-base hover:opacity-90 transition-all no-underline">
+                <Link href={COHORT_URL} onClick={trackCohortApply} className="inline-flex items-center gap-3 bg-[#8ECB3C] text-deep px-7 py-4 rounded-[10px] font-bold text-base hover:opacity-90 transition-all no-underline" /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */>
                   Apply to join <ArrowRight className="w-4 h-4" />
                 </Link>
               </motion.div>
@@ -752,7 +752,7 @@ export default function LandingPage() {
                     <div className="bg-white rounded-2xl p-4" style={{ transform: 'rotate(7deg)', boxShadow: '0 8px 32px rgba(0,0,0,0.08)' }}>
                       <div className="flex items-center gap-2 mb-3">
                         <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(132,204,22,0.15)' }}>
-                          <LayoutGrid className="w-3.5 h-3.5" style={{ color: '#8ECB3C' }} />
+                          <LayoutGrid className="w-3.5 h-3.5" style={{ color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }} />
                         </div>
                         <p className="text-[11px] font-bold text-text-body uppercase tracking-wider">Dashboard</p>
                       </div>
@@ -762,14 +762,14 @@ export default function LandingPage() {
                           <p className="text-[9px] text-text-muted uppercase tracking-wide font-medium">Won</p>
                         </div>
                         <div className="rounded-xl p-2.5" style={{ background: 'rgba(132,204,22,0.15)' }}>
-                          <p className="text-[17px] font-bold leading-tight" style={{ color: '#8ECB3C' }}>68%</p>
-                          <p className="text-[9px] uppercase tracking-wide font-medium" style={{ color: '#8ECB3C' }}>Success</p>
+                          <p className="text-[17px] font-bold leading-tight" style={{ color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }}>68%</p>
+                          <p className="text-[9px] uppercase tracking-wide font-medium" style={{ color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }}>Success</p>
                         </div>
                       </div>
                       <p className="text-[9px] text-text-muted mb-2">Funding won — last 7 months</p>
                       <div className="flex items-end gap-1" style={{ height: '40px' }}>
                         {[40, 25, 55, 35, 70, 60, 85].map((h, i) => (
-                          <div key={i} className="flex-1 rounded-sm" style={{ height: `${h}%`, background: i === 6 ? '#8ECB3C' : 'rgba(132,204,22,0.35)' }} />
+                          <div key={i} className="flex-1 rounded-sm" style={{ height: `${h}%`, background: i === 6 ? '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ : 'rgba(132,204,22,0.35)' }} />
                         ))}
                       </div>
                     </div>
@@ -790,7 +790,7 @@ export default function LandingPage() {
                         {['Identified', 'Applying', 'Submitted'].map((label) => (
                           <div key={label} className="flex items-center justify-between rounded-xl px-2.5 py-1.5" style={{ background: 'var(--surface-pill)' }}>
                             <span className="text-[10px] text-text-body">{label}</span>
-                            <div className="w-2 h-2 rounded-full" style={{ background: label === 'Applying' ? '#8ECB3C' : 'var(--border-warm)' }} />
+                            <div className="w-2 h-2 rounded-full" style={{ background: label === 'Applying' ? '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ : 'var(--border-warm)' }} />
                           </div>
                         ))}
                       </div>
@@ -886,26 +886,26 @@ export default function LandingPage() {
 
             {/* LEFT: cream panel */}
             <motion.div {...fadeInView(0)} style={{ background: 'var(--surface-sunken)', padding: '56px 44px' }}>
-              <p style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 12, color: '#8ECB3C', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 16 }}>About</p>
+              <p style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 12, color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 16 }}>About</p>
               <h2 style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(32px, 4.5vw, 56px)', lineHeight: 1.05, letterSpacing: '-0.03em', color: 'var(--text-body)', margin: '0 0 28px 0' }}>
-                Built from<br /><span style={{ color: '#8ECB3C' }}>the inside.</span>
+                Built from<br /><span style={{ color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }}>the inside.</span>
               </h2>
               <blockquote style={{ position: 'relative', paddingLeft: '42px', paddingRight: '12px', marginTop: 8 }}>
-                <span className="select-none" style={{ position: 'absolute', left: 0, top: 2, fontSize: '58px', color: '#8ECB3C', fontFamily: "'Fraunces', Georgia, serif", lineHeight: 0.7, fontWeight: 500 }}>&ldquo;</span>
+                <span className="select-none" style={{ position: 'absolute', left: 0, top: 2, fontSize: '58px', color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, fontFamily: "'Fraunces', Georgia, serif", lineHeight: 0.7, fontWeight: 500 }}>&ldquo;</span>
                 <p style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 18, color: 'var(--text-body)', lineHeight: 1.55, letterSpacing: '-0.005em', margin: '0 0 16px 0' }}>
                   I&apos;ve spent 20 years in the social enterprise and charity sector, co-founding a youth music organisation, leading development strategy at local charities, and driving fundraising across a global co-working network for social entrepreneurs.
                 </p>
                 <p style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 18, color: 'var(--text-body)', lineHeight: 1.55, letterSpacing: '-0.005em', margin: '0 0 4px 0' }}>
                   The frustration was the same every time: a fragmented funding ecosystem that forced people like me to spend more time hunting opportunities than delivering impactful work.
                 </p>
-                <div className="select-none" style={{ textAlign: 'right', fontFamily: "'Fraunces', Georgia, serif", fontSize: '58px', color: '#8ECB3C', lineHeight: 0.5, fontWeight: 500, marginTop: 16, paddingRight: 4 }}>&rdquo;</div>
+                <div className="select-none" style={{ textAlign: 'right', fontFamily: "'Fraunces', Georgia, serif", fontSize: '58px', color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, lineHeight: 0.5, fontWeight: 500, marginTop: 16, paddingRight: 4 }}>&rdquo;</div>
               </blockquote>
               <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 13, fontWeight: 500, color: 'var(--text-muted)', marginTop: 18 }}>Paul Kilty, founder</p>
             </motion.div>
 
             {/* RIGHT: dark forest panel */}
             <motion.div {...fadeInView(0.1)} style={{ background: 'var(--deep)', padding: '56px 44px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div style={{ background: '#8ECB3C', borderRadius: 14, padding: '32px 32px 26px' }}>
+              <div style={{ background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, borderRadius: 14, padding: '32px 32px 26px' }}>
                 <p style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 'clamp(48px, 5vw, 64px)', color: 'var(--deep)', letterSpacing: '-0.03em', lineHeight: 1, marginBottom: 12 }}>£8bn+</p>
                 <p style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 11.5, color: 'var(--deep)', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', opacity: 0.8 }}>Awarded by UK trusts &amp; foundations annually</p>
               </div>
@@ -924,14 +924,14 @@ export default function LandingPage() {
                       <span key={label} style={{ display: 'inline-flex', alignItems: 'center', padding: '8px 16px', background: 'transparent', border: '0.5px solid rgba(142,203,60,0.35)', borderRadius: 20, fontFamily: 'var(--font-space-grotesk)', fontSize: 13, fontWeight: 500, color: 'var(--sage-pale)', letterSpacing: '-0.005em', whiteSpace: 'nowrap' }}>{label}</span>
                     )
                     const chevron = (i: number) => (
-                      <svg key={`c${i}`} width="10" height="14" viewBox="0 0 10 14" fill="none" stroke="#8ECB3C" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.7 }}><polyline points="2 2 8 7 2 12"/></svg>
+                      <svg key={`c${i}`} width="10" height="14" viewBox="0 0 10 14" fill="none" stroke="#8ECB3C" /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.7 }}><polyline points="2 2 8 7 2 12"/></svg>
                     )
                     return [
                       ghostPill('CIC'), chevron(0),
                       ghostPill('Arts & culture'), chevron(1),
                       ghostPill('London'), chevron(2),
                       ghostPill('Early-stage'), chevron(3),
-                      <span key="result" style={{ display: 'inline-flex', alignItems: 'center', padding: '8px 16px', background: '#8ECB3C', border: '0.5px solid #8ECB3C', borderRadius: 20, fontFamily: 'var(--font-space-grotesk)', fontSize: 13, fontWeight: 500, color: 'var(--deep)', letterSpacing: '-0.005em', whiteSpace: 'nowrap' }}>£10k Arts Grant</span>
+                      <span key="result" style={{ display: 'inline-flex', alignItems: 'center', padding: '8px 16px', background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, border: '0.5px solid #8ECB3C', borderRadius: 20, fontFamily: 'var(--font-space-grotesk)', fontSize: 13, fontWeight: 500, color: 'var(--deep)', letterSpacing: '-0.005em', whiteSpace: 'nowrap' }}>£10k Arts Grant</span>
                     ]
                   })()}
                 </div>
@@ -948,9 +948,9 @@ export default function LandingPage() {
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid lg:grid-cols-2 gap-8 items-end mb-14">
             <motion.div {...fadeInView(0)}>
-              <p className="text-sm font-semibold tracking-widest uppercase mb-4" style={{ color: '#8ECB3C', fontFamily: 'var(--font-space-grotesk)' }}>Who it&apos;s for</p>
+              <p className="text-sm font-semibold tracking-widest uppercase mb-4" style={{ color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, fontFamily: 'var(--font-space-grotesk)' }}>Who it&apos;s for</p>
               <h2 className="leading-tight" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: 'var(--text-body)' }}>
-                Funding matched to<br/><span style={{ color: '#8ECB3C' }}>your structure.</span>
+                Funding matched to<br/><span style={{ color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }}>your structure.</span>
               </h2>
             </motion.div>
             <motion.div {...fadeInView(0.1)}>
@@ -992,9 +992,9 @@ export default function LandingPage() {
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid lg:grid-cols-2 gap-8 items-end mb-14">
             <motion.div {...fadeInView(0)}>
-              <p className="text-sm font-semibold tracking-widest uppercase mb-4" style={{ color: '#8ECB3C', fontFamily: 'var(--font-space-grotesk)' }}>Values</p>
+              <p className="text-sm font-semibold tracking-widest uppercase mb-4" style={{ color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, fontFamily: 'var(--font-space-grotesk)' }}>Values</p>
               <h2 className="leading-tight" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: 'var(--text-body)' }}>
-                How we <span style={{ color: '#8ECB3C' }}>work.</span>
+                How we <span style={{ color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }}>work.</span>
               </h2>
             </motion.div>
             <motion.div {...fadeInView(0.1)}>
@@ -1010,7 +1010,7 @@ export default function LandingPage() {
               {
                 label: 'Honest',
                 body: "We don't inflate match scores or dress up poor-fit grants. If something isn't right for you, we'd rather tell you than waste your time.",
-                bg: 'var(--deep)', titleColor: '#8ECB3C', bodyColor: 'var(--sage-pale)',
+                bg: 'var(--deep)', titleColor: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, bodyColor: 'var(--sage-pale)',
               },
               {
                 label: 'Practical',
@@ -1037,7 +1037,7 @@ export default function LandingPage() {
                 <h2 className="font-bold leading-tight" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 'clamp(20px, 2vw, 28px)', fontWeight: 600, letterSpacing: '-0.02em', color: 'var(--text-body)' }}>
                   We use AI so you can<br />
                   spend less time searching.<br />
-                  <span style={{ color: '#8ECB3C' }}>Not less time thinking.</span>
+                  <span style={{ color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }}>Not less time thinking.</span>
                 </h2>
               </div>
               <div className="space-y-4">
@@ -1063,7 +1063,7 @@ export default function LandingPage() {
                 <p className="font-bold text-xs tracking-wide uppercase">Founding cohort, applications open</p>
               </div>
               <h2 style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(32px, 4.5vw, 56px)', lineHeight: 1.1, letterSpacing: '-0.03em', color: 'var(--text-body)', maxWidth: 640, margin: '0 auto 20px' }}>
-                Building this with a <span style={{ color: '#8ECB3C' }}>small group.</span>
+                Building this with a <span style={{ color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }}>small group.</span>
               </h2>
               <p style={{ fontSize: 16, color: 'var(--text-muted)', lineHeight: 1.6, maxWidth: 540, margin: '0 auto 12px' }}>
                 I&apos;m hand-picking 20&ndash;30 organisations to help shape {brand.name} as I build it.
@@ -1074,7 +1074,7 @@ export default function LandingPage() {
               <Link
                 href={COHORT_URL}
                 onClick={trackCohortApply}
-                style={{ background: '#8ECB3C', color: 'var(--deep)', padding: '13px 28px', borderRadius: 10, fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 15, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}
+                style={{ background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, color: 'var(--deep)', padding: '13px 28px', borderRadius: 10, fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 15, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}
               >
                 Apply to join <span>&#8594;</span>
               </Link>
@@ -1088,24 +1088,24 @@ export default function LandingPage() {
         <div className="mx-auto max-w-6xl px-6">
           <motion.div {...fadeInView(0)} className="grid lg:grid-cols-2 gap-16 items-start">
             <div>
-              <p className="text-sm font-semibold tracking-widest uppercase mb-4" style={{ color: '#8ECB3C', fontFamily: 'var(--font-space-grotesk)' }}>Contact</p>
+              <p className="text-sm font-semibold tracking-widest uppercase mb-4" style={{ color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, fontFamily: 'var(--font-space-grotesk)' }}>Contact</p>
               <h2 className="mb-6 leading-tight" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(32px, 4.5vw, 56px)', letterSpacing: '-0.03em', color: 'var(--text-body)' }}>
-                Get in <span style={{ color: '#8ECB3C' }}>touch.</span>
+                Get in <span style={{ color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }}>touch.</span>
               </h2>
               <p className="text-base leading-relaxed mb-10" style={{ color: 'var(--text-muted)' }}>Have a question, partnership idea, or just want to say hello? We&apos;d love to hear from you.</p>
               <div className="space-y-6">
                 <div className="flex items-center gap-4">
                   <div className="flex h-11 w-11 rounded-xl items-center justify-center flex-shrink-0" style={{ background: 'var(--state-success-pale)' }}>
-                    <Mail size={18} style={{ color: '#8ECB3C' }} />
+                    <Mail size={18} style={{ color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }} />
                   </div>
                   <div>
                     <p className="text-sm font-semibold mb-0.5" style={{ color: 'var(--text-body)', fontFamily: 'var(--font-space-grotesk)' }}>Email us</p>
-                    <a href={`mailto:${brand.email.hello}`} className="text-sm hover:underline" style={{ color: '#8ECB3C' }}>{brand.email.hello}</a>
+                    <a href={`mailto:${brand.email.hello}`} className="text-sm hover:underline" style={{ color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }}>{brand.email.hello}</a>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="flex h-11 w-11 rounded-xl items-center justify-center flex-shrink-0" style={{ background: 'var(--state-success-pale)' }}>
-                    <MessageSquare size={18} style={{ color: '#8ECB3C' }} />
+                    <MessageSquare size={18} style={{ color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }} />
                   </div>
                   <div>
                     <p className="text-sm font-semibold mb-0.5" style={{ color: 'var(--text-body)', fontFamily: 'var(--font-space-grotesk)' }}>Response time</p>
@@ -1126,11 +1126,11 @@ export default function LandingPage() {
         <div className="mx-auto max-w-6xl px-6">
           <motion.div {...fadeInView(0)}>
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-7 text-xs font-semibold uppercase tracking-wider" style={{ background: 'rgba(142,203,60,0.15)', color: 'var(--sage-pale)', fontFamily: 'var(--font-space-grotesk)' }}>
-              <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#8ECB3C' }} />
+              <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }} />
               Founding cohort, applications open
             </div>
             <h2 className="mb-5 leading-tight" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 'clamp(32px, 5vw, 56px)', letterSpacing: '-0.025em', color: 'var(--surface-card)' }}>
-              Help us build <span style={{ color: '#8ECB3C' }}>something better.</span>
+              Help us build <span style={{ color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }}>something better.</span>
             </h2>
             <p className="mx-auto mb-8 max-w-md text-base leading-relaxed" style={{ color: 'var(--sage-pale)' }}>
               We&apos;re hand-picking 20&ndash;30 organisations for the founding cohort. Free for six months.
@@ -1139,7 +1139,7 @@ export default function LandingPage() {
               href={COHORT_URL}
               onClick={trackCohortApply}
               className="inline-flex items-center gap-2 rounded-[10px] px-9 py-4 text-base font-bold transition-opacity hover:opacity-90 no-underline"
-              style={{ background: '#8ECB3C', color: 'var(--deep)', fontFamily: 'var(--font-space-grotesk)' }}
+              style={{ background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, color: 'var(--deep)', fontFamily: 'var(--font-space-grotesk)' }}
             >
               Apply to join <ArrowRight className="w-4 h-4" />
             </Link>

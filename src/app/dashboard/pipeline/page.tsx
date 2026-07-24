@@ -20,11 +20,11 @@ import { Sparkles, Loader2, Link, ArrowRight, Calendar, AlarmClock, X as XIcon, 
 import { PipelineModal, STAGE_ICONS, getWritingStage } from '@/components/PipelineModal'
 
 const STAGE_BG_HEX: Record<string, string> = {
-  identified: '#F5F1E8',
-  applying:   '#F1F7E4',
-  submitted:  '#DFEDCC',
-  won:        '#EAF3DE',
-  declined:   '#FAECE7',
+  identified: '#F5F1E8' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */,
+  applying:   '#F1F7E4' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */,
+  submitted:  '#DFEDCC' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */,
+  won:        '#EAF3DE' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */,
+  declined:   '#FAECE7' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */,
 }
 
 const STAGE_VOCAB: Record<string, string> = {
@@ -130,7 +130,7 @@ function PipelineCard({
       {/* Amount */}
       {amountStr && (
         <p className={cn('text-base font-bold mb-1',
-          isDeclined ? 'text-coral-saturated' : 'text-[#8ECB3C]'
+          isDeclined ? 'text-coral-saturated' : 'text-[#8ECB3C]' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */
         )}>
           {amountStr}
         </p>
@@ -157,7 +157,7 @@ function PipelineCard({
         <div className="mt-2.5">
           <div className="h-1 bg-warm overflow-hidden rounded-full">
             <div
-              className={cn('h-full transition-all', item.application_progress >= 83 ? 'bg-[#8ECB3C]' : item.application_progress >= 50 ? 'bg-sage-pale' : 'bg-gold')}
+              className={cn('h-full transition-all', item.application_progress >= 83 ? 'bg-[#8ECB3C]' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ : item.application_progress >= 50 ? 'bg-sage-pale' : 'bg-gold')}
               style={{ width: `${item.application_progress}%` }}
             />
           </div>
@@ -176,7 +176,7 @@ function PipelineCard({
         <NextLink
           href={`/dashboard/applications/${appId}`}
           onClick={e => e.stopPropagation()}
-          className="inline-block mt-1.5 text-[10px] font-semibold text-sage-deep hover:text-[#8ECB3C] transition-colors"
+          className="inline-block mt-1.5 text-[10px] font-semibold text-sage-deep hover:text-[#8ECB3C] transition-colors" /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */
         >
           Continue application →
         </NextLink>
@@ -185,7 +185,7 @@ function PipelineCard({
         <NextLink
           href={`/dashboard/applications/new?pipeline=${item.id}`}
           onClick={e => e.stopPropagation()}
-          className="inline-block mt-1.5 text-[10px] font-semibold text-sage-deep hover:text-[#8ECB3C] transition-colors"
+          className="inline-block mt-1.5 text-[10px] font-semibold text-sage-deep hover:text-[#8ECB3C] transition-colors" /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */
         >
           Start an application →
         </NextLink>
@@ -197,7 +197,7 @@ function PipelineCard({
           target="_blank"
           rel="noopener noreferrer"
           onClick={e => e.stopPropagation()}
-          className="inline-block mt-1.5 text-[10px] font-semibold text-sage-deep hover:text-[#8ECB3C] transition-colors"
+          className="inline-block mt-1.5 text-[10px] font-semibold text-sage-deep hover:text-[#8ECB3C] transition-colors" /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */
         >
           Start application →
         </a>
@@ -209,7 +209,7 @@ function PipelineCard({
         <NextLink
           href={`/dashboard/search?grant=${encodeURIComponent(findFundingId)}`}
           onClick={e => e.stopPropagation()}
-          className="inline-block mt-1.5 ml-3 text-[10px] font-semibold text-sage-deep hover:text-[#8ECB3C] transition-colors"
+          className="inline-block mt-1.5 ml-3 text-[10px] font-semibold text-sage-deep hover:text-[#8ECB3C] transition-colors" /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */
         >
           View in Find Funding →
         </NextLink>
@@ -217,7 +217,7 @@ function PipelineCard({
       {stage.id === 'applying' && (
         <button
           onClick={e => { e.stopPropagation(); onMove(item.id, 'submitted') }}
-          className="ml-3 mt-1.5 text-[10px] font-semibold text-sage-deep hover:text-[#8ECB3C] transition-colors"
+          className="ml-3 mt-1.5 text-[10px] font-semibold text-sage-deep hover:text-[#8ECB3C] transition-colors" /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */
         >
           Mark submitted ✓
         </button>
@@ -394,12 +394,12 @@ function AddModal({
         <div className="overflow-y-auto flex-1">
           {/* Tip: add from funding list */}
           <div className="mx-6 mt-5 flex items-start gap-3 px-4 py-3 rounded-lg border border-sage-deep/30 bg-sage-deep/5">
-            <Sparkles className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: "#8ECB3C" }} strokeWidth={2} />
+            <Sparkles className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: "#8ECB3C" /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }} strokeWidth={2} />
             <div className="text-sm text-text-body leading-relaxed">
               The fastest way to add a grant is directly from the{' '}
               <a
                 href="/dashboard/search"
-                className="underline underline-offset-2 font-semibold inline-flex items-center gap-0.5" style={{ color: "#8ECB3C" }}
+                className="underline underline-offset-2 font-semibold inline-flex items-center gap-0.5" style={{ color: "#8ECB3C" /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }}
               >
                 funding search <ArrowRight className="w-3 h-3" />
               </a>
@@ -423,7 +423,7 @@ function AddModal({
               Auto-fill from URL
             </label>
             <div className="flex gap-2">
-              <div className="flex-1 flex items-center gap-2 border border-border-warm rounded px-3 bg-white focus-within:border-[#8ECB3C] transition-colors">
+              <div className="flex-1 flex items-center gap-2 border border-border-warm rounded px-3 bg-white focus-within:border-[#8ECB3C] transition-colors" /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */>
                 <Link className="w-3.5 h-3.5 text-light flex-shrink-0" />
                 <input
                   type="url"
@@ -773,7 +773,7 @@ export default function PipelinePage() {
             return total > 0 ? (
               <div className="text-right">
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-light">Total Pipeline</p>
-                <p className="text-2xl font-bold leading-tight" style={{ color: "#8ECB3C" }}>{fmt(total)}</p>
+                <p className="text-2xl font-bold leading-tight" style={{ color: "#8ECB3C" /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }}>{fmt(total)}</p>
               </div>
             ) : null
           })()}
@@ -786,7 +786,7 @@ export default function PipelinePage() {
                 : { background: 'var(--surface-card)', color: 'var(--text-body)', borderColor: 'var(--text-body)' }}
               title={showStarredOnly ? 'Show all' : 'Show starred only'}
             >
-              <Star size={14} strokeWidth={2} fill={showStarredOnly ? '#8ECB3C' : 'none'} />
+              <Star size={14} strokeWidth={2} fill={showStarredOnly ? '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ : 'none'} />
               Starred ({items.filter(i => i.starred).length})
             </button>
           )}
@@ -840,7 +840,7 @@ export default function PipelinePage() {
               className="pipeline-col"
               style={{
                 background: STAGE_BG_HEX[stage.id],
-                ...(stage.id === 'won' ? { borderTop: '3px solid #8ECB3C', paddingTop: 13 } : {}),
+                ...(stage.id === 'won' ? { borderTop: '3px solid #8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, paddingTop: 13 } : {}),
               }}
               onDragOver={onColDragOver}
               onDragLeave={onColDragLeave}

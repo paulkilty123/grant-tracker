@@ -341,11 +341,11 @@ export default async function DashboardPage() {
   // Break to coral at Declined is intentional per spec: not the next rung
   // up, a different kind of outcome.
   const stageData = [
-    { id: 'identified', label: 'Identified', bg: '#F5F1E8', labelCol: '#5F5E5A',            valCol: '#2C2C2A',            countCol: '#5F5E5A' },
-    { id: 'applying',   label: 'Applying',   bg: '#EAF3DE', labelCol: '#3F6814',            valCol: '#173404',            countCol: '#3F6814' },
-    { id: 'submitted',  label: 'Submitted',  bg: '#C0DD97', labelCol: '#3F6814',            valCol: '#173404',            countCol: '#3F6814' },
-    { id: 'won',        label: 'Won',        bg: '#639922', labelCol: 'rgba(250,247,242,0.78)', valCol: '#FAF7F2',        countCol: 'rgba(250,247,242,0.78)' },
-    { id: 'declined',   label: 'Declined',   bg: '#FAECE7', labelCol: '#993C1D',            valCol: '#993C1D',            countCol: '#993C1D' },
+    { id: 'identified', label: 'Identified', bg: '#F5F1E8' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, labelCol: '#5F5E5A',            valCol: '#2C2C2A',            countCol: '#5F5E5A' },
+    { id: 'applying',   label: 'Applying',   bg: '#EAF3DE' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, labelCol: '#3F6814',            valCol: '#173404',            countCol: '#3F6814' },
+    { id: 'submitted',  label: 'Submitted',  bg: '#C0DD97' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, labelCol: '#3F6814',            valCol: '#173404',            countCol: '#3F6814' },
+    { id: 'won',        label: 'Won',        bg: '#639922' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, labelCol: 'rgba(250,247,242,0.78)', valCol: '#FAF7F2',        countCol: 'rgba(250,247,242,0.78)' },
+    { id: 'declined',   label: 'Declined',   bg: '#FAECE7' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, labelCol: '#993C1D',            valCol: '#993C1D',            countCol: '#993C1D' },
   ]
   const stageValues = stageData.map(s => ({
     ...s,
@@ -485,7 +485,7 @@ export default async function DashboardPage() {
                 <a
                   href="/dashboard/search"
                   className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity"
-                  style={{ background: '#8ECB3C', color: 'var(--deep)', fontFamily: 'var(--font-space-grotesk)', boxShadow: '0 2px 8px rgba(132,204,22,0.25)' }}
+                  style={{ background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, color: 'var(--deep)', fontFamily: 'var(--font-space-grotesk)', boxShadow: '0 2px 8px rgba(132,204,22,0.25)' }}
                 >
                   See my matches
                   <ArrowRight className="w-4 h-4" />
@@ -495,7 +495,7 @@ export default async function DashboardPage() {
               <a
                 href="/onboarding/wizard"
                 className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity"
-                style={{ background: '#8ECB3C', color: 'var(--deep)', fontFamily: 'var(--font-space-grotesk)', boxShadow: '0 2px 8px rgba(132,204,22,0.25)' }}
+                style={{ background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, color: 'var(--deep)', fontFamily: 'var(--font-space-grotesk)', boxShadow: '0 2px 8px rgba(132,204,22,0.25)' }}
               >
                 Complete your profile
                 <ArrowRight className="w-4 h-4" />
@@ -513,7 +513,7 @@ export default async function DashboardPage() {
             {/* 1. Complete profile — done if onboarded, active otherwise */}
             <div className="flex items-center gap-4 p-5 border-b border-warm" style={profileComplete ? undefined : { background: 'var(--state-success-pale)' }}>
               {profileComplete ? (
-                <div className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center" style={{ background: '#8ECB3C' }}>
+                <div className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center" style={{ background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }}>
                   <Check className="w-5 h-5 text-white" strokeWidth={3} />
                 </div>
               ) : (
@@ -521,7 +521,7 @@ export default async function DashboardPage() {
                   className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold"
                   style={{
                     background: 'var(--surface-card)',
-                    border: '2px solid #8ECB3C',
+                    border: '2px solid #8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */,
                     color: 'var(--state-success)',
                     fontFamily: 'var(--font-space-grotesk)',
                     boxShadow: '0 0 0 4px rgba(142,203,60,0.15)',
@@ -558,7 +558,7 @@ export default async function DashboardPage() {
                 className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold"
                 style={profileComplete ? {
                   background: 'var(--surface-card)',
-                  border: '2px solid #8ECB3C',
+                  border: '2px solid #8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */,
                   color: 'var(--state-success)',
                   fontFamily: 'var(--font-space-grotesk)',
                   boxShadow: '0 0 0 4px rgba(142,203,60,0.15)',
@@ -734,7 +734,7 @@ export default async function DashboardPage() {
               then help you build a tailored application for each one you choose.
             </p>
             <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' }}>
-              <a href="/dashboard/projects/new" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#8ECB3C', color: 'var(--deep)', fontFamily: 'var(--font-space-grotesk)', fontSize: 14.5, fontWeight: 600, padding: '12px 20px', borderRadius: 11, textDecoration: 'none' }}>
+              <a href="/dashboard/projects/new" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, color: 'var(--deep)', fontFamily: 'var(--font-space-grotesk)', fontSize: 14.5, fontWeight: 600, padding: '12px 20px', borderRadius: 11, textDecoration: 'none' }}>
                 <Lightbulb size={16} /> Describe a project
               </a>
               <a href="/dashboard/applications/new" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 14, fontWeight: 600, color: 'var(--state-success)', textDecoration: 'none' }}>
@@ -783,7 +783,7 @@ export default async function DashboardPage() {
                     <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 15, fontWeight: 500, color: 'var(--text-body)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.title}</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
                       <span style={{ height: 6, flex: 1, maxWidth: 150, background: 'var(--type-inkind-pale)', borderRadius: 999, overflow: 'hidden' }}>
-                        <span style={{ display: 'block', height: '100%', width: `${pct}%`, background: '#8ECB3C' }} />
+                        <span style={{ display: 'block', height: '100%', width: `${pct}%`, background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }} />
                       </span>
                       <span className="text-mid" style={{ fontSize: 12 }}>{a.answered} of {a.total} · {pct}%</span>
                     </div>
@@ -1120,7 +1120,7 @@ export default async function DashboardPage() {
                 <div className="mt-3 pt-3 flex items-center justify-between flex-wrap gap-2 text-xs" style={{ borderTop: '0.5px solid rgba(0,0,0,0.08)', color: 'var(--text-muted)' }}>
                   {declined && declined.count > 0 ? (
                     <span className="inline-flex items-center gap-2" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-                      <span className="inline-block flex-shrink-0" style={{ width: 10, height: 10, background: '#F0997B', borderRadius: 2 }} />
+                      <span className="inline-block flex-shrink-0" style={{ width: 10, height: 10, background: '#F0997B' /* eslint-disable-line no-restricted-syntax -- polysemous value, needs-triage — see hex-token-map.ts POLYSEMOUS_VALUES */, borderRadius: 2 }} />
                       <span>
                         <span className="font-semibold" style={{ color: 'var(--text-body)' }}>{declined.value > 0 ? formatCurrency(declined.value) : declined.count}</span> declined
                         <span className="ml-1">· {declined.count === 1 ? '1 opportunity' : `${declined.count} opportunities`}</span>

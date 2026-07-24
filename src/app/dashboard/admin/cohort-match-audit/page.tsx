@@ -31,7 +31,7 @@ function serviceClient() {
 }
 
 const SCORE_BAND = (score: number) => {
-  if (score >= 80) return { label: 'Good',    bg: 'var(--state-success-pale)', text: 'var(--state-success)', border: '#8ECB3C' }
+  if (score >= 80) return { label: 'Good',    bg: 'var(--state-success-pale)', text: 'var(--state-success)', border: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }
   if (score >= 65) return { label: 'Moderate', bg: 'var(--state-warning-pale)', text: 'var(--state-warning)', border: 'var(--ordinal-3-good)' }
   if (score >= 45) return { label: 'Weak',    bg: 'var(--surface-sunken)', text: 'var(--text-muted)', border: 'var(--border-warm)' }
   return                    { label: 'Poor',    bg: 'var(--state-error-pale)', text: 'var(--state-error)', border: 'var(--terra)' }

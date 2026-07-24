@@ -41,7 +41,7 @@ export default function ContactForm() {
       >
         <div
           className="mx-auto mb-4 flex items-center justify-center"
-          style={{ width: 48, height: 48, borderRadius: '50%', background: '#8ECB3C' }}
+          style={{ width: 48, height: 48, borderRadius: '50%', background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }}
         >
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--deep)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="20 6 9 17 4 12" />
@@ -124,7 +124,7 @@ export default function ContactForm() {
       <button
         type="submit"
         disabled={status === 'sending'}
-        className="w-full h-11 rounded-xl bg-[#8ECB3C] text-deep text-sm font-bold hover:opacity-90 disabled:opacity-50 transition-colors"
+        className="w-full h-11 rounded-xl bg-[#8ECB3C] text-deep text-sm font-bold hover:opacity-90 disabled:opacity-50 transition-colors" /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */
       >
         {status === 'sending' ? 'Sending…' : 'Send message'}
       </button>

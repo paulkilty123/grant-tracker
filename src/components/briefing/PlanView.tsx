@@ -19,11 +19,11 @@ type ActivePlan = Extract<PlanStatePayload, { has_goal: true }>
 
 // Pipeline stage palette (design system, locked)
 const STAGE_STYLE: Record<string, { bg: string; color: string; label: string }> = {
-  identified: { bg: '#F5F1E8', color: '#5F5E5A', label: 'Identified' },
-  applying: { bg: '#EAF3DE', color: '#3B6D11', label: 'Applying' },
-  submitted: { bg: '#C0DD97', color: '#173404', label: 'Submitted' },
-  won: { bg: '#639922', color: '#fff', label: 'Won' },
-  declined: { bg: '#FAECE7', color: '#993C1D', label: 'Declined' },
+  identified: { bg: '#F5F1E8' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, color: '#5F5E5A', label: 'Identified' },
+  applying: { bg: '#EAF3DE' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, color: '#3B6D11', label: 'Applying' },
+  submitted: { bg: '#C0DD97' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, color: '#173404', label: 'Submitted' },
+  won: { bg: '#639922' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, color: '#fff', label: 'Won' },
+  declined: { bg: '#FAECE7' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, color: '#993C1D', label: 'Declined' },
 }
 const STAGE_ORDER = ['identified', 'applying', 'submitted', 'won', 'declined']
 

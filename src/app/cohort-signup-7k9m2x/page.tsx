@@ -101,8 +101,8 @@ export default function CohortSignupPage() {
 
   return (
     <Shell>
-      <div style={{ fontFamily: UI, fontWeight: 500, fontSize: 11.5, color: '#8ECB3C', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 14, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ width: 6, height: 6, background: '#8ECB3C', borderRadius: '50%', display: 'inline-block', flexShrink: 0 }} />
+      <div style={{ fontFamily: UI, fontWeight: 500, fontSize: 11.5, color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 14, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+        <span style={{ width: 6, height: 6, background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, borderRadius: '50%', display: 'inline-block', flexShrink: 0 }} />
         Founding cohort
       </div>
       <h1 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.2, letterSpacing: '-0.02em', color: 'var(--text-body)', marginBottom: 10 }}>
@@ -177,7 +177,7 @@ export default function CohortSignupPage() {
           disabled={loading}
           style={{
             marginTop: 8,
-            background: '#8ECB3C',
+            background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */,
             color: 'var(--deep)',
             fontFamily: UI,
             fontWeight: 600,

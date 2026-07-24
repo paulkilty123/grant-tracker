@@ -314,7 +314,7 @@ function AddDeadlineModal({ orgId, userId, onClose, onSaved }: {
               Cancel
             </button>
             <button type="button" onClick={handleSave} disabled={!grantName.trim() || !deadline || saving}
-              style={{ fontSize: 12, fontWeight: 500, background: '#8ECB3C', color: 'var(--deep)',
+              style={{ fontSize: 12, fontWeight: 500, background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, color: 'var(--deep)',
                 padding: '8px 16px', borderRadius: 10, cursor: 'pointer', border: 'none', fontFamily: 'inherit',
                 opacity: (!grantName.trim() || !deadline || saving) ? 0.5 : 1 }}>
               {saving ? 'Saving\u2026' : 'Save deadline'}
@@ -395,7 +395,7 @@ function EditDeadlineModal({ item, onClose, onSaved }: {
             Cancel
           </button>
           <button type="button" onClick={handleSave} disabled={!deadline || saving}
-            style={{ fontSize: 12, fontWeight: 500, background: deadline ? '#8ECB3C' : 'var(--surface-sunken)',
+            style={{ fontSize: 12, fontWeight: 500, background: deadline ? '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ : 'var(--surface-sunken)',
               color: deadline ? 'var(--deep)' : 'var(--text-subtle)',
               padding: '8px 16px', borderRadius: 10, cursor: deadline ? 'pointer' : 'not-allowed',
               border: 'none', fontFamily: 'inherit' }}>
@@ -557,16 +557,16 @@ function DatePickerInput({ value, onChange, popoverSide = 'right' }: { value: st
 
 // ── Shared pill helpers ───────────────────────────────────────────────────────
 const STAGE_STYLE: Record<string, { bg: string; color: string }> = {
-  identified: { bg: '#F5F1E8', color: '#5F5E5A' },
-  applying:   { bg: '#EAF3DE', color: '#3B6D11' },
-  submitted:  { bg: '#C0DD97', color: '#173404' },
-  won:        { bg: '#639922', color: '#fff'    },
-  declined:   { bg: '#FAECE7', color: '#993C1D' },
+  identified: { bg: '#F5F1E8' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, color: '#5F5E5A' },
+  applying:   { bg: '#EAF3DE' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, color: '#3B6D11' },
+  submitted:  { bg: '#C0DD97' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, color: '#173404' },
+  won:        { bg: '#639922' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, color: '#fff'    },
+  declined:   { bg: '#FAECE7' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, color: '#993C1D' },
 }
 
 function StageChip({ stage }: { stage: string }) {
   const s  = PIPELINE_STAGES.find(p => p.id === stage)
-  const st = STAGE_STYLE[stage] ?? { bg: '#F5F1E8', color: '#5F5E5A' }
+  const st = STAGE_STYLE[stage] ?? { bg: '#F5F1E8' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, color: '#5F5E5A' }
   return (
     <span style={{ fontSize: 11, padding: '2px 7px', borderRadius: 999, fontWeight: 500,
       whiteSpace: 'nowrap', background: st.bg, color: st.color, flexShrink: 0 }}>
@@ -769,7 +769,7 @@ function GrantPreviewModal({
                 <button onClick={handleSetDeadlineClick} disabled={!deadlineValue || saving}
                   style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, padding: '7px 14px', border: 'none', borderRadius: 8,
                     cursor: deadlineValue && !saving ? 'pointer' : 'not-allowed',
-                    background: deadlineValue ? '#8ECB3C' : 'var(--surface-pill)', color: deadlineValue ? 'var(--deep)' : 'var(--text-subtle)' }}>
+                    background: deadlineValue ? '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ : 'var(--surface-pill)', color: deadlineValue ? 'var(--deep)' : 'var(--text-subtle)' }}>
                   {saving ? '…' : inPipeline ? 'Set deadline' : 'Set date & save to pipeline'}
                 </button>
               </div>
@@ -795,7 +795,7 @@ function GrantPreviewModal({
                     width: '100%', display: 'flex', alignItems: 'center', gap: 12,
                     padding: '14px 22px 14px 19px',
                     background: insightsHover ? 'var(--state-success-pale)' : 'var(--surface-card)',
-                    borderLeft: '3px solid #8ECB3C',
+                    borderLeft: '3px solid #8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */,
                     borderRight: 'none', borderTop: 'none', borderBottom: 'none',
                     cursor: 'pointer', textAlign: 'left',
                     transition: 'background-color 160ms ease',
@@ -915,7 +915,7 @@ function GrantPreviewModal({
             {!inPipeline && (
               <button onClick={onAddToPipeline} disabled={saving}
                 style={{ fontFamily: UI_FONT, fontSize: 12.5, fontWeight: 500,
-                  background: saving ? 'var(--surface-sunken)' : '#8ECB3C',
+                  background: saving ? 'var(--surface-sunken)' : '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */,
                   color: saving ? 'var(--text-subtle)' : 'var(--deep)',
                   padding: '8px 14px', borderRadius: 8, border: 'none',
                   cursor: saving ? 'not-allowed' : 'pointer',
@@ -1400,7 +1400,7 @@ export default function DeadlinesPage() {
           <button
             onClick={() => handlePipelineMatch(row.grant)}
             style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, padding: '6px 12px', borderRadius: 6,
-              border: 'none', background: '#8ECB3C', color: 'var(--deep)', cursor: 'pointer',
+              border: 'none', background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, color: 'var(--deep)', cursor: 'pointer',
               display: 'inline-flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
             <Plus size={10} />Pipeline
           </button>
@@ -1417,7 +1417,7 @@ export default function DeadlinesPage() {
               background: 'var(--surface-page)', color: 'var(--text-muted)', border: '1px solid rgba(23,52,4,0.14)', whiteSpace: 'nowrap' }}>Saved</span>
             <button onClick={() => handlePipelineMatch(row.grant)}
               style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, padding: '6px 12px', borderRadius: 6,
-                border: 'none', background: '#8ECB3C', color: 'var(--deep)', cursor: 'pointer',
+                border: 'none', background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, color: 'var(--deep)', cursor: 'pointer',
                 display: 'inline-flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
               <Plus size={10} />Pipeline
             </button>
@@ -1461,7 +1461,7 @@ export default function DeadlinesPage() {
             <button onClick={() => handlePipelineMatch(row.grant)} disabled={!!actioning}
               style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, padding: '6px 12px', borderRadius: 6,
                 border: 'none', cursor: actioning ? 'not-allowed' : 'pointer',
-                background: actioning ? 'var(--surface-sunken)' : '#8ECB3C',
+                background: actioning ? 'var(--surface-sunken)' : '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */,
                 color: actioning ? 'var(--text-subtle)' : 'var(--deep)',
                 display: 'inline-flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
               {actioning === 'pipelining' ? '…' : <><Plus size={10} />Pipeline</>}
@@ -1536,7 +1536,7 @@ export default function DeadlinesPage() {
           </p>
         </div>
         <button onClick={() => setAddOpen(true)}
-          style={{ fontFamily: UI_FONT, fontSize: 13.5, fontWeight: 500, background: '#8ECB3C', color: 'var(--deep)',
+          style={{ fontFamily: UI_FONT, fontSize: 13.5, fontWeight: 500, background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, color: 'var(--deep)',
             border: 'none', padding: '9px 16px', borderRadius: 8, cursor: 'pointer',
             display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0 }}
           onMouseEnter={e => { e.currentTarget.style.filter = 'brightness(0.95)' }}
@@ -1639,7 +1639,7 @@ export default function DeadlinesPage() {
                             <button onClick={() => handleSetDeadline(item.id, val)} disabled={!val || saving}
                               style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, padding: '6px 12px', border: 'none', borderRadius: 6,
                                 cursor: val && !saving ? 'pointer' : 'not-allowed',
-                                background: val ? '#8ECB3C' : 'var(--surface-pill)', color: val ? 'var(--deep)' : 'var(--text-subtle)' }}>
+                                background: val ? '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ : 'var(--surface-pill)', color: val ? 'var(--deep)' : 'var(--text-subtle)' }}>
                               {saving ? '…' : 'Set date'}
                             </button>
                           )}
@@ -1678,7 +1678,7 @@ export default function DeadlinesPage() {
                             <button onClick={() => handleSetSavedDeadline(g, val)} disabled={!val || saving}
                               style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, padding: '6px 12px', border: 'none', borderRadius: 6,
                                 cursor: val && !saving ? 'pointer' : 'not-allowed',
-                                background: val ? '#8ECB3C' : 'var(--surface-pill)', color: val ? 'var(--deep)' : 'var(--text-subtle)' }}>
+                                background: val ? '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ : 'var(--surface-pill)', color: val ? 'var(--deep)' : 'var(--text-subtle)' }}>
                               {saving ? '…' : 'Set date'}
                             </button>
                           )}
@@ -1752,10 +1752,10 @@ export default function DeadlinesPage() {
                 const hasUrgent= markers?.hasUrgent ?? false
                 let bg = 'transparent', textColor = day.isCurrentMonth ? 'var(--text-body)' : 'var(--text-on-dark-mut)', border = 'none', fw = 400
                 if (day.isCurrentMonth) {
-                  if      (isActive)   { bg = '#8ECB3C'; textColor = 'var(--deep)'; fw = 600 }
+                  if      (isActive)   { bg = '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */; textColor = 'var(--deep)'; fw = 600 }
                   else if (hasUrgent)  { bg = 'var(--state-error-pale)'; textColor = 'var(--state-error)'; fw = 600 }
                   else if (hasAlerts)  { bg = 'var(--surface-page)'; textColor = 'var(--sage-deep)'; fw = 600 }
-                  else if (day.isToday){ bg = 'var(--surface-page)'; border = '1.5px solid #8ECB3C'; textColor = 'var(--sage-deep)'; fw = 600 }
+                  else if (day.isToday){ bg = 'var(--surface-page)'; border = '1.5px solid #8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */; textColor = 'var(--sage-deep)'; fw = 600 }
                 }
                 return (
                   <div key={i}
@@ -1794,8 +1794,8 @@ export default function DeadlinesPage() {
               {[
                 { bg: 'var(--state-error-pale)', label: 'Urgent (≤7d)' },
                 { bg: 'var(--surface-page)', label: 'Has deadline' },
-                { bg: '#8ECB3C', label: 'Selected' },
-                { bg: 'var(--surface-page)', border: '1.5px solid #8ECB3C', label: 'Today' },
+                { bg: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, label: 'Selected' },
+                { bg: 'var(--surface-page)', border: '1.5px solid #8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, label: 'Today' },
               ].map(({ bg: d, label, border: b }) => (
                 <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <span style={{ width: 10, height: 10, borderRadius: 3, background: d,

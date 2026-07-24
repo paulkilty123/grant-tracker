@@ -1,6 +1,32 @@
 {
   "extends": "next/core-web-vitals",
+  "rules": {
+    "no-restricted-syntax": [
+      "error",
+      {
+        "selector": "Literal[raw=/^['\"][^'\"]*#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\\b/]",
+        "message": "Raw hex colour literal. Use a Shoots design token instead (var(--token-name) or the matching Tailwind utility class) — see scripts/hex-token-map.ts for the old-hex -> token mapping. Sourced from tailwind.config.ts / globals.css, not a new hardcoded value."
+      },
+      {
+        "selector": "TemplateElement[value.raw=/#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\\b/]",
+        "message": "Raw hex colour literal in a template string. Use a Shoots design token instead (var(--token-name)) — see scripts/hex-token-map.ts."
+      }
+    ]
+  },
   "overrides": [
+    {
+      "files": [
+        "tailwind.config.ts",
+        "src/app/globals.css",
+        "src/components/builder/tokens.ts",
+        "scripts/hex-token-map.ts",
+        "src/app/api/**",
+        "src/app/opengraph-image.tsx"
+      ],
+      "rules": {
+        "no-restricted-syntax": "off"
+      }
+    },
     {
       "files": ["src/lib/agent/tools/**"],
       "rules": {

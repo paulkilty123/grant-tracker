@@ -60,10 +60,10 @@ const SB = {
   text:       'rgba(245,241,232,0.72)',
   textBright: 'var(--surface-sunken)',
   icon:       'rgba(245,241,232,0.55)',
-  iconActive: '#8ECB3C',
+  iconActive: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */,
   hover:      'rgba(245,241,232,0.06)',
   activeBg:   'rgba(142,203,60,0.14)',
-  accent:     '#8ECB3C',
+  accent:     '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */,
   divider:    'rgba(245,241,232,0.08)',
   badgeBg:    'rgba(142,203,60,0.18)',
   badgeText:  'var(--sage-pale)',
@@ -341,7 +341,7 @@ export default function Sidebar({ org, userEmail, companionSurface = false }: Pr
         >
           <div style={{
             width: 30, height: 30, borderRadius: '50%', flexShrink: 0,
-            background: '#8ECB3C', color: 'var(--deep)',
+            background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, color: 'var(--deep)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-space-grotesk)',
           }}>

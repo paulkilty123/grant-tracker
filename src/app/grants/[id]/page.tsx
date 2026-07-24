@@ -388,7 +388,7 @@ export default async function PublicGrantPage({
               href={signupReturn}
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg no-underline hover:opacity-90"
               style={{
-                background: '#8ECB3C',
+                background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */,
                 color: 'var(--deep)',
                 fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif',
                 fontWeight: 600,

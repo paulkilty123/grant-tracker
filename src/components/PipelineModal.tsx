@@ -276,11 +276,11 @@ export function PipelineModal({
               {PIPELINE_STAGES.map(s => {
                 const isActive = localStage === s.id
                 const tones: Record<string, { bg: string; text: string; restBorder: string; activeBorder: string }> = {
-                  identified: { bg: '#F5F1E8', text: '#5F5E5A', restBorder: 'rgba(0,0,0,0.08)', activeBorder: '#8A8986' },
-                  applying:   { bg: '#F1F7E4', text: '#3B6D11', restBorder: 'rgba(57,109,17,0.20)', activeBorder: '#3B6D11' },
-                  submitted:  { bg: '#DFEDCC', text: '#3B6D11', restBorder: 'rgba(57,109,17,0.20)', activeBorder: '#3B6D11' },
-                  won:        { bg: '#EAF3DE', text: '#3B6D11', restBorder: 'rgba(57,109,17,0.20)', activeBorder: '#8ECB3C' },
-                  declined:   { bg: '#FAECE7', text: '#993C1D', restBorder: 'rgba(153,60,29,0.20)', activeBorder: '#993C1D' },
+                  identified: { bg: '#F5F1E8' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, text: '#5F5E5A', restBorder: 'rgba(0,0,0,0.08)', activeBorder: '#8A8986' },
+                  applying:   { bg: '#F1F7E4' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, text: '#3B6D11', restBorder: 'rgba(57,109,17,0.20)', activeBorder: '#3B6D11' },
+                  submitted:  { bg: '#DFEDCC' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, text: '#3B6D11', restBorder: 'rgba(57,109,17,0.20)', activeBorder: '#3B6D11' },
+                  won:        { bg: '#EAF3DE' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, text: '#3B6D11', restBorder: 'rgba(57,109,17,0.20)', activeBorder: '#8ECB3C' },
+                  declined:   { bg: '#FAECE7' /* eslint-disable-line no-restricted-syntax -- pipeline-stage colour duplication, left alone for the primitives pass */, text: '#993C1D', restBorder: 'rgba(153,60,29,0.20)', activeBorder: '#993C1D' },
                 }
                 const tone = tones[s.id]
                 return (
@@ -387,7 +387,7 @@ export function PipelineModal({
           </button>
           <div className="flex gap-2">
             <button onClick={onClose} style={{ padding: '9px 16px', fontSize: 13, fontWeight: 500, background: 'var(--surface-card)', color: 'var(--text-body)', border: '0.5px solid rgba(0,0,0,0.14)', borderRadius: 9999, cursor: 'pointer', fontFamily: 'inherit', lineHeight: 1 }}>Cancel</button>
-            <button onClick={handleSave} disabled={saving} style={{ padding: '9px 18px', fontSize: 13, fontWeight: 600, background: '#8ECB3C', color: 'var(--deep)', border: 'none', borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit', lineHeight: 1, opacity: saving ? 0.6 : 1 }}>
+            <button onClick={handleSave} disabled={saving} style={{ padding: '9px 18px', fontSize: 13, fontWeight: 600, background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, color: 'var(--deep)', border: 'none', borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit', lineHeight: 1, opacity: saving ? 0.6 : 1 }}>
               {saving ? 'Saving…' : 'Save changes'}
             </button>
           </div>

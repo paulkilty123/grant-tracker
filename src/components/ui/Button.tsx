@@ -6,7 +6,7 @@ import { ButtonHTMLAttributes, forwardRef, useState } from 'react'
    Tokens — mirrors the :root block in the
    onboarding HTML reference spec exactly.
 ───────────────────────────────────────────── */
-const LIME       = '#8ECB3C'
+const LIME       = '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */
 const GREEN_MID  = 'var(--sage-deep)'
 const GREEN_DEEP = 'var(--deep)'
 

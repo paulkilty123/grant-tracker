@@ -54,7 +54,7 @@ const PAGES = ['Dashboard', 'Find Funding', 'Pipeline', 'Deadlines', 'Profile', 
 const STATUS_CONFIG: Record<SubmissionStatus, { label: string; bg: string; color: string }> = {
   received:  { label: 'Received',  bg: 'var(--surface-sunken)', color: 'var(--text-muted)' },
   reviewing: { label: 'In review', bg: 'var(--state-warning-pale)', color: 'var(--state-warning)' },
-  actioned:  { label: 'Actioned',  bg: 'var(--surface-pill)', color: '#5A9080' },
+  actioned:  { label: 'Actioned',  bg: 'var(--surface-pill)', color: '#5A9080' /* eslint-disable-line no-restricted-syntax -- no safe token yet — see hex-token-map.ts EXCLUDED_VALUES (#5A9080) */ },
   shipped:   { label: 'Shipped',   bg: 'var(--surface-page)', color: 'var(--sage-deep)' },
 }
 
@@ -314,7 +314,7 @@ export default function FeedbackPage() {
                     disabled={status === 'sending' || !isValid()}
                     style={{
                       fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 14,
-                      background: '#8ECB3C', color: 'var(--deep)', border: 'none',
+                      background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, color: 'var(--deep)', border: 'none',
                       padding: '10px 20px', borderRadius: 8,
                       cursor: (status === 'sending' || !isValid()) ? 'not-allowed' : 'pointer',
                       display: 'inline-flex', alignItems: 'center', gap: 8, transition: 'filter 0.15s',

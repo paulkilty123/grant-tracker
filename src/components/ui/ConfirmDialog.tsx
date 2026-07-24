@@ -39,7 +39,7 @@ export function ConfirmDialog({
 
   const confirmStyle = destructive
     ? { background: 'var(--terra)', color: 'var(--surface-card)' }
-    : { background: '#8ECB3C', color: 'var(--deep)' }
+    : { background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, color: 'var(--deep)' }
 
   return (
     <div

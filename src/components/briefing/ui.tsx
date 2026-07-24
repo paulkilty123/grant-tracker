@@ -19,7 +19,7 @@ export const fmtDate = (iso: string | null | undefined) => {
 
 export const COLOR = {
   ink: 'var(--text-body)', mid: 'var(--text-muted)', faint: 'var(--text-subtle)',
-  hair: 'var(--border-warm)', lime: '#8ECB3C', forest: 'var(--deep)', sage: 'var(--state-success)',
+  hair: 'var(--border-warm)', lime: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, forest: 'var(--deep)', sage: 'var(--state-success)',
   secured: 'var(--sage-deep)', weighted: 'var(--sage-pale)', cream: 'var(--surface-sunken)', pale: 'var(--state-success-pale)',
   amberBg: 'var(--state-warning-pale)', amberInk: 'var(--state-warning)',
 }
@@ -28,7 +28,7 @@ export const COLOR = {
 // the recommended-move tags, and the plan-page mix. Greens for the cash
 // characters (core to hardest), the funding-type accents for investment/in-kind.
 export const MIX_COLOR: Record<string, string> = {
-  unrestricted: COLOR.forest, project: COLOR.secured, capital: '#97C459',
+  unrestricted: COLOR.forest, project: COLOR.secured, capital: '#97C459' /* eslint-disable-line no-restricted-syntax -- polysemous value, needs-triage — see hex-token-map.ts POLYSEMOUS_VALUES */,
   investment: 'var(--type-investment)', in_kind: 'var(--type-inkind)',
 }
 export const mixColor = (c: string) => MIX_COLOR[c] ?? COLOR.lime

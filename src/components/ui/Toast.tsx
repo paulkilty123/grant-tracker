@@ -20,7 +20,7 @@ type ToastApi = {
 const ToastContext = createContext<ToastApi | null>(null)
 
 const KIND_STYLE: Record<ToastKind, { bg: string; border: string; text: string }> = {
-  success: { bg: 'var(--state-success-pale)', border: '#8ECB3C', text: 'var(--deep)' },
+  success: { bg: 'var(--state-success-pale)', border: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, text: 'var(--deep)' },
   error:   { bg: 'var(--state-error-pale)', border: 'var(--terra)', text: 'var(--state-error)' },
   info:    { bg: 'var(--surface-sunken)', border: 'var(--text-muted)', text: 'var(--text-body)' },
 }

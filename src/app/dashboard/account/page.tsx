@@ -11,7 +11,7 @@ import { brand } from '@/config/brand'
 
 /* ─── design tokens ─── */
 const T = {
-  lime:          '#8ECB3C',
+  lime:          '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */,
   greenDeep:     'var(--deep)',
   greenMid:      'var(--sage-deep)',
   pageBg:        'var(--surface-page)',

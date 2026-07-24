@@ -258,7 +258,7 @@ function ConsentScreen({
                 name="decision"
                 value="approve"
                 className="inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity"
-                style={{ background: '#8ECB3C', color: 'var(--deep)', fontFamily: 'var(--font-space-grotesk)' }}
+                style={{ background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, color: 'var(--deep)', fontFamily: 'var(--font-space-grotesk)' }}
               >
                 Approve
               </button>

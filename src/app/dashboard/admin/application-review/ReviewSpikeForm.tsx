@@ -12,7 +12,7 @@ import ReviewResults from './ReviewResults'
 const EMPTY_QUESTION: ReviewQuestion = { question: '', wordLimit: null, draftAnswer: '' }
 
 const labelCls = 'block text-xs font-semibold uppercase tracking-wide text-mid mb-1.5'
-const inputCls = 'w-full rounded-lg border border-warm bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:border-[#8ECB3C]'
+const inputCls = 'w-full rounded-lg border border-warm bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:border-[#8ECB3C]' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */
 
 export default function ReviewSpikeForm(
   { org, pipelineGrants }: { org: OrgContext | null; pipelineGrants: PipelineGrantOption[] },
@@ -538,7 +538,7 @@ export default function ReviewSpikeForm(
         <button
           onClick={submit}
           disabled={!canSubmit}
-          className="rounded-lg bg-[#8ECB3C] px-5 py-2.5 text-sm font-semibold text-deep disabled:opacity-40 disabled:cursor-not-allowed"
+          className="rounded-lg bg-[#8ECB3C] px-5 py-2.5 text-sm font-semibold text-deep disabled:opacity-40 disabled:cursor-not-allowed" /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */
           style={{ fontFamily: 'var(--font-space-grotesk)' }}
         >
           {submitting ? 'Reviewing…' : 'Review draft'}

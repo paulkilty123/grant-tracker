@@ -1796,7 +1796,7 @@ export function scoreColour(score: number): { bg: string; text: string; bar: str
 // for Find Funding's bars; both are the same green family, kept in step here.
 export const MATCH_TIER = {
   strong:  { label: 'Strong',  bg: 'var(--sage-pale)', color: 'var(--deep)', dot: 'var(--sage-deep)' },
-  good:    { label: 'Good',    bg: 'var(--state-success-pale)', color: 'var(--state-success)', dot: '#8ECB3C' },
+  good:    { label: 'Good',    bg: 'var(--state-success-pale)', color: 'var(--state-success)', dot: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ },
   partial: { label: 'Partial', bg: 'var(--surface-sunken)', color: 'var(--text-muted)', dot: 'var(--sage-pale)' },
 } as const
 

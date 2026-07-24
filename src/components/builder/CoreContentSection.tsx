@@ -14,7 +14,7 @@ import ImportApplicationModal from '@/components/builder/ImportApplicationModal'
 import { BLOCK_TYPES, BLOCK_TYPE_LABELS, type BlockType, type CoreContentBlock } from '@/lib/builder/types'
 
 const T = {
-  lime:          '#8ECB3C',
+  lime:          '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */,
   greenDeep:     'var(--deep)',
   greenMid:      'var(--sage-deep)',
   cream:         'var(--surface-sunken)',

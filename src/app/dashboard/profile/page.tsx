@@ -18,7 +18,7 @@ const ADMIN_EMAIL = 'paulkilty1@gmail.com'
    Design tokens
    ═══════════════════════════════════════════════ */
 const T = {
-  lime:          '#8ECB3C',
+  lime:          '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */,
   greenDeep:     'var(--deep)',
   greenMid:      'var(--sage-deep)',
   pageBg:        'var(--surface-page)',
@@ -32,7 +32,7 @@ const T = {
   // Completion tier palette (mirrors opportunity card match tiers)
   strongBorder:  'var(--sage-deep)',
   strongPanel:   'var(--surface-page)',
-  partialBorder: '#5A9080',
+  partialBorder: '#5A9080' /* eslint-disable-line no-restricted-syntax -- no safe token yet — see hex-token-map.ts EXCLUDED_VALUES (#5A9080) */,
   partialPanel:  'var(--surface-pill)',
   weakBorder:    'var(--text-subtle)',
   weakPanel:     'var(--surface-page)',
@@ -854,7 +854,7 @@ function ScanBar({ orgId, website, onSaved }: { orgId: string; website?: string 
       )}
       {/* Scan feedback message */}
       {scanMsg && (
-        <div style={{ marginTop: 12, padding: '10px 14px', background: scanMsg.type === 'success' ? 'var(--type-inkind-pale)' : 'var(--surface-page)', border: `1px solid ${scanMsg.type === 'success' ? '#8ECB3C' : 'var(--border-warm)'}`, borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ marginTop: 12, padding: '10px 14px', background: scanMsg.type === 'success' ? 'var(--type-inkind-pale)' : 'var(--surface-page)', border: `1px solid ${scanMsg.type === 'success' ? '#8ECB3C' : 'var(--border-warm)'}` /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontFamily: BODY, fontSize: 13, color: scanMsg.type === 'success' ? T.greenDeep : 'var(--state-error)' }}>{scanMsg.text}</span>
           <button onClick={() => setScanMsg(null)} style={{ fontFamily: UI, fontSize: 12, color: scanMsg.type === 'success' ? T.greenDeep : 'var(--state-error)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, flexShrink: 0, marginLeft: 12 }}>Dismiss</button>
         </div>
@@ -1324,7 +1324,7 @@ function FocusCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
           {/* Sub-tag panel — tri-state chips. Click cycles:
               neutral (off-white) → include (green) → exclude (red strikethrough) → neutral */}
           {draft.impactSectors.filter(s => NICHE_TAGS_BY_SECTOR[s]).length > 0 && (
-            <div style={{ background: 'var(--surface-sunken)', borderLeft: '3px solid #8ECB3C', borderRadius: 8, padding: '12px 14px' }}>
+            <div style={{ background: 'var(--surface-sunken)', borderLeft: '3px solid #8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, borderRadius: 8, padding: '12px 14px' }}>
               <div style={{
                 fontFamily: UI,
                 fontSize: 12.5,
@@ -1353,7 +1353,7 @@ function FocusCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
                       {opts.map(opt => {
                         const isIncluded = draft.nicheTags.includes(opt.value)
                         const isExcluded = draft.excludedNicheTags.includes(opt.value)
-                        const borderCol = isIncluded ? '#8ECB3C' : isExcluded ? 'var(--terra)' : 'var(--border-warm)'
+                        const borderCol = isIncluded ? '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ : isExcluded ? 'var(--terra)' : 'var(--border-warm)'
                         const bgCol     = isIncluded ? 'var(--type-inkind-pale)' : isExcluded ? 'var(--state-error-pale)' : 'var(--surface-page)'
                         const txtCol    = isIncluded ? 'var(--state-success)' : isExcluded ? 'var(--state-error)' : T.textSecondary
                         return (
@@ -2108,7 +2108,7 @@ export default function ProfilePage() {
             <button
               type="submit"
               disabled={creating || !newOrgName.trim()}
-              style={{ width: '100%', padding: '11px 0', background: '#8ECB3C', color: 'var(--deep)', border: 'none', borderRadius: 10, fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 14, cursor: 'pointer', opacity: (creating || !newOrgName.trim()) ? 0.6 : 1 }}
+              style={{ width: '100%', padding: '11px 0', background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, color: 'var(--deep)', border: 'none', borderRadius: 10, fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 14, cursor: 'pointer', opacity: (creating || !newOrgName.trim()) ? 0.6 : 1 }}
             >
               {creating ? 'Creating\u2026' : 'Continue \u2192'}
             </button>

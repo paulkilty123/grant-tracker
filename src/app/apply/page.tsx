@@ -34,12 +34,12 @@ export default function ApplyPage() {
 
         {/* HERO */}
         <div style={{ padding: '72px 0 48px' }}>
-          <div style={{ fontFamily: UI, fontWeight: 500, fontSize: 11.5, color: '#8ECB3C', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 18, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ width: 6, height: 6, background: '#8ECB3C', borderRadius: '50%', display: 'inline-block', flexShrink: 0 }} />
+          <div style={{ fontFamily: UI, fontWeight: 500, fontSize: 11.5, color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 18, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ width: 6, height: 6, background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, borderRadius: '50%', display: 'inline-block', flexShrink: 0 }} />
             Founding cohort, applications open
           </div>
           <h1 style={{ fontFamily: UI, fontWeight: 500, fontSize: 44, lineHeight: 1.08, letterSpacing: '-0.025em', color: 'var(--text-body)', marginBottom: 28 }}>
-            Help me build <span style={{ color: '#8ECB3C' }}>something better.</span>
+            Help me build <span style={{ color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }}>something better.</span>
           </h1>
           <div>
             <p style={{ fontFamily: SERIF, fontWeight: 400, fontSize: 19, lineHeight: 1.6, color: 'var(--text-body)', marginBottom: 18, letterSpacing: '-0.005em' }}>
@@ -60,7 +60,7 @@ export default function ApplyPage() {
         {/* WHAT THE PRODUCT DOES */}
         <section style={{ padding: '0 0 56px' }}>
           <h2 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.15, letterSpacing: '-0.02em', color: 'var(--text-body)', marginBottom: 20 }}>
-            What {brand.name} <span style={{ color: '#8ECB3C' }}>does.</span>
+            What {brand.name} <span style={{ color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }}>does.</span>
           </h2>
           <p style={{ fontSize: 16, color: 'var(--text-muted)', lineHeight: 1.65, marginBottom: 16 }}>
             {brand.name} covers the full UK funding picture: grants, programmes, social investment, and in-kind support. It helps you find what fits your impact, track what you&apos;re applying for, and keep on top of deadlines.
@@ -73,7 +73,7 @@ export default function ApplyPage() {
         {/* WHAT'S THERE NOW */}
         <section style={{ padding: '0 0 56px' }}>
           <h2 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.15, letterSpacing: '-0.02em', color: 'var(--text-body)', marginBottom: 20 }}>
-            What&apos;s <span style={{ color: '#8ECB3C' }}>there now.</span>
+            What&apos;s <span style={{ color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }}>there now.</span>
           </h2>
           <p style={{ fontSize: 16, color: 'var(--text-muted)', lineHeight: 1.65, marginBottom: 16 }}>
             600+ live funding opportunities in the catalogue right now, growing each week as new ones come in and old ones expire. They include grants, programmes, social investment and in-kind support, covering UK foundations, government, lottery, and corporate funders.
@@ -92,7 +92,7 @@ export default function ApplyPage() {
         {/* WHO I'M LOOKING FOR */}
         <section style={{ padding: '0 0 56px' }}>
           <h2 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.15, letterSpacing: '-0.02em', color: 'var(--text-body)', marginBottom: 20 }}>
-            Who I&apos;m <span style={{ color: '#8ECB3C' }}>looking for.</span>
+            Who I&apos;m <span style={{ color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }}>looking for.</span>
           </h2>
           <p style={{ fontSize: 16, color: 'var(--text-muted)', lineHeight: 1.65, marginBottom: 16 }}>
             {brand.name} is built for UK organisations doing social impact work. For the founding cohort specifically, I&apos;m prioritising organisations where I can genuinely learn from how you use the product, and where the product can genuinely help you.
@@ -108,7 +108,7 @@ export default function ApplyPage() {
               'Impact founders who are early-stage, pre-revenue, or working as an individual',
             ].map((item, i) => (
               <li key={i} style={{ position: 'relative', paddingLeft: 20, marginBottom: 12, fontSize: 16, color: 'var(--text-muted)', lineHeight: 1.6 }}>
-                <span style={{ position: 'absolute', left: 0, top: 10, width: 6, height: 6, background: '#8ECB3C', borderRadius: '50%', display: 'inline-block' }} />
+                <span style={{ position: 'absolute', left: 0, top: 10, width: 6, height: 6, background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, borderRadius: '50%', display: 'inline-block' }} />
                 {item}
               </li>
             ))}
@@ -125,7 +125,7 @@ export default function ApplyPage() {
         <section style={{ padding: '0 0 56px' }}>
           <div style={{ background: 'var(--surface-sunken)', borderRadius: 14, padding: '40px 36px' }}>
             <h2 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.15, letterSpacing: '-0.02em', color: 'var(--text-body)', marginBottom: 14 }}>
-              What I&apos;m <span style={{ color: '#8ECB3C' }}>committing to.</span>
+              What I&apos;m <span style={{ color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }}>committing to.</span>
             </h2>
             <p style={{ fontSize: 16, color: 'var(--text-muted)', lineHeight: 1.65, marginBottom: 0 }}>
               If you&apos;re part of the founding cohort, here&apos;s what you get from me:
@@ -187,7 +187,7 @@ export default function ApplyPage() {
         <section style={{ padding: '0 0 56px' }}>
           <div style={{ background: 'white', border: '0.5px solid rgba(23,52,4,0.08)', borderRadius: 14, padding: '40px 36px' }}>
             <h2 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.15, letterSpacing: '-0.02em', color: 'var(--text-body)', marginBottom: 12 }}>
-              Apply to <span style={{ color: '#8ECB3C' }}>join.</span>
+              Apply to <span style={{ color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }}>join.</span>
             </h2>
             <p style={{ fontSize: 16, color: 'var(--text-muted)', lineHeight: 1.65, marginBottom: 28 }}>
               A few questions about you and your organisation. I read every application personally.
@@ -233,7 +233,7 @@ export default function ApplyPage() {
         {/* FAQ */}
         <section style={{ padding: '0 0 72px' }}>
           <h2 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.15, letterSpacing: '-0.02em', color: 'var(--text-body)', marginBottom: 28 }}>
-            A few <span style={{ color: '#8ECB3C' }}>questions.</span>
+            A few <span style={{ color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }}>questions.</span>
           </h2>
           {[
             {

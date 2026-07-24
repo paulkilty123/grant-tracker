@@ -80,7 +80,7 @@ export default async function MCPKeysPage() {
           <Link
             href="/mcp/keys/new"
             className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity flex-shrink-0"
-            style={{ background: '#8ECB3C', color: 'var(--deep)', fontFamily: 'var(--font-space-grotesk)' }}
+            style={{ background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, color: 'var(--deep)', fontFamily: 'var(--font-space-grotesk)' }}
           >
             <Plus className="w-4 h-4" />
             New API key

@@ -420,7 +420,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
   // ── Match tier ──
   const tier       = score >= 80 ? 'Strong match' : score >= 70 ? 'Good match' : score >= 50 ? 'Partial match' : 'Weak match'
   const tierHue    = score >= 80 ? { ring: 'var(--sage-deep)', title: 'var(--state-success)', panelBg: 'var(--surface-page)', border: 'var(--sage-deep)', barBg: 'rgba(99,153,34,0.15)',    positive: 'var(--sage-deep)', caveat: 'var(--sage-deep)', caveatText: 'var(--state-success)' }
-                   : score >= 70 ? { ring: '#5A9080', title: 'var(--text-muted)', panelBg: 'var(--surface-pill)', border: '#5A9080', barBg: 'rgba(90,144,128,0.15)',   positive: '#5A9080', caveat: '#5A9080', caveatText: 'var(--text-muted)' }
+                   : score >= 70 ? { ring: '#5A9080' /* eslint-disable-line no-restricted-syntax -- no safe token yet — see hex-token-map.ts EXCLUDED_VALUES (#5A9080) */, title: 'var(--text-muted)', panelBg: 'var(--surface-pill)', border: '#5A9080', barBg: 'rgba(90,144,128,0.15)',   positive: '#5A9080', caveat: '#5A9080', caveatText: 'var(--text-muted)' }
                    : score >= 50 ? { ring: 'var(--gold-deep)', title: 'var(--state-warning)', panelBg: 'var(--surface-page)', border: 'var(--gold-deep)', barBg: 'rgba(186,117,23,0.12)',   positive: 'var(--gold-deep)', caveat: 'var(--gold-deep)', caveatText: 'var(--state-warning)' }
                    :               { ring: 'var(--terra)', title: 'var(--state-error)', panelBg: 'var(--surface-sunken)', border: 'var(--terra)', barBg: 'rgba(160,96,96,0.12)',    positive: 'var(--terra)', caveat: 'var(--terra)', caveatText: 'var(--state-error)' }
   const moduleTitle = score >= 80 ? 'Why this strongly matches' : score >= 70 ? 'Why this is a good match' : score >= 50 ? 'Why this partially matches' : 'Why this weakly matches'
@@ -674,7 +674,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                 {state != 'pipeline' && (
                   <button
                     onClick={() => onAddToPipeline(grant)}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, borderRadius: 10, background: '#8ECB3C', color: 'var(--deep)', border: 'none', padding: '9px 14px', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-dm-sans)', whiteSpace: 'nowrap' }}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, borderRadius: 10, background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, color: 'var(--deep)', border: 'none', padding: '9px 14px', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-dm-sans)', whiteSpace: 'nowrap' }}
                   >
                     + Add to pipeline
                   </button>
@@ -753,7 +753,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
             .filter(d => !(d.hideAt100 && d.pct >= 100))
 
           const barFill = (pct: number) =>
-            pct >= 80 ? 'var(--sage-deep)' : pct >= 70 ? '#8ECB3C' : pct >= 50 ? 'var(--gold-deep)' : 'var(--terra)'
+            pct >= 80 ? 'var(--sage-deep)' : pct >= 70 ? '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ : pct >= 50 ? 'var(--gold-deep)' : 'var(--terra)'
           const barText = (pct: number) =>
             pct >= 80 ? 'var(--state-success)' : pct >= 70 ? 'var(--state-success)' : pct >= 50 ? 'var(--state-warning)' : 'var(--state-error)'
 
@@ -897,7 +897,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
             padding: '13px 20px 13px 17px',
             background: insightsExpanded || insightsHover ? 'var(--state-success-pale)' : 'var(--surface-card)',
             borderTop: '0.5px solid rgba(0,0,0,0.06)',
-            borderLeft: '3px solid #8ECB3C',
+            borderLeft: '3px solid #8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */,
             borderRight: 'none',
             borderBottom: insightsExpanded ? '0.5px dashed rgba(57,109,17,0.2)' : 'none',
             cursor: 'pointer', textAlign: 'left',
@@ -1065,7 +1065,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                         href={grant.applyUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 10, background: '#8ECB3C', color: 'var(--deep)', fontSize: 13, fontWeight: 600, padding: '10px 18px', border: 'none', whiteSpace: 'nowrap', textDecoration: 'none', flexShrink: 0 }}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 10, background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, color: 'var(--deep)', fontSize: 13, fontWeight: 600, padding: '10px 18px', border: 'none', whiteSpace: 'nowrap', textDecoration: 'none', flexShrink: 0 }}
                       >
                         Apply at {grant.funder}
                         <ExternalLink style={{ width: 12, height: 12 }} />
@@ -1115,7 +1115,7 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
                       href={grant.applyUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 10, background: '#8ECB3C', color: 'var(--deep)', fontSize: 13, fontWeight: 600, padding: '10px 18px', textDecoration: 'none', flexShrink: 0 }}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 10, background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, color: 'var(--deep)', fontSize: 13, fontWeight: 600, padding: '10px 18px', textDecoration: 'none', flexShrink: 0 }}
                     >
                       Apply
                       <ExternalLink style={{ width: 12, height: 12 }} />
@@ -2386,7 +2386,7 @@ export default function SearchPage() {
   }
 
   const TAB_ACTIVE_STYLES: Record<string, { bg: string; border: string; text: string; count: string }> = {
-    grant:      { bg: 'var(--state-success-pale)', border: '#8ECB3C', text: 'var(--deep)', count: 'var(--sage-deep)' },
+    grant:      { bg: 'var(--state-success-pale)', border: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, text: 'var(--deep)', count: 'var(--sage-deep)' },
     programme:  { bg: 'var(--state-error-pale)', border: 'var(--state-error)', text: 'var(--state-error)', count: 'var(--state-error)' },
     investment: { bg: 'var(--state-info-pale)', border: 'var(--state-info)', text: 'var(--state-info)', count: 'var(--state-info)' },
     in_kind:    { bg: 'var(--state-warning-pale)', border: 'var(--state-warning)', text: 'var(--state-warning)', count: 'var(--state-warning)' },
@@ -2456,7 +2456,7 @@ export default function SearchPage() {
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-mid min-w-0">
           {activeView === 'browse' && org && (
             <>
-              <span className="w-2 h-2 flex-shrink-0 rounded-full" style={{ backgroundColor: '#8ECB3C' }} />
+              <span className="w-2 h-2 flex-shrink-0 rounded-full" style={{ backgroundColor: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }} />
               <span>Matched for <strong className="text-charcoal">{org.name ?? 'your organisation'}</strong>{org.primary_location && <span className="text-mid"> · {org.primary_location}</span>}</span>
             </>
           )}
@@ -2475,7 +2475,7 @@ export default function SearchPage() {
               <button
                 key={v}
                 onClick={() => setActiveView(v)}
-                className={`px-5 py-2 text-sm font-medium transition-colors flex items-center gap-1.5 ${activeView === v ? 'border-b-2 border-[#8ECB3C] text-text-body font-bold' : 'border-b-2 border-transparent text-gray-500 hover:text-charcoal'}`}
+                className={`px-5 py-2 text-sm font-medium transition-colors flex items-center gap-1.5 ${activeView === v ? 'border-b-2 border-[#8ECB3C] text-text-body font-bold' : 'border-b-2 border-transparent text-gray-500 hover:text-charcoal'}` /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */}
               >
                 {v === 'browse' ? 'Browse' : v === 'saved' ? 'Saved' : 'Hidden'}
                 {v === 'saved' && savedCount > 0 && (
@@ -2569,7 +2569,7 @@ export default function SearchPage() {
                 onClick={() => { setHasSearched(true); handleAISearch(inputValue) }}
                 disabled={!inputValue.trim() && !locationFilter.trim()}
                 className={`h-12 px-6 text-sm font-bold flex-shrink-0 transition-opacity disabled:opacity-40 flex items-center gap-2 rounded-full appearance-none ${aiLoading ? 'pointer-events-none' : ''}`}
-                style={{ background: '#8ECB3C', color: 'var(--deep)', borderRadius: 10 }}
+                style={{ background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, color: 'var(--deep)', borderRadius: 10 }}
               >
                 {aiLoading
                   ? <><span className="dot-bounce flex gap-0.5"><span/><span/><span/></span> Searching…</>
@@ -2582,7 +2582,7 @@ export default function SearchPage() {
           {activeView === 'browse' && (aiResults || aiError) && (
             <div className="mt-2 flex items-center gap-2">
               {aiResults && (
-                <button onClick={() => { setAiResults(null); setSmartMatched(false); setQuery(''); setInputValue(''); setFilterQuery('') }} className="px-3 py-1 border border-warm text-xs font-medium text-mid hover:border-[#8ECB3C] hover:text-sage-deep transition-all bg-white rounded-md">
+                <button onClick={() => { setAiResults(null); setSmartMatched(false); setQuery(''); setInputValue(''); setFilterQuery('') }} className="px-3 py-1 border border-warm text-xs font-medium text-mid hover:border-[#8ECB3C] hover:text-sage-deep transition-all bg-white rounded-md" /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */>
                   Clear results
                 </button>
               )}
@@ -2608,7 +2608,7 @@ export default function SearchPage() {
                 {activeFilterCount > 0 && (
                   <button onClick={resetAllFilters} className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium transition-colors" style={{ borderRadius: 9999, color: 'var(--text-muted)', background: 'transparent' }} onMouseEnter={e => { e.currentTarget.style.color = 'var(--state-error)'; e.currentTarget.style.background = 'var(--state-error-pale)' }} onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'transparent' }}><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Reset all</button>
                 )}
-                <button onClick={() => setFiltersOpen(false)} className="px-3 py-1.5 text-xs font-bold rounded-md appearance-none" style={{ background: '#8ECB3C', color: 'var(--deep)' }}>Done</button>
+                <button onClick={() => setFiltersOpen(false)} className="px-3 py-1.5 text-xs font-bold rounded-md appearance-none" style={{ background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, color: 'var(--deep)' }}>Done</button>
               </div>
             </div>
 
@@ -2930,7 +2930,7 @@ export default function SearchPage() {
             <div className="flex items-center gap-3 min-w-0">
               {/* Icon badge */}
               <div className="flex-shrink-0 flex items-center justify-center w-8 h-8"
-                style={{ background: '#8ECB3C', borderRadius: 9, color: 'var(--surface-card)' }}>
+                style={{ background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, borderRadius: 9, color: 'var(--surface-card)' }}>
                 <span className="text-[11px] font-bold leading-none">i</span>
               </div>
               {/* Two-line copy */}
@@ -3238,7 +3238,7 @@ export default function SearchPage() {
                       />
                       <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
                         <button onClick={() => saveNote(item.grant.id)}
-                          style={{ fontFamily: 'inherit', fontSize: 12, fontWeight: 600, padding: '5px 12px', borderRadius: 8, border: 'none', background: '#8ECB3C', color: 'var(--deep)', cursor: 'pointer' }}>
+                          style={{ fontFamily: 'inherit', fontSize: 12, fontWeight: 600, padding: '5px 12px', borderRadius: 8, border: 'none', background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, color: 'var(--deep)', cursor: 'pointer' }}>
                           Save note
                         </button>
                         <button onClick={() => setEditingNoteId(null)}
@@ -3408,7 +3408,7 @@ export default function SearchPage() {
                     </button>
                     <button
                       onClick={async () => { await handleMarkApplied(grant, 'won'); close() }}
-                      style={{ textAlign: 'left', padding: '12px 16px', borderRadius: 10, border: '1px solid #8ECB3C', background: 'var(--state-success-pale)', cursor: 'pointer', fontSize: 14, fontFamily: 'var(--font-dm-sans)', color: 'var(--deep)' }}
+                      style={{ textAlign: 'left', padding: '12px 16px', borderRadius: 10, border: '1px solid #8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, background: 'var(--state-success-pale)', cursor: 'pointer', fontSize: 14, fontFamily: 'var(--font-dm-sans)', color: 'var(--deep)' }}
                     >
                       <strong>Won</strong>
                       <div style={{ fontSize: 12, color: 'var(--state-success)', marginTop: 2 }}>Funded — congratulations</div>

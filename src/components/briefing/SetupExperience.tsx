@@ -135,7 +135,7 @@ export default function SetupExperience({ org }: { org: OrgSummary }) {
             <div className="px-4 pb-2 flex gap-2 flex-wrap">
               <button onClick={() => submit('Sounds right — set it up.')}
                 className="text-xs font-semibold px-3 py-1.5 rounded-lg"
-                style={{ ...grotesk, background: '#8ECB3C', color: 'var(--deep)' }}>Sounds right</button>
+                style={{ ...grotesk, background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, color: 'var(--deep)' }}>Sounds right</button>
               <button onClick={() => submit('I’d like to adjust the mix.')}
                 className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-white"
                 style={{ ...grotesk, border: '1px solid var(--text-body)', color: 'var(--text-body)' }}>Adjust the mix</button>
@@ -245,7 +245,7 @@ export default function SetupExperience({ org }: { org: OrgSummary }) {
               <button
                 onClick={() => router.refresh()}
                 className="mt-3 w-full text-sm font-semibold px-4 py-2 rounded-lg"
-                style={{ ...grotesk, background: '#8ECB3C', color: 'var(--deep)' }}
+                style={{ ...grotesk, background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, color: 'var(--deep)' }}
               >
                 See your briefing
               </button>

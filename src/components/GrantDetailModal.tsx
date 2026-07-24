@@ -365,7 +365,7 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
                     <ul className="space-y-2.5">
                       {eligibility.map((c, i) => (
                         <li key={i} className="flex gap-2.5 text-sm text-text-body">
-                          <span className="flex-shrink-0 font-bold mt-0.5" style={{ color: '#8ECB3C' }}>✓</span>
+                          <span className="flex-shrink-0 font-bold mt-0.5" style={{ color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }}>✓</span>
                           <span className="leading-snug">{c}</span>
                         </li>
                       ))}
@@ -377,7 +377,7 @@ export default function GrantDetailModal({ grantId, onClose, onAddToPipeline }: 
                 {structures.length > 0 && (
                   <div className="bg-white border border-border-warm px-5 py-4" style={{ borderRadius: 16 }}>
                     <p className="text-[10px] font-bold text-text-muted uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
-                      <CheckCircle className="w-3.5 h-3.5" style={{ color: '#8ECB3C' }} />
+                      <CheckCircle className="w-3.5 h-3.5" style={{ color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ }} />
                       Eligible organisation types
                     </p>
                     <div className="flex flex-wrap gap-1.5 mb-2">

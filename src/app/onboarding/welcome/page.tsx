@@ -65,7 +65,7 @@ export default function OnboardingWelcomePage() {
           fontFamily: UI,
           fontWeight: 500,
           fontSize: 11.5,
-          color: '#8ECB3C',
+          color: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */,
           letterSpacing: '0.08em',
           textTransform: 'uppercase',
           marginBottom: 20,
@@ -73,7 +73,7 @@ export default function OnboardingWelcomePage() {
           alignItems: 'center',
           gap: 8,
         }}>
-          <span style={{ width: 6, height: 6, background: '#8ECB3C', borderRadius: '50%', display: 'inline-block', flexShrink: 0 }} />
+          <span style={{ width: 6, height: 6, background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, borderRadius: '50%', display: 'inline-block', flexShrink: 0 }} />
           Founding cohort, you&rsquo;re in
         </div>
 
@@ -106,7 +106,7 @@ export default function OnboardingWelcomePage() {
             fontFamily: UI,
             fontWeight: 600,
             fontSize: 15,
-            background: '#8ECB3C',
+            background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */,
             color: 'var(--deep)',
             padding: '13px 24px',
             borderRadius: 10,

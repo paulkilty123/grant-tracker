@@ -164,7 +164,7 @@ function LoginForm() {
               disabled={loading}
               style={{
                 marginTop: 8,
-                background: '#8ECB3C',
+                background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */,
                 color: 'var(--deep)',
                 fontFamily: UI,
                 fontWeight: 600,

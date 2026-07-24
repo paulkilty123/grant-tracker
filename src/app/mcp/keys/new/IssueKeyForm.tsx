@@ -205,7 +205,7 @@ export function IssueKeyForm({ tosVersion, tosStatus }: Props) {
         type="submit"
         disabled={loading || !tosAccepted || !name.trim()}
         className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
-        style={{ background: '#8ECB3C', color: 'var(--deep)', fontFamily: 'var(--font-space-grotesk)' }}
+        style={{ background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, color: 'var(--deep)', fontFamily: 'var(--font-space-grotesk)' }}
       >
         {loading ? 'Generating…' : 'Generate key'}
       </button>

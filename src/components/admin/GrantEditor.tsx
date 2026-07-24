@@ -226,9 +226,9 @@ function sourceLabel(source: string): string {
 // MED  (amber)  → spot-check the snippet
 // LOW  (coral)  → must read the snippet + reason before approving
 const CONFIDENCE_STYLES = {
-  high: { bg: 'var(--state-success-pale)', fg: 'var(--state-success)', border: '#8ECB3C66', label: 'HIGH' },
-  med:  { bg: 'var(--state-warning-pale)', fg: 'var(--state-warning)', border: '#EF9F2766', label: 'MED'  },
-  low:  { bg: 'var(--state-error-pale)', fg: 'var(--state-error)', border: '#D85A3066', label: 'LOW'  },
+  high: { bg: 'var(--state-success-pale)', fg: 'var(--state-success)', border: '#8ECB3C66' /* eslint-disable-line no-restricted-syntax -- alpha-suffixed hex colour, excluded from the mechanical sweep */, label: 'HIGH' },
+  med:  { bg: 'var(--state-warning-pale)', fg: 'var(--state-warning)', border: '#EF9F2766' /* eslint-disable-line no-restricted-syntax -- alpha-suffixed hex colour, excluded from the mechanical sweep */, label: 'MED'  },
+  low:  { bg: 'var(--state-error-pale)', fg: 'var(--state-error)', border: '#D85A3066' /* eslint-disable-line no-restricted-syntax -- alpha-suffixed hex colour, excluded from the mechanical sweep */, label: 'LOW'  },
 } as const
 
 function ConfidenceChip({ citation }: { citation: NonNullable<ProvenanceEntry['citation']> }) {
@@ -258,7 +258,7 @@ function ProvBadge({ entry }: { entry: ProvenanceEntry | undefined }) {
         style={{
           background:    pinned ? 'var(--state-success-pale)' : 'var(--surface-sunken)',
           color:         pinned ? 'var(--state-success)' : 'var(--text-muted)',
-          border:        `1px solid ${pinned ? '#8ECB3C44' : 'var(--border-warm)'}`,
+          border:        `1px solid ${pinned ? '#8ECB3C44' : 'var(--border-warm)'}` /* eslint-disable-line no-restricted-syntax -- alpha-suffixed hex colour, excluded from the mechanical sweep */,
         }}
         title={`Source: ${entry.source}${entry.backfilled ? ' (backfilled)' : ''}\nSet: ${entry.set_at}${pinned ? '\nPinned by admin — survives scraper runs' : ''}`}
       >
@@ -297,9 +297,9 @@ function ChipMultiSelect({
             }}
             className="text-xs px-2.5 py-1 rounded-full font-medium transition-colors"
             style={{
-              background:  active ? '#8ECB3C' : 'var(--surface-card)',
+              background:  active ? '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ : 'var(--surface-card)',
               color:       active ? 'var(--deep)' : 'var(--text-muted)',
-              border:      `1px solid ${active ? '#8ECB3C' : 'var(--border-warm)'}`,
+              border:      `1px solid ${active ? '#8ECB3C' : 'var(--border-warm)'}` /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */,
             }}
           >
             {opt.label}
@@ -753,7 +753,7 @@ export function GrantEditor(props: GrantEditorProps) {
                   onClick={onEnrichWithSources}
                   disabled={enrichingNow}
                   className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-full disabled:opacity-40"
-                  style={{ backgroundColor: '#8ECB3C', color: 'var(--text-body)' }}
+                  style={{ backgroundColor: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, color: 'var(--text-body)' }}
                 >
                   <Sparkles className="w-3 h-3" />{enrichingNow ? 'Enriching…' : 'Enrich with sources'}
                 </button>

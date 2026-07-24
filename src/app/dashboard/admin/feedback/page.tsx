@@ -34,8 +34,8 @@ const CHIP_LABELS: Record<string, string> = {
 // being swept onto state-success/state-error (both much darker/more saturated;
 // mapping only one half would leave the chart mismatched).
 const FEEDBACK_CHART = {
-  positive: '#6dbf6d', // "Good match" / up-votes
-  negative: '#f4a0a0', // "Not for us" / down-votes
+  positive: '#6dbf6d' /* eslint-disable-line no-restricted-syntax -- FEEDBACK_CHART's own definition — deliberately local, not a token, see hex-token-map.ts ONE_OFFS */, // "Good match" / up-votes
+  negative: '#f4a0a0' /* eslint-disable-line no-restricted-syntax -- FEEDBACK_CHART's own definition — deliberately local, not a token, see hex-token-map.ts ONE_OFFS */, // "Not for us" / down-votes
 } as const
 
 function fmt(date: string) {

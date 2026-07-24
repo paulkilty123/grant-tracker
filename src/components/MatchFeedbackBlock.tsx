@@ -231,7 +231,7 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore, compact = fals
         <div style={{ display: 'flex', gap: 6 }}>
           <button
             onClick={() => handleDirectionTap('up')}
-            style={{ ...btnBase, background: isUp ? '#8ECB3C' : 'white', border: isUp ? '0.5px solid #8ECB3C' : '0.5px solid rgba(99,153,34,0.3)', color: isUp ? 'var(--deep)' : 'var(--state-success)' }}
+            style={{ ...btnBase, background: isUp ? '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */ : 'white', border: isUp ? '0.5px solid #8ECB3C' : '0.5px solid rgba(99,153,34,0.3)', color: isUp ? 'var(--deep)' : 'var(--state-success)' }}
           >
             <ThumbUp /> Good match
           </button>
