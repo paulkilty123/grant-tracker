@@ -28,6 +28,16 @@ const CHIP_LABELS: Record<string, string> = {
   eligibility_issue: 'Eligibility issue', wrong_style: 'Wrong style', something_else: 'Something else',
 }
 
+// Pastel positive/negative pair for this page's feedback-sentiment charts only.
+// Deliberately not a design token: paired, self-contained, admin-only — see
+// hex-token-map.ts's ONE_OFFS entry for why these two stay local rather than
+// being swept onto state-success/state-error (both much darker/more saturated;
+// mapping only one half would leave the chart mismatched).
+const FEEDBACK_CHART = {
+  positive: '#6dbf6d', // "Good match" / up-votes
+  negative: '#f4a0a0', // "Not for us" / down-votes
+} as const
+
 function fmt(date: string) {
   return new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 }
@@ -152,16 +162,16 @@ export default function AdminFeedbackPage() {
               const downH = h - upH
               return (
                 <div key={d.date} title={`${d.date}: ${d.up} up ${d.down} down`} style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-                  {downH > 0 && <div style={{ height: downH, background: '#f4a0a0' }} />}
-                  {upH > 0 && <div style={{ height: upH, background: '#6dbf6d' }} />}
+                  {downH > 0 && <div style={{ height: downH, background: FEEDBACK_CHART.negative }} />}
+                  {upH > 0 && <div style={{ height: upH, background: FEEDBACK_CHART.positive }} />}
                   {h === 0 && <div style={{ height: 2, background: '#e8e0d8' }} />}
                 </div>
               )
             })}
           </div>
           <div style={{ display: 'flex', gap: 16, marginTop: 10, fontSize: 11, color: '#888' }}>
-            <span><span style={{ display: 'inline-block', width: 10, height: 10, background: '#6dbf6d', marginRight: 4 }} />Good match</span>
-            <span><span style={{ display: 'inline-block', width: 10, height: 10, background: '#f4a0a0', marginRight: 4 }} />Not for us</span>
+            <span><span style={{ display: 'inline-block', width: 10, height: 10, background: FEEDBACK_CHART.positive, marginRight: 4 }} />Good match</span>
+            <span><span style={{ display: 'inline-block', width: 10, height: 10, background: FEEDBACK_CHART.negative, marginRight: 4 }} />Not for us</span>
           </div>
         </div>
       </div>
@@ -181,8 +191,8 @@ export default function AdminFeedbackPage() {
                 </div>
                 <div style={{ height: 12, background: '#f0ece6', overflow: 'hidden' }}>
                   <div style={{ width: `${(t / maxChip) * 100}%`, display: 'flex', height: '100%' }}>
-                    <div style={{ width: `${upPct}%`, background: '#6dbf6d' }} />
-                    <div style={{ width: `${100 - upPct}%`, background: '#f4a0a0' }} />
+                    <div style={{ width: `${upPct}%`, background: FEEDBACK_CHART.positive }} />
+                    <div style={{ width: `${100 - upPct}%`, background: FEEDBACK_CHART.negative }} />
                   </div>
                 </div>
               </div>
