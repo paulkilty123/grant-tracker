@@ -35,7 +35,7 @@
  * stages, profile-completion bands, submission statuses, etc., but always
  * meaning the SAME thing (good/warning/bad/info) — safe to map once.
  *
- * Six tiers now, in descending order of trust:
+ * Seven tiers now, in descending order of trust:
  *
  * 1. DOC_MAPPING (23) — shoots-app-tokens.md's own table, minus the two
  *    entries that turned out to be polysemous (#97C459, #F0997B — moved to
@@ -43,29 +43,40 @@
  *    confirmed decision said).
  *
  * 2. POLYSEMOUS_VALUES (4) — occurrence-keyed. Every file:line the value
- *    appears in, each with its own target or `EXCLUDE-needs-triage`.
+ *    appears in, each with its own target or `EXCLUDE-needs-triage`. Fully
+ *    resolved as of the ordinal-scale pass: every occurrence now has a real
+ *    target except briefing/ui.tsx's MIX_COLOR.capital (genuinely different
+ *    taxonomy) and dashboard/page.tsx's pipeline "declined" marker
+ *    (deliberately deferred to the primitives pass, per instruction).
  *
- * 3. DECIDED_MAPPING (7) — the 6 resolved orphans/flagged-dots from the usage
+ * 3. DECIDED_MAPPING (9) — the 6 resolved orphans/flagged-dots from the usage
  *    report (minus #85B7EB/#EF9F27, which moved to tier 2 as polysemous) plus
- *    #BA7517, moved out of tier 5 once gold-deep existed as its exact match.
- *    Each row carries the reasoning, including the two places semantic role
- *    overrode raw colour distance (#FFB74D, #C96A00).
+ *    #BA7517 (moved out of tier 5 once gold-deep existed as its exact match)
+ *    plus #EEEDFE/#3C3489 (the sector-pill bg/text pair, moved out of tier 5
+ *    and decided together onto status-invite/status-invite-pale so the pair
+ *    stays visually coherent). Each row carries the reasoning, including the
+ *    places semantic role or pair-coherence overrode raw colour distance
+ *    (#FFB74D, #C96A00, #3C3489).
  *
  * 4. ONE_OFFS (2) — deliberately NOT tokens. #F4A0A0/#6dbf6d, now a named
  *    `FEEDBACK_CHART` constant in admin/feedback/page.tsx rather than a
  *    swept value.
  *
- * 5. NEAREST_TOKEN_MAPPING (129) — algorithmic redmean colour-distance
- *    assignment, minus #BA7517 (moved to tier 3 — it's gold-deep's exact
- *    value now that gold-deep exists as a candidate, not "terra" at 107.4
- *    as it was before the gold collision was resolved).
+ * 5. NEAREST_TOKEN_MAPPING (126) — algorithmic redmean colour-distance
+ *    assignment, minus #BA7517/#EEEDFE/#3C3489 (moved to tier 3) and
+ *    #5A9080 (moved to tier 7, EXCLUDED_VALUES).
  *
  * 6. ORPHANS (0) — empty. All 7 from the usage report are now decided
  *    (tiers 2 and 3). Kept as an export for structural completeness.
  *
- * NEW_FINDINGS_NOT_YET_DECIDED and KNOWN_GAPS at the bottom are this pass's
- * own discoveries, not yet acted on — surfaced per instruction rather than
- * silently absorbed into a "close enough" nearest-token guess.
+ * 7. EXCLUDED_VALUES (1) — #5A9080 only. Ordinal in role but every candidate
+ *    ordinal rung either collides with an adjacent tier's colour in the same
+ *    component or is the wrong role entirely — see the export for the full
+ *    reasoning. Left excluded rather than guessed.
+ *
+ * KNOWN_GAPS at the bottom is this pass's own discovery, not yet acted on —
+ * surfaced per instruction rather than silently absorbed into a "close
+ * enough" nearest-token guess.
  */
 
 export type MappingSource = 'doc' | 'nearest'
@@ -163,17 +174,17 @@ export const POLYSEMOUS_VALUES: PolysemousValue[] = [
       { file: 'src/app/dashboard/deadlines/page.tsx', line: 21, target: 'sage', note: 'TYPE_DOT.grant — true funding-type Grant dot' },
       { file: 'src/app/dashboard/deadlines/page.tsx', line: 89, target: 'sage', note: 'TYPE_CHIPS grant entry — true funding-type Grant dot' },
       { file: 'src/app/dashboard/projects/[id]/page.tsx', line: 55, target: 'sage', note: 'FUNDING_TYPE_STYLE.grant.dot — true funding-type Grant dot' },
-      { file: 'src/components/briefing/ui.tsx', line: 31, target: 'EXCLUDE-needs-triage', note: "MIX_COLOR.capital — a DIFFERENT taxonomy (funding CHARACTER: unrestricted/project/capital, not funding TYPE: grant/programme/investment/in_kind). 'capital' is not 'Grant'; don't assume the correlation." },
-      { file: 'src/app/opengraph-image.tsx', line: 77, target: 'EXCLUDE-needs-triage', note: 'OG image wordmark/domain text colour — marketing asset, unrelated to funding type' },
-      { file: 'src/app/opengraph-image.tsx', line: 80, target: 'EXCLUDE-needs-triage', note: 'OG image tagline text colour — marketing asset, unrelated to funding type' },
-      { file: 'src/components/landing/LandingPage.tsx', line: 1146, target: 'EXCLUDE-needs-triage', note: 'Footer text colour — generic brand-green, unrelated to funding type' },
-      { file: 'src/components/landing/LandingPage.tsx', line: 1159, target: 'EXCLUDE-needs-triage', note: 'Footer nav links colour — generic brand-green' },
-      { file: 'src/components/landing/LandingPage.tsx', line: 1167, target: 'EXCLUDE-needs-triage', note: 'Footer bottom row colour — generic brand-green' },
-      { file: 'src/components/landing/LandingPage.tsx', line: 1170, target: 'EXCLUDE-needs-triage', note: 'Footer "Privacy" link colour — generic brand-green' },
-      { file: 'src/components/landing/LandingPage.tsx', line: 1171, target: 'EXCLUDE-needs-triage', note: 'Footer "Terms" link colour — generic brand-green' },
-      { file: 'src/app/apply/page.tsx', line: 278, target: 'EXCLUDE-needs-triage', note: 'Footer nav links colour — generic brand-green, same pattern as LandingPage' },
-      { file: 'src/app/apply/page.tsx', line: 286, target: 'EXCLUDE-needs-triage', note: 'Footer bottom row colour — generic brand-green' },
-      { file: 'src/app/onboarding/wizard/page.tsx', line: 27, target: 'EXCLUDE-needs-triage', note: "Local token object's `greenSoft` — needs a read to confirm role before assigning; not a funding-type dot by name" },
+      { file: 'src/components/briefing/ui.tsx', line: 31, target: 'EXCLUDE-needs-triage', note: "MIX_COLOR.capital — a DIFFERENT taxonomy (funding CHARACTER: unrestricted/project/capital, not funding TYPE: grant/programme/investment/in_kind). 'capital' is not 'Grant'; don't assume the correlation. Not decorative brand-green either, so it doesn't fold into the resolution below — categorical mismatch, needs its own call." },
+      { file: 'src/app/opengraph-image.tsx', line: 77, target: 'sage', note: 'OG image wordmark/domain text colour — decorative brand-green, same resolution as the footer occurrences below' },
+      { file: 'src/app/opengraph-image.tsx', line: 80, target: 'sage', note: 'OG image tagline text colour — decorative brand-green' },
+      { file: 'src/components/landing/LandingPage.tsx', line: 1146, target: 'sage', note: 'Footer text colour — decorative brand-green, no graded/categorical role; resolves to the brand accent like the rest of the marketing surface' },
+      { file: 'src/components/landing/LandingPage.tsx', line: 1159, target: 'sage', note: 'Footer nav links colour — decorative brand-green' },
+      { file: 'src/components/landing/LandingPage.tsx', line: 1167, target: 'sage', note: 'Footer bottom row colour — decorative brand-green' },
+      { file: 'src/components/landing/LandingPage.tsx', line: 1170, target: 'sage', note: 'Footer "Privacy" link colour — decorative brand-green' },
+      { file: 'src/components/landing/LandingPage.tsx', line: 1171, target: 'sage', note: 'Footer "Terms" link colour — decorative brand-green' },
+      { file: 'src/app/apply/page.tsx', line: 278, target: 'sage', note: 'Footer nav links colour — decorative brand-green, same pattern as LandingPage' },
+      { file: 'src/app/apply/page.tsx', line: 286, target: 'sage', note: 'Footer bottom row colour — decorative brand-green' },
+      { file: 'src/app/onboarding/wizard/page.tsx', line: 27, target: 'sage', note: "Local token object's `greenSoft` — confirmed via read: progress-dot fill for a completed onboarding step (T.greenSoft for done, T.greenMid for current, grey for future). Binary done/not-done marker, not a multi-tier graded indicator — decorative brand-green like the marketing occurrences, not ordinal." },
     ],
   },
   {
@@ -187,13 +198,13 @@ export const POLYSEMOUS_VALUES: PolysemousValue[] = [
       { file: 'src/app/dashboard/deadlines/page.tsx', line: 22, target: 'type-programme', note: 'TYPE_DOT.programme — true funding-type Programme dot' },
       { file: 'src/app/dashboard/deadlines/page.tsx', line: 90, target: 'type-programme', note: 'TYPE_CHIPS programme entry — true funding-type Programme dot' },
       { file: 'src/app/dashboard/projects/[id]/page.tsx', line: 56, target: 'type-programme', note: 'FUNDING_TYPE_STYLE.programme.dot — true funding-type Programme dot' },
-      { file: 'src/app/dashboard/page.tsx', line: 1123, target: 'EXCLUDE-needs-triage', note: "Verified via context (comment above says 'declined (with coral marker)'): this is a PIPELINE-STAGE 'declined' marker, not Programme. Coincidental hex reuse." },
-      { file: 'src/app/dashboard/admin/urls/page.tsx', line: 4541, target: 'EXCLUDE-needs-triage', note: 'Tag-audit disagreement score >=6 tier background — admin data-quality metric, unrelated to funding type' },
-      { file: 'src/app/dashboard/admin/application-review/ReviewSpikeForm.tsx', line: 557, target: 'EXCLUDE-needs-triage', note: 'Verified via context: generic `draftError` banner border, not a Programme badge despite matching the bg/text/border triple by coincidence' },
-      { file: 'src/app/dashboard/admin/application-review/ReviewSpikeForm.tsx', line: 562, target: 'EXCLUDE-needs-triage', note: 'Same generic `error` banner border, second occurrence' },
-      { file: 'src/app/dashboard/admin/quality/page.tsx', line: 212, target: 'EXCLUDE-needs-triage', note: 'Field-coverage percentage bar, 70-90% tier — admin metric, unrelated to funding type' },
-      { file: 'src/app/dashboard/admin/quality/page.tsx', line: 276, target: 'EXCLUDE-needs-triage', note: "Data-provenance colour switch, '360giving' source — admin metric, unrelated to funding type" },
-      { file: 'src/app/dashboard/admin/quality/page.tsx', line: 350, target: 'EXCLUDE-needs-triage', note: 'Sector/beneficiary tag-density tier, >=3 grants — admin metric, unrelated to funding type' },
+      { file: 'src/app/dashboard/page.tsx', line: 1123, target: 'EXCLUDE-needs-triage', note: "Verified via context (comment above says 'declined (with coral marker)'): this is a PIPELINE-STAGE 'declined' marker, not Programme. Coincidental hex reuse. Stays excluded rather than resolving to the ordinal scale — this is the 6-way pipeline-stage duplication the user has explicitly said to leave alone for the primitives pass, not a graded/ordinal indicator." },
+      { file: 'src/app/dashboard/admin/urls/page.tsx', line: 4541, target: 'ordinal-2-fair', note: "Tag-audit disagreement score tier: >=12 coral (worst), >=6 THIS (declining), else neutral cream. Ordinal in role (3-tier severity scale) but the polarity runs the opposite way from the quality-page tiers below — here the middle tier is 'getting worse', not 'good but not best' — so it resolves to ordinal-2-fair, not ordinal-3-good." },
+      { file: 'src/app/dashboard/admin/application-review/ReviewSpikeForm.tsx', line: 557, target: 'state-error', note: 'Verified via context: generic `draftError` banner border, not a Programme badge despite matching the bg/text/border triple by coincidence. Binary error state, not a graded tier — resolves to state-error, not the ordinal scale.' },
+      { file: 'src/app/dashboard/admin/application-review/ReviewSpikeForm.tsx', line: 562, target: 'state-error', note: 'Same generic `error` banner border, second occurrence — same reasoning as line 557.' },
+      { file: 'src/app/dashboard/admin/quality/page.tsx', line: 212, target: 'ordinal-3-good', note: "Field-coverage bar: >=90% lime (best), >=70% THIS (good, not best), else coral (worst). Clean 3-tier graded scale, middle tier -> ordinal-3-good." },
+      { file: 'src/app/dashboard/admin/quality/page.tsx', line: 276, target: 'ordinal-3-good', note: "Data-provenance colour switch, '360giving' source (trust 80 per the field_provenance trust ladder in CLAUDE.md) — the second-highest tier after admin (100). Graded by trust level, per the instruction that provenance indicators resolve to the ordinal scale; 360giving's relative position (2nd of the ranked sources) maps to ordinal-3-good, the 2nd-highest rung." },
+      { file: 'src/app/dashboard/admin/quality/page.tsx', line: 350, target: 'ordinal-3-good', note: 'Sector/beneficiary tag-density tier: >=10 lime (best), >=3 THIS (good, not best), else coral (worst). Identical shape to the field-coverage bar above -> same ordinal-3-good resolution.' },
     ],
   },
   {
@@ -211,7 +222,7 @@ export const POLYSEMOUS_VALUES: PolysemousValue[] = [
       { file: 'src/app/dashboard/deadlines/page.tsx', line: 23, target: 'type-investment', note: 'TYPE_DOT.investment — true funding-type Investment dot' },
       { file: 'src/app/dashboard/deadlines/page.tsx', line: 91, target: 'type-investment', note: 'TYPE_CHIPS investment entry — true funding-type Investment dot' },
       { file: 'src/components/briefing/ui.tsx', line: 32, target: 'type-investment', note: "MIX_COLOR.investment — same Investment concept in the funding-CHARACTER mix system, consistent with funding-type Investment" },
-      { file: 'src/app/dashboard/admin/quality/page.tsx', line: 274, target: 'EXCLUDE-needs-triage', note: "Data-provenance colour switch, 'ai_classifier' source — admin metric, unrelated to funding type" },
+      { file: 'src/app/dashboard/admin/quality/page.tsx', line: 274, target: 'ordinal-2-fair', note: "Data-provenance colour switch, 'ai_classifier' source (an ai_* source, trust 60 per the trust ladder) — ranks below 360giving (80, -> ordinal-3-good above) but above scraper (40, left as plain grey in this switch, not one of our 4 polysemous values). Resolves to ordinal-2-fair, the next rung down." },
     ],
   },
   {
@@ -225,9 +236,9 @@ export const POLYSEMOUS_VALUES: PolysemousValue[] = [
       { file: 'src/app/dashboard/deadlines/page.tsx', line: 24, target: 'type-inkind', note: 'TYPE_DOT.in_kind — true funding-type In-Kind dot' },
       { file: 'src/app/dashboard/deadlines/page.tsx', line: 92, target: 'type-inkind', note: 'TYPE_CHIPS in_kind entry — true funding-type In-Kind dot' },
       { file: 'src/app/dashboard/projects/[id]/page.tsx', line: 58, target: 'type-inkind', note: 'FUNDING_TYPE_STYLE.in_kind.dot — true funding-type In-Kind dot' },
-      { file: 'src/app/dashboard/projects/[id]/page.tsx', line: 116, target: 'EXCLUDE-needs-triage', note: "Reuses FUNDING_TYPE_STYLE.in_kind.dot as a generic 'Worth checking' warning-list bullet — nothing to do with a grant's actual funding type" },
-      { file: 'src/app/dashboard/admin/cohort-match-audit/page.tsx', line: 35, target: 'EXCLUDE-needs-triage', note: "SCORE_BAND 'Moderate' (65-79) border — admin match-quality tier, unrelated to funding type" },
-      { file: 'src/components/admin/GrantEditor.tsx', line: 230, target: 'EXCLUDE-needs-triage', note: "CONFIDENCE_STYLES 'med' border (as #EF9F2766, with alpha) — admin citation-confidence tier, unrelated to funding type" },
+      { file: 'src/app/dashboard/projects/[id]/page.tsx', line: 116, target: 'state-warning', note: "Reuses FUNDING_TYPE_STYLE.in_kind.dot as a generic 'Worth checking' warning-list bullet — nothing to do with a grant's actual funding type. Binary warning marker, not a graded tier -> state-warning, not the ordinal scale." },
+      { file: 'src/app/dashboard/admin/cohort-match-audit/page.tsx', line: 35, target: 'ordinal-3-good', note: "SCORE_BAND: Good(>=80)/Moderate(65-79, THIS)/Weak(45-64)/Poor(<45) — a clean 4-tier scale matching the ordinal scale's 4 rungs 1:1 in count and relative position. 'Moderate' is 2nd-from-top -> ordinal-3-good, the 2nd-highest rung." },
+      { file: 'src/components/admin/GrantEditor.tsx', line: 230, target: 'ordinal-3-good', note: "CONFIDENCE_STYLES 'med' border (as #EF9F2766, with alpha) — middle of a 3-tier high/med/low citation-confidence scale, same 'good, not best' shape as the quality-page tiers -> ordinal-3-good for consistency." },
     ],
   },
 ]
@@ -279,6 +290,14 @@ export const DECIDED_MAPPING: DecidedRow[] = [
     hex: '#BA7517', count: 11, token: 'gold-deep',
     reasoning: "Moved out of NEAREST_TOKEN_MAPPING, not newly decided by the usage report — flagging the correction here rather than losing it. Originally auto-assigned to terra at distance 107.4 (a poor match) because gold-deep didn't exist as a candidate yet when that tier was first computed. Now that the gold collision is resolved, #BA7517 IS gold-deep's exact value (distance 0.0) — this was always amber-saturated, the same value gold-deep aliases to.",
   },
+  {
+    hex: '#EEEDFE', count: 4, token: 'status-invite-pale',
+    reasoning: "SECTOR_PILL background for 3 impact-sector tags (education/housing/employment) in search/page.tsx's GrantCard — single-use decorative, nothing to do with funding type or invite status. Nearest candidate is status-invite-pale at 10.3 (an excellent raw-colour fit) once that token existed as a candidate; second-nearest (state-info-pale / type-programme-pale, both 16.4) would tie a sector tag to an unrelated concept just as coincidentally. Paired with #3C3489 below (same SECTOR_PILL's text colour) — moved together onto the status-invite/status-invite-pale pair rather than each independently nearest-matched, to avoid the exact half-a-pair mismatch caught earlier with #F4A0A0/#6dbf6d (a purple bg with, say, a blue text colour would look like a rendering bug, not a deliberate two-tone tag).",
+  },
+  {
+    hex: '#3C3489', count: 4, token: 'status-invite',
+    reasoning: "SECTOR_PILL text colour, paired with #EEEDFE above. Independently, state-info is the closer raw match (80.2 vs 95.6 to status-invite) — but resolving the pair to different hue families (status-invite-pale bg + state-info text = purple-tinted bg with blue text) would be visually incoherent. Kept with its bg partner on status-invite/status-invite-pale: both are coincidental nearest-token reuse (sector tagging has no real relationship to invite-only status), flagged here so a future reader isn't confused by the token name — a real sector-tag palette is a candidate for the primitives pass, not built here.",
+  },
 ]
 
 // ==== 4. ONE_OFFS — deliberately NOT tokens, 2 values ====
@@ -295,9 +314,10 @@ export const ONE_OFFS: OneOffRow[] = [
   },
 ]
 
-// ==== 5. NEAREST-TOKEN (algorithmic, redmean colour distance) — 129 values ====
-// (131 originally, minus #BA7517 — moved to DECIDED_MAPPING as gold-deep's
-// exact value — and minus #6dbf6d — moved to ONE_OFFS, paired with #F4A0A0)
+// ==== 5. NEAREST-TOKEN (algorithmic, redmean colour distance) — 126 values ====
+// (131 originally, minus #6dbf6d — moved to ONE_OFFS, paired with #F4A0A0 —
+// minus #BA7517/#EEEDFE/#3C3489 — moved to DECIDED_MAPPING — and minus
+// #5A9080 — moved to EXCLUDED_VALUES, see the ordinal-scale pass notes there)
 export const NEAREST_TOKEN_MAPPING: NearestMappingRow[] = [
   { hex: '#1A3C2E', count: 18, token: 'surface-inverse', distance: 27.5, source: 'nearest' },
   { hex: '#6B6B6B', count: 17, token: 'text-muted', distance: 21.7, source: 'nearest' },
@@ -314,16 +334,13 @@ export const NEAREST_TOKEN_MAPPING: NearestMappingRow[] = [
   { hex: '#F0EFEB', count: 7, token: 'surface-pill', distance: 3.0, source: 'nearest' },
   { hex: '#DCE8C8', count: 6, token: 'border-warm', distance: 29.0, source: 'nearest' },
   { hex: '#9B9B9B', count: 6, token: 'text-subtle', distance: 34.0, source: 'nearest' },
-  { hex: '#5A9080', count: 6, token: 'text-subtle', distance: 80.0, source: 'nearest' },
   { hex: '#006666', count: 6, token: 'state-info', distance: 79.7, source: 'nearest' },
   { hex: '#B91C1C', count: 5, token: 'state-error', distance: 82.6, source: 'nearest' },
   { hex: '#A06060', count: 5, token: 'terra', distance: 99.4, source: 'nearest' },
   { hex: '#F7F4EF', count: 4, token: 'surface-sunken', distance: 13.0, source: 'nearest' },
   { hex: '#F0F7F2', count: 4, token: 'surface-pill', distance: 18.2, source: 'nearest' },
-  { hex: '#EEEDFE', count: 4, token: 'type-programme-pale', distance: 16.4, source: 'nearest' },
   { hex: '#E0DFD9', count: 4, token: 'border-warm', distance: 18.0, source: 'nearest' },
   { hex: '#6B6A67', count: 4, token: 'text-muted', distance: 19.3, source: 'nearest' },
-  { hex: '#3C3489', count: 4, token: 'state-info', distance: 80.2, source: 'nearest' },
   { hex: '#FF7043', count: 3, token: 'terra', distance: 76.9, source: 'nearest' },
   { hex: '#E5E2D7', count: 3, token: 'border-warm', distance: 10.8, source: 'nearest' },
   { hex: '#E0E0DC', count: 3, token: 'border-warm', distance: 21.0, source: 'nearest' },
@@ -437,24 +454,15 @@ export const NEAREST_TOKEN_MAPPING: NearestMappingRow[] = [
 export const ORPHANS: OrphanRow[] = []
 
 // ============================================================
-// NEW_FINDINGS_NOT_YET_DECIDED — surfaced by this polysemy pass, not acted
-// on. Lower stakes than POLYSEMOUS_VALUES (these are semantic-role
-// mismatches in the auto-nearest tier, not colour reused for conflicting
-// meanings), but the same principle applies: don't silently paper over a
-// bad-fit auto-assignment.
+// EXCLUDED_VALUES — value-keyed exclusions (not polysemous — one consistent
+// role — but that role has no safe token to land on). #EEEDFE/#3C3489, the
+// other two members of the pre-decision NEW_FINDINGS_NOT_YET_DECIDED set,
+// are now resolved (see DECIDED_MAPPING) and no longer listed here.
 // ============================================================
-export const NEW_FINDINGS_NOT_YET_DECIDED = [
+export const EXCLUDED_VALUES = [
   {
     hex: '#5A9080', count: 6,
-    issue: "Currently mapped to text-subtle (distance 80.0) in NEAREST_TOKEN_MAPPING — but every real occurrence is a 'good, but not the best tier' ACCENT colour (match-quality score>=70 ring/title in search's GrantCard, profile-completion 60-79% border, feedback-status 'actioned' colour), never body text. text-subtle is the wrong ROLE regardless of distance. Nearest candidate by colour is actually `teal` (distance 101.3, closer than text-subtle's own 80.0 is misleading since that's to a text token, not an accent one) but teal is now also type-programme's colour, which would be an odd match for a generic 'second-tier good' meaning. No clean token represents this specific 'good-but-not-excellent, three unrelated scales' role. Needs a human call: fold into state-success anyway, or leave as its own small accent.",
-  },
-  {
-    hex: '#EEEDFE', count: 4,
-    issue: "Currently mapped to type-programme-pale (distance 16.4) — but every occurrence is a SECTOR_PILL background (education/housing/employment impact-sector tags in search's GrantCard), nothing to do with funding type. Paired with #3C3489 as sector-tag text (see below). No sector-taxonomy token family exists in the new system at all (sectors were out of scope for this token set). Low individual stakes (a 14-sector decorative palette), but the current auto-assignment would visually tie these three unrelated sectors to the Programme funding type by coincidence.",
-  },
-  {
-    hex: '#3C3489', count: 4,
-    issue: "Currently mapped to state-info (distance 80.2) — same SECTOR_PILL text colour, paired with #EEEDFE above. Like the invite-only purple, there's no purple in the new 5-accent palette (terra/gold/teal/sage/sky), so 'nearest' is necessarily a squint. Bundle with #EEEDFE if this gets its own decision.",
+    issue: "Every real occurrence (score>=70 ring/title in search's GrantCard tierHue, profile's CompletionMeter 60-79% border, feedback's STATUS_CONFIG 'actioned' colour) is a 'good, second-tier' GRADED accent — ordinal in role, which is normally exactly what the new ordinal scale is for. But forcing it onto the closest-fitting rung, ordinal-3-good (#639922), creates a real collision, not a hypothetical one: in BOTH search/page.tsx's tierHue AND profile/page.tsx's CompletionMeter, the tier immediately ABOVE #5A9080 already uses #639922 itself (score>=80 / pct>=80, both -> sage-deep, the same hex ordinal-3-good aliases to). Repainting #5A9080 to ordinal-3-good would make two currently-distinct, adjacent tiers render as the identical colour in the same component — a visible regression, not a migration. No other ordinal rung is a remotely close colour match (ordinal-4-strong/2-fair/1-weak are all 130+ distance), and no non-ordinal token fits the role (text-subtle/text-muted are the nearest by raw colour but are text tokens, wrong role entirely). Genuinely unclear: needs either a new 5th ordinal rung slotted between strong and good, or a decision to leave this as its own small accent outside the ordinal scale. Left excluded rather than guessed.",
   },
 ]
 
