@@ -456,14 +456,14 @@ export default async function DashboardPage() {
         <div
           className="relative overflow-hidden rounded-xl p-8 md:p-10 mb-8 border"
           style={{
-            background: 'linear-gradient(135deg, #EAF3DE 0%, #F1F8E4 50%, #FAFAF7 100%)',
-            borderColor: '#E4E2DA',
+            background: 'linear-gradient(135deg, var(--state-success-pale) 0%, var(--surface-sunken) 50%, var(--surface-page) 100%)',
+            borderColor: 'var(--border-warm)',
           }}
         >
           <div className="flex items-center gap-2 mb-4">
             <span
               className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-md"
-              style={{ background: 'rgba(132,204,22,0.20)', color: '#3F6814' }}
+              style={{ background: 'rgba(132,204,22,0.20)', color: 'var(--state-success)' }}
             >
               <Sparkles className="w-3 h-3" />
               {profileComplete ? `${totalMatchCount} matches ready` : 'Profile incomplete'}
@@ -485,7 +485,7 @@ export default async function DashboardPage() {
                 <a
                   href="/dashboard/search"
                   className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity"
-                  style={{ background: '#8ECB3C', color: '#173404', fontFamily: 'var(--font-space-grotesk)', boxShadow: '0 2px 8px rgba(132,204,22,0.25)' }}
+                  style={{ background: '#8ECB3C', color: 'var(--deep)', fontFamily: 'var(--font-space-grotesk)', boxShadow: '0 2px 8px rgba(132,204,22,0.25)' }}
                 >
                   See my matches
                   <ArrowRight className="w-4 h-4" />
@@ -495,7 +495,7 @@ export default async function DashboardPage() {
               <a
                 href="/onboarding/wizard"
                 className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity"
-                style={{ background: '#8ECB3C', color: '#173404', fontFamily: 'var(--font-space-grotesk)', boxShadow: '0 2px 8px rgba(132,204,22,0.25)' }}
+                style={{ background: '#8ECB3C', color: 'var(--deep)', fontFamily: 'var(--font-space-grotesk)', boxShadow: '0 2px 8px rgba(132,204,22,0.25)' }}
               >
                 Complete your profile
                 <ArrowRight className="w-4 h-4" />
@@ -511,7 +511,7 @@ export default async function DashboardPage() {
           </h3>
           <div className="bg-white rounded-xl border border-warm overflow-hidden" style={{ boxShadow: '0 2px 16px rgba(26,46,43,0.04)' }}>
             {/* 1. Complete profile — done if onboarded, active otherwise */}
-            <div className="flex items-center gap-4 p-5 border-b border-warm" style={profileComplete ? undefined : { background: '#EAF3DE' }}>
+            <div className="flex items-center gap-4 p-5 border-b border-warm" style={profileComplete ? undefined : { background: 'var(--state-success-pale)' }}>
               {profileComplete ? (
                 <div className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center" style={{ background: '#8ECB3C' }}>
                   <Check className="w-5 h-5 text-white" strokeWidth={3} />
@@ -520,9 +520,9 @@ export default async function DashboardPage() {
                 <div
                   className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold"
                   style={{
-                    background: '#FFFFFF',
+                    background: 'var(--surface-card)',
                     border: '2px solid #8ECB3C',
-                    color: '#3F6814',
+                    color: 'var(--state-success)',
                     fontFamily: 'var(--font-space-grotesk)',
                     boxShadow: '0 0 0 4px rgba(142,203,60,0.15)',
                   }}
@@ -544,7 +544,7 @@ export default async function DashboardPage() {
                 <a
                   href="/onboarding/wizard"
                   className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg hover:opacity-90 transition-opacity"
-                  style={{ background: '#173404', color: '#FAF7F2', fontFamily: 'var(--font-space-grotesk)' }}
+                  style={{ background: 'var(--deep)', color: 'var(--surface-page)', fontFamily: 'var(--font-space-grotesk)' }}
                 >
                   Start
                   <ArrowRight className="w-3 h-3" />
@@ -553,19 +553,19 @@ export default async function DashboardPage() {
             </div>
 
             {/* 2. Browse first matches — only "active" once profile is done */}
-            <div className="flex items-center gap-4 p-5 border-b border-warm" style={profileComplete ? { background: '#EAF3DE' } : undefined}>
+            <div className="flex items-center gap-4 p-5 border-b border-warm" style={profileComplete ? { background: 'var(--state-success-pale)' } : undefined}>
               <div
                 className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold"
                 style={profileComplete ? {
-                  background: '#FFFFFF',
+                  background: 'var(--surface-card)',
                   border: '2px solid #8ECB3C',
-                  color: '#3F6814',
+                  color: 'var(--state-success)',
                   fontFamily: 'var(--font-space-grotesk)',
                   boxShadow: '0 0 0 4px rgba(142,203,60,0.15)',
                 } : {
-                  background: '#FFFFFF',
-                  border: '1.5px solid #E4E2DA',
-                  color: '#8A8986',
+                  background: 'var(--surface-card)',
+                  border: '1.5px solid var(--border-warm)',
+                  color: 'var(--text-subtle)',
                   fontFamily: 'var(--font-space-grotesk)',
                 }}
               >
@@ -585,7 +585,7 @@ export default async function DashboardPage() {
                 <a
                   href="/dashboard/search"
                   className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg hover:opacity-90 transition-opacity"
-                  style={{ background: '#173404', color: '#FAF7F2', fontFamily: 'var(--font-space-grotesk)' }}
+                  style={{ background: 'var(--deep)', color: 'var(--surface-page)', fontFamily: 'var(--font-space-grotesk)' }}
                 >
                   Start
                   <ArrowRight className="w-3 h-3" />
@@ -597,7 +597,7 @@ export default async function DashboardPage() {
             <div className="flex items-center gap-4 p-5 border-b border-warm">
               <div
                 className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold"
-                style={{ background: '#FFFFFF', border: '1.5px solid #E4E2DA', color: '#9A978E', fontFamily: 'var(--font-space-grotesk)' }}
+                style={{ background: 'var(--surface-card)', border: '1.5px solid var(--border-warm)', color: 'var(--text-subtle)', fontFamily: 'var(--font-space-grotesk)' }}
               >
                 3
               </div>
@@ -614,7 +614,7 @@ export default async function DashboardPage() {
             <div className="flex items-center gap-4 p-5 border-b border-warm">
               <div
                 className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold"
-                style={{ background: '#FFFFFF', border: '1.5px solid #E4E2DA', color: '#9A978E', fontFamily: 'var(--font-space-grotesk)' }}
+                style={{ background: 'var(--surface-card)', border: '1.5px solid var(--border-warm)', color: 'var(--text-subtle)', fontFamily: 'var(--font-space-grotesk)' }}
               >
                 4
               </div>
@@ -631,7 +631,7 @@ export default async function DashboardPage() {
             <div className="flex items-center gap-4 p-5">
               <div
                 className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold"
-                style={{ background: '#FFFFFF', border: '1.5px solid #E4E2DA', color: '#9A978E', fontFamily: 'var(--font-space-grotesk)' }}
+                style={{ background: 'var(--surface-card)', border: '1.5px solid var(--border-warm)', color: 'var(--text-subtle)', fontFamily: 'var(--font-space-grotesk)' }}
               >
                 5
               </div>
@@ -650,7 +650,7 @@ export default async function DashboardPage() {
         </div>
 
         {/* "What you'll see here soon" — preview tiles */}
-        <div className="rounded-xl p-6 md:p-8 border" style={{ background: '#FAF7F2', borderColor: '#E4E2DA' }}>
+        <div className="rounded-xl p-6 md:p-8 border" style={{ background: 'var(--surface-page)', borderColor: 'var(--border-warm)' }}>
           <h3 className="text-sm font-bold uppercase tracking-wider text-mid mb-5" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
             What you'll see here soon
           </h3>
@@ -658,7 +658,7 @@ export default async function DashboardPage() {
             {/* Upcoming deadlines */}
             <div className="bg-white rounded-lg p-5 border border-warm">
               <div className="flex items-center gap-2 mb-3">
-                <CalendarDays className="w-4 h-4" style={{ color: '#5F5E5A' }} />
+                <CalendarDays className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
                 <p className="text-xs font-semibold uppercase tracking-wider text-mid">Upcoming deadlines</p>
               </div>
               <div className="space-y-2">
@@ -670,19 +670,19 @@ export default async function DashboardPage() {
             {/* Pipeline at a glance */}
             <div className="bg-white rounded-lg p-5 border border-warm">
               <div className="flex items-center gap-2 mb-3">
-                <ListChecks className="w-4 h-4" style={{ color: '#5F5E5A' }} />
+                <ListChecks className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
                 <p className="text-xs font-semibold uppercase tracking-wider text-mid">Pipeline at a glance</p>
               </div>
               <div className="flex gap-1 h-10">
-                <div className="flex-1 rounded" style={{ background: '#EAF3DE' }} />
-                <div className="flex-1 rounded" style={{ background: '#F1F7E4' }} />
-                <div className="flex-1 rounded" style={{ background: '#E6F1FB' }} />
+                <div className="flex-1 rounded" style={{ background: 'var(--state-success-pale)' }} />
+                <div className="flex-1 rounded" style={{ background: 'var(--state-success-pale)' }} />
+                <div className="flex-1 rounded" style={{ background: 'var(--state-info-pale)' }} />
               </div>
             </div>
             {/* New matches */}
             <div className="bg-white rounded-lg p-5 border border-warm">
               <div className="flex items-center gap-2 mb-3">
-                <Sparkles className="w-4 h-4" style={{ color: '#5F5E5A' }} />
+                <Sparkles className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
                 <p className="text-xs font-semibold uppercase tracking-wider text-mid">New matches</p>
               </div>
               <div className="space-y-2">
@@ -724,34 +724,34 @@ export default async function DashboardPage() {
       {builderAllowed && !hasWork && (
         <div className="card rounded-xl mb-8" style={{ padding: 28, display: 'grid', gridTemplateColumns: 'minmax(0,1.4fr) minmax(0,1fr)', gap: 28, alignItems: 'center' }}>
           <div>
-            <div style={{ width: 46, height: 46, borderRadius: 13, background: '#F1F7E4', color: '#3B6D11', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+            <div style={{ width: 46, height: 46, borderRadius: 13, background: 'var(--state-success-pale)', color: 'var(--state-success)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
               <Lightbulb size={23} />
             </div>
-            <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 22, fontWeight: 600, color: '#2C2C2A', marginBottom: 8 }}>Start your first project</div>
+            <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 22, fontWeight: 600, color: 'var(--text-body)', marginBottom: 8 }}>Start your first project</div>
             <p className="text-mid" style={{ fontSize: 14.5, lineHeight: 1.6, marginBottom: 20, maxWidth: 420 }}>
               Describe what you need funded once. We&apos;ll match it against the{' '}
-              <span style={{ color: '#2C2C2A', fontWeight: 500 }}>{totalMatchCount} funders that already fit your organisation</span>,
+              <span style={{ color: 'var(--text-body)', fontWeight: 500 }}>{totalMatchCount} funders that already fit your organisation</span>,
               then help you build a tailored application for each one you choose.
             </p>
             <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' }}>
-              <a href="/dashboard/projects/new" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#8ECB3C', color: '#173404', fontFamily: 'var(--font-space-grotesk)', fontSize: 14.5, fontWeight: 600, padding: '12px 20px', borderRadius: 11, textDecoration: 'none' }}>
+              <a href="/dashboard/projects/new" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#8ECB3C', color: 'var(--deep)', fontFamily: 'var(--font-space-grotesk)', fontSize: 14.5, fontWeight: 600, padding: '12px 20px', borderRadius: 11, textDecoration: 'none' }}>
                 <Lightbulb size={16} /> Describe a project
               </a>
-              <a href="/dashboard/applications/new" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 14, fontWeight: 600, color: '#3B6D11', textDecoration: 'none' }}>
+              <a href="/dashboard/applications/new" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 14, fontWeight: 600, color: 'var(--state-success)', textDecoration: 'none' }}>
                 Know which funder to apply to? Start a direct application →
               </a>
             </div>
           </div>
-          <div style={{ background: '#FBFDF7', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 16, padding: 22 }}>
+          <div style={{ background: 'var(--surface-page)', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 16, padding: 22 }}>
             {[
               { t: 'Describe it once', b: 'A few sentences or paste an old plan.' },
               { t: 'See who fits', b: 'We rank funders against your project.' },
               { t: 'Apply to each', b: 'Build a tailored application per funder.' },
             ].map((s, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: i < 2 ? 16 : 0 }}>
-                <span style={{ width: 26, height: 26, borderRadius: 999, background: '#173404', color: '#F1F7E4', fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</span>
+                <span style={{ width: 26, height: 26, borderRadius: 999, background: 'var(--deep)', color: 'var(--state-success-pale)', fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</span>
                 <div>
-                  <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: '#2C2C2A' }}>{s.t}</div>
+                  <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: 'var(--text-body)' }}>{s.t}</div>
                   <div className="text-mid" style={{ fontSize: 12 }}>{s.b}</div>
                 </div>
               </div>
@@ -765,8 +765,8 @@ export default async function DashboardPage() {
           {/* Continue writing */}
           <div className="card rounded-xl p-6">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
-              <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 700, color: '#2C2C2A' }}>Continue writing</span>
-              <a href="/dashboard/applications" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: '#3B6D11', textDecoration: 'none' }}>
+              <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 700, color: 'var(--text-body)' }}>Continue writing</span>
+              <a href="/dashboard/applications" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: 'var(--state-success)', textDecoration: 'none' }}>
                 View all{workApps.length > 4 ? ` ${workApps.length}` : ''} →
               </a>
             </div>
@@ -778,17 +778,17 @@ export default async function DashboardPage() {
               const pct = a.total > 0 ? Math.round((a.answered / a.total) * 100) : 0
               return (
                 <a key={a.id} href={`/dashboard/applications/${a.id}`} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0', borderBottom: i < arr.length - 1 ? '1px solid rgba(23,52,4,0.06)' : 'none', textDecoration: 'none' }}>
-                  <span style={{ width: 40, height: 40, borderRadius: 11, background: '#F1F7E4', color: '#3B6D11', fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{mono}</span>
+                  <span style={{ width: 40, height: 40, borderRadius: 11, background: 'var(--state-success-pale)', color: 'var(--state-success)', fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{mono}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 15, fontWeight: 500, color: '#2C2C2A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.title}</div>
+                    <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 15, fontWeight: 500, color: 'var(--text-body)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.title}</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
-                      <span style={{ height: 6, flex: 1, maxWidth: 150, background: '#EFE9DD', borderRadius: 999, overflow: 'hidden' }}>
+                      <span style={{ height: 6, flex: 1, maxWidth: 150, background: 'var(--type-inkind-pale)', borderRadius: 999, overflow: 'hidden' }}>
                         <span style={{ display: 'block', height: '100%', width: `${pct}%`, background: '#8ECB3C' }} />
                       </span>
                       <span className="text-mid" style={{ fontSize: 12 }}>{a.answered} of {a.total} · {pct}%</span>
                     </div>
                   </div>
-                  <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999, whiteSpace: 'nowrap', flexShrink: 0, ...(a.pill.coral ? { color: '#993C1D', background: '#FAECE7' } : { color: '#5F5E5A', background: '#F1ECE1' }) }}>{a.pill.label}</span>
+                  <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999, whiteSpace: 'nowrap', flexShrink: 0, ...(a.pill.coral ? { color: 'var(--state-error)', background: 'var(--state-error-pale)' } : { color: 'var(--text-muted)', background: 'var(--surface-pill)' }) }}>{a.pill.label}</span>
                 </a>
               )
             })}
@@ -797,19 +797,19 @@ export default async function DashboardPage() {
           {/* Your projects */}
           <div className="card rounded-xl p-6">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-              <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 700, color: '#2C2C2A' }}>Your projects</span>
-              <a href="/dashboard/projects" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: '#3B6D11', textDecoration: 'none' }}>View all →</a>
+              <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 700, color: 'var(--text-body)' }}>Your projects</span>
+              <a href="/dashboard/projects" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: 'var(--state-success)', textDecoration: 'none' }}>View all →</a>
             </div>
             {workProjects.length === 0 ? (
               <p className="text-mid" style={{ fontSize: 13.5, lineHeight: 1.55, marginBottom: 12 }}>Describe a project to match more funders than your organisation profile alone.</p>
             ) : workProjects.slice(0, 4).map((p, i, arr) => (
               <a key={p.id} href={`/dashboard/projects/${p.id}`} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0', borderBottom: i < arr.length - 1 ? '1px solid rgba(23,52,4,0.06)' : 'none', textDecoration: 'none' }}>
-                <span style={{ width: 40, height: 40, borderRadius: 11, background: '#F1F7E4', color: '#3B6D11', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Lightbulb size={19} /></span>
+                <span style={{ width: 40, height: 40, borderRadius: 11, background: 'var(--state-success-pale)', color: 'var(--state-success)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Lightbulb size={19} /></span>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 15, fontWeight: 500, color: '#2C2C2A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
+                  <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 15, fontWeight: 500, color: 'var(--text-body)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 5, fontSize: 12.5 }}>
                     {p.ready
-                      ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#3B6D11', fontWeight: 500 }}><CircleCheck size={13} /> Ready to match</span>
+                      ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--state-success)', fontWeight: 500 }}><CircleCheck size={13} /> Ready to match</span>
                       : <span className="text-mid">Needs a few more details</span>}
                     {p.fitCount != null && p.fitCount > 0 ? <span className="text-mid">· {p.fitCount} funders fit</span> : null}
                     {p.budget ? <span className="text-mid">· £{p.budget.toLocaleString('en-GB')}</span> : null}
@@ -818,7 +818,7 @@ export default async function DashboardPage() {
               </a>
             ))}
             <div style={{ paddingTop: 10 }}>
-              <a href="/dashboard/projects/new" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: '#3B6D11', textDecoration: 'none' }}>+ New project</a>
+              <a href="/dashboard/projects/new" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13.5, fontWeight: 600, color: 'var(--state-success)', textDecoration: 'none' }}>+ New project</a>
             </div>
           </div>
         </div>
@@ -844,12 +844,12 @@ export default async function DashboardPage() {
           { key: 'partial', label: 'Worth exploring', count: qualityCounts.partial, colour: MATCH_TIER.partial.dot },
         ]
         const TYPE_BAR: Record<string, { label: string; colour: string; pillBg: string; pillFg: string }> = {
-          grant:           { label: 'Grants',      colour: '#639922', pillBg: '#F1F7E4', pillFg: '#3B6D11' },
-          in_kind:         { label: 'In-kind',     colour: '#EF9F27', pillBg: '#FAEEDA', pillFg: '#854F0B' },
-          programme:       { label: 'Programmes',  colour: '#D85A30', pillBg: '#FAECE7', pillFg: '#993C1D' },
-          investment:      { label: 'Investment',  colour: '#85B7EB', pillBg: '#E6F1FB', pillFg: '#0C447C' },
-          accelerator:     { label: 'Accelerator', colour: '#D85A30', pillBg: '#FAECE7', pillFg: '#993C1D' },
-          blended_finance: { label: 'Blended',     colour: '#85B7EB', pillBg: '#E6F1FB', pillFg: '#0C447C' },
+          grant:           { label: 'Grants',      colour: 'var(--sage-deep)', pillBg: 'var(--state-success-pale)', pillFg: 'var(--state-success)' },
+          in_kind:         { label: 'In-kind',     colour: 'var(--type-inkind)', pillBg: 'var(--state-warning-pale)', pillFg: 'var(--state-warning)' },
+          programme:       { label: 'Programmes',  colour: 'var(--terra)', pillBg: 'var(--state-error-pale)', pillFg: 'var(--state-error)' },
+          investment:      { label: 'Investment',  colour: 'var(--type-investment)', pillBg: 'var(--state-info-pale)', pillFg: 'var(--state-info)' },
+          accelerator:     { label: 'Accelerator', colour: 'var(--terra)', pillBg: 'var(--state-error-pale)', pillFg: 'var(--state-error)' },
+          blended_finance: { label: 'Blended',     colour: 'var(--type-investment)', pillBg: 'var(--state-info-pale)', pillFg: 'var(--state-info)' },
         }
         const typeBars = Object.entries(typeCounts)
           .map(([key, count]) => ({ key, count, ...(TYPE_BAR[key] ?? TYPE_BAR.grant) }))
@@ -864,15 +864,15 @@ export default async function DashboardPage() {
                   pair of [N matches] (large) and [of M total] (small grey).
                   Number and unit are bound together as the headline; the
                   "of M total" sits as the qualifier. */}
-              <div className="rounded-lg mb-5" style={{ background: '#F0EDE2', padding: 16 }}>
-                <p style={{ fontSize: 11, fontWeight: 500, letterSpacing: '0.5px', color: '#5F5E5A', textTransform: 'uppercase', fontFamily: 'var(--font-space-grotesk)', marginBottom: 6 }}>
+              <div className="rounded-lg mb-5" style={{ background: 'var(--surface-pill)', padding: 16 }}>
+                <p style={{ fontSize: 11, fontWeight: 500, letterSpacing: '0.5px', color: 'var(--text-muted)', textTransform: 'uppercase', fontFamily: 'var(--font-space-grotesk)', marginBottom: 6 }}>
                   Worth your attention
                 </p>
                 <div className="flex items-baseline flex-wrap" style={{ gap: 10 }}>
-                  <span style={{ fontSize: 36, fontWeight: 500, color: '#2C2C2A', fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.02em', lineHeight: 1 }}>
+                  <span style={{ fontSize: 36, fontWeight: 500, color: 'var(--text-body)', fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.02em', lineHeight: 1 }}>
                     {actionableCount} matches
                   </span>
-                  <span style={{ fontSize: 13, color: '#5F5E5A', fontFamily: 'var(--font-space-grotesk)' }}>
+                  <span style={{ fontSize: 13, color: 'var(--text-muted)', fontFamily: 'var(--font-space-grotesk)' }}>
                     of {totalMatchCount} total
                   </span>
                 </div>
@@ -901,7 +901,7 @@ export default async function DashboardPage() {
                       <div className="flex" style={{ flexGrow: actionableRatio * 100, flexBasis: 0, columnGap: 20 }}>
                         {qualityCols.map(q => (
                           <div key={q.key}>
-                            <p className="text-xs whitespace-nowrap" style={{ color: '#5F5E5A' }}>{q.label}</p>
+                            <p className="text-xs whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>{q.label}</p>
                             <p className="text-xl font-bold text-charcoal mt-0.5" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
                               {q.count}
                             </p>
@@ -910,7 +910,7 @@ export default async function DashboardPage() {
                       </div>
                       {showLower && (
                         <div style={{ flexGrow: cappedWeakRatio * 100, flexBasis: 0, opacity: 0.6 }}>
-                          <p className="text-xs" style={{ color: '#5F5E5A', lineHeight: 1.2 }}>Less relevant</p>
+                          <p className="text-xs" style={{ color: 'var(--text-muted)', lineHeight: 1.2 }}>Less relevant</p>
                           <p className="font-bold text-charcoal mt-0.5" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 15 }}>
                             {weak}
                           </p>
@@ -919,13 +919,13 @@ export default async function DashboardPage() {
                     </div>
                     {/* Bar — same flex ratios as label row above */}
                     <div className="flex h-2 mb-4" style={{ gap: 4 }}>
-                      <div className="flex rounded-full overflow-hidden" style={{ flexGrow: actionableRatio * 100, flexBasis: 0, background: '#F0EDE2' }}>
+                      <div className="flex rounded-full overflow-hidden" style={{ flexGrow: actionableRatio * 100, flexBasis: 0, background: 'var(--surface-pill)' }}>
                         {qualityCols.filter(q => q.count > 0).map(q => (
                           <div key={q.key} style={{ flexGrow: q.count, background: q.colour }} />
                         ))}
                       </div>
                       {showLower && (
-                        <div className="rounded-full" style={{ flexGrow: cappedWeakRatio * 100, flexBasis: 0, background: '#D3D1C7' }} />
+                        <div className="rounded-full" style={{ flexGrow: cappedWeakRatio * 100, flexBasis: 0, background: 'var(--border-warm)' }} />
                       )}
                     </div>
                   </>
@@ -935,19 +935,19 @@ export default async function DashboardPage() {
               {/* Browse-all link — discoverable but not styled as a primary CTA.
                   No URL params: takes the user to the unfiltered Find Funding
                   view so the totals on both pages match exactly. */}
-              <a href="/dashboard/search" className="text-xs underline mb-6 inline-block hover:text-charcoal transition-colors" style={{ color: '#5F5E5A', fontFamily: 'var(--font-space-grotesk)' }}>
+              <a href="/dashboard/search" className="text-xs underline mb-6 inline-block hover:text-charcoal transition-colors" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-space-grotesk)' }}>
                 Browse all {totalMatchCount} matches →
               </a>
 
               {/* By funding type — actionable subset (score ≥ 50) only */}
-              <p className="uppercase mb-3" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#5F5E5A', fontSize: 12, letterSpacing: '0.06em', fontWeight: 500 }}>
+              <p className="uppercase mb-3" style={{ fontFamily: 'var(--font-space-grotesk)', color: 'var(--text-muted)', fontSize: 12, letterSpacing: '0.06em', fontWeight: 500 }}>
                 By funding type
               </p>
               <div className="space-y-3">
                 {typeBars.map(t => (
                   <div key={t.key} className="flex items-center gap-3">
-                    <span className="flex-shrink-0" style={{ color: '#2C2C2A', width: 100, fontSize: 13 }}>{t.label}</span>
-                    <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: '#F0EDE2' }}>
+                    <span className="flex-shrink-0" style={{ color: 'var(--text-body)', width: 100, fontSize: 13 }}>{t.label}</span>
+                    <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'var(--surface-pill)' }}>
                       <div className="h-full rounded-full" style={{ width: `${(t.count / maxTypeCount) * 100}%`, background: t.colour }} />
                     </div>
                     <span className="font-semibold text-charcoal flex-shrink-0 text-right" style={{ fontFamily: 'var(--font-space-grotesk)', width: 40, fontSize: 13 }}>
@@ -967,7 +967,7 @@ export default async function DashboardPage() {
                 <h3 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
                   Top matches for you
                 </h3>
-                <a href="/dashboard/search?actionable=1" className="text-xs font-semibold hover:underline" style={{ color: '#3B6D11', fontFamily: 'var(--font-space-grotesk)' }}>
+                <a href="/dashboard/search?actionable=1" className="text-xs font-semibold hover:underline" style={{ color: 'var(--state-success)', fontFamily: 'var(--font-space-grotesk)' }}>
                   See all {actionableCount} →
                 </a>
               </div>
@@ -987,7 +987,7 @@ export default async function DashboardPage() {
                   // collapses to "Nd" when imminent and "DD MMM" beyond.
                   let deadlineNode: React.ReactNode = null
                   if (m.grant.isRolling) {
-                    deadlineNode = <span style={{ color: '#5F5E5A' }}>Rolling</span>
+                    deadlineNode = <span style={{ color: 'var(--text-muted)' }}>Rolling</span>
                   } else if (m.grant.deadline) {
                     const parts = m.grant.deadline.split('-').map(Number)
                     if (parts.length === 3) {
@@ -1000,14 +1000,14 @@ export default async function DashboardPage() {
                       else if (daysLeft <= 30) txt = `${daysLeft}d left`
                       else txt = dueDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
                       const urgent = daysLeft <= 30
-                      deadlineNode = <span style={{ color: urgent ? '#993C1D' : '#5F5E5A', fontWeight: urgent ? 600 : 400 }}>{txt}</span>
+                      deadlineNode = <span style={{ color: urgent ? 'var(--state-error)' : 'var(--text-muted)', fontWeight: urgent ? 600 : 400 }}>{txt}</span>
                     }
                   }
 
                   return (
                     <a key={m.grant.id} href={`/dashboard/search?grant=${encodeURIComponent(m.grant.id)}`}
-                      className="relative flex flex-col justify-center gap-2 rounded-lg pl-5 pr-4 py-4 hover:bg-[#F5F1E8] hover:translate-x-0.5 transition-all overflow-hidden group flex-1"
-                      style={{ background: '#FAFAF7' }}>
+                      className="relative flex flex-col justify-center gap-2 rounded-lg pl-5 pr-4 py-4 hover:bg-surface-sunken hover:translate-x-0.5 transition-all overflow-hidden group flex-1"
+                      style={{ background: 'var(--surface-page)' }}>
                       <div className="absolute top-2 bottom-2 left-0 w-[3px] rounded-r" style={{ background: cfg.colour }} />
                       {/* Top row — title + percentage pill */}
                       <div className="flex items-center gap-3 min-w-0">
@@ -1024,11 +1024,11 @@ export default async function DashboardPage() {
                           {cfg.label.replace(/s$/, '')}
                         </span>
                         {m.grant.isInviteOnly && (
-                          <span className="flex-shrink-0 inline-flex items-center gap-0.5 rounded-full" style={{ background: '#F3EDFA', color: '#6B21A8', fontSize: 10, padding: '2px 7px', fontWeight: 500, fontFamily: 'var(--font-dm-sans)' }}>
+                          <span className="flex-shrink-0 inline-flex items-center gap-0.5 rounded-full" style={{ background: 'var(--type-programme-pale)', color: 'var(--status-invite)', fontSize: 10, padding: '2px 7px', fontWeight: 500, fontFamily: 'var(--font-dm-sans)' }}>
                             ✉ Invite only
                           </span>
                         )}
-                        <span style={{ color: '#5F5E5A' }} className="truncate min-w-0">
+                        <span style={{ color: 'var(--text-muted)' }} className="truncate min-w-0">
                           {m.grant.funder} · {amt}
                           {deadlineNode && <> · {deadlineNode}</>}
                         </span>
@@ -1059,7 +1059,7 @@ export default async function DashboardPage() {
         <div className="card rounded-xl">
           <div className={`flex items-center justify-between ${builderAllowed ? 'mb-1' : 'mb-5'}`}>
             <h3 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Pipeline</h3>
-            <a href="/dashboard/pipeline" className="text-xs font-semibold hover:underline" style={{ color: '#3B6D11', fontFamily: 'var(--font-space-grotesk)' }}>View pipeline →</a>
+            <a href="/dashboard/pipeline" className="text-xs font-semibold hover:underline" style={{ color: 'var(--state-success)', fontFamily: 'var(--font-space-grotesk)' }}>View pipeline →</a>
           </div>
           {builderAllowed && <p className="text-mid mb-5" style={{ fontSize: 12.5 }}>Where each opportunity sits by stage and value, not the answer-writing.</p>}
 
@@ -1075,15 +1075,15 @@ export default async function DashboardPage() {
             if (!hasAnyActivity) {
               return (
                 <a href="/dashboard/search"
-                  className="flex flex-col items-center justify-center text-center gap-2 rounded-xl px-6 py-10 hover:bg-[#F5F1E8] transition-colors"
-                  style={{ background: '#FAFAF7', border: '1.5px dashed rgba(99,153,34,0.35)', minHeight: 160 }}>
+                  className="flex flex-col items-center justify-center text-center gap-2 rounded-xl px-6 py-10 hover:bg-surface-sunken transition-colors"
+                  style={{ background: 'var(--surface-page)', border: '1.5px dashed rgba(99,153,34,0.35)', minHeight: 160 }}>
                   <p className="text-base font-semibold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
                     Nothing in your pipeline yet
                   </p>
-                  <p className="text-sm" style={{ color: '#5F5E5A' }}>
+                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                     Save a match to start tracking applications.
                   </p>
-                  <span className="mt-2 text-xs font-semibold inline-flex items-center gap-1.5" style={{ color: '#3B6D11', fontFamily: 'var(--font-space-grotesk)' }}>
+                  <span className="mt-2 text-xs font-semibold inline-flex items-center gap-1.5" style={{ color: 'var(--state-success)', fontFamily: 'var(--font-space-grotesk)' }}>
                     Find your first match <ArrowRight className="w-3.5 h-3.5" />
                   </span>
                 </a>
@@ -1117,12 +1117,12 @@ export default async function DashboardPage() {
 
                 {/* Footer line — declined (with coral marker) on the left,
                     total in pipeline on the right. Order matches mockup. */}
-                <div className="mt-3 pt-3 flex items-center justify-between flex-wrap gap-2 text-xs" style={{ borderTop: '0.5px solid rgba(0,0,0,0.08)', color: '#5F5E5A' }}>
+                <div className="mt-3 pt-3 flex items-center justify-between flex-wrap gap-2 text-xs" style={{ borderTop: '0.5px solid rgba(0,0,0,0.08)', color: 'var(--text-muted)' }}>
                   {declined && declined.count > 0 ? (
                     <span className="inline-flex items-center gap-2" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
                       <span className="inline-block flex-shrink-0" style={{ width: 10, height: 10, background: '#F0997B', borderRadius: 2 }} />
                       <span>
-                        <span className="font-semibold" style={{ color: '#2C2C2A' }}>{declined.value > 0 ? formatCurrency(declined.value) : declined.count}</span> declined
+                        <span className="font-semibold" style={{ color: 'var(--text-body)' }}>{declined.value > 0 ? formatCurrency(declined.value) : declined.count}</span> declined
                         <span className="ml-1">· {declined.count === 1 ? '1 opportunity' : `${declined.count} opportunities`}</span>
                       </span>
                     </span>
@@ -1143,13 +1143,13 @@ export default async function DashboardPage() {
             <div className="flex items-center gap-2">
               <h3 className="text-xl font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Upcoming deadlines</h3>
               {alerts.length > 0 && (
-                <span className="text-xs font-semibold px-2 py-0.5 rounded-md" style={{ background: '#F0EDE2', color: '#5F5E5A', fontFamily: 'var(--font-space-grotesk)' }}>
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-md" style={{ background: 'var(--surface-pill)', color: 'var(--text-muted)', fontFamily: 'var(--font-space-grotesk)' }}>
                   {alerts.length}
                 </span>
               )}
             </div>
             <a href="/dashboard/deadlines"
-              className="text-xs font-semibold hover:underline" style={{ color: '#3B6D11', fontFamily: 'var(--font-space-grotesk)' }}>
+              className="text-xs font-semibold hover:underline" style={{ color: 'var(--state-success)', fontFamily: 'var(--font-space-grotesk)' }}>
               View all deadlines →
             </a>
           </div>
@@ -1171,13 +1171,13 @@ export default async function DashboardPage() {
                   const isUrgent = d <= 30
                   const pillLabel = d < 0 ? 'Overdue' : d === 0 ? 'Today' : d === 1 ? 'Tomorrow' : `${d}d`
                   const pillCls = isUrgent
-                    ? 'bg-[#FAECE7] text-[#993C1D]'
-                    : 'bg-transparent text-[#5F5E5A] border border-[rgba(23,52,4,0.20)]'
-                  const dayCol   = isUrgent ? '#993C1D' : '#2C2C2A'
-                  const monthCol = isUrgent ? '#993C1D' : '#5F5E5A'
+                    ? 'bg-state-error-pale text-state-error'
+                    : 'bg-transparent text-text-muted border border-[rgba(23,52,4,0.20)]'
+                  const dayCol   = isUrgent ? 'var(--state-error)' : 'var(--text-body)'
+                  const monthCol = isUrgent ? 'var(--state-error)' : 'var(--text-muted)'
                   return (
                     <a key={row.id} href={row.href}
-                      className="flex items-center gap-3 py-2.5 border-b border-warm last:border-0 hover:bg-[#FAFAF7] -mx-2 px-2 rounded-md transition-colors">
+                      className="flex items-center gap-3 py-2.5 border-b border-warm last:border-0 hover:bg-surface-page -mx-2 px-2 rounded-md transition-colors">
                       {dateObj ? (
                         <div className="flex flex-col items-center flex-shrink-0 w-9 text-center">
                           <span className="text-[9px] font-bold uppercase" style={{ color: monthCol }}>{dateObj.month}</span>
