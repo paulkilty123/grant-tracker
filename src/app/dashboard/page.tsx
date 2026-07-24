@@ -742,7 +742,7 @@ export default async function DashboardPage() {
               </a>
             </div>
           </div>
-          <div style={{ background: 'var(--surface-page)', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 16, padding: 22 }}>
+          <div style={{ background: 'var(--surface-page)', border: '1px solid color-mix(in srgb, var(--deep) 8%, transparent)', borderRadius: 16, padding: 22 }}>
             {[
               { t: 'Describe it once', b: 'A few sentences or paste an old plan.' },
               { t: 'See who fits', b: 'We rank funders against your project.' },

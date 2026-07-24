@@ -1414,7 +1414,7 @@ export default function DeadlinesPage() {
         actions = (
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
             <span style={{ fontFamily: UI_FONT, fontSize: 11, padding: '2px 8px', borderRadius: 10, fontWeight: 500,
-              background: 'var(--surface-page)', color: 'var(--text-muted)', border: '1px solid rgba(23,52,4,0.14)', whiteSpace: 'nowrap' }}>Saved</span>
+              background: 'var(--surface-page)', color: 'var(--text-muted)', border: '1px solid color-mix(in srgb, var(--deep) 14%, transparent)', whiteSpace: 'nowrap' }}>Saved</span>
             <button onClick={() => handlePipelineMatch(row.grant)}
               style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, padding: '6px 12px', borderRadius: 6,
                 border: 'none', background: '#8ECB3C' /* eslint-disable-line no-restricted-syntax -- RETIRED lime (#8ECB3C) — button-hierarchy redesign, not a token rename */, color: 'var(--deep)', cursor: 'pointer',
@@ -1454,7 +1454,7 @@ export default function DeadlinesPage() {
             </button>
             <button onClick={() => handleSaveMatch(gId)} disabled={!!actioning}
               style={{ fontFamily: UI_FONT, fontSize: 12, fontWeight: 500, color: 'var(--text-muted)', padding: '6px 10px',
-                borderRadius: 6, border: '0.5px solid rgba(23,52,4,0.14)', background: 'var(--surface-card)',
+                borderRadius: 6, border: '0.5px solid color-mix(in srgb, var(--deep) 14%, transparent)', background: 'var(--surface-card)',
                 cursor: actioning ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' }}>
               {actioning === 'saving' ? '…' : 'Save'}
             </button>
@@ -1476,7 +1476,7 @@ export default function DeadlinesPage() {
         style={{
           display: 'grid', gridTemplateColumns: '72px 1fr auto', gap: 16, alignItems: 'center',
           padding: '14px 22px',
-          borderBottom: isLast ? 'none' : '1px solid rgba(23,52,4,0.08)',
+          borderBottom: isLast ? 'none' : '1px solid color-mix(in srgb, var(--deep) 8%, transparent)',
         }}
         onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface-page)' }}
         onMouseLeave={e => { e.currentTarget.style.background = '' }}>
@@ -1654,7 +1654,7 @@ export default function DeadlinesPage() {
                       return (
                         <div key={g.id} style={{
                           display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 12, alignItems: 'center',
-                          padding: '12px 22px', borderBottom: isLast ? 'none' : '1px solid rgba(23,52,4,0.06)',
+                          padding: '12px 22px', borderBottom: isLast ? 'none' : '1px solid color-mix(in srgb, var(--deep) 6%, transparent)',
                         }}
                           onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface-page)' }}
                           onMouseLeave={e => { e.currentTarget.style.background = '' }}>
@@ -1692,8 +1692,8 @@ export default function DeadlinesPage() {
 
           {/* Later */}
           {laterRows.length > 0 && (
-            <div style={{ background: 'var(--surface-card)', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '16px 22px', borderBottom: '1px solid rgba(23,52,4,0.08)', background: 'var(--surface-page)' }}>
+            <div style={{ background: 'var(--surface-card)', border: '1px solid color-mix(in srgb, var(--deep) 8%, transparent)', borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '16px 22px', borderBottom: '1px solid color-mix(in srgb, var(--deep) 8%, transparent)', background: 'var(--surface-page)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span style={{ fontFamily: UI_FONT, fontWeight: 600, fontSize: 15, color: 'var(--text-body)', letterSpacing: '-0.01em' }}>Later</span>
                   <span style={{ fontFamily: UI_FONT, fontWeight: 500, fontSize: 12, color: 'var(--text-subtle)', background: 'var(--surface-pill)', padding: '3px 9px', borderRadius: 10 }}>{laterRows.length}</span>
@@ -1826,7 +1826,7 @@ export default function DeadlinesPage() {
                     <div style={{ width: 16, height: 16, borderRadius: 4, flexShrink: 0,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       background: checked ? 'var(--deep)' : 'var(--surface-card)',
-                      border: checked ? 'none' : '1.5px solid rgba(23,52,4,0.14)' }}>
+                      border: checked ? 'none' : '1.5px solid color-mix(in srgb, var(--deep) 14%, transparent)' }}>
                       {checked && <Check size={10} strokeWidth={3} style={{ color: 'var(--surface-card)' }} />}
                     </div>
                     <span style={{ fontFamily: UI_FONT, fontSize: 13, color: 'var(--text-body)' }}>{label}</span>

@@ -190,7 +190,7 @@ export default function FeedbackPage() {
           <div style={{
             display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 4,
             padding: 4, background: 'var(--surface-card)',
-            border: '1px solid rgba(23,52,4,0.08)', borderRadius: 10, marginBottom: 20,
+            border: '1px solid color-mix(in srgb, var(--deep) 8%, transparent)', borderRadius: 10, marginBottom: 20,
           }}>
             {TABS.map(tab => {
               const Icon = tab.icon
@@ -217,11 +217,11 @@ export default function FeedbackPage() {
           </div>
 
           {/* Form card */}
-          <div style={{ background: 'var(--surface-card)', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, overflow: 'hidden' }}>
+          <div style={{ background: 'var(--surface-card)', border: '1px solid color-mix(in srgb, var(--deep) 8%, transparent)', borderRadius: 12, overflow: 'hidden' }}>
 
             {status === 'sent' ? (
               <div style={{ textAlign: 'center', padding: '56px 32px' }}>
-                <div style={{ width: 48, height: 48, background: 'rgba(23,52,4,0.08)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                <div style={{ width: 48, height: 48, background: 'color-mix(in srgb, var(--deep) 8%, transparent)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                   <CheckCircle size={22} color="var(--deep)" />
                 </div>
                 <p style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 700, color: 'var(--text-body)', marginBottom: 6 }}>Thank you!</p>
@@ -237,7 +237,7 @@ export default function FeedbackPage() {
                 <div style={{ padding: '24px 26px 22px', display: 'flex', flexDirection: 'column', gap: 18 }}>
 
                   {/* Intro */}
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, paddingBottom: 18, borderBottom: '1px solid rgba(23,52,4,0.08)' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, paddingBottom: 18, borderBottom: '1px solid color-mix(in srgb, var(--deep) 8%, transparent)' }}>
                     <div style={{ width: 36, height: 36, background: 'var(--surface-sunken)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <meta.icon size={18} color="var(--deep)" />
                     </div>
@@ -304,7 +304,7 @@ export default function FeedbackPage() {
                 </div>
 
                 {/* Form footer — stacks on mobile so the submit button stays full-width and reachable */}
-                <div style={{ background: 'var(--surface-page)', borderTop: '1px solid rgba(23,52,4,0.08)', padding: isMobile ? '14px 18px' : '14px 26px', display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'center', justifyContent: 'space-between', gap: isMobile ? 12 : 16 }}>
+                <div style={{ background: 'var(--surface-page)', borderTop: '1px solid color-mix(in srgb, var(--deep) 8%, transparent)', padding: isMobile ? '14px 18px' : '14px 26px', display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'center', justifyContent: 'space-between', gap: isMobile ? 12 : 16 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-dm-sans)', fontSize: 12.5, color: 'var(--text-subtle)' }}>
                     <CheckCircle size={13} />
                     Your account and browser details are attached automatically
@@ -329,7 +329,7 @@ export default function FeedbackPage() {
           </div>
 
           {/* Email fallback */}
-          <div style={{ marginTop: 24, padding: '16px 20px', background: 'var(--surface-card)', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 12, fontFamily: 'var(--font-dm-sans)', fontSize: 13.5, color: 'var(--text-muted)' }}>
+          <div style={{ marginTop: 24, padding: '16px 20px', background: 'var(--surface-card)', border: '1px solid color-mix(in srgb, var(--deep) 8%, transparent)', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 12, fontFamily: 'var(--font-dm-sans)', fontSize: 13.5, color: 'var(--text-muted)' }}>
             <Mail size={16} color="var(--text-subtle)" style={{ flexShrink: 0 }} />
             <span>
               Need a faster response, or prefer email? Write to{' '}
@@ -342,8 +342,8 @@ export default function FeedbackPage() {
         </div>
 
         {/* RIGHT: recent submissions */}
-        <aside style={{ background: 'var(--surface-card)', border: '1px solid rgba(23,52,4,0.08)', borderRadius: 12, padding: '20px 22px', position: 'sticky', top: 24 }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 14, paddingBottom: 14, borderBottom: '1px solid rgba(23,52,4,0.08)' }}>
+        <aside style={{ background: 'var(--surface-card)', border: '1px solid color-mix(in srgb, var(--deep) 8%, transparent)', borderRadius: 12, padding: '20px 22px', position: 'sticky', top: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 14, paddingBottom: 14, borderBottom: '1px solid color-mix(in srgb, var(--deep) 8%, transparent)' }}>
             <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 600, fontSize: 14.5, color: 'var(--text-body)' }}>Your recent submissions</span>
             {submissions.length > 0 && (
               <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 12, color: 'var(--text-subtle)' }}>{submissions.length} total</span>

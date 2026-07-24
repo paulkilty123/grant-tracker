@@ -27,8 +27,8 @@ const T = {
   textPrimary:   'var(--text-body)',
   textSecondary: 'var(--text-muted)',
   textTertiary:  'var(--text-subtle)',
-  border:        'rgba(23, 52, 4, 0.08)',
-  borderStrong:  'rgba(23, 52, 4, 0.14)',
+  border:        'color-mix(in srgb, var(--deep) 8%, transparent)',
+  borderStrong:  'color-mix(in srgb, var(--deep) 14%, transparent)',
   // Completion tier palette (mirrors opportunity card match tiers)
   strongBorder:  'var(--sage-deep)',
   strongPanel:   'var(--surface-page)',
@@ -882,7 +882,7 @@ function CardShell({ title, badge, isEditing, onEdit, editDisabled, children, fo
     <section id={cardId} style={{
       background: T.white, border: `1px solid ${borderColor}`,
       borderRadius: 12, overflow: 'hidden',
-      boxShadow: isEditing ? '0 0 0 3px rgba(23,52,4,0.05)' : hasIncomplete ? '0 0 0 3px rgba(201,123,26,0.06)' : 'none',
+      boxShadow: isEditing ? '0 0 0 3px rgba(23,52,4,0.05)' : hasIncomplete ? '0 0 0 3px color-mix(in srgb, var(--terra) 6%, transparent)' : 'none',
       transition: 'border-color 0.15s, box-shadow 0.15s',
     }}>
       {/* Header */}
@@ -1840,7 +1840,7 @@ function StoryCard({ org, orgId, onSaved, isEditingOther, onEditStart, onEditEnd
       background: hasMission ? T.white : 'linear-gradient(135deg, var(--surface-page) 0%, var(--surface-sunken) 100%)',
       border: `1px solid ${storyBorder}`,
       borderRadius: 12, overflow: 'hidden',
-      boxShadow: editing ? '0 0 0 3px rgba(23,52,4,0.05)' : (!hasMission && hasIncomplete) ? '0 0 0 3px rgba(201,123,26,0.06)' : 'none',
+      boxShadow: editing ? '0 0 0 3px rgba(23,52,4,0.05)' : (!hasMission && hasIncomplete) ? '0 0 0 3px color-mix(in srgb, var(--terra) 6%, transparent)' : 'none',
       transition: 'border-color 0.15s, box-shadow 0.15s',
     }}>
       {/* Header */}
@@ -2103,7 +2103,7 @@ export default function ProfilePage() {
               onChange={e => setNewOrgName(e.target.value)}
               placeholder="e.g. AudioActive"
               required
-              style={{ display: 'block', width: '100%', padding: '10px 14px', border: '1.5px solid rgba(23,52,4,0.14)', borderRadius: 10, fontFamily: 'var(--font-dm-sans)', fontSize: 14, color: 'var(--text-body)', background: 'var(--surface-card)', marginBottom: 16, boxSizing: 'border-box' as const }}
+              style={{ display: 'block', width: '100%', padding: '10px 14px', border: '1.5px solid color-mix(in srgb, var(--deep) 14%, transparent)', borderRadius: 10, fontFamily: 'var(--font-dm-sans)', fontSize: 14, color: 'var(--text-body)', background: 'var(--surface-card)', marginBottom: 16, boxSizing: 'border-box' as const }}
             />
             <button
               type="submit"
@@ -2186,7 +2186,7 @@ export default function ProfilePage() {
               style={{
                 fontFamily: UI, fontWeight: 500, fontSize: 13,
                 color: 'var(--state-error)', background: 'transparent',
-                border: '1px solid rgba(185,64,64,0.25)', borderRadius: 8,
+                border: '1px solid color-mix(in srgb, var(--state-error) 25%, transparent)', borderRadius: 8,
                 padding: '8px 16px', cursor: 'pointer',
                 display: 'inline-flex', alignItems: 'center', gap: 6,
               }}
@@ -2196,7 +2196,7 @@ export default function ProfilePage() {
             </button>
           ) : (
             <div style={{
-              background: 'var(--state-error-pale)', border: '1px solid rgba(185,64,64,0.3)',
+              background: 'var(--state-error-pale)', border: '1px solid color-mix(in srgb, var(--state-error) 30%, transparent)',
               borderRadius: 10, padding: '18px 20px',
             }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 14 }}>
@@ -2230,7 +2230,7 @@ export default function ProfilePage() {
                   style={{
                     fontFamily: UI, fontWeight: 500, fontSize: 13,
                     background: 'transparent', color: 'var(--state-error)',
-                    border: '1px solid rgba(185,64,64,0.25)', borderRadius: 8,
+                    border: '1px solid color-mix(in srgb, var(--state-error) 25%, transparent)', borderRadius: 8,
                     padding: '8px 16px', cursor: 'pointer',
                   }}
                 >

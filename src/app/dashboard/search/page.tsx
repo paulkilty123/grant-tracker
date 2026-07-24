@@ -419,10 +419,10 @@ function GrantCard({ item, hasOrg, hasSearch, interactions, org, onAddToPipeline
 
   // ── Match tier ──
   const tier       = score >= 80 ? 'Strong match' : score >= 70 ? 'Good match' : score >= 50 ? 'Partial match' : 'Weak match'
-  const tierHue    = score >= 80 ? { ring: 'var(--sage-deep)', title: 'var(--state-success)', panelBg: 'var(--surface-page)', border: 'var(--sage-deep)', barBg: 'rgba(99,153,34,0.15)',    positive: 'var(--sage-deep)', caveat: 'var(--sage-deep)', caveatText: 'var(--state-success)' }
+  const tierHue    = score >= 80 ? { ring: 'var(--sage-deep)', title: 'var(--state-success)', panelBg: 'var(--surface-page)', border: 'var(--sage-deep)', barBg: 'color-mix(in srgb, var(--sage-deep) 15%, transparent)',    positive: 'var(--sage-deep)', caveat: 'var(--sage-deep)', caveatText: 'var(--state-success)' }
                    : score >= 70 ? { ring: '#5A9080' /* eslint-disable-line no-restricted-syntax -- no safe token yet — see hex-token-map.ts EXCLUDED_VALUES (#5A9080) */, title: 'var(--text-muted)', panelBg: 'var(--surface-pill)', border: '#5A9080', barBg: 'rgba(90,144,128,0.15)',   positive: '#5A9080', caveat: '#5A9080', caveatText: 'var(--text-muted)' }
-                   : score >= 50 ? { ring: 'var(--gold-deep)', title: 'var(--state-warning)', panelBg: 'var(--surface-page)', border: 'var(--gold-deep)', barBg: 'rgba(186,117,23,0.12)',   positive: 'var(--gold-deep)', caveat: 'var(--gold-deep)', caveatText: 'var(--state-warning)' }
-                   :               { ring: 'var(--terra)', title: 'var(--state-error)', panelBg: 'var(--state-error-pale)', border: 'var(--terra)', barBg: 'rgba(160,96,96,0.12)',    positive: 'var(--terra)', caveat: 'var(--terra)', caveatText: 'var(--state-error)' }
+                   : score >= 50 ? { ring: 'var(--gold-deep)', title: 'var(--state-warning)', panelBg: 'var(--surface-page)', border: 'var(--gold-deep)', barBg: 'color-mix(in srgb, var(--gold-deep) 12%, transparent)',   positive: 'var(--gold-deep)', caveat: 'var(--gold-deep)', caveatText: 'var(--state-warning)' }
+                   :               { ring: 'var(--terra)', title: 'var(--state-error)', panelBg: 'var(--state-error-pale)', border: 'var(--terra)', barBg: 'color-mix(in srgb, var(--terra) 12%, transparent)',    positive: 'var(--terra)', caveat: 'var(--terra)', caveatText: 'var(--state-error)' }
   const moduleTitle = score >= 80 ? 'Why this strongly matches' : score >= 70 ? 'Why this is a good match' : score >= 50 ? 'Why this partially matches' : 'Why this weakly matches'
 
   // ── Funder type label ──
@@ -2742,7 +2742,7 @@ export default function SearchPage() {
                 className="flex-1 min-w-[160px] flex flex-row items-center gap-3 px-4 py-3.5 rounded-xl transition-colors outline-none"
                 style={isActive ? {
                   background: tab.id === 'grant' ? 'var(--state-success-pale)' : tab.id === 'programme' ? 'var(--state-error-pale)' : tab.id === 'investment' ? 'var(--state-info-pale)' : 'var(--state-warning-pale)',
-                  border: `1px solid ${tab.id === 'grant' ? 'rgba(99,153,34,0.35)' : tab.id === 'programme' ? 'rgba(153,60,29,0.3)' : tab.id === 'investment' ? 'rgba(12,68,124,0.3)' : 'rgba(133,79,11,0.3)'}`,
+                  border: `1px solid ${tab.id === 'grant' ? 'rgba(99,153,34,0.35)' : tab.id === 'programme' ? 'color-mix(in srgb, var(--state-error) 30%, transparent)' : tab.id === 'investment' ? 'color-mix(in srgb, var(--state-info) 30%, transparent)' : 'color-mix(in srgb, var(--state-warning) 30%, transparent)'}`,
                 } : {
                   background: 'var(--surface-card)',
                   border: '1px solid var(--border-warm)',
@@ -2802,7 +2802,7 @@ export default function SearchPage() {
               if ((org.impact_sectors as string[] | undefined)?.length) setActiveSectors(new Set(org.impact_sectors as ImpactSector[]))
             }}
             className="text-sm font-semibold px-4 py-2 flex-shrink-0 rounded-full whitespace-nowrap"
-            style={{ background: 'transparent', color: 'var(--deep)', border: '0.5px solid rgba(23,52,4,0.2)' }}
+            style={{ background: 'transparent', color: 'var(--deep)', border: '0.5px solid color-mix(in srgb, var(--deep) 20%, transparent)' }}
           >
             Filter by my profile
           </button>
@@ -2954,9 +2954,9 @@ export default function SearchPage() {
               <a
                 href="/dashboard/profile"
                 className="inline-flex items-center whitespace-nowrap transition-colors"
-                style={{ background: 'transparent', color: 'var(--deep)', border: '0.5px solid rgba(23,52,4,0.2)', borderRadius: 9999, padding: '9px 16px', fontSize: 13, fontWeight: 500 }}
+                style={{ background: 'transparent', color: 'var(--deep)', border: '0.5px solid color-mix(in srgb, var(--deep) 20%, transparent)', borderRadius: 9999, padding: '9px 16px', fontSize: 13, fontWeight: 500 }}
                 onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.background = 'var(--surface-card)'; (e.currentTarget as HTMLAnchorElement).style.borderColor = 'var(--deep)' }}
-                onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.background = 'transparent'; (e.currentTarget as HTMLAnchorElement).style.borderColor = 'rgba(23,52,4,0.2)' }}
+                onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.background = 'transparent'; (e.currentTarget as HTMLAnchorElement).style.borderColor = 'color-mix(in srgb, var(--deep) 20%, transparent)' }}
               >
                 Complete profile
               </a>
@@ -3388,11 +3388,11 @@ export default function SearchPage() {
         return (
           <div
             onClick={close}
-            style={{ position: 'fixed', inset: 0, background: 'rgba(23,52,4,0.42)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 60, fontFamily: 'var(--font-dm-sans)' }}
+            style={{ position: 'fixed', inset: 0, background: 'color-mix(in srgb, var(--deep) 42%, transparent)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 60, fontFamily: 'var(--font-dm-sans)' }}
           >
             <div
               onClick={e => e.stopPropagation()}
-              style={{ width: '100%', maxWidth: 460, background: 'var(--surface-card)', borderRadius: 14, padding: '22px 24px', boxShadow: '0 12px 40px rgba(23,52,4,0.18)' }}
+              style={{ width: '100%', maxWidth: 460, background: 'var(--surface-card)', borderRadius: 14, padding: '22px 24px', boxShadow: '0 12px 40px color-mix(in srgb, var(--deep) 18%, transparent)' }}
             >
               <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 12, fontWeight: 600, color: 'var(--state-success)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
                 Already applied
@@ -3451,7 +3451,7 @@ export default function SearchPage() {
                           })}
                           style={{
                             padding: '6px 12px', borderRadius: 18, fontSize: 12.5, fontWeight: 500,
-                            border: `0.5px solid ${selected ? 'var(--deep)' : 'rgba(23,52,4,0.18)'}`,
+                            border: `0.5px solid ${selected ? 'var(--deep)' : 'color-mix(in srgb, var(--deep) 18%, transparent)'}`,
                             background: selected ? 'var(--deep)' : 'var(--surface-card)',
                             color: selected ? 'var(--surface-card)' : 'var(--text-body)',
                             cursor: 'pointer', fontFamily: 'var(--font-space-grotesk)',

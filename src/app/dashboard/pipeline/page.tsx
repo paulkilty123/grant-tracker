@@ -831,7 +831,7 @@ export default function PipelinePage() {
             stage.id === 'identified'? 'var(--text-body)' :
                                        'var(--deep)'
           const dividerCol =
-            stage.id === 'declined'  ? 'rgba(153,60,29,0.20)' :
+            stage.id === 'declined'  ? 'color-mix(in srgb, var(--state-error) 20%, transparent)' :
             stage.id === 'identified'? 'rgba(0,0,0,0.08)' :
                                        'rgba(57,109,17,0.18)'
           return (
