@@ -13,6 +13,7 @@ import { normaliseScrapedGrant } from '@/lib/grants-normalise'
 import type { LegalStructure, ImpactSector, BeneficiaryGroup, FundingType } from '@/types'
 import Button from '@/components/ui/Button'
 import LogoMark from '@/components/icons/LogoMark'
+import { brand } from '@/config/brand'
 
 /* ═══════════════════════════════════════════════
    Design tokens — 1:1 from reference HTML :root
@@ -222,7 +223,7 @@ function deriveEligibilityFlags(s: LegalStructure | ''): {
     case 'cooperative':
       return { has_asset_lock: true,  social_mission_declared: true,  articles_restrict_profit: true  }
     case 'ltd_guarantee':
-      // Ltd-by-guarantee orgs on Grant Tracker are overwhelmingly social
+      // Ltd-by-guarantee orgs in the catalogue are overwhelmingly social
       // enterprises with mission-locked articles (often charities-in-waiting
       // or CIC-equivalents structurally). Default to all three true so they
       // aren't silently excluded from non-charity funding; user can untick
@@ -534,7 +535,7 @@ function CardShell({
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
               <LogoMark size={26} />
               <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 20, color: T.textPrimary, letterSpacing: '-0.025em' }}>
-                GrantTracker
+                {brand.name}
               </span>
             </span>
             <StepDots active={step} />

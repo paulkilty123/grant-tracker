@@ -19,6 +19,7 @@ import { NextRequest } from 'next/server'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { getBuilderUser } from '@/lib/builder/access'
 import { emitEvent } from '@/lib/events/emit'
+import { brand } from '@/config/brand'
 import { projectMaterialBlock, type Project } from '@/lib/builder/projects'
 import {
   GenerationResultSchema,
@@ -36,7 +37,7 @@ const GENERATION_MODEL = 'claude-sonnet-4-6'
 // The system prompt is static (cacheable). Org content, funder context and
 // questions arrive in the user turn.
 
-const SYSTEM_PROMPT = `You are the application builder inside Grant Tracker, working for a UK charity or social enterprise. You produce the FIRST 10% of a funding application — the scaffold — never the finished draft. The user writes the actual answers in their own voice.
+const SYSTEM_PROMPT = `You are the application builder inside ${brand.name}, working for a UK charity or social enterprise. You produce the FIRST 10% of a funding application — the scaffold — never the finished draft. The user writes the actual answers in their own voice.
 
 For each question you produce three things:
 

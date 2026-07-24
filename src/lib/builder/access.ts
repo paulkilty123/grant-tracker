@@ -10,13 +10,14 @@
 // The list mirrors what migration 030 seeded into apply_access.
 
 import { createClient as createServerClient } from '@/lib/supabase/server'
+import { brand } from '@/config/brand'
 
 export const BUILDER_ALLOWLIST = [
   // Paul / internal
   'paulkilty1@gmail.com',
-  'paul@granttracker.co.uk',
+  `paul@${brand.domain}`,
   'paulkilty77@gmail.com',
-  'reviewer@granttracker.co.uk',
+  `reviewer@${brand.domain}`,
   'rohan.kilty@me.com',
   // Cohort orgs (all registered users as of 2026-06-17)
   'admin@asiancommunityconcern.co.uk',

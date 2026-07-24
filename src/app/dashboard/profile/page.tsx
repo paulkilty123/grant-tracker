@@ -10,6 +10,7 @@ import { useIsMobile } from '@/hooks/useIsMobile'
 import { trimMission } from '@/lib/utils'
 import ClearProfileButton from '@/app/dashboard/admin/ClearProfileButton'
 import CoreContentSection from '@/components/builder/CoreContentSection'
+import { brand } from '@/config/brand'
 
 const ADMIN_EMAIL = 'paulkilty1@gmail.com'
 
@@ -359,7 +360,7 @@ function deriveEligibilityFlagsFromStructure(s: LegalStructure | ''): {
     case 'cic_shares':
       return { has_asset_lock: true,  social_mission_declared: true,  articles_restrict_profit: false }
     case 'ltd_guarantee':
-      // Ltd-by-guarantee orgs on Grant Tracker are overwhelmingly social
+      // Ltd-by-guarantee orgs in the catalogue are overwhelmingly social
       // enterprises with mission-locked articles. Default to all three true
       // so they're not silently excluded from non-charity funding; user
       // can untick if their articles don't include these locks.

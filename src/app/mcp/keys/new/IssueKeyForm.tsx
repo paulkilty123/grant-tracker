@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Check, Copy } from 'lucide-react'
+import { brand } from '@/config/brand'
 
 interface Props {
   tosVersion: string
@@ -185,7 +186,7 @@ export function IssueKeyForm({ tosVersion, tosStatus }: Props) {
           </p>
         )}
         <p className="text-xs text-mid mb-3 leading-relaxed">
-          Please read the full <Link href="/mcp/terms" target="_blank" className="font-semibold hover:underline" style={{ color: '#3B6D11' }}>Terms of Service</Link> (version <code className="text-[10px] px-1 rounded" style={{ background: '#F0EDE2' }}>{tosVersion}</code>) before continuing. They cover attribution, no-commercial-re-aggregation, no-rebranding, rate-limit conduct, and Grant Tracker&apos;s right to revoke keys.
+          Please read the full <Link href="/mcp/terms" target="_blank" className="font-semibold hover:underline" style={{ color: '#3B6D11' }}>Terms of Service</Link> (version <code className="text-[10px] px-1 rounded" style={{ background: '#F0EDE2' }}>{tosVersion}</code>) before continuing. They cover attribution, no-commercial-re-aggregation, no-rebranding, rate-limit conduct, and {brand.name}&apos;s right to revoke keys.
         </p>
         <label className="flex items-start gap-2 cursor-pointer">
           <input

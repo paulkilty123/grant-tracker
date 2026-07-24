@@ -11,6 +11,7 @@ import { ArrowLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { T, UI, BODY, inputStyle, primaryBtn } from '@/components/builder/tokens'
+import { brand } from '@/config/brand'
 
 export default function NewProjectPage() {
   const router = useRouter()
@@ -21,7 +22,7 @@ export default function NewProjectPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    document.title = 'New project · Grant Tracker'
+    document.title = `New project · ${brand.name}`
     async function init() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()

@@ -1,5 +1,5 @@
 // OAuth 2.0 Authorization Server Metadata (RFC 8414).
-// Advertises Grant Tracker as an OAuth 2.0 authorization server to MCP
+// Advertises this app as an OAuth 2.0 authorization server to MCP
 // clients (Claude Desktop, claude.ai, etc.) per the Anthropic Connectors
 // Directory spec.
 

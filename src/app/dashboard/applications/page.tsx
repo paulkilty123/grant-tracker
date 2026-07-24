@@ -11,6 +11,7 @@ import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { T, UI, BODY } from '@/components/builder/tokens'
 import type { ApplicationRecord } from '@/lib/builder/types'
+import { brand } from '@/config/brand'
 
 // The Apply-tier ethos as a few plain principles. Leads with the funder's-eye
 // reframe (the highest-value move for first-time applicants), closes on voice.
@@ -19,7 +20,7 @@ const STRONG_APPLICATION_PRINCIPLES = [
   { t: 'Lead with the need, backed by evidence', b: 'Show the problem and how you know it is real, not just that you care about it.' },
   { t: 'Show outcomes you can measure', b: 'What will change, and how you will know. Funders fund results, not activity.' },
   { t: 'Be specific and honest', b: 'Concrete numbers and plain claims beat polish. A gap you name reads better than one they find.' },
-  { t: 'Your voice, not ours', b: 'The application should sound like you. Grant Tracker drafts from your own material and sharpens it; the final words and the story stay yours.' },
+  { t: 'Your voice, not ours', b: `The application should sound like you. ${brand.name} drafts from your own material and sharpens it; the final words and the story stay yours.` },
 ]
 
 const HOW_IT_WORKS_STEPS = [
@@ -112,7 +113,7 @@ export default function ApplicationsPage() {
   }
 
   useEffect(() => {
-    document.title = 'Applications · Grant Tracker'
+    document.title = `Applications · ${brand.name}`
     async function load() {
       const access = await fetch('/api/builder/access').then(r => r.json()).catch(() => ({ allowed: false }))
       setAllowed(!!access?.allowed)
@@ -198,7 +199,7 @@ export default function ApplicationsPage() {
             Applications
           </h1>
           <p style={{ fontFamily: BODY, fontSize: 14, color: T.textSecondary, margin: '6px 0 0', lineHeight: 1.55, maxWidth: 620 }}>
-            Grant Tracker shapes each answer from your own material, shows you what a strong response
+            {brand.name} shapes each answer from your own material, shows you what a strong response
             to this funder needs to cover, and flags the gaps before you start. You write it in your
             own words.
           </p>

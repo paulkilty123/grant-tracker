@@ -1,4 +1,4 @@
-// Grant Tracker MCP — request validation middleware.
+// MCP request validation middleware.
 // Used by every MCP route handler (search, opportunity_detail, etc.) to
 // extract auth context. Spec: docs/mcp-spec-v1.md §6.
 //
@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { hashApiKey, type ApiKeyRecord } from './mcp-auth'
+import { brand } from '@/config/brand'
 import {
   OAUTH_ACCESS_TOKEN_PREFIX,
   resolveAccessToken,
@@ -145,9 +146,9 @@ export async function validateMCPRequest(req: NextRequest): Promise<MCPAuthConte
 export function authRequiredResponse(state: MCPAuthState): NextResponse {
   const messages: Record<MCPAuthState, string> = {
     authenticated: 'No error',
-    anonymous:     'Anonymous request limit reached. Get a free API key at granttracker.co.uk/mcp to continue.',
-    invalid:       'API key not recognised. Check the value or request a new key at granttracker.co.uk/mcp.',
-    revoked:       'API key has been revoked. Contact hello@granttracker.co.uk if you believe this is in error.',
+    anonymous:     `Anonymous request limit reached. Get a free API key at ${brand.domain}/mcp to continue.`,
+    invalid:       `API key not recognised. Check the value or request a new key at ${brand.domain}/mcp.`,
+    revoked:       `API key has been revoked. Contact ${brand.email.hello} if you believe this is in error.`,
   }
   return NextResponse.json({
     error: {
@@ -155,9 +156,9 @@ export function authRequiredResponse(state: MCPAuthState): NextResponse {
       message: messages[state],
     },
     attribution: {
-      source: 'Grant Tracker',
-      source_url: 'https://granttracker.co.uk',
-      data_provenance: 'UK funding catalogue maintained by Grant Tracker',
+      source: brand.name,
+      source_url: brand.siteUrl,
+      data_provenance: `UK funding catalogue maintained by ${brand.name}`,
       license: 'Free to surface to end users with attribution',
     },
   }, { status: 401 })

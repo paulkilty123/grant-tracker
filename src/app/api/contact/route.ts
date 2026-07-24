@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 
-const FROM_EMAIL  = process.env.ALERT_FROM_EMAIL ?? 'alerts@granttracker.co.uk'
-const NOTIFY_TO   = process.env.FEEDBACK_NOTIFY_EMAIL ?? 'hello@granttracker.co.uk'
+import { brand } from '@/config/brand'
+
+const FROM_EMAIL  = process.env.ALERT_FROM_EMAIL ?? brand.email.alerts
+const NOTIFY_TO   = process.env.FEEDBACK_NOTIFY_EMAIL ?? brand.email.hello
 
 function adminClient() {
   return createClient(
@@ -61,7 +63,7 @@ export async function POST(req: NextRequest) {
             <p><strong>Message:</strong></p>
             <p style="white-space: pre-wrap; border-left: 3px solid #8ECB3C; padding-left: 12px; margin-left: 0;">${escapeHtml(trimmedMessage)}</p>
             <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
-            <p style="font-size: 12px; color: #888;">Sent via the contact form on granttracker.co.uk. Reply to this email to respond directly to the sender.</p>
+            <p style="font-size: 12px; color: #888;">Sent via the contact form on ${brand.domain}. Reply to this email to respond directly to the sender.</p>
           `,
         })
       } catch (emailErr) {

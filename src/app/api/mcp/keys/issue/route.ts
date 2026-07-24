@@ -1,6 +1,6 @@
 // MCP API key issuance endpoint.
 // POST /api/mcp/keys/issue
-// Requires authenticated Grant Tracker user (cookie-based, Supabase auth).
+// Requires an authenticated user (cookie-based, Supabase auth).
 // Records ToS version at issuance, generates the key, returns the raw value
 // once — never again retrievable.
 //
@@ -30,7 +30,7 @@ interface IssueBody {
 }
 
 export async function POST(req: NextRequest) {
-  // 1. Authenticate the Grant Tracker user issuing the key
+  // 1. Authenticate the user issuing the key
   const userClient = await createClient()
   const { data: { user } } = await userClient.auth.getUser()
   if (!user) {

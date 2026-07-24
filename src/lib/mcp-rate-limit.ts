@@ -1,4 +1,4 @@
-// Grant Tracker MCP — rate limit enforcement.
+// MCP rate limit enforcement.
 // Spec §6.3 + §6.4. Sliding-window counters via Upstash Redis REST.
 //
 // Three independent limiters:

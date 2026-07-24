@@ -1,10 +1,11 @@
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import LogoMark from '@/components/icons/LogoMark'
+import { brand } from '@/config/brand'
 
 export const metadata = {
-  title: 'Terms of service — Grant Tracker',
-  description: 'The terms governing your use of Grant Tracker.',
+  title: `Terms of service — ${brand.name}`,
+  description: `The terms governing your use of ${brand.name}.`,
 }
 
 const UI = 'var(--font-space-grotesk), Space Grotesk, sans-serif'
@@ -19,7 +20,7 @@ export default function TermsPage() {
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/" className="no-underline" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <LogoMark size={22} />
-            <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 18, color: '#173404', letterSpacing: '-0.025em' }}>GrantTracker</span>
+            <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 18, color: '#173404', letterSpacing: '-0.025em' }}>{brand.name}</span>
           </Link>
           <Link href="/" className="no-underline" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: UI, fontSize: 13, fontWeight: 600, color: '#173404' }}>
             <ArrowLeft size={14} /> Back home
@@ -38,29 +39,29 @@ export default function TermsPage() {
 
         <div style={{ fontSize: 16, lineHeight: 1.65, color: '#2C2C2A' }}>
           <p>
-            These terms govern your use of Grant Tracker. By creating an account or otherwise using the service, you agree to these terms. If you do not agree, please do not use the service.
+            These terms govern your use of {brand.name}. By creating an account or otherwise using the service, you agree to these terms. If you do not agree, please do not use the service.
           </p>
           <p>
-            If you have any questions about these terms, please email <a href="mailto:hello@granttracker.co.uk" style={{ color: '#3B6D11', fontWeight: 600 }}>hello@granttracker.co.uk</a>.
+            If you have any questions about these terms, please email <a href={`mailto:${brand.email.hello}`} style={{ color: '#3B6D11', fontWeight: 600 }}>{brand.email.hello}</a>.
           </p>
 
           <Heading>Who we are</Heading>
           <p>
-            Grant Tracker is operated by Paul Kilty as a sole trader, based in Brighton, United Kingdom. In these terms, &ldquo;we&rdquo;, &ldquo;us&rdquo;, and &ldquo;our&rdquo; refer to Paul Kilty trading as Grant Tracker. &ldquo;You&rdquo; and &ldquo;your&rdquo; refer to the person using the service or the organisation they represent.
+            {brand.name} is operated by Paul Kilty as a sole trader, based in Brighton, United Kingdom. In these terms, &ldquo;we&rdquo;, &ldquo;us&rdquo;, and &ldquo;our&rdquo; refer to Paul Kilty trading as {brand.name}. &ldquo;You&rdquo; and &ldquo;your&rdquo; refer to the person using the service or the organisation they represent.
           </p>
 
-          <Heading>What Grant Tracker is</Heading>
+          <Heading>What {brand.name} is</Heading>
           <p>
-            Grant Tracker is a service that helps UK charities, community interest companies, social enterprises, co-operatives, and impact-focused organisations discover and manage funding opportunities. The service includes a database of funding opportunities, matching tools, a pipeline manager, deadline alerts, and related features.
+            {brand.name} is a service that helps UK charities, community interest companies, social enterprises, co-operatives, and impact-focused organisations discover and manage funding opportunities. The service includes a database of funding opportunities, matching tools, a pipeline manager, deadline alerts, and related features.
           </p>
 
           <Heading>Founding cohort</Heading>
           <p>
-            During the founding cohort phase, the service is offered free of charge to invited members. Founding cohort terms are set out on the application page at <Link href="/apply" style={{ color: '#3B6D11', fontWeight: 600 }}>granttracker.co.uk/apply</Link> and form part of these terms for cohort members. In summary:
+            During the founding cohort phase, the service is offered free of charge to invited members. Founding cohort terms are set out on the application page at <Link href="/apply" style={{ color: '#3B6D11', fontWeight: 600 }}>{brand.domain}/apply</Link> and form part of these terms for cohort members. In summary:
           </p>
           <ul style={{ paddingLeft: 22, margin: '8px 0 16px' }}>
             <li style={{ marginBottom: 8 }}>Founding cohort members get free access during beta and for six months after paid signups open.</li>
-            <li style={{ marginBottom: 8 }}>Cohort members who remain active receive a permanent founding rate, set lower than the standard subscription, for as long as they stay with Grant Tracker.</li>
+            <li style={{ marginBottom: 8 }}>Cohort members who remain active receive a permanent founding rate, set lower than the standard subscription, for as long as they stay with {brand.name}.</li>
             <li>Cohort benefits depend on staying active and engaged. If you go quiet for six months, cohort status lapses and standard pricing applies.</li>
           </ul>
           <p>These cohort-specific terms sit alongside the general terms below.</p>
@@ -68,7 +69,7 @@ export default function TermsPage() {
           <Heading>Your account</Heading>
           <p>To use the service you must create an account. You must provide accurate information, keep your password secure, and not share your account with others. You are responsible for activity that happens under your account.</p>
           <p>You must be at least 18 years old to create an account. The service is intended for use by UK organisations engaged in social impact work, broadly defined. We may decline an application or close an account at our discretion if we believe the service is being used outside its intended purpose.</p>
-          <p>You can close your account at any time by emailing <a href="mailto:hello@granttracker.co.uk" style={{ color: '#3B6D11', fontWeight: 600 }}>hello@granttracker.co.uk</a>. We will delete or anonymise your personal data within 30 days, subject to any legal requirements to retain certain records.</p>
+          <p>You can close your account at any time by emailing <a href={`mailto:${brand.email.hello}`} style={{ color: '#3B6D11', fontWeight: 600 }}>{brand.email.hello}</a>. We will delete or anonymise your personal data within 30 days, subject to any legal requirements to retain certain records.</p>
 
           <Heading>Acceptable use</Heading>
           <p>When using the service, you agree not to:</p>
@@ -83,9 +84,9 @@ export default function TermsPage() {
           <p>We may suspend or close accounts that breach these rules. Where we can, we will let you know first and give you a chance to put things right.</p>
 
           <Heading>Funding data and your decisions</Heading>
-          <p>Grant Tracker aggregates information about funding opportunities from a variety of public and partner sources. We work hard to keep this information accurate and up to date, but we cannot guarantee that every detail is correct at any given moment. Funder eligibility, deadlines, and amounts can change without notice.</p>
-          <p>You are responsible for your own funding decisions. Before applying for any opportunity surfaced through the service, you should verify the details directly with the funder. Grant Tracker is a tool to help you find and manage opportunities, not a substitute for your own due diligence.</p>
-          <p>We are not a funder, and using Grant Tracker does not guarantee that you will receive funding. We do not take a commission, finder&apos;s fee, or any cut of grants you secure through the service.</p>
+          <p>{brand.name} aggregates information about funding opportunities from a variety of public and partner sources. We work hard to keep this information accurate and up to date, but we cannot guarantee that every detail is correct at any given moment. Funder eligibility, deadlines, and amounts can change without notice.</p>
+          <p>You are responsible for your own funding decisions. Before applying for any opportunity surfaced through the service, you should verify the details directly with the funder. {brand.name} is a tool to help you find and manage opportunities, not a substitute for your own due diligence.</p>
+          <p>We are not a funder, and using {brand.name} does not guarantee that you will receive funding. We do not take a commission, finder&apos;s fee, or any cut of grants you secure through the service.</p>
 
           <Heading>Your data</Heading>
           <p>We take privacy seriously. Our <Link href="/privacy" style={{ color: '#3B6D11', fontWeight: 600 }}>privacy policy</Link> explains what data we collect, how we use it, and the rights you have over it. By using the service, you agree to the practices set out in the privacy policy.</p>
@@ -96,7 +97,7 @@ export default function TermsPage() {
           <p>You are responsible for making sure you have the right to upload any content you put into the service.</p>
 
           <Heading>Our intellectual property</Heading>
-          <p>The Grant Tracker name, logo, design, software, and the structure and organisation of the funding database are owned by Paul Kilty trading as Grant Tracker. You may not copy, modify, redistribute, or commercially exploit any of these without our written permission.</p>
+          <p>The {brand.name} name, logo, design, software, and the structure and organisation of the funding database are owned by Paul Kilty trading as {brand.name}. You may not copy, modify, redistribute, or commercially exploit any of these without our written permission.</p>
           <p>You may, of course, use the funding information surfaced to you through the service for your own internal purposes, such as preparing applications and managing your fundraising.</p>
 
           <Heading>Service availability</Heading>
@@ -130,7 +131,7 @@ export default function TermsPage() {
           <p>These terms are governed by the laws of England and Wales. Any disputes will be subject to the exclusive jurisdiction of the courts of England and Wales.</p>
 
           <Heading>Contact us</Heading>
-          <p>If you have any questions about these terms, please email <a href="mailto:hello@granttracker.co.uk" style={{ color: '#3B6D11', fontWeight: 600 }}>hello@granttracker.co.uk</a>.</p>
+          <p>If you have any questions about these terms, please email <a href={`mailto:${brand.email.hello}`} style={{ color: '#3B6D11', fontWeight: 600 }}>{brand.email.hello}</a>.</p>
         </div>
       </main>
     </div>

@@ -1,4 +1,4 @@
-// Builder UI tokens — the Grant Tracker design system palette + fonts,
+// Builder UI tokens — the design system palette + fonts,
 // shared across builder surfaces so every screen reads from one place.
 
 export const T = {

@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { formatRange } from '@/lib/utils'
 import { notFound } from 'next/navigation'
 import LogoMark from '@/components/icons/LogoMark'
+import { brand } from '@/config/brand'
 import {
   MapPin, Bell, RefreshCw, Calendar, AlertTriangle, CheckCircle, ShieldAlert,
   ExternalLink,
@@ -96,13 +97,13 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const { id } = await params
   const result = await loadGrant(id)
   if (!result) {
-    return { title: 'Opportunity not found — Grant Tracker' }
+    return { title: `Opportunity not found — ${brand.name}` }
   }
   const { row } = result
-  const title = `${row.title} — ${row.funder} · Grant Tracker`
+  const title = `${row.title} — ${row.funder} · ${brand.name}`
   const description = typeof row.description === 'string'
     ? row.description.slice(0, 160).trim()
-    : 'A UK funding opportunity, verified by Grant Tracker.'
+    : `A UK funding opportunity, verified by ${brand.name}.`
   return {
     title,
     description,
@@ -172,7 +173,7 @@ export default async function PublicGrantPage({
         <div className="flex items-center justify-between px-6 md:px-8 py-5 max-w-7xl mx-auto">
           <Link href="/" className="flex items-center gap-1.5 text-2xl font-bold text-[#2C2C2A] tracking-tight no-underline" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>
             <LogoMark size={30} />
-            GrantTracker
+            {brand.name}
           </Link>
           <div className="flex items-center gap-4 text-sm">
             <Link href="/auth/login" className="text-mid hover:text-charcoal no-underline">Sign in</Link>
@@ -380,7 +381,7 @@ export default async function PublicGrantPage({
           )}
 
           {/* CTAs — flipped per Paul 2026-06-04. Save is primary lime (this page
-              is GrantTracker's funnel surface; Save is the conversion); Apply
+              is the app's funnel surface; Save is the conversion); Apply
               is secondary outline (trust signal, still visible). */}
           <div className="pt-4 border-t border-warm flex flex-wrap gap-3 items-center">
             <Link
@@ -421,10 +422,10 @@ export default async function PublicGrantPage({
 
         {/* Footer — trust line, no internal source slug */}
         <p className="text-xs text-center" style={{ color: '#8A8986' }}>
-          Last verified {lastSeenHuman} · GrantTracker catalogue
+          Last verified {lastSeenHuman} · {brand.name} catalogue
         </p>
         <p className="text-xs text-center mt-3" style={{ color: '#8A8986' }}>
-          GrantTracker maintains a curated, URL-validated UK funding catalogue.{' '}
+          {brand.name} maintains a curated, URL-validated UK funding catalogue.{' '}
           <Link href="/" className="no-underline hover:underline" style={{ color: '#3B6D11' }}>Learn more</Link>.
         </p>
       </main>

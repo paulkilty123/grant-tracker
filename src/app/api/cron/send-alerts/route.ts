@@ -7,8 +7,10 @@ import type { AlertGrant } from '@/lib/alerts'
 
 export const dynamic = 'force-dynamic'
 
-const FROM_EMAIL = process.env.ALERT_FROM_EMAIL ?? 'alerts@granttracker.co.uk'
-const APP_URL    = process.env.NEXT_PUBLIC_APP_URL ?? 'https://granttracker.co.uk'
+import { brand } from '@/config/brand'
+
+const FROM_EMAIL = process.env.ALERT_FROM_EMAIL ?? brand.email.alerts
+const APP_URL    = process.env.NEXT_PUBLIC_APP_URL ?? brand.siteUrl
 
 function buildEmailHtml(orgName: string, grants: AlertGrant[]): string {
   const scoreColour = (s: number) =>

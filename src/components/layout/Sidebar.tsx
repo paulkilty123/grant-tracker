@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import type { Organisation } from '@/types'
 import { cn } from '@/lib/utils'
 import LogoMark from '@/components/icons/LogoMark'
+import { brand } from '@/config/brand'
 import {
   LayoutDashboard,
   Compass,
@@ -228,7 +229,7 @@ export default function Sidebar({ org, userEmail, companionSurface = false }: Pr
       >
         <Link href="/dashboard" className="no-underline flex items-center gap-1.5">
           <LogoMark size={24} variant="onInk" />
-          <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 700, letterSpacing: '-0.025em', color: SB.textBright }}>GrantTracker</span>
+          <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 20, fontWeight: 700, letterSpacing: '-0.025em', color: SB.textBright }}>{brand.name}</span>
         </Link>
         <button className="md:hidden" style={{ color: SB.icon }} onClick={() => setMobileOpen(false)}>
           <X className="h-5 w-5" />

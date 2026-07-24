@@ -18,6 +18,7 @@ import { createPipelineItem, updatePipelineStage } from '@/lib/pipeline'
 import { emitClientEvent } from '@/lib/events/client'
 import ImportApplicationModal from '@/components/builder/ImportApplicationModal'
 import { T, UI, BODY, inputStyle, primaryBtn, ghostBtn } from '@/components/builder/tokens'
+import { brand } from '@/config/brand'
 import {
   BLOCK_TYPES, BLOCK_TYPE_LABELS, answerHash,
   type ApplicationQuestion, type ApplicationRecord, type AnswerReview, type BlockType, type EligibilitySnapshot,
@@ -119,7 +120,7 @@ const STATUS_LABELS: Record<string, string> = {
   ineligible:      'Eligibility problems found',
 }
 
-// Funder-brief fields surfaced in the "what Grant Tracker knows" panel,
+// Funder-brief fields surfaced in the "what we know" panel,
 // in reading order, with user-facing labels.
 const BRIEF_FIELD_ORDER = [
   'what_they_fund', 'priorities', 'exclusions', 'strong_application', 'funder_tips', 'how_to_apply',
@@ -242,7 +243,7 @@ export default function ApplicationWorkspacePage() {
       if (!data) { router.push('/dashboard/applications'); return }
       setApp(data as ApplicationRecord)
       setOpenQid(((data as ApplicationRecord).questions ?? [])[0]?.id ?? null)
-      document.title = `${(data as ApplicationRecord).grant_name || (data as ApplicationRecord).funder_name || 'Application'} · Grant Tracker`
+      document.title = `${(data as ApplicationRecord).grant_name || (data as ApplicationRecord).funder_name || 'Application'} · ${brand.name}`
       // Linked project (IA: applications visibly belong to their project).
       const projId = (data as { project_id?: string | null }).project_id
       if (projId) {
@@ -1150,7 +1151,7 @@ export default function ApplicationWorkspacePage() {
         </div>
       )}
 
-      {/* ── What Grant Tracker knows about this funder (shown, not counted) ── */}
+      {/* ── What we know about this funder (shown, not counted) ── */}
       {app.opportunity_id && briefData !== null && !app.supplied_guidelines && (() => {
         const heldKeys = BRIEF_FIELD_ORDER.filter(k => briefData[k])
         const missingKeys = BRIEF_FIELD_ORDER.filter(k => !briefData[k])

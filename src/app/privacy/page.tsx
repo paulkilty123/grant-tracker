@@ -1,10 +1,11 @@
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import LogoMark from '@/components/icons/LogoMark'
+import { brand } from '@/config/brand'
 
 export const metadata = {
-  title: 'Privacy policy — Grant Tracker',
-  description: 'How Grant Tracker collects, uses, and protects your personal data.',
+  title: `Privacy policy — ${brand.name}`,
+  description: `How ${brand.name} collects, uses, and protects your personal data.`,
 }
 
 const UI = 'var(--font-space-grotesk), Space Grotesk, sans-serif'
@@ -19,7 +20,7 @@ export default function PrivacyPage() {
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/" className="no-underline" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <LogoMark size={22} />
-            <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 18, color: '#173404', letterSpacing: '-0.025em' }}>GrantTracker</span>
+            <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 18, color: '#173404', letterSpacing: '-0.025em' }}>{brand.name}</span>
           </Link>
           <Link href="/" className="no-underline" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: UI, fontSize: 13, fontWeight: 600, color: '#173404' }}>
             <ArrowLeft size={14} /> Back home
@@ -38,20 +39,20 @@ export default function PrivacyPage() {
 
         <div style={{ fontSize: 16, lineHeight: 1.65, color: '#2C2C2A' }}>
           <p>
-            This privacy policy explains how Grant Tracker collects, uses, and protects your personal data. Grant Tracker is operated by Paul Kilty as a sole trader, based in Brighton, United Kingdom.
+            This privacy policy explains how {brand.name} collects, uses, and protects your personal data. {brand.name} is operated by Paul Kilty as a sole trader, based in Brighton, United Kingdom.
           </p>
           <p>
-            If you have any questions about this policy or how we handle your data, please email <a href="mailto:hello@granttracker.co.uk" style={{ color: '#3B6D11', fontWeight: 600 }}>hello@granttracker.co.uk</a>.
+            If you have any questions about this policy or how we handle your data, please email <a href={`mailto:${brand.email.hello}`} style={{ color: '#3B6D11', fontWeight: 600 }}>{brand.email.hello}</a>.
           </p>
 
           <Heading>Who we are</Heading>
           <p>
-            Grant Tracker is a service that helps UK charities, community interest companies, social enterprises, co-operatives, and impact-focused organisations discover and manage funding opportunities.
+            {brand.name} is a service that helps UK charities, community interest companies, social enterprises, co-operatives, and impact-focused organisations discover and manage funding opportunities.
           </p>
           <p>For the purposes of UK data protection law, the data controller is:</p>
           <p style={{ background: '#F1F7E4', borderRadius: 12, padding: '16px 20px', margin: '16px 0' }}>
-            Paul Kilty, sole trader, trading as Grant Tracker<br />
-            Email: <a href="mailto:hello@granttracker.co.uk" style={{ color: '#3B6D11', fontWeight: 600 }}>hello@granttracker.co.uk</a>
+            Paul Kilty, sole trader, trading as {brand.name}<br />
+            Email: <a href={`mailto:${brand.email.hello}`} style={{ color: '#3B6D11', fontWeight: 600 }}>{brand.email.hello}</a>
           </p>
 
           <Heading>What data we collect</Heading>
@@ -73,7 +74,7 @@ export default function PrivacyPage() {
 
           <Heading>How your activity builds your organisation&apos;s profile</Heading>
           <p>
-            Everything you do in Grant Tracker builds a picture of your organisation and what it is looking for. We record activity such as the searches you run, the opportunities you view, save, or dismiss, the funding pipeline you build and update, and your use of application-building features. When you connect an AI agent through our MCP server, the queries it makes on your behalf are recorded in the same way.
+            Everything you do in {brand.name} builds a picture of your organisation and what it is looking for. We record activity such as the searches you run, the opportunities you view, save, or dismiss, the funding pipeline you build and update, and your use of application-building features. When you connect an AI agent through our MCP server, the queries it makes on your behalf are recorded in the same way.
           </p>
           <p>We use this activity data for three things:</p>
           <ul style={{ paddingLeft: 22, margin: '8px 0 16px' }}>
@@ -111,9 +112,9 @@ export default function PrivacyPage() {
 
           <Heading>MCP, OAuth, and API access</Heading>
           <p>
-            Grant Tracker operates a read-only Model Context Protocol (MCP) server at <a href="https://granttracker.co.uk/mcp" style={{ color: '#3B6D11', fontWeight: 600 }}>granttracker.co.uk/mcp</a>. The MCP exposes our funding catalogue to AI agents, including Claude, ChatGPT, Gemini, and any other MCP-compatible client, so that an agent you use can answer your funding questions on your behalf. Connecting an AI agent is opt-in.
+            {brand.name} operates a read-only Model Context Protocol (MCP) server at <a href={`${brand.siteUrl}/mcp`} style={{ color: '#3B6D11', fontWeight: 600 }}>{brand.domain}/mcp</a>. The MCP exposes our funding catalogue to AI agents, including Claude, ChatGPT, Gemini, and any other MCP-compatible client, so that an agent you use can answer your funding questions on your behalf. Connecting an AI agent is opt-in.
           </p>
-          <p>You connect by completing the OAuth 2.0 consent flow that an MCP-compatible client initiates when it adds Grant Tracker as a connector. This uses Dynamic Client Registration, which means the client registers itself with us automatically the first time it connects.</p>
+          <p>You connect by completing the OAuth 2.0 consent flow that an MCP-compatible client initiates when it adds {brand.name} as a connector. This uses Dynamic Client Registration, which means the client registers itself with us automatically the first time it connects.</p>
           <p>
             <strong>What we store when you connect.</strong> When you complete the OAuth flow, we store the registration record for the AI client, the access and refresh tokens issued to that client, the user identifier the client is acting on behalf of, and a record of your consent. We do not store your AI-client conversation history or anything else from inside the agent.
           </p>
@@ -121,10 +122,10 @@ export default function PrivacyPage() {
             <strong>What we log when the MCP is used.</strong> When an AI agent makes a request to the MCP on your behalf, we may log the tool that was called, the parameters passed (for example, search filters or opportunity IDs), the authentication identifier on the request (the OAuth client and user ID), the source IP address, the response status, and the response time. We use these logs to operate rate limiting, to debug issues, and to measure service quality. They are not shared with the AI client and are not used to identify individuals beyond the authentication identifier already on the request.
           </p>
           <p>
-            <strong>Third-party AI clients.</strong> The AI client you use to connect to Grant Tracker (for example, Claude operated by Anthropic) is a separate company with its own privacy policy and its own handling of your conversation history. When the client calls Grant Tracker via MCP, the responses we return are passed back into that client&apos;s context. We have no control over how the client stores, retains, or further processes that data; that relationship is between you and the client. Before connecting, you should be comfortable with the AI client&apos;s privacy practices for the content of your queries and our responses.
+            <strong>Third-party AI clients.</strong> The AI client you use to connect to {brand.name} (for example, Claude operated by Anthropic) is a separate company with its own privacy policy and its own handling of your conversation history. When the client calls {brand.name} via MCP, the responses we return are passed back into that client&apos;s context. We have no control over how the client stores, retains, or further processes that data; that relationship is between you and the client. Before connecting, you should be comfortable with the AI client&apos;s privacy practices for the content of your queries and our responses.
           </p>
           <p>
-            <strong>Revoking access.</strong> To revoke a connection, disconnect Grant Tracker from inside the AI client you connected through; revocation is enforced on the next request. After revocation, retention follows the rules in &ldquo;How long we keep your data&rdquo; below.
+            <strong>Revoking access.</strong> To revoke a connection, disconnect {brand.name} from inside the AI client you connected through; revocation is enforced on the next request. After revocation, retention follows the rules in &ldquo;How long we keep your data&rdquo; below.
           </p>
 
           <Heading>Where your data is stored</Heading>
@@ -151,14 +152,14 @@ export default function PrivacyPage() {
           <p>The right to data portability. You can ask us to provide your data in a portable format.</p>
           <p>The right to object. You can object to processing based on legitimate interests.</p>
           <p>The right to withdraw consent at any time, where we are relying on consent.</p>
-          <p>To exercise any of these rights, please email <a href="mailto:hello@granttracker.co.uk" style={{ color: '#3B6D11', fontWeight: 600 }}>hello@granttracker.co.uk</a>. We will respond within one month.</p>
+          <p>To exercise any of these rights, please email <a href={`mailto:${brand.email.hello}`} style={{ color: '#3B6D11', fontWeight: 600 }}>{brand.email.hello}</a>. We will respond within one month.</p>
           <p>If you are not satisfied with how we have handled your data, you have the right to complain to the Information Commissioner&apos;s Office (ICO), the UK data protection regulator. You can contact them at <a href="https://ico.org.uk" target="_blank" rel="noopener noreferrer" style={{ color: '#3B6D11', fontWeight: 600 }}>ico.org.uk</a> or on 0303 123 1113.</p>
 
           <Heading>Changes to this policy</Heading>
           <p>We may update this policy from time to time. If we make significant changes, we will let you know by email or through a notice on the service. The &ldquo;last updated&rdquo; date at the top of this page will always show when the policy was last changed.</p>
 
           <Heading>Contact us</Heading>
-          <p>If you have any questions about this privacy policy or how we handle your data, please email <a href="mailto:hello@granttracker.co.uk" style={{ color: '#3B6D11', fontWeight: 600 }}>hello@granttracker.co.uk</a>.</p>
+          <p>If you have any questions about this privacy policy or how we handle your data, please email <a href={`mailto:${brand.email.hello}`} style={{ color: '#3B6D11', fontWeight: 600 }}>{brand.email.hello}</a>.</p>
         </div>
       </main>
     </div>

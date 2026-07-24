@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { brand } from '@/config/brand'
 
 const UI = "var(--font-space-grotesk), Space Grotesk, sans-serif"
 const BODY = "var(--font-dm-sans), Plus Jakarta Sans, sans-serif"
@@ -96,7 +97,7 @@ export default function OnboardingWelcomePage() {
           maxWidth: 460,
           marginBottom: 36,
         }}>
-          You&rsquo;re one of the first to use Grant Tracker. Let&rsquo;s set up your organisation so we can match you with funding that fits: grants, programmes, social investment, and in-kind support. About two minutes.
+          You&rsquo;re one of the first to use {brand.name}. Let&rsquo;s set up your organisation so we can match you with funding that fits: grants, programmes, social investment, and in-kind support. About two minutes.
         </p>
 
         <Link

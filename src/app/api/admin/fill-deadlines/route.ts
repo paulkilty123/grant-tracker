@@ -12,6 +12,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
 import { mergeGrantUpdate } from '@/lib/grant-merge'
+import { brand } from '@/config/brand'
 
 export const dynamic    = 'force-dynamic'
 export const maxDuration = 300
@@ -72,7 +73,7 @@ async function fetchPageText(url: string, timeoutMs = 10000): Promise<string | n
     const timer = setTimeout(() => controller.abort(), timeoutMs)
     const resp = await fetch(url, {
       signal: controller.signal,
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; GrantTracker/1.0)' },
+      headers: { 'User-Agent': `Mozilla/5.0 (compatible; ${brand.userAgent})` },
     })
     clearTimeout(timer)
     if (!resp.ok) return null

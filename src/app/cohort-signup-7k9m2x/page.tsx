@@ -7,6 +7,7 @@ import { ArrowLeft } from 'lucide-react'
 import { track } from '@/lib/analytics'
 import { createClient } from '@/lib/supabase/client'
 import LogoMark from '@/components/icons/LogoMark'
+import { brand } from '@/config/brand'
 
 const UI = "var(--font-space-grotesk), Space Grotesk, sans-serif"
 const BODY = "var(--font-dm-sans), Plus Jakarta Sans, sans-serif"
@@ -92,7 +93,7 @@ export default function CohortSignupPage() {
           We&apos;ve sent a confirmation link to <strong style={{ color: '#2C2C2A' }}>{email}</strong>. Click it to activate your account and finish setup.
         </p>
         <p style={{ fontFamily: BODY, fontSize: 13, color: '#8A8986' }}>
-          Can&apos;t find it? Check your spam folder, or email <a href="mailto:hello@granttracker.co.uk" style={{ color: '#3B6D11', textDecoration: 'none' }}>hello@granttracker.co.uk</a>.
+          Can&apos;t find it? Check your spam folder, or email <a href={`mailto:${brand.email.hello}`} style={{ color: '#3B6D11', textDecoration: 'none' }}>{brand.email.hello}</a>.
         </p>
       </Shell>
     )
@@ -105,10 +106,10 @@ export default function CohortSignupPage() {
         Founding cohort
       </div>
       <h1 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.2, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 10 }}>
-        Welcome to the Grant Tracker founding cohort
+        Welcome to the {brand.name} founding cohort
       </h1>
       <p style={{ fontFamily: BODY, fontSize: 14.5, color: '#5F5E5A', lineHeight: 1.55, marginBottom: 28 }}>
-        Set up your account below to get started. If you have any questions just email <a href="mailto:hello@granttracker.co.uk" style={{ color: '#3B6D11', textDecoration: 'none' }}>hello@granttracker.co.uk</a>.
+        Set up your account below to get started. If you have any questions just email <a href={`mailto:${brand.email.hello}`} style={{ color: '#3B6D11', textDecoration: 'none' }}>{brand.email.hello}</a>.
       </p>
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -203,7 +204,7 @@ function Shell({ children }: { children: React.ReactNode }) {
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
             <LogoMark size={30} />
-            <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 24, letterSpacing: '-0.025em', color: '#2C2C2A' }}>GrantTracker</span>
+            <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 24, letterSpacing: '-0.025em', color: '#2C2C2A' }}>{brand.name}</span>
           </Link>
           <Link href="/" style={{ fontFamily: UI, fontSize: 13.5, color: '#5F5E5A', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
             <ArrowLeft size={14} /> Back to home

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { deepCheckUrl } from '@/lib/url-validator'
+import { brand } from '@/config/brand'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 55
@@ -381,7 +382,7 @@ export async function POST(req: NextRequest) {
         method: 'HEAD',
         signal: AbortSignal.timeout(5000),
         redirect: 'follow',
-        headers: { 'User-Agent': 'Mozilla/5.0 (GrantTracker/1.0)' },
+        headers: { 'User-Agent': `Mozilla/5.0 (${brand.userAgent})` },
       })
       return res.status !== 404 && res.status !== 410 && res.status !== 400
     } catch {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { brand } from '@/config/brand'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,7 +29,7 @@ export async function POST(req: NextRequest) {
       method: 'GET',
       redirect: 'follow',
       headers: {
-        'User-Agent': 'Mozilla/5.0 (GrantTracker/1.0)',
+        'User-Agent': `Mozilla/5.0 (${brand.userAgent})`,
       },
       signal: AbortSignal.timeout(8000),
     })

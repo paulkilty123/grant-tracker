@@ -1,4 +1,4 @@
-// Grant Tracker MCP — OAuth 2.0 + Dynamic Client Registration support.
+// MCP — OAuth 2.0 + Dynamic Client Registration support.
 // Spec §6 (revised 2026-05-21 for Anthropic Connectors Directory submission).
 //
 // Coexists with bearer-key auth via prefix-based routing in mcp-middleware:
@@ -13,14 +13,20 @@ import { Ratelimit } from '@upstash/ratelimit'
 import { Redis } from '@upstash/redis'
 import { createHash, randomBytes, randomUUID } from 'node:crypto'
 import { createClient } from '@supabase/supabase-js'
+import { brand } from '@/config/brand'
 
 // ──────────────────────────────────────────────────────────────────────────
 // Constants
 // ──────────────────────────────────────────────────────────────────────────
 
-export const OAUTH_ISSUER = 'https://www.granttracker.co.uk'
-export const OAUTH_RESOURCE = 'https://www.granttracker.co.uk/api/mcp/v1/mcp'
+export const OAUTH_ISSUER = brand.siteUrl
+export const OAUTH_RESOURCE = `${brand.siteUrl}/api/mcp/v1/mcp`
 export const OAUTH_SCOPES_SUPPORTED = ['read'] as const
+
+// NOT brand-derived — do not rename on a rebrand. These prefixes are baked
+// into the format of every OAuth access/refresh token already issued and
+// stored in the oauth_tokens table; changing them would invalidate every
+// credential a real MCP client currently holds.
 export const OAUTH_ACCESS_TOKEN_PREFIX = 'gt_oat_'
 export const OAUTH_REFRESH_TOKEN_PREFIX = 'gt_ort_'
 

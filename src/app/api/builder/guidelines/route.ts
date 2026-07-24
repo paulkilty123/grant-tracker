@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { getBuilderUser } from '@/lib/builder/access'
 import { emitEvent } from '@/lib/events/emit'
+import { brand } from '@/config/brand'
 
 export const dynamic     = 'force-dynamic'
 export const maxDuration = 60
@@ -73,7 +74,7 @@ export async function POST(req: NextRequest) {
     }
     try {
       const res = await fetch(parsed.toString(), {
-        headers: { 'User-Agent': 'GrantTrackerBuilder/1.0 (+https://granttracker.co.uk)' },
+        headers: { 'User-Agent': `${brand.userAgentBuilder} (+${brand.siteUrl})` },
         redirect: 'follow',
         signal: AbortSignal.timeout(20_000),
       })

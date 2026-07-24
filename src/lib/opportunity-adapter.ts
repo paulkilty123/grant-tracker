@@ -1,4 +1,4 @@
-// Grant Tracker MCP v1 — external contract adapter.
+// MCP v1 — external contract adapter.
 //
 // Translates raw `scraped_grants` rows (plus optional `funders` enrichment)
 // into the v4 external shape consumed by MCP tool handlers. The adapter is
@@ -9,6 +9,8 @@
 // Funder_brief split is enforced at the type level — app-only keys
 // (funder_tips, how_to_apply, strong_application, decision_timeline) are
 // not in any MCP-side return shape.
+
+import { brand } from '@/config/brand'
 
 // ──────────────────────────────────────────────────────────────────────────
 // Raw inputs (DB row shapes)
@@ -240,7 +242,7 @@ export interface AdapterContext {
   base_url?: string
 }
 
-const DEFAULT_BASE_URL = 'https://granttracker.co.uk'
+const DEFAULT_BASE_URL = brand.siteUrl
 const DEFAULT_CAMPAIGN = 'v1_launch'
 
 function utmQuery(ctx: AdapterContext): string {
@@ -1003,7 +1005,7 @@ export function toMCPOpportunityDetail(
     metadata: {
       last_updated: row.last_seen_at ?? '',
       data_freshness: row.url_status === 'ok' ? 'verified' : 'unverified',
-      source: row.source ?? 'Grant Tracker catalogue',
+      source: row.source ?? `${brand.name} catalogue`,
     },
     links: {
       funder_url: row.apply_url ?? '',

@@ -18,6 +18,7 @@ import { emitEvent } from '../../events/emit'
 import { defineTool } from './envelope'
 import { prov, SetupSurfaceError, type Provenance } from './types'
 import type { GoalInput } from '../types'
+import { brand } from '@/config/brand'
 
 export const PURPOSE_CATEGORIES = ['core', 'programme', 'staffing', 'capital', 'capacity', 'working_capital', 'match_funding', 'other'] as const
 export type PurposeCategory = typeof PURPOSE_CATEGORIES[number]
@@ -127,7 +128,7 @@ export const setFundingGoal = defineTool<SetFundingGoalParams, SetFundingGoalRes
     // EXISTING goal are unaffected; this only blocks creating the first one.
     if (ctx.surface === 'mcp' && !(await getActiveGoalId(ctx.orgId))) {
       throw new SetupSurfaceError(
-        'Initial goal setup works best in the Grant Tracker app, which walks through it one question at a time — direct the user to sign in at granttracker.co.uk and set up their funding goal there. Once a goal exists, this tool and the full adviser work fully here.'
+        `Initial goal setup works best in the ${brand.name} app, which walks through it one question at a time — direct the user to sign in at ${brand.domain} and set up their funding goal there. Once a goal exists, this tool and the full adviser work fully here.`
       )
     }
 

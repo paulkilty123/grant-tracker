@@ -7,6 +7,7 @@ import { Star, Check, X, AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
 import type { Organisation } from '@/types'
 import { useIsMobile } from '@/hooks/useIsMobile'
+import { brand } from '@/config/brand'
 
 /* ─── design tokens ─── */
 const T = {
@@ -318,7 +319,7 @@ function TwoFAEnrollModal({ onClose, onEnrolled }: { onClose: () => void; onEnro
   useEffect(() => {
     async function enroll() {
       const supabase = createClient()
-      const { data, error: err } = await supabase.auth.mfa.enroll({ factorType: 'totp', friendlyName: 'Grant Tracker' })
+      const { data, error: err } = await supabase.auth.mfa.enroll({ factorType: 'totp', friendlyName: brand.name })
       if (err || !data) { setError(err?.message ?? 'Failed to start setup.'); setLoading(false); return }
       setQrUrl(data.totp.qr_code)
       setSecret(data.totp.secret)
@@ -563,7 +564,7 @@ export default function AccountPage() {
 
       {/* ── Your details ── */}
       <section style={{ marginBottom: 36 }}>
-        <SectionHeader title="Your details" desc="How you sign in to Grant Tracker." />
+        <SectionHeader title="Your details" desc={`How you sign in to ${brand.name}.`} />
         <Card>
           <NameRow initialName={displayName} onSave={saveName} />
           <Row
@@ -642,7 +643,7 @@ export default function AccountPage() {
           <div style={{ flex: 1 }}>
             <div style={{ fontFamily: UI, fontWeight: 600, fontSize: 15, color: T.textPrimary, marginBottom: 4 }}>You're in the founding cohort</div>
             <div style={{ fontFamily: BODY, fontSize: 13.5, color: T.textSecondary, lineHeight: 1.55 }}>
-              Grant Tracker is free for you for six months. After that, cohort members lock in a permanent <strong style={{ color: T.textPrimary, fontWeight: 600 }}>founding rate</strong>, meaningfully below the standard price, for as long as you stay active. We&apos;ll email you ahead of any changes, so there are no surprises.
+              {brand.name} is free for you for six months. After that, cohort members lock in a permanent <strong style={{ color: T.textPrimary, fontWeight: 600 }}>founding rate</strong>, meaningfully below the standard price, for as long as you stay active. We&apos;ll email you ahead of any changes, so there are no surprises.
             </div>
           </div>
         </div>

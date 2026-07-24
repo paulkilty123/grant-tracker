@@ -1,7 +1,8 @@
 import { ImageResponse } from 'next/og'
+import { brand } from '@/config/brand'
 
 export const runtime = 'edge'
-export const alt = 'Grant Tracker — UK funding, matched for you'
+export const alt = `${brand.name} — UK funding, matched for you`
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
@@ -21,7 +22,7 @@ export default async function Image() {
           fontFamily: 'sans-serif',
         }}
       >
-        {/* Wordmark — two-pill mark + GrantTracker. Two-pill geometry mirrors
+        {/* Wordmark — two-pill mark + wordmark. Two-pill geometry mirrors
             LogoMark.tsx (cream short pill + green tall pill on the forest
             background that this image already provides). Pills sized for
             a 48px icon-height equivalent; bottom-aligned. */}
@@ -40,7 +41,7 @@ export default async function Image() {
               color: '#FAF7F2',
             }}
           >
-            GrantTracker
+            {brand.name}
           </span>
         </div>
 
@@ -74,7 +75,7 @@ export default async function Image() {
         {/* Footer URL */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ fontSize: 24, color: '#97C459', letterSpacing: '0.01em' }}>
-            granttracker.co.uk
+            {brand.domain}
           </span>
           <span style={{ fontSize: 18, color: '#97C459', textTransform: 'uppercase', letterSpacing: '0.18em' }}>
             Founding cohort open

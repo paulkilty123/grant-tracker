@@ -7,6 +7,7 @@
 import { NextResponse } from 'next/server'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { emitEvent } from '@/lib/events/emit'
+import { brand } from '@/config/brand'
 
 export const dynamic = 'force-dynamic'
 
@@ -77,7 +78,7 @@ export async function GET() {
 
   const body = {
     exported_at: new Date().toISOString(),
-    export_note: 'Your Grant Tracker data. It is yours, it persists beyond beta, and you can export it any time.',
+    export_note: `Your ${brand.name} data. It is yours, it persists beyond beta, and you can export it any time.`,
     organisation: org,
     pipeline: pipeline ?? [],
     saved_opportunities: savedOpportunities,
@@ -89,7 +90,7 @@ export async function GET() {
     status: 200,
     headers: {
       'Content-Type': 'application/json',
-      'Content-Disposition': `attachment; filename="grant-tracker-export-${new Date().toISOString().split('T')[0]}.json"`,
+      'Content-Disposition': `attachment; filename="${brand.exportSlug}-export-${new Date().toISOString().split('T')[0]}.json"`,
     },
   })
 }

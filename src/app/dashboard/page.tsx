@@ -9,6 +9,7 @@ import { normaliseScrapedGrant } from '@/lib/grants-normalise'
 import { getBuilderUser } from '@/lib/builder/access'
 import { agentEnabledForOrg } from '@/lib/agent/orchestrator/config'
 import { tierForOrgFlags } from '@/lib/mcp-entitlement'
+import { brand } from '@/config/brand'
 
 function formatDeadlineDate(deadline: string | null): { month: string; day: string } | null {
   if (!deadline) return null
@@ -442,7 +443,7 @@ export default async function DashboardPage() {
         {/* Greeting */}
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-charcoal mb-1.5" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '-0.02em' }}>
-            Welcome to Grant Tracker, {displayName}.
+            Welcome to {brand.name}, {displayName}.
           </h2>
           <p className="text-sm text-mid">
             {profileComplete

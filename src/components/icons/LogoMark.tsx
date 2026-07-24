@@ -1,4 +1,4 @@
-// Canonical Grant Tracker brand mark — "growth beside you". Two pills:
+// Canonical brand mark — "growth beside you". Two pills:
 // short pill (left) + tall pill (right), rx=13, viewBox 100x100. Geometry
 // from designer export (Downloads/grant_tracker_icons.html, 2026-06-06).
 //
@@ -7,7 +7,7 @@
 // inside a square viewBox; with flex items-center the SVG bounding-box
 // centre aligns with the wordmark line-height centre, which leaves the
 // pills' visual bottom sitting BELOW the wordmark baseline. Lifting the
-// pills brings the pill bottom flush with the GrantTracker baseline at
+// pills brings the pill bottom flush with the wordmark baseline at
 // the live render sizes.
 //
 // Variant mapping:
@@ -17,6 +17,8 @@
 //             tall pill — the "tile interior" dropping onto the dark bg.
 //   onGreen — green-tinted surfaces. Inverse: forest short pill + cream
 //             tall pill.
+import { brand } from '@/config/brand'
+
 type LogoMarkProps = {
   size?: number
   className?: string
@@ -39,7 +41,7 @@ const LogoMark = ({ size = 28, className, variant = 'default' }: LogoMarkProps) 
       height={size}
       className={className}
       role="img"
-      aria-label="Grant Tracker"
+      aria-label={brand.name}
     >
       <rect x="20" y="38" width="26" height="42" rx="13" fill={c.short} />
       <rect x="56" y="10" width="26" height="70" rx="13" fill={c.tall} />

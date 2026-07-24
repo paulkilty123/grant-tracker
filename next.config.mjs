@@ -33,7 +33,7 @@ const nextConfig = {
   },
   // First-party proxy for the self-hosted Umami analytics app, so the tracker
   // is served from our own domain and isn't blocked by adblockers. Set
-  // UMAMI_APP_URL to the deployed Umami URL (e.g. https://grant-tracker-umami.vercel.app).
+  // UMAMI_APP_URL to the deployed Umami URL (e.g. https://<project>-umami.vercel.app).
   // The script is loaded as /o/script.js; events post to /api/send or
   // /o/api/send depending on how the tracker derives its endpoint — both are
   // proxied so it works either way. No rewrites are added until the env is set.

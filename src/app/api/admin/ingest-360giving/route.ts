@@ -22,6 +22,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
 import { stampNewGrant, mergeGrantUpdate } from '@/lib/grant-merge'
+import { brand } from '@/config/brand'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 120
@@ -128,7 +129,7 @@ async function fetchPublisherStats(): Promise<PublisherStats[]> {
   const STATUS_URL = 'https://store.data.threesixtygiving.org/reports/daily_status.json'
 
   const res = await fetch(STATUS_URL, {
-    headers: { 'Accept': 'application/json', 'User-Agent': 'GrantTracker/1.0' },
+    headers: { 'Accept': 'application/json', 'User-Agent': brand.userAgent },
     signal: AbortSignal.timeout(45_000),
   })
   if (!res.ok) throw new Error(`Status feed returned HTTP ${res.status}`)

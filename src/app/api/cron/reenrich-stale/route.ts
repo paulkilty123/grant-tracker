@@ -37,6 +37,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { requireAdmin, isAdminBearerToken } from '@/lib/auth/require-admin'
+import { brand } from '@/config/brand'
 
 export const dynamic     = 'force-dynamic'
 export const maxDuration = 270
@@ -124,8 +125,8 @@ function adminClient() {
 function siteBase(): string {
   const raw = process.env.NEXT_PUBLIC_SITE_URL
     || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '')
-    || 'https://www.granttracker.co.uk'
-  if (/granttracker\.co\.uk|vercel\.app/.test(raw)) return 'https://www.granttracker.co.uk'
+    || brand.siteUrl
+  if (raw.includes(brand.domain) || raw.includes('vercel.app')) return brand.siteUrl
   return raw
 }
 

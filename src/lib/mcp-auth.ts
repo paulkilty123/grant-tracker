@@ -1,4 +1,4 @@
-// Grant Tracker MCP — auth primitives.
+// MCP — auth primitives.
 // Spec: docs/mcp-spec-v1.md §6.
 //
 // API keys are generated server-side, displayed once on creation, and stored
@@ -12,11 +12,16 @@
 import { createHash, randomBytes } from 'crypto'
 import { readFile } from 'fs/promises'
 import path from 'path'
+import { brand } from '@/config/brand'
 
 // ──────────────────────────────────────────────────────────────────────────
 // API key generation and hashing
 // ──────────────────────────────────────────────────────────────────────────
 
+// NOT brand-derived — do not rename on a rebrand. This prefix is baked into
+// the format of every API key already issued and stored (as a SHA-256 hash)
+// in the api_keys table; changing it would invalidate every developer's
+// existing key.
 const KEY_PREFIX = 'gt_mcp_'
 const RAW_BYTES = 16  // 128 bits of entropy → 32 hex chars
 
@@ -94,7 +99,7 @@ export async function readMCPToS(): Promise<ParsedToS> {
       version: 'v0-fallback',
       last_updated: null,
       status: 'ERROR: ToS file unreadable',
-      body: '# Terms of Service\n\nTerms are being prepared. Contact hello@granttracker.co.uk for current terms.',
+      body: `# Terms of Service\n\nTerms are being prepared. Contact ${brand.email.hello} for current terms.`,
     }
   }
 }

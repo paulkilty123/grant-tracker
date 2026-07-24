@@ -14,6 +14,7 @@ import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { emitClientEvent } from '@/lib/events/client'
 import { T, UI, BODY, inputStyle, primaryBtn, forestBtn, ghostBtn } from '@/components/builder/tokens'
+import { brand } from '@/config/brand'
 import { OUTLINE_TEMPLATE } from '@/lib/builder/types'
 
 interface PickedOpportunity {
@@ -315,7 +316,7 @@ export default function NewApplicationPage() {
               Who are you applying to?
             </h2>
             <p style={{ fontFamily: BODY, fontSize: 13, color: T.textSecondary, margin: '0 0 14px', lineHeight: 1.55 }}>
-              Choose a funder from the catalogue and we&apos;ll use everything Grant Tracker knows
+              Choose a funder from the catalogue and we&apos;ll use everything {brand.name} knows
               about them: priorities, exclusions, what a strong application covers. We&apos;ll also
               check your eligibility before you spend any time writing.
             </p>

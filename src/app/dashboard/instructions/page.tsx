@@ -3,6 +3,7 @@ import {
   ThumbsUp, ThumbsDown, Link, Zap, CheckCircle, ArrowRight,
   Info, Trophy, Database, Clock,
 } from 'lucide-react'
+import { brand } from '@/config/brand'
 
 // ── Section card wrapper ──────────────────────────────────────────────────────
 function Section({
@@ -76,7 +77,7 @@ export default function InstructionsPage() {
 
       {/* Header */}
       <div className="mb-8">
-        <h1 className="font-display text-2xl font-bold text-charcoal mb-2">How to use Grant Tracker</h1>
+        <h1 className="font-display text-2xl font-bold text-charcoal mb-2">How to use {brand.name}</h1>
         <p className="text-mid text-sm leading-relaxed">
           Everything you need to find funding, track applications, and stay on top of deadlines — in one place.
         </p>
@@ -89,7 +90,7 @@ export default function InstructionsPage() {
             Go to <strong className="text-charcoal">Profile</strong> in the sidebar and fill in your organisation details — name, type, mission, themes, areas of work, location, and income band. The more you fill in, the better your matches will be.
           </Step>
           <Step n={2} title="Find your first grants">
-            Head to <strong className="text-charcoal">Find Funding</strong> and open the <strong className="text-charcoal">My Matches</strong> tab. Grant Tracker will rank the entire database against your profile and show the most relevant opportunities at the top.
+            Head to <strong className="text-charcoal">Find Funding</strong> and open the <strong className="text-charcoal">My Matches</strong> tab. {brand.name} will rank the entire database against your profile and show the most relevant opportunities at the top.
           </Step>
           <Step n={3} title="Add promising grants to your pipeline">
             On any grant card, hit <strong className="text-charcoal">+ Pipeline</strong> to start tracking it. Set a stage, add notes, and monitor your deadlines — all in the Funding Pipeline section.
@@ -171,7 +172,7 @@ export default function InstructionsPage() {
       {/* Training results */}
       <Section icon={Sparkles} colour="bg-violet-50 text-violet-600" title="Training your results">
         <p>
-          The thumbs up and thumbs down buttons on each grant card teach Grant Tracker what's relevant to you. Over time this improves the quality of your My Matches results.
+          The thumbs up and thumbs down buttons on each grant card teach {brand.name} what's relevant to you. Over time this improves the quality of your My Matches results.
         </p>
         <div className="space-y-2 pt-1">
           <Feature icon={ThumbsUp} label="Thumbs up — Good match" desc="Boosts grants in similar sectors and with similar characteristics higher in your results." />
@@ -219,7 +220,7 @@ export default function InstructionsPage() {
       </Section>
 
       {/* Tips */}
-      <Section icon={Clock} colour="bg-orange-50 text-orange-500" title="Tips for getting the most out of Grant Tracker">
+      <Section icon={Clock} colour="bg-orange-50 text-orange-500" title={`Tips for getting the most out of ${brand.name}`}>
         <ul className="space-y-3">
           {[
             { t: 'Complete your profile first', d: 'Even a partial profile dramatically improves match quality. Start with mission, themes, and location.' },

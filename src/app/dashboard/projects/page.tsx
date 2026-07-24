@@ -12,6 +12,7 @@ import { createClient } from '@/lib/supabase/client'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { T, UI, BODY } from '@/components/builder/tokens'
 import { projectCompleteness, readyToMatch, type Project } from '@/lib/builder/projects'
+import { brand } from '@/config/brand'
 
 const TYPE_STYLE: Record<string, { bg: string; color: string; label: string }> = {
   project:   { bg: T.paleGreen,  color: T.stateSuccess,       label: 'Project' },
@@ -88,7 +89,7 @@ export default function ProjectsPage() {
   }
 
   useEffect(() => {
-    document.title = 'Projects · Grant Tracker'
+    document.title = `Projects · ${brand.name}`
     async function load() {
       const access = await fetch('/api/builder/access').then(r => r.json()).catch(() => ({ allowed: false }))
       setAllowed(!!access?.allowed)

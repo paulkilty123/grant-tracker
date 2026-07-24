@@ -6,6 +6,7 @@ import { getPipelineItems } from '@/lib/pipeline'
 import { getOrganisationByOwner } from '@/lib/organisations'
 import { formatRange, formatDeadline, cn } from '@/lib/utils'
 import type { PipelineItem, Organisation, FunderType } from '@/types'
+import { brand } from '@/config/brand'
 
 // ── Briefing data types ──────────────────────────────────────────────────────
 
@@ -424,7 +425,7 @@ export default function MatchBriefingPage() {
 
             {/* Footer */}
             <div className="flex items-center justify-between mt-8 pt-5 border-t border-warm">
-              <p className="text-[10px] text-light">Generated from your Grant Tracker profile</p>
+              <p className="text-[10px] text-light">Generated from your {brand.name} profile</p>
               <div className="flex gap-2">
                 <a
                   href="/dashboard/pipeline"

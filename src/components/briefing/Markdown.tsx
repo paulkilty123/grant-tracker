@@ -3,7 +3,7 @@
 // Design-system markdown renderer for Companion assistant output (drawer +
 // setup conversation). The model emits bold, lists, and tables in its natural
 // output; before this they rendered raw ("**", broken pipes). Element renderers
-// map to the Grant Tracker system: Space Grotesk headings/table headers, forest
+// map to the design system: Space Grotesk headings/table headers, forest
 // links, cream code/table chrome, rounded corners (never border-radius 0), and
 // tables that scroll inside their own overflow-x container so a wide table
 // never pushes the chat bubble sideways.

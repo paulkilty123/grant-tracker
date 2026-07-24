@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Lightbulb, AlertCircle, Search, MessageSquare, ArrowRight, Mail, CheckCircle } from 'lucide-react'
+import { brand } from '@/config/brand'
 import { useIsMobile } from '@/hooks/useIsMobile'
 
 type TabId = 'feature' | 'bug' | 'missing_funder' | 'general'
@@ -37,7 +38,7 @@ const TABS: { id: TabId; label: string; icon: React.ElementType; introTitle: str
     label: 'Missing funder',
     icon: Search,
     introTitle: 'Suggest a funder',
-    introDesc: 'Know a funder that should be in Grant Tracker? Tell us about them.',
+    introDesc: `Know a funder that should be in ${brand.name}? Tell us about them.`,
   },
   {
     id: 'general',
@@ -297,7 +298,7 @@ export default function FeedbackPage() {
                   {status === 'error' && (
                     <p style={{ fontFamily: 'var(--font-dm-sans)', fontSize: 12.5, color: '#993C1D' }}>
                       Something went wrong — please try again or email{' '}
-                      <a href="mailto:hello@granttracker.co.uk" style={{ color: 'inherit' }}>hello@granttracker.co.uk</a>
+                      <a href={`mailto:${brand.email.hello}`} style={{ color: 'inherit' }}>{brand.email.hello}</a>
                     </p>
                   )}
                 </div>
@@ -332,8 +333,8 @@ export default function FeedbackPage() {
             <Mail size={16} color="#8A8986" style={{ flexShrink: 0 }} />
             <span>
               Need a faster response, or prefer email? Write to{' '}
-              <a href="mailto:hello@granttracker.co.uk" style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, color: '#173404', textDecoration: 'none' }}>
-                hello@granttracker.co.uk
+              <a href={`mailto:${brand.email.hello}`} style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, color: '#173404', textDecoration: 'none' }}>
+                {brand.email.hello}
               </a>
             </span>
           </div>

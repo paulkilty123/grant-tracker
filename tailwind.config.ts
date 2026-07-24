@@ -1,7 +1,7 @@
 import type { Config } from 'tailwindcss'
 
 /**
- * Grant Tracker — Design token source of truth.
+ * Design token source of truth.
  * Aligned with the April 2026 design-spec overhaul:
  *  - Primary brand: lime #8ECB3C on deep-forest #173404
  *  - 4-category funding system: green / coral / blue / amber

@@ -17,6 +17,7 @@ import { computeMatchScore, matchTier } from '@/lib/matching'
 import { normaliseScrapedGrant, type EnrichedGrant } from '@/lib/grants-normalise'
 import { IMPACT_SECTOR_OPTIONS, BENEFICIARY_OPTIONS } from '@/lib/tag-suggestions'
 import { T, UI, BODY, inputStyle } from '@/components/builder/tokens'
+import { brand } from '@/config/brand'
 import {
   PROJECT_FIELDS, fieldFilled, projectCompleteness, readyToMatch,
   updateProject, type Project, type ProjectFieldMeta,
@@ -203,7 +204,7 @@ export default function ProjectPage() {
       if (proj) {
         setProject(proj as Project)
         setDetailsOpen(!readyToMatch(proj as Project))
-        document.title = `${(proj as Project).name} · Grant Tracker`
+        document.title = `${(proj as Project).name} · ${brand.name}`
       }
       setLinkedApps((apps ?? []) as LinkedApp[])
       setLoaded(true)

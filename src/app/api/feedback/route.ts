@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { createClient } from '@/lib/supabase/server'
 
-const FROM_EMAIL = process.env.ALERT_FROM_EMAIL ?? 'alerts@granttracker.co.uk'
-const NOTIFY_TO  = process.env.FEEDBACK_NOTIFY_EMAIL ?? 'hello@granttracker.co.uk'
+import { brand } from '@/config/brand'
+
+const FROM_EMAIL = process.env.ALERT_FROM_EMAIL ?? brand.email.alerts
+const NOTIFY_TO  = process.env.FEEDBACK_NOTIFY_EMAIL ?? brand.email.hello
 
 const TYPE_LABELS: Record<string, string> = {
   feature:        'Feature idea',
