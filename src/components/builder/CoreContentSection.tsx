@@ -15,17 +15,17 @@ import { BLOCK_TYPES, BLOCK_TYPE_LABELS, type BlockType, type CoreContentBlock }
 
 const T = {
   lime:          '#8ECB3C',
-  greenDeep:     '#173404',
-  greenMid:      '#639922',
-  cream:         '#F5F1E8',
-  paleGreen:     '#F1F7E4',
-  white:         '#FFFFFF',
-  textPrimary:   '#2C2C2A',
-  textSecondary: '#5F5E5A',
-  textTertiary:  '#8A8986',
+  greenDeep:     'var(--deep)',
+  greenMid:      'var(--sage-deep)',
+  cream:         'var(--surface-sunken)',
+  paleGreen:     'var(--state-success-pale)',
+  white:         'var(--surface-card)',
+  textPrimary:   'var(--text-body)',
+  textSecondary: 'var(--text-muted)',
+  textTertiary:  'var(--text-subtle)',
   border:        'rgba(23, 52, 4, 0.08)',
-  greenBg:       '#E8F2D8',
-  greenText:     '#3F6018',
+  greenBg:       'var(--type-inkind-pale)',
+  greenText:     'var(--state-success)',
 }
 const UI   = 'var(--font-space-grotesk)'
 const BODY = 'var(--font-dm-sans)'
@@ -212,7 +212,7 @@ export default function CoreContentSection({ orgId }: { orgId: string }) {
                 style={{ ...inputStyle(), resize: 'vertical', lineHeight: 1.6 }}
               />
             </div>
-            {error && <p style={{ fontFamily: BODY, fontSize: 13, color: '#993C1D', margin: 0 }}>{error}</p>}
+            {error && <p style={{ fontFamily: BODY, fontSize: 13, color: 'var(--state-error)', margin: 0 }}>{error}</p>}
             <div style={{ display: 'flex', gap: 10 }}>
               <button
                 onClick={save}
@@ -242,7 +242,7 @@ export default function CoreContentSection({ orgId }: { orgId: string }) {
         {/* Blocks list */}
         {loaded && blocks.length === 0 && !editorOpen && (
           <div style={{
-            background: 'linear-gradient(135deg, #FDFCF7 0%, #F8F5EC 100%)',
+            background: 'linear-gradient(135deg, var(--surface-page) 0%, var(--surface-sunken) 100%)',
             borderRadius: 10, padding: '20px 22px', textAlign: 'center',
           }}>
             <p style={{ fontFamily: BODY, fontSize: 13.5, color: T.textSecondary, margin: 0, lineHeight: 1.6 }}>

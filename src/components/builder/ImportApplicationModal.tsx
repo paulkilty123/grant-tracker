@@ -108,7 +108,7 @@ export default function ImportApplicationModal({ orgId, onClose, onImported }: {
             {error && <p style={{ fontFamily: BODY, fontSize: 13, color: T.coralText, margin: '0 0 10px' }}>{error}</p>}
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={propose} disabled={busy} style={{
-                fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: '#F1F7E4',
+                fontFamily: UI, fontWeight: 600, fontSize: 13.5, color: 'var(--state-success-pale)',
                 background: T.greenDeep, border: 'none', padding: '9px 18px', borderRadius: 8,
                 cursor: busy ? 'wait' : 'pointer', opacity: busy ? 0.7 : 1,
               }}>
@@ -139,7 +139,7 @@ export default function ImportApplicationModal({ orgId, onClose, onImported }: {
                       display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
                     }}
                   >
-                    {b.keep && <Check size={13} color="#fff" />}
+                    {b.keep && <Check size={13} color="var(--surface-card)" />}
                   </button>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 3 }}>
