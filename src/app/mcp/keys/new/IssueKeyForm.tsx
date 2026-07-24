@@ -74,14 +74,14 @@ export function IssueKeyForm({ tosVersion, tosStatus }: Props) {
   if (issued) {
     return (
       <div className="space-y-5">
-        <div className="rounded-xl border p-5" style={{ background: '#F1F7E4', borderColor: 'rgba(99,153,34,0.30)' }}>
+        <div className="rounded-xl border p-5" style={{ background: 'var(--state-success-pale)', borderColor: 'rgba(99,153,34,0.30)' }}>
           <div className="flex items-center gap-2 mb-3">
-            <Check className="w-5 h-5" style={{ color: '#3B6D11' }} />
+            <Check className="w-5 h-5" style={{ color: 'var(--state-success)' }} />
             <p className="text-sm font-bold text-charcoal" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
               Key created — save it now
             </p>
           </div>
-          <p className="text-xs mb-4" style={{ color: '#3B6D11' }}>
+          <p className="text-xs mb-4" style={{ color: 'var(--state-success)' }}>
             This is the only time you&apos;ll see the full key. Copy it somewhere safe (a password manager is good) before leaving this page.
           </p>
           <div className="bg-white border rounded-md p-3 flex items-center gap-3" style={{ borderColor: 'rgba(99,153,34,0.30)' }}>
@@ -91,7 +91,7 @@ export function IssueKeyForm({ tosVersion, tosStatus }: Props) {
             <button
               onClick={copyKey}
               className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md hover:opacity-90"
-              style={{ background: '#173404', color: '#FAF7F2', fontFamily: 'var(--font-space-grotesk)' }}
+              style={{ background: 'var(--deep)', color: 'var(--surface-page)', fontFamily: 'var(--font-space-grotesk)' }}
             >
               {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
               {copied ? 'Copied' : 'Copy'}
@@ -104,9 +104,9 @@ export function IssueKeyForm({ tosVersion, tosStatus }: Props) {
             Using your key
           </p>
           <p className="text-xs text-mid mb-3 leading-relaxed">
-            Pass the key in the <code className="text-[11px] px-1 py-0.5 rounded" style={{ background: '#F0EDE2' }}>Authorization</code> header on every MCP request:
+            Pass the key in the <code className="text-[11px] px-1 py-0.5 rounded" style={{ background: 'var(--surface-pill)' }}>Authorization</code> header on every MCP request:
           </p>
-          <pre className="text-[11px] p-3 rounded-md overflow-x-auto" style={{ background: '#F0EDE2', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>
+          <pre className="text-[11px] p-3 rounded-md overflow-x-auto" style={{ background: 'var(--surface-pill)', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>
             <code>Authorization: Bearer {issued.api_key}</code>
           </pre>
         </div>
@@ -114,7 +114,7 @@ export function IssueKeyForm({ tosVersion, tosStatus }: Props) {
         <button
           onClick={() => router.push('/mcp/keys')}
           className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity"
-          style={{ background: '#173404', color: '#FAF7F2', fontFamily: 'var(--font-space-grotesk)' }}
+          style={{ background: 'var(--deep)', color: 'var(--surface-page)', fontFamily: 'var(--font-space-grotesk)' }}
         >
           Done
         </button>
@@ -127,14 +127,14 @@ export function IssueKeyForm({ tosVersion, tosStatus }: Props) {
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       {error && (
-        <div className="rounded-md p-3 text-sm" style={{ background: '#FAECE7', color: '#993C1D' }}>
+        <div className="rounded-md p-3 text-sm" style={{ background: 'var(--state-error-pale)', color: 'var(--state-error)' }}>
           {error}
         </div>
       )}
 
       <div>
-        <label className="block text-xs font-semibold mb-1.5" style={{ color: '#2C2C2A', fontFamily: 'var(--font-space-grotesk)' }}>
-          Name <span style={{ color: '#993C1D' }}>*</span>
+        <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-body)', fontFamily: 'var(--font-space-grotesk)' }}>
+          Name <span style={{ color: 'var(--state-error)' }}>*</span>
         </label>
         <input
           type="text"
@@ -149,7 +149,7 @@ export function IssueKeyForm({ tosVersion, tosStatus }: Props) {
       </div>
 
       <div>
-        <label className="block text-xs font-semibold mb-1.5" style={{ color: '#2C2C2A', fontFamily: 'var(--font-space-grotesk)' }}>
+        <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-body)', fontFamily: 'var(--font-space-grotesk)' }}>
           Organisation name (optional)
         </label>
         <input
@@ -163,7 +163,7 @@ export function IssueKeyForm({ tosVersion, tosStatus }: Props) {
       </div>
 
       <div>
-        <label className="block text-xs font-semibold mb-1.5" style={{ color: '#2C2C2A', fontFamily: 'var(--font-space-grotesk)' }}>
+        <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-body)', fontFamily: 'var(--font-space-grotesk)' }}>
           Use case (optional)
         </label>
         <textarea
@@ -181,12 +181,12 @@ export function IssueKeyForm({ tosVersion, tosStatus }: Props) {
           Terms of Service
         </p>
         {isDraft && (
-          <p className="text-xs mb-2" style={{ color: '#993C1D' }}>
+          <p className="text-xs mb-2" style={{ color: 'var(--state-error)' }}>
             {tosStatus}
           </p>
         )}
         <p className="text-xs text-mid mb-3 leading-relaxed">
-          Please read the full <Link href="/mcp/terms" target="_blank" className="font-semibold hover:underline" style={{ color: '#3B6D11' }}>Terms of Service</Link> (version <code className="text-[10px] px-1 rounded" style={{ background: '#F0EDE2' }}>{tosVersion}</code>) before continuing. They cover attribution, no-commercial-re-aggregation, no-rebranding, rate-limit conduct, and {brand.name}&apos;s right to revoke keys.
+          Please read the full <Link href="/mcp/terms" target="_blank" className="font-semibold hover:underline" style={{ color: 'var(--state-success)' }}>Terms of Service</Link> (version <code className="text-[10px] px-1 rounded" style={{ background: 'var(--surface-pill)' }}>{tosVersion}</code>) before continuing. They cover attribution, no-commercial-re-aggregation, no-rebranding, rate-limit conduct, and {brand.name}&apos;s right to revoke keys.
         </p>
         <label className="flex items-start gap-2 cursor-pointer">
           <input
@@ -205,7 +205,7 @@ export function IssueKeyForm({ tosVersion, tosStatus }: Props) {
         type="submit"
         disabled={loading || !tosAccepted || !name.trim()}
         className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
-        style={{ background: '#8ECB3C', color: '#173404', fontFamily: 'var(--font-space-grotesk)' }}
+        style={{ background: '#8ECB3C', color: 'var(--deep)', fontFamily: 'var(--font-space-grotesk)' }}
       >
         {loading ? 'Generating…' : 'Generate key'}
       </button>

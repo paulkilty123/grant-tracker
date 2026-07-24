@@ -35,11 +35,11 @@ export function RevokeKeyButton({ keyId, keyName }: { keyId: string; keyName: st
         onClick={handleRevoke}
         disabled={revoking}
         className="text-xs font-semibold px-3 py-1.5 rounded-md transition-colors disabled:opacity-50"
-        style={{ background: '#FAECE7', color: '#993C1D', fontFamily: 'var(--font-space-grotesk)' }}
+        style={{ background: 'var(--state-error-pale)', color: 'var(--state-error)', fontFamily: 'var(--font-space-grotesk)' }}
       >
         {revoking ? 'Revoking…' : 'Revoke'}
       </button>
-      {error && <span className="text-[10px]" style={{ color: '#993C1D' }}>{error}</span>}
+      {error && <span className="text-[10px]" style={{ color: 'var(--state-error)' }}>{error}</span>}
     </div>
   )
 }

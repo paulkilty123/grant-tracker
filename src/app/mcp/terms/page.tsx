@@ -16,14 +16,14 @@ export default async function MCPTermsPage() {
   const blocks = renderMarkdown(tos.body)
 
   return (
-    <div style={{ background: '#FAFAF7', minHeight: '100vh', fontFamily: 'var(--font-plus-jakarta, Plus Jakarta Sans, sans-serif)', color: '#2C2C2A' }}>
+    <div style={{ background: 'var(--surface-page)', minHeight: '100vh', fontFamily: 'var(--font-plus-jakarta, Plus Jakarta Sans, sans-serif)', color: 'var(--text-body)' }}>
       <nav style={{ background: 'white', borderBottom: '0.5px solid rgba(23,52,4,0.08)', padding: '18px 0' }}>
         <div style={{ maxWidth: 760, margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
             <LogoMark size={28} />
-            <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 22, letterSpacing: '-0.025em', color: '#2C2C2A' }}>{brand.name}</span>
+            <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 22, letterSpacing: '-0.025em', color: 'var(--text-body)' }}>{brand.name}</span>
           </Link>
-          <Link href="/mcp" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13, color: '#5F5E5A', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <Link href="/mcp" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
             <ArrowLeft size={14} />
             Back to MCP
           </Link>
@@ -31,16 +31,16 @@ export default async function MCPTermsPage() {
       </nav>
 
       <main style={{ maxWidth: 720, margin: '0 auto', padding: '48px 32px' }}>
-        <div style={{ fontSize: 12, color: '#8A8986', marginBottom: 6, fontFamily: 'var(--font-space-grotesk)' }}>
-          Version <code style={{ background: '#F0EDE2', padding: '2px 6px', borderRadius: 4 }}>{tos.version}</code>
+        <div style={{ fontSize: 12, color: 'var(--text-subtle)', marginBottom: 6, fontFamily: 'var(--font-space-grotesk)' }}>
+          Version <code style={{ background: 'var(--surface-pill)', padding: '2px 6px', borderRadius: 4 }}>{tos.version}</code>
           {tos.last_updated && <> · Updated {tos.last_updated}</>}
         </div>
         {tos.status?.startsWith('DRAFT') && (
-          <div style={{ background: '#FAECE7', color: '#993C1D', padding: '12px 14px', borderRadius: 10, fontSize: 13, marginBottom: 24 }}>
+          <div style={{ background: 'var(--state-error-pale)', color: 'var(--state-error)', padding: '12px 14px', borderRadius: 10, fontSize: 13, marginBottom: 24 }}>
             <strong style={{ fontFamily: 'var(--font-space-grotesk)' }}>Draft:</strong> {tos.status}
           </div>
         )}
-        <article style={{ fontSize: 15, lineHeight: 1.7, color: '#2C2C2A' }}>
+        <article style={{ fontSize: 15, lineHeight: 1.7, color: 'var(--text-body)' }}>
           {blocks}
         </article>
       </main>
@@ -76,7 +76,7 @@ function renderMarkdown(body: string): React.ReactNode[] {
   function flushBlockquote() {
     if (blockquoteLines.length === 0) return
     out.push(
-      <blockquote key={key++} style={{ marginBottom: 16, borderLeft: '3px solid #C0DD97', paddingLeft: 14, color: '#5F5E5A', fontStyle: 'italic' }}>
+      <blockquote key={key++} style={{ marginBottom: 16, borderLeft: '3px solid var(--sage-pale)', paddingLeft: 14, color: 'var(--text-muted)', fontStyle: 'italic' }}>
         {blockquoteLines.join(' ')}
       </blockquote>
     )

@@ -21,21 +21,21 @@ export default async function NewMCPKeyPage() {
   const tos = await readMCPToS()
 
   return (
-    <div style={{ background: '#FAFAF7', minHeight: '100vh', fontFamily: 'var(--font-plus-jakarta, Plus Jakarta Sans, sans-serif)', color: '#2C2C2A' }}>
+    <div style={{ background: 'var(--surface-page)', minHeight: '100vh', fontFamily: 'var(--font-plus-jakarta, Plus Jakarta Sans, sans-serif)', color: 'var(--text-body)' }}>
       <nav style={{ background: 'white', borderBottom: '0.5px solid rgba(23,52,4,0.08)', padding: '18px 0' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/mcp" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
             <LogoMark size={28} />
-            <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 22, letterSpacing: '-0.025em', color: '#2C2C2A' }}>{brand.name}</span>
+            <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 22, letterSpacing: '-0.025em', color: 'var(--text-body)' }}>{brand.name}</span>
           </Link>
           <div style={{ display: 'flex', gap: 18 }}>
-            <Link href="/mcp" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13, color: '#5F5E5A', textDecoration: 'none' }}>
+            <Link href="/mcp" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none' }}>
               Overview
             </Link>
-            <Link href="/mcp/terms" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13, color: '#5F5E5A', textDecoration: 'none' }}>
+            <Link href="/mcp/terms" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none' }}>
               Terms
             </Link>
-            <Link href="/dashboard" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13, color: '#5F5E5A', textDecoration: 'none' }}>
+            <Link href="/dashboard" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none' }}>
               App
             </Link>
           </div>
@@ -46,7 +46,7 @@ export default async function NewMCPKeyPage() {
         <Link
           href="/mcp/keys"
           className="inline-flex items-center gap-1.5 text-xs font-semibold mb-5 hover:underline"
-          style={{ color: '#5F5E5A', fontFamily: 'var(--font-space-grotesk)' }}
+          style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-space-grotesk)' }}
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           Back to keys

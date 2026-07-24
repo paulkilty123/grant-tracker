@@ -46,21 +46,21 @@ export default async function MCPKeysPage() {
   const revoked = keys.filter(k => k.status === 'revoked')
 
   return (
-    <div style={{ background: '#FAFAF7', minHeight: '100vh', fontFamily: 'var(--font-plus-jakarta, Plus Jakarta Sans, sans-serif)', color: '#2C2C2A' }}>
+    <div style={{ background: 'var(--surface-page)', minHeight: '100vh', fontFamily: 'var(--font-plus-jakarta, Plus Jakarta Sans, sans-serif)', color: 'var(--text-body)' }}>
       <nav style={{ background: 'white', borderBottom: '0.5px solid rgba(23,52,4,0.08)', padding: '18px 0' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/mcp" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
             <LogoMark size={28} />
-            <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 22, letterSpacing: '-0.025em', color: '#2C2C2A' }}>{brand.name}</span>
+            <span style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: 22, letterSpacing: '-0.025em', color: 'var(--text-body)' }}>{brand.name}</span>
           </Link>
           <div style={{ display: 'flex', gap: 18 }}>
-            <Link href="/mcp" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13, color: '#5F5E5A', textDecoration: 'none' }}>
+            <Link href="/mcp" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none' }}>
               Overview
             </Link>
-            <Link href="/mcp/terms" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13, color: '#5F5E5A', textDecoration: 'none' }}>
+            <Link href="/mcp/terms" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none' }}>
               Terms
             </Link>
-            <Link href="/dashboard" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13, color: '#5F5E5A', textDecoration: 'none' }}>
+            <Link href="/dashboard" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none' }}>
               App
             </Link>
           </div>
@@ -80,7 +80,7 @@ export default async function MCPKeysPage() {
           <Link
             href="/mcp/keys/new"
             className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity flex-shrink-0"
-            style={{ background: '#8ECB3C', color: '#173404', fontFamily: 'var(--font-space-grotesk)' }}
+            style={{ background: '#8ECB3C', color: 'var(--deep)', fontFamily: 'var(--font-space-grotesk)' }}
           >
             <Plus className="w-4 h-4" />
             New API key
@@ -89,7 +89,7 @@ export default async function MCPKeysPage() {
 
         {keys.length === 0 ? (
           <div className="rounded-xl border border-warm p-10 text-center" style={{ background: 'white' }}>
-            <Key className="w-8 h-8 mx-auto mb-3" style={{ color: '#8A8986' }} />
+            <Key className="w-8 h-8 mx-auto mb-3" style={{ color: 'var(--text-subtle)' }} />
             <p className="text-sm font-semibold text-charcoal mb-1" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
               No API keys yet
             </p>
@@ -97,7 +97,7 @@ export default async function MCPKeysPage() {
             <Link
               href="/mcp/keys/new"
               className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg"
-              style={{ background: '#173404', color: '#FAF7F2', fontFamily: 'var(--font-space-grotesk)' }}
+              style={{ background: 'var(--deep)', color: 'var(--surface-page)', fontFamily: 'var(--font-space-grotesk)' }}
             >
               Get my first key
             </Link>
@@ -143,11 +143,11 @@ function KeyRow({ k, isLast }: { k: ApiKeyListItem; isLast: boolean }) {
           <span className="text-sm font-semibold text-charcoal truncate" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
             {k.name}
           </span>
-          <code className="text-[11px] px-1.5 py-0.5 rounded" style={{ background: '#F0EDE2', color: '#5F5E5A', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>
+          <code className="text-[11px] px-1.5 py-0.5 rounded" style={{ background: 'var(--surface-pill)', color: 'var(--text-muted)', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>
             {k.key_prefix}…
           </code>
           {k.status === 'revoked' && (
-            <span className="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded" style={{ background: '#FAECE7', color: '#993C1D' }}>
+            <span className="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded" style={{ background: 'var(--state-error-pale)', color: 'var(--state-error)' }}>
               revoked
             </span>
           )}
