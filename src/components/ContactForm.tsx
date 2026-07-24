@@ -34,7 +34,7 @@ export default function ContactForm() {
       <div
         className="p-8 text-center rounded-xl"
         style={{
-          background: '#F1F7E4',
+          background: 'var(--state-success-pale)',
           border: '0.5px solid rgba(57,109,17,0.18)',
           boxShadow: '0 1px 3px rgba(23,52,4,0.04)',
         }}
@@ -43,7 +43,7 @@ export default function ContactForm() {
           className="mx-auto mb-4 flex items-center justify-center"
           style={{ width: 48, height: 48, borderRadius: '50%', background: '#8ECB3C' }}
         >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#173404" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--deep)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="20 6 9 17 4 12" />
           </svg>
         </div>
@@ -54,12 +54,12 @@ export default function ContactForm() {
             fontSize: 20,
             fontWeight: 600,
             letterSpacing: '-0.01em',
-            color: '#173404',
+            color: 'var(--deep)',
           }}
         >
           Message received
         </h3>
-        <p style={{ fontFamily: 'var(--font-plus-jakarta, Plus Jakarta Sans, sans-serif)', fontSize: 14, color: '#3B6D11', margin: 0 }}>
+        <p style={{ fontFamily: 'var(--font-plus-jakarta, Plus Jakarta Sans, sans-serif)', fontSize: 14, color: 'var(--state-success)', margin: 0 }}>
           We&apos;ll get back to you at <span style={{ fontWeight: 500 }}>{sentTo}</span>.
         </p>
         <button
@@ -69,7 +69,7 @@ export default function ContactForm() {
             fontFamily: 'var(--font-space-grotesk)',
             fontSize: 12.5,
             fontWeight: 500,
-            color: '#3B6D11',
+            color: 'var(--state-success)',
             background: 'transparent',
             border: 'none',
             padding: '6px 12px',
@@ -124,7 +124,7 @@ export default function ContactForm() {
       <button
         type="submit"
         disabled={status === 'sending'}
-        className="w-full h-11 rounded-xl bg-[#8ECB3C] text-[#173404] text-sm font-bold hover:opacity-90 disabled:opacity-50 transition-colors"
+        className="w-full h-11 rounded-xl bg-[#8ECB3C] text-deep text-sm font-bold hover:opacity-90 disabled:opacity-50 transition-colors"
       >
         {status === 'sending' ? 'Sending…' : 'Send message'}
       </button>

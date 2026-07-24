@@ -166,11 +166,11 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore, compact = fals
       : `You marked this not for us${detail ? `. ${detail}.` : '.'}`
     return (
       <div style={{ ...divider, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
-        <div style={{ fontSize: 12.5, color: direction === 'up' ? '#3B6D11' : '#993C1D', display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-space-grotesk)', fontWeight: 500 }}>
+        <div style={{ fontSize: 12.5, color: direction === 'up' ? 'var(--state-success)' : 'var(--state-error)', display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-space-grotesk)', fontWeight: 500 }}>
           {direction === 'up' ? <ThumbUp /> : <ThumbDown />}
           {summaryText}
         </div>
-        <button onClick={handleUndo} style={{ background: 'transparent', border: 'none', fontFamily: 'var(--font-space-grotesk)', fontSize: 12.5, color: '#8A8986', cursor: 'pointer', textDecoration: 'underline', padding: 0, flexShrink: 0 }}>
+        <button onClick={handleUndo} style={{ background: 'transparent', border: 'none', fontFamily: 'var(--font-space-grotesk)', fontSize: 12.5, color: 'var(--text-subtle)', cursor: 'pointer', textDecoration: 'underline', padding: 0, flexShrink: 0 }}>
           Undo
         </button>
       </div>
@@ -181,12 +181,12 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore, compact = fals
     borderRadius: 18, padding: '6px 14px 6px 11px', cursor: 'pointer',
     display: 'inline-flex', alignItems: 'center', gap: 6,
     fontFamily: 'var(--font-space-grotesk)', fontSize: 12.5, fontWeight: 500,
-    border: '0.5px solid rgba(99,153,34,0.3)', background: 'white', color: '#3B6D11',
+    border: '0.5px solid rgba(99,153,34,0.3)', background: 'white', color: 'var(--state-success)',
   }
 
   // ── Saved flash microcopy ──────────────────────────────────────────────
   const savedBadge = showSaved ? (
-    <span style={{ fontSize: 11.5, color: '#8A8986', fontFamily: 'var(--font-space-grotesk)', marginLeft: 8, transition: 'opacity 0.3s', opacity: showSaved ? 1 : 0 }}>
+    <span style={{ fontSize: 11.5, color: 'var(--text-subtle)', fontFamily: 'var(--font-space-grotesk)', marginLeft: 8, transition: 'opacity 0.3s', opacity: showSaved ? 1 : 0 }}>
       Saved ✓
     </span>
   ) : null
@@ -203,7 +203,7 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore, compact = fals
     }
     return (
       <div style={{ ...divider, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
-        <div style={{ fontSize: 13, color: '#3B6D11', fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, display: 'inline-flex', alignItems: 'center' }}>
+        <div style={{ fontSize: 13, color: 'var(--state-success)', fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, display: 'inline-flex', alignItems: 'center' }}>
           Does this look right for you?
           {savedBadge}
         </div>
@@ -224,20 +224,20 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore, compact = fals
   return (
     <div style={divider}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
-        <div style={{ fontSize: 13, color: '#3B6D11', fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, display: 'inline-flex', alignItems: 'center' }}>
+        <div style={{ fontSize: 13, color: 'var(--state-success)', fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, display: 'inline-flex', alignItems: 'center' }}>
           {prompt}
           {savedBadge}
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
           <button
             onClick={() => handleDirectionTap('up')}
-            style={{ ...btnBase, background: isUp ? '#8ECB3C' : 'white', border: isUp ? '0.5px solid #8ECB3C' : '0.5px solid rgba(99,153,34,0.3)', color: isUp ? '#173404' : '#3B6D11' }}
+            style={{ ...btnBase, background: isUp ? '#8ECB3C' : 'white', border: isUp ? '0.5px solid #8ECB3C' : '0.5px solid rgba(99,153,34,0.3)', color: isUp ? 'var(--deep)' : 'var(--state-success)' }}
           >
             <ThumbUp /> Good match
           </button>
           <button
             onClick={() => handleDirectionTap('down')}
-            style={{ ...btnBase, background: !isUp ? '#FAECE7' : 'white', border: !isUp ? '0.5px solid #D85A30' : '0.5px solid rgba(99,153,34,0.3)', color: !isUp ? '#993C1D' : '#3B6D11' }}
+            style={{ ...btnBase, background: !isUp ? 'var(--state-error-pale)' : 'white', border: !isUp ? '0.5px solid var(--terra)' : '0.5px solid rgba(99,153,34,0.3)', color: !isUp ? 'var(--state-error)' : 'var(--state-success)' }}
           >
             <ThumbDown /> Not for us
           </button>
@@ -245,13 +245,13 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore, compact = fals
       </div>
 
       {!isUp && (
-        <div style={{ marginTop: 8, fontSize: 12, color: '#8A8986', fontFamily: 'var(--font-space-grotesk)' }}>
+        <div style={{ marginTop: 8, fontSize: 12, color: 'var(--text-subtle)', fontFamily: 'var(--font-space-grotesk)' }}>
           Captured. Tap a reason below so we can show fewer like this.
         </div>
       )}
 
       <div style={{ marginTop: 12, paddingTop: 12, borderTop: '0.5px solid rgba(99,153,34,0.2)' }}>
-        <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 12.5, color: '#3B6D11', fontWeight: 500, marginBottom: 10 }}>
+        <div style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 12.5, color: 'var(--state-success)', fontWeight: 500, marginBottom: 10 }}>
           Tap any that apply
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
@@ -262,11 +262,11 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore, compact = fals
                 key={chip.value}
                 onClick={() => handleChipToggle(chip.value)}
                 style={{
-                  background: isSelected ? '#173404' : 'white',
-                  border: `0.5px solid ${isSelected ? '#173404' : 'rgba(23,52,4,0.14)'}`,
+                  background: isSelected ? 'var(--deep)' : 'white',
+                  border: `0.5px solid ${isSelected ? 'var(--deep)' : 'rgba(23,52,4,0.14)'}`,
                   borderRadius: 18, padding: '5px 12px',
                   fontFamily: 'var(--font-space-grotesk)', fontSize: 12, fontWeight: 500,
-                  color: isSelected ? 'white' : '#2C2C2A', cursor: 'pointer',
+                  color: isSelected ? 'white' : 'var(--text-body)', cursor: 'pointer',
                   display: 'inline-flex', alignItems: 'center',
                   gap: chip.value === 'something_else' ? 5 : 0,
                 }}
@@ -292,7 +292,7 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore, compact = fals
                 width: '100%', boxSizing: 'border-box',
                 border: '0.5px solid rgba(99,153,34,0.3)', borderRadius: 10,
                 padding: '10px 14px', fontFamily: 'var(--font-dm-sans)', fontSize: 13,
-                color: '#2C2C2A', background: 'white', resize: 'vertical',
+                color: 'var(--text-body)', background: 'white', resize: 'vertical',
                 lineHeight: 1.5, outline: 'none',
               }}
             />
@@ -312,8 +312,8 @@ export function MatchFeedbackBlock({ grantId, userId, matchScore, compact = fals
               <button
                 onClick={handleDone}
                 style={{
-                  background: '#173404',
-                  color: '#F1F7E4',
+                  background: 'var(--deep)',
+                  color: 'var(--state-success-pale)',
                   border: 'none',
                   borderRadius: 18,
                   padding: '7px 18px',

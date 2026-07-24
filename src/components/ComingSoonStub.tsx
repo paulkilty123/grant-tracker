@@ -12,13 +12,13 @@ export default function ComingSoonStub({ title, body }: { title: string; body: s
     <div className="max-w-xl">
       <div
         className="p-8 md:p-10 rounded-xl border"
-        style={{ background: '#FAF7F2', borderColor: '#E4E2DA' }}
+        style={{ background: 'var(--surface-page)', borderColor: 'var(--border-warm)' }}
       >
         <div
           className="w-10 h-10 rounded-lg flex items-center justify-center mb-5"
           style={{ background: 'rgba(132,204,22,0.15)' }}
         >
-          <Clock className="w-5 h-5" style={{ color: '#3F6814' }} />
+          <Clock className="w-5 h-5" style={{ color: 'var(--state-success)' }} />
         </div>
         <h2
           className="text-2xl font-bold text-charcoal mb-2"

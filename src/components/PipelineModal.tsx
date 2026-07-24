@@ -161,12 +161,12 @@ export function PipelineModal({
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="bg-white w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-xl" style={{ boxShadow: '0 16px 64px rgba(26,46,43,0.18)' }} onClick={e => e.stopPropagation()}>
-        <div className="px-6 py-5 border-b border-[#E8E0D1] flex justify-between items-start" style={{ background: '#FAFAF7' }}>
+        <div className="px-6 py-5 border-b border-border-warm flex justify-between items-start" style={{ background: 'var(--surface-page)' }}>
           <div>
             <h3 className="text-xl font-bold text-charcoal leading-snug" style={{ fontFamily: "var(--font-space-grotesk)" }}>{item.grant_name}</h3>
             <p className="text-sm text-mid mt-0.5">{item.funder_name}</p>
           </div>
-          <button onClick={onClose} className="flex-shrink-0 flex items-center justify-center transition-colors" style={{ width: 32, height: 32, color: '#8A8986', background: 'none', border: 'none', cursor: 'pointer', marginTop: 2 }} onMouseEnter={e => e.currentTarget.style.color = '#2C2C2A'} onMouseLeave={e => e.currentTarget.style.color = '#8A8986'}>
+          <button onClick={onClose} className="flex-shrink-0 flex items-center justify-center transition-colors" style={{ width: 32, height: 32, color: 'var(--text-subtle)', background: 'none', border: 'none', cursor: 'pointer', marginTop: 2 }} onMouseEnter={e => e.currentTarget.style.color = 'var(--text-body)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-subtle)'}>
             <XIcon size={20} strokeWidth={2} />
           </button>
         </div>
@@ -174,13 +174,13 @@ export function PipelineModal({
         <div className="p-6 space-y-5">
           {/* About this grant — summary pulled from the live catalogue by URL,
               plus a link to its Find Funding card. Shown for all stages. */}
-          <div style={{ background: '#F1F7E4', border: '0.5px solid rgba(57,109,17,0.18)', borderRadius: 10, padding: '12px 14px' }}>
+          <div style={{ background: 'var(--state-success-pale)', border: '0.5px solid rgba(57,109,17,0.18)', borderRadius: 10, padding: '12px 14px' }}>
             <div className="flex items-center justify-between gap-3" style={{ marginBottom: 8 }}>
-              <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#3B6D11', margin: 0 }}>About this grant</p>
+              <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--state-success)', margin: 0 }}>About this grant</p>
               {loadingSummary ? null : catalogue ? (
                 <NextLink
                   href={`/dashboard/search?grant=${encodeURIComponent(catalogue.pinId)}`}
-                  style={{ fontSize: 12, fontWeight: 600, color: '#3B6D11', textDecoration: 'none', whiteSpace: 'nowrap' }}
+                  style={{ fontSize: 12, fontWeight: 600, color: 'var(--state-success)', textDecoration: 'none', whiteSpace: 'nowrap' }}
                 >
                   View in Find Funding →
                 </NextLink>
@@ -189,30 +189,30 @@ export function PipelineModal({
                   href={item.grant_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{ fontSize: 12, fontWeight: 600, color: '#3B6D11', textDecoration: 'none', whiteSpace: 'nowrap' }}
+                  style={{ fontSize: 12, fontWeight: 600, color: 'var(--state-success)', textDecoration: 'none', whiteSpace: 'nowrap' }}
                 >
                   Visit funder site →
                 </a>
               ) : null}
             </div>
             {loadingSummary ? (
-              <p className="text-xs" style={{ color: '#8A8986', margin: 0 }}>Loading summary…</p>
+              <p className="text-xs" style={{ color: 'var(--text-subtle)', margin: 0 }}>Loading summary…</p>
             ) : catalogue?.description ? (
               <>
-                <p className="text-sm line-clamp-4" style={{ color: '#2C2C2A', lineHeight: 1.5, margin: 0 }}>{catalogue.description}</p>
+                <p className="text-sm line-clamp-4" style={{ color: 'var(--text-body)', lineHeight: 1.5, margin: 0 }}>{catalogue.description}</p>
                 {catalogue.sectors.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 mt-2">
                     {catalogue.sectors.slice(0, 4).map(s => (
-                      <span key={s} style={{ fontSize: 11, background: '#fff', color: '#3B6D11', border: '0.5px solid rgba(57,109,17,0.2)', borderRadius: 999, padding: '2px 8px', textTransform: 'capitalize' }}>{s}</span>
+                      <span key={s} style={{ fontSize: 11, background: 'var(--surface-card)', color: 'var(--state-success)', border: '0.5px solid rgba(57,109,17,0.2)', borderRadius: 999, padding: '2px 8px', textTransform: 'capitalize' }}>{s}</span>
                     ))}
                   </div>
                 )}
                 {!catalogue.isActive && (
-                  <p className="text-xs" style={{ color: '#8A8986', margin: '8px 0 0' }}>This grant has closed — it&apos;s no longer in the live catalogue. Opening it in Find Funding shows it as no longer open.</p>
+                  <p className="text-xs" style={{ color: 'var(--text-subtle)', margin: '8px 0 0' }}>This grant has closed — it&apos;s no longer in the live catalogue. Opening it in Find Funding shows it as no longer open.</p>
                 )}
               </>
             ) : (
-              <p className="text-xs" style={{ color: '#8A8986', margin: 0 }}>Not in the live catalogue (added manually or no longer listed) — use the funder site link if available.</p>
+              <p className="text-xs" style={{ color: 'var(--text-subtle)', margin: 0 }}>Not in the live catalogue (added manually or no longer listed) — use the funder site link if available.</p>
             )}
           </div>
 
@@ -220,7 +220,7 @@ export function PipelineModal({
           {isApplyingOrLater ? (
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider block mb-1" style={{ color: '#5F5E5A' }}>Amount requested</label>
+                <label className="text-xs font-semibold uppercase tracking-wider block mb-1" style={{ color: 'var(--text-muted)' }}>Amount requested</label>
                 <div className="relative">
                   <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-mid text-sm">£</span>
                   <input type="number" min="0" value={amountRequested} onChange={e => setAmountRequested(e.target.value)}
@@ -228,7 +228,7 @@ export function PipelineModal({
                 </div>
               </div>
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider block mb-1" style={{ color: '#5F5E5A' }}>Deadline</label>
+                <label className="text-xs font-semibold uppercase tracking-wider block mb-1" style={{ color: 'var(--text-muted)' }}>Deadline</label>
                 <input type="date" value={deadline} onChange={e => setDeadline(e.target.value)}
                   className="form-input text-sm" style={{ paddingTop: 10, paddingBottom: 10, paddingLeft: 8, minHeight: 40 }} />
               </div>
@@ -236,7 +236,7 @@ export function PipelineModal({
           ) : (
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider block mb-1" style={{ color: '#5F5E5A' }}>Min amount</label>
+                <label className="text-xs font-semibold uppercase tracking-wider block mb-1" style={{ color: 'var(--text-muted)' }}>Min amount</label>
                 <div className="relative">
                   <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-mid text-sm">£</span>
                   <input type="number" min="0" value={amountMin} onChange={e => setAmountMin(e.target.value)}
@@ -244,7 +244,7 @@ export function PipelineModal({
                 </div>
               </div>
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider block mb-1" style={{ color: '#5F5E5A' }}>Max amount</label>
+                <label className="text-xs font-semibold uppercase tracking-wider block mb-1" style={{ color: 'var(--text-muted)' }}>Max amount</label>
                 <div className="relative">
                   <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-mid text-sm">£</span>
                   <input type="number" min="0" value={amountMax} onChange={e => setAmountMax(e.target.value)}
@@ -252,26 +252,26 @@ export function PipelineModal({
                 </div>
               </div>
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider block mb-1" style={{ color: '#5F5E5A' }}>Deadline</label>
+                <label className="text-xs font-semibold uppercase tracking-wider block mb-1" style={{ color: 'var(--text-muted)' }}>Deadline</label>
                 <input type="date" value={deadline} onChange={e => setDeadline(e.target.value)}
                   className="form-input text-sm" style={{ paddingTop: 10, paddingBottom: 10, paddingLeft: 8, minHeight: 40 }} />
               </div>
             </div>
           )}
           {!isApplyingOrLater && (amountMin || amountMax) && (
-            <p className="-mt-2" style={{ fontSize: 14, fontWeight: 500, color: '#3B6D11' }}>
+            <p className="-mt-2" style={{ fontSize: 14, fontWeight: 500, color: 'var(--state-success)' }}>
               {formatRange(amountMin ? Number(amountMin) : null, amountMax ? Number(amountMax) : null)}
             </p>
           )}
           {isApplyingOrLater && amountRequested && (
-            <p className="-mt-2" style={{ fontSize: 14, fontWeight: 500, color: '#3B6D11' }}>
+            <p className="-mt-2" style={{ fontSize: 14, fontWeight: 500, color: 'var(--state-success)' }}>
               £{Number(amountRequested).toLocaleString('en-GB')} requested
             </p>
           )}
 
           {/* Move stage */}
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: '#5F5E5A' }}>Move to stage</p>
+            <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--text-muted)' }}>Move to stage</p>
             <div className="grid grid-cols-3 gap-2">
               {PIPELINE_STAGES.map(s => {
                 const isActive = localStage === s.id
@@ -306,10 +306,10 @@ export function PipelineModal({
           {/* Writing progress */}
           <div style={{ borderTop: '0.5px solid rgba(0,0,0,0.08)', paddingTop: 16 }}>
             <div className="flex items-center justify-between" style={{ marginBottom: 12 }}>
-              <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#5F5E5A', margin: 0 }}>Writing progress</p>
-              <span className="flex items-center gap-1.5" style={{ fontSize: 11, color: '#5F5E5A' }}>
+              <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)', margin: 0 }}>Writing progress</p>
+              <span className="flex items-center gap-1.5" style={{ fontSize: 11, color: 'var(--text-muted)' }}>
                 {getWritingStage(progress).label}
-                {progress > 0 && <span style={{ color: '#8A8986' }}>· {progress}%</span>}
+                {progress > 0 && <span style={{ color: 'var(--text-subtle)' }}>· {progress}%</span>}
               </span>
             </div>
             <div className="grid grid-cols-4 gap-1.5 mb-3">
@@ -320,14 +320,14 @@ export function PipelineModal({
                     style={{
                       display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
                       padding: '8px 4px',
-                      background: isActive ? '#F1F7E4' : '#fff',
-                      border: `1px solid ${isActive ? '#639922' : 'rgba(0,0,0,0.08)'}`,
+                      background: isActive ? 'var(--state-success-pale)' : 'var(--surface-card)',
+                      border: `1px solid ${isActive ? 'var(--sage-deep)' : 'rgba(0,0,0,0.08)'}`,
                       borderRadius: 8, cursor: 'pointer', transition: 'all 0.12s', fontFamily: 'inherit',
                     }}>
-                    <span style={{ color: isActive ? '#3B6D11' : '#8A8986' }}>
+                    <span style={{ color: isActive ? 'var(--state-success)' : 'var(--text-subtle)' }}>
                       {WRITING_STAGE_ICONS[s.value]}
                     </span>
-                    <span style={{ fontSize: 9, fontWeight: 600, color: isActive ? '#3B6D11' : '#5F5E5A', lineHeight: 1.3 }}>
+                    <span style={{ fontSize: 9, fontWeight: 600, color: isActive ? 'var(--state-success)' : 'var(--text-muted)', lineHeight: 1.3 }}>
                       {s.label}
                     </span>
                   </button>
@@ -335,13 +335,13 @@ export function PipelineModal({
               })}
             </div>
             <div style={{ height: 6, background: 'rgba(57,109,17,0.15)', borderRadius: 3, overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${progress}%`, background: '#639922', borderRadius: 3, transition: 'width 0.3s ease' }} />
+              <div style={{ height: '100%', width: `${progress}%`, background: 'var(--sage-deep)', borderRadius: 3, transition: 'width 0.3s ease' }} />
             </div>
           </div>
 
           {/* Grant URL */}
           <div>
-            <label className="text-xs font-semibold uppercase tracking-wider block mb-2" style={{ color: '#5F5E5A' }}>Grant URL</label>
+            <label className="text-xs font-semibold uppercase tracking-wider block mb-2" style={{ color: 'var(--text-muted)' }}>Grant URL</label>
             <input type="url" value={grantUrl} onChange={e => setGrantUrl(e.target.value)}
               className="form-input text-sm" style={{ paddingTop: 10, paddingBottom: 10, minHeight: 40 }}
               placeholder="https://funder.org.uk/apply" />
@@ -349,7 +349,7 @@ export function PipelineModal({
 
           {/* Contact */}
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: '#5F5E5A' }}>Funder contact</p>
+            <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--text-muted)' }}>Funder contact</p>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-xs text-mid block mb-1">Name</label>
@@ -366,7 +366,7 @@ export function PipelineModal({
 
           {/* Notes */}
           <div>
-            <label className="text-xs font-semibold uppercase tracking-wider block mb-2" style={{ color: '#5F5E5A' }}>Notes</label>
+            <label className="text-xs font-semibold uppercase tracking-wider block mb-2" style={{ color: 'var(--text-muted)' }}>Notes</label>
             <textarea value={notes} onChange={e => setNotes(e.target.value)}
               className="form-textarea" placeholder="Add notes, key dates, requirements…"
               style={{ resize: 'vertical' }} />
@@ -378,16 +378,16 @@ export function PipelineModal({
           <button
             onClick={() => { if (confirm('Delete this opportunity?')) { onDelete(item.id); onClose() } }}
             className="flex items-center gap-1.5 text-sm transition-colors"
-            style={{ color: '#993C1D', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 0', fontFamily: 'inherit' }}
-            onMouseEnter={e => (e.currentTarget.style.color = '#7A2E14')}
-            onMouseLeave={e => (e.currentTarget.style.color = '#993C1D')}
+            style={{ color: 'var(--state-error)', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 0', fontFamily: 'inherit' }}
+            onMouseEnter={e => (e.currentTarget.style.color = 'var(--state-error)')}
+            onMouseLeave={e => (e.currentTarget.style.color = 'var(--state-error)')}
           >
             <Trash2 size={14} strokeWidth={2} />
             Delete
           </button>
           <div className="flex gap-2">
-            <button onClick={onClose} style={{ padding: '9px 16px', fontSize: 13, fontWeight: 500, background: '#fff', color: '#2C2C2A', border: '0.5px solid rgba(0,0,0,0.14)', borderRadius: 9999, cursor: 'pointer', fontFamily: 'inherit', lineHeight: 1 }}>Cancel</button>
-            <button onClick={handleSave} disabled={saving} style={{ padding: '9px 18px', fontSize: 13, fontWeight: 600, background: '#8ECB3C', color: '#173404', border: 'none', borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit', lineHeight: 1, opacity: saving ? 0.6 : 1 }}>
+            <button onClick={onClose} style={{ padding: '9px 16px', fontSize: 13, fontWeight: 500, background: 'var(--surface-card)', color: 'var(--text-body)', border: '0.5px solid rgba(0,0,0,0.14)', borderRadius: 9999, cursor: 'pointer', fontFamily: 'inherit', lineHeight: 1 }}>Cancel</button>
+            <button onClick={handleSave} disabled={saving} style={{ padding: '9px 18px', fontSize: 13, fontWeight: 600, background: '#8ECB3C', color: 'var(--deep)', border: 'none', borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit', lineHeight: 1, opacity: saving ? 0.6 : 1 }}>
               {saving ? 'Saving…' : 'Save changes'}
             </button>
           </div>
