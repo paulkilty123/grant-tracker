@@ -40,16 +40,16 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div style={{ background: '#FAFAF7', minHeight: '100vh', fontFamily: BODY, color: '#2C2C2A' }}>
+    <div style={{ background: 'var(--surface-page)', minHeight: '100vh', fontFamily: BODY, color: 'var(--text-body)' }}>
 
       {/* NAV */}
       <nav style={{ background: 'white', borderBottom: '0.5px solid rgba(23,52,4,0.08)', padding: '18px 0' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
             <LogoMark size={30} />
-            <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 24, letterSpacing: '-0.025em', color: '#2C2C2A' }}>{brand.name}</span>
+            <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 24, letterSpacing: '-0.025em', color: 'var(--text-body)' }}>{brand.name}</span>
           </Link>
-          <Link href="/" style={{ fontFamily: UI, fontSize: 13.5, color: '#5F5E5A', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <Link href="/" style={{ fontFamily: UI, fontSize: 13.5, color: 'var(--text-muted)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
             <ArrowLeft size={14} /> Back to home
           </Link>
         </div>
@@ -60,15 +60,15 @@ export default function ForgotPasswordPage() {
         <div style={{ background: 'white', borderRadius: 16, padding: '40px 36px', boxShadow: '0 2px 24px rgba(23,52,4,0.06)', border: '0.5px solid rgba(23,52,4,0.06)' }}>
           {sent ? (
             <>
-              <h1 style={{ fontFamily: UI, fontWeight: 500, fontSize: 24, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 10 }}>
+              <h1 style={{ fontFamily: UI, fontWeight: 500, fontSize: 24, letterSpacing: '-0.02em', color: 'var(--text-body)', marginBottom: 10 }}>
                 Check your email
               </h1>
-              <p style={{ fontFamily: BODY, fontSize: 14.5, color: '#5F5E5A', lineHeight: 1.55, marginBottom: 18 }}>
-                If <strong style={{ color: '#2C2C2A' }}>{email}</strong> has an account, a reset link is on its way. Click it to set a new password.
+              <p style={{ fontFamily: BODY, fontSize: 14.5, color: 'var(--text-muted)', lineHeight: 1.55, marginBottom: 18 }}>
+                If <strong style={{ color: 'var(--text-body)' }}>{email}</strong> has an account, a reset link is on its way. Click it to set a new password.
               </p>
-              <div style={{ background: '#F5F1E8', border: '0.5px solid rgba(180,135,40,0.18)', borderRadius: 10, padding: '14px 16px', marginBottom: 20 }}>
-                <p style={{ fontFamily: UI, fontWeight: 500, fontSize: 12, color: '#2C2C2A', marginBottom: 6 }}>Not arrived?</p>
-                <ul style={{ fontFamily: BODY, fontSize: 12.5, color: '#5F5E5A', lineHeight: 1.6, paddingLeft: 18, margin: 0 }}>
+              <div style={{ background: 'var(--surface-sunken)', border: '0.5px solid rgba(180,135,40,0.18)', borderRadius: 10, padding: '14px 16px', marginBottom: 20 }}>
+                <p style={{ fontFamily: UI, fontWeight: 500, fontSize: 12, color: 'var(--text-body)', marginBottom: 6 }}>Not arrived?</p>
+                <ul style={{ fontFamily: BODY, fontSize: 12.5, color: 'var(--text-muted)', lineHeight: 1.6, paddingLeft: 18, margin: 0 }}>
                   <li>Check your spam or junk folder</li>
                   <li>Allow a minute or two for delivery</li>
                   <li>Check it&apos;s exactly the address you signed up with — including the spelling and domain (e.g. .co vs .com)</li>
@@ -77,27 +77,27 @@ export default function ForgotPasswordPage() {
               </div>
               <button
                 onClick={() => setSent(false)}
-                style={{ fontFamily: UI, fontSize: 13, color: '#3B6D11', background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', textDecoration: 'underline' }}
+                style={{ fontFamily: UI, fontSize: 13, color: 'var(--state-success)', background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', textDecoration: 'underline' }}
               >
                 Try a different email address
               </button>
             </>
           ) : (
             <>
-              <h1 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.15, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 6 }}>
+              <h1 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.15, letterSpacing: '-0.02em', color: 'var(--text-body)', marginBottom: 6 }}>
                 Reset your password
               </h1>
-              <p style={{ fontFamily: BODY, fontSize: 14.5, color: '#5F5E5A', lineHeight: 1.55, marginBottom: 24 }}>
+              <p style={{ fontFamily: BODY, fontSize: 14.5, color: 'var(--text-muted)', lineHeight: 1.55, marginBottom: 24 }}>
                 Enter the email address for your account and we&apos;ll send you a link to set a new password.
               </p>
               <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {error && (
-                  <div style={{ background: '#FAECE7', border: '0.5px solid rgba(153,60,29,0.25)', color: '#993C1D', fontSize: 13, padding: '11px 14px', borderRadius: 10 }}>
+                  <div style={{ background: 'var(--state-error-pale)', border: '0.5px solid rgba(153,60,29,0.25)', color: 'var(--state-error)', fontSize: 13, padding: '11px 14px', borderRadius: 10 }}>
                     {error}
                   </div>
                 )}
                 <div>
-                  <label style={{ display: 'block', fontFamily: UI, fontWeight: 500, fontSize: 13, color: '#2C2C2A', marginBottom: 6 }}>Email address</label>
+                  <label style={{ display: 'block', fontFamily: UI, fontWeight: 500, fontSize: 13, color: 'var(--text-body)', marginBottom: 6 }}>Email address</label>
                   <input
                     type="email"
                     value={email}
@@ -113,7 +113,7 @@ export default function ForgotPasswordPage() {
                   style={{
                     marginTop: 4,
                     background: '#8ECB3C',
-                    color: '#173404',
+                    color: 'var(--deep)',
                     fontFamily: UI,
                     fontWeight: 600,
                     fontSize: 15,
@@ -132,7 +132,7 @@ export default function ForgotPasswordPage() {
           )}
 
           <div style={{ marginTop: 24, paddingTop: 20, borderTop: '0.5px solid rgba(23,52,4,0.08)', textAlign: 'center' }}>
-            <Link href="/auth/login" style={{ fontFamily: UI, fontSize: 13, color: '#5F5E5A', textDecoration: 'none' }}>
+            <Link href="/auth/login" style={{ fontFamily: UI, fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none' }}>
               Back to sign in
             </Link>
           </div>

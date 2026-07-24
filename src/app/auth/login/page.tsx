@@ -94,16 +94,16 @@ function LoginForm() {
   }
 
   return (
-    <div style={{ background: '#FAFAF7', minHeight: '100vh', fontFamily: BODY, color: '#2C2C2A' }}>
+    <div style={{ background: 'var(--surface-page)', minHeight: '100vh', fontFamily: BODY, color: 'var(--text-body)' }}>
 
       {/* NAV */}
       <nav style={{ background: 'white', borderBottom: '0.5px solid rgba(23,52,4,0.08)', padding: '18px 0' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
             <LogoMark size={30} />
-            <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 24, letterSpacing: '-0.025em', color: '#2C2C2A' }}>{brand.name}</span>
+            <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 24, letterSpacing: '-0.025em', color: 'var(--text-body)' }}>{brand.name}</span>
           </Link>
-          <Link href="/" style={{ fontFamily: UI, fontSize: 13.5, color: '#5F5E5A', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <Link href="/" style={{ fontFamily: UI, fontSize: 13.5, color: 'var(--text-muted)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
             <ArrowLeft size={14} /> Back to home
           </Link>
         </div>
@@ -113,34 +113,34 @@ function LoginForm() {
 
         {/* Card */}
         <div style={{ background: 'white', borderRadius: 16, padding: '40px 36px', boxShadow: '0 2px 24px rgba(23,52,4,0.06)', border: '0.5px solid rgba(23,52,4,0.06)' }}>
-          <h1 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.15, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 6 }}>
+          <h1 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.15, letterSpacing: '-0.02em', color: 'var(--text-body)', marginBottom: 6 }}>
             Welcome back
           </h1>
-          <p style={{ fontFamily: BODY, fontSize: 14.5, color: '#5F5E5A', marginBottom: 28 }}>
+          <p style={{ fontFamily: BODY, fontSize: 14.5, color: 'var(--text-muted)', marginBottom: 28 }}>
             Sign in to your {brand.name} account.
           </p>
 
           <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {urlErrorMessage && (
-              <div style={{ background: '#FFFBEB', border: '0.5px solid rgba(180,135,40,0.25)', color: '#854F0B', fontSize: 13, padding: '11px 14px', borderRadius: 10 }}>
+              <div style={{ background: 'var(--surface-page)', border: '0.5px solid rgba(180,135,40,0.25)', color: 'var(--state-warning)', fontSize: 13, padding: '11px 14px', borderRadius: 10 }}>
                 {urlErrorMessage}
               </div>
             )}
             {error && (
-              <div style={{ background: '#FAECE7', border: '0.5px solid rgba(153,60,29,0.25)', color: '#993C1D', fontSize: 13, padding: '11px 14px', borderRadius: 10 }}>
+              <div style={{ background: 'var(--state-error-pale)', border: '0.5px solid rgba(153,60,29,0.25)', color: 'var(--state-error)', fontSize: 13, padding: '11px 14px', borderRadius: 10 }}>
                 {error}
               </div>
             )}
 
             <div>
-              <label style={{ display: 'block', fontFamily: UI, fontWeight: 500, fontSize: 13, color: '#2C2C2A', marginBottom: 6 }}>Email</label>
+              <label style={{ display: 'block', fontFamily: UI, fontWeight: 500, fontSize: 13, color: 'var(--text-body)', marginBottom: 6 }}>Email</label>
               <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="form-input" placeholder="you@organisation.org" autoComplete="email" required />
             </div>
 
             <div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                <label style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, color: '#2C2C2A' }}>Password</label>
-                <Link href="/auth/forgot-password" style={{ fontFamily: UI, fontSize: 12, color: '#3B6D11', textDecoration: 'none' }}>Forgot password?</Link>
+                <label style={{ fontFamily: UI, fontWeight: 500, fontSize: 13, color: 'var(--text-body)' }}>Password</label>
+                <Link href="/auth/forgot-password" style={{ fontFamily: UI, fontSize: 12, color: 'var(--state-success)', textDecoration: 'none' }}>Forgot password?</Link>
               </div>
               <div style={{ position: 'relative' }}>
                 <input
@@ -153,7 +153,7 @@ function LoginForm() {
                   autoComplete="current-password"
                   required
                 />
-                <button type="button" onClick={() => setShowPw(v => !v)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontFamily: UI, fontSize: 12, color: '#8A8986', background: 'transparent', border: 'none', cursor: 'pointer' }} tabIndex={-1}>
+                <button type="button" onClick={() => setShowPw(v => !v)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontFamily: UI, fontSize: 12, color: 'var(--text-subtle)', background: 'transparent', border: 'none', cursor: 'pointer' }} tabIndex={-1}>
                   {showPw ? 'Hide' : 'Show'}
                 </button>
               </div>
@@ -165,7 +165,7 @@ function LoginForm() {
               style={{
                 marginTop: 8,
                 background: '#8ECB3C',
-                color: '#173404',
+                color: 'var(--deep)',
                 fontFamily: UI,
                 fontWeight: 600,
                 fontSize: 15,
@@ -182,9 +182,9 @@ function LoginForm() {
           </form>
         </div>
 
-        <p style={{ fontFamily: BODY, fontSize: 13, color: '#8A8986', textAlign: 'center', marginTop: 24 }}>
+        <p style={{ fontFamily: BODY, fontSize: 13, color: 'var(--text-subtle)', textAlign: 'center', marginTop: 24 }}>
           Want to join the founding cohort?{' '}
-          <Link href="/apply" style={{ fontFamily: UI, fontWeight: 500, color: '#3B6D11', textDecoration: 'none' }}>Apply here</Link>
+          <Link href="/apply" style={{ fontFamily: UI, fontWeight: 500, color: 'var(--state-success)', textDecoration: 'none' }}>Apply here</Link>
         </p>
       </div>
     </div>

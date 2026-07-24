@@ -67,16 +67,16 @@ function ResetPasswordContent() {
   }
 
   return (
-    <div style={{ background: '#FAFAF7', minHeight: '100vh', fontFamily: BODY, color: '#2C2C2A' }}>
+    <div style={{ background: 'var(--surface-page)', minHeight: '100vh', fontFamily: BODY, color: 'var(--text-body)' }}>
 
       {/* NAV */}
       <nav style={{ background: 'white', borderBottom: '0.5px solid rgba(23,52,4,0.08)', padding: '18px 0' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
             <LogoMark size={30} />
-            <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 24, letterSpacing: '-0.025em', color: '#2C2C2A' }}>{brand.name}</span>
+            <span style={{ fontFamily: UI, fontWeight: 700, fontSize: 24, letterSpacing: '-0.025em', color: 'var(--text-body)' }}>{brand.name}</span>
           </Link>
-          <Link href="/" style={{ fontFamily: UI, fontSize: 13.5, color: '#5F5E5A', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <Link href="/" style={{ fontFamily: UI, fontSize: 13.5, color: 'var(--text-muted)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
             <ArrowLeft size={14} /> Back to home
           </Link>
         </div>
@@ -86,22 +86,22 @@ function ResetPasswordContent() {
 
         <div style={{ background: 'white', borderRadius: 16, padding: '40px 36px', boxShadow: '0 2px 24px rgba(23,52,4,0.06)', border: '0.5px solid rgba(23,52,4,0.06)' }}>
           {exchanging ? (
-            <p style={{ fontFamily: BODY, fontSize: 14, color: '#5F5E5A', textAlign: 'center', padding: '12px 0' }}>Verifying reset link...</p>
+            <p style={{ fontFamily: BODY, fontSize: 14, color: 'var(--text-muted)', textAlign: 'center', padding: '12px 0' }}>Verifying reset link...</p>
           ) : done ? (
             <>
-              <h1 style={{ fontFamily: UI, fontWeight: 500, fontSize: 24, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 8 }}>
+              <h1 style={{ fontFamily: UI, fontWeight: 500, fontSize: 24, letterSpacing: '-0.02em', color: 'var(--text-body)', marginBottom: 8 }}>
                 Password updated
               </h1>
-              <p style={{ fontFamily: BODY, fontSize: 14.5, color: '#5F5E5A' }}>
+              <p style={{ fontFamily: BODY, fontSize: 14.5, color: 'var(--text-muted)' }}>
                 Taking you to your dashboard...
               </p>
             </>
           ) : error && !password ? (
             <>
-              <h1 style={{ fontFamily: UI, fontWeight: 500, fontSize: 24, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 8 }}>
+              <h1 style={{ fontFamily: UI, fontWeight: 500, fontSize: 24, letterSpacing: '-0.02em', color: 'var(--text-body)', marginBottom: 8 }}>
                 Reset link expired
               </h1>
-              <p style={{ fontFamily: BODY, fontSize: 14.5, color: '#5F5E5A', lineHeight: 1.55, marginBottom: 24 }}>
+              <p style={{ fontFamily: BODY, fontSize: 14.5, color: 'var(--text-muted)', lineHeight: 1.55, marginBottom: 24 }}>
                 This link has already been used or has expired. Reset links are single-use and valid for one hour.
               </p>
               <Link
@@ -109,7 +109,7 @@ function ResetPasswordContent() {
                 style={{
                   display: 'inline-block',
                   background: '#8ECB3C',
-                  color: '#173404',
+                  color: 'var(--deep)',
                   fontFamily: UI,
                   fontWeight: 600,
                   fontSize: 15,
@@ -123,20 +123,20 @@ function ResetPasswordContent() {
             </>
           ) : (
             <>
-              <h1 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.15, letterSpacing: '-0.02em', color: '#2C2C2A', marginBottom: 6 }}>
+              <h1 style={{ fontFamily: UI, fontWeight: 500, fontSize: 28, lineHeight: 1.15, letterSpacing: '-0.02em', color: 'var(--text-body)', marginBottom: 6 }}>
                 Choose a new password
               </h1>
-              <p style={{ fontFamily: BODY, fontSize: 14.5, color: '#5F5E5A', marginBottom: 24 }}>
+              <p style={{ fontFamily: BODY, fontSize: 14.5, color: 'var(--text-muted)', marginBottom: 24 }}>
                 Pick something at least 8 characters long.
               </p>
               <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {error && (
-                  <div style={{ background: '#FAECE7', border: '0.5px solid rgba(153,60,29,0.25)', color: '#993C1D', fontSize: 13, padding: '11px 14px', borderRadius: 10 }}>
+                  <div style={{ background: 'var(--state-error-pale)', border: '0.5px solid rgba(153,60,29,0.25)', color: 'var(--state-error)', fontSize: 13, padding: '11px 14px', borderRadius: 10 }}>
                     {error}
                   </div>
                 )}
                 <div>
-                  <label style={{ display: 'block', fontFamily: UI, fontWeight: 500, fontSize: 13, color: '#2C2C2A', marginBottom: 6 }}>New password</label>
+                  <label style={{ display: 'block', fontFamily: UI, fontWeight: 500, fontSize: 13, color: 'var(--text-body)', marginBottom: 6 }}>New password</label>
                   <div style={{ position: 'relative' }}>
                     <input
                       type={showPw ? 'text' : 'password'}
@@ -148,13 +148,13 @@ function ResetPasswordContent() {
                       required
                       minLength={8}
                     />
-                    <button type="button" onClick={() => setShowPw(v => !v)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontFamily: UI, fontSize: 12, color: '#8A8986', background: 'transparent', border: 'none', cursor: 'pointer' }} tabIndex={-1}>
+                    <button type="button" onClick={() => setShowPw(v => !v)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontFamily: UI, fontSize: 12, color: 'var(--text-subtle)', background: 'transparent', border: 'none', cursor: 'pointer' }} tabIndex={-1}>
                       {showPw ? 'Hide' : 'Show'}
                     </button>
                   </div>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontFamily: UI, fontWeight: 500, fontSize: 13, color: '#2C2C2A', marginBottom: 6 }}>Confirm new password</label>
+                  <label style={{ display: 'block', fontFamily: UI, fontWeight: 500, fontSize: 13, color: 'var(--text-body)', marginBottom: 6 }}>Confirm new password</label>
                   <input
                     type={showPw ? 'text' : 'password'}
                     value={confirm}
@@ -170,7 +170,7 @@ function ResetPasswordContent() {
                   style={{
                     marginTop: 4,
                     background: '#8ECB3C',
-                    color: '#173404',
+                    color: 'var(--deep)',
                     fontFamily: UI,
                     fontWeight: 600,
                     fontSize: 15,
@@ -190,7 +190,7 @@ function ResetPasswordContent() {
 
           {!done && !exchanging && !(error && !password) && (
             <div style={{ marginTop: 24, paddingTop: 20, borderTop: '0.5px solid rgba(23,52,4,0.08)', textAlign: 'center' }}>
-              <Link href="/auth/login" style={{ fontFamily: UI, fontSize: 13, color: '#5F5E5A', textDecoration: 'none' }}>
+              <Link href="/auth/login" style={{ fontFamily: UI, fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none' }}>
                 Back to sign in
               </Link>
             </div>
@@ -204,8 +204,8 @@ function ResetPasswordContent() {
 export default function ResetPasswordPage() {
   return (
     <Suspense fallback={
-      <div style={{ background: '#FAFAF7', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <p style={{ fontFamily: BODY, fontSize: 14, color: '#5F5E5A' }}>Loading...</p>
+      <div style={{ background: 'var(--surface-page)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ fontFamily: BODY, fontSize: 14, color: 'var(--text-muted)' }}>Loading...</p>
       </div>
     }>
       <ResetPasswordContent />
