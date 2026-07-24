@@ -49,7 +49,7 @@ export default function ClearProfileButton() {
               fontFamily: 'var(--font-space-grotesk)',
               background: 'var(--state-error-pale)',
               color: 'var(--state-error)',
-              border: '0.5px solid rgba(153,60,29,0.25)',
+              border: '0.5px solid color-mix(in srgb, var(--state-error) 25%, transparent)',
               cursor: busy ? 'default' : 'pointer',
               opacity: busy ? 0.7 : 1,
             }}

@@ -467,7 +467,7 @@ export default function FunderIntelligencePage() {
                 key={grant.id}
                 ref={isHighlighted ? highlightRef : null}
                 className="bg-white border overflow-hidden transition-all"
-                style={{ borderRadius: 12, borderColor: isHighlighted ? 'var(--teal)' : 'var(--border-warm)', boxShadow: isHighlighted ? '0 0 0 3px rgba(0,128,128,0.15)' : undefined }}
+                style={{ borderRadius: 12, borderColor: isHighlighted ? 'var(--teal)' : 'var(--border-warm)', boxShadow: isHighlighted ? '0 0 0 3px color-mix(in srgb, var(--teal) 15%, transparent)' : undefined }}
               >
                 {isHighlighted && (
                   <div className="flex items-center gap-2 px-4 py-2 text-xs font-semibold" style={{ background: 'var(--surface-page)', color: 'var(--teal)', borderBottom: '1px solid var(--type-programme-pale)' }}>
@@ -678,7 +678,7 @@ export default function FunderIntelligencePage() {
                         borderRadius: 9999,
                         borderColor: isSourcesOpen ? 'var(--teal)' : 'var(--border-warm)',
                         color: isSourcesOpen ? 'var(--teal)' : 'var(--text-muted)',
-                        backgroundColor: isSourcesOpen ? 'rgba(0,128,128,0.08)' : 'white',
+                        backgroundColor: isSourcesOpen ? 'color-mix(in srgb, var(--teal) 8%, transparent)' : 'white',
                       }}
                       title="Add extra source pages">
                       <BookOpen className="w-3 h-3" />
@@ -690,7 +690,7 @@ export default function FunderIntelligencePage() {
                       className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold transition-colors disabled:opacity-50"
                       style={{
                         borderRadius: 9999,
-                        backgroundColor: isEnriched ? 'rgba(0,128,128,0.10)' : 'var(--teal)',
+                        backgroundColor: isEnriched ? 'color-mix(in srgb, var(--teal) 10%, transparent)' : 'var(--teal)',
                         color: isEnriched ? 'var(--teal)' : 'white',
                       }}>
                       <Sparkles className="w-3 h-3" />
